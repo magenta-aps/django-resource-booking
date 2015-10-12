@@ -12,7 +12,7 @@ echo 'Installing system dependencies'
 echo '******************************'
 
 
-SYSTEM_PACKAGES=$(cat "${DIR}/docs/SYSTEM_DEPENDENCIES")
+SYSTEM_PACKAGES=( $(cat "${DIR}/docs/SYSTEM_DEPENDENCIES") )
 
 for pkg in "${SYSTEM_PACKAGES[@]}"
 do
