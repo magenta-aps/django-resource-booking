@@ -21,9 +21,7 @@ designed for the University of Copenhagen.""",
       install_requires=[
           # -*- Extra requirements: -*-
           'Django==1.8.5',
-	  'argparse==1.2.1',
 	  'pep8==1.6.2',
-	  'wsgiref==0.1.2',
       ],
       entry_points="""
       # -*- Entry points: -*-
