@@ -6,9 +6,10 @@ version = '0.1'
 setup(name='django_resource_booking',
       version=version,
       description="Resource booking and allocation for large organizations.",
-      long_description="""\
-Resource booking and allocation for large organizations - specifically designed for the University of Copenhagen.""",
-      classifiers=[], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
+      long_description="""
+Resource booking and allocation for large organizations - specifically
+designed for the University of Copenhagen.""",
+      classifiers=[],
       keywords='',
       author='Magenta ApS',
       author_email='info@magenta.dk',
