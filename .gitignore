@@ -1,0 +1,4 @@
+python-env
+*.pyc
+*.egg-info
+*.sqlite3
