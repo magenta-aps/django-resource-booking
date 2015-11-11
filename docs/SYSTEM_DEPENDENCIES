@@ -1,1 +1,6 @@
 python-virtualenv
+postgresql
+postgresql-server-dev-9.3
+python-dev
+apache2
+libapache2-mod-wsgi

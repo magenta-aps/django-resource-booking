@@ -18,7 +18,7 @@ for pkg in "${SYSTEM_PACKAGES[@]}"
 do
     if [ $(dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -c "ok installed") -eq 0 ]
     then
-        sudo apt-get -y install $pkg > ${DIR}/install.log
+        sudo apt-get -y install $pkg # > ${DIR}/install.log
     fi
 done
 
@@ -43,7 +43,7 @@ echo '******************************************'
 echo 'Installing Python package and dependencies'
 echo '******************************************'
 
-python "$DIR/setup.py" develop  &>>  ${DIR}/install.log
+python "$DIR/setup.py" develop # &>>  ${DIR}/install.log
 
 
 echo ''
@@ -54,6 +54,13 @@ echo ''
 echo 'To get started:'
 echo ''
 echo 'source python-env/bin/activate'
+echo ''
+echo 'Initiate DB with:'
+echo ''
+echo 'python manage.py migrate'
+echo ''
+echo 'For testing etc.:'
+echo ''
 echo 'python manage.py runserver|test|shell'
 echo ''
 echo ''

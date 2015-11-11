@@ -4,3 +4,5 @@ dist
 *.egg-info
 *.sqlite3
 install.log
+/static/
+resource_booking/local_settings.py
