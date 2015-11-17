@@ -51,7 +51,7 @@ echo '********************'
 echo 'Installing git hooks'
 echo '********************'
 
-ln -s $DIR/tools/git-hooks/* "$DIR/.git/hooks/"
+ln -sf $DIR/tools/git-hooks/* "$DIR/.git/hooks/"
 
 echo ''
 echo '**********************'
