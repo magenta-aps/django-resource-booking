@@ -46,6 +46,13 @@ echo '******************************************'
 python "$DIR/setup.py" develop # &>>  ${DIR}/install.log
 
 
+# Install Python package, including dependencies
+echo '********************'
+echo 'Installing git hooks'
+echo '********************'
+
+ln -s $DIR/tools/git-hooks/* "$DIR/.git/hooks/"
+
 echo ''
 echo '**********************'
 echo 'Installation complete!'

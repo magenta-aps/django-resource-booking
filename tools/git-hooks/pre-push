@@ -1,0 +1,24 @@
+#!/bin/bash
+
+OLDDIR=`pwd -P`
+GIT_ROOT=`git rev-parse --show-toplevel`
+GIT_ROOT=$(cd $GIT_ROOT >/dev/null && pwd -P)
+
+# Go to the git root folder
+cd $GIT_ROOT
+echo $GIT_ROOT
+
+# Enter python virtual environment
+source python-env/bin/activate
+
+# Run syntax check
+flake8 booking/ resource_booking/
+STATUS=$?
+
+# Exit python virtual environment
+deactivate
+
+# Get back to previous dir and exit
+cd $OLDDIR
+exit $STATUS
+
