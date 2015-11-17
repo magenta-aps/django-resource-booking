@@ -1,10 +1,12 @@
-python-env
 dist
-*.pyc
 *.egg-info
-*.sqlite3
 install.log
-/static/
-/resource_booking/local_settings.py
 *.komodoproject
 /locale/**/*.mo
+*.pyc
+python-env
+/resource_booking/local_settings.py
+.ropeproject
+*.sqlite3
+/static/
+*.swp
