@@ -3,8 +3,10 @@ dist
 *.pyc
 *.egg-info
 *.sqlite3
+*.swp
 install.log
 /static/
 /resource_booking/local_settings.py
 *.komodoproject
 /locale/**/*.mo
+.ropeproject
