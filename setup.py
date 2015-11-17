@@ -23,8 +23,7 @@ designed for the University of Copenhagen.""",
           # -*- Extra requirements: -*-
           'Django==1.8.5',
           'pep8==1.6.2',
-          'psycopg2',
-          'enum34'
+          'psycopg2'
       ],
       entry_points="""
       # -*- Entry points: -*-
