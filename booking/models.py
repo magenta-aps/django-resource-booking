@@ -52,4 +52,3 @@ class Visit(Resource):
         (VISIT_TYPE_1, _("Type 1")),
         (VISIT_TYPE_2, _("Type 2"))
     )
-
