@@ -52,3 +52,19 @@ class Visit(Resource):
         (VISIT_TYPE_1, _("Type 1")),
         (VISIT_TYPE_2, _("Type 2"))
     )
+
+
+
+#
+# Units (faculties, institutes etc)
+#
+
+class UnitType(models.Model):
+    """A type of organization, e.g. 'faculty' """
+    name = models.CharField(max_length=20)
+
+class Unit(models.Model):
+    """A generic organizational unit, such as a faculty or an institute"""
+    name = models.CharField(max_length=30)
+    type = models.ForeignKey(UnitType)
+    parent = models.ForeignKey('self', null=True, blank=True)
