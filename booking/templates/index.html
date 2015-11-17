@@ -20,13 +20,27 @@
     </head>
     <body>
         
-        <div class="container">
+        {% block content %}
         
-            <h1>Københavns Universitets booking-løsning</h1>
-        
-            <p>Kommer snart ...</p>
+            <div class="container">
+
+                <h1>Tilbudsbooking: Søg i tilbud</h1>
             
-        </div>
+                <form class="form-inline" action="search-list">
+                    <div class="form-group">
+                      <label class="sr-only" for="searchBox">Søg i tilbud</label>
+                      <input type="text" class="form-control" id="searchBox" placeholder="Skriv noget">
+                    </div>
+                    <button type="submit" class="btn btn-default">Søg</button>
+                </form>
+                
+                <hr>
+                    
+                <a href="manage">Admin</a>
+            
+            </div>
+        
+        {% endblock %}
         
         <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
