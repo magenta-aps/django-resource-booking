@@ -40,6 +40,21 @@ class Mixin(object):
         })
         return context
 
+class ListMixin(Mixin):
+    def __init__(self):
+        self.template_name = "%s/list.html" % self.url_base
+
+class CreateMixin(Mixin):
+    pass
+
+class EditMixin(Mixin):
+    pass
+
+class DeleteMixin(Mixin):
+    def __init__(self):
+        self.template_name = "%s/delete.html" % self.url_base
+    def get_success_url(self):
+        return reverse('unittype_list')
 
 
 
@@ -47,28 +62,24 @@ class UnitTypeMixin(Mixin):
     model = UnitType
     object_name = 'UnitType'
     url_base = 'unittype'
-
-class UnitTypeFormMixin(UnitTypeMixin):
     form_class = UnitTypeForm
     template_name = 'unittype/form.html'
     success_url = '/unittype'
 
 
-class ListUnitType(UnitTypeMixin, ListView):
-    # Inherit from superclasses and leverage their methods
-    template_name = 'unittype/list.html'
-
-class NewUnitType(UnitTypeFormMixin, CreateView):
+class ListUnitType(UnitTypeMixin, ListMixin, ListView):
     # Inherit from superclasses and leverage their methods
     pass
 
-class EditUnitType(UnitTypeFormMixin, UpdateView):
+class CreateUnitType(UnitTypeMixin, CreateMixin, CreateView):
     # Inherit from superclasses and leverage their methods
     pass
 
-class DeleteUnitType(UnitTypeMixin, DeleteView):
+class EditUnitType(UnitTypeMixin, EditMixin, UpdateView):
     # Inherit from superclasses and leverage their methods
-    template_name = 'unittype/delete.html'
-    def get_success_url(self):
-        return reverse('unittype_list')
+    pass
+
+class DeleteUnitType(UnitTypeMixin, DeleteMixin, DeleteView):
+    # Inherit from superclasses and leverage their methods
+    pass
 
