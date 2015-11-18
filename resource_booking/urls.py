@@ -16,14 +16,10 @@ Including another URLconf
 from django.conf.urls import include, url
 from django.contrib import admin
 
-import django.contrib.auth.views as auth_views
-
 
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     # Booking URLs:
     url(r'^', include('booking.urls')),
-    url(r'^login/', auth_views.login,
-        {'template_name': 'login.html', 'redirect_field_name': 'profile/'}),
     url(r'^profile/', include('profile.urls')),
 ]
