@@ -7,7 +7,6 @@ urlpatterns = patterns(
 
     '',
     url(r'^$', MainPageView.as_view(), name='index'),
-
     url(r'^manage$', TemplateView.as_view(
         template_name='mockup_templates/manage-list.html')),
     url(r'^manage-item$', TemplateView.as_view(
