@@ -12,7 +12,7 @@ echo $GIT_ROOT
 source python-env/bin/activate
 
 # Run syntax check
-flake8 --exclude="migrations" booking/ resource_booking/
+flake8 --exclude="migrations" booking/ resource_booking/ profile/
 STATUS=$?
 
 # Exit python virtual environment
