@@ -3,7 +3,6 @@
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
-from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
 
@@ -14,6 +13,7 @@ LOGACTION_DELETE = DELETION
 # system defined ones by adding 128 to the value.
 LOGACTION_CUSTOM1 = 128 + 1
 LOGACTION_CUSTOM2 = 128 + 2
+
 
 def log_action(user, obj, action_flag, change_message=''):
     user_id = user.pk if user else None
