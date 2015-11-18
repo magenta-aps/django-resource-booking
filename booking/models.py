@@ -1,45 +1,7 @@
 # encoding: utf-8
 
 from django.db import models
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
 from django.utils.translation import ugettext_lazy as _
-
-
-LOGACTION_CREATE = ADDITION
-LOGACTION_CHANGE = CHANGE
-LOGACTION_DELETE = DELETION
-# If we need to add additional values make sure they do not conflict with
-# system defined ones by adding 128 to the value.
-LOGACTION_CUSTOM1 = 128 + 1
-LOGACTION_CUSTOM2 = 128 + 2
-
-
-def log_action(user, obj, action_flag, change_message=''):
-    user_id = user.pk if user else None
-    content_type_id = None
-    object_id = None
-    object_repr = ""
-    if obj:
-        ctype = ContentType.objects.get_for_model(obj)
-        content_type_id = ctype.pk
-        try:
-            object_id = obj.pk
-        except:
-            pass
-        try:
-            object_repr = unicode(obj)
-        except:
-            pass
-
-    LogEntry.objects.log_action(
-        user_id,
-        content_type_id,
-        object_id,
-        object_repr,
-        action_flag,
-        change_message
-    )
 
 
 class Resource(models.Model):
