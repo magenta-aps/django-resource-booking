@@ -62,9 +62,15 @@ class UnitType(models.Model):
     """A type of organization, e.g. 'faculty' """
     name = models.CharField(max_length=20)
 
+    def __unicode__(self):
+        return self.name
+
 
 class Unit(models.Model):
     """A generic organizational unit, such as a faculty or an institute"""
     name = models.CharField(max_length=30)
     type = models.ForeignKey(UnitType)
     parent = models.ForeignKey('self', null=True, blank=True)
+
+    def __unicode__(self):
+        return "%s (%s)" % (self.name, self.type.name)
