@@ -53,6 +53,18 @@ class Visit(Resource):
         (VISIT_TYPE_2, _("Type 2"))
     )
 
+
+class Person(models.Model):
+    """A dude or chick"""
+
+    # Eventually this could just be an pointer to AD
+    name = models.CharField(max_length=50)
+    email = models.EmailField
+    phone = models.CharField
+
+    def __unicode__(self):
+        return self.name
+
 #
 # Units (faculties, institutes etc)
 #
@@ -71,6 +83,7 @@ class Unit(models.Model):
     name = models.CharField(max_length=30)
     type = models.ForeignKey(UnitType)
     parent = models.ForeignKey('self', null=True, blank=True)
+    contact = models.ForeignKey(Person, null=True, blank=True)
 
     def __unicode__(self):
         return "%s (%s)" % (self.name, self.type.name)
