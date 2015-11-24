@@ -1,33 +1,48 @@
+# encoding: utf-8
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils.translation import ugettext_lazy as _
+
+from booking.models import Unit
 
 
-# TODO Insert the right values for this
-SUPER_ADMIN = 0
-UNIT_ADMIN = 1
-PROFESSOR = 2
-OTHER = 3
+# User roles
+
+TEACHER = 0
+HOST = 1
+COORDINATOR = 2
+ADMINISTRATOR = 3
 
 user_role_choices = (
-    (SUPER_ADMIN, "Superadministrator"),
-    (UNIT_ADMIN, "Site admin"),
-    (PROFESSOR, "Underviser"),
-    # XXX: COMPLETE THIS !!!
-    (OTHER, "Hvad har vi")
+    (TEACHER, _(u"Underviser")),
+    (HOST, _(u"Vært")),
+    (COORDINATOR, _(u"Koordinator")),
+    (ADMINISTRATOR, _(u"Underviser"))
 )
 
 
 class UserRole(models.Model):
     """"Superadmin, administrator, teacher, etc."""
-    code = models.IntegerField(
+    role = models.IntegerField(
         null=False,
-        unique=True,
-        choices=user_role_choices
+        choices=user_role_choices,
+        default=TEACHER
     )
-    name = models.CharField(max_length=256)
-    description = models.TextField()
+    name = models.CharField(max_length=256, blank=True)
+    description = models.TextField(blank=True)
+
+    def __unicode__(self):
+        return self.name
 
 
 class UserProfile(models.Model):
+    """User profile associated with each user."""
     user = models.OneToOneField(User)
     user_role = models.ForeignKey(UserRole)
+    # Unit must always be specified for coordinators,
+    # possibly also for teachers and hosts.
+    # Unit is not needed for administrators.
+    unit = models.ForeignKey(Unit, null=True, blank=True)
+
+    def __unicode__(self):
+        return self.user.username

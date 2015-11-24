@@ -16,8 +16,10 @@ Including another URLconf
 from django.conf.urls import include, url
 from django.contrib import admin
 
+
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     # Booking URLs:
     url(r'^', include('booking.urls')),
+    url(r'^profile/', include('profile.urls')),
 ]

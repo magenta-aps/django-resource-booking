@@ -1,0 +1,14 @@
+{% extends "index.html" %}
+
+{% block content %}
+
+<h1>Velkommen!</h1>
+
+<ul>
+    <li> Du er logget ind som {{user.username}}</li>
+    <li> Du er logget ind som <font
+            color="red">{{user.userprofile.user_role.name}}</font></li>
+</ul>
+
+<h2> <a href="/profile/logout/">Log ud</a> </h2>
+{% endblock %}
