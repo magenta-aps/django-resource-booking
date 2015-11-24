@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 from django.views.generic import TemplateView
 from django.utils.translation import ugettext as _
-from django.views.generic.base import View
 from django.views.generic.list import ListView
-from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.core.urlresolvers import reverse
 
 from booking.models import UnitType
 from booking.forms import UnitTypeForm
 
-from pprint import pprint
+from booking.models import Unit
+from booking.forms import UnitForm
+
 
 i18n_test = _(u"Dette tester oversættelses-systemet")
 
@@ -54,7 +54,7 @@ class DeleteMixin(Mixin):
     def __init__(self):
         self.template_name = "%s/delete.html" % self.url_base
     def get_success_url(self):
-        return reverse('unittype_list')
+        return reverse("%s_list" % self.url_base)
 
 
 
@@ -80,6 +80,35 @@ class EditUnitType(UnitTypeMixin, EditMixin, UpdateView):
     pass
 
 class DeleteUnitType(UnitTypeMixin, DeleteMixin, DeleteView):
+    # Inherit from superclasses and leverage their methods
+    pass
+
+
+
+
+
+class UnitMixin(Mixin):
+    model = Unit
+    object_name = 'Unit'
+    url_base = 'unit'
+    form_class = UnitForm
+    template_name = 'unit/form.html'
+    success_url = '/unit'
+
+
+class ListUnit(UnitMixin, ListMixin, ListView):
+    # Inherit from superclasses and leverage their methods
+    pass
+
+class CreateUnit(UnitMixin, CreateMixin, CreateView):
+    # Inherit from superclasses and leverage their methods
+    pass
+
+class EditUnit(UnitMixin, EditMixin, UpdateView):
+    # Inherit from superclasses and leverage their methods
+    pass
+
+class DeleteUnit(UnitMixin, DeleteMixin, DeleteView):
     # Inherit from superclasses and leverage their methods
     pass
 
