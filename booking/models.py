@@ -4,6 +4,40 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 
+class UnitType(models.Model):
+    """A type of organization, e.g. 'faculty' """
+    name = models.CharField(max_length=20)
+
+
+class Unit(models.Model):
+    """A generic organizational unit, such as a faculty or an institute"""
+    name = models.CharField(max_length=30)
+    type = models.ForeignKey(UnitType)
+    parent = models.ForeignKey('self', null=True, blank=True)
+
+
+class Subject(models.Model):
+    """A relevant subject from primary or secondary education."""
+    stx = 0
+    hf = 1
+    htx = 2
+    eux = 3
+    valgfag = 4
+
+    line_choices = (
+        (stx, _(u'stx')),
+        (hf, _(u'hf')),
+        (htx, _(u'htx')),
+        (eux, _(u'eux')),
+        (valgfag, _(u'valgfag')),
+    )
+
+    name = models.CharField(max_length=256)
+    line = models.IntegerField(choices=line_choices, verbose_name=u'Linje',
+                               blank=True, null=True)
+    description = models.TextField()
+
+
 class Resource(models.Model):
     """A bookable resource of any kind."""
 
@@ -28,15 +62,19 @@ class Resource(models.Model):
     title = models.CharField(max_length=256)
     description = models.TextField()
     mouseover_description = models.CharField(max_length=512)
-    # unit = models.ForeignKey(unit)
+    unit = models.ForeignKey(Unit, null=True, blank=True)
     audience = models.IntegerField(choices=audience_choices,
                                    verbose_name=_(u'Målgruppe'))
     institution_level = models.IntegerField(choices=institution_choices,
-                                            verbose_name=_(u'Institution'))
-    # TODO: Level and subjects are still to be defined
+                                            verbose_name=_(u'Institution'),
+                                            default=SECONDARY)
+    subjects = models.ManyToManyField(Subject)
     # level = <<suitable choice list for levels>>
-    # subjects = << Suitable link to yet-to-be-defined Subject class >>
+    # class_year = <<suitable representation, maybe free text.>>
+    # tags = <<choice list for tags>>
+    # topics = <<choice list for topics>>
 
+    # Comment field for internal use in backend.
     comment = models.TextField()
 
 
@@ -57,14 +95,3 @@ class Visit(Resource):
 # Units (faculties, institutes etc)
 #
 
-
-class UnitType(models.Model):
-    """A type of organization, e.g. 'faculty' """
-    name = models.CharField(max_length=20)
-
-
-class Unit(models.Model):
-    """A generic organizational unit, such as a faculty or an institute"""
-    name = models.CharField(max_length=30)
-    type = models.ForeignKey(UnitType)
-    parent = models.ForeignKey('self', null=True, blank=True)
