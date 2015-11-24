@@ -59,8 +59,8 @@ class Person(models.Model):
 
     # Eventually this could just be an pointer to AD
     name = models.CharField(max_length=50)
-    email = models.EmailField
-    phone = models.CharField
+    email = models.EmailField(max_length=64, null=True, blank=True)
+    phone = models.CharField(max_length=14, null=True, blank=True)
 
     def __unicode__(self):
         return self.name
