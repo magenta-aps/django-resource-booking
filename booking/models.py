@@ -134,7 +134,8 @@ class Resource(models.Model):
         (A, u'a'), (B, u'B'), (C, u'C')
     )
 
-    type = models.IntegerField(choices=resource_type_choices)
+    type = models.IntegerField(choices=resource_type_choices,
+                               default=OTHER_RESOURCES)
     title = models.CharField(max_length=256)
     description = models.TextField()
     mouseover_description = models.CharField(max_length=512)
@@ -147,7 +148,9 @@ class Resource(models.Model):
                                             default=SECONDARY)
     subjects = models.ManyToManyField(Subject)
     level = models.IntegerField(choices=level_choices,
-                                verbose_name=_(u"Niveau"))
+                                verbose_name=_(u"Niveau"),
+                                blank=True,
+                                null=True)
     # tags = <<choice list for tags>>
     topics = models.ManyToManyField(Topic)
 
@@ -159,10 +162,11 @@ class Visit(Resource):
     """A bookable visit of any kind."""
     # locality = <<suitable representation of locality.>>
     # room = <<representation of roomm, maybe free text field.>>
+    contact_persons = models.ManyToManyField(Person)
     do_send_evaluation = models.BooleanField(
         verbose_name=_(u"Udsend evaluering"), default=False
     )
-    price = models.DecimalField(default=0)
+    price = models.DecimalField(default=0, max_digits=10, decimal_places=2)
     additional_services = models.ManyToManyField(AdditionalService)
     special_requirements = models.ManyToManyField(SpecialRequirement)
     is_group_visit = models.BooleanField(default=True)
