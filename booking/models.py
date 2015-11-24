@@ -94,4 +94,3 @@ class Visit(Resource):
 #
 # Units (faculties, institutes etc)
 #
-
