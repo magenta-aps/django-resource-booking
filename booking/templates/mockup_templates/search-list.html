@@ -1,0 +1,30 @@
+{% extends "index.html" %}
+
+{% block content %}
+
+    <div class="container">
+        
+        <h1>Søgeresultat</h1>
+
+        <form class="form-inline" action="search-list">
+            <div class="form-group">
+              <label class="sr-only" for="searchBox">Søg i tilbud</label>
+              <input type="text" class="form-control" id="searchBox" placeholder="Skriv noget">
+            </div>
+            <button type="submit" class="btn btn-default">Søg</button>
+        </form>
+        
+        <ul>
+            <li><a href="item">Tilbud 1</a></li>
+            <li><a href="item">Tilbud 1</a></li>
+            <li><a href="item">Tilbud 1</a></li>
+            <li><a href="item">Tilbud 1</a></li>
+        </ul>
+        
+        <hr>
+        
+        <a href="manage">Admin</a>
+    
+    </div>
+
+{% endblock %}
