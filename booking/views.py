@@ -2,7 +2,7 @@
 from django.views.generic import TemplateView
 from django.utils.translation import ugettext as _
 
-i18n_test = _("Dette tester oversættelses-systemet")
+i18n_test = _(u"Dette tester oversættelses-systemet")
 
 
 class MainPageView(TemplateView):
