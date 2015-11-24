@@ -58,6 +58,9 @@ class Subject(models.Model):
                                blank=True, null=True)
     description = models.TextField()
 
+    def __unicode__(self):
+        return self.name
+
 
 class Link(models.Model):
     """"An URL and relevant metadata."""
@@ -67,11 +70,26 @@ class Link(models.Model):
     # pages.
     description = models.CharField(max_length=256)
 
+    def __unicode__(self):
+        return self.name
+
+
+class Tag(models.Model):
+    """Tag class, just name and description fields."""
+    name = models.CharField(max_length=256)
+    description = models.TextField()
+
+    def __unicode__(self):
+        return self.name
+
 
 class Topic(models.Model):
     """Tag class, just name and description fields."""
     name = models.CharField(max_length=256)
     description = models.TextField()
+
+    def __unicode__(self):
+        return self.name
 
 
 class AdditionalService(models.Model):
@@ -79,11 +97,35 @@ class AdditionalService(models.Model):
     name = models.CharField(max_length=256)
     description = models.TextField()
 
+    def __unicode__(self):
+        return self.name
+
 
 class SpecialRequirement(models.Model):
     """Special requirements for visit - e.g., driver's license."""
     name = models.CharField(max_length=256)
     description = models.TextField()
+
+    def __unicode__(self):
+        return self.name
+
+
+class StudyMaterial(models.Model):
+    """Material for the students to study before visiting."""
+    URL = 0
+    ATTACHMENT = 1
+    study_material_choices = (
+        (URL, _(u"URL")),
+        (ATTACHMENT, _(u"Vedhæftet fil"))
+    )
+    type = models.IntegerField(choices=study_material_choices, default=URL)
+    url = models.URLField(null=True, blank=True)
+    file = models.FileField(upload_to='material', null=True, blank=True)
+
+    def __unicode__(self):
+        s = "{0}: {1}".format(self.study_material_choices(self.type),
+                              self.url if self.type == self.URL else self.file)
+        return s
 
 
 # Bookable resources
@@ -131,8 +173,10 @@ class Resource(models.Model):
     C = 0
 
     level_choices = (
-        (A, u'a'), (B, u'B'), (C, u'C')
+        (A, u'A'), (B, u'B'), (C, u'C')
     )
+
+    class_level_choices = [(i, unicode(i)) for i in range(0, 11)]
 
     type = models.IntegerField(choices=resource_type_choices,
                                default=OTHER_RESOURCES)
@@ -140,22 +184,30 @@ class Resource(models.Model):
     description = models.TextField()
     mouseover_description = models.CharField(max_length=512)
     unit = models.ForeignKey(Unit, null=True, blank=True)
-    links = models.ManyToManyField(Link)
+    links = models.ManyToManyField(Link, blank=True)
     audience = models.IntegerField(choices=audience_choices,
                                    verbose_name=_(u'Målgruppe'))
     institution_level = models.IntegerField(choices=institution_choices,
                                             verbose_name=_(u'Institution'),
                                             default=SECONDARY)
-    subjects = models.ManyToManyField(Subject)
+    subjects = models.ManyToManyField(Subject, blank=True)
     level = models.IntegerField(choices=level_choices,
                                 verbose_name=_(u"Niveau"),
                                 blank=True,
                                 null=True)
-    # tags = <<choice list for tags>>
-    topics = models.ManyToManyField(Topic)
+    # TODO: We should validate that min <= max here.
+    class_level_min = models.IntegerField(choices=class_level_choices,
+                                          default=0)
+    class_level_max = models.IntegerField(choices=class_level_choices,
+                                          default=10)
+    tags = models.ManyToManyField(Tag, blank=True)
+    topics = models.ManyToManyField(Topic, blank=True)
 
     # Comment field for internal use in backend.
     comment = models.TextField()
+
+    def __unicode__(self):
+        return self.title
 
 
 class Visit(Resource):
@@ -175,4 +227,4 @@ class Visit(Resource):
     maximum_number_of_visitors = models.IntegerField(null=True, blank=True)
     do_create_waiting_list = models.BooleanField(default=False)
     do_show_countdown = models.BooleanField(default=False)
-    # preparatory_material = <<< ... >>>
+    preparatory_material = models.ManyToManyField(StudyMaterial)
