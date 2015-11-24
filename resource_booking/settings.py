@@ -102,6 +102,8 @@ LOCALE_PATHS = (
     os.path.join(BASE_DIR, "locale"),
 )
 
+# On login, redirect to /profile/
+LOGIN_REDIRECT_URL = '/profile/'
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 

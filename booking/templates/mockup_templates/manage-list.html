@@ -1,0 +1,34 @@
+{% extends "index.html" %}
+
+{% block content %}
+
+    <div class="container">
+
+        <h1>Admin</h1>
+        
+        <a href="/">Gå til index</a>
+        
+        <nav>
+            <a class="btn btn-default" href="new-item">Tilføj tilbud</a>
+            <a class="btn btn-default" href="booking-list">Bookings og forespørgsler</a>
+        </nav>
+        
+        <h2>Tilbud</h2>
+        <form class="form-inline" action="manage">
+            <div class="form-group">
+              <label class="sr-only" for="searchBox">Søg i tilbud</label>
+              <input type="text" class="form-control" id="searchBox" placeholder="Skriv noget">
+            </div>
+            <button type="submit" class="btn btn-default">Søg</button>
+        </form>
+        
+        <ul>
+            <li><a href="manage-item">Tilbud 1</a></li>
+            <li><a href="manage-item">Tilbud 1</a></li>
+            <li><a href="manage-item">Tilbud 1</a></li>
+            <li><a href="manage-item">Tilbud 1</a></li>
+        </ul>
+    
+    </div>
+
+{% endblock %}

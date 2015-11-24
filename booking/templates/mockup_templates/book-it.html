@@ -1,0 +1,24 @@
+{% extends "index.html" %}
+
+{% block content %}
+
+    <div class="container">
+
+        <h1>Book <em>Tilbud X</em></h1>
+        
+        <form action="thx-for-booking">
+            <div class="form-group">
+              <label for="navn">Email address</label>
+              <input type="text" class="form-control" id="navn" placeholder="Dit navn">
+            </div>
+            <div class="form-group">
+              <label for="email">Email address</label>
+              <input type="email" class="form-control" id="email" placeholder="Din email">
+            </div>
+            <button type="submit" class="btn btn-primary">Book det</button>
+            <a href="item" class="btn btn-default">Annullér</>
+        </form>
+    
+    </div>
+
+{% endblock %}
