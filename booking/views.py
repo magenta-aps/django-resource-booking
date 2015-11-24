@@ -20,7 +20,6 @@ class MainPageView(TemplateView):
     template_name = 'index.html'
 
 
-
 # A couple of generic superclasses for crud views
 # Our views will inherit from these and from django.views.generic classes
 
@@ -28,34 +27,41 @@ class Mixin(object):
     object_name = 'Object'
     url_base = 'object'
 
+    # Get the view's topmost superclass that is not a Mixin
     def get_other_superclass(self):
         for superclass in self.__class__.__mro__:
             if not issubclass(superclass, Mixin):
                 return superclass
 
+    # Call the 'real' get_context_data() from the non-Mixin superclass
+    # and apply the object_name to it.
     def get_context_data(self, **kwargs):
-        context = super(self.get_other_superclass(), self).get_context_data(**kwargs)
-        context.update({
-            'object_name': self.object_name
-        })
+        superclass = super(self.get_other_superclass(), self)
+        context = superclass.get_context_data(**kwargs)
+        context['object_name'] = self.object_name
         return context
+
 
 class ListMixin(Mixin):
     def __init__(self):
         self.template_name = "%s/list.html" % self.url_base
 
+
 class CreateMixin(Mixin):
     pass
+
 
 class EditMixin(Mixin):
     pass
 
+
 class DeleteMixin(Mixin):
+
     def __init__(self):
         self.template_name = "%s/delete.html" % self.url_base
+
     def get_success_url(self):
         return reverse("%s_list" % self.url_base)
-
 
 
 class UnitTypeMixin(Mixin):
@@ -71,20 +77,20 @@ class ListUnitType(UnitTypeMixin, ListMixin, ListView):
     # Inherit from superclasses and leverage their methods
     pass
 
+
 class CreateUnitType(UnitTypeMixin, CreateMixin, CreateView):
     # Inherit from superclasses and leverage their methods
     pass
+
 
 class EditUnitType(UnitTypeMixin, EditMixin, UpdateView):
     # Inherit from superclasses and leverage their methods
     pass
 
+
 class DeleteUnitType(UnitTypeMixin, DeleteMixin, DeleteView):
     # Inherit from superclasses and leverage their methods
     pass
-
-
-
 
 
 class UnitMixin(Mixin):
@@ -100,15 +106,17 @@ class ListUnit(UnitMixin, ListMixin, ListView):
     # Inherit from superclasses and leverage their methods
     pass
 
+
 class CreateUnit(UnitMixin, CreateMixin, CreateView):
     # Inherit from superclasses and leverage their methods
     pass
+
 
 class EditUnit(UnitMixin, EditMixin, UpdateView):
     # Inherit from superclasses and leverage their methods
     pass
 
+
 class DeleteUnit(UnitMixin, DeleteMixin, DeleteView):
     # Inherit from superclasses and leverage their methods
     pass
-
