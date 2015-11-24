@@ -91,6 +91,18 @@ class Visit(Resource):
         (VISIT_TYPE_2, _("Type 2"))
     )
 
+
+class Person(models.Model):
+    """A dude or chick"""
+
+    # Eventually this could just be an pointer to AD
+    name = models.CharField(max_length=50)
+    email = models.EmailField(max_length=64, null=True, blank=True)
+    phone = models.CharField(max_length=14, null=True, blank=True)
+
+    def __unicode__(self):
+        return self.name
+
 #
 # Units (faculties, institutes etc)
 #
@@ -100,9 +112,16 @@ class UnitType(models.Model):
     """A type of organization, e.g. 'faculty' """
     name = models.CharField(max_length=20)
 
+    def __unicode__(self):
+        return self.name
+
 
 class Unit(models.Model):
     """A generic organizational unit, such as a faculty or an institute"""
     name = models.CharField(max_length=30)
     type = models.ForeignKey(UnitType)
     parent = models.ForeignKey('self', null=True, blank=True)
+    contact = models.ForeignKey(Person, null=True, blank=True)
+
+    def __unicode__(self):
+        return "%s (%s)" % (self.name, self.type.name)
