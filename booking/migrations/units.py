@@ -83,6 +83,8 @@ class Migration(migrations.Migration):
             # Det teologiske fakultet er et enhedsfakultet uden institutter
         ])
 
+    dependencies = [("booking", "0001_initial")]
+ 
 
     operations = [
         migrations.RunPython(populate_units),
