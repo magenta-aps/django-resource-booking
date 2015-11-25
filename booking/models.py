@@ -57,7 +57,7 @@ class Visit(Resource):
 class Person(models.Model):
     """A dude or chick"""
 
-    # Eventually this could just be an pointer to AD
+    # Eventually this could just be a pointer to AD
     name = models.CharField(max_length=50)
     email = models.EmailField(max_length=64, null=True, blank=True)
     phone = models.CharField(max_length=14, null=True, blank=True)
