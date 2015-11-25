@@ -9,4 +9,5 @@ python-env
 .ropeproject
 *.sqlite3
 /static/
+/media/
 *.swp
