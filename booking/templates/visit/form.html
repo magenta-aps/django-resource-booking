@@ -25,8 +25,8 @@
                     <div id="collapseDescription" class="panel-collapse collapse in" aria-labelledby="headingDescription" role="tabpanel">
                         <div class="panel-body">
                             <fieldset>
-                                <label>Teaser:</label>
-                                <textarea style="height: 4em;"></textarea>
+                                <label for="{{ form.teaser.id_for_label }}">Teaser:</label>
+                                {{ form.teaser }}
                             </fieldset>
                             <fieldset>
                                 <label for="{{ form.description.id_for_label }}">Tekst:</label>
@@ -81,6 +81,10 @@
                                 {{ form.level }}
                             </fieldset>
                             <fieldset>
+                                <label for="{{ form.minimum_number_of_visitors.id_for_label }}">Min antal:</label>
+                                {{ form.minimum_number_of_visitors }}
+                            </fieldset>
+                            <fieldset>
                                 <label for="{{ form.maximum_number_of_visitors.id_for_label }}">Max antal:</label>
                                 {{ form.maximum_number_of_visitors }}
                             </fieldset>
@@ -100,12 +104,12 @@
                         <div class="row">
                             <div class="col-sm-12 col-md-6">
                                 <fieldset>
-                                    <label>Tid:</label>
-                                    <input type="date">
+                                    <label for="{{ form.time.id_for_label }}">Tid:</label>
+                                    {{ form.time }}
                                 </fieldset>
                                 <fieldset>
-                                    <label>Varighed:</label>
-                                    <input type="text" value="">
+                                    <label for="{{ form.duration.id_for_label }}">Varighed:</label>
+                                    {{ form.duration }}
                                 </fieldset>
                             </div>
                             <div class="col-sm-12 col-md-6">
@@ -126,15 +130,14 @@
             <div class="panel panel-default">
                 <div id="headingContact" class="panel-heading" role="tab">
                     <h4 class="panel-title">
-                        <a class="" aria-controls="collapseContact" aria-expanded="true" href="#collapseContact" data-parent="#accordion" data-toggle="collapse" role="button">Tid og sted</a>
+                        <a class="" aria-controls="collapseContact" aria-expanded="true" href="#collapseContact" data-parent="#accordion" data-toggle="collapse" role="button">Kontaktinformation</a>
                     </h4>
                 </div>
                 <div id="collapseContact" class="panel-collapse collapse in" aria-labelledby="headingContact" role="tabpanel" aria-expanded="true" style="">
                     <div class="panel-body">
                         <fieldset>
                             <label class="radiolabel">
-                                <input type="checkbox" style="display: inline;" value="yes" name="bookable">
-                                <label>Kan bookes</label>
+                                <label for="{{ form.enabled.id_for_label }}">{{ form.enabled }} Kan bookes</label>
                             </label>
                         </fieldset>
                         <fieldset>

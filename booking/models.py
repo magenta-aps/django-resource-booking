@@ -4,6 +4,7 @@ from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
 from django.utils.translation import ugettext_lazy as _
+import timedelta
 
 
 LOGACTION_CREATE = ADDITION
@@ -232,9 +233,11 @@ class Resource(models.Model):
 
     class_level_choices = [(i, unicode(i)) for i in range(0, 11)]
 
+    enabled = models.BooleanField(verbose_name=_(u'Aktiv'), default=False)
     type = models.IntegerField(choices=resource_type_choices,
                                default=OTHER_RESOURCES)
     title = models.CharField(max_length=256, verbose_name=_(u'Titel'))
+    teaser = models.TextField(blank=True, verbose_name=_(u'Teaser'))
     description = models.TextField(blank=True, verbose_name=_(u'Beskrivelse'))
     mouseover_description = models.CharField(
         max_length=512, blank=True, verbose_name=_(u'Mouseover-tekst')
@@ -289,6 +292,10 @@ class Visit(Resource):
     room = models.CharField(
         max_length=64, verbose_name=_(u'Lokale'), blank=True
     )
+    time = models.DateTimeField(
+        verbose_name=_(u'Tid')
+    )
+    duration = timedelta.fields.TimedeltaField()
     contact_persons = models.ManyToManyField(
         Person,
         blank=True,
@@ -312,7 +319,7 @@ class Visit(Resource):
     is_group_visit = models.BooleanField(default=True,
                                          verbose_name=_(u'Gruppebesøg'))
     # Min/max number of visitors - only relevant for group visits.
-    mininimum_number_of_visitors = models.IntegerField(
+    minimum_number_of_visitors = models.IntegerField(
         null=True,
         blank=True,
         verbose_name=_(u'Mindste antal deltagere')

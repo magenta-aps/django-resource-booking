@@ -19,8 +19,8 @@ class UnitForm(forms.ModelForm):
 class VisitForm(forms.ModelForm):
     class Meta:
         model = Visit
-        fields = ('title', 'description', 'price',
+        fields = ('title', 'teaser', 'description', 'price',
                   'type', 'tags',
-                  'audience', 'topics', 'level', 'maximum_number_of_visitors',
-                  'locality', 'room',
-                  'contact_persons')
+                  'audience', 'topics', 'level', 'minimum_number_of_visitors', 'maximum_number_of_visitors',
+                  'time', 'duration', 'locality', 'room',
+                  'enabled', 'contact_persons')
