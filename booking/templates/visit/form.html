@@ -46,7 +46,7 @@
                             <a class="" aria-controls="collapseCategory" aria-expanded="true" href="#collapseCategory" data-parent="#accordion" data-toggle="collapse" role="button">Kategorisering</a>
                         </h4>
                     </div>
-                    <div id="collapseCategory" class="panel-collapse collapse in" aria-labelledby="headingCategory" role="tabpanel" aria-expanded="true" style="">
+                    <div id="collapseCategory" class="panel-collapse collapse" aria-labelledby="headingCategory" role="tabpanel" aria-expanded="true" style="">
                         <div class="panel-body">
                             <fieldset>
                                 <label for="{{ form.type.id_for_label }}">Type:</label>
@@ -66,20 +66,34 @@
                             <a class="" aria-controls="collapseAudience" aria-expanded="true" href="#collapseAudience" data-parent="#accordion" data-toggle="collapse" role="button">Målgruppe</a>
                         </h4>
                     </div>
-                    <div id="collapseAudience" class="panel-collapse collapse in" aria-labelledby="headingAudience" role="tabpanel" aria-expanded="true" style="">
+                    <div id="collapseAudience" class="panel-collapse collapse" aria-labelledby="headingAudience" role="tabpanel" aria-expanded="true" style="">
                         <div class="panel-body">
+
                             <fieldset>
-                                <label for="{{ form.audience.id_for_label }}">Henvendt til:</label>
-                                {{ form.audience }}
+                                <label for="{{ form.institution_level.id_for_label }}">Henvendt til:</label>
+                                {{ form.institution_level }}
                             </fieldset>
                             <fieldset>
                                 <label for="{{ form.topics.id_for_label }}">Fag:</label>
                                 {{ form.topics }}
                             </fieldset>
-                            <fieldset>
-                                <label for="{{ form.level.id_for_label }}">Niveau:</label>
-                                {{ form.level }}
-                            </fieldset>
+
+                            <div class="institution_level_dependent" data-display-value="1">
+                                <fieldset>
+                                    <label for="{{ form.level.id_for_label }}">Niveau:</label>
+                                    {{ form.level }}
+                                </fieldset>
+                            </div>
+                            <div class="institution_level_dependent" data-display-value="0">
+                                <fieldset>
+                                    <label for="{{ form.class_level_min.id_for_label }}">Klassetrin fra:</label>
+                                    {{ form.class_level_min }}
+                                </fieldset>
+                                <fieldset>
+                                    <label for="{{ form.class_level_max.id_for_label }}">Klassetrin til:</label>
+                                    {{ form.class_level_max }}
+                                </fieldset>
+                            </div>
                             <fieldset>
                                 <label for="{{ form.minimum_number_of_visitors.id_for_label }}">Min antal:</label>
                                 {{ form.minimum_number_of_visitors }}
@@ -90,6 +104,21 @@
                             </fieldset>
                         </div>
                     </div>
+
+                    <script>
+                        <!--
+                        $(function(){
+                            var select = $("#{{ form.institution_level.id_for_label }}");
+                            var changeDisplay = function(){
+                                var value = select.val();
+                                $(".institution_level_dependent[data-display-value='"+value+"']").show();
+                                $(".institution_level_dependent[data-display-value!='"+value+"']").hide();
+                            };
+                            select.change(changeDisplay);
+                            changeDisplay();
+                        });
+                        //-->
+                    </script>
                 </div>
 
                 <div class="panel panel-default">
@@ -98,7 +127,7 @@
                             <a class="" aria-controls="collapseTimePlace" aria-expanded="true" href="#collapseTimePlace" data-parent="#accordion" data-toggle="collapse" role="button">Tid og sted</a>
                         </h4>
                     </div>
-                    <div id="collapseTimePlace" class="panel-collapse collapse in" aria-labelledby="headingTimePlace" role="tabpanel" aria-expanded="true" style="">
+                    <div id="collapseTimePlace" class="panel-collapse collapse" aria-labelledby="headingTimePlace" role="tabpanel" aria-expanded="true" style="">
                         <div class="panel-body">
                             <div class="row">
                                 <div class="col-sm-12 col-md-6">
@@ -132,7 +161,7 @@
                             <a class="" aria-controls="collapseContact" aria-expanded="true" href="#collapseContact" data-parent="#accordion" data-toggle="collapse" role="button">Kontaktinformation</a>
                         </h4>
                     </div>
-                    <div id="collapseContact" class="panel-collapse collapse in" aria-labelledby="headingContact" role="tabpanel" aria-expanded="true" style="">
+                    <div id="collapseContact" class="panel-collapse collapse" aria-labelledby="headingContact" role="tabpanel" aria-expanded="true" style="">
                         <div class="panel-body">
                             <fieldset>
                                 <label class="radiolabel">
@@ -150,10 +179,10 @@
                 <div class="panel panel-default">
                     <div id="headingAttach" class="panel-heading" role="tab">
                         <h4 class="panel-title">
-                            <a class="" aria-controls="collapseAttach" aria-expanded="true" href="#collapseAttach" data-parent="#accordion" data-toggle="collapse" role="button"> Vedhæftninger </a>
+                            <a class="" aria-controls="collapseAttach" aria-expanded="true" href="#collapseAttach" data-parent="#accordion" data-toggle="collapse" role="button">Vedhæftninger</a>
                         </h4>
                     </div>
-                    <div id="collapseAttach" class="panel-collapse collapse in" aria-labelledby="headingAttach" role="tabpanel" aria-expanded="true" style="">
+                    <div id="collapseAttach" class="panel-collapse collapse" aria-labelledby="headingAttach" role="tabpanel" aria-expanded="true" style="">
                         <div class="panel-body">
                             <fieldset>
                                 <label>Vedhæftede filer:</label>
