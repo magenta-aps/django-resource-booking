@@ -19,6 +19,17 @@
         <![endif]-->
     </head>
     <body>
+
+        {% block header %}
+            <div class="box invert">
+                <strong><a href="adm-search-list.html">Administration</a></strong>
+                <div class="pull-right navlinks">
+                    <a href="adm-my-list.html">Mine tilbud</a>
+                    <a href="adm-req-list.html">Forespørgsler <span class="label label-default">8</span></a>
+                    <a href="index.html">Log ud</a>
+                </div>
+            </div>
+        {% endblock %}
         
         {% block content %}
         

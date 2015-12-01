@@ -1,3 +1,205 @@
-body > .container {
-    max-width: 505px;
+@font-face {
+    font-family: 'noto_sansregular';
+    src: url('../fonts/notosans-regular-webfont.eot');
+    src: url('../fonts/notosans-regular-webfont.eot?#iefix') format('embedded-opentype'), url('../fonts/notosans-regular-webfont.woff2') format('woff2'), url('../fonts/notosans-regular-webfont.woff') format('woff'), url('../fonts/notosans-regular-webfont.ttf') format('truetype'), url('../fonts/notosans-regular-webfont.svg#noto_sansregular') format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'noto_sansbold';
+    src: url('../fonts/notosans-bold-webfont.eot');
+    src: url('../fonts/notosans-bold-webfont.eot?#iefix') format('embedded-opentype'), url('../fonts/notosans-bold-webfont.woff2') format('woff2'), url('../fonts/notosans-bold-webfont.woff') format('woff'), url('../fonts/notosans-bold-webfont.ttf') format('truetype'), url('../fonts/notosans-bold-webfont.svg#noto_sansbold') format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
+html {
+    position: relative;
+    min-height: 100%;
+    font-size: 14px;
+    -webkit-overflow-scrolling: touch;
+}
+body {
+    font-family: 'noto_sansregular', arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    -webkit-overflow-scrolling: touch;
+    color: #333;
+    margin: 0;
+    padding-top: 20px;
+    position: relative;
+    min-height: 100%;
+}
+h1 {
+    font-size: 28px;
+    font-family: 'noto_sansregular', arial, sans-serif;
+    font-weight: normal;
+    margin-top: 0;
+}
+h2 {
+    font-size: 24px;
+    font-family: 'noto_sansregular', arial, sans-serif;
+    font-weight: normal;
+    margin-top: 0;
+}
+h3 {
+    font-size: 16px;
+    font-family: 'noto_sansbold', arial, sans-serif;
+    font-weight: normal;
+}
+a:not(.btn),
+a:not(.btn):hover,
+a:not(.btn):active {
+    color: #68a;
+    text-decoration: none;
+}
+a:not(.btn):hover {
+    color: #468;
+}
+.container {
+    max-width: 1024px;
+}
+.breadcrumb {
+    padding: 0 15px;
+    margin-bottom: 0;
+    background-color: transparent;
+}
+li.media {
+    padding-bottom: 5px;
+    border-bottom: 1px solid #eee;
+}
+.media-body p {
+    margin-top: 4px;
+}
+.matched-search-phrase {
+    background-color: #888;
+    color: #fff;
+    padding: 0 3px 1px;
+    border-radius: 2px;
+}
+.lead {
+    margin-bottom: 5px;
+}
+.google-maps-container {
+    padding: 0;
+}
+.google-maps {
+    position: relative;
+    padding-bottom: 75%;
+    height: 0;
+    overflow: hidden;
+}
+.google-maps iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    height: 100% !important;
+}
+.well {
+    padding: 10px 0;
+    background-color: transparent;
+    border: 0;
+    border-radius: 0;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+    margin-bottom: 0;
+}
+hr {
+    margin-top: 15px;
+    margin-bottom: 15px
+}
+.teaser {
+    font-size: 90%;
+}
+.image-left {
+    float: left;
+    margin: 5px 15px 15px 0;
+}
+.image-right {
+    float: right;
+    margin: 5px 0 15px 15px;
+}
+footer {
+    background-color: #F3F3F3;
+    min-height: 50px;
+    margin-top: 30px;
+}
+@media screen and (min-width:768px) {
+    .dl-horizontal {
+        margin-bottom: 0;
+    }
+    .dl-horizontal dt {
+        width: 105px;
+        text-align: left;
+    }
+    .dl-horizontal dt,
+    .dl-horizontal dd {
+        min-height: 1.5em;
+        padding-top: 5px;
+    }
+    .dl-horizontal dd {
+        margin-left: 105px;
+        padding-top: 5px;
+    }
+}
+
+body {
+    padding-top: 0;
+}
+
+.box {
+    border: dashed 1px #eee;
+    padding: 1em;
+    margin-bottom: 1em;
+}
+
+.invert {
+    background: #444;
+    color: #ddd;
+    border: none;
+}
+.invert a {
+    color: #fff;
+}
+label {
+    display: block;
+}
+input,
+textarea {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 0.5em;
+    margin: 0 0 1em;
+    border: solid 1px #ccc;
+}
+select {
+    margin: 0 0 1em;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+input[type="checkbox"] {
+    width: auto;
+    display: inline;
+    margin-right: 0.5em;
+}
+.panel-heading {
+    padding: 0;
+}
+.panel-heading h4 {
+    margin: 0;
+    padding: 0;
+}
+.panel-heading a {
+    display: block;
+    padding: 0.5em 1em;
+}
+.navlinks a {
+    display: inline-block;
+    margin-left: 1em;
+}
+.label {
+    background: #888 !important;
 }
