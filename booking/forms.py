@@ -3,6 +3,7 @@ from booking.models import UnitType
 from booking.models import Unit
 from booking.models import Visit
 
+from pprint import pprint
 
 class UnitTypeForm(forms.ModelForm):
     class Meta:
@@ -17,6 +18,13 @@ class UnitForm(forms.ModelForm):
 
 
 class VisitForm(forms.ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        super(VisitForm, self).__init__(*args, **kwargs)
+
+        # change a widget attribute:
+        pprint(self.fields['time'].widget)
+
     class Meta:
         model = Visit
         fields = ('title', 'teaser', 'description', 'price',

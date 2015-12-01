@@ -8,6 +8,8 @@
         <form action="" method="post">
             {% csrf_token %}
 
+            {{ form.non_field_errors }}
+
             <fieldset>
                 {{ form.title.errors }}
                 <label for="{{ form.title.id_for_label }}">Titel:</label>
@@ -22,17 +24,22 @@
                             <a aria-controls="collapseDescription" aria-expanded="true" href="#collapseDescription" data-parent="#accordion" data-toggle="collapse" role="button">Beskrivelse</a>
                         </h4>
                     </div>
-                    <div id="collapseDescription" class="panel-collapse collapse in" aria-labelledby="headingDescription" role="tabpanel">
+                    <div id="collapseDescription" class="panel-collapse collapse
+                    {% if not form.errors or form.teaser.errors or form.description.errors or form.price.errors %}in{% endif %}
+                    " aria-labelledby="headingDescription" role="tabpanel">
                         <div class="panel-body">
                             <fieldset>
+                                {{ form.teaser.errors }}
                                 <label for="{{ form.teaser.id_for_label }}">Teaser:</label>
                                 {{ form.teaser }}
                             </fieldset>
                             <fieldset>
+                                {{ form.description.errors }}
                                 <label for="{{ form.description.id_for_label }}">Tekst:</label>
                                 {{ form.description }}
                             </fieldset>
                             <fieldset>
+                                {{ form.price.errors }}
                                 <label for="{{ form.price.id_for_label }}">Pris:</label>
                                 {{ form.price }}
                             </fieldset>
@@ -46,13 +53,17 @@
                             <a class="" aria-controls="collapseCategory" aria-expanded="true" href="#collapseCategory" data-parent="#accordion" data-toggle="collapse" role="button">Kategorisering</a>
                         </h4>
                     </div>
-                    <div id="collapseCategory" class="panel-collapse collapse" aria-labelledby="headingCategory" role="tabpanel" aria-expanded="true" style="">
+                    <div id="collapseCategory" class="panel-collapse collapse
+                    {% if form.type.errors or form.tags.errors %}in{% endif %}
+                    " aria-labelledby="headingCategory" role="tabpanel" aria-expanded="true" style="">
                         <div class="panel-body">
                             <fieldset>
+                                {{ form.type.errors }}
                                 <label for="{{ form.type.id_for_label }}">Type:</label>
                                 {{ form.type }}
                             </fieldset>
                             <fieldset>
+                                {{ form.tags.errors }}
                                 <label for="{{ form.tags.id_for_label }}">Nøgleord:</label>
                                 {{ form.tags }}
                             </fieldset>
@@ -66,39 +77,48 @@
                             <a class="" aria-controls="collapseAudience" aria-expanded="true" href="#collapseAudience" data-parent="#accordion" data-toggle="collapse" role="button">Målgruppe</a>
                         </h4>
                     </div>
-                    <div id="collapseAudience" class="panel-collapse collapse" aria-labelledby="headingAudience" role="tabpanel" aria-expanded="true" style="">
+                    <div id="collapseAudience" class="panel-collapse collapse
+                        {% if form.institution_level.errors or form.topics.errors or form.level.errors or form.class_level_min.errors or form.class_level_max.errors or form.minimum_number_of_visitors.errors or form.maximum_number_of_visitors.errors %}in{% endif %}
+                        " aria-labelledby="headingAudience" role="tabpanel" aria-expanded="true" style="">
                         <div class="panel-body">
 
                             <fieldset>
+                                {{ form.institution_level.errors }}
                                 <label for="{{ form.institution_level.id_for_label }}">Henvendt til:</label>
                                 {{ form.institution_level }}
                             </fieldset>
                             <fieldset>
+                                {{ form.topics.errors }}
                                 <label for="{{ form.topics.id_for_label }}">Fag:</label>
                                 {{ form.topics }}
                             </fieldset>
 
                             <div class="institution_level_dependent" data-display-value="1">
                                 <fieldset>
+                                    {{ form.level.errors }}
                                     <label for="{{ form.level.id_for_label }}">Niveau:</label>
                                     {{ form.level }}
                                 </fieldset>
                             </div>
                             <div class="institution_level_dependent" data-display-value="0">
                                 <fieldset>
+                                    {{ form.class_level_min.errors }}
                                     <label for="{{ form.class_level_min.id_for_label }}">Klassetrin fra:</label>
                                     {{ form.class_level_min }}
                                 </fieldset>
                                 <fieldset>
+                                    {{ form.class_level_max.errors }}
                                     <label for="{{ form.class_level_max.id_for_label }}">Klassetrin til:</label>
                                     {{ form.class_level_max }}
                                 </fieldset>
                             </div>
                             <fieldset>
+                                {{ form.minimum_number_of_visitors.errors }}
                                 <label for="{{ form.minimum_number_of_visitors.id_for_label }}">Min antal:</label>
                                 {{ form.minimum_number_of_visitors }}
                             </fieldset>
                             <fieldset>
+                                {{ form.maximum_number_of_visitors.errors }}
                                 <label for="{{ form.maximum_number_of_visitors.id_for_label }}">Max antal:</label>
                                 {{ form.maximum_number_of_visitors }}
                             </fieldset>
@@ -127,25 +147,31 @@
                             <a class="" aria-controls="collapseTimePlace" aria-expanded="true" href="#collapseTimePlace" data-parent="#accordion" data-toggle="collapse" role="button">Tid og sted</a>
                         </h4>
                     </div>
-                    <div id="collapseTimePlace" class="panel-collapse collapse" aria-labelledby="headingTimePlace" role="tabpanel" aria-expanded="true" style="">
+                    <div id="collapseTimePlace" class="panel-collapse collapse
+                    {% if form.time.errors or form.duration.errors or form.locality.errors or form.room.errors %}in{% endif %}
+                    " aria-labelledby="headingTimePlace" role="tabpanel" aria-expanded="true" style="">
                         <div class="panel-body">
                             <div class="row">
                                 <div class="col-sm-12 col-md-6">
                                     <fieldset>
+                                        {{ form.time.errors }}
                                         <label for="{{ form.time.id_for_label }}">Tid:</label>
                                         {{ form.time }}
                                     </fieldset>
                                     <fieldset>
+                                        {{ form.duration.errors }}
                                         <label for="{{ form.duration.id_for_label }}">Varighed:</label>
                                         {{ form.duration }}
                                     </fieldset>
                                 </div>
                                 <div class="col-sm-12 col-md-6">
                                     <fieldset>
+                                        {{ form.locality.errors }}
                                         <label for="{{ form.locality.id_for_label }}">Sted:</label>
                                         {{ form.locality }}
                                     </fieldset>
                                     <fieldset>
+                                        {{ form.room.errors }}
                                         <label for="{{ form.room.id_for_label }}">Lokale:</label>
                                         {{ form.room }}
                                     </fieldset>
@@ -161,14 +187,18 @@
                             <a class="" aria-controls="collapseContact" aria-expanded="true" href="#collapseContact" data-parent="#accordion" data-toggle="collapse" role="button">Kontaktinformation</a>
                         </h4>
                     </div>
-                    <div id="collapseContact" class="panel-collapse collapse" aria-labelledby="headingContact" role="tabpanel" aria-expanded="true" style="">
+                    <div id="collapseContact" class="panel-collapse collapse
+                    {% if form.enabled.errors or form.contact_persons.errors %}in{% endif %}
+                    " aria-labelledby="headingContact" role="tabpanel" aria-expanded="true" style="">
                         <div class="panel-body">
                             <fieldset>
+                                {{ form.enabled.errors }}
                                 <label class="radiolabel">
                                     <label for="{{ form.enabled.id_for_label }}">{{ form.enabled }} Kan bookes</label>
                                 </label>
                             </fieldset>
                             <fieldset>
+                                {{ form.contact_persons.errors }}
                                 <label for="{{ form.contact_persons.id_for_label }}">Kontaktinfo:</label>
                                 {{ form.contact_persons }}
                             </fieldset>

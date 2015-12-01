@@ -203,3 +203,7 @@ input[type="checkbox"] {
 .label {
     background: #888 !important;
 }
+
+ul.errorlist {
+    color: #c00;
+}

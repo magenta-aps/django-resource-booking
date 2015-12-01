@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "jquery": "latest",
+    "bootstrap": "3.3.5",
+    "bootstrap-datepicker": "latest"
+  }
+}

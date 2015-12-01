@@ -11,4 +11,5 @@ python-env
 *.sqlite3
 /static/
 /media/
+/thirdparty/node_modules/
 *.swp

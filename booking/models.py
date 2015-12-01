@@ -295,7 +295,11 @@ class Visit(Resource):
     time = models.DateTimeField(
         verbose_name=_(u'Tid')
     )
-    duration = timedelta.fields.TimedeltaField()
+    duration = timedelta.fields.TimedeltaField(
+        verbose_name=_(u'Varighed'),
+        blank=True,
+        null=True
+    )
     contact_persons = models.ManyToManyField(
         Person,
         blank=True,
