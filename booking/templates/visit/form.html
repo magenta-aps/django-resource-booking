@@ -91,80 +91,79 @@
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="panel panel-default">
-                <div id="headingTimePlace" class="panel-heading" role="tab">
-                    <h4 class="panel-title">
-                        <a class="" aria-controls="collapseTimePlace" aria-expanded="true" href="#collapseTimePlace" data-parent="#accordion" data-toggle="collapse" role="button">Tid og sted</a>
-                    </h4>
-                </div>
-                <div id="collapseTimePlace" class="panel-collapse collapse in" aria-labelledby="headingTimePlace" role="tabpanel" aria-expanded="true" style="">
-                    <div class="panel-body">
-                        <div class="row">
-                            <div class="col-sm-12 col-md-6">
-                                <fieldset>
-                                    <label for="{{ form.time.id_for_label }}">Tid:</label>
-                                    {{ form.time }}
-                                </fieldset>
-                                <fieldset>
-                                    <label for="{{ form.duration.id_for_label }}">Varighed:</label>
-                                    {{ form.duration }}
-                                </fieldset>
-                            </div>
-                            <div class="col-sm-12 col-md-6">
-                                <fieldset>
-                                    <label for="{{ form.locality.id_for_label }}">Sted:</label>
-                                    {{ form.locality }}
-                                </fieldset>
-                                <fieldset>
-                                    <label for="{{ form.room.id_for_label }}">Lokale:</label>
-                                    {{ form.room }}
-                                </fieldset>
+                <div class="panel panel-default">
+                    <div id="headingTimePlace" class="panel-heading" role="tab">
+                        <h4 class="panel-title">
+                            <a class="" aria-controls="collapseTimePlace" aria-expanded="true" href="#collapseTimePlace" data-parent="#accordion" data-toggle="collapse" role="button">Tid og sted</a>
+                        </h4>
+                    </div>
+                    <div id="collapseTimePlace" class="panel-collapse collapse in" aria-labelledby="headingTimePlace" role="tabpanel" aria-expanded="true" style="">
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-sm-12 col-md-6">
+                                    <fieldset>
+                                        <label for="{{ form.time.id_for_label }}">Tid:</label>
+                                        {{ form.time }}
+                                    </fieldset>
+                                    <fieldset>
+                                        <label for="{{ form.duration.id_for_label }}">Varighed:</label>
+                                        {{ form.duration }}
+                                    </fieldset>
+                                </div>
+                                <div class="col-sm-12 col-md-6">
+                                    <fieldset>
+                                        <label for="{{ form.locality.id_for_label }}">Sted:</label>
+                                        {{ form.locality }}
+                                    </fieldset>
+                                    <fieldset>
+                                        <label for="{{ form.room.id_for_label }}">Lokale:</label>
+                                        {{ form.room }}
+                                    </fieldset>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="panel panel-default">
-                <div id="headingContact" class="panel-heading" role="tab">
-                    <h4 class="panel-title">
-                        <a class="" aria-controls="collapseContact" aria-expanded="true" href="#collapseContact" data-parent="#accordion" data-toggle="collapse" role="button">Kontaktinformation</a>
-                    </h4>
+                <div class="panel panel-default">
+                    <div id="headingContact" class="panel-heading" role="tab">
+                        <h4 class="panel-title">
+                            <a class="" aria-controls="collapseContact" aria-expanded="true" href="#collapseContact" data-parent="#accordion" data-toggle="collapse" role="button">Kontaktinformation</a>
+                        </h4>
+                    </div>
+                    <div id="collapseContact" class="panel-collapse collapse in" aria-labelledby="headingContact" role="tabpanel" aria-expanded="true" style="">
+                        <div class="panel-body">
+                            <fieldset>
+                                <label class="radiolabel">
+                                    <label for="{{ form.enabled.id_for_label }}">{{ form.enabled }} Kan bookes</label>
+                                </label>
+                            </fieldset>
+                            <fieldset>
+                                <label for="{{ form.contact_persons.id_for_label }}">Kontaktinfo:</label>
+                                {{ form.contact_persons }}
+                            </fieldset>
+                        </div>
+                    </div>
                 </div>
-                <div id="collapseContact" class="panel-collapse collapse in" aria-labelledby="headingContact" role="tabpanel" aria-expanded="true" style="">
-                    <div class="panel-body">
-                        <fieldset>
-                            <label class="radiolabel">
-                                <label for="{{ form.enabled.id_for_label }}">{{ form.enabled }} Kan bookes</label>
-                            </label>
-                        </fieldset>
-                        <fieldset>
-                            <label for="{{ form.contact_persons.id_for_label }}">Kontaktinfo:</label>
-                            {{ form.contact_persons }}
-                        </fieldset>
+
+                <div class="panel panel-default">
+                    <div id="headingAttach" class="panel-heading" role="tab">
+                        <h4 class="panel-title">
+                            <a class="" aria-controls="collapseAttach" aria-expanded="true" href="#collapseAttach" data-parent="#accordion" data-toggle="collapse" role="button"> Vedhæftninger </a>
+                        </h4>
+                    </div>
+                    <div id="collapseAttach" class="panel-collapse collapse in" aria-labelledby="headingAttach" role="tabpanel" aria-expanded="true" style="">
+                        <div class="panel-body">
+                            <fieldset>
+                                <label>Vedhæftede filer:</label>
+                                <input type="file">
+                                <a href="#">Tilføj ny fil</a>
+                            </fieldset>
+                        </div>
                     </div>
                 </div>
             </div>
-
-            <div class="panel panel-default">
-                <div id="headingAttach" class="panel-heading" role="tab">
-                    <h4 class="panel-title">
-                        <a class="" aria-controls="collapseAttach" aria-expanded="true" href="#collapseAttach" data-parent="#accordion" data-toggle="collapse" role="button"> Vedhæftninger </a>
-                    </h4>
-                </div>
-                <div id="collapseAttach" class="panel-collapse collapse in" aria-labelledby="headingAttach" role="tabpanel" aria-expanded="true" style="">
-                    <div class="panel-body">
-                        <fieldset>
-                            <label>Vedhæftede filer:</label>
-                            <input type="file">
-                            <a href="#">Tilføj ny fil</a>
-                        </fieldset>
-                    </div>
-                </div>
-            </div>
-    </div>
 
             {% include 'common/save_cancel.html' %}
         </form>
