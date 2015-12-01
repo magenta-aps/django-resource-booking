@@ -69,6 +69,16 @@ TEMPLATES = [
     },
 ]
 
+STATICFILES_FINDERS = [
+    'npm.finders.NpmFinder'
+]
+
+NPM_PREFIX_PATH = 'thirdparty'
+NPM_DESTINATION_PREFIX = 'js'
+NPM_FILE_PATTERNS = {
+    'jquery': ['dist/jquery.min.js'],
+}
+
 WSGI_APPLICATION = 'resource_booking.wsgi.application'
 
 
