@@ -8,8 +8,9 @@ class Migration(migrations.Migration):
 
     def populate_units(apps, schema_editor):
 
-        unit = apps.get_model("booking", "Unit")
-        unittype = apps.get_model("booking", "UnitType")
+        from booking.models import Unit as unit, UnitType as unittype
+        # unit = apps.get_model("booking", "Unit")
+        # unittype = apps.get_model("booking", "UnitType")
 
         fakultet = unittype(name=u"Fakultet")
         fakultet.save()
@@ -83,9 +84,7 @@ class Migration(migrations.Migration):
             # Det teologiske fakultet er et enhedsfakultet uden institutter
         ])
 
-    dependencies = [
-        ('booking', '0006_auto_20151124_1054'),
-    ]
+    dependencies = [("booking", "0001_initial")]
 
     operations = [
         migrations.RunPython(populate_units),

@@ -80,7 +80,7 @@ WSGI_APPLICATION = 'resource_booking.wsgi.application'
 #        'ENGINE': 'django.db.backends.postgresql_psycopg2',
 #        'NAME': 'resource_booking',
 #        'USER': 'resource_booking',
-#        'PASSWORD': 'resource_booking',
+#       'PASSWORD': 'resource_booking',
 #        'HOST': '127.0.0.1',
 #    }
 # }
@@ -109,6 +109,9 @@ LOGIN_REDIRECT_URL = '/profile/'
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
 local_settings_file = os.path.join(
