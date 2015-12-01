@@ -73,13 +73,15 @@ STATICFILES_FINDERS = [
     'npm.finders.NpmFinder'
 ]
 
-# Local thirdparty cache; holds all downloaded dependencies in this folder under the root
+# Local thirdparty cache; holds all downloaded
+# dependencies in this folder under the root
 NPM_PREFIX_PATH = 'thirdparty'
 
 # collectstatic will put dependencies in static/thirdparty/
 NPM_DESTINATION_PREFIX = 'thirdparty'
 
-# Mapping for dependencies: Only the listed files from each dependency will make it into static/
+# Mapping for dependencies: Only the listed files from
+# each dependency will make it into static/
 NPM_FILE_PATTERNS = {
     'jquery': ['dist/jquery.min.js'],
     'bootstrap': ['dist/css/bootstrap.min.css',
