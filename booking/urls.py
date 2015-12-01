@@ -5,6 +5,8 @@ from booking.views import CreateUnitType, ListUnitType
 from booking.views import EditUnitType, DeleteUnitType
 from booking.views import CreateUnit, ListUnit, EditUnit, DeleteUnit
 
+from booking.views import CreateVisit
+
 from django.views.generic import TemplateView
 
 urlpatterns = patterns(
@@ -51,6 +53,13 @@ urlpatterns = patterns(
     url(r'^book-it$', TemplateView.as_view(
         template_name='mockup_templates/book-it.html')),
     url(r'^thx-for-booking$', TemplateView.as_view(
-        template_name='mockup_templates/thx-for-booking.html'))
+        template_name='mockup_templates/thx-for-booking.html')),
+
+
+
+
+    url(r'^visit/create$',
+        CreateVisit.as_view(), name='visit_create')
+
 
 )

@@ -11,6 +11,9 @@ from booking.forms import UnitTypeForm
 from booking.models import Unit
 from booking.forms import UnitForm
 
+from booking.models import Visit
+from booking.forms import VisitForm
+
 
 i18n_test = _(u"Dette tester oversættelses-systemet")
 
@@ -119,4 +122,17 @@ class EditUnit(UnitMixin, EditMixin, UpdateView):
 
 class DeleteUnit(UnitMixin, DeleteMixin, DeleteView):
     # Inherit from superclasses and leverage their methods
+    pass
+
+
+class VisitMixin(Mixin):
+    model = Visit
+    object_name = 'Visit'
+    url_base = 'visit'
+    form_class = VisitForm
+    template_name = 'visit/form.html'
+    success_url = '/visit'
+
+
+class CreateVisit(VisitMixin, CreateMixin, CreateView):
     pass
