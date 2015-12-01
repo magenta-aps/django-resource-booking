@@ -17,7 +17,7 @@ user_role_choices = (
     (TEACHER, _(u"Underviser")),
     (HOST, _(u"Vært")),
     (COORDINATOR, _(u"Koordinator")),
-    (ADMINISTRATOR, _(u"Underviser"))
+    (ADMINISTRATOR, _(u"Administrator"))
 )
 
 
