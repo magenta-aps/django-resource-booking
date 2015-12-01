@@ -73,11 +73,17 @@ STATICFILES_FINDERS = [
     'npm.finders.NpmFinder'
 ]
 
-NPM_PREFIX_PATH = 'thirdparty' # Local thirdparty cache; holds all downloaded dependencies in this folder under the root
-NPM_DESTINATION_PREFIX = 'thirdparty' # collectstatic will put dependencies in static/thirdparty/
-NPM_FILE_PATTERNS = { # Mapping for dependencies: Only the listed files from each dependency will make it into static/
+# Local thirdparty cache; holds all downloaded dependencies in this folder under the root
+NPM_PREFIX_PATH = 'thirdparty'
+
+# collectstatic will put dependencies in static/thirdparty/
+NPM_DESTINATION_PREFIX = 'thirdparty'
+
+# Mapping for dependencies: Only the listed files from each dependency will make it into static/
+NPM_FILE_PATTERNS = {
     'jquery': ['dist/jquery.min.js'],
-    'bootstrap': ['dist/css/bootstrap.min.css', 'dist/fonts/*', 'dist/js/bootstrap.min.js']
+    'bootstrap': ['dist/css/bootstrap.min.css',
+                  'dist/fonts/*', 'dist/js/bootstrap.min.js']
 }
 
 WSGI_APPLICATION = 'resource_booking.wsgi.application'
