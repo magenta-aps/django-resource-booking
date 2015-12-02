@@ -30,7 +30,7 @@ class VisitForm(forms.ModelForm):
                   'time', 'duration', 'locality', 'room',
                   'enabled', 'contact_persons')
         widgets = {
-            'title': TextInput(attrs={'class':'titlefield'})
+            'title': TextInput(attrs={'class': 'titlefield'})
         }
 
     def clean_locality(self):
