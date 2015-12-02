@@ -2,6 +2,8 @@ from django import forms
 from booking.models import UnitType
 from booking.models import Unit
 from booking.models import Visit
+from booking.models import StudyMaterial
+from django.forms import inlineformset_factory
 
 
 class UnitTypeForm(forms.ModelForm):
@@ -27,3 +29,6 @@ class VisitForm(forms.ModelForm):
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'time', 'duration', 'locality', 'room',
                   'enabled', 'contact_persons')
+
+
+VisitStudyMaterialForm = inlineformset_factory(Visit, StudyMaterial, fields=('file',), can_delete=True, extra=1)

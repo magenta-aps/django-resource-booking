@@ -13,6 +13,11 @@ from booking.forms import UnitForm
 
 from booking.models import Visit
 from booking.forms import VisitForm
+from booking.forms import VisitStudyMaterialForm
+from booking.models import StudyMaterial
+
+from pprint import pprint
+from inspect import getmembers
 
 
 i18n_test = _(u"Dette tester oversættelses-systemet")
@@ -126,13 +131,43 @@ class DeleteUnit(UnitMixin, DeleteMixin, DeleteView):
 
 
 class VisitMixin(Mixin):
+
     model = Visit
     object_name = 'Visit'
     url_base = 'visit'
     form_class = VisitForm
+
     template_name = 'visit/form.html'
     success_url = '/visit'
 
 
 class CreateVisit(VisitMixin, CreateMixin, CreateView):
-    pass
+    def get(self, request, *args, **kwargs):
+        self.object = None
+        form = self.get_form()
+        fileformset = VisitStudyMaterialForm(instance=Visit())
+        return self.render_to_response(
+            self.get_context_data(form=form, fileformset=fileformset)
+        )
+
+    def post(self, request, *args, **kwargs):
+        self.object = None
+        form = self.get_form()
+        if form.is_valid():
+            visit = form.save()
+            fileformset = VisitStudyMaterialForm(request.POST, instance=visit)
+            if fileformset.is_valid():
+                visit.save()
+                for f in fileformset:
+                    try:
+                        instance = StudyMaterial(
+                            visit=visit,
+                            file=request.FILES["%s-file" % f.prefix]
+                        )
+                        instance.save()
+                    except:
+                        pass
+
+            return super(CreateVisit, self).form_valid(form)
+        else:
+            return self.form_invalid(form)

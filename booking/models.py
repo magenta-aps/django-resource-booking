@@ -160,6 +160,7 @@ class StudyMaterial(models.Model):
     type = models.IntegerField(choices=study_material_choices, default=URL)
     url = models.URLField(null=True, blank=True)
     file = models.FileField(upload_to='material', null=True, blank=True)
+    visit = models.ForeignKey('Visit', on_delete=models.CASCADE)
 
     def __unicode__(self):
         s = u"{0}: {1}".format(
@@ -233,7 +234,7 @@ class Resource(models.Model):
 
     class_level_choices = [(i, unicode(i)) for i in range(0, 11)]
 
-    enabled = models.BooleanField(verbose_name=_(u'Aktiv'), default=False)
+    enabled = models.BooleanField(verbose_name=_(u'Aktiv'), default=True)
     type = models.IntegerField(choices=resource_type_choices,
                                default=OTHER_RESOURCES)
     title = models.CharField(max_length=256, verbose_name=_(u'Titel'))
@@ -340,11 +341,11 @@ class Visit(Resource):
         default=False,
         verbose_name=_(u'Vis nedtælling')
     )
-    preparatory_material = models.ManyToManyField(
-        StudyMaterial,
-        verbose_name=_(u'Forberedelsesmateriale'),
-        blank=True
-    )
+    #preparatory_material = models.OneToManyField(
+    #    StudyMaterial,
+    #    verbose_name=_(u'Forberedelsesmateriale'),
+    #    blank=True
+    #)
     preparation_time = models.IntegerField(
         default=0,
         verbose_name=_(u'Forberedelsestid (i timer)')
