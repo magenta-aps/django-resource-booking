@@ -341,11 +341,6 @@ class Visit(Resource):
         default=False,
         verbose_name=_(u'Vis nedtælling')
     )
-    #preparatory_material = models.OneToManyField(
-    #    StudyMaterial,
-    #    verbose_name=_(u'Forberedelsesmateriale'),
-    #    blank=True
-    #)
     preparation_time = models.IntegerField(
         default=0,
         verbose_name=_(u'Forberedelsestid (i timer)')

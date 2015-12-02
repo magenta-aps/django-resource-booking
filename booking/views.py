@@ -16,9 +16,6 @@ from booking.forms import VisitForm
 from booking.forms import VisitStudyMaterialForm
 from booking.models import StudyMaterial
 
-from pprint import pprint
-from inspect import getmembers
-
 
 i18n_test = _(u"Dette tester oversættelses-systemet")
 

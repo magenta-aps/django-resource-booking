@@ -38,4 +38,6 @@ class VisitForm(forms.ModelForm):
         return locality
 
 
-VisitStudyMaterialForm = inlineformset_factory(Visit, StudyMaterial, fields=('file',), can_delete=True, extra=1)
+VisitStudyMaterialForm = inlineformset_factory(Visit,
+                                               StudyMaterial, fields=('file',),
+                                               can_delete=True, extra=1)
