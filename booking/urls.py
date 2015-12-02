@@ -5,7 +5,7 @@ from booking.views import CreateUnitType, ListUnitType
 from booking.views import EditUnitType, DeleteUnitType
 from booking.views import CreateUnit, ListUnit, EditUnit, DeleteUnit
 
-from booking.views import CreateVisit
+from booking.views import EditVisit
 
 from django.views.generic import TemplateView
 
@@ -59,7 +59,10 @@ urlpatterns = patterns(
 
 
     url(r'^visit/create$',
-        CreateVisit.as_view(), name='visit_create')
+        EditVisit.as_view(), name='visit_create'),
+
+    url(r'^visit/(?P<pk>[0-9]+)/edit$',
+        EditVisit.as_view(), name='visit_edit')
 
 
 )

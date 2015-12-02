@@ -16,6 +16,8 @@ from booking.forms import VisitForm
 from booking.forms import VisitStudyMaterialForm
 from booking.models import StudyMaterial
 
+from pprint import pprint
+
 
 i18n_test = _(u"Dette tester oversættelses-systemet")
 
@@ -138,12 +140,13 @@ class VisitMixin(Mixin):
     success_url = '/visit'
 
 
-class CreateVisit(VisitMixin, CreateMixin, CreateView):
+class EditVisit(VisitMixin, CreateView):
 
     # Display a view with two form objects; one for the regular model,
     # and one for the file upload
     def get(self, request, *args, **kwargs):
-        self.object = None
+        pk = kwargs.get("pk")
+        self.object = None if pk is None else Visit.objects.get(id=pk)
         form = self.get_form()
         fileformset = VisitStudyMaterialForm(instance=Visit())
         return self.render_to_response(
@@ -152,7 +155,8 @@ class CreateVisit(VisitMixin, CreateMixin, CreateView):
 
     # Handle both forms, creating a Visit and a number of StudyMaterials
     def post(self, request, *args, **kwargs):
-        self.object = None
+        pk = kwargs.get("pk")
+        self.object = None if pk is None else Visit.objects.get(id=pk)
         form = self.get_form()
         if form.is_valid():
             visit = form.save()
@@ -169,6 +173,6 @@ class CreateVisit(VisitMixin, CreateMixin, CreateView):
                     except:
                         pass
 
-            return super(CreateVisit, self).form_valid(form)
+            return super(EditVisit, self).form_valid(form)
         else:
             return self.form_invalid(form)
