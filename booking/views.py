@@ -142,6 +142,9 @@ class VisitMixin(Mixin):
 
 
 class CreateVisit(VisitMixin, CreateMixin, CreateView):
+
+    # Display a view with two form objects; one for the regular model,
+    # and one for the file upload
     def get(self, request, *args, **kwargs):
         self.object = None
         form = self.get_form()
@@ -150,6 +153,7 @@ class CreateVisit(VisitMixin, CreateMixin, CreateView):
             self.get_context_data(form=form, fileformset=fileformset)
         )
 
+    # Handle both forms, creating a Visit and a number of StudyMaterials
     def post(self, request, *args, **kwargs):
         self.object = None
         form = self.get_form()
@@ -158,11 +162,11 @@ class CreateVisit(VisitMixin, CreateMixin, CreateView):
             fileformset = VisitStudyMaterialForm(request.POST, instance=visit)
             if fileformset.is_valid():
                 visit.save()
-                for f in fileformset:
+                for fileform in fileformset:
                     try:
                         instance = StudyMaterial(
                             visit=visit,
-                            file=request.FILES["%s-file" % f.prefix]
+                            file=request.FILES["%s-file" % fileform.prefix]
                         )
                         instance.save()
                     except:

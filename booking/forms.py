@@ -30,5 +30,12 @@ class VisitForm(forms.ModelForm):
                   'time', 'duration', 'locality', 'room',
                   'enabled', 'contact_persons')
 
+    def clean_locality(self):
+        data = self.cleaned_data
+        locality = data.get("locality")
+        if locality is None:
+            raise forms.ValidationError("This field is required")
+        return locality
+
 
 VisitStudyMaterialForm = inlineformset_factory(Visit, StudyMaterial, fields=('file',), can_delete=True, extra=1)
