@@ -169,6 +169,10 @@ body {
 label {
     display: block;
 }
+input.titlefield {
+    font-size: 1.3em;
+    font-weight: bold;
+}
 input,
 textarea {
     box-sizing: border-box;
