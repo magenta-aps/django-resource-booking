@@ -286,14 +286,14 @@ class Resource(models.Model):
     )
 
     objects = SearchManager(
-        fields = (
+        fields=(
             'title',
             'description',
             'mouseover_description',
             'extra_search_text'
         ),
-        config = 'pg_catalog.danish',
-        auto_update_search_field = True
+        config='pg_catalog.danish',
+        auto_update_search_field=True
     )
 
     def __unicode__(self):
@@ -334,11 +334,11 @@ class Resource(models.Model):
 
         # Display-value for level
         texts.append(self.get_level_display())
-        
+
         # Name of all tags
         for t in self.tags.all():
             texts.append(t.name)
-        
+
         # Name of all topocs
         for t in self.topics.all():
             texts.append(t.name)
@@ -349,9 +349,11 @@ class Resource(models.Model):
         self.extra_search_text = self.generate_extra_search_text()
         return super(Resource, self).save(*args, **kwargs)
 
+
 class OtherResource(Resource):
     """A non-bookable, non-visit resource, basically material on the Web."""
     pass
+
 
 class Visit(Resource):
     """A bookable visit of any kind."""

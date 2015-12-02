@@ -37,7 +37,7 @@ urlpatterns = patterns(
     url(r'^thx-for-booking$', TemplateView.as_view(
         template_name='mockup_templates/thx-for-booking.html'),
         name="mockup-thx-for-booking"),
-    
+
     # Main search page
     url(r'^search', SearchView.as_view(), name='search'),
 
