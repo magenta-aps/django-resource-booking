@@ -176,7 +176,8 @@ class Locality(models.Model):
     zip_city = models.CharField(
         max_length=256, verbose_name=_(u'Postnummer og by')
     )
-    unit = models.ForeignKey(Unit, verbose_name=_(u'Enhed'))
+    unit = models.ForeignKey(Unit, verbose_name=_(u'Enhed'), blank=True,
+                             null=True)
 
     def __unicode__(self):
         return self.name

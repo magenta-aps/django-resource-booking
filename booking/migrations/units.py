@@ -84,7 +84,6 @@ class Migration(migrations.Migration):
         ])
 
     dependencies = [("booking", "0001_initial")]
- 
 
     operations = [
         migrations.RunPython(populate_units),
