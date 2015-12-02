@@ -1,6 +1,6 @@
 # encoding: utf-8
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User  as AuthUser
 from django.utils.translation import ugettext_lazy as _
 
 from booking.models import Unit
@@ -33,6 +33,19 @@ class UserRole(models.Model):
 
     def __unicode__(self):
         return self.name
+
+
+class User(AuthUser):
+    """Proxy class for User to ensure it's possible to check user's role."""
+
+    class Meta:
+        proxy = True
+
+    def has_role(self, role):
+        result = False
+        if hasattr(self, 'userprofile'):
+            result = (self.userprofile.user_role.role == role)
+        return result
 
 
 class UserProfile(models.Model):

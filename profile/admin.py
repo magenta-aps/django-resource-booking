@@ -1,9 +1,9 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User as AuthUser
 from django.utils.translation import ugettext_lazy as _
 
-from .models import UserRole, UserProfile
+from .models import UserRole, UserProfile, User
 
 
 class UserProfileInline(admin.StackedInline):
@@ -16,6 +16,6 @@ class UserAdmin(UserAdmin):
     inlines = (UserProfileInline, )
 
 
-admin.site.unregister(User)
+admin.site.unregister(AuthUser)
 admin.site.register(User, UserAdmin)
 admin.site.register(UserRole)
