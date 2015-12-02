@@ -1,6 +1,6 @@
 # encoding: utf-8
 from django.db import models
-from django.contrib.auth.models import User  as AuthUser
+from django.contrib.auth.models import User as AuthUser
 from django.utils.translation import ugettext_lazy as _
 
 from booking.models import Unit
