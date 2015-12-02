@@ -4,24 +4,25 @@ from django.utils.translation import ugettext as _
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.core.urlresolvers import reverse
+from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
 
-from booking.models import UnitType
-from booking.forms import UnitTypeForm
 
-from booking.models import Unit
-from booking.forms import UnitForm
+from .models import Unit, UnitType
+from .forms import UnitForm, UnitTypeForm
 
 
 i18n_test = _(u"Dette tester oversættelses-systemet")
 
 
+# A couple of generic superclasses for crud views
+# Our views will inherit from these and from django.views.generic classes
+
 class MainPageView(TemplateView):
     """Display the main page."""
     template_name = 'index.html'
 
-
-# A couple of generic superclasses for crud views
-# Our views will inherit from these and from django.views.generic classes
 
 class Mixin(object):
     object_name = 'Object'
@@ -40,6 +41,39 @@ class Mixin(object):
         context = superclass.get_context_data(**kwargs)
         context['object_name'] = self.object_name
         return context
+
+
+class LoginRequiredMixin(object):
+    """Include this mixin to require login.
+
+    Mainly useful for users who are not coordinators or administrators.
+    """
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        """Check that user is logged in and dispatch."""
+        return super(LoginRequiredMixin, self).dispatch(*args, **kwargs)
+
+
+class RoleRequiredMixin(object):
+    """Require that user has any of a number of roles."""
+
+    # Roles is a list of required roles - maybe only one.
+    # Each user can have only one role, and the condition is fulfilled
+    # if one is found.
+
+    roles = []  # Specify in subclass.
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        current_user = self.request.user
+        try:
+            role = current_user.userprofile.get_role()
+            if role in self.roles:
+                return super(RoleRequiredMixin, self).dispatch(*args, **kwargs)
+        except AttributeError:
+            pass
+        raise PermissionDenied
 
 
 class ListMixin(Mixin):

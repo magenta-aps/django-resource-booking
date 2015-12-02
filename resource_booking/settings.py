@@ -104,6 +104,8 @@ LOCALE_PATHS = (
 
 # On login, redirect to /profile/
 LOGIN_REDIRECT_URL = '/profile/'
+# Default URL for login
+LOGIN_URL = '/profile/login'
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
