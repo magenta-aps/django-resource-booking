@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, DetailView
 from django.utils.translation import ugettext as _
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
@@ -136,3 +136,10 @@ class VisitMixin(Mixin):
 
 class CreateVisit(VisitMixin, CreateMixin, CreateView):
     pass
+
+
+class VisitDetailView(DetailView):
+    """Display Visit details"""
+    model = Visit
+    template_name = 'visit/details.html'
+

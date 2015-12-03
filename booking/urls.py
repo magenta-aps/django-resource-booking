@@ -1,7 +1,7 @@
 from django.conf.urls import patterns, url
 
 from .views import MainPageView
-from booking.views import CreateUnitType, ListUnitType
+from booking.views import CreateUnitType, ListUnitType, VisitDetailView
 from booking.views import EditUnitType, DeleteUnitType
 from booking.views import CreateUnit, ListUnit, EditUnit, DeleteUnit
 
@@ -59,7 +59,7 @@ urlpatterns = patterns(
 
 
     url(r'^visit/create$',
-        CreateVisit.as_view(), name='visit_create')
-
-
+        CreateVisit.as_view(), name='visit_create'),
+    url(r'^visit/(?P<pk>[0-9]+)/?',
+        VisitDetailView.as_view(), name='visit')
 )

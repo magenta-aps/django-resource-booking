@@ -295,7 +295,7 @@ class Visit(Resource):
     time = models.DateTimeField(
         verbose_name=_(u'Tid')
     )
-    duration = timedelta.fields.TimedeltaField()
+    duration = timedelta.fields.TimedeltaField(null=True)
     contact_persons = models.ManyToManyField(
         Person,
         blank=True,
