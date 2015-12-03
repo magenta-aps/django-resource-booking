@@ -303,7 +303,7 @@ class Resource(models.Model):
         texts = []
 
         # Display-value for type
-        texts.append(self.get_type_display())
+        texts.append(self.get_type_display() or "")
 
         # Unit name
         if self.unit:
@@ -323,17 +323,17 @@ class Resource(models.Model):
                 texts.append(l.description)
 
         # Display-value for audience
-        texts.append(self.get_audience_display())
+        texts.append(self.get_audience_display() or "")
 
         # Display-value for institution_level
-        texts.append(self.get_institution_level_display())
+        texts.append(self.get_institution_level_display() or "")
 
         # Name of all subjects
         for s in self.subjects.all():
             texts.append(s.name)
 
         # Display-value for level
-        texts.append(self.get_level_display())
+        texts.append(self.get_level_display() or "")
 
         # Name of all tags
         for t in self.tags.all():
@@ -346,7 +346,15 @@ class Resource(models.Model):
         return "\n".join(texts)
 
     def save(self, *args, **kwargs):
+        # If creating new object, save so we have pk to generate search
+        # text with
+        if self.pk is None:
+            super(Resource, self).save(*args, **kwargs)
+
+        # Update search_text
         self.extra_search_text = self.generate_extra_search_text()
+
+        # Do the final save
         return super(Resource, self).save(*args, **kwargs)
 
 
