@@ -1,4 +1,3 @@
-
 *~
 dist
 *.egg-info
@@ -15,3 +14,4 @@ python-env
 *.sqlite3
 /static/
 *.swp
+/thirdparty/node_modules/
