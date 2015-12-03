@@ -357,6 +357,7 @@ class Resource(models.Model):
         # Do the final save
         return super(Resource, self).save(*args, **kwargs)
 
+
 class OtherResource(Resource):
     """A non-bookable, non-visit resource, basically material on the Web."""
     pass
