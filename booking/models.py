@@ -345,6 +345,20 @@ class Resource(models.Model):
 
         return "\n".join(texts)
 
+
+class OtherResource(Resource):
+    """A non-bookable, non-visit resource, basically material on the Web."""
+    objects = SearchManager(
+        fields=(
+            'title',
+            'description',
+            'mouseover_description',
+            'extra_search_text'
+        ),
+        config='pg_catalog.danish',
+        auto_update_search_field=True
+    )
+
     def save(self, *args, **kwargs):
         # If creating new object, save so we have pk to generate search
         # text with
@@ -358,13 +372,18 @@ class Resource(models.Model):
         return super(Resource, self).save(*args, **kwargs)
 
 
-class OtherResource(Resource):
-    """A non-bookable, non-visit resource, basically material on the Web."""
-    pass
-
-
 class Visit(Resource):
     """A bookable visit of any kind."""
+    objects = SearchManager(
+        fields=(
+            'title',
+            'description',
+            'mouseover_description',
+            'extra_search_text'
+        ),
+        config='pg_catalog.danish',
+        auto_update_search_field=True
+    )
     locality = models.ForeignKey(
         Locality, verbose_name=_(u'Lokalitet'), blank=True
     )
@@ -423,3 +442,15 @@ class Visit(Resource):
         default=0,
         verbose_name=_(u'Forberedelsestid (i timer)')
     )
+
+    def save(self, *args, **kwargs):
+        # If creating new object, save so we have pk to generate search
+        # text with
+        if self.pk is None:
+            super(Resource, self).save(*args, **kwargs)
+
+        # Update search_text
+        self.extra_search_text = self.generate_extra_search_text()
+
+        # Do the final save
+        return super(Resource, self).save(*args, **kwargs)
