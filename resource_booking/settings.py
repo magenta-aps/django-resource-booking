@@ -69,6 +69,30 @@ TEMPLATES = [
     },
 ]
 
+STATICFILES_FINDERS = [
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    'npm.finders.NpmFinder'
+]
+
+# Local thirdparty cache; holds all downloaded
+# dependencies in this folder under the root
+NPM_PREFIX_PATH = 'thirdparty'
+
+# collectstatic will put dependencies in static/thirdparty/
+NPM_DESTINATION_PREFIX = 'thirdparty'
+
+# Mapping for dependencies: Only the listed files from
+# each dependency will make it into static/
+NPM_FILE_PATTERNS = {
+    'jquery': ['dist/jquery.min.js'],
+    'bootstrap': ['dist/css/bootstrap.min.css',
+                  'dist/fonts/*', 'dist/js/bootstrap.min.js'],
+    'bootstrap-datetime-picker': ['js/bootstrap-datetimepicker.min.js',
+                                  'js/locales/bootstrap-datetimepicker.da.js',
+                                  'css/bootstrap-datetimepicker.min.css']
+}
+
 WSGI_APPLICATION = 'resource_booking.wsgi.application'
 
 

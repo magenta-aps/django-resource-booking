@@ -1,10 +1,8 @@
 from django.conf.urls import patterns, url
 
 from .views import MainPageView
-from booking.views import CreateUnitType, ListUnitType
-from booking.views import EditUnitType, DeleteUnitType
-from booking.views import CreateUnit, ListUnit, EditUnit, DeleteUnit
-
+from booking.views import SearchView
+from booking.views import EditVisit, VisitDetailView
 from django.views.generic import TemplateView
 
 urlpatterns = patterns(
@@ -12,45 +10,41 @@ urlpatterns = patterns(
     '',
     url(r'^$', MainPageView.as_view(), name='index'),
 
-    url(r'^unittype/$',
-        ListUnitType.as_view(), name='unittype_list'),
-    url(r'^unittype/create$',
-        CreateUnitType.as_view(), name='unittype_create'),
-    url(r'^unittype/(?P<pk>[0-9]+)/?$',
-        EditUnitType.as_view(), name='unittype_update'),
-    url(r'^unittype/(?P<pk>[0-9]+)/edit$',
-        EditUnitType.as_view(), name='unittype_update'),
-    url(r'^unittype/(?P<pk>[0-9]+)/delete$',
-        DeleteUnitType.as_view(), name='unittype_delete'),
-
-    url(r'^unit/$',
-        ListUnit.as_view(), name='unit_list'),
-    url(r'^unit/create$',
-        CreateUnit.as_view(), name='unit_create'),
-    url(r'^unit/(?P<pk>[0-9]+)/?$',
-        EditUnit.as_view(), name='unit_update'),
-    url(r'^unit/(?P<pk>[0-9]+)/edit$',
-        EditUnit.as_view(), name='unit_update'),
-    url(r'^unit/(?P<pk>[0-9]+)/delete$',
-        DeleteUnit.as_view(), name='unit_delete'),
-
     url(r'^manage$', TemplateView.as_view(
-        template_name='mockup_templates/manage-list.html')),
+        template_name='mockup_templates/manage-list.html'),
+        name="mockup-manage-list"),
     url(r'^manage-item$', TemplateView.as_view(
-        template_name='mockup_templates/manage-item.html')),
+        template_name='mockup_templates/manage-item.html'),
+        name="mockup-manage-item"),
     url(r'^booking-list$', TemplateView.as_view(
-        template_name='mockup_templates/booking-list.html')),
+        template_name='mockup_templates/booking-list.html'),
+        name="mockup-booking-list"),
     url(r'^booking-details$', TemplateView.as_view(
-        template_name='mockup_templates/booking-details.html')),
+        template_name='mockup_templates/booking-details.html'),
+        name="mockup-booking-detail"),
     url(r'^new-item$', TemplateView.as_view(
-        template_name='mockup_templates/new-item.html')),
+        template_name='mockup_templates/new-item.html'),
+        name="mockup-new-item"),
     url(r'^search-list$', TemplateView.as_view(
-        template_name='mockup_templates/search-list.html')),
+        template_name='mockup_templates/search-list.html'),
+        name="mockup-search-list"),
     url(r'^item$', TemplateView.as_view(
-        template_name='mockup_templates/item.html')),
+        template_name='mockup_templates/item.html'),
+        name="mockup-item"),
     url(r'^book-it$', TemplateView.as_view(
-        template_name='mockup_templates/book-it.html')),
+        template_name='mockup_templates/book-it.html'),
+        name="mockup-book-it"),
     url(r'^thx-for-booking$', TemplateView.as_view(
-        template_name='mockup_templates/thx-for-booking.html'))
+        template_name='mockup_templates/thx-for-booking.html'),
+        name="mockup-thx-for-booking"),
 
+    # Main search page
+    url(r'^search', SearchView.as_view(), name='search'),
+
+    url(r'^visit/create$',
+        EditVisit.as_view(), name='visit_create'),
+    url(r'^visit/(?P<pk>[0-9]+)/?',
+        VisitDetailView.as_view(), name='visit'),
+    url(r'^visit/(?P<pk>[0-9]+)/edit$',
+        EditVisit.as_view(), name='visit_edit')
 )
