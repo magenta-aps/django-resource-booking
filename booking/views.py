@@ -10,7 +10,6 @@ from booking.models import StudyMaterial
 
 from booking.models import Resource, Subject
 
-
 i18n_test = _(u"Dette tester oversættelses-systemet")
 
 
@@ -118,9 +117,9 @@ class EditVisit(VisitMixin, UpdateView):
     # and one for the file upload
     def get(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
-        self.object = None if pk is None else Visit.objects.get(id=pk)
+        self.object = Visit() if pk is None else Visit.objects.get(id=pk)
         form = self.get_form()
-        fileformset = VisitStudyMaterialForm(instance=Visit())
+        fileformset = VisitStudyMaterialForm(None, instance=self.object)
         return self.render_to_response(
             self.get_context_data(form=form, fileformset=fileformset)
         )
