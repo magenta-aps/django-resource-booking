@@ -14,18 +14,7 @@ class Migration(migrations.Migration):
         ('booking', 'units'),
     ]
 
-    def truncate_tables(apps, schema_editor):
-        from booking.models import Visit
-        Visit.objects.all().delete()
-
-        from booking.models import StudyMaterial
-        StudyMaterial.objects.all().delete()
-
-        from booking.models import OtherResource
-        OtherResource.objects.all().delete()
-
     operations = [
-        migrations.RunPython(truncate_tables),
         migrations.CreateModel(
             name='Resource',
             fields=[
@@ -189,12 +178,6 @@ class Migration(migrations.Migration):
             name='unit',
         ),
         migrations.AddField(
-            model_name='studymaterial',
-            name='visit',
-            field=models.ForeignKey(default=1, to='booking.Visit'),
-            preserve_default=False,
-        ),
-        migrations.AddField(
             model_name='visit',
             name='duration',
             field=timedelta.fields.TimedeltaField(null=True, verbose_name='Varighed', blank=True),
@@ -215,6 +198,12 @@ class Migration(migrations.Migration):
             model_name='visit',
             name='resource_ptr',
             field=models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, default=1, serialize=False, to='booking.Resource'),
+            preserve_default=False,
+        ),
+        migrations.AddField(
+            model_name='studymaterial',
+            name='visit',
+            field=models.ForeignKey(default=1, to='booking.Visit'),
             preserve_default=False,
         ),
     ]

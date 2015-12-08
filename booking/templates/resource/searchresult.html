@@ -136,7 +136,7 @@
                 {% for res in results %}
                 <li class="media">
                     <div class="media-body">
-                        <h3 class="media-heading"><a href="{{ res.pk }}">{{ res.title }}</a></h3>
+                        <h3 class="media-heading"><a href="{% url 'visit' res.pk %}">{{ res.title }}</a></h3>
                         <div class="media-info"><strong>Hvad: </strong><span class="type-offer">{{ res.get_type_display }}.</span></div>
                         <p>{{ res.description }}</p>
                     </div>

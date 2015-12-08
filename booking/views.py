@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from django.views.generic import TemplateView, ListView
+from django.views.generic import TemplateView, ListView, DetailView
 from django.utils.translation import ugettext as _
 from django.views.generic.edit import UpdateView
 
@@ -148,3 +148,9 @@ class EditVisit(VisitMixin, UpdateView):
             return super(EditVisit, self).form_valid(form)
         else:
             return self.form_invalid(form)
+
+
+class VisitDetailView(DetailView):
+    """Display Visit details"""
+    model = Visit
+    template_name = 'visit/details.html'

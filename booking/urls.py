@@ -2,7 +2,7 @@ from django.conf.urls import patterns, url
 
 from .views import MainPageView
 from booking.views import SearchView
-from booking.views import EditVisit
+from booking.views import EditVisit, VisitDetailView
 from django.views.generic import TemplateView
 
 urlpatterns = patterns(
@@ -43,8 +43,8 @@ urlpatterns = patterns(
 
     url(r'^visit/create$',
         EditVisit.as_view(), name='visit_create'),
-
+    url(r'^visit/(?P<pk>[0-9]+)/?',
+        VisitDetailView.as_view(), name='visit'),
     url(r'^visit/(?P<pk>[0-9]+)/edit$',
         EditVisit.as_view(), name='visit_edit')
-
 )
