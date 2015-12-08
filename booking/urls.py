@@ -1,4 +1,6 @@
 from django.conf.urls import patterns, url
+from django.conf.urls.static import static
+from django.conf import settings
 
 from .views import MainPageView
 from booking.views import SearchView
@@ -43,8 +45,10 @@ urlpatterns = patterns(
 
     url(r'^visit/create$',
         EditVisit.as_view(), name='visit_create'),
-    url(r'^visit/(?P<pk>[0-9]+)/?',
+    url(r'^visit/(?P<pk>[0-9]+)/?$',
         VisitDetailView.as_view(), name='visit'),
     url(r'^visit/(?P<pk>[0-9]+)/edit$',
-        EditVisit.as_view(), name='visit_edit')
-)
+        EditVisit.as_view(), name='visit_edit'),
+
+
+) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

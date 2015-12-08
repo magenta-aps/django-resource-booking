@@ -41,6 +41,14 @@ class VisitForm(forms.ModelForm):
         return locality
 
 
-VisitStudyMaterialForm = inlineformset_factory(Visit,
-                                               StudyMaterial, fields=('file',),
-                                               can_delete=True, extra=1)
+VisitStudyMaterialFormBase = inlineformset_factory(Visit,
+                                                   StudyMaterial,
+                                                   fields=('file',),
+                                                   can_delete=True, extra=1)
+
+
+class VisitStudyMaterialForm(VisitStudyMaterialFormBase):
+
+    def __init__(self, data, instance=None):
+        super(VisitStudyMaterialForm, self).__init__(data)
+        self.studymaterials = StudyMaterial.objects.filter(visit=instance)

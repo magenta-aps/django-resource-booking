@@ -11,7 +11,6 @@ from booking.models import Resource, Subject
 from booking.forms import VisitForm
 from booking.forms import VisitStudyMaterialForm
 
-
 i18n_test = _(u"Dette tester oversættelses-systemet")
 
 
@@ -146,7 +145,12 @@ class VisitMixin(object):
     form_class = VisitForm
 
     template_name = 'visit/form.html'
-    success_url = '/visit'
+
+    def get_success_url(self):
+        try:
+            return "/visit/%d" % self.object.id
+        except:
+            return '/'
 
 
 class EditVisit(VisitMixin, UpdateView):
@@ -155,9 +159,9 @@ class EditVisit(VisitMixin, UpdateView):
     # and one for the file upload
     def get(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
-        self.object = None if pk is None else Visit.objects.get(id=pk)
+        self.object = Visit() if pk is None else Visit.objects.get(id=pk)
         form = self.get_form()
-        fileformset = VisitStudyMaterialForm(instance=Visit())
+        fileformset = VisitStudyMaterialForm(None, instance=self.object)
         return self.render_to_response(
             self.get_context_data(form=form, fileformset=fileformset)
         )
