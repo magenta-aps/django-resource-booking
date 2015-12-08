@@ -6,6 +6,8 @@ from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 
+from profile.models import COORDINATOR, ADMINISTRATOR
+
 from booking.models import Visit, StudyMaterial
 from booking.models import Resource, Subject
 from booking.forms import VisitForm
@@ -153,10 +155,13 @@ class VisitMixin(object):
             return '/'
 
 
-class EditVisit(VisitMixin, UpdateView):
+class EditVisit(RoleRequiredMixin, VisitMixin, UpdateView):
 
     # Display a view with two form objects; one for the regular model,
     # and one for the file upload
+
+    roles = COORDINATOR, ADMINISTRATOR
+
     def get(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
         self.object = Visit() if pk is None else Visit.objects.get(id=pk)
