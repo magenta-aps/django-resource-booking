@@ -22,6 +22,17 @@
         <![endif]-->
     </head>
     <body>
+
+        {% block header %}
+            <div class="box invert">
+                <strong><a href="{% url 'admin:index' %}">Administration</a></strong>
+                <div class="pull-right navlinks">
+                    <a href="{% url 'mockup-manage-list' %}">Mine tilbud</a>
+                    <a href="{% url 'mockup-booking-list' %}">Forespørgsler <span class="label label-default">8</span></a>
+                    <a href="index.html">Log ud</a>
+                </div>
+            </div>
+        {% endblock %}
         
         {% block content %}
         
@@ -29,7 +40,7 @@
                 <h1>Søg i tilbud</h1>
                 <div class="row">
                     <div class="col-sm-12 col-md-6">
-                        <form action="/search">
+                        <form action="{% url 'search' %}">
                             <div class="input-group">
                                 <label class="sr-only" for="searchBox">Søg efter tilbud</label>
                                 <input type="text" class="form-control" id="searchBox" placeholder="Indtast et eller flere søgeord..." name="q">
@@ -50,7 +61,7 @@
                 {% endif %}
             </div>
         {% endblock %}
-        
+
         <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
         <script src="{% static 'thirdparty/jquery/dist/jquery.min.js' %}"></script>
         <!-- Include all compiled plugins (below), or include individual files as needed -->

@@ -1,6 +1,8 @@
 # encoding: utf-8
 
 from django.db import models
+from djorm_pgfulltext.models import SearchManager
+from djorm_pgfulltext.fields import VectorField
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
 from django.utils.translation import ugettext_lazy as _
@@ -273,11 +275,79 @@ class Resource(models.Model):
     # Comment field for internal use in backend.
     comment = models.TextField(blank=True, verbose_name=_(u'Kommentar'))
 
-    class Meta:
-        abstract = True
+    # ts_vector field for fulltext search
+    search_index = VectorField()
+
+    # Field for concatenating search data from relations
+    extra_search_text = models.TextField(
+        blank=True,
+        default='',
+        verbose_name=_(u'Tekst-værdier til fritekstsøgning')
+    )
+
+    objects = SearchManager(
+        fields=(
+            'title',
+            'description',
+            'mouseover_description',
+            'extra_search_text'
+        ),
+        config='pg_catalog.danish',
+        auto_update_search_field=True
+    )
 
     def __unicode__(self):
         return self.title
+
+    def generate_extra_search_text(self):
+        texts = []
+
+        # Display-value for type
+        texts.append(self.get_type_display())
+
+        # Unit name
+        if self.unit:
+            texts.append(self.unit.name)
+
+            # Unit's parent name
+            if self.unit.parent:
+                texts.append(self.unit.parent.name)
+
+        # Url, name and description of all links
+        for l in self.links.all():
+            if l.url:
+                texts.append(l.url)
+            if l.name:
+                texts.append(l.name)
+            if l.description:
+                texts.append(l.description)
+
+        # Display-value for audience
+        texts.append(self.get_audience_display())
+
+        # Display-value for institution_level
+        texts.append(self.get_institution_level_display())
+
+        # Name of all subjects
+        for s in self.subjects.all():
+            texts.append(s.name)
+
+        # Display-value for level
+        texts.append(self.get_level_display())
+
+        # Name of all tags
+        for t in self.tags.all():
+            texts.append(t.name)
+
+        # Name of all topocs
+        for t in self.topics.all():
+            texts.append(t.name)
+
+        return "\n".join(texts)
+
+    def save(self, *args, **kwargs):
+        self.extra_search_text = self.generate_extra_search_text()
+        return super(Resource, self).save(*args, **kwargs)
 
 
 class OtherResource(Resource):

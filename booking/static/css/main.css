@@ -49,6 +49,9 @@ h3 {
     font-weight: normal;
     color: #4c4c4c;
 }
+a {
+    cursor: pointer;
+}
 a:not(.btn),
 a:not(.btn):hover,
 a:not(.btn):active {
@@ -260,6 +263,14 @@ hr {
 .teaser {
     font-size: 90%;
 }
+.image-left {
+    float: left;
+    margin: 5px 15px 15px 0;
+}
+.image-right {
+    float: right;
+    margin: 5px 0 15px 15px;
+}
 .order-buttons .btn {
     margin-right: 15px;
 }
@@ -343,4 +354,66 @@ a>.caret, a>.caret:focus, a>.caret:active {
         margin-left: 110px;
         padding-top: 5px;
     }
+}
+.box {
+    border: dashed 1px #eee;
+    padding: 1em;
+    margin-bottom: 1em;
+}
+
+.invert {
+    background: #444;
+    color: #ddd;
+    border: none;
+}
+.invert a {
+    color: #fff;
+}
+label {
+    display: block;
+}
+input.titlefield {
+    font-size: 1.3em;
+    font-weight: bold;
+}
+input,
+textarea {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 0.5em;
+    margin: 0 0 1em;
+    border: solid 1px #ccc;
+}
+select {
+    margin: 0 0 1em;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+input[type="checkbox"] {
+    width: auto;
+    display: inline;
+    margin-right: 0.5em;
+}
+.panel-heading {
+    padding: 0;
+}
+.panel-heading h4 {
+    margin: 0;
+    padding: 0;
+}
+.panel-heading a {
+    display: block;
+    padding: 0.5em 1em;
+}
+.navlinks a {
+    display: inline-block;
+    margin-left: 1em;
+}
+.label {
+    background: #888 !important;
+}
+
+ul.errorlist {
+    color: #c00;
 }

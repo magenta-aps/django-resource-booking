@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, ListView
 from django.utils.translation import ugettext as _
 from django.views.generic.edit import UpdateView
 
@@ -8,6 +8,8 @@ from booking.forms import VisitForm
 from booking.forms import VisitStudyMaterialForm
 from booking.models import StudyMaterial
 
+from booking.models import Resource, Subject
+
 
 i18n_test = _(u"Dette tester oversættelses-systemet")
 
@@ -15,6 +17,88 @@ i18n_test = _(u"Dette tester oversættelses-systemet")
 class MainPageView(TemplateView):
     """Display the main page."""
     template_name = 'index.html'
+
+
+# Class for handling main search
+class SearchView(ListView):
+    model = Resource
+    template_name = "resource/searchresult.html"
+    context_object_name = "results"
+    paginate_by = 10
+
+    def get_queryset(self):
+        searchexpression = self.request.GET.get("q", "")
+        filters = {}
+        a = self.request.GET.getlist("a")
+        if a:
+            filters["audience__in"] = a
+        t = self.request.GET.getlist("t")
+        if t:
+            filters["type__in"] = t
+        f = set(self.request.GET.getlist("f"))
+        for g in self.request.GET.getlist("g"):
+            f.add(g)
+        if f:
+            filters["subjects__in"] = f
+        return self.model.objects.search(searchexpression).filter(
+            **filters
+        )
+
+    def build_choices(self, choice_tuples, selected,
+                      selected_value='checked="checked"'):
+
+        selected = set(selected)
+        choices = []
+
+        for value, name in choice_tuples:
+            if unicode(value) in selected:
+                sel = selected_value
+            else:
+                sel = ''
+
+            choices.append({
+                'label': name,
+                'value': value,
+                'selected': sel
+            })
+
+        return choices
+
+    def get_context_data(self, **kwargs):
+        context = {}
+
+        # Store the querystring without the page argument
+        qdict = self.request.GET.copy()
+        if "page" in qdict:
+            qdict.pop("page")
+        context["qstring"] = qdict.urlencode()
+
+        context["audience_choices"] = self.build_choices(
+            self.model.audience_choices,
+            self.request.GET.getlist("a"),
+        )
+
+        context["type_choices"] = self.build_choices(
+            self.model.resource_type_choices,
+            self.request.GET.getlist("t"),
+        )
+
+        gym_selected = self.request.GET.getlist("f")
+        context["gymnasie_selected"] = gym_selected
+        context["gymnasie_choices"] = self.build_choices(
+            [(x.pk, x.name) for x in Subject.objects.all().order_by("name")],
+            gym_selected,
+        )
+
+        gs_selected = self.request.GET.getlist("g")
+        context["grundskole_selected"] = gs_selected
+        context["grundskole_choices"] = self.build_choices(
+            [(x.pk, x.name) for x in Subject.objects.all().order_by("name")],
+            gs_selected,
+        )
+
+        context.update(kwargs)
+        return super(SearchView, self).get_context_data(**context)
 
 
 class VisitMixin(object):

@@ -1,9 +1,9 @@
 {% extends 'index.html' %}
 {% load i18n %}
+{% load staticfiles %}
 
 {% block head %}
-    <script type="text/javascript" src="/static/thirdparty/bootstrap-datetime-picker/js/bootstrap-datetimepicker.min.js"></script>
-    <link rel="stylesheet" href="/static/thirdparty/bootstrap-datetime-picker/css/bootstrap-datetimepicker.min.css"/>
+    <link rel="stylesheet" href="{% static 'thirdparty/bootstrap-datetime-picker/css/bootstrap-datetimepicker.min.css' %}"/>
 {% endblock %}
 
 {% block content %}
@@ -130,21 +130,6 @@
                             </fieldset>
                         </div>
                     </div>
-
-                    <script>
-                        <!--
-                        $(function(){
-                            var select = $("#{{ form.institution_level.id_for_label }}");
-                            var changeDisplay = function(){
-                                var value = select.val();
-                                $(".institution_level_dependent[data-display-value='"+value+"']").show();
-                                $(".institution_level_dependent[data-display-value!='"+value+"']").hide();
-                            };
-                            select.change(changeDisplay);
-                            changeDisplay();
-                        });
-                        //-->
-                    </script>
                 </div>
 
                 <div class="panel panel-default">
@@ -185,17 +170,6 @@
                             </div>
                         </div>
                     </div>
-                    <script>
-                        <!--
-                        $(function(){
-                            {# See doc at http://www.malot.fr/bootstrap-datetimepicker/ #}
-                            $("#{{ form.time.id_for_label }}").datetimepicker({
-                                locale: 'da',
-                                autoclose: true
-                            });
-                        });
-                        //-->
-                    </script>
                 </div>
 
                 <div class="panel panel-default">
@@ -243,29 +217,6 @@
                             </fieldset>
                         </div>
                     </div>
-                    <script>
-                        $(function(){
-                            var totalFormsField = $("#{{ fileformset.management_form.TOTAL_FORMS.id_for_label }}"),
-                                maxForms = parseInt($("#{{ fileformset.management_form.MAX_NUM_FORMS.id_for_label }}").val()) || 1000,
-                                fieldContainer = $("#attachFileFields"),
-                                numberFinder = /\d+/;
-
-                            $("#attachAddFileField").click(function(){
-                                if (fieldContainer.find("input[type=file]").length < maxForms) {
-                                    var newFileField = fieldContainer.find("input[type=file]").last().clone();
-                                    var match = numberFinder.exec(newFileField.attr("id"));
-                                    if (match) {
-                                        var number = parseInt(match[0], 10) + 1;
-                                        newFileField.attr("id", newFileField.attr("id").replace(numberFinder, number));
-                                        newFileField.attr("name", newFileField.attr("name").replace(numberFinder, number));
-                                        newFileField.val(null);
-                                        fieldContainer.append(newFileField);
-                                        totalFormsField.val(fieldContainer.find("input[type=file]").length);
-                                    }
-                                }
-                            });
-                        });
-                    </script>
                 </div>
             </div>
 
@@ -276,3 +227,50 @@
     </div>
 
 {% endblock %}
+
+{% block extra_scripts %}
+    <script type="text/javascript" src="{% static 'thirdparty/bootstrap-datetime-picker/js/bootstrap-datetimepicker.min.js' %}"></script>
+    <script type="text/javascript"><!--
+        $(function(){
+            var totalFormsField = $("#{{ fileformset.management_form.TOTAL_FORMS.id_for_label }}"),
+                maxForms = parseInt($("#{{ fileformset.management_form.MAX_NUM_FORMS.id_for_label }}").val()) || 1000,
+                fieldContainer = $("#attachFileFields"),
+                numberFinder = /\d+/;
+
+            $("#attachAddFileField").click(function(){
+                if (fieldContainer.find("input[type=file]").length < maxForms) {
+                    var newFileField = fieldContainer.find("input[type=file]").last().clone();
+                    var match = numberFinder.exec(newFileField.attr("id"));
+                    if (match) {
+                        var number = parseInt(match[0], 10) + 1;
+                        newFileField.attr("id", newFileField.attr("id").replace(numberFinder, number));
+                        newFileField.attr("name", newFileField.attr("name").replace(numberFinder, number));
+                        newFileField.val(null);
+                        fieldContainer.append(newFileField);
+                        totalFormsField.val(fieldContainer.find("input[type=file]").length);
+                    }
+                }
+            });
+        });
+
+        $(function(){
+            // See doc at http://www.malot.fr/bootstrap-datetimepicker/
+            $("#{{ form.time.id_for_label }}").datetimepicker({
+                locale: 'da',
+                autoclose: true
+            });
+        });
+
+        $(function(){
+            var select = $("#{{ form.institution_level.id_for_label }}");
+            var changeDisplay = function(){
+                var value = select.val();
+                $(".institution_level_dependent[data-display-value='"+value+"']").show();
+                $(".institution_level_dependent[data-display-value!='"+value+"']").hide();
+            };
+            select.change(changeDisplay);
+            changeDisplay();
+        });
+    //--></script>
+{% endblock %}
+
