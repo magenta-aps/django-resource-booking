@@ -108,7 +108,12 @@ class VisitMixin(object):
     form_class = VisitForm
 
     template_name = 'visit/form.html'
-    success_url = '/visit'
+
+    def get_success_url(self):
+        try:
+            return "/visit/%d" % self.object.id
+        except:
+            return '/'
 
 
 class EditVisit(VisitMixin, UpdateView):
