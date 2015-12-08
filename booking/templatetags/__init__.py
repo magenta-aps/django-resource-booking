@@ -1,1 +1,1 @@
-# Django needs sthis empty file
+# Django needs this empty file
