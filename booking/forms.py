@@ -3,7 +3,7 @@ from booking.models import UnitType
 from booking.models import Unit
 from booking.models import Visit
 from booking.models import StudyMaterial
-from django.forms import inlineformset_factory, TextInput
+from django.forms import inlineformset_factory, TextInput, NumberInput
 
 
 class UnitTypeForm(forms.ModelForm):
@@ -30,7 +30,9 @@ class VisitForm(forms.ModelForm):
                   'time', 'duration', 'locality', 'room',
                   'enabled', 'contact_persons')
         widgets = {
-            'title': TextInput(attrs={'class': 'titlefield'})
+            'title': TextInput(attrs={'class': 'titlefield'}),
+            'minimum_number_of_visitors': NumberInput(attrs={'min': 1}),
+            'maximum_number_of_visitors': NumberInput(attrs={'min': 1})
         }
 
     def clean_locality(self):
