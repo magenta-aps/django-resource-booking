@@ -1,17 +1,13 @@
 # -*- coding: utf-8 -*-
 from django.views.generic import TemplateView, ListView, DetailView
 from django.utils.translation import ugettext as _
-from django.views.generic.edit import CreateView, UpdateView, DeleteView
-from django.core.urlresolvers import reverse
+from django.views.generic.edit import UpdateView
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 
-
-from booking.models import Unit, UnitType
 from booking.models import Visit, StudyMaterial
 from booking.models import Resource, Subject
-from booking.forms import UnitForm, UnitTypeForm
 from booking.forms import VisitForm
 from booking.forms import VisitStudyMaterialForm
 
