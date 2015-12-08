@@ -1,9 +1,12 @@
 # encoding: utf-8
 
 from django.db import models
+from djorm_pgfulltext.models import SearchManager
+from djorm_pgfulltext.fields import VectorField
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
 from django.utils.translation import ugettext_lazy as _
+import timedelta
 
 
 LOGACTION_CREATE = ADDITION
@@ -159,6 +162,7 @@ class StudyMaterial(models.Model):
     type = models.IntegerField(choices=study_material_choices, default=URL)
     url = models.URLField(null=True, blank=True)
     file = models.FileField(upload_to='material', null=True, blank=True)
+    visit = models.ForeignKey('Visit', on_delete=models.CASCADE)
 
     def __unicode__(self):
         s = u"{0}: {1}".format(
@@ -233,9 +237,11 @@ class Resource(models.Model):
 
     class_level_choices = [(i, unicode(i)) for i in range(0, 11)]
 
+    enabled = models.BooleanField(verbose_name=_(u'Aktiv'), default=True)
     type = models.IntegerField(choices=resource_type_choices,
                                default=OTHER_RESOURCES)
     title = models.CharField(max_length=256, verbose_name=_(u'Titel'))
+    teaser = models.TextField(blank=True, verbose_name=_(u'Teaser'))
     description = models.TextField(blank=True, verbose_name=_(u'Beskrivelse'))
     mouseover_description = models.CharField(
         max_length=512, blank=True, verbose_name=_(u'Mouseover-tekst')
@@ -270,25 +276,128 @@ class Resource(models.Model):
     # Comment field for internal use in backend.
     comment = models.TextField(blank=True, verbose_name=_(u'Kommentar'))
 
-    class Meta:
-        abstract = True
+    # ts_vector field for fulltext search
+    search_index = VectorField()
+
+    # Field for concatenating search data from relations
+    extra_search_text = models.TextField(
+        blank=True,
+        default='',
+        verbose_name=_(u'Tekst-værdier til fritekstsøgning')
+    )
+
+    objects = SearchManager(
+        fields=(
+            'title',
+            'description',
+            'mouseover_description',
+            'extra_search_text'
+        ),
+        config='pg_catalog.danish',
+        auto_update_search_field=True
+    )
 
     def __unicode__(self):
         return self.title
 
+    def generate_extra_search_text(self):
+        texts = []
+
+        # Display-value for type
+        texts.append(self.get_type_display() or "")
+
+        # Unit name
+        if self.unit:
+            texts.append(self.unit.name)
+
+            # Unit's parent name
+            if self.unit.parent:
+                texts.append(self.unit.parent.name)
+
+        # Url, name and description of all links
+        for l in self.links.all():
+            if l.url:
+                texts.append(l.url)
+            if l.name:
+                texts.append(l.name)
+            if l.description:
+                texts.append(l.description)
+
+        # Display-value for audience
+        texts.append(self.get_audience_display() or "")
+
+        # Display-value for institution_level
+        texts.append(self.get_institution_level_display() or "")
+
+        # Name of all subjects
+        for s in self.subjects.all():
+            texts.append(s.name)
+
+        # Display-value for level
+        texts.append(self.get_level_display() or "")
+
+        # Name of all tags
+        for t in self.tags.all():
+            texts.append(t.name)
+
+        # Name of all topocs
+        for t in self.topics.all():
+            texts.append(t.name)
+
+        return "\n".join(texts)
+
 
 class OtherResource(Resource):
     """A non-bookable, non-visit resource, basically material on the Web."""
-    pass
+    objects = SearchManager(
+        fields=(
+            'title',
+            'description',
+            'mouseover_description',
+            'extra_search_text'
+        ),
+        config='pg_catalog.danish',
+        auto_update_search_field=True
+    )
+
+    def save(self, *args, **kwargs):
+        # If creating new object, save so we have pk to generate search
+        # text with
+        if self.pk is None:
+            super(Resource, self).save(*args, **kwargs)
+
+        # Update search_text
+        self.extra_search_text = self.generate_extra_search_text()
+
+        # Do the final save
+        return super(Resource, self).save(*args, **kwargs)
 
 
 class Visit(Resource):
     """A bookable visit of any kind."""
+    objects = SearchManager(
+        fields=(
+            'title',
+            'description',
+            'mouseover_description',
+            'extra_search_text'
+        ),
+        config='pg_catalog.danish',
+        auto_update_search_field=True
+    )
     locality = models.ForeignKey(
         Locality, verbose_name=_(u'Lokalitet'), blank=True
     )
     room = models.CharField(
         max_length=64, verbose_name=_(u'Lokale'), blank=True
+    )
+    time = models.DateTimeField(
+        verbose_name=_(u'Tid')
+    )
+    duration = timedelta.fields.TimedeltaField(
+        verbose_name=_(u'Varighed'),
+        blank=True,
+        null=True
     )
     contact_persons = models.ManyToManyField(
         Person,
@@ -313,7 +422,7 @@ class Visit(Resource):
     is_group_visit = models.BooleanField(default=True,
                                          verbose_name=_(u'Gruppebesøg'))
     # Min/max number of visitors - only relevant for group visits.
-    mininimum_number_of_visitors = models.IntegerField(
+    minimum_number_of_visitors = models.IntegerField(
         null=True,
         blank=True,
         verbose_name=_(u'Mindste antal deltagere')
@@ -330,12 +439,19 @@ class Visit(Resource):
         default=False,
         verbose_name=_(u'Vis nedtælling')
     )
-    preparatory_material = models.ManyToManyField(
-        StudyMaterial,
-        verbose_name=_(u'Forberedelsesmateriale'),
-        blank=True
-    )
     preparation_time = models.IntegerField(
         default=0,
         verbose_name=_(u'Forberedelsestid (i timer)')
     )
+
+    def save(self, *args, **kwargs):
+        # If creating new object, save so we have pk to generate search
+        # text with
+        if self.pk is None:
+            super(Resource, self).save(*args, **kwargs)
+
+        # Update search_text
+        self.extra_search_text = self.generate_extra_search_text()
+
+        # Do the final save
+        return super(Resource, self).save(*args, **kwargs)
