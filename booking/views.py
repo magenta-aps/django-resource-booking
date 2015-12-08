@@ -149,6 +149,7 @@ class EditVisit(VisitMixin, UpdateView):
         else:
             return self.form_invalid(form)
 
+
 class VisitDetailView(DetailView):
     """Display Visit details"""
     model = Visit
