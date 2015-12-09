@@ -236,11 +236,24 @@ class Resource(models.Model):
         (A, u'A'), (B, u'B'), (C, u'C')
     )
 
+    # Resource state - created, active and discontinued.
+    CREATED = 0
+    ACTIVE = 1
+    DISCONTINUED = 2
+
+    state_choices = (
+        (CREATED, _(u"Oprettet")),
+        (ACTIVE, _(u"Aktivt")),
+        (DISCONTINUED, _(u"Ophørt"))
+    )
+
     class_level_choices = [(i, unicode(i)) for i in range(0, 11)]
 
     enabled = models.BooleanField(verbose_name=_(u'Aktiv'), default=True)
     type = models.IntegerField(choices=resource_type_choices,
                                default=OTHER_RESOURCES)
+    state = models.IntegerField(choices=state_choices, default=CREATED,
+                                verbose_name=_(u"Tilstand"))
     title = models.CharField(max_length=256, verbose_name=_(u'Titel'))
     teaser = models.TextField(blank=True, verbose_name=_(u'Teaser'))
     description = models.TextField(blank=True, verbose_name=_(u'Beskrivelse'))
