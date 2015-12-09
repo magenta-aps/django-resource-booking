@@ -2,20 +2,59 @@
 from django.views.generic import TemplateView, ListView, DetailView
 from django.utils.translation import ugettext as _
 from django.views.generic.edit import UpdateView
+from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
 
-from booking.models import Visit
+from profile.models import COORDINATOR, ADMINISTRATOR
+
+from booking.models import Visit, StudyMaterial
+from booking.models import Resource, Subject
 from booking.forms import VisitForm
 from booking.forms import VisitStudyMaterialForm
-from booking.models import StudyMaterial
-
-from booking.models import Resource, Subject
 
 i18n_test = _(u"Dette tester oversættelses-systemet")
 
 
+# A couple of generic superclasses for crud views
+# Our views will inherit from these and from django.views.generic classes
+
 class MainPageView(TemplateView):
     """Display the main page."""
     template_name = 'index.html'
+
+
+class LoginRequiredMixin(object):
+    """Include this mixin to require login.
+
+    Mainly useful for users who are not coordinators or administrators.
+    """
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        """Check that user is logged in and dispatch."""
+        return super(LoginRequiredMixin, self).dispatch(*args, **kwargs)
+
+
+class RoleRequiredMixin(object):
+    """Require that user has any of a number of roles."""
+
+    # Roles is a list of required roles - maybe only one.
+    # Each user can have only one role, and the condition is fulfilled
+    # if one is found.
+
+    roles = []  # Specify in subclass.
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        current_user = self.request.user
+        try:
+            role = current_user.userprofile.get_role()
+            if role in self.roles:
+                return super(RoleRequiredMixin, self).dispatch(*args, **kwargs)
+        except AttributeError:
+            pass
+        raise PermissionDenied
 
 
 # Class for handling main search
@@ -116,10 +155,13 @@ class VisitMixin(object):
             return '/'
 
 
-class EditVisit(VisitMixin, UpdateView):
+class EditVisit(RoleRequiredMixin, VisitMixin, UpdateView):
 
     # Display a view with two form objects; one for the regular model,
     # and one for the file upload
+
+    roles = COORDINATOR, ADMINISTRATOR
+
     def get(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
         self.object = Visit() if pk is None else Visit.objects.get(id=pk)

@@ -32,7 +32,12 @@
                 <div class="pull-right navlinks">
                     <a href="{% url 'mockup-manage-list' %}">Mine tilbud</a>
                     <a href="{% url 'mockup-booking-list' %}">Forespørgsler <span class="label label-default">8</span></a>
-                    <a href="index.html">Log ud</a>
+                    {% if user.is_authenticated %}
+                    <a href="/profile/logout">Log ud</a>
+                    {% else %}
+                    <a href="/profile/login">Login</a>
+                    {% endif %}
+
                 </div>
             </div>
         {% endblock %}
