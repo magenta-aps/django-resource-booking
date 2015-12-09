@@ -50,7 +50,7 @@ urlpatterns = patterns(
     url(r'^visit/(?P<pk>[0-9]+)/edit$',
         EditVisit.as_view(), name='visit_edit'),
     url(r'^visit/(?P<pk>[0-9]+)/clone$',
-        EditVisit.as_view(), {'clone':True}, name='visit_clone'),
+        EditVisit.as_view(), {'clone': True}, name='visit_clone'),
 
     url(r'^tinymce/', include('tinymce.urls')),
 
