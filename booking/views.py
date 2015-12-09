@@ -100,23 +100,11 @@ class SearchView(ListView):
         return super(SearchView, self).get_context_data(**context)
 
 
-class VisitMixin(object):
-
-    model = Visit
-    object_name = 'Visit'
-    url_base = 'visit'
-    form_class = VisitForm
+class EditVisit(UpdateView):
 
     template_name = 'visit/form.html'
-
-    def get_success_url(self):
-        try:
-            return "/visit/%d" % self.object.id
-        except:
-            return '/'
-
-
-class EditVisit(VisitMixin, UpdateView):
+    form_class = VisitForm
+    model = Visit
 
     # Display a view with two form objects; one for the regular model,
     # and one for the file upload
@@ -152,6 +140,12 @@ class EditVisit(VisitMixin, UpdateView):
             return super(EditVisit, self).form_valid(form)
         else:
             return self.form_invalid(form)
+
+    def get_success_url(self):
+        try:
+            return "/visit/%d" % self.object.id
+        except:
+            return '/'
 
 
 class VisitDetailView(DetailView):
