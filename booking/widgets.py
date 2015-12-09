@@ -46,7 +46,7 @@ class DurationWidget(MultiWidget):
         if value and isinstance(value, timedelta):
             return [value.days, value.seconds / 3600,
                     (value.seconds / 60) % 60]
-        return [None, None, None]
+        return [0, 0, 0]
 
     def value_from_datadict(self, data, files, name):
         valuelist = []
