@@ -3,7 +3,8 @@ from booking.models import UnitType
 from booking.models import Unit
 from booking.models import Visit
 from booking.models import StudyMaterial
-from django.forms import inlineformset_factory, TextInput, NumberInput, Textarea
+from django.forms import inlineformset_factory
+from django.forms import TextInput, NumberInput, Textarea
 from django.utils.translation import ugettext_lazy as _
 from tinymce.widgets import TinyMCE
 

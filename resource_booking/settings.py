@@ -108,10 +108,6 @@ TINYMCE_COMPRESSOR = True
 TINYMCE_JS_ROOT = '/static/thirdparty/tinymce'
 
 
-
-
-
-
 WSGI_APPLICATION = 'resource_booking.wsgi.application'
 
 # Database
