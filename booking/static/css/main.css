@@ -426,3 +426,7 @@ ul.errorlist {
     width: 25%;
     margin: 0 4px;
 }
+label span.lengthcounter {
+    font-weight: normal;
+    margin-left: 4px;
+}
