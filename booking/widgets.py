@@ -49,9 +49,11 @@ class DurationWidget(MultiWidget):
         return [None, None, None]
 
     def value_from_datadict(self, data, files, name):
-        valuelist = [
-            int(widget.value_from_datadict(data, files, name + '_%s' % i))
-            for i, widget in enumerate(self.widgets)]
+        valuelist = []
+        for i, widget in enumerate(self.widgets):
+            value = widget.value_from_datadict(data, files, name + '_%s' % i)
+            valuelist.append(int(value or 0))
+
         return timedelta(days=valuelist[0], hours=valuelist[1],
                          minutes=valuelist[2])
 
