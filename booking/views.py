@@ -120,6 +120,10 @@ class VisitMixin(object):
 
 class EditVisit(VisitMixin, UpdateView):
 
+    def __init__(self, *args, **kwargs):
+        super(EditVisit, self).__init__(*args, **kwargs)
+        self.object = None
+
     # Display a view with two form objects; one for the regular model,
     # and one for the file upload
     def get(self, request, *args, **kwargs):
@@ -144,7 +148,7 @@ class EditVisit(VisitMixin, UpdateView):
                 self.object = Visit.objects.get(id=pk)
             except ObjectDoesNotExist:
                 raise Http404
-            form = self.get_form()
+        form = self.get_form()
         if form.is_valid():
             visit = form.save()
             fileformset = VisitStudyMaterialForm(request.POST, instance=visit)
