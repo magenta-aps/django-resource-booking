@@ -155,3 +155,10 @@ class VisitDetailView(DetailView):
     """Display Visit details"""
     model = Visit
     template_name = 'visit/details.html'
+
+    def get_queryset(self):
+        """Get queryset, only include active visits."""
+        qs = super(VisitDetailView, self).get_queryset()
+        # Dismiss visits that are not active.
+        qs = qs.filter(state=Resource.ACTIVE)
+        return qs
