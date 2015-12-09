@@ -142,7 +142,7 @@ class SearchView(ListView):
         return super(SearchView, self).get_context_data(**context)
 
 
-class EditVisit(UpdateView):
+class EditVisit(RoleRequiredMixin, UpdateView):
 
     template_name = 'visit/form.html'
     form_class = VisitForm
