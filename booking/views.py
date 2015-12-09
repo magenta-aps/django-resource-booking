@@ -40,6 +40,7 @@ class SearchView(ListView):
             f.add(g)
         if f:
             filters["subjects__in"] = f
+        filters["state__in"] = [Resource.ACTIVE]
         return self.model.objects.search(searchexpression).filter(
             **filters
         )
