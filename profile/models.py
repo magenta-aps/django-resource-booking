@@ -17,7 +17,7 @@ user_role_choices = (
     (TEACHER, _(u"Underviser")),
     (HOST, _(u"Vært")),
     (COORDINATOR, _(u"Koordinator")),
-    (ADMINISTRATOR, _(u"Underviser"))
+    (ADMINISTRATOR, _(u"Administrator"))
 )
 
 
@@ -46,3 +46,7 @@ class UserProfile(models.Model):
 
     def __unicode__(self):
         return self.user.username
+
+    def get_role(self):
+        """Return the role code, i.e. TEACHER, HOST, etc."""
+        return self.user_role.role
