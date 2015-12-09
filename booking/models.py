@@ -361,16 +361,14 @@ class OtherResource(Resource):
     )
 
     def save(self, *args, **kwargs):
-        # If creating new object, save so we have pk to generate search
-        # text with
-        if self.pk is None:
-            super(Resource, self).save(*args, **kwargs)
+        # Save once to store relations
+        super(OtherResource, self).save(*args, **kwargs)
 
         # Update search_text
         self.extra_search_text = self.generate_extra_search_text()
 
         # Do the final save
-        return super(Resource, self).save(*args, **kwargs)
+        return super(OtherResource, self).save(*args, **kwargs)
 
 
 class Visit(Resource):
@@ -445,13 +443,11 @@ class Visit(Resource):
     )
 
     def save(self, *args, **kwargs):
-        # If creating new object, save so we have pk to generate search
-        # text with
-        if self.pk is None:
-            super(Resource, self).save(*args, **kwargs)
+        # Save once to store relations
+        super(Visit, self).save(*args, **kwargs)
 
         # Update search_text
         self.extra_search_text = self.generate_extra_search_text()
 
         # Do the final save
-        return super(Resource, self).save(*args, **kwargs)
+        return super(Visit, self).save(*args, **kwargs)
