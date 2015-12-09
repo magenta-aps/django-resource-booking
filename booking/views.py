@@ -160,5 +160,6 @@ class VisitDetailView(DetailView):
         """Get queryset, only include active visits."""
         qs = super(VisitDetailView, self).get_queryset()
         # Dismiss visits that are not active.
-        qs = qs.filter(state=Resource.ACTIVE)
+        if not self.request.user.is_authenticated():
+            qs = qs.filter(state=Resource.ACTIVE)
         return qs
