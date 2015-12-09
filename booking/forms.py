@@ -3,8 +3,10 @@ from booking.models import UnitType
 from booking.models import Unit
 from booking.models import Visit
 from booking.models import StudyMaterial
-from django.forms import inlineformset_factory, TextInput, NumberInput
+from django.forms import inlineformset_factory
+from django.forms import TextInput, NumberInput, Textarea
 from django.utils.translation import ugettext_lazy as _
+from tinymce.widgets import TinyMCE
 
 
 class UnitTypeForm(forms.ModelForm):
@@ -32,6 +34,8 @@ class VisitForm(forms.ModelForm):
                   'enabled', 'contact_persons', 'unit')
         widgets = {
             'title': TextInput(attrs={'class': 'titlefield'}),
+            'teaser': Textarea(attrs={'rows': 3, 'maxlength': 1000}),
+            'description': TinyMCE(attrs={'rows': 10}),
             'minimum_number_of_visitors': NumberInput(attrs={'min': 1}),
             'maximum_number_of_visitors': NumberInput(attrs={'min': 1})
         }

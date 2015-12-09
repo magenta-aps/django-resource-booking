@@ -244,7 +244,9 @@
 {% endblock %}
 
 {% block extra_scripts %}
+    {{ form.media }}
     <script type="text/javascript" src="{% static 'thirdparty/bootstrap-datetime-picker/js/bootstrap-datetimepicker.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/formutil.js' %}"></script>
     <script type="text/javascript"><!--
         $(function(){
             var totalFormsField = $("#{{ fileformset.management_form.TOTAL_FORMS.id_for_label }}"),
