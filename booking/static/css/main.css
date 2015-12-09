@@ -422,3 +422,7 @@ ul.errorlist {
     display: inline-block;
     width: auto;
 }
+.duration input {
+    width: 25%;
+    margin: 0 4px;
+}
