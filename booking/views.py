@@ -140,8 +140,11 @@ class EditVisit(VisitMixin, UpdateView):
         if pk is None or kwargs.get("clone", False):
             self.object = None
         else:
-            self.object = Visit.objects.get(id=pk)
-        form = self.get_form()
+            try:
+                self.object = Visit.objects.get(id=pk)
+            except ObjectDoesNotExist:
+                raise Http404
+            form = self.get_form()
         if form.is_valid():
             visit = form.save()
             fileformset = VisitStudyMaterialForm(request.POST, instance=visit)
