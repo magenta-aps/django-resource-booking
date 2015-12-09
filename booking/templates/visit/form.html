@@ -186,6 +186,11 @@
                     " aria-labelledby="headingContact" role="tabpanel" aria-expanded="true" style="">
                         <div class="panel-body">
                             <fieldset>
+                                {{ form.unit.errors }}
+                                <label for="{{ form.unit.id_for_label }}">{{ form.unit.label }}:</label>
+                                {{ form.unit }}
+                            </fieldset>
+                            <fieldset>
                                 {{ form.enabled.errors }}
                                 <label class="radiolabel">
                                     <label for="{{ form.enabled.id_for_label }}">{{ form.enabled }} Kan bookes</label>
