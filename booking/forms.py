@@ -3,7 +3,8 @@ from booking.models import UnitType
 from booking.models import Unit
 from booking.models import Visit
 from booking.models import StudyMaterial
-from django.forms import inlineformset_factory, TextInput
+from django.forms import inlineformset_factory, TextInput, NumberInput
+from django.utils.translation import ugettext_lazy as _
 
 
 class UnitTypeForm(forms.ModelForm):
@@ -28,9 +29,11 @@ class VisitForm(forms.ModelForm):
                   'class_level_max',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'time', 'duration', 'locality', 'room',
-                  'enabled', 'contact_persons')
+                  'enabled', 'contact_persons', 'unit')
         widgets = {
-            'title': TextInput(attrs={'class': 'titlefield'})
+            'title': TextInput(attrs={'class': 'titlefield'}),
+            'minimum_number_of_visitors': NumberInput(attrs={'min': 1}),
+            'maximum_number_of_visitors': NumberInput(attrs={'min': 1})
         }
 
     def clean_locality(self):
@@ -39,6 +42,21 @@ class VisitForm(forms.ModelForm):
         if locality is None:
             raise forms.ValidationError("This field is required")
         return locality
+
+    def clean(self):
+        cleaned_data = super(VisitForm, self).clean()
+        min_visitors = cleaned_data.get('minimum_number_of_visitors')
+        max_visitors = cleaned_data.get('maximum_number_of_visitors')
+        if min_visitors > max_visitors:
+            min_error_msg = _(u"The minimum numbers of visitors " +
+                              u"must not be larger than " +
+                              u"the maximum number of visitors")
+            max_error_msg = _(u"The maximum numbers of visitors " +
+                              u"must not be smaller than " +
+                              u"the minimum number of visitors")
+            self.add_error('minimum_number_of_visitors', min_error_msg)
+            self.add_error('maximum_number_of_visitors', max_error_msg)
+            raise forms.ValidationError(min_error_msg)
 
 
 VisitStudyMaterialFormBase = inlineformset_factory(Visit,

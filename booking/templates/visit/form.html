@@ -153,7 +153,9 @@
                                     <fieldset>
                                         {{ form.duration.errors }}
                                         <label for="{{ form.duration.id_for_label }}">{{ form.duration.label }}:</label>
+                                        <div class="form-inline duration">
                                         {{ form.duration }}
+                                        </div>
                                     </fieldset>
                                 </div>
                                 <div class="col-sm-12 col-md-6">
@@ -183,6 +185,11 @@
                     {% if form.enabled.errors or form.contact_persons.errors %}in{% endif %}
                     " aria-labelledby="headingContact" role="tabpanel" aria-expanded="true" style="">
                         <div class="panel-body">
+                            <fieldset>
+                                {{ form.unit.errors }}
+                                <label for="{{ form.unit.id_for_label }}">{{ form.unit.label }}:</label>
+                                {{ form.unit }}
+                            </fieldset>
                             <fieldset>
                                 {{ form.enabled.errors }}
                                 <label class="radiolabel">

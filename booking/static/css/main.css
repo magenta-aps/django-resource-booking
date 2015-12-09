@@ -413,7 +413,16 @@ input[type="checkbox"] {
 .label {
     background: #888 !important;
 }
-
 ul.errorlist {
     color: #c00;
+}
+.form-inline label,
+.form-inline input,
+.form-inline select {
+    display: inline-block;
+    width: auto;
+}
+.duration input {
+    width: 25%;
+    margin: 0 4px;
 }

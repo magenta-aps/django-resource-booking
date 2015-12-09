@@ -6,7 +6,8 @@ from djorm_pgfulltext.fields import VectorField
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
 from django.utils.translation import ugettext_lazy as _
-import timedelta
+
+from .fields import DurationField
 
 
 LOGACTION_CREATE = ADDITION
@@ -394,10 +395,12 @@ class Visit(Resource):
     time = models.DateTimeField(
         verbose_name=_(u'Tid')
     )
-    duration = timedelta.fields.TimedeltaField(
+    duration = DurationField(
         verbose_name=_(u'Varighed'),
         blank=True,
-        null=True
+        null=True,
+        labels={'day': _(u'Dage:'), 'hour': _(u'Timer:'),
+                'minute': _(u'Minutter:')}
     )
     contact_persons = models.ManyToManyField(
         Person,
