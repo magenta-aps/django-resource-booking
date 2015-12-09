@@ -37,7 +37,8 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'booking',
-    'profile'
+    'profile',
+    'timedelta'
 )
 
 MIDDLEWARE_CLASSES = (
@@ -112,7 +113,7 @@ WSGI_APPLICATION = 'resource_booking.wsgi.application'
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'da-dk'
 
 TIME_ZONE = 'UTC'
 

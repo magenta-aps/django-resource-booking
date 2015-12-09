@@ -1,6 +1,7 @@
 {% extends 'index.html' %}
 {% load i18n %}
 {% load staticfiles %}
+{% load booking_tags %}
 
 {% block head %}
     <link rel="stylesheet" href="{% static 'thirdparty/bootstrap-datetime-picker/css/bootstrap-datetimepicker.min.css' %}"/>
@@ -152,7 +153,9 @@
                                     <fieldset>
                                         {{ form.duration.errors }}
                                         <label for="{{ form.duration.id_for_label }}">{{ form.duration.label }}:</label>
+                                        <div class="form-inline duration">
                                         {{ form.duration }}
+                                        </div>
                                     </fieldset>
                                 </div>
                                 <div class="col-sm-12 col-md-6">
@@ -183,6 +186,11 @@
                     " aria-labelledby="headingContact" role="tabpanel" aria-expanded="true" style="">
                         <div class="panel-body">
                             <fieldset>
+                                {{ form.unit.errors }}
+                                <label for="{{ form.unit.id_for_label }}">{{ form.unit.label }}:</label>
+                                {{ form.unit }}
+                            </fieldset>
+                            <fieldset>
                                 {{ form.enabled.errors }}
                                 <label class="radiolabel">
                                     <label for="{{ form.enabled.id_for_label }}">{{ form.enabled }} Kan bookes</label>
@@ -207,6 +215,13 @@
                         <div class="panel-body">
                             <fieldset>
                                 <label>{% trans "Vedhæftede filer" %}:</label>
+                                <ul>
+                                {% for material in fileformset.studymaterials %}
+                                    <li>
+                                        <a href="{{ MEDIA_URL }}{{ material.file.url }}">{{ material.file.name | upload_name_strip_path }}</a>
+                                    </li>
+                                {% endfor %}
+                                </ul>
                                 {{ fileformset.management_form }}
                                 <div id="attachFileFields">
                                 {% for fileform in fileformset %}
