@@ -122,9 +122,9 @@ class EditVisit(UpdateView):
         pk = kwargs.get("pk")
         self.object = None if pk is None else Visit.objects.get(id=pk)
         form = self.get_form()
+        fileformset = VisitStudyMaterialForm(request.POST)
         if form.is_valid():
             visit = form.save()
-            fileformset = VisitStudyMaterialForm(request.POST, instance=visit)
             if fileformset.is_valid():
                 visit.save()
                 for fileform in fileformset:
@@ -139,13 +139,18 @@ class EditVisit(UpdateView):
 
             return super(EditVisit, self).form_valid(form)
         else:
-            return self.form_invalid(form)
+            return self.form_invalid(form, fileformset)
 
     def get_success_url(self):
         try:
             return "/visit/%d" % self.object.id
         except:
             return '/'
+
+    def form_invalid(self, form, fileformset=None):
+        return self.render_to_response(
+            self.get_context_data(form=form, fileformset=fileformset)
+        )
 
 
 class VisitDetailView(DetailView):
