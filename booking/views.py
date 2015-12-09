@@ -166,8 +166,6 @@ class EditVisit(RoleRequiredMixin, VisitMixin, UpdateView):
     def get(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
         self.object = Visit() if pk is None else Visit.objects.get(id=pk)
-        if kwargs.get("clone") and self.object:
-            self.object.pk = None
         form = self.get_form()
         fileformset = VisitStudyMaterialForm(None, instance=self.object)
         return self.render_to_response(
@@ -177,10 +175,10 @@ class EditVisit(RoleRequiredMixin, VisitMixin, UpdateView):
     # Handle both forms, creating a Visit and a number of StudyMaterials
     def post(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
-        if pk is None or kwargs.get("clone"):
+        if pk is None or kwargs.get("clone", False):
             self.object = None
         else:
-            Visit.objects.get(id=pk)
+            self.object = Visit.objects.get(id=pk)
         form = self.get_form()
         if form.is_valid():
             visit = form.save()
