@@ -244,6 +244,7 @@
 {% endblock %}
 
 {% block extra_scripts %}
+    {{ form.media }}
     <script type="text/javascript" src="{% static 'thirdparty/bootstrap-datetime-picker/js/bootstrap-datetimepicker.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/formutil.js' %}"></script>
     <script type="text/javascript"><!--

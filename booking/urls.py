@@ -1,4 +1,4 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import patterns, url, include
 from django.conf.urls.static import static
 from django.conf import settings
 
@@ -49,6 +49,8 @@ urlpatterns = patterns(
         VisitDetailView.as_view(), name='visit'),
     url(r'^visit/(?P<pk>[0-9]+)/edit$',
         EditVisit.as_view(), name='visit_edit'),
+
+    url(r'^tinymce/', include('tinymce.urls')),
 
 
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
