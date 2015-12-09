@@ -2,6 +2,8 @@
 from django.views.generic import TemplateView, ListView, DetailView
 from django.utils.translation import ugettext as _
 from django.views.generic.edit import UpdateView
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import Http404
 
 from booking.models import Visit
 from booking.forms import VisitForm
@@ -122,7 +124,10 @@ class EditVisit(VisitMixin, UpdateView):
     # and one for the file upload
     def get(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
-        self.object = Visit() if pk is None else Visit.objects.get(id=pk)
+        try:
+            self.object = Visit() if pk is None else Visit.objects.get(id=pk)
+        except ObjectDoesNotExist:
+            raise Http404
         form = self.get_form()
         fileformset = VisitStudyMaterialForm(None, instance=self.object)
         return self.render_to_response(
