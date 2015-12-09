@@ -10,9 +10,6 @@ from booking.models import StudyMaterial
 
 from booking.models import Resource, Subject
 
-from pprint import pprint
-from inspect import getmembers
-
 i18n_test = _(u"Dette tester oversættelses-systemet")
 
 
