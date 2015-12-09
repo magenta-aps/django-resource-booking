@@ -5,6 +5,8 @@ from django.views.generic.edit import UpdateView
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import Http404
 
 from profile.models import COORDINATOR, ADMINISTRATOR
 
@@ -146,6 +148,10 @@ class EditVisit(UpdateView):
     form_class = VisitForm
     model = Visit
 
+    def __init__(self, *args, **kwargs):
+        super(EditVisit, self).__init__(*args, **kwargs)
+        self.object = None
+
     # Display a view with two form objects; one for the regular model,
     # and one for the file upload
 
@@ -153,7 +159,10 @@ class EditVisit(UpdateView):
 
     def get(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
-        self.object = Visit() if pk is None else Visit.objects.get(id=pk)
+        try:
+            self.object = Visit() if pk is None else Visit.objects.get(id=pk)
+        except ObjectDoesNotExist:
+            raise Http404
         form = self.get_form()
         fileformset = VisitStudyMaterialForm(None, instance=self.object)
         return self.render_to_response(
@@ -166,7 +175,10 @@ class EditVisit(UpdateView):
         if pk is None or kwargs.get("clone", False):
             self.object = None
         else:
-            self.object = Visit.objects.get(id=pk)
+            try:
+                self.object = Visit.objects.get(id=pk)
+            except ObjectDoesNotExist:
+                raise Http404
         form = self.get_form()
         fileformset = VisitStudyMaterialForm(request.POST)
         if form.is_valid():
