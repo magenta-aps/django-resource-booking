@@ -1,8 +1,7 @@
 from django.conf.urls import patterns, url
 
 from .views import MainPageView
-from booking.views import SearchView
-from booking.views import EditVisit, VisitDetailView
+from booking.views import EditVisit, VisitDetailView, SearchView, AdminSearchView, AdminIndexView, AdminVisitDetailView
 from django.views.generic import TemplateView
 
 urlpatterns = patterns(
@@ -46,5 +45,8 @@ urlpatterns = patterns(
     url(r'^visit/(?P<pk>[0-9]+)/?',
         VisitDetailView.as_view(), name='visit'),
     url(r'^visit/(?P<pk>[0-9]+)/edit$',
-        EditVisit.as_view(), name='visit_edit')
+        EditVisit.as_view(), name='visit_edit'),
+    url(r'^fokusadmin/?$', AdminIndexView.as_view(), name='admin-index'),
+    url(r'^fokusadmin/search/?$', AdminSearchView.as_view(), name='admin-search'),
+    url(r'^fokusadmin/visit/(?P<pk>[0-9]+)/?$', AdminVisitDetailView.as_view(), name='admin-visit')
 )

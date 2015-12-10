@@ -149,7 +149,22 @@ class EditVisit(VisitMixin, UpdateView):
         else:
             return self.form_invalid(form)
 
+
 class VisitDetailView(DetailView):
     """Display Visit details"""
     model = Visit
     template_name = 'visit/details.html'
+
+
+class AdminIndexView(MainPageView):
+    template_name = 'admin_index.html'
+
+
+class AdminSearchView(SearchView):
+    template_name = 'resource/admin_searchresult.html'
+    # url_base = 'fokusadmin'
+    # success_url = '/fokusadmin'
+
+
+class AdminVisitDetailView(VisitDetailView):
+    template_name = 'visit/admin_details.html'
