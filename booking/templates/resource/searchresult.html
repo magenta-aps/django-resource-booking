@@ -1,41 +1,24 @@
-{%extends "index.html" %}
-{% load staticfiles %}
-
-{% block content %}
-<div class="container">
-    <header>
-        <nav class="navbar navbar-top">
-            <div class="navbar-header">
-                <a class="navbar-brand" href="http://www.ku.dk"><img src="{% static "img/ku-top.svg" %}" class="img-responsive" alt="Københavns Universitet"></a>
-            </div>
-        </nav>
-    </header>
+{%extends "index.html" %} {% load staticfiles %} {% block content %}
+<div class="container-fluid">
     <div class="row">
-        <div class="col-sm-12">
-            <div class="row red-line no-gutter">
-                <div class="hidden-xs col-md-3">
-                    <div class="segl">
-                        <a href="{% url 'index' %}"><img src="{% static "img/logo.svg" %}" class="img-responsive" alt=""></a>
-                    </div>
+        <header>
+            <nav class="navbar navbar-top">
+                <div class="clearfix ku-top">
+                    <a class="navbar-brand" href="http://fokus.ku.dk"><span class="ku-regular">Fo</span><span class="ku-bold">ku</span><span class="ku-regular">s</span></a>
+                    <div class="intro hidden-xs">Portal for skole- og gymnasieområdet</div>
                 </div>
-                <div class="col-sm-9 pull-right text-right">
-                    <form class="search-list clearfix" role="søg" action={% url 'search' %}>
-                        <div class="input-group">
-                            <label class="sr-only" for="searchBox">Søg efter tilbud</label>
-                            <input type="text" class="form-control" id="searchBox" placeholder="Søg efter tilbud - indtast et eller flere søgeord..." name="q" value="{{ request.GET.q }}">
-                            <span class="input-group-btn">
-                                <button class="btn btn-default" type="submit"><span class="hidden-xs">Søg</span> <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
-                            </button>
-                            </span>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
+                <ul class="personal-menu list-inline">
+                    <li class="login"><a href="#">Log ind</a></li>
+                </ul>
+            </nav>
+        </header>
     </div>
-    <div class="row">
+</div>
+<div class="container">
+    <div class="row no-gutter hidden-xs">
         <div class="col-sm-12">
             <ol class="breadcrumb">
+                <li>Du er her: </li>
                 <li><a href="{% url 'index' %}">Søgning</a></li>
                 <li class="active">Søgeresultat</li>
             </ol>
@@ -43,12 +26,48 @@
     </div>
     <div class="row titlebar">
         <div class="col-sm-12 col-md-9 col-md-offset-3">Søgeresultat</div>
+        <div class="col-sm-12 visible-xs-block titlebar-gradient"></div>
     </div>
     <div class="row">
+        <div class="col-sm-12 col-md-7 col-md-offset-3">
+            <form class="search-list clearfix" role="søg" action={% url 'search' %}>
+                <div class="input-group">
+                    <label class="sr-only" for="searchBox">Søg efter tilbud</label>
+                    <input type="text" class="form-control" id="searchBox" placeholder="Søg efter tilbud - indtast et eller flere søgeord..." name="q" value="{{ request.GET.q }}">
+                    <span class="input-group-btn">
+                    <button class="btn btn-default" type="submit"><span class="hidden-xs">Søg</span> <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                    </button>
+                    </span>
+                </div>
+            </form>
+        </div>
+        <div class="col-md-2 text-right hidden-xs">
+            <div class="search-list">
+                <div class="btn-group" role="group" aria-label="Vælg antal resultater i listen">
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-default">10</button>
+                        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <span class="caret"></span>
+                            <span class="sr-only">Vælg antal resultater i listen</span>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a href="#">5</a></li>
+                            <li class="selected"><a href="#">10</a></li>
+                            <li><a href="#">15</a></li>
+                            <li><a href="#">Alle</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="divider"></div>
+    <div class="row">
         <div class="col-sm-6 col-md-3">
-            <form class="" action="{% url 'search' %}" method="get"
-                  name="filter-search-results" id="filter-search-results">
-                <input type="hidden" name="q" value="{{ request.GET.q }}""/>
+            <button type="button" class="visible-xs btn btn-default" data-toggle="collapse" data-target="#filters" id="filter-btn">Filtrer søgeresultat <span class="glyphicon glyphicon-chevron-down hidden-print"></span></button>
+            <div class="hidden-xs" id="filters">
+            <form class="" action="{% url 'search' %}" method="get" name="filter-search-results" id="filter-search-results">
+                <input type="hidden" name="q" value="{{ request.GET.q }}" "/>
                 <div class="panel panel-sidebar">
                     <div class="panel-heading">
                         <h3 class="panel-title">Filtrer resultater</h3>
@@ -56,20 +75,20 @@
                     <div class="panel-body">
                         <h3 class="panel-title">Hvem er du?</h3>
                         <hr>
-                        <div class="input-group">
+                        <div class="input-group ">
                             {% for c in audience_choices %}
-                            <div class="checkbox">
+                            <div class="checkbox ">
                                 <label class="control-label" for="audience-choice-{{c.value}}">
                                     <input name="a" id="audience-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}> {{c.label}}
                                 </label>
                             </div>
                             {% endfor %}
                         </div>
-                        <h3 class="panel-title">Hvad søger du?</h3>
+                        <h3 class="panel-title ">Hvad søger du?</h3>
                         <hr>
-                        <div class="input-group">
+                        <div class="input-group ">
                             {% for c in type_choices %}
-                            <div class="checkbox">
+                            <div class="checkbox ">
                                 <label class="control-label" for="type-choice-{{c.value}}">
                                     <input name="t" id="type-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}> {{c.label}}
                                 </label>
@@ -96,7 +115,7 @@
                                 <h3 class="panel-title inline-block">Grundskolefag </h3><span class="caret"></span></a>
                             <hr>
                             <div id="grundskolefag" class="panel-collapse {% if not grundskole_selected %}collapse{% endif %}" role="tabpanel" aria-labelledby="headingThree">
-                                <div class="input-group">
+                                <div class="input-group ">
                                     {% for c in grundskole_choices %}
                                     <div class="checkbox">
                                         <label class="control-label" for="grundskole-choice-{{c.value}}">
@@ -106,19 +125,19 @@
                                     {% endfor %}
                                 </div>
                             </div>
-                            <h3 class="panel-title inline-block">Vælg periode </h3>
+                            <h3 class="panel-title inline-block ">Vælg periode </h3>
                             <hr>
                             <div class="row input-daterange">
                                 <div class="form-group clearfix">
                                     <label class="col-sm-2 control-label">Fra:</label>
                                     <div class="col-sm-10">
-                                        <input type="text" class="form-control" placeholder="Klik og vælg dato" value="">
+                                        <input type="text" class="form-control" placeholder="Klik og vælg dato" value=" ">
                                     </div>
                                 </div>
                                 <div class="form-group clearfix">
                                     <label class="col-sm-2 control-label">til:</label>
                                     <div class="col-sm-10">
-                                        <input type="text" class="form-control" placeholder="Klik og vælg dato" value="">
+                                        <input type="text" class="form-control" placeholder="Klik og vælg dato" value=" ">
                                     </div>
                                 </div>
                             </div>
@@ -127,17 +146,18 @@
                 </div>
             </form>
         </div>
+        </div>
         <div class="col-sm-12 col-md-9">
             {% if not results %}
             <p>Din søgning gav ikke noget resultat</p>
             {% else %}
-            <p class="lead">{{ paginator.count }} resultater matcher din søgning på "{{request.GET.q}}"</p>
+            <h2 class="dotted-underlined">{{ paginator.count }} resultater matcher din søgning på <span class="matched-search-phrase">"{{request.GET.q}}"</span></h2>
             <ul class="media-list">
                 {% for res in results %}
                 <li class="media">
                     <div class="media-body">
-                        <h3 class="media-heading"><a href="{% url 'visit' res.pk %}">{{ res.title }}</a></h3>
-                        <div class="media-info"><strong>Hvad: </strong><span class="type-offer">{{ res.get_type_display }}.</span></div>
+                        <h3 class="media-heading"><a href="{% url 'visit' res.pk %} ">{{ res.title }}</a></h3>
+                        <div class="media-info "><strong>Hvad: </strong><span class="type-offer ">{{ res.get_type_display }}.</span></div>
                         <p>{{ res.description }}</p>
                     </div>
                 </li>
@@ -149,7 +169,7 @@
     <div class="row">
         <div class="col-sm-6 col-sm-offset-3">
             <nav>
-                <ul class="pagination">
+                <ul class="pagination ">
                     
                     {% if page_obj.has_previous %}
                     <li>
@@ -171,10 +191,10 @@
                     {% for pnr in paginator.page_range %}
                         {% if page_obj.number == pnr %}
                             <li class="active">
-                                <span>{{ pnr }} <span class="sr-only">(aktiv side)</span></span>
+                                <span>{{ pnr }} <span class="sr-only ">(aktiv side)</span></span>
                             </li>
                         {% else %}
-                            <li><a href="?{{ qstring }}&page={{pnr}}">{{pnr}}</a></li>
+                            <li><a href="?{{ qstring }}&page={{pnr}} ">{{pnr}}</a></li>
                         {% endif %}
                     {% endfor %}
                     {% if page_obj.has_next %}
@@ -201,10 +221,37 @@
 </div>
 {% endblock %}
 
+{% block footer %}
+    <div class="container-fluid ">
+        <div class="row">
+            <footer>
+                <div class="container">
+                    <div class="row no-gutter footer-columns">
+                        <div class="col-sm-4 col-sm-offset-0">
+                            <ul class="footerlinks ">
+                                <li><a href="http://kommunikation.ku.dk/ ">Kommunikation</a></li>
+                                <li><a href="http://www.ku.dk/ ">Københavns Universitet</a></li>
+                                <li>Nørregade 10, Postboks 2177</li>
+                                <li>1017 København K</li>
+                            </ul>
+                        </div>
+                        <div class="col-sm-3">
+                            <ul class="footerlinks">
+                                <li class="clearfix social-icons "><a target="_blank " class="footer-social " href="https://www.facebook.com/universitet "><span class="icon-circle "><i class="fa fa-facebook "></i></span></a><a target="_blank " class="footer-social " href="https://www.linkedin.com/edu/k%C3%B8benhavns-universitet-12012 "><span class="icon-circle "><i class="fa fa-linkedin "></i></span></a><a target="_blank " class="footer-social " href="https://twitter.com/koebenhavns_uni "><span class="icon-circle "><i class="fa fa-twitter "></i></span></a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+{% endblock %}
+
 {% block extra_scripts %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.5.0/js/bootstrap-datepicker.min.js"></script>
-<script src="{% static 'js/bootstrap-datepicker.da.min.js' %}"></script>
-<script type="text/javascript">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.5.0/js/bootstrap-datepicker.min.js "></script>
+<script src="{% static 'js/bootstrap-datepicker.da.min.js' %} "></script>
+<script src="{% static 'js/custom.js' %} "></script>
+<script type="text/javascript ">
 $(function() {
     $('.input-daterange input').each(function() {
         $(this).datepicker({
@@ -217,14 +264,10 @@ $(function() {
         });
     });
     $('.collapse').on('shown.bs.collapse', function() {
-        $(this).parent().find(".caret").addClass("caret-up");
+        $(this).parent().find(".caret ").addClass("caret-up ");
     });
     $('.collapse').on('hidden.bs.collapse', function() {
-        $(this).parent().find(".caret").removeClass("caret-up");
-    });
-    $('.checkbox input:checkbox').click(function() {
-        $('label:has(input:checkbox:checked)').addClass('active');
-        $('label:has(input:checkbox:not(:checked))').removeClass('active');
+        $(this).parent().find(".caret ").removeClass("caret-up ");
     });
     $('#filter-search-results input[type=checkbox]').on('change', function() {
         $(this.form).trigger("submit")
