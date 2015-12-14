@@ -48,6 +48,17 @@
                     </nav>
                 </header>
             </div>
+            {% if user.is_authenticated %}
+            <div class="row">
+                <nav class="navbar">
+                    <ul class="list-inline">
+                        <li><a href="/profile">Min side</a></li>
+                        <li><a href="/">Søg i alle tilbud</a></li>
+                        <li><a href="/admin">Administration</a></li>
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
         </div>
         {% endblock %}
         
