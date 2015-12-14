@@ -30,84 +30,71 @@
     <body>
 
         {% block header %}
-            <div class="box invert">
-                <strong><a href="{% url 'admin:index' %}">Administration</a></strong>
-                <div class="pull-right navlinks">
-                    <a href="{% url 'mockup-manage-list' %}">Mine tilbud</a>
-                    <a href="{% url 'mockup-booking-list' %}">Forespørgsler <span class="label label-default">8</span></a>
-                    <a href="index.html">Log ud</a>
-                </div>
+        <div class="container-fluid">
+            <div class="row">
+                <header>
+                    <nav class="navbar navbar-top">
+                        <div class="clearfix ku-top">
+                            <a class="navbar-brand" href="http://fokus.ku.dk"><span class="ku-regular">Fo</span><span class="ku-bold">ku</span><span class="ku-regular">s</span></a>
+                            <div class="intro hidden-xs">Portal for skole- og gymnasieområdet</div>
+                        </div>
+                        <ul class="personal-menu list-inline">
+                            {% if user.is_authenticated %}
+                            <li class="login"><a href="/profile/logout">Log ud</a></li>
+                            {% else %}
+                            <li class="login"><a href="/profile/login">Log ind</a></li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </header>
             </div>
-            
-            <div class="container-fluid">
-                <div class="row">
-                    <header>
-                        <nav class="navbar navbar-top">
-                            <div class="clearfix ku-top">
-                                <a class="navbar-brand" href="http://fokus.ku.dk"><span class="ku-regular">Fo</span><span class="ku-bold">ku</span><span class="ku-regular">s</span></a>
-                                <div class="intro hidden-xs">Portal for skole- og gymnasieområdet</div>
-                            </div>
-                            <ul class="personal-menu list-inline">
-                                <li class="login"><a href="#">Log ind</a></li>
-                            </ul>
-                        </nav>
-                    </header>
-                </div>
-            </div>
+        </div>
         {% endblock %}
         
+        <div class="container">
         {% block content %}
-        
-            <div class="container">
-                <h1>Søg i tilbud</h1>
-                <div class="row">
-                    <div class="col-sm-12 col-md-6">
-                        <form action="{% url 'search' %}">
-                            <div class="input-group">
-                                <label class="sr-only" for="searchBox">Søg efter tilbud</label>
-                                <input type="text" class="form-control" id="searchBox" placeholder="Indtast et eller flere søgeord..." name="q">
-                                <span class="input-group-btn">
-                                    <button class="btn btn-default" type="submit">Søg  <span class="glyphicon glyphicon-search" aria-hidden="true"></span></button>
-                                </span>
-                            </div>
-                        </form>
-                    </div>
+            <h1>Søg i tilbud</h1>
+            <div class="row">
+                <div class="col-sm-12 col-md-6">
+                    <form action="{% url 'search' %}">
+                        <div class="input-group">
+                            <label class="sr-only" for="searchBox">Søg efter tilbud</label>
+                            <input type="text" class="form-control" id="searchBox" placeholder="Indtast et eller flere søgeord..." name="q">
+                            <span class="input-group-btn">
+                                <button class="btn btn-default" type="submit">Søg  <span class="glyphicon glyphicon-search" aria-hidden="true"></span></button>
+                            </span>
+                        </div>
+                    </form>
                 </div>
-                <hr>
-                    
-                <a href="manage">Admin</a>
-                {% if user.is_authenticated %}
-                <a href="profile/logout">Logout</a>
-                {% else %}
-                <a href="profile/login">Login</a>
-                {% endif %}
             </div>
+            <hr>
         {% endblock %}
+        </div>
         
         {% block footer %}
-            <div class="container-fluid ">
-                <div class="row">
-                    <footer>
-                        <div class="container">
-                            <div class="row no-gutter footer-columns">
-                                <div class="col-sm-4 col-sm-offset-0">
-                                    <ul class="footerlinks ">
-                                        <li><a href="http://kommunikation.ku.dk/ ">Kommunikation</a></li>
-                                        <li><a href="http://www.ku.dk/ ">Københavns Universitet</a></li>
-                                        <li>Nørregade 10, Postboks 2177</li>
-                                        <li>1017 København K</li>
-                                    </ul>
-                                </div>
-                                <div class="col-sm-3">
-                                    <ul class="footerlinks">
-                                        <li class="clearfix social-icons "><a target="_blank " class="footer-social " href="https://www.facebook.com/universitet "><span class="icon-circle "><i class="fa fa-facebook "></i></span></a><a target="_blank " class="footer-social " href="https://www.linkedin.com/edu/k%C3%B8benhavns-universitet-12012 "><span class="icon-circle "><i class="fa fa-linkedin "></i></span></a><a target="_blank " class="footer-social " href="https://twitter.com/koebenhavns_uni "><span class="icon-circle "><i class="fa fa-twitter "></i></span></a></li>
-                                    </ul>
-                                </div>
+        <div class="container-fluid ">
+            <div class="row">
+                <footer>
+                    <div class="container">
+                        <div class="row no-gutter footer-columns">
+                            <div class="col-sm-4 col-sm-offset-0">
+                                <ul class="footerlinks ">
+                                    <li><a href="http://kommunikation.ku.dk/ ">Kommunikation</a></li>
+                                    <li><a href="http://www.ku.dk/ ">Københavns Universitet</a></li>
+                                    <li>Nørregade 10, Postboks 2177</li>
+                                    <li>1017 København K</li>
+                                </ul>
+                            </div>
+                            <div class="col-sm-3">
+                                <ul class="footerlinks">
+                                    <li class="clearfix social-icons "><a target="_blank " class="footer-social " href="https://www.facebook.com/universitet "><span class="icon-circle "><i class="fa fa-facebook "></i></span></a><a target="_blank " class="footer-social " href="https://www.linkedin.com/edu/k%C3%B8benhavns-universitet-12012 "><span class="icon-circle "><i class="fa fa-linkedin "></i></span></a><a target="_blank " class="footer-social " href="https://twitter.com/koebenhavns_uni "><span class="icon-circle "><i class="fa fa-twitter "></i></span></a></li>
+                                </ul>
                             </div>
                         </div>
-                    </footer>
-                </div>
+                    </div>
+                </footer>
             </div>
+        </div>
         {% endblock %}
 
         <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->

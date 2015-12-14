@@ -113,6 +113,10 @@ a:not(.btn):active {
 .container {
     max-width: 1024px;
 }
+.container-iframe {
+    max-width: 1024px;
+    margin: 15px auto;
+}
 .container-fluid {
      padding: 0;
 }
