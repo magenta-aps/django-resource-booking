@@ -376,7 +376,7 @@ h3.media-heading {
     font-size:13px;
 }
 
-.matched-search-phrase {
+mark, .matched-search-phrase {
     font-family: 'noto_sansbold', arial, sans-serif;
 }
 
