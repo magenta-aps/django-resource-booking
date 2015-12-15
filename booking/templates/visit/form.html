@@ -233,6 +233,34 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="panel panel-default">
+                    <div id="headingInternal" class="panel-heading" role="tab">
+                        <h4 class="panel-title">
+                            <a class="" aria-controls="collapseInternal"
+                                aria-expanded="true"
+                                href="#collapseInternal" data-parent="#accordion"
+                                data-toggle="collapse" role="button">{% trans "Interne oplysninger" %}</a>
+                        </h4>
+                    </div>
+                    <div id="collapseInternal" class="panel-collapse collapse {% if form.enabled.errors or form.contact_persons.errors %}in{% endif %} " aria-labelledby="headingContact" role="tabpanel" aria-expanded="true" style="">
+                        <div class="panel-body">
+                                    <fieldset>
+                                        {{ form.preparation_time.errors }}
+                                        <label for="{{
+                                            form.preparation_time.id_for_label }}">{{ form.preparation_time.label }}:</label>
+                                        {{ form.preparation_time }}
+                                    </fieldset>
+                                    <fieldset>
+                                        {{ form.comment.errors }}
+                                        <label for="{{
+                                            form.comment.id_for_label }}">{{ form.comment.label }}:</label>
+                                        {{ form.comment }}
+                                    </fieldset>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
             {% include 'common/save_cancel.html' %}
