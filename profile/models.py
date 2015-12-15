@@ -21,6 +21,14 @@ user_role_choices = (
 )
 
 
+def role_to_text(role):
+    """Return text representation of role code."""
+    for r, t in user_role_choices:
+        if r == role:
+            return unicode(t)
+    return ""
+
+
 class UserRole(models.Model):
     """"Superadmin, administrator, teacher, etc."""
     role = models.IntegerField(
