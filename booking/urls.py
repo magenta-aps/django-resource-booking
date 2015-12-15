@@ -5,8 +5,6 @@ from booking.views import SearchView
 from booking.views import EditVisit, VisitDetailView
 from django.views.generic import TemplateView
 
-import djangosaml2
-
 urlpatterns = patterns(
 
     '',
