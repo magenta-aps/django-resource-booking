@@ -9,6 +9,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
 
 from profile.models import COORDINATOR, ADMINISTRATOR
+from profile.models import role_to_text
 
 from booking.models import Visit, StudyMaterial
 from booking.models import Resource, Subject
@@ -38,6 +39,17 @@ class LoginRequiredMixin(object):
         return super(LoginRequiredMixin, self).dispatch(*args, **kwargs)
 
 
+class RoleNotFound(PermissionDenied):
+    def __init__(self, text, *args, **kwargs):
+        _text = text
+        print _text
+        return super(RoleNotFound, self).__init__(text, *args, **kwargs)
+
+    def __unicode__(self):
+        print self._text
+        return unicode(self._text)
+
+
 class RoleRequiredMixin(object):
     """Require that user has any of a number of roles."""
 
@@ -56,11 +68,16 @@ class RoleRequiredMixin(object):
                 return super(RoleRequiredMixin, self).dispatch(*args, **kwargs)
         except AttributeError:
             pass
-        raise PermissionDenied
+        txts = map(role_to_text, self.roles)
+        # TODO: Render this with the error message!
+        raise RoleNotFound(
+            u"Kun brugere med disse roller kan logge ind: " +
+            u",".join(txts)
+        )
 
 
-# Class for handling main search
 class SearchView(ListView):
+    """Class for handling main search."""
     model = Resource
     template_name = "resource/searchresult.html"
     context_object_name = "results"
