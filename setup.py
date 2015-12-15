@@ -27,7 +27,7 @@ designed for the University of Copenhagen.""",
           'djorm-ext-pgfulltext==0.10',
           'django-npm',
           'django-timedeltafield',
-          'django-tinymce==2.0.6',
+          'django-tinymce==2.0.4',
           'djangosaml2=0.13.0'
       ],
       entry_points="""
