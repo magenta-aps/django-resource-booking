@@ -7,10 +7,15 @@ from booking.views import EditVisit, VisitDetailView, SearchView
 from booking.views import AdminSearchView, AdminIndexView, AdminVisitDetailView
 from django.views.generic import TemplateView
 
+import djangosaml2
+
 urlpatterns = patterns(
 
     '',
     url(r'^$', MainPageView.as_view(), name='index'),
+
+    # Djangosaml2
+    (r'^saml2/', include('djangosaml2.urls')),
 
     url(r'^manage$', TemplateView.as_view(
         template_name='mockup_templates/manage-list.html'),
