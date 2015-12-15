@@ -47,6 +47,7 @@ class RoleNotFound(PermissionDenied):
         print self._text
         return unicode(self._text)
 
+
 class RoleRequiredMixin(object):
     """Require that user has any of a number of roles."""
 
