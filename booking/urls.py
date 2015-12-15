@@ -7,8 +7,6 @@ from booking.views import EditVisit, VisitDetailView, SearchView
 from booking.views import AdminSearchView, AdminIndexView, AdminVisitDetailView
 from django.views.generic import TemplateView
 
-import djangosaml2
-
 urlpatterns = patterns(
 
     '',

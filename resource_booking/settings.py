@@ -160,7 +160,7 @@ USE_SAML = False
 MAKE_SAML_LOGIN_DEFAULT = False
 # Setup the default login backend so we can override it after loading local
 # saml settings
-AUTHENTICATION_BACKENDS = [ 'django.contrib.auth.backends.ModelBackend' ]
+AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.ModelBackend']
 
 local_settings_file = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
@@ -173,10 +173,6 @@ if os.path.exists(local_settings_file):
 if USE_SAML:
     from saml_settings import *  # noqa
     if MAKE_SAML_LOGIN_DEFAULT:
-        AUTHENTICATION_BACKENDS.insert(0,
-            'djangosaml2.backends.Saml2Backend'
-        )
+        AUTHENTICATION_BACKENDS.insert(0, 'djangosaml2.backends.Saml2Backend')
     else:
-        AUTHENTICATION_BACKENDS.append(
-            'djangosaml2.backends.Saml2Backend'
-        )
+        AUTHENTICATION_BACKENDS.append('djangosaml2.backends.Saml2Backend')
