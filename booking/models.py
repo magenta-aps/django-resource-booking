@@ -297,7 +297,8 @@ class Resource(models.Model):
     extra_search_text = models.TextField(
         blank=True,
         default='',
-        verbose_name=_(u'Tekst-værdier til fritekstsøgning')
+        verbose_name=_(u'Tekst-værdier til fritekstsøgning'),
+        editable=False
     )
 
     objects = SearchManager(
