@@ -37,7 +37,8 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'booking',
-    'profile'
+    'profile',
+    'tinymce'
 )
 
 MIDDLEWARE_CLASSES = (
@@ -69,8 +70,45 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'resource_booking.wsgi.application'
+STATICFILES_FINDERS = [
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    'npm.finders.NpmFinder'
+]
 
+# Django-npm config
+
+# Local thirdparty cache; holds all downloaded
+# dependencies in this folder under the root
+NPM_PREFIX_PATH = 'thirdparty'
+
+# collectstatic will put dependencies in static/thirdparty/
+NPM_DESTINATION_PREFIX = 'thirdparty'
+
+# Mapping for dependencies: Only the listed files from
+# each dependency will make it into static/
+NPM_FILE_PATTERNS = {
+    'jquery': ['dist/jquery.min.js'],
+    'bootstrap': ['dist/css/bootstrap.min.css',
+                  'dist/fonts/*', 'dist/js/bootstrap.min.js'],
+    'bootstrap-datetime-picker': ['js/bootstrap-datetimepicker.min.js',
+                                  'js/locales/bootstrap-datetimepicker.da.js',
+                                  'css/bootstrap-datetimepicker.min.css']
+}
+
+# Django-tinymce config
+
+TINYMCE_DEFAULT_CONFIG = {
+    'plugins': "table,paste,searchreplace",
+    'theme': "advanced",
+    'cleanup_on_startup': True,
+    'custom_undo_redo_levels': 100,
+}
+TINYMCE_COMPRESSOR = True
+TINYMCE_JS_ROOT = '/static/thirdparty/tinymce'
+
+
+WSGI_APPLICATION = 'resource_booking.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
@@ -104,6 +142,8 @@ LOCALE_PATHS = (
 
 # On login, redirect to /profile/
 LOGIN_REDIRECT_URL = '/profile/'
+# Default URL for login
+LOGIN_URL = '/profile/login'
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
