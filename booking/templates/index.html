@@ -11,19 +11,22 @@
     
         <!-- Bootstrap -->
         <link href="{% static 'thirdparty/bootstrap/dist/css/bootstrap.min.css' %}" rel="stylesheet">
-        <link href="{% static 'css/main.css' %}" rel="stylesheet">    
+
+        <!-- Our own stylesheet -->
+        <link href="{% static 'css/main.css' %}" rel="stylesheet">
         <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.5.0/css/bootstrap-datepicker.min.css" rel="stylesheet">
         <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet">
-            
+
+        <!-- Our own header content -->
+        {% block head %}{% endblock %}
+
         <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
         <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
         <!--[if lt IE 9]>
             <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
             <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
         <![endif]-->
-        {% block head %}
-        {% endblock %}
-        
+
         <link href="{% static 'img/favicon.ico' %}" rel="shortcut icon">
             
     </head>
@@ -53,8 +56,10 @@
                 <nav class="navbar">
                     <ul class="list-inline">
                         <li><a href="/profile">Min side</a></li>
+                        <li><a href="{% url 'mockup-manage-list' %}">Mine tilbud</a></li>
+                        <li><a href="{% url 'mockup-booking-list' %}">Forespørgsler <span class="label label-default">8</span></a></li>
                         <li><a href="/">Søg i alle tilbud</a></li>
-                        <li><a href="/admin">Administration</a></li>
+                        <li><a href="{% url 'admin:index' %}">Administration</a></li>
                     </ul>
                 </nav>
             </div>
@@ -109,9 +114,10 @@
         {% endblock %}
 
         <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+        <script src="{% static 'thirdparty/jquery/dist/jquery.min.js' %}"></script>
         <!-- Include all compiled plugins (below), or include individual files as needed -->
         <script src="{% static 'thirdparty/bootstrap/dist/js/bootstrap.min.js' %}"></script>
         {% block extra_scripts %}{% endblock %}
+
     </body>
 </html>
