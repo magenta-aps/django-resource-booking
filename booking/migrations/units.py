@@ -47,6 +47,7 @@ class Migration(migrations.Migration):
             # Naturvidenskab - where the real work is done
             unit(name=u"Biologisk Institut", parent=fakultet_naturvidenskab, type=institut),
             unit(name=u"Datalogisk Institut", parent=fakultet_naturvidenskab, type=institut),
+            unit(name=u"Det Natur- og Biovidenskabelige Fakultets Skoletjeneste", parent=fakultet_naturvidenskab, type=institut),
             unit(name=u"Institut for Idræt og Ernæring", parent=fakultet_naturvidenskab, type=institut),
             unit(name=u"Institut for Geovidenskab og Naturforvaltning", parent=fakultet_naturvidenskab, type=institut),
             unit(name=u"Institut for Fødevarevidenskab", parent=fakultet_naturvidenskab, type=institut),
@@ -57,6 +58,7 @@ class Migration(migrations.Migration):
             unit(name=u"Kemisk Institut", parent=fakultet_naturvidenskab, type=institut),
             unit(name=u"Niels Bohr Institutet", parent=fakultet_naturvidenskab, type=institut),
             unit(name=u"Statens Naturhistoriske Museum", parent=fakultet_naturvidenskab, type=institut),
+            unit(name=u"Statens Naturhistoriske Museums Skoletjeneste", parent=fakultet_naturvidenskab, type=institut),
 
             # Samfundsvidenskab - holder hjulene i gang
             unit(name=u"Institut for Antropologi", parent=fakultet_samfund, type=institut),
