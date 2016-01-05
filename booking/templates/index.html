@@ -89,26 +89,27 @@
         </div>
     {% endblock %}
         
-       
+    <div class="container grey-sides">
+        
     {% block content %}
-        <div class="container grey-sides">
-            <h1>Søg i tilbud</h1>
-            <div class="row">
-                <div class="col-sm-12 col-md-6">
-                    <form action="{% url 'search' %}">
-                        <div class="input-group">
-                            <label class="sr-only" for="searchBox">Søg efter tilbud</label>
-                            <input type="text" class="form-control" id="searchBox" placeholder="Indtast et eller flere søgeord..." name="q">
-                            <span class="input-group-btn">
-                                <button class="btn btn-default" type="submit">Søg  <span class="glyphicon glyphicon-search" aria-hidden="true"></span></button>
-                            </span>
-                        </div>
-                    </form>
-                </div>
+        <h1>Søg i tilbud</h1>
+        <div class="row">
+            <div class="col-sm-12 col-md-6">
+                <form action="{% url 'search' %}">
+                    <div class="input-group">
+                        <label class="sr-only" for="searchBox">Søg efter tilbud</label>
+                        <input type="text" class="form-control" id="searchBox" placeholder="Indtast et eller flere søgeord..." name="q">
+                        <span class="input-group-btn">
+                            <button class="btn btn-default" type="submit">Søg  <span class="glyphicon glyphicon-search" aria-hidden="true"></span></button>
+                        </span>
+                    </div>
+                </form>
             </div>
-            <hr>
         </div>
+        <hr>
     {% endblock %}
+    
+    </div>
         
     {% block footer %}
         <div class="container">
