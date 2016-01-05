@@ -56,19 +56,19 @@
                 </div>
             </div>
         </nav>
+        
         {% if user.is_authenticated %}
-        <div class="row">
-            <nav class="navbar">
-                <ul class="list-inline">
-                    <li><a href="/profile">Min side</a></li>
-                    <li><a href="{% url 'mockup-manage-list' %}">Mine tilbud</a></li>
-                    <li><a href="{% url 'mockup-booking-list' %}">Forespørgsler <span class="label label-default">8</span></a></li>
-                    <li><a href="/">Søg i alle tilbud</a></li>
-                    <li><a href="{% url 'admin:index' %}">Administration</a></li>
-                </ul>
-            </nav>
+        <div class="container">
+            <ul class="list-inline">
+                <li><a href="/profile">Min side</a></li>
+                <li><a href="{% url 'mockup-manage-list' %}">Mine tilbud</a></li>
+                <li><a href="{% url 'mockup-booking-list' %}">Forespørgsler <span class="label label-default">8</span></a></li>
+                <li><a href="/">Søg i alle tilbud</a></li>
+                <li><a href="{% url 'admin:index' %}">Administration</a></li>
+            </ul>
         </div>
         {% endif %}
+        
         <div class="container-fluid grey-line hidden-xs"></div>
         <div class="container grey-sides">
             <div class="row">
