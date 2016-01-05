@@ -74,6 +74,14 @@ class Unit(models.Model):
     parent = models.ForeignKey('self', null=True, blank=True)
     contact = models.ForeignKey(Person, null=True, blank=True)
 
+    def belongs_to(self, unit):
+        if self == unit:
+            return True
+        elif self.parent is None:
+            return False
+        else:
+            return self.parent.belongs_to(unit)
+
     def __unicode__(self):
         return "%s (%s)" % (self.name, self.type.name)
 
