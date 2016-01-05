@@ -61,10 +61,10 @@
         <div class="container">
             <ul class="list-inline">
                 <li><a href="/profile">Min side</a></li>
-                <li><a href="{% url 'mockup-manage-list' %}">Mine tilbud</a></li>
-                <li><a href="{% url 'mockup-booking-list' %}">Forespørgsler <span class="label label-default">8</span></a></li>
-                <li><a href="/">Søg i alle tilbud</a></li>
+                <li><a href="/search">Tilbud</a></li>
+                <li>Bookings</li>
                 <li><a href="{% url 'admin:index' %}">Administration</a></li>
+                <li class="pull-right"><a href="/profile/logout">Log ud</a></li>
             </ul>
         </div>
         {% endif %}
