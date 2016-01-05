@@ -32,43 +32,66 @@
     </head>
     <body>
 
-        {% block header %}
-        <div class="container-fluid">
-            <div class="row">
-                <header>
-                    <nav class="navbar navbar-top">
-                        <div class="clearfix ku-top">
-                            <a class="navbar-brand" href="http://fokus.ku.dk"><span class="ku-regular">Fo</span><span class="ku-bold">ku</span><span class="ku-regular">s</span></a>
-                            <div class="intro hidden-xs">Portal for skole- og gymnasieområdet</div>
-                        </div>
-                        <ul class="personal-menu list-inline">
-                            {% if user.is_authenticated %}
-                            <li class="login"><a href="/profile/logout">Log ud</a></li>
-                            {% else %}
-                            <li class="login"><a href="/profile/login">Log ind</a></li>
-                            {% endif %}
-                        </ul>
-                    </nav>
-                </header>
-            </div>
-            {% if user.is_authenticated %}
-            <div class="row">
-                <nav class="navbar">
-                    <ul class="list-inline">
-                        <li><a href="/profile">Min side</a></li>
-                        <li><a href="{% url 'mockup-manage-list' %}">Mine tilbud</a></li>
-                        <li><a href="{% url 'mockup-booking-list' %}">Forespørgsler <span class="label label-default">8</span></a></li>
-                        <li><a href="/">Søg i alle tilbud</a></li>
-                        <li><a href="{% url 'admin:index' %}">Administration</a></li>
+    {% block header %}
+        <nav class="navbar navbar-default">
+            <div class="container">
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="http://www.ku.dk/" title="Københavns Universitet"><img src="http://cms.ku.dk/grafik/globalmenu/navnetraek_DK_neg.svg" alt="Københavns Universitet"></a>
+                </div>
+                <div id="navbar" class="navbar-collapse collapse">
+                    <ul class="nav navbar-nav navbar-right">
+                        {% if user.is_authenticated %}
+                        <li class="login"><a href="/profile/logout">Log ud</a></li>
+                        {% else %}
+                        <li class="login"><a href="/profile/login">Log ind</a></li>
+                        {% endif %}
+                        <li><a href="http://kalender.ku.dk">Kalender</a></li>
+                        <li><a href="http://findvej.ku.dk">Find vej</a></li>
+                        <li><a href="http://www.ku.dk/vejviser/">Telefonbog</a></li>
+                        <li><a href="http://jobportal.ku.dk/">Job</a></li>
+                        <li><a href="http://velkommen.ku.dk/indeks/">A-Å-indeks</a></li>
+                        <li><a href="https://intranet.ku.dk/">KUnet</a></li>
+                        <li class="global-sprog"><a href="http://research.ku.dk/" class="english">English</a></li>
                     </ul>
-                </nav>
+                </div>
             </div>
-            {% endif %}
+        </nav>
+        {% if user.is_authenticated %}
+        <div class="row">
+            <nav class="navbar">
+                <ul class="list-inline">
+                    <li><a href="/profile">Min side</a></li>
+                    <li><a href="{% url 'mockup-manage-list' %}">Mine tilbud</a></li>
+                    <li><a href="{% url 'mockup-booking-list' %}">Forespørgsler <span class="label label-default">8</span></a></li>
+                    <li><a href="/">Søg i alle tilbud</a></li>
+                    <li><a href="{% url 'admin:index' %}">Administration</a></li>
+                </ul>
+            </nav>
         </div>
-        {% endblock %}
+        {% endif %}
+        <div class="container-fluid grey-line hidden-xs"></div>
+        <div class="container grey-sides">
+            <div class="row">
+                <div id="branding-images" class="clearfix">
+                    <div id="logo">
+                        <a href="http://www.ku.dk" title="Københavns Universitet">
+                            <img src="{% static 'img/faelles.gif' %} "" height="87" width="65" alt="Københavns Universitet">
+                        </a>
+                    </div>
+                    <div id="branding-title">
+                        <a href="http://fokus.ku.dk" title="Velkommen til Københavns Universitet">
+                            <h2>foKUs</h2>
+                            <p>Portal for skole- og gymnasieområdet</p>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endblock %}
         
-        <div class="container">
-        {% block content %}
+       
+    {% block content %}
+        <div class="container grey-sides">
             <h1>Søg i tilbud</h1>
             <div class="row">
                 <div class="col-sm-12 col-md-6">
@@ -84,26 +107,26 @@
                 </div>
             </div>
             <hr>
-        {% endblock %}
         </div>
+    {% endblock %}
         
-        {% block footer %}
-        <div class="container-fluid ">
+    {% block footer %}
+        <div class="container">
             <div class="row">
                 <footer>
                     <div class="container">
-                        <div class="row no-gutter footer-columns">
-                            <div class="col-sm-4 col-sm-offset-0">
-                                <ul class="footerlinks ">
-                                    <li><a href="http://kommunikation.ku.dk/ ">Kommunikation</a></li>
-                                    <li><a href="http://www.ku.dk/ ">Københavns Universitet</a></li>
+                        <div class="row footer-columns">
+                            <div class="col-sm-6 col-sm-offset-1 col-md-offset-3">
+                                <ul class="footerlinks">
+                                    <li><a href="http://kommunikation.ku.dk/">Kommunikation</a></li>
+                                    <li><a href="http://www.ku.dk/">Københavns Universitet</a></li>
                                     <li>Nørregade 10, Postboks 2177</li>
                                     <li>1017 København K</li>
                                 </ul>
                             </div>
                             <div class="col-sm-3">
                                 <ul class="footerlinks">
-                                    <li class="clearfix social-icons "><a target="_blank " class="footer-social " href="https://www.facebook.com/universitet "><span class="icon-circle "><i class="fa fa-facebook "></i></span></a><a target="_blank " class="footer-social " href="https://www.linkedin.com/edu/k%C3%B8benhavns-universitet-12012 "><span class="icon-circle "><i class="fa fa-linkedin "></i></span></a><a target="_blank " class="footer-social " href="https://twitter.com/koebenhavns_uni "><span class="icon-circle "><i class="fa fa-twitter "></i></span></a></li>
+                                    <li class="clearfix social-icons"><a target="_blank" class="footer-social" href="https://www.facebook.com/universitet"><span class="icon-circle"><i class="fa fa-facebook"></i></span></a><a target="_blank" class="footer-social" href="https://www.linkedin.com/edu/k%C3%B8benhavns-universitet-12012"><span class="icon-circle"><i class="fa fa-linkedin"></i></span></a><a target="_blank" class="footer-social" href="https://twitter.com/koebenhavns_uni"><span class="icon-circle"><i class="fa fa-twitter"></i></span></a></li>
                                 </ul>
                             </div>
                         </div>
@@ -111,13 +134,15 @@
                 </footer>
             </div>
         </div>
-        {% endblock %}
+    {% endblock %}
 
-        <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-        <script src="{% static 'thirdparty/jquery/dist/jquery.min.js' %}"></script>
-        <!-- Include all compiled plugins (below), or include individual files as needed -->
-        <script src="{% static 'thirdparty/bootstrap/dist/js/bootstrap.min.js' %}"></script>
-        {% block extra_scripts %}{% endblock %}
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="{% static 'thirdparty/jquery/dist/jquery.min.js' %}"></script>
+    
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="{% static 'thirdparty/bootstrap/dist/js/bootstrap.min.js' %}"></script>
+    
+    {% block extra_scripts %}{% endblock %}
 
     </body>
 </html>

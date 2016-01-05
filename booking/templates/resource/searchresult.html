@@ -1,168 +1,165 @@
 {%extends "index.html" %} {% load staticfiles %} {% block content %}
-
-<div class="container">
-    <div class="row no-gutter hidden-xs">
-        <div class="col-sm-12">
-            <ol class="breadcrumb">
-                <li>Du er her: </li>
-                <li><a href="{% url 'index' %}">Søgning</a></li>
-                <li class="active">Søgeresultat</li>
-            </ol>
-        </div>
-    </div>
-    <div class="row titlebar">
-        <div class="col-sm-12 col-md-9 col-md-offset-3">Søgeresultat</div>
-        <div class="col-sm-12 visible-xs-block titlebar-gradient"></div>
-    </div>
-    <div class="row">
-        <div class="col-sm-12 col-md-7 col-md-offset-3">
-            <form class="search-list clearfix" role="søg" action={% url 'search' %}>
-                <div class="input-group">
-                    <label class="sr-only" for="searchBox">Søg efter tilbud</label>
-                    <input type="text" class="form-control" id="searchBox" placeholder="Søg efter tilbud - indtast et eller flere søgeord..." name="q" value="{{ request.GET.q }}">
-                    <span class="input-group-btn">
-                    <button class="btn btn-default" type="submit"><span class="hidden-xs">Søg</span> <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
-                    </button>
-                    </span>
-                </div>
-            </form>
-        </div>
-        <div class="col-md-2 text-right hidden-xs">
-            <div class="search-list">
-                <div class="btn-group" role="group" aria-label="Vælg antal resultater i listen">
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-default">10</button>
-                        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <span class="caret"></span>
-                            <span class="sr-only">Vælg antal resultater i listen</span>
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li><a href="#">5</a></li>
-                            <li class="selected"><a href="#">10</a></li>
-                            <li><a href="#">15</a></li>
-                            <li><a href="#">Alle</a></li>
-                        </ul>
-                    </div>
+    
+    <div class="container grey-sides">
+        <div class="row">
+            <div id="leftside" class="col-sm-6 col-md-3">
+                <button type="button" class="visible-xs btn btn-default" data-toggle="collapse" data-target="#filters" id="filter-btn">Filtrer søgeresultat <span class="glyphicon glyphicon-chevron-down hidden-print"></span></button>
+                <div class="hidden-xs" id="filters">
+                    <form class="" action="{% url 'search' %}" method="get" name="filter-search-results" id="filter-search-results">
+                    <input type="hidden" name="q" value="{{ request.GET.q }}" "/>
+                        <div class="panel panel-sidebar">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">Filtrer resultater</h3>
+                            </div>
+                            <div class="panel-body">
+                                <h3 class="panel-title">Hvem er du?</h3>
+                                <hr>
+                                <div class="input-group">
+                                    {% for c in audience_choices %}
+                                    <div class="checkbox ">
+                                        <label class="control-label" for="audience-choice-{{c.value}}">
+                                            <input name="a" id="audience-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}> {{c.label}}
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                <h3 class="panel-title">Hvad søger du?</h3>
+                                <hr>
+                                <div class="input-group">
+                                    {% for c in type_choices %}
+                                    <div class="checkbox ">
+                                        <label class="control-label" for="type-choice-{{c.value}}">
+                                            <input name="t" id="type-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}> {{c.label}}
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                <div id="accordion" role="tablist" aria-multiselectable="true">
+                                    <a role="button" title="Klik for at vælge gymnasiefag" data-toggle="collapse" data-parent="#accordion" href="#gymnasiefag" aria-expanded="false" aria-controls="gymnasiefag">
+                                        <h3 class="panel-title inline-block">Gymnasiefag </h3><span class="caret"></span>
+                                    </a>
+                                    <hr>
+                                    <div id="gymnasiefag" class="panel-collapse {% if not gymnasie_selected %}collapse{% endif %}" role="tabpanel" aria-labelledby="headingOne">
+                                        <div class="input-group">
+                                        {% for c in gymnasie_choices %}
+                                        <div class="checkbox">
+                                            <label class="control-label" for="gymnasie-choice-{{c.value}}">
+                                                <input name="f" id="gymnasie-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}> {{c.label}}
+                                            </label>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    </div>
+                                    <a role="button" title="Klik for at vælge grundskolefag" class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#grundskolefag" aria-expanded="false" aria-controls="grundskolefag">
+                                        <h3 class="panel-title inline-block">Grundskolefag </h3><span class="caret"></span></a>
+                                    <hr>
+                                    <div id="grundskolefag" class="panel-collapse {% if not grundskole_selected %}collapse{% endif %}" role="tabpanel" aria-labelledby="headingThree">
+                                        <div class="input-group ">
+                                        {% for c in grundskole_choices %}
+                                        <div class="checkbox">
+                                            <label class="control-label" for="grundskole-choice-{{c.value}}">
+                                                <input name="g" id="grundskole-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}> {{c.label}}
+                                            </label>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    </div>
+                                    <h3 class="panel-title inline-block">Vælg periode </h3>
+                                    <hr>
+                                    <div class="row input-daterange">
+                                        <div class="form-group clearfix">
+                                            <label class="col-sm-2 control-label">Fra:</label>
+                                            <div class="col-sm-10">
+                                                <input type="text" class="form-control input-sm" placeholder="Klik og vælg dato" value="">
+                                            </div>
+                                        </div>
+                                        <div class="form-group clearfix">
+                                            <label class="col-sm-2 control-label">til:</label>
+                                            <div class="col-sm-10">
+                                                <input type="text" class="form-control input-sm" placeholder="Klik og vælg dato" value="">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </div>
-        </div>
-    </div>
-    <div class="divider"></div>
-    <div class="row">
-        <div class="col-sm-6 col-md-3">
-            <button type="button" class="visible-xs btn btn-default" data-toggle="collapse" data-target="#filters" id="filter-btn">Filtrer søgeresultat <span class="glyphicon glyphicon-chevron-down hidden-print"></span></button>
-            <div class="hidden-xs" id="filters">
-            <form class="" action="{% url 'search' %}" method="get" name="filter-search-results" id="filter-search-results">
-                <input type="hidden" name="q" value="{{ request.GET.q }}" "/>
-                <div class="panel panel-sidebar">
-                    <div class="panel-heading">
-                        <h3 class="panel-title">Filtrer resultater</h3>
+            <div id="main" class="col-sm-12 col-md-9">
+                <div class="row">
+                    <div class="col-sm-8">
+                        <ol class="breadcrumb hidden-xs">
+                            <li>Du er her: </li>
+                            <li><a href="http://fokus.ku.dk/">Søgning</a></li>
+                            <li class="active"><a href="{% url 'index' %}">Søgeresultatliste</a></li>
+                        </ol>
                     </div>
-                    <div class="panel-body">
-                        <h3 class="panel-title">Hvem er du?</h3>
-                        <hr>
-                        <div class="input-group ">
-                            {% for c in audience_choices %}
-                            <div class="checkbox ">
-                                <label class="control-label" for="audience-choice-{{c.value}}">
-                                    <input name="a" id="audience-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}> {{c.label}}
-                                </label>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        <h3 class="panel-title ">Hvad søger du?</h3>
-                        <hr>
-                        <div class="input-group ">
-                            {% for c in type_choices %}
-                            <div class="checkbox ">
-                                <label class="control-label" for="type-choice-{{c.value}}">
-                                    <input name="t" id="type-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}> {{c.label}}
-                                </label>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        <div id="accordion" role="tablist" aria-multiselectable="true">
-                            <a role="button" title="Klik for at vælge gymnasiefag" data-toggle="collapse" data-parent="#accordion" href="#gymnasiefag" aria-expanded="false" aria-controls="gymnasiefag">
-                                <h3 class="panel-title inline-block">Gymnasiefag </h3><span class="caret"></span>
-                            </a>
-                            <hr>
-                            <div id="gymnasiefag" class="panel-collapse {% if not gymnasie_selected %}collapse{% endif %}" role="tabpanel" aria-labelledby="headingOne">
-                                <div class="input-group">
-                                    {% for c in gymnasie_choices %}
-                                    <div class="checkbox">
-                                        <label class="control-label" for="gymnasie-choice-{{c.value}}">
-                                            <input name="f" id="gymnasie-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}> {{c.label}}
-                                        </label>
-                                    </div>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                            <a role="button" title="Klik for at vælge grundskolefag" class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#grundskolefag" aria-expanded="false" aria-controls="grundskolefag">
-                                <h3 class="panel-title inline-block">Grundskolefag </h3><span class="caret"></span></a>
-                            <hr>
-                            <div id="grundskolefag" class="panel-collapse {% if not grundskole_selected %}collapse{% endif %}" role="tabpanel" aria-labelledby="headingThree">
-                                <div class="input-group ">
-                                    {% for c in grundskole_choices %}
-                                    <div class="checkbox">
-                                        <label class="control-label" for="grundskole-choice-{{c.value}}">
-                                            <input name="g" id="grundskole-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}> {{c.label}}
-                                        </label>
-                                    </div>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                            <h3 class="panel-title inline-block ">Vælg periode </h3>
-                            <hr>
-                            <div class="row input-daterange">
-                                <div class="form-group clearfix">
-                                    <label class="col-sm-2 control-label">Fra:</label>
-                                    <div class="col-sm-10">
-                                        <input type="text" class="form-control" placeholder="Klik og vælg dato" value=" ">
-                                    </div>
-                                </div>
-                                <div class="form-group clearfix">
-                                    <label class="col-sm-2 control-label">til:</label>
-                                    <div class="col-sm-10">
-                                        <input type="text" class="form-control" placeholder="Klik og vælg dato" value=" ">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="col-sm-4 text-right small-icons hidden-print">
+                        <a title="E-mail" href="#" class="glyphicon glyphicon-envelope print-icon" aria-hidden="true"><span class="sr-only">Send via e-mail</span></a>
+                        <a title="Print" href="#" onclick="window.print();return false" aria-hidden="true" class="glyphicon glyphicon-print print-icon"><span class="sr-only">Print</span></a>
+                        <!--AddThis Button BEGIN -->
+                        <script type="text/javascript">
+                        <!--
+                        var addthis_config = {
+                                ui_click: 'true',
+                                services_compact: 'facebook,twitter,blogger,digg,reddit,gmail,google,linkedin,myspace,delicious,favorites',
+                                services_exclude: 'email,print',
+                                ui_header_color: '#ffffff',
+                                ui_header_background: '#666666',
+                                ui_cobrand: 'www.ku.dk'
+                            }
+                            // -->
+                        </script>
+                        <a href="https://www.addthis.com/bookmark.php?v=250&amp;pub=copenhagenuni" class="addthis_button_compact">
+                            <img src="{% static 'img/shareknap_dk.gif' %} " width="28" height="12" alt="Bookmark and Share" style="border:0" />
+                        </a>
+                        <script type="text/javascript" src="https://s7.addthis.com/js/250/addthis_widget.js#pub=copenhagenuni"></script>
+                        <!-- AddThis Button END -->
                     </div>
                 </div>
-            </form>
-        </div>
-        </div>
-        <div class="col-sm-12 col-md-9">
-            {% if not results %}
-            <p>Din søgning gav ikke noget resultat</p>
-            {% else %}
-            <h2 class="dotted-underlined">{{ paginator.count }} resultater matcher din søgning på "{{request.GET.q}}"</h2>
-            <ul class="media-list">
+                <h1>Søgeresultat</h1>
+                <div class="divider"></div>
+                <form class="clearfix" role="søg" action={% url 'search' %}>
+                    <div class="input-group">
+                        <label class="sr-only" for="searchBox">Søg efter tilbud</label>
+                        <input type="text" class="form-control" id="searchBox" placeholder="Søg efter tilbud - indtast et eller flere søgeord..." name="q" value="{{ request.GET.q }}">
+                        <span class="input-group-btn">
+                        <button class="btn btn-default" id="search" type="submit"><span class="hidden-xs">Søg</span> <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                        </button>
+                        </span>
+                    </div>
+                </form>
+                <div class="divider"></div>
+                {% if not results %}
+                <p>Din søgning gav ikke noget resultat</p>
+                {% else %}
+                <h2 class="bold">{{ paginator.count }} resultater matcher din søgning på "{{request.GET.q}}"</h2>
+                <ul class="media-list">
                 {% for res in results %}
-                <li class="media">
-                    <div class="media-body">
-                        <h3 class="media-heading"><a href="{% url 'visit' res.pk %}">{{ res.title }}</a></h3>
-                        <p>{{ res.teaser }}</p>
-                        <div class="media-info">
+                    <li class="media">
+                        <div class="media-body">
+                            <h3 class="media-heading"><a href="{% url 'visit' res.pk %}">{{ res.title }}">Oplev matematik på universitetet</a></h3>
+                            <p>{{ res.teaser }}</p>
+                            <div class="media-info">
                                 <ul class="info-list list-inline">
                                     <li><strong>Fag/niveau: </strong><span class="type-offer">Hardcoded! Matematik</span></li>
                                     <li><strong>Hvad: </strong><span class="type-offer">{{ res.get_type_display }}</span></li>
                                     <li><strong>Dato: </strong><span class="type-offer">Hardcoded! 15. 01. 2016</span></li>
-                                    <li><strong>Varighed: </strong><span class="type-offer">Hardcoded! 2 timer</span></li>
+                                    <li><strong>Lokalitet: </strong><span class="type-offer">Hardcoded! Bülowsvej 17, 1870 Frederiksberg C</span></li>
                                 </ul>
                             </div>
-                    </div>
-                </li>
-                {% endfor %}
-            </ul>
-            {% endif %}
+                        </div>
+                    </li>
+                   {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
         </div>
-    </div>
-    <div class="row">
-        <div class="col-sm-6 col-sm-offset-3">
-            <nav>
-                <ul class="pagination ">
+        <div class="row">
+            <div class="col-sm-6 col-md-5 col-sm-offset-1 col-md-offset-3">
+                <nav>
+                    <ul class="pagination ">
                     
                     {% if page_obj.has_previous %}
                     <li>
@@ -208,38 +205,40 @@
                     </li>
                     {% endif %}
                 </ul>
-            </nav>
+                </nav>
+            </div>
+            <div class="col-sm-4 col-md-3">
+                <div class="input-group input-group-sm search-list items-pr-side">
+                    <span class="input-group-addon">Vis</span>
+                    <div class="input-group-btn">
+                        <button type="button" class="btn btn-default">10</button>
+                        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> <span class="caret"></span> <span class="sr-only">Vis anrtal resultater pr. side</span> </button>
+                        <ul class="dropdown-menu">
+                            <li><a href="#">5</a></li>
+                            <li class="selected"><a href="#">10</a></li>
+                            <li><a href="#">15</a></li>
+                            <li><a href="#">20</a></li>
+                        </ul>
+                    </div>
+                    <span class="input-group-addon"> pr. side</span>
+                </div>
+            </div>
         </div>
     </div>
-</div>
 {% endblock %}
 
 
 {% block extra_scripts %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.5.0/js/bootstrap-datepicker.min.js "></script>
-<script src="{% static 'js/bootstrap-datepicker.da.min.js' %} "></script>
-<script src="{% static 'js/custom.js' %} "></script>
-<script type="text/javascript ">
-$(function() {
-    $('.input-daterange input').each(function() {
-        $(this).datepicker({
-            language: 'da',
-            format: 'dd-mm-yyyy',
-            todayHighlight: true,
-            startDate: 'Date',
-            clearBtn: true,
-            autoclose: true
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.5.0/js/bootstrap-datepicker.min.js "></script>
+    <script src="{% static 'js/bootstrap-datepicker.da.min.js' %} "></script>
+    <script src="{% static 'js/custom.js' %} "></script>
+    <script type="text/javascript ">
+        $(function() {
+            $('#filter-search-results input[type=checkbox]').on('change', function() {
+                $(this.form).trigger("submit")
+            });
         });
-    });
-    $('.collapse').on('shown.bs.collapse', function() {
-        $(this).parent().find(".caret ").addClass("caret-up ");
-    });
-    $('.collapse').on('hidden.bs.collapse', function() {
-        $(this).parent().find(".caret ").removeClass("caret-up ");
-    });
-    $('#filter-search-results input[type=checkbox]').on('change', function() {
-        $(this.form).trigger("submit")
-    });
-});
-</script>
+    </script>
+    
 {% endblock %}
