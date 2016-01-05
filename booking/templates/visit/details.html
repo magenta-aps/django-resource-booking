@@ -51,6 +51,9 @@
             </form>
         
             <h2>Her skal "hvad" vises</h2>
+            {% if user.is_authenticated %}
+                <a class="pull-right" href="#">Redigér</a>
+            {% endif %}
             <h1>{{ object.title }}</h1>
             <div class="well">
                 {% autoescape off %}
