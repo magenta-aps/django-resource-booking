@@ -399,11 +399,22 @@ class Visit(Resource):
         config='pg_catalog.danish',
         auto_update_search_field=True
     )
+    
+    ROOMS_ASSIGNED_ON_VISIT = 0
+    ROOMS_ASSIGNED_WHEN_BOOKING = 1
+    
+    rooms_assignment_choices = (
+        (ROOMS_ASSIGNED_ON_VISIT, _(u"Lokale tildeles på besøg")),
+        (ROOMS_ASSIGNED_WHEN_BOOKING, _(u"Lokale tildeles ved booking")),
+    )
+    
+    rooms_assignment = models.IntegerField(
+        choices=rooms_assignment_choices, default=ROOMS_ASSIGNED_ON_VISIT,
+        verbose_name=_(u"Tildeling af lokale(r)")
+    )
+    
     locality = models.ForeignKey(
         Locality, verbose_name=_(u'Lokalitet'), blank=True
-    )
-    room = models.CharField(
-        max_length=64, verbose_name=_(u'Lokale'), blank=True
     )
     time = models.DateTimeField(
         verbose_name=_(u'Tid')
@@ -471,3 +482,14 @@ class Visit(Resource):
 
         # Do the final save
         return super(Resource, self).save(*args, **kwargs)
+
+class Room(models.Model):
+    visit = models.ForeignKey(
+        Visit, verbose_name=_(u'Besøg'), blank=False
+    )
+    name = models.CharField(
+        max_length=64, verbose_name=_(u'Navn på lokale'), blank=False
+    )
+
+    def __unicode__(self):
+        return self.name
