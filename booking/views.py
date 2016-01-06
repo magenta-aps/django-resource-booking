@@ -289,7 +289,8 @@ class EditVisit(RoleRequiredMixin, UpdateView):
                 visits_unit = self.object.unit
                 if visits_unit and not visits_unit.belongs_to(users_unit):
                     raise AccessDenied(
-                        _(u"Du kan kun redigere enheder,som du selv er koordinator for.")
+                        _(u"Du kan kun redigere enheder,som du selv er" +
+                          " koordinator for.")
                     )
         return result
 
