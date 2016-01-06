@@ -60,11 +60,11 @@ class RoleRequiredMixin(object):
     @method_decorator(login_required)
     def dispatch(self, *args, **kwargs):
         current_user = self.request.user
-        try:
+        if hasattr(current_user, 'userprofile'):
             role = current_user.userprofile.get_role()
             if role in self.roles:
                 return super(RoleRequiredMixin, self).dispatch(*args, **kwargs)
-        except AttributeError:
+        else:
             pass
         txts = map(role_to_text, self.roles)
         # TODO: Render this with the error message!
@@ -180,7 +180,7 @@ class EditVisit(RoleRequiredMixin, UpdateView):
     # Handle both forms, creating a Visit and a number of StudyMaterials
     def post(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
-        if self.object is None:
+        if not hasattr(self, 'object') or self.object is None:
             self.object = None if pk is None else Visit.objects.get(id=pk)
         form = self.get_form()
         fileformset = VisitStudyMaterialForm(request.POST)
@@ -216,7 +216,7 @@ class EditVisit(RoleRequiredMixin, UpdateView):
     @method_decorator(login_required)
     def dispatch(self, *args, **kwargs):
         # First, check all is well in superclass
-        result = super(RoleRequiredMixin, self).__dispatch(*args, **kwargs)
+        result = super(EditVisit, self).dispatch(*args, **kwargs)
         # Now, check that the user belongs to the correct unit.
         current_user = self.request.user
         pk = kwargs.get("pk")
@@ -227,12 +227,17 @@ class EditVisit(RoleRequiredMixin, UpdateView):
             if role == COORDINATOR:
                 users_unit = current_user.userprofile.unit
                 visits_unit = self.object.unit
-                if not visits_unit.belongs_to(users_unit):
+                if visits_unit and not visits_unit.belongs_to(users_unit):
                     raise AccessDenied(
                         u"Du må kun redigere enheder,som du selv er "
                         "koordinator for."
                     )
         return result
+
+    def get_form_kwargs(self):
+        kwargs = super(EditVisit, self).get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
 
 
 class VisitDetailView(DetailView):
