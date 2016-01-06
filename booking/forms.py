@@ -81,7 +81,10 @@ class VisitForm(forms.ModelForm):
         user = self.user
         if user.userprofile.get_role() == COORDINATOR:
             uu = user.userprofile.unit
-            qs = uu.get_descendants()
+            if uu is not None:
+                qs = uu.get_descendants()
+            else:
+                qs = Unit.objects.none()
         else:
             # User must be an administrator and may attach any unit.
             qs = Unit.objects.all()
