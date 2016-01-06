@@ -74,6 +74,22 @@ class Unit(models.Model):
     parent = models.ForeignKey('self', null=True, blank=True)
     contact = models.ForeignKey(Person, null=True, blank=True)
 
+    def belongs_to(self, unit):
+        if self == unit:
+            return True
+        elif self.parent is None:
+            return False
+        else:
+            return self.parent.belongs_to(unit)
+
+    def get_descendants(self):
+        """Return all units at a lower level"""
+        offspring = Unit.objects.filter(parent=self)
+        all_children = Unit.objects.none()
+        for u in offspring:
+            all_children = all_children | u.get_descendants()
+        return all_children | Unit.objects.filter(pk=self.pk)
+
     def __unicode__(self):
         return "%s (%s)" % (self.name, self.type.name)
 
