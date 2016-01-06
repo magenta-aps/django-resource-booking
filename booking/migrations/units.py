@@ -46,6 +46,7 @@ class Migration(migrations.Migration):
 
             # Naturvidenskab - where the real work is done
             unit(name=u"Biologisk Institut", parent=fakultet_naturvidenskab, type=institut),
+            unit(name=u"Cirkus Naturligvis", parent=fakultet_naturvidenskab, type=institut),
             unit(name=u"Datalogisk Institut", parent=fakultet_naturvidenskab, type=institut),
             unit(name=u"Det Natur- og Biovidenskabelige Fakultets Skoletjeneste", parent=fakultet_naturvidenskab, type=institut),
             unit(name=u"Institut for Idræt og Ernæring", parent=fakultet_naturvidenskab, type=institut),
