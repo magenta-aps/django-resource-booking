@@ -238,7 +238,7 @@ class EditVisit(RoleRequiredMixin, UpdateView):
 
         if search_unit is not None:
             context['existingrooms'] = Room.objects.filter(
-                visit__unit = search_unit
+                visit__unit=search_unit
             ).order_by("name").distinct("name")
         else:
             context['existinrooms'] = []
