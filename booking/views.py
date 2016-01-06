@@ -13,6 +13,7 @@ from profile.models import role_to_text
 
 from booking.models import Visit, StudyMaterial
 from booking.models import Resource, Subject
+from booking.models import Room
 from booking.forms import VisitForm
 from booking.forms import VisitStudyMaterialForm
 
@@ -202,6 +203,25 @@ class EditVisit(RoleRequiredMixin, UpdateView):
             visit = form.save()
             if fileformset.is_valid():
                 visit.save()
+
+                # Update rooms
+                existing_rooms = set([x.name for x in visit.room_set.all()])
+
+                new_rooms = request.POST.getlist("rooms")
+                for roomname in new_rooms:
+                    if roomname in existing_rooms:
+                        existing_rooms.remove(roomname)
+                    else:
+                        new_room = Room(visit=visit, name=roomname)
+                        new_room.save()
+
+                # Delete any rooms left in existing rooms
+                if len(existing_rooms) > 0:
+                    visit.room_set.all().filter(
+                        name__in=existing_rooms
+                    ).delete()
+
+                # Attach uploaded files
                 for fileform in fileformset:
                     try:
                         instance = StudyMaterial(
@@ -215,6 +235,32 @@ class EditVisit(RoleRequiredMixin, UpdateView):
             return super(EditVisit, self).form_valid(form)
         else:
             return self.form_invalid(form, fileformset)
+
+    def get_context_data(self, **kwargs):
+        context = {}
+
+        if self.object and self.object.pk:
+            context['rooms'] = self.object.room_set.all()
+        else:
+            context['rooms'] = []
+
+        search_unit = None
+        if self.object and self.object.unit:
+            search_unit = self.object.unit
+        else:
+            if self.request.user and self.request.user.userprofile:
+                search_unit = self.request.user.userprofile.unit
+
+        if search_unit is not None:
+            context['existingrooms'] = Room.objects.filter(
+                visit__unit=search_unit
+            ).order_by("name").distinct("name")
+        else:
+            context['existinrooms'] = []
+
+        context.update(kwargs)
+
+        return super(EditVisit, self).get_context_data(**context)
 
     def get_success_url(self):
         try:

@@ -46,6 +46,11 @@ urlpatterns = patterns(
     # Main search page
     url(r'^search', SearchView.as_view(), name='search'),
 
+    # iframe-friendly main page with search bar
+    url(r'^iframe$', TemplateView.as_view(
+        template_name='iframe-index.html'),
+        name='iframe_search'),
+
     url(r'^visit/create$',
         EditVisit.as_view(), name='visit_create'),
     url(r'^visit/(?P<pk>[0-9]+)/?$',
