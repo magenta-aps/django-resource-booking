@@ -80,5 +80,13 @@ $(function() {
     $('#newroom').on("keydown", function(e) {
     });
 
+    $('#id_rooms_needed').on("change", function() {
+        if ($(this).is(":checked")) {
+            $('#rooms_needed_fields').show()
+        } else {
+            $('#rooms_needed_fields').hide()
+        }
+    }).trigger("change");
+
     $('#chosenrooms .glyphicon-remove').on("click", removeElem);
 })

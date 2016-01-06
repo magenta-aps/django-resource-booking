@@ -36,6 +36,7 @@ class VisitForm(forms.ModelForm):
                   'class_level_max',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'time', 'duration', 'locality', 'rooms_assignment',
+                  'rooms_needed',
                   'enabled', 'contact_persons', 'unit')
         widgets = {
             'title': TextInput(attrs={'class': 'titlefield'}),
