@@ -1,0 +1,109 @@
+{% extends 'index.html' %}
+{% load timedelta %}
+
+{% block content %}
+
+
+<div class="container">
+    <div class="row">
+        <div class="col-sm-10">
+            <ol class="breadcrumb">
+                <li><a href="http://fokus.ku.dk/">Søgning</a></li>
+                <li><a href="search-list.html">Søgeresultat</a></li>
+                <li class="active">Tilbudsdetaljer</li>
+            </ol>
+        </div>
+        <div class="col-sm-2 text-right">
+            <a title="Print" href="#" onclick="window.print();return false" class="print-icon"><span class="sr-only">Print</span>
+               <span class="glyphicon glyphicon-print hidden-print"></span>
+             </a>
+        </div>
+    </div>
+    <div class="row titlebar hidden-print">
+        <div class="col-sm-12 col-md-9">Om tilbuddet</div>
+    </div>
+    <div class="row">
+        <div class="col-sm-12 col-md-8">
+            <p class="lead">{{ object.get_type_display }}:</p>
+            <h1>{{ object.title }}</h1>
+            <div class="well teaser">
+                {% autoescape off %}
+                {{ object.teaser }}
+                {% endautoescape %}
+            </div>
+            <div class="well">
+                <!-- Richtext editor start -->
+                {% autoescape off %}
+                {{ object.description }}
+                {% endautoescape %}
+                <!-- Richtext editor end -->
+            </div>
+            <div class="well order-buttons hidden-print">
+                <!-- Display according to business logic -->
+                <i>Buttons display according to business logic.</i>
+                <br />
+                <button type="button" class="btn btn-default">Book dette tilbud
+                    <span class="glyphicon glyphicon-chevron-right"></span>
+                </button>
+                <button type="button" class="btn btn-default">Send forespørgsel
+                    <span class="glyphicon glyphicon-chevron-right"></span>
+                </button>
+                <br/><i>Buttons display according to business logic.</i>
+                <!-- Display according to business logic -->
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-4">
+            <form class="form-horizontal">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Hvem, hvor og hvornår</h3>
+                    </div>
+                    <div class="panel-body">
+                        <dl class="dl-horizontal">
+                            <dt>Henvendt til:</dt>
+                            <dd>{{ object.get_audience_display }}</dd>
+                            <dt>Fag/niveau:</dt>
+                            <dd>{{ object.get_level_display }}</dd>
+                            <dt>Max antal:</dt>
+                            <dd>{{ object.maximum_number_of_visitors }}</dd>
+                            <dt>Hvad:</dt>
+                            <dd>{{ object.get_type_display }}</dd>
+                            <dt>Hvor:</dt>
+                            <dd>{{ object.unit.name }}, {{ object.locality.name }}, {{ object.locality.address_line }}, {{ object.locality.zip_city }}</dd>
+                            <dt>Arrangør:</dt>
+                            <dd></dd>
+                            <dt>Hvornår:</dt>
+                            <dd>{{ object.time|date:"d M Y" }}</dd>
+                            <dt>Varighed:</dt>
+                            <dd>{{ object.duration|timedelta }}</dd>
+                            <dt>Pris:</dt>
+                            <dd>{{ object.price }}</dd>
+                        </dl>
+                    </div>
+                </div>
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Kort</h3>
+                    </div>
+                    <div class="panel-body google-maps-container">
+                        <div class="google-maps">
+                            <iframe src='https://maps.google.com/maps?q=Bülowsvej 17, 1870 Frederiksberg C&amp;z=14&amp;output=embed&amp;iwloc=0&amp;sensor=false' width='450' height='450' frameborder='0' style='border:0' allowfullscreen></iframe>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="clearfix visible-xs-block"></div>
+    <hr>
+    <div class="row hidden-print">
+        <div class="col-sm-12">
+            <a href="#" class="btn btn-default "><span class="glyphicon glyphicon-chevron-left"></span> Tilbage til søgeresultat</a>
+        </div>
+    </div>
+    <footer>
+    </footer>
+</div>
+
+
+{% endblock %}
