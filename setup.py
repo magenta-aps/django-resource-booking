@@ -26,7 +26,8 @@ designed for the University of Copenhagen.""",
           'psycopg2',
           'djorm-ext-pgfulltext==0.10',
           'django-npm',
-          'django-timedeltafield'
+          'django-timedeltafield',
+          'django-tinymce==2.0.4'
       ],
       entry_points="""
       # -*- Entry points: -*-

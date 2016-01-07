@@ -1,6 +1,7 @@
 {% extends 'index.html' %}
 {% load i18n %}
 {% load staticfiles %}
+{% load booking_tags %}
 
 {% block head %}
     <link rel="stylesheet" href="{% static 'thirdparty/bootstrap-datetime-picker/css/bootstrap-datetimepicker.min.css' %}"/>
@@ -139,7 +140,7 @@
                         </h4>
                     </div>
                     <div id="collapseTimePlace" class="panel-collapse collapse
-                    {% if form.time.errors or form.duration.errors or form.locality.errors or form.room.errors %}in{% endif %}
+                    {% if form.time.errors or form.duration.errors or form.locality.errors or form.rooms_assignment.errors %}in{% endif %}
                     " aria-labelledby="headingTimePlace" role="tabpanel" aria-expanded="true" style="">
                         <div class="panel-body">
                             <div class="row">
@@ -152,7 +153,9 @@
                                     <fieldset>
                                         {{ form.duration.errors }}
                                         <label for="{{ form.duration.id_for_label }}">{{ form.duration.label }}:</label>
+                                        <div class="form-inline duration">
                                         {{ form.duration }}
+                                        </div>
                                     </fieldset>
                                 </div>
                                 <div class="col-sm-12 col-md-6">
@@ -161,16 +164,71 @@
                                         <label for="{{ form.locality.id_for_label }}">{{ form.locality.label }}:</label>
                                         {{ form.locality }}
                                     </fieldset>
-                                    <fieldset>
-                                        {{ form.room.errors }}
-                                        <label for="{{ form.room.id_for_label }}">{{ form.room.label }}:</label>
-                                        {{ form.room }}
-                                    </fieldset>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <div class="panel panel-default">
+                    <div id="headingRooms" class="panel-heading" role="tab">
+                        <h4 class="panel-title">
+                            <a class="" aria-controls="collapseRooms" aria-expanded="true" href="#collapseRooms" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Lokaletildeling" %}</a>
+                        </h4>
+                    </div>
+                    <div id="collapseRooms" class="panel-collapse collapse
+                    {% if form.rooms_needed.errors or form.rooms_assignment.errors or form.contact_persons.errors %}in{% endif %}
+                    " aria-labelledby="headingContact" role="tabpanel" aria-expanded="true" style="">
+                        <div class="panel-body">
+                            <fieldset>
+                                {{ form.rooms_needed.errors }}
+                                {{ form.rooms_needed }}
+                                <label for="{{ form.rooms_needed.id_for_label }}">{{ form.rooms_needed.label }}</label>
+                            </fieldset>
+                            <div id="rooms_needed_fields">
+                            <fieldset>
+                                {{ form.rooms_assignment.errors }}
+                                <label for="{{ form.rooms_assignment.id_for_label }}">{{ form.rooms_assignment.label }}:</label>
+                                {{ form.rooms_assignment }}
+                            </fieldset>
+                            <fieldset id="roomsedit">
+                                <div class="row">
+                                    <div class="col-sm-12 col-md-6">
+                                        <label for="newroom">{% trans "Tilføj nyt lokale" %}</label>
+                                        <input type="text" name="newroom" id="newroom" value="" class="col-md-8" />
+                                        <input type="button" id="addnewroom" value="{% trans "Tilføj" %}" class=" col-md-2" />
+                                    </div>
+                                    <div class="col-sm-12 col-md-6">
+                                        <label for="existingrooms">{% trans "Tilføj eksisterende lokale" %}</label>
+                                        <select name="existingrooms" id="existingrooms" class="col-md-10">
+                                            <option>{% trans "Vælg lokale..." %}</option>
+                                            {% for room in existingrooms %}
+                                            <option value="{{room.name}}">{{room.name}}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div><strong>{% trans "Valgte lokaler" %}</strong></div>
+                                <ul id="chosenrooms">
+                                {% comment %}
+                                    When making changes here, also change the addRoom method
+                                    in booking/static/js/formutil.js which generates the
+                                    same HTML dynamically.
+                                {% endcomment %}
+                                {% for room in rooms %}
+                                    <li>
+                                        <span class="roomname">{{ room.name }}</span>
+                                        <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                                        <input type="hidden" name="rooms" value="{{ room.name }}" />
+                                    </li>
+                                {% endfor %}
+                                </ul>
+                            </fieldset>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
 
                 <div class="panel panel-default">
                     <div id="headingContact" class="panel-heading" role="tab">
@@ -182,6 +240,11 @@
                     {% if form.enabled.errors or form.contact_persons.errors %}in{% endif %}
                     " aria-labelledby="headingContact" role="tabpanel" aria-expanded="true" style="">
                         <div class="panel-body">
+                            <fieldset>
+                                {{ form.unit.errors }}
+                                <label for="{{ form.unit.id_for_label }}">{{ form.unit.label }}:</label>
+                                {{ form.unit }}
+                            </fieldset>
                             <fieldset>
                                 {{ form.enabled.errors }}
                                 <label class="radiolabel">
@@ -207,6 +270,13 @@
                         <div class="panel-body">
                             <fieldset>
                                 <label>{% trans "Vedhæftede filer" %}:</label>
+                                <ul>
+                                {% for material in fileformset.studymaterials %}
+                                    <li>
+                                        <a href="{{ MEDIA_URL }}{{ material.file.url }}">{{ material.file.name | upload_name_strip_path }}</a>
+                                    </li>
+                                {% endfor %}
+                                </ul>
                                 {{ fileformset.management_form }}
                                 <div id="attachFileFields">
                                 {% for fileform in fileformset %}
@@ -218,6 +288,34 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="panel panel-default">
+                    <div id="headingInternal" class="panel-heading" role="tab">
+                        <h4 class="panel-title">
+                            <a class="" aria-controls="collapseInternal"
+                                aria-expanded="true"
+                                href="#collapseInternal" data-parent="#accordion"
+                                data-toggle="collapse" role="button">{% trans "Interne oplysninger" %}</a>
+                        </h4>
+                    </div>
+                    <div id="collapseInternal" class="panel-collapse collapse {% if form.enabled.errors or form.contact_persons.errors %}in{% endif %} " aria-labelledby="headingContact" role="tabpanel" aria-expanded="true" style="">
+                        <div class="panel-body">
+                                    <fieldset>
+                                        {{ form.preparation_time.errors }}
+                                        <label for="{{
+                                            form.preparation_time.id_for_label }}">{{ form.preparation_time.label }}:</label>
+                                        {{ form.preparation_time }}
+                                    </fieldset>
+                                    <fieldset>
+                                        {{ form.comment.errors }}
+                                        <label for="{{
+                                            form.comment.id_for_label }}">{{ form.comment.label }}:</label>
+                                        {{ form.comment }}
+                                    </fieldset>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
             {% include 'common/save_cancel.html' %}
@@ -229,7 +327,9 @@
 {% endblock %}
 
 {% block extra_scripts %}
+    {{ form.media }}
     <script type="text/javascript" src="{% static 'thirdparty/bootstrap-datetime-picker/js/bootstrap-datetimepicker.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/formutil.js' %}"></script>
     <script type="text/javascript"><!--
         $(function(){
             var totalFormsField = $("#{{ fileformset.management_form.TOTAL_FORMS.id_for_label }}"),
