@@ -12,6 +12,9 @@ urlpatterns = patterns(
     '',
     url(r'^$', MainPageView.as_view(), name='index'),
 
+    # Djangosaml2
+    (r'^saml2/', include('djangosaml2.urls')),
+
     url(r'^manage$', TemplateView.as_view(
         template_name='mockup_templates/manage-list.html'),
         name="mockup-manage-list"),

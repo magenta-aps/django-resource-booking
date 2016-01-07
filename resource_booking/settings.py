@@ -39,7 +39,8 @@ INSTALLED_APPS = (
     'booking',
     'profile',
     'timedelta',
-    'tinymce'
+    'tinymce',
+    'djangosaml2'
 )
 
 MIDDLEWARE_CLASSES = (
@@ -154,6 +155,12 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+# Whether to enable SAML
+USE_SAML = False
+MAKE_SAML_LOGIN_DEFAULT = False
+# Setup the default login backend so we can override it after loading local
+# saml settings
+AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.ModelBackend']
 
 local_settings_file = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
@@ -161,3 +168,11 @@ local_settings_file = os.path.join(
 )
 if os.path.exists(local_settings_file):
     from local_settings import *  # noqa
+
+# Include SAML setup if the local settings specify it:
+if USE_SAML:
+    from saml_settings import *  # noqa
+    if MAKE_SAML_LOGIN_DEFAULT:
+        AUTHENTICATION_BACKENDS.insert(0, 'djangosaml2.backends.Saml2Backend')
+    else:
+        AUTHENTICATION_BACKENDS.append('djangosaml2.backends.Saml2Backend')
