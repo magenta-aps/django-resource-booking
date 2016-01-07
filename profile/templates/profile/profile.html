@@ -2,12 +2,10 @@
 
 {% block content %}
 
-<h1>Velkommen {{user.userprofile.user_role.name}}</h1>
+    <h1>Velkommen {{user.username}}</h1>
+    
+    <p>Du er logget ind som {{user.userprofile.user_role.name}}</p>
 
-<ul>
-    <li> Du er logget ind som {{user.username}}</li>
-    <li> Du er logget ind som <font
-            color="red">{{user.userprofile.user_role.name}}</font></li>
-</ul>
+    <a class="btn btn-primary" href="/visit/create">+ Opret tilbud</a>
 
 {% endblock %}

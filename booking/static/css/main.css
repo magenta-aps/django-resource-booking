@@ -104,6 +104,11 @@ strong,
     padding: 0;
 }
 
+.content-container {
+    padding-top: 15px;
+    padding-bottom: 15px;
+}
+
 .navbar-brand {
     height: 28px;
     width: 250px;
@@ -173,7 +178,7 @@ strong,
     color: #999;
     font-size: 8.8px;
     padding: 0 15px 0 1px;
-    margin: 15px 0;
+    margin: 0 0 15px;
     background-color: transparent;
 }
 
@@ -385,7 +390,6 @@ hr {
 .print-icon {
     color: #777!important;
     margin-right: 5px;
-    margin-top: 10px;
     display: inline-block;
 }
 
@@ -643,7 +647,7 @@ ul.footerlinks .footerlist-header {
         margin-top: 5px;
     }
     #leftside {
-        padding-top: 20px;
+        padding-top: 5px;
     }
     li.global-sprog a.english {
         background: transparent url("http://forskning.ku.dk/grafik/globalmenu/flag-uk.gif") no-repeat right 6px;
