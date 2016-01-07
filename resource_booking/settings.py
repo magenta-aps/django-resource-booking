@@ -37,6 +37,10 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'booking',
+    'profile',
+    'timedelta',
+    'tinymce',
+    'djangosaml2'
 )
 
 MIDDLEWARE_CLASSES = (
@@ -68,8 +72,45 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'resource_booking.wsgi.application'
+STATICFILES_FINDERS = [
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    'npm.finders.NpmFinder'
+]
 
+# Django-npm config
+
+# Local thirdparty cache; holds all downloaded
+# dependencies in this folder under the root
+NPM_PREFIX_PATH = 'thirdparty'
+
+# collectstatic will put dependencies in static/thirdparty/
+NPM_DESTINATION_PREFIX = 'thirdparty'
+
+# Mapping for dependencies: Only the listed files from
+# each dependency will make it into static/
+NPM_FILE_PATTERNS = {
+    'jquery': ['dist/jquery.min.js'],
+    'bootstrap': ['dist/css/bootstrap.min.css',
+                  'dist/fonts/*', 'dist/js/bootstrap.min.js'],
+    'bootstrap-datetime-picker': ['js/bootstrap-datetimepicker.min.js',
+                                  'js/locales/bootstrap-datetimepicker.da.js',
+                                  'css/bootstrap-datetimepicker.min.css']
+}
+
+# Django-tinymce config
+
+TINYMCE_DEFAULT_CONFIG = {
+    'plugins': "table,paste,searchreplace",
+    'theme': "advanced",
+    'cleanup_on_startup': True,
+    'custom_undo_redo_levels': 100,
+}
+TINYMCE_COMPRESSOR = True
+TINYMCE_JS_ROOT = '/static/thirdparty/tinymce'
+
+
+WSGI_APPLICATION = 'resource_booking.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
@@ -87,7 +128,7 @@ DATABASES = {
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'da-dk'
 
 TIME_ZONE = 'UTC'
 
@@ -97,17 +138,41 @@ USE_L10N = True
 
 USE_TZ = True
 
+LOCALE_PATHS = (
+    os.path.join(BASE_DIR, "locale"),
+)
 
+# On login, redirect to /profile/
+LOGIN_REDIRECT_URL = '/profile/'
+# Default URL for login
+LOGIN_URL = '/profile/login'
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Whether to enable SAML
+USE_SAML = False
+MAKE_SAML_LOGIN_DEFAULT = False
+# Setup the default login backend so we can override it after loading local
+# saml settings
+AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.ModelBackend']
 
 local_settings_file = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
     'local_settings.py'
 )
 if os.path.exists(local_settings_file):
-    from local_settings import *
+    from local_settings import *  # noqa
+
+# Include SAML setup if the local settings specify it:
+if USE_SAML:
+    from saml_settings import *  # noqa
+    if MAKE_SAML_LOGIN_DEFAULT:
+        AUTHENTICATION_BACKENDS.insert(0, 'djangosaml2.backends.Saml2Backend')
+    else:
+        AUTHENTICATION_BACKENDS.append('djangosaml2.backends.Saml2Backend')

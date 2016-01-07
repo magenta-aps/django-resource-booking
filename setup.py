@@ -1,5 +1,6 @@
 from setuptools import setup, find_packages
-import sys, os
+import sys
+import os
 
 version = '0.1'
 
@@ -21,8 +22,13 @@ designed for the University of Copenhagen.""",
       install_requires=[
           # -*- Extra requirements: -*-
           'Django==1.8.5',
-	  'pep8==1.6.2',
-          'psycopg2'
+          'flake8==2.5.0',
+          'psycopg2',
+          'djorm-ext-pgfulltext==0.10',
+          'django-npm',
+          'django-timedeltafield',
+          'django-tinymce==2.0.4',
+          'djangosaml2==0.13.0'
       ],
       entry_points="""
       # -*- Entry points: -*-

@@ -1,6 +1,11 @@
-python-virtualenv
+apache2
+gettext
+libapache2-mod-wsgi
+libffi-dev
+npm
 postgresql
 postgresql-server-dev-9.3
 python-dev
-apache2
-libapache2-mod-wsgi
+python-virtualenv
+npm
+xmlsec1
