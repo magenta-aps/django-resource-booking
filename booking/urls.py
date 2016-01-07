@@ -1,7 +1,10 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import patterns, url, include
+from django.conf.urls.static import static
+from django.conf import settings
 
 from .views import MainPageView
-from booking.views import EditVisit, VisitDetailView, SearchView, AdminSearchView, AdminIndexView, AdminVisitDetailView
+from booking.views import EditVisit, VisitDetailView, SearchView
+from booking.views import AdminSearchView, AdminIndexView, AdminVisitDetailView
 from django.views.generic import TemplateView
 
 urlpatterns = patterns(
@@ -40,13 +43,24 @@ urlpatterns = patterns(
     # Main search page
     url(r'^search', SearchView.as_view(), name='search'),
 
+    # iframe-friendly main page with search bar
+    url(r'^iframe$', TemplateView.as_view(
+        template_name='iframe-index.html'),
+        name='iframe_search'),
+
     url(r'^visit/create$',
         EditVisit.as_view(), name='visit_create'),
-    url(r'^visit/(?P<pk>[0-9]+)/?',
+    url(r'^visit/(?P<pk>[0-9]+)/?$',
         VisitDetailView.as_view(), name='visit'),
     url(r'^visit/(?P<pk>[0-9]+)/edit$',
         EditVisit.as_view(), name='visit_edit'),
+
+    url(r'^tinymce/', include('tinymce.urls')),
+
     url(r'^fokusadmin/?$', AdminIndexView.as_view(), name='admin-index'),
-    url(r'^fokusadmin/search/?$', AdminSearchView.as_view(), name='admin-search'),
-    url(r'^fokusadmin/visit/(?P<pk>[0-9]+)/?$', AdminVisitDetailView.as_view(), name='admin-visit')
-)
+    url(r'^fokusadmin/search/?$', AdminSearchView.as_view(),
+        name='admin-search'),
+    url(r'^fokusadmin/visit/(?P<pk>[0-9]+)/?$', AdminVisitDetailView.as_view(),
+        name='admin-visit')
+
+) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -2,6 +2,7 @@
 <!DOCTYPE html>
 <html lang="da">
     <head>
+        
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -10,7 +11,14 @@
     
         <!-- Bootstrap -->
         <link href="{% static 'thirdparty/bootstrap/dist/css/bootstrap.min.css' %}" rel="stylesheet">
+
+        <!-- Our own stylesheet -->
         <link href="{% static 'css/main.css' %}" rel="stylesheet">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.5.0/css/bootstrap-datepicker.min.css" rel="stylesheet">
+        <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet">
+
+        <!-- Our own header content -->
+        {% block head %}{% endblock %}
 
         <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
         <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -18,54 +26,124 @@
             <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
             <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
         <![endif]-->
-        {% block head %}
-        {% endblock %}
+
+        <link href="{% static 'img/favicon.ico' %}" rel="shortcut icon">
+            
     </head>
     <body>
 
-        {% block header %}
-            <div class="box invert">
-                <strong><a href="{% url 'admin:index' %}">Administration</a></strong>
-                <div class="pull-right navlinks">
-                    <a href="{% url 'mockup-manage-list' %}">Mine tilbud</a>
-                    <a href="{% url 'mockup-booking-list' %}">Forespørgsler <span class="label label-default">8</span></a>
-                    <a href="index.html">Log ud</a>
+    {% block header %}
+        <nav class="navbar navbar-default">
+            <div class="container">
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="http://www.ku.dk/" title="Københavns Universitet"><img src="http://cms.ku.dk/grafik/globalmenu/navnetraek_DK_neg.svg" alt="Københavns Universitet"></a>
+                </div>
+                <div id="navbar" class="navbar-collapse collapse">
+                    <ul class="nav navbar-nav navbar-right">
+                        {% if user.is_authenticated %}
+                        <li class="login"><a href="/profile/logout">Log ud</a></li>
+                        {% else %}
+                        <li class="login"><a href="/profile/login">Log ind</a></li>
+                        {% endif %}
+                        <li><a href="http://kalender.ku.dk">Kalender</a></li>
+                        <li><a href="http://findvej.ku.dk">Find vej</a></li>
+                        <li><a href="http://www.ku.dk/vejviser/">Telefonbog</a></li>
+                        <li><a href="http://jobportal.ku.dk/">Job</a></li>
+                        <li><a href="http://velkommen.ku.dk/indeks/">A-Å-indeks</a></li>
+                        <li><a href="https://intranet.ku.dk/">KUnet</a></li>
+                        <li class="global-sprog"><a href="http://research.ku.dk/" class="english">English</a></li>
+                    </ul>
                 </div>
             </div>
-        {% endblock %}
+        </nav>
         
-        {% block content %}
+        {% if user.is_authenticated %}
+        <div class="container">
+            <ul class="list-inline">
+                <li><a href="/profile">Min side</a></li>
+                <li><a href="{% url 'search' %}">Tilbud</a></li>
+                <li>Bookings</li>
+                <li><a href="{% url 'admin:index' %}">Administration</a></li>
+                <li class="pull-right"><a href="/profile/logout">Log ud</a></li>
+            </ul>
+        </div>
+        {% endif %}
         
-            <div class="container-fluid">
-                <h1>Søg i tilbud</h1>
-                <div class="row">
-                    <div class="col-sm-12 col-md-6">
-                        <form action="{% url 'search' %}">
-                            <div class="input-group">
-                                <label class="sr-only" for="searchBox">Søg efter tilbud</label>
-                                <input type="text" class="form-control" id="searchBox" placeholder="Indtast et eller flere søgeord..." name="q">
-                                <span class="input-group-btn">
-                                    <button class="btn btn-default" type="submit">Søg  <span class="glyphicon glyphicon-search" aria-hidden="true"></span></button>
-                                </span>
-                            </div>
-                        </form>
+        <div class="container-fluid grey-line hidden-xs"></div>
+        <div class="container grey-sides">
+            <div class="row">
+                <div id="branding-images" class="clearfix">
+                    <div id="logo">
+                        <a href="http://www.ku.dk" title="Københavns Universitet">
+                            <img src="{% static 'img/faelles.gif' %} "" height="87" width="65" alt="Københavns Universitet">
+                        </a>
+                    </div>
+                    <div id="branding-title">
+                        <a href="http://fokus.ku.dk" title="Velkommen til Københavns Universitet">
+                            <h2>foKUs</h2>
+                            <p>Portal for skole- og gymnasieområdet</p>
+                        </a>
                     </div>
                 </div>
-                <hr>
-                    
-                <a href="manage">Admin</a>
-                {% if user.is_authenticated %}
-                <a href="profile/logout">Logout</a>
-                {% else %}
-                <a href="profile/login">Login</a>
-                {% endif %}
             </div>
-        {% endblock %}
+        </div>
+    {% endblock %}
+        
+    <div class="container grey-sides">
+        
+    {% block content %}
+        <h1>Søg i tilbud</h1>
+        <div class="row">
+            <div class="col-sm-12 col-md-6">
+                <form action="{% url 'search' %}">
+                    <div class="input-group">
+                        <label class="sr-only" for="searchBox">Søg efter tilbud</label>
+                        <input type="text" class="form-control" id="searchBox" placeholder="Indtast et eller flere søgeord..." name="q">
+                        <span class="input-group-btn">
+                            <button class="btn btn-default" type="submit">Søg  <span class="glyphicon glyphicon-search" aria-hidden="true"></span></button>
+                        </span>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <hr>
+    {% endblock %}
+    
+    </div>
+        
+    {% block footer %}
+        <div class="container">
+            <div class="row">
+                <footer>
+                    <div class="container">
+                        <div class="row footer-columns">
+                            <div class="col-sm-6 col-sm-offset-1 col-md-offset-3">
+                                <ul class="footerlinks">
+                                    <li><a href="http://kommunikation.ku.dk/">Kommunikation</a></li>
+                                    <li><a href="http://www.ku.dk/">Københavns Universitet</a></li>
+                                    <li>Nørregade 10, Postboks 2177</li>
+                                    <li>1017 København K</li>
+                                </ul>
+                            </div>
+                            <div class="col-sm-3">
+                                <ul class="footerlinks">
+                                    <li class="clearfix social-icons"><a target="_blank" class="footer-social" href="https://www.facebook.com/universitet"><span class="icon-circle"><i class="fa fa-facebook"></i></span></a><a target="_blank" class="footer-social" href="https://www.linkedin.com/edu/k%C3%B8benhavns-universitet-12012"><span class="icon-circle"><i class="fa fa-linkedin"></i></span></a><a target="_blank" class="footer-social" href="https://twitter.com/koebenhavns_uni"><span class="icon-circle"><i class="fa fa-twitter"></i></span></a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+            </div>
+        </div>
+    {% endblock %}
 
-        <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-        <!-- Include all compiled plugins (below), or include individual files as needed -->
-        <script src="{% static 'thirdparty/bootstrap/dist/js/bootstrap.min.js' %}"></script>
-        {% block extra_scripts %}{% endblock %}
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="{% static 'thirdparty/jquery/dist/jquery.min.js' %}"></script>
+    
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="{% static 'thirdparty/bootstrap/dist/js/bootstrap.min.js' %}"></script>
+    
+    {% block extra_scripts %}{% endblock %}
+
     </body>
 </html>
