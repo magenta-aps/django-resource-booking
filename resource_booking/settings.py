@@ -38,6 +38,8 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'booking',
     'profile',
+    'timedelta',
+    'tinymce',
     'djangosaml2'
 )
 
@@ -76,6 +78,8 @@ STATICFILES_FINDERS = [
     'npm.finders.NpmFinder'
 ]
 
+# Django-npm config
+
 # Local thirdparty cache; holds all downloaded
 # dependencies in this folder under the root
 NPM_PREFIX_PATH = 'thirdparty'
@@ -94,26 +98,37 @@ NPM_FILE_PATTERNS = {
                                   'css/bootstrap-datetimepicker.min.css']
 }
 
-WSGI_APPLICATION = 'resource_booking.wsgi.application'
+# Django-tinymce config
 
+TINYMCE_DEFAULT_CONFIG = {
+    'plugins': "table,paste,searchreplace",
+    'theme': "advanced",
+    'cleanup_on_startup': True,
+    'custom_undo_redo_levels': 100,
+}
+TINYMCE_COMPRESSOR = True
+TINYMCE_JS_ROOT = '/static/thirdparty/tinymce'
+
+
+WSGI_APPLICATION = 'resource_booking.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 
-# DATABASES = {
-#    'default': {
-#        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-#        'NAME': 'resource_booking',
-#        'USER': 'resource_booking',
-#       'PASSWORD': 'resource_booking',
-#        'HOST': '127.0.0.1',
-#    }
-# }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'resource_booking',
+        'USER': 'resource_booking',
+        'PASSWORD': 'resource_booking',
+        'HOST': '127.0.0.1',
+    }
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'da-dk'
 
 TIME_ZONE = 'UTC'
 
@@ -129,6 +144,8 @@ LOCALE_PATHS = (
 
 # On login, redirect to /profile/
 LOGIN_REDIRECT_URL = '/profile/'
+# Default URL for login
+LOGIN_URL = '/profile/login'
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
