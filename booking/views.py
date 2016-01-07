@@ -95,6 +95,7 @@ class SearchView(ListView):
             f.add(g)
         if f:
             filters["subjects__in"] = f
+        filters["state__in"] = [Resource.ACTIVE]
         return self.model.objects.search(searchexpression).filter(
             **filters
         )
@@ -156,23 +157,11 @@ class SearchView(ListView):
         return super(SearchView, self).get_context_data(**context)
 
 
-class VisitMixin(object):
-
-    model = Visit
-    object_name = 'Visit'
-    url_base = 'visit'
-    form_class = VisitForm
+class EditVisit(RoleRequiredMixin, UpdateView):
 
     template_name = 'visit/form.html'
-
-    def get_success_url(self):
-        try:
-            return "/visit/%d" % self.object.id
-        except:
-            return '/'
-
-
-class EditVisit(RoleRequiredMixin, VisitMixin, UpdateView):
+    form_class = VisitForm
+    model = Visit
 
     # Display a view with two form objects; one for the regular model,
     # and one for the file upload
@@ -193,9 +182,9 @@ class EditVisit(RoleRequiredMixin, VisitMixin, UpdateView):
         pk = kwargs.get("pk")
         self.object = None if pk is None else Visit.objects.get(id=pk)
         form = self.get_form()
+        fileformset = VisitStudyMaterialForm(request.POST)
         if form.is_valid():
             visit = form.save()
-            fileformset = VisitStudyMaterialForm(request.POST, instance=visit)
             if fileformset.is_valid():
                 visit.save()
                 for fileform in fileformset:
@@ -210,10 +199,29 @@ class EditVisit(RoleRequiredMixin, VisitMixin, UpdateView):
 
             return super(EditVisit, self).form_valid(form)
         else:
-            return self.form_invalid(form)
+            return self.form_invalid(form, fileformset)
+
+    def get_success_url(self):
+        try:
+            return "/visit/%d" % self.object.id
+        except:
+            return '/'
+
+    def form_invalid(self, form, fileformset=None):
+        return self.render_to_response(
+            self.get_context_data(form=form, fileformset=fileformset)
+        )
 
 
 class VisitDetailView(DetailView):
     """Display Visit details"""
     model = Visit
     template_name = 'visit/details.html'
+
+    def get_queryset(self):
+        """Get queryset, only include active visits."""
+        qs = super(VisitDetailView, self).get_queryset()
+        # Dismiss visits that are not active.
+        if not self.request.user.is_authenticated():
+            qs = qs.filter(state=Resource.ACTIVE)
+        return qs

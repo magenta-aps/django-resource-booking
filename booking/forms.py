@@ -26,7 +26,7 @@ class VisitForm(forms.ModelForm):
     class Meta:
         model = Visit
         fields = ('title', 'teaser', 'description', 'price',
-                  'type', 'tags',
+                  'type', 'tags', 'preparation_time', 'comment',
                   'institution_level', 'topics', 'level', 'class_level_min',
                   'class_level_max',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
