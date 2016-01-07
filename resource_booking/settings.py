@@ -114,14 +114,14 @@ WSGI_APPLICATION = 'resource_booking.wsgi.application'
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 
 DATABASES = {
-   'default': {
-       'ENGINE': 'django.db.backends.postgresql_psycopg2',
-       'NAME': 'resource_booking',
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'resource_booking',
         'USER': 'resource_booking',
-       'PASSWORD': 'resource_booking',
+        'PASSWORD': 'resource_booking',
         'HOST': '127.0.0.1',
     }
- }
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
