@@ -400,12 +400,17 @@ class Visit(Resource):
         auto_update_search_field=True
     )
 
+    rooms_needed = models.BooleanField(
+        default=True,
+        verbose_name=_(u"Tilbuddet kræver brug af et eller flere lokaler")
+    )
+
     ROOMS_ASSIGNED_ON_VISIT = 0
     ROOMS_ASSIGNED_WHEN_BOOKING = 1
 
     rooms_assignment_choices = (
-        (ROOMS_ASSIGNED_ON_VISIT, _(u"Lokale tildeles på besøg")),
-        (ROOMS_ASSIGNED_WHEN_BOOKING, _(u"Lokale tildeles ved booking")),
+        (ROOMS_ASSIGNED_ON_VISIT, _(u"Lokaler tildeles på forhånd")),
+        (ROOMS_ASSIGNED_WHEN_BOOKING, _(u"Lokaler tildeles ved booking")),
     )
 
     rooms_assignment = models.IntegerField(

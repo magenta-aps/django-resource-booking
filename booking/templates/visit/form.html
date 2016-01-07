@@ -177,9 +177,15 @@
                         </h4>
                     </div>
                     <div id="collapseRooms" class="panel-collapse collapse
-                    {% if form.rooms_assignment.errors or form.contact_persons.errors %}in{% endif %}
+                    {% if form.rooms_needed.errors or form.rooms_assignment.errors or form.contact_persons.errors %}in{% endif %}
                     " aria-labelledby="headingContact" role="tabpanel" aria-expanded="true" style="">
                         <div class="panel-body">
+                            <fieldset>
+                                {{ form.rooms_needed.errors }}
+                                {{ form.rooms_needed }}
+                                <label for="{{ form.rooms_needed.id_for_label }}">{{ form.rooms_needed.label }}</label>
+                            </fieldset>
+                            <div id="rooms_needed_fields">
                             <fieldset>
                                 {{ form.rooms_assignment.errors }}
                                 <label for="{{ form.rooms_assignment.id_for_label }}">{{ form.rooms_assignment.label }}:</label>
@@ -218,6 +224,7 @@
                                 {% endfor %}
                                 </ul>
                             </fieldset>
+                            </div>
                         </div>
                     </div>
                 </div>
