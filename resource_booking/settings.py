@@ -38,6 +38,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'booking',
     'profile',
+    'timedelta',
     'tinymce'
 )
 
@@ -126,7 +127,7 @@ DATABASES = {
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'da-dk'
 
 TIME_ZONE = 'UTC'
 
