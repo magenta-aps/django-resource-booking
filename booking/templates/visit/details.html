@@ -1,4 +1,5 @@
 {% extends 'index.html' %}
+{% load timedelta %}
 
 {% block content %}
 
@@ -95,13 +96,13 @@
                             <dt>Henvendt til:</dt>
                             <dd>{{ object.get_audience_display }}</dd>
                             <dt>Fag/niveau:</dt>
-                            <dd>{{ object.level }}</dd>
+                            <dd>{{ object.get_level_display }}</dd>
                             <dt>Max antal:</dt>
                             <dd>{{ object.maximum_number_of_visitors }}</dd>
                             <dt>Hvad:</dt>
-                            <dd></dd>
+                            <dd>{{ object.get_type_display }}</dd>
                             <dt>Hvor:</dt>
-                            <dd>{{ object.room }}</dd>
+                            <dd>{{ object.unit.name }}, {{ object.locality.name }}, {{ object.locality.address_line }}, {{ object.locality.zip_city }}</dd>
                             <dt>Arrangør:</dt>
                             <dd></dd>
                             <dt>Hvornår:</dt>
@@ -114,7 +115,7 @@
                                 <option>30. debember 2016</option>
                             </select></dd>
                             <dt>Varighed:</dt>
-                            <dd>{{ object.duration }}</dd>
+                            <dd>{{ object.duration|timedelta }}</dd>
                             <dt>Pris:</dt>
                             <dd>{{ object.price }}</dd>
                         </dl>

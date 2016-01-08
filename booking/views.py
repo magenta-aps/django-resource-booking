@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from django.db.models import Count
 from django.views.generic import TemplateView, ListView, DetailView
 from django.utils.translation import ugettext as _
 from django.views.generic.edit import UpdateView
@@ -11,6 +12,7 @@ from profile.models import role_to_text
 
 from booking.models import Visit, StudyMaterial
 from booking.models import Resource, Subject
+from booking.models import Room
 from booking.forms import VisitForm
 from booking.forms import VisitStudyMaterialForm
 
@@ -80,25 +82,37 @@ class SearchView(ListView):
     template_name = "resource/searchresult.html"
     context_object_name = "results"
     paginate_by = 10
+    base_queryset = None
+    filters = None
+
+    def get_base_queryset(self):
+        if self.base_queryset is None:
+            searchexpression = self.request.GET.get("q", "")
+            self.base_queryset = self.model.objects.search(searchexpression)
+
+        return self.base_queryset
+
+    def get_filters(self):
+        if self.filters is None:
+            self.filters = {}
+            a = self.request.GET.getlist("a")
+            if a:
+                self.filters["audience__in"] = a
+            t = self.request.GET.getlist("t")
+            if t:
+                self.filters["type__in"] = t
+            f = set(self.request.GET.getlist("f"))
+            for g in self.request.GET.getlist("g"):
+                f.add(g)
+            if f:
+                self.filters["subjects__in"] = f
+            self.filters["state__in"] = [Resource.ACTIVE]
+
+        return self.filters
 
     def get_queryset(self):
-        searchexpression = self.request.GET.get("q", "")
-        filters = {}
-        a = self.request.GET.getlist("a")
-        if a:
-            filters["audience__in"] = a
-        t = self.request.GET.getlist("t")
-        if t:
-            filters["type__in"] = t
-        f = set(self.request.GET.getlist("f"))
-        for g in self.request.GET.getlist("g"):
-            f.add(g)
-        if f:
-            filters["subjects__in"] = f
-        filters["state__in"] = [Resource.ACTIVE]
-        return self.model.objects.search(searchexpression).filter(
-            **filters
-        )
+        filters = self.get_filters()
+        return self.get_base_queryset().filter(**filters)
 
     def build_choices(self, choice_tuples, selected,
                       selected_value='checked="checked"'):
@@ -120,41 +134,92 @@ class SearchView(ListView):
 
         return choices
 
+    def make_facet(self, facet_field, choice_tuples, selected,
+                   selected_value='checked="checked"'):
+
+        selected = set(selected)
+        hits = {}
+        choices = []
+
+        # Remove filter for the field we want to facetize
+        new_filters = {}
+        for k, v in self.get_filters().iteritems():
+            if not k.startswith(facet_field):
+                new_filters[k] = v
+
+        qs = self.get_base_queryset().filter(**new_filters)
+        qs = qs.values(facet_field).annotate(hits=Count(facet_field))
+        for item in qs:
+            hits[item[facet_field]] = item["hits"]
+
+        for value, name in choice_tuples:
+            if value not in hits:
+                continue
+
+            if unicode(value) in selected:
+                sel = selected_value
+            else:
+                sel = ''
+
+            choices.append({
+                'label': name,
+                'value': value,
+                'selected': sel,
+                'hits': hits[value]
+            })
+
+        return choices
+
     def get_context_data(self, **kwargs):
         context = {}
 
-        # Store the querystring without the page argument
+        # Store the querystring without the page and pagesize arguments
         qdict = self.request.GET.copy()
         if "page" in qdict:
             qdict.pop("page")
+        if "pagesize" in qdict:
+            qdict.pop("pagesize")
         context["qstring"] = qdict.urlencode()
 
-        context["audience_choices"] = self.build_choices(
+        context['pagesizes'] = [5, 10, 15, 20]
+
+        context["audience_choices"] = self.make_facet(
+            "audience",
             self.model.audience_choices,
-            self.request.GET.getlist("a"),
+            self.request.GET.getlist("a")
         )
 
-        context["type_choices"] = self.build_choices(
+        context["type_choices"] = self.make_facet(
+            "type",
             self.model.resource_type_choices,
             self.request.GET.getlist("t"),
         )
 
+        subject_choices = [
+            (x.pk, x.name) for x in Subject.objects.all().order_by("name")
+        ]
+
         gym_selected = self.request.GET.getlist("f")
         context["gymnasie_selected"] = gym_selected
-        context["gymnasie_choices"] = self.build_choices(
-            [(x.pk, x.name) for x in Subject.objects.all().order_by("name")],
+        context["gymnasie_choices"] = self.make_facet(
+            "subjects",
+            subject_choices,
             gym_selected,
         )
 
         gs_selected = self.request.GET.getlist("g")
         context["grundskole_selected"] = gs_selected
-        context["grundskole_choices"] = self.build_choices(
-            [(x.pk, x.name) for x in Subject.objects.all().order_by("name")],
+        context["grundskole_choices"] = self.make_facet(
+            "subjects",
+            subject_choices,
             gs_selected,
         )
 
         context.update(kwargs)
         return super(SearchView, self).get_context_data(**context)
+
+    def get_paginate_by(self, queryset):
+        return self.request.GET.get("pagesize", 10)
 
 
 class EditVisit(RoleRequiredMixin, UpdateView):
@@ -187,6 +252,25 @@ class EditVisit(RoleRequiredMixin, UpdateView):
             visit = form.save()
             if fileformset.is_valid():
                 visit.save()
+
+                # Update rooms
+                existing_rooms = set([x.name for x in visit.room_set.all()])
+
+                new_rooms = request.POST.getlist("rooms")
+                for roomname in new_rooms:
+                    if roomname in existing_rooms:
+                        existing_rooms.remove(roomname)
+                    else:
+                        new_room = Room(visit=visit, name=roomname)
+                        new_room.save()
+
+                # Delete any rooms left in existing rooms
+                if len(existing_rooms) > 0:
+                    visit.room_set.all().filter(
+                        name__in=existing_rooms
+                    ).delete()
+
+                # Attach uploaded files
                 for fileform in fileformset:
                     try:
                         instance = StudyMaterial(
@@ -200,6 +284,32 @@ class EditVisit(RoleRequiredMixin, UpdateView):
             return super(EditVisit, self).form_valid(form)
         else:
             return self.form_invalid(form, fileformset)
+
+    def get_context_data(self, **kwargs):
+        context = {}
+
+        if self.object and self.object.pk:
+            context['rooms'] = self.object.room_set.all()
+        else:
+            context['rooms'] = []
+
+        search_unit = None
+        if self.object and self.object.unit:
+            search_unit = self.object.unit
+        else:
+            if self.request.user and self.request.user.userprofile:
+                search_unit = self.request.user.userprofile.unit
+
+        if search_unit is not None:
+            context['existingrooms'] = Room.objects.filter(
+                visit__unit=search_unit
+            ).order_by("name").distinct("name")
+        else:
+            context['existinrooms'] = []
+
+        context.update(kwargs)
+
+        return super(EditVisit, self).get_context_data(**context)
 
     def get_success_url(self):
         try:
@@ -225,3 +335,15 @@ class VisitDetailView(DetailView):
         if not self.request.user.is_authenticated():
             qs = qs.filter(state=Resource.ACTIVE)
         return qs
+
+
+class AdminIndexView(MainPageView):
+    template_name = 'admin_index.html'
+
+
+class AdminSearchView(SearchView):
+    template_name = 'resource/admin_searchresult.html'
+
+
+class AdminVisitDetailView(VisitDetailView):
+    template_name = 'visit/admin_details.html'

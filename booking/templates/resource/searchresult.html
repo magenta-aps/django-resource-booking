@@ -1,4 +1,5 @@
-{%extends "index.html" %} {% load staticfiles %}
+{%extends "index.html" %}
+{% load staticfiles %}
 
 {% block content %}
     
@@ -7,7 +8,8 @@
             <button type="button" class="visible-xs btn btn-default" data-toggle="collapse" data-target="#filters" id="filter-btn">Filtrer søgeresultat <span class="glyphicon glyphicon-chevron-down hidden-print"></span></button>
             <div class="hidden-xs" id="filters">
                 <form class="" action="{% url 'search' %}" method="get" name="filter-search-results" id="filter-search-results">
-                <input type="hidden" name="q" value="{{ request.GET.q }}" "/>
+                <input type="hidden" name="q" value="{{ request.GET.q }}" />
+                <input type="hidden" name="pagesize" value="{{ paginator.per_page }}" />
                     <div class="panel panel-sidebar">
                         <div class="panel-heading">
                             <h3 class="panel-title">Filtrer resultater</h3>
@@ -20,6 +22,9 @@
                                 <div class="checkbox ">
                                     <label class="control-label" for="audience-choice-{{c.value}}">
                                         <input name="a" id="audience-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}> {{c.label}}
+                                        {% if c.hits %}
+                                            ({{ c.hits }})
+                                        {% endif %}
                                     </label>
                                 </div>
                                 {% endfor %}
@@ -31,6 +36,9 @@
                                 <div class="checkbox ">
                                     <label class="control-label" for="type-choice-{{c.value}}">
                                         <input name="t" id="type-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}> {{c.label}}
+                                        {% if c.hits %}
+                                            ({{ c.hits }})
+                                        {% endif %}
                                     </label>
                                 </div>
                                 {% endfor %}
@@ -46,6 +54,9 @@
                                     <div class="checkbox">
                                         <label class="control-label" for="gymnasie-choice-{{c.value}}">
                                             <input name="f" id="gymnasie-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}> {{c.label}}
+                                            {% if c.hits %}
+                                                ({{ c.hits }})
+                                            {% endif %}
                                         </label>
                                     </div>
                                     {% endfor %}
@@ -60,6 +71,9 @@
                                     <div class="checkbox">
                                         <label class="control-label" for="grundskole-choice-{{c.value}}">
                                             <input name="g" id="grundskole-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}> {{c.label}}
+                                            {% if c.hits %}
+                                                ({{ c.hits }})
+                                            {% endif %}
                                         </label>
                                     </div>
                                     {% endfor %}
@@ -169,7 +183,7 @@
                 
                 {% if page_obj.has_previous %}
                 <li>
-                    <a href="?{{ qstring }}&page={{ page_obj.previous_page_number }}">
+                    <a href="?{{ qstring }}&page={{ page_obj.previous_page_number }}&pagesize={{paginator.per_page}}">
                     <span>
                         <span class="glyphicon glyphicon-chevron-left small" aria-hidden="true"></span>
                         Forrige
@@ -190,12 +204,12 @@
                             <span>{{ pnr }} <span class="sr-only ">(aktiv side)</span></span>
                         </li>
                     {% else %}
-                        <li><a href="?{{ qstring }}&page={{pnr}} ">{{pnr}}</a></li>
+                        <li><a href="?{{ qstring }}&page={{pnr}}&pagesize={{paginator.per_page}}">{{pnr}}</a></li>
                     {% endif %}
                 {% endfor %}
                 {% if page_obj.has_next %}
                 <li>
-                    <a href="?{{ qstring }}&page={{ page_obj.next_page_number }}" aria-label="Næste">
+                    <a href="?{{ qstring }}&page={{ page_obj.next_page_number }}&pagesize={{paginator.per_page}}" aria-label="Næste">
                     <span>
                         Næste
                         <span class="glyphicon glyphicon-chevron-right small" aria-hidden="true"></span>
@@ -217,13 +231,12 @@
             <div class="input-group input-group-sm search-list items-pr-side">
                 <span class="input-group-addon">Vis</span>
                 <div class="input-group-btn">
-                    <button type="button" class="btn btn-default">10</button>
+                    <button type="button" class="btn btn-default">{{paginator.per_page}}</button>
                     <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> <span class="caret"></span> <span class="sr-only">Vis anrtal resultater pr. side</span> </button>
                     <ul class="dropdown-menu">
-                        <li><a href="#">5</a></li>
-                        <li class="selected"><a href="#">10</a></li>
-                        <li><a href="#">15</a></li>
-                        <li><a href="#">20</a></li>
+                        {% for size in pagesizes %}
+                        <li{% if size == paginator.per_page %} class="selected"{% endif %}><a href="?{{ qstring }}&pagesize={{size}}">{{size}}</a></li>
+                        {% endfor %}
                     </ul>
                 </div>
                 <span class="input-group-addon"> pr. side</span>

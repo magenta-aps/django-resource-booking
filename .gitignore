@@ -10,7 +10,11 @@ install.log
 /profile/migrations/*_auto_*
 *.pyc
 python-env
+/resource_booking/local_saml_settings.py
 /resource_booking/local_settings.py
+/resource_booking/saml/*.crt
+/resource_booking/saml/*.key
+/resource_booking/saml/*.pem
 .ropeproject
 .ropeproject
 *.sqlite3
