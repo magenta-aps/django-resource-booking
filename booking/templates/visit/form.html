@@ -175,43 +175,6 @@
             </div>
 
             <div class="panel panel-default">
-                <div id="headingTimePlace" class="panel-heading" role="tab">
-                    <h4 class="panel-title">
-                        <a class="" aria-controls="collapseTimePlace" aria-expanded="true" href="#collapseTimePlace" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Tid og sted" %}</a>
-                    </h4>
-                </div>
-                <div id="collapseTimePlace" class="panel-collapse collapse
-                {% if form.time.errors or form.duration.errors or form.locality.errors or form.rooms_assignment.errors %}in{% endif %}
-                " aria-labelledby="headingTimePlace" role="tabpanel" aria-expanded="true" style="">
-                    <div class="panel-body">
-                        <div class="row">
-                            <div class="col-sm-12 col-md-6">
-                                <fieldset>
-                                    {{ form.time.errors }}
-                                    <label for="{{ form.time.id_for_label }}">{{ form.time.label }}:</label>
-                                    {{ form.time }}
-                                </fieldset>
-                                <fieldset>
-                                    {{ form.duration.errors }}
-                                    <label for="{{ form.duration.id_for_label }}">{{ form.duration.label }}:</label>
-                                    <div class="form-inline duration">
-                                    {{ form.duration }}
-                                    </div>
-                                </fieldset>
-                            </div>
-                            <div class="col-sm-12 col-md-6">
-                                <fieldset>
-                                    {{ form.locality.errors }}
-                                    <label for="{{ form.locality.id_for_label }}">{{ form.locality.label }}:</label>
-                                    {{ form.locality }}
-                                </fieldset>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="panel panel-default">
                 <div id="headingRooms" class="panel-heading" role="tab">
                     <h4 class="panel-title">
                         <a class="" aria-controls="collapseRooms" aria-expanded="true" href="#collapseRooms" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Lokaletildeling" %}</a>
