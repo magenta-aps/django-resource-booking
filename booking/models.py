@@ -6,8 +6,8 @@ from djorm_pgfulltext.fields import VectorField
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
 from django.utils.translation import ugettext_lazy as _
-import timedelta
 
+from recurrence.fields import RecurrenceField
 
 LOGACTION_CREATE = ADDITION
 LOGACTION_CHANGE = CHANGE
@@ -403,10 +403,8 @@ class Visit(Resource):
     room = models.CharField(
         max_length=64, verbose_name=_(u'Lokale'), blank=True
     )
-    time = models.DateTimeField(
-        verbose_name=_(u'Tid')
-    )
-    duration = timedelta.fields.TimedeltaField(
+    duration = models.CharField(
+        max_length=8,
         verbose_name=_(u'Varighed'),
         blank=True,
         null=True
@@ -455,6 +453,10 @@ class Visit(Resource):
         default=0,
         verbose_name=_(u'Forberedelsestid (i timer)')
     )
+    recurrences = RecurrenceField(
+        null=True,
+        verbose_name=_(u'Gentagelser')
+    )
 
     def save(self, *args, **kwargs):
         # If creating new object, save so we have pk to generate search
@@ -467,3 +469,25 @@ class Visit(Resource):
 
         # Do the final save
         return super(Resource, self).save(*args, **kwargs)
+
+    @property
+    def recurrences_description(self):
+        return [d.to_text() for d in self.recurrences.rrules]
+
+
+class VisitOccurrence(models.Model):
+    start_datetime = models.DateTimeField(
+        verbose_name=_(u'Starttidspunkt')
+    )
+    end_datetime1 = models.DateTimeField(
+        verbose_name=_(u'Sluttidspunkt')
+    )
+    end_datetime2 = models.DateTimeField(
+        verbose_name=_(u'Alternativt sluttidspunkt'),
+        blank=True,
+        null=True
+    )
+    visit = models.ForeignKey(
+        Visit,
+        on_delete=models.CASCADE
+    )

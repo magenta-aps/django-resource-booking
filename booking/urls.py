@@ -1,13 +1,18 @@
 from django.conf.urls import patterns, url
 
 from .views import MainPageView
-from booking.views import SearchView
+from booking.views import SearchView, RrulestrView
 from booking.views import EditVisit, VisitDetailView
 from django.views.generic import TemplateView
+
+js_info_dict = {
+    'packages': ('recurrence', ),
+}
 
 urlpatterns = patterns(
 
     '',
+    (r'^jsi18n/$', 'django.views.i18n.javascript_catalog', js_info_dict),
     url(r'^$', MainPageView.as_view(), name='index'),
 
     url(r'^manage$', TemplateView.as_view(
@@ -42,9 +47,12 @@ urlpatterns = patterns(
     url(r'^search', SearchView.as_view(), name='search'),
 
     url(r'^visit/create$',
-        EditVisit.as_view(), name='visit_create'),
+        EditVisit.as_view(success_url='create'), name='visit_create'),
     url(r'^visit/(?P<pk>[0-9]+)/?',
         VisitDetailView.as_view(), name='visit'),
     url(r'^visit/(?P<pk>[0-9]+)/edit$',
-        EditVisit.as_view(), name='visit_edit')
+        EditVisit.as_view(), name='visit_edit'),
+
+    # Ajax api
+    url(r'^jsapi/rrulestr$', RrulestrView.as_view(), name='jsapi_rrulestr')
 )
