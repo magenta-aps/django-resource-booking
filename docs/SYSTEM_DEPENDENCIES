@@ -1,8 +1,11 @@
 apache2
 gettext
 libapache2-mod-wsgi
+libffi-dev
+npm
 postgresql
 postgresql-server-dev-9.3
 python-dev
 python-virtualenv
 npm
+xmlsec1

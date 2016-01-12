@@ -1,16 +1,14 @@
-from tinymce.widgets import TinyMCE
-
-from django import forms
-from django.forms import inlineformset_factory
-from django.forms import TextInput, NumberInput, Textarea
-from django.utils.translation import ugettext_lazy as _
-
-from profile.models import COORDINATOR
-
+from booking.models import StudyMaterial
 from booking.models import UnitType
 from booking.models import Unit
 from booking.models import Visit
-from booking.models import StudyMaterial
+from django import forms
+from django.forms import CheckboxSelectMultiple
+from django.forms import inlineformset_factory
+from django.forms import TextInput, NumberInput, Textarea
+from django.utils.translation import ugettext_lazy as _
+from profile.models import COORDINATOR
+from tinymce.widgets import TinyMCE
 
 
 class UnitTypeForm(forms.ModelForm):
@@ -34,7 +32,8 @@ class VisitForm(forms.ModelForm):
                   'institution_level', 'topics', 'level', 'class_level_min',
                   'class_level_max',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
-                  'time', 'duration', 'locality', 'room',
+                  'time', 'duration', 'locality', 'rooms_assignment',
+                  'rooms_needed',
                   'enabled', 'contact_persons', 'unit',)
         widgets = {
             'title': TextInput(attrs={'class': 'titlefield'}),
@@ -42,6 +41,9 @@ class VisitForm(forms.ModelForm):
             'description': TinyMCE(attrs={'rows': 10}),
             'minimum_number_of_visitors': NumberInput(attrs={'min': 1}),
             'maximum_number_of_visitors': NumberInput(attrs={'min': 1}),
+            'tags': CheckboxSelectMultiple(),
+            'topics': CheckboxSelectMultiple(),
+            'contact_persons': CheckboxSelectMultiple(),
         }
 
     def clean_locality(self):

@@ -391,16 +391,14 @@ class OtherResource(Resource):
     )
 
     def save(self, *args, **kwargs):
-        # If creating new object, save so we have pk to generate search
-        # text with
-        if self.pk is None:
-            super(Resource, self).save(*args, **kwargs)
+        # Save once to store relations
+        super(OtherResource, self).save(*args, **kwargs)
 
         # Update search_text
         self.extra_search_text = self.generate_extra_search_text()
 
         # Do the final save
-        return super(Resource, self).save(*args, **kwargs)
+        return super(OtherResource, self).save(*args, **kwargs)
 
 
 class Visit(Resource):
@@ -415,11 +413,27 @@ class Visit(Resource):
         config='pg_catalog.danish',
         auto_update_search_field=True
     )
+
+    rooms_needed = models.BooleanField(
+        default=True,
+        verbose_name=_(u"Tilbuddet kræver brug af et eller flere lokaler")
+    )
+
+    ROOMS_ASSIGNED_ON_VISIT = 0
+    ROOMS_ASSIGNED_WHEN_BOOKING = 1
+
+    rooms_assignment_choices = (
+        (ROOMS_ASSIGNED_ON_VISIT, _(u"Lokaler tildeles på forhånd")),
+        (ROOMS_ASSIGNED_WHEN_BOOKING, _(u"Lokaler tildeles ved booking")),
+    )
+
+    rooms_assignment = models.IntegerField(
+        choices=rooms_assignment_choices, default=ROOMS_ASSIGNED_ON_VISIT,
+        verbose_name=_(u"Tildeling af lokale(r)")
+    )
+
     locality = models.ForeignKey(
         Locality, verbose_name=_(u'Lokalitet'), blank=True
-    )
-    room = models.CharField(
-        max_length=64, verbose_name=_(u'Lokale'), blank=True
     )
     time = models.DateTimeField(
         verbose_name=_(u'Tid')
@@ -477,13 +491,23 @@ class Visit(Resource):
     )
 
     def save(self, *args, **kwargs):
-        # If creating new object, save so we have pk to generate search
-        # text with
-        if self.pk is None:
-            super(Resource, self).save(*args, **kwargs)
+        # Save once to store relations
+        super(Visit, self).save(*args, **kwargs)
 
         # Update search_text
         self.extra_search_text = self.generate_extra_search_text()
 
         # Do the final save
-        return super(Resource, self).save(*args, **kwargs)
+        return super(Visit, self).save(*args, **kwargs)
+
+
+class Room(models.Model):
+    visit = models.ForeignKey(
+        Visit, verbose_name=_(u'Besøg'), blank=False
+    )
+    name = models.CharField(
+        max_length=64, verbose_name=_(u'Navn på lokale'), blank=False
+    )
+
+    def __unicode__(self):
+        return self.name

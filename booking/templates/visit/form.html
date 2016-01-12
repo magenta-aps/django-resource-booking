@@ -9,269 +9,326 @@
 
 {% block content %}
 
-    <div class="container">
-        <h1>{% if object %}{% trans "Rediger tilbud" %}{% else %}{% trans "Nyt tilbud" %}{% endif %}</h1>
-        <hr/>
-        <form action="" method="post" enctype="multipart/form-data">
-            {% csrf_token %}
+    <h1>{% if object %}{% trans "Rediger tilbud" %}{% else %}{% trans "Nyt tilbud" %}{% endif %}</h1>
+    <hr/>
+    <form action="" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
 
-            {{ form.non_field_errors }}
+        {{ form.non_field_errors }}
 
-            <fieldset>
-                {{ form.title.errors }}
-                <label for="{{ form.title.id_for_label }}">{{ form.title.label }}:</label>
-                {{ form.title }}
-            </fieldset>
+        <div class="form-group">
+            {{ form.title.errors }}
+            <label for="{{ form.title.id_for_label }}">{{ form.title.label }}:</label>
+            {{ form.title }}
+        </div>
 
-            <div id="accordion" class="panel-group" aria-multiselectable="true" role="tablist">
+        <div id="accordion" class="panel-group" aria-multiselectable="true" role="tablist">
 
-                <div class="panel panel-default">
-                    <div id="headingDescription" class="panel-heading" role="tab">
-                        <h4 class="panel-title">
-                            <a aria-controls="collapseDescription" aria-expanded="true" href="#collapseDescription" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Beskrivelse" %}</a>
-                        </h4>
-                    </div>
-                    <div id="collapseDescription" class="panel-collapse collapse
-                    {% if not form.errors or form.teaser.errors or form.description.errors or form.price.errors %}in{% endif %}
-                    " aria-labelledby="headingDescription" role="tabpanel">
-                        <div class="panel-body">
-                            <fieldset>
-                                {{ form.teaser.errors }}
-                                <label for="{{ form.teaser.id_for_label }}">{{ form.teaser.label }}:</label>
-                                {{ form.teaser }}
-                            </fieldset>
-                            <fieldset>
-                                {{ form.description.errors }}
-                                <label for="{{ form.description.id_for_label }}">{{ form.description.label }}:</label>
-                                {{ form.description }}
-                            </fieldset>
-                            <fieldset>
-                                {{ form.price.errors }}
-                                <label for="{{ form.price.id_for_label }}">{{ form.price.label }}:</label>
-                                {{ form.price }}
-                            </fieldset>
+            <div class="panel panel-default">
+                <div id="headingDescription" class="panel-heading" role="tab">
+                    <h4 class="panel-title">
+                        <a aria-controls="collapseDescription" aria-expanded="true" href="#collapseDescription" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Beskrivelse" %}</a>
+                    </h4>
+                </div>
+                <div id="collapseDescription" class="panel-collapse collapse
+                {% if not form.errors or form.teaser.errors or form.description.errors or form.price.errors %}in{% endif %}
+                " aria-labelledby="headingDescription" role="tabpanel">
+                    <div class="panel-body">
+                        <div class="form-group">
+                            {{ form.teaser.errors }}
+                            <label for="{{ form.teaser.id_for_label }}">{{ form.teaser.label }}:</label>
+                            {{ form.teaser }}
+                        </div>
+                        <div class="form-group">
+                            {{ form.description.errors }}
+                            <label for="{{ form.description.id_for_label }}">{{ form.description.label }}:</label>
+                            {{ form.description }}
+                        </div>
+                        <div class="form-group">
+                            {{ form.price.errors }}
+                            <label for="{{ form.price.id_for_label }}">{{ form.price.label }}:</label>
+                            {{ form.price }}
                         </div>
                     </div>
                 </div>
-
-                <div class="panel panel-default">
-                    <div id="headingCategory" class="panel-heading" role="tab">
-                        <h4 class="panel-title">
-                            <a class="" aria-controls="collapseCategory" aria-expanded="true" href="#collapseCategory" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Kategorisering" %}</a>
-                        </h4>
-                    </div>
-                    <div id="collapseCategory" class="panel-collapse collapse
-                    {% if form.type.errors or form.tags.errors %}in{% endif %}
-                    " aria-labelledby="headingCategory" role="tabpanel" aria-expanded="true" style="">
-                        <div class="panel-body">
-                            <fieldset>
-                                {{ form.type.errors }}
-                                <label for="{{ form.type.id_for_label }}">{{ form.type.label }}:</label>
-                                {{ form.type }}
-                            </fieldset>
-                            <fieldset>
-                                {{ form.tags.errors }}
-                                <label for="{{ form.tags.id_for_label }}">{{ form.tags.label }}:</label>
-                                {{ form.tags }}
-                            </fieldset>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="panel panel-default">
-                    <div id="headingAudience" class="panel-heading" role="tab">
-                        <h4 class="panel-title">
-                            <a class="" aria-controls="collapseAudience" aria-expanded="true" href="#collapseAudience" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Målgruppe" %}</a>
-                        </h4>
-                    </div>
-                    <div id="collapseAudience" class="panel-collapse collapse
-                        {% if form.institution_level.errors or form.topics.errors or form.level.errors or form.class_level_min.errors or form.class_level_max.errors or form.minimum_number_of_visitors.errors or form.maximum_number_of_visitors.errors %}in{% endif %}
-                        " aria-labelledby="headingAudience" role="tabpanel" aria-expanded="true" style="">
-                        <div class="panel-body">
-
-                            <fieldset>
-                                {{ form.institution_level.errors }}
-                                <label for="{{ form.institution_level.id_for_label }}">{{ form.institution_level.label }}:</label>
-                                {{ form.institution_level }}
-                            </fieldset>
-                            <fieldset>
-                                {{ form.topics.errors }}
-                                <label for="{{ form.topics.id_for_label }}">{{ form.topics.label }}:</label>
-                                {{ form.topics }}
-                            </fieldset>
-
-                            <div class="institution_level_dependent" data-display-value="1">
-                                <fieldset>
-                                    {{ form.level.errors }}
-                                    <label for="{{ form.level.id_for_label }}">{{ form.level.label }}:</label>
-                                    {{ form.level }}
-                                </fieldset>
-                            </div>
-                            <div class="institution_level_dependent" data-display-value="0">
-                                <fieldset>
-                                    {{ form.class_level_min.errors }}
-                                    <label for="{{ form.class_level_min.id_for_label }}">{{ form.class_level_min.label }}:</label>
-                                    {{ form.class_level_min }}
-                                </fieldset>
-                                <fieldset>
-                                    {{ form.class_level_max.errors }}
-                                    <label for="{{ form.class_level_max.id_for_label }}">{{ form.class_level_max.label }}:</label>
-                                    {{ form.class_level_max }}
-                                </fieldset>
-                            </div>
-                            <fieldset>
-                                {{ form.minimum_number_of_visitors.errors }}
-                                <label for="{{ form.minimum_number_of_visitors.id_for_label }}">{{ form.minimum_number_of_visitors.label }}:</label>
-                                {{ form.minimum_number_of_visitors }}
-                            </fieldset>
-                            <fieldset>
-                                {{ form.maximum_number_of_visitors.errors }}
-                                <label for="{{ form.maximum_number_of_visitors.id_for_label }}">{{ form.maximum_number_of_visitors.label }}:</label>
-                                {{ form.maximum_number_of_visitors }}
-                            </fieldset>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="panel panel-default">
-                    <div id="headingTimePlace" class="panel-heading" role="tab">
-                        <h4 class="panel-title">
-                            <a class="" aria-controls="collapseTimePlace" aria-expanded="true" href="#collapseTimePlace" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Tid og sted" %}</a>
-                        </h4>
-                    </div>
-                    <div id="collapseTimePlace" class="panel-collapse collapse
-                    {% if form.time.errors or form.duration.errors or form.locality.errors or form.room.errors %}in{% endif %}
-                    " aria-labelledby="headingTimePlace" role="tabpanel" aria-expanded="true" style="">
-                        <div class="panel-body">
-                            <div class="row">
-                                <div class="col-sm-12 col-md-6">
-                                    <fieldset>
-                                        {{ form.time.errors }}
-                                        <label for="{{ form.time.id_for_label }}">{{ form.time.label }}:</label>
-                                        {{ form.time }}
-                                    </fieldset>
-                                    <fieldset>
-                                        {{ form.duration.errors }}
-                                        <label for="{{ form.duration.id_for_label }}">{{ form.duration.label }}:</label>
-                                        <div class="form-inline duration">
-                                        {{ form.duration }}
-                                        </div>
-                                    </fieldset>
-                                </div>
-                                <div class="col-sm-12 col-md-6">
-                                    <fieldset>
-                                        {{ form.locality.errors }}
-                                        <label for="{{ form.locality.id_for_label }}">{{ form.locality.label }}:</label>
-                                        {{ form.locality }}
-                                    </fieldset>
-                                    <fieldset>
-                                        {{ form.room.errors }}
-                                        <label for="{{ form.room.id_for_label }}">{{ form.room.label }}:</label>
-                                        {{ form.room }}
-                                    </fieldset>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="panel panel-default">
-                    <div id="headingContact" class="panel-heading" role="tab">
-                        <h4 class="panel-title">
-                            <a class="" aria-controls="collapseContact" aria-expanded="true" href="#collapseContact" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Kontaktinformation" %}</a>
-                        </h4>
-                    </div>
-                    <div id="collapseContact" class="panel-collapse collapse
-                    {% if form.enabled.errors or form.contact_persons.errors %}in{% endif %}
-                    " aria-labelledby="headingContact" role="tabpanel" aria-expanded="true" style="">
-                        <div class="panel-body">
-                            <fieldset>
-                                {{ form.unit.errors }}
-                                <label for="{{ form.unit.id_for_label }}">{{ form.unit.label }}:</label>
-                                {{ form.unit }}
-                            </fieldset>
-                            <fieldset>
-                                {{ form.enabled.errors }}
-                                <label class="radiolabel">
-                                    <label for="{{ form.enabled.id_for_label }}">{{ form.enabled }} Kan bookes</label>
-                                </label>
-                            </fieldset>
-                            <fieldset>
-                                {{ form.contact_persons.errors }}
-                                <label for="{{ form.contact_persons.id_for_label }}">{{ form.contact_persons.label }}:</label>
-                                {{ form.contact_persons }}
-                            </fieldset>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="panel panel-default">
-                    <div id="headingAttach" class="panel-heading" role="tab">
-                        <h4 class="panel-title">
-                            <a class="" aria-controls="collapseAttach" aria-expanded="true" href="#collapseAttach" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Vedhæftninger" %}</a>
-                        </h4>
-                    </div>
-                    <div id="collapseAttach" class="panel-collapse collapse" aria-labelledby="headingAttach" role="tabpanel" aria-expanded="true" style="">
-                        <div class="panel-body">
-                            <fieldset>
-                                <label>{% trans "Vedhæftede filer" %}:</label>
-                                <ul>
-                                {% for material in fileformset.studymaterials %}
-                                    <li>
-                                        <a href="{{ MEDIA_URL }}{{ material.file.url }}">{{ material.file.name | upload_name_strip_path }}</a>
-                                    </li>
-                                {% endfor %}
-                                </ul>
-                                {{ fileformset.management_form }}
-                                <div id="attachFileFields">
-                                {% for fileform in fileformset %}
-                                    {{ fileform.file }}
-                                {% endfor %}
-                                </div>
-                                <a id="attachAddFileField">{% trans "Tilføj ny fil" %}</a>
-                            </fieldset>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="panel panel-default">
-                    <div id="headingInternal" class="panel-heading" role="tab">
-                        <h4 class="panel-title">
-                            <a class="" aria-controls="collapseInternal"
-                                aria-expanded="true"
-                                href="#collapseInternal" data-parent="#accordion"
-                                data-toggle="collapse" role="button">{% trans "Interne oplysninger" %}</a>
-                        </h4>
-                    </div>
-                    <div id="collapseInternal" class="panel-collapse collapse {% if form.enabled.errors or form.contact_persons.errors %}in{% endif %} " aria-labelledby="headingContact" role="tabpanel" aria-expanded="true" style="">
-                        <div class="panel-body">
-                                    <fieldset>
-                                        {{ form.preparation_time.errors }}
-                                        <label for="{{
-                                            form.preparation_time.id_for_label }}">{{ form.preparation_time.label }}:</label>
-                                        {{ form.preparation_time }}
-                                    </fieldset>
-                                    <fieldset>
-                                        {{ form.comment.errors }}
-                                        <label for="{{
-                                            form.comment.id_for_label }}">{{ form.comment.label }}:</label>
-                                        {{ form.comment }}
-                                    </fieldset>
-                        </div>
-                    </div>
-                </div>
-
             </div>
 
-            {% include 'common/save_cancel.html' %}
-        </form>
-        <footer>
-        </footer>
-    </div>
+            <div class="panel panel-default">
+                <div id="headingCategory" class="panel-heading" role="tab">
+                    <h4 class="panel-title">
+                        <a class="" aria-controls="collapseCategory" aria-expanded="true" href="#collapseCategory" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Kategorisering" %}</a>
+                    </h4>
+                </div>
+                <div id="collapseCategory" class="panel-collapse collapse
+                {% if form.type.errors or form.tags.errors %}in{% endif %}
+                " aria-labelledby="headingCategory" role="tabpanel" aria-expanded="true" style="">
+                    <div class="panel-body">
+                        <fieldset>
+                            {{ form.type.errors }}
+                            <label for="{{ form.type.id_for_label }}">{{ form.type.label }}:</label>
+                            {{ form.type }}
+                        </fieldset>
+                        <fieldset>
+                            {{ form.tags.errors }}
+                            <label for="{{ form.tags.id_for_label }}">{{ form.tags.label }}:</label>
+                            {{ form.tags }}
+                        </fieldset>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel panel-default">
+                <div id="headingAudience" class="panel-heading" role="tab">
+                    <h4 class="panel-title">
+                        <a class="" aria-controls="collapseAudience" aria-expanded="true" href="#collapseAudience" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Målgruppe" %}</a>
+                    </h4>
+                </div>
+                <div id="collapseAudience" class="panel-collapse collapse
+                    {% if form.institution_level.errors or form.topics.errors or form.level.errors or form.class_level_min.errors or form.class_level_max.errors or form.minimum_number_of_visitors.errors or form.maximum_number_of_visitors.errors %}in{% endif %}
+                    " aria-labelledby="headingAudience" role="tabpanel" aria-expanded="true" style="">
+                    <div class="panel-body">
+
+                        <fieldset>
+                            {{ form.institution_level.errors }}
+                            <label for="{{ form.institution_level.id_for_label }}">{{ form.institution_level.label }}:</label>
+                            {{ form.institution_level }}
+                        </fieldset>
+                        <fieldset>
+                            {{ form.topics.errors }}
+                            <label for="{{ form.topics.id_for_label }}">{{ form.topics.label }}:</label>
+                            {{ form.topics }}
+                        </fieldset>
+
+                        <div class="institution_level_dependent" data-display-value="1">
+                            <fieldset>
+                                {{ form.level.errors }}
+                                <label for="{{ form.level.id_for_label }}">{{ form.level.label }}:</label>
+                                {{ form.level }}
+                            </fieldset>
+                        </div>
+                        <div class="institution_level_dependent" data-display-value="0">
+                            <fieldset>
+                                {{ form.class_level_min.errors }}
+                                <label for="{{ form.class_level_min.id_for_label }}">{{ form.class_level_min.label }}:</label>
+                                {{ form.class_level_min }}
+                            </fieldset>
+                            <fieldset>
+                                {{ form.class_level_max.errors }}
+                                <label for="{{ form.class_level_max.id_for_label }}">{{ form.class_level_max.label }}:</label>
+                                {{ form.class_level_max }}
+                            </fieldset>
+                        </div>
+                        <fieldset>
+                            {{ form.minimum_number_of_visitors.errors }}
+                            <label for="{{ form.minimum_number_of_visitors.id_for_label }}">{{ form.minimum_number_of_visitors.label }}:</label>
+                            {{ form.minimum_number_of_visitors }}
+                        </fieldset>
+                        <fieldset>
+                            {{ form.maximum_number_of_visitors.errors }}
+                            <label for="{{ form.maximum_number_of_visitors.id_for_label }}">{{ form.maximum_number_of_visitors.label }}:</label>
+                            {{ form.maximum_number_of_visitors }}
+                        </fieldset>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel panel-default">
+                <div id="headingTimePlace" class="panel-heading" role="tab">
+                    <h4 class="panel-title">
+                        <a class="" aria-controls="collapseTimePlace" aria-expanded="true" href="#collapseTimePlace" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Tid og sted" %}</a>
+                    </h4>
+                </div>
+                <div id="collapseTimePlace" class="panel-collapse collapse
+                {% if form.time.errors or form.duration.errors or form.locality.errors or form.room.errors %}in{% endif %}
+                " aria-labelledby="headingTimePlace" role="tabpanel" aria-expanded="true" style="">
+                    <div class="panel-body">
+                        <div class="row">
+                            <div class="col-sm-12 col-md-6">
+                                <fieldset>
+                                    {{ form.time.errors }}
+                                    <label for="{{ form.time.id_for_label }}">{{ form.time.label }}:</label>
+                                    {{ form.time }}
+                                </fieldset>
+                                <fieldset>
+                                    {{ form.duration.errors }}
+                                    <label for="{{ form.duration.id_for_label }}">{{ form.duration.label }}:</label>
+                                    <div class="form-inline duration">
+                                    {{ form.duration }}
+                                    </div>
+                                </fieldset>
+                            </div>
+                            <div class="col-sm-12 col-md-6">
+                                <fieldset>
+                                    {{ form.locality.errors }}
+                                    <label for="{{ form.locality.id_for_label }}">{{ form.locality.label }}:</label>
+                                    {{ form.locality }}
+                                </fieldset>
+                                <fieldset>
+                                    {{ form.room.errors }}
+                                    <label for="{{ form.room.id_for_label }}">{{ form.room.label }}:</label>
+                                    {{ form.room }}
+                                </fieldset>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel panel-default">
+                <div id="headingRooms" class="panel-heading" role="tab">
+                    <h4 class="panel-title">
+                        <a class="" aria-controls="collapseRooms" aria-expanded="true" href="#collapseRooms" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Lokaletildeling" %}</a>
+                    </h4>
+                </div>
+                <div id="collapseRooms" class="panel-collapse collapse
+                {% if form.rooms_needed.errors or form.rooms_assignment.errors or form.contact_persons.errors %}in{% endif %}
+                " aria-labelledby="headingContact" role="tabpanel" aria-expanded="true" style="">
+                    <div class="panel-body">
+                        <fieldset>
+                            {{ form.rooms_needed.errors }}
+                            {{ form.rooms_needed }}
+                            <label for="{{ form.rooms_needed.id_for_label }}">{{ form.rooms_needed.label }}</label>
+                        </fieldset>
+                        <div id="rooms_needed_fields">
+                        <fieldset>
+                            {{ form.rooms_assignment.errors }}
+                            <label for="{{ form.rooms_assignment.id_for_label }}">{{ form.rooms_assignment.label }}:</label>
+                            {{ form.rooms_assignment }}
+                        </fieldset>
+                        <fieldset id="roomsedit">
+                            <div class="row">
+                                <div class="col-sm-12 col-md-6">
+                                    <label for="newroom">{% trans "Tilføj nyt lokale" %}</label>
+                                    <input type="text" name="newroom" id="newroom" value="" class="col-md-8" />
+                                    <input type="button" id="addnewroom" value="{% trans "Tilføj" %}" class=" col-md-2" />
+                                </div>
+                                <div class="col-sm-12 col-md-6">
+                                    <label for="existingrooms">{% trans "Tilføj eksisterende lokale" %}</label>
+                                    <select name="existingrooms" id="existingrooms" class="col-md-10">
+                                        <option>{% trans "Vælg lokale..." %}</option>
+                                        {% for room in existingrooms %}
+                                        <option value="{{room.name}}">{{room.name}}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div><strong>{% trans "Valgte lokaler" %}</strong></div>
+                            <ul id="chosenrooms">
+                            {% comment %}
+                                When making changes here, also change the addRoom method
+                                in booking/static/js/formutil.js which generates the
+                                same HTML dynamically.
+                            {% endcomment %}
+                            {% for room in rooms %}
+                                <li>
+                                    <span class="roomname">{{ room.name }}</span>
+                                    <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                                    <input type="hidden" name="rooms" value="{{ room.name }}" />
+                                </li>
+                            {% endfor %}
+                            </ul>
+                        </fieldset>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="panel panel-default">
+                <div id="headingContact" class="panel-heading" role="tab">
+                    <h4 class="panel-title">
+                        <a class="" aria-controls="collapseContact" aria-expanded="true" href="#collapseContact" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Kontaktinformation" %}</a>
+                    </h4>
+                </div>
+                <div id="collapseContact" class="panel-collapse collapse
+                {% if form.enabled.errors or form.contact_persons.errors %}in{% endif %}
+                " aria-labelledby="headingContact" role="tabpanel" aria-expanded="true" style="">
+                    <div class="panel-body">
+                        <fieldset>
+                            {{ form.unit.errors }}
+                            <label for="{{ form.unit.id_for_label }}">{{ form.unit.label }}:</label>
+                            {{ form.unit }}
+                        </fieldset>
+                        <fieldset>
+                            {{ form.enabled.errors }}
+                            <label class="radiolabel">
+                                <label for="{{ form.enabled.id_for_label }}">{{ form.enabled }} Kan bookes</label>
+                            </label>
+                        </fieldset>
+                        <fieldset>
+                            {{ form.contact_persons.errors }}
+                            <label for="{{ form.contact_persons.id_for_label }}">{{ form.contact_persons.label }}:</label>
+                            {{ form.contact_persons }}
+                        </fieldset>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel panel-default">
+                <div id="headingAttach" class="panel-heading" role="tab">
+                    <h4 class="panel-title">
+                        <a class="" aria-controls="collapseAttach" aria-expanded="true" href="#collapseAttach" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Vedhæftninger" %}</a>
+                    </h4>
+                </div>
+                <div id="collapseAttach" class="panel-collapse collapse" aria-labelledby="headingAttach" role="tabpanel" aria-expanded="true" style="">
+                    <div class="panel-body">
+                        <fieldset>
+                            <label>{% trans "Vedhæftede filer" %}:</label>
+                            <ul>
+                            {% for material in fileformset.studymaterials %}
+                                <li>
+                                    <a href="{{ MEDIA_URL }}{{ material.file.url }}">{{ material.file.name | upload_name_strip_path }}</a>
+                                </li>
+                            {% endfor %}
+                            </ul>
+                            {{ fileformset.management_form }}
+                            <div id="attachFileFields">
+                            {% for fileform in fileformset %}
+                                {{ fileform.file }}
+                            {% endfor %}
+                            </div>
+                            <a id="attachAddFileField">{% trans "Tilføj ny fil" %}</a>
+                        </fieldset>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel panel-default">
+                <div id="headingInternal" class="panel-heading" role="tab">
+                    <h4 class="panel-title">
+                        <a class="" aria-controls="collapseInternal"
+                            aria-expanded="true"
+                            href="#collapseInternal" data-parent="#accordion"
+                            data-toggle="collapse" role="button">{% trans "Interne oplysninger" %}</a>
+                    </h4>
+                </div>
+                <div id="collapseInternal" class="panel-collapse collapse {% if form.enabled.errors or form.contact_persons.errors %}in{% endif %} " aria-labelledby="headingContact" role="tabpanel" aria-expanded="true" style="">
+                    <div class="panel-body">
+                        <fieldset>
+                            {{ form.preparation_time.errors }}
+                            <label for="{{
+                                form.preparation_time.id_for_label }}">{{ form.preparation_time.label }}:</label>
+                            {{ form.preparation_time }}
+                        </fieldset>
+                        <fieldset>
+                            {{ form.comment.errors }}
+                            <label for="{{
+                                form.comment.id_for_label }}">{{ form.comment.label }}:</label>
+                            {{ form.comment }}
+                        </fieldset>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        {% include 'common/save_cancel.html' %}
+    </form>
 
 {% endblock %}
 
 {% block extra_scripts %}
+    
     {{ form.media }}
     <script type="text/javascript" src="{% static 'thirdparty/bootstrap-datetime-picker/js/bootstrap-datetimepicker.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/formutil.js' %}"></script>
@@ -317,5 +374,5 @@
             changeDisplay();
         });
     //--></script>
+    
 {% endblock %}
-
