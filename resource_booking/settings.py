@@ -38,6 +38,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'booking',
     'profile',
+    'recurrence',
     'timedelta',
     'tinymce',
     'djangosaml2'
