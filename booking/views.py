@@ -444,16 +444,3 @@ class RrulestrView(View):
             json.dumps(date_strings),
             content_type='application/json'
         )
-
-
-class AdminIndexView(MainPageView):
-    template_name = 'admin_index.html'
-
-
-class AdminSearchView(SearchView):
-    template_name = 'resource/admin_searchresult.html'
-
-
-class AdminVisitDetailView(VisitDetailView):
-    template_name = 'visit/admin_details.html'
-

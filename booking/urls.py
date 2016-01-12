@@ -71,11 +71,5 @@ urlpatterns = patterns(
 
     url(r'^tinymce/', include('tinymce.urls')),
 
-    url(r'^fokusadmin/?$', AdminIndexView.as_view(), name='admin-index'),
-    url(r'^fokusadmin/search/?$', AdminSearchView.as_view(),
-        name='admin-search'),
-    url(r'^fokusadmin/visit/(?P<pk>[0-9]+)/?$', AdminVisitDetailView.as_view(),
-        name='admin-visit')
-
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
