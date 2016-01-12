@@ -456,4 +456,3 @@ class AdminSearchView(SearchView):
 
 class AdminVisitDetailView(VisitDetailView):
     template_name = 'visit/admin_details.html'
-

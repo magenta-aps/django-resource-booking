@@ -7,8 +7,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
 from django.utils.translation import ugettext_lazy as _
 
-from .fields import DurationField
-
 from recurrence.fields import RecurrenceField
 
 LOGACTION_CREATE = ADDITION
