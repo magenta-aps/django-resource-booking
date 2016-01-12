@@ -9,7 +9,7 @@
                 <li>Du er her: </li>
                 <li><a href="http://fokus.ku.dk/">Søgning</a></li>
                 <li><a href="#">Søgeresultatliste</a></li>
-                <li class="active"><a href="{% url 'index' %}">Detaljevisning</a></li>
+                <li class="active">Detaljevisning</li>
             </ol>
         </div>
         <div class="col-sm-4 text-right small-icons hidden-print">
@@ -74,7 +74,7 @@
                 <!-- Display according to business logic -->
                 <i>Buttons display according to business logic.</i>
                 <br />
-                <button type="button" class="btn btn-default">Book dette tilbud
+                <button type="button" class="btn btn-default" data-toggle="modal" data-target="#startbooking">Book dette tilbud
                     <span class="glyphicon glyphicon-chevron-right"></span>
                 </button>
                 <br/><i>Buttons display according to business logic.</i>
@@ -134,5 +134,106 @@
             </form>
         </div>
     </div>
-
+<!-- Modal start -->
+    <div class="modal fade" id="startbooking" tabindex="-1" role="Popup-bookingflow" aria-labelledby="overskrift">
+        <div class="modal-dialog modal-lg" role="Bookingflow">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="overskrift">Book tilbuddet "Oplev matematik på universitetet"</h4>
+                </div>
+                <div class="modal-body">
+                <p>Udfyld venligst nedenstående formular for at booke et tilbud. Felter markeret med * er obligatoriske.</p>
+                <div class="divider"></div>
+                    <form class="form-horizontal clearfix" id="startbookingform" role="form" data-toggle="validator">
+                        <div class="form-group">
+                            <label for="name" class="col-sm-2 control-label">Navn*</label>
+                            <div class="col-sm-6">
+                                <input type="text" class="form-control input-sm" data-error="Udfyld navn" id="name" placeholder="Navn" required>
+                            </div>
+                            <div class="col-sm-4 help-block with-errors"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="inputEmail3" class="col-sm-2 control-label">Email*</label>
+                            <div class="col-sm-6">
+                                <input type="email" class="form-control input-sm" data-error="Angiv gyldig e-mailadresse" id="inputEmail3" placeholder="Email" required>
+                            </div>
+                            <div class="col-sm-4 help-block with-errors"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="skole" class="col-sm-2 control-label">Skole*</label>
+                            <div class="col-sm-6">
+                                <input type="text" class="form-control input-sm" data-error="Angiv skole" id="skole" placeholder="Skole" required>
+                            </div>
+                            <div class="col-sm-4 help-block with-errors"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="antal" class="col-sm-2 control-label">Antal deltagere*</label>
+                            <div class="col-sm-6">
+                                <input type="text" class="form-control input-sm" data-error="Angiv antal deltagere" id="antal" placeholder="Antal deltagere" required>
+                            </div>
+                            <div class="col-sm-4 help-block with-errors"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="skole" class="col-sm-2 control-label">Kommentarer</label>
+                            <div class="col-sm-6">
+                                <textarea class="form-control" rows="3"></textarea>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-sm-6 col-sm-offset-2">
+                                <div class="stepwizard">
+                                    <div class="stepwizard-row">
+                                        <div class="stepwizard-step">
+                                            <button type="button" class="btn btn-default btn-circle">1</button>
+                                            <p>Trin 1</p>
+                                        </div>
+                                        <div class="stepwizard-step active">
+                                            <button type="button" class="btn btn-primary btn-circle">2</button>
+                                            <p>Trin 2</p>
+                                        </div>
+                                        <div class="stepwizard-step">
+                                            <button type="button" class="btn btn-default btn-circle" disabled="disabled">3</button>
+                                            <p>Trin 3</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Annullér</button>
+                    <button type="button" class="btn btn-primary">Næste</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal end -->
+{% endblock %}
+{% block footer %}
+    <div class="container">
+        <div class="row">
+            <footer>
+                <div class="container">
+                    <div class="row footer-columns">
+                        <div class="col-sm-4 col-sm-offset-0">
+                            <ul class="footerlinks">
+                                <li><a href="http://kommunikation.ku.dk/">Kommunikation</a></li>
+                                <li><a href="http://www.ku.dk/">Københavns Universitet</a></li>
+                                <li>Nørregade 10, Postboks 2177</li>
+                                <li>1017 København K</li>
+                            </ul>
+                        </div>
+                        <div class="col-sm-4 col-sm-offset-4">
+                            <ul class="footerlinks">
+                                <li class="clearfix social-icons"><a target="_blank" class="footer-social" href="https://www.facebook.com/universitet"><span class="icon-circle"><i class="fa fa-facebook"></i></span></a><a target="_blank" class="footer-social" href="https://www.linkedin.com/edu/k%C3%B8benhavns-universitet-12012"><span class="icon-circle"><i class="fa fa-linkedin"></i></span></a><a target="_blank" class="footer-social" href="https://twitter.com/koebenhavns_uni"><span class="icon-circle"><i class="fa fa-twitter"></i></span></a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
 {% endblock %}
