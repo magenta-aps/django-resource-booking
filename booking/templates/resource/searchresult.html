@@ -133,6 +133,11 @@
                     <!-- AddThis Button END -->
                 </div>
             </div>
+            
+            {% if user.is_authenticated %}
+                <a class="pull-right btn btn-primary" href="/visit/create">+ Opret tilbud</a>
+            {% endif %}
+            
             <h1>Søgeresultat</h1>
             <div class="divider"></div>
             <form class="clearfix" role="søg" action={% url 'search' %}>

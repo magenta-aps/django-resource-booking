@@ -1,17 +1,14 @@
-from tinymce.widgets import TinyMCE
-
-from django import forms
-from django.forms import inlineformset_factory
-from django.forms import CheckboxSelectMultiple
-from django.forms import TextInput, NumberInput, Textarea
-from django.utils.translation import ugettext_lazy as _
-
-from profile.models import COORDINATOR
-
+from booking.models import StudyMaterial
 from booking.models import UnitType
 from booking.models import Unit
 from booking.models import Visit
-from booking.models import StudyMaterial
+from django import forms
+from django.forms import CheckboxSelectMultiple
+from django.forms import inlineformset_factory
+from django.forms import TextInput, NumberInput, Textarea
+from django.utils.translation import ugettext_lazy as _
+from profile.models import COORDINATOR
+from tinymce.widgets import TinyMCE
 
 
 class UnitTypeForm(forms.ModelForm):
@@ -37,7 +34,7 @@ class VisitForm(forms.ModelForm):
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'time', 'duration', 'locality', 'rooms_assignment',
                   'rooms_needed',
-                  'enabled', 'contact_persons', 'unit')
+                  'enabled', 'contact_persons', 'unit',)
         widgets = {
             'title': TextInput(attrs={'class': 'titlefield'}),
             'teaser': Textarea(attrs={'rows': 3, 'maxlength': 1000}),
