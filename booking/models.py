@@ -7,6 +7,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
 from django.utils.translation import ugettext_lazy as _
 
+from .fields import DurationField
+
 from recurrence.fields import RecurrenceField
 
 LOGACTION_CREATE = ADDITION
@@ -72,6 +74,22 @@ class Unit(models.Model):
     type = models.ForeignKey(UnitType)
     parent = models.ForeignKey('self', null=True, blank=True)
     contact = models.ForeignKey(Person, null=True, blank=True)
+
+    def belongs_to(self, unit):
+        if self == unit:
+            return True
+        elif self.parent is None:
+            return False
+        else:
+            return self.parent.belongs_to(unit)
+
+    def get_descendants(self):
+        """Return all units at a lower level"""
+        offspring = Unit.objects.filter(parent=self)
+        all_children = Unit.objects.none()
+        for u in offspring:
+            all_children = all_children | u.get_descendants()
+        return all_children | Unit.objects.filter(pk=self.pk)
 
     def __unicode__(self):
         return "%s (%s)" % (self.name, self.type.name)
@@ -180,7 +198,8 @@ class Locality(models.Model):
     zip_city = models.CharField(
         max_length=256, verbose_name=_(u'Postnummer og by')
     )
-    unit = models.ForeignKey(Unit, verbose_name=_(u'Enhed'))
+    unit = models.ForeignKey(Unit, verbose_name=_(u'Enhed'), blank=True,
+                             null=True)
 
     def __unicode__(self):
         return self.name
@@ -373,16 +392,14 @@ class OtherResource(Resource):
     )
 
     def save(self, *args, **kwargs):
-        # If creating new object, save so we have pk to generate search
-        # text with
-        if self.pk is None:
-            super(Resource, self).save(*args, **kwargs)
+        # Save once to store relations
+        super(OtherResource, self).save(*args, **kwargs)
 
         # Update search_text
         self.extra_search_text = self.generate_extra_search_text()
 
         # Do the final save
-        return super(Resource, self).save(*args, **kwargs)
+        return super(OtherResource, self).save(*args, **kwargs)
 
 
 class Visit(Resource):
@@ -397,17 +414,33 @@ class Visit(Resource):
         config='pg_catalog.danish',
         auto_update_search_field=True
     )
+
+    rooms_needed = models.BooleanField(
+        default=True,
+        verbose_name=_(u"Tilbuddet kræver brug af et eller flere lokaler")
+    )
+
+    ROOMS_ASSIGNED_ON_VISIT = 0
+    ROOMS_ASSIGNED_WHEN_BOOKING = 1
+
+    rooms_assignment_choices = (
+        (ROOMS_ASSIGNED_ON_VISIT, _(u"Lokaler tildeles på forhånd")),
+        (ROOMS_ASSIGNED_WHEN_BOOKING, _(u"Lokaler tildeles ved booking")),
+    )
+
+    rooms_assignment = models.IntegerField(
+        choices=rooms_assignment_choices, default=ROOMS_ASSIGNED_ON_VISIT,
+        verbose_name=_(u"Tildeling af lokale(r)")
+    )
+
     locality = models.ForeignKey(
         Locality, verbose_name=_(u'Lokalitet'), blank=True
-    )
-    room = models.CharField(
-        max_length=64, verbose_name=_(u'Lokale'), blank=True
     )
     duration = models.CharField(
         max_length=8,
         verbose_name=_(u'Varighed'),
         blank=True,
-        null=True
+        null=True,
     )
     contact_persons = models.ManyToManyField(
         Person,
@@ -459,16 +492,14 @@ class Visit(Resource):
     )
 
     def save(self, *args, **kwargs):
-        # If creating new object, save so we have pk to generate search
-        # text with
-        if self.pk is None:
-            super(Resource, self).save(*args, **kwargs)
+        # Save once to store relations
+        super(Visit, self).save(*args, **kwargs)
 
         # Update search_text
         self.extra_search_text = self.generate_extra_search_text()
 
         # Do the final save
-        return super(Resource, self).save(*args, **kwargs)
+        return super(Visit, self).save(*args, **kwargs)
 
     @property
     def recurrences_description(self):
@@ -491,3 +522,15 @@ class VisitOccurrence(models.Model):
         Visit,
         on_delete=models.CASCADE
     )
+
+
+class Room(models.Model):
+    visit = models.ForeignKey(
+        Visit, verbose_name=_(u'Besøg'), blank=False
+    )
+    name = models.CharField(
+        max_length=64, verbose_name=_(u'Navn på lokale'), blank=False
+    )
+
+    def __unicode__(self):
+        return self.name
