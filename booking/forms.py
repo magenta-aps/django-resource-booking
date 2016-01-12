@@ -1,12 +1,13 @@
-from django import forms
+from booking.models import StudyMaterial
 from booking.models import UnitType
 from booking.models import Unit
 from booking.models import Visit
-from booking.models import StudyMaterial
-from django.forms import inlineformset_factory
+from django import forms
 from django.forms import CheckboxSelectMultiple
+from django.forms import inlineformset_factory
 from django.forms import TextInput, NumberInput, Textarea
 from django.utils.translation import ugettext_lazy as _
+from profile.models import COORDINATOR
 from tinymce.widgets import TinyMCE
 
 
@@ -33,7 +34,7 @@ class VisitForm(forms.ModelForm):
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'time', 'duration', 'locality', 'rooms_assignment',
                   'rooms_needed',
-                  'enabled', 'contact_persons', 'unit')
+                  'enabled', 'contact_persons', 'unit',)
         widgets = {
             'title': TextInput(attrs={'class': 'titlefield'}),
             'teaser': Textarea(attrs={'rows': 3, 'maxlength': 1000}),
@@ -66,6 +67,25 @@ class VisitForm(forms.ModelForm):
             self.add_error('minimum_number_of_visitors', min_error_msg)
             self.add_error('maximum_number_of_visitors', max_error_msg)
             raise forms.ValidationError(min_error_msg)
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user')
+        super(VisitForm, self).__init__(*args, **kwargs)
+        self.fields['unit'].queryset = self.get_unit_query_set()
+
+    def get_unit_query_set(self):
+        """"Get units for which user can create events."""
+        user = self.user
+        if user.userprofile.get_role() == COORDINATOR:
+            uu = user.userprofile.unit
+            if uu is not None:
+                qs = uu.get_descendants()
+            else:
+                qs = Unit.objects.none()
+        else:
+            # User must be an administrator and may attach any unit.
+            qs = Unit.objects.all()
+        return qs
 
 
 VisitStudyMaterialFormBase = inlineformset_factory(Visit,

@@ -39,11 +39,11 @@ class LoginRequiredMixin(object):
         return super(LoginRequiredMixin, self).dispatch(*args, **kwargs)
 
 
-class RoleNotFound(PermissionDenied):
+class AccessDenied(PermissionDenied):
     def __init__(self, text, *args, **kwargs):
         _text = text
         print _text
-        return super(RoleNotFound, self).__init__(text, *args, **kwargs)
+        return super(AccessDenied, self).__init__(text, *args, **kwargs)
 
     def __unicode__(self):
         print self._text
@@ -62,15 +62,15 @@ class RoleRequiredMixin(object):
     @method_decorator(login_required)
     def dispatch(self, *args, **kwargs):
         current_user = self.request.user
-        try:
+        if hasattr(current_user, 'userprofile'):
             role = current_user.userprofile.get_role()
             if role in self.roles:
                 return super(RoleRequiredMixin, self).dispatch(*args, **kwargs)
-        except AttributeError:
+        else:
             pass
         txts = map(role_to_text, self.roles)
         # TODO: Render this with the error message!
-        raise RoleNotFound(
+        raise AccessDenied(
             u"Kun brugere med disse roller kan logge ind: " +
             u",".join(txts)
         )
@@ -245,7 +245,8 @@ class EditVisit(RoleRequiredMixin, UpdateView):
     # Handle both forms, creating a Visit and a number of StudyMaterials
     def post(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
-        self.object = None if pk is None else Visit.objects.get(id=pk)
+        if not hasattr(self, 'object') or self.object is None:
+            self.object = None if pk is None else Visit.objects.get(id=pk)
         form = self.get_form()
         fileformset = VisitStudyMaterialForm(request.POST)
         if form.is_valid():
@@ -321,6 +322,32 @@ class EditVisit(RoleRequiredMixin, UpdateView):
         return self.render_to_response(
             self.get_context_data(form=form, fileformset=fileformset)
         )
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        # First, check all is well in superclass
+        result = super(EditVisit, self).dispatch(*args, **kwargs)
+        # Now, check that the user belongs to the correct unit.
+        current_user = self.request.user
+        pk = kwargs.get("pk")
+        if self.object is None:
+            self.object = None if pk is None else Visit.objects.get(id=pk)
+        if self.object is not None:
+            role = current_user.userprofile.get_role()
+            if role == COORDINATOR:
+                users_unit = current_user.userprofile.unit
+                visits_unit = self.object.unit
+                if visits_unit and not visits_unit.belongs_to(users_unit):
+                    raise AccessDenied(
+                        _(u"Du kan kun redigere enheder,som du selv er" +
+                          " koordinator for.")
+                    )
+        return result
+
+    def get_form_kwargs(self):
+        kwargs = super(EditVisit, self).get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
 
 
 class VisitDetailView(DetailView):
