@@ -21,7 +21,7 @@
             <div class="col-sm-2">
             <label for="{{ form.title.id_for_label }}">{{ form.title.label }}:</label>
             </div>
-            <div class="col-sm-8">
+            <div class="col-sm-10">
             {{ form.title }}
             </div>
         </div>
@@ -38,29 +38,29 @@
                 " aria-labelledby="headingDescription" role="tabpanel">
                     <div class="panel-body">
                         <div class="row form-group">
-                            {{ form.teaser.errors }}
+                            <div>{{ form.teaser.errors }}</div>
                             <div class="col-sm-2">
                             <label for="{{ form.teaser.id_for_label }}">{{ form.teaser.label }}:</label>
                             </div>
-                            <div class="col-sm-8">
+                            <div class="col-sm-10">
                             {{ form.teaser }}
                             </div>
                         </div>
                         <div class="row form-group">
-                            {{ form.description.errors }}
+                            <div>{{ form.description.errors }}</div>
                             <div class="col-sm-2">
                             <label for="{{ form.description.id_for_label }}">{{ form.description.label }}:</label>
                             </div>
-                            <div class="col-sm-8">
+                            <div class="col-sm-10">
                             {{ form.description }}
                             </div>
                         </div>
                         <div class="row form-group">
-                            {{ form.price.errors }}
+                            <div>{{ form.price.errors }}</div>
                             <div class="col-sm-2">
                             <label for="{{ form.price.id_for_label }}">{{ form.price.label }}:</label>
                             </div>
-                            <div class="col-sm-8">
+                            <div class="col-sm-10">
                             {{ form.price }}
                             </div>
                         </div>
@@ -79,20 +79,20 @@
                 " aria-labelledby="headingCategory" role="tabpanel" aria-expanded="true" style="">
                     <div class="panel-body">
                     <div class="row form-group">
-                            {{ form.type.errors }}
+                            <div>{{ form.type.errors }}</div>
                             <div class="col-sm-2">
                             <label for="{{ form.type.id_for_label }}">{{ form.type.label }}:</label>
                             </div>
-                            <div class="col-sm-8">
+                            <div class="col-sm-10">
                             {{ form.type }}
                             </div>
                         </div>
                         <div class="row form-group">
-                            {{ form.tags.errors }}
+                            <div>{{ form.tags.errors }}</div>
                             <div class="col-sm-2">
                             <label for="{{ form.tags.id_for_label }}">{{ form.tags.label }}:</label>
                             </div>
-                            <div class="col-sm-8">
+                            <div class="col-sm-10">
                             {{ form.tags }}
                             </div>
                         </div>
@@ -110,54 +110,73 @@
                     {% if form.institution_level.errors or form.topics.errors or form.level.errors or form.class_level_min.errors or form.class_level_max.errors or form.minimum_number_of_visitors.errors or form.maximum_number_of_visitors.errors %}in{% endif %}
                     " aria-labelledby="headingAudience" role="tabpanel" aria-expanded="true" style="">
                     <div class="panel-body">
-
                         <div class="row form-group">
-                            {{ form.institution_level.errors }}
+                            <div>{{ form.institution_level.errors }}</div>
                             <div class="col-sm-2">
                             <label for="{{ form.institution_level.id_for_label }}">{{ form.institution_level.label }}:</label>
                             </div>
-                            <div class="col-sm-8">
+                            <div class="col-sm-10">
                             {{ form.institution_level }}
                             </div>
                         </div>
                         <div class="row form-group">
-                            {{ form.topics.errors }}
+                            <div>{{ form.topics.errors }}</div>
                             <div class="col-sm-2">
                             <label for="{{ form.topics.id_for_label }}">{{ form.topics.label }}:</label>
                             </div>
-                            <div class="col-sm-8">
+                            <div class="col-sm-10">
                             {{ form.topics }}
                             </div>
                         </div>
 
                         <div class="institution_level_dependent" data-display-value="1">
                             <div class="row form-group">
-                                {{ form.level.errors }}
+                                <div>{{ form.level.errors }}</div>
+                                <div class="col-sm-2">
                                 <label for="{{ form.level.id_for_label }}">{{ form.level.label }}:</label>
+                                </div>
+                                <div class="col-sm-10">
                                 {{ form.level }}
+                                </div>
                             </div>
                         </div>
                         <div class="institution_level_dependent" data-display-value="0">
                             <div class="row form-group">
-                                {{ form.class_level_min.errors }}
+                                <div>{{ form.class_level_min.errors }}</div>
+                                <div class="col-sm-2">
                                 <label for="{{ form.class_level_min.id_for_label }}">{{ form.class_level_min.label }}:</label>
+                                </div>
+                                <div class="col-sm-10">
                                 {{ form.class_level_min }}
+                                </div>
                             </div>
                             <div class="row form-group">
-                                {{ form.class_level_max.errors }}
+                                <div>{{ form.class_level_max.errors }}</div>
+                                <div class="col-sm-2">
                                 <label for="{{ form.class_level_max.id_for_label }}">{{ form.class_level_max.label }}:</label>
+                                </div>
+                                <div class="col-sm-10">
                                 {{ form.class_level_max }}
+                                </div>
                             </div>
                         </div>
                         <div class="row form-group">
-                            {{ form.minimum_number_of_visitors.errors }}
+                            <div>{{ form.minimum_number_of_visitors.errors }}</div>
+                            <div class="col-sm-2">
                             <label for="{{ form.minimum_number_of_visitors.id_for_label }}">{{ form.minimum_number_of_visitors.label }}:</label>
+                            </div>
+                            <div class="col-sm-10">
                             {{ form.minimum_number_of_visitors }}
+                            </div>
                         </div>
                         <div class="row form-group">
-                            {{ form.maximum_number_of_visitors.errors }}
+                            <div>{{ form.maximum_number_of_visitors.errors }}</div>
+                            <div class="col-sm-2">
                             <label for="{{ form.maximum_number_of_visitors.id_for_label }}">{{ form.maximum_number_of_visitors.label }}:</label>
+                            </div>
+                            <div class="col-sm-10">
                             {{ form.maximum_number_of_visitors }}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -173,37 +192,46 @@
                 {% if form.time.errors or form.duration.errors or form.locality.errors or form.room.errors %}in{% endif %}
                 " aria-labelledby="headingTimePlace" role="tabpanel" aria-expanded="true" style="">
                     <div class="panel-body">
-                        <div class="row">
-                            <div class="col-sm-12 col-md-6">
-                                <fieldset>
-                                    {{ form.time.errors }}
+                        <div class="row form-group">
+                                    <div>{{ form.time.errors }}</div>
+                                    <div class="col-sm-2">
                                     <label for="{{ form.time.id_for_label }}">{{ form.time.label }}:</label>
+                                    </div>
+                                    <div class="col-sm-10">
                                     {{ form.time }}
-                                </fieldset>
-                                <fieldset>
-                                    {{ form.duration.errors }}
+                                    </div>
+                                    </div>
+                                <div class="row form-group">
+                                    <div>{{ form.duration.errors }}</div>
+                                    <div class="col-sm-2">
                                     <label for="{{ form.duration.id_for_label }}">{{ form.duration.label }}:</label>
-                                    <div class="form-inline duration">
+                                    </div>
+                                    <div class="col-sm-10">
                                     {{ form.duration }}
                                     </div>
-                                </fieldset>
                             </div>
-                            <div class="col-sm-12 col-md-6">
-                                <fieldset>
-                                    {{ form.locality.errors }}
+                            <div class="row form-group">
+                                    <div>{{ form.locality.errors }}</div>
+                                    <div class="col-sm-2">
                                     <label for="{{ form.locality.id_for_label }}">{{ form.locality.label }}:</label>
+                                    </div>
+                                    <div class="col-sm-10">
                                     {{ form.locality }}
-                                </fieldset>
-                                <fieldset>
-                                    {{ form.room.errors }}
+                                </div>
+                                </div>
+                                <div class="row form-group">
+                                    <div>{{ form.room.errors }}</div>
+                                    <div class="col-sm-2">
                                     <label for="{{ form.room.id_for_label }}">{{ form.room.label }}:</label>
+                                    </div>
+                                    <div class="col-sm-10">
                                     {{ form.room }}
-                                </fieldset>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
+           
 
             <div class="panel panel-default">
                 <div id="headingRooms" class="panel-heading" role="tab">
@@ -215,32 +243,47 @@
                 {% if form.rooms_needed.errors or form.rooms_assignment.errors or form.contact_persons.errors %}in{% endif %}
                 " aria-labelledby="headingContact" role="tabpanel" aria-expanded="true" style="">
                     <div class="panel-body">
-                        <fieldset>
-                            {{ form.rooms_needed.errors }}
+                        <div class="row form-group">
+                            <div>{{ form.rooms_needed.errors }}</div>
+                            <div class="col-sm-12">
                             {{ form.rooms_needed }}
                             <label for="{{ form.rooms_needed.id_for_label }}">{{ form.rooms_needed.label }}</label>
-                        </fieldset>
+                            </div>
+                        </div>
+
                         <div id="rooms_needed_fields">
-                        <fieldset>
-                            {{ form.rooms_assignment.errors }}
+                        <div class="row form-group">
+                            <div>{{ form.rooms_assignment.errors }}</div>
+                            <div class="col-sm-2">
                             <label for="{{ form.rooms_assignment.id_for_label }}">{{ form.rooms_assignment.label }}:</label>
+                            </div>
+                            <div class="col-sm-10">
                             {{ form.rooms_assignment }}
-                        </fieldset>
+                            </div>
+                        </div>
                         <fieldset id="roomsedit">
-                            <div class="row">
-                                <div class="col-sm-12 col-md-6">
-                                    <label for="newroom">{% trans "Tilføj nyt lokale" %}</label>
-                                    <input type="text" name="newroom" id="newroom" value="" class="col-md-8" />
-                                    <input type="button" id="addnewroom" value="{% trans "Tilføj" %}" class=" col-md-2" />
-                                </div>
-                                <div class="col-sm-12 col-md-6">
-                                    <label for="existingrooms">{% trans "Tilføj eksisterende lokale" %}</label>
-                                    <select name="existingrooms" id="existingrooms" class="col-md-10">
+                        <div class="row form-group">
+                            <div class="col-sm-2">
+                                    <label for="existingrooms">{% trans "Tilføj eksisterende lokale" %}:</label>
+                                    </div>
+                                    <div class="col-sm-6">
+                                    <select name="existingrooms" class="form-control input-sm" id="existingrooms">
                                         <option>{% trans "Vælg lokale..." %}</option>
                                         {% for room in existingrooms %}
                                         <option value="{{room.name}}">{{room.name}}</option>
                                         {% endfor %}
                                     </select>
+                                </div>
+                        </div>
+                            <div class="row form-group">
+                                <div class="col-sm-2">
+                                    <label for="newroom">{% trans "Tilføj nyt lokale" %}:</label>
+                                    </div>
+                                    <div class="col-sm-4">
+                                    <div class="input-group">
+                                    <input type="text" name="newroom" id="newroom" value="" class="form-control input-sm" /><span class="input-group-btn">
+                                    <button type="button" id="addnewroom" value="{% trans "Tilføj" %}" class="btn btn-default">{% trans "Tilføj" %}</button></span>
+                                    </div>
                                 </div>
                             </div>
                             <div><strong>{% trans "Valgte lokaler" %}</strong></div>

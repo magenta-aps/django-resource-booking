@@ -646,9 +646,12 @@ ul.footerlinks .footerlist-header {
 .lengthcounter {
     margin-left: 7px;
 }
-.form-group [id*="id_"] {
+.form-group ul[id*="id_"] {
     list-style-type: none;
     padding-left: 0;
+}
+.form-group label[for*="id_"], .form-group label[for*="id_"] + input[id*="id_"] {
+    margin-right: 7px;
 }
 /*Backend specific styles end */
 @media screen and (max-width:768px) {
