@@ -151,14 +151,15 @@ strong,
 .search-list {
     margin: 15px 0;
 }
-
+.search-list .dropdown-menu {
+    font-size: 11px;
+}
 .search-list .dropdown-menu li.selected {
     background-color: #f5f5f5;
 }
 
 .search-list .dropdown-menu li.selected > a {
-    font-family: 'noto_sansbold', arial, sans-serif;
-    font-weight: normal;
+    font-weight: bold;
 }
 
 #searchBox {
@@ -173,7 +174,6 @@ strong,
     margin-left: 0;
     margin-right: 0;
 }
-
 .breadcrumb {
     color: #999;
     font-size: 8.8px;
@@ -293,7 +293,7 @@ strong,
 }
 
 .panel.panel-sidebar>.panel-heading h3 {
-    color: ##4A4949;
+    color: #4A4949;
     font-size: 9.9px;
     font-weight: bold;
     text-transform: initial;
@@ -463,7 +463,8 @@ a>.caret:active {
 }
 
 .input-daterange input {
-    text-align: left;
+    text-align: left!important;
+    font-size: 11px;
 }
 
 .datepicker-switch {
@@ -543,7 +544,9 @@ ul.footerlinks .footerlist-header {
     left: 7px;
     font-size: 24px;
 }
-
+.padleft0 {
+    padding-left: 0;
+}
 #startbooking .form-group.has-error .help-block.with-errors {
     background-color: #f2dede;
     border: 1px solid #a94442;
@@ -635,7 +638,19 @@ ul.footerlinks .footerlist-header {
     line-height: 1.428571429;
     border-radius: 15px;
 }
+.input-sm, textarea {
+    font-size: 11px!important;
+}
 
+/*Backend specific styles start */
+.lengthcounter {
+    margin-left: 7px;
+}
+.form-group [id*="id_"] {
+    list-style-type: none;
+    padding-left: 0;
+}
+/*Backend specific styles end */
 @media screen and (max-width:768px) {
     html,
     body {
@@ -705,6 +720,9 @@ ul.footerlinks .footerlist-header {
     }
     #startbooking .form-group.has-error .help-block.with-errors:after {
         display: none;
+    }
+    #startbookingform .form-group [class*="col-"] + [class*="col-"] {
+        margin-top: 10px;
     }
 }
 
@@ -777,6 +795,12 @@ ul.footerlinks .footerlist-header {
     .dl-horizontal dd {
         margin-left: 110px;
         padding-top: 7px;
+    }
+    #startbookingform .form-group [class*="col-"] + [class*="col-"] {
+        padding-left: 0;
+    }
+    .form-horizontal .control-label {
+        padding-top: 3px;
     }
     footer {
         border-left: 1px solid #ccc;
