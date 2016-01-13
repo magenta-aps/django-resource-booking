@@ -17,6 +17,8 @@ from django.views.generic.edit import UpdateView
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import Http404
 
 
 from profile.models import COORDINATOR, ADMINISTRATOR
@@ -298,6 +300,10 @@ class EditVisit(RoleRequiredMixin, UpdateView):
     form_class = VisitForm
     model = Visit
 
+    def __init__(self, *args, **kwargs):
+        super(EditVisit, self).__init__(*args, **kwargs)
+        self.object = None
+
     # Display a view with two form objects; one for the regular model,
     # and one for the file upload
 
@@ -305,7 +311,10 @@ class EditVisit(RoleRequiredMixin, UpdateView):
 
     def get(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
-        self.object = Visit() if pk is None else Visit.objects.get(id=pk)
+        try:
+            self.object = Visit() if pk is None else Visit.objects.get(id=pk)
+        except ObjectDoesNotExist:
+            raise Http404
         form = self.get_form()
         fileformset = VisitStudyMaterialForm(None, instance=self.object)
         return self.render_to_response(
@@ -315,8 +324,19 @@ class EditVisit(RoleRequiredMixin, UpdateView):
     # Handle both forms, creating a Visit and a number of StudyMaterials
     def post(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
-        if not hasattr(self, 'object') or self.object is None:
-            self.object = None if pk is None else Visit.objects.get(id=pk)
+        is_cloning = kwargs.get("clone", False)
+        if (is_cloning or
+            not hasattr(self, 'object') or
+            self.object is None):
+            if pk is None or is_cloning:
+                self.object = None
+            else:
+                try:
+                    self.object = Visit.objects.get(id=pk)
+                    if is_cloning:
+                        self.object.pk = None
+                except ObjectDoesNotExist:
+                    raise Http404
         form = self.get_form()
         fileformset = VisitStudyMaterialForm(request.POST)
         if form.is_valid():
