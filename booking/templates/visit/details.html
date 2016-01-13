@@ -90,31 +90,49 @@
                     </div>
                     <div class="panel-body">
                         <dl class="dl-horizontal">
-                            <dt>Henvendt til:</dt>
-                            <dd>{{ object.get_audience_display }}</dd>
-                            <dt>Fag/niveau:</dt>
-                            <dd>{{ object.get_level_display }}</dd>
-                            <dt>Max antal:</dt>
-                            <dd>{{ object.maximum_number_of_visitors }}</dd>
-                            <dt>Hvad:</dt>
-                            <dd>{{ object.get_type_display }}</dd>
-                            <dt>Hvor:</dt>
-                            <dd>{{ object.unit.name }}, {{ object.locality.name }}, {{ object.locality.address_line }}, {{ object.locality.zip_city }}</dd>
+                            {% if object.get_audience_display %}
+                                <dt>Henvendt til:</dt>
+                                <dd>{{ object.get_audience_display }}</dd>
+                            {% endif %}
+                            {% if object.get_level_display %}
+                                <dt>Fag/niveau:</dt>
+                                <dd>{{ object.get_level_display }}</dd>
+                            {% endif %}
+                            {% if object.maximum_number_of_visitors %}
+                                <dt>Max antal:</dt>
+                                <dd>{{ object.maximum_number_of_visitors }}</dd>
+                            {% endif %}
+                            {% if object.get_type_display %}
+                                <dt>Hvad:</dt>
+                                <dd>{{ object.get_type_display }}</dd>
+                            {% endif %}
+                            {% if object.locality %}
+                                <dt>Hvor:</dt>
+                                <dd>{{ object.unit.name }}, {{ object.locality.name }}, {{ object.locality.address_line }}, {{ object.locality.zip_city }}</dd>
+                            {% endif %}
+                            
                             <dt>Arrangør:</dt>
-                            <dd></dd>
-                            <dt>Hvornår:</dt>
-                            <dd>
-                            <select class="form-control input-sm">
-                                <option>Vælg dato</option>
-                                <option>{{ object.time }}</option>
-                                <option>26. marts 2016</option>
-                                <option>16. november 2016</option>
-                                <option>30. debember 2016</option>
-                            </select></dd>
-                            <dt>Varighed:</dt>
-                            <dd>{{ object.duration|timedelta }}</dd>
-                            <dt>Pris:</dt>
-                            <dd>{{ object.price }}</dd>
+                            <dd>HARDCODED! Arrangør</dd>
+                            
+                            {% if object.time %}
+                                <dt>Hvornår:</dt>
+                                <dd>
+                                <select class="form-control input-sm">
+                                    <option>Vælg dato</option>
+                                    <option>{{ object.time }}</option>
+                                    <option>26. marts 2016</option>
+                                    <option>16. november 2016</option>
+                                    <option>30. debember 2016</option>
+                                </select></dd>
+                            {% endif %}
+                            {% if object.duration %}
+                                <dt>Varighed:</dt>
+                                <dd>{{ object.duration|timedelta }}</dd>
+                            {% endif %}
+                            {% if object.price %}
+                                <dt>Pris:</dt>
+                                <dd>{{ object.price }}</dd>
+                            {% endif %}
                         </dl>
                     </div>
                 </div>

@@ -653,6 +653,20 @@ ul.footerlinks .footerlist-header {
 .form-group label[for*="id_"], .form-group label[for*="id_"] + input[id*="id_"] {
     margin-right: 7px;
 }
+a#attachAddFileField {
+    margin-top: 10px;
+    display: inline-block;
+    cursor: pointer;
+}
+div ul.errorlist {
+    color: #a94442;
+    background-color: #f2dede;
+    border: 1px solid #a94442;
+    padding: 10px;
+    display: inline-block;
+    list-style-position: inside;
+    max-width: 70%;
+}
 /*Backend specific styles end */
 @media screen and (max-width:768px) {
     html,

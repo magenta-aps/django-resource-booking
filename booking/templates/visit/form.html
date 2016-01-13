@@ -17,13 +17,15 @@
         {{ form.non_field_errors }}
 
         <div class="row form-group">
-            {{ form.title.errors }}
+        <div class="panel-body">
+            <div>{{ form.title.errors }}</div>
             <div class="col-sm-2">
             <label for="{{ form.title.id_for_label }}">{{ form.title.label }}:</label>
             </div>
             <div class="col-sm-10">
             {{ form.title }}
             </div>
+        </div>
         </div>
 
         <div id="accordion" class="panel-group" aria-multiselectable="true" role="tablist">
@@ -261,7 +263,7 @@
                             {{ form.rooms_assignment }}
                             </div>
                         </div>
-                        <fieldset id="roomsedit">
+                        <div id="roomsedit">
                         <div class="row form-group">
                             <div class="col-sm-2">
                                     <label for="existingrooms">{% trans "Tilføj eksisterende lokale" %}:</label>
@@ -279,7 +281,7 @@
                                 <div class="col-sm-2">
                                     <label for="newroom">{% trans "Tilføj nyt lokale" %}:</label>
                                     </div>
-                                    <div class="col-sm-4">
+                                    <div class="col-sm-6">
                                     <div class="input-group">
                                     <input type="text" name="newroom" id="newroom" value="" class="form-control input-sm" /><span class="input-group-btn">
                                     <button type="button" id="addnewroom" value="{% trans "Tilføj" %}" class="btn btn-default">{% trans "Tilføj" %}</button></span>
@@ -301,12 +303,11 @@
                                 </li>
                             {% endfor %}
                             </ul>
-                        </fieldset>
+                        </div>
                         </div>
                     </div>
                 </div>
             </div>
-
 
             <div class="panel panel-default">
                 <div id="headingContact" class="panel-heading" role="tab">
@@ -318,26 +319,33 @@
                 {% if form.enabled.errors or form.contact_persons.errors %}in{% endif %}
                 " aria-labelledby="headingContact" role="tabpanel" aria-expanded="true" style="">
                     <div class="panel-body">
-                        <fieldset>
-                            {{ form.unit.errors }}
+                    <div class="row form-group">
+                            <div>{{ form.unit.errors }}</div>
+                            <div class="col-sm-2">
                             <label for="{{ form.unit.id_for_label }}">{{ form.unit.label }}:</label>
+                            </div>
+                            <div class="col-sm-10">
                             {{ form.unit }}
-                        </fieldset>
-                        <fieldset>
-                            {{ form.enabled.errors }}
-                            <label class="radiolabel">
-                                <label for="{{ form.enabled.id_for_label }}">{{ form.enabled }} Kan bookes</label>
-                            </label>
-                        </fieldset>
-                        <fieldset>
-                            {{ form.contact_persons.errors }}
+                        </div>
+                    </div>
+                    <div class="row form-group">
+                            <div>{{ form.enabled.errors }}</div>
+                            <div class="col-sm-12">
+                                <label class="radiolabel" for="{{ form.enabled.id_for_label }}">{{ form.enabled }} Kan bookes</label>
+                            </div>
+                        </div>
+                        <div class="row form-group">
+                            <div>{{ form.contact_persons.errors }}</div>
+                            <div class="col-sm-2">
                             <label for="{{ form.contact_persons.id_for_label }}">{{ form.contact_persons.label }}:</label>
+                            </div>
+                            <div class="col-sm-10">
                             {{ form.contact_persons }}
-                        </fieldset>
+                        </div>
                     </div>
                 </div>
             </div>
-
+            </div>
             <div class="panel panel-default">
                 <div id="headingAttach" class="panel-heading" role="tab">
                     <h4 class="panel-title">
@@ -346,8 +354,11 @@
                 </div>
                 <div id="collapseAttach" class="panel-collapse collapse" aria-labelledby="headingAttach" role="tabpanel" aria-expanded="true" style="">
                     <div class="panel-body">
-                        <fieldset>
+                        <div class="row form-group">
+                            <div class="col-sm-2">
                             <label>{% trans "Vedhæftede filer" %}:</label>
+                            </div>
+                            <div class="col-sm-10">
                             <ul>
                             {% for material in fileformset.studymaterials %}
                                 <li>
@@ -362,11 +373,11 @@
                             {% endfor %}
                             </div>
                             <a id="attachAddFileField">{% trans "Tilføj ny fil" %}</a>
-                        </fieldset>
+                        </div>
                     </div>
                 </div>
             </div>
-
+        </div>
             <div class="panel panel-default">
                 <div id="headingInternal" class="panel-heading" role="tab">
                     <h4 class="panel-title">
@@ -378,25 +389,32 @@
                 </div>
                 <div id="collapseInternal" class="panel-collapse collapse {% if form.enabled.errors or form.contact_persons.errors %}in{% endif %} " aria-labelledby="headingContact" role="tabpanel" aria-expanded="true" style="">
                     <div class="panel-body">
-                        <fieldset>
-                            {{ form.preparation_time.errors }}
+                        <div class="row form-group">  
+                            <div>{{ form.preparation_time.errors }}</div>
+                            <div class="col-sm-2">
                             <label for="{{
                                 form.preparation_time.id_for_label }}">{{ form.preparation_time.label }}:</label>
+                                </div>
+                                <div class="col-sm-2">
                             {{ form.preparation_time }}
-                        </fieldset>
-                        <fieldset>
-                            {{ form.comment.errors }}
+                        </div>
+                        </div>
+                        <div class="row form-group">  
+                            <div>{{ form.comment.errors }}</div>
+                            <div class="col-sm-2">
                             <label for="{{
                                 form.comment.id_for_label }}">{{ form.comment.label }}:</label>
+                                </div>
+                                <div class="col-sm-10">
                             {{ form.comment }}
-                        </fieldset>
+                        </div>
+                        </div>
                     </div>
                 </div>
             </div>
-
-        </div>
-
+</div>
         {% include 'common/save_cancel.html' %}
+        <div class="divider"></div>
     </form>
 
 {% endblock %}
