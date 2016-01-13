@@ -5,6 +5,15 @@
 
 {% block head %}
     <link href="{% static 'recurrence/css/recurrence.css' %}" type="text/css" media="all" rel="stylesheet" />
+    <script>
+        // @TODO: Remove this hack when django-recurrence internationalization detection
+        // is fixed or when i18n support is added to Knock
+        if (!pgettext) {
+            function pgettext(ignore, t) {
+                return gettext(t);
+            }
+        }
+    </script>
     <script type="text/javascript" src="{% static 'js/recurrence.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/recurrence-widget.js' %}"></script>
 {% endblock %}
@@ -255,6 +264,18 @@
                                         {{ form.recurrences }}
                                     </fieldset>
                                     <fieldset>
+                                        <label>Eksisterende tidspunkter:</label>
+                                        <div class="pre-scrollable">
+                                            <ul id="existing-recurrence-dates" class="list-unstyled" data-visit-id="{{ object.id }}">
+                                                {% if object and object.visitoccurrence_set %}
+                                                    {% for occurrence in object.visitoccurrence_set.all %}
+                                                        <li><input type="checkbox" name="occurrences" value="{{ occurrence.start_datetime|date:'d-m-Y H:i' }}" checked/>{{ occurrence.start_datetime|date:'d-m-Y H:i' }}</li>
+                                                    {% endfor %}
+                                                {% endif %}
+                                            </ul>
+                                        </div>
+                                    </fieldset>
+                                    <fieldset>
                                         <label>Mulige tidspunkter:</label>
                                         <div class="pre-scrollable">
                                             <ul id="recurrence-dates" class="list-unstyled">
@@ -476,6 +497,7 @@
                     'rrulestr': $(this).val(),
                     'start_times': $('#id_time').val(),
                     'duration': $('#id_duration').val(),
+                    'visit_id': $('#existing-recurrence-dates').data('visitId'),
                     'csrfmiddlewaretoken': '{{ csrf_token }}',
                 },
 
@@ -495,12 +517,6 @@
                     });  // close each()
 
                     list.append( items.join('') );
-
-                    <!--$.each(json, function(key, value) {-->
-                         <!--list-->
-                            <!--.append($('<li><input type="checkbox"/></li>')-->
-                            <!--.text(value));-->
-                    <!--});-->
                 },
 
                 error : function(xhr,errmsg,err) {
@@ -524,7 +540,6 @@
             });
             $('#id_time').val(value.join(','));
         });
-
     //--></script>
     
 {% endblock %}
