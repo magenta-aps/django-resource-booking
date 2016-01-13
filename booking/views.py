@@ -9,6 +9,9 @@ from dateutil.rrule import rrulestr
 from django.http import HttpResponse
 from django.views.generic import TemplateView, ListView, DetailView, View
 from django.db.models import Count
+from django.db.models import F
+from django.db.models import Q
+from django.utils import timezone
 from django.utils.translation import ugettext as _
 from django.views.generic.edit import UpdateView
 from django.utils.decorators import method_decorator
@@ -93,13 +96,65 @@ class SearchView(ListView):
     paginate_by = 10
     base_queryset = None
     filters = None
+    from_datetime = None
+    to_datetime = None
+
+    def get_date_from_request(self, queryparam):
+        val = self.request.GET.get(queryparam)
+        if not val:
+            return None
+        try:
+            val = datetime.strptime(val, '%d-%m-%Y')
+            val = timezone.make_aware(val)
+        except Exception:
+            val = None
+        return val
 
     def get_base_queryset(self):
         if self.base_queryset is None:
             searchexpression = self.request.GET.get("q", "")
-            self.base_queryset = self.model.objects.search(searchexpression)
+
+            qs = self.model.objects.search(searchexpression)
+
+            date_cond = None
+
+            # Filter on from-time if one is specified or from current time
+            # if not
+            t_from = self.get_date_from_request("from")
+            if t_from is None:
+                t_from = timezone.now()
+            self.from_datetime = t_from
+
+            date_cond = Q(
+                visit__visitoccurrence__start_datetime__gt=t_from
+            )
+
+            # To time will match latest end time if it exists and else
+            # match the first endtime
+            t_to = self.get_date_from_request("to")
+            if t_to:
+                date_cond = date_cond & Q(
+                    Q(
+                        Q(visit__visitoccurrence__end_datetime2__isnull=True) &
+                        Q(visit__visitoccurrence__end_datetime1__lte=t_to)
+                    ) |
+                    Q(
+                        visit__visitoccurrence__end_datetime2__lte=t_to
+                    )
+                )
+            self.to_datetime = t_to
+
+            # Only do date matching on resources that are actual visits
+            qs = qs.filter(Q(visit__isnull=True) | date_cond)
+
+            self.base_queryset = qs
 
         return self.base_queryset
+
+    def annotate(self, qs):
+        return qs.annotate(
+            occ_starttime=F('visit__visitoccurrence__start_datetime')
+        )
 
     def get_filters(self):
         if self.filters is None:
@@ -121,7 +176,10 @@ class SearchView(ListView):
 
     def get_queryset(self):
         filters = self.get_filters()
-        return self.get_base_queryset().filter(**filters)
+        qs = self.get_base_queryset().filter(**filters)
+        qs = self.annotate(qs)
+        print qs.query
+        return qs
 
     def build_choices(self, choice_tuples, selected,
                       selected_value='checked="checked"'):
@@ -157,7 +215,7 @@ class SearchView(ListView):
                 new_filters[k] = v
 
         qs = self.get_base_queryset().filter(**new_filters)
-        qs = qs.values(facet_field).annotate(hits=Count(facet_field))
+        qs = qs.values(facet_field).annotate(hits=Count("pk"))
         for item in qs:
             hits[item[facet_field]] = item["hits"]
 
@@ -223,6 +281,9 @@ class SearchView(ListView):
             subject_choices,
             gs_selected,
         )
+
+        context['from_datetime'] = self.from_datetime
+        context['to_datetime'] = self.to_datetime
 
         context.update(kwargs)
         return super(SearchView, self).get_context_data(**context)

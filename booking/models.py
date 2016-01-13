@@ -7,8 +7,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
 from django.utils.translation import ugettext_lazy as _
 
-from .fields import DurationField
-
 from recurrence.fields import RecurrenceField
 
 LOGACTION_CREATE = ADDITION
@@ -118,7 +116,7 @@ class Subject(models.Model):
     description = models.TextField(blank=True)
 
     def __unicode__(self):
-        return self.name
+        return '%s (%s)' % (self.name, self.get_line_display())
 
 
 class Link(models.Model):
@@ -377,6 +375,23 @@ class Resource(models.Model):
 
         return "\n".join(texts)
 
+    def get_dates_display(self):
+        if self.visit:
+            return self.visit.get_dates_display()
+
+        return "-"
+
+    def get_subjects_display(self):
+        return ", ".join([unicode(x) for x in self.subjects.all()])
+
+    def display_locality(self):
+        try:
+            return self.visit.locality
+        except Visit.DoesNotExist:
+            pass
+
+        return "-"
+
 
 class OtherResource(Resource):
     """A non-bookable, non-visit resource, basically material on the Web."""
@@ -503,7 +518,19 @@ class Visit(Resource):
 
     @property
     def recurrences_description(self):
-        return [d.to_text() for d in self.recurrences.rrules]
+        if self.recurrences and self.recurrences.rrules:
+            return [d.to_text() for d in self.recurrences.rrules]
+        else:
+            return []
+
+    def get_dates_display(self):
+        dates = [
+            x.display_value for x in self.visitoccurrence_set.all()
+        ]
+        if len(dates) > 0:
+            return ", ".join(dates)
+        else:
+            return "-"
 
 
 class VisitOccurrence(models.Model):
@@ -522,6 +549,19 @@ class VisitOccurrence(models.Model):
         Visit,
         on_delete=models.CASCADE
     )
+
+    @property
+    def display_value(self):
+        if not self.start_datetime or not self.end_datetime1:
+            return None
+
+        result = self.start_datetime.strftime('%d. %m %Y %H:%M')
+
+        endtime = self.end_datetime2 or self.end_datetime1
+        if endtime:
+            result += endtime.strftime(' %H:%M')
+
+        return result
 
 
 class Room(models.Model):

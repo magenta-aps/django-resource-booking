@@ -58,3 +58,6 @@ class UserProfile(models.Model):
     def get_role(self):
         """Return the role code, i.e. TEACHER, HOST, etc."""
         return self.user_role.role
+
+    def can_create(self):
+        return self.get_role() in (COORDINATOR, ADMINISTRATOR)

@@ -85,13 +85,13 @@
                                     <div class="form-group clearfix">
                                         <label class="col-sm-2 control-label">Fra:</label>
                                         <div class="col-sm-10">
-                                            <input type="text" class="form-control input-sm" placeholder="Klik og vælg dato" value="">
+                                            <input type="text" name="from" class="form-control input-sm datepicker" placeholder="Klik og vælg dato" value="{{ from_datetime|date:"d-m-Y" }}">
                                         </div>
                                     </div>
                                     <div class="form-group clearfix">
                                         <label class="col-sm-2 control-label">til:</label>
                                         <div class="col-sm-10">
-                                            <input type="text" class="form-control input-sm" placeholder="Klik og vælg dato" value="">
+                                            <input type="text" name="to" class="form-control input-sm datepicker" placeholder="Klik og vælg dato" value="{{ to_datetime|date:"d-m-Y" }}">
                                         </div>
                                     </div>
                                 </div>
@@ -134,7 +134,7 @@
                 </div>
             </div>
             
-            {% if user.is_authenticated %}
+            {% if user.userprofile.can_create %}
                 <a class="pull-right btn btn-primary" href="/visit/create">+ Opret tilbud</a>
             {% endif %}
             
@@ -159,14 +159,25 @@
             {% for res in results %}
                 <li class="media">
                     <div class="media-body">
-                        <h3 class="media-heading"><a href="{% url 'visit' res.pk %}">{{ res.title }}">Oplev matematik på universitetet</a></h3>
+                        <h3 class="media-heading"><a href="{% url 'visit' res.pk %}">{{ res.title }}</a></h3>
                         <p>{{ res.teaser }}</p>
                         <div class="media-info">
                             <ul class="info-list list-inline">
-                                <li><strong>Fag/niveau: </strong><span class="type-offer">Hardcoded! Matematik</span></li>
+                                <li>
+                                    <strong>Fag/niveau: </strong>
+                                    <span class="type-offer">{{ res.get_subjects_display }}</span>
+                                    {% if res.class_level_max %}
+                                        Klassetrin
+                                        {% if res.class_level_min != res.class_level_max %}
+                                            {{ res.class_level_min }}-{{res.class_level_max}}
+                                        {% else %}
+                                            {{ res.class_level_min }}
+                                        {% endif %}
+                                    {% endif %}
+                                </li>
                                 <li><strong>Hvad: </strong><span class="type-offer">{{ res.get_type_display }}</span></li>
-                                <li><strong>Dato: </strong><span class="type-offer">Hardcoded! 15. 01. 2016</span></li>
-                                <li><strong>Lokalitet: </strong><span class="type-offer">Hardcoded! Bülowsvej 17, 1870 Frederiksberg C</span></li>
+                                <li><strong>Dato: </strong><span class="type-offer">{% if res.occ_starttime %}{{ res.occ_starttime|date:"d. m. Y" }}  kl. {{ res.occ_starttime|date:"H:i" }}{% else %}-{% endif %}</span></li>
+                                <li><strong>Lokalitet: </strong><span class="type-offer">{{ res.display_locality }}</span></li>
                             </ul>
                         </div>
                     </div>
@@ -252,12 +263,5 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.5.0/js/bootstrap-datepicker.min.js "></script>
     <script src="{% static 'js/bootstrap-datepicker.da.min.js' %} "></script>
     <script src="{% static 'js/custom.js' %} "></script>
-    <script type="text/javascript ">
-        $(function() {
-            $('#filter-search-results input[type=checkbox]').on('change', function() {
-                $(this.form).trigger("submit")
-            });
-        });
-    </script>
     
 {% endblock %}
