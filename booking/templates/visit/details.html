@@ -117,13 +117,17 @@
                             {% if object.time %}
                                 <dt>Hvornår:</dt>
                                 <dd>
-                                <select class="form-control input-sm">
-                                    <option>Vælg dato</option>
-                                    <option>{{ object.time }}</option>
-                                    <option>26. marts 2016</option>
-                                    <option>16. november 2016</option>
-                                    <option>30. debember 2016</option>
-                                </select></dd>
+                                    {{ object.time }}
+                                    <!--
+                                    <select class="form-control input-sm">
+                                        <option>Vælg dato</option>
+                                        <option>{{ object.time }}</option>
+                                        <option>26. marts 2016</option>
+                                        <option>16. november 2016</option>
+                                        <option>30. debember 2016</option>
+                                    </select>
+                                    -->
+                                </dd>
                             {% endif %}
                             {% if object.duration %}
                                 <dt>Varighed:</dt>

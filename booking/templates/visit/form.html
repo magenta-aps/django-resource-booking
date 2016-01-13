@@ -32,7 +32,7 @@
             <div class="panel panel-default">
                 <div id="headingDescription" class="panel-heading" role="tab">
                     <h4 class="panel-title">
-                        <a aria-controls="collapseDescription" aria-expanded="true" href="#collapseDescription" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Beskrivelse" %}</a>
+                        <a aria-controls="collapseDescription" aria-expanded="true" href="#collapseDescription" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Beskrivelse" %}</a><span class="caret"></span>
                     </h4>
                 </div>
                 <div id="collapseDescription" class="panel-collapse collapse
@@ -464,6 +464,13 @@
             };
             select.change(changeDisplay);
             changeDisplay();
+            // Toggle arrows
+            $('.collapse').on('show.bs.collapse', function() {
+            $(this).prev().find(".caret").addClass("caret-up");
+            });
+            $('.collapse').on('hide.bs.collapse', function() {
+                $(this).prev().find(".caret").removeClass("caret-up");
+            });
         });
     //--></script>
     

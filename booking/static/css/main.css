@@ -242,7 +242,7 @@ strong,
     box-shadow: none;
 }
 
-.panel .panel-title {
+.panel .panel-title, .panel .panel-title a {
     font-size: 11px;
     color: #5e5e5e;
     font-weight: bold;
