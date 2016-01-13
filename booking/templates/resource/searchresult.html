@@ -12,7 +12,7 @@
                 <input type="hidden" name="pagesize" value="{{ paginator.per_page }}" />
                     <div class="panel panel-sidebar">
                         <div class="panel-heading">
-                            <h3 class="panel-title">Filtrer resultater</h3>
+                            <h3 class="panel-title">Filtrer søgeresultater</h3>
                         </div>
                         <div class="panel-body">
                             <h3 class="panel-title">Hvem er du?</h3>
@@ -152,9 +152,10 @@
             </form>
             <div class="divider"></div>
             {% if not results %}
-            <p>Din søgning gav ikke noget resultat</p>
+            <p>Din søgning gav ikke noget resultat.</p>
             {% else %}
             <h2 class="bold">{{ paginator.count }} resultater matcher din søgning på "{{request.GET.q}}"</h2>
+            <div class="divider"></div>
             <ul class="media-list">
             {% for res in results %}
                 <li class="media">

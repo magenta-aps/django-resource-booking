@@ -317,7 +317,9 @@ li.media:nth-child(odd) {
     border-top: 1px solid #cdcdcd;
     border-bottom: 1px solid #cdcdcd;
 }
-
+li.media:last-child {
+    border-bottom: 1px solid #cdcdcd;
+}
 li.media .info-list {
     padding-top: 8px;
     border-top: 1px solid #eee;
@@ -475,7 +477,9 @@ a>.caret:active {
     padding-right: 0;
     padding-left: 0;
 }
-
+.go-back {
+    margin-bottom: 20px;
+}
 footer {
     margin: 0 auto;
     padding: 15px 0;
@@ -524,24 +528,25 @@ ul.footerlinks .footerlist-header {
 }
 
 .footer-social > .icon-circle {
-    height: 30px;
-    width: 30px;
+    height: 33px;
+    width: 33px;
     border-radius: 50%;
+    border: 1px solid #ccc;
     display: inline-block;
     background-color: #fff;
 }
 
 .footer-social > .icon-circle > .fa {
     position: relative;
-    bottom: -4px;
-    left: 7px;
+    bottom: -5px;
+    left: 8px;
     font-size: 20px;
 }
 
 .footer-social > .icon-circle > .fa.fa-facebook {
     position: relative;
-    bottom: -7px;
-    left: 7px;
+    bottom: -8px;
+    left: 9px;
     font-size: 24px;
 }
 .padleft0 {
@@ -657,6 +662,11 @@ a#attachAddFileField {
     margin-top: 10px;
     display: inline-block;
     cursor: pointer;
+}
+#chosenrooms .glyphicon-remove {
+    cursor: pointer;
+    font-size: 14px;
+    color: #a94442;
 }
 div ul.errorlist {
     color: #a94442;
