@@ -23,11 +23,15 @@ $('#filters').on('hide.bs.collapse', function() {
 });
 //Search-list.html end
 //Booking form validation start...
-$('#startbookingform').validator().on('submit', function (e) {
-  if (e.isDefaultPrevented()) {
-    // handle the invalid form...
-  } else {
-    // everything looks good!
-  }
-})
+// $('#startbookingform').validator().on('submit', function (e) {
+//   if (e.isDefaultPrevented()) {
+//     // handle the invalid form...
+//   } else {
+//     // everything looks good!
+//   }
+// });
 //Booking form validation end...
+//Clear serch field
+$('#reset-btn').click(function() {
+    $('#searchBox').val('');
+});

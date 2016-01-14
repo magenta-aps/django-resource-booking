@@ -141,10 +141,11 @@
             <h1>Søgeresultat</h1>
             <div class="divider"></div>
             <form class="clearfix" role="søg" action={% url 'search' %}>
-                <div class="input-group has-feedback has-clear">
+                <div class="input-group">
                     <label class="sr-only" for="searchBox">Søg efter tilbud</label>
                     <input type="text" class="form-control" id="searchBox" placeholder="Søg efter tilbud - indtast et eller flere søgeord..." name="q" value="{{ request.GET.q }}">
                     <span class="input-group-btn">
+                    <a id="reset-btn" class="btn btn-default" aria-label="Ryd søgning"><span class="glyphicon glyphicon-remove"></span></a>
                     <button class="btn btn-default" id="search" type="submit"><span class="hidden-xs">Søg</span> <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
                     </button>
                     </span>

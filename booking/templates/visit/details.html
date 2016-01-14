@@ -45,6 +45,7 @@
                     <label class="sr-only" for="searchBox">Søg efter tilbud</label>
                     <input type="text" class="form-control" id="searchBox" placeholder="Søg efter tilbud - indtast et eller flere søgeord..." name="q" value="{{ request.GET.q }}">
                     <span class="input-group-btn">
+                    <a id="reset-btn" class="btn btn-default" aria-label="Ryd søgning"><span class="glyphicon glyphicon-remove"></span></a>
                     <button class="btn btn-default" id="search" type="submit"><span class="hidden-xs">Søg</span> <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
                     </button>
                     </span>
@@ -54,7 +55,7 @@
             <h2>{{ object.get_type_display }}</h2>
             
             {% if user.is_authenticated %}
-                <a class="pull-right" href="/visit/{{ object.id }}/edit">Redigér</a>
+                <a class="pull-right btn btn-primary edit-btn" href="/visit/{{ object.id }}/edit">+ Redigér</a>
             {% endif %}
             
             <h1>{{ object.title }}</h1>
@@ -311,4 +312,7 @@
             </footer>
         </div>
     </div>
+{% endblock %}
+{% block extra_scripts %}
+    <script src="/static/js/custom.js"></script>
 {% endblock %}

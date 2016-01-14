@@ -166,7 +166,7 @@ strong,
     right: -1px;
 }
 
-#search.btn-default {
+#search, #reset-btn {
     font-size: 14px;
 }
 
@@ -479,6 +479,8 @@ a>.caret:active {
 }
 .go-back {
     margin-bottom: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #ddd;
 }
 footer {
     margin: 0 auto;
@@ -648,6 +650,9 @@ ul.footerlinks .footerlist-header {
 }
 
 /*Backend specific styles start */
+.edit-btn {
+    margin-bottom: 10px;
+}
 .lengthcounter {
     margin-left: 7px;
 }
