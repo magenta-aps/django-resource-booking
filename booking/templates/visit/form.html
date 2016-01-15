@@ -96,7 +96,7 @@
                             {{ form.type }}
                             </div>
                         </div>
-                        <div class="row form-group">
+                        <!-- <div class="row form-group">
                             <div>{{ form.tags.errors }}</div>
                             <div class="col-sm-2">
                             <label for="{{ form.tags.id_for_label }}">{{ form.tags.label }}:</label>
@@ -104,7 +104,7 @@
                             <div class="col-sm-10">
                             {{ form.tags }}
                             </div>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
             </div>
@@ -128,7 +128,7 @@
                             {{ form.institution_level }}
                             </div>
                         </div>
-                        <div class="row form-group">
+                        <!-- <div class="row form-group">
                             <div>{{ form.topics.errors }}</div>
                             <div class="col-sm-2">
                             <label for="{{ form.topics.id_for_label }}">{{ form.topics.label }}:</label>
@@ -136,7 +136,7 @@
                             <div class="col-sm-10">
                             {{ form.topics }}
                             </div>
-                        </div>
+                        </div> -->
 
                         <div class="institution_level_dependent" data-display-value="1">
                             <div class="row form-group">
@@ -287,7 +287,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div><strong>{% trans "Valgte lokaler" %}</strong></div>
+                            <div><strong>{% trans "Valgte lokaler" %}:</strong></div>
                             <ul id="chosenrooms">
                             {% comment %}
                                 When making changes here, also change the addRoom method

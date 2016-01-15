@@ -31,7 +31,7 @@ $('#filters').on('hide.bs.collapse', function() {
 //   }
 // });
 //Booking form validation end...
-//Clear serch field
-$('#reset-btn').click(function() {
-    $('#searchBox').val('');
+$("#reset-btn").click(function() {
+    $("#searchBox").val("");
+    $("form").trigger("submit")
 });

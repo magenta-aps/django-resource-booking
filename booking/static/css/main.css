@@ -309,17 +309,14 @@ strong,
 }
 
 li.media {
-    padding: 10px;
+    padding: 15px 10px;
+    border: 1px solid #cdcdcd;
 }
 
 li.media:nth-child(odd) {
     background-color: #f8f8f8;
-    border-top: 1px solid #cdcdcd;
-    border-bottom: 1px solid #cdcdcd;
 }
-li.media:last-child {
-    border-bottom: 1px solid #cdcdcd;
-}
+
 li.media .info-list {
     padding-top: 8px;
     border-top: 1px solid #eee;
@@ -741,9 +738,6 @@ div ul.errorlist {
     [data-target="#filters"] {
         margin: 20px 0;
     }
-    li.media {
-        padding: 10px 0;
-    }
     .items-pr-side {
         float: left;
     }
@@ -800,6 +794,10 @@ div ul.errorlist {
     }
     #leftside {
         padding-top: 20px;
+    }
+    li.media {
+        padding: 15px 10px;
+        border: 1px solid #cdcdcd;
     }
     li.global-sprog a.english {
         background: transparent url("http://forskning.ku.dk/grafik/globalmenu/flag-uk.gif") no-repeat right 6px;
