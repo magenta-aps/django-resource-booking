@@ -236,6 +236,7 @@
                     <button type="button" class="btn btn-default">{{paginator.per_page}}</button>
                     <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> <span class="caret"></span> <span class="sr-only">Vis anrtal resultater pr. side</span> </button>
                     <ul class="dropdown-menu">
+                        <li><a href="#">Vis alle</a></li>
                         {% for size in pagesizes %}
                         <li{% if size == paginator.per_page %} class="selected"{% endif %}><a href="?{{ qstring }}&pagesize={{size}}">{{size}}</a></li>
                         {% endfor %}
