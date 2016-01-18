@@ -3,7 +3,50 @@
 {% block content %}
 <form method="POST">
     {% csrf_token %}
-    {{ form.as_p }}
-    <input type="submit", value="Opret" name="submit" />
+    <div>
+        <fieldset>
+            {{ form.username.errors }}
+            <label for="{{ form.username.id_for_username}}">{{ form.username.label }}:</label>
+            {{ form.username }}
+        </fieldset>
+        <fieldset>
+            {{ form.email.errors }}
+            <label for="{{ form.email.id_for_email}}">{{ form.email.label }}:</label>
+            {{ form.email }}
+        </fieldset>
+        <fieldset>
+            {{ form.first_name.errors }}
+            <label for="{{ form.first_name.id_for_first_name}}">{{ form.first_name.label }}:</label>
+            {{ form.first_name }}
+        </fieldset>
+        <fieldset>
+            {{ form.last_name.errors }}
+            <label for="{{ form.last_name.id_for_last_name}}">{{ form.last_name.label }}:</label>
+            {{ form.last_name }}
+        </fieldset>
+        <fieldset>
+            {{ form.password1.errors }}
+            <label for="{{ form.password1.id_for_password1}}">{{ form.password1.label }}:</label>
+            {{ form.password1 }}
+        </fieldset>
+        <fieldset>
+            {{ form.password2.errors }}
+            <label for="{{ form.password2.id_for_password2}}">{{ form.password2.label }}:</label>
+            {{ form.password2 }}
+        </fieldset>
+        <fieldset>
+            {{ form.role.errors }}
+            <label for="{{ form.role.id_for_role}}">{{ form.role.label }}:</label>
+            {{ form.role }}
+        </fieldset>
+        <fieldset>
+            {{ form.unit.errors }}
+            <label for="{{ form.unit.id_for_unit}}">{{ form.unit.label }}:</label>
+            {{ form.unit }}
+        </fieldset>
+
+    </div>
+
+    <input class="btn btn-primary" type="submit", value="Gem" name="submit" />
 </form>
 {% endblock %}

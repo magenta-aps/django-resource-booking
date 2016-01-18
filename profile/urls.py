@@ -16,5 +16,8 @@ urlpatterns = patterns(
         template_name='profile/create_user.html',
         success_url='create'
     )),
+    url(r'^user/(?P<pk>[0-9]+)/?$',
+        CreateUserView.as_view(),
+        name='user_edit'),
 
 )
