@@ -67,7 +67,7 @@ urlpatterns = patterns(
     url(r'^fokusadmin/visit/(?P<pk>[0-9]+)/?$', AdminVisitDetailView.as_view(),
         name='admin-visit'),
 
-    url(r'^book/studentforaday$', StudentForADayView.as_view(),
+    url(r'^visit/(?P<visit>[0-9]+)/book$', StudentForADayView.as_view(),
         name='book-studentforaday')
 
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

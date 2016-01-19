@@ -3,6 +3,7 @@ from django.db.models import Count
 from django.views.generic import TemplateView, ListView, DetailView
 from django.utils.translation import ugettext as _
 from django.views.generic.edit import ProcessFormView, UpdateView
+from django.views.defaults import bad_request
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
@@ -390,6 +391,14 @@ class StudentForADayView(UpdateView):
 
     def post(self, request, *args, **kwargs):
         self.object = Booking()
+
+        visit_id = kwargs.get("visit")
+        if visit_id is None:
+            return bad_request(request)
+        visit = Visit.objects.get(id=visit_id)
+        if visit is None:
+            return bad_request(request)
+
         bookerform = BookerForm(request.POST)
         if bookerform.is_valid():
             data = bookerform.cleaned_data
@@ -403,6 +412,12 @@ class StudentForADayView(UpdateView):
             booker.notes = data['notes']
             # booker.school = noget
             booker.save()
+
+            booking = Booking()
+            booking.visit = visit
+            booking.booker = booker
+            booking.save()
+
         return self.render_to_response(
             self.get_context_data(bookerform=bookerform)
         )
