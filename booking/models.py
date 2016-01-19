@@ -513,32 +513,16 @@ class Room(models.Model):
         return self.name
 
 
-class Booking(models.Model):
-    # A booking of a visit
-    visit = models.ForeignKey(
-            Visit,
-            verbose_name=_(u'Tilbud'),
-            blank=False
+class PostCode(models.Model):
+    number = models.IntegerField(
+        primary_key=True
     )
-    firstname = models.CharField(
-            max_length=64,
-            blank=False
+    city = models.CharField(
+        max_length=48
     )
-    lastname = models.CharField(
-            max_length=64,
-            blank=False
-    )
-    email = models.EmailField(
-            max_length=64,
-            null=True,
-            blank=True
-    )
-    phone = models.CharField(
-            max_length=14,
-            null=True,
-            blank=True
-    )
-    visitors = models.IntegerField(
-            null=True,
-            blank=True,
+
+
+class Region(models.Model):
+    name = models.CharField(
+        max_length=16
     )
