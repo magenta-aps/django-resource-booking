@@ -521,11 +521,17 @@ class PostCode(models.Model):
         max_length=48
     )
 
+    def __unicode__(self):
+        return "%d %s" % (self.number, self.city)
+
 
 class Region(models.Model):
     name = models.CharField(
         max_length=16
     )
+
+    def __unicode__(self):
+        return self.name
 
 
 class School(models.Model):
@@ -540,6 +546,9 @@ class School(models.Model):
         Region,
         null=True
     )
+
+    def __unicode__(self):
+        return self.name
 
 
 class Booker(models.Model):
@@ -613,6 +622,11 @@ class Booker(models.Model):
         blank=True,
         verbose_name=u'Bemærkninger'
     )
+
+    def __unicode__(self):
+        if self.email is not None and self.email != "":
+            return "%s %s <%s>" % (self.firstname, self.lastname, self.email)
+        return "%s %s" % (self.firstname, self.lastname)
 
 
 class Booking(models.Model):
