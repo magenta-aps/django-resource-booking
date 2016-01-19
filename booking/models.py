@@ -526,3 +526,95 @@ class Region(models.Model):
     name = models.CharField(
         max_length=16
     )
+
+
+class School(models.Model):
+    name = models.CharField(
+        max_length=128,
+    )
+    postcode = models.ForeignKey(
+        PostCode,
+        null=True
+    )
+    region = models.ForeignKey(
+        Region,
+        null=True
+    )
+
+
+class Booker(models.Model):
+    # A person booking a visit
+    firstname = models.CharField(
+        max_length=64,
+        blank=False,
+        verbose_name=u'Fornavn'
+    )
+    lastname = models.CharField(
+        max_length=64,
+        blank=False,
+        verbose_name=u'Efternavn'
+    )
+    email = models.EmailField(
+        max_length=64,
+        null=True,
+        blank=True,
+        verbose_name=u'Email'
+    )
+    phone = models.CharField(
+        max_length=14,
+        null=True,
+        blank=True,
+        verbose_name=u'Telefon'
+    )
+
+    stx = 0
+    hf = 1
+    htx = 2
+    eux = 3
+    valgfag = 4
+    hhx = 5
+    line_choices = (
+        (stx, _(u'stx')),
+        (hf, _(u'hf')),
+        (htx, _(u'htx')),
+        (eux, _(u'eux')),
+        (hhx, _(u'hhx')),
+    )
+    line = models.IntegerField(
+        choices=line_choices,
+        blank=True,
+        verbose_name=u'Linje',
+    )
+
+    g1 = 1
+    g2 = 2
+    g3 = 3
+    student = 4
+    other = 5
+    level_choices = (
+        (g1, _(u'1.g')),
+        (g2, _(u'2.g')),
+        (g3, _(u'3.g')),
+        (student, _(u'Student')),
+        (other, _(u'Andet')),
+    )
+    level = models.IntegerField(
+        choices=level_choices,
+        blank=True,
+        verbose_name=u'Niveau'
+    )
+
+    school = models.ForeignKey(
+        School,
+        null=True,
+        verbose_name=u'Skole'
+    )
+    notes = models.TextField(
+        blank=True,
+        verbose_name=u'Bemærkninger'
+    )
+
+
+class Booking(models.Model):
+    visit = models.ForeignKey(Visit, null=True)
+    booker = models.ForeignKey(Booker)
