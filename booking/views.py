@@ -393,10 +393,12 @@ class SchoolView(View):
     def get(self, request, *args, **kwargs):
         query = request.GET['q']
         items = School.search(query)
-        json = {'schools':[
+        json = {'schools':
+                [
                     {'name': item.name,
                      'postcode': item.postcode.number} for item in items
-                ]}
+                ]
+                }
         return JsonResponse(json)
 
 
