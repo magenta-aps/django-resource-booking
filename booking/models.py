@@ -524,6 +524,13 @@ class PostCode(models.Model):
     def __unicode__(self):
         return "%d %s" % (self.number, self.city)
 
+    @staticmethod
+    def get(code):
+        try:
+            return PostCode.objects.get(number=int(code))
+        except PostCode.DoesNotExist:
+            return None
+
 
 class Region(models.Model):
     name = models.CharField(

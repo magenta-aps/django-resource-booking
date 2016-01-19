@@ -384,8 +384,8 @@ class AdminVisitDetailView(VisitDetailView):
 class PostcodeView(View):
     def get(self, request, *args, **kwargs):
         code = int(kwargs.get("code"))
-        postcode = PostCode.objects.get(number=code)
-        return JsonResponse({'code': postcode.number, 'city': postcode.city})
+        postcode = PostCode.get(code)
+        return JsonResponse({'code': code, 'city': postcode.city if postcode is not None else None})
 
 
 class StudentForADayView(UpdateView):

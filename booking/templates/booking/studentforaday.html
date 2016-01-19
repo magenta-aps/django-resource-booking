@@ -149,4 +149,25 @@
 
 {% block extra_scripts %}
 
+    <script type="text/javascript">
+        <!--
+            $(function(){
+                var city = $("#id_city");
+                $("#id_postcode").on("change keyup", function(){
+                    var code = parseInt(this.value, 10);
+                    if (code && code>=1000 && code<10000) {
+                        $.ajax({
+                            url: "/postcode/" + code,
+                            dataType: "json",
+                            complete: function(response) {
+                                var data = response.responseJSON;
+                                city.val(data.city);
+                            }
+                        });
+                    }
+                })
+            });
+        //-->
+    </script>
+
 {% endblock %}
