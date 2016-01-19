@@ -80,7 +80,7 @@
             </div>
             <div class="disclaimer">Bemærk at din bestilling først er bindende, når du har modtaget en bekræftelse fra den ansvarlige arrangør fra Københavns Universitet.</div>
             <div class="go-back">
-            <a href="#" class="btn btn-default" onclick="history.go(-1);"><span class="glyphicon glyphicon-chevron-left"></span> Tilbage til søgeresultat</a>
+            <a href="#" class="btn btn-default" onclick="history.go(-1); return false;"><span class="glyphicon glyphicon-chevron-left"></span> Tilbage til søgeresultat</a>
         </div>
         </div>
         <div class="col-sm-6 col-md-4">
@@ -147,7 +147,7 @@
                     </div>
                     <div class="panel-body google-maps-container">
                         <div class="google-maps">
-                            <iframe src='https://maps.google.com/maps?q=Bülowsvej 17, 1870 Frederiksberg C&amp;z=14&amp;output=embed&amp;iwloc=0&amp;sensor=false' width='450' height='450' frameborder='0' style='border:0' allowfullscreen></iframe>
+                            <iframe src='https://maps.google.com/maps?q={{ object.locality.address_line }}, {{ object.locality.zip_city }}&amp;z=14&amp;output=embed&amp;iwloc=0&amp;sensor=false' width='450' height='450' frameborder='0' style='border:0' allowfullscreen></iframe>
                         </div>
                     </div>
                 </div>
