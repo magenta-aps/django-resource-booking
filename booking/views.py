@@ -2,7 +2,7 @@
 from django.db.models import Count
 from django.views.generic import View, TemplateView, ListView, DetailView
 from django.utils.translation import ugettext as _
-from django.views.generic.edit import ProcessFormView, UpdateView
+from django.views.generic.edit import UpdateView
 from django.views.defaults import bad_request
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
@@ -398,8 +398,9 @@ class SchoolView(View):
                     {'name': item.name,
                      'postcode': item.postcode.number} for item in items
                 ]
-        }
+            }
         return JsonResponse(json)
+
 
 class StudentForADayView(UpdateView):
     template_name = 'booking/studentforaday.html'

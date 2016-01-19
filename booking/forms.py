@@ -104,24 +104,77 @@ class VisitStudyMaterialForm(VisitStudyMaterialFormBase):
 
 class BookerForm(forms.Form):
 
-    firstname = forms.CharField(widget=TextInput(attrs={'class': 'form-control input-sm', 'placeholder': 'Fornavn'}))
-    lastname = forms.CharField(widget=TextInput(attrs={'class': 'form-control input-sm', 'placeholder': 'Efternavn'}))
-    email = forms.EmailField(widget=EmailInput(attrs={'class': 'form-control input-sm', 'placeholder': 'Email'}))
-    repeatemail = forms.CharField(widget=TextInput(attrs={'class': 'form-control input-sm', 'placeholder': 'Gentag email'}))
-    phone = forms.CharField(widget=TextInput(attrs={'class': 'form-control input-sm', 'placeholder': 'Telefonnummer', 'pattern': '(\(\+\d+\)|\+\d+)?\s*\d+[ \d]*'}))
-    school = forms.CharField(widget=TextInput(attrs={'class': 'form-control input-sm', 'autocomplete': 'off'}))
-    line = forms.ChoiceField(choices=Booker.line_choices)
-    level = forms.ChoiceField(choices=Booker.level_choices)
-    postcode = forms.IntegerField(widget=NumberInput(attrs={'class': 'form-control input-sm', 'placeholder': 'Postnummer', 'min': '1000', 'max': '9999'}))
-    city = forms.CharField(widget=TextInput(attrs={'class': 'form-control input-sm', 'placeholder': 'By'}))
-    region = forms.ModelChoiceField(queryset=Region.objects.all())
-    notes = forms.CharField(widget=Textarea(attrs={'class': 'form-control input-sm'}))
+    firstname = forms.CharField(
+            widget=TextInput(
+                    attrs={'class': 'form-control input-sm',
+                           'placeholder': 'Fornavn'}
+            )
+    )
+    lastname = forms.CharField(
+            widget=TextInput(
+                    attrs={'class': 'form-control input-sm',
+                           'placeholder': 'Efternavn'}
+            )
+    )
+    email = forms.EmailField(
+            widget=EmailInput(
+                    attrs={'class': 'form-control input-sm',
+                           'placeholder': 'Email'}
+            )
+    )
+    repeatemail = forms.CharField(
+            widget=TextInput(
+                    attrs={'class': 'form-control input-sm',
+                           'placeholder': 'Gentag email'}
+            )
+    )
+    phone = forms.CharField(
+            widget=TextInput(
+                    attrs={'class': 'form-control input-sm',
+                           'placeholder': 'Telefonnummer',
+                           'pattern': '(\(\+\d+\)|\+\d+)?\s*\d+[ \d]*'}
+            )
+    )
+    school = forms.CharField(
+            widget=TextInput(
+                    attrs={'class': 'form-control input-sm',
+                           'autocomplete': 'off'}
+            )
+    )
+    line = forms.ChoiceField(
+            choices=Booker.line_choices
+    )
+    level = forms.ChoiceField(
+            choices=Booker.level_choices
+    )
+    postcode = forms.IntegerField(
+            widget=NumberInput(
+                    attrs={'class': 'form-control input-sm',
+                           'placeholder': 'Postnummer',
+                           'min': '1000', 'max': '9999'}
+            )
+    )
+    city = forms.CharField(
+            widget=TextInput(
+                    attrs={'class': 'form-control input-sm',
+                           'placeholder': 'By'}
+            )
+    )
+    region = forms.ModelChoiceField(
+            queryset=Region.objects.all())
+    notes = forms.CharField(
+            widget=Textarea(
+                    attrs={'class': 'form-control input-sm'}
+            )
+    )
 
     def clean(self):
         cleaned_data = super(BookerForm, self).clean()
         email = cleaned_data.get("email")
         repeatemail = cleaned_data.get("repeatemail")
 
-        if email is not None and repeatemail is not None and email != repeatemail:
-            error = forms.ValidationError(u"Indtast den samme email-adresse i begge felter")
+        if email is not None and repeatemail is not None \
+                and email != repeatemail:
+            error = forms.ValidationError(u"Indtast den samme email-adresse " +
+                                          u"i begge felter")
             self.add_error('repeatemail', error)
