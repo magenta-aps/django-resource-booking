@@ -557,6 +557,11 @@ class School(models.Model):
     def __unicode__(self):
         return self.name
 
+    @staticmethod
+    def search(query):
+        query = query.lower()
+        return School.objects.filter(name__icontains=query)
+
 
 class Booker(models.Model):
     # A person booking a visit

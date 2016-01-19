@@ -109,7 +109,7 @@ class BookerForm(forms.Form):
     email = forms.EmailField(widget=EmailInput(attrs={'class': 'form-control input-sm', 'placeholder': 'Email'}))
     repeatemail = forms.CharField(widget=TextInput(attrs={'class': 'form-control input-sm', 'placeholder': 'Gentag email'}))
     phone = forms.CharField(widget=TextInput(attrs={'class': 'form-control input-sm', 'placeholder': 'Telefonnummer', 'pattern': '(\(\+\d+\)|\+\d+)?\s*\d+[ \d]*'}))
-    school = forms.CharField(widget=TextInput(attrs={'class': 'form-control input-sm'}))
+    school = forms.CharField(widget=TextInput(attrs={'class': 'form-control input-sm', 'autocomplete': 'off'}))
     line = forms.ChoiceField(choices=Booker.line_choices)
     level = forms.ChoiceField(choices=Booker.level_choices)
     postcode = forms.IntegerField(widget=NumberInput(attrs={'class': 'form-control input-sm', 'placeholder': 'Postnummer', 'min': '1000', 'max': '9999'}))

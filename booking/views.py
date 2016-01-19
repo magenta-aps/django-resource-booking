@@ -15,7 +15,7 @@ from profile.models import role_to_text
 from booking.models import Visit, StudyMaterial
 from booking.models import Resource, Subject
 from booking.models import Room
-from booking.models import PostCode
+from booking.models import PostCode, School
 from booking.models import Booking, Booker
 from booking.forms import VisitForm
 from booking.forms import VisitStudyMaterialForm
@@ -385,8 +385,21 @@ class PostcodeView(View):
     def get(self, request, *args, **kwargs):
         code = int(kwargs.get("code"))
         postcode = PostCode.get(code)
-        return JsonResponse({'code': code, 'city': postcode.city if postcode is not None else None})
+        city = postcode.city if postcode is not None else None
+        return JsonResponse({'code': code, 'city': city})
 
+
+class SchoolView(View):
+    def get(self, request, *args, **kwargs):
+        query = request.GET['q']
+        items = School.search(query)
+        json = {'schools':
+                [
+                    {'name': item.name,
+                     'postcode': item.postcode.number} for item in items
+                ]
+        }
+        return JsonResponse(json)
 
 class StudentForADayView(UpdateView):
     template_name = 'booking/studentforaday.html'
