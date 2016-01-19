@@ -6,6 +6,7 @@ from .views import MainPageView
 from booking.views import EditVisit, VisitDetailView, SearchView
 from booking.views import AdminSearchView, AdminIndexView, AdminVisitDetailView
 from booking.views import StudentForADayView
+from booking.views import PostcodeView
 from django.views.generic import TemplateView
 
 urlpatterns = patterns(
@@ -68,6 +69,8 @@ urlpatterns = patterns(
         name='admin-visit'),
 
     url(r'^visit/(?P<visit>[0-9]+)/book$', StudentForADayView.as_view(),
-        name='book-studentforaday')
+        name='book-studentforaday'),
+
+    url(r'^postcode/(?P<code>[0-9]{4})$', PostcodeView.as_view())
 
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

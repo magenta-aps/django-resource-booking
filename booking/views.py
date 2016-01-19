@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 from django.db.models import Count
-from django.views.generic import TemplateView, ListView, DetailView
+from django.views.generic import View, TemplateView, ListView, DetailView
 from django.utils.translation import ugettext as _
 from django.views.generic.edit import ProcessFormView, UpdateView
 from django.views.defaults import bad_request
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
+from django.http import JsonResponse
 
 from profile.models import COORDINATOR, ADMINISTRATOR
 from profile.models import role_to_text
@@ -14,6 +15,7 @@ from profile.models import role_to_text
 from booking.models import Visit, StudyMaterial
 from booking.models import Resource, Subject
 from booking.models import Room
+from booking.models import PostCode
 from booking.models import Booking, Booker
 from booking.forms import VisitForm
 from booking.forms import VisitStudyMaterialForm
@@ -377,6 +379,13 @@ class AdminSearchView(SearchView):
 
 class AdminVisitDetailView(VisitDetailView):
     template_name = 'visit/admin_details.html'
+
+
+class PostcodeView(View):
+    def get(self, request, *args, **kwargs):
+        code = int(kwargs.get("code"))
+        postcode = PostCode.objects.get(number=code)
+        return JsonResponse({'code': postcode.number, 'city': postcode.city})
 
 
 class StudentForADayView(UpdateView):
