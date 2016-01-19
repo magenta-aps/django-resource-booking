@@ -9,6 +9,7 @@ from django.views.generic import TemplateView
 from django.views.generic.edit import UpdateView, FormView
 
 from booking.views import LoginRequiredMixin, AccessDenied
+from django.views.generic.list import ListView
 from profile.forms import UserCreateForm
 from profile.models import UserProfile, UserRole
 from profile.models import FACULTY_EDITOR, ADMINISTRATOR, COORDINATOR
@@ -139,3 +140,32 @@ class CreateUserView(FormView, UpdateView):
             return "/profile/user/%d" % self.object.id
         except:
             return '/'
+
+
+class UnitListView(ListView):
+    model = Unit
+
+    def get_context_data(self, **kwargs):
+        context = super(UnitListView, self).get_context_data(**kwargs)
+        return context
+
+    def get_queryset(self):
+        user = self.request.user
+        user_role = user.userprofile.get_role()
+        if user_role == FACULTY_EDITOR:
+            uu = user.userprofile.unit
+            if uu is not None:
+                qs = uu.get_descendants()
+            else:
+                qs = Unit.objects.none()
+        elif user_role == COORDINATOR:
+            uu = user.userprofile.unit
+            if uu is not None:
+                # Needs to be iterable or the template will fail
+                qs = Unit.objects.filter(id=uu.id)
+            else:
+                qs = Unit.objects.none()
+        else:
+            # User must be an administrator and may attach any unit.
+            qs = Unit.objects.all()
+        return qs
