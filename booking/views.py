@@ -13,7 +13,7 @@ from profile.models import role_to_text
 from booking.models import Visit, StudyMaterial
 from booking.models import Resource, Subject
 from booking.models import Room
-from booking.models import Booking
+from booking.models import Booking, Booker
 from booking.forms import VisitForm
 from booking.forms import VisitStudyMaterialForm
 from booking.forms import BookerForm
@@ -392,9 +392,17 @@ class StudentForADayView(UpdateView):
         self.object = Booking()
         bookerform = BookerForm(request.POST)
         if bookerform.is_valid():
-            print "OK"
-        else:
-            print "not OK"
+            data = bookerform.cleaned_data
+            booker = Booker()
+            booker.firstname = data['firstname']
+            booker.lastname = data['lastname']
+            booker.email = data['email']
+            booker.phone = data['phone']
+            booker.line = data['line']
+            booker.level = data['level']
+            booker.notes = data['notes']
+            # booker.school = noget
+            booker.save()
         return self.render_to_response(
             self.get_context_data(bookerform=bookerform)
         )
