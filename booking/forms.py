@@ -116,3 +116,12 @@ class BookerForm(forms.Form):
     city = forms.CharField(widget=TextInput(attrs={'class': 'form-control input-sm', 'placeholder': 'By'}))
     region = forms.ModelChoiceField(queryset=Region.objects.all())
     notes = forms.CharField(widget=Textarea(attrs={'class': 'form-control input-sm'}))
+
+    def clean(self):
+        cleaned_data = super(BookerForm, self).clean()
+        email = cleaned_data.get("email")
+        repeatemail = cleaned_data.get("repeatemail")
+
+        if email is not None and repeatemail is not None and email != repeatemail:
+            error = forms.ValidationError(u"Indtast den samme email-adresse i begge felter")
+            self.add_error('repeatemail', error)
