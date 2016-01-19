@@ -2,7 +2,7 @@
 from django.db.models import Count
 from django.views.generic import TemplateView, ListView, DetailView
 from django.utils.translation import ugettext as _
-from django.views.generic.edit import UpdateView
+from django.views.generic.edit import ProcessFormView, UpdateView
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
@@ -13,8 +13,10 @@ from profile.models import role_to_text
 from booking.models import Visit, StudyMaterial
 from booking.models import Resource, Subject
 from booking.models import Room
+from booking.models import Booking
 from booking.forms import VisitForm
 from booking.forms import VisitStudyMaterialForm
+from booking.forms import BookerForm
 
 i18n_test = _(u"Dette tester oversættelses-systemet")
 
@@ -374,3 +376,14 @@ class AdminSearchView(SearchView):
 
 class AdminVisitDetailView(VisitDetailView):
     template_name = 'visit/admin_details.html'
+
+
+class StudentForADayView(UpdateView):
+    template_name = 'booking/studentforaday.html'
+    def get(self, request, *args, **kwargs):
+        self.object = Booking()
+        bookerform = BookerForm()
+        print bookerform
+        return self.render_to_response(
+            self.get_context_data(bookerform=bookerform)
+        )

@@ -2,6 +2,7 @@ from booking.models import StudyMaterial
 from booking.models import UnitType
 from booking.models import Unit
 from booking.models import Visit
+from booking.models import Booker, Region
 from django import forms
 from django.forms import CheckboxSelectMultiple
 from django.forms import inlineformset_factory
@@ -99,3 +100,19 @@ class VisitStudyMaterialForm(VisitStudyMaterialFormBase):
     def __init__(self, data, instance=None):
         super(VisitStudyMaterialForm, self).__init__(data)
         self.studymaterials = StudyMaterial.objects.filter(visit=instance)
+
+
+class BookerForm(forms.Form):
+
+    firstname = forms.CharField(widget=TextInput(attrs={'class': 'form-control input-sm', 'placeholder': 'Fornavn'}))
+    lastname = forms.CharField(widget=TextInput(attrs={'class': 'form-control input-sm', 'placeholder': 'Efternavn'}))
+    email = forms.CharField(widget=TextInput(attrs={'class': 'form-control input-sm', 'placeholder': 'Email'}))
+    repeatemail = forms.CharField(widget=TextInput(attrs={'class': 'form-control input-sm', 'placeholder': 'Gentag email'}))
+    phone = forms.CharField(widget=TextInput(attrs={'class': 'form-control input-sm', 'placeholder': 'Telefonnummer'}))
+    school = forms.CharField(widget=TextInput(attrs={'class': 'form-control input-sm'}))
+    line = forms.ChoiceField(choices=Booker.line_choices)
+    level = forms.ChoiceField(choices=Booker.level_choices)
+    postcode = forms.IntegerField(widget=NumberInput(attrs={'class': 'form-control input-sm', 'placeholder': 'Postnummer', 'min': '1000', 'max': '9999'}))
+    city = forms.CharField(widget=TextInput(attrs={'class': 'form-control input-sm', 'placeholder': 'By'}))
+    region = forms.ModelChoiceField(queryset=Region.objects.all())
+    notes = forms.CharField(widget=Textarea(attrs={'class': 'form-control input-sm'}))

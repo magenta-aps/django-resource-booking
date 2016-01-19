@@ -5,6 +5,7 @@ from django.conf import settings
 from .views import MainPageView
 from booking.views import EditVisit, VisitDetailView, SearchView
 from booking.views import AdminSearchView, AdminIndexView, AdminVisitDetailView
+from booking.views import StudentForADayView
 from django.views.generic import TemplateView
 
 urlpatterns = patterns(
@@ -64,6 +65,9 @@ urlpatterns = patterns(
     url(r'^fokusadmin/search/?$', AdminSearchView.as_view(),
         name='admin-search'),
     url(r'^fokusadmin/visit/(?P<pk>[0-9]+)/?$', AdminVisitDetailView.as_view(),
-        name='admin-visit')
+        name='admin-visit'),
+
+    url(r'^book/studentforaday$', StudentForADayView.as_view(),
+        name='book-studentforaday')
 
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
