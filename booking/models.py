@@ -511,3 +511,34 @@ class Room(models.Model):
 
     def __unicode__(self):
         return self.name
+
+
+class Booking(models.Model):
+    # A booking of a visit
+    visit = models.ForeignKey(
+            Visit,
+            verbose_name=_(u'Tilbud'),
+            blank=False
+    )
+    firstname = models.CharField(
+            max_length=64,
+            blank=False
+    )
+    lastname = models.CharField(
+            max_length=64,
+            blank=False
+    )
+    email = models.EmailField(
+            max_length=64,
+            null=True,
+            blank=True
+    )
+    phone = models.CharField(
+            max_length=14,
+            null=True,
+            blank=True
+    )
+    visitors = models.IntegerField(
+            null=True,
+            blank=True,
+    )
