@@ -12,75 +12,99 @@
 
 {% block content %}
 
-    <form id="startbookingform" class="form-horizontal clearfix" data-toggle="validator" role="form" novalidate="true">
+    <form id="startbookingform" class="form-horizontal clearfix" data-toggle="validator" role="form" novalidate="true" method="POST">
+        {% csrf_token %}
+
+        {{ bookerform.non_field_errors }}
+
         <div class="form-group">
             <label class="col-sm-2 control-label" for="name">For- og efternavn*</label>
-            <div class="col-sm-3">
+            <div class="col-sm-3{% if bookerform.firstname.errors %} has-error{% endif %}">
                 {{ bookerform.firstname }}
             </div>
-            <div class="col-sm-3">
+            <div class="col-sm-3{% if bookerform.lastname.errors %} has-error{% endif %}">
                 {{ bookerform.lastname }}
             </div>
-            <div class="col-sm-3 help-block with-errors"></div>
+            <div class="col-sm-3 help-block with-errors">
+                {{ bookerform.firstname.errors }}
+                {{ bookerform.lastname.errors }}
+            </div>
         </div>
 
         <div class="form-group">
             <label class="col-sm-2 control-label" for="inputEmail">Email*</label>
-            <div class="col-sm-3">
+            <div class="col-sm-3{% if bookerform.email.errors %} has-error{% endif %}">
                 {{ bookerform.email }}
             </div>
-            <div class="col-sm-3">
+            <div class="col-sm-3{% if bookerform.repeatemail.errors %} has-error{% endif %}">
                 {{ bookerform.repeatemail }}
             </div>
-            <div class="col-sm-3 help-block with-errors"></div>
+            <div class="col-sm-3 help-block with-errors">
+                {{ bookerform.email.errors }}
+                {{ bookerform.repeatemail.errors }}
+            </div>
         </div>
 
         <div class="form-group">
             <label class="col-sm-2 control-label" for="tlf">Telefonnummer*</label>
-            <div class="col-sm-6">
+            <div class="col-sm-6{% if bookerform.phone.errors %} has-error{% endif %}">
                 {{ bookerform.phone }}
             </div>
-            <div class="col-sm-3 help-block with-errors"></div>
+            <div class="col-sm-3 help-block with-errors">
+                {{ bookerform.phone.errors }}
+            </div>
         </div>
 
         <div class="form-group">
             <label class="col-sm-2 control-label" for="">Gymnasium*</label>
-            <div class="col-sm-6">
+            <div class="col-sm-6{% if bookerform.school.errors %} has-error{% endif %}">
                 {{ bookerform.school }}
             </div>
-            <div class="col-sm-3 help-block with-errors"></div>
+            <div class="col-sm-3 help-block with-errors">
+                {{ bookerform.school.errors }}
+            </div>
         </div>
 
         <div class="form-group">
             <label class="col-sm-2 control-label" for="">Gymnasie-uddannelse*</label>
-            <div class="col-sm-6">
+            <div class="col-sm-6{% if bookerform.line.errors %} has-error{% endif %}">
                 {{ bookerform.line }}
             </div>
-            <div class="col-sm-3 help-block with-errors"></div>
+            <div class="col-sm-3 help-block with-errors">
+                {{ bookerform.line.errors }}
+            </div>
         </div>
 
         <div class="form-group">
             <label class="col-sm-2 control-label" for="tlf">Gymnasiets postnr. og by*</label>
-            <div class="col-sm-2">
+            <div class="col-sm-2{% if bookerform.postcode.errors %} has-error{% endif %}">
                 {{ bookerform.postcode }}
             </div>
-            <div class="col-sm-4">
+            <div class="col-sm-4{% if bookerform.city.errors %} has-error{% endif %}">
                 {{ bookerform.city }}
             </div>
-            <div class="col-sm-3 help-block with-errors"></div>
+            <div class="col-sm-3 help-block with-errors">
+                {{ bookerform.postcode.errors }}
+                {{ bookerform.city.errors }}
+            </div>
         </div>
         <div class="form-group">
             <label class="col-sm-2 control-label" for="">Region*</label>
-            <div class="col-sm-6">
+            <div class="col-sm-6{% if bookerform.region.errors %} has-error{% endif %}">
                 {{ bookerform.region }}
             </div>
-            <div class="col-sm-3 help-block with-errors"></div>
+            <div class="col-sm-3 help-block with-errors">
+                {{ bookerform.region.errors }}
+            </div>
         </div>
 
         <div class="form-group">
             <label class="col-sm-2 control-label" for="skole">Kommentarer</label>
-            <div class="col-sm-6">
+            <div class="col-sm-6{% if bookerform.notes.errors %} has-error{% endif %}">
                 {{ bookerform.notes }}
+            </div>
+            <div class="col-sm-3 help-block with-errors">
+                {{ bookerform.notes.errors }}
             </div>
         </div>
 
@@ -104,6 +128,8 @@
                 </div>
             </div>
         </div>
+
+        <button type="submit">Submit</button>
     </form>
 
 

@@ -380,10 +380,21 @@ class AdminVisitDetailView(VisitDetailView):
 
 class StudentForADayView(UpdateView):
     template_name = 'booking/studentforaday.html'
+
     def get(self, request, *args, **kwargs):
         self.object = Booking()
         bookerform = BookerForm()
-        print bookerform
+        return self.render_to_response(
+            self.get_context_data(bookerform=bookerform)
+        )
+
+    def post(self, request, *args, **kwargs):
+        self.object = Booking()
+        bookerform = BookerForm(request.POST)
+        if bookerform.is_valid():
+            print "OK"
+        else:
+            print "not OK"
         return self.render_to_response(
             self.get_context_data(bookerform=bookerform)
         )
