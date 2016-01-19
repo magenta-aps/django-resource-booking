@@ -12,101 +12,99 @@
 
 {% block content %}
 
-
-
     <form id="startbookingform" class="form-horizontal clearfix" data-toggle="validator" role="form" novalidate="true">
-<div class="form-group">
-        <label class="col-sm-2 control-label" for="name">For- og efternavn*</label>
-        <div class="col-sm-3">
-            {{ bookerform.firstname }}
+        <div class="form-group">
+            <label class="col-sm-2 control-label" for="name">For- og efternavn*</label>
+            <div class="col-sm-3">
+                {{ bookerform.firstname }}
+            </div>
+            <div class="col-sm-3">
+                {{ bookerform.lastname }}
+            </div>
+            <div class="col-sm-3 help-block with-errors"></div>
         </div>
-        <div class="col-sm-3">
-            {{ bookerform.lastname }}
-        </div>
-        <div class="col-sm-3 help-block with-errors"></div>
-    </div>
 
-    <div class="form-group">
-        <label class="col-sm-2 control-label" for="inputEmail">Email*</label>
-        <div class="col-sm-3">
-            {{ bookerform.email }}
+        <div class="form-group">
+            <label class="col-sm-2 control-label" for="inputEmail">Email*</label>
+            <div class="col-sm-3">
+                {{ bookerform.email }}
+            </div>
+            <div class="col-sm-3">
+                {{ bookerform.repeatemail }}
+            </div>
+            <div class="col-sm-3 help-block with-errors"></div>
         </div>
-        <div class="col-sm-3">
-            {{ bookerform.repeatemail }}
-        </div>
-        <div class="col-sm-3 help-block with-errors"></div>
-    </div>
 
-    <div class="form-group">
-        <label class="col-sm-2 control-label" for="tlf">Telefonnummer*</label>
-        <div class="col-sm-6">
-            {{ bookerform.phone }}
+        <div class="form-group">
+            <label class="col-sm-2 control-label" for="tlf">Telefonnummer*</label>
+            <div class="col-sm-6">
+                {{ bookerform.phone }}
+            </div>
+            <div class="col-sm-3 help-block with-errors"></div>
         </div>
-        <div class="col-sm-3 help-block with-errors"></div>
-    </div>
 
-    <div class="form-group">
-        <label class="col-sm-2 control-label" for="">Gymnasium*</label>
-        <div class="col-sm-6">
-            {{ bookerform.school }}
+        <div class="form-group">
+            <label class="col-sm-2 control-label" for="">Gymnasium*</label>
+            <div class="col-sm-6">
+                {{ bookerform.school }}
+            </div>
+            <div class="col-sm-3 help-block with-errors"></div>
         </div>
-        <div class="col-sm-3 help-block with-errors"></div>
-    </div>
 
-    <div class="form-group">
-        <label class="col-sm-2 control-label" for="">Gymnasie-uddannelse*</label>
-        <div class="col-sm-6">
-            {{ bookerform.line }}
+        <div class="form-group">
+            <label class="col-sm-2 control-label" for="">Gymnasie-uddannelse*</label>
+            <div class="col-sm-6">
+                {{ bookerform.line }}
+            </div>
+            <div class="col-sm-3 help-block with-errors"></div>
         </div>
-        <div class="col-sm-3 help-block with-errors"></div>
-    </div>
 
-    <div class="form-group">
-        <label class="col-sm-2 control-label" for="tlf">Gymnasiets postnr. pg by*</label>
-        <div class="col-sm-2">
-            {{ bookerform.postcode }}
+        <div class="form-group">
+            <label class="col-sm-2 control-label" for="tlf">Gymnasiets postnr. og by*</label>
+            <div class="col-sm-2">
+                {{ bookerform.postcode }}
+            </div>
+            <div class="col-sm-4">
+                {{ bookerform.city }}
+            </div>
+            <div class="col-sm-3 help-block with-errors"></div>
         </div>
-        <div class="col-sm-4">
-            {{ bookerform.city }}
+        <div class="form-group">
+            <label class="col-sm-2 control-label" for="">Region*</label>
+            <div class="col-sm-6">
+                {{ bookerform.region }}
+            </div>
+            <div class="col-sm-3 help-block with-errors"></div>
         </div>
-        <div class="col-sm-3 help-block with-errors"></div>
-    </div>
-    <div class="form-group">
-        <label class="col-sm-2 control-label" for="">Region*</label>
-        <div class="col-sm-6">
-            {{ bookerform.region }}
-        </div>
-        <div class="col-sm-3 help-block with-errors"></div>
-    </div>
 
-    <div class="form-group">
-        <label class="col-sm-2 control-label" for="skole">Kommentarer</label>
-        <div class="col-sm-6">
-            {{ bookerform.notes }}
+        <div class="form-group">
+            <label class="col-sm-2 control-label" for="skole">Kommentarer</label>
+            <div class="col-sm-6">
+                {{ bookerform.notes }}
+            </div>
         </div>
-    </div>
 
-    <div class="form-group">
-        <div class="col-sm-6 col-sm-offset-2 padleft0">
-            <div class="stepwizard">
-                <div class="stepwizard-row">
-                    <div class="stepwizard-step">
-                        <button class="btn btn-default btn-circle" type="button">1</button>
-                        <p>Trin 1</p>
-                    </div>
-                    <div class="stepwizard-step active">
-                        <button class="btn btn-primary btn-circle" type="button">2</button>
-                        <p>Trin 2</p>
-                    </div>
-                    <div class="stepwizard-step">
-                        <button disabled="disabled" class="btn btn-default btn-circle" type="button">3</button>
-                        <p>Trin 3</p>
+        <div class="form-group">
+            <div class="col-sm-6 col-sm-offset-2 padleft0">
+                <div class="stepwizard">
+                    <div class="stepwizard-row">
+                        <div class="stepwizard-step">
+                            <button class="btn btn-default btn-circle" type="button">1</button>
+                            <p>Trin 1</p>
+                        </div>
+                        <div class="stepwizard-step active">
+                            <button class="btn btn-primary btn-circle" type="button">2</button>
+                            <p>Trin 2</p>
+                        </div>
+                        <div class="stepwizard-step">
+                            <button disabled="disabled" class="btn btn-default btn-circle" type="button">3</button>
+                            <p>Trin 3</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</form>
+    </form>
 
 
 

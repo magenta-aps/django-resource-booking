@@ -4,7 +4,7 @@ from booking.models import Unit
 from booking.models import Visit
 from booking.models import Booker, Region
 from django import forms
-from django.forms import CheckboxSelectMultiple
+from django.forms import CheckboxSelectMultiple, EmailInput
 from django.forms import inlineformset_factory
 from django.forms import TextInput, NumberInput, Textarea
 from django.utils.translation import ugettext_lazy as _
@@ -106,9 +106,9 @@ class BookerForm(forms.Form):
 
     firstname = forms.CharField(widget=TextInput(attrs={'class': 'form-control input-sm', 'placeholder': 'Fornavn'}))
     lastname = forms.CharField(widget=TextInput(attrs={'class': 'form-control input-sm', 'placeholder': 'Efternavn'}))
-    email = forms.CharField(widget=TextInput(attrs={'class': 'form-control input-sm', 'placeholder': 'Email'}))
+    email = forms.EmailField(widget=EmailInput(attrs={'class': 'form-control input-sm', 'placeholder': 'Email'}))
     repeatemail = forms.CharField(widget=TextInput(attrs={'class': 'form-control input-sm', 'placeholder': 'Gentag email'}))
-    phone = forms.CharField(widget=TextInput(attrs={'class': 'form-control input-sm', 'placeholder': 'Telefonnummer'}))
+    phone = forms.CharField(widget=TextInput(attrs={'class': 'form-control input-sm', 'placeholder': 'Telefonnummer', 'pattern': '(\(\+\d+\)|\+\d+)?\s*\d+[ \d]*'}))
     school = forms.CharField(widget=TextInput(attrs={'class': 'form-control input-sm'}))
     line = forms.ChoiceField(choices=Booker.line_choices)
     level = forms.ChoiceField(choices=Booker.level_choices)
