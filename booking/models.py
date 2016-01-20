@@ -244,8 +244,8 @@ class Resource(models.Model):
 
     # Level choices - A, B or C
     A = 0
-    B = 0
-    C = 0
+    B = 1
+    C = 2
 
     level_choices = (
         (A, u'A'), (B, u'B'), (C, u'C')
@@ -382,7 +382,25 @@ class Resource(models.Model):
         return "-"
 
     def get_subjects_display(self):
-        return ", ".join([unicode(x) for x in self.subjects.all()])
+        res = []
+        res.append(self.get_institution_level_display())
+        res.append(": ")
+        if self.institution_level == Resource.PRIMARY:
+            # TODO: Add proper PRIMARY subjects
+            res.append(_(u"TODO: Tilføj-grundskole-fag"))
+            # Output "Klassetrin X" or "Klassetrin X-Y"
+            res.append(_(u", klassetrin "))
+            res.append(self.class_level_min)
+            if self.class_level_max != self.class_level_min:
+                res.append("-")
+                res.append(self.class_level_max)
+        elif self.institution_level == Resource.SECONDARY:
+            res.append(
+                ", ".join([unicode(x) for x in self.subjects.all()])
+            )
+            res.append(_(u" på %s-niveau") % self.get_level_display())
+
+        return "".join([unicode(x) for x in res])
 
     def display_locality(self):
         try:
@@ -531,6 +549,17 @@ class Visit(Resource):
             return ", ".join(dates)
         else:
             return "-"
+
+    def num_of_participants_display(self):
+        if self.minimum_number_of_visitors:
+            return "%s-%s" % (
+                self.minimum_number_of_visitors,
+                self.maximum_number_of_visitors
+            )
+        elif self.maximum_number_of_visitors:
+            return self.maximum_number_of_visitors
+
+        return "-"
 
 
 class VisitOccurrence(models.Model):

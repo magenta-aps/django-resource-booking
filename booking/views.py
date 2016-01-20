@@ -325,9 +325,7 @@ class EditVisit(RoleRequiredMixin, UpdateView):
     def post(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
         is_cloning = kwargs.get("clone", False)
-        if (is_cloning or
-            not hasattr(self, 'object') or
-            self.object is None):
+        if (is_cloning or not hasattr(self, 'object') or self.object is None):
             if pk is None or is_cloning:
                 self.object = None
             else:
@@ -474,6 +472,18 @@ class VisitDetailView(DetailView):
         if not self.request.user.is_authenticated():
             qs = qs.filter(state=Resource.ACTIVE)
         return qs
+
+    def get_context_data(self, **kwargs):
+        context = {}
+
+        if self.request.user and self.request.user.userprofile.can_edit(self):
+            context['can_edit'] = True
+        else:
+            context['can_edit'] = False
+
+        context.update(kwargs)
+
+        return super(VisitDetailView, self).get_context_data(**context)
 
 
 class RrulestrView(View):

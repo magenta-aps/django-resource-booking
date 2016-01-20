@@ -61,3 +61,20 @@ class UserProfile(models.Model):
 
     def can_create(self):
         return self.get_role() in (COORDINATOR, ADMINISTRATOR)
+
+    def can_edit(self, item):
+        role = self.get_role()
+
+        # Administrators can always edit
+        if role == ADMINISTRATOR:
+            return True
+
+        # Coordinators can only edit stuff that belongs to their unit
+        if role == COORDINATOR:
+            if not self.unit or not item.unit:
+                return False
+
+            if item.unit.belongs_to(self.unit):
+                return True
+
+        return False

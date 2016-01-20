@@ -53,8 +53,11 @@
         
             <h2>Her skal "hvad" vises</h2>
             
-            {% if user.is_authenticated %}
-                <a class="pull-right" href="/visit/{{ object.id }}/edit">Redigér</a>
+            {% if can_edit %}
+                <a class="pull-right btn" href="{% url 'visit_edit' object.pk %}">Redigér</a>
+            {% endif %}
+            {% if user.userprofile.can_create %}
+                <a class="pull-right btn" href="{% url 'visit_clone' object.pk %}">Opret kopi</a>
             {% endif %}
             
             <h1>{{ object.title }}</h1>
@@ -96,9 +99,9 @@
                             <dt>Henvendt til:</dt>
                             <dd>{{ object.get_audience_display }}</dd>
                             <dt>Fag/niveau:</dt>
-                            <dd>{{ object.get_level_display }}</dd>
+                            <dd>{{ object.resource_ptr.get_subjects_display }}</dd>
                             <dt>Max antal:</dt>
-                            <dd>{{ object.maximum_number_of_visitors }}</dd>
+                            <dd>{{ object.num_of_participants_display }}</dd>
                             <dt>Hvad:</dt>
                             <dd>{{ object.get_type_display }}</dd>
                             <dt>Hvor:</dt>
