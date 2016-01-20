@@ -1,4 +1,4 @@
-//Search-list.html:
+//Search-list.html start:
 $('.input-daterange input').each(function() {
     $(this).datepicker({
         language: 'da',
@@ -29,19 +29,17 @@ $('#filters').on('show.bs.collapse', function() {
 $('#filters').on('hide.bs.collapse', function() {
     $(this).prev().find(".glyphicon").toggleClass("glyphicon-chevron-up glyphicon-chevron-down");
 });
-//Search-list.html
-//Keep footer stuck to bottom
-var footer = function() {
-        $('body').css('margin-bottom', $('footer').height() + 40);
-    },
-    didResize = false;
-footer();
-$(window).resize(function() {
-    didResize = true;
+//Search-list.html end
+//Booking form validation start...
+// $('#startbookingform').validator().on('submit', function (e) {
+//   if (e.isDefaultPrevented()) {
+//     // handle the invalid form...
+//   } else {
+//     // everything looks good!
+//   }
+// });
+//Booking form validation end...
+$("#reset-btn").click(function() {
+    $("#searchBox").val("");
+    $("form").trigger("submit")
 });
-setInterval(function() {
-    if (didResize) {
-        didResize = false;
-        footer();
-    }
-}, 250);

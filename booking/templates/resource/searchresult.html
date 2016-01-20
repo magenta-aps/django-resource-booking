@@ -12,18 +12,18 @@
                 <input type="hidden" name="pagesize" value="{{ paginator.per_page }}" />
                     <div class="panel panel-sidebar">
                         <div class="panel-heading">
-                            <h3 class="panel-title">Filtrer resultater</h3>
+                            <h3 class="panel-title">Filtrer søgeresultater</h3>
                         </div>
                         <div class="panel-body">
                             <h3 class="panel-title">Hvem er du?</h3>
                             <hr>
                             <div class="input-group">
                                 {% for c in audience_choices %}
-                                <div class="checkbox ">
+                                <div class="checkbox">
                                     <label class="control-label" for="audience-choice-{{c.value}}">
-                                        <input name="a" id="audience-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}> {{c.label}}
+                                        <input name="a" id="audience-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}>{{c.label}}
                                         {% if c.hits %}
-                                            ({{ c.hits }})
+                                            <span title="{{ c.hits }} resultater" class="type-hits">({{ c.hits }})</span>
                                         {% endif %}
                                     </label>
                                 </div>
@@ -33,11 +33,11 @@
                             <hr>
                             <div class="input-group">
                                 {% for c in type_choices %}
-                                <div class="checkbox ">
+                                <div class="checkbox">
                                     <label class="control-label" for="type-choice-{{c.value}}">
-                                        <input name="t" id="type-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}> {{c.label}}
+                                        <input name="t" id="type-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}>{{c.label}}
                                         {% if c.hits %}
-                                            ({{ c.hits }})
+                                            <span title="{{ c.hits }} resultater" class="type-hits">({{ c.hits }})</span>
                                         {% endif %}
                                     </label>
                                 </div>
@@ -53,9 +53,9 @@
                                     {% for c in gymnasie_choices %}
                                     <div class="checkbox">
                                         <label class="control-label" for="gymnasie-choice-{{c.value}}">
-                                            <input name="f" id="gymnasie-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}> {{c.label}}
+                                            <input name="f" id="gymnasie-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}>{{c.label}}
                                             {% if c.hits %}
-                                                ({{ c.hits }})
+                                                <span title="{{ c.hits }} resultater" class="type-hits">({{ c.hits }})</span>
                                             {% endif %}
                                         </label>
                                     </div>
@@ -66,13 +66,13 @@
                                     <h3 class="panel-title inline-block">Grundskolefag </h3><span class="caret"></span></a>
                                 <hr>
                                 <div id="grundskolefag" class="panel-collapse {% if not grundskole_selected %}collapse{% endif %}" role="tabpanel" aria-labelledby="headingThree">
-                                    <div class="input-group ">
+                                    <div class="input-group">
                                     {% for c in grundskole_choices %}
                                     <div class="checkbox">
                                         <label class="control-label" for="grundskole-choice-{{c.value}}">
-                                            <input name="g" id="grundskole-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}> {{c.label}}
+                                            <input name="g" id="grundskole-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}>{{c.label}}
                                             {% if c.hits %}
-                                                ({{ c.hits }})
+                                                <span title="{{ c.hits }} resultater" class="type-hits">({{ c.hits }})</span>
                                             {% endif %}
                                         </label>
                                     </div>
@@ -127,7 +127,7 @@
                         // -->
                     </script>
                     <a href="https://www.addthis.com/bookmark.php?v=250&amp;pub=copenhagenuni" class="addthis_button_compact">
-                        <img src="{% static 'img/shareknap_dk.gif' %} " width="28" height="12" alt="Bookmark and Share" style="border:0" />
+                        <img src="{% static 'img/shareknap_dk.gif' %}" width="28" height="12" alt="Bookmark and Share" style="border:0" />
                     </a>
                     <script type="text/javascript" src="https://s7.addthis.com/js/250/addthis_widget.js#pub=copenhagenuni"></script>
                     <!-- AddThis Button END -->
@@ -145,6 +145,7 @@
                     <label class="sr-only" for="searchBox">Søg efter tilbud</label>
                     <input type="text" class="form-control" id="searchBox" placeholder="Søg efter tilbud - indtast et eller flere søgeord..." name="q" value="{{ request.GET.q }}">
                     <span class="input-group-btn">
+                    <a id="reset-btn" class="btn btn-default" aria-label="Ryd søgning"><span class="glyphicon glyphicon-remove"></span></a>
                     <button class="btn btn-default" id="search" type="submit"><span class="hidden-xs">Søg</span> <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
                     </button>
                     </span>
@@ -152,9 +153,10 @@
             </form>
             <div class="divider"></div>
             {% if not results %}
-            <p>Din søgning gav ikke noget resultat</p>
+            <p>Din søgning gav ikke noget resultat.</p>
             {% else %}
             <h2 class="bold">{{ paginator.count }} resultater matcher din søgning på "{{request.GET.q}}"</h2>
+            <div class="divider"></div>
             <ul class="media-list">
             {% for res in results %}
                 <li class="media">
@@ -190,7 +192,7 @@
     <div class="row">
         <div class="col-sm-6 col-md-5 col-sm-offset-1 col-md-offset-3">
             <nav>
-                <ul class="pagination ">
+                <ul class="pagination">
                 
                 {% if page_obj.has_previous %}
                 <li>
@@ -212,7 +214,7 @@
                 {% for pnr in paginator.page_range %}
                     {% if page_obj.number == pnr %}
                         <li class="active">
-                            <span>{{ pnr }} <span class="sr-only ">(aktiv side)</span></span>
+                            <span>{{ pnr }} <span class="sr-only">(aktiv side)</span></span>
                         </li>
                     {% else %}
                         <li><a href="?{{ qstring }}&page={{pnr}}&pagesize={{paginator.per_page}}">{{pnr}}</a></li>
@@ -245,6 +247,7 @@
                     <button type="button" class="btn btn-default">{{paginator.per_page}}</button>
                     <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> <span class="caret"></span> <span class="sr-only">Vis anrtal resultater pr. side</span> </button>
                     <ul class="dropdown-menu">
+                        <li><a href="#">Vis alle</a></li>
                         {% for size in pagesizes %}
                         <li{% if size == paginator.per_page %} class="selected"{% endif %}><a href="?{{ qstring }}&pagesize={{size}}">{{size}}</a></li>
                         {% endfor %}
@@ -256,12 +259,36 @@
     </div>
     
 {% endblock %}
-
+{% block footer %}
+        <div class="container">
+            <div class="row">
+                <footer>
+                    <div class="container">
+                        <div class="row footer-columns">
+                            <div class="col-sm-6 col-sm-offset-1 col-md-offset-3">
+                                <ul class="footerlinks">
+                                    <li><a href="http://kommunikation.ku.dk/">Kommunikation</a></li>
+                                    <li><a href="http://www.ku.dk/">Københavns Universitet</a></li>
+                                    <li>Nørregade 10, Postboks 2177</li>
+                                    <li>1017 København K</li>
+                                </ul>
+                            </div>
+                            <div class="col-sm-3">
+                                <ul class="footerlinks">
+                                    <li class="clearfix social-icons"><a target="_blank" class="footer-social" href="https://www.facebook.com/universitet"><span class="icon-circle"><i class="fa fa-facebook"></i></span></a><a target="_blank" class="footer-social" href="https://www.linkedin.com/edu/k%C3%B8benhavns-universitet-12012"><span class="icon-circle"><i class="fa fa-linkedin"></i></span></a><a target="_blank" class="footer-social" href="https://twitter.com/koebenhavns_uni"><span class="icon-circle"><i class="fa fa-twitter"></i></span></a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+            </div>
+        </div>
+    {% endblock %}
 
 {% block extra_scripts %}
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.5.0/js/bootstrap-datepicker.min.js "></script>
-    <script src="{% static 'js/bootstrap-datepicker.da.min.js' %} "></script>
-    <script src="{% static 'js/custom.js' %} "></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.5.0/js/bootstrap-datepicker.min.js"></script>
+    <script src="{% static 'js/bootstrap-datepicker.da.min.js' %}"></script>
+    <script src="{% static 'js/custom.js' %}"></script>
     
 {% endblock %}
