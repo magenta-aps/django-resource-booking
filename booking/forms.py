@@ -160,6 +160,12 @@ class BookerForm(forms.ModelForm):
             queryset=Region.objects.all()
     )
 
+    def clean_postcode(self):
+        try:
+            PostCode.objects.get(number=self.cleaned_data.get('postcode'))
+        except:
+            raise forms.ValidationError(u"Ukendt postnummer")
+
     def clean(self):
         cleaned_data = super(BookerForm, self).clean()
         email = cleaned_data.get("email")

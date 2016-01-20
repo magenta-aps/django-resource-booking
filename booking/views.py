@@ -426,7 +426,6 @@ class StudentForADayView(UpdateView):
 
         bookerform = BookerForm(request.POST)
         if bookerform.is_valid():
-            data = bookerform.cleaned_data
             booker = bookerform.save()
             booking = Booking()
             booking.visit = visit
