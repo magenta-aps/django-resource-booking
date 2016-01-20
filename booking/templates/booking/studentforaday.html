@@ -153,7 +153,8 @@
     <script type="text/javascript">
         <!--
             $(function(){
-                var city = $("#id_city");
+                var city = $("#id_city")
+                    region = $("#id_region");
                 $("#id_postcode").on("change keyup", function(){
                     var code = parseInt(this.value, 10);
                     if (code && code>=1000 && code<10000) {
@@ -163,6 +164,7 @@
                             complete: function(response) {
                                 var data = response.responseJSON;
                                 city.val(data.city);
+                                region.val(data.region && data.region.id);
                             }
                         });
                     }

@@ -386,7 +386,9 @@ class PostcodeView(View):
         code = int(kwargs.get("code"))
         postcode = PostCode.get(code)
         city = postcode.city if postcode is not None else None
-        return JsonResponse({'code': code, 'city': city})
+        region = {'id': postcode.region.id, 'name': postcode.region.name} \
+            if postcode is not None else None
+        return JsonResponse({'code': code, 'city': city, 'region': region})
 
 
 class SchoolView(View):
