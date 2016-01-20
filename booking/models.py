@@ -515,7 +515,7 @@ class Room(models.Model):
 
 class Region(models.Model):
     name = models.CharField(
-            max_length=16
+        max_length=16
     )
 
     def __unicode__(self):
@@ -542,8 +542,6 @@ class PostCode(models.Model):
             return PostCode.objects.get(number=int(code))
         except PostCode.DoesNotExist:
             return None
-
-
 
 
 class School(models.Model):
