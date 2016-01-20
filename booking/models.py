@@ -390,10 +390,14 @@ class Resource(models.Model):
             res.append(_(u"TODO: Tilføj-grundskole-fag"))
             # Output "Klassetrin X" or "Klassetrin X-Y"
             res.append(_(u", klassetrin "))
-            res.append(self.class_level_min)
-            if self.class_level_max != self.class_level_min:
-                res.append("-")
-                res.append(self.class_level_max)
+            if self.class_level_min:
+                res.append(self.class_level_min)
+                if self.class_level_max != self.class_level_min:
+                    res.append("-")
+                    res.append(self.class_level_max)
+            else:
+                if self.class_level_max:
+                    res.append(self.class_level_max)
         elif self.institution_level == Resource.SECONDARY:
             res.append(
                 ", ".join([unicode(x) for x in self.subjects.all()])
@@ -559,7 +563,7 @@ class Visit(Resource):
         elif self.maximum_number_of_visitors:
             return self.maximum_number_of_visitors
 
-        return "-"
+        return None
 
 
 class VisitOccurrence(models.Model):

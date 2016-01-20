@@ -476,7 +476,9 @@ class VisitDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = {}
 
-        if self.request.user and self.request.user.userprofile.can_edit(self):
+        user = self.request.user
+
+        if (hasattr(user, 'userprofile') and user.userprofile.can_edit(self)):
             context['can_edit'] = True
         else:
             context['can_edit'] = False
