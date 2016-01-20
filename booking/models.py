@@ -554,10 +554,6 @@ class School(models.Model):
         PostCode,
         null=True
     )
-    region = models.ForeignKey(
-        Region,
-        null=True
-    )
 
     def __unicode__(self):
         return self.name
