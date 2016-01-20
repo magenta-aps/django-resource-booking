@@ -164,10 +164,10 @@ class BookerForm(forms.Form):
         queryset=Region.objects.all()
     )
     notes = forms.CharField(
+        required=False,
         widget=Textarea(
             attrs={'class': 'form-control input-sm'}
-        ),
-        blank=True
+        )
     )
 
     def clean(self):
