@@ -513,12 +513,24 @@ class Room(models.Model):
         return self.name
 
 
+class Region(models.Model):
+    name = models.CharField(
+            max_length=16
+    )
+
+    def __unicode__(self):
+        return self.name
+
+
 class PostCode(models.Model):
     number = models.IntegerField(
         primary_key=True
     )
     city = models.CharField(
         max_length=48
+    )
+    region = models.ForeignKey(
+        Region
     )
 
     def __unicode__(self):
@@ -532,13 +544,6 @@ class PostCode(models.Model):
             return None
 
 
-class Region(models.Model):
-    name = models.CharField(
-        max_length=16
-    )
-
-    def __unicode__(self):
-        return self.name
 
 
 class School(models.Model):
