@@ -68,7 +68,7 @@ urlpatterns = patterns(
     url(r'^fokusadmin/visit/(?P<pk>[0-9]+)/?$', AdminVisitDetailView.as_view(),
         name='admin-visit'),
 
-    url(r'^visit/(?P<visit>[0-9]+)/book$', StudentForADayView.as_view(),
+    url(r'^visit/(?P<visit>[0-9]+)/book$', ClassVisitView.as_view(),
         name='book-studentforaday'),
 
     url(r'^postcode/(?P<code>[0-9]{4})$', PostcodeView.as_view()),

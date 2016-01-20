@@ -112,54 +112,54 @@
 
         <div class="form-group">
             <label class="col-sm-2 control-label" for="tlf">Antal Elever*</label>
-            <div class="col-sm-6{% if visitform.student_count.errors %} has-error{% endif %}">
-                {{ visitform.student_count }}
+            <div class="col-sm-6{% if bookingform.student_count.errors %} has-error{% endif %}">
+                {{ bookingform.student_count }}
             </div>
             <div class="col-sm-3 help-block with-errors">
-                {{ visitform.student_count.errors }}
+                {{ bookingform.student_count.errors }}
             </div>
         </div>
 
         <div class="form-group">
             <label class="col-sm-2 control-label" for="tlf">Antal Lærere*</label>
-            <div class="col-sm-6{% if visitform.teacher_count.errors %} has-error{% endif %}">
-                {{ visitform.teacher_count }}
+            <div class="col-sm-6{% if bookingform.teacher_count.errors %} has-error{% endif %}">
+                {{ bookingform.teacher_count }}
             </div>
             <div class="col-sm-3 help-block with-errors">
-                {{ visitform.teacher_count.errors }}
+                {{ bookingform.teacher_count.errors }}
             </div>
         </div>
 
 
         <div class="form-group">
             <label class="col-sm-2 control-label" for="tlf">Tidspunkt*</label>
-            <div class="col-sm-6{% if visitform.time.errors %} has-error{% endif %}">
-                {{ visitform.time }}
+            <div class="col-sm-6{% if bookingform.time.errors %} has-error{% endif %}">
+                {{ bookingform.time }}
             </div>
             <div class="col-sm-3 help-block with-errors">
-                {{ visitform.time.errors }}
+                {{ bookingform.time.errors }}
             </div>
         </div>
 
 
         <div class="form-group">
             <label class="col-sm-2 control-label" for="tlf">Rundvisning</label>
-            <div class="col-sm-6{% if visitform.tour_desired.errors %} has-error{% endif %}">
-                {{ visitform.tour_desired }}
+            <div class="col-sm-6{% if bookingform.tour_desired.errors %} has-error{% endif %}">
+                {{ bookingform.tour_desired }}
             </div>
             <div class="col-sm-3 help-block with-errors">
-                {{ visitform.tour_desired.errors }}
+                {{ bookingform.tour_desired.errors }}
             </div>
         </div>
 
 
         <div class="form-group">
             <label class="col-sm-2 control-label" for="skole">Kommentarer</label>
-            <div class="col-sm-6{% if visitform.notes.errors %} has-error{% endif %}">
-                {{ visitform.notes }}
+            <div class="col-sm-6{% if bookingform.notes.errors %} has-error{% endif %}">
+                {{ bookingform.notes }}
             </div>
             <div class="col-sm-3 help-block with-errors">
-                {{ visitform.notes.errors }}
+                {{ bookingform.notes.errors }}
             </div>
         </div>
 

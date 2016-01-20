@@ -23,6 +23,8 @@ from booking.forms import BookerForm
 
 i18n_test = _(u"Dette tester oversættelses-systemet")
 
+from pprint import pprint
+from inspect import getmembers
 
 # A couple of generic superclasses for crud views
 # Our views will inherit from these and from django.views.generic classes
@@ -444,13 +446,12 @@ class ClassVisitView(UpdateView):
 
     def get(self, request, *args, **kwargs):
         self.object = ClassBooking()
-        visitform = self.get_form()
+        bookingform = self.get_form()
         bookerform = BookerForm()
         return self.render_to_response(
-            self.get_context_data(visitform=visitform, bookerform=bookerform)
+            self.get_context_data(bookingform=bookingform, bookerform=bookerform)
         )
 
-    # Handle both forms, creating a Visit and a number of StudyMaterials
     def post(self, request, *args, **kwargs):
         self.object = ClassBooking()
         bookingform = self.get_form()
@@ -465,11 +466,11 @@ class ClassVisitView(UpdateView):
 
         if bookingform.is_valid() and bookerform.is_valid():
             booker = bookerform.save()
-            booking = bookingform.save()
+            booking = bookingform.save(commit=False)
             booking.visit = visit
             booking.booker = booker
             booking.save()
 
         return self.render_to_response(
-                self.get_context_data(bookerform=bookerform)
+            self.get_context_data(bookerform=bookerform, bookingform=bookingform)
         )
