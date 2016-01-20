@@ -16,97 +16,9 @@
         {% csrf_token %}
 
         {{ bookerform.non_field_errors }}
-
-        <div class="form-group">
-            <label class="col-sm-2 control-label" for="name">For- og efternavn*</label>
-            <div class="col-sm-3{% if bookerform.firstname.errors %} has-error{% endif %}">
-                {{ bookerform.firstname }}
-            </div>
-            <div class="col-sm-3{% if bookerform.lastname.errors %} has-error{% endif %}">
-                {{ bookerform.lastname }}
-            </div>
-            <div class="col-sm-3 help-block with-errors">
-                {{ bookerform.firstname.errors }}
-                {{ bookerform.lastname.errors }}
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label class="col-sm-2 control-label" for="inputEmail">Email*</label>
-            <div class="col-sm-3{% if bookerform.email.errors %} has-error{% endif %}">
-                {{ bookerform.email }}
-            </div>
-            <div class="col-sm-3{% if bookerform.repeatemail.errors %} has-error{% endif %}">
-                {{ bookerform.repeatemail }}
-            </div>
-            <div class="col-sm-3 help-block with-errors">
-                {{ bookerform.email.errors }}
-                {{ bookerform.repeatemail.errors }}
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label class="col-sm-2 control-label" for="tlf">Telefonnummer*</label>
-            <div class="col-sm-6{% if bookerform.phone.errors %} has-error{% endif %}">
-                {{ bookerform.phone }}
-            </div>
-            <div class="col-sm-3 help-block with-errors">
-                {{ bookerform.phone.errors }}
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label class="col-sm-2 control-label" for="">Gymnasium*</label>
-            <div class="col-sm-6{% if bookerform.school.errors %} has-error{% endif %}">
-                {{ bookerform.school }}
-            </div>
-            <div class="col-sm-3 help-block with-errors">
-                {{ bookerform.school.errors }}
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label class="col-sm-2 control-label" for="">Gymnasie-uddannelse*</label>
-            <div class="col-sm-6{% if bookerform.line.errors %} has-error{% endif %}">
-                {{ bookerform.line }}
-            </div>
-            <div class="col-sm-3 help-block with-errors">
-                {{ bookerform.line.errors }}
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label class="col-sm-2 control-label" for="">Gymnasie-klasse*</label>
-            <div class="col-sm-6{% if bookerform.level.errors %} has-error{% endif %}">
-                {{ bookerform.level }}
-            </div>
-            <div class="col-sm-3 help-block with-errors">
-                {{ bookerform.level.errors }}
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label class="col-sm-2 control-label" for="tlf">Gymnasiets postnr. og by*</label>
-            <div class="col-sm-2{% if bookerform.postcode.errors %} has-error{% endif %}">
-                {{ bookerform.postcode }}
-            </div>
-            <div class="col-sm-4{% if bookerform.city.errors %} has-error{% endif %}">
-                {{ bookerform.city }}
-            </div>
-            <div class="col-sm-3 help-block with-errors">
-                {{ bookerform.postcode.errors }}
-                {{ bookerform.city.errors }}
-            </div>
-        </div>
-        <div class="form-group">
-            <label class="col-sm-2 control-label" for="">Region*</label>
-            <div class="col-sm-6{% if bookerform.region.errors %} has-error{% endif %}">
-                {{ bookerform.region }}
-            </div>
-            <div class="col-sm-3 help-block with-errors">
-                {{ bookerform.region.errors }}
-            </div>
-        </div>
+        {% include "booking/booker/basedata.html" %}
+        {% include "booking/booker/school.html" %}
+        {% include "booking/booker/location.html" %}
 
         <hr/>
 
@@ -194,60 +106,9 @@
 
 {% block extra_scripts %}
 
-    <script src="{% static 'thirdparty/bootstrap-3-typeahead/bootstrap3-typeahead.min.js' %}"></script>
-    <script type="text/javascript">
-        <!--
-            $(function(){
-                var city = $("#id_city")
-                    region = $("#id_region");
-                $("#id_postcode").on("change keyup", function(){
-                    var code = parseInt(this.value, 10);
-                    if (code && code>=1000 && code<10000) {
-                        $.ajax({
-                            url: "/postcode/" + code,
-                            dataType: "json",
-                            complete: function(response) {
-                                var data = response.responseJSON;
-                                city.val(data.city);
-                                region.val(data.region && data.region.id);
-                            }
-                        });
-                    }
-                })
-            });
-        //-->
-    </script>
-    <script type="text/javascript">
-        <!--
-        $(function() {
-            var postcode = $("#id_postcode");
-            $("#id_school").typeahead({
-                source: function (query, process) {
-                    $.ajax({
-                        url: "/schools",
-                        data: {
-                            q: query
-                        },
-                        dataType: "json",
-                        complete: function (response) {
-                            if (response && response.status === 200) {
-                                process(response.responseJSON.schools);
-                            }
-                        }.bind(this)
-                    });
-                },
-                updater: function (selected) {
-                    if (selected.postcode) {
-                        postcode.val(selected.postcode);
-                        postcode.change();
-                    }
-                    return selected.name;
-                }
-            });
-        });
 
-        //-->
-    </script>
+    {% include 'booking/booker/location_script.html' %}
+    {% include 'booking/booker/school_script.html' %}
 
     <script type="text/javascript" src="{% static 'thirdparty/bootstrap-datetime-picker/js/bootstrap-datetimepicker.min.js' %}"></script>
 

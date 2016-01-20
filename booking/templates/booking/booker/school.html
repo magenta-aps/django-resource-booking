@@ -1,0 +1,29 @@
+<div class="form-group">
+    <label class="col-sm-2 control-label" for="">Gymnasium*</label>
+    <div class="col-sm-6{% if bookerform.school.errors %} has-error{% endif %}">
+        {{ bookerform.school }}
+    </div>
+    <div class="col-sm-3 help-block with-errors">
+        {{ bookerform.school.errors }}
+    </div>
+</div>
+
+<div class="form-group">
+    <label class="col-sm-2 control-label" for="">Gymnasie-uddannelse*</label>
+    <div class="col-sm-6{% if bookerform.line.errors %} has-error{% endif %}">
+        {{ bookerform.line }}
+    </div>
+    <div class="col-sm-3 help-block with-errors">
+        {{ bookerform.line.errors }}
+    </div>
+</div>
+
+<div class="form-group">
+    <label class="col-sm-2 control-label" for="">Gymnasie-klasse*</label>
+    <div class="col-sm-6{% if bookerform.level.errors %} has-error{% endif %}">
+        {{ bookerform.level }}
+    </div>
+    <div class="col-sm-3 help-block with-errors">
+        {{ bookerform.level.errors }}
+    </div>
+</div>
