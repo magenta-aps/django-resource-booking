@@ -166,7 +166,8 @@ class BookerForm(forms.Form):
     notes = forms.CharField(
         widget=Textarea(
             attrs={'class': 'form-control input-sm'}
-        )
+        ),
+        blank=True
     )
 
     def clean(self):
