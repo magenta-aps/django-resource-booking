@@ -665,3 +665,6 @@ class ClassBooking(Booking):
         blank=True,
         verbose_name=u'Bemærkninger'
     )
+
+class TeacherBooking(Booking):
+    subjects = models.ManyToManyField(Subject)

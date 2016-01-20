@@ -17,7 +17,7 @@ from booking.models import Resource, Subject
 from booking.models import Room
 from booking.models import PostCode, School
 from booking.models import Booking, Booker
-from booking.forms import VisitForm, ClassBookingForm
+from booking.forms import VisitForm, ClassBookingForm, TeacherBookingForm
 from booking.forms import VisitStudyMaterialForm
 from booking.forms import BookerForm
 
@@ -471,7 +471,9 @@ class BookingView(UpdateView):
         if self.visit is not None:
             forms['bookerform'] = BookerForm(data)
             if self.visit.audience == Resource.STUDENT:
-                forms['bookingform'] = ClassBookingForm
+                forms['bookingform'] = ClassBookingForm(data)
+            if self.visit.audience == Resource.TEACHER:
+                forms['bookingform'] = TeacherBookingForm(data)
         return forms
 
     def get_template_names(self):

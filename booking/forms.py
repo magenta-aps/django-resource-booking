@@ -1,8 +1,9 @@
-from booking.models import StudyMaterial, PostCode
+from booking.models import StudyMaterial
 from booking.models import UnitType
 from booking.models import Unit
 from booking.models import Visit
-from booking.models import Booker, Region, ClassBooking, School
+from booking.models import Booker, Region, PostCode, School
+from booking.models import ClassBooking, TeacherBooking
 from django import forms
 from django.forms import CheckboxSelectMultiple, EmailInput
 from django.forms import inlineformset_factory
@@ -205,3 +206,9 @@ class ClassBookingForm(forms.ModelForm):
             'time': DateTimeInput(attrs={'class': 'form-control input-sm'}),
             'notes': Textarea(attrs={'class': 'form-control input-sm'})
         }
+
+
+class TeacherBookingForm(forms.ModelForm):
+    class Meta:
+        model = TeacherBooking
+        fields = ('subjects', )

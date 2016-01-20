@@ -119,6 +119,16 @@
         </div>
 
         <div class="form-group">
+            <label class="col-sm-2 control-label" for="skole">Fag</label>
+            <div class="col-sm-6{% if bookingform.subjects.errors %} has-error{% endif %}">
+                {{ bookingform.subjects }}
+            </div>
+            <div class="col-sm-3 help-block with-errors">
+                {{ bookingform.subjects.errors }}
+            </div>
+        </div>
+
+        <div class="form-group">
             <div class="col-sm-6 col-sm-offset-2 padleft0">
                 <div class="stepwizard">
                     <div class="stepwizard-row">
