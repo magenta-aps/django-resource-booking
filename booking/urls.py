@@ -3,9 +3,8 @@ from django.conf.urls.static import static
 from django.conf import settings
 
 from .views import MainPageView
-from booking.views import EditVisit, VisitDetailView, SearchView
+from booking.views import EditVisit, VisitDetailView, SearchView, BookingView
 from booking.views import AdminSearchView, AdminIndexView, AdminVisitDetailView
-from booking.views import StudentForADayView, ClassVisitView
 from booking.views import PostcodeView, SchoolView
 from django.views.generic import TemplateView
 
@@ -68,7 +67,7 @@ urlpatterns = patterns(
     url(r'^fokusadmin/visit/(?P<pk>[0-9]+)/?$', AdminVisitDetailView.as_view(),
         name='admin-visit'),
 
-    url(r'^visit/(?P<visit>[0-9]+)/book$', ClassVisitView.as_view(),
+    url(r'^visit/(?P<visit>[0-9]+)/book$', BookingView.as_view(),
         name='book-studentforaday'),
 
     url(r'^postcode/(?P<code>[0-9]{4})$', PostcodeView.as_view()),

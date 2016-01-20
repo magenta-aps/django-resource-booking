@@ -406,71 +406,82 @@ class SchoolView(View):
         return JsonResponse(json)
 
 
-class StudentForADayView(UpdateView):
-    template_name = 'booking/studentforaday.html'
+class BookingView(UpdateView):
+
+    visit = None
+
+    def set_visit(self, visit_id):
+        if visit_id is not None:
+            try:
+                self.visit = Visit.objects.get(id=visit_id)
+            except:
+                pass
+
+    def get_visit_type(self):
+        if self.visit is None:
+            return None
+        if self.visit.type == Resource.STUDENT_FOR_A_DAY:
+            return
+        if self.visit.type == Resource.STUDY_PROJECT:
+            return
+        if self.visit.audience == Resource.TEACHER:
+            return
+        if self.visit.audience == Resource.STUDENT:
+            return
 
     def get(self, request, *args, **kwargs):
+        self.set_visit(kwargs.get("visit"))
+        if self.visit is None:
+            return bad_request(request)
+
         self.object = Booking()
-        bookerform = BookerForm()
+        forms = self.get_forms()
         return self.render_to_response(
-            self.get_context_data(bookerform=bookerform)
+            self.get_context_data(**forms)
         )
 
     def post(self, request, *args, **kwargs):
+        self.set_visit(kwargs.get("visit"))
+        if self.visit is None:
+            return bad_request(request)
+
         self.object = Booking()
+        forms = self.get_forms(request.POST)
+        valid = True
+        for (name, form) in forms.items():
+            if not form.is_valid():
+                valid = False
 
-        visit_id = kwargs.get("visit")
-        if visit_id is None:
-            return bad_request(request)
-        visit = Visit.objects.get(id=visit_id)
-        if visit is None:
-            return bad_request(request)
-
-        bookerform = BookerForm(request.POST)
-        if bookerform.is_valid():
-            booker = bookerform.save()
-            booking = Booking()
-            booking.visit = visit
-            booking.booker = booker
+        if valid:
+            if 'bookingform' in forms:
+                booking = forms['bookingform'].save(commit=False)
+            else:
+                booking = self.object
+            booking.visit = self.visit
+            if 'bookerform' in forms:
+                booking.booker = forms['bookerform'].save()
             booking.save()
 
         return self.render_to_response(
-            self.get_context_data(bookerform=bookerform)
+            self.get_context_data(**forms)
         )
 
+    def get_forms(self, data=None):
+        forms = {}
+        if self.visit is not None:
+            forms['bookerform'] = BookerForm(data)
+            if self.visit.audience == Resource.STUDENT:
+                forms['bookingform'] = ClassBookingForm
+        return forms
 
-class ClassVisitView(UpdateView):
-    template_name = 'booking/classvisit.html'
-    form_class = ClassBookingForm
-    model = ClassBooking
-
-    def get(self, request, *args, **kwargs):
-        self.object = ClassBooking()
-        bookingform = self.get_form()
-        bookerform = BookerForm()
-        return self.render_to_response(
-            self.get_context_data(bookingform=bookingform, bookerform=bookerform)
-        )
-
-    def post(self, request, *args, **kwargs):
-        self.object = ClassBooking()
-        bookingform = self.get_form()
-        bookerform = BookerForm(request.POST)
-
-        visit_id = kwargs.get("visit")
-        if visit_id is None:
-            return bad_request(request)
-        visit = Visit.objects.get(id=visit_id)
-        if visit is None:
-            return bad_request(request)
-
-        if bookingform.is_valid() and bookerform.is_valid():
-            booker = bookerform.save()
-            booking = bookingform.save(commit=False)
-            booking.visit = visit
-            booking.booker = booker
-            booking.save()
-
-        return self.render_to_response(
-            self.get_context_data(bookerform=bookerform, bookingform=bookingform)
-        )
+    def get_template_names(self):
+        if self.visit is None:
+            return [""]
+        if self.visit.type == Resource.STUDENT_FOR_A_DAY:
+            return ["booking/studentforaday.html"]
+        if self.visit.type == Resource.STUDY_PROJECT:
+            return ["booking/srp.html"]
+        if self.visit.audience == Resource.TEACHER:
+            return ["booking/teachervisit.html"]
+        if self.visit.audience == Resource.STUDENT:
+            return ["booking/classvisit.html"]
