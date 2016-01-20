@@ -12,12 +12,12 @@ from django.http import JsonResponse
 from profile.models import COORDINATOR, ADMINISTRATOR
 from profile.models import role_to_text
 
-from booking.models import Visit, StudyMaterial
+from booking.models import Visit, StudyMaterial, ClassBooking
 from booking.models import Resource, Subject
 from booking.models import Room
 from booking.models import PostCode, School
 from booking.models import Booking, Booker
-from booking.forms import VisitForm
+from booking.forms import VisitForm, ClassBookingForm
 from booking.forms import VisitStudyMaterialForm
 from booking.forms import BookerForm
 
@@ -427,17 +427,7 @@ class StudentForADayView(UpdateView):
         bookerform = BookerForm(request.POST)
         if bookerform.is_valid():
             data = bookerform.cleaned_data
-            booker = Booker()
-            booker.firstname = data['firstname']
-            booker.lastname = data['lastname']
-            booker.email = data['email']
-            booker.phone = data['phone']
-            booker.line = data['line']
-            booker.level = data['level']
-            booker.notes = data['notes']
-            # booker.school = noget
-            booker.save()
-
+            booker = bookerform.save()
             booking = Booking()
             booking.visit = visit
             booking.booker = booker
@@ -445,4 +435,42 @@ class StudentForADayView(UpdateView):
 
         return self.render_to_response(
             self.get_context_data(bookerform=bookerform)
+        )
+
+
+class ClassVisitView(UpdateView):
+    template_name = 'booking/classvisit.html'
+    form_class = ClassBookingForm
+    model = ClassBooking
+
+    def get(self, request, *args, **kwargs):
+        self.object = ClassBooking()
+        visitform = self.get_form()
+        bookerform = BookerForm()
+        return self.render_to_response(
+            self.get_context_data(visitform=visitform, bookerform=bookerform)
+        )
+
+    # Handle both forms, creating a Visit and a number of StudyMaterials
+    def post(self, request, *args, **kwargs):
+        self.object = ClassBooking()
+        bookingform = self.get_form()
+        bookerform = BookerForm(request.POST)
+
+        visit_id = kwargs.get("visit")
+        if visit_id is None:
+            return bad_request(request)
+        visit = Visit.objects.get(id=visit_id)
+        if visit is None:
+            return bad_request(request)
+
+        if bookingform.is_valid() and bookerform.is_valid():
+            booker = bookerform.save()
+            booking = bookingform.save()
+            booking.visit = visit
+            booking.booker = booker
+            booking.save()
+
+        return self.render_to_response(
+                self.get_context_data(bookerform=bookerform)
         )

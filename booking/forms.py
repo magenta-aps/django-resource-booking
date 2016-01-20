@@ -1,12 +1,12 @@
-from booking.models import StudyMaterial
+from booking.models import StudyMaterial, PostCode
 from booking.models import UnitType
 from booking.models import Unit
 from booking.models import Visit
-from booking.models import Booker, Region
+from booking.models import Booker, Region, ClassBooking, School
 from django import forms
 from django.forms import CheckboxSelectMultiple, EmailInput
 from django.forms import inlineformset_factory
-from django.forms import TextInput, NumberInput, Textarea
+from django.forms import TextInput, NumberInput, Textarea, DateTimeInput
 from django.utils.translation import ugettext_lazy as _
 from profile.models import COORDINATOR
 from tinymce.widgets import TinyMCE
@@ -102,72 +102,62 @@ class VisitStudyMaterialForm(VisitStudyMaterialFormBase):
         self.studymaterials = StudyMaterial.objects.filter(visit=instance)
 
 
-class BookerForm(forms.Form):
+class BookerForm(forms.ModelForm):
+    class Meta:
+        model = Booker
+        fields = ('firstname', 'lastname', 'email', 'phone', 'line',
+                  #'school',
+                  'level', 'notes')
+        widgets = {
+            'firstname': TextInput(
+                    attrs={'class': 'form-control input-sm',
+                           'placeholder': 'Fornavn'}
+            ),
+            'lastname': TextInput(
+                    attrs={'class': 'form-control input-sm',
+                           'placeholder': 'Efternavn'}
+            ),
+            'email': EmailInput(
+                    attrs={'class': 'form-control input-sm',
+                           'placeholder': 'Email'}
+            ),
+            'phone': TextInput(
+                    attrs={'class': 'form-control input-sm',
+                           'placeholder': 'Telefonnummer',
+                           'pattern': '(\(\+\d+\)|\+\d+)?\s*\d+[ \d]*'}
+            ),
+            'notes': Textarea(
+                    attrs={'class': 'form-control input-sm'}
+            )
+        }
 
-    firstname = forms.CharField(
-        widget=TextInput(
-            attrs={'class': 'form-control input-sm',
-                   'placeholder': 'Fornavn'}
-        )
-    )
-    lastname = forms.CharField(
-        widget=TextInput(
-            attrs={'class': 'form-control input-sm',
-                   'placeholder': 'Efternavn'}
-        )
-    )
-    email = forms.EmailField(
-        widget=EmailInput(
-            attrs={'class': 'form-control input-sm',
-                   'placeholder': 'Email'}
-        )
-    )
     repeatemail = forms.CharField(
-        widget=TextInput(
-            attrs={'class': 'form-control input-sm',
-                   'placeholder': 'Gentag email'}
-        )
-    )
-    phone = forms.CharField(
-        widget=TextInput(
-            attrs={'class': 'form-control input-sm',
-                   'placeholder': 'Telefonnummer',
-                   'pattern': '(\(\+\d+\)|\+\d+)?\s*\d+[ \d]*'}
-        )
+            widget=TextInput(
+                    attrs={'class': 'form-control input-sm',
+                           'placeholder': 'Gentag email'}
+            )
     )
     school = forms.CharField(
-        widget=TextInput(
-            attrs={'class': 'form-control input-sm',
-                   'autocomplete': 'off'}
-        )
-    )
-    line = forms.ChoiceField(
-        choices=Booker.line_choices
-    )
-    level = forms.ChoiceField(
-        choices=Booker.level_choices
+            widget=TextInput(
+                    attrs={'class': 'form-control input-sm',
+                           'autocomplete': 'off'}
+            )
     )
     postcode = forms.IntegerField(
-        widget=NumberInput(
-            attrs={'class': 'form-control input-sm',
-                   'placeholder': 'Postnummer',
-                   'min': '1000', 'max': '9999'}
-        )
+            widget=NumberInput(
+                    attrs={'class': 'form-control input-sm',
+                           'placeholder': 'Postnummer',
+                           'min': '1000', 'max': '9999'}
+            )
     )
     city = forms.CharField(
-        widget=TextInput(
-            attrs={'class': 'form-control input-sm',
-                   'placeholder': 'By'}
-        )
+            widget=TextInput(
+                    attrs={'class': 'form-control input-sm',
+                           'placeholder': 'By'}
+            )
     )
     region = forms.ModelChoiceField(
-        queryset=Region.objects.all()
-    )
-    notes = forms.CharField(
-        required=False,
-        widget=Textarea(
-            attrs={'class': 'form-control input-sm'}
-        )
+            queryset=Region.objects.all()
     )
 
     def clean(self):
@@ -180,3 +170,32 @@ class BookerForm(forms.Form):
             error = forms.ValidationError(u"Indtast den samme email-adresse " +
                                           u"i begge felter")
             self.add_error('repeatemail', error)
+
+    def save(self):
+        booker = super(BookerForm, self).save(commit=False)
+        data = self.cleaned_data
+        schoolname = data.get('school')
+        try:
+            school = School.objects.get(name__iexact=schoolname)
+        except:
+            school = School()
+            school.name = schoolname
+            school.postcode = PostCode.objects.get(number=data.get('postcode'))
+            school.save()
+        booker.school = school
+        booker.save()
+        return booker
+
+
+class ClassBookingForm(forms.ModelForm):
+
+    class Meta:
+        model = ClassBooking
+        fields = ('student_count', 'teacher_count', 'time', 'tour_desired',
+                  'notes',)
+        widgets = {
+            'student_count': NumberInput(attrs={'class': 'form-control input-sm'}),
+            'teacher_count': NumberInput(attrs={'class': 'form-control input-sm'}),
+            'time': DateTimeInput(attrs={'class': 'form-control input-sm'}),
+            'notes': Textarea(attrs={'class': 'form-control input-sm'})
+        }

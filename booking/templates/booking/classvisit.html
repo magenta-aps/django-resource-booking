@@ -1,0 +1,263 @@
+{% extends 'lightbox-index.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load booking_tags %}
+
+{% block head %}
+    <link rel="stylesheet" href="{% static 'thirdparty/bootstrap-datetime-picker/css/bootstrap-datetimepicker.min.css' %}"/>
+{% endblock %}
+
+{% block header %}
+{% endblock %}
+
+{% block content %}
+
+    <form id="startbookingform" class="form-horizontal clearfix" data-toggle="validator" role="form" novalidate="true" method="POST">
+        {% csrf_token %}
+
+        {{ bookerform.non_field_errors }}
+
+        <div class="form-group">
+            <label class="col-sm-2 control-label" for="name">For- og efternavn*</label>
+            <div class="col-sm-3{% if bookerform.firstname.errors %} has-error{% endif %}">
+                {{ bookerform.firstname }}
+            </div>
+            <div class="col-sm-3{% if bookerform.lastname.errors %} has-error{% endif %}">
+                {{ bookerform.lastname }}
+            </div>
+            <div class="col-sm-3 help-block with-errors">
+                {{ bookerform.firstname.errors }}
+                {{ bookerform.lastname.errors }}
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="col-sm-2 control-label" for="inputEmail">Email*</label>
+            <div class="col-sm-3{% if bookerform.email.errors %} has-error{% endif %}">
+                {{ bookerform.email }}
+            </div>
+            <div class="col-sm-3{% if bookerform.repeatemail.errors %} has-error{% endif %}">
+                {{ bookerform.repeatemail }}
+            </div>
+            <div class="col-sm-3 help-block with-errors">
+                {{ bookerform.email.errors }}
+                {{ bookerform.repeatemail.errors }}
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="col-sm-2 control-label" for="tlf">Telefonnummer*</label>
+            <div class="col-sm-6{% if bookerform.phone.errors %} has-error{% endif %}">
+                {{ bookerform.phone }}
+            </div>
+            <div class="col-sm-3 help-block with-errors">
+                {{ bookerform.phone.errors }}
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="col-sm-2 control-label" for="">Gymnasium*</label>
+            <div class="col-sm-6{% if bookerform.school.errors %} has-error{% endif %}">
+                {{ bookerform.school }}
+            </div>
+            <div class="col-sm-3 help-block with-errors">
+                {{ bookerform.school.errors }}
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="col-sm-2 control-label" for="">Gymnasie-uddannelse*</label>
+            <div class="col-sm-6{% if bookerform.line.errors %} has-error{% endif %}">
+                {{ bookerform.line }}
+            </div>
+            <div class="col-sm-3 help-block with-errors">
+                {{ bookerform.line.errors }}
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="col-sm-2 control-label" for="">Gymnasie-klasse*</label>
+            <div class="col-sm-6{% if bookerform.level.errors %} has-error{% endif %}">
+                {{ bookerform.level }}
+            </div>
+            <div class="col-sm-3 help-block with-errors">
+                {{ bookerform.level.errors }}
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="col-sm-2 control-label" for="tlf">Gymnasiets postnr. og by*</label>
+            <div class="col-sm-2{% if bookerform.postcode.errors %} has-error{% endif %}">
+                {{ bookerform.postcode }}
+            </div>
+            <div class="col-sm-4{% if bookerform.city.errors %} has-error{% endif %}">
+                {{ bookerform.city }}
+            </div>
+            <div class="col-sm-3 help-block with-errors">
+                {{ bookerform.postcode.errors }}
+                {{ bookerform.city.errors }}
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-2 control-label" for="">Region*</label>
+            <div class="col-sm-6{% if bookerform.region.errors %} has-error{% endif %}">
+                {{ bookerform.region }}
+            </div>
+            <div class="col-sm-3 help-block with-errors">
+                {{ bookerform.region.errors }}
+            </div>
+        </div>
+
+        <hr/>
+
+        <div class="form-group">
+            <label class="col-sm-2 control-label" for="tlf">Antal Elever*</label>
+            <div class="col-sm-6{% if visitform.student_count.errors %} has-error{% endif %}">
+                {{ visitform.student_count }}
+            </div>
+            <div class="col-sm-3 help-block with-errors">
+                {{ visitform.student_count.errors }}
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="col-sm-2 control-label" for="tlf">Antal Lærere*</label>
+            <div class="col-sm-6{% if visitform.teacher_count.errors %} has-error{% endif %}">
+                {{ visitform.teacher_count }}
+            </div>
+            <div class="col-sm-3 help-block with-errors">
+                {{ visitform.teacher_count.errors }}
+            </div>
+        </div>
+
+
+        <div class="form-group">
+            <label class="col-sm-2 control-label" for="tlf">Tidspunkt*</label>
+            <div class="col-sm-6{% if visitform.time.errors %} has-error{% endif %}">
+                {{ visitform.time }}
+            </div>
+            <div class="col-sm-3 help-block with-errors">
+                {{ visitform.time.errors }}
+            </div>
+        </div>
+
+
+        <div class="form-group">
+            <label class="col-sm-2 control-label" for="tlf">Rundvisning</label>
+            <div class="col-sm-6{% if visitform.tour_desired.errors %} has-error{% endif %}">
+                {{ visitform.tour_desired }}
+            </div>
+            <div class="col-sm-3 help-block with-errors">
+                {{ visitform.tour_desired.errors }}
+            </div>
+        </div>
+
+
+        <div class="form-group">
+            <label class="col-sm-2 control-label" for="skole">Kommentarer</label>
+            <div class="col-sm-6{% if visitform.notes.errors %} has-error{% endif %}">
+                {{ visitform.notes }}
+            </div>
+            <div class="col-sm-3 help-block with-errors">
+                {{ visitform.notes.errors }}
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="col-sm-6 col-sm-offset-2 padleft0">
+                <div class="stepwizard">
+                    <div class="stepwizard-row">
+                        <div class="stepwizard-step">
+                            <button class="btn btn-default btn-circle" type="button">1</button>
+                            <p>Trin 1</p>
+                        </div>
+                        <div class="stepwizard-step active">
+                            <button class="btn btn-primary btn-circle" type="button">2</button>
+                            <p>Trin 2</p>
+                        </div>
+                        <div class="stepwizard-step">
+                            <button disabled="disabled" class="btn btn-default btn-circle" type="button">3</button>
+                            <p>Trin 3</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit">Submit</button>
+    </form>
+
+
+
+
+{% endblock %}
+
+{% block extra_scripts %}
+
+    <script src="{% static 'thirdparty/bootstrap-3-typeahead/bootstrap3-typeahead.min.js' %}"></script>
+    <script type="text/javascript">
+        <!--
+            $(function(){
+                var city = $("#id_city")
+                    region = $("#id_region");
+                $("#id_postcode").on("change keyup", function(){
+                    var code = parseInt(this.value, 10);
+                    if (code && code>=1000 && code<10000) {
+                        $.ajax({
+                            url: "/postcode/" + code,
+                            dataType: "json",
+                            complete: function(response) {
+                                var data = response.responseJSON;
+                                city.val(data.city);
+                                region.val(data.region && data.region.id);
+                            }
+                        });
+                    }
+                })
+            });
+        //-->
+    </script>
+    <script type="text/javascript">
+        <!--
+        $(function() {
+            var postcode = $("#id_postcode");
+            $("#id_school").typeahead({
+                source: function (query, process) {
+                    $.ajax({
+                        url: "/schools",
+                        data: {
+                            q: query
+                        },
+                        dataType: "json",
+                        complete: function (response) {
+                            if (response && response.status === 200) {
+                                process(response.responseJSON.schools);
+                            }
+                        }.bind(this)
+                    });
+                },
+                updater: function (selected) {
+                    if (selected.postcode) {
+                        postcode.val(selected.postcode);
+                        postcode.change();
+                    }
+                    return selected.name;
+                }
+            });
+        });
+
+        //-->
+    </script>
+
+    <script type="text/javascript" src="{% static 'thirdparty/bootstrap-datetime-picker/js/bootstrap-datetimepicker.min.js' %}"></script>
+
+    <script type="text/javascript">
+        $(function(){
+            // See doc at http://www.malot.fr/bootstrap-datetimepicker/
+            $("input[name=time]").datetimepicker({
+                locale: 'da',
+                autoclose: true
+            });
+        });
+    </script>
+{% endblock %}

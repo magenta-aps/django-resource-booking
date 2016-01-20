@@ -643,3 +643,25 @@ class Booker(models.Model):
 class Booking(models.Model):
     visit = models.ForeignKey(Visit, null=True)
     booker = models.ForeignKey(Booker)
+
+
+class ClassBooking(Booking):
+    student_count = models.IntegerField(
+        blank=False,
+        verbose_name=u'Antal elever'
+    )
+    teacher_count = models.IntegerField(
+        blank=False,
+        verbose_name=u'Antal lærere'
+    )
+    time = models.DateTimeField(
+        null=True,
+        verbose_name=u'Tidspunkt'
+    )
+    tour_desired = models.BooleanField(
+        verbose_name=u'Rundvisning ønsket'
+    )
+    notes = models.TextField(
+        blank=True,
+        verbose_name=u'Bemærkninger'
+    )

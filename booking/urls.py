@@ -5,7 +5,7 @@ from django.conf import settings
 from .views import MainPageView
 from booking.views import EditVisit, VisitDetailView, SearchView
 from booking.views import AdminSearchView, AdminIndexView, AdminVisitDetailView
-from booking.views import StudentForADayView
+from booking.views import StudentForADayView, ClassVisitView
 from booking.views import PostcodeView, SchoolView
 from django.views.generic import TemplateView
 
