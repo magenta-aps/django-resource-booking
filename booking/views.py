@@ -21,7 +21,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
 
 
-from profile.models import COORDINATOR, ADMINISTRATOR
+from profile.models import EDIT_ROLES
 from profile.models import role_to_text
 
 from booking.models import Visit, VisitOccurrence, StudyMaterial
@@ -314,7 +314,7 @@ class EditVisit(RoleRequiredMixin, UpdateView):
     # Display a view with two form objects; one for the regular model,
     # and one for the file upload
 
-    roles = COORDINATOR, ADMINISTRATOR
+    roles = EDIT_ROLES
 
     def get(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
