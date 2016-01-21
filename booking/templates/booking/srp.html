@@ -17,15 +17,12 @@
         <p>Udfyld venligst nedenstående formular for at booke et tilbud. Felter markeret med * er obligatoriske.</p>
         <div class="divider"></div>
 
-        <form id="startbookingform" class="form-horizontal clearfix" data-toggle="validator" role="form" novalidate="true" method="POST">
+        <form id="bookingform" class="form-horizontal clearfix" data-toggle="validator" role="form" novalidate="true" method="POST">
             {% csrf_token %}
-
             {{ bookerform.non_field_errors }}
             {% include "booking/booker/basedata.html" %}
             {% include "booking/booker/school.html" %}
             {% include "booking/booker/notes.html" %}
-
-            <button type="submit">Submit</button>
         </form>
     </div>
     {% include 'booking/modal/footer.html' %}
@@ -36,4 +33,11 @@
 
     {% include 'booking/booker/school_script.html' %}
 
+    <script type="text/javascript">
+        $(function(){
+            $("#submitbutton").click(function(){
+                $("#bookingform").submit();
+            });
+        });
+    </script>
 {% endblock %}
