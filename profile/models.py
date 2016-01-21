@@ -12,12 +12,14 @@ TEACHER = 0
 HOST = 1
 COORDINATOR = 2
 ADMINISTRATOR = 3
+FACULTY_EDITOR = 4
 
 user_role_choices = (
     (TEACHER, _(u"Underviser")),
     (HOST, _(u"Vært")),
     (COORDINATOR, _(u"Koordinator")),
-    (ADMINISTRATOR, _(u"Administrator"))
+    (ADMINISTRATOR, _(u"Administrator")),
+    (FACULTY_EDITOR, _(u"Fakultetsredaktør"))
 )
 
 
