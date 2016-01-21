@@ -36,25 +36,7 @@ class UserCreateForm(UserCreationForm):
 
     def get_unit_query_set(self):
         """"Get units for which user can create events."""
-        user = self.user
-        user_role = user.userprofile.get_role()
-        if user_role == FACULTY_EDITOR:
-            uu = user.userprofile.unit
-            if uu is not None:
-                qs = uu.get_descendants()
-            else:
-                qs = Unit.objects.none()
-        elif user_role == COORDINATOR:
-            uu = user.userprofile.unit
-            if uu is not None:
-                # Needs to be iterable or the template will fail
-                qs = Unit.objects.filter(id=uu.id)
-            else:
-                qs = Unit.objects.none()
-        else:
-            # User must be an administrator and may attach any unit.
-            qs = Unit.objects.all()
-        return qs
+        return self.user.userprofile.get_unit_queryset()
 
     def get_role_query_set(self):
         user = self.user

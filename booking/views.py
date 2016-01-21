@@ -472,15 +472,11 @@ class EditVisit(RoleRequiredMixin, UpdateView):
         if self.object is None:
             self.object = None if pk is None else Visit.objects.get(id=pk)
         if self.object is not None:
-            role = current_user.userprofile.get_role()
-            if role == COORDINATOR:
-                users_unit = current_user.userprofile.unit
-                visits_unit = self.object.unit
-                if visits_unit and not visits_unit.belongs_to(users_unit):
-                    raise AccessDenied(
-                        _(u"Du kan kun redigere enheder,som du selv er" +
-                          " koordinator for.")
-                    )
+            if not current_user.userprofile.can_edit(self.object):
+                raise AccessDenied(
+                    _(u"Du kan kun redigere enheder,som du selv er" +
+                      " koordinator for.")
+                )
         return result
 
     def get_form_kwargs(self):
@@ -507,7 +503,8 @@ class VisitDetailView(DetailView):
 
         user = self.request.user
 
-        if (hasattr(user, 'userprofile') and user.userprofile.can_edit(self)):
+        if (hasattr(user, 'userprofile') and
+                user.userprofile.can_edit(self.object)):
             context['can_edit'] = True
         else:
             context['can_edit'] = False

@@ -10,8 +10,8 @@ from django.views.generic.edit import UpdateView, FormView
 
 from booking.views import LoginRequiredMixin, AccessDenied
 from profile.forms import UserCreateForm
-from profile.models import UserProfile, UserRole
-from profile.models import FACULTY_EDITOR, ADMINISTRATOR, COORDINATOR
+from profile.models import UserProfile, UserRole, EDIT_ROLES
+from profile.models import FACULTY_EDITOR, COORDINATOR
 
 
 class ProfileView(LoginRequiredMixin, TemplateView):
@@ -33,8 +33,7 @@ class CreateUserView(FormView, UpdateView):
         role = current_user.userprofile.get_role()
         users_unit = current_user.userprofile.unit
 
-        if role == COORDINATOR or role == FACULTY_EDITOR \
-                or role == ADMINISTRATOR:
+        if role in EDIT_ROLES:
             if self.request.method == 'POST':
                 if role == FACULTY_EDITOR:
                     # This should not be possible!
