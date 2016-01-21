@@ -107,58 +107,57 @@ class BookerForm(forms.ModelForm):
     class Meta:
         model = Booker
         fields = ('firstname', 'lastname', 'email', 'phone', 'line',
-                  #'school',
                   'level', 'notes')
         widgets = {
             'firstname': TextInput(
-                    attrs={'class': 'form-control input-sm',
-                           'placeholder': 'Fornavn'}
+                attrs={'class': 'form-control input-sm',
+                       'placeholder': 'Fornavn'}
             ),
             'lastname': TextInput(
-                    attrs={'class': 'form-control input-sm',
-                           'placeholder': 'Efternavn'}
+                attrs={'class': 'form-control input-sm',
+                       'placeholder': 'Efternavn'}
             ),
             'email': EmailInput(
-                    attrs={'class': 'form-control input-sm',
-                           'placeholder': 'Email'}
+                attrs={'class': 'form-control input-sm',
+                       'placeholder': 'Email'}
             ),
             'phone': TextInput(
-                    attrs={'class': 'form-control input-sm',
-                           'placeholder': 'Telefonnummer',
-                           'pattern': '(\(\+\d+\)|\+\d+)?\s*\d+[ \d]*'}
+                attrs={'class': 'form-control input-sm',
+                       'placeholder': 'Telefonnummer',
+                       'pattern': '(\(\+\d+\)|\+\d+)?\s*\d+[ \d]*'}
             ),
             'notes': Textarea(
-                    attrs={'class': 'form-control input-sm'}
+                attrs={'class': 'form-control input-sm'}
             )
         }
 
     repeatemail = forms.CharField(
-            widget=TextInput(
-                    attrs={'class': 'form-control input-sm',
-                           'placeholder': 'Gentag email'}
-            )
+        widget=TextInput(
+            attrs={'class': 'form-control input-sm',
+                   'placeholder': 'Gentag email'}
+        )
     )
     school = forms.CharField(
-            widget=TextInput(
-                    attrs={'class': 'form-control input-sm',
-                           'autocomplete': 'off'}
-            )
+        widget=TextInput(
+            attrs={'class': 'form-control input-sm',
+                   'autocomplete': 'off'}
+        )
     )
     postcode = forms.IntegerField(
-            widget=NumberInput(
-                    attrs={'class': 'form-control input-sm',
-                           'placeholder': 'Postnummer',
-                           'min': '1000', 'max': '9999'}
-            )
+        widget=NumberInput(
+            attrs={'class': 'form-control input-sm',
+                   'placeholder': 'Postnummer',
+                   'min': '1000', 'max': '9999'}
+        )
     )
     city = forms.CharField(
-            widget=TextInput(
-                    attrs={'class': 'form-control input-sm',
-                           'placeholder': 'By'}
-            )
+        widget=TextInput(
+            attrs={'class': 'form-control input-sm',
+                   'placeholder': 'By'}
+        )
     )
     region = forms.ModelChoiceField(
-            queryset=Region.objects.all()
+        queryset=Region.objects.all()
     )
 
     def clean_postcode(self):
@@ -201,10 +200,18 @@ class ClassBookingForm(forms.ModelForm):
         fields = ('student_count', 'teacher_count', 'time', 'tour_desired',
                   'notes',)
         widgets = {
-            'student_count': NumberInput(attrs={'class': 'form-control input-sm'}),
-            'teacher_count': NumberInput(attrs={'class': 'form-control input-sm'}),
-            'time': DateTimeInput(attrs={'class': 'form-control input-sm'}),
-            'notes': Textarea(attrs={'class': 'form-control input-sm'})
+            'student_count': NumberInput(
+                attrs={'class': 'form-control input-sm'}
+            ),
+            'teacher_count': NumberInput(
+                attrs={'class': 'form-control input-sm'}
+            ),
+            'time': DateTimeInput(
+                attrs={'class': 'form-control input-sm'}
+            ),
+            'notes': Textarea(
+                attrs={'class': 'form-control input-sm'}
+            )
         }
 
 

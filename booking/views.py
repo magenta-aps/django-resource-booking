@@ -12,22 +12,20 @@ from django.http import JsonResponse
 from profile.models import COORDINATOR, ADMINISTRATOR
 from profile.models import role_to_text
 
-from booking.models import Visit, StudyMaterial, ClassBooking
+from booking.models import Visit, StudyMaterial
 from booking.models import Resource, Subject
 from booking.models import Room
 from booking.models import PostCode, School
-from booking.models import Booking, Booker
+from booking.models import Booking
 from booking.forms import VisitForm, ClassBookingForm, TeacherBookingForm
 from booking.forms import VisitStudyMaterialForm
 from booking.forms import BookerForm
 
 i18n_test = _(u"Dette tester oversættelses-systemet")
 
-from pprint import pprint
-from inspect import getmembers
-
 # A couple of generic superclasses for crud views
 # Our views will inherit from these and from django.views.generic classes
+
 
 class MainPageView(TemplateView):
     """Display the main page."""
