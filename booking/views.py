@@ -7,7 +7,6 @@ from datetime import datetime, timedelta
 from dateutil import parser
 from dateutil.rrule import rrulestr
 from django.http import HttpResponse
-from django.utils import timezone
 from django.views.generic import TemplateView, ListView, DetailView, View
 from django.db.models import Count
 from django.db.models import F
