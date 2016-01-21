@@ -77,6 +77,9 @@ $(function(){
     });
 
     // Show the formpart that has data-first set
-    show(".formpart[data-first]");
+    var firstFormPart = $(".formpart[data-first]");
+    if (firstFormPart.length) {
+        show(firstFormPart);
+    }
 
 });
