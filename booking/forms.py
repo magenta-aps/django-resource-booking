@@ -1,7 +1,7 @@
 from booking.models import StudyMaterial
 from booking.models import UnitType
 from booking.models import Unit
-from booking.models import Visit
+from booking.models import Visit, VisitOccurrence
 from booking.models import Booker, Region, PostCode, School
 from booking.models import ClassBooking, TeacherBooking
 from django import forms
@@ -109,7 +109,7 @@ class VisitStudyMaterialForm(VisitStudyMaterialFormBase):
 class BookingForm(forms.ModelForm):
 
     def __init__(self, data=None, visit=None, *args, **kwargs):
-        super(BookingForm, self).__init__(*args, **kwargs)
+        super(BookingForm, self).__init__(data, *args, **kwargs)
 
 
 class BookerForm(BookingForm):
@@ -207,8 +207,7 @@ class ClassBookingForm(BookingForm):
 
     class Meta:
         model = ClassBooking
-        fields = ('student_count', 'teacher_count', 'tour_desired',
-                  'notes',)
+        fields = ('student_count', 'teacher_count', 'tour_desired', 'notes')
         widgets = {
             'student_count': NumberInput(
                 attrs={'class': 'form-control input-sm'}
@@ -216,25 +215,37 @@ class ClassBookingForm(BookingForm):
             'teacher_count': NumberInput(
                 attrs={'class': 'form-control input-sm'}
             ),
-            #'time': DateTimeInput(
-            #    attrs={'class': 'form-control input-sm'}
-            #),
             'notes': Textarea(
                 attrs={'class': 'form-control input-sm'}
             )
         }
 
     time = forms.ChoiceField(
-        widget=Select()
+        widget=Select(),
+        required=False
     )
 
     def __init__(self, data=None, visit=None, *args, **kwargs):
-        super(ClassBookingForm, self).__init__(*args, **kwargs)
-
+        super(ClassBookingForm, self).__init__(data, *args, **kwargs)
         time_choices = [
-            (x.start_datetime, x.start_datetime.strftime("%d-%m-%Y %H:%M"))
-            for x in visit.visitoccurrence_set.all()]
-        self.fields['time'].widget.choices = time_choices
+            (x.id, x.start_datetime.strftime("%d-%m-%Y %H:%M"))
+            for x in visit.visitoccurrence_set.all()
+            ]
+        self.fields['time'].choices = time_choices
+
+    def save(self, commit=True, *args, **kwargs):
+        booking = super(ClassBookingForm, self).save(commit=False)
+        data = self.cleaned_data
+        occurrence_id = data.get("time")
+        try:
+            occurrence = VisitOccurrence.objects.get(id=occurrence_id)
+            booking.time = occurrence.start_datetime
+        except:
+            pass
+        if commit:
+            booking.save(*args, **kwargs)
+        return booking
+
 
 
 class TeacherBookingForm(BookingForm):

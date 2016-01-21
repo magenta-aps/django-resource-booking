@@ -559,7 +559,7 @@ class BookingView(UpdateView):
         data = {'visit': self.visit}
 
         self.object = Booking()
-        data.update(self.get_forms(self.visit))
+        data.update(self.get_forms())
         return self.render_to_response(
             self.get_context_data(**data)
         )
@@ -572,7 +572,7 @@ class BookingView(UpdateView):
         data = {'visit': self.visit}
 
         self.object = Booking()
-        forms = self.get_forms(self.visit, request.POST)
+        forms = self.get_forms(request.POST)
         valid = True
         for (name, form) in forms.items():
             if not form.is_valid():
@@ -593,14 +593,14 @@ class BookingView(UpdateView):
             self.get_context_data(**data)
         )
 
-    def get_forms(self, visit=None, data=None):
+    def get_forms(self, data=None):
         forms = {}
         if self.visit is not None:
-            forms['bookerform'] = BookerForm(data, visit=visit)
+            forms['bookerform'] = BookerForm(data, visit=self.visit)
             if self.visit.audience == Resource.STUDENT:
-                forms['bookingform'] = ClassBookingForm(data, visit=visit)
+                forms['bookingform'] = ClassBookingForm(data, visit=self.visit)
             if self.visit.audience == Resource.TEACHER:
-                forms['bookingform'] = TeacherBookingForm(data, visit=visit)
+                forms['bookingform'] = TeacherBookingForm(data, visit=self.visit)
         return forms
 
     def get_template_names(self):
