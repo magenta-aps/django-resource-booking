@@ -478,7 +478,7 @@ class Visit(Resource):
     )
 
     locality = models.ForeignKey(
-        Locality, verbose_name=_(u'Lokalitet'), blank=True
+        Locality, verbose_name=_(u'Lokalitet'), blank=True, null=True
     )
     duration = models.CharField(
         max_length=8,
