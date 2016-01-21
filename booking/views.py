@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from dateutil import parser
 from dateutil.rrule import rrulestr
 from django.http import HttpResponse
+from django.utils import timezone
 from django.views.generic import TemplateView, ListView, DetailView, View
 from django.db.models import Count
 from django.db.models import F
@@ -264,15 +265,23 @@ class SearchView(ListView):
             self.request.GET.getlist("t"),
         )
 
-        subject_choices = [
-            (x.pk, x.name) for x in Subject.objects.all().order_by("name")
-        ]
+        gym_subject_choices = []
+        gs_subject_choices = []
+
+        for s in Subject.objects.all():
+            val = (s.pk, s.name)
+
+            if s.subject_type & Subject.SUBJECT_TYPE_GYMNASIE:
+                gym_subject_choices.append(val)
+
+            if s.subject_type & Subject.SUBJECT_TYPE_GRUNDSKOLE:
+                gs_subject_choices.append(val)
 
         gym_selected = self.request.GET.getlist("f")
         context["gymnasie_selected"] = gym_selected
         context["gymnasie_choices"] = self.make_facet(
             "subjects",
-            subject_choices,
+            gym_subject_choices,
             gym_selected,
         )
 
@@ -280,7 +289,7 @@ class SearchView(ListView):
         context["grundskole_selected"] = gs_selected
         context["grundskole_choices"] = self.make_facet(
             "subjects",
-            subject_choices,
+            gs_subject_choices,
             gs_selected,
         )
 
@@ -369,28 +378,50 @@ class EditVisit(RoleRequiredMixin, UpdateView):
                         instance.save()
                     except:
                         pass
+            # update occurrences
+            existing_visit_occurrences = \
+                set([x.start_datetime
+                     for x in visit.visitoccurrence_set.all()])
+
+            # convert date strings to datetimes
             dates = request.POST.getlist(u'occurrences')
 
             datetimes = []
             if dates is not None:
                 for date in dates:
-                    datetimes.append(parser.parse(date, dayfirst=True))
-            for date_t in datetimes:
-                duration = request.POST[u'duration']
-                hours = int(duration[0:2])
-                minutes = int(duration[3:5])
-                end_datetime = date_t
-                if duration is not None:
-                    end_datetime = date_t + timedelta(
-                        hours=hours,
-                        minutes=minutes
+                    dt = timezone.make_aware(
+                        parser.parse(date, dayfirst=True),
+                        timezone.pytz.timezone('UTC')
                     )
-                instance = VisitOccurrence(
-                    start_datetime=date_t,
-                    end_datetime1=end_datetime,
-                    visit=visit
-                )
-                instance.save()
+                    datetimes.append(dt)
+            # remove existing to avoid duplicates,
+            # then save the rest...
+            for date_t in datetimes:
+                if date_t in existing_visit_occurrences:
+                    existing_visit_occurrences.remove(date_t)
+                else:
+                    duration = request.POST[u'duration']
+                    hours = int(duration[0:2])
+                    minutes = int(duration[3:5])
+                    end_datetime = date_t
+                    if duration is not None:
+                        end_datetime = date_t + timedelta(
+                            hours=hours,
+                            minutes=minutes
+                        )
+                    instance = VisitOccurrence(
+                        start_datetime=date_t,
+                        end_datetime1=end_datetime,
+                        visit=visit
+                    )
+                    instance.save()
+            # If the set of existing occurrences still is not empty,
+            # it means that the user un-ticket one or more existing.
+            # So, we remove those to...
+            if len(existing_visit_occurrences) > 0:
+                visit.visitoccurrence_set.all().filter(
+                    start_datetime__in=existing_visit_occurrences
+                ).delete()
 
             return super(EditVisit, self).form_valid(form)
         else:
@@ -501,10 +532,23 @@ class RrulestrView(View):
         dates x start_times is returned.
         """
         rrulestring = request.POST['rrulestr']
-        now = datetime.now()
+        now = timezone.now()
+        tz = timezone.pytz.timezone('UTC')
         dates = []
         lines = rrulestring.split("\n")
         times_list = request.POST[u'start_times'].split(',')
+        visit_id = None
+        if request.POST[u'visit_id'] != 'None':
+            visit_id = int(request.POST[u'visit_id'])
+        existing_dates_strings = set()
+
+        if visit_id is not None:
+            visit = Visit.objects.get(pk=visit_id)
+
+            for occurrence in visit.visitoccurrence_set.all():
+                existing_dates_strings.add(
+                    occurrence.start_datetime.strftime('%d-%m-%Y %H:%M')
+                )
 
         for line in lines:
             # When handling RRULEs, we don't want to send all dates until
@@ -515,7 +559,8 @@ class RrulestrView(View):
             if u'RRULE' in line and u'UNTIL=' not in line:
                 line += u';UNTIL=%s' % (now + timedelta(90))\
                     .strftime('%Y%m%dT%H%M%SZ')
-                dates = [x for x in rrulestr(line, ignoretz=True)]
+                dates = [timezone.make_aware(x, tz)
+                         for x in rrulestr(line, ignoretz=True)]
             # RRDATEs are appended to the dates list
             elif u'RDATE' in line:
                 dates.append(datetime.strptime(line[6:], '%Y%m%dT%H%M%SZ'))
@@ -525,15 +570,20 @@ class RrulestrView(View):
         # ['2016-01-01','2016-01-02'] x ['10:00','12:00'] ->
         # ['2016-01-01 10:00','2016-01-01 12:00',
         # '2016-01-02 10:00','2016-01-02 12:00']
-        dates_to_return = \
+        cartesian_dates = \
             [val.replace(  # parse time format: '00:00'
                 hour=int(_[0:2]),
-                minute=int(_[4:6])
+                minute=int(_[4:6]),
+                second=0,
+                microsecond=0
             ) for val in dates for _ in times_list]
 
-        # convert to danish date format and off we go...
-        date_strings = [x.strftime('%d-%m-%Y %H:%M') for x in dates_to_return]
+        # convert to danish date format strings and off we go...
+        date_strings = [x.strftime('%d-%m-%Y %H:%M') for x in cartesian_dates]
+
+        dates_without_existing_dates = \
+            [x for x in date_strings if x not in existing_dates_strings]
         return HttpResponse(
-            json.dumps(date_strings),
+            json.dumps(dates_without_existing_dates),
             content_type='application/json'
         )

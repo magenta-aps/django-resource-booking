@@ -5,6 +5,15 @@
 
 {% block head %}
     <link href="{% static 'recurrence/css/recurrence.css' %}" type="text/css" media="all" rel="stylesheet" />
+    <script>
+        // @TODO: Remove this hack when django-recurrence internationalization detection
+        // is fixed or when i18n support is added to Knock
+        if (!pgettext) {
+            function pgettext(ignore, t) {
+                return gettext(t);
+            }
+        }
+    </script>
     <script type="text/javascript" src="{% static 'js/recurrence.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/recurrence-widget.js' %}"></script>
 {% endblock %}
@@ -118,7 +127,7 @@
                     </h4>
                 </div>
                 <div id="collapseAudience" class="panel-collapse collapse
-                    {% if form.institution_level.errors or form.topics.errors or form.level.errors or form.class_level_min.errors or form.class_level_max.errors or form.minimum_number_of_visitors.errors or form.maximum_number_of_visitors.errors %}in{% endif %}
+                    {% if form.institution_level.errors or form.topics.errors or form.level.errors or form.class_level_min.errors or form.class_level_max.errors or form.minimum_number_of_visitors.errors or form.maximum_number_of_visitors.errors or form.subjects.errors %}in{% endif %}
                     " aria-labelledby="headingAudience" role="tabpanel" aria-expanded="true" style="">
                     <div class="panel-body">
                         <div class="row form-group">
@@ -157,7 +166,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="institution_level_dependent" data-display-value="0">
+                        <div class="institution_level_dependent" data-display-value="2">
                             <div class="row form-group">
                                 <div>{{ form.class_level_min.errors }}</div>
                                 <div class="col-sm-2">
@@ -174,6 +183,17 @@
                                 </div>
                                 <div class="col-sm-10">
                                 {{ form.class_level_max }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="institution_level_dependent">
+                            <div class="row form-group">
+                                <div>{{ form.subjects.errors }}</div>
+                                <div class="col-sm-2">
+                                <label for="{{ form.subjects.id_for_label }}">{{ form.subjects.label }}:</label>
+                                </div>
+                                <div class="col-sm-10">
+                                {{ form.subjects }}
                                 </div>
                             </div>
                         </div>
@@ -316,8 +336,20 @@
                                     </fieldset>
                                     <fieldset>
                                         {{ form.recurrences.errors }}
-                                        <label for="{{ form.recurrences.id_for_label }}">{{ form.recurrences.label }}:</label>
+                                        <label for="{{ form.recurrences.id_for_label }}">{{ form.recurrences.label }}:</label><br>
                                         {{ form.recurrences }}
+                                    </fieldset>
+                                    <fieldset>
+                                        <label>Eksisterende tidspunkter:</label>
+                                        <div class="pre-scrollable">
+                                            <ul id="existing-recurrence-dates" class="list-unstyled" data-visit-id="{{ object.id }}">
+                                                {% if object and object.visitoccurrence_set %}
+                                                    {% for occurrence in object.visitoccurrence_set.all %}
+                                                        <li><input type="checkbox" name="occurrences" value="{{ occurrence.start_datetime|date:'d-m-Y H:i' }}" checked/>{{ occurrence.start_datetime|date:'d-m-Y H:i' }}</li>
+                                                    {% endfor %}
+                                                {% endif %}
+                                            </ul>
+                                        </div>
                                     </fieldset>
                                     <fieldset>
                                         <label>Mulige tidspunkter:</label>
@@ -563,8 +595,15 @@
             var select = $("#{{ form.institution_level.id_for_label }}");
             var changeDisplay = function(){
                 var value = select.val();
-                $(".institution_level_dependent[data-display-value='"+value+"']").show();
-                $(".institution_level_dependent[data-display-value!='"+value+"']").hide();
+                $(".institution_level_dependent").each(function() {
+                    var attr = $(this).attr("data-display-value") || 0xFFFFFF;
+                    console.log(attr, value, parseInt(value), parseInt(attr))
+                    if (parseInt(value) & parseInt(attr)) {
+                        $(this).show()
+                    } else {
+                        $(this).hide()
+                    }
+                })
             };
             select.change(changeDisplay);
             changeDisplay();
@@ -584,7 +623,6 @@
         });
 
         $("#id_recurrences").on("change", function() {
-            console.log($(this).val());
             $.ajax({
                 url : "/jsapi/rrulestr",
                 type : "POST",
@@ -592,12 +630,11 @@
                     'rrulestr': $(this).val(),
                     'start_times': $('#id_time').val(),
                     'duration': $('#id_duration').val(),
+                    'visit_id': $('#existing-recurrence-dates').data('visitId'),
                     'csrfmiddlewaretoken': '{{ csrf_token }}',
                 },
 
                 success : function(json) {
-                    console.log(json);
-                    console.log("success");
                     var list = $('#recurrence-dates');
 
                     list.empty();
@@ -611,12 +648,6 @@
                     });  // close each()
 
                     list.append( items.join('') );
-
-                    <!--$.each(json, function(key, value) {-->
-                         <!--list-->
-                            <!--.append($('<li><input type="checkbox"/></li>')-->
-                            <!--.text(value));-->
-                    <!--});-->
                 },
 
                 error : function(xhr,errmsg,err) {
@@ -640,7 +671,39 @@
             });
             $('#id_time').val(value.join(','));
         });
-
+        (function(select_id) {
+            var type_map = {
+                "Gymnasie": 1,
+                "Grundskole": 2,
+                "Begge": 3
+            };
+            $(function() {
+                $(select_id).on("change", function() {
+                    var val = parseInt($(this).val()) || 0xFFFFFF;
+                    $('input[name=subjects]').each(function() {
+                        var txt = $(this).parent().text().match(
+                            /\((Gymnasie|Grundskole|Begge)\)/
+                        );
+                        if (txt && txt.length) {
+                            txt = txt[1];
+                        }
+                        v = type_map[txt || ''];
+                        if (v && parseInt(v) & val) {
+                            $(this).parent().show();
+                            if ($(this).attr("data-prev-selected")) {
+                                $(this).attr("checked", "checked");
+                            }
+                        } else {
+                            $(this).parent().hide();
+                            if ($(this).attr("checked")) {
+                                $(this).removeAttr("checked");
+                                $(this).attr("data-prev-selected", "yes");
+                            }
+                        }
+                    });
+                }).trigger("change");
+            });
+        })('#{{form.institution_level.id_for_label }}')
     //--></script>
     
 {% endblock %}
