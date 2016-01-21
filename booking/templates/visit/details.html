@@ -113,31 +113,33 @@
                             {% endif %}
                             
                             <dt>Arrangør:</dt>
-                            <dd>HARDCODED! Arrangør</dd>
-                            
-                            {% if object.time %}
-                                <dt>Hvornår:</dt>
-                                <dd>
-                                    {{ object.time }}
-                                    <!--
-                                    <select class="form-control input-sm">
-                                        <option>Vælg dato</option>
-                                        <option>{{ object.time }}</option>
-                                        <option>26. marts 2016</option>
-                                        <option>16. november 2016</option>
-                                        <option>30. debember 2016</option>
-                                    </select>
-                                    -->
-                                </dd>
-                            {% endif %}
-                            {% if object.duration %}
-                                <dt>Varighed:</dt>
-                                <dd>{{ object.duration|timedelta }}</dd>
-                            {% endif %}
-                            {% if object.price %}
-                                <dt>Pris:</dt>
-                                <dd>{{ object.price }}</dd>
-                            {% endif %}
+                            <dd></dd>
+                            <dt>Hvornår:</dt>
+                            <!--<dd>{{ object.time }}</dd>-->
+                            <dd>
+                                {% for description in object.recurrences_description %}
+                                    {{ description }}
+                                {% endfor %}
+                                <ul class="list-unstyled">
+                                {% for occurrence in object.visitoccurrence_set.all %}
+                                    <li>{{ occurrence.start_datetime|date:'d-m-Y H:i' }}</li>
+                                {% endfor %}
+                                </ul>
+                            </dd>
+                            <dt>Varighed:</dt>
+                            <dd>{{ object.duration }} min.</dd>
+                            <dd>
+                            <select class="form-control input-sm">
+                                <option>Vælg dato</option>
+                                <option>{{ object.time }}</option>
+                                <option>26. marts 2016</option>
+                                <option>16. november 2016</option>
+                                <option>30. debember 2016</option>
+                            </select></dd>
+                            <dt>Varighed:</dt>
+                            <dd>{{ object.duration|timedelta }}</dd>
+                            <dt>Pris:</dt>
+                            <dd>{{ object.price }}</dd>
                         </dl>
                     </div>
                 </div>
