@@ -471,7 +471,7 @@ class EditVisit(RoleRequiredMixin, UpdateView):
         pk = kwargs.get("pk")
         if self.object is None:
             self.object = None if pk is None else Visit.objects.get(id=pk)
-        if self.object is not None:
+        if self.object is not None and self.object.unit:
             if not current_user.userprofile.can_edit(self.object):
                 raise AccessDenied(
                     _(u"Du kan kun redigere enheder,som du selv er" +
