@@ -264,15 +264,23 @@ class SearchView(ListView):
             self.request.GET.getlist("t"),
         )
 
-        subject_choices = [
-            (x.pk, x.name) for x in Subject.objects.all().order_by("name")
-        ]
+        gym_subject_choices = []
+        gs_subject_choices = []
+
+        for s in Subject.objects.all():
+            val = (s.pk, s.name)
+
+            if s.subject_type & Subject.SUBJECT_TYPE_GYMNASIE:
+                gym_subject_choices.append(val)
+
+            if s.subject_type & Subject.SUBJECT_TYPE_GRUNDSKOLE:
+                gs_subject_choices.append(val)
 
         gym_selected = self.request.GET.getlist("f")
         context["gymnasie_selected"] = gym_selected
         context["gymnasie_choices"] = self.make_facet(
             "subjects",
-            subject_choices,
+            gym_subject_choices,
             gym_selected,
         )
 
@@ -280,7 +288,7 @@ class SearchView(ListView):
         context["grundskole_selected"] = gs_selected
         context["grundskole_choices"] = self.make_facet(
             "subjects",
-            subject_choices,
+            gs_subject_choices,
             gs_selected,
         )
 
