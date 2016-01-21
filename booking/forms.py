@@ -1,7 +1,7 @@
 from booking.models import StudyMaterial
 from booking.models import UnitType
 from booking.models import Unit
-from booking.models import Visit, VisitOccurrence
+from booking.models import Resource, Visit, VisitOccurrence
 from booking.models import Booker, Region, PostCode, School
 from booking.models import ClassBooking, TeacherBooking
 from django import forms
@@ -225,27 +225,32 @@ class ClassBookingForm(BookingForm):
         required=False
     )
 
+    scheduled = False
+
     def __init__(self, data=None, visit=None, *args, **kwargs):
         super(ClassBookingForm, self).__init__(data, *args, **kwargs)
-        time_choices = [
-            (x.id, x.start_datetime.strftime("%d-%m-%Y %H:%M"))
-            for x in visit.visitoccurrence_set.all()
-            ]
-        self.fields['time'].choices = time_choices
+        self.scheduled = visit is not None and visit.type == Resource.FIXED_SCHEDULE_GROUP_VISIT
+
+        if self.scheduled:
+            time_choices = [
+                (x.id, x.start_datetime.strftime("%d-%m-%Y %H:%M"))
+                for x in visit.visitoccurrence_set.all()
+                ]
+            self.fields['time'].choices = time_choices
 
     def save(self, commit=True, *args, **kwargs):
         booking = super(ClassBookingForm, self).save(commit=False)
         data = self.cleaned_data
-        occurrence_id = data.get("time")
-        try:
-            occurrence = VisitOccurrence.objects.get(id=occurrence_id)
-            booking.time = occurrence.start_datetime
-        except:
-            pass
+        if self.scheduled:
+            occurrence_id = data.get("time")
+            try:
+                occurrence = VisitOccurrence.objects.get(id=occurrence_id)
+                booking.time = occurrence.start_datetime
+            except:
+                pass
         if commit:
             booking.save(*args, **kwargs)
         return booking
-
 
 
 class TeacherBookingForm(BookingForm):

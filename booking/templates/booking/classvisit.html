@@ -49,6 +49,7 @@
                     </div>
                 </div>
 
+                {% if bookingform.scheduled %}
                 <div class="form-group">
                     <label class="col-sm-2 control-label" for="tlf">Tidspunkt*</label>
                     <div class="col-sm-6{% if bookingform.time.errors %} has-error{% endif %}">
@@ -58,6 +59,7 @@
                         {{ bookingform.time.errors }}
                     </div>
                 </div>
+                {% endif %}
 
                 <div class="form-group">
                     <label class="col-sm-2 control-label" for="tlf">Rundvisning</label>
