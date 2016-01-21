@@ -96,27 +96,29 @@ class Unit(models.Model):
 # Master data related to bookable resources start here
 class Subject(models.Model):
     """A relevant subject from primary or secondary education."""
-    stx = 0
-    hf = 1
-    htx = 2
-    eux = 3
-    valgfag = 4
+    SUBJECT_TYPE_GYMNASIE = 2**0
+    SUBJECT_TYPE_GRUNDSKOLE = 2**1
+    # NEXT_VALUE = 2**2
 
-    line_choices = (
-        (stx, _(u'stx')),
-        (hf, _(u'hf')),
-        (htx, _(u'htx')),
-        (eux, _(u'eux')),
-        (valgfag, _(u'valgfag')),
+    SUBJECT_TYPE_BOTH = SUBJECT_TYPE_GYMNASIE | SUBJECT_TYPE_GRUNDSKOLE
+
+    type_choices = (
+        (SUBJECT_TYPE_GYMNASIE, _(u'Gymnasie')),
+        (SUBJECT_TYPE_GRUNDSKOLE, _(u'Grundskole')),
+        (SUBJECT_TYPE_BOTH, _(u'Begge')),
     )
 
     name = models.CharField(max_length=256)
-    line = models.IntegerField(choices=line_choices, verbose_name=u'Linje',
-                               blank=True)
+    subject_type = models.IntegerField(
+        choices=type_choices,
+        verbose_name=u'Skoleniveau',
+        default=SUBJECT_TYPE_GYMNASIE,
+        blank=False,
+    )
     description = models.TextField(blank=True)
 
     def __unicode__(self):
-        return self.name
+        return '%s (%s)' % (self.name, self.get_subject_type_display())
 
 
 class Link(models.Model):
@@ -237,10 +239,7 @@ class Resource(models.Model):
     PRIMARY = 0
     SECONDARY = 1
 
-    institution_choices = (
-        (PRIMARY, _(u'Grundskole')),
-        (SECONDARY, _(u'Gymnasium'))
-    )
+    institution_choices = Subject.type_choices
 
     # Level choices - A, B or C
     A = 0
@@ -501,7 +500,10 @@ class Visit(Resource):
 
     @property
     def recurrences_description(self):
-        return [d.to_text() for d in self.recurrences.rrules]
+        if self.recurrences:
+            return [d.to_text() for d in self.recurrences.rrules]
+
+        return []
 
 
 class VisitOccurrence(models.Model):
