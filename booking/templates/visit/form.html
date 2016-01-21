@@ -209,7 +209,7 @@
                     </h4>
                 </div>
                 <div id="collapseTimePlace" class="panel-collapse collapse
-                {% if form.time.errors or form.duration.errors or form.locality.errors or form.room.errors %}in{% endif %}
+                {% if form.time.errors or form.duration.errors %}in{% endif %}
                 " aria-labelledby="headingTimePlace" role="tabpanel" aria-expanded="true" style="">
                     <div class="panel-body">
                         <div class="row">
@@ -343,13 +343,6 @@
                                         </div>
                                     </fieldset>
                             </div>
-                            <div class="col-sm-12 col-md-6">
-                                <fieldset>
-                                    {{ form.locality.errors }}
-                                    <label for="{{ form.locality.id_for_label }}">{{ form.locality.label }}:</label>
-                                    {{ form.locality }}
-                                </fieldset>
-                            </div>
 
                         </div>
                     </div>
@@ -363,7 +356,7 @@
                     </h4>
                 </div>
                 <div id="collapseRooms" class="panel-collapse collapse
-                {% if form.rooms_needed.errors or form.rooms_assignment.errors or form.contact_persons.errors %}in{% endif %}
+                {% if form.rooms_needed.errors or form.rooms_assignment.errors or form.contact_persons.errors or form.locality.errors %}in{% endif %}
                 " aria-labelledby="headingContact" role="tabpanel" aria-expanded="true" style="">
                     <div class="panel-body">
                         <div class="row form-group">
