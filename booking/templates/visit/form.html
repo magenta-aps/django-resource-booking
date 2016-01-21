@@ -127,9 +127,19 @@
                     </h4>
                 </div>
                 <div id="collapseAudience" class="panel-collapse collapse
-                    {% if form.institution_level.errors or form.topics.errors or form.level.errors or form.class_level_min.errors or form.class_level_max.errors or form.minimum_number_of_visitors.errors or form.maximum_number_of_visitors.errors or form.subjects.errors %}in{% endif %}
+                    {% if form.audience.errors or form.institution_level.errors or form.topics.errors or form.level.errors or form.class_level_min.errors or form.class_level_max.errors or form.minimum_number_of_visitors.errors or form.maximum_number_of_visitors.errors or form.subjects.errors %}in{% endif %}
                     " aria-labelledby="headingAudience" role="tabpanel" aria-expanded="true" style="">
                     <div class="panel-body">
+                        <div class="row form-group">
+                            <div>{{ form.audience.errors }}</div>
+                            <div class="col-sm-2">
+                            <label for="{{ form.audience.id_for_label }}">{{ form.audience.label }}:</label>
+                            </div>
+                            <div class="col-sm-10">
+                            {{ form.audience }}
+                            </div>
+                        </div>
+
                         <div class="row form-group">
                             <div>{{ form.institution_level.errors }}</div>
                             <div class="col-sm-2">
