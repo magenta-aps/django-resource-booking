@@ -31,6 +31,14 @@ $.fn.extend({
                 var iframe = $("<iframe>");
                 iframe.attr("src", url);
                 container.append(iframe);
+
+                iframe.load(function(){
+                    var hash = iframe.get(0).contentDocument.location.hash;
+                    if (!/[#;]id=[^;]/.exec(hash)) {
+                        iframe.contentDocument.location.hash += (hash.indexOf("#") ? "#":";") + "id=" + id;
+                        modal.modals[id].setId(id);
+                    }
+                });
             }
         });
     }

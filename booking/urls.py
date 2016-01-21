@@ -6,7 +6,8 @@ from .views import MainPageView
 
 from booking.views import PostcodeView, SchoolView
 from booking.views import RrulestrView
-from booking.views import EditVisit, VisitDetailView, SearchView, BookingView
+from booking.views import EditVisit, VisitDetailView, SearchView
+from booking.views import BookingView, BookingSuccessView
 from booking.views import AdminSearchView, AdminIndexView, AdminVisitDetailView
 
 
@@ -80,9 +81,11 @@ urlpatterns = patterns(
         name='admin-visit'),
 
     url(r'^visit/(?P<visit>[0-9]+)/book$', BookingView.as_view(),
-        name='book-studentforaday'),
+        name='book-visit'),
+    url(r'^visit/(?P<visit>[0-9]+)/book/success$', BookingSuccessView.as_view(),
+        name='book-visit-success'),
 
     url(r'^postcode/(?P<code>[0-9]{4})$', PostcodeView.as_view()),
-    url(r'^school', SchoolView.as_view())
+    url(r'^school', SchoolView.as_view()),
 
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

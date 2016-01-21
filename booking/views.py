@@ -17,6 +17,7 @@ from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
+from django.shortcuts import redirect
 
 
 from profile.models import COORDINATOR, ADMINISTRATOR
@@ -587,6 +588,7 @@ class BookingView(UpdateView):
             if 'bookerform' in forms:
                 booking.booker = forms['bookerform'].save()
             booking.save()
+            return redirect("/visit/%d/book/success" % self.visit.id)
 
         data.update(forms)
         return self.render_to_response(
@@ -614,3 +616,23 @@ class BookingView(UpdateView):
             return ["booking/teachervisit.html"]
         if self.visit.audience == Resource.STUDENT:
             return ["booking/classvisit.html"]
+
+
+class BookingSuccessView(TemplateView):
+    template_name = "booking/success.html"
+    def get(self, request, *args, **kwargs):
+        visit_id = kwargs.get("visit")
+        visit = None
+        if visit_id is not None:
+            try:
+                visit = Visit.objects.get(id=visit_id)
+            except:
+                pass
+        if visit is None:
+            return bad_request(request)
+
+        data = {'visit': visit}
+
+        return self.render_to_response(
+            self.get_context_data(**data)
+        )
