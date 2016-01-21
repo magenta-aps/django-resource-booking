@@ -82,8 +82,8 @@ urlpatterns = patterns(
 
     url(r'^visit/(?P<visit>[0-9]+)/book$', BookingView.as_view(),
         name='book-visit'),
-    url(r'^visit/(?P<visit>[0-9]+)/book/success$', BookingSuccessView.as_view(),
-        name='book-visit-success'),
+    url(r'^visit/(?P<visit>[0-9]+)/book/success$',
+        BookingSuccessView.as_view(), name='book-visit-success'),
 
     url(r'^postcode/(?P<code>[0-9]{4})$', PostcodeView.as_view()),
     url(r'^school', SchoolView.as_view()),

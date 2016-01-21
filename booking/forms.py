@@ -7,13 +7,10 @@ from booking.models import ClassBooking, TeacherBooking
 from django import forms
 from django.forms import CheckboxSelectMultiple, EmailInput
 from django.forms import inlineformset_factory
-from django.forms import TextInput, NumberInput, Textarea, DateTimeInput, Select
+from django.forms import TextInput, NumberInput, Textarea, Select
 from django.utils.translation import ugettext_lazy as _
 from profile.models import COORDINATOR
 from tinymce.widgets import TinyMCE
-
-from pprint import pprint
-from inspect import getmembers
 
 
 class UnitTypeForm(forms.ModelForm):
@@ -230,7 +227,9 @@ class ClassBookingForm(BookingForm):
     def __init__(self, data=None, visit=None, *args, **kwargs):
         super(ClassBookingForm, self).__init__(data, *args, **kwargs)
 
-        self.scheduled = visit is not None and visit.type == Resource.FIXED_SCHEDULE_GROUP_VISIT
+        self.scheduled = visit is not None and \
+            visit.type == Resource.FIXED_SCHEDULE_GROUP_VISIT
+
         if self.scheduled:
             time_choices = [
                 (x.id, x.start_datetime.strftime("%d-%m-%Y %H:%M"))
@@ -238,12 +237,15 @@ class ClassBookingForm(BookingForm):
                 ]
             self.fields['time'].choices = time_choices
 
-        self.fields['student_count'].widget.attrs['min'] = 1
+        studentcount_widget = self.fields['student_count'].widget
+        studentcount_widget.attrs['min'] = 1
         if visit is not None:
             if visit.minimum_number_of_visitors is not None:
-                self.fields['student_count'].widget.attrs['min'] = visit.minimum_number_of_visitors
+                studentcount_widget.attrs['min'] = \
+                    visit.minimum_number_of_visitors
             if visit.maximum_number_of_visitors is not None:
-                self.fields['student_count'].widget.attrs['max'] = visit.maximum_number_of_visitors
+                studentcount_widget.attrs['max'] = \
+                    visit.maximum_number_of_visitors
 
     def save(self, commit=True, *args, **kwargs):
         booking = super(ClassBookingForm, self).save(commit=False)

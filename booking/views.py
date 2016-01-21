@@ -602,7 +602,8 @@ class BookingView(UpdateView):
             if self.visit.audience == Resource.STUDENT:
                 forms['bookingform'] = ClassBookingForm(data, visit=self.visit)
             if self.visit.audience == Resource.TEACHER:
-                forms['bookingform'] = TeacherBookingForm(data, visit=self.visit)
+                forms['bookingform'] = TeacherBookingForm(data,
+                                                          visit=self.visit)
         return forms
 
     def get_template_names(self):
@@ -620,6 +621,7 @@ class BookingView(UpdateView):
 
 class BookingSuccessView(TemplateView):
     template_name = "booking/success.html"
+
     def get(self, request, *args, **kwargs):
         visit_id = kwargs.get("visit")
         visit = None
