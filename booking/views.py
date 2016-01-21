@@ -432,16 +432,20 @@ class BookingView(UpdateView):
         if self.visit is None:
             return bad_request(request)
 
+        data = {'visit': self.visit}
+
         self.object = Booking()
-        forms = self.get_forms()
+        data.update(self.get_forms())
         return self.render_to_response(
-            self.get_context_data(**forms)
+            self.get_context_data(**data)
         )
 
     def post(self, request, *args, **kwargs):
         self.set_visit(kwargs.get("visit"))
         if self.visit is None:
             return bad_request(request)
+
+        data = {'visit': self.visit}
 
         self.object = Booking()
         forms = self.get_forms(request.POST)
@@ -460,8 +464,9 @@ class BookingView(UpdateView):
                 booking.booker = forms['bookerform'].save()
             booking.save()
 
+        data.update(forms)
         return self.render_to_response(
-            self.get_context_data(**forms)
+            self.get_context_data(**data)
         )
 
     def get_forms(self, data=None):
