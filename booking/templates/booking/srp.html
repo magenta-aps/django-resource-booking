@@ -12,16 +12,23 @@
 
 {% block content %}
 
-    <form id="startbookingform" class="form-horizontal clearfix" data-toggle="validator" role="form" novalidate="true" method="POST">
-        {% csrf_token %}
+    {% include 'booking/modal/header.html' %}
+    <div class="modal-body">
+        <p>Udfyld venligst nedenstående formular for at booke et tilbud. Felter markeret med * er obligatoriske.</p>
+        <div class="divider"></div>
 
-        {{ bookerform.non_field_errors }}
-        {% include "booking/booker/basedata.html" %}
-        {% include "booking/booker/school.html" %}
-        {% include "booking/booker/notes.html" %}
+        <form id="startbookingform" class="form-horizontal clearfix" data-toggle="validator" role="form" novalidate="true" method="POST">
+            {% csrf_token %}
 
-        <button type="submit">Submit</button>
-    </form>
+            {{ bookerform.non_field_errors }}
+            {% include "booking/booker/basedata.html" %}
+            {% include "booking/booker/school.html" %}
+            {% include "booking/booker/notes.html" %}
+
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+    {% include 'booking/modal/footer.html' %}
 
 {% endblock %}
 

@@ -12,73 +12,79 @@
 
 {% block content %}
 
-    <form id="startbookingform" class="form-horizontal clearfix" data-toggle="validator" role="form" novalidate="true" method="POST">
-        {% csrf_token %}
+    {% include 'booking/modal/header.html' %}
+    <div class="modal-body">
+        <p>Udfyld venligst nedenstående formular for at booke et tilbud. Felter markeret med * er obligatoriske.</p>
+        <div class="divider"></div>
 
-        {{ bookerform.non_field_errors }}
-        {% include "booking/booker/basedata.html" %}
-        {% include "booking/booker/school.html" %}
-        {% include "booking/booker/location.html" %}
+        <form id="startbookingform" class="form-horizontal clearfix" data-toggle="validator" role="form" novalidate="true" method="POST">
+            {% csrf_token %}
 
-        <hr/>
+            {{ bookerform.non_field_errors }}
+            {% include "booking/booker/basedata.html" %}
+            {% include "booking/booker/school.html" %}
+            {% include "booking/booker/location.html" %}
 
-        <div class="form-group">
-            <label class="col-sm-2 control-label" for="tlf">Antal Elever*</label>
-            <div class="col-sm-6{% if bookingform.student_count.errors %} has-error{% endif %}">
-                {{ bookingform.student_count }}
+            <hr/>
+
+            <div class="form-group">
+                <label class="col-sm-2 control-label" for="tlf">Antal Elever*</label>
+                <div class="col-sm-6{% if bookingform.student_count.errors %} has-error{% endif %}">
+                    {{ bookingform.student_count }}
+                </div>
+                <div class="col-sm-3 help-block with-errors">
+                    {{ bookingform.student_count.errors }}
+                </div>
             </div>
-            <div class="col-sm-3 help-block with-errors">
-                {{ bookingform.student_count.errors }}
+
+            <div class="form-group">
+                <label class="col-sm-2 control-label" for="tlf">Antal Lærere*</label>
+                <div class="col-sm-6{% if bookingform.teacher_count.errors %} has-error{% endif %}">
+                    {{ bookingform.teacher_count }}
+                </div>
+                <div class="col-sm-3 help-block with-errors">
+                    {{ bookingform.teacher_count.errors }}
+                </div>
             </div>
-        </div>
 
-        <div class="form-group">
-            <label class="col-sm-2 control-label" for="tlf">Antal Lærere*</label>
-            <div class="col-sm-6{% if bookingform.teacher_count.errors %} has-error{% endif %}">
-                {{ bookingform.teacher_count }}
+
+            <div class="form-group">
+                <label class="col-sm-2 control-label" for="tlf">Tidspunkt*</label>
+                <div class="col-sm-6{% if bookingform.time.errors %} has-error{% endif %}">
+                    {{ bookingform.time }}
+                </div>
+                <div class="col-sm-3 help-block with-errors">
+                    {{ bookingform.time.errors }}
+                </div>
             </div>
-            <div class="col-sm-3 help-block with-errors">
-                {{ bookingform.teacher_count.errors }}
+
+
+            <div class="form-group">
+                <label class="col-sm-2 control-label" for="tlf">Rundvisning</label>
+                <div class="col-sm-6{% if bookingform.tour_desired.errors %} has-error{% endif %}">
+                    {{ bookingform.tour_desired }}
+                </div>
+                <div class="col-sm-3 help-block with-errors">
+                    {{ bookingform.tour_desired.errors }}
+                </div>
             </div>
-        </div>
 
 
-        <div class="form-group">
-            <label class="col-sm-2 control-label" for="tlf">Tidspunkt*</label>
-            <div class="col-sm-6{% if bookingform.time.errors %} has-error{% endif %}">
-                {{ bookingform.time }}
+            <div class="form-group">
+                <label class="col-sm-2 control-label" for="skole">Kommentarer</label>
+                <div class="col-sm-6{% if bookingform.notes.errors %} has-error{% endif %}">
+                    {{ bookingform.notes }}
+                </div>
+                <div class="col-sm-3 help-block with-errors">
+                    {{ bookingform.notes.errors }}
+                </div>
             </div>
-            <div class="col-sm-3 help-block with-errors">
-                {{ bookingform.time.errors }}
-            </div>
-        </div>
 
+            <button type="submit">Submit</button>
+        </form>
 
-        <div class="form-group">
-            <label class="col-sm-2 control-label" for="tlf">Rundvisning</label>
-            <div class="col-sm-6{% if bookingform.tour_desired.errors %} has-error{% endif %}">
-                {{ bookingform.tour_desired }}
-            </div>
-            <div class="col-sm-3 help-block with-errors">
-                {{ bookingform.tour_desired.errors }}
-            </div>
-        </div>
-
-
-        <div class="form-group">
-            <label class="col-sm-2 control-label" for="skole">Kommentarer</label>
-            <div class="col-sm-6{% if bookingform.notes.errors %} has-error{% endif %}">
-                {{ bookingform.notes }}
-            </div>
-            <div class="col-sm-3 help-block with-errors">
-                {{ bookingform.notes.errors }}
-            </div>
-        </div>
-
-        <button type="submit">Submit</button>
-    </form>
-
-
+    </div>
+    {% include 'booking/modal/footer.html' %}
 
 
 {% endblock %}

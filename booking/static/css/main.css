@@ -593,6 +593,11 @@ ul.footerlinks .footerlist-header {
     border-radius: 2px;
 }
 
+.modal-content iframe {
+    width: 100%;
+    border: 0 none;
+}
+
 .stepwizard-step p {
     margin-top: 10px;
 }

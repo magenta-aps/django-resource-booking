@@ -1,4 +1,5 @@
 {% extends 'index.html' %}
+{% load staticfiles %}
 {% load timedelta %}
 
 {% block content %}
@@ -155,135 +156,9 @@
         </div>
     </div>
 <!-- Modal start -->
-    <div class="modal fade" id="startbooking" tabindex="-1" role="Popup-bookingflow" aria-labelledby="overskrift">
+    <div class="modal fade" id="startbooking" tabindex="-1" role="Popup-bookingflow" aria-labelledby="overskrift" data-frametarget="/visit/{{ object.id }}/book">
         <div class="modal-dialog modal-lg" role="Bookingflow">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title" id="overskrift">Book tilbuddet "Oplev matematik på universitetet"</h4>
-                </div>
-                <div class="modal-body">
-                <p>Udfyld venligst nedenstående formular for at booke et tilbud. Felter markeret med * er obligatoriske.</p>
-                <div class="divider"></div>
-                    <form class="form-horizontal clearfix" id="startbookingform" role="form" data-toggle="validator">
-                        <div class="form-group">
-                            <label for="name" class="col-sm-2 control-label">For- og efternavn*</label>
-                            <div class="col-sm-3">
-                                <input type="text" class="form-control input-sm" data-error="Udfyld fornavn" id="name" placeholder="Foravn" required>
-                            </div>
-                            <div class="col-sm-3">
-                                <input type="text" class="form-control input-sm" data-error="Udfyld efternavn" placeholder="Efternavn" required>
-                            </div>
-                            <div class="col-sm-3 help-block with-errors"></div>
-                        </div>
-                        <div class="form-group">
-                            <label for="inputEmail" class="col-sm-2 control-label">Email*</label>
-                            <div class="col-sm-3">
-                                <input type="email" class="form-control input-sm" data-error="Angiv gyldig e-mailadresse" id="inputEmail" placeholder="E-mail" required>
-                            </div>
-                            <div class="col-sm-3">
-                                <input type="email" class="form-control input-sm" data-error="E-mailadressen skal gentages korrekt" data-match="#inputEmail" placeholder="Gentag e-mail" required>
-                            </div>
-                            <div class="col-sm-3 help-block with-errors"></div>
-                        </div>
-                        <div class="form-group">
-                            <label for="tlf" class="col-sm-2 control-label">Telefonnummer*</label>
-                            <div class="col-sm-6">
-                                <input type="tel" class="form-control input-sm" pattern="^\d{8}" data-error="Angiv gyldig e-telefonnumer" id="tlf" placeholder="Telefonnummer" required>
-                            </div>
-                            <div class="col-sm-3 help-block with-errors"></div>
-                        </div>
-                        <div class="form-group">
-                            <label for="" class="col-sm-2 control-label">Gymnasium*</label>
-                            <div class="col-sm-6">
-                                <select class="form-control input-sm" data-error="Vælg gymnasium" required>
-                                  <option>Vælg gymnasium</option>
-                                  <option value="">2</option>
-                                  <option value="">3</option>
-                                  <option value="">4</option>
-                                  <option value="">5</option>
-                                </select>
-                            </div>
-                            <div class="col-sm-3 help-block with-errors"></div>
-                        </div>
-                        <div class="form-group">
-                            <label for="" class="col-sm-2 control-label">Gymnasie-uddannelse*</label>
-                            <div class="col-sm-6">
-                                <select class="form-control input-sm" data-error="Vælg gymnasieuddannelse" required>
-                                  <option>Vælg gymnasieuddannelse</option>
-                                  <option value="">2</option>
-                                  <option value="">3</option>
-                                  <option value="">4</option>
-                                  <option value="">5</option>
-                                </select>
-                            </div>
-                            <div class="col-sm-3 help-block with-errors"></div>
-                        </div>
-                        <div class="form-group">
-                            <label for="tlf" class="col-sm-2 control-label">Gymnasiets postnr. pg by*</label>
-                            <div class="col-sm-2">
-                                <input type="text" class="form-control input-sm" pattern="^\d{4}" data-error="Angiv gymnasiets postnummer" id="zip" placeholder="Postnummer" required>
-                            </div>
-                            <div class="col-sm-4">
-                                <input type="text" class="form-control input-sm" data-error="Angiv by hvor Gymnasiet ligger" placeholder="By hvori Gymnasiet ligger" required>
-                            </div>
-                            <div class="col-sm-3 help-block with-errors"></div>
-                        </div>
-                        <div class="form-group">
-                            <label for="" class="col-sm-2 control-label">Region*</label>
-                            <div class="col-sm-6">
-                                <select class="form-control input-sm" data-error="Vælg region" required>
-                                  <option>Vælg region</option>
-                                  <option value="">Hovedstaden</option>
-                                  <option value="">Midtjylland</option>
-                                  <option value="">Nordjylland</option>
-                                  <option value="">Sjælland</option>
-                                  <option value="">Syddanmark</option>
-                                </select>
-                            </div>
-                            <div class="col-sm-3 help-block with-errors"></div>
-                        </div>
-                        <div class="form-group">
-                            <label for="antal" class="col-sm-2 control-label">Antal deltagere*</label>
-                            <div class="col-sm-6">
-                                <input type="text" class="form-control input-sm" data-error="Angiv antal deltagere" id="antal" placeholder="Antal deltagere" required>
-                            </div>
-                            <div class="col-sm-3 help-block with-errors"></div>
-                        </div>
-                        <div class="form-group">
-                            <label for="skole" class="col-sm-2 control-label">Kommentarer</label>
-                            <div class="col-sm-6">
-                                <textarea class="form-control input-sm" rows="3"></textarea>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <div class="col-sm-6 col-sm-offset-2 padleft0">
-                                <div class="stepwizard">
-                                    <div class="stepwizard-row">
-                                        <div class="stepwizard-step">
-                                            <button type="button" class="btn btn-default btn-circle">1</button>
-                                            <p>Trin 1</p>
-                                        </div>
-                                        <div class="stepwizard-step active">
-                                            <button type="button" class="btn btn-primary btn-circle">2</button>
-                                            <p>Trin 2</p>
-                                        </div>
-                                        <div class="stepwizard-step">
-                                            <button type="button" class="btn btn-default btn-circle" disabled="disabled">3</button>
-                                            <p>Trin 3</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <p class="text-center">Bemærk venligst at aftalen først er bindende, når du har modtaget en bekræftelse<br />fra den arrangør på Københavns Universitet, der er ansvarlig for besøget. </p>
-                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Annullér</button>
-                    <button type="button" class="btn btn-primary">Næste</button>
-                </div>
-            </div>
+            <div class="modal-content" id="booking-container"></div>
         </div>
     </div>
     <!-- Modal end -->
@@ -315,4 +190,10 @@
 {% endblock %}
 {% block extra_scripts %}
     <script src="/static/js/custom.js"></script>
+    <script src="{% static "js/modalframe-host.js" %}"></script>
+    <script type="text/javascript">
+    <!--
+    $('#startbooking').hostModalIframe($('#startbooking').attr("data-frametarget"));
+    //-->
+    </script>
 {% endblock %}
