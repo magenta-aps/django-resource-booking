@@ -217,7 +217,6 @@ class SearchView(ListView):
             if s.subject_type & Subject.SUBJECT_TYPE_GRUNDSKOLE:
                 gs_subject_choices.append(val)
 
-
         gym_selected = self.request.GET.getlist("f")
         context["gymnasie_selected"] = gym_selected
         context["gymnasie_choices"] = self.make_facet(
