@@ -180,7 +180,6 @@ class SearchView(ListView):
         filters = self.get_filters()
         qs = self.get_base_queryset().filter(**filters)
         qs = self.annotate(qs)
-        print qs.query
         return qs
 
     def build_choices(self, choice_tuples, selected,
