@@ -105,7 +105,7 @@ class SearchView(ListView):
     def get_filters(self):
         if self.filters is None:
             self.filters = {}
-            
+
             # Audience will always include a search for resources marked for
             # all audiences.
             a = self.request.GET.getlist("a")
@@ -158,8 +158,8 @@ class SearchView(ListView):
                 if key in hits:
                     to_add = to_add + hits[key]
                     del hits[key]
-            
-            for v, _ in choice_tuples:
+
+            for v, n in choice_tuples:
                 if v in keys:
                     continue
 
