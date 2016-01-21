@@ -209,19 +209,26 @@ class Resource(models.Model):
 
     # Resource type.
     STUDENT_FOR_A_DAY = 0
-    FIXED_SCHEDULE_GROUP_VISIT = 1
-    FREELY_SCHEDULED_GROUP_VISIT = 2
+    GROUP_VISIT = 1
+    _UNUSED = 2
     STUDY_PROJECT = 3
     SINGLE_EVENT = 4
-    OTHER_RESOURCES = 5
+    STUDY_MATERIAL = 5
+    TEACHER_EVENT = 6
+    OPEN_HOUSE = 7
+    ASSIGNMENT_HELP = 8
+    STUDIEPRAKTIK = 9
 
     resource_type_choices = (
         (STUDENT_FOR_A_DAY, _(u"Studerende for en dag")),
-        (FIXED_SCHEDULE_GROUP_VISIT, _(u"Gruppebesøg med faste tider")),
-        (FREELY_SCHEDULED_GROUP_VISIT, _(u"Gruppebesøg uden faste tider")),
-        (STUDY_PROJECT, _(u"Studieretningsprojekt - SRP")),
+        (STUDIEPRAKTIK, _(u"Studiepraktik")),
+        (OPEN_HOUSE, _(u"Åbent hus")),
+        (TEACHER_EVENT, _(u"Lærerarrangement")),
+        (GROUP_VISIT, _(u"Besøg med klassen")),
+        (STUDY_PROJECT, _(u"Studieretningsprojekt")),
+        (ASSIGNMENT_HELP, _(u"Opgavehjælp")),
         (SINGLE_EVENT,  _(u"Enkeltstående event")),
-        (OTHER_RESOURCES, _(u"Andre tilbud"))
+        (STUDY_MATERIAL, _(u"Undervisningsmateriale"))
     )
 
     # Target audience choice - student or teacher.
@@ -266,7 +273,7 @@ class Resource(models.Model):
 
     enabled = models.BooleanField(verbose_name=_(u'Aktiv'), default=True)
     type = models.IntegerField(choices=resource_type_choices,
-                               default=OTHER_RESOURCES)
+                               default=STUDY_MATERIAL)
     state = models.IntegerField(choices=state_choices, default=CREATED,
                                 verbose_name=_(u"Tilstand"))
     title = models.CharField(max_length=256, verbose_name=_(u'Titel'))
