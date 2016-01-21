@@ -7,10 +7,13 @@ from booking.models import ClassBooking, TeacherBooking
 from django import forms
 from django.forms import CheckboxSelectMultiple, EmailInput
 from django.forms import inlineformset_factory
-from django.forms import TextInput, NumberInput, Textarea, DateTimeInput
+from django.forms import TextInput, NumberInput, Textarea, DateTimeInput, Select
 from django.utils.translation import ugettext_lazy as _
 from profile.models import COORDINATOR
 from tinymce.widgets import TinyMCE
+
+from pprint import pprint
+from inspect import getmembers
 
 
 class UnitTypeForm(forms.ModelForm):
@@ -103,7 +106,14 @@ class VisitStudyMaterialForm(VisitStudyMaterialFormBase):
         self.studymaterials = StudyMaterial.objects.filter(visit=instance)
 
 
-class BookerForm(forms.ModelForm):
+class BookingForm(forms.ModelForm):
+
+    def __init__(self, data=None, visit=None, *args, **kwargs):
+        super(BookingForm, self).__init__(*args, **kwargs)
+
+
+class BookerForm(BookingForm):
+
     class Meta:
         model = Booker
         fields = ('firstname', 'lastname', 'email', 'phone', 'line',
@@ -193,11 +203,11 @@ class BookerForm(forms.ModelForm):
         return booker
 
 
-class ClassBookingForm(forms.ModelForm):
+class ClassBookingForm(BookingForm):
 
     class Meta:
         model = ClassBooking
-        fields = ('student_count', 'teacher_count', 'time', 'tour_desired',
+        fields = ('student_count', 'teacher_count', 'tour_desired',
                   'notes',)
         widgets = {
             'student_count': NumberInput(
@@ -206,16 +216,28 @@ class ClassBookingForm(forms.ModelForm):
             'teacher_count': NumberInput(
                 attrs={'class': 'form-control input-sm'}
             ),
-            'time': DateTimeInput(
-                attrs={'class': 'form-control input-sm'}
-            ),
+            #'time': DateTimeInput(
+            #    attrs={'class': 'form-control input-sm'}
+            #),
             'notes': Textarea(
                 attrs={'class': 'form-control input-sm'}
             )
         }
 
+    time = forms.ChoiceField(
+        widget=Select()
+    )
 
-class TeacherBookingForm(forms.ModelForm):
+    def __init__(self, data=None, visit=None, *args, **kwargs):
+        super(ClassBookingForm, self).__init__(*args, **kwargs)
+
+        time_choices = [
+            (x.start_datetime, x.start_datetime.strftime("%d-%m-%Y %H:%M"))
+            for x in visit.visitoccurrence_set.all()]
+        self.fields['time'].widget.choices = time_choices
+
+
+class TeacherBookingForm(BookingForm):
     class Meta:
         model = TeacherBooking
         fields = ('subjects', )
