@@ -495,7 +495,7 @@
                 type : "POST",
                 data : {
                     'rrulestr': $(this).val(),
-                    'start_times': $('#id_time').val(),
+                    'start_times': $('#id_time').val() === "" ? "00:00" : $('#id_time').val(),
                     'duration': $('#id_duration').val(),
                     'visit_id': $('#existing-recurrence-dates').data('visitId'),
                     'csrfmiddlewaretoken': '{{ csrf_token }}',

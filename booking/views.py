@@ -2,7 +2,7 @@
 
 import json
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from dateutil import parser
 from dateutil.rrule import rrulestr
@@ -304,7 +304,7 @@ class EditVisit(RoleRequiredMixin, UpdateView):
                 for date in dates:
                     dt = timezone.make_aware(
                         parser.parse(date, dayfirst=True),
-                        timezone.pytz.timezone('UTC')
+                        timezone.pytz.timezone('Europe/Copenhagen')
                     )
                     datetimes.append(dt)
             # remove existing to avoid duplicates,
@@ -432,7 +432,7 @@ class RrulestrView(View):
         """
         rrulestring = request.POST['rrulestr']
         now = timezone.now()
-        tz = timezone.pytz.timezone('UTC')
+        tz = timezone.pytz.timezone('Europe/Copenhagen')
         dates = []
         lines = rrulestring.split("\n")
         times_list = request.POST[u'start_times'].split(',')
@@ -457,14 +457,15 @@ class RrulestrView(View):
             # Todo: This should probably be handled more elegantly
             if u'RRULE' in line and u'UNTIL=' not in line:
                 line += u';UNTIL=%s' % (now + timedelta(90))\
-                    .strftime('%Y%m%dT%H%M%SZ')
-                dates = [timezone.make_aware(x, tz)
-                         for x in rrulestr(line, ignoretz=True)]
+                    .strftime('%Y%m%dT%H%M%S')
+                dates += [timezone.make_aware(x, tz)
+                            for x in rrulestr(line, ignoretz=True)]
             # RRDATEs are appended to the dates list
             elif u'RDATE' in line:
-                dates.append(datetime.strptime(line[6:], '%Y%m%dT%H%M%SZ'))
+                dates += [timezone.make_aware(x, tz)
+                         for x in rrulestr(line, ignoretz=True)]
         # sort the list while still in ISO 8601 format,
-        dates.sort()
+        dates = sorted(set(dates))
         # Cartesian product: AxB
         # ['2016-01-01','2016-01-02'] x ['10:00','12:00'] ->
         # ['2016-01-01 10:00','2016-01-01 12:00',
