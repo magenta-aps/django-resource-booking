@@ -127,9 +127,19 @@
                     </h4>
                 </div>
                 <div id="collapseAudience" class="panel-collapse collapse
-                    {% if form.institution_level.errors or form.topics.errors or form.level.errors or form.class_level_min.errors or form.class_level_max.errors or form.minimum_number_of_visitors.errors or form.maximum_number_of_visitors.errors %}in{% endif %}
+                    {% if form.audience.errors or form.institution_level.errors or form.topics.errors or form.level.errors or form.class_level_min.errors or form.class_level_max.errors or form.minimum_number_of_visitors.errors or form.maximum_number_of_visitors.errors or form.subjects.errors %}in{% endif %}
                     " aria-labelledby="headingAudience" role="tabpanel" aria-expanded="true" style="">
                     <div class="panel-body">
+                        <div class="row form-group">
+                            <div>{{ form.audience.errors }}</div>
+                            <div class="col-sm-2">
+                            <label for="{{ form.audience.id_for_label }}">{{ form.audience.label }}:</label>
+                            </div>
+                            <div class="col-sm-10">
+                            {{ form.audience }}
+                            </div>
+                        </div>
+
                         <div class="row form-group">
                             <div>{{ form.institution_level.errors }}</div>
                             <div class="col-sm-2">
@@ -149,12 +159,6 @@
                             </div>
                         </div> -->
 
-                        <fieldset>
-                            {{ form.subjects.errors }}
-                            <label for="{{ form.subjects.id_for_label }}">{{ form.subjects.label }}:</label>
-                            {{ form.subjects }}
-                        </fieldset>
-
                         <div class="institution_level_dependent" data-display-value="1">
                             <div class="row form-group">
                                 <div>{{ form.level.errors }}</div>
@@ -166,7 +170,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="institution_level_dependent" data-display-value="0">
+                        <div class="institution_level_dependent" data-display-value="2">
                             <div class="row form-group">
                                 <div>{{ form.class_level_min.errors }}</div>
                                 <div class="col-sm-2">
@@ -183,6 +187,17 @@
                                 </div>
                                 <div class="col-sm-10">
                                 {{ form.class_level_max }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="institution_level_dependent">
+                            <div class="row form-group">
+                                <div>{{ form.subjects.errors }}</div>
+                                <div class="col-sm-2">
+                                <label for="{{ form.subjects.id_for_label }}">{{ form.subjects.label }}:</label>
+                                </div>
+                                <div class="col-sm-10">
+                                {{ form.subjects }}
                                 </div>
                             </div>
                         </div>
@@ -215,7 +230,7 @@
                     </h4>
                 </div>
                 <div id="collapseTimePlace" class="panel-collapse collapse
-                {% if form.time.errors or form.duration.errors or form.locality.errors or form.room.errors %}in{% endif %}
+                {% if form.time.errors or form.duration.errors %}in{% endif %}
                 " aria-labelledby="headingTimePlace" role="tabpanel" aria-expanded="true" style="">
                     <div class="panel-body">
                         <div class="row">
@@ -349,13 +364,6 @@
                                         </div>
                                     </fieldset>
                             </div>
-                            <div class="col-sm-12 col-md-6">
-                                <fieldset>
-                                    {{ form.locality.errors }}
-                                    <label for="{{ form.locality.id_for_label }}">{{ form.locality.label }}:</label>
-                                    {{ form.locality }}
-                                </fieldset>
-                            </div>
 
                         </div>
                     </div>
@@ -369,7 +377,7 @@
                     </h4>
                 </div>
                 <div id="collapseRooms" class="panel-collapse collapse
-                {% if form.rooms_needed.errors or form.rooms_assignment.errors or form.contact_persons.errors %}in{% endif %}
+                {% if form.rooms_needed.errors or form.rooms_assignment.errors or form.contact_persons.errors or form.locality.errors %}in{% endif %}
                 " aria-labelledby="headingContact" role="tabpanel" aria-expanded="true" style="">
                     <div class="panel-body">
                         <div class="row form-group">
@@ -584,8 +592,15 @@
             var select = $("#{{ form.institution_level.id_for_label }}");
             var changeDisplay = function(){
                 var value = select.val();
-                $(".institution_level_dependent[data-display-value='"+value+"']").show();
-                $(".institution_level_dependent[data-display-value!='"+value+"']").hide();
+                $(".institution_level_dependent").each(function() {
+                    var attr = $(this).attr("data-display-value") || 0xFFFFFF;
+                    console.log(attr, value, parseInt(value), parseInt(attr))
+                    if (parseInt(value) & parseInt(attr)) {
+                        $(this).show()
+                    } else {
+                        $(this).hide()
+                    }
+                })
             };
             select.change(changeDisplay);
             changeDisplay();
@@ -605,7 +620,6 @@
         });
 
         $("#id_recurrences").on("change", function() {
-            console.log($(this).val());
             $.ajax({
                 url : "/jsapi/rrulestr",
                 type : "POST",
@@ -618,8 +632,6 @@
                 },
 
                 success : function(json) {
-                    console.log(json);
-                    console.log("success");
                     var list = $('#recurrence-dates');
 
                     list.empty();
@@ -656,6 +668,40 @@
             });
             $('#id_time').val(value.join(','));
         });
+        (function(select_id) {
+            var type_map = {
+                "Gymnasie": 1,
+                "Grundskole": 2,
+                "Begge": 3
+            };
+            $(function() {
+                $(select_id).on("change", function() {
+                    var val = parseInt($(this).val()) || 0xFFFFFF;
+                    $('input[name=subjects]').each(function() {
+                        var txt = $(this).parent().text().match(
+                            /\((Gymnasie|Grundskole|Begge)\)/
+                        );
+                        if (txt && txt.length) {
+                            txt = txt[1];
+                        }
+                        v = type_map[txt || ''];
+                        if (v && parseInt(v) & val) {
+                            $(this).parent().show();
+                            if ($(this).attr("data-prev-selected")) {
+                                $(this).removeAttr("data-prev-selected");
+                                $(this).prop("checked", true);
+                            }
+                        } else {
+                            $(this).parent().hide();
+                            if ($(this).is(":checked")) {
+                                $(this).prop("checked", false);
+                                $(this).attr("data-prev-selected", "yes");
+                            }
+                        }
+                    });
+                }).trigger("change");
+            });
+        })('#{{form.institution_level.id_for_label }}')
     //--></script>
     
 {% endblock %}

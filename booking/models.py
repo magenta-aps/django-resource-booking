@@ -96,27 +96,29 @@ class Unit(models.Model):
 # Master data related to bookable resources start here
 class Subject(models.Model):
     """A relevant subject from primary or secondary education."""
-    stx = 0
-    hf = 1
-    htx = 2
-    eux = 3
-    valgfag = 4
+    SUBJECT_TYPE_GYMNASIE = 2**0
+    SUBJECT_TYPE_GRUNDSKOLE = 2**1
+    # NEXT_VALUE = 2**2
 
-    line_choices = (
-        (stx, _(u'stx')),
-        (hf, _(u'hf')),
-        (htx, _(u'htx')),
-        (eux, _(u'eux')),
-        (valgfag, _(u'valgfag')),
+    SUBJECT_TYPE_BOTH = SUBJECT_TYPE_GYMNASIE | SUBJECT_TYPE_GRUNDSKOLE
+
+    type_choices = (
+        (SUBJECT_TYPE_GYMNASIE, _(u'Gymnasie')),
+        (SUBJECT_TYPE_GRUNDSKOLE, _(u'Grundskole')),
+        (SUBJECT_TYPE_BOTH, _(u'Begge')),
     )
 
     name = models.CharField(max_length=256)
-    line = models.IntegerField(choices=line_choices, verbose_name=u'Linje',
-                               blank=True)
+    subject_type = models.IntegerField(
+        choices=type_choices,
+        verbose_name=u'Skoleniveau',
+        default=SUBJECT_TYPE_GYMNASIE,
+        blank=False,
+    )
     description = models.TextField(blank=True)
 
     def __unicode__(self):
-        return '%s (%s)' % (self.name, self.get_line_display())
+        return '%s (%s)' % (self.name, self.get_subject_type_display())
 
 
 class Link(models.Model):
@@ -209,38 +211,44 @@ class Resource(models.Model):
 
     # Resource type.
     STUDENT_FOR_A_DAY = 0
-    FIXED_SCHEDULE_GROUP_VISIT = 1
-    FREELY_SCHEDULED_GROUP_VISIT = 2
+    GROUP_VISIT = 1
+    _UNUSED = 2
     STUDY_PROJECT = 3
     SINGLE_EVENT = 4
-    OTHER_RESOURCES = 5
+    STUDY_MATERIAL = 5
+    TEACHER_EVENT = 6
+    OPEN_HOUSE = 7
+    ASSIGNMENT_HELP = 8
+    STUDIEPRAKTIK = 9
 
     resource_type_choices = (
         (STUDENT_FOR_A_DAY, _(u"Studerende for en dag")),
-        (FIXED_SCHEDULE_GROUP_VISIT, _(u"Gruppebesøg med faste tider")),
-        (FREELY_SCHEDULED_GROUP_VISIT, _(u"Gruppebesøg uden faste tider")),
-        (STUDY_PROJECT, _(u"Studieretningsprojekt - SRP")),
+        (STUDIEPRAKTIK, _(u"Studiepraktik")),
+        (OPEN_HOUSE, _(u"Åbent hus")),
+        (TEACHER_EVENT, _(u"Lærerarrangement")),
+        (GROUP_VISIT, _(u"Besøg med klassen")),
+        (STUDY_PROJECT, _(u"Studieretningsprojekt")),
+        (ASSIGNMENT_HELP, _(u"Opgavehjælp")),
         (SINGLE_EVENT,  _(u"Enkeltstående event")),
-        (OTHER_RESOURCES, _(u"Andre tilbud"))
+        (STUDY_MATERIAL, _(u"Undervisningsmateriale"))
     )
 
     # Target audience choice - student or teacher.
-    TEACHER = 0
-    STUDENT = 1
+    AUDIENCE_TEACHER = 2**0
+    AUDIENCE_STUDENT = 2**1
+    AUDIENCE_ALL = AUDIENCE_TEACHER | AUDIENCE_STUDENT
 
     audience_choices = (
-        (TEACHER, _(u'Lærer')),
-        (STUDENT, _(u'Elev'))
+        (AUDIENCE_TEACHER, _(u'Lærer')),
+        (AUDIENCE_STUDENT, _(u'Elev')),
+        (AUDIENCE_ALL, _(u'Alle'))
     )
 
     # Institution choice - primary or secondary school.
     PRIMARY = 0
     SECONDARY = 1
 
-    institution_choices = (
-        (PRIMARY, _(u'Grundskole')),
-        (SECONDARY, _(u'Gymnasium'))
-    )
+    institution_choices = Subject.type_choices
 
     # Level choices - A, B or C
     A = 0
@@ -266,7 +274,7 @@ class Resource(models.Model):
 
     enabled = models.BooleanField(verbose_name=_(u'Aktiv'), default=True)
     type = models.IntegerField(choices=resource_type_choices,
-                               default=OTHER_RESOURCES)
+                               default=STUDY_MATERIAL)
     state = models.IntegerField(choices=state_choices, default=CREATED,
                                 verbose_name=_(u"Tilstand"))
     title = models.CharField(max_length=256, verbose_name=_(u'Titel'))
@@ -280,7 +288,7 @@ class Resource(models.Model):
     links = models.ManyToManyField(Link, blank=True, verbose_name=_('Links'))
     audience = models.IntegerField(choices=audience_choices,
                                    verbose_name=_(u'Målgruppe'),
-                                   default=TEACHER)
+                                   default=AUDIENCE_ALL)
     institution_level = models.IntegerField(choices=institution_choices,
                                             verbose_name=_(u'Institution'),
                                             default=SECONDARY)
@@ -472,7 +480,7 @@ class Visit(Resource):
     )
 
     locality = models.ForeignKey(
-        Locality, verbose_name=_(u'Lokalitet'), blank=True
+        Locality, verbose_name=_(u'Lokalitet'), blank=True, null=True
     )
     duration = models.CharField(
         max_length=8,
