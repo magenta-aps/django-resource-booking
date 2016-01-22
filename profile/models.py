@@ -72,10 +72,13 @@ class UserProfile(models.Model):
         return self.get_role() in EDIT_ROLES
 
     def can_edit(self, item):
-        if not hasattr(item, "unit") and item.unit:
-            return False
-
         role = self.get_role()
+
+        if role == ADMINISTRATOR:
+            return True
+
+        if not hasattr(item, "unit") or not item.unit:
+            return False
 
         if role in EDIT_ROLES:
             qs = self.get_unit_queryset().filter(pk=item.unit.pk)
