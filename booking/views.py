@@ -21,7 +21,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
 
 
-from profile.models import COORDINATOR, ADMINISTRATOR
+from profile.models import EDIT_ROLES
 from profile.models import role_to_text
 
 from booking.models import Visit, VisitOccurrence, StudyMaterial
@@ -314,7 +314,7 @@ class EditVisit(RoleRequiredMixin, UpdateView):
     # Display a view with two form objects; one for the regular model,
     # and one for the file upload
 
-    roles = COORDINATOR, ADMINISTRATOR
+    roles = EDIT_ROLES
 
     def get(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
@@ -471,16 +471,12 @@ class EditVisit(RoleRequiredMixin, UpdateView):
         pk = kwargs.get("pk")
         if self.object is None:
             self.object = None if pk is None else Visit.objects.get(id=pk)
-        if self.object is not None:
-            role = current_user.userprofile.get_role()
-            if role == COORDINATOR:
-                users_unit = current_user.userprofile.unit
-                visits_unit = self.object.unit
-                if visits_unit and not visits_unit.belongs_to(users_unit):
-                    raise AccessDenied(
-                        _(u"Du kan kun redigere enheder,som du selv er" +
-                          " koordinator for.")
-                    )
+        if self.object is not None and self.object.unit:
+            if not current_user.userprofile.can_edit(self.object):
+                raise AccessDenied(
+                    _(u"Du kan kun redigere enheder,som du selv er" +
+                      " koordinator for.")
+                )
         return result
 
     def get_form_kwargs(self):
@@ -507,7 +503,8 @@ class VisitDetailView(DetailView):
 
         user = self.request.user
 
-        if (hasattr(user, 'userprofile') and user.userprofile.can_edit(self)):
+        if (hasattr(user, 'userprofile') and
+                user.userprofile.can_edit(self.object)):
             context['can_edit'] = True
         else:
             context['can_edit'] = False
