@@ -35,8 +35,15 @@ class VisitForm(forms.ModelForm):
                   'rooms_needed',
                   'enabled', 'contact_persons', 'unit',)
         widgets = {
-            'title': TextInput(attrs={'class': 'titlefield'}),
-            'teaser': Textarea(attrs={'rows': 3, 'maxlength': 1000}),
+            'title': TextInput(attrs={
+                'class': 'titlefield',
+                'rows': 1, 'size': 62
+            }),
+            'teaser': Textarea(attrs={
+                'rows': 3,
+                'cols': 70,
+                'maxlength': 210
+            }),
             'description': TinyMCE(attrs={'rows': 10}),
             'minimum_number_of_visitors': NumberInput(attrs={'min': 1}),
             'maximum_number_of_visitors': NumberInput(attrs={'min': 1}),

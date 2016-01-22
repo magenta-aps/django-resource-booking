@@ -268,8 +268,12 @@ class Resource(models.Model):
                                default=OTHER_RESOURCES)
     state = models.IntegerField(choices=state_choices, default=CREATED,
                                 verbose_name=_(u"Tilstand"))
-    title = models.CharField(max_length=256, verbose_name=_(u'Titel'))
-    teaser = models.TextField(blank=True, verbose_name=_(u'Teaser'))
+    title = models.CharField(max_length=60, verbose_name=_(u'Titel'))
+    teaser = models.TextField(
+        max_length=210,
+        blank=True,
+        verbose_name=_(u'Teaser')
+    )
     description = models.TextField(blank=True, verbose_name=_(u'Beskrivelse'))
     mouseover_description = models.CharField(
         max_length=512, blank=True, verbose_name=_(u'Mouseover-tekst')
