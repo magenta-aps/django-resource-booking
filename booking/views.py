@@ -458,12 +458,19 @@ class RrulestrView(View):
             if u'RRULE' in line and u'UNTIL=' not in line:
                 line += u';UNTIL=%s' % (now + timedelta(90))\
                     .strftime('%Y%m%dT%H%M%S')
-                dates += [timezone.make_aware(x, tz)
-                            for x in rrulestr(line, ignoretz=True)]
+                dates += [
+                    timezone.make_aware(x, tz) for x in rrulestr(
+                        line, ignoretz=True
+                    )
+                ]
             # RRDATEs are appended to the dates list
             elif u'RDATE' in line:
-                dates += [timezone.make_aware(x, tz)
-                         for x in rrulestr(line, ignoretz=True)]
+                dates += [
+                    timezone.make_aware(x, tz)for x in rrulestr(
+                        line,
+                        ignoretz=True
+                    )
+                ]
         # sort the list while still in ISO 8601 format,
         dates = sorted(set(dates))
         # Cartesian product: AxB
