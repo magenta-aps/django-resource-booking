@@ -2,7 +2,7 @@
 
 import json
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from dateutil import parser
 from dateutil.rrule import rrulestr
