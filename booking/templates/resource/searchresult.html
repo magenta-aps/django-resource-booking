@@ -161,12 +161,11 @@
             {% for res in results %}
                 <li class="media">
                     <div class="media-body">
-                        <h3 class="media-heading"><a href="{% url 'visit' res.pk %}">{{ res.title }}</a></h3>
+                        <h3 class="media-heading"><a href="{% url 'visit' res.pk %}"><span class="label label-default">{{ res.get_type_display }}</span> {{ res.title }}</a></h3>
                         <p>{{ res.teaser }}</p>
                         <div class="media-info">
                             <ul class="info-list list-inline">
                                 <li><strong>Fag/niveau: </strong><span class="type-offer">Hardcoded! Matematik</span></li>
-                                <li><strong>Hvad: </strong><span class="type-offer">{{ res.get_type_display }}</span></li>
                                 <li><strong>Dato: </strong><span class="type-offer">Hardcoded! 15. 01. 2016</span></li>
                                 <li><strong>Lokalitet: </strong><span class="type-offer">Hardcoded! Bülowsvej 17, 1870 Frederiksberg C</span></li>
                             </ul>
