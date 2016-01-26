@@ -699,3 +699,25 @@ class ClassBooking(Booking):
 
 class TeacherBooking(Booking):
     subjects = models.ManyToManyField(Subject)
+
+
+class BookingSubjectLevel(models.Model):
+
+    booking = models.ForeignKey(Booking, blank=False, null=False)
+    subject = models.ForeignKey(
+        Subject, blank=False, null=False,
+        limit_choices_to={
+            'subject_type__in': [
+                Subject.SUBJECT_TYPE_GYMNASIE,
+                Subject.SUBJECT_TYPE_BOTH
+            ]
+        }
+    )
+
+    level = models.ForeignKey(GymnasieLevel, blank=False, null=False)
+
+    def __unicode__(self):
+        return u"%s (for '%s')" % (self.display_value(), self.resource.title)
+
+    def display_value(self):
+        return u'%s på %s niveau' % (self.subject.name, self.level)
