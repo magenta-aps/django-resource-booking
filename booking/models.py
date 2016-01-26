@@ -382,26 +382,40 @@ class Resource(models.Model):
 
     def get_subjects_display(self):
         res = []
-        res.append(self.get_institution_level_display())
-        res.append(": ")
-        if self.institution_level == Resource.PRIMARY:
-            # TODO: Add proper PRIMARY subjects
-            res.append(_(u"TODO: Tilføj-grundskole-fag"))
-            # Output "Klassetrin X" or "Klassetrin X-Y"
-            res.append(_(u", klassetrin "))
+        gym = []
+        gs = []
+
+        for fag in self.subjects.all():
+            if fag.subject_type & Subject.SUBJECT_TYPE_GYMNASIE:
+                gym.append(fag)
+            if fag.subject_type & Subject.SUBJECT_TYPE_GRUNDSKOLE:
+                gs.append(fag)
+
+        if (self.institution_level & Subject.SUBJECT_TYPE_GYMNASIE and
+                len(gym) > 0):
+            res.append(_(u"Gymnasie"))
+            if self.level:
+                res.append(_(u" (niveau %s)") % self.get_level_display())
+            res.append(u": ")
+            res.append(", ".join([x.name for x in gym]))
+            res.append(". ")
+
+        if (self.institution_level & Subject.SUBJECT_TYPE_GRUNDSKOLE and
+                len(gs) > 0):
+            res.append(_(u"Grundskole"))
             if self.class_level_min:
+                res.append(_(u" (klassetrin "))
                 res.append(self.class_level_min)
                 if self.class_level_max != self.class_level_min:
                     res.append("-")
                     res.append(self.class_level_max)
+                res.append(u")")
             else:
                 if self.class_level_max:
-                    res.append(self.class_level_max)
-        elif self.institution_level == Resource.SECONDARY:
-            res.append(
-                ", ".join([unicode(x) for x in self.subjects.all()])
-            )
-            res.append(_(u" på %s-niveau") % self.get_level_display())
+                    res.append(_(u" (klassetrin %s)") % self.class_level_max)
+            res.append(u": ")
+            res.append(", ".join([x.name for x in gs]))
+            res.append(u". ")
 
         return "".join([unicode(x) for x in res])
 
