@@ -629,10 +629,10 @@ class BookingView(UpdateView):
             return ["booking/studentforaday.html"]
         if self.visit.type == Resource.STUDY_PROJECT:
             return ["booking/srp.html"]
+        if self.visit.type == Resource.GROUP_VISIT:
+            return ["booking/classvisit.html"]
         if self.visit.audience == Resource.AUDIENCE_TEACHER:
             return ["booking/teachervisit.html"]
-        if self.visit.audience == Resource.AUDIENCE_STUDENT:
-            return ["booking/classvisit.html"]
 
 
 class BookingSuccessView(TemplateView):
