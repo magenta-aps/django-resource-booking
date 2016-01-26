@@ -168,14 +168,6 @@
                                 <li>
                                     <strong>Fag/niveau: </strong>
                                     <span class="type-offer">{{ res.get_subjects_display }}</span>
-                                    {% if res.class_level_max %}
-                                        Klassetrin
-                                        {% if res.class_level_min != res.class_level_max %}
-                                            {{ res.class_level_min }}-{{res.class_level_max}}
-                                        {% else %}
-                                            {{ res.class_level_min }}
-                                        {% endif %}
-                                    {% endif %}
                                 </li>
                                 <li><strong>Hvad: </strong><span class="type-offer">{{ res.get_type_display }}</span></li>
                                 <li><strong>Dato: </strong><span class="type-offer">{% if res.occ_starttime %}{{ res.occ_starttime|date:"d. m. Y" }}  kl. {{ res.occ_starttime|date:"H:i" }}{% else %}-{% endif %}</span></li>
