@@ -207,10 +207,10 @@ class ClassBookingForm(BookingForm):
         fields = ('student_count', 'teacher_count', 'tour_desired', 'notes')
         widgets = {
             'student_count': NumberInput(
-                attrs={'class': 'form-control input-sm'}
+                attrs={'class': 'form-control input-sm', 'min': 0}
             ),
             'teacher_count': NumberInput(
-                attrs={'class': 'form-control input-sm'}
+                attrs={'class': 'form-control input-sm', 'min': 0}
             ),
             'notes': Textarea(
                 attrs={'class': 'form-control input-sm'}
