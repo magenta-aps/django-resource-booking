@@ -89,6 +89,10 @@ strong,
 .label {
     font-size: 86%;
     letter-spacing: 0.7px;
+    color: #666;
+    background-color: #fff;
+    border: 1px solid #999;
+    margin-right: 5px;
 }
 .inline-block {
     display: inline-block;
