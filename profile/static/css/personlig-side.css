@@ -25,6 +25,7 @@
 
 #personalPage .panel.panel-bookings .panel-heading .panel-title {
     font-size: 14px;
+    display: inline-block;
 }
 
 #personalPage .badge-primary {
