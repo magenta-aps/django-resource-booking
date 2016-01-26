@@ -1,39 +1,81 @@
 #personalPage.eq-height [class*="col-"] .panel {
     border-color: #ddd;
 }
-#personalPage.eq-height [class*="col-"] .panel .panel-body  {
+
+#personalPage.eq-height [class*="col-"] .panel .panel-body {
     padding: 5px;
 }
+
+#personalPage .list-group {
+    margin-bottom: 0;
+}
+
 #personalPage .list-group-item {
     margin-bottom: 10px;
+    position: relative;
 }
-#personalPage  .list-group-item:first-child {
+
+#personalPage .list-group-item:hover {
+    border: 1px solid #bbb;
+}
+
+#personalPage .list-group-item:first-child {
     margin-top: 5px;
+    border-radius: 0;
 }
+
+#personalPage .list-group-item:last-child {
+    margin-bottom: 0!important;
+    border-radius: 0;
+}
+
 #personalPage .list-group-item:nth-child(odd) {
     background-color: #f8f8f8;
     margin-bottom: 10px;
 }
+
+#personalPage a.list-group-item .list-group-item-heading {
+    line-height: 16px;
+}
+
 #personalPage .list-group-item ul {
     padding-left: 0;
     color: #4A4949;
     list-style-type: none;
 }
-#personalPage .panel.panel-bookings .panel-heading {
-    
-}
 
 #personalPage .panel.panel-bookings .panel-heading .panel-title {
     font-size: 14px;
     display: inline-block;
+    max-width: 90%;
+    color: #333;
 }
 
 #personalPage .badge-primary {
     background-color: #337ab7;
 }
+
 #personalPage .badge-danger {
     background-color: #901a1e;
 }
+
 #personalPage .badge-success {
     background-color: #5cb85c;
+}
+#personalPage .outdated-item:hover {
+    border: 1px solid #ddd!important;
+}
+#personalPage .list-group-item .outdated {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 30%;
+    height: 50px;
+    font-size: 20px;
+    line-height: 50px;
+    text-align: center;
+    color: #31708f;
+    background-color: #d9edf7;
+    border-color: #bce8f1;
+    opacity: 0.85;
 }

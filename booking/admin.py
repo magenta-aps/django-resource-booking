@@ -1,6 +1,7 @@
 from django.contrib import admin
 
-from .models import OtherResource, Visit, Person, Unit, UnitType
+from .models import OtherResource, Visit, Person, Unit, UnitType, \
+    VisitOccurrence
 from .models import Link, Subject, Tag, Topic, AdditionalService
 from .models import SpecialRequirement, StudyMaterial, Locality
 
@@ -8,6 +9,7 @@ from .models import SpecialRequirement, StudyMaterial, Locality
 
 admin.site.register(OtherResource)
 admin.site.register(Visit)
+admin.site.register(VisitOccurrence)
 admin.site.register(Person)
 admin.site.register(Unit)
 admin.site.register(UnitType)

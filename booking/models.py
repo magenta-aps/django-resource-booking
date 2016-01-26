@@ -7,8 +7,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
 from django.utils.translation import ugettext_lazy as _
 
-from .fields import DurationField
-
+from recurrence.fields import RecurrenceField
 
 LOGACTION_CREATE = ADDITION
 LOGACTION_CHANGE = CHANGE
@@ -97,27 +96,29 @@ class Unit(models.Model):
 # Master data related to bookable resources start here
 class Subject(models.Model):
     """A relevant subject from primary or secondary education."""
-    stx = 0
-    hf = 1
-    htx = 2
-    eux = 3
-    valgfag = 4
+    SUBJECT_TYPE_GYMNASIE = 2**0
+    SUBJECT_TYPE_GRUNDSKOLE = 2**1
+    # NEXT_VALUE = 2**2
 
-    line_choices = (
-        (stx, _(u'stx')),
-        (hf, _(u'hf')),
-        (htx, _(u'htx')),
-        (eux, _(u'eux')),
-        (valgfag, _(u'valgfag')),
+    SUBJECT_TYPE_BOTH = SUBJECT_TYPE_GYMNASIE | SUBJECT_TYPE_GRUNDSKOLE
+
+    type_choices = (
+        (SUBJECT_TYPE_GYMNASIE, _(u'Gymnasie')),
+        (SUBJECT_TYPE_GRUNDSKOLE, _(u'Grundskole')),
+        (SUBJECT_TYPE_BOTH, _(u'Begge')),
     )
 
     name = models.CharField(max_length=256)
-    line = models.IntegerField(choices=line_choices, verbose_name=u'Linje',
-                               blank=True)
+    subject_type = models.IntegerField(
+        choices=type_choices,
+        verbose_name=u'Skoleniveau',
+        default=SUBJECT_TYPE_GYMNASIE,
+        blank=False,
+    )
     description = models.TextField(blank=True)
 
     def __unicode__(self):
-        return self.name
+        return '%s (%s)' % (self.name, self.get_subject_type_display())
 
 
 class Link(models.Model):
@@ -238,15 +239,12 @@ class Resource(models.Model):
     PRIMARY = 0
     SECONDARY = 1
 
-    institution_choices = (
-        (PRIMARY, _(u'Grundskole')),
-        (SECONDARY, _(u'Gymnasium'))
-    )
+    institution_choices = Subject.type_choices
 
     # Level choices - A, B or C
     A = 0
-    B = 0
-    C = 0
+    B = 1
+    C = 2
 
     level_choices = (
         (A, u'A'), (B, u'B'), (C, u'C')
@@ -376,6 +374,45 @@ class Resource(models.Model):
 
         return "\n".join(texts)
 
+    def get_dates_display(self):
+        if self.visit:
+            return self.visit.get_dates_display()
+
+        return "-"
+
+    def get_subjects_display(self):
+        res = []
+        res.append(self.get_institution_level_display())
+        res.append(": ")
+        if self.institution_level == Resource.PRIMARY:
+            # TODO: Add proper PRIMARY subjects
+            res.append(_(u"TODO: Tilføj-grundskole-fag"))
+            # Output "Klassetrin X" or "Klassetrin X-Y"
+            res.append(_(u", klassetrin "))
+            if self.class_level_min:
+                res.append(self.class_level_min)
+                if self.class_level_max != self.class_level_min:
+                    res.append("-")
+                    res.append(self.class_level_max)
+            else:
+                if self.class_level_max:
+                    res.append(self.class_level_max)
+        elif self.institution_level == Resource.SECONDARY:
+            res.append(
+                ", ".join([unicode(x) for x in self.subjects.all()])
+            )
+            res.append(_(u" på %s-niveau") % self.get_level_display())
+
+        return "".join([unicode(x) for x in res])
+
+    def display_locality(self):
+        try:
+            return self.visit.locality
+        except Visit.DoesNotExist:
+            pass
+
+        return "-"
+
 
 class OtherResource(Resource):
     """A non-bookable, non-visit resource, basically material on the Web."""
@@ -435,15 +472,11 @@ class Visit(Resource):
     locality = models.ForeignKey(
         Locality, verbose_name=_(u'Lokalitet'), blank=True
     )
-    time = models.DateTimeField(
-        verbose_name=_(u'Tid')
-    )
-    duration = DurationField(
+    duration = models.CharField(
+        max_length=8,
         verbose_name=_(u'Varighed'),
         blank=True,
         null=True,
-        labels={'day': _(u'Dage:'), 'hour': _(u'Timer:'),
-                'minute': _(u'Minutter:')}
     )
     contact_persons = models.ManyToManyField(
         Person,
@@ -489,6 +522,10 @@ class Visit(Resource):
         default=0,
         verbose_name=_(u'Forberedelsestid (i timer)')
     )
+    recurrences = RecurrenceField(
+        null=True,
+        verbose_name=_(u'Gentagelser')
+    )
 
     def save(self, *args, **kwargs):
         # Save once to store relations
@@ -499,6 +536,64 @@ class Visit(Resource):
 
         # Do the final save
         return super(Visit, self).save(*args, **kwargs)
+
+    @property
+    def recurrences_description(self):
+        if self.recurrences and self.recurrences.rrules:
+            return [d.to_text() for d in self.recurrences.rrules]
+        else:
+            return []
+
+    def get_dates_display(self):
+        dates = [
+            x.display_value for x in self.visitoccurrence_set.all()
+        ]
+        if len(dates) > 0:
+            return ", ".join(dates)
+        else:
+            return "-"
+
+    def num_of_participants_display(self):
+        if self.minimum_number_of_visitors:
+            return "%s-%s" % (
+                self.minimum_number_of_visitors,
+                self.maximum_number_of_visitors
+            )
+        elif self.maximum_number_of_visitors:
+            return self.maximum_number_of_visitors
+
+        return None
+
+
+class VisitOccurrence(models.Model):
+    start_datetime = models.DateTimeField(
+        verbose_name=_(u'Starttidspunkt')
+    )
+    end_datetime1 = models.DateTimeField(
+        verbose_name=_(u'Sluttidspunkt')
+    )
+    end_datetime2 = models.DateTimeField(
+        verbose_name=_(u'Alternativt sluttidspunkt'),
+        blank=True,
+        null=True
+    )
+    visit = models.ForeignKey(
+        Visit,
+        on_delete=models.CASCADE
+    )
+
+    @property
+    def display_value(self):
+        if not self.start_datetime or not self.end_datetime1:
+            return None
+
+        result = self.start_datetime.strftime('%d. %m %Y %H:%M')
+
+        endtime = self.end_datetime2 or self.end_datetime1
+        if endtime:
+            result += endtime.strftime(' %H:%M')
+
+        return result
 
 
 class Room(models.Model):
