@@ -106,6 +106,12 @@ TINYMCE_DEFAULT_CONFIG = {
     'theme': "advanced",
     'cleanup_on_startup': True,
     'custom_undo_redo_levels': 100,
+    'theme_advanced_buttons1':
+        'bold,italic,underline,|,justifyleft,justifycenter,justifyright,'
+        'justifyfull,|,formatselect,|,bullist,numlist,outdent,indent,|,undo,'
+        'redo|link,unlink,anchor,image,cleanup,help,code,hr,removeformat,'
+        'visualaid,|charmap'
+
 }
 TINYMCE_COMPRESSOR = True
 TINYMCE_JS_ROOT = '/static/thirdparty/tinymce'
