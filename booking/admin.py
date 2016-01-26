@@ -3,7 +3,8 @@ from django.contrib import admin
 from .models import OtherResource, Visit, Person, Unit, UnitType, \
     VisitOccurrence
 from .models import Link, Subject, Tag, Topic, AdditionalService
-from .models import SpecialRequirement, StudyMaterial, Locality
+from .models import SpecialRequirement, StudyMaterial, Locality, \
+    GymnasieLevel, ResourceGymnasieFag, ResourceGrundskoleFag
 
 # Register your models here.
 
@@ -21,3 +22,6 @@ admin.site.register(AdditionalService)
 admin.site.register(SpecialRequirement)
 admin.site.register(StudyMaterial)
 admin.site.register(Locality)
+admin.site.register(GymnasieLevel)
+admin.site.register(ResourceGymnasieFag)
+admin.site.register(ResourceGrundskoleFag)

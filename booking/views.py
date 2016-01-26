@@ -25,7 +25,7 @@ from profile.models import EDIT_ROLES
 from profile.models import role_to_text
 
 from booking.models import Visit, VisitOccurrence, StudyMaterial
-from booking.models import Resource, Subject
+from booking.models import Resource, Subject, GymnasieLevel
 from booking.models import Room
 from booking.forms import VisitForm
 from booking.forms import VisitStudyMaterialForm
@@ -446,6 +446,11 @@ class EditVisit(RoleRequiredMixin, UpdateView):
             ).order_by("name").distinct("name")
         else:
             context['existinrooms'] = []
+
+        context['gymnasiefag_choices'] = Subject.gymnasiefag_qs()
+        context['grundskolefag_choices'] = Subject.grundskolefag_qs()
+        context['gymnasie_level_choices'] = \
+            GymnasieLevel.objects.all().order_by('level')
 
         context.update(kwargs)
 

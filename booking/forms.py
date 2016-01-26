@@ -28,8 +28,7 @@ class VisitForm(forms.ModelForm):
         model = Visit
         fields = ('title', 'teaser', 'description', 'price',
                   'type', 'tags', 'preparation_time', 'comment',
-                  'institution_level', 'topics', 'level', 'class_level_min',
-                  'class_level_max', 'subjects',
+                  'institution_level', 'topics',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'recurrences', 'duration', 'locality', 'rooms_assignment',
                   'rooms_needed',

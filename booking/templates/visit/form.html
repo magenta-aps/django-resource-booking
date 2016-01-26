@@ -150,13 +150,29 @@
                         </div> -->
 
                         <div class="institution_level_dependent" data-display-value="1">
-                            <div class="row form-group">
-                                <div>{{ form.level.errors }}</div>
+                            <div class="row form-group" id="gymnasie-fag-edit">
                                 <div class="col-sm-2">
-                                <label for="{{ form.level.id_for_label }}">{{ form.level.label }}:</label>
+                                    <label for="gymnasie-fag-edit">Gymnasiefag:</label>
                                 </div>
-                                <div class="col-sm-10">
-                                {{ form.level }}
+                                
+                                <div class="col-sm-3">
+                                    <select name="gymnasiefag-fag">
+                                        <option value="">-- Vælg gymnasiefag --</option>
+                                        {% for fag in gymnasiefag_choices %}
+                                        <option value="{{fag.pk}}">{{fag.name}}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="col-sm-3">
+                                    <label for="gymnasielevel-group">Gymnasiefag:</label>
+                                    <ul id="gymnasielevel-group">
+                                        {% for level in gymnasie_level_choices %}
+                                        <li>
+                                            <label for="gymnasielevel-{{level.pk}}"><input type="checkbox" value="{{level.pk}}" />{{ level }}</label>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
                                 </div>
                             </div>
                         </div>

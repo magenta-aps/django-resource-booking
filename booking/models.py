@@ -120,6 +120,22 @@ class Subject(models.Model):
     def __unicode__(self):
         return '%s (%s)' % (self.name, self.get_subject_type_display())
 
+    @classmethod
+    def gymnasiefag_qs(cls):
+        return Subject.objects.filter(
+            subject_type__in=[
+                cls.SUBJECT_TYPE_GYMNASIE, cls.SUBJECT_TYPE_BOTH
+            ]
+        )
+
+    @classmethod
+    def grundskolefag_qs(cls):
+        return Subject.objects.filter(
+            subject_type__in=[
+                cls.SUBJECT_TYPE_GRUNDSKOLE, cls.SUBJECT_TYPE_BOTH
+            ]
+        )
+
 
 class Link(models.Model):
     """"An URL and relevant metadata."""
@@ -241,15 +257,6 @@ class Resource(models.Model):
 
     institution_choices = Subject.type_choices
 
-    # Level choices - A, B or C
-    A = 0
-    B = 1
-    C = 2
-
-    level_choices = (
-        (A, u'A'), (B, u'B'), (C, u'C')
-    )
-
     # Resource state - created, active and discontinued.
     CREATED = 0
     ACTIVE = 1
@@ -260,8 +267,6 @@ class Resource(models.Model):
         (ACTIVE, _(u"Aktivt")),
         (DISCONTINUED, _(u"Ophørt"))
     )
-
-    class_level_choices = [(i, unicode(i)) for i in range(0, 11)]
 
     enabled = models.BooleanField(verbose_name=_(u'Aktiv'), default=True)
     type = models.IntegerField(choices=resource_type_choices,
@@ -280,22 +285,25 @@ class Resource(models.Model):
     audience = models.IntegerField(choices=audience_choices,
                                    verbose_name=_(u'Målgruppe'),
                                    default=TEACHER)
+
     institution_level = models.IntegerField(choices=institution_choices,
                                             verbose_name=_(u'Institution'),
                                             default=SECONDARY)
-    subjects = models.ManyToManyField(Subject, blank=True,
-                                      verbose_name=_(u'Fag'))
-    level = models.IntegerField(choices=level_choices,
-                                verbose_name=_(u"Niveau"),
-                                blank=True,
-                                null=True)
-    # TODO: We should validate that min <= max here.
-    class_level_min = models.IntegerField(choices=class_level_choices,
-                                          default=0,
-                                          verbose_name=_(u'Klassetrin fra'))
-    class_level_max = models.IntegerField(choices=class_level_choices,
-                                          default=10,
-                                          verbose_name=_(u'Klassetrin til'))
+
+    gymnasiefag = models.ManyToManyField(
+        Subject, blank=True,
+        verbose_name=_(u'Gymnasiefag'),
+        through='ResourceGymnasieFag',
+        related_name='gymnasie_resources'
+    )
+
+    grundskolefag = models.ManyToManyField(
+        Subject, blank=True,
+        verbose_name=_(u'Grundskolefag'),
+        through='ResourceGrundskoleFag',
+        related_name='grundskole_resources'
+    )
+
     tags = models.ManyToManyField(Tag, blank=True, verbose_name=_(u'Tags'))
     topics = models.ManyToManyField(
         Topic, blank=True, verbose_name=_(u'Emner')
@@ -412,6 +420,113 @@ class Resource(models.Model):
             pass
 
         return "-"
+
+
+class ResourceGymnasieFag(models.Model):
+    class Meta:
+        verbose_name = _(u"Gymnasiefagtilknytning")
+        verbose_name_plural = _(u"Gymnasiefagtilknytninger")
+
+    class_level_choices = [(i, unicode(i)) for i in range(0, 11)]
+
+    resource = models.ForeignKey(Resource, blank=False, null=False)
+    subject = models.ForeignKey(
+        Subject, blank=False, null=False,
+        limit_choices_to={
+            'subject_type__in': [
+                Subject.SUBJECT_TYPE_GYMNASIE,
+                Subject.SUBJECT_TYPE_BOTH
+            ]
+        }
+    )
+
+    level = models.ManyToManyField('GymnasieLevel')
+
+    def __unicode__(self):
+        return u"%s (for '%s')" % (self.display_value(), self.resource.title)
+
+    def display_value(self):
+        levels = [unicode(x) for x in self.level.all().order_by('level')]
+        nr_levels = len(levels)
+        if nr_levels == 1:
+            levels_desc = levels[0]
+        elif nr_levels == 2:
+            levels_desc = u'%s eller %s' % (levels[0], levels[1])
+        elif nr_levels > 2:
+            last = levels.pop()
+            levels_desc = u'%s eller %s' % (", ".join(levels), last)
+
+        if levels_desc:
+            return u'%s på %s niveau' % (self.subject.name, levels_desc)
+        else:
+            return unicode(self.subject.name)
+
+
+class ResourceGrundskoleFag(models.Model):
+    class Meta:
+        verbose_name = _(u"Grundskolefagtilknytning")
+        verbose_name_plural = _(u"Grundskolefagtilknytninger")
+
+    class_level_choices = [(i, unicode(i)) for i in range(0, 11)]
+
+    resource = models.ForeignKey(Resource, blank=False, null=False)
+    subject = models.ForeignKey(
+        Subject, blank=False, null=False,
+        limit_choices_to={
+            'subject_type__in': [
+                Subject.SUBJECT_TYPE_GRUNDSKOLE,
+                Subject.SUBJECT_TYPE_BOTH
+            ]
+        }
+    )
+
+    # TODO: We should validate that min <= max here.
+    class_level_min = models.IntegerField(choices=class_level_choices,
+                                          default=0,
+                                          verbose_name=_(u'Klassetrin fra'))
+    class_level_max = models.IntegerField(choices=class_level_choices,
+                                          default=10,
+                                          verbose_name=_(u'Klassetrin til'))
+
+    def __unicode__(self):
+        return u"%s (for '%s')" % (self.display_value(), self.resource.title)
+
+    def display_value(self):
+        class_range = []
+        if self.class_level_min:
+            class_range.append(self.class_level_min)
+            if self.class_level_max != self.class_level_min:
+                class_range.append(self.class_level_max)
+        else:
+            if self.class_level_max:
+                class_range.append(self.class_level_max)
+
+        if len(class_range) > 0:
+            return u'%s på klassetrin %s' % (
+                self.subject.name,
+                "-".join([unicode(x) for x in class_range])
+            )
+        else:
+            return unicode(self.subject.name)
+
+
+class GymnasieLevel(models.Model):
+    # Level choices - A, B or C
+    A = 0
+    B = 1
+    C = 2
+
+    level_choices = (
+        (A, u'A'), (B, u'B'), (C, u'C')
+    )
+
+    level = models.IntegerField(choices=level_choices,
+                                verbose_name=_(u"Gymnasieniveau"),
+                                blank=True,
+                                null=True)
+
+    def __unicode__(self):
+        return self.get_level_display()
 
 
 class OtherResource(Resource):
