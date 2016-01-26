@@ -165,19 +165,22 @@ class BookerForm(BookingForm):
             attrs={'class': 'form-control input-sm',
                    'placeholder': 'Postnummer',
                    'min': '1000', 'max': '9999'}
-        )
+        ),
+        required=False
     )
     city = forms.CharField(
         widget=TextInput(
             attrs={'class': 'form-control input-sm',
                    'placeholder': 'By'}
-        )
+        ),
+        required=False
     )
     region = forms.ModelChoiceField(
         queryset=Region.objects.all(),
         widget=Select(
             attrs={'class': 'selectpicker form-control'}
-        )
+        ),
+        required=False
     )
 
     def __init__(self, data=None, visit=None, *args, **kwargs):
@@ -193,10 +196,12 @@ class BookerForm(BookingForm):
                     visit.maximum_number_of_visitors
 
     def clean_postcode(self):
-        try:
-            PostCode.objects.get(number=self.cleaned_data.get('postcode'))
-        except:
-            raise forms.ValidationError(u"Ukendt postnummer")
+        postcode = self.cleaned_data.get('postcode')
+        if postcode is not None:
+            try:
+                PostCode.objects.get(number=postcode)
+            except:
+                raise forms.ValidationError(u"Ukendt postnummer")
 
     def clean(self):
         cleaned_data = super(BookerForm, self).clean()
