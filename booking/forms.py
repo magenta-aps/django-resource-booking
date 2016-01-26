@@ -47,7 +47,7 @@ class VisitForm(forms.ModelForm):
                 'cols': 70,
                 'maxlength': 210
             }),
-            'description': TinyMCE(attrs={'rows': 10}),
+            'description': TinyMCE(attrs={'rows': 10, 'cols': 90}),
             'minimum_number_of_visitors': NumberInput(attrs={'min': 1}),
             'maximum_number_of_visitors': NumberInput(attrs={'min': 1}),
             'tags': CheckboxSelectMultiple(),
