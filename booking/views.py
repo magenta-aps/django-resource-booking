@@ -111,9 +111,14 @@ class SearchView(ListView):
     def get_filters(self):
         if self.filters is None:
             self.filters = {}
+
+            # Audience will always include a search for resources marked for
+            # all audiences.
             a = self.request.GET.getlist("a")
             if a:
+                a.append(Resource.AUDIENCE_ALL)
                 self.filters["audience__in"] = a
+
             t = self.request.GET.getlist("t")
             if t:
                 self.filters["type__in"] = t
@@ -130,28 +135,9 @@ class SearchView(ListView):
         filters = self.get_filters()
         return self.get_base_queryset().filter(**filters)
 
-    def build_choices(self, choice_tuples, selected,
-                      selected_value='checked="checked"'):
-
-        selected = set(selected)
-        choices = []
-
-        for value, name in choice_tuples:
-            if unicode(value) in selected:
-                sel = selected_value
-            else:
-                sel = ''
-
-            choices.append({
-                'label': name,
-                'value': value,
-                'selected': sel
-            })
-
-        return choices
-
     def make_facet(self, facet_field, choice_tuples, selected,
-                   selected_value='checked="checked"'):
+                   selected_value='checked="checked"',
+                   add_to_all=None):
 
         selected = set(selected)
         hits = {}
@@ -165,8 +151,28 @@ class SearchView(ListView):
 
         qs = self.get_base_queryset().filter(**new_filters)
         qs = qs.values(facet_field).annotate(hits=Count(facet_field))
+
         for item in qs:
             hits[item[facet_field]] = item["hits"]
+
+        # This adds all hits on a certain keys to the hits of all other keys.
+        if add_to_all is not None:
+            keys = set(add_to_all)
+            to_add = 0
+
+            for key in keys:
+                if key in hits:
+                    to_add = to_add + hits[key]
+                    del hits[key]
+
+            for v, n in choice_tuples:
+                if v in keys:
+                    continue
+
+                if v in hits:
+                    hits[v] += to_add
+                else:
+                    hits[v] = to_add
 
         for value, name in choice_tuples:
             if value not in hits:
@@ -202,7 +208,8 @@ class SearchView(ListView):
         context["audience_choices"] = self.make_facet(
             "audience",
             self.model.audience_choices,
-            self.request.GET.getlist("a")
+            self.request.GET.getlist("a"),
+            add_to_all=[Resource.AUDIENCE_ALL]
         )
 
         context["type_choices"] = self.make_facet(
@@ -211,15 +218,23 @@ class SearchView(ListView):
             self.request.GET.getlist("t"),
         )
 
-        subject_choices = [
-            (x.pk, x.name) for x in Subject.objects.all().order_by("name")
-        ]
+        gym_subject_choices = []
+        gs_subject_choices = []
+
+        for s in Subject.objects.all():
+            val = (s.pk, s.name)
+
+            if s.subject_type & Subject.SUBJECT_TYPE_GYMNASIE:
+                gym_subject_choices.append(val)
+
+            if s.subject_type & Subject.SUBJECT_TYPE_GRUNDSKOLE:
+                gs_subject_choices.append(val)
 
         gym_selected = self.request.GET.getlist("f")
         context["gymnasie_selected"] = gym_selected
         context["gymnasie_choices"] = self.make_facet(
             "subjects",
-            subject_choices,
+            gym_subject_choices,
             gym_selected,
         )
 
@@ -227,7 +242,7 @@ class SearchView(ListView):
         context["grundskole_selected"] = gs_selected
         context["grundskole_choices"] = self.make_facet(
             "subjects",
-            subject_choices,
+            gs_subject_choices,
             gs_selected,
         )
 
