@@ -1,0 +1,33 @@
+{% load staticfiles %}
+<script src="{% static 'thirdparty/bootstrap-3-typeahead/bootstrap3-typeahead.min.js' %}"></script>
+<script type="text/javascript">
+    <!--
+    $(function() {
+        var postcode = $("#id_postcode");
+       $("#id_school").typeahead({
+            source: function (query, process) {
+                $.ajax({
+                    url: "/schools",
+                    data: {
+                        q: query
+                    },
+                    dataType: "json",
+                    complete: function (response) {
+                        if (response && response.status === 200) {
+                            process(response.responseJSON.schools);
+                        }
+                    }.bind(this)
+                });
+            },
+            updater: function (selected) {
+                if (selected.postcode && postcode.length) {
+                    postcode.val(selected.postcode);
+                    postcode.change();
+                }
+                return selected.name;
+            }
+        });
+    });
+
+    //-->
+</script>

@@ -96,7 +96,8 @@ NPM_FILE_PATTERNS = {
                   'dist/fonts/*', 'dist/js/bootstrap.min.js'],
     'bootstrap-datetime-picker': ['js/bootstrap-datetimepicker.min.js',
                                   'js/locales/bootstrap-datetimepicker.da.js',
-                                  'css/bootstrap-datetimepicker.min.css']
+                                  'css/bootstrap-datetimepicker.min.css'],
+    'bootstrap-3-typeahead': ['bootstrap3-typeahead.min.js']
 }
 
 # Django-tinymce config

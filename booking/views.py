@@ -7,18 +7,21 @@ from datetime import datetime, timedelta
 from dateutil import parser
 from dateutil.rrule import rrulestr
 from django.http import HttpResponse
-from django.views.generic import TemplateView, ListView, DetailView, View
-from django.db.models import Count
 from django.db.models import F
 from django.db.models import Q
 from django.utils import timezone
+from django.db.models import Count
+from django.views.generic import View, TemplateView, ListView, DetailView
 from django.utils.translation import ugettext as _
 from django.views.generic.edit import UpdateView
+from django.views.defaults import bad_request
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
+from django.http import JsonResponse
+from django.shortcuts import redirect
 
 
 from profile.models import EDIT_ROLES
@@ -27,14 +30,17 @@ from profile.models import role_to_text
 from booking.models import Visit, VisitOccurrence, StudyMaterial
 from booking.models import Resource, Subject
 from booking.models import Room
-from booking.forms import VisitForm
+from booking.models import PostCode, School
+from booking.models import Booking
+from booking.forms import VisitForm, ClassBookingForm, TeacherBookingForm
 from booking.forms import VisitStudyMaterialForm
+from booking.forms import BookerForm
 
 i18n_test = _(u"Dette tester oversættelses-systemet")
 
-
 # A couple of generic superclasses for crud views
 # Our views will inherit from these and from django.views.generic classes
+
 
 class MainPageView(TemplateView):
     """Display the main page."""
@@ -601,4 +607,152 @@ class RrulestrView(View):
         return HttpResponse(
             json.dumps(dates_without_existing_dates),
             content_type='application/json'
+        )
+
+
+class AdminIndexView(MainPageView):
+    template_name = 'admin_index.html'
+
+
+class AdminSearchView(SearchView):
+    template_name = 'resource/admin_searchresult.html'
+
+
+class AdminVisitDetailView(VisitDetailView):
+    template_name = 'visit/admin_details.html'
+
+
+class PostcodeView(View):
+    def get(self, request, *args, **kwargs):
+        code = int(kwargs.get("code"))
+        postcode = PostCode.get(code)
+        city = postcode.city if postcode is not None else None
+        region = {'id': postcode.region.id, 'name': postcode.region.name} \
+            if postcode is not None else None
+        return JsonResponse({'code': code, 'city': city, 'region': region})
+
+
+class SchoolView(View):
+    def get(self, request, *args, **kwargs):
+        query = request.GET['q']
+        items = School.search(query)
+        json = {'schools':
+                [
+                    {'name': item.name,
+                     'postcode': item.postcode.number} for item in items
+                ]
+                }
+        return JsonResponse(json)
+
+
+class BookingView(UpdateView):
+
+    visit = None
+
+    def set_visit(self, visit_id):
+        if visit_id is not None:
+            try:
+                self.visit = Visit.objects.get(id=visit_id)
+            except:
+                pass
+
+    def get_visit_type(self):
+        if self.visit is None:
+            return None
+        if self.visit.type == Resource.STUDENT_FOR_A_DAY:
+            return
+        if self.visit.type == Resource.STUDY_PROJECT:
+            return
+        if self.visit.audience == Resource.TEACHER:
+            return
+        if self.visit.audience == Resource.STUDENT:
+            return
+
+    def get(self, request, *args, **kwargs):
+        self.set_visit(kwargs.get("visit"))
+        if self.visit is None:
+            return bad_request(request)
+
+        data = {'visit': self.visit}
+
+        self.object = Booking()
+        data.update(self.get_forms())
+        return self.render_to_response(
+            self.get_context_data(**data)
+        )
+
+    def post(self, request, *args, **kwargs):
+        self.set_visit(kwargs.get("visit"))
+        if self.visit is None:
+            return bad_request(request)
+
+        data = {'visit': self.visit}
+
+        self.object = Booking()
+        forms = self.get_forms(request.POST)
+        valid = True
+        for (name, form) in forms.items():
+            if not form.is_valid():
+                valid = False
+
+        if valid:
+            if 'bookingform' in forms:
+                booking = forms['bookingform'].save(commit=False)
+            else:
+                booking = self.object
+            booking.visit = self.visit
+            if 'bookerform' in forms:
+                booking.booker = forms['bookerform'].save()
+            booking.save()
+            return redirect("/visit/%d/book/success" % self.visit.id)
+
+        data.update(forms)
+        return self.render_to_response(
+            self.get_context_data(**data)
+        )
+
+    def get_forms(self, data=None):
+        forms = {}
+        if self.visit is not None:
+            forms['bookerform'] = BookerForm(data, visit=self.visit)
+
+            if self.visit.type == Resource.FIXED_SCHEDULE_GROUP_VISIT or \
+                    self.visit.type == Resource.FREELY_SCHEDULED_GROUP_VISIT:
+                forms['bookingform'] = ClassBookingForm(data, visit=self.visit)
+            if self.visit.audience == Resource.TEACHER:
+                forms['bookingform'] = TeacherBookingForm(data,
+                                                          visit=self.visit)
+        return forms
+
+    def get_template_names(self):
+        if self.visit is None:
+            return [""]
+        if self.visit.type == Resource.STUDENT_FOR_A_DAY:
+            return ["booking/studentforaday.html"]
+        if self.visit.type == Resource.STUDY_PROJECT:
+            return ["booking/srp.html"]
+        if self.visit.audience == Resource.TEACHER:
+            return ["booking/teachervisit.html"]
+        if self.visit.audience == Resource.STUDENT:
+            return ["booking/classvisit.html"]
+
+
+class BookingSuccessView(TemplateView):
+    template_name = "booking/success.html"
+
+    def get(self, request, *args, **kwargs):
+        visit_id = kwargs.get("visit")
+        visit = None
+        if visit_id is not None:
+            try:
+                visit = Visit.objects.get(id=visit_id)
+            except:
+                pass
+        if visit is None:
+            return bad_request(request)
+
+        data = {'visit': visit}
+
+        return self.render_to_response(
+            self.get_context_data(**data)
         )
