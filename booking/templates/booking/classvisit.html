@@ -50,15 +50,25 @@
                 </div>
 
                 {% if bookingform.scheduled %}
-                <div class="form-group">
-                    <label class="col-sm-2 control-label" for="tlf">Tidspunkt*</label>
-                    <div class="col-sm-6{% if bookingform.time.errors %} has-error{% endif %}">
-                        {{ bookingform.time }}
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="tlf">Tidspunkt*</label>
+                        <div class="col-sm-6{% if bookingform.time.errors %} has-error{% endif %}">
+                            {{ bookingform.time }}
+                        </div>
+                        <div class="col-sm-3 help-block with-errors">
+                            {{ bookingform.time.errors }}
+                        </div>
                     </div>
-                    <div class="col-sm-3 help-block with-errors">
-                        {{ bookingform.time.errors }}
+                {% else %}
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="tlf">Ønsket tidspunkt*</label>
+                        <div class="col-sm-6{% if bookingform.desired_time.errors %} has-error{% endif %}">
+                            {{ bookingform.desired_time }}
+                        </div>
+                        <div class="col-sm-3 help-block with-errors">
+                            {{ bookingform.desired_time.errors }}
+                        </div>
                     </div>
-                </div>
                 {% endif %}
 
                 <div class="form-group">

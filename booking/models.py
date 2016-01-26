@@ -597,8 +597,7 @@ class Booker(models.Model):
     )
     email = models.EmailField(
         max_length=64,
-        null=True,
-        blank=True,
+        blank=False,
         verbose_name=u'Email'
     )
     phone = models.CharField(
@@ -678,6 +677,11 @@ class ClassBooking(Booking):
     time = models.DateTimeField(
         null=True,
         verbose_name=u'Tidspunkt'
+    )
+    desired_time = models.CharField(
+        null=True,
+        max_length=2000,
+        verbose_name=u'Ønsket tidspunkt'
     )
     tour_desired = models.BooleanField(
         verbose_name=u'Rundvisning ønsket'

@@ -214,11 +214,18 @@ class ClassBookingForm(BookingForm):
             ),
             'notes': Textarea(
                 attrs={'class': 'form-control input-sm'}
+            ),
+            'desired_time': Textarea(
+                attrs={'class': 'form-control input-sm'}
             )
         }
 
     time = forms.ChoiceField(
         widget=Select(),
+        required=False
+    )
+    desired_time = forms.CharField(
+        widget=Textarea(attrs={'class': 'form-control input-sm'}),
         required=False
     )
 
@@ -236,6 +243,9 @@ class ClassBookingForm(BookingForm):
                 for x in visit.visitoccurrence_set.all()
                 ]
             self.fields['time'].choices = time_choices
+            self.fields['time'].required = True
+        else:
+            self.fields['desired_time'].required = True
 
         studentcount_widget = self.fields['student_count'].widget
         studentcount_widget.attrs['min'] = 1
