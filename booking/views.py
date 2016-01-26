@@ -656,18 +656,6 @@ class BookingView(UpdateView):
             except:
                 pass
 
-    def get_visit_type(self):
-        if self.visit is None:
-            return None
-        if self.visit.type == Resource.STUDENT_FOR_A_DAY:
-            return
-        if self.visit.type == Resource.STUDY_PROJECT:
-            return
-        if self.visit.audience == Resource.AUDIENCE_TEACHER:
-            return
-        if self.visit.audience == Resource.AUDIENCE_STUDENT:
-            return
-
     def get(self, request, *args, **kwargs):
         self.set_visit(kwargs.get("visit"))
         if self.visit is None:
@@ -718,7 +706,7 @@ class BookingView(UpdateView):
 
             if self.visit.type == Resource.GROUP_VISIT:
                 forms['bookingform'] = ClassBookingForm(data, visit=self.visit)
-            if self.visit.audience == Resource.AUDIENCE_TEACHER:
+            elif self.visit.audience == Resource.AUDIENCE_TEACHER:
                 forms['bookingform'] = TeacherBookingForm(data,
                                                           visit=self.visit)
         return forms
