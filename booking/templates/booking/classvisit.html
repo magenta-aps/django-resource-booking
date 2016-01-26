@@ -20,6 +20,11 @@
         <form id="bookingform" class="form-horizontal clearfix" data-toggle="validator" role="form" novalidate="true" method="POST">
             {% csrf_token %}
 
+            <!--
+            {{ bookerform.errors }}
+            {{ bookingform.errors }}
+            -->
+
             <div id="part1" class="formpart" data-prevbutton="cancelbutton"  data-nextbutton="nextbutton" data-next="part2" {% if bookerform.errors or not bookingform.errors %} data-first="true"{% endif %}>
                 {{ bookerform.non_field_errors }}
                 {% include "booking/booker/basedata.html" %}
