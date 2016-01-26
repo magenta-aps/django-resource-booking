@@ -1,7 +1,7 @@
 from booking.models import StudyMaterial
 from booking.models import UnitType
 from booking.models import Unit
-from booking.models import Resource, Visit, VisitOccurrence
+from booking.models import Visit, VisitOccurrence
 from booking.models import Booker, Region, PostCode, School
 from booking.models import ClassBooking, TeacherBooking
 from django import forms
@@ -247,7 +247,7 @@ class ClassBookingForm(BookingForm):
     def __init__(self, data=None, visit=None, *args, **kwargs):
         super(ClassBookingForm, self).__init__(data, *args, **kwargs)
 
-        #self.scheduled = visit is not None and \
+        # self.scheduled = visit is not None and \
         #    visit.type == Resource.FIXED_SCHEDULE_GROUP_VISIT
         self.scheduled = visit is not None
 
