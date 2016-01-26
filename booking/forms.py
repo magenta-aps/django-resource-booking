@@ -23,6 +23,7 @@ class UnitForm(forms.ModelForm):
 
 
 class VisitForm(forms.ModelForm):
+    required_css_class = 'required'
 
     class Meta:
         model = Visit
