@@ -38,7 +38,7 @@
         <div class="panel-body">
             <div>{{ form.title.errors }}</div>
             <div class="col-sm-2">
-            <label for="{{ form.title.id_for_label }}">{{ form.title.label }}:</label>
+            <label class="{{ form.title.css_classes }}" for="{{ form.title.id_for_label }}">{{ form.title.label }}:</label>
             </div>
             <div class="col-sm-10">
             {{ form.title }}
@@ -60,7 +60,7 @@
                         <div class="row form-group">
                             <div>{{ form.teaser.errors }}</div>
                             <div class="col-sm-2">
-                            <label for="{{ form.teaser.id_for_label }}">{{ form.teaser.label }}:</label>
+                            <label class="{{ form.teaser.css_classes }}" for="{{ form.teaser.id_for_label }}">{{ form.teaser.label }}:</label>
                             </div>
                             <div class="col-sm-10">
                             {{ form.teaser }}
@@ -69,7 +69,7 @@
                         <div class="row form-group">
                             <div>{{ form.description.errors }}</div>
                             <div class="col-sm-2">
-                            <label for="{{ form.description.id_for_label }}">{{ form.description.label }}:</label>
+                            <label class="{{ form.description.css_classes }}" for="{{ form.description.id_for_label }}">{{ form.description.label }}:</label>
                             </div>
                             <div class="col-sm-10">
                             {{ form.description }}
@@ -78,7 +78,7 @@
                         <div class="row form-group">
                             <div>{{ form.price.errors }}</div>
                             <div class="col-sm-2">
-                            <label for="{{ form.price.id_for_label }}">{{ form.price.label }}:</label>
+                            <label class="{{ form.price.css_classes }}" for="{{ form.price.id_for_label }}">{{ form.price.label }}:</label>
                             </div>
                             <div class="col-sm-10">
                             {{ form.price }}
@@ -101,7 +101,7 @@
                     <div class="row form-group">
                             <div>{{ form.type.errors }}</div>
                             <div class="col-sm-2">
-                            <label for="{{ form.type.id_for_label }}">{{ form.type.label }}:</label>
+                            <label class="{{ form.type.css_classes }}" for="{{ form.type.id_for_label }}">{{ form.type.label }}:</label>
                             </div>
                             <div class="col-sm-10">
                             {{ form.type }}
@@ -143,7 +143,7 @@
                         <div class="row form-group">
                             <div>{{ form.institution_level.errors }}</div>
                             <div class="col-sm-2">
-                            <label for="{{ form.institution_level.id_for_label }}">{{ form.institution_level.label }}:</label>
+                            <label class="{{ form.institution_level.css_classes }}" for="{{ form.institution_level.id_for_label }}">{{ form.institution_level.label }}:</label>
                             </div>
                             <div class="col-sm-10">
                             {{ form.institution_level }}
@@ -163,7 +163,7 @@
                             <div class="row form-group">
                                 <div>{{ form.level.errors }}</div>
                                 <div class="col-sm-2">
-                                <label for="{{ form.level.id_for_label }}">{{ form.level.label }}:</label>
+                                <label class="{{ form.level.css_classes }}" for="{{ form.level.id_for_label }}">{{ form.level.label }}:</label>
                                 </div>
                                 <div class="col-sm-10">
                                 {{ form.level }}
@@ -174,7 +174,7 @@
                             <div class="row form-group">
                                 <div>{{ form.class_level_min.errors }}</div>
                                 <div class="col-sm-2">
-                                <label for="{{ form.class_level_min.id_for_label }}">{{ form.class_level_min.label }}:</label>
+                                <label class="{{ form.class_level.css_classes }}" for="{{ form.class_level_min.id_for_label }}">{{ form.class_level_min.label }}:</label>
                                 </div>
                                 <div class="col-sm-10">
                                 {{ form.class_level_min }}
@@ -183,7 +183,7 @@
                             <div class="row form-group">
                                 <div>{{ form.class_level_max.errors }}</div>
                                 <div class="col-sm-2">
-                                <label for="{{ form.class_level_max.id_for_label }}">{{ form.class_level_max.label }}:</label>
+                                <label class="{{ form.class_level_max.css_classes }}" for="{{ form.class_level_max.id_for_label }}">{{ form.class_level_max.label }}:</label>
                                 </div>
                                 <div class="col-sm-10">
                                 {{ form.class_level_max }}
@@ -194,7 +194,7 @@
                             <div class="row form-group">
                                 <div>{{ form.subjects.errors }}</div>
                                 <div class="col-sm-2">
-                                <label for="{{ form.subjects.id_for_label }}">{{ form.subjects.label }}:</label>
+                                <label class="{{ form.subjects.css_classes }}" for="{{ form.subjects.id_for_label }}">{{ form.subjects.label }}:</label>
                                 </div>
                                 <div class="col-sm-10">
                                 {{ form.subjects }}
@@ -204,7 +204,7 @@
                         <div class="row form-group">
                             <div>{{ form.minimum_number_of_visitors.errors }}</div>
                             <div class="col-sm-2">
-                            <label for="{{ form.minimum_number_of_visitors.id_for_label }}">{{ form.minimum_number_of_visitors.label }}:</label>
+                            <label class="{{ form.minimum_number_of_visitors.css_classes }}" for="{{ form.minimum_number_of_visitors.id_for_label }}">{{ form.minimum_number_of_visitors.label }}:</label>
                             </div>
                             <div class="col-sm-10">
                             {{ form.minimum_number_of_visitors }}
@@ -213,7 +213,7 @@
                         <div class="row form-group">
                             <div>{{ form.maximum_number_of_visitors.errors }}</div>
                             <div class="col-sm-2">
-                            <label for="{{ form.maximum_number_of_visitors.id_for_label }}">{{ form.maximum_number_of_visitors.label }}:</label>
+                            <label class="{{ form.maximum_number_of_visitors.css_classes }}" for="{{ form.maximum_number_of_visitors.id_for_label }}">{{ form.maximum_number_of_visitors.label }}:</label>
                             </div>
                             <div class="col-sm-10">
                             {{ form.maximum_number_of_visitors }}
@@ -309,7 +309,7 @@
 
                                     <fieldset>
                                         {{ form.duration.errors }}
-                                        <label for="{{ form.duration.id_for_label }}">{{ form.duration.label }}:</label>
+                                        <label class="{{ form.duration.css_classes }}" for="{{ form.duration.id_for_label }}">{{ form.duration.label }}:</label>
                                         <select id="id_duration" name="duration">
                                             <option value="00:00">00:00</option>
                                             <option value="00:30">00:30</option>
@@ -340,7 +340,7 @@
                                     </fieldset>
                                     <fieldset>
                                         {{ form.recurrences.errors }}
-                                        <label for="{{ form.recurrences.id_for_label }}">{{ form.recurrences.label }}:</label><br>
+                                        <label class="{{ form.recurrences.css_classes }}" for="{{ form.recurrences.id_for_label }}">{{ form.recurrences.label }}:</label><br>
                                         {{ form.recurrences }}
                                     </fieldset>
                                     <fieldset>
@@ -364,7 +364,6 @@
                                         </div>
                                     </fieldset>
                             </div>
-
                         </div>
                     </div>
                 </div>
@@ -383,7 +382,7 @@
                         <div class="row form-group">
                                     <div>{{ form.locality.errors }}</div>
                                     <div class="col-sm-2">
-                                    <label for="{{ form.locality.id_for_label }}">{{ form.locality.label }}:</label>
+                                    <label class="{{ form.locality.css_classes }}" for="{{ form.locality.id_for_label }}">{{ form.locality.label }}:</label>
                                     </div>
                                     <div class="col-sm-10">
                                     {{ form.locality }}
@@ -393,7 +392,7 @@
                             <div>{{ form.rooms_needed.errors }}</div>
                             <div class="col-sm-12">
                             {{ form.rooms_needed }}
-                            <label for="{{ form.rooms_needed.id_for_label }}">{{ form.rooms_needed.label }}</label>
+                            <label class="{{ form.rooms_needed.css_classes }}" for="{{ form.rooms_needed.id_for_label }}">{{ form.rooms_needed.label }}</label>
                             </div>
                         </div>
 
@@ -401,7 +400,7 @@
                         <div class="row form-group">
                             <div>{{ form.rooms_assignment.errors }}</div>
                             <div class="col-sm-2">
-                            <label for="{{ form.rooms_assignment.id_for_label }}">{{ form.rooms_assignment.label }}:</label>
+                            <label class="{{ form.rooms_assignment.css_classes }}" for="{{ form.rooms_assignment.id_for_label }}">{{ form.rooms_assignment.label }}:</label>
                             </div>
                             <div class="col-sm-10">
                             {{ form.rooms_assignment }}
@@ -410,7 +409,7 @@
                         <div id="roomsedit">
                         <div class="row form-group">
                             <div class="col-sm-2">
-                                    <label for="existingrooms">{% trans "Tilføj eksisterende lokale" %}:</label>
+                                    <label class="{{ form.existingrooms.css_classes }}" for="existingrooms">{% trans "Tilføj eksisterende lokale" %}:</label>
                                     </div>
                                     <div class="col-sm-6">
                                     <select name="existingrooms" class="form-control input-sm" id="existingrooms">
@@ -423,7 +422,7 @@
                         </div>
                             <div class="row form-group">
                                 <div class="col-sm-2">
-                                    <label for="newroom">{% trans "Tilføj nyt lokale" %}:</label>
+                                    <label class="{{ form.newroom.css_classes }}" for="newroom">{% trans "Tilføj nyt lokale" %}:</label>
                                     </div>
                                     <div class="col-sm-6">
                                     <div class="input-group">
@@ -466,7 +465,7 @@
                     <div class="row form-group">
                             <div>{{ form.unit.errors }}</div>
                             <div class="col-sm-2">
-                            <label for="{{ form.unit.id_for_label }}">{{ form.unit.label }}:</label>
+                            <label class="{{ form.unit.css_classes }}" for="{{ form.unit.id_for_label }}">{{ form.unit.label }}:</label>
                             </div>
                             <div class="col-sm-10">
                             {{ form.unit }}
