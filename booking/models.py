@@ -602,8 +602,7 @@ class Booker(models.Model):
     )
     phone = models.CharField(
         max_length=14,
-        null=True,
-        blank=True,
+        blank=False,
         verbose_name=u'Telefon'
     )
 

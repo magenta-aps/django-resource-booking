@@ -131,7 +131,7 @@ class BookerForm(BookingForm):
             'phone': TextInput(
                 attrs={'class': 'form-control input-sm',
                        'placeholder': 'Telefonnummer',
-                       'pattern': '(\(\+\d+\)|\+\d+)?\s*\d+[ \d]*'}
+                       'pattern': '(\(\+\d+\)|\+\d+)?\s*\d+[ \d]*'},
             ),
             'notes': Textarea(
                 attrs={'class': 'form-control input-sm'}
