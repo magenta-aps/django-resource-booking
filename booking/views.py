@@ -562,9 +562,9 @@ class BookingView(UpdateView):
             return
         if self.visit.type == Resource.STUDY_PROJECT:
             return
-        if self.visit.audience == Resource.TEACHER:
+        if self.visit.audience == Resource.AUDIENCE_TEACHER:
             return
-        if self.visit.audience == Resource.STUDENT:
+        if self.visit.audience == Resource.AUDIENCE_STUDENT:
             return
 
     def get(self, request, *args, **kwargs):
@@ -617,7 +617,7 @@ class BookingView(UpdateView):
 
             if self.visit.type == Resource.GROUP_VISIT:
                 forms['bookingform'] = ClassBookingForm(data, visit=self.visit)
-            if self.visit.audience == Resource.TEACHER:
+            if self.visit.audience == Resource.AUDIENCE_TEACHER:
                 forms['bookingform'] = TeacherBookingForm(data,
                                                           visit=self.visit)
         return forms
@@ -629,9 +629,9 @@ class BookingView(UpdateView):
             return ["booking/studentforaday.html"]
         if self.visit.type == Resource.STUDY_PROJECT:
             return ["booking/srp.html"]
-        if self.visit.audience == Resource.TEACHER:
+        if self.visit.audience == Resource.AUDIENCE_TEACHER:
             return ["booking/teachervisit.html"]
-        if self.visit.audience == Resource.STUDENT:
+        if self.visit.audience == Resource.AUDIENCE_STUDENT:
             return ["booking/classvisit.html"]
 
 
