@@ -650,12 +650,12 @@ class Booker(models.Model):
     )
 
     attendee_count = models.IntegerField(
-            blank=False,
-            verbose_name=u'Antal deltagere'
+        blank=False,
+        verbose_name=u'Antal deltagere'
     )
     notes = models.TextField(
-            blank=True,
-            verbose_name=u'Bemærkninger'
+        blank=True,
+        verbose_name=u'Bemærkninger'
     )
 
     def __unicode__(self):

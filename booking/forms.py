@@ -140,7 +140,7 @@ class BookerForm(BookingForm):
                 attrs={'class': 'selectpicker form-control'}
             ),
             'attendee_count': NumberInput(
-                    attrs={'class': 'form-control input-sm', 'min': 0}
+                attrs={'class': 'form-control input-sm', 'min': 0}
             ),
             'notes': Textarea(
                 attrs={'class': 'form-control input-sm'}
