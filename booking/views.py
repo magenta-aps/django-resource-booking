@@ -527,6 +527,14 @@ class VisitDetailView(DetailView):
         else:
             context['can_edit'] = False
 
+        if self.object.type in [Resource.STUDENT_FOR_A_DAY,
+                                Resource.STUDY_PROJECT,
+                                Resource.GROUP_VISIT,
+                                Resource.TEACHER_EVENT]:
+            context['can_book'] = True
+        else:
+            context['can_book'] = False
+
         context.update(kwargs)
 
         return super(VisitDetailView, self).get_context_data(**context)
@@ -720,7 +728,7 @@ class BookingView(UpdateView):
             return ["booking/srp.html"]
         if self.visit.type == Resource.GROUP_VISIT:
             return ["booking/classvisit.html"]
-        if self.visit.audience == Resource.AUDIENCE_TEACHER:
+        if self.visit.type == Resource.TEACHER_EVENT:
             return ["booking/teachervisit.html"]
 
 

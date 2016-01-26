@@ -77,9 +77,11 @@
             </div>
             <div class="well order-buttons hidden-print">
                 <!-- Display according to business logic -->
+                {% if can_book %}
                 <button type="button" class="btn btn-default" data-toggle="modal" data-target="#startbooking">Book dette tilbud
                     <span class="glyphicon glyphicon-chevron-right"></span>
                 </button>
+                {% endif %}
                 <!-- Display according to business logic -->
             </div>
             <div class="disclaimer">Bemærk at din bestilling først er bindende, når du har modtaget en bekræftelse fra den ansvarlige arrangør fra Københavns Universitet.</div>
