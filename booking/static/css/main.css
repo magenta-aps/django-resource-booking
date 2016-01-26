@@ -17,11 +17,11 @@
 html,
 body {
     text-align: left;
+    height: 100%;
 }
 
 html {
     position: relative;
-    min-height: 100%;
     -webkit-overflow-scrolling: touch;
 }
 
@@ -36,7 +36,6 @@ body {
     color: #4A4949;
     margin: 0;
     padding: 0;
-    min-height: 100%;
 }
 
 h1 {
@@ -842,5 +841,11 @@ div ul.errorlist {
         border-left: 1px solid #ccc;
         border-right: 1px solid #ccc;
         border-bottom: 1px solid #ccc;
+    }
+    .eq-height {
+        display: -webkit-box;
+        display: -webkit-flex;
+        display: -ms-flexbox;
+        display: flex;
     }
 }
