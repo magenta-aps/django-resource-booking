@@ -600,8 +600,7 @@ class BookingView(UpdateView):
         if self.visit is not None:
             forms['bookerform'] = BookerForm(data, visit=self.visit)
 
-            if self.visit.type == Resource.FIXED_SCHEDULE_GROUP_VISIT or \
-                    self.visit.type == Resource.FREELY_SCHEDULED_GROUP_VISIT:
+            if self.visit.type == Resource.GROUP_VISIT:
                 forms['bookingform'] = ClassBookingForm(data, visit=self.visit)
             if self.visit.audience == Resource.TEACHER:
                 forms['bookingform'] = TeacherBookingForm(data,

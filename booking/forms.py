@@ -247,8 +247,9 @@ class ClassBookingForm(BookingForm):
     def __init__(self, data=None, visit=None, *args, **kwargs):
         super(ClassBookingForm, self).__init__(data, *args, **kwargs)
 
-        self.scheduled = visit is not None and \
-            visit.type == Resource.FIXED_SCHEDULE_GROUP_VISIT
+        #self.scheduled = visit is not None and \
+        #    visit.type == Resource.FIXED_SCHEDULE_GROUP_VISIT
+        self.scheduled = visit is not None
 
         if self.scheduled:
             time_choices = [
