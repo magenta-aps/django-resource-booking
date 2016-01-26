@@ -114,7 +114,7 @@ class BookerForm(BookingForm):
     class Meta:
         model = Booker
         fields = ('firstname', 'lastname', 'email', 'phone', 'line',
-                  'level', 'notes')
+                  'level', 'attendee_count', 'notes')
         widgets = {
             'firstname': TextInput(
                 attrs={'class': 'form-control input-sm',
@@ -133,9 +133,19 @@ class BookerForm(BookingForm):
                        'placeholder': 'Telefonnummer',
                        'pattern': '(\(\+\d+\)|\+\d+)?\s*\d+[ \d]*'},
             ),
+            'line': Select(
+                attrs={'class': 'selectpicker form-control'}
+            ),
+            'level': Select(
+                attrs={'class': 'selectpicker form-control'}
+            ),
+            'attendee_count': NumberInput(
+                    attrs={'class': 'form-control input-sm', 'min': 0}
+            ),
             'notes': Textarea(
                 attrs={'class': 'form-control input-sm'}
-            )
+            ),
+
         }
 
     repeatemail = forms.CharField(
@@ -164,8 +174,23 @@ class BookerForm(BookingForm):
         )
     )
     region = forms.ModelChoiceField(
-        queryset=Region.objects.all()
+        queryset=Region.objects.all(),
+        widget=Select(
+            attrs={'class': 'selectpicker form-control'}
+        )
     )
+
+    def __init__(self, data=None, visit=None, *args, **kwargs):
+        super(BookerForm, self).__init__(data, *args, **kwargs)
+        attendeecount_widget = self.fields['attendee_count'].widget
+        attendeecount_widget.attrs['min'] = 1
+        if visit is not None:
+            if visit.minimum_number_of_visitors is not None:
+                attendeecount_widget.attrs['min'] = \
+                    visit.minimum_number_of_visitors
+            if visit.maximum_number_of_visitors is not None:
+                attendeecount_widget.attrs['max'] = \
+                    visit.maximum_number_of_visitors
 
     def clean_postcode(self):
         try:
@@ -204,24 +229,12 @@ class ClassBookingForm(BookingForm):
 
     class Meta:
         model = ClassBooking
-        fields = ('student_count', 'teacher_count', 'tour_desired', 'notes')
-        widgets = {
-            'student_count': NumberInput(
-                attrs={'class': 'form-control input-sm', 'min': 0}
-            ),
-            'teacher_count': NumberInput(
-                attrs={'class': 'form-control input-sm', 'min': 0}
-            ),
-            'notes': Textarea(
-                attrs={'class': 'form-control input-sm'}
-            ),
-            'desired_time': Textarea(
-                attrs={'class': 'form-control input-sm'}
-            )
-        }
+        fields = ('tour_desired',)
 
     time = forms.ChoiceField(
-        widget=Select(),
+        widget=Select(
+            attrs={'class': 'selectpicker form-control'}
+        ),
         required=False
     )
     desired_time = forms.CharField(
@@ -246,16 +259,6 @@ class ClassBookingForm(BookingForm):
             self.fields['time'].required = True
         else:
             self.fields['desired_time'].required = True
-
-        studentcount_widget = self.fields['student_count'].widget
-        studentcount_widget.attrs['min'] = 1
-        if visit is not None:
-            if visit.minimum_number_of_visitors is not None:
-                studentcount_widget.attrs['min'] = \
-                    visit.minimum_number_of_visitors
-            if visit.maximum_number_of_visitors is not None:
-                studentcount_widget.attrs['max'] = \
-                    visit.maximum_number_of_visitors
 
     def save(self, commit=True, *args, **kwargs):
         booking = super(ClassBookingForm, self).save(commit=False)

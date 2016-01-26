@@ -648,9 +648,14 @@ class Booker(models.Model):
         null=True,
         verbose_name=u'Skole'
     )
+
+    attendee_count = models.IntegerField(
+            blank=False,
+            verbose_name=u'Antal deltagere'
+    )
     notes = models.TextField(
-        blank=True,
-        verbose_name=u'Bemærkninger'
+            blank=True,
+            verbose_name=u'Bemærkninger'
     )
 
     def __unicode__(self):
@@ -665,29 +670,19 @@ class Booking(models.Model):
 
 
 class ClassBooking(Booking):
-    student_count = models.IntegerField(
-        blank=False,
-        verbose_name=u'Antal elever'
-    )
-    teacher_count = models.IntegerField(
-        blank=False,
-        verbose_name=u'Antal lærere'
-    )
     time = models.DateTimeField(
         null=True,
+        blank=True,
         verbose_name=u'Tidspunkt'
     )
     desired_time = models.CharField(
         null=True,
+        blank=True,
         max_length=2000,
         verbose_name=u'Ønsket tidspunkt'
     )
     tour_desired = models.BooleanField(
         verbose_name=u'Rundvisning ønsket'
-    )
-    notes = models.TextField(
-        blank=True,
-        verbose_name=u'Bemærkninger'
     )
 
 

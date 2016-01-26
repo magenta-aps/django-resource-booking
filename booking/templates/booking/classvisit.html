@@ -29,25 +29,7 @@
 
             <div id="part2" class="formpart" data-prevbutton="previousbutton" data-nextbutton="submitbutton" data-prev="part1"{% if bookingform.errors and not bookerform.errors %} data-first="true"{% endif %}>
 
-                <div class="form-group">
-                    <label class="col-sm-2 control-label" for="tlf">Antal Elever*</label>
-                    <div class="col-sm-6{% if bookingform.student_count.errors %} has-error{% endif %}">
-                        {{ bookingform.student_count }}
-                    </div>
-                    <div class="col-sm-3 help-block with-errors">
-                        {{ bookingform.student_count.errors }}
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="col-sm-2 control-label" for="tlf">Antal Lærere*</label>
-                    <div class="col-sm-6{% if bookingform.teacher_count.errors %} has-error{% endif %}">
-                        {{ bookingform.teacher_count }}
-                    </div>
-                    <div class="col-sm-3 help-block with-errors">
-                        {{ bookingform.teacher_count.errors }}
-                    </div>
-                </div>
+                {% include "booking/booker/attendees.html" %}
 
                 {% if bookingform.scheduled %}
                     <div class="form-group">
@@ -83,11 +65,11 @@
 
                 <div class="form-group">
                     <label class="col-sm-2 control-label" for="skole">Kommentarer</label>
-                    <div class="col-sm-6{% if bookingform.notes.errors %} has-error{% endif %}">
-                        {{ bookingform.notes }}
+                    <div class="col-sm-6{% if bookerform.notes.errors %} has-error{% endif %}">
+                        {{ bookerform.notes }}
                     </div>
                     <div class="col-sm-3 help-block with-errors">
-                        {{ bookingform.notes.errors }}
+                        {{ bookerform.notes.errors }}
                     </div>
                 </div>
             </div>
