@@ -109,8 +109,8 @@ TINYMCE_DEFAULT_CONFIG = {
     'theme_advanced_buttons1':
         'bold,italic,underline,|,justifyleft,justifycenter,justifyright,'
         'justifyfull,|,formatselect,|,bullist,numlist,outdent,indent,|,undo,'
-        'redo|link,unlink,anchor,image,cleanup,help,code,hr,removeformat,'
-        'visualaid,|charmap'
+        'redo,|,link,unlink,anchor,image,cleanup,help,code,|,hr,removeformat,'
+        'visualaid,charmap'
 
 }
 TINYMCE_COMPRESSOR = True
