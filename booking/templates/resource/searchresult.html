@@ -163,7 +163,9 @@
                 <li class="media">
                     <div class="media-body">
                         <h3 class="media-heading"><a href="{% url 'visit' res.pk %}">{{ res.title }}</a></h3>
-                        <p>{{ res.teaser|highlight:request.GET.q }}</p>
+                        {% if request.GET.q %}
+                            <p>{{ res.teaser|highlight:request.GET.q }}</p>
+                        {% endif %}
                         <div class="media-info">
                             <ul class="info-list list-inline">
                                 <li>
