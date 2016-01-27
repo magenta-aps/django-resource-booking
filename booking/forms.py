@@ -3,7 +3,7 @@ from booking.models import UnitType
 from booking.models import Unit
 from booking.models import Visit, VisitOccurrence
 from booking.models import Booker, Region, PostCode, School
-from booking.models import ClassBooking, TeacherBooking
+from booking.models import ClassBooking, TeacherBooking, BookingSubjectLevel
 from django import forms
 from django.forms import CheckboxSelectMultiple, EmailInput, RadioSelect
 from django.forms import inlineformset_factory
@@ -287,3 +287,20 @@ class TeacherBookingForm(BookingForm):
     class Meta:
         model = TeacherBooking
         fields = ('subjects', )
+
+
+BookingSubjectLevelForm = \
+    inlineformset_factory(ClassBooking,
+                          BookingSubjectLevel,
+                          fields=('subject', 'level'),
+                          can_delete=True,
+                          extra=1,
+                          widgets={
+                              'subject': Select(
+                                  attrs={'class': 'form-control'}
+                              ),
+                              'level': Select(
+                                  attrs={'class': 'form-control'}
+                              )
+                          }
+                          )

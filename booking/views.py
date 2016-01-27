@@ -29,7 +29,7 @@ from booking.models import Room
 from booking.models import PostCode, School
 from booking.models import Booking
 from booking.forms import VisitForm, ClassBookingForm, TeacherBookingForm
-from booking.forms import VisitStudyMaterialForm
+from booking.forms import VisitStudyMaterialForm, BookingSubjectLevelForm
 from booking.forms import BookerForm
 
 i18n_test = _(u"Dette tester oversættelses-systemet")
@@ -600,6 +600,13 @@ class BookingView(UpdateView):
 
         self.object = Booking()
         forms = self.get_forms(request.POST)
+
+        # Hack: remove this form; we'll add it later when
+        # we have our booking object
+        if 'subjectform' in forms:
+            del forms['subjectform']
+            hadSubjectForm = True
+
         valid = True
         for (name, form) in forms.items():
             if not form.is_valid():
@@ -613,8 +620,19 @@ class BookingView(UpdateView):
             booking.visit = self.visit
             if 'bookerform' in forms:
                 booking.booker = forms['bookerform'].save()
+
             booking.save()
+
+            # We can't fetch this form before we have
+            # a saved booking object to feed it, or we'll get an error
+            if hadSubjectForm:
+                subjectform = BookingSubjectLevelForm(request.POST,
+                                                      instance=booking)
+                if subjectform.is_valid():
+                    subjectform.save()
             return redirect("/visit/%d/book/success" % self.visit.id)
+        else:
+            forms['subjectform'] = BookingSubjectLevelForm(request.POST)
 
         data.update(forms)
         return self.render_to_response(
@@ -628,6 +646,8 @@ class BookingView(UpdateView):
 
             if self.visit.type == Resource.GROUP_VISIT:
                 forms['bookingform'] = ClassBookingForm(data, visit=self.visit)
+                forms['subjectform'] = BookingSubjectLevelForm(data)
+
             elif self.visit.audience == Resource.AUDIENCE_TEACHER:
                 forms['bookingform'] = TeacherBookingForm(data,
                                                           visit=self.visit)

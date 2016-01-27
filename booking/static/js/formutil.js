@@ -89,4 +89,4 @@ $(function() {
     }).trigger("change");
 
     $('#chosenrooms .glyphicon-remove').on("click", removeElem);
-})
+});
