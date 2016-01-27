@@ -1,0 +1,31 @@
+{% extends 'lightbox-index.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load booking_tags %}
+
+{% block head %}
+{% endblock %}
+
+{% block header %}
+{% endblock %}
+
+{% block content %}
+    {% include 'booking/modal/header.html' %}
+
+    <div class="modal-body">
+        <p>Besøget er booket</p>
+    </div>
+
+    <div class="modal-footer">
+        <p class="text-center">
+            Bemærk venligst at aftalen først er bindende, når du har modtaget en bekræftelse<br />
+            fra den arrangør på Københavns Universitet, der er ansvarlig for besøget.
+        </p>
+        <button type="button" class="btn btn-primary" data-dismiss="modal">Ok</button>
+    </div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+
+{% endblock %}

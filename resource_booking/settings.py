@@ -96,7 +96,8 @@ NPM_FILE_PATTERNS = {
                   'dist/fonts/*', 'dist/js/bootstrap.min.js'],
     'bootstrap-datetime-picker': ['js/bootstrap-datetimepicker.min.js',
                                   'js/locales/bootstrap-datetimepicker.da.js',
-                                  'css/bootstrap-datetimepicker.min.css']
+                                  'css/bootstrap-datetimepicker.min.css'],
+    'bootstrap-3-typeahead': ['bootstrap3-typeahead.min.js']
 }
 
 # Django-tinymce config
@@ -106,6 +107,12 @@ TINYMCE_DEFAULT_CONFIG = {
     'theme': "advanced",
     'cleanup_on_startup': True,
     'custom_undo_redo_levels': 100,
+    'theme_advanced_buttons1':
+        'bold,italic,underline,|,justifyleft,justifycenter,justifyright,'
+        'justifyfull,|,formatselect,|,bullist,numlist,outdent,indent,|,undo,'
+        'redo,|,link,unlink,anchor,image,cleanup,help,code,|,hr,removeformat,'
+        'visualaid,charmap'
+
 }
 TINYMCE_COMPRESSOR = True
 TINYMCE_JS_ROOT = '/static/thirdparty/tinymce'
