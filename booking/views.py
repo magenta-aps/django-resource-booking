@@ -133,8 +133,11 @@ class SearchView(ListView):
                 t_from = timezone.now()
             self.from_datetime = t_from
 
+            # Search for either resources without dates specified or
+            # resources that have times available in the future
             date_cond = Q(
-                visit__visitoccurrence__start_datetime__gt=t_from
+                Q(visit__visitoccurrence__start_datetime__isnull=True) |
+                Q(visit__visitoccurrence__start_datetime__gt=t_from)
             )
 
             # To time will match latest end time if it exists and else
