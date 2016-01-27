@@ -1,5 +1,5 @@
 #personalPage.eq-height [class*="col-"] .panel {
-    border-color: #ddd;
+    border-color: #ccc;
 }
 
 #personalPage.eq-height [class*="col-"] .panel .panel-body {
@@ -47,7 +47,7 @@
 #personalPage .panel.panel-bookings .panel-heading .panel-title {
     font-size: 14px;
     display: inline-block;
-    max-width: 90%;
+    max-width: 85%;
     color: #333;
 }
 
@@ -62,20 +62,36 @@
 #personalPage .badge-success {
     background-color: #5cb85c;
 }
+#personalPage [class*="alert-"] {
+    border-width: 1px;
+    border-style: solid;
+}
+#personalPage .outdated-item {
+    border: 1px solid #9C5154;
+    z-index: 1;
+    cursor: default;
+}
 #personalPage .outdated-item:hover {
-    border: 1px solid #ddd!important;
+    border: 1px solid #901a1e!important;
 }
 #personalPage .list-group-item .outdated {
     position: absolute;
-    left: 0;
-    right: 0;
-    top: 30%;
-    height: 50px;
-    font-size: 20px;
-    line-height: 50px;
+    left: 2%;
+    right: 2%;
+    bottom: 6%;
+    height: 40px;
+    font-size: 16px;
+    line-height: 40px;
     text-align: center;
-    color: #31708f;
-    background-color: #d9edf7;
-    border-color: #bce8f1;
+    color: #333;
+    background-color: #f2f2f2;
+    border:1px solid #e2e2e2;
     opacity: 0.85;
+    z-index: 2;
+    cursor: pointer;
+}
+#personalPage .list-group-item .outdated:hover {
+    background-color: #f2dede;
+    border: 1px solid #9C5154;
+    opacity: 1;
 }
