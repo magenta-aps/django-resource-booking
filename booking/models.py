@@ -446,6 +446,25 @@ class Resource(models.Model):
         return "-"
 
 
+class GymnasieLevel(models.Model):
+    # Level choices - A, B or C
+    A = 0
+    B = 1
+    C = 2
+
+    level_choices = (
+        (A, u'A'), (B, u'B'), (C, u'C')
+    )
+
+    level = models.IntegerField(choices=level_choices,
+                                verbose_name=_(u"Gymnasieniveau"),
+                                blank=True,
+                                null=True)
+
+    def __unicode__(self):
+        return self.get_level_display()
+
+
 class OtherResource(Resource):
     """A non-bookable, non-visit resource, basically material on the Web."""
     objects = SearchManager(
@@ -794,3 +813,24 @@ class ClassBooking(Booking):
 
 class TeacherBooking(Booking):
     subjects = models.ManyToManyField(Subject)
+
+
+class BookingSubjectLevel(models.Model):
+
+    booking = models.ForeignKey(Booking, blank=False, null=False)
+    subject = models.ForeignKey(
+        Subject, blank=False, null=False,
+        limit_choices_to={
+            'subject_type__in': [
+                Subject.SUBJECT_TYPE_GYMNASIE,
+                Subject.SUBJECT_TYPE_BOTH
+            ]
+        }
+    )
+    level = models.ForeignKey(GymnasieLevel, blank=False, null=False)
+
+    def __unicode__(self):
+        return u"%s (for booking %s)" % (self.display_value(), self.booking.pk)
+
+    def display_value(self):
+        return u'%s på %s niveau' % (self.subject.name, self.level)

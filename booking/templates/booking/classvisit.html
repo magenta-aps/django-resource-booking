@@ -34,6 +34,25 @@
 
             <div id="part2" class="formpart" data-prevbutton="previousbutton" data-nextbutton="submitbutton" data-prev="part1"{% if bookingform.errors and not bookerform.errors %} data-first="true"{% endif %}>
 
+                <div id="rowcontainer">
+                {{ subjectform.management_form }}
+                {% for form in subjectform %}
+                    {{ form.id }}
+                    <div class="form-group" id="rowprototype">
+                        <label class="col-sm-2 control-label" for="{{ form.subject.id_for_label }}">Fag/Niveau</label>
+                        <div class="col-sm-4">
+                            {{ form.subject }}
+                        </div>
+                        <div class="col-sm-2">
+                            {{ form.level }}
+                        </div>
+                        <div class="col-sm-2 rowadder">
+                            <a href="#" id="addRow">Tilføj ny</a>
+                        </div>
+                    </div>
+                {% endfor %}
+                </div>
+
                 {% include "booking/booker/attendees.html" %}
 
                 {% if bookingform.scheduled %}
@@ -109,5 +128,47 @@
             $("#bookingform").submit();
         });
     });
+    </script>
+
+    <script type="text/javascript" src="{% static 'js/formset-row.js' %}"></script>
+    <script type="text/javascript">
+        $(function(){
+
+            var extraRows = $("#rowcontainer > div").not(":first");
+
+            var mingleRow = function(row) {
+                row.removeAttr("id");
+                row.find("label").text(null);
+                var adder = row.find(".rowadder");
+                adder.addClass("rowremover");
+                adder.removeClass("rowadder");
+                adder.find("a").text("Fjern");
+                adder.find("a").click(removeRowEvent);
+            };
+
+            mingleRow(extraRows);
+
+            $(".rowadder a").click(function(){
+                var newRow = formset.addRow(
+                        $("#{{ subjectform.management_form.TOTAL_FORMS.id_for_label }}"),
+                        $("#{{ subjectform.management_form.MAX_NUM_FORMS.id_for_label }}"),
+                        $("#rowprototype"),
+                        $("#rowcontainer")
+                );
+                mingleRow(newRow);
+                modal.updateHeight();
+                return false;
+            });
+
+            var removeRowEvent = function() {
+                formset.removeRow(
+                        "#{{ subjectform.management_form.TOTAL_FORMS.id_for_label }}",
+                        $(this).parents(".form-group")
+                );
+                modal.updateHeight();
+            };
+
+            $(".rowremover a").click(removeRowEvent);
+        });
     </script>
 {% endblock %}
