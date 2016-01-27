@@ -692,6 +692,7 @@ class BookingView(UpdateView):
 
         # Hack: remove this form; we'll add it later when
         # we have our booking object
+        hadSubjectForm = False
         if 'subjectform' in forms:
             del forms['subjectform']
             hadSubjectForm = True
