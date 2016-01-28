@@ -480,6 +480,13 @@ class OtherResource(Resource):
                 Resource.resource_type_choices
                 if type[0] in OtherResource.applicable_types)
 
+    link = models.URLField(
+        verbose_name=u'Link',
+        max_length=256,
+        blank=True,
+        null=True
+    )
+
     def save(self, *args, **kwargs):
         # Save once to store relations
         super(OtherResource, self).save(*args, **kwargs)

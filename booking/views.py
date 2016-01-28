@@ -26,12 +26,12 @@ from django.views.defaults import bad_request
 from profile.models import EDIT_ROLES
 from profile.models import role_to_text
 
-from booking.models import Visit, VisitOccurrence, StudyMaterial
+from booking.models import OtherResource, Visit, VisitOccurrence, StudyMaterial
 from booking.models import Resource, Subject
 from booking.models import Room
 from booking.models import PostCode, School
 from booking.models import Booking
-from booking.forms import ResourceInitialForm, VisitForm
+from booking.forms import ResourceInitialForm, OtherResourceForm, VisitForm
 from booking.forms import ClassBookingForm, TeacherBookingForm
 from booking.forms import VisitStudyMaterialForm, BookingSubjectLevelForm
 from booking.forms import BookerForm
@@ -344,6 +344,92 @@ class CreateResourceInitialView(TemplateView):
         return self.render_to_response(
             self.get_context_data(form=form)
         )
+
+
+class EditResourceView(UpdateView):
+    pass
+
+
+class EditOtherResourceView(EditResourceView):
+
+    template_name = 'otherresource/form.html'
+    form_class = OtherResourceForm
+    model = OtherResource
+
+    def __init__(self, *args, **kwargs):
+        super(EditOtherResourceView, self).__init__(*args, **kwargs)
+        self.object = None
+
+    # Display a view with two form objects; one for the regular model,
+    # and one for the file upload
+
+    roles = EDIT_ROLES
+
+    def get(self, request, *args, **kwargs):
+        pk = kwargs.get("pk")
+        try:
+            self.object = OtherResource() if pk is None\
+                else OtherResource.objects.get(id=pk)
+        except ObjectDoesNotExist:
+            raise Http404
+        form = self.get_form()
+        return self.render_to_response(
+            self.get_context_data(form=form)
+        )
+
+    # Handle both forms, creating a Visit and a number of StudyMaterials
+    def post(self, request, *args, **kwargs):
+        pk = kwargs.get("pk")
+        is_cloning = kwargs.get("clone", False)
+        if is_cloning or not hasattr(self, 'object') or self.object is None:
+            if pk is None or is_cloning:
+                self.object = None
+            else:
+                try:
+                    self.object = OtherResource.objects.get(id=pk)
+                    if is_cloning:
+                        self.object.pk = None
+                except ObjectDoesNotExist:
+                    raise Http404
+        form = self.get_form()
+        if form.is_valid():
+            form.save()
+            return super(EditOtherResourceView, self).form_valid(form)
+        else:
+            return self.form_invalid(form)
+
+    def get_success_url(self):
+        try:
+            return "/otherresource/%d" % self.object.id
+        except:
+            return '/'
+
+    def form_invalid(self, form):
+        return self.render_to_response(
+            self.get_context_data(form=form)
+        )
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        # First, check all is well in superclass
+        result = super(EditOtherResourceView, self).dispatch(*args, **kwargs)
+        # Now, check that the user belongs to the correct unit.
+        current_user = self.request.user
+        pk = kwargs.get("pk")
+        if self.object is None:
+            self.object = None if pk is None else Visit.objects.get(id=pk)
+        if self.object is not None and self.object.unit:
+            if not current_user.userprofile.can_edit(self.object):
+                raise AccessDenied(
+                    _(u"Du kan kun redigere enheder,som du selv er" +
+                      " koordinator for.")
+                )
+        return result
+
+    def get_form_kwargs(self):
+        kwargs = super(EditOtherResourceView, self).get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
 
 
 class EditVisit(RoleRequiredMixin, UpdateView):
