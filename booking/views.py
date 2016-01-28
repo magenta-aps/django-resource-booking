@@ -331,9 +331,9 @@ class EditResourceInitialView(TemplateView):
         pk = kwargs.get("pk")
         if pk is not None:
             if OtherResource.objects.filter(id=pk).count() > 0:
-                return redirect(reverse('otherresource_edit', args=[pk]))
+                return redirect(reverse('otherresource-edit', args=[pk]))
             elif Visit.objects.filter(id=pk).count() > 0:
-                return redirect(reverse('visit_edit', args=[pk]))
+                return redirect(reverse('visit-edit', args=[pk]))
             else:
                 raise Http404
         else:
@@ -349,7 +349,7 @@ class EditResourceInitialView(TemplateView):
             if type_id in Visit.applicable_types:
                 return redirect(reverse('visit_create') + "?type=%d" % type_id)
             else:
-                return redirect(reverse('otherresource_create') +
+                return redirect(reverse('otherresource-create') +
                                 "?type=%d" % type_id)
 
         return self.render_to_response(

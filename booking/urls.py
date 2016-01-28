@@ -64,19 +64,19 @@ urlpatterns = patterns(
 
     url(r'^resource/create$',
         EditResourceInitialView.as_view(),
-        name='resource_create'),
+        name='resource-create'),
     url(r'^resource/(?P<pk>[0-9]+)/edit$',
         EditResourceInitialView.as_view(),
-        name='resource_edit'),
+        name='resource-edit'),
 
     url(r'^otherresource/create$',
         EditOtherResourceView.as_view(success_url='create'),
-        name='otherresource_create'),
+        name='otherresource-create'),
     url(r'^otherresource/(?P<pk>[0-9]+)/edit$',
-        EditOtherResourceView.as_view(), name='otherresource_edit'),
+        EditOtherResourceView.as_view(), name='otherresource-edit'),
     url(r'^otherresource/(?P<pk>[0-9]+)/clone$',
         EditOtherResourceView.as_view(), {'clone': True},
-        name='otherresource_clone'),
+        name='otherresource-clone'),
 
 
     url(r'^visit/create$',
