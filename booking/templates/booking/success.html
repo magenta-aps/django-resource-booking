@@ -14,7 +14,7 @@
 
     <div class="modal-body">
         <p>{% trans "Tak for din booking! Du hører fra os snarest." %}</p>
-        <p><a id="rebook" href="/visit/{{ visit.id }}/book">{% trans "Foretag ny booking" %}</a></p>
+        <p><a id="rebook" href="{% url 'visit-book' visit.id %}">{% trans "Foretag ny booking" %}</a></p>
     </div>
 
     <div class="modal-footer">
@@ -29,7 +29,7 @@
 {% block extra_scripts %}
     <script type="text/javascript">
         <!--
-            $("#rebook").attr("href", "/visit/{{ visit.id }}/book" + document.location.hash);
+            $("#rebook").attr("href", "{% url 'visit-book' visit.id %}" + document.location.hash);
         //-->
     </script>
 

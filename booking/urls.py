@@ -69,18 +69,19 @@ urlpatterns = patterns(
         EditVisit.as_view(), name='visit_edit'),
     url(r'^visit/(?P<pk>[0-9]+)/clone$',
         EditVisit.as_view(), {'clone': True}, name='visit_clone'),
+    url(r'^visit/(?P<visit>[0-9]+)/book$', BookingView.as_view(),
+        name='visit-book'),
+    url(r'^visit/(?P<visit>[0-9]+)/book/success$',
+        BookingSuccessView.as_view(), name='visit-book-success'),
 
     # Ajax api
     url(r'^jsapi/rrulestr$', RrulestrView.as_view(), name='jsapi_rrulestr'),
 
     url(r'^tinymce/', include('tinymce.urls')),
 
-    url(r'^visit/(?P<visit>[0-9]+)/book$', BookingView.as_view(),
-        name='book-visit'),
-    url(r'^visit/(?P<visit>[0-9]+)/book/success$',
-        BookingSuccessView.as_view(), name='book-visit-success'),
 
-    url(r'^postcode/(?P<code>[0-9]{4})$', PostcodeView.as_view()),
-    url(r'^school', SchoolView.as_view()),
+    url(r'^postcode/(?P<code>[0-9]{4})$', PostcodeView.as_view(),
+        name='postcode'),
+    url(r'^school', SchoolView.as_view(), name='school'),
 
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
