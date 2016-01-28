@@ -31,6 +31,7 @@ from booking.models import Resource, Subject, GymnasieLevel
 from booking.models import Room
 from booking.models import PostCode, School
 from booking.models import Booking
+from booking.models import ResourceGymnasieFag, ResourceGrundskoleFag
 from booking.forms import VisitForm, ClassBookingForm, TeacherBookingForm
 from booking.forms import VisitStudyMaterialForm, BookingSubjectLevelForm
 from booking.forms import BookerForm
@@ -440,6 +441,39 @@ class EditVisit(RoleRequiredMixin, UpdateView):
                     start_datetime__in=existing_visit_occurrences
                 ).delete()
 
+
+            # Save fag
+            existing_gym_fag = {}
+            for x in visit.gymnasiefag.all():
+                existing_gym_fag[x.as_submitvalue()] = x
+
+            for gval in self.request.POST.getlist('gymnasiefag'):
+                if gval in existing_gym_fag:
+                    del existing_gym_fag[gval]
+                else:
+                    ResourceGymnasieFag.create_from_submitvalue(visit, gval)
+
+            # Delete any remaining values that were not submitted
+            for x in existing_gym_fag.itervalues():
+                x.delete()
+    
+            existing_gs_fag = {}
+            for x in visit.grundskolefag.all():
+                existing_gs_fag[x.as_submitvalue()] = x
+
+            for gval in self.request.POST.getlist('grundskolefag'):
+                if gval in existing_gs_fag:
+                    del existing_gs_fag[gval]
+                else:
+                    ResourceGrundskoleFag.create_from_submitvalue(
+                        visit, gval
+                    )
+
+            # Delete any remaining values that were not submitted
+            for x in existing_gs_fag.itervalues():
+                x.delete()
+
+
             return super(EditVisit, self).form_valid(form)
         else:
             return self.form_invalid(form, fileformset)
@@ -470,6 +504,8 @@ class EditVisit(RoleRequiredMixin, UpdateView):
         context['grundskolefag_choices'] = Subject.grundskolefag_qs()
         context['gymnasie_level_choices'] = \
             GymnasieLevel.objects.all().order_by('level')
+
+        context['klassetrin_range'] = range(1, 9)
 
         context.update(kwargs)
 

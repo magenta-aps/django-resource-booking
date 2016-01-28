@@ -181,43 +181,108 @@
                             {{ form.institution_level }}
                             </div>
                         </div>
-                        <!-- <div class="row form-group">
-                            <div>{{ form.topics.errors }}</div>
-                            <div class="col-sm-2">
-                            <label for="{{ form.topics.id_for_label }}">{{ form.topics.label }}:</label>
-                            </div>
-                            <div class="col-sm-10">
-                            {{ form.topics }}
-                            </div>
-                        </div> -->
 
                         <div class="institution_level_dependent" data-display-value="1">
                             <div class="row form-group" id="gymnasie-fag-edit">
                                 <div class="col-sm-2">
-                                    <label for="gymnasie-fag-edit">Gymnasiefag:</label>
+                                    <label for="gymnasiefag-edit">Gymnasiefag:</label>
                                 </div>
                                 
-                                <div class="col-sm-3">
-                                    <select name="gymnasiefag-fag">
-                                        <option value="">-- Vælg gymnasiefag --</option>
-                                        {% for fag in gymnasiefag_choices %}
-                                        <option value="{{fag.pk}}">{{fag.name}}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-
-                                <div class="col-sm-3">
-                                    <label for="gymnasielevel-group">Gymnasiefag:</label>
-                                    <ul id="gymnasielevel-group">
-                                        {% for level in gymnasie_level_choices %}
-                                        <li>
-                                            <label for="gymnasielevel-{{level.pk}}"><input type="checkbox" value="{{level.pk}}" />{{ level }}</label>
-                                        </li>
-                                        {% endfor %}
-                                    </ul>
+                                <div class="col-sm-10 form-group form-inline">
+                                    <div style="border: 1px solid black" id="gymnasiefag-edit">
+                                        <h1 style="border-bottom: 1px solid black; background: #eee">Tilføj nyt fag</h1>
+                                        <div>
+                                            <label for="gymnasiefag-fag">Fag:</label>
+                                            <select name="gymnasiefag-fag" id="gymnasiefag-fag">
+                                                <option value="">-- Vælg gymnasiefag --</option>
+                                                {% for fag in gymnasiefag_choices %}
+                                                <option value="{{fag.pk}}">{{fag.name}}</option>
+                                                {% endfor %}
+                                            </select>
+                    
+                                            <label for="gymnasiefag-levels">Niveau:</label>
+                                            <ul id="gymnasiefag-levels" class="list-inline" style="display: inline-block">
+                                                {% for level in gymnasie_level_choices %}
+                                                <li><label for="gymnasielevel-{{level.pk}}"><input type="checkbox" value="{{level.pk}}" /> {{ level }}</label></li>
+                                                {% endfor %}
+                                            </ul>
+                                            
+                                            <input type="button" id="gymnasiefag-add" value="Tilføj" />
+                                        </div>
+                                    </div>
+                                    <div style="border: 1px solid black">
+                                        <h1 style="border-bottom: 1px solid black; background: #eee">Valgte fag</h1>
+                                        <div id="gymnasiefag-empty">Der er ikke valgt nogen fag</div>
+                                        <script type="text/template" id="gymnasiefag-item-template">
+                                            <li data-fag-id="##id##" data-level-pks="##level-pks##">
+                                                <input type="hidden" value="##submitvalue##" name="gymnasiefag" />
+                                                <span class="fag-description">##description##</span>
+                                                <span class="glyphicon glyphicon-remove"></span>
+                                            </li>
+                                        </script>
+                                        <ul id="gymnasiefag-list">
+                                        </ul>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+
+                        <div class="institution_level_dependent" data-display-value="2">
+                            <div class="row form-group" id="gymnasie-fag-edit">
+                                <div class="col-sm-2">
+                                    <label for="grundskolefag-edit">Grundskolefag:</label>
+                                </div>
+                                
+                                <div class="col-sm-10 form-group form-inline">
+                                    <div style="border: 1px solid black" id="grundskolefag-edit">
+                                        <h1 style="border-bottom: 1px solid black; background: #eee">Tilføj nyt fag</h1>
+                                        <div>
+                                            <label for="grundskolefag-fag">Fag:</label>
+                                            <select name="grundskolefag-fag" id="grundskolefag-fag">
+                                                <option value="">-- Vælg grundskolefag --</option>
+                                                {% for fag in grundskolefag_choices %}
+                                                <option value="{{fag.pk}}">{{fag.name}}</option>
+                                                {% endfor %}
+                                            </select>
+                    
+                                            <label for="grundskolefag-minclass">Fra klassetrin:</label>
+                                            <select name="grundskolefag-minclass" id="grundskolefag-minclass">
+                                                <option value="" selected="selected">-- Vælg klassetrin --</option>
+                                                {% for trin in klassetrin_range %}
+                                                <option value="{{trin}}">{{trin}}</option>
+                                                {% endfor %}
+                                                <option value="10">10</option>
+                                            </select>
+                                            
+                                            <label for="grundskolefag-maxclass">Til klassetrin:</label>
+                                            <select name="grundskolefag-maxclass" id="grundskolefag-maxclass">
+                                                <option value="">-- Vælg klassetrin --</option>
+                                                {% for trin in klassetrin_range %}
+                                                <option value="{{trin}}">{{trin}}</option>
+                                                {% endfor %}
+                                                <option value="10" selected="selected">10</option>
+                                            </select>
+
+                                            <input type="button" id="grundskolefag-add" value="Tilføj" />
+                                        </div>
+                                    </div>
+                                    <div style="border: 1px solid black">
+                                        <h1 style="border-bottom: 1px solid black; background: #eee">Valgte fag</h1>
+                                        <div id="grundskolefag-empty">Der er ikke valgt nogen fag</div>
+                                        <script type="text/template" id="grundskolefag-item-template">
+                                            <li data-fag-id="##id##" data-level-min="##level-min##" data-level-max="##level-max##">
+                                                <input type="hidden" value="##submitvalue##" name="grundskolefag" />
+                                                <span class="fag-description">##description##</span>
+                                                <span class="glyphicon glyphicon-remove"></span>
+                                            </li>
+                                        </script>
+                                        <ul id="grundskolefag-list">
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="institution_level_dependent" data-display-value="2">
                             <div class="row form-group">
                                 <div>{{ form.class_level_min.errors }}</div>
@@ -611,7 +676,6 @@
                 var value = select.val();
                 $(".institution_level_dependent").each(function() {
                     var attr = $(this).attr("data-display-value") || 0xFFFFFF;
-                    console.log(attr, value, parseInt(value), parseInt(attr))
                     if (parseInt(value) & parseInt(attr)) {
                         $(this).show()
                     } else {
