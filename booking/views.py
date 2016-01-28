@@ -7,17 +7,21 @@ from datetime import datetime, timedelta
 from dateutil import parser
 from dateutil.rrule import rrulestr
 from django.http import HttpResponse
-from django.utils import timezone
 from django.views.generic import TemplateView, ListView, DetailView, View
 from django.db.models import Count
+from django.db.models import F
+from django.db.models import Q
+from django.utils import timezone
 from django.utils.translation import ugettext as _
 from django.views.generic.edit import UpdateView
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import Http404
 
 
-from profile.models import COORDINATOR, ADMINISTRATOR
+from profile.models import EDIT_ROLES
 from profile.models import role_to_text
 
 from booking.models import Visit, VisitOccurrence, StudyMaterial
@@ -94,20 +98,80 @@ class SearchView(ListView):
     paginate_by = 10
     base_queryset = None
     filters = None
+    from_datetime = None
+    to_datetime = None
+
+    def get_date_from_request(self, queryparam):
+        val = self.request.GET.get(queryparam)
+        if not val:
+            return None
+        try:
+            val = datetime.strptime(val, '%d-%m-%Y')
+            val = timezone.make_aware(val)
+        except Exception:
+            val = None
+        return val
 
     def get_base_queryset(self):
         if self.base_queryset is None:
             searchexpression = self.request.GET.get("q", "")
-            self.base_queryset = self.model.objects.search(searchexpression)
+
+            qs = self.model.objects.search(searchexpression)
+
+            date_cond = None
+
+            # Filter on from-time if one is specified or from current time
+            # if not
+            t_from = self.get_date_from_request("from")
+            if t_from is None:
+                t_from = timezone.now()
+            self.from_datetime = t_from
+
+            # Search for either resources without dates specified or
+            # resources that have times available in the future
+            date_cond = Q(
+                Q(visit__visitoccurrence__start_datetime__isnull=True) |
+                Q(visit__visitoccurrence__start_datetime__gt=t_from)
+            )
+
+            # To time will match latest end time if it exists and else
+            # match the first endtime
+            t_to = self.get_date_from_request("to")
+            if t_to:
+                date_cond = date_cond & Q(
+                    Q(
+                        Q(visit__visitoccurrence__end_datetime2__isnull=True) &
+                        Q(visit__visitoccurrence__end_datetime1__lte=t_to)
+                    ) |
+                    Q(
+                        visit__visitoccurrence__end_datetime2__lte=t_to
+                    )
+                )
+            self.to_datetime = t_to
+
+            # Only do date matching on resources that are actual visits
+            qs = qs.filter(Q(visit__isnull=True) | date_cond)
+
+            self.base_queryset = qs
 
         return self.base_queryset
+
+    def annotate(self, qs):
+        return qs.annotate(
+            occ_starttime=F('visit__visitoccurrence__start_datetime')
+        )
 
     def get_filters(self):
         if self.filters is None:
             self.filters = {}
+
+            # Audience will always include a search for resources marked for
+            # all audiences.
             a = self.request.GET.getlist("a")
             if a:
+                a.append(Resource.AUDIENCE_ALL)
                 self.filters["audience__in"] = a
+
             t = self.request.GET.getlist("t")
             if t:
                 self.filters["type__in"] = t
@@ -122,30 +186,13 @@ class SearchView(ListView):
 
     def get_queryset(self):
         filters = self.get_filters()
-        return self.get_base_queryset().filter(**filters)
-
-    def build_choices(self, choice_tuples, selected,
-                      selected_value='checked="checked"'):
-
-        selected = set(selected)
-        choices = []
-
-        for value, name in choice_tuples:
-            if unicode(value) in selected:
-                sel = selected_value
-            else:
-                sel = ''
-
-            choices.append({
-                'label': name,
-                'value': value,
-                'selected': sel
-            })
-
-        return choices
+        qs = self.get_base_queryset().filter(**filters)
+        qs = self.annotate(qs)
+        return qs
 
     def make_facet(self, facet_field, choice_tuples, selected,
-                   selected_value='checked="checked"'):
+                   selected_value='checked="checked"',
+                   add_to_all=None):
 
         selected = set(selected)
         hits = {}
@@ -158,9 +205,28 @@ class SearchView(ListView):
                 new_filters[k] = v
 
         qs = self.get_base_queryset().filter(**new_filters)
-        qs = qs.values(facet_field).annotate(hits=Count(facet_field))
+        qs = qs.values(facet_field).annotate(hits=Count("pk"))
         for item in qs:
             hits[item[facet_field]] = item["hits"]
+
+        # This adds all hits on a certain keys to the hits of all other keys.
+        if add_to_all is not None:
+            keys = set(add_to_all)
+            to_add = 0
+
+            for key in keys:
+                if key in hits:
+                    to_add = to_add + hits[key]
+                    del hits[key]
+
+            for v, n in choice_tuples:
+                if v in keys:
+                    continue
+
+                if v in hits:
+                    hits[v] += to_add
+                else:
+                    hits[v] = to_add
 
         for value, name in choice_tuples:
             if value not in hits:
@@ -196,7 +262,8 @@ class SearchView(ListView):
         context["audience_choices"] = self.make_facet(
             "audience",
             self.model.audience_choices,
-            self.request.GET.getlist("a")
+            self.request.GET.getlist("a"),
+            add_to_all=[Resource.AUDIENCE_ALL]
         )
 
         context["type_choices"] = self.make_facet(
@@ -205,15 +272,23 @@ class SearchView(ListView):
             self.request.GET.getlist("t"),
         )
 
-        subject_choices = [
-            (x.pk, x.name) for x in Subject.objects.all().order_by("name")
-        ]
+        gym_subject_choices = []
+        gs_subject_choices = []
+
+        for s in Subject.objects.all():
+            val = (s.pk, s.name)
+
+            if s.subject_type & Subject.SUBJECT_TYPE_GYMNASIE:
+                gym_subject_choices.append(val)
+
+            if s.subject_type & Subject.SUBJECT_TYPE_GRUNDSKOLE:
+                gs_subject_choices.append(val)
 
         gym_selected = self.request.GET.getlist("f")
         context["gymnasie_selected"] = gym_selected
         context["gymnasie_choices"] = self.make_facet(
             "subjects",
-            subject_choices,
+            gym_subject_choices,
             gym_selected,
         )
 
@@ -221,9 +296,12 @@ class SearchView(ListView):
         context["grundskole_selected"] = gs_selected
         context["grundskole_choices"] = self.make_facet(
             "subjects",
-            subject_choices,
+            gs_subject_choices,
             gs_selected,
         )
+
+        context['from_datetime'] = self.from_datetime
+        context['to_datetime'] = self.to_datetime
 
         context.update(kwargs)
         return super(SearchView, self).get_context_data(**context)
@@ -243,14 +321,21 @@ class EditVisit(RoleRequiredMixin, UpdateView):
     form_class = VisitForm
     model = Visit
 
+    def __init__(self, *args, **kwargs):
+        super(EditVisit, self).__init__(*args, **kwargs)
+        self.object = None
+
     # Display a view with two form objects; one for the regular model,
     # and one for the file upload
 
-    roles = COORDINATOR, ADMINISTRATOR
+    roles = EDIT_ROLES
 
     def get(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
-        self.object = Visit() if pk is None else Visit.objects.get(id=pk)
+        try:
+            self.object = Visit() if pk is None else Visit.objects.get(id=pk)
+        except ObjectDoesNotExist:
+            raise Http404
         form = self.get_form()
         fileformset = VisitStudyMaterialForm(None, instance=self.object)
         return self.render_to_response(
@@ -260,8 +345,17 @@ class EditVisit(RoleRequiredMixin, UpdateView):
     # Handle both forms, creating a Visit and a number of StudyMaterials
     def post(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
-        if not hasattr(self, 'object') or self.object is None:
-            self.object = None if pk is None else Visit.objects.get(id=pk)
+        is_cloning = kwargs.get("clone", False)
+        if (is_cloning or not hasattr(self, 'object') or self.object is None):
+            if pk is None or is_cloning:
+                self.object = None
+            else:
+                try:
+                    self.object = Visit.objects.get(id=pk)
+                    if is_cloning:
+                        self.object.pk = None
+                except ObjectDoesNotExist:
+                    raise Http404
         form = self.get_form()
         fileformset = VisitStudyMaterialForm(request.POST)
         if form.is_valid():
@@ -309,7 +403,7 @@ class EditVisit(RoleRequiredMixin, UpdateView):
                 for date in dates:
                     dt = timezone.make_aware(
                         parser.parse(date, dayfirst=True),
-                        timezone.pytz.timezone('UTC')
+                        timezone.pytz.timezone('Europe/Copenhagen')
                     )
                     datetimes.append(dt)
             # remove existing to avoid duplicates,
@@ -391,16 +485,12 @@ class EditVisit(RoleRequiredMixin, UpdateView):
         pk = kwargs.get("pk")
         if self.object is None:
             self.object = None if pk is None else Visit.objects.get(id=pk)
-        if self.object is not None:
-            role = current_user.userprofile.get_role()
-            if role == COORDINATOR:
-                users_unit = current_user.userprofile.unit
-                visits_unit = self.object.unit
-                if visits_unit and not visits_unit.belongs_to(users_unit):
-                    raise AccessDenied(
-                        _(u"Du kan kun redigere enheder,som du selv er" +
-                          " koordinator for.")
-                    )
+        if self.object is not None and self.object.unit:
+            if not current_user.userprofile.can_edit(self.object):
+                raise AccessDenied(
+                    _(u"Du kan kun redigere enheder,som du selv er" +
+                      " koordinator for.")
+                )
         return result
 
     def get_form_kwargs(self):
@@ -422,6 +512,21 @@ class VisitDetailView(DetailView):
             qs = qs.filter(state=Resource.ACTIVE)
         return qs
 
+    def get_context_data(self, **kwargs):
+        context = {}
+
+        user = self.request.user
+
+        if (hasattr(user, 'userprofile') and
+                user.userprofile.can_edit(self.object)):
+            context['can_edit'] = True
+        else:
+            context['can_edit'] = False
+
+        context.update(kwargs)
+
+        return super(VisitDetailView, self).get_context_data(**context)
+
 
 class RrulestrView(View):
 
@@ -437,7 +542,7 @@ class RrulestrView(View):
         """
         rrulestring = request.POST['rrulestr']
         now = timezone.now()
-        tz = timezone.pytz.timezone('UTC')
+        tz = timezone.pytz.timezone('Europe/Copenhagen')
         dates = []
         lines = rrulestring.split("\n")
         times_list = request.POST[u'start_times'].split(',')
@@ -462,14 +567,22 @@ class RrulestrView(View):
             # Todo: This should probably be handled more elegantly
             if u'RRULE' in line and u'UNTIL=' not in line:
                 line += u';UNTIL=%s' % (now + timedelta(90))\
-                    .strftime('%Y%m%dT%H%M%SZ')
-                dates = [timezone.make_aware(x, tz)
-                         for x in rrulestr(line, ignoretz=True)]
+                    .strftime('%Y%m%dT%H%M%S')
+                dates += [
+                    timezone.make_aware(x, tz) for x in rrulestr(
+                        line, ignoretz=True
+                    )
+                ]
             # RRDATEs are appended to the dates list
             elif u'RDATE' in line:
-                dates.append(datetime.strptime(line[6:], '%Y%m%dT%H%M%SZ'))
+                dates += [
+                    timezone.make_aware(x, tz)for x in rrulestr(
+                        line,
+                        ignoretz=True
+                    )
+                ]
         # sort the list while still in ISO 8601 format,
-        dates.sort()
+        dates = sorted(set(dates))
         # Cartesian product: AxB
         # ['2016-01-01','2016-01-02'] x ['10:00','12:00'] ->
         # ['2016-01-01 10:00','2016-01-01 12:00',
@@ -491,15 +604,3 @@ class RrulestrView(View):
             json.dumps(dates_without_existing_dates),
             content_type='application/json'
         )
-
-
-class AdminIndexView(MainPageView):
-    template_name = 'admin_index.html'
-
-
-class AdminSearchView(SearchView):
-    template_name = 'resource/admin_searchresult.html'
-
-
-class AdminVisitDetailView(VisitDetailView):
-    template_name = 'visit/admin_details.html'
