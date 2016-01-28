@@ -214,7 +214,7 @@ class Resource(models.Model):
     GROUP_VISIT = 1
     _UNUSED = 2
     STUDY_PROJECT = 3
-    SINGLE_EVENT = 4
+    OTHER_OFFERS = 4
     STUDY_MATERIAL = 5
     TEACHER_EVENT = 6
     OPEN_HOUSE = 7
@@ -229,7 +229,7 @@ class Resource(models.Model):
         (GROUP_VISIT, _(u"Besøg med klassen")),
         (STUDY_PROJECT, _(u"Studieretningsprojekt")),
         (ASSIGNMENT_HELP, _(u"Opgavehjælp")),
-        (SINGLE_EVENT,  _(u"Enkeltstående event")),
+        (OTHER_OFFERS,  _(u"Andre tilbud")),
         (STUDY_MATERIAL, _(u"Undervisningsmateriale"))
     )
 
@@ -252,8 +252,8 @@ class Resource(models.Model):
 
     # Level choices - A, B or C
     A = 0
-    B = 0
-    C = 0
+    B = 1
+    C = 2
 
     level_choices = (
         (A, u'A'), (B, u'B'), (C, u'C')
@@ -383,6 +383,59 @@ class Resource(models.Model):
 
         return "\n".join(texts)
 
+    def get_dates_display(self):
+        if self.visit:
+            return self.visit.get_dates_display()
+
+        return "-"
+
+    def get_subjects_display(self):
+        res = []
+        gym = []
+        gs = []
+
+        for fag in self.subjects.all():
+            if fag.subject_type & Subject.SUBJECT_TYPE_GYMNASIE:
+                gym.append(fag)
+            if fag.subject_type & Subject.SUBJECT_TYPE_GRUNDSKOLE:
+                gs.append(fag)
+
+        if (self.institution_level & Subject.SUBJECT_TYPE_GYMNASIE and
+                len(gym) > 0):
+            res.append(_(u"Gymnasie"))
+            if self.level:
+                res.append(_(u" (niveau %s)") % self.get_level_display())
+            res.append(u": ")
+            res.append(", ".join([x.name for x in gym]))
+            res.append(". ")
+
+        if (self.institution_level & Subject.SUBJECT_TYPE_GRUNDSKOLE and
+                len(gs) > 0):
+            res.append(_(u"Grundskole"))
+            if self.class_level_min:
+                res.append(_(u" (klassetrin "))
+                res.append(self.class_level_min)
+                if self.class_level_max != self.class_level_min:
+                    res.append("-")
+                    res.append(self.class_level_max)
+                res.append(u")")
+            else:
+                if self.class_level_max:
+                    res.append(_(u" (klassetrin %s)") % self.class_level_max)
+            res.append(u": ")
+            res.append(", ".join([x.name for x in gs]))
+            res.append(u". ")
+
+        return "".join([unicode(x) for x in res])
+
+    def display_locality(self):
+        try:
+            return self.visit.locality
+        except Visit.DoesNotExist:
+            pass
+
+        return "-"
+
 
 class GymnasieLevel(models.Model):
     # Level choices - A, B or C
@@ -459,7 +512,7 @@ class Visit(Resource):
     )
 
     locality = models.ForeignKey(
-        Locality, verbose_name=_(u'Lokalitet'), blank=True
+        Locality, verbose_name=_(u'Lokalitet'), blank=True, null=True
     )
     duration = models.CharField(
         max_length=8,
@@ -528,10 +581,30 @@ class Visit(Resource):
 
     @property
     def recurrences_description(self):
-        if self.recurrences:
+        if self.recurrences and self.recurrences.rrules:
             return [d.to_text() for d in self.recurrences.rrules]
+        else:
+            return []
 
-        return []
+    def get_dates_display(self):
+        dates = [
+            x.display_value for x in self.visitoccurrence_set.all()
+        ]
+        if len(dates) > 0:
+            return ", ".join(dates)
+        else:
+            return "-"
+
+    def num_of_participants_display(self):
+        if self.minimum_number_of_visitors:
+            return "%s-%s" % (
+                self.minimum_number_of_visitors,
+                self.maximum_number_of_visitors
+            )
+        elif self.maximum_number_of_visitors:
+            return self.maximum_number_of_visitors
+
+        return None
 
 
 class VisitOccurrence(models.Model):
@@ -550,6 +623,19 @@ class VisitOccurrence(models.Model):
         Visit,
         on_delete=models.CASCADE
     )
+
+    @property
+    def display_value(self):
+        if not self.start_datetime or not self.end_datetime1:
+            return None
+
+        result = self.start_datetime.strftime('%d. %m %Y %H:%M')
+
+        endtime = self.end_datetime2 or self.end_datetime1
+        if endtime:
+            result += endtime.strftime(' %H:%M')
+
+        return result
 
 
 class Room(models.Model):

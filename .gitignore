@@ -18,5 +18,6 @@ python-env
 .ropeproject
 .ropeproject
 *.sqlite3
+/static/
 *.swp
 /thirdparty/node_modules/
