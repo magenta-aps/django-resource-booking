@@ -56,10 +56,10 @@
             <h2>{{ object.get_type_display }}</h2>
             
             {% if can_edit %}
-                <a class="pull-right btn btn-primary edit-btn" href="{% url 'visit_edit' object.pk %}">+ Redigér</a>
+                <a class="pull-right btn btn-primary edit-btn" href="{% url 'visit-edit' object.pk %}">+ Redigér</a>
             {% endif %}
             {% if user.userprofile.can_create %}
-                <a class="pull-right btn btn-primary" href="{% url 'visit_clone' object.pk %}">Opret kopi</a>
+                <a class="pull-right btn btn-primary" href="{% url 'visit-clone' object.pk %}">Opret kopi</a>
             {% endif %}
             
             <h1>{{ object.title }}</h1>
