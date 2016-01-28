@@ -349,7 +349,8 @@ class EditResourceInitialView(TemplateView):
             if type_id in Visit.applicable_types:
                 return redirect(reverse('visit_create') + "?type=%d" % type_id)
             else:
-                return redirect(reverse('otherresource_create') + "?type=%d" % type_id)
+                return redirect(reverse('otherresource_create') +
+                                "?type=%d" % type_id)
 
         return self.render_to_response(
             self.get_context_data(form=form)
