@@ -278,9 +278,7 @@ class Resource(models.Model):
     state = models.IntegerField(choices=state_choices, default=CREATED,
                                 verbose_name=_(u"Tilstand"))
     title = models.CharField(
-        blank=False,
-        max_length=60,
-        verbose_name=_(u'Titel')
+        blank=False, max_length=60, verbose_name=_(u'Titel')
     )
     teaser = models.TextField(
         max_length=210,
