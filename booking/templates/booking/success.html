@@ -13,16 +13,15 @@
     {% include 'booking/modal/header.html' %}
 
     <div class="modal-body">
-        <p>Tak for din booking! Du hører fra os snarest.</p>
-        <p><a id="rebook" href="/visit/{{ visit.id }}/book">Foretag ny booking</a></p>
+        <p>{% trans "Tak for din booking! Du hører fra os snarest." %}</p>
+        <p><a id="rebook" href="/visit/{{ visit.id }}/book">{% trans "Foretag ny booking" %}</a></p>
     </div>
 
     <div class="modal-footer">
         <p class="text-center">
-            Bemærk venligst at aftalen først er bindende, når du har modtaget en bekræftelse<br />
-            fra den arrangør på Københavns Universitet, der er ansvarlig for besøget.
+            {% trans "Bemærk venligst at aftalen først er bindende, når du har modtaget en bekræftelse<br />fra den arrangør på Københavns Universitet, der er ansvarlig for besøget." %}
         </p>
-        <button type="button" class="btn btn-primary" data-dismiss="modal">Ok</button>
+        <button type="button" class="btn btn-primary" data-dismiss="modal">{% trans "OK" %}</button>
     </div>
 
 {% endblock %}

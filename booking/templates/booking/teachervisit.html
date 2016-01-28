@@ -14,7 +14,7 @@
 
     {% include 'booking/modal/header.html' %}
     <div class="modal-body">
-        <p>Udfyld venligst nedenstående formular for at booke et tilbud. Felter markeret med * er obligatoriske.</p>
+        <p>{% trans "Udfyld venligst nedenstående formular for at booke et tilbud. Felter markeret med * er obligatoriske." %}</p>
         <div class="divider"></div>
 
         <form id="bookingform" class="form-horizontal clearfix" data-toggle="validator" role="form" novalidate="true" method="POST">
@@ -28,7 +28,7 @@
             {{ bookerform.non_field_errors }}
             {% include "booking/booker/basedata.html" %}
             <div class="form-group">
-                <label class="col-sm-2 control-label" for="skole">Fag</label>
+                <label class="col-sm-2 control-label" for="skole">{% trans "Fag" %}</label>
                 <div class="col-sm-6{% if bookingform.subjects.errors %} has-error{% endif %}">
                     {{ bookingform.subjects }}
                 </div>
