@@ -39,7 +39,7 @@ class VisitForm(forms.ModelForm):
         widgets = {
             'title': TextInput(attrs={'class': 'titlefield'}),
             'teaser': Textarea(attrs={'rows': 3, 'maxlength': 1000}),
-            'description': TinyMCE(attrs={'rows': 10}),
+            'description': TinyMCE(attrs={'rows': 10, 'cols': 90}),
             'minimum_number_of_visitors': NumberInput(attrs={'min': 1}),
             'maximum_number_of_visitors': NumberInput(attrs={'min': 1}),
             'tags': CheckboxSelectMultiple(),
