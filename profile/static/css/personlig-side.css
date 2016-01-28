@@ -1,69 +1,97 @@
-.huge {
-    font-size: 40px;
+#personalPage.eq-height [class*="col-"] .panel {
+    border-color: #ccc;
 }
 
-.panel-green {
-    border-color: #5cb85c;
+#personalPage.eq-height [class*="col-"] .panel .panel-body {
+    padding: 5px;
 }
 
-.panel-green .panel-heading {
-    border-color: #5cb85c;
-    color: #fff;
-    background: none;
-    background-color: #5cb85c;
-    -webkit-box-shadow: none;
-    box-shadow: none;
+#personalPage .list-group {
+    margin-bottom: 0;
 }
 
-.panel-green a {
-    color: #5cb85c;
+#personalPage .list-group-item {
+    margin-bottom: 10px;
+    position: relative;
 }
 
-.panel-green a:hover {
-    color: #3d8b3d;
-}
-.panel-yellow {
-    border-color: #f0ad4e;
-}
-.panel-yellow .panel-heading {
-    border-color: #f0ad4e;
-    color: #fff;
-    background: none;
-    background-color: #f0ad4e;
-    -webkit-box-shadow: none;
-    box-shadow: none;
-}
-.panel-yellow a {
-    color: #f0ad4e;
+#personalPage .list-group-item:hover {
+    border: 1px solid #bbb;
 }
 
-.panel-yellow a:hover {
-    color: #df8a13;
+#personalPage .list-group-item:first-child {
+    margin-top: 5px;
+    border-radius: 0;
 }
 
-.panel-primary {
-    border-color: #337ab7;
+#personalPage .list-group-item:last-child {
+    margin-bottom: 0!important;
+    border-radius: 0;
 }
-.panel-primary .panel-heading {
-    border-color: #337ab7;
-    color: #fff;
-    background: none;
+
+#personalPage .list-group-item:nth-child(odd) {
+    background-color: #f8f8f8;
+    margin-bottom: 10px;
+}
+
+#personalPage a.list-group-item .list-group-item-heading {
+    line-height: 16px;
+}
+
+#personalPage .list-group-item ul {
+    padding-left: 0;
+    color: #4A4949;
+    list-style-type: none;
+}
+
+#personalPage .panel.panel-bookings .panel-heading .panel-title {
+    font-size: 14px;
+    display: inline-block;
+    max-width: 85%;
+    color: #333;
+}
+
+#personalPage .badge-primary {
     background-color: #337ab7;
-    -webkit-box-shadow: none;
-    box-shadow: none;
-}
-.panel-primary a {
-    color: #337ab7;
 }
 
-.panel-primary a:hover {
-    color: #23527c;
+#personalPage .badge-danger {
+    background-color: #901a1e;
 }
 
-a.list-group-item, a.list-group-item:hover {
-    color: #555;
-    font-weight: normal;
+#personalPage .badge-success {
+    background-color: #5cb85c;
 }
-#chart {
-    height:250px;
+#personalPage [class*="alert-"] {
+    border-width: 1px;
+    border-style: solid;
+}
+#personalPage .outdated-item {
+    border: 1px solid #9C5154;
+    z-index: 1;
+    cursor: default;
+}
+#personalPage .outdated-item:hover {
+    border: 1px solid #901a1e!important;
+}
+#personalPage .list-group-item .outdated {
+    position: absolute;
+    left: 2%;
+    right: 2%;
+    bottom: 6%;
+    height: 40px;
+    font-size: 16px;
+    line-height: 40px;
+    text-align: center;
+    color: #333;
+    background-color: #f2f2f2;
+    border:1px solid #e2e2e2;
+    opacity: 0.85;
+    z-index: 2;
+    cursor: pointer;
+}
+#personalPage .list-group-item .outdated:hover {
+    background-color: #f2dede;
+    border: 1px solid #9C5154;
+    opacity: 1;
 }

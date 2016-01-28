@@ -9,6 +9,14 @@ $('.input-daterange input').each(function() {
         autoclose: true
     });
 });
+$(function() {
+    $('#filter-search-results input[type=checkbox]').on('change', function() {
+        $(this.form).trigger("submit")
+    });
+    $('#filter-search-results input.datepicker').on('changeDate', function() {
+        $(this.form).trigger("submit")
+    });
+});
 $('.collapse').on('show.bs.collapse', function() {
     $(this).parent().find(".caret").addClass("caret-up");
 });
