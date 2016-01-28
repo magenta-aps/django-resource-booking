@@ -372,6 +372,12 @@ class EditOtherResourceView(EditResourceView):
                 else OtherResource.objects.get(id=pk)
         except ObjectDoesNotExist:
             raise Http404
+        try:
+            type = int(request.GET['type'])
+            if type in OtherResource.applicable_types:
+                self.object.type = type
+        except:
+            pass
         form = self.get_form()
         return self.render_to_response(
             self.get_context_data(form=form)
@@ -453,8 +459,12 @@ class EditVisit(RoleRequiredMixin, UpdateView):
             self.object = Visit() if pk is None else Visit.objects.get(id=pk)
         except ObjectDoesNotExist:
             raise Http404
-        type = request.GET['type']
-        self.object.type = type
+        try:
+            type = int(request.GET['type'])
+            if type in Visit.applicable_types:
+                self.object.type = type
+        except:
+            pass
         form = self.get_form()
         fileformset = VisitStudyMaterialForm(None, instance=self.object)
         return self.render_to_response(
