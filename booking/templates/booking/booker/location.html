@@ -1,0 +1,23 @@
+<div class="form-group">
+    <label class="col-sm-2 control-label" for="tlf">Gymnasiets postnr. og by*</label>
+    <div class="col-sm-2{% if bookerform.postcode.errors %} has-error{% endif %}">
+        {{ bookerform.postcode }}
+    </div>
+    <div class="col-sm-4{% if bookerform.city.errors %} has-error{% endif %}">
+        {{ bookerform.city }}
+    </div>
+    <div class="col-sm-3 help-block with-errors">
+        {{ bookerform.postcode.errors }}
+        {{ bookerform.city.errors }}
+    </div>
+</div>
+
+<div class="form-group">
+    <label class="col-sm-2 control-label" for="">Region*</label>
+    <div class="col-sm-6{% if bookerform.region.errors %} has-error{% endif %}">
+        {{ bookerform.region }}
+    </div>
+    <div class="col-sm-3 help-block with-errors">
+        {{ bookerform.region.errors }}
+    </div>
+</div>

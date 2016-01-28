@@ -1,7 +1,7 @@
 import django.contrib.auth.views as auth_views
 
 from django.conf.urls import patterns, url
-from profile.views import ProfileView, CreateUserView
+from profile.views import ProfileView, CreateUserView, UnitListView
 
 urlpatterns = patterns(
 
@@ -19,5 +19,8 @@ urlpatterns = patterns(
     url(r'^user/(?P<pk>[0-9]+)/?$',
         CreateUserView.as_view(),
         name='user_edit'),
+    url(r'^units/$', UnitListView.as_view(
+        template_name='profile/unit_list.html'
+    ), name='unit_list'),
 
 )

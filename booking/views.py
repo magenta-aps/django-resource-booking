@@ -6,20 +6,22 @@ from datetime import datetime, timedelta
 
 from dateutil import parser
 from dateutil.rrule import rrulestr
-from django.http import HttpResponse
-from django.views.generic import TemplateView, ListView, DetailView, View
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import PermissionDenied
 from django.db.models import Count
 from django.db.models import F
 from django.db.models import Q
-from django.utils import timezone
-from django.utils.translation import ugettext as _
-from django.views.generic.edit import UpdateView
-from django.utils.decorators import method_decorator
-from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied
-from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
-
+from django.http import HttpResponse
+from django.http import JsonResponse
+from django.shortcuts import redirect
+from django.utils import timezone
+from django.utils.decorators import method_decorator
+from django.utils.translation import ugettext as _
+from django.views.generic import View, TemplateView, ListView, DetailView
+from django.views.generic.edit import UpdateView
+from django.views.defaults import bad_request
 
 from profile.models import EDIT_ROLES
 from profile.models import role_to_text
@@ -27,14 +29,17 @@ from profile.models import role_to_text
 from booking.models import Visit, VisitOccurrence, StudyMaterial
 from booking.models import Resource, Subject
 from booking.models import Room
-from booking.forms import VisitForm
-from booking.forms import VisitStudyMaterialForm
+from booking.models import PostCode, School
+from booking.models import Booking
+from booking.forms import VisitForm, ClassBookingForm, TeacherBookingForm
+from booking.forms import VisitStudyMaterialForm, BookingSubjectLevelForm
+from booking.forms import BookerForm
 
 i18n_test = _(u"Dette tester oversættelses-systemet")
 
-
 # A couple of generic superclasses for crud views
 # Our views will inherit from these and from django.views.generic classes
+
 
 class MainPageView(TemplateView):
     """Display the main page."""
@@ -127,8 +132,11 @@ class SearchView(ListView):
                 t_from = timezone.now()
             self.from_datetime = t_from
 
+            # Search for either resources without dates specified or
+            # resources that have times available in the future
             date_cond = Q(
-                visit__visitoccurrence__start_datetime__gt=t_from
+                Q(visit__visitoccurrence__start_datetime__isnull=True) |
+                Q(visit__visitoccurrence__start_datetime__gt=t_from)
             )
 
             # To time will match latest end time if it exists and else
@@ -161,9 +169,14 @@ class SearchView(ListView):
     def get_filters(self):
         if self.filters is None:
             self.filters = {}
+
+            # Audience will always include a search for resources marked for
+            # all audiences.
             a = self.request.GET.getlist("a")
             if a:
+                a.append(Resource.AUDIENCE_ALL)
                 self.filters["audience__in"] = a
+
             t = self.request.GET.getlist("t")
             if t:
                 self.filters["type__in"] = t
@@ -182,28 +195,9 @@ class SearchView(ListView):
         qs = self.annotate(qs)
         return qs
 
-    def build_choices(self, choice_tuples, selected,
-                      selected_value='checked="checked"'):
-
-        selected = set(selected)
-        choices = []
-
-        for value, name in choice_tuples:
-            if unicode(value) in selected:
-                sel = selected_value
-            else:
-                sel = ''
-
-            choices.append({
-                'label': name,
-                'value': value,
-                'selected': sel
-            })
-
-        return choices
-
     def make_facet(self, facet_field, choice_tuples, selected,
-                   selected_value='checked="checked"'):
+                   selected_value='checked="checked"',
+                   add_to_all=None):
 
         selected = set(selected)
         hits = {}
@@ -219,6 +213,25 @@ class SearchView(ListView):
         qs = qs.values(facet_field).annotate(hits=Count("pk"))
         for item in qs:
             hits[item[facet_field]] = item["hits"]
+
+        # This adds all hits on a certain keys to the hits of all other keys.
+        if add_to_all is not None:
+            keys = set(add_to_all)
+            to_add = 0
+
+            for key in keys:
+                if key in hits:
+                    to_add = to_add + hits[key]
+                    del hits[key]
+
+            for v, n in choice_tuples:
+                if v in keys:
+                    continue
+
+                if v in hits:
+                    hits[v] += to_add
+                else:
+                    hits[v] = to_add
 
         for value, name in choice_tuples:
             if value not in hits:
@@ -254,7 +267,8 @@ class SearchView(ListView):
         context["audience_choices"] = self.make_facet(
             "audience",
             self.model.audience_choices,
-            self.request.GET.getlist("a")
+            self.request.GET.getlist("a"),
+            add_to_all=[Resource.AUDIENCE_ALL]
         )
 
         context["type_choices"] = self.make_facet(
@@ -298,7 +312,12 @@ class SearchView(ListView):
         return super(SearchView, self).get_context_data(**context)
 
     def get_paginate_by(self, queryset):
-        return self.request.GET.get("pagesize", 10)
+        size = self.request.GET.get("pagesize", 10)
+
+        if size == "all":
+            return None
+
+        return size
 
 
 class EditVisit(RoleRequiredMixin, UpdateView):
@@ -509,6 +528,14 @@ class VisitDetailView(DetailView):
         else:
             context['can_edit'] = False
 
+        if self.object.type in [Resource.STUDENT_FOR_A_DAY,
+                                Resource.STUDY_PROJECT,
+                                Resource.GROUP_VISIT,
+                                Resource.TEACHER_EVENT]:
+            context['can_book'] = True
+        else:
+            context['can_book'] = False
+
         context.update(kwargs)
 
         return super(VisitDetailView, self).get_context_data(**context)
@@ -589,4 +616,148 @@ class RrulestrView(View):
         return HttpResponse(
             json.dumps(dates_without_existing_dates),
             content_type='application/json'
+        )
+
+
+class PostcodeView(View):
+    def get(self, request, *args, **kwargs):
+        code = int(kwargs.get("code"))
+        postcode = PostCode.get(code)
+        city = postcode.city if postcode is not None else None
+        region = {'id': postcode.region.id, 'name': postcode.region.name} \
+            if postcode is not None else None
+        return JsonResponse({'code': code, 'city': city, 'region': region})
+
+
+class SchoolView(View):
+    def get(self, request, *args, **kwargs):
+        query = request.GET['q']
+        items = School.search(query)
+        json = {'schools':
+                [
+                    {'name': item.name,
+                     'postcode': item.postcode.number} for item in items
+                ]
+                }
+        return JsonResponse(json)
+
+
+class BookingView(UpdateView):
+
+    visit = None
+
+    def set_visit(self, visit_id):
+        if visit_id is not None:
+            try:
+                self.visit = Visit.objects.get(id=visit_id)
+            except:
+                pass
+
+    def get(self, request, *args, **kwargs):
+        self.set_visit(kwargs.get("visit"))
+        if self.visit is None:
+            return bad_request(request)
+
+        data = {'visit': self.visit}
+
+        self.object = Booking()
+        data.update(self.get_forms())
+        return self.render_to_response(
+            self.get_context_data(**data)
+        )
+
+    def post(self, request, *args, **kwargs):
+        self.set_visit(kwargs.get("visit"))
+        if self.visit is None:
+            return bad_request(request)
+
+        data = {'visit': self.visit}
+
+        self.object = Booking()
+        forms = self.get_forms(request.POST)
+
+        # Hack: remove this form; we'll add it later when
+        # we have our booking object
+        hadSubjectForm = False
+        if 'subjectform' in forms:
+            del forms['subjectform']
+            hadSubjectForm = True
+
+        valid = True
+        for (name, form) in forms.items():
+            if not form.is_valid():
+                valid = False
+
+        if valid:
+            if 'bookingform' in forms:
+                booking = forms['bookingform'].save(commit=False)
+            else:
+                booking = self.object
+            booking.visit = self.visit
+            if 'bookerform' in forms:
+                booking.booker = forms['bookerform'].save()
+
+            booking.save()
+
+            # We can't fetch this form before we have
+            # a saved booking object to feed it, or we'll get an error
+            if hadSubjectForm:
+                subjectform = BookingSubjectLevelForm(request.POST,
+                                                      instance=booking)
+                if subjectform.is_valid():
+                    subjectform.save()
+            return redirect("/visit/%d/book/success" % self.visit.id)
+        else:
+            forms['subjectform'] = BookingSubjectLevelForm(request.POST)
+
+        data.update(forms)
+        return self.render_to_response(
+            self.get_context_data(**data)
+        )
+
+    def get_forms(self, data=None):
+        forms = {}
+        if self.visit is not None:
+            forms['bookerform'] = BookerForm(data, visit=self.visit)
+
+            if self.visit.type == Resource.GROUP_VISIT:
+                forms['bookingform'] = ClassBookingForm(data, visit=self.visit)
+                forms['subjectform'] = BookingSubjectLevelForm(data)
+
+            elif self.visit.audience == Resource.AUDIENCE_TEACHER:
+                forms['bookingform'] = TeacherBookingForm(data,
+                                                          visit=self.visit)
+        return forms
+
+    def get_template_names(self):
+        if self.visit is None:
+            return [""]
+        if self.visit.type == Resource.STUDENT_FOR_A_DAY:
+            return ["booking/studentforaday.html"]
+        if self.visit.type == Resource.STUDY_PROJECT:
+            return ["booking/srp.html"]
+        if self.visit.type == Resource.GROUP_VISIT:
+            return ["booking/classvisit.html"]
+        if self.visit.type == Resource.TEACHER_EVENT:
+            return ["booking/teachervisit.html"]
+
+
+class BookingSuccessView(TemplateView):
+    template_name = "booking/success.html"
+
+    def get(self, request, *args, **kwargs):
+        visit_id = kwargs.get("visit")
+        visit = None
+        if visit_id is not None:
+            try:
+                visit = Visit.objects.get(id=visit_id)
+            except:
+                pass
+        if visit is None:
+            return bad_request(request)
+
+        data = {'visit': visit}
+
+        return self.render_to_response(
+            self.get_context_data(**data)
         )

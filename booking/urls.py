@@ -4,8 +4,11 @@ from django.conf import settings
 
 from .views import MainPageView
 
+from booking.views import PostcodeView, SchoolView
 from booking.views import RrulestrView
 from booking.views import EditVisit, VisitDetailView, SearchView
+from booking.views import BookingView, BookingSuccessView
+
 
 from django.views.generic import TemplateView
 
@@ -71,5 +74,13 @@ urlpatterns = patterns(
     url(r'^jsapi/rrulestr$', RrulestrView.as_view(), name='jsapi_rrulestr'),
 
     url(r'^tinymce/', include('tinymce.urls')),
+
+    url(r'^visit/(?P<visit>[0-9]+)/book$', BookingView.as_view(),
+        name='book-visit'),
+    url(r'^visit/(?P<visit>[0-9]+)/book/success$',
+        BookingSuccessView.as_view(), name='book-visit-success'),
+
+    url(r'^postcode/(?P<code>[0-9]{4})$', PostcodeView.as_view()),
+    url(r'^school', SchoolView.as_view()),
 
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

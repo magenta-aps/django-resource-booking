@@ -4,6 +4,8 @@ from .models import OtherResource, Visit, Person, Unit, UnitType, \
     VisitOccurrence
 from .models import Link, Subject, Tag, Topic, AdditionalService
 from .models import SpecialRequirement, StudyMaterial, Locality
+from .models import School, PostCode, Region, Booker, Booking
+from .models import GymnasieLevel
 
 # Register your models here.
 
@@ -21,3 +23,9 @@ admin.site.register(AdditionalService)
 admin.site.register(SpecialRequirement)
 admin.site.register(StudyMaterial)
 admin.site.register(Locality)
+admin.site.register(PostCode)
+admin.site.register(Region)
+admin.site.register(School)
+admin.site.register(Booker)
+admin.site.register(Booking)
+admin.site.register(GymnasieLevel)
