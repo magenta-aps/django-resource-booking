@@ -227,12 +227,14 @@ class Resource(models.Model):
     )
 
     # Target audience choice - student or teacher.
-    TEACHER = 0
-    STUDENT = 1
+    AUDIENCE_TEACHER = 2**0
+    AUDIENCE_STUDENT = 2**1
+    AUDIENCE_ALL = AUDIENCE_TEACHER | AUDIENCE_STUDENT
 
     audience_choices = (
-        (TEACHER, _(u'Lærer')),
-        (STUDENT, _(u'Elev'))
+        (AUDIENCE_TEACHER, _(u'Lærer')),
+        (AUDIENCE_STUDENT, _(u'Elev')),
+        (AUDIENCE_ALL, _(u'Alle'))
     )
 
     # Institution choice - primary or secondary school.
@@ -279,7 +281,7 @@ class Resource(models.Model):
     links = models.ManyToManyField(Link, blank=True, verbose_name=_('Links'))
     audience = models.IntegerField(choices=audience_choices,
                                    verbose_name=_(u'Målgruppe'),
-                                   default=TEACHER)
+                                   default=AUDIENCE_ALL)
     institution_level = models.IntegerField(choices=institution_choices,
                                             verbose_name=_(u'Institution'),
                                             default=SECONDARY)
