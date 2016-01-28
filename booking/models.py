@@ -245,8 +245,8 @@ class Resource(models.Model):
 
     # Level choices - A, B or C
     A = 0
-    B = 0
-    C = 0
+    B = 1
+    C = 2
 
     level_choices = (
         (A, u'A'), (B, u'B'), (C, u'C')
@@ -376,6 +376,45 @@ class Resource(models.Model):
 
         return "\n".join(texts)
 
+    def get_dates_display(self):
+        if self.visit:
+            return self.visit.get_dates_display()
+
+        return "-"
+
+    def get_subjects_display(self):
+        res = []
+        res.append(self.get_institution_level_display())
+        res.append(": ")
+        if self.institution_level == Resource.PRIMARY:
+            # TODO: Add proper PRIMARY subjects
+            res.append(_(u"TODO: Tilføj-grundskole-fag"))
+            # Output "Klassetrin X" or "Klassetrin X-Y"
+            res.append(_(u", klassetrin "))
+            if self.class_level_min:
+                res.append(self.class_level_min)
+                if self.class_level_max != self.class_level_min:
+                    res.append("-")
+                    res.append(self.class_level_max)
+            else:
+                if self.class_level_max:
+                    res.append(self.class_level_max)
+        elif self.institution_level == Resource.SECONDARY:
+            res.append(
+                ", ".join([unicode(x) for x in self.subjects.all()])
+            )
+            res.append(_(u" på %s-niveau") % self.get_level_display())
+
+        return "".join([unicode(x) for x in res])
+
+    def display_locality(self):
+        try:
+            return self.visit.locality
+        except Visit.DoesNotExist:
+            pass
+
+        return "-"
+
 
 class OtherResource(Resource):
     """A non-bookable, non-visit resource, basically material on the Web."""
@@ -502,10 +541,30 @@ class Visit(Resource):
 
     @property
     def recurrences_description(self):
-        if self.recurrences:
+        if self.recurrences and self.recurrences.rrules:
             return [d.to_text() for d in self.recurrences.rrules]
+        else:
+            return []
 
-        return []
+    def get_dates_display(self):
+        dates = [
+            x.display_value for x in self.visitoccurrence_set.all()
+        ]
+        if len(dates) > 0:
+            return ", ".join(dates)
+        else:
+            return "-"
+
+    def num_of_participants_display(self):
+        if self.minimum_number_of_visitors:
+            return "%s-%s" % (
+                self.minimum_number_of_visitors,
+                self.maximum_number_of_visitors
+            )
+        elif self.maximum_number_of_visitors:
+            return self.maximum_number_of_visitors
+
+        return None
 
 
 class VisitOccurrence(models.Model):
@@ -524,6 +583,19 @@ class VisitOccurrence(models.Model):
         Visit,
         on_delete=models.CASCADE
     )
+
+    @property
+    def display_value(self):
+        if not self.start_datetime or not self.end_datetime1:
+            return None
+
+        result = self.start_datetime.strftime('%d. %m %Y %H:%M')
+
+        endtime = self.end_datetime2 or self.end_datetime1
+        if endtime:
+            result += endtime.strftime(' %H:%M')
+
+        return result
 
 
 class Room(models.Model):

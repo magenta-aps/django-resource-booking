@@ -7,7 +7,6 @@ from django.forms import CheckboxSelectMultiple, RadioSelect
 from django.forms import inlineformset_factory
 from django.forms import TextInput, NumberInput, Textarea
 from django.utils.translation import ugettext_lazy as _
-from profile.models import COORDINATOR
 from tinymce.widgets import TinyMCE
 
 
@@ -78,16 +77,7 @@ class VisitForm(forms.ModelForm):
     def get_unit_query_set(self):
         """"Get units for which user can create events."""
         user = self.user
-        if user.userprofile.get_role() == COORDINATOR:
-            uu = user.userprofile.unit
-            if uu is not None:
-                qs = uu.get_descendants()
-            else:
-                qs = Unit.objects.none()
-        else:
-            # User must be an administrator and may attach any unit.
-            qs = Unit.objects.all()
-        return qs
+        return user.userprofile.get_unit_queryset()
 
 
 VisitStudyMaterialFormBase = inlineformset_factory(Visit,
