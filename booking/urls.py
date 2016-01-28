@@ -69,6 +69,8 @@ urlpatterns = patterns(
     url(r'^otherresource/create$',
         EditOtherResourceView.as_view(success_url='create'),
         name='otherresource_create'),
+    url(r'^otherresource/(?P<pk>[0-9]+)/edit$',
+        EditOtherResourceView.as_view(), name='otherresource_edit'),
 
 
     url(r'^visit/create$',
