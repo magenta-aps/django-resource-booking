@@ -312,7 +312,12 @@ class SearchView(ListView):
         return super(SearchView, self).get_context_data(**context)
 
     def get_paginate_by(self, queryset):
-        return self.request.GET.get("pagesize", 10)
+        size = self.request.GET.get("pagesize", 10)
+
+        if size == "all":
+            return None
+
+        return size
 
 
 class EditVisit(RoleRequiredMixin, UpdateView):
