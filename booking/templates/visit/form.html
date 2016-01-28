@@ -132,6 +132,7 @@
                             <label>{% trans "Vedhæftede filer" %}:</label>
                             </div>
                             <div class="col-sm-10">
+                            {% if fileformset.studymaterials %}
                             <ul>
                             {% for material in fileformset.studymaterials %}
                                 <li>
@@ -139,10 +140,13 @@
                                 </li>
                             {% endfor %}
                             </ul>
+                            {% endif %}
                             {{ fileformset.management_form }}
                             <div id="attachFileFields">
                             {% for fileform in fileformset %}
-                                {{ fileform.file }}
+                                <div class="fileupload">
+                                    {{ fileform.file }}
+                                </div>
                             {% endfor %}
                             </div>
                             <a id="attachAddFileField">{% trans "Tilføj ny fil" %}</a>
@@ -564,28 +568,23 @@
     {{ form.media }}
     <script type="text/javascript" src="{% static 'thirdparty/bootstrap-datetime-picker/js/bootstrap-datetimepicker.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/formutil.js' %}"></script>
-    <script type="text/javascript"><!--
-        $(function(){
-            var totalFormsField = $("#{{ fileformset.management_form.TOTAL_FORMS.id_for_label }}"),
-                maxForms = parseInt($("#{{ fileformset.management_form.MAX_NUM_FORMS.id_for_label }}").val()) || 1000,
-                fieldContainer = $("#attachFileFields"),
-                numberFinder = /\d+/;
+    <script type="text/javascript" src="{% static 'js/formset-row.js' %}"></script>
 
-            $("#attachAddFileField").click(function(){
-                if (fieldContainer.find("input[type=file]").length < maxForms) {
-                    var newFileField = fieldContainer.find("input[type=file]").last().clone();
-                    var match = numberFinder.exec(newFileField.attr("id"));
-                    if (match) {
-                        var number = parseInt(match[0], 10) + 1;
-                        newFileField.attr("id", newFileField.attr("id").replace(numberFinder, number));
-                        newFileField.attr("name", newFileField.attr("name").replace(numberFinder, number));
-                        newFileField.val(null);
-                        fieldContainer.append(newFileField);
-                        totalFormsField.val(fieldContainer.find("input[type=file]").length);
-                    }
-                }
-            });
+
+
+    <script type="text/javascript"><!--
+
+    $(function(){
+        $("#attachAddFileField").click(function(){
+            formset.addRow(
+                    $("#{{ fileformset.management_form.TOTAL_FORMS.id_for_label }}"),
+                    $("#{{ fileformset.management_form.MAX_NUM_FORMS.id_for_label }}"),
+                    $(".fileupload").first(),
+                    $("#attachFileFields")
+            );
+            return false;
         });
+    });
 
         $(function(){
             var select = $("#{{ form.institution_level.id_for_label }}");
