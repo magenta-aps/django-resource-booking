@@ -9,6 +9,7 @@ from dateutil.rrule import rrulestr
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
+from django.core.urlresolvers import reverse
 from django.db.models import Count
 from django.db.models import F
 from django.db.models import Q
@@ -26,14 +27,16 @@ from django.views.defaults import bad_request
 from profile.models import EDIT_ROLES
 from profile.models import role_to_text
 
-from booking.models import Visit, VisitOccurrence, StudyMaterial
+from booking.models import OtherResource, Visit, VisitOccurrence, StudyMaterial
 from booking.models import Resource, Subject
 from booking.models import Room
 from booking.models import PostCode, School
 from booking.models import Booking
-from booking.forms import VisitForm, ClassBookingForm, TeacherBookingForm
+from booking.forms import ResourceInitialForm, OtherResourceForm, VisitForm
+from booking.forms import ClassBookingForm, TeacherBookingForm
 from booking.forms import VisitStudyMaterialForm, BookingSubjectLevelForm
 from booking.forms import BookerForm
+
 
 i18n_test = _(u"Dette tester oversættelses-systemet")
 
@@ -320,15 +323,131 @@ class SearchView(ListView):
         return size
 
 
-class EditVisit(RoleRequiredMixin, UpdateView):
+class EditResourceInitialView(TemplateView):
+
+    template_name = 'resource/form.html'
+
+    def get(self, request, *args, **kwargs):
+        pk = kwargs.get("pk")
+        if pk is not None:
+            if OtherResource.objects.filter(id=pk).count() > 0:
+                return redirect(reverse('otherresource_edit', args=[pk]))
+            elif Visit.objects.filter(id=pk).count() > 0:
+                return redirect(reverse('visit_edit', args=[pk]))
+            else:
+                raise Http404
+        else:
+            form = ResourceInitialForm()
+            return self.render_to_response(
+                self.get_context_data(form=form)
+            )
+
+    def post(self, request, *args, **kwargs):
+        form = ResourceInitialForm(request.POST)
+        if form.is_valid():
+            type_id = int(form.cleaned_data['type'])
+            if type_id in Visit.applicable_types:
+                return redirect(reverse('visit_create') + "?type=%d" % type_id)
+            else:
+                return redirect(reverse('otherresource_create') +
+                                "?type=%d" % type_id)
+
+        return self.render_to_response(
+            self.get_context_data(form=form)
+        )
+
+
+class EditResourceView(UpdateView):
+
+    def __init__(self, *args, **kwargs):
+        super(EditResourceView, self).__init__(*args, **kwargs)
+        self.object = None
+
+    def get_form_kwargs(self):
+        kwargs = super(EditResourceView, self).get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        # First, check all is well in superclass
+        result = super(EditResourceView, self).dispatch(*args, **kwargs)
+        # Now, check that the user belongs to the correct unit.
+        current_user = self.request.user
+        pk = kwargs.get("pk")
+        if self.object is None:
+            self.object = None if pk is None else self.model.objects.get(id=pk)
+        if self.object is not None and self.object.unit:
+            if not current_user.userprofile.can_edit(self.object):
+                raise AccessDenied(
+                    _(u"Du kan kun redigere enheder,som du selv er" +
+                      " koordinator for.")
+                )
+        return result
+
+
+class EditOtherResourceView(EditResourceView):
+
+    template_name = 'otherresource/form.html'
+    form_class = OtherResourceForm
+    model = OtherResource
+
+    # Display a view with two form objects; one for the regular model,
+    # and one for the file upload
+
+    roles = EDIT_ROLES
+
+    def get(self, request, *args, **kwargs):
+        pk = kwargs.get("pk")
+        try:
+            self.object = OtherResource() if pk is None\
+                else OtherResource.objects.get(id=pk)
+        except ObjectDoesNotExist:
+            raise Http404
+        try:
+            type = int(request.GET['type'])
+            if type in OtherResource.applicable_types:
+                self.object.type = type
+        except:
+            pass
+        form = self.get_form()
+        return self.render_to_response(
+            self.get_context_data(form=form)
+        )
+
+    # Handle both forms, creating a Visit and a number of StudyMaterials
+    def post(self, request, *args, **kwargs):
+        pk = kwargs.get("pk")
+        is_cloning = kwargs.get("clone", False)
+        if is_cloning or not hasattr(self, 'object') or self.object is None:
+            if pk is None or is_cloning:
+                self.object = None
+            else:
+                try:
+                    self.object = OtherResource.objects.get(id=pk)
+                    if is_cloning:
+                        self.object.pk = None
+                except ObjectDoesNotExist:
+                    raise Http404
+        form = self.get_form()
+        if form.is_valid():
+            form.save()
+            return super(EditOtherResourceView, self).form_valid(form)
+        else:
+            return self.form_invalid(form)
+
+    def get_success_url(self):
+        try:
+            return reverse('otherresource', args=[self.object.id])
+        except:
+            return '/'
+
+
+class EditVisit(RoleRequiredMixin, EditResourceView):
 
     template_name = 'visit/form.html'
     form_class = VisitForm
     model = Visit
-
-    def __init__(self, *args, **kwargs):
-        super(EditVisit, self).__init__(*args, **kwargs)
-        self.object = None
 
     # Display a view with two form objects; one for the regular model,
     # and one for the file upload
@@ -341,6 +460,12 @@ class EditVisit(RoleRequiredMixin, UpdateView):
             self.object = Visit() if pk is None else Visit.objects.get(id=pk)
         except ObjectDoesNotExist:
             raise Http404
+        try:
+            type = int(request.GET['type'])
+            if type in Visit.applicable_types:
+                self.object.type = type
+        except:
+            pass
         form = self.get_form()
         fileformset = VisitStudyMaterialForm(None, instance=self.object)
         return self.render_to_response(
@@ -472,7 +597,7 @@ class EditVisit(RoleRequiredMixin, UpdateView):
 
     def get_success_url(self):
         try:
-            return "/visit/%d" % self.object.id
+            return reverse('visit', args=[self.object.id])
         except:
             return '/'
 
@@ -480,28 +605,6 @@ class EditVisit(RoleRequiredMixin, UpdateView):
         return self.render_to_response(
             self.get_context_data(form=form, fileformset=fileformset)
         )
-
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        # First, check all is well in superclass
-        result = super(EditVisit, self).dispatch(*args, **kwargs)
-        # Now, check that the user belongs to the correct unit.
-        current_user = self.request.user
-        pk = kwargs.get("pk")
-        if self.object is None:
-            self.object = None if pk is None else Visit.objects.get(id=pk)
-        if self.object is not None and self.object.unit:
-            if not current_user.userprofile.can_edit(self.object):
-                raise AccessDenied(
-                    _(u"Du kan kun redigere enheder,som du selv er" +
-                      " koordinator for.")
-                )
-        return result
-
-    def get_form_kwargs(self):
-        kwargs = super(EditVisit, self).get_form_kwargs()
-        kwargs['user'] = self.request.user
-        return kwargs
 
 
 class VisitDetailView(DetailView):

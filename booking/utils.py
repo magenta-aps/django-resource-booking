@@ -38,3 +38,13 @@ def log_action(user, obj, action_flag, change_message=''):
         action_flag,
         change_message
     )
+
+
+# Decorator for @property on class variables
+class ClassProperty(object):
+
+    def __init__(self, func):
+        self.func = func
+
+    def __get__(self, inst, cls):
+        return self.func(cls)
