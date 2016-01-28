@@ -212,7 +212,7 @@ class Resource(models.Model):
     GROUP_VISIT = 1
     _UNUSED = 2
     STUDY_PROJECT = 3
-    SINGLE_EVENT = 4
+    OTHER_OFFERS = 4
     STUDY_MATERIAL = 5
     TEACHER_EVENT = 6
     OPEN_HOUSE = 7
@@ -227,7 +227,7 @@ class Resource(models.Model):
         (GROUP_VISIT, _(u"Besøg med klassen")),
         (STUDY_PROJECT, _(u"Studieretningsprojekt")),
         (ASSIGNMENT_HELP, _(u"Opgavehjælp")),
-        (SINGLE_EVENT,  _(u"Enkeltstående event")),
+        (OTHER_OFFERS,  _(u"Andre tilbud")),
         (STUDY_MATERIAL, _(u"Undervisningsmateriale"))
     )
 
