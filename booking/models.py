@@ -214,7 +214,7 @@ class Resource(models.Model):
     GROUP_VISIT = 1
     _UNUSED = 2
     STUDY_PROJECT = 3
-    SINGLE_EVENT = 4
+    OTHER_OFFERS = 4
     STUDY_MATERIAL = 5
     TEACHER_EVENT = 6
     OPEN_HOUSE = 7
@@ -229,7 +229,7 @@ class Resource(models.Model):
         (GROUP_VISIT, _(u"Besøg med klassen")),
         (STUDY_PROJECT, _(u"Studieretningsprojekt")),
         (ASSIGNMENT_HELP, _(u"Opgavehjælp")),
-        (SINGLE_EVENT,  _(u"Enkeltstående event")),
+        (OTHER_OFFERS,  _(u"Andre tilbud")),
         (STUDY_MATERIAL, _(u"Undervisningsmateriale"))
     )
 
@@ -444,6 +444,25 @@ class Resource(models.Model):
             pass
 
         return "-"
+
+
+class GymnasieLevel(models.Model):
+    # Level choices - A, B or C
+    A = 0
+    B = 1
+    C = 2
+
+    level_choices = (
+        (A, u'A'), (B, u'B'), (C, u'C')
+    )
+
+    level = models.IntegerField(choices=level_choices,
+                                verbose_name=_(u"Gymnasieniveau"),
+                                blank=True,
+                                null=True)
+
+    def __unicode__(self):
+        return self.get_level_display()
 
 
 class OtherResource(Resource):
@@ -794,3 +813,24 @@ class ClassBooking(Booking):
 
 class TeacherBooking(Booking):
     subjects = models.ManyToManyField(Subject)
+
+
+class BookingSubjectLevel(models.Model):
+
+    booking = models.ForeignKey(Booking, blank=False, null=False)
+    subject = models.ForeignKey(
+        Subject, blank=False, null=False,
+        limit_choices_to={
+            'subject_type__in': [
+                Subject.SUBJECT_TYPE_GYMNASIE,
+                Subject.SUBJECT_TYPE_BOTH
+            ]
+        }
+    )
+    level = models.ForeignKey(GymnasieLevel, blank=False, null=False)
+
+    def __unicode__(self):
+        return u"%s (for booking %s)" % (self.display_value(), self.booking.pk)
+
+    def display_value(self):
+        return u'%s på %s niveau' % (self.subject.name, self.level)

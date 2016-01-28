@@ -14,6 +14,7 @@
 
     <div class="modal-body">
         <p>Besøget er booket</p>
+        <p><a id="rebook" href="/visit/{{ visit.id }}/book">Foretag ny booking</a></p>
     </div>
 
     <div class="modal-footer">
@@ -27,5 +28,10 @@
 {% endblock %}
 
 {% block extra_scripts %}
+    <script type="text/javascript">
+        <!--
+            $("#rebook").attr("href", "/visit/{{ visit.id }}/book" + document.location.hash);
+        //-->
+    </script>
 
 {% endblock %}

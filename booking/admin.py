@@ -5,6 +5,7 @@ from .models import OtherResource, Visit, Person, Unit, UnitType, \
 from .models import Link, Subject, Tag, Topic, AdditionalService
 from .models import SpecialRequirement, StudyMaterial, Locality
 from .models import School, PostCode, Region, Booker, Booking
+from .models import GymnasieLevel
 
 # Register your models here.
 
@@ -27,3 +28,4 @@ admin.site.register(Region)
 admin.site.register(School)
 admin.site.register(Booker)
 admin.site.register(Booking)
+admin.site.register(GymnasieLevel)

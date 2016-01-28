@@ -6,23 +6,22 @@ from datetime import datetime, timedelta
 
 from dateutil import parser
 from dateutil.rrule import rrulestr
-from django.http import HttpResponse
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import PermissionDenied
+from django.db.models import Count
 from django.db.models import F
 from django.db.models import Q
-from django.utils import timezone
-from django.db.models import Count
-from django.views.generic import View, TemplateView, ListView, DetailView
-from django.utils.translation import ugettext as _
-from django.views.generic.edit import UpdateView
-from django.views.defaults import bad_request
-from django.utils.decorators import method_decorator
-from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied
-from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
+from django.http import HttpResponse
 from django.http import JsonResponse
 from django.shortcuts import redirect
-
+from django.utils import timezone
+from django.utils.decorators import method_decorator
+from django.utils.translation import ugettext as _
+from django.views.generic import View, TemplateView, ListView, DetailView
+from django.views.generic.edit import UpdateView
+from django.views.defaults import bad_request
 
 from profile.models import EDIT_ROLES
 from profile.models import role_to_text
@@ -33,7 +32,7 @@ from booking.models import Room
 from booking.models import PostCode, School
 from booking.models import Booking
 from booking.forms import VisitForm, ClassBookingForm, TeacherBookingForm
-from booking.forms import VisitStudyMaterialForm
+from booking.forms import VisitStudyMaterialForm, BookingSubjectLevelForm
 from booking.forms import BookerForm
 
 i18n_test = _(u"Dette tester oversættelses-systemet")
@@ -212,7 +211,6 @@ class SearchView(ListView):
 
         qs = self.get_base_queryset().filter(**new_filters)
         qs = qs.values(facet_field).annotate(hits=Count("pk"))
-
         for item in qs:
             hits[item[facet_field]] = item["hits"]
 
@@ -621,18 +619,6 @@ class RrulestrView(View):
         )
 
 
-class AdminIndexView(MainPageView):
-    template_name = 'admin_index.html'
-
-
-class AdminSearchView(SearchView):
-    template_name = 'resource/admin_searchresult.html'
-
-
-class AdminVisitDetailView(VisitDetailView):
-    template_name = 'visit/admin_details.html'
-
-
 class PostcodeView(View):
     def get(self, request, *args, **kwargs):
         code = int(kwargs.get("code"))
@@ -689,6 +675,14 @@ class BookingView(UpdateView):
 
         self.object = Booking()
         forms = self.get_forms(request.POST)
+
+        # Hack: remove this form; we'll add it later when
+        # we have our booking object
+        hadSubjectForm = False
+        if 'subjectform' in forms:
+            del forms['subjectform']
+            hadSubjectForm = True
+
         valid = True
         for (name, form) in forms.items():
             if not form.is_valid():
@@ -702,8 +696,19 @@ class BookingView(UpdateView):
             booking.visit = self.visit
             if 'bookerform' in forms:
                 booking.booker = forms['bookerform'].save()
+
             booking.save()
+
+            # We can't fetch this form before we have
+            # a saved booking object to feed it, or we'll get an error
+            if hadSubjectForm:
+                subjectform = BookingSubjectLevelForm(request.POST,
+                                                      instance=booking)
+                if subjectform.is_valid():
+                    subjectform.save()
             return redirect("/visit/%d/book/success" % self.visit.id)
+        else:
+            forms['subjectform'] = BookingSubjectLevelForm(request.POST)
 
         data.update(forms)
         return self.render_to_response(
@@ -717,6 +722,8 @@ class BookingView(UpdateView):
 
             if self.visit.type == Resource.GROUP_VISIT:
                 forms['bookingform'] = ClassBookingForm(data, visit=self.visit)
+                forms['subjectform'] = BookingSubjectLevelForm(data)
+
             elif self.visit.audience == Resource.AUDIENCE_TEACHER:
                 forms['bookingform'] = TeacherBookingForm(data,
                                                           visit=self.visit)

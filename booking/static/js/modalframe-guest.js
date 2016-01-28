@@ -10,7 +10,11 @@ window.modal = {
         this.parent.setHeight(this.id, height);
     },
     updateHeight: function() {
-        this.setHeight(document.body.clientHeight);
+        var height = 0;
+        $(document.body).children().not("script").each(function(){
+            height += $(this).outerHeight();
+        });
+        this.setHeight(height);
     }
 };
 (function(){
@@ -59,7 +63,7 @@ $(function(){
 
             modal.updateHeight();
         }
-    }
+    };
 
     // Handle clicks on the 'previous' button
     $("*[data-formpart-action='prev']").click(function() {
