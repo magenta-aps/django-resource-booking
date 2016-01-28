@@ -18,4 +18,3 @@ def highlight(text, filter):
     words = filter.split(' ')
     pattern = re.compile(r"(?P<filter>%s)" % '|'.join(words), re.IGNORECASE)
     return mark_safe(re.sub(pattern, r"<mark>\g<filter></mark>", text))
-
