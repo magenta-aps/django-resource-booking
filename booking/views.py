@@ -127,8 +127,11 @@ class SearchView(ListView):
                 t_from = timezone.now()
             self.from_datetime = t_from
 
+            # Search for either resources without dates specified or
+            # resources that have times available in the future
             date_cond = Q(
-                visit__visitoccurrence__start_datetime__gt=t_from
+                Q(visit__visitoccurrence__start_datetime__isnull=True) |
+                Q(visit__visitoccurrence__start_datetime__gt=t_from)
             )
 
             # To time will match latest end time if it exists and else
@@ -161,9 +164,14 @@ class SearchView(ListView):
     def get_filters(self):
         if self.filters is None:
             self.filters = {}
+
+            # Audience will always include a search for resources marked for
+            # all audiences.
             a = self.request.GET.getlist("a")
             if a:
+                a.append(Resource.AUDIENCE_ALL)
                 self.filters["audience__in"] = a
+
             t = self.request.GET.getlist("t")
             if t:
                 self.filters["type__in"] = t
@@ -182,28 +190,9 @@ class SearchView(ListView):
         qs = self.annotate(qs)
         return qs
 
-    def build_choices(self, choice_tuples, selected,
-                      selected_value='checked="checked"'):
-
-        selected = set(selected)
-        choices = []
-
-        for value, name in choice_tuples:
-            if unicode(value) in selected:
-                sel = selected_value
-            else:
-                sel = ''
-
-            choices.append({
-                'label': name,
-                'value': value,
-                'selected': sel
-            })
-
-        return choices
-
     def make_facet(self, facet_field, choice_tuples, selected,
-                   selected_value='checked="checked"'):
+                   selected_value='checked="checked"',
+                   add_to_all=None):
 
         selected = set(selected)
         hits = {}
@@ -219,6 +208,25 @@ class SearchView(ListView):
         qs = qs.values(facet_field).annotate(hits=Count("pk"))
         for item in qs:
             hits[item[facet_field]] = item["hits"]
+
+        # This adds all hits on a certain keys to the hits of all other keys.
+        if add_to_all is not None:
+            keys = set(add_to_all)
+            to_add = 0
+
+            for key in keys:
+                if key in hits:
+                    to_add = to_add + hits[key]
+                    del hits[key]
+
+            for v, n in choice_tuples:
+                if v in keys:
+                    continue
+
+                if v in hits:
+                    hits[v] += to_add
+                else:
+                    hits[v] = to_add
 
         for value, name in choice_tuples:
             if value not in hits:
@@ -254,7 +262,8 @@ class SearchView(ListView):
         context["audience_choices"] = self.make_facet(
             "audience",
             self.model.audience_choices,
-            self.request.GET.getlist("a")
+            self.request.GET.getlist("a"),
+            add_to_all=[Resource.AUDIENCE_ALL]
         )
 
         context["type_choices"] = self.make_facet(
@@ -298,7 +307,12 @@ class SearchView(ListView):
         return super(SearchView, self).get_context_data(**context)
 
     def get_paginate_by(self, queryset):
-        return self.request.GET.get("pagesize", 10)
+        size = self.request.GET.get("pagesize", 10)
+
+        if size == "all":
+            return None
+
+        return size
 
 
 class EditVisit(RoleRequiredMixin, UpdateView):

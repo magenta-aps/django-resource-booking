@@ -227,28 +227,37 @@ class Resource(models.Model):
 
     # Resource type.
     STUDENT_FOR_A_DAY = 0
-    FIXED_SCHEDULE_GROUP_VISIT = 1
-    FREELY_SCHEDULED_GROUP_VISIT = 2
+    GROUP_VISIT = 1
+    _UNUSED = 2
     STUDY_PROJECT = 3
-    SINGLE_EVENT = 4
-    OTHER_RESOURCES = 5
+    OTHER_OFFERS = 4
+    STUDY_MATERIAL = 5
+    TEACHER_EVENT = 6
+    OPEN_HOUSE = 7
+    ASSIGNMENT_HELP = 8
+    STUDIEPRAKTIK = 9
 
     resource_type_choices = (
         (STUDENT_FOR_A_DAY, _(u"Studerende for en dag")),
-        (FIXED_SCHEDULE_GROUP_VISIT, _(u"Gruppebesøg med faste tider")),
-        (FREELY_SCHEDULED_GROUP_VISIT, _(u"Gruppebesøg uden faste tider")),
-        (STUDY_PROJECT, _(u"Studieretningsprojekt - SRP")),
-        (SINGLE_EVENT,  _(u"Enkeltstående event")),
-        (OTHER_RESOURCES, _(u"Andre tilbud"))
+        (STUDIEPRAKTIK, _(u"Studiepraktik")),
+        (OPEN_HOUSE, _(u"Åbent hus")),
+        (TEACHER_EVENT, _(u"Lærerarrangement")),
+        (GROUP_VISIT, _(u"Besøg med klassen")),
+        (STUDY_PROJECT, _(u"Studieretningsprojekt")),
+        (ASSIGNMENT_HELP, _(u"Opgavehjælp")),
+        (OTHER_OFFERS,  _(u"Andre tilbud")),
+        (STUDY_MATERIAL, _(u"Undervisningsmateriale"))
     )
 
     # Target audience choice - student or teacher.
-    TEACHER = 0
-    STUDENT = 1
+    AUDIENCE_TEACHER = 2**0
+    AUDIENCE_STUDENT = 2**1
+    AUDIENCE_ALL = AUDIENCE_TEACHER | AUDIENCE_STUDENT
 
     audience_choices = (
-        (TEACHER, _(u'Lærer')),
-        (STUDENT, _(u'Elev'))
+        (AUDIENCE_TEACHER, _(u'Lærer')),
+        (AUDIENCE_STUDENT, _(u'Elev')),
+        (AUDIENCE_ALL, _(u'Alle'))
     )
 
     # Institution choice - primary or secondary school.
@@ -270,7 +279,7 @@ class Resource(models.Model):
 
     enabled = models.BooleanField(verbose_name=_(u'Aktiv'), default=True)
     type = models.IntegerField(choices=resource_type_choices,
-                               default=OTHER_RESOURCES)
+                               default=STUDY_MATERIAL)
     state = models.IntegerField(choices=state_choices, default=CREATED,
                                 verbose_name=_(u"Tilstand"))
     title = models.CharField(max_length=256, verbose_name=_(u'Titel'))
@@ -284,7 +293,7 @@ class Resource(models.Model):
     links = models.ManyToManyField(Link, blank=True, verbose_name=_('Links'))
     audience = models.IntegerField(choices=audience_choices,
                                    verbose_name=_(u'Målgruppe'),
-                                   default=TEACHER)
+                                   default=AUDIENCE_ALL)
 
     institution_level = models.IntegerField(choices=institution_choices,
                                             verbose_name=_(u'Institution'),
@@ -390,26 +399,40 @@ class Resource(models.Model):
 
     def get_subjects_display(self):
         res = []
-        res.append(self.get_institution_level_display())
-        res.append(": ")
-        if self.institution_level == Resource.PRIMARY:
-            # TODO: Add proper PRIMARY subjects
-            res.append(_(u"TODO: Tilføj-grundskole-fag"))
-            # Output "Klassetrin X" or "Klassetrin X-Y"
-            res.append(_(u", klassetrin "))
+        gym = []
+        gs = []
+
+        for fag in self.subjects.all():
+            if fag.subject_type & Subject.SUBJECT_TYPE_GYMNASIE:
+                gym.append(fag)
+            if fag.subject_type & Subject.SUBJECT_TYPE_GRUNDSKOLE:
+                gs.append(fag)
+
+        if (self.institution_level & Subject.SUBJECT_TYPE_GYMNASIE and
+                len(gym) > 0):
+            res.append(_(u"Gymnasie"))
+            if self.level:
+                res.append(_(u" (niveau %s)") % self.get_level_display())
+            res.append(u": ")
+            res.append(", ".join([x.name for x in gym]))
+            res.append(". ")
+
+        if (self.institution_level & Subject.SUBJECT_TYPE_GRUNDSKOLE and
+                len(gs) > 0):
+            res.append(_(u"Grundskole"))
             if self.class_level_min:
+                res.append(_(u" (klassetrin "))
                 res.append(self.class_level_min)
                 if self.class_level_max != self.class_level_min:
                     res.append("-")
                     res.append(self.class_level_max)
+                res.append(u")")
             else:
                 if self.class_level_max:
-                    res.append(self.class_level_max)
-        elif self.institution_level == Resource.SECONDARY:
-            res.append(
-                ", ".join([unicode(x) for x in self.subjects.all()])
-            )
-            res.append(_(u" på %s-niveau") % self.get_level_display())
+                    res.append(_(u" (klassetrin %s)") % self.class_level_max)
+            res.append(u": ")
+            res.append(", ".join([x.name for x in gs]))
+            res.append(u". ")
 
         return "".join([unicode(x) for x in res])
 

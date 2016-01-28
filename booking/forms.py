@@ -3,7 +3,7 @@ from booking.models import UnitType
 from booking.models import Unit
 from booking.models import Visit
 from django import forms
-from django.forms import CheckboxSelectMultiple
+from django.forms import CheckboxSelectMultiple, RadioSelect
 from django.forms import inlineformset_factory
 from django.forms import TextInput, NumberInput, Textarea
 from django.utils.translation import ugettext_lazy as _
@@ -28,7 +28,7 @@ class VisitForm(forms.ModelForm):
         model = Visit
         fields = ('title', 'teaser', 'description', 'price',
                   'type', 'tags', 'preparation_time', 'comment',
-                  'institution_level', 'topics',
+                  'institution_level', 'topics', 'audience',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'recurrences', 'duration', 'locality', 'rooms_assignment',
                   'rooms_needed',
@@ -43,6 +43,7 @@ class VisitForm(forms.ModelForm):
             'topics': CheckboxSelectMultiple(),
             'contact_persons': CheckboxSelectMultiple(),
             'subjects': CheckboxSelectMultiple(),
+            'audience': RadioSelect()
         }
 
     def clean_locality(self):
