@@ -574,17 +574,17 @@
 
     <script type="text/javascript"><!--
 
-    $(function(){
-        $("#attachAddFileField").click(function(){
-            formset.addRow(
-                    $("#{{ fileformset.management_form.TOTAL_FORMS.id_for_label }}"),
-                    $("#{{ fileformset.management_form.MAX_NUM_FORMS.id_for_label }}"),
-                    $(".fileupload").first(),
-                    $("#attachFileFields")
-            );
-            return false;
+        $(function(){
+            $("#attachAddFileField").click(function(){
+                formset.addRow(
+                        $("#{{ fileformset.management_form.TOTAL_FORMS.id_for_label }}"),
+                        $("#{{ fileformset.management_form.MAX_NUM_FORMS.id_for_label }}"),
+                        $(".fileupload").first(),
+                        $("#attachFileFields")
+                );
+                return false;
+            });
         });
-    });
 
         $(function(){
             var select = $("#{{ form.institution_level.id_for_label }}");
