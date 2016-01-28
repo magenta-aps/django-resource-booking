@@ -1,0 +1,9 @@
+<div class="form-group">
+    <label class="col-sm-2 control-label" for="skole">Kommentarer</label>
+    <div class="col-sm-6{% if bookerform.notes.errors %} has-error{% endif %}">
+        {{ bookerform.notes }}
+    </div>
+    <div class="col-sm-3 help-block with-errors">
+        {{ bookerform.notes.errors }}
+    </div>
+</div>

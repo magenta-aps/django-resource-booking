@@ -282,8 +282,12 @@ class Resource(models.Model):
                                default=STUDY_MATERIAL)
     state = models.IntegerField(choices=state_choices, default=CREATED,
                                 verbose_name=_(u"Tilstand"))
-    title = models.CharField(max_length=256, verbose_name=_(u'Titel'))
-    teaser = models.TextField(blank=True, verbose_name=_(u'Teaser'))
+    title = models.CharField(max_length=60, verbose_name=_(u'Titel'))
+    teaser = models.TextField(
+        max_length=210,
+        blank=True,
+        verbose_name=_(u'Teaser')
+    )
     description = models.TextField(blank=True, verbose_name=_(u'Beskrivelse'))
     mouseover_description = models.CharField(
         max_length=512, blank=True, verbose_name=_(u'Mouseover-tekst')
@@ -744,3 +748,180 @@ class Room(models.Model):
 
     def __unicode__(self):
         return self.name
+
+
+class Region(models.Model):
+    name = models.CharField(
+        max_length=16
+    )
+
+    def __unicode__(self):
+        return self.name
+
+
+class PostCode(models.Model):
+    number = models.IntegerField(
+        primary_key=True
+    )
+    city = models.CharField(
+        max_length=48
+    )
+    region = models.ForeignKey(
+        Region
+    )
+
+    def __unicode__(self):
+        return "%d %s" % (self.number, self.city)
+
+    @staticmethod
+    def get(code):
+        try:
+            return PostCode.objects.get(number=int(code))
+        except PostCode.DoesNotExist:
+            return None
+
+
+class School(models.Model):
+    name = models.CharField(
+        max_length=128,
+    )
+    postcode = models.ForeignKey(
+        PostCode,
+        null=True
+    )
+
+    def __unicode__(self):
+        return self.name
+
+    @staticmethod
+    def search(query):
+        query = query.lower()
+        return School.objects.filter(name__icontains=query)
+
+
+class Booker(models.Model):
+    # A person booking a visit
+    firstname = models.CharField(
+        max_length=64,
+        blank=False,
+        verbose_name=u'Fornavn'
+    )
+    lastname = models.CharField(
+        max_length=64,
+        blank=False,
+        verbose_name=u'Efternavn'
+    )
+    email = models.EmailField(
+        max_length=64,
+        blank=False,
+        verbose_name=u'Email'
+    )
+    phone = models.CharField(
+        max_length=14,
+        blank=False,
+        verbose_name=u'Telefon'
+    )
+
+    stx = 0
+    hf = 1
+    htx = 2
+    eux = 3
+    valgfag = 4
+    hhx = 5
+    line_choices = (
+        (stx, _(u'stx')),
+        (hf, _(u'hf')),
+        (htx, _(u'htx')),
+        (eux, _(u'eux')),
+        (hhx, _(u'hhx')),
+    )
+    line = models.IntegerField(
+        choices=line_choices,
+        blank=True,
+        verbose_name=u'Linje',
+    )
+
+    g1 = 1
+    g2 = 2
+    g3 = 3
+    student = 4
+    other = 5
+    level_choices = (
+        (g1, _(u'1.g')),
+        (g2, _(u'2.g')),
+        (g3, _(u'3.g')),
+        (student, _(u'Student')),
+        (other, _(u'Andet')),
+    )
+    level = models.IntegerField(
+        choices=level_choices,
+        blank=True,
+        verbose_name=u'Niveau'
+    )
+
+    school = models.ForeignKey(
+        School,
+        null=True,
+        verbose_name=u'Skole'
+    )
+
+    attendee_count = models.IntegerField(
+        blank=False,
+        verbose_name=u'Antal deltagere'
+    )
+    notes = models.TextField(
+        blank=True,
+        verbose_name=u'Bemærkninger'
+    )
+
+    def __unicode__(self):
+        if self.email is not None and self.email != "":
+            return "%s %s <%s>" % (self.firstname, self.lastname, self.email)
+        return "%s %s" % (self.firstname, self.lastname)
+
+
+class Booking(models.Model):
+    visit = models.ForeignKey(Visit, null=True)
+    booker = models.ForeignKey(Booker)
+
+
+class ClassBooking(Booking):
+    time = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name=u'Tidspunkt'
+    )
+    desired_time = models.CharField(
+        null=True,
+        blank=True,
+        max_length=2000,
+        verbose_name=u'Ønsket tidspunkt'
+    )
+    tour_desired = models.BooleanField(
+        verbose_name=u'Rundvisning ønsket'
+    )
+
+
+class TeacherBooking(Booking):
+    subjects = models.ManyToManyField(Subject)
+
+
+class BookingSubjectLevel(models.Model):
+
+    booking = models.ForeignKey(Booking, blank=False, null=False)
+    subject = models.ForeignKey(
+        Subject, blank=False, null=False,
+        limit_choices_to={
+            'subject_type__in': [
+                Subject.SUBJECT_TYPE_GYMNASIE,
+                Subject.SUBJECT_TYPE_BOTH
+            ]
+        }
+    )
+    level = models.ForeignKey(GymnasieLevel, blank=False, null=False)
+
+    def __unicode__(self):
+        return u"%s (for booking %s)" % (self.display_value(), self.booking.pk)
+
+    def display_value(self):
+        return u'%s på %s niveau' % (self.subject.name, self.level)

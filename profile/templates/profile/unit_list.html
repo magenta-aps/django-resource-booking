@@ -1,0 +1,13 @@
+{% extends "index.html" %}
+
+{% block content %}
+
+<h1>Enheder</h1>
+
+{% for unit in object_list %}
+    <li>{{ unit.name }}</li>
+{% empty %}
+    <li>Ingen enheder.</li>
+{% endfor %}
+
+{% endblock %}
