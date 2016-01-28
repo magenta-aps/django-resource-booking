@@ -322,15 +322,24 @@ class SearchView(ListView):
         return size
 
 
-class CreateResourceInitialView(TemplateView):
+class EditResourceInitialView(TemplateView):
 
     template_name = 'resource/form.html'
 
     def get(self, request, *args, **kwargs):
-        form = ResourceInitialForm()
-        return self.render_to_response(
-            self.get_context_data(form=form)
-        )
+        pk = kwargs.get("pk")
+        if pk is not None:
+            if OtherResource.objects.filter(id=pk).count() > 0:
+                return redirect("/otherresource/%s/edit" % pk)
+            elif Visit.objects.filter(id=pk).count() > 0:
+                return redirect("/visit/%s/edit" % pk)
+            else:
+                raise Http404
+        else:
+            form = ResourceInitialForm()
+            return self.render_to_response(
+                self.get_context_data(form=form)
+            )
 
     def post(self, request, *args, **kwargs):
         form = ResourceInitialForm(request.POST)

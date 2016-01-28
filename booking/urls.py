@@ -6,7 +6,7 @@ from .views import MainPageView
 
 from booking.views import PostcodeView, SchoolView
 from booking.views import RrulestrView
-from booking.views import CreateResourceInitialView
+from booking.views import EditResourceInitialView
 from booking.views import BookingView, BookingSuccessView
 from booking.views import EditOtherResourceView, EditVisit, VisitDetailView
 from booking.views import SearchView
@@ -63,8 +63,11 @@ urlpatterns = patterns(
         name='iframe_search'),
 
     url(r'^resource/create$',
-        CreateResourceInitialView.as_view(),
-        name='visit_create'),
+        EditResourceInitialView.as_view(),
+        name='resource_create'),
+    url(r'^resource/(?P<pk>[0-9]+)/edit$',
+        EditResourceInitialView.as_view(),
+        name='resource_edit'),
 
     url(r'^otherresource/create$',
         EditOtherResourceView.as_view(success_url='create'),
