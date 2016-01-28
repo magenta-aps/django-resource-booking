@@ -29,6 +29,7 @@ class ResourceInitialForm(forms.Form):
         choices=Resource.resource_type_choices
     )
 
+
 class VisitForm(forms.ModelForm):
 
     class Meta:

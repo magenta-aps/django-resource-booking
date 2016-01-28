@@ -6,7 +6,7 @@ from .views import MainPageView
 
 from booking.views import PostcodeView, SchoolView
 from booking.views import RrulestrView
-from booking.views import CreateResourceInitialView, EditVisit, VisitDetailView, SearchView
+from booking.views import CreateResourceInitialView
 from booking.views import BookingView, BookingSuccessView
 from booking.views import EditVisit, VisitDetailView, SearchView
 

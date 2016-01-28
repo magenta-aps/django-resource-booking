@@ -476,9 +476,9 @@ class OtherResource(Resource):
 
     @ClassProperty
     def type_choices(self):
-        return (x for x in
-            Resource.resource_type_choices
-            if x[0] in OtherResource.applicable_types)
+        return (type for type in
+                Resource.resource_type_choices
+                if type[0] in OtherResource.applicable_types)
 
     def save(self, *args, **kwargs):
         # Save once to store relations
