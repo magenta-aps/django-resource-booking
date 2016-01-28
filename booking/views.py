@@ -356,7 +356,32 @@ class EditResourceInitialView(TemplateView):
 
 
 class EditResourceView(UpdateView):
-    pass
+
+    def __init__(self, *args, **kwargs):
+        super(EditResourceView, self).__init__(*args, **kwargs)
+        self.object = None
+
+    def get_form_kwargs(self):
+        kwargs = super(EditResourceView, self).get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        # First, check all is well in superclass
+        result = super(EditResourceView, self).dispatch(*args, **kwargs)
+        # Now, check that the user belongs to the correct unit.
+        current_user = self.request.user
+        pk = kwargs.get("pk")
+        if self.object is None:
+            self.object = None if pk is None else self.model.objects.get(id=pk)
+        if self.object is not None and self.object.unit:
+            if not current_user.userprofile.can_edit(self.object):
+                raise AccessDenied(
+                    _(u"Du kan kun redigere enheder,som du selv er" +
+                      " koordinator for.")
+                )
+        return result
 
 
 class EditOtherResourceView(EditResourceView):
@@ -364,10 +389,6 @@ class EditOtherResourceView(EditResourceView):
     template_name = 'otherresource/form.html'
     form_class = OtherResourceForm
     model = OtherResource
-
-    def __init__(self, *args, **kwargs):
-        super(EditOtherResourceView, self).__init__(*args, **kwargs)
-        self.object = None
 
     # Display a view with two form objects; one for the regular model,
     # and one for the file upload
@@ -419,43 +440,12 @@ class EditOtherResourceView(EditResourceView):
         except:
             return '/'
 
-    def form_invalid(self, form):
-        return self.render_to_response(
-            self.get_context_data(form=form)
-        )
 
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        # First, check all is well in superclass
-        result = super(EditOtherResourceView, self).dispatch(*args, **kwargs)
-        # Now, check that the user belongs to the correct unit.
-        current_user = self.request.user
-        pk = kwargs.get("pk")
-        if self.object is None:
-            self.object = None if pk is None else Visit.objects.get(id=pk)
-        if self.object is not None and self.object.unit:
-            if not current_user.userprofile.can_edit(self.object):
-                raise AccessDenied(
-                    _(u"Du kan kun redigere enheder,som du selv er" +
-                      " koordinator for.")
-                )
-        return result
-
-    def get_form_kwargs(self):
-        kwargs = super(EditOtherResourceView, self).get_form_kwargs()
-        kwargs['user'] = self.request.user
-        return kwargs
-
-
-class EditVisit(RoleRequiredMixin, UpdateView):
+class EditVisit(RoleRequiredMixin, EditResourceView):
 
     template_name = 'visit/form.html'
     form_class = VisitForm
     model = Visit
-
-    def __init__(self, *args, **kwargs):
-        super(EditVisit, self).__init__(*args, **kwargs)
-        self.object = None
 
     # Display a view with two form objects; one for the regular model,
     # and one for the file upload
@@ -613,28 +603,6 @@ class EditVisit(RoleRequiredMixin, UpdateView):
         return self.render_to_response(
             self.get_context_data(form=form, fileformset=fileformset)
         )
-
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        # First, check all is well in superclass
-        result = super(EditVisit, self).dispatch(*args, **kwargs)
-        # Now, check that the user belongs to the correct unit.
-        current_user = self.request.user
-        pk = kwargs.get("pk")
-        if self.object is None:
-            self.object = None if pk is None else Visit.objects.get(id=pk)
-        if self.object is not None and self.object.unit:
-            if not current_user.userprofile.can_edit(self.object):
-                raise AccessDenied(
-                    _(u"Du kan kun redigere enheder,som du selv er" +
-                      " koordinator for.")
-                )
-        return result
-
-    def get_form_kwargs(self):
-        kwargs = super(EditVisit, self).get_form_kwargs()
-        kwargs['user'] = self.request.user
-        return kwargs
 
 
 class VisitDetailView(DetailView):
