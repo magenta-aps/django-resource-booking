@@ -347,7 +347,7 @@ class EditResourceInitialView(TemplateView):
         if form.is_valid():
             type_id = int(form.cleaned_data['type'])
             if type_id in Visit.applicable_types:
-                return redirect(reverse('visit_create') + "?type=%d" % type_id)
+                return redirect(reverse('visit-create') + "?type=%d" % type_id)
             else:
                 return redirect(reverse('otherresource-create') +
                                 "?type=%d" % type_id)
@@ -443,7 +443,7 @@ class EditOtherResourceView(EditResourceView):
             return '/'
 
 
-class EditVisit(RoleRequiredMixin, EditResourceView):
+class EditVisitView(RoleRequiredMixin, EditResourceView):
 
     template_name = 'visit/form.html'
     form_class = VisitForm
@@ -565,7 +565,7 @@ class EditVisit(RoleRequiredMixin, EditResourceView):
                     start_datetime__in=existing_visit_occurrences
                 ).delete()
 
-            return super(EditVisit, self).form_valid(form)
+            return super(EditVisitView, self).form_valid(form)
         else:
             return self.form_invalid(form, fileformset)
 
@@ -593,7 +593,7 @@ class EditVisit(RoleRequiredMixin, EditResourceView):
 
         context.update(kwargs)
 
-        return super(EditVisit, self).get_context_data(**context)
+        return super(EditVisitView, self).get_context_data(**context)
 
     def get_success_url(self):
         try:
