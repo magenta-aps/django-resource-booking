@@ -31,9 +31,11 @@ from booking.models import Resource, Subject
 from booking.models import Room
 from booking.models import PostCode, School
 from booking.models import Booking
-from booking.forms import VisitForm, ClassBookingForm, TeacherBookingForm
+from booking.forms import ResourceInitialForm, VisitForm
+from booking.forms import ClassBookingForm, TeacherBookingForm
 from booking.forms import VisitStudyMaterialForm, BookingSubjectLevelForm
 from booking.forms import BookerForm
+
 
 i18n_test = _(u"Dette tester oversættelses-systemet")
 
@@ -320,6 +322,30 @@ class SearchView(ListView):
         return size
 
 
+class CreateResourceInitialView(TemplateView):
+
+    template_name = 'resource/form.html'
+
+    def get(self, request, *args, **kwargs):
+        form = ResourceInitialForm()
+        return self.render_to_response(
+            self.get_context_data(form=form)
+        )
+
+    def post(self, request, *args, **kwargs):
+        form = ResourceInitialForm(request.POST)
+        if form.is_valid():
+            type_id = int(form.cleaned_data['type'])
+            if type_id in Visit.applicable_types:
+                return redirect("/visit/create?type=%d" % type_id)
+            else:
+                return redirect("/otherresource/create?type=%d" % type_id)
+
+        return self.render_to_response(
+            self.get_context_data(form=form)
+        )
+
+
 class EditVisit(RoleRequiredMixin, UpdateView):
 
     template_name = 'visit/form.html'
@@ -341,6 +367,8 @@ class EditVisit(RoleRequiredMixin, UpdateView):
             self.object = Visit() if pk is None else Visit.objects.get(id=pk)
         except ObjectDoesNotExist:
             raise Http404
+        type = request.GET['type']
+        self.object.type = type
         form = self.get_form()
         fileformset = VisitStudyMaterialForm(None, instance=self.object)
         return self.render_to_response(

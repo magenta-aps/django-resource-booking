@@ -1,7 +1,7 @@
 from booking.models import StudyMaterial
 from booking.models import UnitType
 from booking.models import Unit
-from booking.models import Visit, VisitOccurrence
+from booking.models import Resource, Visit, VisitOccurrence
 from booking.models import Booker, Region, PostCode, School
 from booking.models import ClassBooking, TeacherBooking, BookingSubjectLevel
 from django import forms
@@ -23,6 +23,11 @@ class UnitForm(forms.ModelForm):
         model = Unit
         fields = ('name', 'type', 'parent')
 
+
+class ResourceInitialForm(forms.Form):
+    type = forms.ChoiceField(
+        choices=Resource.resource_type_choices
+    )
 
 class VisitForm(forms.ModelForm):
 
@@ -49,6 +54,12 @@ class VisitForm(forms.ModelForm):
             'audience': RadioSelect()
         }
 
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user')
+        super(VisitForm, self).__init__(*args, **kwargs)
+        self.fields['unit'].queryset = self.get_unit_query_set()
+        self.fields['type'].choices = Visit.type_choices
+
     def clean_locality(self):
         data = self.cleaned_data
         locality = data.get("locality")
@@ -70,11 +81,6 @@ class VisitForm(forms.ModelForm):
             self.add_error('minimum_number_of_visitors', min_error_msg)
             self.add_error('maximum_number_of_visitors', max_error_msg)
             raise forms.ValidationError(min_error_msg)
-
-    def __init__(self, *args, **kwargs):
-        self.user = kwargs.pop('user')
-        super(VisitForm, self).__init__(*args, **kwargs)
-        self.fields['unit'].queryset = self.get_unit_query_set()
 
     def get_unit_query_set(self):
         """"Get units for which user can create events."""

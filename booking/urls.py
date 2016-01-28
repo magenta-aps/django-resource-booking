@@ -6,9 +6,9 @@ from .views import MainPageView
 
 from booking.views import PostcodeView, SchoolView
 from booking.views import RrulestrView
-from booking.views import EditVisit, VisitDetailView, SearchView
+from booking.views import CreateResourceInitialView, EditVisit, VisitDetailView, SearchView
 from booking.views import BookingView, BookingSuccessView
-
+from booking.views import EditVisit, VisitDetailView, SearchView
 
 from django.views.generic import TemplateView
 
@@ -60,6 +60,11 @@ urlpatterns = patterns(
     url(r'^iframe$', TemplateView.as_view(
         template_name='iframe-index.html'),
         name='iframe_search'),
+
+    url(r'^resource/create$',
+        CreateResourceInitialView.as_view(),
+        name='visit_create'),
+
 
     url(r'^visit/create$',
         EditVisit.as_view(success_url='create'), name='visit_create'),

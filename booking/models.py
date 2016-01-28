@@ -8,6 +8,7 @@ from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
 from django.utils.translation import ugettext_lazy as _
 
 from recurrence.fields import RecurrenceField
+from booking.utils import ClassProperty
 
 LOGACTION_CREATE = ADDITION
 LOGACTION_CHANGE = CHANGE
@@ -469,6 +470,16 @@ class OtherResource(Resource):
         auto_update_search_field=True
     )
 
+    applicable_types = [Resource.OTHER_OFFERS, Resource.STUDY_MATERIAL,
+                        Resource.OPEN_HOUSE, Resource.ASSIGNMENT_HELP,
+                        Resource.STUDIEPRAKTIK]
+
+    @ClassProperty
+    def type_choices(self):
+        return (x for x in
+            Resource.resource_type_choices
+            if x[0] in OtherResource.applicable_types)
+
     def save(self, *args, **kwargs):
         # Save once to store relations
         super(OtherResource, self).save(*args, **kwargs)
@@ -492,6 +503,15 @@ class Visit(Resource):
         config='pg_catalog.danish',
         auto_update_search_field=True
     )
+
+    applicable_types = [Resource.STUDENT_FOR_A_DAY, Resource.GROUP_VISIT,
+                        Resource.STUDY_PROJECT, Resource.TEACHER_EVENT]
+
+    @ClassProperty
+    def type_choices(self):
+        return (x for x in
+                Resource.resource_type_choices
+                if x[0] in Visit.applicable_types)
 
     rooms_needed = models.BooleanField(
         default=True,

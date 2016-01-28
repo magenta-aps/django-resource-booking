@@ -1,0 +1,59 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load booking_tags %}
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+    <div class="divider"></div>
+    <div class="row form-group">
+        <div class="col-sm-8">
+            <h1>{% if object %}{% trans "Rediger tilbud" %}{% else %}{% trans "Nyt tilbud" %}{% endif %}</h1>
+        </div>
+        <div class="col-sm-4 text-right">
+            <a href="#" class="btn btn-default btn-sm openall">Udvid alle felter</a> <a href="#" class="btn btn-default btn-sm closeall">Luk alle felter</a>
+        </div>
+    </div>
+    <hr/>
+    <form action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        {{ form.non_field_errors }}
+
+        <div id="accordion" class="panel-group" aria-multiselectable="true" role="tablist">
+            <div class="panel panel-default">
+                <div id="headingCategory" class="panel-heading" role="tab">
+                    <h4 class="panel-title">
+                        <a class="" aria-controls="collapseCategory" aria-expanded="true" href="#collapseCategory" data-parent="#accordion" role="button">{% trans "Kategorisering" %}</a><span class="caret"></span>
+                    </h4>
+                </div>
+                <div id="collapseCategory" class="panel-collapse collapse in
+                {% if form.type.errors or form.tags.errors %}in{% endif %}
+                " aria-labelledby="headingCategory" role="tabpanel" aria-expanded="true" style="">
+                    <div class="panel-body">
+                        <div class="row form-group">
+                            <div>{{ form.type.errors }}</div>
+                            <div class="col-sm-2">
+                                <label for="{{ form.type.id_for_label }}">{{ form.type.label }}:</label>
+                            </div>
+                            <div class="col-sm-10">
+                                {{ form.type }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% include 'common/continue.html' %}
+        <div class="divider"></div>
+    </form>
+
+{% endblock %}
+
+{% block extra_scripts %}
+
+    {{ form.media }}
+
+{% endblock %}
