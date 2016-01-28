@@ -211,28 +211,37 @@ class Resource(models.Model):
 
     # Resource type.
     STUDENT_FOR_A_DAY = 0
-    FIXED_SCHEDULE_GROUP_VISIT = 1
-    FREELY_SCHEDULED_GROUP_VISIT = 2
+    GROUP_VISIT = 1
+    _UNUSED = 2
     STUDY_PROJECT = 3
-    SINGLE_EVENT = 4
-    OTHER_RESOURCES = 5
+    OTHER_OFFERS = 4
+    STUDY_MATERIAL = 5
+    TEACHER_EVENT = 6
+    OPEN_HOUSE = 7
+    ASSIGNMENT_HELP = 8
+    STUDIEPRAKTIK = 9
 
     resource_type_choices = (
         (STUDENT_FOR_A_DAY, _(u"Studerende for en dag")),
-        (FIXED_SCHEDULE_GROUP_VISIT, _(u"Gruppebesøg med faste tider")),
-        (FREELY_SCHEDULED_GROUP_VISIT, _(u"Gruppebesøg uden faste tider")),
-        (STUDY_PROJECT, _(u"Studieretningsprojekt - SRP")),
-        (SINGLE_EVENT,  _(u"Enkeltstående event")),
-        (OTHER_RESOURCES, _(u"Andre tilbud"))
+        (STUDIEPRAKTIK, _(u"Studiepraktik")),
+        (OPEN_HOUSE, _(u"Åbent hus")),
+        (TEACHER_EVENT, _(u"Lærerarrangement")),
+        (GROUP_VISIT, _(u"Besøg med klassen")),
+        (STUDY_PROJECT, _(u"Studieretningsprojekt")),
+        (ASSIGNMENT_HELP, _(u"Opgavehjælp")),
+        (OTHER_OFFERS,  _(u"Andre tilbud")),
+        (STUDY_MATERIAL, _(u"Undervisningsmateriale"))
     )
 
     # Target audience choice - student or teacher.
-    TEACHER = 0
-    STUDENT = 1
+    AUDIENCE_TEACHER = 2**0
+    AUDIENCE_STUDENT = 2**1
+    AUDIENCE_ALL = AUDIENCE_TEACHER | AUDIENCE_STUDENT
 
     audience_choices = (
-        (TEACHER, _(u'Lærer')),
-        (STUDENT, _(u'Elev'))
+        (AUDIENCE_TEACHER, _(u'Lærer')),
+        (AUDIENCE_STUDENT, _(u'Elev')),
+        (AUDIENCE_ALL, _(u'Alle'))
     )
 
     # Institution choice - primary or secondary school.
@@ -265,7 +274,7 @@ class Resource(models.Model):
 
     enabled = models.BooleanField(verbose_name=_(u'Aktiv'), default=True)
     type = models.IntegerField(choices=resource_type_choices,
-                               default=OTHER_RESOURCES)
+                               default=STUDY_MATERIAL)
     state = models.IntegerField(choices=state_choices, default=CREATED,
                                 verbose_name=_(u"Tilstand"))
     title = models.CharField(max_length=60, verbose_name=_(u'Titel'))
@@ -283,7 +292,7 @@ class Resource(models.Model):
     links = models.ManyToManyField(Link, blank=True, verbose_name=_('Links'))
     audience = models.IntegerField(choices=audience_choices,
                                    verbose_name=_(u'Målgruppe'),
-                                   default=TEACHER)
+                                   default=AUDIENCE_ALL)
     institution_level = models.IntegerField(choices=institution_choices,
                                             verbose_name=_(u'Institution'),
                                             default=SECONDARY)
@@ -386,26 +395,40 @@ class Resource(models.Model):
 
     def get_subjects_display(self):
         res = []
-        res.append(self.get_institution_level_display())
-        res.append(": ")
-        if self.institution_level == Resource.PRIMARY:
-            # TODO: Add proper PRIMARY subjects
-            res.append(_(u"TODO: Tilføj-grundskole-fag"))
-            # Output "Klassetrin X" or "Klassetrin X-Y"
-            res.append(_(u", klassetrin "))
+        gym = []
+        gs = []
+
+        for fag in self.subjects.all():
+            if fag.subject_type & Subject.SUBJECT_TYPE_GYMNASIE:
+                gym.append(fag)
+            if fag.subject_type & Subject.SUBJECT_TYPE_GRUNDSKOLE:
+                gs.append(fag)
+
+        if (self.institution_level & Subject.SUBJECT_TYPE_GYMNASIE and
+                len(gym) > 0):
+            res.append(_(u"Gymnasie"))
+            if self.level:
+                res.append(_(u" (niveau %s)") % self.get_level_display())
+            res.append(u": ")
+            res.append(", ".join([x.name for x in gym]))
+            res.append(". ")
+
+        if (self.institution_level & Subject.SUBJECT_TYPE_GRUNDSKOLE and
+                len(gs) > 0):
+            res.append(_(u"Grundskole"))
             if self.class_level_min:
+                res.append(_(u" (klassetrin "))
                 res.append(self.class_level_min)
                 if self.class_level_max != self.class_level_min:
                     res.append("-")
                     res.append(self.class_level_max)
+                res.append(u")")
             else:
                 if self.class_level_max:
-                    res.append(self.class_level_max)
-        elif self.institution_level == Resource.SECONDARY:
-            res.append(
-                ", ".join([unicode(x) for x in self.subjects.all()])
-            )
-            res.append(_(u" på %s-niveau") % self.get_level_display())
+                    res.append(_(u" (klassetrin %s)") % self.class_level_max)
+            res.append(u": ")
+            res.append(", ".join([x.name for x in gs]))
+            res.append(u". ")
 
         return "".join([unicode(x) for x in res])
 
@@ -416,6 +439,25 @@ class Resource(models.Model):
             pass
 
         return "-"
+
+
+class GymnasieLevel(models.Model):
+    # Level choices - A, B or C
+    A = 0
+    B = 1
+    C = 2
+
+    level_choices = (
+        (A, u'A'), (B, u'B'), (C, u'C')
+    )
+
+    level = models.IntegerField(choices=level_choices,
+                                verbose_name=_(u"Gymnasieniveau"),
+                                blank=True,
+                                null=True)
+
+    def __unicode__(self):
+        return self.get_level_display()
 
 
 class OtherResource(Resource):
@@ -474,7 +516,7 @@ class Visit(Resource):
     )
 
     locality = models.ForeignKey(
-        Locality, verbose_name=_(u'Lokalitet'), blank=True
+        Locality, verbose_name=_(u'Lokalitet'), blank=True, null=True
     )
     duration = models.CharField(
         max_length=8,
@@ -610,3 +652,180 @@ class Room(models.Model):
 
     def __unicode__(self):
         return self.name
+
+
+class Region(models.Model):
+    name = models.CharField(
+        max_length=16
+    )
+
+    def __unicode__(self):
+        return self.name
+
+
+class PostCode(models.Model):
+    number = models.IntegerField(
+        primary_key=True
+    )
+    city = models.CharField(
+        max_length=48
+    )
+    region = models.ForeignKey(
+        Region
+    )
+
+    def __unicode__(self):
+        return "%d %s" % (self.number, self.city)
+
+    @staticmethod
+    def get(code):
+        try:
+            return PostCode.objects.get(number=int(code))
+        except PostCode.DoesNotExist:
+            return None
+
+
+class School(models.Model):
+    name = models.CharField(
+        max_length=128,
+    )
+    postcode = models.ForeignKey(
+        PostCode,
+        null=True
+    )
+
+    def __unicode__(self):
+        return self.name
+
+    @staticmethod
+    def search(query):
+        query = query.lower()
+        return School.objects.filter(name__icontains=query)
+
+
+class Booker(models.Model):
+    # A person booking a visit
+    firstname = models.CharField(
+        max_length=64,
+        blank=False,
+        verbose_name=u'Fornavn'
+    )
+    lastname = models.CharField(
+        max_length=64,
+        blank=False,
+        verbose_name=u'Efternavn'
+    )
+    email = models.EmailField(
+        max_length=64,
+        blank=False,
+        verbose_name=u'Email'
+    )
+    phone = models.CharField(
+        max_length=14,
+        blank=False,
+        verbose_name=u'Telefon'
+    )
+
+    stx = 0
+    hf = 1
+    htx = 2
+    eux = 3
+    valgfag = 4
+    hhx = 5
+    line_choices = (
+        (stx, _(u'stx')),
+        (hf, _(u'hf')),
+        (htx, _(u'htx')),
+        (eux, _(u'eux')),
+        (hhx, _(u'hhx')),
+    )
+    line = models.IntegerField(
+        choices=line_choices,
+        blank=True,
+        verbose_name=u'Linje',
+    )
+
+    g1 = 1
+    g2 = 2
+    g3 = 3
+    student = 4
+    other = 5
+    level_choices = (
+        (g1, _(u'1.g')),
+        (g2, _(u'2.g')),
+        (g3, _(u'3.g')),
+        (student, _(u'Student')),
+        (other, _(u'Andet')),
+    )
+    level = models.IntegerField(
+        choices=level_choices,
+        blank=True,
+        verbose_name=u'Niveau'
+    )
+
+    school = models.ForeignKey(
+        School,
+        null=True,
+        verbose_name=u'Skole'
+    )
+
+    attendee_count = models.IntegerField(
+        blank=False,
+        verbose_name=u'Antal deltagere'
+    )
+    notes = models.TextField(
+        blank=True,
+        verbose_name=u'Bemærkninger'
+    )
+
+    def __unicode__(self):
+        if self.email is not None and self.email != "":
+            return "%s %s <%s>" % (self.firstname, self.lastname, self.email)
+        return "%s %s" % (self.firstname, self.lastname)
+
+
+class Booking(models.Model):
+    visit = models.ForeignKey(Visit, null=True)
+    booker = models.ForeignKey(Booker)
+
+
+class ClassBooking(Booking):
+    time = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name=u'Tidspunkt'
+    )
+    desired_time = models.CharField(
+        null=True,
+        blank=True,
+        max_length=2000,
+        verbose_name=u'Ønsket tidspunkt'
+    )
+    tour_desired = models.BooleanField(
+        verbose_name=u'Rundvisning ønsket'
+    )
+
+
+class TeacherBooking(Booking):
+    subjects = models.ManyToManyField(Subject)
+
+
+class BookingSubjectLevel(models.Model):
+
+    booking = models.ForeignKey(Booking, blank=False, null=False)
+    subject = models.ForeignKey(
+        Subject, blank=False, null=False,
+        limit_choices_to={
+            'subject_type__in': [
+                Subject.SUBJECT_TYPE_GYMNASIE,
+                Subject.SUBJECT_TYPE_BOTH
+            ]
+        }
+    )
+    level = models.ForeignKey(GymnasieLevel, blank=False, null=False)
+
+    def __unicode__(self):
+        return u"%s (for booking %s)" % (self.display_value(), self.booking.pk)
+
+    def display_value(self):
+        return u'%s på %s niveau' % (self.subject.name, self.level)
