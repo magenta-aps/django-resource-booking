@@ -71,6 +71,8 @@ urlpatterns = patterns(
         name='otherresource_create'),
     url(r'^otherresource/(?P<pk>[0-9]+)/edit$',
         EditOtherResourceView.as_view(), name='otherresource_edit'),
+    url(r'^otherresource/(?P<pk>[0-9]+)/clone$',
+        EditOtherResourceView.as_view(), {'clone': True}, name='otherresource_clone'),
 
 
     url(r'^visit/create$',
