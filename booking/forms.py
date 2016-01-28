@@ -3,11 +3,10 @@ from booking.models import UnitType
 from booking.models import Unit
 from booking.models import Visit
 from django import forms
-from django.forms import CheckboxSelectMultiple
+from django.forms import CheckboxSelectMultiple, RadioSelect
 from django.forms import inlineformset_factory
 from django.forms import TextInput, NumberInput, Textarea
 from django.utils.translation import ugettext_lazy as _
-from profile.models import COORDINATOR
 from tinymce.widgets import TinyMCE
 
 
@@ -30,9 +29,9 @@ class VisitForm(forms.ModelForm):
         fields = ('title', 'teaser', 'description', 'price',
                   'type', 'tags', 'preparation_time', 'comment',
                   'institution_level', 'topics', 'level', 'class_level_min',
-                  'class_level_max',
+                  'class_level_max', 'subjects', 'audience',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
-                  'time', 'duration', 'locality', 'rooms_assignment',
+                  'recurrences', 'duration', 'locality', 'rooms_assignment',
                   'rooms_needed',
                   'enabled', 'contact_persons', 'unit',)
         widgets = {
@@ -44,6 +43,8 @@ class VisitForm(forms.ModelForm):
             'tags': CheckboxSelectMultiple(),
             'topics': CheckboxSelectMultiple(),
             'contact_persons': CheckboxSelectMultiple(),
+            'subjects': CheckboxSelectMultiple(),
+            'audience': RadioSelect()
         }
 
     def clean_locality(self):
@@ -76,16 +77,7 @@ class VisitForm(forms.ModelForm):
     def get_unit_query_set(self):
         """"Get units for which user can create events."""
         user = self.user
-        if user.userprofile.get_role() == COORDINATOR:
-            uu = user.userprofile.unit
-            if uu is not None:
-                qs = uu.get_descendants()
-            else:
-                qs = Unit.objects.none()
-        else:
-            # User must be an administrator and may attach any unit.
-            qs = Unit.objects.all()
-        return qs
+        return user.userprofile.get_unit_queryset()
 
 
 VisitStudyMaterialFormBase = inlineformset_factory(Visit,

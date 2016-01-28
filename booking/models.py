@@ -7,8 +7,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
 from django.utils.translation import ugettext_lazy as _
 
-from .fields import DurationField
-
+from recurrence.fields import RecurrenceField
 
 LOGACTION_CREATE = ADDITION
 LOGACTION_CHANGE = CHANGE
@@ -97,27 +96,29 @@ class Unit(models.Model):
 # Master data related to bookable resources start here
 class Subject(models.Model):
     """A relevant subject from primary or secondary education."""
-    stx = 0
-    hf = 1
-    htx = 2
-    eux = 3
-    valgfag = 4
+    SUBJECT_TYPE_GYMNASIE = 2**0
+    SUBJECT_TYPE_GRUNDSKOLE = 2**1
+    # NEXT_VALUE = 2**2
 
-    line_choices = (
-        (stx, _(u'stx')),
-        (hf, _(u'hf')),
-        (htx, _(u'htx')),
-        (eux, _(u'eux')),
-        (valgfag, _(u'valgfag')),
+    SUBJECT_TYPE_BOTH = SUBJECT_TYPE_GYMNASIE | SUBJECT_TYPE_GRUNDSKOLE
+
+    type_choices = (
+        (SUBJECT_TYPE_GYMNASIE, _(u'Gymnasie')),
+        (SUBJECT_TYPE_GRUNDSKOLE, _(u'Grundskole')),
+        (SUBJECT_TYPE_BOTH, _(u'Begge')),
     )
 
     name = models.CharField(max_length=256)
-    line = models.IntegerField(choices=line_choices, verbose_name=u'Linje',
-                               blank=True)
+    subject_type = models.IntegerField(
+        choices=type_choices,
+        verbose_name=u'Skoleniveau',
+        default=SUBJECT_TYPE_GYMNASIE,
+        blank=False,
+    )
     description = models.TextField(blank=True)
 
     def __unicode__(self):
-        return self.name
+        return '%s (%s)' % (self.name, self.get_subject_type_display())
 
 
 class Link(models.Model):
@@ -210,43 +211,49 @@ class Resource(models.Model):
 
     # Resource type.
     STUDENT_FOR_A_DAY = 0
-    FIXED_SCHEDULE_GROUP_VISIT = 1
-    FREELY_SCHEDULED_GROUP_VISIT = 2
+    GROUP_VISIT = 1
+    _UNUSED = 2
     STUDY_PROJECT = 3
-    SINGLE_EVENT = 4
-    OTHER_RESOURCES = 5
+    OTHER_OFFERS = 4
+    STUDY_MATERIAL = 5
+    TEACHER_EVENT = 6
+    OPEN_HOUSE = 7
+    ASSIGNMENT_HELP = 8
+    STUDIEPRAKTIK = 9
 
     resource_type_choices = (
         (STUDENT_FOR_A_DAY, _(u"Studerende for en dag")),
-        (FIXED_SCHEDULE_GROUP_VISIT, _(u"Gruppebesøg med faste tider")),
-        (FREELY_SCHEDULED_GROUP_VISIT, _(u"Gruppebesøg uden faste tider")),
-        (STUDY_PROJECT, _(u"Studieretningsprojekt - SRP")),
-        (SINGLE_EVENT,  _(u"Enkeltstående event")),
-        (OTHER_RESOURCES, _(u"Andre tilbud"))
+        (STUDIEPRAKTIK, _(u"Studiepraktik")),
+        (OPEN_HOUSE, _(u"Åbent hus")),
+        (TEACHER_EVENT, _(u"Lærerarrangement")),
+        (GROUP_VISIT, _(u"Besøg med klassen")),
+        (STUDY_PROJECT, _(u"Studieretningsprojekt")),
+        (ASSIGNMENT_HELP, _(u"Opgavehjælp")),
+        (OTHER_OFFERS,  _(u"Andre tilbud")),
+        (STUDY_MATERIAL, _(u"Undervisningsmateriale"))
     )
 
     # Target audience choice - student or teacher.
-    TEACHER = 0
-    STUDENT = 1
+    AUDIENCE_TEACHER = 2**0
+    AUDIENCE_STUDENT = 2**1
+    AUDIENCE_ALL = AUDIENCE_TEACHER | AUDIENCE_STUDENT
 
     audience_choices = (
-        (TEACHER, _(u'Lærer')),
-        (STUDENT, _(u'Elev'))
+        (AUDIENCE_TEACHER, _(u'Lærer')),
+        (AUDIENCE_STUDENT, _(u'Elev')),
+        (AUDIENCE_ALL, _(u'Alle'))
     )
 
     # Institution choice - primary or secondary school.
     PRIMARY = 0
     SECONDARY = 1
 
-    institution_choices = (
-        (PRIMARY, _(u'Grundskole')),
-        (SECONDARY, _(u'Gymnasium'))
-    )
+    institution_choices = Subject.type_choices
 
     # Level choices - A, B or C
     A = 0
-    B = 0
-    C = 0
+    B = 1
+    C = 2
 
     level_choices = (
         (A, u'A'), (B, u'B'), (C, u'C')
@@ -267,7 +274,7 @@ class Resource(models.Model):
 
     enabled = models.BooleanField(verbose_name=_(u'Aktiv'), default=True)
     type = models.IntegerField(choices=resource_type_choices,
-                               default=OTHER_RESOURCES)
+                               default=STUDY_MATERIAL)
     state = models.IntegerField(choices=state_choices, default=CREATED,
                                 verbose_name=_(u"Tilstand"))
     title = models.CharField(max_length=256, verbose_name=_(u'Titel'))
@@ -281,7 +288,7 @@ class Resource(models.Model):
     links = models.ManyToManyField(Link, blank=True, verbose_name=_('Links'))
     audience = models.IntegerField(choices=audience_choices,
                                    verbose_name=_(u'Målgruppe'),
-                                   default=TEACHER)
+                                   default=AUDIENCE_ALL)
     institution_level = models.IntegerField(choices=institution_choices,
                                             verbose_name=_(u'Institution'),
                                             default=SECONDARY)
@@ -376,6 +383,59 @@ class Resource(models.Model):
 
         return "\n".join(texts)
 
+    def get_dates_display(self):
+        if self.visit:
+            return self.visit.get_dates_display()
+
+        return "-"
+
+    def get_subjects_display(self):
+        res = []
+        gym = []
+        gs = []
+
+        for fag in self.subjects.all():
+            if fag.subject_type & Subject.SUBJECT_TYPE_GYMNASIE:
+                gym.append(fag)
+            if fag.subject_type & Subject.SUBJECT_TYPE_GRUNDSKOLE:
+                gs.append(fag)
+
+        if (self.institution_level & Subject.SUBJECT_TYPE_GYMNASIE and
+                len(gym) > 0):
+            res.append(_(u"Gymnasie"))
+            if self.level:
+                res.append(_(u" (niveau %s)") % self.get_level_display())
+            res.append(u": ")
+            res.append(", ".join([x.name for x in gym]))
+            res.append(". ")
+
+        if (self.institution_level & Subject.SUBJECT_TYPE_GRUNDSKOLE and
+                len(gs) > 0):
+            res.append(_(u"Grundskole"))
+            if self.class_level_min:
+                res.append(_(u" (klassetrin "))
+                res.append(self.class_level_min)
+                if self.class_level_max != self.class_level_min:
+                    res.append("-")
+                    res.append(self.class_level_max)
+                res.append(u")")
+            else:
+                if self.class_level_max:
+                    res.append(_(u" (klassetrin %s)") % self.class_level_max)
+            res.append(u": ")
+            res.append(", ".join([x.name for x in gs]))
+            res.append(u". ")
+
+        return "".join([unicode(x) for x in res])
+
+    def display_locality(self):
+        try:
+            return self.visit.locality
+        except Visit.DoesNotExist:
+            pass
+
+        return "-"
+
 
 class OtherResource(Resource):
     """A non-bookable, non-visit resource, basically material on the Web."""
@@ -433,17 +493,13 @@ class Visit(Resource):
     )
 
     locality = models.ForeignKey(
-        Locality, verbose_name=_(u'Lokalitet'), blank=True
+        Locality, verbose_name=_(u'Lokalitet'), blank=True, null=True
     )
-    time = models.DateTimeField(
-        verbose_name=_(u'Tid')
-    )
-    duration = DurationField(
+    duration = models.CharField(
+        max_length=8,
         verbose_name=_(u'Varighed'),
         blank=True,
         null=True,
-        labels={'day': _(u'Dage:'), 'hour': _(u'Timer:'),
-                'minute': _(u'Minutter:')}
     )
     contact_persons = models.ManyToManyField(
         Person,
@@ -489,6 +545,10 @@ class Visit(Resource):
         default=0,
         verbose_name=_(u'Forberedelsestid (i timer)')
     )
+    recurrences = RecurrenceField(
+        null=True,
+        verbose_name=_(u'Gentagelser')
+    )
 
     def save(self, *args, **kwargs):
         # Save once to store relations
@@ -499,6 +559,64 @@ class Visit(Resource):
 
         # Do the final save
         return super(Visit, self).save(*args, **kwargs)
+
+    @property
+    def recurrences_description(self):
+        if self.recurrences and self.recurrences.rrules:
+            return [d.to_text() for d in self.recurrences.rrules]
+        else:
+            return []
+
+    def get_dates_display(self):
+        dates = [
+            x.display_value for x in self.visitoccurrence_set.all()
+        ]
+        if len(dates) > 0:
+            return ", ".join(dates)
+        else:
+            return "-"
+
+    def num_of_participants_display(self):
+        if self.minimum_number_of_visitors:
+            return "%s-%s" % (
+                self.minimum_number_of_visitors,
+                self.maximum_number_of_visitors
+            )
+        elif self.maximum_number_of_visitors:
+            return self.maximum_number_of_visitors
+
+        return None
+
+
+class VisitOccurrence(models.Model):
+    start_datetime = models.DateTimeField(
+        verbose_name=_(u'Starttidspunkt')
+    )
+    end_datetime1 = models.DateTimeField(
+        verbose_name=_(u'Sluttidspunkt')
+    )
+    end_datetime2 = models.DateTimeField(
+        verbose_name=_(u'Alternativt sluttidspunkt'),
+        blank=True,
+        null=True
+    )
+    visit = models.ForeignKey(
+        Visit,
+        on_delete=models.CASCADE
+    )
+
+    @property
+    def display_value(self):
+        if not self.start_datetime or not self.end_datetime1:
+            return None
+
+        result = self.start_datetime.strftime('%d. %m %Y %H:%M')
+
+        endtime = self.end_datetime2 or self.end_datetime1
+        if endtime:
+            result += endtime.strftime(' %H:%M')
+
+        return result
 
 
 class Room(models.Model):

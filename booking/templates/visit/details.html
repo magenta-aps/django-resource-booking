@@ -40,21 +40,25 @@
     </div>
     <div class="row">
         <div class="col-sm-12 col-md-8">
-            <form class="clearfix search-list" role="søg" action={% url 'search' %}>
+            <form class="clearfix" role="søg" action={% url 'search' %}>
                 <div class="input-group">
                     <label class="sr-only" for="searchBox">Søg efter tilbud</label>
                     <input type="text" class="form-control" id="searchBox" placeholder="Søg efter tilbud - indtast et eller flere søgeord..." name="q" value="{{ request.GET.q }}">
                     <span class="input-group-btn">
+                    <a id="reset-btn" class="btn btn-default" aria-label="Ryd søgning"><span class="glyphicon glyphicon-remove"></span></a>
                     <button class="btn btn-default" id="search" type="submit"><span class="hidden-xs">Søg</span> <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
                     </button>
                     </span>
                 </div>
             </form>
-        
-            <h2>Her skal "hvad" vises</h2>
+            <div class="divider"></div>
+            <h2>{{ object.get_type_display }}</h2>
             
-            {% if user.is_authenticated %}
-                <a class="pull-right" href="/visit/{{ object.id }}/edit">Redigér</a>
+            {% if can_edit %}
+                <a class="pull-right btn btn-primary edit-btn" href="{% url 'visit_edit' object.pk %}">+ Redigér</a>
+            {% endif %}
+            {% if user.userprofile.can_create %}
+                <a class="pull-right btn btn-primary" href="{% url 'visit_clone' object.pk %}">Opret kopi</a>
             {% endif %}
             
             <h1>{{ object.title }}</h1>
@@ -72,17 +76,14 @@
             </div>
             <div class="well order-buttons hidden-print">
                 <!-- Display according to business logic -->
-                <i>Buttons display according to business logic.</i>
-                <br />
                 <button type="button" class="btn btn-default" data-toggle="modal" data-target="#startbooking">Book dette tilbud
                     <span class="glyphicon glyphicon-chevron-right"></span>
                 </button>
-                <br/><i>Buttons display according to business logic.</i>
                 <!-- Display according to business logic -->
             </div>
             <div class="disclaimer">Bemærk at din bestilling først er bindende, når du har modtaget en bekræftelse fra den ansvarlige arrangør fra Københavns Universitet.</div>
             <div class="go-back">
-            <a href="#" class="btn btn-default "><span class="glyphicon glyphicon-chevron-left"></span> Tilbage til søgeresultat</a>
+            <a href="#" class="btn btn-default" onclick="history.go(-1); return false;"><span class="glyphicon glyphicon-chevron-left"></span> Tilbage til søgeresultat</a>
         </div>
         </div>
         <div class="col-sm-6 col-md-4">
@@ -93,31 +94,50 @@
                     </div>
                     <div class="panel-body">
                         <dl class="dl-horizontal">
-                            <dt>Henvendt til:</dt>
-                            <dd>{{ object.get_audience_display }}</dd>
-                            <dt>Fag/niveau:</dt>
-                            <dd>{{ object.get_level_display }}</dd>
-                            <dt>Max antal:</dt>
-                            <dd>{{ object.maximum_number_of_visitors }}</dd>
-                            <dt>Hvad:</dt>
-                            <dd>{{ object.get_type_display }}</dd>
-                            <dt>Hvor:</dt>
-                            <dd>{{ object.unit.name }}, {{ object.locality.name }}, {{ object.locality.address_line }}, {{ object.locality.zip_city }}</dd>
+                            {% if object.get_audience_display %}
+                                <dt>Henvendt til:</dt>
+                                <dd>{{ object.get_audience_display }}</dd>
+                            {% endif %}
+                            {% if object.resource_ptr.get_subjects_display %}
+                                <dt>Fag/niveau:</dt>
+                                <dd>{{ object.resource_ptr.get_subjects_display }}</dd>
+                            {% endif %}
+                            {% if object.num_of_participants_display %}
+                                <dt>Max antal:</dt>
+                                <dd>{{ object.num_of_participants_display }}</dd>
+                            {% endif %}
+                            {% if object.get_type_display %}
+                                <dt>Hvad:</dt>
+                                <dd>{{ object.get_type_display }}</dd>
+                            {% endif %}
+                            {% if object.locality %}
+                                <dt>Hvor:</dt>
+                                <dd>{{ object.unit.name }}, {{ object.locality.name }}, {{ object.locality.address_line }}, {{ object.locality.zip_city }}</dd>
+                            {% endif %}
+                            
                             <dt>Arrangør:</dt>
-                            <dd></dd>
+                            <dd><a href="#" data-toggle="modal" data-target="#kontaktformular">Kontakt arrangøren</a> <span class="glyphicon glyphicon-new-window"></span></dd>
+                            
                             <dt>Hvornår:</dt>
+                            <!--<dd>{{ object.time }}</dd>-->
                             <dd>
-                            <select class="form-control input-sm">
-                                <option>Vælg dato</option>
-                                <option>{{ object.time }}</option>
-                                <option>26. marts 2016</option>
-                                <option>16. november 2016</option>
-                                <option>30. debember 2016</option>
-                            </select></dd>
-                            <dt>Varighed:</dt>
-                            <dd>{{ object.duration|timedelta }}</dd>
-                            <dt>Pris:</dt>
-                            <dd>{{ object.price }}</dd>
+                                {% for description in object.recurrences_description %}
+                                    {{ description }}
+                                {% endfor %}
+                                <ul class="list-unstyled">
+                                {% for occurrence in object.visitoccurrence_set.all %}
+                                    <li>{{ occurrence.start_datetime|date:'d-m-Y H:i' }}</li>
+                                {% endfor %}
+                                </ul>
+                            </dd>
+                            {% if object.duration %}
+                                <dt>Varighed:</dt>
+                                <dd>{{ object.duration|timedelta }}</dd>
+                            {% endif %}
+                            {% if object.price %}
+                                <dt>Pris:</dt>
+                                <dd>{{ object.price }}</dd>
+                            {% endif %}
                         </dl>
                     </div>
                 </div>
@@ -127,13 +147,50 @@
                     </div>
                     <div class="panel-body google-maps-container">
                         <div class="google-maps">
-                            <iframe src='https://maps.google.com/maps?q=Bülowsvej 17, 1870 Frederiksberg C&amp;z=14&amp;output=embed&amp;iwloc=0&amp;sensor=false' width='450' height='450' frameborder='0' style='border:0' allowfullscreen></iframe>
+                            <iframe src='https://maps.google.com/maps?q={{ object.locality.address_line }}, {{ object.locality.zip_city }}&amp;z=14&amp;output=embed&amp;iwloc=0&amp;sensor=false' width='450' height='450' frameborder='0' style='border:0' allowfullscreen></iframe>
                         </div>
                     </div>
                 </div>
             </form>
         </div>
     </div>
+<!-- Modal kontaktformular start -->
+<div id="kontaktformular" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="kontaktTitel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <h3 id="kontaktTitel">Kontakt arrangøren</h3>
+            </div>
+            <div class="modal-body">
+                <form class="form-horizontal col-sm-12">
+                    <div class="form-group">
+                        <label class="control-label">Navn</label>
+                        <input class="form-control required" placeholder="Dit navn" data-error="Udfyld venligst navn." type="text">
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label">E-Mail</label>
+                        <input class="form-control" placeholder="Angiv din e-mailadresse" data-error="Angiv gyldig e-mailadresse." type="email">
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label">Telefon</label>
+                        <input class="form-control" placeholder="Telefonnummer - 8 tal" data-error="Telefonnummer - 8 tal" type="phone">
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label">Besked</label>
+                        <textarea class="form-control" cols="40" rows="10" placeholder="Skriv besked"></textarea>
+                    </div>
+                    <div class="form-group"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">Cancel</button>
+                <button type="submit" class="btn btn-primary pull-right">Send besked</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal kontaktformulat end -->
 <!-- Modal start -->
     <div class="modal fade" id="startbooking" tabindex="-1" role="Popup-bookingflow" aria-labelledby="overskrift">
         <div class="modal-dialog modal-lg" role="Bookingflow">
@@ -147,23 +204,79 @@
                 <div class="divider"></div>
                     <form class="form-horizontal clearfix" id="startbookingform" role="form" data-toggle="validator">
                         <div class="form-group">
-                            <label for="name" class="col-sm-2 control-label">Navn*</label>
-                            <div class="col-sm-6">
-                                <input type="text" class="form-control input-sm" data-error="Udfyld navn" id="name" placeholder="Navn" required>
+                            <label for="name" class="col-sm-2 control-label">For- og efternavn*</label>
+                            <div class="col-sm-3">
+                                <input type="text" class="form-control input-sm" data-error="Udfyld fornavn" id="name" placeholder="Foravn" required>
+                            </div>
+                            <div class="col-sm-3">
+                                <input type="text" class="form-control input-sm" data-error="Udfyld efternavn" placeholder="Efternavn" required>
                             </div>
                             <div class="col-sm-3 help-block with-errors"></div>
                         </div>
                         <div class="form-group">
-                            <label for="inputEmail3" class="col-sm-2 control-label">Email*</label>
-                            <div class="col-sm-6">
-                                <input type="email" class="form-control input-sm" data-error="Angiv gyldig e-mailadresse" id="inputEmail3" placeholder="Email" required>
+                            <label for="inputEmail" class="col-sm-2 control-label">Email*</label>
+                            <div class="col-sm-3">
+                                <input type="email" class="form-control input-sm" data-error="Angiv gyldig e-mailadresse" id="inputEmail" placeholder="E-mail" required>
+                            </div>
+                            <div class="col-sm-3">
+                                <input type="email" class="form-control input-sm" data-error="E-mailadressen skal gentages korrekt" data-match="#inputEmail" placeholder="Gentag e-mail" required>
                             </div>
                             <div class="col-sm-3 help-block with-errors"></div>
                         </div>
                         <div class="form-group">
-                            <label for="skole" class="col-sm-2 control-label">Skole*</label>
+                            <label for="tlf" class="col-sm-2 control-label">Telefonnummer*</label>
                             <div class="col-sm-6">
-                                <input type="text" class="form-control input-sm" data-error="Angiv skole" id="skole" placeholder="Skole" required>
+                                <input type="tel" class="form-control input-sm" pattern="^\d{8}" data-error="Angiv gyldig e-telefonnumer" id="tlf" placeholder="Telefonnummer" required>
+                            </div>
+                            <div class="col-sm-3 help-block with-errors"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="" class="col-sm-2 control-label">Gymnasium*</label>
+                            <div class="col-sm-6">
+                                <select class="form-control input-sm" data-error="Vælg gymnasium" required>
+                                  <option>Vælg gymnasium</option>
+                                  <option value="">2</option>
+                                  <option value="">3</option>
+                                  <option value="">4</option>
+                                  <option value="">5</option>
+                                </select>
+                            </div>
+                            <div class="col-sm-3 help-block with-errors"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="" class="col-sm-2 control-label">Gymnasie-uddannelse*</label>
+                            <div class="col-sm-6">
+                                <select class="form-control input-sm" data-error="Vælg gymnasieuddannelse" required>
+                                  <option>Vælg gymnasieuddannelse</option>
+                                  <option value="">2</option>
+                                  <option value="">3</option>
+                                  <option value="">4</option>
+                                  <option value="">5</option>
+                                </select>
+                            </div>
+                            <div class="col-sm-3 help-block with-errors"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="tlf" class="col-sm-2 control-label">Gymnasiets postnr. pg by*</label>
+                            <div class="col-sm-2">
+                                <input type="text" class="form-control input-sm" pattern="^\d{4}" data-error="Angiv gymnasiets postnummer" id="zip" placeholder="Postnummer" required>
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" class="form-control input-sm" data-error="Angiv by hvor Gymnasiet ligger" placeholder="By hvori Gymnasiet ligger" required>
+                            </div>
+                            <div class="col-sm-3 help-block with-errors"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="" class="col-sm-2 control-label">Region*</label>
+                            <div class="col-sm-6">
+                                <select class="form-control input-sm" data-error="Vælg region" required>
+                                  <option>Vælg region</option>
+                                  <option value="">Hovedstaden</option>
+                                  <option value="">Midtjylland</option>
+                                  <option value="">Nordjylland</option>
+                                  <option value="">Sjælland</option>
+                                  <option value="">Syddanmark</option>
+                                </select>
                             </div>
                             <div class="col-sm-3 help-block with-errors"></div>
                         </div>
@@ -177,11 +290,11 @@
                         <div class="form-group">
                             <label for="skole" class="col-sm-2 control-label">Kommentarer</label>
                             <div class="col-sm-6">
-                                <textarea class="form-control" rows="3"></textarea>
+                                <textarea class="form-control input-sm" rows="3"></textarea>
                             </div>
                         </div>
                         <div class="form-group">
-                            <div class="col-sm-6 col-sm-offset-2">
+                            <div class="col-sm-6 col-sm-offset-2 padleft0">
                                 <div class="stepwizard">
                                     <div class="stepwizard-row">
                                         <div class="stepwizard-step">
@@ -203,7 +316,7 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    
+                    <p class="text-center">Bemærk venligst at aftalen først er bindende, når du har modtaget en bekræftelse<br />fra den arrangør på Københavns Universitet, der er ansvarlig for besøget. </p>
                     <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Annullér</button>
                     <button type="button" class="btn btn-primary">Næste</button>
                 </div>
@@ -236,4 +349,7 @@
             </footer>
         </div>
     </div>
+{% endblock %}
+{% block extra_scripts %}
+    <script src="/static/js/custom.js"></script>
 {% endblock %}

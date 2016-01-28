@@ -9,6 +9,14 @@ $('.input-daterange input').each(function() {
         autoclose: true
     });
 });
+$(function() {
+    $('#filter-search-results input[type=checkbox]').on('change', function() {
+        $(this.form).trigger("submit")
+    });
+    $('#filter-search-results input.datepicker').on('changeDate', function() {
+        $(this.form).trigger("submit")
+    });
+});
 $('.collapse').on('show.bs.collapse', function() {
     $(this).parent().find(".caret").addClass("caret-up");
 });
@@ -23,11 +31,15 @@ $('#filters').on('hide.bs.collapse', function() {
 });
 //Search-list.html end
 //Booking form validation start...
-$('#startbookingform').validator().on('submit', function (e) {
-  if (e.isDefaultPrevented()) {
-    // handle the invalid form...
-  } else {
-    // everything looks good!
-  }
-})
+// $('#startbookingform').validator().on('submit', function (e) {
+//   if (e.isDefaultPrevented()) {
+//     // handle the invalid form...
+//   } else {
+//     // everything looks good!
+//   }
+// });
 //Booking form validation end...
+$("#reset-btn").click(function() {
+    $("#searchBox").val("");
+    $("form").trigger("submit")
+});

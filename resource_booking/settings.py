@@ -38,6 +38,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'booking',
     'profile',
+    'recurrence',
     'timedelta',
     'tinymce',
     'djangosaml2'
@@ -130,7 +131,7 @@ DATABASES = {
 
 LANGUAGE_CODE = 'da-dk'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Copenhagen'
 
 USE_I18N = True
 

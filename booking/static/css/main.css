@@ -17,11 +17,11 @@
 html,
 body {
     text-align: left;
+    height: 100%;
 }
 
 html {
     position: relative;
-    min-height: 100%;
     -webkit-overflow-scrolling: touch;
 }
 
@@ -36,7 +36,6 @@ body {
     color: #4A4949;
     margin: 0;
     padding: 0;
-    min-height: 100%;
 }
 
 h1 {
@@ -85,9 +84,17 @@ strong,
     background: -webkit-linear-gradient(top, rgba(250, 250, 250, 1) 0%, rgba(230, 230, 230, 1) 100%);
     background: linear-gradient(to bottom, rgba(250, 250, 250, 1) 0%, rgba(230, 230, 230, 1) 100%);
     filter: progid: DXImageTransform.Microsoft.gradient( startColorstr='#fafafa', endColorstr='#e6e6e6', GradientType=0);
-    font-size: 12px;
 }
-
+.label {
+    font-size: 86%;
+}
+.label-default {
+    letter-spacing: 0.7px;
+    color: #666;
+    background-color: #fff;
+    border: 1px solid #999;
+    margin-right: 5px;
+}
 .inline-block {
     display: inline-block;
 }
@@ -151,21 +158,22 @@ strong,
 .search-list {
     margin: 15px 0;
 }
-
+.search-list .dropdown-menu {
+    font-size: 11px;
+}
 .search-list .dropdown-menu li.selected {
     background-color: #f5f5f5;
 }
 
 .search-list .dropdown-menu li.selected > a {
-    font-family: 'noto_sansbold', arial, sans-serif;
-    font-weight: normal;
+    font-weight: bold;
 }
 
 #searchBox {
     right: -1px;
 }
 
-#search.btn-default {
+#search, #reset-btn {
     font-size: 14px;
 }
 
@@ -173,7 +181,6 @@ strong,
     margin-left: 0;
     margin-right: 0;
 }
-
 .breadcrumb {
     color: #999;
     font-size: 8.8px;
@@ -228,7 +235,7 @@ strong,
     border-color: transparent;
 }
 
-.panel>.panel-heading {
+.panel.panel-default>.panel-heading {
     padding: 6px 2px 6px 6px;
     background: rgb(234, 234, 232);
     background: -moz-linear-gradient(top, rgba(234, 234, 232, 1) 0%, rgba(241, 241, 241, 1) 100%);
@@ -242,7 +249,7 @@ strong,
     box-shadow: none;
 }
 
-.panel .panel-title {
+.panel .panel-title, .panel .panel-title a {
     font-size: 11px;
     color: #5e5e5e;
     font-weight: bold;
@@ -293,7 +300,7 @@ strong,
 }
 
 .panel.panel-sidebar>.panel-heading h3 {
-    color: ##4A4949;
+    color: #4A4949;
     font-size: 9.9px;
     font-weight: bold;
     text-transform: initial;
@@ -309,13 +316,12 @@ strong,
 }
 
 li.media {
-    padding: 10px;
+    padding: 15px 10px;
+    border: 1px solid #cdcdcd;
 }
 
 li.media:nth-child(odd) {
     background-color: #f8f8f8;
-    border-top: 1px solid #cdcdcd;
-    border-bottom: 1px solid #cdcdcd;
 }
 
 li.media .info-list {
@@ -463,7 +469,8 @@ a>.caret:active {
 }
 
 .input-daterange input {
-    text-align: left;
+    text-align: left!important;
+    font-size: 11px;
 }
 
 .datepicker-switch {
@@ -474,7 +481,11 @@ a>.caret:active {
     padding-right: 0;
     padding-left: 0;
 }
-
+.go-back {
+    margin-bottom: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #ddd;
+}
 footer {
     margin: 0 auto;
     padding: 15px 0;
@@ -523,27 +534,30 @@ ul.footerlinks .footerlist-header {
 }
 
 .footer-social > .icon-circle {
-    height: 30px;
-    width: 30px;
+    height: 33px;
+    width: 33px;
     border-radius: 50%;
+    border: 1px solid #ccc;
     display: inline-block;
     background-color: #fff;
 }
 
 .footer-social > .icon-circle > .fa {
     position: relative;
-    bottom: -4px;
-    left: 7px;
+    bottom: -5px;
+    left: 8px;
     font-size: 20px;
 }
 
 .footer-social > .icon-circle > .fa.fa-facebook {
     position: relative;
-    bottom: -7px;
-    left: 7px;
+    bottom: -8px;
+    left: 9px;
     font-size: 24px;
 }
-
+.padleft0 {
+    padding-left: 0;
+}
 #startbooking .form-group.has-error .help-block.with-errors {
     background-color: #f2dede;
     border: 1px solid #a94442;
@@ -635,7 +649,44 @@ ul.footerlinks .footerlist-header {
     line-height: 1.428571429;
     border-radius: 15px;
 }
+.input-sm, textarea {
+    font-size: 11px!important;
+}
 
+/*Backend specific styles start */
+.edit-btn {
+    margin-bottom: 10px;
+}
+.lengthcounter {
+    margin-left: 7px;
+}
+.form-group ul[id*="id_"] {
+    list-style-type: none;
+    padding-left: 0;
+}
+.form-group label[for*="id_"], .form-group label[for*="id_"] + input[id*="id_"] {
+    margin-right: 7px;
+}
+a#attachAddFileField {
+    margin-top: 10px;
+    display: inline-block;
+    cursor: pointer;
+}
+#chosenrooms .glyphicon-remove {
+    cursor: pointer;
+    font-size: 14px;
+    color: #a94442;
+}
+div ul.errorlist {
+    color: #a94442;
+    background-color: #f2dede;
+    border: 1px solid #a94442;
+    padding: 10px;
+    display: inline-block;
+    list-style-position: inside;
+    max-width: 70%;
+}
+/*Backend specific styles end */
 @media screen and (max-width:768px) {
     html,
     body {
@@ -694,9 +745,6 @@ ul.footerlinks .footerlist-header {
     [data-target="#filters"] {
         margin: 20px 0;
     }
-    li.media {
-        padding: 10px 0;
-    }
     .items-pr-side {
         float: left;
     }
@@ -705,6 +753,9 @@ ul.footerlinks .footerlist-header {
     }
     #startbooking .form-group.has-error .help-block.with-errors:after {
         display: none;
+    }
+    #startbookingform .form-group [class*="col-"] + [class*="col-"] {
+        margin-top: 10px;
     }
 }
 
@@ -751,6 +802,10 @@ ul.footerlinks .footerlist-header {
     #leftside {
         padding-top: 20px;
     }
+    li.media {
+        padding: 15px 10px;
+        border: 1px solid #cdcdcd;
+    }
     li.global-sprog a.english {
         background: transparent url("http://forskning.ku.dk/grafik/globalmenu/flag-uk.gif") no-repeat right 6px;
         display: inline-block;
@@ -778,9 +833,21 @@ ul.footerlinks .footerlist-header {
         margin-left: 110px;
         padding-top: 7px;
     }
+    #startbookingform .form-group [class*="col-"] + [class*="col-"] {
+        padding-left: 0;
+    }
+    .form-horizontal .control-label {
+        padding-top: 3px;
+    }
     footer {
         border-left: 1px solid #ccc;
         border-right: 1px solid #ccc;
         border-bottom: 1px solid #ccc;
+    }
+    .eq-height {
+        display: -webkit-box;
+        display: -webkit-flex;
+        display: -ms-flexbox;
+        display: flex;
     }
 }
