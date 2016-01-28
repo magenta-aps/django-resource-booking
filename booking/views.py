@@ -9,6 +9,7 @@ from dateutil.rrule import rrulestr
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
+from django.core.urlresolvers import reverse
 from django.db.models import Count
 from django.db.models import F
 from django.db.models import Q
@@ -330,9 +331,9 @@ class EditResourceInitialView(TemplateView):
         pk = kwargs.get("pk")
         if pk is not None:
             if OtherResource.objects.filter(id=pk).count() > 0:
-                return redirect("/otherresource/%s/edit" % pk)
+                return redirect(reverse('otherresource_edit', args=[pk]))
             elif Visit.objects.filter(id=pk).count() > 0:
-                return redirect("/visit/%s/edit" % pk)
+                return redirect(reverse('visit_edit', args=[pk]))
             else:
                 raise Http404
         else:
@@ -346,9 +347,9 @@ class EditResourceInitialView(TemplateView):
         if form.is_valid():
             type_id = int(form.cleaned_data['type'])
             if type_id in Visit.applicable_types:
-                return redirect("/visit/create?type=%d" % type_id)
+                return redirect(reverse('visit_create') + "?type=%d" % type_id)
             else:
-                return redirect("/otherresource/create?type=%d" % type_id)
+                return redirect(reverse('otherresource_create') + "?type=%d" % type_id)
 
         return self.render_to_response(
             self.get_context_data(form=form)
@@ -436,7 +437,7 @@ class EditOtherResourceView(EditResourceView):
 
     def get_success_url(self):
         try:
-            return "/otherresource/%d" % self.object.id
+            return reverse('otherresource', args=[self.object.id])
         except:
             return '/'
 
@@ -595,7 +596,7 @@ class EditVisit(RoleRequiredMixin, EditResourceView):
 
     def get_success_url(self):
         try:
-            return "/visit/%d" % self.object.id
+            return reverse('visit', args=[self.object.id])
         except:
             return '/'
 
