@@ -57,7 +57,7 @@
 
                 {% if bookingform.scheduled %}
                     <div class="form-group">
-                        <label class="col-sm-2 control-label" for="tlf">{% trans "Tidspunkt*" %}</label>
+                        <label class="col-sm-2 control-label" for="{{ bookingform.time.id_for_label }}">{% trans "Tidspunkt*" %}</label>
                         <div class="col-sm-6{% if bookingform.time.errors %} has-error{% endif %}">
                             {{ bookingform.time }}
                         </div>
@@ -67,7 +67,7 @@
                     </div>
                 {% else %}
                     <div class="form-group">
-                        <label class="col-sm-2 control-label" for="tlf">{% trans "Ønsket tidspunkt*" %}</label>
+                        <label class="col-sm-2 control-label" for="{{ bookingform.desired_time.id_for_label }}">{% trans "Ønsket tidspunkt*" %}</label>
                         <div class="col-sm-6{% if bookingform.desired_time.errors %} has-error{% endif %}">
                             {{ bookingform.desired_time }}
                         </div>
@@ -78,7 +78,7 @@
                 {% endif %}
 
                 <div class="form-group">
-                    <label class="col-sm-2 control-label" for="tlf">{% trans "Rundvisning" %}</label>
+                    <label class="col-sm-2 control-label" for="{{ bookingform.tour_desired.id_for_label }}">{% trans "Rundvisning" %}</label>
                     <div class="col-sm-6{% if bookingform.tour_desired.errors %} has-error{% endif %}">
                         {{ bookingform.tour_desired }}
                     </div>
@@ -88,7 +88,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="col-sm-2 control-label" for="skole">{% trans "Kommentarer" %}</label>
+                    <label class="col-sm-2 control-label" for="{{ bookerform.notes.id_for_label }}">{% trans "Kommentarer" %}</label>
                     <div class="col-sm-6{% if bookerform.notes.errors %} has-error{% endif %}">
                         {{ bookerform.notes }}
                     </div>

@@ -28,7 +28,7 @@
             {{ bookerform.non_field_errors }}
             {% include "booking/booker/basedata.html" %}
             <div class="form-group">
-                <label class="col-sm-2 control-label" for="skole">{% trans "Fag" %}</label>
+                <label class="col-sm-2 control-label" for="{{ bookingform.subjects.id_for_label }}">{% trans "Fag" %}</label>
                 <div class="col-sm-6{% if bookingform.subjects.errors %} has-error{% endif %}">
                     {{ bookingform.subjects }}
                 </div>
