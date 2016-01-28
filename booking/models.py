@@ -398,13 +398,12 @@ class Resource(models.Model):
         return "-"
 
     def get_subjects_display(self):
-        lst = [ x.display_value() for x in self.resourcegymnasiefag_set.all()]
+        lst = [x.display_value() for x in self.resourcegymnasiefag_set.all()]
         lst.extend([
             x.display_value() for x in self.resourcegrundskolefag_set.all()
         ])
 
         return ", ".join(lst)
-
 
     def display_locality(self):
         try:
@@ -453,7 +452,6 @@ class ResourceGymnasieFag(models.Model):
 
         return f
 
-
     def __unicode__(self):
         u"%s (for '%s')" % (self.display_value(), self.resource.title)
 
@@ -486,7 +484,7 @@ class ResourceGymnasieFag(models.Model):
             res = ",".join([res, levels])
 
         return res
-    
+
     def levels_as_text(self):
         return ",".join([unicode(x.pk) for x in self.ordered_levels()])
 
@@ -560,6 +558,7 @@ class ResourceGrundskoleFag(models.Model):
             unicode(self.class_level_min or 0),
             unicode(self.class_level_max or 0)
         ])
+
 
 class GymnasieLevel(models.Model):
     # Level choices - A, B or C

@@ -6,7 +6,6 @@ from .models import Link, Subject, Tag, Topic, AdditionalService
 from .models import SpecialRequirement, StudyMaterial, Locality
 from .models import GymnasieLevel, ResourceGymnasieFag, ResourceGrundskoleFag
 from .models import School, PostCode, Region, Booker, Booking
-from .models import GymnasieLevel
 
 # Register your models here.
 

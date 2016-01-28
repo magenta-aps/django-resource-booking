@@ -441,7 +441,6 @@ class EditVisit(RoleRequiredMixin, UpdateView):
                     start_datetime__in=existing_visit_occurrences
                 ).delete()
 
-
             # Save fag
             existing_gym_fag = {}
             for x in visit.gymnasiefag.all():
@@ -456,7 +455,7 @@ class EditVisit(RoleRequiredMixin, UpdateView):
             # Delete any remaining values that were not submitted
             for x in existing_gym_fag.itervalues():
                 x.delete()
-    
+
             existing_gs_fag = {}
             for x in visit.grundskolefag.all():
                 existing_gs_fag[x.as_submitvalue()] = x
@@ -472,7 +471,6 @@ class EditVisit(RoleRequiredMixin, UpdateView):
             # Delete any remaining values that were not submitted
             for x in existing_gs_fag.itervalues():
                 x.delete()
-
 
             return super(EditVisit, self).form_valid(form)
         else:
