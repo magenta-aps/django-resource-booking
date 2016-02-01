@@ -1,0 +1,36 @@
+{%load i18n %}
+<div id="kontaktformular" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="kontaktTitel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <h3 id="kontaktTitel">{% trans 'Kontakt arrangøren' %}</h3>
+            </div>
+            <div class="modal-body">
+                <form class="form-horizontal col-sm-12">
+                    <div class="form-group">
+                        <label class="control-label">{% trans 'Navn' %}</label>
+                        <input class="form-control required" placeholder="Dit navn" data-error="Udfyld venligst navn." type="text">
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label">{% trans 'E-Mail' %}</label>
+                        <input class="form-control" placeholder="Angiv din e-mailadresse" data-error="Angiv gyldig e-mailadresse." type="email">
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label">{% trans 'Telefon' %}</label>
+                        <input class="form-control" placeholder="Telefonnummer - 8 tal" data-error="Telefonnummer - 8 tal" type="phone">
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label">{% trans 'Besked' %}</label>
+                        <textarea class="form-control" cols="40" rows="10" placeholder="Skriv besked"></textarea>
+                    </div>
+                    <div class="form-group"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">{% trans 'Annullér' %}</button>
+                <button type="submit" class="btn btn-primary pull-right">{% trans 'Send besked' %}</button>
+            </div>
+        </div>
+    </div>
+</div>
