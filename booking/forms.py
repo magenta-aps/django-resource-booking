@@ -37,16 +37,39 @@ class VisitForm(forms.ModelForm):
                   'rooms_needed',
                   'enabled', 'contact_persons', 'unit',)
         widgets = {
-            'title': TextInput(attrs={'class': 'titlefield'}),
-            'teaser': Textarea(attrs={'rows': 3, 'maxlength': 1000}),
+            'title': TextInput(
+                attrs={'class': 'titlefield form-control input-sm'}
+            ),
+            'teaser': Textarea(
+                attrs={
+                    'class': 'form-control input-sm',
+                    'rows': 3,
+                    'maxlength': 1000
+                }
+            ),
             'description': TinyMCE(attrs={'rows': 10}),
-            'minimum_number_of_visitors': NumberInput(attrs={'min': 1}),
-            'maximum_number_of_visitors': NumberInput(attrs={'min': 1}),
-            'tags': CheckboxSelectMultiple(),
-            'topics': CheckboxSelectMultiple(),
-            'contact_persons': CheckboxSelectMultiple(),
-            'subjects': CheckboxSelectMultiple(),
-            'audience': RadioSelect()
+
+            'price': NumberInput(attrs={'class': 'form-control input-sm'}),
+            'type': Select(attrs={'class': 'form-control input-sm'}),
+            'preparation_time': NumberInput(attrs={'class': 'form-control input-sm'}),
+            'comment': Textarea(attrs={'class': 'form-control input-sm'}),
+            'institution_level': Select(attrs={'class': 'form-control input-sm'}),
+            'level': Select(attrs={'class': 'form-control input-sm'}),
+            'class_level_min': Select(attrs={'class': 'form-control input-sm'}),
+            'class_level_max': Select(attrs={'class': 'form-control input-sm'}),
+
+            'minimum_number_of_visitors': NumberInput(
+                attrs={'class': 'form-control input-sm', 'min': 1}
+            ),
+            'maximum_number_of_visitors': NumberInput(
+                attrs={'class': 'form-control input-sm', 'min': 1}
+            ),
+            'duration': Select(attrs={'class': 'form-control input-sm'}),
+            'locality': Select(attrs={'class': 'form-control input-sm'}),
+            'rooms_assignment': Select(attrs={'class': 'form-control input-sm'}),
+            'unit': Select(attrs={'class': 'form-control input-sm'}),
+            'subjects': CheckboxSelectMultiple(attrs={'class': 'form-control input-sm'}),
+            'audience': RadioSelect(attrs={'class': 'form-control input-sm'}),
         }
 
     def clean_locality(self):

@@ -275,7 +275,7 @@
                                         <div class="time-container">
                                             <div class="time-select">
                                                 <div>
-                                                    <select class="start-time">
+                                                    <select class="start-time form-control input-sm">
                                                         <option value="00:00">00:00</option>
                                                         <option value="00:30">00:30</option>
                                                         <option value="01:00">01:00</option>
@@ -342,7 +342,7 @@
                                     <fieldset>
                                         {{ form.duration.errors }}
                                         <label for="{{ form.duration.id_for_label }}">{{ form.duration.label }}:</label>
-                                        <select id="id_duration" name="duration">
+                                        <select id="id_duration" name="duration" class="form-control input-sm">
                                             <option value="00:00">00:00</option>
                                             <option value="00:30">00:30</option>
                                             <option value="01:00">01:00</option>
