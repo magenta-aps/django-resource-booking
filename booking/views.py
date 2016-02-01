@@ -324,7 +324,8 @@ class SearchView(ListView):
                     if value is not None and len(unicode(value)) > 0:
                         querylist.append("%s=%s" % (key, value))
         if len(querylist) > 0:
-            context['fullquery'] = reverse('search') + "?" + "&".join(querylist)
+            context['fullquery'] = reverse('search') + \
+                                   "?" + "&".join(querylist)
         else:
             context['fullquery'] = None
 
