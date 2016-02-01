@@ -642,6 +642,7 @@ class VisitOccurrence(models.Model):
         class_booking = ClassBooking.objects.get(time_id=self.id)
         return class_booking is not None
 
+
 class Room(models.Model):
     visit = models.ForeignKey(
         Visit, verbose_name=_(u'Besøg'), blank=False
