@@ -92,7 +92,56 @@ class VisitForm(forms.ModelForm):
             'topics': CheckboxSelectMultiple(),
             'contact_persons': CheckboxSelectMultiple(),
             'subjects': CheckboxSelectMultiple(),
-            'audience': RadioSelect()
+            'audience': RadioSelect(),
+            'title': TextInput(
+                attrs={
+                    'class': 'titlefield form-control input-sm',
+                    'rows': 1, 'size': 62
+                }
+            ),
+            'teaser': Textarea(
+                attrs={
+                    'class': 'form-control input-sm',
+                    'rows': 3,
+                    'cols': 70,
+                    'maxlength': 210
+                }
+            ),
+            'description': TinyMCE(attrs={'rows': 10, 'cols': 90}),
+
+            'price': NumberInput(attrs={'class': 'form-control input-sm'}),
+            'type': Select(attrs={'class': 'form-control input-sm'}),
+            'preparation_time': NumberInput(
+                attrs={'class': 'form-control input-sm'}
+            ),
+            'comment': Textarea(attrs={'class': 'form-control input-sm'}),
+            'institution_level': Select(
+                attrs={'class': 'form-control input-sm'}
+            ),
+            'level': Select(attrs={'class': 'form-control input-sm'}),
+            'class_level_min': Select(
+                attrs={'class': 'form-control input-sm'}
+            ),
+            'class_level_max': Select(
+                attrs={'class': 'form-control input-sm'}
+            ),
+
+            'minimum_number_of_visitors': NumberInput(
+                attrs={'class': 'form-control input-sm', 'min': 1}
+            ),
+            'maximum_number_of_visitors': NumberInput(
+                attrs={'class': 'form-control input-sm', 'min': 1}
+            ),
+            'duration': Select(attrs={'class': 'form-control input-sm'}),
+            'locality': Select(attrs={'class': 'form-control input-sm'}),
+            'rooms_assignment': Select(
+                attrs={'class': 'form-control input-sm'}
+            ),
+            'unit': Select(attrs={'class': 'form-control input-sm'}),
+            'subjects': CheckboxSelectMultiple(
+                attrs={'class': 'form-control input-sm'}
+            ),
+            'audience': RadioSelect(attrs={'class': 'form-control input-sm'}),
         }
 
     def __init__(self, *args, **kwargs):
