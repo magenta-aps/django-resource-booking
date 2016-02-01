@@ -6,9 +6,10 @@ from .views import MainPageView
 
 from booking.views import PostcodeView, SchoolView
 from booking.views import RrulestrView
-from booking.views import EditResourceInitialView
+from booking.views import EditResourceInitialView, ResourceDetailView
 from booking.views import BookingView, BookingSuccessView
-from booking.views import EditOtherResourceView, EditVisitView, VisitDetailView
+from booking.views import EditOtherResourceView, OtherResourceDetailView
+from booking.views import EditVisitView, VisitDetailView
 from booking.views import SearchView
 
 from django.views.generic import TemplateView
@@ -65,6 +66,9 @@ urlpatterns = patterns(
     url(r'^resource/create$',
         EditResourceInitialView.as_view(),
         name='resource-create'),
+    url(r'^resource/(?P<pk>[0-9]+)/$',
+        ResourceDetailView.as_view(),
+        name='resource-view'),
     url(r'^resource/(?P<pk>[0-9]+)/edit$',
         EditResourceInitialView.as_view(),
         name='resource-edit'),
@@ -72,6 +76,9 @@ urlpatterns = patterns(
     url(r'^otherresource/create$',
         EditOtherResourceView.as_view(success_url='create'),
         name='otherresource-create'),
+    url(r'^otherresource/(?P<pk>[0-9]+)/?$',
+        OtherResourceDetailView.as_view(),
+        name='otherresource-view'),
     url(r'^otherresource/(?P<pk>[0-9]+)/edit$',
         EditOtherResourceView.as_view(), name='otherresource-edit'),
     url(r'^otherresource/(?P<pk>[0-9]+)/clone$',
@@ -84,7 +91,7 @@ urlpatterns = patterns(
         name='visit-create'),
     url(r'^visit/(?P<pk>[0-9]+)/?$',
         VisitDetailView.as_view(),
-        name='visit'),
+        name='visit-view'),
     url(r'^visit/(?P<pk>[0-9]+)/edit$',
         EditVisitView.as_view(),
         name='visit-edit'),
