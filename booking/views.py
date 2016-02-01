@@ -311,7 +311,6 @@ class SearchView(ListView):
         context['from_datetime'] = self.from_datetime
         context['to_datetime'] = self.to_datetime
 
-
         context['breadcrumbs'] = [
             {'url': reverse('search'), 'text': _(u'Søgning')},
             {'text': _(u'Søgeresultatliste')},
@@ -485,12 +484,12 @@ class OtherResourceDetailView(DetailView):
         else:
             context['can_edit'] = False
 
-        #if self.object.type in [Resource.STUDENT_FOR_A_DAY,
+        # if self.object.type in [Resource.STUDENT_FOR_A_DAY,
         #                        Resource.STUDY_PROJECT,
         #                        Resource.GROUP_VISIT,
         #                        Resource.TEACHER_EVENT]:
         #    context['can_book'] = True
-        #else:
+        # else:
         context['can_book'] = False
 
         context['breadcrumbs'] = [
@@ -537,7 +536,7 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
     def post(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
         is_cloning = kwargs.get("clone", False)
-        if (is_cloning or not hasattr(self, 'object') or self.object is None):
+        if is_cloning or not hasattr(self, 'object') or self.object is None:
             if pk is None or is_cloning:
                 self.object = None
             else:
