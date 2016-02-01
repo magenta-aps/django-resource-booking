@@ -91,7 +91,7 @@ urlpatterns = patterns(
         name='visit-create'),
     url(r'^visit/(?P<pk>[0-9]+)/?$',
         VisitDetailView.as_view(),
-        name='visit'),
+        name='visit-view'),
     url(r'^visit/(?P<pk>[0-9]+)/edit$',
         EditVisitView.as_view(),
         name='visit-edit'),
