@@ -311,6 +311,12 @@ class SearchView(ListView):
         context['from_datetime'] = self.from_datetime
         context['to_datetime'] = self.to_datetime
 
+
+        context['breadcrumbs'] = [
+            {'url': reverse('search'), 'text': _(u'Søgning')},
+            {'text': _(u'Søgeresultatliste')},
+        ]
+
         context.update(kwargs)
         return super(SearchView, self).get_context_data(**context)
 
@@ -441,6 +447,49 @@ class EditOtherResourceView(EditResourceView):
             return reverse('otherresource', args=[self.object.id])
         except:
             return '/'
+
+
+class OtherResourceDetailView(DetailView):
+    """Display Visit details"""
+    model = OtherResource
+    template_name = 'otherresource/details.html'
+
+    def get_queryset(self):
+        """Get queryset, only include active visits."""
+        qs = super(OtherResourceDetailView, self).get_queryset()
+        # Dismiss visits that are not active.
+        if not self.request.user.is_authenticated():
+            qs = qs.filter(state=Resource.ACTIVE)
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = {}
+
+        user = self.request.user
+
+        if (hasattr(user, 'userprofile') and
+                user.userprofile.can_edit(self.object)):
+            context['can_edit'] = True
+        else:
+            context['can_edit'] = False
+
+        #if self.object.type in [Resource.STUDENT_FOR_A_DAY,
+        #                        Resource.STUDY_PROJECT,
+        #                        Resource.GROUP_VISIT,
+        #                        Resource.TEACHER_EVENT]:
+        #    context['can_book'] = True
+        #else:
+        context['can_book'] = False
+
+        context['breadcrumbs'] = [
+            {'url': reverse('search'), 'text': _(u'Søgning')},
+            {'url': '#', 'text': _(u'Søgeresultatliste')},
+            {'text': _(u'Detaljevisning')},
+        ]
+
+        context.update(kwargs)
+
+        return super(OtherResourceDetailView, self).get_context_data(**context)
 
 
 class EditVisitView(RoleRequiredMixin, EditResourceView):
@@ -638,6 +687,12 @@ class VisitDetailView(DetailView):
             context['can_book'] = True
         else:
             context['can_book'] = False
+
+        context['breadcrumbs'] = [
+            {'url': reverse('search'), 'text': _(u'Søgning')},
+            {'url': '#', 'text': _(u'Søgeresultatliste')},
+            {'text': _(u'Detaljevisning')},
+        ]
 
         context.update(kwargs)
 
