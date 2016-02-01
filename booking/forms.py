@@ -51,12 +51,20 @@ class VisitForm(forms.ModelForm):
 
             'price': NumberInput(attrs={'class': 'form-control input-sm'}),
             'type': Select(attrs={'class': 'form-control input-sm'}),
-            'preparation_time': NumberInput(attrs={'class': 'form-control input-sm'}),
+            'preparation_time': NumberInput(
+                attrs={'class': 'form-control input-sm'}
+            ),
             'comment': Textarea(attrs={'class': 'form-control input-sm'}),
-            'institution_level': Select(attrs={'class': 'form-control input-sm'}),
+            'institution_level': Select(
+                attrs={'class': 'form-control input-sm'}
+            ),
             'level': Select(attrs={'class': 'form-control input-sm'}),
-            'class_level_min': Select(attrs={'class': 'form-control input-sm'}),
-            'class_level_max': Select(attrs={'class': 'form-control input-sm'}),
+            'class_level_min': Select(
+                attrs={'class': 'form-control input-sm'}
+            ),
+            'class_level_max': Select(
+                attrs={'class': 'form-control input-sm'}
+            ),
 
             'minimum_number_of_visitors': NumberInput(
                 attrs={'class': 'form-control input-sm', 'min': 1}
@@ -66,9 +74,13 @@ class VisitForm(forms.ModelForm):
             ),
             'duration': Select(attrs={'class': 'form-control input-sm'}),
             'locality': Select(attrs={'class': 'form-control input-sm'}),
-            'rooms_assignment': Select(attrs={'class': 'form-control input-sm'}),
+            'rooms_assignment': Select(
+                attrs={'class': 'form-control input-sm'}
+            ),
             'unit': Select(attrs={'class': 'form-control input-sm'}),
-            'subjects': CheckboxSelectMultiple(attrs={'class': 'form-control input-sm'}),
+            'subjects': CheckboxSelectMultiple(
+                attrs={'class': 'form-control input-sm'}
+            ),
             'audience': RadioSelect(attrs={'class': 'form-control input-sm'}),
         }
 
