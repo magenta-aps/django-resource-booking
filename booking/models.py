@@ -800,7 +800,8 @@ class Booker(models.Model):
     )
 
     attendee_count = models.IntegerField(
-        blank=False,
+        blank=True,
+        null=True,
         verbose_name=u'Antal deltagere'
     )
     notes = models.TextField(
