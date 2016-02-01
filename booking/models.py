@@ -637,6 +637,10 @@ class VisitOccurrence(models.Model):
 
         return result
 
+    def is_booked(self):
+        """Has this VisitOccurrence instance been booked yet?"""
+        class_booking = ClassBooking.objects.get(time_id=self.id)
+        return class_booking is not None
 
 class Room(models.Model):
     visit = models.ForeignKey(
@@ -786,7 +790,8 @@ class Booking(models.Model):
 
 
 class ClassBooking(Booking):
-    time = models.DateTimeField(
+    time = models.ForeignKey(
+        VisitOccurrence,
         null=True,
         blank=True,
         verbose_name=u'Tidspunkt'

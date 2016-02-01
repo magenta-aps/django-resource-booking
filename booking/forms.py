@@ -228,7 +228,8 @@ class ClassBookingForm(BookingForm):
         model = ClassBooking
         fields = ('tour_desired',)
 
-    time = forms.ChoiceField(
+    time = forms.ModelChoiceField(
+        queryset=VisitOccurrence.objects.all(),
         widget=Select(
             attrs={'class': 'selectpicker form-control'}
         ),
@@ -262,10 +263,10 @@ class ClassBookingForm(BookingForm):
         booking = super(ClassBookingForm, self).save(commit=False)
         data = self.cleaned_data
         if self.scheduled:
-            occurrence_id = data.get("time")
+            occurrence_id = data.get("time").id
             try:
                 occurrence = VisitOccurrence.objects.get(id=occurrence_id)
-                booking.time = occurrence.start_datetime
+                booking.time_id = occurrence.id
             except:
                 pass
         if commit:
