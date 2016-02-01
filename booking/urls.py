@@ -6,7 +6,7 @@ from .views import MainPageView
 
 from booking.views import PostcodeView, SchoolView
 from booking.views import RrulestrView
-from booking.views import EditResourceInitialView
+from booking.views import EditResourceInitialView, ResourceDetailView
 from booking.views import BookingView, BookingSuccessView
 from booking.views import EditOtherResourceView, OtherResourceDetailView
 from booking.views import EditVisitView, VisitDetailView
@@ -66,6 +66,9 @@ urlpatterns = patterns(
     url(r'^resource/create$',
         EditResourceInitialView.as_view(),
         name='resource-create'),
+    url(r'^resource/(?P<pk>[0-9]+)/$',
+        ResourceDetailView.as_view(),
+        name='resource-view'),
     url(r'^resource/(?P<pk>[0-9]+)/edit$',
         EditResourceInitialView.as_view(),
         name='resource-edit'),
@@ -75,7 +78,7 @@ urlpatterns = patterns(
         name='otherresource-create'),
     url(r'^otherresource/(?P<pk>[0-9]+)/?$',
         OtherResourceDetailView.as_view(),
-        name='otherresource'),
+        name='otherresource-view'),
     url(r'^otherresource/(?P<pk>[0-9]+)/edit$',
         EditOtherResourceView.as_view(), name='otherresource-edit'),
     url(r'^otherresource/(?P<pk>[0-9]+)/clone$',

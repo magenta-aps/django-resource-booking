@@ -363,6 +363,18 @@ class EditResourceInitialView(TemplateView):
         )
 
 
+class ResourceDetailView(View):
+
+    def get(self, request, *args, **kwargs):
+        pk = kwargs.get("pk")
+        if pk is not None:
+            if OtherResource.objects.filter(id=pk).count() > 0:
+                return redirect(reverse('otherresource-view', args=[pk]))
+            elif Visit.objects.filter(id=pk).count() > 0:
+                return redirect(reverse('visit-view', args=[pk]))
+        raise Http404
+
+
 class EditResourceView(UpdateView):
 
     def __init__(self, *args, **kwargs):
@@ -444,7 +456,7 @@ class EditOtherResourceView(EditResourceView):
 
     def get_success_url(self):
         try:
-            return reverse('otherresource', args=[self.object.id])
+            return reverse('otherresource-view', args=[self.object.id])
         except:
             return '/'
 
@@ -646,7 +658,7 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
 
     def get_success_url(self):
         try:
-            return reverse('visit', args=[self.object.id])
+            return reverse('visit-view', args=[self.object.id])
         except:
             return '/'
 
