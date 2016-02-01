@@ -430,7 +430,7 @@
                         </div>
                     </div>
                 </div>
-           
+           </div>
 
             <div class="panel panel-default">
                 <div id="headingRooms" class="panel-heading" role="tab">
@@ -525,32 +525,32 @@
                 {% if form.enabled.errors or form.contact_persons.errors %}in{% endif %}
                 " aria-labelledby="headingContact" role="tabpanel" aria-expanded="false" style="">
                     <div class="panel-body">
-                    <div class="row form-group">
-                            <div>{{ form.unit.errors }}</div>
-                            <div class="col-sm-2">
-                            <label for="{{ form.unit.id_for_label }}">{{ form.unit.label }}:</label>
-                            </div>
-                            <div class="col-sm-10">
-                            {{ form.unit }}
-                        </div>
-                    </div>
-                    <div class="row form-group">
-                            <div>{{ form.enabled.errors }}</div>
-                            <div class="col-sm-12">
-                                <label class="radiolabel" for="{{ form.enabled.id_for_label }}">{{ form.enabled }} Kan bookes</label>
+                        <div class="row form-group">
+                                <div>{{ form.unit.errors }}</div>
+                                <div class="col-sm-2">
+                                <label for="{{ form.unit.id_for_label }}">{{ form.unit.label }}:</label>
+                                </div>
+                                <div class="col-sm-10">
+                                {{ form.unit }}
                             </div>
                         </div>
                         <div class="row form-group">
-                            <div>{{ form.contact_persons.errors }}</div>
-                            <div class="col-sm-2">
-                            <label for="{{ form.contact_persons.id_for_label }}">{{ form.contact_persons.label }}:</label>
+                                <div>{{ form.enabled.errors }}</div>
+                                <div class="col-sm-12">
+                                    <label class="radiolabel" for="{{ form.enabled.id_for_label }}">{{ form.enabled }} Kan bookes</label>
+                                </div>
                             </div>
-                            <div class="col-sm-10">
-                            {{ form.contact_persons }}
+                            <div class="row form-group">
+                                <div>{{ form.contact_persons.errors }}</div>
+                                <div class="col-sm-2">
+                                <label for="{{ form.contact_persons.id_for_label }}">{{ form.contact_persons.label }}:</label>
+                                </div>
+                                <div class="col-sm-10">
+                                {{ form.contact_persons }}
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
             </div>
             
             <div class="panel panel-default">

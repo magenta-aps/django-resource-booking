@@ -607,6 +607,41 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         )
 
 
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        # First, check all is well in superclass
+        result = super(EditVisitView, self).dispatch(*args, **kwargs)
+        # Now, check that the user belongs to the correct unit.
+        current_user = self.request.user
+        pk = kwargs.get("pk")
+        if self.object is None:
+            self.object = None if pk is None else Visit.objects.get(id=pk)
+        if self.object is not None and self.object.unit:
+            if not current_user.userprofile.can_edit(self.object):
+                raise AccessDenied(
+                    _(u"Du kan kun redigere enheder,som du selv er" +
+                      " koordinator for.")
+                )
+        return result
+
+    def get_form_kwargs(self):
+        kwargs = super(EditVisitView, self).get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+    def get_template_names(self):
+        if self.object.type is None:
+            return [""]
+        if self.object.type == Resource.STUDENT_FOR_A_DAY:
+            return ["visit/studentforaday.html"]
+        if self.object.type == Resource.STUDY_PROJECT:
+            return ["visit/srp.html"]
+        if self.object.type == Resource.GROUP_VISIT:
+            return ["visit/classvisit.html"]
+        if self.object.type == Resource.TEACHER_EVENT:
+            return ["visit/teachervisit.html"]
+
+
 class VisitDetailView(DetailView):
     """Display Visit details"""
     model = Visit
