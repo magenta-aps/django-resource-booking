@@ -124,7 +124,7 @@
             {% for res in results %}
                 <li class="media">
                     <div class="media-body">
-                        <h3 class="media-heading"><a href="{% url 'visit-view' res.pk %}?search={{ fullquery | urlencode }}">{{ res.title }}</a></h3>
+                        <h3 class="media-heading"><a href="{% url 'visit-view' res.pk %}{% if fullquery %}?search={{ fullquery | urlencode }}{% endif %}">{{ res.title }}</a></h3>
                         <p>{{ res.teaser }}</p>
                         <div class="media-info">
                             <ul class="info-list list-inline">
