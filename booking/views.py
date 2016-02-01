@@ -316,6 +316,15 @@ class SearchView(ListView):
             {'text': _(u'Søgeresultatliste')},
         ]
 
+        querylist = []
+        for key in ['q', 'page', 'pagesize', 't', 'a', 'f', 'g', 'from', 'to']:
+            values = self.request.GET.getlist(key)
+            if values is not None and len(values) > 0:
+                for value in values:
+                    if value is not None and len(unicode(value)) > 0:
+                        querylist.append("%s=%s" % (key, value))
+        context['fullquery'] = reverse('search') + "?" + "&".join(querylist)
+
         context.update(kwargs)
         return super(SearchView, self).get_context_data(**context)
 
@@ -494,7 +503,8 @@ class OtherResourceDetailView(DetailView):
 
         context['breadcrumbs'] = [
             {'url': reverse('search'), 'text': _(u'Søgning')},
-            {'url': '#', 'text': _(u'Søgeresultatliste')},
+            {'url': self.request.GET.get("search", reverse('search')),
+             'text': _(u'Søgeresultatliste')},
             {'text': _(u'Detaljevisning')},
         ]
 
@@ -701,7 +711,8 @@ class VisitDetailView(DetailView):
 
         context['breadcrumbs'] = [
             {'url': reverse('search'), 'text': _(u'Søgning')},
-            {'url': '#', 'text': _(u'Søgeresultatliste')},
+            {'url': self.request.GET.get("search", reverse('search')),
+             'text': _(u'Søgeresultatliste')},
             {'text': _(u'Detaljevisning')},
         ]
 
