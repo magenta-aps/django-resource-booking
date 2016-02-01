@@ -317,7 +317,7 @@ class SearchView(ListView):
         ]
 
         querylist = []
-        for key in ['q','page','pagesize','t','a','f','g','from','to']:
+        for key in ['q', 'page', 'pagesize', 't', 'a', 'f', 'g', 'from', 'to']:
             values = self.request.GET.getlist(key)
             if values is not None and len(values) > 0:
                 for value in values:
@@ -503,7 +503,8 @@ class OtherResourceDetailView(DetailView):
 
         context['breadcrumbs'] = [
             {'url': reverse('search'), 'text': _(u'Søgning')},
-            {'url': self.request.GET.get("search", reverse('search')), 'text': _(u'Søgeresultatliste')},
+            {'url': self.request.GET.get("search", reverse('search')),
+             'text': _(u'Søgeresultatliste')},
             {'text': _(u'Detaljevisning')},
         ]
 
@@ -710,7 +711,8 @@ class VisitDetailView(DetailView):
 
         context['breadcrumbs'] = [
             {'url': reverse('search'), 'text': _(u'Søgning')},
-            {'url': self.request.GET.get("search", reverse('search')), 'text': _(u'Søgeresultatliste')},
+            {'url': self.request.GET.get("search", reverse('search')),
+             'text': _(u'Søgeresultatliste')},
             {'text': _(u'Detaljevisning')},
         ]
 
