@@ -78,10 +78,8 @@ class VisitForm(forms.ModelForm):
                 attrs={'class': 'form-control input-sm'}
             ),
             'unit': Select(attrs={'class': 'form-control input-sm'}),
-            'subjects': CheckboxSelectMultiple(
-                attrs={'class': 'form-control input-sm'}
-            ),
-            'audience': RadioSelect(attrs={'class': 'form-control input-sm'}),
+            'subjects': CheckboxSelectMultiple(),
+            'audience': RadioSelect(),
         }
 
     def clean_locality(self):
