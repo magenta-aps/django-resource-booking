@@ -125,7 +125,7 @@
                 <li class="media">
                     <div class="media-body">
                         <div class="small">{{ res.get_type_display }}</div>
-                        <h3 class="media-heading"><a href="{% url 'visit-view' res.pk %}">{{ res.title }}</a></h3>
+                        <h3 class="media-heading"><a href="{% if res.visit  %}{% url 'visit-view' res.visit.pk %}{% else %}{% url 'otherresource-view' res.otherresource.pk %}{% endif %}">{{ res.title }}</a></h3>
                         <p>{{ res.teaser }}</p>
                         <div class="media-info">
                             <ul class="info-list list-inline">

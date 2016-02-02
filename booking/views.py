@@ -304,8 +304,6 @@ class SearchView(ListView):
             gym_subject_choices,
             gym_selected,
         )
-        print gym_subject_choices
-        print context["gymnasie_choices"]
 
         gs_selected = self.request.GET.getlist("g")
         context["grundskole_selected"] = gs_selected
