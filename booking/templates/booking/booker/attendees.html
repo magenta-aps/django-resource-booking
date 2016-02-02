@@ -1,0 +1,10 @@
+{% load i18n %}
+<div class="form-group">
+    <label class="col-sm-2 control-label" for="{{ bookerform.attendee_count.id_for_label }}">{% trans "Antal Deltagere*" %}</label>
+    <div class="col-sm-6{% if bookerform.attendee_count.errors %} has-error{% endif %}">
+        {{ bookerform.attendee_count }}
+    </div>
+    <div class="col-sm-3 help-block with-errors">
+        {{ bookerform.attendee_count.errors }}
+    </div>
+</div>

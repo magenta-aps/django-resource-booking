@@ -6,35 +6,44 @@ from datetime import datetime, timedelta
 
 from dateutil import parser
 from dateutil.rrule import rrulestr
-from django.http import HttpResponse
-from django.views.generic import TemplateView, ListView, DetailView, View
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import PermissionDenied
+from django.core.urlresolvers import reverse
 from django.db.models import Count
 from django.db.models import F
 from django.db.models import Q
-from django.utils import timezone
-from django.utils.translation import ugettext as _
-from django.views.generic.edit import UpdateView
-from django.utils.decorators import method_decorator
-from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied
-from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
-
+from django.http import HttpResponse
+from django.http import JsonResponse
+from django.shortcuts import redirect
+from django.utils import timezone
+from django.utils.decorators import method_decorator
+from django.utils.translation import ugettext as _
+from django.views.generic import View, TemplateView, ListView, DetailView
+from django.views.generic.edit import UpdateView
+from django.views.defaults import bad_request
 
 from profile.models import EDIT_ROLES
 from profile.models import role_to_text
 
-from booking.models import Visit, VisitOccurrence, StudyMaterial
-from booking.models import Resource, Subject
+from booking.models import OtherResource, Visit, VisitOccurrence, StudyMaterial
+from booking.models import Resource, Subject, GymnasieLevel
 from booking.models import Room
-from booking.forms import VisitForm
-from booking.forms import VisitStudyMaterialForm
+from booking.models import PostCode, School
+from booking.models import Booking
+from booking.models import ResourceGymnasieFag, ResourceGrundskoleFag
+from booking.forms import ResourceInitialForm, OtherResourceForm, VisitForm
+from booking.forms import ClassBookingForm, TeacherBookingForm
+from booking.forms import VisitStudyMaterialForm, BookingSubjectLevelForm
+from booking.forms import BookerForm
+
 
 i18n_test = _(u"Dette tester oversættelses-systemet")
 
-
 # A couple of generic superclasses for crud views
 # Our views will inherit from these and from django.views.generic classes
+
 
 class MainPageView(TemplateView):
     """Display the main page."""
@@ -127,8 +136,11 @@ class SearchView(ListView):
                 t_from = timezone.now()
             self.from_datetime = t_from
 
+            # Search for either resources without dates specified or
+            # resources that have times available in the future
             date_cond = Q(
-                visit__visitoccurrence__start_datetime__gt=t_from
+                Q(visit__visitoccurrence__start_datetime__isnull=True) |
+                Q(visit__visitoccurrence__start_datetime__gt=t_from)
             )
 
             # To time will match latest end time if it exists and else
@@ -161,17 +173,26 @@ class SearchView(ListView):
     def get_filters(self):
         if self.filters is None:
             self.filters = {}
+
+            # Audience will always include a search for resources marked for
+            # all audiences.
             a = self.request.GET.getlist("a")
             if a:
+                a.append(Resource.AUDIENCE_ALL)
                 self.filters["audience__in"] = a
+
             t = self.request.GET.getlist("t")
             if t:
                 self.filters["type__in"] = t
+
             f = set(self.request.GET.getlist("f"))
-            for g in self.request.GET.getlist("g"):
-                f.add(g)
             if f:
-                self.filters["subjects__in"] = f
+                self.filters["gymnasiefag__in"] = f
+
+            g = self.request.GET.getlist("g")
+            if g:
+                self.filters["grundskolefag__in"] = f
+
             self.filters["state__in"] = [Resource.ACTIVE]
 
         return self.filters
@@ -182,28 +203,9 @@ class SearchView(ListView):
         qs = self.annotate(qs)
         return qs
 
-    def build_choices(self, choice_tuples, selected,
-                      selected_value='checked="checked"'):
-
-        selected = set(selected)
-        choices = []
-
-        for value, name in choice_tuples:
-            if unicode(value) in selected:
-                sel = selected_value
-            else:
-                sel = ''
-
-            choices.append({
-                'label': name,
-                'value': value,
-                'selected': sel
-            })
-
-        return choices
-
     def make_facet(self, facet_field, choice_tuples, selected,
-                   selected_value='checked="checked"'):
+                   selected_value='checked="checked"',
+                   add_to_all=None):
 
         selected = set(selected)
         hits = {}
@@ -219,6 +221,25 @@ class SearchView(ListView):
         qs = qs.values(facet_field).annotate(hits=Count("pk"))
         for item in qs:
             hits[item[facet_field]] = item["hits"]
+
+        # This adds all hits on a certain keys to the hits of all other keys.
+        if add_to_all is not None:
+            keys = set(add_to_all)
+            to_add = 0
+
+            for key in keys:
+                if key in hits:
+                    to_add = to_add + hits[key]
+                    del hits[key]
+
+            for v, n in choice_tuples:
+                if v in keys:
+                    continue
+
+                if v in hits:
+                    hits[v] += to_add
+                else:
+                    hits[v] = to_add
 
         for value, name in choice_tuples:
             if value not in hits:
@@ -254,7 +275,8 @@ class SearchView(ListView):
         context["audience_choices"] = self.make_facet(
             "audience",
             self.model.audience_choices,
-            self.request.GET.getlist("a")
+            self.request.GET.getlist("a"),
+            add_to_all=[Resource.AUDIENCE_ALL]
         )
 
         context["type_choices"] = self.make_facet(
@@ -278,7 +300,7 @@ class SearchView(ListView):
         gym_selected = self.request.GET.getlist("f")
         context["gymnasie_selected"] = gym_selected
         context["gymnasie_choices"] = self.make_facet(
-            "subjects",
+            "gymnasiefag",
             gym_subject_choices,
             gym_selected,
         )
@@ -286,7 +308,7 @@ class SearchView(ListView):
         gs_selected = self.request.GET.getlist("g")
         context["grundskole_selected"] = gs_selected
         context["grundskole_choices"] = self.make_facet(
-            "subjects",
+            "grundskolefag",
             gs_subject_choices,
             gs_selected,
         )
@@ -294,22 +316,308 @@ class SearchView(ListView):
         context['from_datetime'] = self.from_datetime
         context['to_datetime'] = self.to_datetime
 
+        context['breadcrumbs'] = [
+            {'url': reverse('search'), 'text': _(u'Søgning')},
+            {'text': _(u'Søgeresultatliste')},
+        ]
+
         context.update(kwargs)
         return super(SearchView, self).get_context_data(**context)
 
     def get_paginate_by(self, queryset):
-        return self.request.GET.get("pagesize", 10)
+        size = self.request.GET.get("pagesize", 10)
+
+        if size == "all":
+            return None
+
+        return size
 
 
-class EditVisit(RoleRequiredMixin, UpdateView):
+class EditResourceInitialView(TemplateView):
+
+    template_name = 'resource/form.html'
+
+    def get(self, request, *args, **kwargs):
+        pk = kwargs.get("pk")
+        if pk is not None:
+            if OtherResource.objects.filter(id=pk).count() > 0:
+                return redirect(reverse('otherresource-edit', args=[pk]))
+            elif Visit.objects.filter(id=pk).count() > 0:
+                return redirect(reverse('visit-edit', args=[pk]))
+            else:
+                raise Http404
+        else:
+            form = ResourceInitialForm()
+            return self.render_to_response(
+                self.get_context_data(form=form)
+            )
+
+    def post(self, request, *args, **kwargs):
+        form = ResourceInitialForm(request.POST)
+        if form.is_valid():
+            type_id = int(form.cleaned_data['type'])
+            if type_id in Visit.applicable_types:
+                return redirect(reverse('visit-create') + "?type=%d" % type_id)
+            else:
+                return redirect(reverse('otherresource-create') +
+                                "?type=%d" % type_id)
+
+        return self.render_to_response(
+            self.get_context_data(form=form)
+        )
+
+
+class ResourceDetailView(View):
+
+    def get(self, request, *args, **kwargs):
+        pk = kwargs.get("pk")
+        if pk is not None:
+            if OtherResource.objects.filter(id=pk).count() > 0:
+                return redirect(reverse('otherresource-view', args=[pk]))
+            elif Visit.objects.filter(id=pk).count() > 0:
+                return redirect(reverse('visit-view', args=[pk]))
+        raise Http404
+
+
+class EditResourceView(UpdateView):
+
+    def __init__(self, *args, **kwargs):
+        super(EditResourceView, self).__init__(*args, **kwargs)
+        self.object = None
+
+    def get_form_kwargs(self):
+        kwargs = super(EditResourceView, self).get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        # First, check all is well in superclass
+        result = super(EditResourceView, self).dispatch(*args, **kwargs)
+        # Now, check that the user belongs to the correct unit.
+        current_user = self.request.user
+        pk = kwargs.get("pk")
+        if self.object is None:
+            self.object = None if pk is None else self.model.objects.get(id=pk)
+        if self.object is not None and self.object.unit:
+            if not current_user.userprofile.can_edit(self.object):
+                raise AccessDenied(
+                    _(u"Du kan kun redigere enheder,som du selv er" +
+                      " koordinator for.")
+                )
+        return result
+
+    def get_context_data(self, **kwargs):
+        context = {}
+
+        context['gymnasiefag_choices'] = Subject.gymnasiefag_qs()
+        context['grundskolefag_choices'] = Subject.grundskolefag_qs()
+        context['gymnasie_level_choices'] = \
+            GymnasieLevel.objects.all().order_by('level')
+
+        context['gymnasiefag_selected'] = self.gymnasiefag_selected()
+        context['grundskolefag_selected'] = self.grundskolefag_selected()
+
+        context['klassetrin_range'] = range(1, 9)
+
+        context.update(kwargs)
+
+        return super(EditResourceView, self).get_context_data(**context)
+
+    def gymnasiefag_selected(self):
+        result = []
+        obj = self.object
+        if self.request.method == 'GET':
+            if obj and obj.pk:
+                for x in obj.resourcegymnasiefag_set.all():
+                    result.append({
+                        'submitvalue': x.as_submitvalue(),
+                        'description': x.display_value()
+                    })
+        elif self.request.method == 'POST':
+            submitvalue = self.request.POST.getlist('gymnasiefag', [])
+            for sv_text in submitvalue:
+                sv = sv_text.split(",")
+                subject_pk = sv.pop(0)
+                subject = Subject.objects.get(pk=subject_pk)
+                result.append({
+                    'submitvalue': sv_text,
+                    'description': ResourceGymnasieFag.display(
+                        subject,
+                        [GymnasieLevel.objects.get(pk=x) for x in sv]
+                    )
+                })
+
+        return result
+
+    def grundskolefag_selected(self):
+        result = []
+        obj = self.object
+        if self.request.method == 'GET':
+            if obj and obj.pk:
+                for x in obj.resourcegrundskolefag_set.all():
+                    result.append({
+                        'submitvalue': x.as_submitvalue(),
+                        'description': x.display_value()
+                    })
+        elif self.request.method == 'POST':
+            submitvalue = self.request.POST.getlist('grundskolefag', [])
+            for sv_text in submitvalue:
+                sv = sv_text.split(",")
+                subject_pk = sv.pop(0)
+                lv_min = sv.pop(0)
+                lv_max = sv.pop(0)
+                subject = Subject.objects.get(pk=subject_pk)
+                result.append({
+                    'submitvalue': sv_text,
+                    'description': ResourceGrundskoleFag.display(
+                        subject, lv_min, lv_max
+                    )
+                })
+
+        return result
+
+    def save_subjects(self, obj):
+        existing_gym_fag = {}
+        for x in obj.resourcegymnasiefag_set.all():
+            existing_gym_fag[x.as_submitvalue()] = x
+
+        for gval in self.request.POST.getlist('gymnasiefag', []):
+            if gval in existing_gym_fag:
+                del existing_gym_fag[gval]
+            else:
+                ResourceGymnasieFag.create_from_submitvalue(obj, gval)
+
+        # Delete any remaining values that were not submitted
+        for x in existing_gym_fag.itervalues():
+            x.delete()
+
+        existing_gs_fag = {}
+        for x in obj.resourcegrundskolefag_set.all():
+            existing_gs_fag[x.as_submitvalue()] = x
+
+        for gval in self.request.POST.getlist('grundskolefag', []):
+            if gval in existing_gs_fag:
+                del existing_gs_fag[gval]
+            else:
+                ResourceGrundskoleFag.create_from_submitvalue(
+                    obj, gval
+                )
+
+        # Delete any remaining values that were not submitted
+        for x in existing_gs_fag.itervalues():
+            x.delete()
+
+
+class EditOtherResourceView(EditResourceView):
+
+    template_name = 'otherresource/form.html'
+    form_class = OtherResourceForm
+    model = OtherResource
+
+    # Display a view with two form objects; one for the regular model,
+    # and one for the file upload
+
+    roles = EDIT_ROLES
+
+    def get(self, request, *args, **kwargs):
+        pk = kwargs.get("pk")
+        try:
+            self.object = OtherResource() if pk is None\
+                else OtherResource.objects.get(id=pk)
+        except ObjectDoesNotExist:
+            raise Http404
+        try:
+            type = int(request.GET['type'])
+            if type in OtherResource.applicable_types:
+                self.object.type = type
+        except:
+            pass
+        form = self.get_form()
+        return self.render_to_response(
+            self.get_context_data(form=form)
+        )
+
+    # Handle both forms, creating a Visit and a number of StudyMaterials
+    def post(self, request, *args, **kwargs):
+        pk = kwargs.get("pk")
+        is_cloning = kwargs.get("clone", False)
+        if is_cloning or not hasattr(self, 'object') or self.object is None:
+            if pk is None or is_cloning:
+                self.object = None
+            else:
+                try:
+                    self.object = OtherResource.objects.get(id=pk)
+                    if is_cloning:
+                        self.object.pk = None
+                except ObjectDoesNotExist:
+                    raise Http404
+        form = self.get_form()
+        if form.is_valid():
+            obj = form.save()
+
+            # Save subjects
+            self.save_subjects(obj)
+
+            return super(EditOtherResourceView, self).form_valid(form)
+        else:
+            return self.form_invalid(form)
+
+    def get_success_url(self):
+        try:
+            return reverse('otherresource-view', args=[self.object.id])
+        except:
+            return '/'
+
+
+class OtherResourceDetailView(DetailView):
+    """Display Visit details"""
+    model = OtherResource
+    template_name = 'otherresource/details.html'
+
+    def get_queryset(self):
+        """Get queryset, only include active visits."""
+        qs = super(OtherResourceDetailView, self).get_queryset()
+        # Dismiss visits that are not active.
+        if not self.request.user.is_authenticated():
+            qs = qs.filter(state=Resource.ACTIVE)
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = {}
+
+        user = self.request.user
+
+        if (hasattr(user, 'userprofile') and
+                user.userprofile.can_edit(self.object)):
+            context['can_edit'] = True
+        else:
+            context['can_edit'] = False
+
+        # if self.object.type in [Resource.STUDENT_FOR_A_DAY,
+        #                        Resource.STUDY_PROJECT,
+        #                        Resource.GROUP_VISIT,
+        #                        Resource.TEACHER_EVENT]:
+        #    context['can_book'] = True
+        # else:
+        context['can_book'] = False
+
+        context['breadcrumbs'] = [
+            {'url': reverse('search'), 'text': _(u'Søgning')},
+            {'url': '#', 'text': _(u'Søgeresultatliste')},
+            {'text': _(u'Detaljevisning')},
+        ]
+
+        context.update(kwargs)
+
+        return super(OtherResourceDetailView, self).get_context_data(**context)
+
+
+class EditVisitView(RoleRequiredMixin, EditResourceView):
 
     template_name = 'visit/form.html'
     form_class = VisitForm
     model = Visit
-
-    def __init__(self, *args, **kwargs):
-        super(EditVisit, self).__init__(*args, **kwargs)
-        self.object = None
 
     # Display a view with two form objects; one for the regular model,
     # and one for the file upload
@@ -322,6 +630,12 @@ class EditVisit(RoleRequiredMixin, UpdateView):
             self.object = Visit() if pk is None else Visit.objects.get(id=pk)
         except ObjectDoesNotExist:
             raise Http404
+        try:
+            type = int(request.GET['type'])
+            if type in Visit.applicable_types:
+                self.object.type = type
+        except:
+            pass
         form = self.get_form()
         fileformset = VisitStudyMaterialForm(None, instance=self.object)
         return self.render_to_response(
@@ -332,7 +646,7 @@ class EditVisit(RoleRequiredMixin, UpdateView):
     def post(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
         is_cloning = kwargs.get("clone", False)
-        if (is_cloning or not hasattr(self, 'object') or self.object is None):
+        if is_cloning or not hasattr(self, 'object') or self.object is None:
             if pk is None or is_cloning:
                 self.object = None
             else:
@@ -421,7 +735,10 @@ class EditVisit(RoleRequiredMixin, UpdateView):
                     start_datetime__in=existing_visit_occurrences
                 ).delete()
 
-            return super(EditVisit, self).form_valid(form)
+            # Save subjects
+            self.save_subjects(visit)
+
+            return super(EditVisitView, self).form_valid(form)
         else:
             return self.form_invalid(form, fileformset)
 
@@ -447,13 +764,23 @@ class EditVisit(RoleRequiredMixin, UpdateView):
         else:
             context['existinrooms'] = []
 
+        context['gymnasiefag_choices'] = Subject.gymnasiefag_qs()
+        context['grundskolefag_choices'] = Subject.grundskolefag_qs()
+        context['gymnasie_level_choices'] = \
+            GymnasieLevel.objects.all().order_by('level')
+
+        context['gymnasiefag_selected'] = self.gymnasiefag_selected()
+        context['grundskolefag_selected'] = self.grundskolefag_selected()
+
+        context['klassetrin_range'] = range(1, 9)
+
         context.update(kwargs)
 
-        return super(EditVisit, self).get_context_data(**context)
+        return super(EditVisitView, self).get_context_data(**context)
 
     def get_success_url(self):
         try:
-            return "/visit/%d" % self.object.id
+            return reverse('visit-view', args=[self.object.id])
         except:
             return '/'
 
@@ -461,28 +788,6 @@ class EditVisit(RoleRequiredMixin, UpdateView):
         return self.render_to_response(
             self.get_context_data(form=form, fileformset=fileformset)
         )
-
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        # First, check all is well in superclass
-        result = super(EditVisit, self).dispatch(*args, **kwargs)
-        # Now, check that the user belongs to the correct unit.
-        current_user = self.request.user
-        pk = kwargs.get("pk")
-        if self.object is None:
-            self.object = None if pk is None else Visit.objects.get(id=pk)
-        if self.object is not None and self.object.unit:
-            if not current_user.userprofile.can_edit(self.object):
-                raise AccessDenied(
-                    _(u"Du kan kun redigere enheder,som du selv er" +
-                      " koordinator for.")
-                )
-        return result
-
-    def get_form_kwargs(self):
-        kwargs = super(EditVisit, self).get_form_kwargs()
-        kwargs['user'] = self.request.user
-        return kwargs
 
 
 class VisitDetailView(DetailView):
@@ -508,6 +813,20 @@ class VisitDetailView(DetailView):
             context['can_edit'] = True
         else:
             context['can_edit'] = False
+
+        if self.object.type in [Resource.STUDENT_FOR_A_DAY,
+                                Resource.STUDY_PROJECT,
+                                Resource.GROUP_VISIT,
+                                Resource.TEACHER_EVENT]:
+            context['can_book'] = True
+        else:
+            context['can_book'] = False
+
+        context['breadcrumbs'] = [
+            {'url': reverse('search'), 'text': _(u'Søgning')},
+            {'url': '#', 'text': _(u'Søgeresultatliste')},
+            {'text': _(u'Detaljevisning')},
+        ]
 
         context.update(kwargs)
 
@@ -589,4 +908,148 @@ class RrulestrView(View):
         return HttpResponse(
             json.dumps(dates_without_existing_dates),
             content_type='application/json'
+        )
+
+
+class PostcodeView(View):
+    def get(self, request, *args, **kwargs):
+        code = int(kwargs.get("code"))
+        postcode = PostCode.get(code)
+        city = postcode.city if postcode is not None else None
+        region = {'id': postcode.region.id, 'name': postcode.region.name} \
+            if postcode is not None else None
+        return JsonResponse({'code': code, 'city': city, 'region': region})
+
+
+class SchoolView(View):
+    def get(self, request, *args, **kwargs):
+        query = request.GET['q']
+        items = School.search(query)
+        json = {'schools':
+                [
+                    {'name': item.name,
+                     'postcode': item.postcode.number} for item in items
+                ]
+                }
+        return JsonResponse(json)
+
+
+class BookingView(UpdateView):
+
+    visit = None
+
+    def set_visit(self, visit_id):
+        if visit_id is not None:
+            try:
+                self.visit = Visit.objects.get(id=visit_id)
+            except:
+                pass
+
+    def get(self, request, *args, **kwargs):
+        self.set_visit(kwargs.get("visit"))
+        if self.visit is None:
+            return bad_request(request)
+
+        data = {'visit': self.visit}
+
+        self.object = Booking()
+        data.update(self.get_forms())
+        return self.render_to_response(
+            self.get_context_data(**data)
+        )
+
+    def post(self, request, *args, **kwargs):
+        self.set_visit(kwargs.get("visit"))
+        if self.visit is None:
+            return bad_request(request)
+
+        data = {'visit': self.visit}
+
+        self.object = Booking()
+        forms = self.get_forms(request.POST)
+
+        # Hack: remove this form; we'll add it later when
+        # we have our booking object
+        hadSubjectForm = False
+        if 'subjectform' in forms:
+            del forms['subjectform']
+            hadSubjectForm = True
+
+        valid = True
+        for (name, form) in forms.items():
+            if not form.is_valid():
+                valid = False
+
+        if valid:
+            if 'bookingform' in forms:
+                booking = forms['bookingform'].save(commit=False)
+            else:
+                booking = self.object
+            booking.visit = self.visit
+            if 'bookerform' in forms:
+                booking.booker = forms['bookerform'].save()
+
+            booking.save()
+
+            # We can't fetch this form before we have
+            # a saved booking object to feed it, or we'll get an error
+            if hadSubjectForm:
+                subjectform = BookingSubjectLevelForm(request.POST,
+                                                      instance=booking)
+                if subjectform.is_valid():
+                    subjectform.save()
+            return redirect("/visit/%d/book/success" % self.visit.id)
+        else:
+            forms['subjectform'] = BookingSubjectLevelForm(request.POST)
+
+        data.update(forms)
+        return self.render_to_response(
+            self.get_context_data(**data)
+        )
+
+    def get_forms(self, data=None):
+        forms = {}
+        if self.visit is not None:
+            forms['bookerform'] = BookerForm(data, visit=self.visit)
+
+            if self.visit.type == Resource.GROUP_VISIT:
+                forms['bookingform'] = ClassBookingForm(data, visit=self.visit)
+                forms['subjectform'] = BookingSubjectLevelForm(data)
+
+            elif self.visit.audience == Resource.AUDIENCE_TEACHER:
+                forms['bookingform'] = TeacherBookingForm(data,
+                                                          visit=self.visit)
+        return forms
+
+    def get_template_names(self):
+        if self.visit is None:
+            return [""]
+        if self.visit.type == Resource.STUDENT_FOR_A_DAY:
+            return ["booking/studentforaday.html"]
+        if self.visit.type == Resource.STUDY_PROJECT:
+            return ["booking/srp.html"]
+        if self.visit.type == Resource.GROUP_VISIT:
+            return ["booking/classvisit.html"]
+        if self.visit.type == Resource.TEACHER_EVENT:
+            return ["booking/teachervisit.html"]
+
+
+class BookingSuccessView(TemplateView):
+    template_name = "booking/success.html"
+
+    def get(self, request, *args, **kwargs):
+        visit_id = kwargs.get("visit")
+        visit = None
+        if visit_id is not None:
+            try:
+                visit = Visit.objects.get(id=visit_id)
+            except:
+                pass
+        if visit is None:
+            return bad_request(request)
+
+        data = {'visit': visit}
+
+        return self.render_to_response(
+            self.get_context_data(**data)
         )

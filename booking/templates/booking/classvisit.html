@@ -1,0 +1,163 @@
+{% extends 'lightbox-index.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load booking_tags %}
+
+{% block head %}
+{% endblock %}
+
+{% block header %}
+{% endblock %}
+
+{% block content %}
+
+    {% include 'booking/modal/header.html' %}
+    <div class="modal-body">
+        <p>{% trans "Udfyld venligst nedenstående formular for at booke et tilbud. Felter markeret med * er obligatoriske." %}</p>
+        <div class="divider"></div>
+
+        <form id="bookingform" class="form-horizontal clearfix" data-toggle="validator" role="form" novalidate="true" method="POST">
+            {% csrf_token %}
+
+            <!--
+            {{ bookerform.errors }}
+            {{ bookingform.errors }}
+            -->
+
+            <div id="part1" class="formpart" data-prevbutton="cancelbutton"  data-nextbutton="nextbutton" data-next="part2" {% if bookerform.errors or not bookingform.errors %} data-first="true"{% endif %}>
+                {{ bookerform.non_field_errors }}
+                {% include "booking/booker/basedata.html" %}
+                {% include "booking/booker/school.html" %}
+                {% include "booking/booker/location.html" %}
+            </div>
+
+            <div id="part2" class="formpart" data-prevbutton="previousbutton" data-nextbutton="submitbutton" data-prev="part1"{% if bookingform.errors and not bookerform.errors %} data-first="true"{% endif %}>
+
+                <div id="rowcontainer">
+                {{ subjectform.management_form }}
+                {% for form in subjectform %}
+                    {{ form.id }}
+                    <div class="form-group" id="rowprototype">
+                        <label class="col-sm-2 control-label" for="{{ form.subject.id_for_label }}">{% trans "Fag/Niveau" %}</label>
+                        <div class="col-sm-4">
+                            {{ form.subject }}
+                        </div>
+                        <div class="col-sm-2">
+                            {{ form.level }}
+                        </div>
+                        <div class="col-sm-2 rowadder">
+                            <a href="javascript:void()" id="addRow">{% trans "Tilføj ny" %}</a>
+                        </div>
+                    </div>
+                {% endfor %}
+                </div>
+
+                {% include "booking/booker/attendees.html" %}
+
+                {% if bookingform.scheduled %}
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="{{ bookingform.time.id_for_label }}">{% trans "Tidspunkt*" %}</label>
+                        <div class="col-sm-6{% if bookingform.time.errors %} has-error{% endif %}">
+                            {{ bookingform.time }}
+                        </div>
+                        <div class="col-sm-3 help-block with-errors">
+                            {{ bookingform.time.errors }}
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="{{ bookingform.desired_time.id_for_label }}">{% trans "Ønsket tidspunkt*" %}</label>
+                        <div class="col-sm-6{% if bookingform.desired_time.errors %} has-error{% endif %}">
+                            {{ bookingform.desired_time }}
+                        </div>
+                        <div class="col-sm-3 help-block with-errors">
+                            {{ bookingform.desired_time.errors }}
+                        </div>
+                    </div>
+                {% endif %}
+
+                <div class="form-group">
+                    <label class="col-sm-2 control-label" for="{{ bookingform.tour_desired.id_for_label }}">{% trans "Rundvisning" %}</label>
+                    <div class="col-sm-6{% if bookingform.tour_desired.errors %} has-error{% endif %}">
+                        {{ bookingform.tour_desired }}
+                    </div>
+                    <div class="col-sm-3 help-block with-errors">
+                        {{ bookingform.tour_desired.errors }}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-2 control-label" for="{{ bookerform.notes.id_for_label }}">{% trans "Kommentarer" %}</label>
+                    <div class="col-sm-6{% if bookerform.notes.errors %} has-error{% endif %}">
+                        {{ bookerform.notes }}
+                    </div>
+                    <div class="col-sm-3 help-block with-errors">
+                        {{ bookerform.notes.errors }}
+                    </div>
+                </div>
+            </div>
+
+        </form>
+
+    </div>
+    {% include 'booking/modal/footer.html' %}
+
+
+{% endblock %}
+
+{% block extra_scripts %}
+
+
+    {% include 'booking/booker/location_script.html' %}
+    {% include 'booking/booker/school_script.html' %}
+
+    <script type="text/javascript">
+    $(function(){
+        $("#submitbutton").click(function(){
+            $("#bookingform").submit();
+        });
+    });
+    </script>
+
+    <script type="text/javascript" src="{% static 'js/formset-row.js' %}"></script>
+    <script type="text/javascript">
+        $(function(){
+
+            var extraRows = $("#rowcontainer > div").not(":first");
+
+            var mingleRow = function(row) {
+                row.removeAttr("id");
+                row.find("label").text(null);
+                var adder = row.find(".rowadder");
+                adder.addClass("rowremover");
+                adder.removeClass("rowadder");
+                adder.find("a").text('{% trans "Fjern" %}');
+                adder.find("a").click(removeRowEvent);
+            };
+
+            mingleRow(extraRows);
+
+            $(".rowadder a").click(function(){
+                var newRow = formset.addRow(
+                        $("#{{ subjectform.management_form.TOTAL_FORMS.id_for_label }}"),
+                        $("#{{ subjectform.management_form.MAX_NUM_FORMS.id_for_label }}"),
+                        $("#rowprototype"),
+                        $("#rowcontainer")
+                );
+                mingleRow(newRow);
+                modal.updateHeight();
+                return false;
+            });
+
+            var removeRowEvent = function() {
+                formset.removeRow(
+                        "#{{ subjectform.management_form.TOTAL_FORMS.id_for_label }}",
+                        $(this).parents(".form-group")
+                );
+                modal.updateHeight();
+            };
+
+            $(".rowremover a").click(removeRowEvent);
+        });
+    </script>
+{% endblock %}

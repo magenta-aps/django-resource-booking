@@ -1,0 +1,48 @@
+{% extends 'lightbox-index.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load booking_tags %}
+
+{% block head %}
+{% endblock %}
+
+{% block header %}
+{% endblock %}
+
+{% block content %}
+
+    {% include 'booking/modal/header.html' %}
+    <div class="modal-body">
+        <p>{% trans "Udfyld formularen nedenfor, så vi kan matche dig med den rigtige studerende. Når du har udfyldt formularen, sender vi en email til dig, der bekræfter din henvendelse. Vi finder herefter en studerende, som kontakter dig, og sammen finder I en dag der passer." %}</p>
+        <div class="divider"></div>
+
+        <form id="bookingform" class="form-horizontal clearfix" data-toggle="validator" role="form" novalidate="true" method="POST">
+            {% csrf_token %}
+
+            <!--
+            {{ bookerform.errors }}
+            -->
+
+            {{ bookerform.non_field_errors }}
+            {% include "booking/booker/basedata.html" %}
+            {% include "booking/booker/school.html" %}
+            {% include "booking/booker/attendees.html" %}
+            {% include "booking/booker/notes.html" %}
+        </form>
+    </div>
+    {% include 'booking/modal/footer.html' %}
+
+{% endblock %}
+
+{% block extra_scripts %}
+
+    {% include 'booking/booker/school_script.html' %}
+
+    <script type="text/javascript">
+        $(function(){
+            $("#submitbutton").click(function(){
+                $("#bookingform").submit();
+            });
+        });
+    </script>
+{% endblock %}
