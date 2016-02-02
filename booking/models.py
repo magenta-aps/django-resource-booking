@@ -303,10 +303,12 @@ class Resource(models.Model):
     class_level_min = models.IntegerField(choices=class_level_choices,
                                           default=0,
                                           null=True,
+                                          blank=True,
                                           verbose_name=_(u'Klassetrin fra'))
     class_level_max = models.IntegerField(choices=class_level_choices,
                                           default=10,
                                           null=True,
+                                          blank=True,
                                           verbose_name=_(u'Klassetrin til'))
     tags = models.ManyToManyField(Tag, blank=True, verbose_name=_(u'Tags'))
     topics = models.ManyToManyField(

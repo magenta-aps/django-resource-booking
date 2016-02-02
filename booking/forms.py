@@ -39,7 +39,7 @@ class OtherResourceForm(forms.ModelForm):
                   'type', 'tags', 'comment',
                   'institution_level', 'topics', 'level', 'class_level_min',
                   'class_level_max', 'subjects', 'audience',
-                  'enabled', 'unit',)
+                  'enabled', 'unit')
         widgets = {
             'title': TextInput(attrs={'class': 'titlefield'}),
             'teaser': Textarea(attrs={'rows': 3, 'maxlength': 1000}),
@@ -48,14 +48,14 @@ class OtherResourceForm(forms.ModelForm):
             'topics': CheckboxSelectMultiple(),
             'subjects': CheckboxSelectMultiple(),
             'audience': RadioSelect(),
-            'link': URLInput()
+            'link': URLInput(),
         }
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user')
         super(OtherResourceForm, self).__init__(*args, **kwargs)
         self.fields['unit'].queryset = self.get_unit_query_set()
-        self.fields['type'].choices = OtherResource.type_choices
+        self.fields['type'].widget = HiddenInput()
 
     def get_unit_query_set(self):
         """"Get units for which user can create events."""

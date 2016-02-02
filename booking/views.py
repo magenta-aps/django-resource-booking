@@ -3,6 +3,7 @@
 import json
 
 from datetime import datetime, timedelta
+from abc import ABCMeta
 
 from dateutil import parser
 from dateutil.rrule import rrulestr
@@ -385,6 +386,25 @@ class EditResourceView(UpdateView):
                 )
         return result
 
+    def set_object(self, pk, request, is_cloning=False):
+        if is_cloning or not hasattr(self, 'object') or self.object is None:
+            if pk is None:
+                self.object = self.model()
+                try:
+                    type = int(request.GET['type'])
+                    if type in self.model.applicable_types:
+                        self.object.type = type
+                except:
+                    pass
+            else:
+                try:
+                    self.object = self.model.objects.get(id=pk)
+                    if is_cloning:
+                        self.object.pk = None
+                        self.object.id = None
+                except ObjectDoesNotExist:
+                    raise Http404
+
 
 class EditOtherResourceView(EditResourceView):
 
@@ -399,36 +419,16 @@ class EditOtherResourceView(EditResourceView):
 
     def get(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
-        try:
-            self.object = OtherResource() if pk is None\
-                else OtherResource.objects.get(id=pk)
-        except ObjectDoesNotExist:
-            raise Http404
-        try:
-            type = int(request.GET['type'])
-            if type in OtherResource.applicable_types:
-                self.object.type = type
-        except:
-            pass
+        self.set_object(pk, request)
         form = self.get_form()
         return self.render_to_response(
             self.get_context_data(form=form)
         )
 
-    # Handle both forms, creating a Visit and a number of StudyMaterials
     def post(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
         is_cloning = kwargs.get("clone", False)
-        if is_cloning or not hasattr(self, 'object') or self.object is None:
-            if pk is None or is_cloning:
-                self.object = None
-            else:
-                try:
-                    self.object = OtherResource.objects.get(id=pk)
-                    if is_cloning:
-                        self.object.pk = None
-                except ObjectDoesNotExist:
-                    raise Http404
+        self.set_object(pk, request)
         form = self.get_form()
         if form.is_valid():
             form.save()
@@ -442,6 +442,18 @@ class EditOtherResourceView(EditResourceView):
         except:
             return '/'
 
+    def get_template_names(self):
+        if self.object.type is not None:
+            if self.object.type == Resource.STUDIEPRAKTIK:
+                return ["otherresource/studiepraktik.html"]
+            if self.object.type == Resource.OPEN_HOUSE:
+                return ["otherresource/open_house.html"]
+            if self.object.type == Resource.ASSIGNMENT_HELP:
+                return ["otherresource/assignment_help.html"]
+            if self.object.type == Resource.STUDY_MATERIAL:
+                return ["otherresource/study_material.html"]
+        raise "Couldn't find template for object type %d" % self.object.type
+
 
 class EditVisitView(RoleRequiredMixin, EditResourceView):
 
@@ -451,26 +463,6 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
 
     # Display a view with two form objects; one for the regular model,
     # and one for the file upload
-
-    def set_object(self, pk, request, is_cloning=False):
-        print "is cloning: " + str(is_cloning)
-        if is_cloning or not hasattr(self, 'object') or self.object is None:
-            if pk is None:
-                self.object = Visit()
-                try:
-                    type = int(request.GET['type'])
-                    if type in Visit.applicable_types:
-                        self.object.type = type
-                except:
-                    pass
-            else:
-                try:
-                    self.object = Visit.objects.get(id=pk)
-                    if is_cloning:
-                        self.object.pk = None
-                        self.object.id = None
-                except ObjectDoesNotExist:
-                    raise Http404
 
     roles = EDIT_ROLES
 

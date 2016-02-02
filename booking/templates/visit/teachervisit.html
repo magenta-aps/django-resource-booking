@@ -45,7 +45,7 @@
                     </h4>
                 </div>
                 <div id="collapseTitel" class="panel-collapse collapse
-                {% if not object.pk or form.title.errors or form.title.errors %}in{% endif %}
+                {% if not form.errors or form.title.errors or form.title.errors %}in{% endif %}
                 " aria-labelledby="headingCategory" role="tabpanel" aria-expanded="true" style="">
                     <div class="panel-body">
                         {% include 'resource/fields/title.html' %}
@@ -61,7 +61,7 @@
                     </h4>
                 </div>
                 <div id="collapseDescription" class="panel-collapse collapse
-                {% if not form.errors or form.teaser.errors or form.description.errors or form.price.errors or fileformset.errors %}in{% endif %}
+                {% if not object.pk or form.teaser.errors or form.description.errors or form.price.errors or fileformset.errors %}in{% endif %}
                 " aria-labelledby="headingDescription" role="tabpanel">
                     <div class="panel-body">
                         {% include 'resource/fields/teaser.html' %}
