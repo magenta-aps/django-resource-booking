@@ -107,7 +107,7 @@
                     <ol class="breadcrumb hidden-xs">
                         <li>Du er her: </li>
                         <li><a href="http://fokus.ku.dk/">Søgning</a></li>
-                        <li class="active"><a href="{% url 'index' %}">Søgeresultatliste</a></li>
+                        <li class="active">Søgeresultatliste</li>
                     </ol>
                 </div>
                 <div class="col-sm-4 text-right small-icons hidden-print">
@@ -161,6 +161,7 @@
             {% for res in results %}
                 <li class="media">
                     <div class="media-body">
+                        <div class="small">{{ res.get_type_display }}</div>
                         <h3 class="media-heading"><a href="{% url 'visit' res.pk %}">{{ res.title }}</a></h3>
                         <p>{{ res.teaser }}</p>
                         <div class="media-info">
@@ -169,7 +170,6 @@
                                     <strong>Fag/niveau: </strong>
                                     <span class="type-offer">{{ res.get_subjects_display }}</span>
                                 </li>
-                                <li><strong>Hvad: </strong><span class="type-offer">{{ res.get_type_display }}</span></li>
                                 <li><strong>Hvornår: </strong><span class="type-offer">{% if res.occ_starttime %}{{ res.occ_starttime|date:"d. m. Y" }}  kl. {{ res.occ_starttime|date:"H:i" }}{% else %}-{% endif %}</span></li>
                                 <li><strong>Hvor: </strong><span class="type-offer">{{ res.display_locality }}</span></li>
                             </ul>
