@@ -184,11 +184,16 @@ class SearchView(ListView):
             t = self.request.GET.getlist("t")
             if t:
                 self.filters["type__in"] = t
+
             f = set(self.request.GET.getlist("f"))
-            for g in self.request.GET.getlist("g"):
-                f.add(g)
             if f:
-                self.filters["subjects__in"] = f
+                self.filters["gymnasiefag__in"] = f
+
+            g = self.request.GET.getlist("g")
+            if g:
+                self.filters["grundskolefag__in"] = f
+
+
             self.filters["state__in"] = [Resource.ACTIVE]
 
         return self.filters
@@ -296,15 +301,17 @@ class SearchView(ListView):
         gym_selected = self.request.GET.getlist("f")
         context["gymnasie_selected"] = gym_selected
         context["gymnasie_choices"] = self.make_facet(
-            "subjects",
+            "gymnasiefag",
             gym_subject_choices,
             gym_selected,
         )
+        print gym_subject_choices
+        print context["gymnasie_choices"]
 
         gs_selected = self.request.GET.getlist("g")
         context["grundskole_selected"] = gs_selected
         context["grundskole_choices"] = self.make_facet(
-            "subjects",
+            "grundskolefag",
             gs_subject_choices,
             gs_selected,
         )
