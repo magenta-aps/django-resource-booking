@@ -125,6 +125,7 @@
             {% for res in results %}
                 <li class="media">
                     <div class="media-body">
+                        <div class="small">{{ res.get_type_display }}</div>
                         <h3 class="media-heading"><a href="{% url 'visit-view' res.pk %}{% if fullquery %}?search={{ fullquery | urlencode }}{% endif %}">{{ res.title }}</a></h3>
                         {% if request.GET.q %}
                             <p>{{ res.teaser|highlight:request.GET.q }}</p>
@@ -135,7 +136,6 @@
                                     <strong>Fag/niveau: </strong>
                                     <span class="type-offer">{{ res.get_subjects_display }}</span>
                                 </li>
-                                <li><strong>Hvad: </strong><span class="type-offer">{{ res.get_type_display }}</span></li>
                                 <li><strong>Hvornår: </strong><span class="type-offer">{% if res.occ_starttime %}{{ res.occ_starttime|date:"d. m. Y" }}  kl. {{ res.occ_starttime|date:"H:i" }}{% else %}-{% endif %}</span></li>
                                 <li><strong>Hvor: </strong><span class="type-offer">{{ res.display_locality }}</span></li>
                             </ul>
