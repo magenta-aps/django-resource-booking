@@ -69,8 +69,8 @@ class VisitForm(forms.ModelForm):
         model = Visit
         fields = ('title', 'teaser', 'description', 'price',
                   'type', 'tags', 'preparation_time', 'comment',
-                  'institution_level', 'topics', 'level', 'class_level_min',
-                  'class_level_max', 'subjects', 'audience',
+                  'institution_level', 'level', 'class_level_min',
+                  'class_level_max', 'audience', 'subjects',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'recurrences', 'duration', 'locality', 'rooms_assignment',
                   'rooms_needed', 'tour_available',
@@ -82,7 +82,6 @@ class VisitForm(forms.ModelForm):
             'minimum_number_of_visitors': NumberInput(attrs={'min': 1}),
             'maximum_number_of_visitors': NumberInput(attrs={'min': 1}),
             'tags': CheckboxSelectMultiple(),
-            'topics': CheckboxSelectMultiple(),
             'contact_persons': CheckboxSelectMultiple(),
             'subjects': CheckboxSelectMultiple(),
             'audience': RadioSelect()
