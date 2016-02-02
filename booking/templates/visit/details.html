@@ -22,7 +22,7 @@
                 <a class="pull-right btn btn-primary edit-btn" href="{% url 'visit-edit' object.pk %}">+ Redigér</a>
             {% endif %}
             {% if user.userprofile.can_create %}
-                <a class="pull-right btn btn-primary margin-right-10" href="{% url 'visit_clone' object.pk %}">Opret kopi</a>
+                <a class="pull-right btn btn-primary margin-right-10" href="{% url 'visit-clone' object.pk %}">Opret kopi</a>
             {% endif %}
             
             <h1>{{ object.title }}</h1>
