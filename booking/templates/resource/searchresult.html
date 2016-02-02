@@ -135,7 +135,7 @@
             </div>
             
             {% if user.userprofile.can_create %}
-                <a class="pull-right btn btn-primary" href="/visit/create">+ Opret tilbud</a>
+                <a class="pull-right btn btn-primary" href="{% url 'resource-create' %}">+ Opret tilbud</a>
             {% endif %}
             
             <h1>Søgeresultat</h1>

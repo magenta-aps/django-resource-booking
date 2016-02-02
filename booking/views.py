@@ -9,6 +9,7 @@ from dateutil.rrule import rrulestr
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
+from django.core.urlresolvers import reverse
 from django.db.models import Count
 from django.db.models import F
 from django.db.models import Q
@@ -26,15 +27,17 @@ from django.views.defaults import bad_request
 from profile.models import EDIT_ROLES
 from profile.models import role_to_text
 
-from booking.models import Visit, VisitOccurrence, StudyMaterial
+from booking.models import OtherResource, Visit, VisitOccurrence, StudyMaterial
 from booking.models import Resource, Subject, GymnasieLevel
 from booking.models import Room
 from booking.models import PostCode, School
 from booking.models import Booking
 from booking.models import ResourceGymnasieFag, ResourceGrundskoleFag
-from booking.forms import VisitForm, ClassBookingForm, TeacherBookingForm
+from booking.forms import ResourceInitialForm, OtherResourceForm, VisitForm
+from booking.forms import ClassBookingForm, TeacherBookingForm
 from booking.forms import VisitStudyMaterialForm, BookingSubjectLevelForm
 from booking.forms import BookerForm
+
 
 i18n_test = _(u"Dette tester oversættelses-systemet")
 
@@ -321,15 +324,237 @@ class SearchView(ListView):
         return size
 
 
-class EditVisit(RoleRequiredMixin, UpdateView):
+class EditResourceInitialView(TemplateView):
+
+    template_name = 'resource/form.html'
+
+    def get(self, request, *args, **kwargs):
+        pk = kwargs.get("pk")
+        if pk is not None:
+            if OtherResource.objects.filter(id=pk).count() > 0:
+                return redirect(reverse('otherresource-edit', args=[pk]))
+            elif Visit.objects.filter(id=pk).count() > 0:
+                return redirect(reverse('visit-edit', args=[pk]))
+            else:
+                raise Http404
+        else:
+            form = ResourceInitialForm()
+            return self.render_to_response(
+                self.get_context_data(form=form)
+            )
+
+    def post(self, request, *args, **kwargs):
+        form = ResourceInitialForm(request.POST)
+        if form.is_valid():
+            type_id = int(form.cleaned_data['type'])
+            if type_id in Visit.applicable_types:
+                return redirect(reverse('visit-create') + "?type=%d" % type_id)
+            else:
+                return redirect(reverse('otherresource-create') +
+                                "?type=%d" % type_id)
+
+        return self.render_to_response(
+            self.get_context_data(form=form)
+        )
+
+
+class EditResourceView(UpdateView):
+
+    def __init__(self, *args, **kwargs):
+        super(EditResourceView, self).__init__(*args, **kwargs)
+        self.object = None
+
+    def get_form_kwargs(self):
+        kwargs = super(EditResourceView, self).get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        # First, check all is well in superclass
+        result = super(EditResourceView, self).dispatch(*args, **kwargs)
+        # Now, check that the user belongs to the correct unit.
+        current_user = self.request.user
+        pk = kwargs.get("pk")
+        if self.object is None:
+            self.object = None if pk is None else self.model.objects.get(id=pk)
+        if self.object is not None and self.object.unit:
+            if not current_user.userprofile.can_edit(self.object):
+                raise AccessDenied(
+                    _(u"Du kan kun redigere enheder,som du selv er" +
+                      " koordinator for.")
+                )
+        return result
+
+    def get_context_data(self, **kwargs):
+        context = {}
+
+        context['gymnasiefag_choices'] = Subject.gymnasiefag_qs()
+        context['grundskolefag_choices'] = Subject.grundskolefag_qs()
+        context['gymnasie_level_choices'] = \
+            GymnasieLevel.objects.all().order_by('level')
+
+        context['gymnasiefag_selected'] = self.gymnasiefag_selected()
+        context['grundskolefag_selected'] = self.grundskolefag_selected()
+
+        context['klassetrin_range'] = range(1, 9)
+
+        context.update(kwargs)
+
+        return super(EditResourceView, self).get_context_data(**context)
+
+    def gymnasiefag_selected(self):
+        result = []
+        obj = self.object
+        if self.request.method == 'GET':
+            if obj and obj.pk:
+                for x in obj.resourcegymnasiefag_set.all():
+                    result.append({
+                        'submitvalue': x.as_submitvalue(),
+                        'description': x.display_value()
+                    })
+        elif self.request.method == 'POST':
+            submitvalue = self.request.POST.getlist('gymnasiefag', [])
+            for sv_text in submitvalue:
+                sv = sv_text.split(",")
+                subject_pk = sv.pop(0)
+                subject = Subject.objects.get(pk=subject_pk)
+                result.append({
+                    'submitvalue': sv_text,
+                    'description': ResourceGymnasieFag.display(
+                        subject,
+                        [GymnasieLevel.objects.get(pk=x) for x in sv]
+                    )
+                })
+
+        return result
+
+    def grundskolefag_selected(self):
+        result = []
+        obj = self.object
+        if self.request.method == 'GET':
+            if obj and obj.pk:
+                for x in obj.resourcegrundskolefag_set.all():
+                    result.append({
+                        'submitvalue': x.as_submitvalue(),
+                        'description': x.display_value()
+                    })
+        elif self.request.method == 'POST':
+            submitvalue = self.request.POST.getlist('grundskolefag', [])
+            for sv_text in submitvalue:
+                sv = sv_text.split(",")
+                subject_pk = sv.pop(0)
+                lv_min = sv.pop(0)
+                lv_max = sv.pop(0)
+                subject = Subject.objects.get(pk=subject_pk)
+                result.append({
+                    'submitvalue': sv_text,
+                    'description': ResourceGrundskoleFag.display(
+                        subject, lv_min, lv_max
+                    )
+                })
+
+        return result
+
+    def save_subjects(self, obj):
+        existing_gym_fag = {}
+        for x in obj.resourcegymnasiefag_set.all():
+            existing_gym_fag[x.as_submitvalue()] = x
+
+        for gval in self.request.POST.getlist('gymnasiefag', []):
+            if gval in existing_gym_fag:
+                del existing_gym_fag[gval]
+            else:
+                ResourceGymnasieFag.create_from_submitvalue(obj, gval)
+
+        # Delete any remaining values that were not submitted
+        for x in existing_gym_fag.itervalues():
+            x.delete()
+
+        existing_gs_fag = {}
+        for x in obj.resourcegrundskolefag_set.all():
+            existing_gs_fag[x.as_submitvalue()] = x
+
+        for gval in self.request.POST.getlist('grundskolefag', []):
+            if gval in existing_gs_fag:
+                del existing_gs_fag[gval]
+            else:
+                ResourceGrundskoleFag.create_from_submitvalue(
+                    obj, gval
+                )
+
+        # Delete any remaining values that were not submitted
+        for x in existing_gs_fag.itervalues():
+            x.delete()
+        
+
+
+class EditOtherResourceView(EditResourceView):
+
+    template_name = 'otherresource/form.html'
+    form_class = OtherResourceForm
+    model = OtherResource
+
+    # Display a view with two form objects; one for the regular model,
+    # and one for the file upload
+
+    roles = EDIT_ROLES
+
+    def get(self, request, *args, **kwargs):
+        pk = kwargs.get("pk")
+        try:
+            self.object = OtherResource() if pk is None\
+                else OtherResource.objects.get(id=pk)
+        except ObjectDoesNotExist:
+            raise Http404
+        try:
+            type = int(request.GET['type'])
+            if type in OtherResource.applicable_types:
+                self.object.type = type
+        except:
+            pass
+        form = self.get_form()
+        return self.render_to_response(
+            self.get_context_data(form=form)
+        )
+
+    # Handle both forms, creating a Visit and a number of StudyMaterials
+    def post(self, request, *args, **kwargs):
+        pk = kwargs.get("pk")
+        is_cloning = kwargs.get("clone", False)
+        if is_cloning or not hasattr(self, 'object') or self.object is None:
+            if pk is None or is_cloning:
+                self.object = None
+            else:
+                try:
+                    self.object = OtherResource.objects.get(id=pk)
+                    if is_cloning:
+                        self.object.pk = None
+                except ObjectDoesNotExist:
+                    raise Http404
+        form = self.get_form()
+        if form.is_valid():
+            obj = form.save()
+
+            # Save subjects
+            self.save_subjects(obj)
+
+            return super(EditOtherResourceView, self).form_valid(form)
+        else:
+            return self.form_invalid(form)
+
+    def get_success_url(self):
+        try:
+            return reverse('otherresource', args=[self.object.id])
+        except:
+            return '/'
+
+
+class EditVisitView(RoleRequiredMixin, EditResourceView):
 
     template_name = 'visit/form.html'
     form_class = VisitForm
     model = Visit
-
-    def __init__(self, *args, **kwargs):
-        super(EditVisit, self).__init__(*args, **kwargs)
-        self.object = None
 
     # Display a view with two form objects; one for the regular model,
     # and one for the file upload
@@ -342,6 +567,12 @@ class EditVisit(RoleRequiredMixin, UpdateView):
             self.object = Visit() if pk is None else Visit.objects.get(id=pk)
         except ObjectDoesNotExist:
             raise Http404
+        try:
+            type = int(request.GET['type'])
+            if type in Visit.applicable_types:
+                self.object.type = type
+        except:
+            pass
         form = self.get_form()
         fileformset = VisitStudyMaterialForm(None, instance=self.object)
         return self.render_to_response(
@@ -441,38 +672,10 @@ class EditVisit(RoleRequiredMixin, UpdateView):
                     start_datetime__in=existing_visit_occurrences
                 ).delete()
 
-            # Save fag
-            existing_gym_fag = {}
-            for x in visit.resourcegymnasiefag_set.all():
-                existing_gym_fag[x.as_submitvalue()] = x
+            # Save subjects
+            self.save_subjects(visit)
 
-            for gval in self.request.POST.getlist('gymnasiefag', []):
-                if gval in existing_gym_fag:
-                    del existing_gym_fag[gval]
-                else:
-                    ResourceGymnasieFag.create_from_submitvalue(visit, gval)
-
-            # Delete any remaining values that were not submitted
-            for x in existing_gym_fag.itervalues():
-                x.delete()
-
-            existing_gs_fag = {}
-            for x in visit.resourcegrundskolefag_set.all():
-                existing_gs_fag[x.as_submitvalue()] = x
-
-            for gval in self.request.POST.getlist('grundskolefag', []):
-                if gval in existing_gs_fag:
-                    del existing_gs_fag[gval]
-                else:
-                    ResourceGrundskoleFag.create_from_submitvalue(
-                        visit, gval
-                    )
-
-            # Delete any remaining values that were not submitted
-            for x in existing_gs_fag.itervalues():
-                x.delete()
-
-            return super(EditVisit, self).form_valid(form)
+            return super(EditVisitView, self).form_valid(form)
         else:
             return self.form_invalid(form, fileformset)
 
@@ -510,11 +713,11 @@ class EditVisit(RoleRequiredMixin, UpdateView):
 
         context.update(kwargs)
 
-        return super(EditVisit, self).get_context_data(**context)
+        return super(EditVisitView, self).get_context_data(**context)
 
     def get_success_url(self):
         try:
-            return "/visit/%d" % self.object.id
+            return reverse('visit', args=[self.object.id])
         except:
             return '/'
 
@@ -522,81 +725,6 @@ class EditVisit(RoleRequiredMixin, UpdateView):
         return self.render_to_response(
             self.get_context_data(form=form, fileformset=fileformset)
         )
-
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        # First, check all is well in superclass
-        result = super(EditVisit, self).dispatch(*args, **kwargs)
-        # Now, check that the user belongs to the correct unit.
-        current_user = self.request.user
-        pk = kwargs.get("pk")
-        if self.object is None:
-            self.object = None if pk is None else Visit.objects.get(id=pk)
-        if self.object is not None and self.object.unit:
-            if not current_user.userprofile.can_edit(self.object):
-                raise AccessDenied(
-                    _(u"Du kan kun redigere enheder,som du selv er" +
-                      " koordinator for.")
-                )
-        return result
-
-    def get_form_kwargs(self):
-        kwargs = super(EditVisit, self).get_form_kwargs()
-        kwargs['user'] = self.request.user
-        return kwargs
-
-    def gymnasiefag_selected(self):
-        result = []
-        obj = self.object
-        if self.request.method == 'GET':
-            if obj and obj.pk:
-                for x in obj.resourcegymnasiefag_set.all():
-                    result.append({
-                        'submitvalue': x.as_submitvalue(),
-                        'description': x.display_value()
-                    })
-        elif self.request.method == 'POST':
-            submitvalue = self.request.POST.getlist('gymnasiefag', [])
-            for sv_text in submitvalue:
-                sv = sv_text.split(",")
-                subject_pk = sv.pop(0)
-                subject = Subject.objects.get(pk=subject_pk)
-                result.append({
-                    'submitvalue': sv_text,
-                    'description': ResourceGymnasieFag.display(
-                        subject,
-                        [GymnasieLevel.objects.get(pk=x) for x in sv]
-                    )
-                })
-
-        return result
-
-    def grundskolefag_selected(self):
-        result = []
-        obj = self.object
-        if self.request.method == 'GET':
-            if obj and obj.pk:
-                for x in obj.resourcegrundskolefag_set.all():
-                    result.append({
-                        'submitvalue': x.as_submitvalue(),
-                        'description': x.display_value()
-                    })
-        elif self.request.method == 'POST':
-            submitvalue = self.request.POST.getlist('grundskolefag', [])
-            for sv_text in submitvalue:
-                sv = sv_text.split(",")
-                subject_pk = sv.pop(0)
-                lv_min = sv.pop(0)
-                lv_max = sv.pop(0)
-                subject = Subject.objects.get(pk=subject_pk)
-                result.append({
-                    'submitvalue': sv_text,
-                    'description': ResourceGrundskoleFag.display(
-                        subject, lv_min, lv_max
-                    )
-                })
-
-        return result
 
 
 class VisitDetailView(DetailView):

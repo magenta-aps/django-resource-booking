@@ -7,7 +7,7 @@
        $("#id_school").typeahead({
             source: function (query, process) {
                 $.ajax({
-                    url: "/schools",
+                    url: "{% url 'school' %}",
                     data: {
                         q: query
                     },
