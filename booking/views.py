@@ -445,7 +445,7 @@ class EditOtherResourceView(EditResourceView):
     def post(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
         is_cloning = kwargs.get("clone", False)
-        self.set_object(pk, request)
+        self.set_object(pk, request, is_cloning)
         form = self.get_form()
         if form.is_valid():
             form.save()
