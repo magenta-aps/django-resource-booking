@@ -1,13 +1,13 @@
 from booking.models import StudyMaterial
 from booking.models import UnitType
 from booking.models import Unit
-from booking.models import Visit, VisitOccurrence
+from booking.models import Resource, OtherResource, Visit, VisitOccurrence
 from booking.models import Booker, Region, PostCode, School
 from booking.models import ClassBooking, TeacherBooking, BookingSubjectLevel
 from django import forms
 from django.forms import CheckboxSelectMultiple, EmailInput, RadioSelect
 from django.forms import inlineformset_factory
-from django.forms import TextInput, NumberInput, Textarea, Select
+from django.forms import TextInput, NumberInput, URLInput, Textarea, Select
 from django.utils.translation import ugettext_lazy as _
 from tinymce.widgets import TinyMCE
 
@@ -24,14 +24,50 @@ class UnitForm(forms.ModelForm):
         fields = ('name', 'type', 'parent')
 
 
+class ResourceInitialForm(forms.Form):
+    type = forms.ChoiceField(
+        choices=Resource.resource_type_choices
+    )
+
+
+class OtherResourceForm(forms.ModelForm):
+
+    class Meta:
+        model = OtherResource
+        fields = ('title', 'teaser', 'description', 'link',
+                  'type', 'tags', 'comment',
+                  'institution_level', 'topics', 'audience',
+                  'enabled', 'unit',)
+        widgets = {
+            'title': TextInput(attrs={'class': 'titlefield'}),
+            'teaser': Textarea(attrs={'rows': 3, 'maxlength': 1000}),
+            'description': TinyMCE(attrs={'rows': 10}),
+            'tags': CheckboxSelectMultiple(),
+            'topics': CheckboxSelectMultiple(),
+            'subjects': CheckboxSelectMultiple(),
+            'audience': RadioSelect(),
+            'link': URLInput()
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user')
+        super(OtherResourceForm, self).__init__(*args, **kwargs)
+        self.fields['unit'].queryset = self.get_unit_query_set()
+        self.fields['type'].choices = OtherResource.type_choices
+
+    def get_unit_query_set(self):
+        """"Get units for which user can create events."""
+        user = self.user
+        return user.userprofile.get_unit_queryset()
+
+
 class VisitForm(forms.ModelForm):
 
     class Meta:
         model = Visit
         fields = ('title', 'teaser', 'description', 'price',
                   'type', 'tags', 'preparation_time', 'comment',
-                  'institution_level', 'topics', 'level', 'class_level_min',
-                  'class_level_max', 'subjects', 'audience',
+                  'institution_level', 'topics', 'audience',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'recurrences', 'duration', 'locality', 'rooms_assignment',
                   'rooms_needed',
@@ -56,6 +92,12 @@ class VisitForm(forms.ModelForm):
             'audience': RadioSelect()
         }
 
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user')
+        super(VisitForm, self).__init__(*args, **kwargs)
+        self.fields['unit'].queryset = self.get_unit_query_set()
+        self.fields['type'].choices = Visit.type_choices
+
     def clean_locality(self):
         data = self.cleaned_data
         locality = data.get("locality")
@@ -77,11 +119,6 @@ class VisitForm(forms.ModelForm):
             self.add_error('minimum_number_of_visitors', min_error_msg)
             self.add_error('maximum_number_of_visitors', max_error_msg)
             raise forms.ValidationError(min_error_msg)
-
-    def __init__(self, *args, **kwargs):
-        self.user = kwargs.pop('user')
-        super(VisitForm, self).__init__(*args, **kwargs)
-        self.fields['unit'].queryset = self.get_unit_query_set()
 
     def get_unit_query_set(self):
         """"Get units for which user can create events."""

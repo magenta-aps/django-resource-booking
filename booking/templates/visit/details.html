@@ -4,62 +4,25 @@
 
 {% block content %}
 
-    <div class="row">
-        <div class="col-sm-8">
-            <ol class="breadcrumb hidden-xs">
-                <li>Du er her: </li>
-                <li><a href="http://fokus.ku.dk/">Søgning</a></li>
-                <li><a href="#">Søgeresultatliste</a></li>
-                <li class="active">Detaljevisning</li>
-            </ol>
-        </div>
-        <div class="col-sm-4 text-right small-icons hidden-print">
-            <a title="E-mail" href="#" class="glyphicon glyphicon-envelope print-icon" aria-hidden="true"><span class="sr-only">Send via e-mail</span></a>
-            <a title="Print" href="#" onclick="window.print();return false" aria-hidden="true" class="glyphicon glyphicon-print print-icon"><span class="sr-only">Print</span></a>
-                <!--AddThis Button BEGIN -->
-                        <script type="text/javascript">
-                        <!--
-                        var addthis_config = {
-                                ui_click: 'true',
-                                services_compact: 'facebook,twitter,blogger,digg,reddit,gmail,google,linkedin,myspace,delicious,favorites',
-                                services_exclude: 'email,print',
-                                ui_header_color: '#ffffff',
-                                ui_header_background: '#666666',
-                                ui_cobrand: 'www.ku.dk'
-                            }
-                            // -->
-                        </script>
-                <a href="https://www.addthis.com/bookmark.php?v=250&amp;pub=copenhagenuni" class="addthis_button_compact">
-                <img src="/static/img/shareknap_dk.gif" width="28" height="12" alt="Bookmark and Share" style="border:0" /></a>
-                <script type="text/javascript" src="https://s7.addthis.com/js/250/addthis_widget.js#pub=copenhagenuni"></script>
-                <!-- AddThis Button END -->
-        </div>
-    </div>
+    {% include 'common/breadcrumbrow.html' %}
+
     <div class="row titlebar hidden-print">
         <div class="col-sm-12 col-md-9"><h2>Om tilbuddet</h2></div>
         <div class="divider"></div>
     </div>
     <div class="row">
         <div class="col-sm-12 col-md-8">
-            <form class="clearfix" role="søg" action={% url 'search' %}>
-                <div class="input-group">
-                    <label class="sr-only" for="searchBox">Søg efter tilbud</label>
-                    <input type="text" class="form-control" id="searchBox" placeholder="Søg efter tilbud - indtast et eller flere søgeord..." name="q" value="{{ request.GET.q }}">
-                    <span class="input-group-btn">
-                    <a id="reset-btn" class="btn btn-default" aria-label="Ryd søgning"><span class="glyphicon glyphicon-remove"></span></a>
-                    <button class="btn btn-default" id="search" type="submit"><span class="hidden-xs">Søg</span> <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
-                    </button>
-                    </span>
-                </div>
-            </form>
+
+            {% include 'common/searchform.html' %}
+
             <div class="divider"></div>
             <h2>{{ object.get_type_display }}</h2>
             
             {% if can_edit %}
-                <a class="pull-right btn btn-primary edit-btn" href="{% url 'visit_edit' object.pk %}">+ Redigér</a>
+                <a class="pull-right btn btn-primary edit-btn" href="{% url 'visit-edit' object.pk %}">+ Redigér</a>
             {% endif %}
             {% if user.userprofile.can_create %}
-                <a class="pull-right btn btn-primary margin-right-10" href="{% url 'visit_clone' object.pk %}">Opret kopi</a>
+                <a class="pull-right btn btn-primary margin-right-10" href="{% url 'visit-clone' object.pk %}">Opret kopi</a>
             {% endif %}
             
             <h1>{{ object.title }}</h1>
@@ -84,10 +47,12 @@
                 {% endif %}
                 <!-- Display according to business logic -->
             </div>
+            {% if can_book %}
             <div class="disclaimer">Bemærk at din bestilling først er bindende, når du har modtaget en bekræftelse fra den ansvarlige arrangør fra Københavns Universitet.</div>
+            {% endif %}
             <div class="go-back">
-            <a href="#" class="btn btn-default" onclick="history.go(-1); return false;"><span class="glyphicon glyphicon-chevron-left"></span> Tilbage til søgeresultat</a>
-        </div>
+                <a href="#" class="btn btn-default" onclick="history.go(-1); return false;"><span class="glyphicon glyphicon-chevron-left"></span> Tilbage til søgeresultat</a>
+            </div>
         </div>
         <div class="col-sm-6 col-md-4">
             <form class="form-horizontal">
@@ -157,43 +122,9 @@
             </form>
         </div>
     </div>
-<!-- Modal kontaktformular start -->
-<div id="kontaktformular" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="kontaktTitel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                <h3 id="kontaktTitel">Kontakt arrangøren</h3>
-            </div>
-            <div class="modal-body">
-                <form class="form-horizontal col-sm-12">
-                    <div class="form-group">
-                        <label class="control-label">Navn</label>
-                        <input class="form-control required" placeholder="Dit navn" data-error="Udfyld venligst navn." type="text">
-                    </div>
-                    <div class="form-group">
-                        <label class="control-label">E-Mail</label>
-                        <input class="form-control" placeholder="Angiv din e-mailadresse" data-error="Angiv gyldig e-mailadresse." type="email">
-                    </div>
-                    <div class="form-group">
-                        <label class="control-label">Telefon</label>
-                        <input class="form-control" placeholder="Telefonnummer - 8 tal" data-error="Telefonnummer - 8 tal" type="phone">
-                    </div>
-                    <div class="form-group">
-                        <label class="control-label">Besked</label>
-                        <textarea class="form-control" cols="40" rows="10" placeholder="Skriv besked"></textarea>
-                    </div>
-                    <div class="form-group"></div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">Cancel</button>
-                <button type="submit" class="btn btn-primary pull-right">Send besked</button>
-            </div>
-        </div>
-    </div>
-</div>
-<!-- Modal kontaktformulat end -->
+
+    {% include 'common/modal_contact.html' %}
+
 <!-- Modal start -->
     <div class="modal fade" id="startbooking" tabindex="-1" role="Popup-bookingflow" aria-labelledby="overskrift" data-frametarget="/visit/{{ object.id }}/book">
         <div class="modal-dialog modal-lg" role="Bookingflow">
