@@ -602,6 +602,11 @@ ul.footerlinks .footerlist-header {
     border-radius: 2px;
 }
 
+.modal-content iframe {
+    border: 0 none;
+    width: 100%;
+}
+
 .stepwizard-step p {
     margin-top: 10px;
 }
