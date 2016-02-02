@@ -443,10 +443,10 @@ class EditVisit(RoleRequiredMixin, UpdateView):
 
             # Save fag
             existing_gym_fag = {}
-            for x in visit.gymnasiefag.all():
+            for x in visit.resourcegymnasiefag_set.all():
                 existing_gym_fag[x.as_submitvalue()] = x
 
-            for gval in self.request.POST.getlist('gymnasiefag'):
+            for gval in self.request.POST.getlist('gymnasiefag', []):
                 if gval in existing_gym_fag:
                     del existing_gym_fag[gval]
                 else:
@@ -457,10 +457,10 @@ class EditVisit(RoleRequiredMixin, UpdateView):
                 x.delete()
 
             existing_gs_fag = {}
-            for x in visit.grundskolefag.all():
+            for x in visit.resourcegrundskolefag_set.all():
                 existing_gs_fag[x.as_submitvalue()] = x
 
-            for gval in self.request.POST.getlist('grundskolefag'):
+            for gval in self.request.POST.getlist('grundskolefag', []):
                 if gval in existing_gs_fag:
                     del existing_gs_fag[gval]
                 else:
@@ -503,6 +503,9 @@ class EditVisit(RoleRequiredMixin, UpdateView):
         context['gymnasie_level_choices'] = \
             GymnasieLevel.objects.all().order_by('level')
 
+        context['gymnasiefag_selected'] = self.gymnasiefag_selected()
+        context['grundskolefag_selected'] = self.grundskolefag_selected()
+
         context['klassetrin_range'] = range(1, 9)
 
         context.update(kwargs)
@@ -541,6 +544,59 @@ class EditVisit(RoleRequiredMixin, UpdateView):
         kwargs = super(EditVisit, self).get_form_kwargs()
         kwargs['user'] = self.request.user
         return kwargs
+
+    def gymnasiefag_selected(self):
+        result = []
+        obj = self.object
+        if self.request.method == 'GET':
+            if obj and obj.pk:
+                for x in obj.resourcegymnasiefag_set.all():
+                    result.append({
+                        'submitvalue': x.as_submitvalue(),
+                        'description': x.display_value()
+                    })
+        elif self.request.method == 'POST':
+            submitvalue = self.request.POST.getlist('gymnasiefag', [])
+            for sv_text in submitvalue:
+                sv = sv_text.split(",")
+                subject_pk = sv.pop(0)
+                subject = Subject.objects.get(pk=subject_pk)
+                result.append({
+                    'submitvalue': sv_text,
+                    'description': ResourceGymnasieFag.display(
+                        subject,
+                        [GymnasieLevel.objects.get(pk=x) for x in sv]
+                    )
+                })
+
+        return result
+
+    def grundskolefag_selected(self):
+        result = []
+        obj = self.object
+        if self.request.method == 'GET':
+            if obj and obj.pk:
+                for x in obj.resourcegrundskolefag_set.all():
+                    result.append({
+                        'submitvalue': x.as_submitvalue(),
+                        'description': x.display_value()
+                    })
+        elif self.request.method == 'POST':
+            submitvalue = self.request.POST.getlist('grundskolefag', [])
+            for sv_text in submitvalue:
+                sv = sv_text.split(",")
+                subject_pk = sv.pop(0)
+                lv_min = sv.pop(0)
+                lv_max = sv.pop(0)
+                subject = Subject.objects.get(pk=subject_pk)
+                result.append({
+                    'submitvalue': sv_text,
+                    'description': ResourceGrundskoleFag.display(
+                        subject, lv_min, lv_max
+                    )
+                })
+
+        return result
 
 
 class VisitDetailView(DetailView):

@@ -145,9 +145,13 @@ $(function() {
         return result
     }
     
+    function remove_elem() {
+        $(this).parents('li').first().remove()
+        check_list_display()
+    }
+
     $('#gymnasiefag-add').on("click", function() {
         var fag_pk = $('#gymnasiefag-fag').val(),
-            level_pks = [],
             level_texts = [],
             submitvalue = [fag_pk];
         if (!fag_pk) {
@@ -159,19 +163,16 @@ $(function() {
                 val = $this.val(),
                 text = $this.parent().text().trim();
             if ($this.is(":checked")) {
-                level_pks.push(val);
                 level_texts.push(text);
                 submitvalue.push(val)
             }
         });
-        if (level_pks.length < 1) {
+        if (submitvalue.length < 2) {
             alert("Du skal vælge mindst et niveau")
             return false;
         }
-        
+
         var elem_html = KU.TEMPLATES.expand(item_template, {
-            'id': fag_pk,
-            'level-pks': level_pks.join(","),
             'submitvalue': submitvalue.join(","),
             'description': build_description(
                 $("#gymnasiefag-fag option:selected").text(),
@@ -179,13 +180,11 @@ $(function() {
             )
         });
         var elem = $(elem_html);
-        elem.find('.glyphicon-remove').on('click', function() {
-            $(this).parents('li').first().remove()
-            check_list_display()
-        });
+        elem.find('.glyphicon-remove').on('click', remove_elem);
         $('#gymnasiefag-list').append(elem);
         check_list_display();
     });
+    $('#gymnasiefag-list .glyphicon-remove').on('click', remove_elem);
 })(jQuery);
 
 (function($) {
@@ -223,10 +222,15 @@ $(function() {
         return result
     }
     
+    function remove_elem() {
+        $(this).parents('li').first().remove()
+        check_list_display()
+    }
+    
     $('#grundskolefag-add').on("click", function() {
         var fag_pk = $('#grundskolefag-fag').val(),
-            from = $('#grundskolefag-minclass').val(),
-            to = $('#grundskolefag-maxclass').val()
+            from = $('#grundskolefag-minclass').val() || 0,
+            to = $('#grundskolefag-maxclass').val() || 0,
             submitvalue = [fag_pk, from, to];
         if (!fag_pk) {
             alert("Du skal vælge et fag")
@@ -234,9 +238,6 @@ $(function() {
         }
         
         var elem_html = KU.TEMPLATES.expand(item_template, {
-            'id': fag_pk,
-            'level-min': from,
-            'level-max': to,
             'submitvalue': submitvalue.join(","),
             'description': build_description(
                 $("#grundskolefag-fag option:selected").text(),
@@ -245,11 +246,10 @@ $(function() {
             )
         });
         var elem = $(elem_html);
-        elem.find('.glyphicon-remove').on('click', function() {
-            $(this).parents('li').first().remove()
-            check_list_display()
-        });
+        elem.find('.glyphicon-remove').on('click', remove_elem);
         $('#grundskolefag-list').append(elem);
         check_list_display();
     });
+    $('#grundskolefag-list .glyphicon-remove').on('click', remove_elem)
+    
 })(jQuery);

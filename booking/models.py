@@ -453,13 +453,15 @@ class ResourceGymnasieFag(models.Model):
         return f
 
     def __unicode__(self):
-        u"%s (for '%s')" % (self.display_value(), self.resource.title)
+        return u"%s (for '%s')" % (self.display_value(), self.resource.title)
 
     def ordered_levels(self):
         return [x for x in self.level.all().order_by('level')]
 
-    def display_value(self):
-        levels = [unicode(x) for x in self.ordered_levels()]
+    @classmethod
+    def display(cls, subject, levels):
+        levels = [unicode(x) for x in levels]
+
         nr_levels = len(levels)
         if nr_levels == 1:
             levels_desc = levels[0]
@@ -471,22 +473,24 @@ class ResourceGymnasieFag(models.Model):
 
         if levels_desc:
             return u'%s på %s niveau' % (
-                unicode(self.subject.name), levels_desc
+                unicode(subject.name), levels_desc
             )
         else:
-            return unicode(self.subject.name)
+            return unicode(subject.name)
+
+    def display_value(self):
+        return ResourceGymnasieFag.display(
+            self.subject, self.ordered_levels()
+        )
 
     def as_submitvalue(self):
         res = unicode(self.subject.pk)
-        levels = self.levels_as_text()
+        levels = ",".join([unicode(x.pk) for x in self.ordered_levels()])
 
         if levels:
             res = ",".join([res, levels])
 
         return res
-
-    def levels_as_text(self):
-        return ",".join([unicode(x.pk) for x in self.ordered_levels()])
 
 
 class ResourceGrundskoleFag(models.Model):
@@ -534,23 +538,29 @@ class ResourceGrundskoleFag(models.Model):
     def __unicode__(self):
         return u"%s (for '%s')" % (self.display_value(), self.resource.title)
 
-    def display_value(self):
+    @classmethod
+    def display(cls, subject, clevel_min, clevel_max):
         class_range = []
-        if self.class_level_min:
-            class_range.append(self.class_level_min)
-            if self.class_level_max != self.class_level_min:
-                class_range.append(self.class_level_max)
+        if clevel_min:
+            class_range.append(clevel_min)
+            if clevel_max != clevel_min:
+                class_range.append(clevel_max)
         else:
-            if self.class_level_max:
-                class_range.append(self.class_level_max)
+            if clevel_max:
+                class_range.append(clevel_max)
 
         if len(class_range) > 0:
             return u'%s på klassetrin %s' % (
-                self.subject.name,
+                subject.name,
                 "-".join([unicode(x) for x in class_range])
             )
         else:
-            return unicode(self.subject.name)
+            return unicode(subject.name)
+
+    def display_value(self):
+        return ResourceGrundskoleFag.display(
+            self.subject, self.class_level_min, self.class_level_max
+        )
 
     def as_submitvalue(self):
         return ",".join([
