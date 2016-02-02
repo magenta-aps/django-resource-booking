@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-11-17 13:41+0100\n"
+"POT-Creation-Date: 2016-02-01 16:21+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,6 +17,332 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: booking/views.py:5
-msgid "Dette tester oversættelses-systemet"
+#: booking/templates/booking/booker/attendees.html:3
+msgid "Antal Deltagere*"
+msgstr ""
+
+#: booking/templates/booking/booker/basedata.html:3
+msgid "For- og efternavn*"
+msgstr ""
+
+#: booking/templates/booking/booker/basedata.html:17
+msgid "Email*"
+msgstr ""
+
+#: booking/templates/booking/booker/basedata.html:31
+msgid "Telefonnummer*"
+msgstr ""
+
+#: booking/templates/booking/booker/location.html:3
+msgid "Gymnasiets postnr. og by*"
+msgstr ""
+
+#: booking/templates/booking/booker/location.html:17
+msgid "Region*"
+msgstr ""
+
+#: booking/templates/booking/booker/notes.html:3
+#: booking/templates/booking/classvisit.html:90
+msgid "Kommentarer"
+msgstr ""
+
+#: booking/templates/booking/booker/school.html:3
+msgid "Gymnasium*"
+msgstr ""
+
+#: booking/templates/booking/booker/school.html:13
+msgid "Gymnasie-uddannelse"
+msgstr ""
+
+#: booking/templates/booking/booker/school.html:23
+msgid "Gymnasie-klasse"
+msgstr ""
+
+#: booking/templates/booking/classvisit.html:16
+#: booking/templates/booking/teachervisit.html:16
+msgid ""
+"Udfyld venligst nedenstående formular for at booke et tilbud. Felter "
+"markeret med * er obligatoriske."
+msgstr ""
+
+#: booking/templates/booking/classvisit.html:41
+msgid "Fag/Niveau"
+msgstr ""
+
+#: booking/templates/booking/classvisit.html:49
+msgid "Tilføj ny"
+msgstr ""
+
+#: booking/templates/booking/classvisit.html:59
+msgid "Tidspunkt*"
+msgstr ""
+
+#: booking/templates/booking/classvisit.html:69
+msgid "Ønsket tidspunkt*"
+msgstr ""
+
+#: booking/templates/booking/classvisit.html:80
+msgid "Rundvisning"
+msgstr ""
+
+#: booking/templates/booking/classvisit.html:134
+msgid "Fjern"
+msgstr ""
+
+#: booking/templates/booking/modal/footer.html:4
+#: booking/templates/booking/success.html:22
+msgid ""
+"Bemærk venligst at aftalen først er bindende, når du har modtaget en "
+"bekræftelse<br />fra den arrangør på Københavns Universitet, der er "
+"ansvarlig for besøget."
+msgstr ""
+
+#: booking/templates/booking/modal/footer.html:6
+#: booking/templates/common/modal_contact.html:31
+#: booking/templates/common/save_cancel.html:4
+msgid "Annullér"
+msgstr ""
+
+#: booking/templates/booking/modal/footer.html:7
+msgid "Forrige"
+msgstr ""
+
+#: booking/templates/booking/modal/footer.html:8
+msgid "Næste"
+msgstr ""
+
+#: booking/templates/booking/modal/footer.html:9
+msgid "Book!"
+msgstr ""
+
+#: booking/templates/booking/modal/header.html:3
+msgid "Close"
+msgstr ""
+
+#: booking/templates/booking/modal/header.html:4
+#, python-format
+msgid "Book tilbuddet \"%(title)s\""
+msgstr ""
+
+#: booking/templates/booking/srp.html:16
+#: booking/templates/booking/studentforaday.html:16
+msgid ""
+"Udfyld formularen nedenfor, så vi kan matche dig med den rigtige studerende. "
+"Når du har udfyldt formularen, sender vi en email til dig, der bekræfter din "
+"henvendelse. Vi finder herefter en studerende, som kontakter dig, og sammen "
+"finder I en dag der passer."
+msgstr ""
+
+#: booking/templates/booking/success.html:16
+msgid "Tak for din booking! Du hører fra os snarest."
+msgstr ""
+
+#: booking/templates/booking/success.html:17
+msgid "Foretag ny booking"
+msgstr ""
+
+#: booking/templates/booking/success.html:24
+msgid "OK"
+msgstr ""
+
+#: booking/templates/booking/teachervisit.html:30
+msgid "Fag"
+msgstr ""
+
+#: booking/templates/common/breadcrumbrow.html:5
+msgid "Du er her:"
+msgstr ""
+
+#: booking/templates/common/breadcrumbrow.html:17
+msgid "Send via e-mail"
+msgstr ""
+
+#: booking/templates/common/breadcrumbrow.html:20
+msgid "Print"
+msgstr ""
+
+#: booking/templates/common/continue.html:3
+msgid "Fortsæt"
+msgstr ""
+
+#: booking/templates/common/modal_contact.html:7
+#: booking/templates/otherresource/details.html:82
+msgid "Kontakt arrangøren"
+msgstr ""
+
+#: booking/templates/common/modal_contact.html:12
+msgid "Navn"
+msgstr ""
+
+#: booking/templates/common/modal_contact.html:16
+msgid "E-Mail"
+msgstr ""
+
+#: booking/templates/common/modal_contact.html:20
+msgid "Telefon"
+msgstr ""
+
+#: booking/templates/common/modal_contact.html:24
+msgid "Besked"
+msgstr ""
+
+#: booking/templates/common/modal_contact.html:32
+msgid "Send besked"
+msgstr ""
+
+#: booking/templates/common/save_cancel.html:3
+msgid "Gem"
+msgstr ""
+
+#: booking/templates/common/searchform.html:4
+msgid "Søg efter tilbud"
+msgstr ""
+
+#: booking/templates/common/searchform.html:5
+msgid "Søg efter tilbud - indtast et eller flere søgeord..."
+msgstr ""
+
+#: booking/templates/common/searchform.html:7
+msgid "Ryd søgning"
+msgstr ""
+
+#: booking/templates/common/searchform.html:11
+msgid "Søg"
+msgstr ""
+
+#: booking/templates/otherresource/details.html:12
+msgid "Om tilbuddet"
+msgstr ""
+
+#: booking/templates/otherresource/details.html:25
+msgid "+ Redigér"
+msgstr ""
+
+#: booking/templates/otherresource/details.html:28
+msgid "Opret kopi"
+msgstr ""
+
+#: booking/templates/otherresource/details.html:47
+msgid "Book dette tilbud"
+msgstr ""
+
+#: booking/templates/otherresource/details.html:54
+msgid ""
+"Bemærk at din bestilling først er bindende, når du har modtaget en "
+"bekræftelse fra den ansvarlige arrangør fra Københavns Universitet"
+msgstr ""
+
+#: booking/templates/otherresource/details.html:57
+msgid "Tilbage til søgeresultat"
+msgstr ""
+
+#: booking/templates/otherresource/details.html:64
+msgid "Hvem, hvor og hvornår"
+msgstr ""
+
+#: booking/templates/otherresource/details.html:69
+msgid "Henvendt til:"
+msgstr ""
+
+#: booking/templates/otherresource/details.html:73
+msgid "Fag/niveau:"
+msgstr ""
+
+#: booking/templates/otherresource/details.html:77
+msgid "Hvad:"
+msgstr ""
+
+#: booking/templates/otherresource/details.html:81
+msgid "Arrangør:"
+msgstr ""
+
+#: booking/templates/otherresource/form.html:13
+#: booking/templates/resource/form.html:13
+#: booking/templates/visit/form.html:25
+msgid "Rediger tilbud"
+msgstr ""
+
+#: booking/templates/otherresource/form.html:13
+#: booking/templates/resource/form.html:13
+#: booking/templates/visit/form.html:25
+msgid "Nyt tilbud"
+msgstr ""
+
+#: booking/templates/otherresource/form.html:16
+#: booking/templates/resource/form.html:16
+#: booking/templates/visit/form.html:28
+msgid "Udvid alle felter"
+msgstr ""
+
+#: booking/templates/otherresource/form.html:16
+#: booking/templates/resource/form.html:16
+#: booking/templates/visit/form.html:28
+msgid "Luk alle felter"
+msgstr ""
+
+#: booking/templates/otherresource/form.html:29
+#: booking/templates/resource/form.html:29
+#: booking/templates/visit/form.html:41
+msgid "Kategorisering"
+msgstr ""
+
+#: booking/templates/otherresource/form.html:60
+#: booking/templates/visit/form.html:65
+msgid "Titel"
+msgstr ""
+
+#: booking/templates/otherresource/form.html:86
+#: booking/templates/visit/form.html:91
+msgid "Beskrivelse"
+msgstr ""
+
+#: booking/templates/otherresource/form.html:133
+#: booking/templates/visit/form.html:163
+msgid "Målgruppe"
+msgstr ""
+
+#: booking/templates/otherresource/form.html:230
+#: booking/templates/visit/form.html:512
+msgid "Kontaktinformation"
+msgstr ""
+
+#: booking/templates/otherresource/form.html:255
+#: booking/templates/visit/form.html:550
+msgid "Interne oplysninger"
+msgstr ""
+
+#: booking/templates/visit/form.html:133
+msgid "Vedhæftede filer"
+msgstr ""
+
+#: booking/templates/visit/form.html:153
+msgid "Tilføj ny fil"
+msgstr ""
+
+#: booking/templates/visit/form.html:282
+msgid "Tidspunkt og varighed"
+msgstr ""
+
+#: booking/templates/visit/form.html:428
+msgid "Lokalitet og lokaler"
+msgstr ""
+
+#: booking/templates/visit/form.html:465
+msgid "Tilføj eksisterende lokale"
+msgstr ""
+
+#: booking/templates/visit/form.html:469
+msgid "Vælg lokale..."
+msgstr ""
+
+#: booking/templates/visit/form.html:478
+msgid "Tilføj nyt lokale"
+msgstr ""
+
+#: booking/templates/visit/form.html:483
+msgid "Tilføj"
+msgstr ""
+
+#: booking/templates/visit/form.html:487
+msgid "Valgte lokaler"
 msgstr ""
