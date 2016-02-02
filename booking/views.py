@@ -193,7 +193,6 @@ class SearchView(ListView):
             if g:
                 self.filters["grundskolefag__in"] = f
 
-
             self.filters["state__in"] = [Resource.ACTIVE]
 
         return self.filters
