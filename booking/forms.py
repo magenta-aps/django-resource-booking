@@ -36,8 +36,7 @@ class OtherResourceForm(forms.ModelForm):
         model = OtherResource
         fields = ('title', 'teaser', 'description', 'link',
                   'type', 'tags', 'comment',
-                  'institution_level', 'topics', 'level', 'class_level_min',
-                  'class_level_max', 'subjects', 'audience',
+                  'institution_level', 'topics', 'audience',
                   'enabled', 'unit',)
         widgets = {
             'title': TextInput(attrs={'class': 'titlefield'}),
@@ -69,8 +68,7 @@ class VisitForm(forms.ModelForm):
         model = Visit
         fields = ('title', 'teaser', 'description', 'price',
                   'type', 'tags', 'preparation_time', 'comment',
-                  'institution_level', 'topics', 'level', 'class_level_min',
-                  'class_level_max', 'subjects', 'audience',
+                  'institution_level', 'topics', 'audience',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'recurrences', 'duration', 'locality', 'rooms_assignment',
                   'rooms_needed',

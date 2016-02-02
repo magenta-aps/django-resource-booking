@@ -28,10 +28,11 @@ from profile.models import EDIT_ROLES
 from profile.models import role_to_text
 
 from booking.models import OtherResource, Visit, VisitOccurrence, StudyMaterial
-from booking.models import Resource, Subject
+from booking.models import Resource, Subject, GymnasieLevel
 from booking.models import Room
 from booking.models import PostCode, School
 from booking.models import Booking
+from booking.models import ResourceGymnasieFag, ResourceGrundskoleFag
 from booking.forms import ResourceInitialForm, OtherResourceForm, VisitForm
 from booking.forms import ClassBookingForm, TeacherBookingForm
 from booking.forms import VisitStudyMaterialForm, BookingSubjectLevelForm
@@ -415,6 +416,108 @@ class EditResourceView(UpdateView):
                 )
         return result
 
+    def get_context_data(self, **kwargs):
+        context = {}
+
+        context['gymnasiefag_choices'] = Subject.gymnasiefag_qs()
+        context['grundskolefag_choices'] = Subject.grundskolefag_qs()
+        context['gymnasie_level_choices'] = \
+            GymnasieLevel.objects.all().order_by('level')
+
+        context['gymnasiefag_selected'] = self.gymnasiefag_selected()
+        context['grundskolefag_selected'] = self.grundskolefag_selected()
+
+        context['klassetrin_range'] = range(1, 9)
+
+        context.update(kwargs)
+
+        return super(EditResourceView, self).get_context_data(**context)
+
+    def gymnasiefag_selected(self):
+        result = []
+        obj = self.object
+        if self.request.method == 'GET':
+            if obj and obj.pk:
+                for x in obj.resourcegymnasiefag_set.all():
+                    result.append({
+                        'submitvalue': x.as_submitvalue(),
+                        'description': x.display_value()
+                    })
+        elif self.request.method == 'POST':
+            submitvalue = self.request.POST.getlist('gymnasiefag', [])
+            for sv_text in submitvalue:
+                sv = sv_text.split(",")
+                subject_pk = sv.pop(0)
+                subject = Subject.objects.get(pk=subject_pk)
+                result.append({
+                    'submitvalue': sv_text,
+                    'description': ResourceGymnasieFag.display(
+                        subject,
+                        [GymnasieLevel.objects.get(pk=x) for x in sv]
+                    )
+                })
+
+        return result
+
+    def grundskolefag_selected(self):
+        result = []
+        obj = self.object
+        if self.request.method == 'GET':
+            if obj and obj.pk:
+                for x in obj.resourcegrundskolefag_set.all():
+                    result.append({
+                        'submitvalue': x.as_submitvalue(),
+                        'description': x.display_value()
+                    })
+        elif self.request.method == 'POST':
+            submitvalue = self.request.POST.getlist('grundskolefag', [])
+            for sv_text in submitvalue:
+                sv = sv_text.split(",")
+                subject_pk = sv.pop(0)
+                lv_min = sv.pop(0)
+                lv_max = sv.pop(0)
+                subject = Subject.objects.get(pk=subject_pk)
+                result.append({
+                    'submitvalue': sv_text,
+                    'description': ResourceGrundskoleFag.display(
+                        subject, lv_min, lv_max
+                    )
+                })
+
+        return result
+
+    def save_subjects(self, obj):
+        existing_gym_fag = {}
+        for x in obj.resourcegymnasiefag_set.all():
+            existing_gym_fag[x.as_submitvalue()] = x
+
+        for gval in self.request.POST.getlist('gymnasiefag', []):
+            if gval in existing_gym_fag:
+                del existing_gym_fag[gval]
+            else:
+                ResourceGymnasieFag.create_from_submitvalue(obj, gval)
+
+        # Delete any remaining values that were not submitted
+        for x in existing_gym_fag.itervalues():
+            x.delete()
+
+        existing_gs_fag = {}
+        for x in obj.resourcegrundskolefag_set.all():
+            existing_gs_fag[x.as_submitvalue()] = x
+
+        for gval in self.request.POST.getlist('grundskolefag', []):
+            if gval in existing_gs_fag:
+                del existing_gs_fag[gval]
+            else:
+                ResourceGrundskoleFag.create_from_submitvalue(
+                    obj, gval
+                )
+
+        # Delete any remaining values that were not submitted
+        for x in existing_gs_fag.itervalues():
+            x.delete()
+        
+
 
 class EditOtherResourceView(EditResourceView):
 
@@ -461,7 +564,11 @@ class EditOtherResourceView(EditResourceView):
                     raise Http404
         form = self.get_form()
         if form.is_valid():
-            form.save()
+            obj = form.save()
+
+            # Save subjects
+            self.save_subjects(obj)
+
             return super(EditOtherResourceView, self).form_valid(form)
         else:
             return self.form_invalid(form)
@@ -639,6 +746,9 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
                     start_datetime__in=existing_visit_occurrences
                 ).delete()
 
+            # Save subjects
+            self.save_subjects(visit)
+
             return super(EditVisitView, self).form_valid(form)
         else:
             return self.form_invalid(form, fileformset)
@@ -664,6 +774,16 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
             ).order_by("name").distinct("name")
         else:
             context['existinrooms'] = []
+
+        context['gymnasiefag_choices'] = Subject.gymnasiefag_qs()
+        context['grundskolefag_choices'] = Subject.grundskolefag_qs()
+        context['gymnasie_level_choices'] = \
+            GymnasieLevel.objects.all().order_by('level')
+
+        context['gymnasiefag_selected'] = self.gymnasiefag_selected()
+        context['grundskolefag_selected'] = self.grundskolefag_selected()
+
+        context['klassetrin_range'] = range(1, 9)
 
         context.update(kwargs)
 
