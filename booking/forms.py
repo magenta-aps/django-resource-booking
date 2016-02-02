@@ -8,6 +8,7 @@ from django import forms
 from django.forms import CheckboxSelectMultiple, EmailInput, RadioSelect
 from django.forms import inlineformset_factory
 from django.forms import TextInput, NumberInput, URLInput, Textarea, Select
+from django.forms import HiddenInput
 from django.utils.translation import ugettext_lazy as _
 from tinymce.widgets import TinyMCE
 
@@ -91,7 +92,16 @@ class VisitForm(forms.ModelForm):
         self.user = kwargs.pop('user')
         super(VisitForm, self).__init__(*args, **kwargs)
         self.fields['unit'].queryset = self.get_unit_query_set()
-        self.fields['type'].choices = Visit.type_choices
+        self.fields['type'].widget = HiddenInput()
+
+    def clean_type(self):
+        instance = getattr(self, 'instance', None)
+        if instance:
+            print "instance type: %d" % instance.type
+            return instance.type
+        else:
+            print "cleaned: %d" % self.cleaned_data['type']
+            return self.cleaned_data['type']
 
     def clean_locality(self):
         data = self.cleaned_data
@@ -104,7 +114,8 @@ class VisitForm(forms.ModelForm):
         cleaned_data = super(VisitForm, self).clean()
         min_visitors = cleaned_data.get('minimum_number_of_visitors')
         max_visitors = cleaned_data.get('maximum_number_of_visitors')
-        if min_visitors > max_visitors:
+        if min_visitors is not None and max_visitors is not None and \
+           min_visitors > max_visitors:
             min_error_msg = _(u"The minimum numbers of visitors " +
                               u"must not be larger than " +
                               u"the maximum number of visitors")
