@@ -287,7 +287,6 @@ class Resource(models.Model):
         (A, u'A'), (B, u'B'), (C, u'C')
     )
 
-
     enabled = models.BooleanField(verbose_name=_(u'Aktiv'), default=True)
     type = models.IntegerField(choices=resource_type_choices,
                                default=STUDY_MATERIAL)
