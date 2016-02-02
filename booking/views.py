@@ -3,7 +3,6 @@
 import json
 
 from datetime import datetime, timedelta
-from abc import ABCMeta
 
 from dateutil import parser
 from dateutil.rrule import rrulestr
