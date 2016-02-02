@@ -516,7 +516,6 @@ class EditResourceView(UpdateView):
         # Delete any remaining values that were not submitted
         for x in existing_gs_fag.itervalues():
             x.delete()
-        
 
 
 class EditOtherResourceView(EditResourceView):
