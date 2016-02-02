@@ -73,7 +73,7 @@ class VisitForm(forms.ModelForm):
                   'class_level_max', 'subjects', 'audience',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'recurrences', 'duration', 'locality', 'rooms_assignment',
-                  'rooms_needed',
+                  'rooms_needed', 'tour_available',
                   'enabled', 'contact_persons', 'unit',)
         widgets = {
             'title': TextInput(attrs={'class': 'titlefield'}),
@@ -97,10 +97,8 @@ class VisitForm(forms.ModelForm):
     def clean_type(self):
         instance = getattr(self, 'instance', None)
         if instance:
-            print "instance type: %d" % instance.type
             return instance.type
         else:
-            print "cleaned: %d" % self.cleaned_data['type']
             return self.cleaned_data['type']
 
     def clean_locality(self):
@@ -307,6 +305,9 @@ class ClassBookingForm(BookingForm):
             self.fields['time'].required = True
         else:
             self.fields['desired_time'].required = True
+
+        if visit is not None and not visit.tour_available:
+            del self.fields['tour_desired']
 
     def save(self, commit=True, *args, **kwargs):
         booking = super(ClassBookingForm, self).save(commit=False)

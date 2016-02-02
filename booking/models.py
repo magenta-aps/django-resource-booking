@@ -616,6 +616,11 @@ class Visit(Resource):
         blank=True,
         verbose_name=_(u'Gentagelser')
     )
+    tour_available = models.BooleanField(
+        default=False,
+        blank=True,
+        verbose_name=_(u'Mulighed for rundvisning')
+    )
 
     def save(self, *args, **kwargs):
         # Save once to store relations
