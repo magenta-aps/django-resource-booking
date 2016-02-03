@@ -1,6 +1,7 @@
 {% extends 'index.html' %}
 {% load staticfiles %}
 {% load timedelta %}
+{% load i18n %}
 
 {% block content %}
 
@@ -66,9 +67,15 @@
                                 <dt>Henvendt til:</dt>
                                 <dd>{{ object.get_audience_display }}</dd>
                             {% endif %}
-                            {% if object.resource_ptr.get_subjects_display %}
-                                <dt>Fag/niveau:</dt>
-                                <dd>{{ object.resource_ptr.get_subjects_display }}</dd>
+                            {% if object.resource_ptr.all_subjects  %}
+                                <dt>{% trans 'Fag/niveau:' %}</dt>
+                                <dd>
+                                    <ul class="type-offer list-inline">
+                                        {% for x in object.resource_ptr.all_subjects %}
+                                        <li>{{ x.display_value }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </dd>
                             {% endif %}
                             {% if object.num_of_participants_display %}
                                 <dt>Max antal:</dt>
