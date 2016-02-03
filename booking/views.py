@@ -422,6 +422,25 @@ class EditResourceView(UpdateView):
                 )
         return result
 
+    def set_object(self, pk, request, is_cloning=False):
+        if is_cloning or not hasattr(self, 'object') or self.object is None:
+            if pk is None:
+                self.object = self.model()
+                try:
+                    type = int(request.GET['type'])
+                    if type in self.model.applicable_types:
+                        self.object.type = type
+                except:
+                    pass
+            else:
+                try:
+                    self.object = self.model.objects.get(id=pk)
+                    if is_cloning:
+                        self.object.pk = None
+                        self.object.id = None
+                except ObjectDoesNotExist:
+                    raise Http404
+
     def get_context_data(self, **kwargs):
         context = {}
 
@@ -522,25 +541,6 @@ class EditResourceView(UpdateView):
         # Delete any remaining values that were not submitted
         for x in existing_gs_fag.itervalues():
             x.delete()
-
-    def set_object(self, pk, request, is_cloning=False):
-        if is_cloning or not hasattr(self, 'object') or self.object is None:
-            if pk is None:
-                self.object = self.model()
-                try:
-                    type = int(request.GET['type'])
-                    if type in self.model.applicable_types:
-                        self.object.type = type
-                except:
-                    pass
-            else:
-                try:
-                    self.object = self.model.objects.get(id=pk)
-                    if is_cloning:
-                        self.object.pk = None
-                        self.object.id = None
-                except ObjectDoesNotExist:
-                    raise Http404
 
 
 class EditOtherResourceView(EditResourceView):

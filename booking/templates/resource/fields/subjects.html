@@ -1,13 +1,11 @@
-<div class="institution_level_dependent">
-    <div class="row form-group">
-        <div>
-            {{ form.subjects.errors }}
-        </div>
-        <div class="col-sm-2">
-            <label class="{{ form.subjects.css_classes }}" for="{{ form.subjects.id_for_label }}">{{ form.subjects.label }}:</label>
-        </div>
-        <div class="col-sm-10">
-            {{ form.subjects }}
-        </div>
+<div class="institution_level_dependent" data-display-value="1">
+    <div class="row form-group" id="gymnasie-fag-edit">
+        {% include "common/snippets/edit-gymnasiefag.html" %}
+    </div>
+</div>
+
+<div class="institution_level_dependent" data-display-value="2">
+    <div class="row form-group" id="grundskole-fag-edit">
+        {% include "common/snippets/edit-grundskolefag.html" %}
     </div>
 </div>

@@ -331,24 +331,6 @@ class Resource(models.Model):
         related_name='grundskole_resources'
     )
 
-    subjects = models.ManyToManyField(Subject, blank=True,
-                                      verbose_name=_(u'Fag'))
-    level = models.IntegerField(choices=level_choices,
-                                verbose_name=_(u"Niveau"),
-                                blank=True,
-                                null=True)
-    # TODO: We should validate that min <= max here.
-    class_level_min = models.IntegerField(choices=class_level_choices,
-                                          default=0,
-                                          null=True,
-                                          blank=True,
-                                          verbose_name=_(u'Klassetrin fra'))
-    class_level_max = models.IntegerField(choices=class_level_choices,
-                                          default=10,
-                                          null=True,
-                                          blank=True,
-                                          verbose_name=_(u'Klassetrin til'))
-
     tags = models.ManyToManyField(Tag, blank=True, verbose_name=_(u'Tags'))
     topics = models.ManyToManyField(
         Topic, blank=True, verbose_name=_(u'Emner')
