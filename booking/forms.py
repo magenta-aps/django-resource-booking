@@ -35,12 +35,11 @@ class OtherResourceForm(forms.ModelForm):
 
     class Meta:
         model = OtherResource
-        fields = ('title', 'teaser', 'description', 'link',
+        fields = ('title', 'teaser', 'description', 'link', 'state',
                   'type', 'tags', 'comment',
                   'institution_level', 'topics', 'audience', 'class_level_min',
                   'class_level_max', 'subjects', 'level',
                   'enabled', 'unit',)
-
         widgets = {
             'title': TextInput(attrs={'class': 'titlefield'}),
             'teaser': Textarea(attrs={'rows': 3, 'maxlength': 1000}),
@@ -69,7 +68,7 @@ class VisitForm(forms.ModelForm):
 
     class Meta:
         model = Visit
-        fields = ('title', 'teaser', 'description', 'price',
+        fields = ('title', 'teaser', 'description', 'price', 'state',
                   'type', 'tags', 'preparation_time', 'comment',
                   'institution_level', 'level', 'class_level_min',
                   'class_level_max', 'audience', 'subjects',
