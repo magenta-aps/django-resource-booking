@@ -1,4 +1,5 @@
 {% load i18n %}
+{% if not view.kwargs.embed %}
 <div class="row">
     <div class="col-sm-8">
         <ol class="breadcrumb hidden-xs">
@@ -39,3 +40,4 @@
         <!-- AddThis Button END -->
     </div>
 </div>
+{% endif %}
