@@ -69,9 +69,15 @@
                                 <dt>{% trans 'Henvendt til:' %}</dt>
                                 <dd>{{ object.get_audience_display }}</dd>
                             {% endif %}
-                            {% if object.resource_ptr.get_subjects_display %}
+                            {% if object.resource_ptr.all_subjects  %}
                                 <dt>{% trans 'Fag/niveau:' %}</dt>
-                                <dd>{{ object.resource_ptr.get_subjects_display }}</dd>
+                                <dd>
+                                    <ul class="type-offer list-inline">
+                                        {% for x in object.resource_ptr.all_subjects %}
+                                        <li>{{ x.display_value }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </dd>
                             {% endif %}
                             {% if object.get_type_display %}
                                 <dt>{% trans 'Hvad:' %}</dt>
