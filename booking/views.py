@@ -431,7 +431,7 @@ class EditResourceView(UpdateView):
         context['gymnasiefag_selected'] = self.gymnasiefag_selected()
         context['grundskolefag_selected'] = self.grundskolefag_selected()
 
-        context['klassetrin_range'] = range(1, 9)
+        context['klassetrin_range'] = range(1, 10)
 
         context.update(kwargs)
 
@@ -779,7 +779,7 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         context['gymnasiefag_selected'] = self.gymnasiefag_selected()
         context['grundskolefag_selected'] = self.grundskolefag_selected()
 
-        context['klassetrin_range'] = range(1, 9)
+        context['klassetrin_range'] = range(1, 10)
 
         context.update(kwargs)
 

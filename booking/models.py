@@ -411,8 +411,9 @@ class Resource(models.Model):
         # Display-value for institution_level
         texts.append(self.get_institution_level_display() or "")
 
-        # Name of all subjects
-        # TODO: Add new subject relations instead
+        # All subjects
+        for x in self.all_subjects():
+            texts.append(x.display_value())
 
         # Name of all tags
         for t in self.tags.all():
@@ -430,13 +431,11 @@ class Resource(models.Model):
 
         return "-"
 
-    def get_subjects_display(self):
-        lst = [x.display_value() for x in self.resourcegymnasiefag_set.all()]
-        lst.extend([
-            x.display_value() for x in self.resourcegrundskolefag_set.all()
-        ])
-
-        return ", ".join(lst)
+    def all_subjects(self):
+        return (
+            [x for x in self.resourcegymnasiefag_set.all()] +
+            [x for x in self.resourcegrundskolefag_set.all()]
+        )
 
     def display_locality(self):
         try:
