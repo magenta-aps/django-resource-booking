@@ -689,6 +689,16 @@ div ul.errorlist {
     max-width: 70%;
 }
 /*Backend specific styles end */
+
+/* Embedded pages styles */
+.embedded > .container {
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    border: none;
+}
+
+
 @media screen and (max-width:768px) {
     html,
     body {
