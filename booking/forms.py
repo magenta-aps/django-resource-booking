@@ -37,9 +37,8 @@ class OtherResourceForm(forms.ModelForm):
         model = OtherResource
         fields = ('title', 'teaser', 'description', 'link',
                   'type', 'tags', 'comment',
-                  'institution_level', 'topics', 'level', 'class_level_min',
-                  'class_level_max', 'subjects', 'audience',
-                  'enabled', 'unit')
+                  'institution_level', 'topics', 'audience',
+                  'enabled', 'unit',)
         widgets = {
             'title': TextInput(attrs={'class': 'titlefield'}),
             'teaser': Textarea(attrs={'rows': 3, 'maxlength': 1000}),
@@ -69,16 +68,22 @@ class VisitForm(forms.ModelForm):
         model = Visit
         fields = ('title', 'teaser', 'description', 'price',
                   'type', 'tags', 'preparation_time', 'comment',
-                  'institution_level', 'level', 'class_level_min',
-                  'class_level_max', 'audience', 'subjects',
+                  'institution_level', 'topics', 'audience',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'recurrences', 'duration', 'locality', 'rooms_assignment',
                   'rooms_needed', 'tour_available',
                   'enabled', 'contact_persons', 'unit',)
         widgets = {
-            'title': TextInput(attrs={'class': 'titlefield'}),
-            'teaser': Textarea(attrs={'rows': 3, 'maxlength': 1000}),
-            'description': TinyMCE(attrs={'rows': 10}),
+            'title': TextInput(attrs={
+                'class': 'titlefield',
+                'rows': 1, 'size': 62
+            }),
+            'teaser': Textarea(attrs={
+                'rows': 3,
+                'cols': 70,
+                'maxlength': 210
+            }),
+            'description': TinyMCE(attrs={'rows': 10, 'cols': 90}),
             'minimum_number_of_visitors': NumberInput(attrs={'min': 1}),
             'maximum_number_of_visitors': NumberInput(attrs={'min': 1}),
             'tags': CheckboxSelectMultiple(),

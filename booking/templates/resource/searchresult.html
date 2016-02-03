@@ -1,5 +1,6 @@
 {%extends "index.html" %}
 {% load staticfiles %}
+{% load booking_tags %}
 
 {% block content %}
     
@@ -106,7 +107,7 @@
             {% include 'common/breadcrumbrow.html' %}
             
             {% if user.userprofile.can_create %}
-                <a class="pull-right btn btn-primary" href="/visit/create">+ Opret tilbud</a>
+                <a class="pull-right btn btn-primary" href="{% url 'resource-create' %}">+ Opret tilbud</a>
             {% endif %}
             
             <h1>Søgeresultat</h1>
@@ -124,15 +125,21 @@
             {% for res in results %}
                 <li class="media">
                     <div class="media-body">
-                        <h3 class="media-heading"><a href="{% url 'visit-view' res.pk %}">{{ res.title }}</a></h3>
-                        <p>{{ res.teaser }}</p>
+                        <div class="small">{{ res.get_type_display }}</div>
+                        <h3 class="media-heading"><a href="{% if res.visit  %}{% url 'visit-view' res.visit.pk %}{% else %}{% url 'otherresource-view' res.otherresource.pk %}{% endif %}">{{ res.title }}</a></h3>
+                        <p>{% if request.GET.q %}{{ res.teaser|highlight:request.GET.q }}{% else %}{{ res.teaser }}{% endif %}</p>
                         <div class="media-info">
                             <ul class="info-list list-inline">
+                                {% if res.all_subjects %}
                                 <li>
                                     <strong>Fag/niveau: </strong>
-                                    <span class="type-offer">{{ res.get_subjects_display }}</span>
+                                    <ul class="type-offer list-inline">
+                                        {% for x in res.all_subjects %}
+                                        <li>{{ x.display_value }}</li>
+                                        {% endfor %}
+                                    </ul>
                                 </li>
-                                <li><strong>Hvad: </strong><span class="type-offer">{{ res.get_type_display }}</span></li>
+                                {% endif %}
                                 <li><strong>Hvornår: </strong><span class="type-offer">{% if res.occ_starttime %}{{ res.occ_starttime|date:"d. m. Y" }}  kl. {{ res.occ_starttime|date:"H:i" }}{% else %}-{% endif %}</span></li>
                                 <li><strong>Hvor: </strong><span class="type-offer">{{ res.display_locality }}</span></li>
                             </ul>
