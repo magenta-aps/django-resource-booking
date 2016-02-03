@@ -951,11 +951,14 @@ class PostcodeView(View):
 class SchoolView(View):
     def get(self, request, *args, **kwargs):
         query = request.GET['q']
-        items = School.search(query)
+        type = request.GET.get('t')
+        items = School.search(query, type)
         json = {'schools':
                 [
                     {'name': item.name,
-                     'postcode': item.postcode.number} for item in items
+                     'postcode': item.postcode.number
+                     if item.postcode is not None else None}
+                    for item in items
                 ]
                 }
         return JsonResponse(json)
