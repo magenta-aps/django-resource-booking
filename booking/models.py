@@ -911,9 +911,17 @@ class School(models.Model):
         return self.name
 
     @staticmethod
-    def search(query):
+    def search(query, type=None):
         query = query.lower()
-        return School.objects.filter(name__icontains=query)
+        qs = School.objects.filter(name__icontains=query)
+        if type is not None:
+            try:
+                type = int(type)
+                if type in [id for id, title in School.type_choices]:
+                    qs = qs.filter(type=type)
+            except ValueError:
+                pass
+        return qs
 
     @staticmethod
     def create_defaults():
