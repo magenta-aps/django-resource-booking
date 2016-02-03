@@ -267,6 +267,15 @@ class Resource(models.Model):
 
     institution_choices = Subject.type_choices
 
+    # Level choices - A, B or C
+    A = 0
+    B = 1
+    C = 2
+
+    level_choices = (
+        (A, u'A'), (B, u'B'), (C, u'C')
+    )
+
     # Resource state - created, active and discontinued.
     CREATED = 0
     ACTIVE = 1
@@ -279,13 +288,6 @@ class Resource(models.Model):
     )
 
     class_level_choices = [(i, unicode(i)) for i in range(0, 11)]
-    A = 0
-    B = 1
-    C = 2
-
-    level_choices = (
-        (A, u'A'), (B, u'B'), (C, u'C')
-    )
 
     enabled = models.BooleanField(verbose_name=_(u'Aktiv'), default=True)
     type = models.IntegerField(choices=resource_type_choices,
