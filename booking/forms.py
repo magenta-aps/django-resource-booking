@@ -371,6 +371,9 @@ class ClassBookingForm(BookingForm):
                 booking.time = occurrence.start_datetime
             except:
                 pass
+        if 'tour_desired' not in data:
+            data['tour_desired'] = False
+            booking.tour_desired = False
         if commit:
             booking.save(*args, **kwargs)
         return booking
