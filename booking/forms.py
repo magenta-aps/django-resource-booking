@@ -306,11 +306,14 @@ class ClassBookingForm(BookingForm):
                 for x in visit.visitoccurrence_set.all()
                 ]
             self.fields['time'].choices = time_choices
-            self.fields['time'].required = True
+            # self.fields['time'].required = True
         else:
             self.fields['desired_time'].required = True
 
         if visit is not None and not visit.tour_available:
+            #self.fields['tour_desired'].widget = HiddenInput(
+            #    attrs={'value': False}
+            #)
             del self.fields['tour_desired']
 
     def save(self, commit=True, *args, **kwargs):
@@ -323,6 +326,9 @@ class ClassBookingForm(BookingForm):
                 booking.time = occurrence.start_datetime
             except:
                 pass
+        if not 'tour_desired' in data:
+            data['tour_desired'] = False
+            booking.tour_desired = False
         if commit:
             booking.save(*args, **kwargs)
         return booking
