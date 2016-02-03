@@ -883,8 +883,8 @@ class School(models.Model):
     def create_defaults():
         from booking.data import schools
         for data, type in [
-            (schools.elementary_schools, School.ELEMENTARY_SCHOOL),
-            (schools.high_schools, School.GYMNASIE)]:
+                (schools.elementary_schools, School.ELEMENTARY_SCHOOL),
+                (schools.high_schools, School.GYMNASIE)]:
             for name, postnr in data:
                 try:
                     School.objects.get(name=name, postcode__number=postnr)
