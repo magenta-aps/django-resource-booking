@@ -88,7 +88,7 @@
                     <div class="panel-body">
                         <dl class="dl-horizontal">
 
-                            {% if object.get_audience_display %}
+                            {% if object.visit.title %}
                                 <dt>{% trans 'Titel:' %}</dt>
                                 <dd><a href="{% url 'visit-view' object.visit.id %}">{{ object.visit.title }}</a></dd>
                             {% endif %}
