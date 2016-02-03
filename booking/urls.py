@@ -11,6 +11,7 @@ from booking.views import BookingView, BookingSuccessView
 from booking.views import EditOtherResourceView, OtherResourceDetailView
 from booking.views import EditVisitView, VisitDetailView
 from booking.views import SearchView, EmbedcodesView
+from booking.views import BookingDetailView
 
 from django.views.generic import TemplateView
 
@@ -57,7 +58,6 @@ urlpatterns = patterns(
         EditOtherResourceView.as_view(), {'clone': True},
         name='otherresource-clone'),
 
-
     url(r'^visit/create$',
         EditVisitView.as_view(success_url='create'),
         name='visit-create'),
@@ -77,6 +77,10 @@ urlpatterns = patterns(
     url(r'^visit/(?P<visit>[0-9]+)/book/success$',
         BookingSuccessView.as_view(),
         name='visit-book-success'),
+
+    url(r'^booking/(?P<pk>[0-9]+)/?$',
+        BookingDetailView.as_view(),
+        name='booking-view'),
 
     # Ajax api
     url(r'^jsapi/rrulestr$', RrulestrView.as_view(), name='jsapi_rrulestr'),

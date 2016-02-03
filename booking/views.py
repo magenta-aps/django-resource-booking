@@ -1131,3 +1131,22 @@ class EmbedcodesView(TemplateView):
         context.update(kwargs)
 
         return super(EmbedcodesView, self).get_context_data(**context)
+
+
+class BookingDetailView(DetailView):
+    """Display Booking details"""
+    model = Booking
+    template_name = 'booking/details.html'
+
+    def get_context_data(self, **kwargs):
+        context = {}
+
+        context['breadcrumbs'] = [
+            {'url': reverse('search'), 'text': _(u'Søgning')},
+            {'url': '#', 'text': _(u'Søgeresultatliste')},
+            {'text': _(u'Detaljevisning')},
+        ]
+
+        context.update(kwargs)
+
+        return super(BookingDetailView, self).get_context_data(**context)
