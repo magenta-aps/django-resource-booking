@@ -1,0 +1,213 @@
+{% extends 'index.html' %}
+{% load staticfiles %}
+{% load timedelta %}
+{% load i18n %}
+
+{% block content %}
+
+    {% include 'common/breadcrumbrow.html' %}
+
+    <div class="row titlebar hidden-print">
+        <div class="col-sm-12 col-md-9"><h2>Om bookingen</h2></div>
+        <div class="divider"></div>
+    </div>
+    <div class="row">
+        <div class="col-sm-12 col-md-8">
+
+            {% include 'common/searchform.html' %}
+
+            <div class="divider"></div>
+
+
+            <dl class="dl-horizontal">
+
+                <dt>{% trans 'Tilbud:' %}</dt>
+                <dd><a href="{% url 'visit-view' object.visit.id %}">{{ object.visit.title }}</a></dd>
+
+                <dt>{% trans 'Navn:' %}</dt>
+                <dd>{{ object.booker.firstname }} {{ object.booker.lastname }}</dd>
+
+                <dt>{% trans 'Email:' %}</dt>
+                <dd>{{ object.booker.email }}</dd>
+
+                <dt>{% trans 'Telefon:' %}</dt>
+                <dd>{{ object.booker.phone }}</dd>
+
+                <dt>{% trans 'Skole:' %}</dt>
+                <dd>{{ object.booker.school.name }}, {{ object.booker.school.postcode.number }} {{ object.booker.school.postcode.city }}</dd>
+
+                <dt>{% trans 'Linje:' %}</dt>
+                <dd>
+                    {% for line,title in object.booker.line_choices %}
+                        {% if line == object.booker.line %}
+                            {{ title }}
+                        {% endif %}
+                    {% endfor %}
+                </dd>
+
+                <dt>{% trans 'Niveau:' %}</dt>
+                <dd>
+                    {% for level,title in object.booker.level_choices %}
+                        {% if level == object.booker.level %}
+                            {{ title }}
+                        {% endif %}
+                    {% endfor %}
+                </dd>
+
+                <dt>{% trans 'Antal deltagere:' %}</dt>
+                <dd>{{ object.booker.attendee_count }}</dd>
+
+                <dt>{% trans 'Noter:' %}</dt>
+                <dd>{{ object.booker.notes }}</dd>
+
+                {% if object.classbooking %}
+                    {% if object.classbooking.time %}
+                        <dt>{% trans 'Tidspunkt:' %}</dt>
+                        <dd>{{ object.classbooking.time }}</dd>
+                    {% elif object.classbooking.desired_time %}
+                        <dt>{% trans 'Ønsket tidspunkt:' %}</dt>
+                        <dd>{{ object.classbooking.desired_time }}</dd>
+                    {% endif %}
+
+                    <dt>{% trans 'Rundvisning:' %}</dt>
+                    <dd>{{ object.classbooking.tour_desired | yesno }}</dd>
+                {% endif %}
+
+            </dl>
+
+            <div class="go-back">
+                <a href="#" class="btn btn-default" onclick="history.go(-1); return false;"><span class="glyphicon glyphicon-chevron-left"></span> {% trans 'Tilbage til søgeresultat' %}</a>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-4">
+            <form class="form-horizontal">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">{% trans 'Tilbud' %}</h3>
+                    </div>
+                    <div class="panel-body">
+                        <dl class="dl-horizontal">
+
+                            {% if object.get_audience_display %}
+                                <dt>{% trans 'Titel:' %}</dt>
+                                <dd><a href="{% url 'visit-view' object.visit.id %}">{{ object.visit.title }}</a></dd>
+                            {% endif %}
+
+                            {% if object.visit.get_audience_display %}
+                                <dt>{% trans 'Henvendt til:' %}</dt>
+                                <dd>{{ object.visit.get_audience_display }}</dd>
+                            {% endif %}
+
+                            {% if object.visit.resource_ptr.all_subjects  %}
+                                <dt>{% trans 'Fag/niveau:' %}</dt>
+                                <dd>
+                                    <ul class="type-offer list-inline">
+                                        {% for x in object.visit.resource_ptr.all_subjects %}
+                                            <li>{{ x.display_value }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </dd>
+                            {% endif %}
+
+                            {% if object.visit.num_of_participants_display %}
+                                <dt>{% trans 'Max antal:' %}</dt>
+                                <dd>{{ object.visit.num_of_participants_display }}</dd>
+                            {% endif %}
+
+                            {% if object.visit.get_type_display %}
+                                <dt>{% trans 'Hvad:' %}</dt>
+                                <dd>{{ object.visit.get_type_display }}</dd>
+                            {% endif %}
+
+                            {% if object.visit.locality %}
+                                <dt>{% trans 'Hvor:' %}</dt>
+                                <dd>{{ object.visit.unit.name }}, {{ object.visit.locality.name }}, {{ object.visit.locality.address_line }}, {{ object.visit.locality.zip_city }}</dd>
+                            {% endif %}
+
+                            <dt>{% trans 'Arrangør:' %}</dt>
+                            <dd><a href="#" data-toggle="modal" data-target="#kontaktformular">{% trans 'Kontakt arrangøren' %}</a> <span class="glyphicon glyphicon-new-window"></span></dd>
+
+                            <dt>{% trans 'Hvornår:' %}</dt>
+                            <dd>
+                                {% for description in object.visit.recurrences_description %}
+                                    {{ description }}
+                                {% endfor %}
+                                <ul class="list-unstyled">
+                                    {% for occurrence in object.visit.visitoccurrence_set.all %}
+                                        <li>{{ occurrence.start_datetime|date:'d-m-Y H:i' }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </dd>
+
+                            {% if object.visit.duration %}
+                                <dt>{% trans 'Varighed:' %}</dt>
+                                <dd>{{ object.visit.duration|timedelta }}</dd>
+                            {% endif %}
+
+                            {% if object.visit.price %}
+                                <dt>{% trans 'Pris:' %}</dt>
+                                <dd>{{ object.visit.price }}</dd>
+                            {% endif %}
+
+                        </dl>
+                    </div>
+                </div>
+
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">{% trans 'Kort' %}</h3>
+                    </div>
+                    <div class="panel-body google-maps-container">
+                        <div class="google-maps">
+                            <iframe src='https://maps.google.com/maps?q={{ object.visit.locality.address_line }}, {{ object.visit.locality.zip_city }}&amp;z=14&amp;output=embed&amp;iwloc=0&amp;sensor=false' width='450' height='450' frameborder='0' style='border:0' allowfullscreen></iframe>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% include 'common/modal_contact.html' %}
+
+    <!-- Modal start -->
+    <div class="modal fade" id="startbooking" tabindex="-1" role="Popup-bookingflow" aria-labelledby="overskrift" data-frametarget="/visit/{{ object.id }}/book">
+        <div class="modal-dialog modal-lg" role="Bookingflow">
+            <div class="modal-content" id="booking-container"></div>
+        </div>
+    </div>
+    <!-- Modal end -->
+{% endblock %}
+{% block footer %}
+    <div class="container">
+        <div class="row">
+            <footer>
+                <div class="container">
+                    <div class="row footer-columns">
+                        <div class="col-sm-4 col-sm-offset-0">
+                            <ul class="footerlinks">
+                                <li><a href="http://kommunikation.ku.dk/">Kommunikation</a></li>
+                                <li><a href="http://www.ku.dk/">Københavns Universitet</a></li>
+                                <li>Nørregade 10, Postboks 2177</li>
+                                <li>1017 København K</li>
+                            </ul>
+                        </div>
+                        <div class="col-sm-4 col-sm-offset-4">
+                            <ul class="footerlinks">
+                                <li class="clearfix social-icons"><a target="_blank" class="footer-social" href="https://www.facebook.com/universitet"><span class="icon-circle"><i class="fa fa-facebook"></i></span></a><a target="_blank" class="footer-social" href="https://www.linkedin.com/edu/k%C3%B8benhavns-universitet-12012"><span class="icon-circle"><i class="fa fa-linkedin"></i></span></a><a target="_blank" class="footer-social" href="https://twitter.com/koebenhavns_uni"><span class="icon-circle"><i class="fa fa-twitter"></i></span></a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+{% endblock %}
+{% block extra_scripts %}
+    <script src="/static/js/custom.js"></script>
+    <script src="{% static "js/modalframe-host.js" %}"></script>
+    <script type="text/javascript">
+        <!--
+        $('#startbooking').hostModalIframe($('#startbooking').attr("data-frametarget"));
+        //-->
+    </script>
+{% endblock %}
