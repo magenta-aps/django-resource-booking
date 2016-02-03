@@ -318,6 +318,23 @@ class Resource(models.Model):
         related_name='grundskole_resources'
     )
 
+    subjects = models.ManyToManyField(Subject, blank=True,
+                                      verbose_name=_(u'Fag'))
+    level = models.IntegerField(choices=level_choices,
+                                verbose_name=_(u"Niveau"),
+                                blank=True,
+                                null=True)
+    # TODO: We should validate that min <= max here.
+    class_level_min = models.IntegerField(choices=class_level_choices,
+                                          default=0,
+                                          null=True,
+                                          blank=True,
+                                          verbose_name=_(u'Klassetrin fra'))
+    class_level_max = models.IntegerField(choices=class_level_choices,
+                                          default=10,
+                                          null=True,
+                                          blank=True,
+                                          verbose_name=_(u'Klassetrin til'))
     tags = models.ManyToManyField(Tag, blank=True, verbose_name=_(u'Tags'))
     topics = models.ManyToManyField(
         Topic, blank=True, verbose_name=_(u'Emner')
@@ -348,7 +365,7 @@ class Resource(models.Model):
     )
 
     def __unicode__(self):
-        return self.title
+        return self.title + "(%s)" % str(self.id)
 
     def generate_extra_search_text(self):
         texts = []
@@ -676,12 +693,18 @@ class Visit(Resource):
     )
 
     rooms_assignment = models.IntegerField(
-        choices=rooms_assignment_choices, default=ROOMS_ASSIGNED_ON_VISIT,
-        verbose_name=_(u"Tildeling af lokale(r)")
+        choices=rooms_assignment_choices,
+        default=ROOMS_ASSIGNED_ON_VISIT,
+        verbose_name=_(u"Tildeling af lokale(r)"),
+        blank=True,
+        null=True
     )
 
     locality = models.ForeignKey(
-        Locality, verbose_name=_(u'Lokalitet'), blank=True, null=True
+        Locality,
+        verbose_name=_(u'Lokalitet'),
+        blank=True,
+        null=True
     )
     duration = models.CharField(
         max_length=8,
@@ -695,10 +718,17 @@ class Visit(Resource):
         verbose_name=_(u'Kontaktpersoner')
     )
     do_send_evaluation = models.BooleanField(
-        verbose_name=_(u"Udsend evaluering"), default=False
+        verbose_name=_(u"Udsend evaluering"),
+        default=False
     )
-    price = models.DecimalField(default=0, max_digits=10, decimal_places=2,
-                                verbose_name=_(u'Pris'))
+    price = models.DecimalField(
+        default=0,
+        null=True,
+        blank=True,
+        max_digits=10,
+        decimal_places=2,
+        verbose_name=_(u'Pris')
+    )
     additional_services = models.ManyToManyField(
         AdditionalService,
         verbose_name=_(u'Ekstra ydelser'),
@@ -709,8 +739,10 @@ class Visit(Resource):
         verbose_name=_(u'Særlige krav'),
         blank=True
     )
-    is_group_visit = models.BooleanField(default=True,
-                                         verbose_name=_(u'Gruppebesøg'))
+    is_group_visit = models.BooleanField(
+        default=True,
+        verbose_name=_(u'Gruppebesøg')
+    )
     # Min/max number of visitors - only relevant for group visits.
     minimum_number_of_visitors = models.IntegerField(
         null=True,
@@ -731,11 +763,18 @@ class Visit(Resource):
     )
     preparation_time = models.IntegerField(
         default=0,
+        null=True,
         verbose_name=_(u'Forberedelsestid (i timer)')
     )
     recurrences = RecurrenceField(
         null=True,
+        blank=True,
         verbose_name=_(u'Gentagelser')
+    )
+    tour_available = models.BooleanField(
+        default=False,
+        blank=True,
+        verbose_name=_(u'Mulighed for rundvisning')
     )
 
     def save(self, *args, **kwargs):

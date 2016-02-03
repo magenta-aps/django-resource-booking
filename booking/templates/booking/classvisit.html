@@ -76,6 +76,7 @@
                     </div>
                 {% endif %}
 
+                {% if bookingform.tour_desired %}
                 <div class="form-group">
                     <label class="col-sm-2 control-label" for="{{ bookingform.tour_desired.id_for_label }}">{% trans "Rundvisning" %}</label>
                     <div class="col-sm-6{% if bookingform.tour_desired.errors %} has-error{% endif %}">
@@ -85,6 +86,7 @@
                         {{ bookingform.tour_desired.errors }}
                     </div>
                 </div>
+                {% endif %}
 
                 <div class="form-group">
                     <label class="col-sm-2 control-label" for="{{ bookerform.notes.id_for_label }}">{% trans "Kommentarer" %}</label>

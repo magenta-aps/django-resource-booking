@@ -8,6 +8,7 @@ from django import forms
 from django.forms import CheckboxSelectMultiple, EmailInput, RadioSelect
 from django.forms import inlineformset_factory
 from django.forms import TextInput, NumberInput, URLInput, Textarea, Select
+from django.forms import HiddenInput
 from django.utils.translation import ugettext_lazy as _
 from tinymce.widgets import TinyMCE
 
@@ -36,8 +37,9 @@ class OtherResourceForm(forms.ModelForm):
         model = OtherResource
         fields = ('title', 'teaser', 'description', 'link',
                   'type', 'tags', 'comment',
-                  'institution_level', 'topics', 'audience',
-                  'enabled', 'unit',)
+                  'institution_level', 'topics', 'level', 'class_level_min',
+                  'class_level_max', 'subjects', 'audience',
+                  'enabled', 'unit')
         widgets = {
             'title': TextInput(attrs={'class': 'titlefield'}),
             'teaser': Textarea(attrs={'rows': 3, 'maxlength': 1000}),
@@ -46,14 +48,14 @@ class OtherResourceForm(forms.ModelForm):
             'topics': CheckboxSelectMultiple(),
             'subjects': CheckboxSelectMultiple(),
             'audience': RadioSelect(),
-            'link': URLInput()
+            'link': URLInput(),
         }
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user')
         super(OtherResourceForm, self).__init__(*args, **kwargs)
         self.fields['unit'].queryset = self.get_unit_query_set()
-        self.fields['type'].choices = OtherResource.type_choices
+        self.fields['type'].widget = HiddenInput()
 
     def get_unit_query_set(self):
         """"Get units for which user can create events."""
@@ -67,10 +69,11 @@ class VisitForm(forms.ModelForm):
         model = Visit
         fields = ('title', 'teaser', 'description', 'price',
                   'type', 'tags', 'preparation_time', 'comment',
-                  'institution_level', 'topics', 'audience',
+                  'institution_level', 'level', 'class_level_min',
+                  'class_level_max', 'audience', 'subjects',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'recurrences', 'duration', 'locality', 'rooms_assignment',
-                  'rooms_needed',
+                  'rooms_needed', 'tour_available',
                   'enabled', 'contact_persons', 'unit',)
         widgets = {
             'title': TextInput(attrs={
@@ -86,7 +89,6 @@ class VisitForm(forms.ModelForm):
             'minimum_number_of_visitors': NumberInput(attrs={'min': 1}),
             'maximum_number_of_visitors': NumberInput(attrs={'min': 1}),
             'tags': CheckboxSelectMultiple(),
-            'topics': CheckboxSelectMultiple(),
             'contact_persons': CheckboxSelectMultiple(),
             'subjects': CheckboxSelectMultiple(),
             'audience': RadioSelect()
@@ -96,7 +98,14 @@ class VisitForm(forms.ModelForm):
         self.user = kwargs.pop('user')
         super(VisitForm, self).__init__(*args, **kwargs)
         self.fields['unit'].queryset = self.get_unit_query_set()
-        self.fields['type'].choices = Visit.type_choices
+        self.fields['type'].widget = HiddenInput()
+
+    def clean_type(self):
+        instance = getattr(self, 'instance', None)
+        if instance:
+            return instance.type
+        else:
+            return self.cleaned_data['type']
 
     def clean_locality(self):
         data = self.cleaned_data
@@ -109,7 +118,8 @@ class VisitForm(forms.ModelForm):
         cleaned_data = super(VisitForm, self).clean()
         min_visitors = cleaned_data.get('minimum_number_of_visitors')
         max_visitors = cleaned_data.get('maximum_number_of_visitors')
-        if min_visitors > max_visitors:
+        if min_visitors is not None and max_visitors is not None and \
+           min_visitors > max_visitors:
             min_error_msg = _(u"The minimum numbers of visitors " +
                               u"must not be larger than " +
                               u"the maximum number of visitors")
@@ -301,6 +311,9 @@ class ClassBookingForm(BookingForm):
             self.fields['time'].required = True
         else:
             self.fields['desired_time'].required = True
+
+        if visit is not None and not visit.tour_available:
+            del self.fields['tour_desired']
 
     def save(self, commit=True, *args, **kwargs):
         booking = super(ClassBookingForm, self).save(commit=False)

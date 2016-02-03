@@ -1,0 +1,13 @@
+<div class="institution_level_dependent" data-display-value="1">
+    <div class="row form-group">
+        <div>
+            {{ form.level.errors }}
+        </div>
+        <div class="col-sm-2">
+            <label class="{{ form.level.css_classes }}" for="{{ form.level.id_for_label }}">{{ form.level.label }}:</label>
+        </div>
+        <div class="col-sm-10">
+            {{ form.level }}
+        </div>
+    </div>
+</div>
