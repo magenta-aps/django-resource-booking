@@ -407,6 +407,25 @@ class EditResourceView(UpdateView):
                 )
         return result
 
+    def set_object(self, pk, request, is_cloning=False):
+        if is_cloning or not hasattr(self, 'object') or self.object is None:
+            if pk is None:
+                self.object = self.model()
+                try:
+                    type = int(request.GET['type'])
+                    if type in self.model.applicable_types:
+                        self.object.type = type
+                except:
+                    pass
+            else:
+                try:
+                    self.object = self.model.objects.get(id=pk)
+                    if is_cloning:
+                        self.object.pk = None
+                        self.object.id = None
+                except ObjectDoesNotExist:
+                    raise Http404
+
     def get_context_data(self, **kwargs):
         context = {}
 
@@ -522,36 +541,16 @@ class EditOtherResourceView(EditResourceView):
 
     def get(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
-        try:
-            self.object = OtherResource() if pk is None\
-                else OtherResource.objects.get(id=pk)
-        except ObjectDoesNotExist:
-            raise Http404
-        try:
-            type = int(request.GET['type'])
-            if type in OtherResource.applicable_types:
-                self.object.type = type
-        except:
-            pass
+        self.set_object(pk, request)
         form = self.get_form()
         return self.render_to_response(
             self.get_context_data(form=form)
         )
 
-    # Handle both forms, creating a Visit and a number of StudyMaterials
     def post(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
         is_cloning = kwargs.get("clone", False)
-        if is_cloning or not hasattr(self, 'object') or self.object is None:
-            if pk is None or is_cloning:
-                self.object = None
-            else:
-                try:
-                    self.object = OtherResource.objects.get(id=pk)
-                    if is_cloning:
-                        self.object.pk = None
-                except ObjectDoesNotExist:
-                    raise Http404
+        self.set_object(pk, request, is_cloning)
         form = self.get_form()
         if form.is_valid():
             obj = form.save()
@@ -568,6 +567,18 @@ class EditOtherResourceView(EditResourceView):
             return reverse('otherresource-view', args=[self.object.id])
         except:
             return '/'
+
+    def get_template_names(self):
+        if self.object.type is not None:
+            if self.object.type == Resource.STUDIEPRAKTIK:
+                return ["otherresource/studiepraktik.html"]
+            if self.object.type == Resource.OPEN_HOUSE:
+                return ["otherresource/open_house.html"]
+            if self.object.type == Resource.ASSIGNMENT_HELP:
+                return ["otherresource/assignment_help.html"]
+            if self.object.type == Resource.STUDY_MATERIAL:
+                return ["otherresource/study_material.html"]
+        raise "Couldn't find template for object type %d" % self.object.type
 
 
 class OtherResourceDetailView(DetailView):
@@ -626,16 +637,7 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
 
     def get(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
-        try:
-            self.object = Visit() if pk is None else Visit.objects.get(id=pk)
-        except ObjectDoesNotExist:
-            raise Http404
-        try:
-            type = int(request.GET['type'])
-            if type in Visit.applicable_types:
-                self.object.type = type
-        except:
-            pass
+        self.set_object(pk, request)
         form = self.get_form()
         fileformset = VisitStudyMaterialForm(None, instance=self.object)
         return self.render_to_response(
@@ -646,16 +648,7 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
     def post(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
         is_cloning = kwargs.get("clone", False)
-        if is_cloning or not hasattr(self, 'object') or self.object is None:
-            if pk is None or is_cloning:
-                self.object = None
-            else:
-                try:
-                    self.object = Visit.objects.get(id=pk)
-                    if is_cloning:
-                        self.object.pk = None
-                except ObjectDoesNotExist:
-                    raise Http404
+        self.set_object(pk, request, is_cloning)
         form = self.get_form()
         fileformset = VisitStudyMaterialForm(request.POST)
         if form.is_valid():
@@ -788,6 +781,40 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         return self.render_to_response(
             self.get_context_data(form=form, fileformset=fileformset)
         )
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        # First, check all is well in superclass
+        result = super(EditVisitView, self).dispatch(*args, **kwargs)
+        # Now, check that the user belongs to the correct unit.
+        current_user = self.request.user
+        pk = kwargs.get("pk")
+        if self.object is None:
+            self.object = None if pk is None else Visit.objects.get(id=pk)
+        if self.object is not None and self.object.unit:
+            if not current_user.userprofile.can_edit(self.object):
+                raise AccessDenied(
+                    _(u"Du kan kun redigere enheder,som du selv er" +
+                      " koordinator for.")
+                )
+        return result
+
+    def get_form_kwargs(self):
+        kwargs = super(EditVisitView, self).get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+    def get_template_names(self):
+        if self.object.type is not None:
+            if self.object.type == Resource.STUDENT_FOR_A_DAY:
+                return ["visit/studentforaday.html"]
+            if self.object.type == Resource.STUDY_PROJECT:
+                return ["visit/srp.html"]
+            if self.object.type == Resource.GROUP_VISIT:
+                return ["visit/classvisit.html"]
+            if self.object.type == Resource.TEACHER_EVENT:
+                return ["visit/teachervisit.html"]
+        raise "Couldn't find template for object type %d" % self.object.type
 
 
 class VisitDetailView(DetailView):
