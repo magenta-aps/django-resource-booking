@@ -10,7 +10,7 @@ from booking.views import EditResourceInitialView, ResourceDetailView
 from booking.views import BookingView, BookingSuccessView
 from booking.views import EditOtherResourceView, OtherResourceDetailView
 from booking.views import EditVisitView, VisitDetailView
-from booking.views import SearchView
+from booking.views import SearchView, EmbedcodesView
 
 from django.views.generic import TemplateView
 
@@ -26,34 +26,6 @@ urlpatterns = patterns(
 
     # Djangosaml2
     (r'^saml2/', include('djangosaml2.urls')),
-
-    url(r'^manage$', TemplateView.as_view(
-        template_name='mockup_templates/manage-list.html'),
-        name="mockup-manage-list"),
-    url(r'^manage-item$', TemplateView.as_view(
-        template_name='mockup_templates/manage-item.html'),
-        name="mockup-manage-item"),
-    url(r'^booking-list$', TemplateView.as_view(
-        template_name='mockup_templates/booking-list.html'),
-        name="mockup-booking-list"),
-    url(r'^booking-details$', TemplateView.as_view(
-        template_name='mockup_templates/booking-details.html'),
-        name="mockup-booking-detail"),
-    url(r'^new-item$', TemplateView.as_view(
-        template_name='mockup_templates/new-item.html'),
-        name="mockup-new-item"),
-    url(r'^search-list$', TemplateView.as_view(
-        template_name='mockup_templates/search-list.html'),
-        name="mockup-search-list"),
-    url(r'^item$', TemplateView.as_view(
-        template_name='mockup_templates/item.html'),
-        name="mockup-item"),
-    url(r'^book-it$', TemplateView.as_view(
-        template_name='mockup_templates/book-it.html'),
-        name="mockup-book-it"),
-    url(r'^thx-for-booking$', TemplateView.as_view(
-        template_name='mockup_templates/thx-for-booking.html'),
-        name="mockup-thx-for-booking"),
 
     # Main search page
     url(r'^search', SearchView.as_view(), name='search'),
@@ -119,4 +91,32 @@ urlpatterns = patterns(
         SchoolView.as_view(),
         name='school'),
 
+    url(r'^embedcodes/(?P<embed_url>.*)$',
+        EmbedcodesView.as_view(),
+        name='embedcodes')
+
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+embed_views = [
+    'index',
+    'visit-view',
+    'otherresource-view',
+    'search',
+]
+
+embedpatterns = []
+for x in urlpatterns:
+    if hasattr(x, 'name') and x.name in embed_views:
+        # Tell template system that these URLs can be embedded
+        x.default_args['can_be_embedded'] = True
+
+        # Add a corresponding embed URL
+        embedpatterns.append(
+            url(
+                '^(?P<embed>embed/)' + x.regex.pattern[1:],
+                x._callback,
+                name=x.name + '-embed'
+            )
+        )
+
+urlpatterns += embedpatterns
