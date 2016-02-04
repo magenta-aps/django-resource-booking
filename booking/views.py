@@ -1081,6 +1081,7 @@ class BookingSuccessView(TemplateView):
             self.get_context_data(**data)
         )
 
+
 class BookingSearchView(LoginRequiredMixin, ListView):
     model = Booking
     template_name = "booking/searchresult.html"

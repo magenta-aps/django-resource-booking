@@ -1017,7 +1017,7 @@ class Booking(models.Model):
 
         if qs is None:
             qs = Booking.objects.all()
-    
+
         return qs.filter(visit__unit=user.userprofile.get_unit_queryset())
 
     def as_searchtext(self):
@@ -1040,6 +1040,7 @@ class Booking(models.Model):
 
         # Do the final save
         super(Booking, self).save(*args, **kwargs)
+
 
 class ClassBooking(Booking):
 
