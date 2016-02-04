@@ -862,6 +862,15 @@ class Region(models.Model):
     def __unicode__(self):
         return self.name
 
+    @staticmethod
+    def create_defaults():
+        from booking.data import regions
+        for name in regions.regions:
+            try:
+                Region.objects.get(name=name)
+            except ObjectDoesNotExist:
+                Region(name=name).save()
+
 
 class PostCode(models.Model):
     number = models.IntegerField(
@@ -883,6 +892,38 @@ class PostCode(models.Model):
             return PostCode.objects.get(number=int(code))
         except PostCode.DoesNotExist:
             return None
+
+    @staticmethod
+    def create_defaults():
+        Region.create_defaults()
+        from booking.data import postcodes
+        regions = {}
+        for postcode_def in postcodes.postcodes:
+            postcode_number = postcode_def['number']
+            city_name = postcode_def['city']
+            region_name = postcode_def['region']
+            region = regions.get(region_name)
+            if region is None:
+                try:
+                    region = Region.objects.get(name=region_name)
+                    regions[region_name] = region
+                except Region.DoesNotExist:
+                    print "Unknown region '%s'. May be a typo, please fix in " \
+                          "booking/data/postcodes.py" % region_name
+                    return
+            try:
+                postcode = PostCode.objects.get(number=postcode_number)
+            except PostCode.DoesNotExist:
+                postcode = PostCode(number=postcode_number,
+                                    city=city_name, region=region)
+                postcode.save()
+            else:
+                if postcode.city != city_name:
+                    postcode.city = city_name
+                    postcode.save()
+                if postcode.region != region:
+                    postcode.region = region
+                    postcode.save()
 
 
 class School(models.Model):
