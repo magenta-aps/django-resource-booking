@@ -1,5 +1,5 @@
 # encoding: utf-8
-
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from djorm_pgfulltext.models import SearchManager
 from djorm_pgfulltext.fields import VectorField
@@ -880,13 +880,51 @@ class School(models.Model):
         null=True
     )
 
+    ELEMENTARY_SCHOOL = 0
+    GYMNASIE = 1
+    type_choices = (
+        (ELEMENTARY_SCHOOL, u'Folkeskole'),
+        (GYMNASIE, u'Gymnasie')
+    )
+
+    type = models.IntegerField(
+        choices=type_choices,
+        default=1,
+        verbose_name=_(u'Uddannelsestype')
+    )
+
     def __unicode__(self):
         return self.name
 
     @staticmethod
-    def search(query):
+    def search(query, type=None):
         query = query.lower()
-        return School.objects.filter(name__icontains=query)
+        qs = School.objects.filter(name__icontains=query)
+        if type is not None:
+            try:
+                type = int(type)
+                if type in [id for id, title in School.type_choices]:
+                    qs = qs.filter(type=type)
+            except ValueError:
+                pass
+        return qs
+
+    @staticmethod
+    def create_defaults():
+        from booking.data import schools
+        for data, type in [
+                (schools.elementary_schools, School.ELEMENTARY_SCHOOL),
+                (schools.high_schools, School.GYMNASIE)]:
+            for name, postnr in data:
+                try:
+                    School.objects.get(name=name, postcode__number=postnr)
+                except ObjectDoesNotExist:
+                    try:
+                        postcode = PostCode.get(postnr)
+                        School(name=name, postcode=postcode, type=type).save()
+                    except ObjectDoesNotExist:
+                        print "Warning: Postcode %d not found in database. " \
+                              "Not adding school %s" % (postcode, name)
 
 
 class Booker(models.Model):
@@ -956,7 +994,8 @@ class Booker(models.Model):
     )
 
     attendee_count = models.IntegerField(
-        blank=False,
+        blank=True,
+        null=True,
         verbose_name=u'Antal deltagere'
     )
     notes = models.TextField(
