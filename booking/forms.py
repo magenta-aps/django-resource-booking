@@ -106,13 +106,6 @@ class VisitForm(forms.ModelForm):
         else:
             return self.cleaned_data['type']
 
-    def clean_locality(self):
-        data = self.cleaned_data
-        locality = data.get("locality")
-        if locality is None:
-            raise forms.ValidationError("This field is required")
-        return locality
-
     def clean(self):
         cleaned_data = super(VisitForm, self).clean()
         min_visitors = cleaned_data.get('minimum_number_of_visitors')
