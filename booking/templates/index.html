@@ -31,8 +31,9 @@
         <link href="{% static 'img/favicon.ico' %}" rel="shortcut icon">
             
     </head>
-    <body>
+    <body class="{% if view.kwargs.embed %}embedded{% endif %}">
 
+    {% if not view.kwargs.embed %}
     {% block header %}
         <nav class="navbar navbar-default">
             <div class="container">
@@ -65,6 +66,9 @@
                 <li><a href="{% url 'search' %}">Tilbud</a></li>
                 <li>Bookings</li>
                 <li><a href="{% url 'admin:index' %}">Administration</a></li>
+                {% if view.kwargs.can_be_embedded %}
+                <li><a href="{% url 'embedcodes' view.request.get_full_path|slice:"1:" %}">Indlejr side</a></li>
+                {% endif %}
                 <li class="pull-right"><a href="/profile/logout">Log ud</a></li>
             </ul>
         </div>
@@ -80,7 +84,7 @@
                         </a>
                     </div>
                     <div id="branding-title">
-                        <a href="http://fokus.ku.dk" title="Velkommen til Københavns Universitet">
+                        <a href="{% url 'index' %}" title="Velkommen til Københavns Universitet">
                             <h2>foKUs</h2>
                             <p>Portal for skole- og gymnasieområdet</p>
                         </a>
@@ -89,6 +93,7 @@
             </div>
         </div>
     {% endblock %}
+    {% endif %}
         
     <div class="container grey-sides content-container">
         
@@ -114,6 +119,7 @@
     
     </div>
         
+    {% if not view.kwargs.embed %}
     {% block footer %}
     <div class="container">
         <div class="row">
@@ -139,6 +145,7 @@
         </div>
     </div>
 {% endblock %}
+    {% endif %}
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="{% static 'thirdparty/jquery/dist/jquery.min.js' %}"></script>
