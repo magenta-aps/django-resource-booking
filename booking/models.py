@@ -1087,7 +1087,7 @@ class Booker(models.Model):
     )
     level = models.IntegerField(
         choices=level_choices,
-        blank=True,
+        blank=False,
         verbose_name=u'Niveau'
     )
 
