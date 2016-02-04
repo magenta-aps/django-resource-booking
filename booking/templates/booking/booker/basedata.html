@@ -1,0 +1,38 @@
+{% load i18n %}
+<div class="form-group">
+    <label class="col-sm-2 control-label" for="{{ bookerform.firstname.id_for_label }}">{% trans "For- og efternavn*" %}</label>
+    <div class="col-sm-3{% if bookerform.firstname.errors %} has-error{% endif %}">
+        {{ bookerform.firstname }}
+    </div>
+    <div class="col-sm-3{% if bookerform.lastname.errors %} has-error{% endif %}">
+        {{ bookerform.lastname }}
+    </div>
+    <div class="col-sm-3 help-block with-errors">
+        {{ bookerform.firstname.errors }}
+        {{ bookerform.lastname.errors }}
+    </div>
+</div>
+
+<div class="form-group">
+    <label class="col-sm-2 control-label" for="{{ bookerform.email.id_for_label }}">{% trans "Email*" %}</label>
+    <div class="col-sm-3{% if bookerform.email.errors %} has-error{% endif %}">
+        {{ bookerform.email }}
+    </div>
+    <div class="col-sm-3{% if bookerform.repeatemail.errors %} has-error{% endif %}">
+        {{ bookerform.repeatemail }}
+    </div>
+    <div class="col-sm-3 help-block with-errors">
+        {{ bookerform.email.errors }}
+        {{ bookerform.repeatemail.errors }}
+    </div>
+</div>
+
+<div class="form-group">
+    <label class="col-sm-2 control-label" for="{{ bookerform.phone.id_for_label }}">{% trans "Telefonnummer*" %}</label>
+    <div class="col-sm-6{% if bookerform.phone.errors %} has-error{% endif %}">
+        {{ bookerform.phone }}
+    </div>
+    <div class="col-sm-3 help-block with-errors">
+        {{ bookerform.phone.errors }}
+    </div>
+</div>

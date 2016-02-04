@@ -2,6 +2,7 @@
   "dependencies": {
     "jquery": "latest",
     "bootstrap": "3.3.5",
-    "bootstrap-datetime-picker": "latest"
+    "bootstrap-datetime-picker": "latest",
+    "bootstrap-3-typeahead": "latest"
   }
 }

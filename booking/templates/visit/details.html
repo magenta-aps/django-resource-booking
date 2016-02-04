@@ -1,64 +1,29 @@
 {% extends 'index.html' %}
+{% load staticfiles %}
 {% load timedelta %}
+{% load i18n %}
 
 {% block content %}
 
-    <div class="row">
-        <div class="col-sm-8">
-            <ol class="breadcrumb hidden-xs">
-                <li>Du er her: </li>
-                <li><a href="http://fokus.ku.dk/">Søgning</a></li>
-                <li><a href="#">Søgeresultatliste</a></li>
-                <li class="active">Detaljevisning</li>
-            </ol>
-        </div>
-        <div class="col-sm-4 text-right small-icons hidden-print">
-            <a title="E-mail" href="#" class="glyphicon glyphicon-envelope print-icon" aria-hidden="true"><span class="sr-only">Send via e-mail</span></a>
-            <a title="Print" href="#" onclick="window.print();return false" aria-hidden="true" class="glyphicon glyphicon-print print-icon"><span class="sr-only">Print</span></a>
-                <!--AddThis Button BEGIN -->
-                        <script type="text/javascript">
-                        <!--
-                        var addthis_config = {
-                                ui_click: 'true',
-                                services_compact: 'facebook,twitter,blogger,digg,reddit,gmail,google,linkedin,myspace,delicious,favorites',
-                                services_exclude: 'email,print',
-                                ui_header_color: '#ffffff',
-                                ui_header_background: '#666666',
-                                ui_cobrand: 'www.ku.dk'
-                            }
-                            // -->
-                        </script>
-                <a href="https://www.addthis.com/bookmark.php?v=250&amp;pub=copenhagenuni" class="addthis_button_compact">
-                <img src="/static/img/shareknap_dk.gif" width="28" height="12" alt="Bookmark and Share" style="border:0" /></a>
-                <script type="text/javascript" src="https://s7.addthis.com/js/250/addthis_widget.js#pub=copenhagenuni"></script>
-                <!-- AddThis Button END -->
-        </div>
-    </div>
+    {% include 'common/breadcrumbrow.html' %}
+
     <div class="row titlebar hidden-print">
         <div class="col-sm-12 col-md-9"><h2>Om tilbuddet</h2></div>
         <div class="divider"></div>
     </div>
     <div class="row">
         <div class="col-sm-12 col-md-8">
-            <form class="clearfix" role="søg" action={% url 'search' %}>
-                <div class="input-group">
-                    <label class="sr-only" for="searchBox">Søg efter tilbud</label>
-                    <input type="text" class="form-control" id="searchBox" placeholder="Søg efter tilbud - indtast et eller flere søgeord..." name="q" value="{{ request.GET.q }}">
-                    <span class="input-group-btn">
-                    <a id="reset-btn" class="btn btn-default" aria-label="Ryd søgning"><span class="glyphicon glyphicon-remove"></span></a>
-                    <button class="btn btn-default" id="search" type="submit"><span class="hidden-xs">Søg</span> <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
-                    </button>
-                    </span>
-                </div>
-            </form>
+
+            {% include 'common/searchform.html' %}
+
             <div class="divider"></div>
             <h2>{{ object.get_type_display }}</h2>
             
             {% if can_edit %}
-                <a class="pull-right btn btn-primary edit-btn" href="{% url 'visit_edit' object.pk %}">+ Redigér</a>
+                <a class="pull-right btn btn-primary edit-btn" href="{% url 'visit-edit' object.pk %}">+ Redigér</a>
             {% endif %}
             {% if user.userprofile.can_create %}
-                <a class="pull-right btn btn-primary" href="{% url 'visit_clone' object.pk %}">Opret kopi</a>
+                <a class="pull-right btn btn-primary margin-right-10" href="{% url 'visit-clone' object.pk %}">Opret kopi</a>
             {% endif %}
             
             <h1>{{ object.title }}</h1>
@@ -76,15 +41,19 @@
             </div>
             <div class="well order-buttons hidden-print">
                 <!-- Display according to business logic -->
+                {% if can_book %}
                 <button type="button" class="btn btn-default" data-toggle="modal" data-target="#startbooking">Book dette tilbud
                     <span class="glyphicon glyphicon-chevron-right"></span>
                 </button>
+                {% endif %}
                 <!-- Display according to business logic -->
             </div>
+            {% if can_book %}
             <div class="disclaimer">Bemærk at din bestilling først er bindende, når du har modtaget en bekræftelse fra den ansvarlige arrangør fra Københavns Universitet.</div>
+            {% endif %}
             <div class="go-back">
-            <a href="#" class="btn btn-default" onclick="history.go(-1); return false;"><span class="glyphicon glyphicon-chevron-left"></span> Tilbage til søgeresultat</a>
-        </div>
+                <a href="#" class="btn btn-default" onclick="history.go(-1); return false;"><span class="glyphicon glyphicon-chevron-left"></span> Tilbage til søgeresultat</a>
+            </div>
         </div>
         <div class="col-sm-6 col-md-4">
             <form class="form-horizontal">
@@ -98,9 +67,15 @@
                                 <dt>Henvendt til:</dt>
                                 <dd>{{ object.get_audience_display }}</dd>
                             {% endif %}
-                            {% if object.resource_ptr.get_subjects_display %}
-                                <dt>Fag/niveau:</dt>
-                                <dd>{{ object.resource_ptr.get_subjects_display }}</dd>
+                            {% if object.resource_ptr.all_subjects  %}
+                                <dt>{% trans 'Fag/niveau:' %}</dt>
+                                <dd>
+                                    <ul class="type-offer list-inline">
+                                        {% for x in object.resource_ptr.all_subjects %}
+                                        <li>{{ x.display_value }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </dd>
                             {% endif %}
                             {% if object.num_of_participants_display %}
                                 <dt>Max antal:</dt>
@@ -116,7 +91,7 @@
                             {% endif %}
                             
                             <dt>Arrangør:</dt>
-                            <dd>HARDCODED! Arrangør</dd>
+                            <dd><a href="#" data-toggle="modal" data-target="#kontaktformular">Kontakt arrangøren</a> <span class="glyphicon glyphicon-new-window"></span></dd>
                             
                             <dt>Hvornår:</dt>
                             <!--<dd>{{ object.time }}</dd>-->
@@ -154,136 +129,13 @@
             </form>
         </div>
     </div>
+
+    {% include 'common/modal_contact.html' %}
+
 <!-- Modal start -->
-    <div class="modal fade" id="startbooking" tabindex="-1" role="Popup-bookingflow" aria-labelledby="overskrift">
+    <div class="modal fade" id="startbooking" tabindex="-1" role="Popup-bookingflow" aria-labelledby="overskrift" data-frametarget="/visit/{{ object.id }}/book">
         <div class="modal-dialog modal-lg" role="Bookingflow">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title" id="overskrift">Book tilbuddet "Oplev matematik på universitetet"</h4>
-                </div>
-                <div class="modal-body">
-                <p>Udfyld venligst nedenstående formular for at booke et tilbud. Felter markeret med * er obligatoriske.</p>
-                <div class="divider"></div>
-                    <form class="form-horizontal clearfix" id="startbookingform" role="form" data-toggle="validator">
-                        <div class="form-group">
-                            <label for="name" class="col-sm-2 control-label">For- og efternavn*</label>
-                            <div class="col-sm-3">
-                                <input type="text" class="form-control input-sm" data-error="Udfyld fornavn" id="name" placeholder="Foravn" required>
-                            </div>
-                            <div class="col-sm-3">
-                                <input type="text" class="form-control input-sm" data-error="Udfyld efternavn" placeholder="Efternavn" required>
-                            </div>
-                            <div class="col-sm-3 help-block with-errors"></div>
-                        </div>
-                        <div class="form-group">
-                            <label for="inputEmail" class="col-sm-2 control-label">Email*</label>
-                            <div class="col-sm-3">
-                                <input type="email" class="form-control input-sm" data-error="Angiv gyldig e-mailadresse" id="inputEmail" placeholder="E-mail" required>
-                            </div>
-                            <div class="col-sm-3">
-                                <input type="email" class="form-control input-sm" data-error="E-mailadressen skal gentages korrekt" data-match="#inputEmail" placeholder="Gentag e-mail" required>
-                            </div>
-                            <div class="col-sm-3 help-block with-errors"></div>
-                        </div>
-                        <div class="form-group">
-                            <label for="tlf" class="col-sm-2 control-label">Telefonnummer*</label>
-                            <div class="col-sm-6">
-                                <input type="tel" class="form-control input-sm" pattern="^\d{8}" data-error="Angiv gyldig e-telefonnumer" id="tlf" placeholder="Telefonnummer" required>
-                            </div>
-                            <div class="col-sm-3 help-block with-errors"></div>
-                        </div>
-                        <div class="form-group">
-                            <label for="" class="col-sm-2 control-label">Gymnasium*</label>
-                            <div class="col-sm-6">
-                                <select class="form-control input-sm" data-error="Vælg gymnasium" required>
-                                  <option>Vælg gymnasium</option>
-                                  <option value="">2</option>
-                                  <option value="">3</option>
-                                  <option value="">4</option>
-                                  <option value="">5</option>
-                                </select>
-                            </div>
-                            <div class="col-sm-3 help-block with-errors"></div>
-                        </div>
-                        <div class="form-group">
-                            <label for="" class="col-sm-2 control-label">Gymnasie-uddannelse*</label>
-                            <div class="col-sm-6">
-                                <select class="form-control input-sm" data-error="Vælg gymnasieuddannelse" required>
-                                  <option>Vælg gymnasieuddannelse</option>
-                                  <option value="">2</option>
-                                  <option value="">3</option>
-                                  <option value="">4</option>
-                                  <option value="">5</option>
-                                </select>
-                            </div>
-                            <div class="col-sm-3 help-block with-errors"></div>
-                        </div>
-                        <div class="form-group">
-                            <label for="tlf" class="col-sm-2 control-label">Gymnasiets postnr. pg by*</label>
-                            <div class="col-sm-2">
-                                <input type="text" class="form-control input-sm" pattern="^\d{4}" data-error="Angiv gymnasiets postnummer" id="zip" placeholder="Postnummer" required>
-                            </div>
-                            <div class="col-sm-4">
-                                <input type="text" class="form-control input-sm" data-error="Angiv by hvor Gymnasiet ligger" placeholder="By hvori Gymnasiet ligger" required>
-                            </div>
-                            <div class="col-sm-3 help-block with-errors"></div>
-                        </div>
-                        <div class="form-group">
-                            <label for="" class="col-sm-2 control-label">Region*</label>
-                            <div class="col-sm-6">
-                                <select class="form-control input-sm" data-error="Vælg region" required>
-                                  <option>Vælg region</option>
-                                  <option value="">Hovedstaden</option>
-                                  <option value="">Midtjylland</option>
-                                  <option value="">Nordjylland</option>
-                                  <option value="">Sjælland</option>
-                                  <option value="">Syddanmark</option>
-                                </select>
-                            </div>
-                            <div class="col-sm-3 help-block with-errors"></div>
-                        </div>
-                        <div class="form-group">
-                            <label for="antal" class="col-sm-2 control-label">Antal deltagere*</label>
-                            <div class="col-sm-6">
-                                <input type="text" class="form-control input-sm" data-error="Angiv antal deltagere" id="antal" placeholder="Antal deltagere" required>
-                            </div>
-                            <div class="col-sm-3 help-block with-errors"></div>
-                        </div>
-                        <div class="form-group">
-                            <label for="skole" class="col-sm-2 control-label">Kommentarer</label>
-                            <div class="col-sm-6">
-                                <textarea class="form-control input-sm" rows="3"></textarea>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <div class="col-sm-6 col-sm-offset-2 padleft0">
-                                <div class="stepwizard">
-                                    <div class="stepwizard-row">
-                                        <div class="stepwizard-step">
-                                            <button type="button" class="btn btn-default btn-circle">1</button>
-                                            <p>Trin 1</p>
-                                        </div>
-                                        <div class="stepwizard-step active">
-                                            <button type="button" class="btn btn-primary btn-circle">2</button>
-                                            <p>Trin 2</p>
-                                        </div>
-                                        <div class="stepwizard-step">
-                                            <button type="button" class="btn btn-default btn-circle" disabled="disabled">3</button>
-                                            <p>Trin 3</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <p class="text-center">Bemærk venligst at aftalen først er bindende, når du har modtaget en bekræftelse<br />fra den arrangør på Københavns Universitet, der er ansvarlig for besøget. </p>
-                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Annullér</button>
-                    <button type="button" class="btn btn-primary">Næste</button>
-                </div>
-            </div>
+            <div class="modal-content" id="booking-container"></div>
         </div>
     </div>
     <!-- Modal end -->
@@ -315,4 +167,10 @@
 {% endblock %}
 {% block extra_scripts %}
     <script src="/static/js/custom.js"></script>
+    <script src="{% static "js/modalframe-host.js" %}"></script>
+    <script type="text/javascript">
+    <!--
+    $('#startbooking').hostModalIframe($('#startbooking').attr("data-frametarget"));
+    //-->
+    </script>
 {% endblock %}

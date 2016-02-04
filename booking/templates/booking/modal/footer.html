@@ -1,0 +1,10 @@
+{% load i18n %}
+<div class="modal-footer">
+    <p class="text-center">
+        {% trans "Bemærk venligst at aftalen først er bindende, når du har modtaget en bekræftelse<br />fra den arrangør på Københavns Universitet, der er ansvarlig for besøget." %}
+    </p>
+    <button id="cancelbutton" type="button" class="btn btn-default pull-left formpartbutton" data-dismiss="modal">{% trans "Annullér" %}</button>
+    <button id="previousbutton" type="button" class="btn btn-default pull-left formpartbutton" data-formpart-action="prev" style="display:none">{% trans "Forrige" %}</button>
+    <button id="nextbutton" type="button" class="btn btn-primary formpartbutton" data-formpart-action="next" style="display:none">{% trans "Næste" %}</button>
+    <button id="submitbutton" type="button" class="btn btn-primary formpartbutton">{% trans "Book!" %}</button>
+</div>
