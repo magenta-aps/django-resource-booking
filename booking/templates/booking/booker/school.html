@@ -1,7 +1,7 @@
 {% load i18n %}
 
 <div class="form-group">
-    <label class="col-sm-2 control-label" for="{{ bookerform.school.id_for_label }}">
+    <label class="col-sm-2 control-label {{ bookerform.school.css_classes }}" for="{{ bookerform.school.id_for_label }}">
         {% if visit.institution_level == 1 %}
             {% trans "Gymnasium*" %}
         {% elif visit.institution_level == 2 %}
@@ -20,7 +20,7 @@
 
 {% if visit.institution_level != 2 %}
 <div class="form-group institution_level_dependent" data-display-value="1">
-    <label class="col-sm-2 control-label" for="{{ bookerform.line.id_for_label }}">{% trans "Gymnasie-uddannelse" %}</label>
+    <label class="col-sm-2 control-label {{ bookerform.line.css_classes }}" for="{{ bookerform.line.id_for_label }}">{% trans "Gymnasie-uddannelse" %}</label>
     <div class="col-sm-6{% if bookerform.line.errors %} has-error{% endif %}">
         {{ bookerform.line }}
     </div>
@@ -31,7 +31,7 @@
 {% endif %}
 
 <div class="form-group">
-    <label class="col-sm-2 control-label" for="{{ bookerform.level.id_for_label }}">{% trans "Klasse" %}</label>
+    <label class="col-sm-2 control-label {{ bookerform.level.css_classes }}" for="{{ bookerform.level.id_for_label }}">{% trans "Klasse" %}</label>
     <div class="col-sm-6{% if bookerform.level.errors %} has-error{% endif %}">
         {{ bookerform.level }}
     </div>
