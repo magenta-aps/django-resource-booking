@@ -8,24 +8,21 @@
     {% include 'common/breadcrumbrow.html' %}
 
     <div class="row titlebar hidden-print">
-        <div class="col-sm-12 col-md-9"><h2>Om bookingen</h2></div>
+        <div class="col-sm-12 col-md-9"><h1>Booking #{{ object.id }}</h1></div>
         <div class="divider"></div>
     </div>
     <div class="row">
         <div class="col-sm-12 col-md-8">
 
-            {% include 'common/searchform.html' %}
-
-            <div class="divider"></div>
-
+            <div class="panel panel-default">
+                <div class="panel-body"><strong>{{ object.booker.firstname }} {{ object.booker.lastname }}</strong> har booket <a href="{% url 'visit-view' object.visit.id %}">{{ object.visit.title }}</a></div>
+            </div>
 
             <dl class="dl-horizontal">
 
-                <dt>{% trans 'Tilbud:' %}</dt>
-                <dd><a href="{% url 'visit-view' object.visit.id %}">{{ object.visit.title }}</a></dd>
-
                 <dt>{% trans 'Navn:' %}</dt>
                 <dd>{{ object.booker.firstname }} {{ object.booker.lastname }}</dd>
+
 
                 <dt>{% trans 'Email:' %}</dt>
                 <dd>{{ object.booker.email }}</dd>
@@ -75,18 +72,23 @@
 
             </dl>
 
+            <div class="divider"></div>
+            
             <div class="go-back">
-                <a href="#" class="btn btn-default" onclick="history.go(-1); return false;"><span class="glyphicon glyphicon-chevron-left"></span> {% trans 'Tilbage til søgeresultat' %}</a>
+                <a href="#" class="btn btn-default" onclick="history.go(-1); return false;"><span class="glyphicon glyphicon-chevron-left"></span> {% trans 'Tilbage til bookingliste' %}</a>
             </div>
         </div>
         <div class="col-sm-6 col-md-4">
             <form class="form-horizontal">
                 <div class="panel panel-default">
                     <div class="panel-heading">
-                        <h3 class="panel-title">{% trans 'Tilbud' %}</h3>
+                        <h3 class="panel-title">{% trans 'Detaljer om tilbuddet' %}</h3>
                     </div>
                     <div class="panel-body">
                         <dl class="dl-horizontal">
+                            
+                            <dt>{% trans 'Link til tilbud:' %}</dt>
+                            <dd><a href="{% url 'visit-view' object.visit.id %}">{{ object.visit.title }}</a></dd>
 
                             {% if object.get_audience_display %}
                                 <dt>{% trans 'Titel:' %}</dt>
@@ -121,7 +123,7 @@
 
                             {% if object.visit.locality %}
                                 <dt>{% trans 'Hvor:' %}</dt>
-                                <dd>{{ object.visit.unit.name }}, {{ object.visit.locality.name }}, {{ object.visit.locality.address_line }}, {{ object.visit.locality.zip_city }}</dd>
+                                <dd><strong>{{ object.visit.unit.name }}</strong><br> {{ object.visit.locality.name }}, {{ object.visit.locality.address_line }}, {{ object.visit.locality.zip_city }}</dd>
                             {% endif %}
 
                             <dt>{% trans 'Arrangør:' %}</dt>
