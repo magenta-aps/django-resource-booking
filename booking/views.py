@@ -593,7 +593,10 @@ class EditOtherResourceView(EditResourceView):
                 return ["otherresource/assignment_help.html"]
             if self.object.type == Resource.STUDY_MATERIAL:
                 return ["otherresource/study_material.html"]
-        raise "Couldn't find template for object type %d" % self.object.type
+            if self.object.type == Resource.OTHER_OFFERS:
+                return ["otherresource/other.html"]
+        raise Exception("Couldn't find template for "
+                        "object type %d" % self.object.type)
 
 
 class OtherResourceDetailView(DetailView):
