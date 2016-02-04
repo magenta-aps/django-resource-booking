@@ -27,3 +27,13 @@ $("#reset-btn").click(function() {
     $("#searchBox").val("");
     $("form").trigger("submit")
 });
+
+// Automatically submit the search form whenever the filters are changed
+$(function() {
+    $('#filter-search-results input[type=checkbox]').on('change', function() {
+        $(this.form).trigger("submit")
+    });
+    $('#filter-search-results input.datepicker').on('changeDate', function() {
+        $(this.form).trigger("submit")
+    });
+});
