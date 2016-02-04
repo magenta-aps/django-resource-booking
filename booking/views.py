@@ -997,7 +997,10 @@ class BookingView(UpdateView):
         if self.visit is None:
             return bad_request(request)
 
-        data = {'visit': self.visit}
+        data = {
+            'visit': self.visit,
+            'level_map': Booker.level_map
+        }
 
         self.object = Booking()
         forms = self.get_forms(request.POST)
