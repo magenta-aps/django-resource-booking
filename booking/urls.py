@@ -7,7 +7,7 @@ from .views import MainPageView
 from booking.views import PostcodeView, SchoolView
 from booking.views import RrulestrView
 from booking.views import EditResourceInitialView, ResourceDetailView
-from booking.views import BookingView, BookingSuccessView
+from booking.views import BookingView, BookingSuccessView, BookingSearchView
 from booking.views import EditOtherResourceView, OtherResourceDetailView
 from booking.views import EditVisitView, VisitDetailView
 from booking.views import SearchView, EmbedcodesView
@@ -81,6 +81,9 @@ urlpatterns = patterns(
     url(r'^booking/(?P<pk>[0-9]+)/?$',
         BookingDetailView.as_view(),
         name='booking-view'),
+    url(r'^booking/search$',
+        BookingSearchView.as_view(),
+        name='booking-search'),
 
     # Ajax api
     url(r'^jsapi/rrulestr$', RrulestrView.as_view(), name='jsapi_rrulestr'),
