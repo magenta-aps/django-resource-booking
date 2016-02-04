@@ -393,6 +393,14 @@ class Resource(models.Model):
 
         return "\n".join(texts)
 
+    def as_searchtext(self):
+        return " ".join([unicode(x) for x in [
+            self.title,
+            self.description,
+            self.mouseover_description,
+            self.extra_search_text
+        ] if x])
+
     def get_dates_display(self):
         if self.visit:
             return self.visit.get_dates_display()
@@ -964,6 +972,16 @@ class Booker(models.Model):
         verbose_name=u'Bemærkninger'
     )
 
+    def as_searchtext(self):
+        return " ".join([unicode(x) for x in [
+            self.firstname,
+            self.lastname,
+            self.email,
+            self.phone,
+            self.get_level_display(),
+            self.school
+        ] if x])
+
     def __unicode__(self):
         if self.email is not None and self.email != "":
             return "%s %s <%s>" % (self.firstname, self.lastname, self.email)
@@ -971,11 +989,59 @@ class Booker(models.Model):
 
 
 class Booking(models.Model):
+    objects = SearchManager(
+        fields=('extra_search_text'),
+        config='pg_catalog.danish',
+        auto_update_search_field=True
+    )
+
     visit = models.ForeignKey(Visit, null=True)
     booker = models.ForeignKey(Booker)
 
+    # ts_vector field for fulltext search
+    search_index = VectorField()
+
+    # Field for concatenating search data from relations
+    extra_search_text = models.TextField(
+        blank=True,
+        default='',
+        verbose_name=_(u'Tekst-værdier til fritekstsøgning'),
+        editable=False
+    )
+
+    @classmethod
+    def queryset_for_user(cls, user, qs=None):
+        if not user or not user.userprofile:
+            return Booking.objects.none()
+
+        if qs is None:
+            qs = Booking.objects.all()
+    
+        return qs.filter(visit__unit=user.userprofile.get_unit_queryset())
+
+    def as_searchtext(self):
+        result = []
+
+        if self.visit:
+            result.append(self.visit.as_searchtext())
+
+        if self.booker:
+            result.append(self.booker.as_searchtext())
+
+        return " ".join(result)
+
+    def save(self, *args, **kwargs):
+        # Save once to store relations
+        super(Booking, self).save(*args, **kwargs)
+
+        # Update search_text
+        self.extra_search_text = self.as_searchtext()
+
+        # Do the final save
+        super(Booking, self).save(*args, **kwargs)
 
 class ClassBooking(Booking):
+
     time = models.DateTimeField(
         null=True,
         blank=True,
@@ -993,7 +1059,16 @@ class ClassBooking(Booking):
 
 
 class TeacherBooking(Booking):
+
     subjects = models.ManyToManyField(Subject)
+
+    def as_searchtext(self):
+        result = [super(TeacherBooking, self).as_searchtext()]
+
+        for x in self.subjects.all():
+            result.append(x.name)
+
+        return " ".join(result)
 
 
 class BookingSubjectLevel(models.Model):
