@@ -952,6 +952,7 @@ class School(models.Model):
 
     @staticmethod
     def create_defaults():
+        PostCode.create_defaults()
         from booking.data import schools
         for data, type in [
                 (schools.elementary_schools, School.ELEMENTARY_SCHOOL),
@@ -959,11 +960,11 @@ class School(models.Model):
             for name, postnr in data:
                 try:
                     School.objects.get(name=name, postcode__number=postnr)
-                except ObjectDoesNotExist:
+                except School.DoesNotExist:
                     try:
                         postcode = PostCode.get(postnr)
                         School(name=name, postcode=postcode, type=type).save()
-                    except ObjectDoesNotExist:
+                    except PostCode.DoesNotExist:
                         print "Warning: Postcode %d not found in database. " \
                               "Not adding school %s" % (postcode, name)
 
