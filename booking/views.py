@@ -1113,10 +1113,14 @@ class EmbedcodesView(TemplateView):
 
         embed_url = 'embed/' + kwargs['embed_url']
 
+        # We only want to test the part before ? (or its encoded value, %3F):
+        test_url = embed_url.split('?', 1)[0]
+        test_url = test_url.split('%3F', 1)[0]
+
         can_embed = False
 
         for x in urls.embedpatterns:
-            if x.regex.match(embed_url):
+            if x.regex.match(test_url):
                 can_embed = True
                 break
 
