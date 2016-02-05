@@ -1146,7 +1146,9 @@ class EmailTemplateEditView(UpdateView):
     def post(self, request, *args, **kwargs):
 
         pk = kwargs.get("pk")
-        if pk is None:
+        is_cloning = kwargs.get("clone", False)
+
+        if pk is None or is_cloning:
             self.object = EmailTemplate()
         else:
             self.object = EmailTemplate.objects.get(pk)

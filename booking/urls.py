@@ -102,6 +102,10 @@ urlpatterns = patterns(
     url(r'^emailtemplate/(?P<pk>[0-9]+)/edit$',
         EmailTemplateEditView.as_view(),
         name='emailtemplate-edit'),
+    url(r'^emailtemplate/(?P<pk>[0-9]+)/clone$',
+        EmailTemplateEditView.as_view(), {'clone': True},
+        name='emailtemplate-clone'),
+
 
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
