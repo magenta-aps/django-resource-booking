@@ -4,6 +4,7 @@ from booking.models import Unit
 from booking.models import Resource, OtherResource, Visit, VisitOccurrence
 from booking.models import Booker, Region, PostCode, School
 from booking.models import ClassBooking, TeacherBooking, BookingSubjectLevel
+from booking.models import EmailTemplate
 from django import forms
 from django.forms import CheckboxSelectMultiple, EmailInput, RadioSelect
 from django.forms import inlineformset_factory
@@ -352,3 +353,11 @@ BookingSubjectLevelForm = \
                               )
                           }
                           )
+
+class EmailTemplateForm(forms.ModelForm):
+    class Meta:
+        model = EmailTemplate
+        fields = ('name', 'subject', 'body')
+        widgets = {
+            'body': TinyMCE(attrs={'rows': 10, 'cols': 90})
+        }

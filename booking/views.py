@@ -33,10 +33,12 @@ from booking.models import Room
 from booking.models import PostCode, School
 from booking.models import Booking
 from booking.models import ResourceGymnasieFag, ResourceGrundskoleFag
+from booking.models import EmailTemplate
 from booking.forms import ResourceInitialForm, OtherResourceForm, VisitForm
 from booking.forms import ClassBookingForm, TeacherBookingForm
 from booking.forms import VisitStudyMaterialForm, BookingSubjectLevelForm
 from booking.forms import BookerForm
+from booking.forms import EmailTemplateForm
 
 import urls
 
@@ -1123,3 +1125,39 @@ class EmbedcodesView(TemplateView):
         context.update(kwargs)
 
         return super(EmbedcodesView, self).get_context_data(**context)
+
+
+class EmailTemplateEditView(UpdateView):
+    template_name = 'email/form.html'
+    form_class = EmailTemplateForm
+    model = EmailTemplate
+
+    def get(self, request, *args, **kwargs):
+        pk = kwargs.get("pk")
+        if pk is None:
+            self.object = EmailTemplate()
+        else:
+            self.object = EmailTemplate.objects.get(pk=pk)
+        form = self.get_form()
+        return self.render_to_response(
+            self.get_context_data(form=form)
+        )
+
+    def post(self, request, *args, **kwargs):
+
+        pk = kwargs.get("pk")
+        if pk is None:
+            self.object = EmailTemplate()
+        else:
+            self.object = EmailTemplate.objects.get(pk)
+        context = {}
+        context.update(kwargs)
+
+        form = self.get_form()
+        if form.is_valid():
+            self.object = form.save()
+            return redirect(reverse('emailtemplate-edit', args=[self.object.id]))
+
+        return self.render_to_response(
+                self.get_context_data(**context)
+        )

@@ -6,6 +6,7 @@ from djorm_pgfulltext.fields import VectorField
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
 from django.utils.translation import ugettext_lazy as _
+from django.template.base import Template
 
 from recurrence.fields import RecurrenceField
 from booking.utils import ClassProperty
@@ -1054,3 +1055,25 @@ class BookingSubjectLevel(models.Model):
 
     def display_value(self):
         return u'%s på %s niveau' % (self.subject.name, self.level)
+
+
+class EmailTemplate(models.Model):
+
+    name = models.CharField(
+        max_length=64,
+        verbose_name=u'Navn'
+    )
+
+    subject = models.CharField(
+        max_length=77,
+        verbose_name=u'Emne'
+    )
+
+    body = models.CharField(
+        max_length=4096,
+        verbose_name=u'Tekst'
+    )
+
+    def expand(self, context):
+        template = Template(unicode(self.body))
+        return template.render(context)

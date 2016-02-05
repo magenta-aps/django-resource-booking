@@ -11,6 +11,7 @@ from booking.views import BookingView, BookingSuccessView
 from booking.views import EditOtherResourceView, OtherResourceDetailView
 from booking.views import EditVisitView, VisitDetailView
 from booking.views import SearchView, EmbedcodesView
+from booking.views import EmailTemplateEditView
 
 from django.views.generic import TemplateView
 
@@ -93,7 +94,14 @@ urlpatterns = patterns(
 
     url(r'^embedcodes/(?P<embed_url>.*)$',
         EmbedcodesView.as_view(),
-        name='embedcodes')
+        name='embedcodes'),
+
+    url(r'^emailtemplate/create$',
+        EmailTemplateEditView.as_view(),
+        name='emailtemplate-create'),
+    url(r'^emailtemplate/(?P<pk>[0-9]+)/edit$',
+        EmailTemplateEditView.as_view(),
+        name='emailtemplate-edit'),
 
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
