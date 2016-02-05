@@ -698,6 +698,26 @@ div ul.errorlist {
     list-style-position: inside;
     max-width: 70%;
 }
+
+/* gymnasiefag-edit & grundskolefag-edit */
+#gymnasiefag-fag,
+#gymnasiefag-levels,
+#grundskolefag-fag,
+#grundskolefag-minclass,
+#grundskolefag-maxclass {
+    margin-right: 10px;
+}
+#gymnasiefag-empty,
+#grundskolefag-empty {
+    margin-bottom: 10px;
+}
+.fagedit-group {
+    display: inline-block;
+}
+.fagedit-group label {
+    font-weight: normal;
+}
+
 /*Backend specific styles end */
 
 /* Embedded pages styles */
