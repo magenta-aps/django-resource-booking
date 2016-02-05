@@ -1,6 +1,7 @@
 # encoding: utf-8
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+from django.template.context import make_context
 from djorm_pgfulltext.models import SearchManager
 from djorm_pgfulltext.fields import VectorField
 from django.contrib.contenttypes.models import ContentType
@@ -1070,10 +1071,19 @@ class EmailTemplate(models.Model):
     )
 
     body = models.CharField(
-        max_length=4096,
+        max_length=65584,
         verbose_name=u'Tekst'
     )
 
-    def expand(self, context):
-        template = Template(unicode(self.body))
+    def expand_subject(self, context):
+        return self._expand(self.subject, context)
+
+    def expand_body(self, context):
+        return self._expand(self.body, context)
+
+    @staticmethod
+    def _expand(text, context):
+        template = Template(unicode(text))
+        if isinstance(context, dict):
+            context = make_context(context)
         return template.render(context)

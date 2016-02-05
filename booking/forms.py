@@ -6,7 +6,8 @@ from booking.models import Booker, Region, PostCode, School
 from booking.models import ClassBooking, TeacherBooking, BookingSubjectLevel
 from booking.models import EmailTemplate
 from django import forms
-from django.forms import CheckboxSelectMultiple, EmailInput, RadioSelect
+from django.forms import CheckboxSelectMultiple, EmailInput, RadioSelect, \
+    formset_factory
 from django.forms import inlineformset_factory
 from django.forms import TextInput, NumberInput, URLInput, Textarea, Select
 from django.forms import HiddenInput
@@ -354,6 +355,7 @@ BookingSubjectLevelForm = \
                           }
                           )
 
+
 class EmailTemplateForm(forms.ModelForm):
     class Meta:
         model = EmailTemplate
@@ -361,3 +363,31 @@ class EmailTemplateForm(forms.ModelForm):
         widgets = {
             'body': TinyMCE(attrs={'rows': 10, 'cols': 90})
         }
+
+
+class EmailTemplatePreviewContextEntryForm(forms.Form):
+    key = forms.CharField(
+        max_length=256,
+        widget=TextInput(attrs={'class': 'form-control emailtemplate-key'})
+    )
+    type = forms.ChoiceField(
+        choices=(
+            ('string', 'String'),
+            ('Visit', 'Visit'),
+            ('Booking', 'Booking'),
+        ),
+        widget=Select(attrs={'class': 'form-control emailtemplate-type'})
+    )
+    value = forms.CharField(
+        max_length=1024,
+        widget=TextInput(
+            attrs={
+                'class': 'form-control emailtemplate-value '
+                         'emailtemplate-type-string'
+            }
+        )
+    )
+
+EmailTemplatePreviewContextForm = formset_factory(
+    EmailTemplatePreviewContextEntryForm
+)

@@ -16,7 +16,7 @@ from django.db.models import Q
 from django.http import Http404
 from django.http import HttpResponse
 from django.http import JsonResponse
-from django.shortcuts import redirect
+from django.shortcuts import render, redirect
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext as _
@@ -38,7 +38,7 @@ from booking.forms import ResourceInitialForm, OtherResourceForm, VisitForm
 from booking.forms import ClassBookingForm, TeacherBookingForm
 from booking.forms import VisitStudyMaterialForm, BookingSubjectLevelForm
 from booking.forms import BookerForm
-from booking.forms import EmailTemplateForm
+from booking.forms import EmailTemplateForm, EmailTemplatePreviewContextForm
 
 import urls
 
@@ -1151,15 +1151,77 @@ class EmailTemplateEditView(UpdateView):
         if pk is None or is_cloning:
             self.object = EmailTemplate()
         else:
-            self.object = EmailTemplate.objects.get(pk)
+            self.object = EmailTemplate.objects.get(pk=pk)
         context = {}
         context.update(kwargs)
 
         form = self.get_form()
         if form.is_valid():
             self.object = form.save()
-            return redirect(reverse('emailtemplate-edit', args=[self.object.id]))
+            return redirect(reverse('emailtemplate-edit',
+                                    args=[self.object.id]))
 
         return self.render_to_response(
-                self.get_context_data(**context)
+            self.get_context_data(**context)
         )
+
+
+class EmailTemplateDetailView(View):
+    template_name = 'email/preview.html'
+
+    @staticmethod
+    def _getObjectJson():
+        return json.dumps({
+            'Visit': [
+                {'text': unicode(visit), 'value': visit.id}
+                for visit in Visit.objects.all()
+                ],
+            'Booking': [
+                {'text': unicode(booking), 'value': booking.id}
+                for booking in Booking.objects.all()
+                ]
+        })
+
+    def get(self, request, *args, **kwargs):
+        pk = kwargs.get("pk")
+        formset = EmailTemplatePreviewContextForm()
+        template = EmailTemplate.objects.get(pk=pk)
+
+        data = {'form': formset,
+                'subject': template.subject,
+                'body': template.body,
+                'objects': self._getObjectJson()
+                }
+
+        return render(request, self.template_name, data)
+
+    def post(self, request, *args, **kwargs):
+        pk = kwargs.get("pk")
+        formset = EmailTemplatePreviewContextForm(request.POST)
+        template = EmailTemplate.objects.get(pk=pk)
+
+        context = {}
+        if formset.is_valid():
+            for form in formset:
+                if form.is_valid():
+                    type = form.cleaned_data['type']
+                    value = form.cleaned_data['value']
+                    if type == 'Visit':
+                        try:
+                            value = Visit.objects.get(pk=value)
+                        except Visit.DoesNotExist:
+                            pass
+                    if type == 'Booking':
+                        try:
+                            value = Booking.objects.get(pk=value)
+                        except Booking.DoesNotExist:
+                            pass
+                    context[form.cleaned_data['key']] = value
+
+        data = {'form': formset,
+                'subject': template.expand_subject(context),
+                'body': template.expand_body(context),
+                'objects': self._getObjectJson()
+                }
+
+        return render(request, self.template_name, data)
