@@ -39,6 +39,7 @@ from booking.forms import VisitStudyMaterialForm, BookingSubjectLevelForm
 from booking.forms import BookerForm
 
 import urls
+import booking_workflows.views as booking_views
 
 
 i18n_test = _(u"Dette tester oversættelses-systemet")
@@ -1215,3 +1216,8 @@ class BookingDetailView(DetailView):
         context.update(kwargs)
 
         return super(BookingDetailView, self).get_context_data(**context)
+
+ChangeBookingStatusView = booking_views.ChangeBookingStatusView
+ChangeBookingTeachersView = booking_views.ChangeBookingTeachersView
+ChangeBookingHostsView = booking_views.ChangeBookingHostsView
+ChangeBookingRoomsView = booking_views.ChangeBookingRoomsView

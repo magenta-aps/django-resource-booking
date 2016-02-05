@@ -18,6 +18,48 @@
 
             <div class="divider"></div>
 
+            <h2>Statusoverblik</h2>
+
+            {% if not object.can_assign_resources %}
+            <p>
+                Det er ikke længere muligt at tildele ressourcer til denne
+                booking. Hvis du ønsker at rette i de tildelte ressourcer skal
+                du ændre statuses til '{{object.BEING_PLANNED_STATUS_TEXT}}'.
+            </p>
+            {% endif %}
+
+            <dl class="dl-horizontal">
+                <dt>Undervisere</dt>
+                <dd>
+                    {{ object.get_teacher_status_display }}
+                    {% if object.can_assign_resources %}
+                    <a href="{% url 'change-booking-teachers' object.pk %}" role="button" class="btn btn-primary btn-xs">Redigér</a>
+                    {% endif %}
+                </dd>
+                <dt>Værter</dt>
+                <dd>
+                    {{ object.get_host_status_display }}
+                    {% if object.can_assign_resources %}
+                    <a href="{% url 'change-booking-hosts' object.pk %}" role="button" class="btn btn-primary btn-xs">Redigér</a>
+                    {% endif %}
+                </dd>
+                <dt>Lokalerer</dt>
+                <dd>
+                    {{ object.get_room_status_display }}
+                    {% if object.can_assign_resources %}
+                    <a href="{% url 'change-booking-rooms' object.pk %}" role="button" class="btn btn-primary btn-xs">Redigér</a>
+                    {% endif %}
+                </dd>
+                <dt>Afvikling</dt>
+                <dd>
+                    {{ object.get_workflow_status_display }}
+                    <a href="{% url 'change-booking-status' object.pk %}" role="button" class="btn btn-primary btn-xs">Skift status</a>
+                </dd>
+            </dl>
+            
+            <div class="divider"></div>
+
+            <h2>Information om bookingen</h2>
 
             <dl class="dl-horizontal">
 
