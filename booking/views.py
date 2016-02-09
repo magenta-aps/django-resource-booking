@@ -1345,11 +1345,16 @@ class EmailTemplateEditView(UpdateView, UnitAccessRequiredMixin):
         context = super(EmailTemplateEditView, self).get_context_data(**kwargs)
         context['breadcrumbs'] = [
             {'url': reverse('emailtemplate-list'),
-             'text': _(u'Emailskabelonliste')},
-            {'url': reverse('emailtemplate-view', args={self.object.id}),
-             'text': _(u'Emailskabelon')},
-            {'text': _(u'Redigér')},
-        ]
+             'text': _(u'Emailskabelonliste')}]
+        if self.object and self.object.id:
+            context['breadcrumbs'].extend([
+                {'url': reverse('emailtemplate-view', args={self.object.id}),
+                 'text': _(u'Emailskabelon')},
+                {'text': _(u'Redigér')},
+        ])
+        else:
+            context['breadcrumbs'].append({'text': _(u'Opret')})
+
         return context
 
     def get_form_kwargs(self):
