@@ -10,6 +10,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
+from django.core.mail.message import EmailMessage
 from django.db.models import Count
 from django.db.models import F
 from django.db.models import Q
@@ -27,7 +28,8 @@ from django.views.defaults import bad_request
 from profile.models import EDIT_ROLES
 from profile.models import role_to_text
 
-from booking.models import Visit, VisitOccurrence, StudyMaterial, Booker
+from booking.models import Visit, VisitOccurrence, StudyMaterial, Booker, \
+    KUEmailMessage
 from booking.models import Resource, Subject
 from booking.models import Room
 from booking.models import PostCode, School
@@ -736,6 +738,7 @@ class BookingView(UpdateView):
                 booking.booker = forms['bookerform'].save()
 
             booking.save()
+            self._send_email()
 
             # We can't fetch this form before we have
             # a saved booking object to feed it, or we'll get an error
@@ -778,6 +781,31 @@ class BookingView(UpdateView):
             return ["booking/classvisit.html"]
         if self.visit.type == Resource.TEACHER_EVENT:
             return ["booking/teachervisit.html"]
+
+    def _save_email(self, email_message):
+        ku_email_message = KUEmailMessage(
+            subject=email_message.subject,
+            body=email_message.body,
+            from_email=email_message.from_email,
+            recipients=', '.join(email_message.recipients())
+        )
+        ku_email_message.save()
+
+    def _send_email(self):
+        email = EmailMessage(
+            subject='Hello',
+            body='''
+                Der er blevet booket et besøg i KU-booking!
+
+                mvh.
+
+                KU
+            ''',
+            from_email='me@example.com',
+            to=['somebody@example.com', 'somebodyelse@example.com']
+        )
+        email.send()
+        self._save_email(email)
 
 
 class BookingSuccessView(TemplateView):

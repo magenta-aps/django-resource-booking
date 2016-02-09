@@ -1,6 +1,6 @@
 # encoding: utf-8
-
 from django.db import models
+from django.utils import timezone
 from djorm_pgfulltext.models import SearchManager
 from djorm_pgfulltext.fields import VectorField
 from django.contrib.contenttypes.models import ContentType
@@ -831,3 +831,19 @@ class BookingSubjectLevel(models.Model):
 
     def display_value(self):
         return u'%s på %s niveau' % (self.subject.name, self.level)
+
+
+class KUEmailMessage(models.Model):
+    """Email data for logging purposes."""
+    created = models.DateTimeField(
+        blank=False,
+        null=False,
+        default=timezone.now()
+    )
+    subject = models.TextField(blank=False, null=False)
+    body = models.TextField(blank=False, null=False)
+    from_email = models.TextField(blank=False, null=False)
+    recipients = models.TextField(
+        blank=False,
+        null=False
+    )
