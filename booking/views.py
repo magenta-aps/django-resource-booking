@@ -104,6 +104,25 @@ class RoleRequiredMixin(object):
         )
 
 
+class UnitAccessRequiredMixin(object):
+
+    def check_item(self, item):
+        current_user = self.request.user
+        if hasattr(current_user, 'userprofile'):
+            if current_user.userprofile.can_edit(item):
+                return
+        raise AccessDenied(_(u"You cannot edit an object for a unit "
+                             u"that you don't belong to"))
+
+    def check_unit(self, unit):
+        current_user = self.request.user
+        if hasattr(current_user, 'userprofile'):
+            if current_user.userprofile.unit_access(unit):
+                return
+        raise AccessDenied(_(u"You cannot edit an object for a unit "
+                             u"that you don't belong to"))
+
+
 class SearchView(ListView):
     """Class for handling main search."""
     model = Resource
@@ -1132,8 +1151,15 @@ class EmailTemplateListView(ListView):
     template_name = 'email/list.html'
     model = EmailTemplate
 
+    def get_queryset(self):
+        qs = super(EmailTemplateListView, self).get_queryset()
+        qs = [item
+              for item in qs
+              if self.request.user.userprofile.can_edit(item)]
+        return qs
 
-class EmailTemplateEditView(UpdateView):
+
+class EmailTemplateEditView(UpdateView, UnitAccessRequiredMixin):
     template_name = 'email/form.html'
     form_class = EmailTemplateForm
     model = EmailTemplate
@@ -1144,6 +1170,7 @@ class EmailTemplateEditView(UpdateView):
             self.object = EmailTemplate()
         else:
             self.object = EmailTemplate.objects.get(pk=pk)
+            self.check_item(self.object)
         form = self.get_form()
         return self.render_to_response(
             self.get_context_data(form=form)
@@ -1158,10 +1185,12 @@ class EmailTemplateEditView(UpdateView):
             self.object = EmailTemplate()
         else:
             self.object = EmailTemplate.objects.get(pk=pk)
+            self.check_item(self.object)
         context = {}
         context.update(kwargs)
 
         form = self.get_form()
+        self.check_unit(form.cleaned_data.unit)
         if form.is_valid():
             self.object = form.save()
             return redirect(reverse('emailtemplate-list'))
@@ -1169,6 +1198,11 @@ class EmailTemplateEditView(UpdateView):
         return self.render_to_response(
             self.get_context_data(**context)
         )
+
+    def get_form_kwargs(self):
+        args = super(EmailTemplateEditView, self).get_form_kwargs()
+        args['user'] = self.request.user
+        return args
 
 
 class EmailTemplateDetailView(View):
@@ -1200,6 +1234,7 @@ class EmailTemplateDetailView(View):
             for key, type in EmailTemplateDetailView.classes.items()
             })
 
+    @method_decorator(login_required)
     def get(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
         formset = EmailTemplatePreviewContextForm()
@@ -1214,6 +1249,7 @@ class EmailTemplateDetailView(View):
 
         return render(request, self.template_name, data)
 
+    @method_decorator(login_required)
     def post(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
         formset = EmailTemplatePreviewContextForm(request.POST)
