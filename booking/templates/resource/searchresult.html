@@ -140,7 +140,9 @@
                                     </ul>
                                 </li>
                                 {% endif %}
-                                <li><strong>Hvornår: </strong><span class="type-offer">{% if res.occ_starttime %}{{ res.occ_starttime|date:"d. m. Y" }}  kl. {{ res.occ_starttime|date:"H:i" }}{% else %}-{% endif %}</span></li>
+                                {% if res.occ_starttime %}
+                                <li><strong>Hvornår: </strong><span class="type-offer">{{ res.occ_starttime|date:"d. m. Y" }}  kl. {{ res.occ_starttime|date:"H:i" }}</span></li>
+                                {% endif %}
                                 <li><strong>Hvor: </strong><span class="type-offer">{{ res.display_locality }}</span></li>
                             </ul>
                         </div>
