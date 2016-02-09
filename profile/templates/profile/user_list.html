@@ -1,0 +1,67 @@
+{% extends "index.html" %}
+
+{% block content %}
+    {% include 'common/breadcrumbrow.html' %}
+
+    <h1>Administrér brugere</h1>
+
+    <div class="divider"></div>
+    <div class="row">
+        <div class="col-sm-12">
+            <a href="{% url 'user_create' %}" class="btn btn-primary btn-tiny pull-right">Opret ny bruger</a>
+            <h2>Filter brugerliste</h2>
+            
+            <form name="filteruserlist" id="filteruserlist">
+                <dl class="dl-horizontal">
+                    <dt>Fakultet:</dt>
+                    <dd>
+                        <select name="unit">
+                            <option value="">-- Vælg fakultet --</option>
+                            {% for val, name in possible_units %}
+                            <option value="{{ val }}"{% if selected_unit == val %}selected=" selected"{% endif %}>{{ name }}</option>
+                            {% endfor %}
+                        </select>
+                    </dd>
+                    <dt>Rolle:</dt>
+                    <dd>
+                        <select name="role">
+                            <option value="">-- Vælg rolle --</option>
+                            {% for val, name in possible_roles %}
+                            <option value="{{ val }}"{% if selected_role == val %}selected=" selected"{% endif %}>{{ name }}</option>
+                            {% endfor %}
+                        </select>
+                    </dd>
+                    <dt>Søg i navn:</dt>
+                    <dd><input type="text" name="q" value="{{ request.GET.q }}" /></dd>
+                    <dt></dt>
+                    <dd><input type="submit" value="Opdater" /></dd>
+                </dl>
+                
+            </form>
+        </div>
+    </div>
+    <div class="divider"></div>
+    <div class="row">
+        <div class="col-sm-12">
+            <ul class="list-unstyled">
+                {% for user in users %}
+                <li style="border: 1px solid gray; margin: 0.5em; padding: 0.5em">
+                    <dl class="dl-horizontal">
+                        <dt>Navn:</dt>
+                        <dd>
+                            {{ user }}
+                            <a href="{% url 'user_edit' user.pk %}">Redigér</a>
+                        </dd>
+                        <dt>Fakultet:</dt>
+                        <dd>{{ user.userprofile.unit.name }}</dd>
+                        <dt>Rolle:</dt>
+                        <dd>{{ user.userprofile.get_role_name }}</dd>
+                    </dl>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <div class="divider"></div>
+
+{% endblock %}

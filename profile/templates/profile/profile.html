@@ -19,10 +19,13 @@
             <p>Her kan du se en oversigt over dine tilbud, hvilke der er bookede, og hvilke der kræver handling.</p>    
         </div>
     </div>
+    {% if request.user.userprofile.can_create %}
     <div class="divider"></div>
-    <div>
-        <a href="{% url 'booking-search' %}">Søg i bookinger</a>
-    </div>
+    <ul>
+        <li><a href="{% url 'booking-search' %}">Søg i bookinger</a></li>
+        <li><a href="{% url 'user_list' %}">Administrér brugere</a></li>
+    </ul>
+    {% endif %}
     <div class="divider"></div>
     <div id="personalPage" class="row eq-height">
             <div class="col-sm-4">
