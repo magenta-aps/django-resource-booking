@@ -1171,19 +1171,19 @@ class EmailTemplateDetailView(View):
     template_name = 'email/preview.html'
 
     classes = {'Unit': Unit,
-               #'OtherResource': OtherResource,
+               # 'OtherResource': OtherResource,
                'Visit': Visit,
-               #'VisitOccurrence': VisitOccurrence,
-               #'StudyMaterial': StudyMaterial,
-               #'Resource': Resource,
-               #'Subject': Subject,
-               #'GymnasieLevel': GymnasieLevel,
-               #'Room': Room,
-               #'PostCode': PostCode,
-               #'School': School,
+               # 'VisitOccurrence': VisitOccurrence,
+               # 'StudyMaterial': StudyMaterial,
+               # 'Resource': Resource,
+               # 'Subject': Subject,
+               # 'GymnasieLevel': GymnasieLevel,
+               # 'Room': Room,
+               # 'PostCode': PostCode,
+               # 'School': School,
                'Booking': Booking,
-               #'ResourceGymnasieFag': ResourceGymnasieFag,
-               #'ResourceGrundskoleFag': ResourceGrundskoleFag
+               # 'ResourceGymnasieFag': ResourceGymnasieFag,
+               # 'ResourceGrundskoleFag': ResourceGrundskoleFag
                }
 
     @staticmethod
