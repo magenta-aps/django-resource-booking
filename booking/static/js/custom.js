@@ -3,18 +3,11 @@ $('.input-daterange input').each(function() {
     $(this).datepicker({
         language: 'da',
         format: 'dd-mm-yyyy',
+        weekStart: 1,
         todayHighlight: true,
         startDate: 'Date',
         clearBtn: true,
         autoclose: true
-    });
-});
-$(function() {
-    $('#filter-search-results input[type=checkbox]').on('change', function() {
-        $(this.form).trigger("submit")
-    });
-    $('#filter-search-results input.datepicker').on('changeDate', function() {
-        $(this.form).trigger("submit")
     });
 });
 $('.collapse').on('show.bs.collapse', function() {
@@ -30,16 +23,17 @@ $('#filters').on('hide.bs.collapse', function() {
     $(this).prev().find(".glyphicon").toggleClass("glyphicon-chevron-up glyphicon-chevron-down");
 });
 //Search-list.html end
-//Booking form validation start...
-// $('#startbookingform').validator().on('submit', function (e) {
-//   if (e.isDefaultPrevented()) {
-//     // handle the invalid form...
-//   } else {
-//     // everything looks good!
-//   }
-// });
-//Booking form validation end...
 $("#reset-btn").click(function() {
     $("#searchBox").val("");
     $("form").trigger("submit")
+});
+
+// Automatically submit the search form whenever the filters are changed
+$(function() {
+    $('#filter-search-results input[type=checkbox]').on('change', function() {
+        $(this.form).trigger("submit")
+    });
+    $('#filter-search-results input.datepicker').on('changeDate', function() {
+        $(this.form).trigger("submit")
+    });
 });

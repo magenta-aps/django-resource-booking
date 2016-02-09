@@ -1,0 +1,11 @@
+<div class="row form-group">
+    <div>
+        {{ form.institution_level.errors }}
+    </div>
+    <div class="col-sm-2">
+        <label class="{{ form.institution_level.css_classes }}" for="{{ form.institution_level.id_for_label }}">{{ form.institution_level.label }}:</label>
+    </div>
+    <div class="col-sm-10">
+        {{ form.institution_level }}
+    </div>
+</div>

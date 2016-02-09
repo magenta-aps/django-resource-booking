@@ -7,7 +7,7 @@
             var code = parseInt(this.value, 10);
             if (code && code>=1000 && code<10000) {
                 $.ajax({
-                    url: "/postcode/" + code,
+                    url: "{% url 'postcode' '0000' %}".replace("0000", code),
                     dataType: "json",
                     complete: function(response) {
                         var data = response.responseJSON;

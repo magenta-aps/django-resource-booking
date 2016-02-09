@@ -1,0 +1,45 @@
+<div class="col-sm-2">
+    <label for="gymnasiefag-edit">Gymnasiefag:</label>
+</div>
+
+<div class="col-sm-10">
+    <div>
+        <div id="gymnasiefag-empty">Der er ikke valgt nogen fag</div>
+        <script type="text/template" id="gymnasiefag-item-template">
+            <li data-fag-id="##subject-id##">
+                <input type="hidden" value="##submitvalue##" name="gymnasiefag" />
+                <span class="fag-description">##description##</span>
+                <span class="glyphicon glyphicon-remove"></span>
+            </li>
+        </script>
+        <ul id="gymnasiefag-list">
+        {% for fag in gymnasiefag_selected %}
+            <li>
+                <input type="hidden" value="{{ fag.submitvalue }}" name="gymnasiefag" />
+                <span class="fag-description">{{ fag.description }}</span>
+                <span class="glyphicon glyphicon-remove"></span>
+            </li>
+        {% endfor %}
+        </ul>
+    </div>
+    <div id="gymnasiefag-edit">
+        <div class="fagedit-group">
+            <label for="gymnasiefag-fag">Tilføj fag:</label>
+            <select name="gymnasiefag-fag" id="gymnasiefag-fag">
+                <option value="">-- Vælg gymnasiefag --</option>
+                {% for fag in gymnasiefag_choices %}
+                <option value="{{fag.pk}}">{{fag.name}}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="fagedit-group">
+            <label for="gymnasiefag-levels">Niveau:</label>
+            <ul id="gymnasiefag-levels" class="list-inline" style="display: inline-block">
+                {% for level in gymnasie_level_choices %}
+                <li><label for="gymnasielevel-{{level.pk}}"><input type="checkbox" value="{{level.pk}}" /> {{ level }}</label></li>
+                {% endfor %}
+            </ul>
+        </div>
+        <input type="button" id="gymnasiefag-add" value="Tilføj" />
+    </div>
+</div>
