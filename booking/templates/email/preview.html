@@ -8,6 +8,9 @@
 {% endblock %}
 
 {% block content %}
+
+    {% include 'common/breadcrumbrow.html' %}
+
     <div class="divider"></div>
     <div class="row form-group">
         <div class="col-sm-8">
@@ -16,6 +19,7 @@
         <div class="col-sm-4 text-right">
             <a href="{% url 'emailtemplate-edit' template.id %}" class="btn btn-primary">{% trans "Rediger skabelon" %}</a>
             <a href="{% url 'emailtemplate-clone' template.id %}" class="btn btn-primary">{% trans "Kopier skabelon" %}</a>
+            <a href="{% url 'emailtemplate-delete' template.id %}" class="btn btn-primary">{% trans "Slet skabelon" %}</a>
         </div>
         </div>
     <div class="row">

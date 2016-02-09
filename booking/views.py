@@ -1162,6 +1162,9 @@ class EmailTemplateListView(ListView):
                         and objectA.key == objectB.key \
                         and objectA.unit == objectB.unit:
                     context['duplicates'].extend([objectA, objectB])
+        context['breadcrumbs'] = [
+            {'text': _(u'Emailskabelonliste')},
+        ]
         return context
 
     def get_queryset(self):
@@ -1211,6 +1214,15 @@ class EmailTemplateEditView(UpdateView, UnitAccessRequiredMixin):
             self.get_context_data(**context)
         )
 
+    def get_context_data(self, **kwargs):
+        context = super(EmailTemplateEditView, self).get_context_data(**kwargs)
+        context['breadcrumbs'] = [
+            {'url': reverse('emailtemplate-list'), 'text': _(u'Emailskabelonliste')},
+            {'url': reverse('emailtemplate-view', args={self.object.id}), 'text': _(u'Emailskabelon')},
+            {'text': _(u'Redigér')},
+        ]
+        return context
+
     def get_form_kwargs(self):
         args = super(EmailTemplateEditView, self).get_form_kwargs()
         args['user'] = self.request.user
@@ -1259,6 +1271,7 @@ class EmailTemplateDetailView(View):
                 'template': template
                 }
 
+        data.update(self.get_context_data())
         return render(request, self.template_name, data)
 
     @method_decorator(login_required)
@@ -1287,11 +1300,29 @@ class EmailTemplateDetailView(View):
                 'objects': self._getObjectJson(),
                 'template': template
                 }
+        data.update(self.get_context_data())
 
         return render(request, self.template_name, data)
+
+    def get_context_data(self, **kwargs):
+        context = {}
+        context['breadcrumbs'] = [
+            {'url': reverse('emailtemplate-list'), 'text': _(u'Emailskabelonliste')},
+            {'text': _(u'Emailskabelon')},
+        ]
+        return context
 
 
 class EmailTemplateDeleteView(DeleteView):
     template_name = 'email/delete.html'
     model = EmailTemplate
     success_url = reverse_lazy('emailtemplate-list')
+
+    def get_context_data(self, **kwargs):
+        context = super(EmailTemplateDeleteView, self).get_context_data(**kwargs)
+        context['breadcrumbs'] = [
+            {'url': reverse('emailtemplate-list'), 'text': _(u'Emailskabelonliste')},
+            {'url': reverse('emailtemplate-view', args={self.object.id}), 'text': _(u'Emailskabelon')},
+            {'text': _(u'Slet')},
+        ]
+        return context
