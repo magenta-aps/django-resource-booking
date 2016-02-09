@@ -4,6 +4,7 @@ $('.input-daterange input').each(function() {
         language: 'da',
         format: 'dd-mm-yyyy',
         weekStart: 1,
+        calendarWeeks: true,
         todayHighlight: true,
         startDate: 'Date',
         clearBtn: true,
