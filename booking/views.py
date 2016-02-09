@@ -1158,7 +1158,9 @@ class EmailTemplateListView(ListView):
             objectA = self.object_list[i]
             for j in xrange(i, len(self.object_list)):
                 objectB = self.object_list[j]
-                if objectA != objectB and objectA.key == objectB.key and objectA.unit == objectB.unit:
+                if objectA != objectB \
+                        and objectA.key == objectB.key \
+                        and objectA.unit == objectB.unit:
                     context['duplicates'].extend([objectA, objectB])
         return context
 
