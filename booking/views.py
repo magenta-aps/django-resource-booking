@@ -1351,7 +1351,7 @@ class EmailTemplateEditView(UpdateView, UnitAccessRequiredMixin):
                 {'url': reverse('emailtemplate-view', args={self.object.id}),
                  'text': _(u'Emailskabelon')},
                 {'text': _(u'Redigér')},
-        ])
+            ])
         else:
             context['breadcrumbs'].append({'text': _(u'Opret')})
 
