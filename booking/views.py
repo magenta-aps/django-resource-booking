@@ -1217,8 +1217,10 @@ class EmailTemplateEditView(UpdateView, UnitAccessRequiredMixin):
     def get_context_data(self, **kwargs):
         context = super(EmailTemplateEditView, self).get_context_data(**kwargs)
         context['breadcrumbs'] = [
-            {'url': reverse('emailtemplate-list'), 'text': _(u'Emailskabelonliste')},
-            {'url': reverse('emailtemplate-view', args={self.object.id}), 'text': _(u'Emailskabelon')},
+            {'url': reverse('emailtemplate-list'),
+             'text': _(u'Emailskabelonliste')},
+            {'url': reverse('emailtemplate-view', args={self.object.id}),
+             'text': _(u'Emailskabelon')},
             {'text': _(u'Redigér')},
         ]
         return context
@@ -1307,7 +1309,8 @@ class EmailTemplateDetailView(View):
     def get_context_data(self, **kwargs):
         context = {}
         context['breadcrumbs'] = [
-            {'url': reverse('emailtemplate-list'), 'text': _(u'Emailskabelonliste')},
+            {'url': reverse('emailtemplate-list'),
+             'text': _(u'Emailskabelonliste')},
             {'text': _(u'Emailskabelon')},
         ]
         return context
@@ -1319,10 +1322,13 @@ class EmailTemplateDeleteView(DeleteView):
     success_url = reverse_lazy('emailtemplate-list')
 
     def get_context_data(self, **kwargs):
-        context = super(EmailTemplateDeleteView, self).get_context_data(**kwargs)
+        context = super(EmailTemplateDeleteView, self).\
+            get_context_data(**kwargs)
         context['breadcrumbs'] = [
-            {'url': reverse('emailtemplate-list'), 'text': _(u'Emailskabelonliste')},
-            {'url': reverse('emailtemplate-view', args={self.object.id}), 'text': _(u'Emailskabelon')},
+            {'url': reverse('emailtemplate-list'),
+             'text': _(u'Emailskabelonliste')},
+            {'url': reverse('emailtemplate-view', args={self.object.id}),
+             'text': _(u'Emailskabelon')},
             {'text': _(u'Slet')},
         ]
         return context
