@@ -1,14 +1,19 @@
 # encoding: utf-8
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.mail.message import EmailMessage
 from django.db import models
+from django.utils import timezone
+from django.core.exceptions import ObjectDoesNotExist
+from django.template.context import make_context
 from djorm_pgfulltext.models import SearchManager
 from djorm_pgfulltext.fields import VectorField
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
 from django.utils.translation import ugettext_lazy as _
+from django.template.base import Template
 
 from recurrence.fields import RecurrenceField
 from booking.utils import ClassProperty
+from resource_booking import settings
 
 LOGACTION_CREATE = ADDITION
 LOGACTION_CHANGE = CHANGE
@@ -56,6 +61,12 @@ class Person(models.Model):
 
     def __unicode__(self):
         return self.name
+
+    def get_name(self):
+        return self.name
+
+    def get_email(self):
+        return self.email
 
 
 # Units (faculties, institutes etc)
@@ -827,6 +838,11 @@ class VisitOccurrence(models.Model):
 
         return result
 
+    def is_booked(self):
+        """Has this VisitOccurrence instance been booked yet?"""
+        class_booking = ClassBooking.objects.get(time_id=self.id)
+        return class_booking is not None
+
 
 class Room(models.Model):
     visit = models.ForeignKey(
@@ -1015,7 +1031,8 @@ class Booking(models.Model):
 
 
 class ClassBooking(Booking):
-    time = models.DateTimeField(
+    time = models.ForeignKey(
+        VisitOccurrence,
         null=True,
         blank=True,
         verbose_name=u'Tidspunkt'
@@ -1054,3 +1071,135 @@ class BookingSubjectLevel(models.Model):
 
     def display_value(self):
         return u'%s på %s niveau' % (self.subject.name, self.level)
+
+
+class KUEmailMessage(models.Model):
+    """Email data for logging purposes."""
+    created = models.DateTimeField(
+        blank=False,
+        null=False,
+        default=timezone.now()
+    )
+    subject = models.TextField(blank=False, null=False)
+    body = models.TextField(blank=False, null=False)
+    from_email = models.TextField(blank=False, null=False)
+    recipients = models.TextField(
+        blank=False,
+        null=False
+    )
+
+    @staticmethod
+    def save_email(email_message):
+        ku_email_message = KUEmailMessage(
+            subject=email_message.subject,
+            body=email_message.body,
+            from_email=email_message.from_email,
+            recipients=', '.join(email_message.recipients())
+        )
+        ku_email_message.save()
+
+    @staticmethod
+    def send_email(template_key, context, recipients, unit=None, **kwargs):
+        template = None
+        emails = []
+
+        while unit is not None and template is not None:
+            try:
+                template = EmailTemplate.objects.filter(
+                    key=template_key,
+                    unit=unit
+                )[0]
+            except:
+                pass
+            unit = unit.parent
+        if template is None:
+            try:
+                template = EmailTemplate.objects.filter(key=template_key,
+                                                        unit__isnull=True)[0]
+            except:
+                pass
+        if template is None:
+            raise Exception(
+                u"Template with name %s does not exist!" % template_key
+            )
+
+        if type(recipients) is not list:
+            recipients = [recipients]
+        for recipient in recipients:
+            try:
+                address = recipient.get_email()
+                email = {'address': address}
+                try:
+                    name = recipient.get_name()
+                    email['name'] = name
+                    email['full'] = u"\"%s\" <%s>" % (name, address)
+                except:
+                    email['full'] = address
+                emails.append(email)
+            except:
+                pass
+
+        for email in emails:
+            ctx = {
+                'unit': unit,
+                'recipient': email,
+                'sender': settings.DEFAULT_FROM_EMAIL
+            }
+            ctx.update(context)
+            subject = template.expand_subject(ctx)
+            body = template.expand_body(ctx)
+
+            message = EmailMessage(
+                subject=subject,
+                body=body,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[email['full']]
+            )
+            message.send()
+            KUEmailMessage.save_email(message)
+
+
+class EmailTemplate(models.Model):
+
+    BOOKING_CREATED = 1
+
+    key_choices = [
+        (BOOKING_CREATED, _(u'Booking created')),
+    ]
+    key = models.IntegerField(
+        verbose_name=u'Key',
+        choices=key_choices,
+        default=1
+    )
+
+    subject = models.CharField(
+        max_length=77,
+        verbose_name=u'Emne'
+    )
+
+    body = models.CharField(
+        max_length=65584,
+        verbose_name=u'Tekst'
+    )
+
+    unit = models.ForeignKey(
+        Unit,
+        verbose_name=u'Enhed',
+        null=True,
+        blank=True
+    )
+
+    def expand_subject(self, context, keep_placeholders=False):
+        return self._expand(self.subject, context, keep_placeholders)
+
+    def expand_body(self, context, keep_placeholders=False):
+        return self._expand(self.body, context, keep_placeholders)
+
+    @staticmethod
+    def _expand(text, context, keep_placeholders=False):
+        template = Template(unicode(text))
+        if keep_placeholders:
+            template.engine.string_if_invalid = "{{ %s }}"
+        if isinstance(context, dict):
+            context = make_context(context)
+        return template.render(context)

@@ -37,7 +37,7 @@
                 {{ subjectform.management_form }}
                 {% for form in subjectform %}
                     {{ form.id }}
-                    <div class="form-group" id="rowprototype">
+                    <div class="form-group"{% if forloop.first %} id="rowprototype"{% endif %}>
                         <label class="col-sm-2 control-label" for="{{ form.subject.id_for_label }}">{% trans "Fag/Niveau" %}</label>
                         <div class="col-sm-4">
                             {{ form.subject }}
