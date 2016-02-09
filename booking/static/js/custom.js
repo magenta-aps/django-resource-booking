@@ -4,6 +4,7 @@ $('.input-daterange input').each(function() {
         language: 'da',
         format: 'dd-mm-yyyy',
         weekStart: 1,
+        calendarWeeks: true,
         todayHighlight: true,
         startDate: 'Date',
         clearBtn: true,
@@ -22,6 +23,7 @@ $('#filters').on('show.bs.collapse', function() {
 $('#filters').on('hide.bs.collapse', function() {
     $(this).prev().find(".glyphicon").toggleClass("glyphicon-chevron-up glyphicon-chevron-down");
 });
+
 //Search-list.html end
 $("#reset-btn").click(function() {
     $("#searchBox").val("");
