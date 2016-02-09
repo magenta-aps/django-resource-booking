@@ -10,7 +10,6 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
-from django.core.mail.message import EmailMessage
 from django.core.urlresolvers import reverse
 from django.db.models import Count
 from django.db.models import F
@@ -1072,13 +1071,13 @@ class BookingView(UpdateView):
 
             booking.save()
             KUEmailMessage.send_email(
-                'booking',
+                EmailTemplate.BOOKING_CREATED,
                 {
                     'booking': booking,
                     'visit': booking.visit,
                     'booker': booking.booker
                 },
-                self.visit.contact_persons,
+                [x for x in self.visit.contact_persons.all()],
                 self.visit.unit
             )
 
@@ -1123,6 +1122,7 @@ class BookingView(UpdateView):
             return ["booking/classvisit.html"]
         if self.visit.type == Resource.TEACHER_EVENT:
             return ["booking/teachervisit.html"]
+
 
 class BookingSuccessView(TemplateView):
     template_name = "booking/success.html"

@@ -62,6 +62,12 @@ class Person(models.Model):
     def __unicode__(self):
         return self.name
 
+    def get_name(self):
+        return self.name
+
+    def get_email(self):
+        return self.email
+
 
 # Units (faculties, institutes etc)
 class UnitType(models.Model):
@@ -1093,32 +1099,36 @@ class KUEmailMessage(models.Model):
         ku_email_message.save()
 
     @staticmethod
-    def send_email(template_name, context, recipients, unit=None, **kwargs):
+    def send_email(template_key, context, recipients, unit=None, **kwargs):
         template = None
         emails = []
 
         while unit is not None and template is not None:
             try:
-                template = EmailTemplate.objects.filter(name=template_name,
-                                                    unit=unit)[0]
+                template = EmailTemplate.objects.filter(
+                    key=template_key,
+                    unit=unit
+                )[0]
             except:
                 pass
             unit = unit.parent
         if template is None:
             try:
-                template = EmailTemplate.objects.filter(name=template_name,
+                template = EmailTemplate.objects.filter(key=template_key,
                                                         unit__isnull=True)[0]
             except:
                 pass
         if template is None:
-            raise Exception(u"Template with name %s does not exist!" % template_name)
+            raise Exception(
+                u"Template with name %s does not exist!" % template_key
+            )
 
         if type(recipients) is not list:
             recipients = [recipients]
         for recipient in recipients:
             try:
                 address = recipient.get_email()
-                email = {'address':address}
+                email = {'address': address}
                 try:
                     name = recipient.get_name()
                     email['name'] = name
@@ -1130,7 +1140,11 @@ class KUEmailMessage(models.Model):
                 pass
 
         for email in emails:
-            ctx = {'unit': unit, 'recipient': email, 'sender': settings.DEFAULT_FROM_EMAIL}
+            ctx = {
+                'unit': unit,
+                'recipient': email,
+                'sender': settings.DEFAULT_FROM_EMAIL
+            }
             ctx.update(context)
             subject = template.expand_subject(ctx)
             body = template.expand_body(ctx)
@@ -1139,12 +1153,10 @@ class KUEmailMessage(models.Model):
                 subject=subject,
                 body=body,
                 from_email=settings.DEFAULT_FROM_EMAIL,
-                to=[email.full]
+                to=[email['full']]
             )
             message.send()
             KUEmailMessage.save_email(message)
-
-
 
 
 class EmailTemplate(models.Model):
