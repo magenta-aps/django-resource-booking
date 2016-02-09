@@ -52,7 +52,7 @@
                             {{ user }}
                             <a href="{% url 'user_edit' user.pk %}">Redigér</a>
                         </dd>
-                        <dt>Fakultet:</dt>
+                        <dt>Enhed:</dt>
                         <dd>{{ user.userprofile.unit.name }}</dd>
                         <dt>Rolle:</dt>
                         <dd>{{ user.userprofile.get_role_name }}</dd>
