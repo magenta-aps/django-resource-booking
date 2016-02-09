@@ -1,18 +1,20 @@
 # -*- coding: utf-8 -*-
 from booking.models import Unit
+from django.db.models import Q
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
+from django.core.urlresolvers import reverse
 from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext as _
 from django.views.generic import TemplateView
 from django.views.generic.edit import UpdateView, FormView
 
-from booking.views import LoginRequiredMixin, AccessDenied
+from booking.views import LoginRequiredMixin, AccessDenied, EditorRequriedMixin
 from django.views.generic.list import ListView
 from profile.forms import UserCreateForm
 from profile.models import UserProfile, UserRole, EDIT_ROLES
-from profile.models import FACULTY_EDITOR, COORDINATOR
+from profile.models import FACULTY_EDITOR, COORDINATOR, user_role_choices
 
 
 class ProfileView(LoginRequiredMixin, TemplateView):
@@ -123,6 +125,28 @@ class CreateUserView(FormView, UpdateView):
         else:
             return self.form_invalid(form)
 
+    def get_context_data(self, **kwargs):
+        context = {}
+
+        context['breadcrumbs'] = [
+            {'url': reverse('user_profile'), 'text': _(u'Min side')},
+            {'url': reverse('user_list'), 'text': _(u'Administrér brugere')},
+        ]
+        if self.object and self.object.pk:
+            context['breadcrumbs'].append({
+                'url': reverse('user_edit', args=[self.object.pk]),
+                'text': _(u"Redigér bruger '%s'") % self.object.username
+            })
+        else:
+            context['breadcrumbs'].append({
+                'url': reverse('user_create'),
+                'text': _(u'Opret ny bruger')
+            })
+
+        context.update(kwargs)
+
+        return super(CreateUserView, self).get_context_data(**context)
+
     def get_form_kwargs(self):
         kwargs = super(CreateUserView, self).get_form_kwargs()
         # kwargs['user'] = self.request.user
@@ -141,7 +165,67 @@ class CreateUserView(FormView, UpdateView):
             return '/'
 
 
-class UnitListView(ListView):
+class UserListView(EditorRequriedMixin, ListView):
+    model = User
+    template_name = 'profile/user_list.html'
+    context_object_name = "users"
+    selected_unit = None
+    selected_role = None
+
+    def get_queryset(self):
+        user = self.request.user
+        unit_qs = user.userprofile.get_unit_queryset()
+
+        qs = self.model.objects.filter(userprofile__unit__in=unit_qs)
+
+        try:
+            self.selected_unit = int(self.request.GET.get("unit", None))
+        except:
+            pass
+        if self.selected_unit:
+            qs = qs.filter(userprofile__unit=self.selected_unit)
+
+        try:
+            self.selected_role = int(self.request.GET.get("role", None))
+        except:
+            pass
+        if self.selected_role:
+            qs = qs.filter(userprofile__user_role__role=self.selected_role)
+
+        q = self.request.GET.get("q", None)
+        if q:
+            qs = qs.filter(
+                Q(username__contains=q) | Q(first_name__contains=q) |
+                Q(last_name__contains=q)
+            )
+
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = {}
+
+        user = self.request.user
+        context['user_role'] = user.userprofile.get_role_name()
+
+        unit_qs = user.userprofile.get_unit_queryset()
+        context['selected_unit'] = self.selected_unit
+        context['possible_units'] = [
+            (x.pk, x.name) for x in unit_qs.order_by('name')
+        ]
+
+        context['selected_role'] = self.selected_role
+        context['possible_roles'] = user_role_choices
+
+        context['breadcrumbs'] = [
+            {'url': reverse('user_profile'), 'text': _(u'Min side')},
+            {'text': _(u'Administrér brugere')},
+        ]
+
+        context.update(kwargs)
+        return super(UserListView, self).get_context_data(**context)
+
+
+class UnitListView(EditorRequriedMixin, ListView):
     model = Unit
 
     def get_context_data(self, **kwargs):
@@ -150,21 +234,4 @@ class UnitListView(ListView):
 
     def get_queryset(self):
         user = self.request.user
-        user_role = user.userprofile.get_role()
-        if user_role == FACULTY_EDITOR:
-            uu = user.userprofile.unit
-            if uu is not None:
-                qs = uu.get_descendants()
-            else:
-                qs = Unit.objects.none()
-        elif user_role == COORDINATOR:
-            uu = user.userprofile.unit
-            if uu is not None:
-                # Needs to be iterable or the template will fail
-                qs = Unit.objects.filter(id=uu.id)
-            else:
-                qs = Unit.objects.none()
-        else:
-            # User must be an administrator and may attach any unit.
-            qs = Unit.objects.all()
-        return qs
+        return user.userprofile.get_unit_queryset()
