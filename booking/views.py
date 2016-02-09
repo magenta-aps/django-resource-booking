@@ -1128,6 +1128,11 @@ class EmbedcodesView(TemplateView):
         return super(EmbedcodesView, self).get_context_data(**context)
 
 
+class EmailTemplateListView(ListView):
+    template_name = 'email/list.html'
+    model = EmailTemplate
+
+
 class EmailTemplateEditView(UpdateView):
     template_name = 'email/form.html'
     form_class = EmailTemplateForm
@@ -1159,8 +1164,7 @@ class EmailTemplateEditView(UpdateView):
         form = self.get_form()
         if form.is_valid():
             self.object = form.save()
-            return redirect(reverse('emailtemplate-edit',
-                                    args=[self.object.id]))
+            return redirect(reverse('emailtemplate-list'))
 
         return self.render_to_response(
             self.get_context_data(**context)
