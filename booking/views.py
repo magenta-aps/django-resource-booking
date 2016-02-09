@@ -660,6 +660,10 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
             min,
             max
     ):
+        if min is None or min == '':
+            min = 0
+        if max is None or max == '':
+            max = 1000
         """
         Check if any existing bookings exists with attendee count outside
         the new min-/max_attendee_count bounds.
@@ -1067,7 +1071,16 @@ class BookingView(UpdateView):
                 booking.booker = forms['bookerform'].save()
 
             booking.save()
-            self._send_email()
+            KUEmailMessage.send_email(
+                'booking',
+                {
+                    'booking': booking,
+                    'visit': booking.visit,
+                    'booker': booking.booker
+                },
+                self.visit.contact_persons,
+                self.visit.unit
+            )
 
             # We can't fetch this form before we have
             # a saved booking object to feed it, or we'll get an error
@@ -1110,32 +1123,6 @@ class BookingView(UpdateView):
             return ["booking/classvisit.html"]
         if self.visit.type == Resource.TEACHER_EVENT:
             return ["booking/teachervisit.html"]
-
-    def _save_email(self, email_message):
-        ku_email_message = KUEmailMessage(
-            subject=email_message.subject,
-            body=email_message.body,
-            from_email=email_message.from_email,
-            recipients=', '.join(email_message.recipients())
-        )
-        ku_email_message.save()
-
-    def _send_email(self):
-        email = EmailMessage(
-            subject='Hello',
-            body='''
-                Der er blevet booket et besøg i KU-booking!
-
-                mvh.
-
-                KU
-            ''',
-            from_email='me@example.com',
-            to=['somebody@example.com', 'somebodyelse@example.com']
-        )
-        email.send()
-        self._save_email(email)
-
 
 class BookingSuccessView(TemplateView):
     template_name = "booking/success.html"

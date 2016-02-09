@@ -1,4 +1,5 @@
 # encoding: utf-8
+from django.core.mail.message import EmailMessage
 from django.db import models
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
@@ -12,6 +13,7 @@ from django.template.base import Template
 
 from recurrence.fields import RecurrenceField
 from booking.utils import ClassProperty
+from resource_booking import settings
 
 LOGACTION_CREATE = ADDITION
 LOGACTION_CHANGE = CHANGE
@@ -1079,6 +1081,70 @@ class KUEmailMessage(models.Model):
         blank=False,
         null=False
     )
+
+    @staticmethod
+    def save_email(email_message):
+        ku_email_message = KUEmailMessage(
+            subject=email_message.subject,
+            body=email_message.body,
+            from_email=email_message.from_email,
+            recipients=', '.join(email_message.recipients())
+        )
+        ku_email_message.save()
+
+    @staticmethod
+    def send_email(template_name, context, recipients, unit=None, **kwargs):
+        template = None
+        emails = []
+
+        while unit is not None and template is not None:
+            try:
+                template = EmailTemplate.objects.filter(name=template_name,
+                                                    unit=unit)[0]
+            except:
+                pass
+            unit = unit.parent
+        if template is None:
+            try:
+                template = EmailTemplate.objects.filter(name=template_name,
+                                                        unit__isnull=True)[0]
+            except:
+                pass
+        if template is None:
+            raise Exception(u"Template with name %s does not exist!" % template_name)
+
+        if type(recipients) is not list:
+            recipients = [recipients]
+        for recipient in recipients:
+            try:
+                address = recipient.get_email()
+                email = {'address':address}
+                try:
+                    name = recipient.get_name()
+                    email['name'] = name
+                    email['full'] = u"\"%s\" <%s>" % (name, address)
+                except:
+                    email['full'] = address
+                emails.append(email)
+            except:
+                pass
+
+        for email in emails:
+            ctx = {'unit': unit, 'recipient': email, 'sender': settings.DEFAULT_FROM_EMAIL}
+            ctx.update(context)
+            subject = template.expand_subject(ctx)
+            body = template.expand_body(ctx)
+
+            message = EmailMessage(
+                subject=subject,
+                body=body,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[email.full]
+            )
+            message.send()
+            KUEmailMessage.save_email(message)
+
+
 
 
 class EmailTemplate(models.Model):
