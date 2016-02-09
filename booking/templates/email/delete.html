@@ -1,0 +1,13 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load staticfiles %}
+
+{% block content %}
+    <form action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <p>Are you sure you want to delete "{{ object }}"?</p>
+        <button type="submit" class="btn btn-primary">{% trans 'Yes' %}</button>
+        <a href="javascript:history.back()" class="btn btn-primary">{% trans 'No' %}</a>
+    </form>
+{% endblock %}
+

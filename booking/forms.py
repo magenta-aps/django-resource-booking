@@ -4,9 +4,10 @@ from booking.models import Unit
 from booking.models import Resource, OtherResource, Visit, VisitOccurrence
 from booking.models import Booker, Region, PostCode, School
 from booking.models import ClassBooking, TeacherBooking, BookingSubjectLevel
+from booking.models import EmailTemplate
 from django import forms
 from django.forms import CheckboxSelectMultiple, RadioSelect, EmailInput
-from django.forms import inlineformset_factory
+from django.forms import formset_factory, inlineformset_factory
 from django.forms import TextInput, NumberInput, URLInput, Textarea, Select
 from django.forms import HiddenInput
 from django.utils.translation import ugettext_lazy as _
@@ -403,3 +404,57 @@ BookingSubjectLevelForm = \
                               )
                           }
                           )
+
+
+class EmailTemplateForm(forms.ModelForm):
+
+    class Meta:
+        model = EmailTemplate
+        fields = ('key', 'subject', 'body', 'unit')
+        widgets = {
+            'body': TinyMCE(attrs={'rows': 10, 'cols': 90}),
+        }
+
+    def __init__(self, user, *args, **kwargs):
+        super(EmailTemplateForm, self).__init__(*args, **kwargs)
+        self.fields['unit'].choices = (
+            (x.pk, unicode(x))
+            for x in user.userprofile.get_unit_queryset())
+
+
+class EmailTemplatePreviewContextEntryForm(forms.Form):
+    key = forms.CharField(
+        max_length=256,
+        widget=TextInput(attrs={'class': 'form-control emailtemplate-key'})
+    )
+    type = forms.ChoiceField(
+        choices=(
+            ('string', 'String'),
+            ('Unit', 'Unit'),
+            # ('OtherResource': OtherResource),
+            ('Visit', 'Visit'),
+            # ('VisitOccurrence', VisitOccurrence),
+            # ('StudyMaterial', StudyMaterial),
+            # ('Resource',Resource),
+            # ('Subject', Subject),
+            # ('GymnasieLevel', GymnasieLevel),
+            # ('Room', Room),
+            # ('PostCode', PostCode),
+            # ('School', School),
+            ('Booking', 'Booking'),
+        ),
+        widget=Select(attrs={'class': 'form-control emailtemplate-type'})
+    )
+    value = forms.CharField(
+        max_length=1024,
+        widget=TextInput(
+            attrs={
+                'class': 'form-control emailtemplate-value '
+                         'emailtemplate-type-string'
+            }
+        )
+    )
+
+EmailTemplatePreviewContextForm = formset_factory(
+    EmailTemplatePreviewContextEntryForm
+)

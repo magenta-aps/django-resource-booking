@@ -1,0 +1,63 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load staticfiles %}
+
+{% block content %}
+    <div class="divider"></div>
+    <div class="row form-group">
+        <div class="col-sm-8">
+            <h1>{% trans "Emailskabeloner" %}</h1>
+        </div>
+        <div class="col-sm-4 text-right">
+            <a href="{% url 'emailtemplate-create' %}" class="btn btn-primary">{% trans "Opret skabelon" %}</a>
+        </div>
+    </div>
+    <hr/>
+
+    {% if duplicates %}
+        <p class="text-warning">Warning: Two or more templates share the same Key and Unit - only one of these will ever be chosen</p>
+    {% endif %}
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th class="col-sm-3">
+                    {% trans 'Key' %}
+                </th>
+                <th class="col-sm-4">
+                    {% trans 'Unit' %}
+                </th>
+                <th class="col-sm-5">
+                    {% trans 'Options' %}
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for object in object_list %}
+                <tr class="{% if object in duplicates %}warning{% endif %}">
+                    <td class="col-sm-3">
+                        {{ object.get_key_display }}
+                    </td>
+                    <td class="col-sm-4">
+                        {% if object.unit %}
+                            {{ object.unit.name }}
+                        {% else %}
+                            {% trans 'Ingen' %}
+                        {% endif %}
+                    </td>
+                    <td class="col-sm-5">
+                        <a href="{% url 'emailtemplate-view' object.id %}">{% trans 'Preview' %}</a>
+                        <a href="{% url 'emailtemplate-edit' object.id %}">{% trans 'Redigér' %}</a>
+                        <a href="{% url 'emailtemplate-delete' object.id %}">{% trans 'Slet' %}</a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+
+    </table>
+
+
+
+
+{% endblock %}
+

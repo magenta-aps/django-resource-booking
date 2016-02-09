@@ -1,6 +1,7 @@
 # encoding: utf-8
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+from django.template.context import make_context
 from djorm_pgfulltext.models import SearchManager
 from djorm_pgfulltext.fields import VectorField
 from django.contrib.contenttypes.models import ContentType
@@ -8,6 +9,7 @@ from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext_lazy as _
+from django.template.base import Template
 
 from recurrence.fields import RecurrenceField
 from booking.utils import ClassProperty
@@ -1407,3 +1409,49 @@ class BookingSubjectLevel(models.Model):
 
     def display_value(self):
         return u'%s på %s niveau' % (self.subject.name, self.level)
+
+
+class EmailTemplate(models.Model):
+
+    BOOKING_CREATED = 1
+
+    key_choices = [
+        (BOOKING_CREATED, _(u'Booking created')),
+    ]
+    key = models.IntegerField(
+        verbose_name=u'Key',
+        choices=key_choices,
+        default=1
+    )
+
+    subject = models.CharField(
+        max_length=77,
+        verbose_name=u'Emne'
+    )
+
+    body = models.CharField(
+        max_length=65584,
+        verbose_name=u'Tekst'
+    )
+
+    unit = models.ForeignKey(
+        Unit,
+        verbose_name=u'Enhed',
+        null=True,
+        blank=True
+    )
+
+    def expand_subject(self, context, keep_placeholders=False):
+        return self._expand(self.subject, context, keep_placeholders)
+
+    def expand_body(self, context, keep_placeholders=False):
+        return self._expand(self.body, context, keep_placeholders)
+
+    @staticmethod
+    def _expand(text, context, keep_placeholders=False):
+        template = Template(unicode(text))
+        if keep_placeholders:
+            template.engine.string_if_invalid = "{{ %s }}"
+        if isinstance(context, dict):
+            context = make_context(context)
+        return template.render(context)

@@ -9,34 +9,37 @@ from dateutil.rrule import rrulestr
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
-from django.core.urlresolvers import reverse
+from django.core.urlresolvers import reverse, reverse_lazy
 from django.db.models import Count
 from django.db.models import F
 from django.db.models import Q
 from django.http import Http404
 from django.http import HttpResponse
 from django.http import JsonResponse
-from django.shortcuts import redirect
+from django.shortcuts import render, redirect
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext as _
 from django.views.generic import View, TemplateView, ListView, DetailView
-from django.views.generic.edit import UpdateView
+from django.views.generic.edit import UpdateView, DeleteView
 from django.views.defaults import bad_request
 
 from profile.models import EDIT_ROLES
 from profile.models import role_to_text
 
+from booking.models import Unit
 from booking.models import OtherResource, Visit, VisitOccurrence, StudyMaterial
 from booking.models import Resource, Subject, GymnasieLevel
 from booking.models import Room
 from booking.models import PostCode, School
 from booking.models import Booking, Booker
 from booking.models import ResourceGymnasieFag, ResourceGrundskoleFag
+from booking.models import EmailTemplate
 from booking.forms import ResourceInitialForm, OtherResourceForm, VisitForm
 from booking.forms import ClassBookingForm, TeacherBookingForm
 from booking.forms import VisitStudyMaterialForm, BookingSubjectLevelForm
 from booking.forms import BookerForm
+from booking.forms import EmailTemplateForm, EmailTemplatePreviewContextForm
 
 import urls
 import booking_workflows.views as booking_views
@@ -104,6 +107,25 @@ class RoleRequiredMixin(object):
 
 class EditorRequriedMixin(RoleRequiredMixin):
     roles = EDIT_ROLES
+
+
+class UnitAccessRequiredMixin(object):
+
+    def check_item(self, item):
+        current_user = self.request.user
+        if hasattr(current_user, 'userprofile'):
+            if current_user.userprofile.can_edit(item):
+                return
+        raise AccessDenied(_(u"You cannot edit an object for a unit "
+                             u"that you don't belong to"))
+
+    def check_unit(self, unit):
+        current_user = self.request.user
+        if hasattr(current_user, 'userprofile'):
+            if current_user.userprofile.unit_access(unit):
+                return
+        raise AccessDenied(_(u"You cannot edit an object for a unit "
+                             u"that you don't belong to"))
 
 
 class SearchView(ListView):
@@ -1250,3 +1272,153 @@ ChangeBookingStatusView = booking_views.ChangeBookingStatusView
 ChangeBookingTeachersView = booking_views.ChangeBookingTeachersView
 ChangeBookingHostsView = booking_views.ChangeBookingHostsView
 ChangeBookingRoomsView = booking_views.ChangeBookingRoomsView
+
+
+class EmailTemplateListView(ListView):
+    template_name = 'email/list.html'
+    model = EmailTemplate
+
+    def get_context_data(self, **kwargs):
+        context = super(EmailTemplateListView, self).get_context_data(**kwargs)
+        context['duplicates'] = []
+        for i in xrange(0, len(self.object_list)):
+            objectA = self.object_list[i]
+            for j in xrange(i, len(self.object_list)):
+                objectB = self.object_list[j]
+                if objectA != objectB \
+                        and objectA.key == objectB.key \
+                        and objectA.unit == objectB.unit:
+                    context['duplicates'].extend([objectA, objectB])
+        return context
+
+    def get_queryset(self):
+        qs = super(EmailTemplateListView, self).get_queryset()
+        qs = [item
+              for item in qs
+              if self.request.user.userprofile.can_edit(item)]
+        return qs
+
+
+class EmailTemplateEditView(UpdateView, UnitAccessRequiredMixin):
+    template_name = 'email/form.html'
+    form_class = EmailTemplateForm
+    model = EmailTemplate
+
+    def get(self, request, *args, **kwargs):
+        pk = kwargs.get("pk")
+        if pk is None:
+            self.object = EmailTemplate()
+        else:
+            self.object = EmailTemplate.objects.get(pk=pk)
+            self.check_item(self.object)
+        form = self.get_form()
+        return self.render_to_response(
+            self.get_context_data(form=form)
+        )
+
+    def post(self, request, *args, **kwargs):
+
+        pk = kwargs.get("pk")
+        is_cloning = kwargs.get("clone", False)
+
+        if pk is None or is_cloning:
+            self.object = EmailTemplate()
+        else:
+            self.object = EmailTemplate.objects.get(pk=pk)
+            self.check_item(self.object)
+        context = {}
+        context.update(kwargs)
+
+        form = self.get_form()
+        if form.is_valid():
+            self.object = form.save()
+            return redirect(reverse('emailtemplate-list'))
+
+        return self.render_to_response(
+            self.get_context_data(**context)
+        )
+
+    def get_form_kwargs(self):
+        args = super(EmailTemplateEditView, self).get_form_kwargs()
+        args['user'] = self.request.user
+        return args
+
+
+class EmailTemplateDetailView(View):
+    template_name = 'email/preview.html'
+
+    classes = {'Unit': Unit,
+               # 'OtherResource': OtherResource,
+               'Visit': Visit,
+               # 'VisitOccurrence': VisitOccurrence,
+               # 'StudyMaterial': StudyMaterial,
+               # 'Resource': Resource,
+               # 'Subject': Subject,
+               # 'GymnasieLevel': GymnasieLevel,
+               # 'Room': Room,
+               # 'PostCode': PostCode,
+               # 'School': School,
+               'Booking': Booking,
+               # 'ResourceGymnasieFag': ResourceGymnasieFag,
+               # 'ResourceGrundskoleFag': ResourceGrundskoleFag
+               }
+
+    @staticmethod
+    def _getObjectJson():
+        return json.dumps({
+            key: [
+                {'text': unicode(object), 'value': object.id}
+                for object in type.objects.all()
+                ]
+            for key, type in EmailTemplateDetailView.classes.items()
+            })
+
+    @method_decorator(login_required)
+    def get(self, request, *args, **kwargs):
+        pk = kwargs.get("pk")
+        formset = EmailTemplatePreviewContextForm()
+        template = EmailTemplate.objects.get(pk=pk)
+
+        data = {'form': formset,
+                'subject': template.subject,
+                'body': template.body,
+                'objects': self._getObjectJson(),
+                'template': template
+                }
+
+        return render(request, self.template_name, data)
+
+    @method_decorator(login_required)
+    def post(self, request, *args, **kwargs):
+        pk = kwargs.get("pk")
+        formset = EmailTemplatePreviewContextForm(request.POST)
+        template = EmailTemplate.objects.get(pk=pk)
+
+        context = {}
+        if formset.is_valid():
+            for form in formset:
+                if form.is_valid():
+                    type = form.cleaned_data['type']
+                    value = form.cleaned_data['value']
+                    if type in self.classes.keys():
+                        clazz = self.classes[type]
+                        try:
+                            value = clazz.objects.get(pk=value)
+                        except clazz.DoesNotExist:
+                            pass
+                    context[form.cleaned_data['key']] = value
+
+        data = {'form': formset,
+                'subject': template.expand_subject(context, True),
+                'body': template.expand_body(context, True),
+                'objects': self._getObjectJson(),
+                'template': template
+                }
+
+        return render(request, self.template_name, data)
+
+
+class EmailTemplateDeleteView(DeleteView):
+    template_name = 'email/delete.html'
+    model = EmailTemplate
+    success_url = reverse_lazy('emailtemplate-list')

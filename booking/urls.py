@@ -14,6 +14,8 @@ from booking.views import SearchView, EmbedcodesView
 from booking.views import BookingDetailView, ChangeBookingStatusView
 from booking.views import ChangeBookingTeachersView, ChangeBookingHostsView
 from booking.views import ChangeBookingRoomsView
+from booking.views import EmailTemplateListView, EmailTemplateEditView
+from booking.views import EmailTemplateDetailView, EmailTemplateDeleteView
 
 from django.views.generic import TemplateView
 
@@ -114,7 +116,26 @@ urlpatterns = patterns(
 
     url(r'^embedcodes/(?P<embed_url>.*)$',
         EmbedcodesView.as_view(),
-        name='embedcodes')
+        name='embedcodes'),
+
+    url(r'^emailtemplate/?$',
+        EmailTemplateListView.as_view(),
+        name='emailtemplate-list'),
+    url(r'^emailtemplate/create$',
+        EmailTemplateEditView.as_view(),
+        name='emailtemplate-create'),
+    url(r'^emailtemplate/(?P<pk>[0-9]+)/edit$',
+        EmailTemplateEditView.as_view(),
+        name='emailtemplate-edit'),
+    url(r'^emailtemplate/(?P<pk>[0-9]+)/clone$',
+        EmailTemplateEditView.as_view(), {'clone': True},
+        name='emailtemplate-clone'),
+    url(r'^emailtemplate/(?P<pk>[0-9]+)/?$',
+        EmailTemplateDetailView.as_view(),
+        name='emailtemplate-view'),
+    url(r'^emailtemplate/(?P<pk>[0-9]+)/delete$',
+        EmailTemplateDeleteView.as_view(),
+        name='emailtemplate-delete')
 
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
