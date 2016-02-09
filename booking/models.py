@@ -1060,9 +1060,13 @@ class BookingSubjectLevel(models.Model):
 
 class EmailTemplate(models.Model):
 
-    name = models.CharField(
-        max_length=64,
-        verbose_name=u'Navn'
+    key_choices = [
+        (1, _(u'Booking created')),
+    ]
+    key = models.IntegerField(
+        verbose_name=u'Key',
+        choices=key_choices,
+        default=1
     )
 
     subject = models.CharField(

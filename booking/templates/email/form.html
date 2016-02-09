@@ -39,13 +39,13 @@
                     <div class="panel-body">
                         <div class="row form-group">
                             <div>
-                                {{ form.name.errors }}
+                                {{ form.key.errors }}
                             </div>
                             <div class="col-sm-2">
-                                <label class="{{ form.name.css_classes }}" for="{{ form.name.id_for_label }}">{{ form.name.label }}:</label>
+                                <label class="{{ form.key.css_classes }}" for="{{ form.key.id_for_label }}">{{ form.key.label }}:</label>
                             </div>
                             <div class="col-sm-10">
-                                {{ form.name }}
+                                {{ form.key }}
                             </div>
                         </div>
 
@@ -65,7 +65,7 @@
                             <div class="col-sm-2"></div>
                             <div class="col-sm-10">
                                 {% blocktrans %}
-                                    Når en emailskabelon skal findes til et givet formål (f.eks. når en booking foretages), søges efter en skabelon med det rette navn (f.eks. "booking"). Først søges efter skabeloner associeret med det relevante institut, derefter skabeloner associeret med det relevante fakultet, og sidst efter skabeloner uden enhed tilknyttet. Den først fundne af disse skabeloner vil blive anvendt til udsendelse af email.
+                                    Når en emailskabelon skal findes til et givet formål (f.eks. når en booking foretages), søges efter en skabelon med den rette nøgle. Først søges efter skabeloner associeret med det relevante institut, derefter skabeloner associeret med det relevante fakultet, og sidst efter skabeloner uden enhed tilknyttet. Den først fundne af disse skabeloner vil blive anvendt til udsendelse af email.
                                 {% endblocktrans %}
                             </div>
                         </div>

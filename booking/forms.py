@@ -359,7 +359,7 @@ BookingSubjectLevelForm = \
 class EmailTemplateForm(forms.ModelForm):
     class Meta:
         model = EmailTemplate
-        fields = ('name', 'subject', 'body', 'unit')
+        fields = ('key', 'subject', 'body', 'unit')
         widgets = {
             'body': TinyMCE(attrs={'rows': 10, 'cols': 90})
         }
