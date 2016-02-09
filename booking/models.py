@@ -1075,6 +1075,13 @@ class EmailTemplate(models.Model):
         verbose_name=u'Tekst'
     )
 
+    unit = models.ForeignKey(
+        Unit,
+        verbose_name=u'Enhed',
+        null=True,
+        blank=True
+    )
+
     def expand_subject(self, context, keep_placeholders=False):
         return self._expand(self.subject, context, keep_placeholders)
 
