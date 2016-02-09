@@ -1190,8 +1190,8 @@ class EmailTemplateEditView(UpdateView, UnitAccessRequiredMixin):
         context.update(kwargs)
 
         form = self.get_form()
-        self.check_unit(form.cleaned_data.unit)
         if form.is_valid():
+            self.check_unit(form.cleaned_data['unit'])
             self.object = form.save()
             return redirect(reverse('emailtemplate-list'))
 
