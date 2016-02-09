@@ -9,14 +9,14 @@
     <div class="row">
         <div class="col-sm-12">
             <a href="{% url 'user_create' %}" class="btn btn-primary btn-tiny pull-right">Opret ny bruger</a>
-            <h2>Filter brugerliste</h2>
+            <h2>Filtrér brugerliste</h2>
             
             <form name="filteruserlist" id="filteruserlist">
                 <dl class="dl-horizontal">
-                    <dt>Fakultet:</dt>
+                    <dt>Enhed:</dt>
                     <dd>
                         <select name="unit">
-                            <option value="">-- Vælg fakultet --</option>
+                            <option value="">-- Vælg enhed --</option>
                             {% for val, name in possible_units %}
                             <option value="{{ val }}"{% if selected_unit == val %}selected=" selected"{% endif %}>{{ name }}</option>
                             {% endfor %}
