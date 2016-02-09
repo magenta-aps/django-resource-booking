@@ -14,7 +14,13 @@
             <h1>{% trans "Preview Email template" %}</h1>
         </div>
         <div class="col-sm-4 text-right">
-            <a href="#" class="btn btn-default btn-sm openall">{% trans "Udvid alle felter" %}</a> <a href="#" class="btn btn-default btn-sm closeall">{% trans "Luk alle felter" %}</a>
+            <a href="{% url 'emailtemplate-edit' template.id %}" class="btn btn-primary">{% trans "Redigér template" %}</a>
+            <a href="{% url 'emailtemplate-clone' template.id %}" class="btn btn-primary">{% trans "Klon template" %}</a>
+        </div>
+        </div>
+    <div class="row">
+        <div class="col-sm-12">
+            {% trans 'På denne side kan du afprøve templatens felter ved at definere en kontekst. Ved tryk på "preview" bliver templaten udfyldt med den angivne kontekst.' %}
         </div>
     </div>
     <hr/>

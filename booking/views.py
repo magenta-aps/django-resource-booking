@@ -1204,7 +1204,8 @@ class EmailTemplateDetailView(View):
         data = {'form': formset,
                 'subject': template.subject,
                 'body': template.body,
-                'objects': self._getObjectJson()
+                'objects': self._getObjectJson(),
+                'template': template
                 }
 
         return render(request, self.template_name, data)
@@ -1231,7 +1232,8 @@ class EmailTemplateDetailView(View):
         data = {'form': formset,
                 'subject': template.expand_subject(context, True),
                 'body': template.expand_body(context, True),
-                'objects': self._getObjectJson()
+                'objects': self._getObjectJson(),
+                'template': template
                 }
 
         return render(request, self.template_name, data)
