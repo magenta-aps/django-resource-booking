@@ -14,33 +14,34 @@
     </div>
     <hr/>
 
-    <div class="row form-group">
+    <div class="row">
         <div class="col-sm-3">
             {% trans 'Key' %}
         </div>
-        <div class="col-sm-3">
+        <div class="col-sm-4">
             {% trans 'Unit' %}
         </div>
-        <div class="col-sm-6">
+        <div class="col-sm-5">
             {% trans 'Options' %}
         </div>
     </div>
 
     {% for object in object_list %}
-        <div class="row form-group">
+        <div class="row">
             <div class="col-sm-3">
                 {{ object.get_key_display }}
             </div>
-            <div class="col-sm-3">
+            <div class="col-sm-4">
                 {% if object.unit %}
                     {{ object.unit.name }}
                 {% else %}
                     {% trans 'Ingen' %}
                 {% endif %}
             </div>
-            <div class="col-sm-6">
+            <div class="col-sm-5">
                 <a href="{% url 'emailtemplate-view' object.id %}">{% trans 'Preview' %}</a>
                 <a href="{% url 'emailtemplate-edit' object.id %}">{% trans 'Redigér' %}</a>
+                <a href="{% url 'emailtemplate-delete' object.id %}">{% trans 'Slet' %}</a>
             </div>
         </div>
     {% endfor %}
