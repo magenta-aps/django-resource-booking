@@ -1219,8 +1219,8 @@ class EmailTemplateDetailView(View):
                     context[form.cleaned_data['key']] = value
 
         data = {'form': formset,
-                'subject': template.expand_subject(context),
-                'body': template.expand_body(context),
+                'subject': template.expand_subject(context, True),
+                'body': template.expand_body(context, True),
                 'objects': self._getObjectJson()
                 }
 

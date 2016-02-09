@@ -1075,15 +1075,17 @@ class EmailTemplate(models.Model):
         verbose_name=u'Tekst'
     )
 
-    def expand_subject(self, context):
-        return self._expand(self.subject, context)
+    def expand_subject(self, context, keep_placeholders=False):
+        return self._expand(self.subject, context, keep_placeholders)
 
-    def expand_body(self, context):
-        return self._expand(self.body, context)
+    def expand_body(self, context, keep_placeholders=False):
+        return self._expand(self.body, context, keep_placeholders)
 
     @staticmethod
-    def _expand(text, context):
+    def _expand(text, context, keep_placeholders=False):
         template = Template(unicode(text))
+        if keep_placeholders:
+            template.engine.string_if_invalid = "{{ %s }}"
         if isinstance(context, dict):
             context = make_context(context)
         return template.render(context)

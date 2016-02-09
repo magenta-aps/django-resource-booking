@@ -21,11 +21,7 @@
     <form action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
         {% csrf_token %}
 
-        {{ form.non_field_errors }}
-
         <div id="accordion" class="panel-group" aria-multiselectable="true" role="tablist">
-
-            {{ form.type }}
 
             <div class="panel panel-default">
                 <div id="headingCategory" class="panel-heading" role="tab">
