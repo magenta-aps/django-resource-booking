@@ -1151,6 +1151,17 @@ class EmailTemplateListView(ListView):
     template_name = 'email/list.html'
     model = EmailTemplate
 
+    def get_context_data(self, **kwargs):
+        context = super(EmailTemplateListView, self).get_context_data(**kwargs)
+        context['duplicates'] = []
+        for i in xrange(0, len(self.object_list)):
+            objectA = self.object_list[i]
+            for j in xrange(i, len(self.object_list)):
+                objectB = self.object_list[j]
+                if objectA != objectB and objectA.key == objectB.key and objectA.unit == objectB.unit:
+                    context['duplicates'].extend([objectA, objectB])
+        return context
+
     def get_queryset(self):
         qs = super(EmailTemplateListView, self).get_queryset()
         qs = [item
