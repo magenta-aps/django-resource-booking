@@ -320,7 +320,7 @@ class SearchView(ListView):
 
         context['breadcrumbs'] = [
             {'url': reverse('search'), 'text': _(u'Søgning')},
-            {'text': _(u'Søgeresultatliste')},
+            {'text': _(u'Søgeresultat')},
         ]
 
         context.update(kwargs)
@@ -617,8 +617,8 @@ class OtherResourceDetailView(DetailView):
 
         context['breadcrumbs'] = [
             {'url': reverse('search'), 'text': _(u'Søgning')},
-            {'url': '#', 'text': _(u'Søgeresultatliste')},
-            {'text': _(u'Detaljevisning')},
+            {'url': '#', 'text': _(u'Søgeresultat')},
+            {'text': _(u'Om tilbuddet')},
         ]
 
         context.update(kwargs)
@@ -853,8 +853,8 @@ class VisitDetailView(DetailView):
 
         context['breadcrumbs'] = [
             {'url': reverse('search'), 'text': _(u'Søgning')},
-            {'url': '#', 'text': _(u'Søgeresultatliste')},
-            {'text': _(u'Detaljevisning')},
+            {'url': '#', 'text': _(u'Søgeresultat')},
+            {'text': _(u'Om tilbuddet')},
         ]
 
         context.update(kwargs)
