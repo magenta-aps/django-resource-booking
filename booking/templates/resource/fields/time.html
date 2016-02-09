@@ -1,27 +1,24 @@
 {% load i18n %}
 
-{% if object and object.visitoccurrence_set %}
+
 <div class="row form-group">
     <div class="col-sm-2">
         <label>{% trans 'Tidspunkter:' %}</label>
     </div>
     <div class="col-sm-10 pre-scrollable">
+        <ul id="id_time" class="list-unstyled"></ul>
+
+        {% if object and object.visitoccurrence_set %}
         <ul id="existing-recurrence-dates" class="list-unstyled" data-visit-id="{{ object.id }}">
             {% for occurrence in object.visitoccurrence_set.all %}
                 <li data-date="{{ occurrence.start_datetime|date:'d-m-Y H:i' }}">{{ occurrence.start_datetime|date:'d-m-Y H:i' }} <button class="button-remove">x</button></li>
             {% endfor %}
         </ul>
-        <input id="occurrences" name="occurrences" type="hidden"/>
+        <input id="occurrences" name="occurrences" type="hidden">
+        {% endif %}
+
+        <label id="time-select-btn" for="time-select" class="btn btn-default">{% trans 'Tilføj tidspunkt:' %}
+            <input id="time-select" name="id_time" placeholder="{% trans 'Tilføj tidspunkt:' %}">
+        </label>
     </div>
 </div>
-{% endif %}
-
-<div class="row form-group">
-        <ul id="id_time" class="list-unstyled"></ul>
-
-        <label for="time-select">Nyt tidspunkt:</label>
-        <input id="time-select" name="id_time"/>
-    </div>
-</div>
-
-
