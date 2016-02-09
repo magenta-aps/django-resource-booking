@@ -1060,8 +1060,10 @@ class BookingSubjectLevel(models.Model):
 
 class EmailTemplate(models.Model):
 
+    BOOKING_CREATED = 1
+
     key_choices = [
-        (1, _(u'Booking created')),
+        (BOOKING_CREATED, _(u'Booking created')),
     ]
     key = models.IntegerField(
         verbose_name=u'Key',
