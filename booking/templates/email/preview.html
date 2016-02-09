@@ -158,11 +158,10 @@
         {% autoescape off %}
         $(function(){
             var objects = {{ objects }};
-            var typeClassMap = {
-                'string': 'emailtemplate-type-string',
-                'Visit': 'emailtemplate-type-Visit',
-                'Booking': 'emailtemplate-type-Booking'
-            };
+            var typeClassMap = {'string': 'emailtemplate-type-string'};
+            for (var type in objects) {
+                typeClassMap[type] = 'emailtemplate-type-' + type;
+            }
 
             var replaceWidget = function(oldField, newType) {
                 var newWidget = $("<"+newType+">");
@@ -178,23 +177,21 @@
                 var valueField = row.find('.emailtemplate-value');
                 if (!valueField.hasClass(typeClassMap[type])) {
                     var newWidget;
-                    switch (type) {
-                        case 'string':
-                            newWidget = replaceWidget(valueField, "input");
-                            break;
-                        case 'Visit':
-                        case 'Booking':
-                            newWidget = replaceWidget(valueField, "select");
-                            for (var i=0; i<objects[type].length; i++) {
-                                var optionData = objects[type][i];
-                                var option = $("<option>");
-                                option.val(optionData.value);
-                                option.text(optionData.text);
-                                newWidget.append(option);
-                            }
-                            break;
+                    if (type == 'string') {
+                        newWidget = replaceWidget(valueField, "input");
+                    } else if (type in objects) {
+                        newWidget = replaceWidget(valueField, "select");
+                        for (var i = 0; i < objects[type].length; i++) {
+                            var optionData = objects[type][i];
+                            var option = $("<option>");
+                            option.val(optionData.value);
+                            option.text(optionData.text);
+                            newWidget.append(option);
+                        }
                     }
-                    newWidget.addClass("emailtemplate-value " + typeClassMap[type]);
+                    if (newWidget) {
+                        newWidget.addClass("emailtemplate-value " + typeClassMap[type]);
+                    }
                 }
             };
 

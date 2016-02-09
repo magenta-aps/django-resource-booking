@@ -27,6 +27,7 @@ from django.views.defaults import bad_request
 from profile.models import EDIT_ROLES
 from profile.models import role_to_text
 
+from booking.models import Unit
 from booking.models import OtherResource, Visit, VisitOccurrence, StudyMaterial
 from booking.models import Resource, Subject, GymnasieLevel
 from booking.models import Room
@@ -1169,18 +1170,31 @@ class EmailTemplateEditView(UpdateView):
 class EmailTemplateDetailView(View):
     template_name = 'email/preview.html'
 
+    classes = {'Unit': Unit,
+               #'OtherResource': OtherResource,
+               'Visit': Visit,
+               #'VisitOccurrence': VisitOccurrence,
+               #'StudyMaterial': StudyMaterial,
+               #'Resource': Resource,
+               #'Subject': Subject,
+               #'GymnasieLevel': GymnasieLevel,
+               #'Room': Room,
+               #'PostCode': PostCode,
+               #'School': School,
+               'Booking': Booking,
+               #'ResourceGymnasieFag': ResourceGymnasieFag,
+               #'ResourceGrundskoleFag': ResourceGrundskoleFag
+               }
+
     @staticmethod
     def _getObjectJson():
         return json.dumps({
-            'Visit': [
-                {'text': unicode(visit), 'value': visit.id}
-                for visit in Visit.objects.all()
-                ],
-            'Booking': [
-                {'text': unicode(booking), 'value': booking.id}
-                for booking in Booking.objects.all()
+            key: [
+                {'text': unicode(object), 'value': object.id}
+                for object in type.objects.all()
                 ]
-        })
+            for key, type in EmailTemplateDetailView.classes.items()
+            })
 
     def get(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
@@ -1206,15 +1220,11 @@ class EmailTemplateDetailView(View):
                 if form.is_valid():
                     type = form.cleaned_data['type']
                     value = form.cleaned_data['value']
-                    if type == 'Visit':
+                    if type in self.classes.keys():
+                        clazz = self.classes[type]
                         try:
-                            value = Visit.objects.get(pk=value)
-                        except Visit.DoesNotExist:
-                            pass
-                    if type == 'Booking':
-                        try:
-                            value = Booking.objects.get(pk=value)
-                        except Booking.DoesNotExist:
+                            value = clazz.objects.get(pk=value)
+                        except clazz.DoesNotExist:
                             pass
                     context[form.cleaned_data['key']] = value
 

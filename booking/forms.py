@@ -373,7 +373,17 @@ class EmailTemplatePreviewContextEntryForm(forms.Form):
     type = forms.ChoiceField(
         choices=(
             ('string', 'String'),
+            ('Unit', 'Unit'),
+            #('OtherResource': OtherResource),
             ('Visit', 'Visit'),
+            #('VisitOccurrence', VisitOccurrence),
+            #('StudyMaterial', StudyMaterial),
+            #('Resource',Resource),
+            #('Subject', Subject),
+            #('GymnasieLevel', GymnasieLevel),
+            #('Room', Room),
+            #('PostCode', PostCode),
+            #('School', School),
             ('Booking', 'Booking'),
         ),
         widget=Select(attrs={'class': 'form-control emailtemplate-type'})
