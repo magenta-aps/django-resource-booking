@@ -1149,9 +1149,13 @@ class KUEmailMessage(models.Model):
 
 class EmailTemplate(models.Model):
 
-    name = models.CharField(
-        max_length=64,
-        verbose_name=u'Navn'
+    key_choices = [
+        (1, _(u'Booking created')),
+    ]
+    key = models.IntegerField(
+        verbose_name=u'Key',
+        choices=key_choices,
+        default=1
     )
 
     subject = models.CharField(
@@ -1162,6 +1166,13 @@ class EmailTemplate(models.Model):
     body = models.CharField(
         max_length=65584,
         verbose_name=u'Tekst'
+    )
+
+    unit = models.ForeignKey(
+        Unit,
+        verbose_name=u'Enhed',
+        null=True,
+        blank=True
     )
 
     def expand_subject(self, context, keep_placeholders=False):
