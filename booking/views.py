@@ -956,7 +956,8 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
                 return ["visit/classvisit.html"]
             if self.object.type == Resource.TEACHER_EVENT:
                 return ["visit/teachervisit.html"]
-        raise "Couldn't find template for object type %d" % self.object.type
+        raise Exception("Couldn't find template for "
+                        "object type %d" % self.object.type)
 
 
 class VisitDetailView(DetailView):
