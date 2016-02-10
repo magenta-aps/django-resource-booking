@@ -424,6 +424,7 @@ class EmailTemplateForm(forms.ModelForm):
         model = EmailTemplate
         fields = ('key', 'subject', 'body', 'unit')
         widgets = {
+            'subject': TextInput(attrs={'class': 'form-control'}),
             'body': TinyMCE(attrs={'rows': 10, 'cols': 90}),
         }
 
@@ -470,3 +471,24 @@ class EmailTemplatePreviewContextEntryForm(forms.Form):
 EmailTemplatePreviewContextForm = formset_factory(
     EmailTemplatePreviewContextEntryForm
 )
+
+
+class BaseEmailComposeForm(forms.Form):
+
+    body = forms.CharField(
+        max_length=65584,
+        widget=TinyMCE(attrs={'rows': 10, 'cols': 90}),
+        label=_(u'Tekst')
+    )
+
+
+class EmailComposeForm(BaseEmailComposeForm):
+
+    recipients = forms.MultipleChoiceField(
+        label=_(u'Modtagere')
+    )
+
+    subject = forms.CharField(
+        max_length=77,
+        label=_(u'Emne')
+    )

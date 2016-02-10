@@ -1153,6 +1153,12 @@ class Booker(models.Model):
             return "%s %s <%s>" % (self.firstname, self.lastname, self.email)
         return "%s %s" % (self.firstname, self.lastname)
 
+    def get_email(self):
+        return self.email
+
+    def get_name(self):
+        return "%s %s" % (self.firstname, self.lastname)
+
 
 class Booking(models.Model):
     objects = SearchManager(
@@ -1452,47 +1458,38 @@ class KUEmailMessage(models.Model):
         ku_email_message.save()
 
     @staticmethod
-    def send_email(template_key, context, recipients, unit=None, **kwargs):
-        template = None
-        emails = []
-
-        while unit is not None and template is not None:
-            try:
-                template = EmailTemplate.objects.filter(
-                    key=template_key,
-                    unit=unit
-                )[0]
-            except:
-                pass
-            unit = unit.parent
-        if template is None:
-            try:
-                template = EmailTemplate.objects.filter(key=template_key,
-                                                        unit__isnull=True)[0]
-            except:
-                pass
-        if template is None:
+    def send_email(template, context, recipients, unit=None, **kwargs):
+        if isinstance(template, basestring):
+            template_key = template
+            template = EmailTemplate.get_template(template_key, unit)
+            if template is None:
+                raise Exception(
+                    u"Template with name %s does not exist!" % template_key
+                )
+        if not isinstance(template, EmailTemplate):
             raise Exception(
-                u"Template with name %s does not exist!" % template_key
+                u"Invalid template object '%s'" % str(template)
             )
 
+        emails = {}
         if type(recipients) is not list:
             recipients = [recipients]
         for recipient in recipients:
             try:
                 address = recipient.get_email()
-                email = {'address': address}
-                try:
-                    name = recipient.get_name()
-                    email['name'] = name
-                    email['full'] = u"\"%s\" <%s>" % (name, address)
-                except:
-                    email['full'] = address
-                emails.append(email)
+                if address not in emails:
+                    email = {'address': address}
+                    try:
+                        name = recipient.get_name()
+                        email['name'] = name
+                        email['full'] = u"\"%s\" <%s>" % (name, address)
+                    except:
+                        email['full'] = address
+                    emails[address] = email
             except:
                 pass
 
-        for email in emails:
+        for email in emails.values():
             ctx = {
                 'unit': unit,
                 'recipient': email,
@@ -1500,7 +1497,7 @@ class KUEmailMessage(models.Model):
             }
             ctx.update(context)
             subject = template.expand_subject(ctx)
-            body = template.expand_body(ctx)
+            body = template.expand_body(ctx, encapsulate=True)
 
             message = EmailMessage(
                 subject=subject,
@@ -1515,9 +1512,11 @@ class KUEmailMessage(models.Model):
 class EmailTemplate(models.Model):
 
     BOOKING_CREATED = 1
+    NOTIFY_BOOKERS = 2
 
     key_choices = [
         (BOOKING_CREATED, _(u'Booking created')),
+        (NOTIFY_BOOKERS, _(u'Message to bookers of a visit'))
     ]
     key = models.IntegerField(
         verbose_name=u'Key',
@@ -1545,8 +1544,14 @@ class EmailTemplate(models.Model):
     def expand_subject(self, context, keep_placeholders=False):
         return self._expand(self.subject, context, keep_placeholders)
 
-    def expand_body(self, context, keep_placeholders=False):
-        return self._expand(self.body, context, keep_placeholders)
+    def expand_body(self, context, keep_placeholders=False, encapsulate=False):
+        body = self._expand(self.body, context, keep_placeholders)
+        if encapsulate \
+                and not body.startswith(("<html", "<HTML", "<!DOCTYPE")):
+            body = "<!DOCTYPE html><html><head></head>" \
+                   "<body>%s</body>" \
+                   "</html>" % body
+        return body
 
     @staticmethod
     def _expand(text, context, keep_placeholders=False):
@@ -1556,3 +1561,23 @@ class EmailTemplate(models.Model):
         if isinstance(context, dict):
             context = make_context(context)
         return template.render(context)
+
+    @staticmethod
+    def get_template(template_key, unit):
+        template = None
+        while unit is not None and template is None:
+            try:
+                template = EmailTemplate.objects.filter(
+                    key=template_key,
+                    unit=unit
+                )[0]
+            except:
+                pass
+            unit = unit.parent
+        if template is None:
+            try:
+                template = EmailTemplate.objects.filter(key=template_key,
+                                                        unit__isnull=True)[0]
+            except:
+                pass
+        return template

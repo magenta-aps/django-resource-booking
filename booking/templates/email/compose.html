@@ -1,0 +1,79 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load booking_tags %}
+
+{% block head %}
+
+{% endblock %}
+
+{% block content %}
+
+    {% include 'common/breadcrumbrow.html' %}
+
+    <div class="divider"></div>
+    <div class="row form-group">
+        <div class="col-sm-8">
+            <h1>{% trans "Send email" %}</h1>
+        </div>
+    </div>
+    <hr/>
+    <form action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        {{ form.non_field_errors }}
+
+        <div id="accordion" class="panel-group" aria-multiselectable="true" role="tablist">
+
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <div class="row form-group">
+                        <div>
+                            {{ form.recipients.errors }}
+                        </div>
+                        <div class="col-sm-2">
+                            <label class="{{ form.recipients.css_classes }}" for="{{ form.recipients.id_for_label }}">{{ form.recipients.label }}:</label>
+                        </div>
+                        <div class="col-sm-10">
+                            {{ form.recipients }}
+                        </div>
+                    </div>
+
+                    <div class="row form-group">
+                        <div>
+                            {{ form.subject.errors }}
+                        </div>
+                        <div class="col-sm-2">
+                            <label class="{{ form.subject.css_classes }}" for="{{ form.subject.id_for_label }}">{{ form.subject.label }}:</label>
+                        </div>
+                        <div class="col-sm-10">
+                            {{ form.subject }}
+                        </div>
+                    </div>
+
+                    <div class="row form-group">
+                        <div>
+                            {{ form.body.errors }}
+                        </div>
+                        <div class="col-sm-2">
+                            <label class="{{ form.body.css_classes }}" for="{{ form.body.id_for_label }}">{{ form.body.label }}:</label>
+                        </div>
+                        <div class="col-sm-10">
+                            {{ form.body }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        {% include 'common/send_cancel.html' %}
+        <div class="divider"></div>
+    </form>
+
+
+{% endblock %}
+
+{% block extra_scripts %}
+    {{ form.media }}
+{% endblock %}

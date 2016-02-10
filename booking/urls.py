@@ -9,7 +9,7 @@ from booking.views import RrulestrView
 from booking.views import EditResourceInitialView, ResourceDetailView
 from booking.views import BookingView, BookingSuccessView, BookingSearchView
 from booking.views import EditOtherResourceView, OtherResourceDetailView
-from booking.views import EditVisitView, VisitDetailView
+from booking.views import EditVisitView, VisitDetailView, VisitNotifyView
 from booking.views import SearchView, EmbedcodesView
 from booking.views import BookingDetailView, ChangeBookingStatusView
 from booking.views import ChangeBookingTeachersView, ChangeBookingHostsView
@@ -81,6 +81,9 @@ urlpatterns = patterns(
     url(r'^visit/(?P<visit>[0-9]+)/book/success$',
         BookingSuccessView.as_view(),
         name='visit-book-success'),
+    url(r'^visit/(?P<visit>[0-9]+)/notify$',
+        VisitNotifyView.as_view(),
+        name='visit-notify'),
 
     url(r'^booking/(?P<pk>[0-9]+)/?$',
         BookingDetailView.as_view(),
