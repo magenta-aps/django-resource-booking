@@ -124,6 +124,24 @@ class EmailComposeView(FormMixin, TemplateView):
             self.get_context_data(form=form)
         )
 
+    def post(self, request, *args, **kwargs):
+        form = self.get_form()
+        form.fields['recipients'].choices = self.recipients
+        if form.is_valid():
+            data = form.cleaned_data
+            template = EmailTemplate(
+                subject=data['subject'],
+                body=data['body']
+            )
+            context = self.template_context
+            recipients = self.lookup_recipients(
+                form.cleaned_data['recipients'])
+            KUEmailMessage.send_email(template, context, recipients)
+
+        return self.render_to_response(
+            self.get_context_data(form=form)
+        )
+
     def get_initial(self):
         data = {}
         if self.template_key is not None:
@@ -134,6 +152,11 @@ class EmailComposeView(FormMixin, TemplateView):
                 data['subject'] = template.subject
                 data['body'] = template.body
         return data
+
+    def lookup_recipients(self, recipient_ids):
+        # Override in subclasses: return a list of recipient objects
+        # (instances that implement get_email() and get_name())
+        raise NotImplementedError
 
 
 class UnitAccessRequiredMixin(object):
@@ -959,21 +982,37 @@ class VisitDetailView(DetailView):
 
 class VisitNotifyView(EmailComposeView):
 
-    def get(self, request, *args, **kwargs):
+    def dispatch(self, request, *args, **kwargs):
         self.recipients = []
         pk = kwargs['visit']
-        visit = Visit.objects.get(id=pk)
+        self.visit = Visit.objects.get(id=pk)
         types = request.GET.get("to")
         if type(types) is not list:
             types = [types]
         if 'guests' in types:
-            for booking in visit.booking_set.all():
+            for booking in self.visit.booking_set.all():
                 email = full_email(booking.booker.email,
                                    booking.booker.firstname + " " +
                                    booking.booker.lastname)
-                self.recipients.append((email, email))
+                self.recipients.append((booking.booker.id, email))
                 self.template_key = EmailTemplate.NOTIFY_BOOKERS
-        return super(VisitNotifyView, self).get(self, request, *args, **kwargs)
+        self.template_context['visit'] = self.visit
+        return super(VisitNotifyView, self).dispatch(request, *args, **kwargs)
+
+    def lookup_recipients(self, recipient_ids):
+        return list(Booker.objects.filter(id__in=recipient_ids))
+
+    def get_context_data(self, **kwargs):
+        context = {}
+        context['breadcrumbs'] = [
+            {'url': reverse('search'), 'text': _(u'Søgning')},
+            {'url': reverse('search'), 'text': _(u'Søgeresultat')},
+            {'url': reverse('visit-view', args=[self.visit.id]),
+             'text': _(u'Om tilbuddet')},
+            {'text': _(u'Send notifikation')},
+        ]
+        context.update(kwargs)
+        return super(VisitNotifyView, self).get_context_data(**context)
 
 
 class RrulestrView(View):
