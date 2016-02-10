@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 
 from dateutil import parser
 from dateutil.rrule import rrulestr
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
@@ -26,10 +27,13 @@ from django.views.defaults import bad_request
 
 from profile.models import EDIT_ROLES
 from profile.models import role_to_text
-
+from booking.models import Visit, VisitOccurrence, StudyMaterial, Booker, \
+    KUEmailMessage
+from booking.models import Resource, Subject
 from booking.models import Unit
-from booking.models import OtherResource, Visit, VisitOccurrence, StudyMaterial
-from booking.models import Resource, Subject, GymnasieLevel
+from booking.models import OtherResource
+from booking.models import GymnasieLevel
+
 from booking.models import Room
 from booking.models import PostCode, School
 from booking.models import Booking, Booker
@@ -690,9 +694,50 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
             self.get_context_data(form=form, fileformset=fileformset)
         )
 
+    def _is_any_booking_outside_new_attendee_count_bounds(
+            self,
+            visit_id,
+            min,
+            max
+    ):
+        if min is None or min == '':
+            min = 0
+        if max is None or max == '':
+            max = 1000
+        """
+        Check if any existing bookings exists with attendee count outside
+        the new min-/max_attendee_count bounds.
+        :param visit_id:
+        :param min:
+        :param max:
+        :return: Boolean
+        """
+        existing_bookings_outside_bounds = Booker.objects.raw('''
+            select *
+            from booking_booking bb
+            join booking_booker bkr on (bb.booker_id = bkr.id)
+            join booking_visit bv on (bb.visit_id = bv.resource_ptr_id)
+            where bv.resource_ptr_id = %s
+            and bkr.attendee_count
+            not between %s and %s
+        ''', [visit_id, min, max])
+        return len(list(existing_bookings_outside_bounds)) > 0
+
     # Handle both forms, creating a Visit and a number of StudyMaterials
     def post(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
+        if pk is not None:
+            if self._is_any_booking_outside_new_attendee_count_bounds(
+                pk,
+                request.POST.get(u'minimum_number_of_visitors'),
+                request.POST.get(u'maximum_number_of_visitors'),
+            ):
+                messages.add_message(
+                    request,
+                    messages.INFO,
+                    _(u'Der findes bookinger med deltagerantal udenfor de'
+                      u'netop ændrede min-/max-grænser for deltagere!')
+                )
         is_cloning = kwargs.get("clone", False)
         self.set_object(pk, request, is_cloning)
         form = self.get_form()
@@ -1074,6 +1119,16 @@ class BookingView(UpdateView):
                 booking.booker = forms['bookerform'].save()
 
             booking.save()
+            KUEmailMessage.send_email(
+                EmailTemplate.BOOKING_CREATED,
+                {
+                    'booking': booking,
+                    'visit': booking.visit,
+                    'booker': booking.booker
+                },
+                [x for x in self.visit.contact_persons.all()],
+                self.visit.unit
+            )
 
             # We can't fetch this form before we have
             # a saved booking object to feed it, or we'll get an error
