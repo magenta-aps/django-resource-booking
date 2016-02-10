@@ -8,19 +8,23 @@
 {% endblock %}
 
 {% block content %}
+
+    {% include 'common/breadcrumbrow.html' %}
+
     <div class="divider"></div>
     <div class="row form-group">
         <div class="col-sm-8">
-            <h1>{% trans "Preview Email template" %}</h1>
+            <h1>{% trans "Preview Emailskabelon" %}</h1>
         </div>
         <div class="col-sm-4 text-right">
-            <a href="{% url 'emailtemplate-edit' template.id %}" class="btn btn-primary">{% trans "Redigér template" %}</a>
-            <a href="{% url 'emailtemplate-clone' template.id %}" class="btn btn-primary">{% trans "Klon template" %}</a>
+            <a href="{% url 'emailtemplate-edit' template.id %}" class="btn btn-primary">{% trans "Rediger skabelon" %}</a>
+            <a href="{% url 'emailtemplate-clone' template.id %}" class="btn btn-primary">{% trans "Kopier skabelon" %}</a>
+            <a href="{% url 'emailtemplate-delete' template.id %}" class="btn btn-primary">{% trans "Slet skabelon" %}</a>
         </div>
         </div>
     <div class="row">
         <div class="col-sm-12">
-            {% trans 'På denne side kan du afprøve templatens felter ved at definere en kontekst. Ved tryk på "preview" bliver templaten udfyldt med den angivne kontekst.' %}
+            {% trans 'På denne side kan du afprøve skabelonens felter ved at definere en kontekst. Ved tryk på "preview" bliver skabelonen udfyldt med den angivne kontekst.' %}
         </div>
     </div>
     <hr/>

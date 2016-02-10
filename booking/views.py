@@ -10,7 +10,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
-from django.core.urlresolvers import reverse
+from django.core.urlresolvers import reverse, reverse_lazy
 from django.db.models import Count
 from django.db.models import F
 from django.db.models import Q
@@ -22,7 +22,7 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext as _
 from django.views.generic import View, TemplateView, ListView, DetailView
-from django.views.generic.edit import UpdateView, FormMixin
+from django.views.generic.edit import UpdateView, FormMixin, DeleteView
 from django.views.defaults import bad_request
 
 from profile.models import EDIT_ROLES
@@ -131,6 +131,25 @@ class EmailComposeView(FormMixin, TemplateView):
             data['subject'] = self.template.subject
             data['body'] = self.template.body
         return data
+
+
+class UnitAccessRequiredMixin(object):
+
+    def check_item(self, item):
+        current_user = self.request.user
+        if hasattr(current_user, 'userprofile'):
+            if current_user.userprofile.can_edit(item):
+                return
+        raise AccessDenied(_(u"You cannot edit an object for a unit "
+                             u"that you don't belong to"))
+
+    def check_unit(self, unit):
+        current_user = self.request.user
+        if hasattr(current_user, 'userprofile'):
+            if current_user.userprofile.unit_access(unit):
+                return
+        raise AccessDenied(_(u"You cannot edit an object for a unit "
+                             u"that you don't belong to"))
 
 
 class SearchView(ListView):
@@ -1226,7 +1245,35 @@ class EmbedcodesView(TemplateView):
         return super(EmbedcodesView, self).get_context_data(**context)
 
 
-class EmailTemplateEditView(UpdateView):
+class EmailTemplateListView(ListView):
+    template_name = 'email/list.html'
+    model = EmailTemplate
+
+    def get_context_data(self, **kwargs):
+        context = super(EmailTemplateListView, self).get_context_data(**kwargs)
+        context['duplicates'] = []
+        for i in xrange(0, len(self.object_list)):
+            objectA = self.object_list[i]
+            for j in xrange(i, len(self.object_list)):
+                objectB = self.object_list[j]
+                if objectA != objectB \
+                        and objectA.key == objectB.key \
+                        and objectA.unit == objectB.unit:
+                    context['duplicates'].extend([objectA, objectB])
+        context['breadcrumbs'] = [
+            {'text': _(u'Emailskabelonliste')},
+        ]
+        return context
+
+    def get_queryset(self):
+        qs = super(EmailTemplateListView, self).get_queryset()
+        qs = [item
+              for item in qs
+              if self.request.user.userprofile.can_edit(item)]
+        return qs
+
+
+class EmailTemplateEditView(UpdateView, UnitAccessRequiredMixin):
     template_name = 'email/form.html'
     form_class = EmailTemplateForm
     model = EmailTemplate
@@ -1237,6 +1284,7 @@ class EmailTemplateEditView(UpdateView):
             self.object = EmailTemplate()
         else:
             self.object = EmailTemplate.objects.get(pk=pk)
+            self.check_item(self.object)
         form = self.get_form()
         return self.render_to_response(
             self.get_context_data(form=form)
@@ -1251,18 +1299,39 @@ class EmailTemplateEditView(UpdateView):
             self.object = EmailTemplate()
         else:
             self.object = EmailTemplate.objects.get(pk=pk)
+            self.check_item(self.object)
         context = {}
         context.update(kwargs)
 
         form = self.get_form()
         if form.is_valid():
             self.object = form.save()
-            return redirect(reverse('emailtemplate-edit',
-                                    args=[self.object.id]))
+            return redirect(reverse('emailtemplate-list'))
 
         return self.render_to_response(
             self.get_context_data(**context)
         )
+
+    def get_context_data(self, **kwargs):
+        context = super(EmailTemplateEditView, self).get_context_data(**kwargs)
+        context['breadcrumbs'] = [
+            {'url': reverse('emailtemplate-list'),
+             'text': _(u'Emailskabelonliste')}]
+        if self.object and self.object.id:
+            context['breadcrumbs'].extend([
+                {'url': reverse('emailtemplate-view', args={self.object.id}),
+                 'text': _(u'Emailskabelon')},
+                {'text': _(u'Redigér')},
+            ])
+        else:
+            context['breadcrumbs'].append({'text': _(u'Opret')})
+
+        return context
+
+    def get_form_kwargs(self):
+        args = super(EmailTemplateEditView, self).get_form_kwargs()
+        args['user'] = self.request.user
+        return args
 
 
 class EmailTemplateDetailView(View):
@@ -1294,6 +1363,7 @@ class EmailTemplateDetailView(View):
             for key, type in EmailTemplateDetailView.classes.items()
             })
 
+    @method_decorator(login_required)
     def get(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
         formset = EmailTemplatePreviewContextForm()
@@ -1306,8 +1376,10 @@ class EmailTemplateDetailView(View):
                 'template': template
                 }
 
+        data.update(self.get_context_data())
         return render(request, self.template_name, data)
 
+    @method_decorator(login_required)
     def post(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
         formset = EmailTemplatePreviewContextForm(request.POST)
@@ -1333,5 +1405,33 @@ class EmailTemplateDetailView(View):
                 'objects': self._getObjectJson(),
                 'template': template
                 }
+        data.update(self.get_context_data())
 
         return render(request, self.template_name, data)
+
+    def get_context_data(self, **kwargs):
+        context = {}
+        context['breadcrumbs'] = [
+            {'url': reverse('emailtemplate-list'),
+             'text': _(u'Emailskabelonliste')},
+            {'text': _(u'Emailskabelon')},
+        ]
+        return context
+
+
+class EmailTemplateDeleteView(DeleteView):
+    template_name = 'email/delete.html'
+    model = EmailTemplate
+    success_url = reverse_lazy('emailtemplate-list')
+
+    def get_context_data(self, **kwargs):
+        context = super(EmailTemplateDeleteView, self).\
+            get_context_data(**kwargs)
+        context['breadcrumbs'] = [
+            {'url': reverse('emailtemplate-list'),
+             'text': _(u'Emailskabelonliste')},
+            {'url': reverse('emailtemplate-view', args={self.object.id}),
+             'text': _(u'Emailskabelon')},
+            {'text': _(u'Slet')},
+        ]
+        return context
