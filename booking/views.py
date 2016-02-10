@@ -1077,9 +1077,20 @@ class BookingView(UpdateView):
                     'visit': booking.visit,
                     'booker': booking.booker
                 },
-                [x for x in self.visit.contact_persons.all()],
+                list(self.visit.contact_persons.all()),
                 self.visit.unit
             )
+            KUEmailMessage.send_email(
+                EmailTemplate.CONFIRMATION_TO_BOOKER,
+                {
+                    'booking': booking,
+                    'visit': booking.visit,
+                    'booker': booking.booker
+                },
+                [booking.booker],
+                self.visit.unit
+            )
+
 
             # We can't fetch this form before we have
             # a saved booking object to feed it, or we'll get an error

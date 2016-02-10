@@ -1024,6 +1024,12 @@ class Booker(models.Model):
             return "%s %s <%s>" % (self.firstname, self.lastname, self.email)
         return "%s %s" % (self.firstname, self.lastname)
 
+    def get_name(self):
+        return self.name
+
+    def get_email(self):
+        return self.email
+
 
 class Booking(models.Model):
     visit = models.ForeignKey(Visit, null=True)
@@ -1161,10 +1167,12 @@ class KUEmailMessage(models.Model):
 
 class EmailTemplate(models.Model):
 
-    BOOKING_CREATED = 1
+    BOOKING_CREATED = 1  # Notification to coordinator
+    CONFIRMATION_TO_BOOKER = 2  #Confirmation to booker
 
     key_choices = [
         (BOOKING_CREATED, _(u'Booking created')),
+        (CONFIRMATION_TO_BOOKER, _(u'Confirmation to booker')),
     ]
     key = models.IntegerField(
         verbose_name=u'Key',
