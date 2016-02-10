@@ -33,6 +33,7 @@ class ResourceInitialForm(forms.Form):
 
 
 class OtherResourceForm(forms.ModelForm):
+    required_css_class = 'required'
 
     class Meta:
         model = OtherResource
@@ -41,9 +42,19 @@ class OtherResourceForm(forms.ModelForm):
                   'institution_level', 'topics', 'audience',
                   'enabled', 'unit',)
         widgets = {
-            'title': TextInput(attrs={'class': 'titlefield'}),
-            'teaser': Textarea(attrs={'rows': 3, 'maxlength': 1000}),
-            'description': TinyMCE(attrs={'rows': 10}),
+            'title': TextInput(attrs={
+                'class': 'titlefield form-control input-sm'
+            }),
+            'teaser': Textarea(attrs={
+                'rows': 3,
+                'cols': 70,
+                'maxlength': 1000,
+                'class': 'form-control input-sm'
+            }),
+            'description': TinyMCE(attrs={
+                'rows': 10,
+                'cols': 90
+            }),
             'tags': CheckboxSelectMultiple(),
             'topics': CheckboxSelectMultiple(),
             'subjects': CheckboxSelectMultiple(),
