@@ -1147,8 +1147,8 @@ class KUEmailMessage(models.Model):
 
 class EmailTemplate(models.Model):
 
-    BOOKING_CREATED = 1,
-    NOTIFY_BOOKERS = 2,
+    BOOKING_CREATED = 1
+    NOTIFY_BOOKERS = 2
 
     key_choices = [
         (BOOKING_CREATED, _(u'Booking created')),
@@ -1195,7 +1195,7 @@ class EmailTemplate(models.Model):
     @staticmethod
     def get_template(template_key, unit):
         template = None
-        while unit is not None and template is not None:
+        while unit is not None and template is None:
             try:
                 template = EmailTemplate.objects.filter(
                         key=template_key,

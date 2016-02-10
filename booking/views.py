@@ -127,9 +127,12 @@ class EmailComposeView(FormMixin, TemplateView):
     def get_initial(self):
         data = {}
         if self.template_key is not None:
-            template = EmailTemplate.get_template(self.template_key, self.request.user.userprofile.unit)
-            data['subject'] = self.template.subject
-            data['body'] = self.template.body
+            template = \
+                EmailTemplate.get_template(self.template_key,
+                                           self.request.user.userprofile.unit)
+            if template is not None:
+                data['subject'] = template.subject
+                data['body'] = template.body
         return data
 
 
@@ -969,6 +972,7 @@ class VisitNotifyView(EmailComposeView):
                                    booking.booker.firstname + " " +
                                    booking.booker.lastname)
                 self.recipients.append((email, email))
+                self.template_key = EmailTemplate.NOTIFY_BOOKERS
         return super(VisitNotifyView, self).get(self, request, *args, **kwargs)
 
 
