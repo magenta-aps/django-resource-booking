@@ -1100,24 +1100,9 @@ class KUEmailMessage(models.Model):
 
     @staticmethod
     def send_email(template_key, context, recipients, unit=None, **kwargs):
-        template = None
+        template = EmailTemplate.get_template(template_key, unit)
         emails = []
 
-        while unit is not None and template is not None:
-            try:
-                template = EmailTemplate.objects.filter(
-                    key=template_key,
-                    unit=unit
-                )[0]
-            except:
-                pass
-            unit = unit.parent
-        if template is None:
-            try:
-                template = EmailTemplate.objects.filter(key=template_key,
-                                                        unit__isnull=True)[0]
-            except:
-                pass
         if template is None:
             raise Exception(
                 u"Template with name %s does not exist!" % template_key
@@ -1159,34 +1144,37 @@ class KUEmailMessage(models.Model):
             KUEmailMessage.save_email(message)
 
 
+
 class EmailTemplate(models.Model):
 
-    BOOKING_CREATED = 1
+    BOOKING_CREATED = 1,
+    NOTIFY_BOOKERS = 2,
 
     key_choices = [
         (BOOKING_CREATED, _(u'Booking created')),
+        (NOTIFY_BOOKERS, _(u'Message to bookers of a visit'))
     ]
     key = models.IntegerField(
-        verbose_name=u'Key',
-        choices=key_choices,
-        default=1
+            verbose_name=u'Key',
+            choices=key_choices,
+            default=1
     )
 
     subject = models.CharField(
-        max_length=77,
-        verbose_name=u'Emne'
+            max_length=77,
+            verbose_name=u'Emne'
     )
 
     body = models.CharField(
-        max_length=65584,
-        verbose_name=u'Tekst'
+            max_length=65584,
+            verbose_name=u'Tekst'
     )
 
     unit = models.ForeignKey(
-        Unit,
-        verbose_name=u'Enhed',
-        null=True,
-        blank=True
+            Unit,
+            verbose_name=u'Enhed',
+            null=True,
+            blank=True
     )
 
     def expand_subject(self, context, keep_placeholders=False):
@@ -1203,3 +1191,23 @@ class EmailTemplate(models.Model):
         if isinstance(context, dict):
             context = make_context(context)
         return template.render(context)
+
+    @staticmethod
+    def get_template(template_key, unit):
+        template = None
+        while unit is not None and template is not None:
+            try:
+                template = EmailTemplate.objects.filter(
+                        key=template_key,
+                        unit=unit
+                )[0]
+            except:
+                pass
+            unit = unit.parent
+        if template is None:
+            try:
+                template = EmailTemplate.objects.filter(key=template_key,
+                                                        unit__isnull=True)[0]
+            except:
+                pass
+        return template

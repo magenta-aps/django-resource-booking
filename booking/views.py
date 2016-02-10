@@ -22,7 +22,7 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext as _
 from django.views.generic import View, TemplateView, ListView, DetailView
-from django.views.generic.edit import UpdateView
+from django.views.generic.edit import UpdateView, FormMixin
 from django.views.defaults import bad_request
 
 from profile.models import EDIT_ROLES
@@ -44,6 +44,8 @@ from booking.forms import ClassBookingForm, TeacherBookingForm
 from booking.forms import VisitStudyMaterialForm, BookingSubjectLevelForm
 from booking.forms import BookerForm
 from booking.forms import EmailTemplateForm, EmailTemplatePreviewContextForm
+from booking.forms import EmailComposeForm
+from booking.utils import full_email
 
 import urls
 
@@ -106,6 +108,29 @@ class RoleRequiredMixin(object):
             u"Kun brugere med disse roller kan logge ind: " +
             u",".join(txts)
         )
+
+
+class EmailComposeView(FormMixin, TemplateView):
+    template_name = 'email/compose.html'
+    form_class = EmailComposeForm
+    recipients = []
+    template_key = None
+    template_context = {}
+
+    def get(self, request, *args, **kwargs):
+        form = self.get_form()
+        form.fields['recipients'].choices = self.recipients
+        return self.render_to_response(
+                self.get_context_data(form=form)
+        )
+
+    def get_initial(self):
+        data = {}
+        if self.template_key is not None:
+            template = EmailTemplate.get_template(self.template_key, self.request.user.userprofile.unit)
+            data['subject'] = self.template.subject
+            data['body'] = self.template.body
+        return data
 
 
 class SearchView(ListView):
@@ -908,6 +933,24 @@ class VisitDetailView(DetailView):
         context.update(kwargs)
 
         return super(VisitDetailView, self).get_context_data(**context)
+
+
+class VisitNotifyView(EmailComposeView):
+
+    def get(self, request, *args, **kwargs):
+        self.recipients = []
+        pk = kwargs['visit']
+        visit = Visit.objects.get(id=pk)
+        types = request.GET.get("to")
+        if type(types) is not list:
+            types = [types]
+        if 'guests' in types:
+            for booking in visit.booking_set.all():
+                email = full_email(booking.booker.email,
+                                   booking.booker.firstname + " " +
+                                   booking.booker.lastname)
+                self.recipients.append((email, email))
+        return super(VisitNotifyView, self).get(self, request, *args, **kwargs)
 
 
 class RrulestrView(View):

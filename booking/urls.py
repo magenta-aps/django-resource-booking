@@ -9,7 +9,7 @@ from booking.views import RrulestrView
 from booking.views import EditResourceInitialView, ResourceDetailView
 from booking.views import BookingView, BookingSuccessView
 from booking.views import EditOtherResourceView, OtherResourceDetailView
-from booking.views import EditVisitView, VisitDetailView
+from booking.views import EditVisitView, VisitDetailView, VisitNotifyView
 from booking.views import SearchView, EmbedcodesView
 from booking.views import EmailTemplateEditView, EmailTemplateDetailView
 
@@ -78,6 +78,9 @@ urlpatterns = patterns(
     url(r'^visit/(?P<visit>[0-9]+)/book/success$',
         BookingSuccessView.as_view(),
         name='visit-book-success'),
+    url(r'^visit/(?P<visit>[0-9]+)/notify$',
+        VisitNotifyView.as_view(),
+        name='visit-notify'),
 
     # Ajax api
     url(r'^jsapi/rrulestr$', RrulestrView.as_view(), name='jsapi_rrulestr'),
