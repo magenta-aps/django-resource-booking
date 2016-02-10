@@ -416,14 +416,18 @@ class BaseEmailComposeForm(forms.Form):
 
     body = forms.CharField(
         max_length=65584,
-        widget=TinyMCE(attrs={'rows': 10, 'cols': 90})
+        widget=TinyMCE(attrs={'rows': 10, 'cols': 90}),
+        label=_(u'Tekst')
     )
 
 
 class EmailComposeForm(BaseEmailComposeForm):
 
-    recipients = forms.MultipleChoiceField()
+    recipients = forms.MultipleChoiceField(
+        label=_(u'Modtagere')
+    )
 
     subject = forms.CharField(
         max_length=77,
+        label=_(u'Emne')
     )
