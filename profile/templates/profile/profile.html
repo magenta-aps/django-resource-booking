@@ -12,20 +12,22 @@
     <div class="divider"></div>
     
     <div class="row">
-        <div class="col-sm-12">
+        <div class="col-sm-7">
             <h1>Personlig side</h1>
-            <p><a class="btn btn-primary pull-right" href="/resource/create">+ Opret tilbud</a></p>
             <p>Du er logget ind som {{user.userprofile.user_role.name}}.</p>
-            <p>Her kan du se en oversigt over dine tilbud, hvilke der er bookede, og hvilke der kræver handling.</p>    
+            <p>Her kan du se en oversigt over dine tilbud, hvilke der er bookede, og hvilke der kræver handling.</p>
+        </div>
+        <div class="col-sm-5">
+            <ul class="list-unstyled pull-right">
+                <li><a class="btn btn-primary pull-right" href="/resource/create">+ Opret tilbud</a></li>
+                {% if request.user.userprofile.can_create %}
+                <li><a class="btn btn-primary pull-right" href="{% url 'booking-search' %}">Søg i bookinger</a></li>
+                <li><a class="btn btn-primary pull-right" href="{% url 'user_list' %}">Administrér brugere</a></li>
+                {% endif %}
+            </ul>
         </div>
     </div>
-    {% if request.user.userprofile.can_create %}
-    <div class="divider"></div>
-    <ul>
-        <li><a href="{% url 'booking-search' %}">Søg i bookinger</a></li>
-        <li><a href="{% url 'user_list' %}">Administrér brugere</a></li>
-    </ul>
-    {% endif %}
+    
     <div class="divider"></div>
     <div id="personalPage" class="row eq-height">
             <div class="col-sm-4">
