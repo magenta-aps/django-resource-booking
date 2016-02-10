@@ -121,7 +121,7 @@ class EmailComposeView(FormMixin, TemplateView):
         form = self.get_form()
         form.fields['recipients'].choices = self.recipients
         return self.render_to_response(
-                self.get_context_data(form=form)
+            self.get_context_data(form=form)
         )
 
     def get_initial(self):

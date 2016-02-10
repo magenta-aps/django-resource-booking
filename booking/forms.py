@@ -415,8 +415,8 @@ EmailTemplatePreviewContextForm = formset_factory(
 class BaseEmailComposeForm(forms.Form):
 
     body = forms.CharField(
-            max_length=65584,
-            widget=TinyMCE(attrs={'rows': 10, 'cols': 90})
+        max_length=65584,
+        widget=TinyMCE(attrs={'rows': 10, 'cols': 90})
     )
 
 
@@ -425,5 +425,5 @@ class EmailComposeForm(BaseEmailComposeForm):
     recipients = forms.MultipleChoiceField()
 
     subject = forms.CharField(
-            max_length=77,
+        max_length=77,
     )
