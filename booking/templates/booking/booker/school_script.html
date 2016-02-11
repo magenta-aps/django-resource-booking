@@ -9,7 +9,8 @@
                 $.ajax({
                     url: "{% url 'school' %}",
                     data: {
-                        q: query
+                        q: query,
+                        t: 1
                     },
                     dataType: "json",
                     complete: function (response) {

@@ -38,6 +38,8 @@ from booking.forms import ClassBookingForm, TeacherBookingForm
 from booking.forms import VisitStudyMaterialForm, BookingSubjectLevelForm
 from booking.forms import BookerForm
 
+import urls
+
 
 i18n_test = _(u"Dette tester oversættelses-systemet")
 
@@ -318,7 +320,7 @@ class SearchView(ListView):
 
         context['breadcrumbs'] = [
             {'url': reverse('search'), 'text': _(u'Søgning')},
-            {'text': _(u'Søgeresultatliste')},
+            {'text': _(u'Søgeresultat')},
         ]
 
         context.update(kwargs)
@@ -615,8 +617,8 @@ class OtherResourceDetailView(DetailView):
 
         context['breadcrumbs'] = [
             {'url': reverse('search'), 'text': _(u'Søgning')},
-            {'url': '#', 'text': _(u'Søgeresultatliste')},
-            {'text': _(u'Detaljevisning')},
+            {'url': '#', 'text': _(u'Søgeresultat')},
+            {'text': _(u'Om tilbuddet')},
         ]
 
         context.update(kwargs)
@@ -851,8 +853,8 @@ class VisitDetailView(DetailView):
 
         context['breadcrumbs'] = [
             {'url': reverse('search'), 'text': _(u'Søgning')},
-            {'url': '#', 'text': _(u'Søgeresultatliste')},
-            {'text': _(u'Detaljevisning')},
+            {'url': '#', 'text': _(u'Søgeresultat')},
+            {'text': _(u'Om tilbuddet')},
         ]
 
         context.update(kwargs)
@@ -951,11 +953,14 @@ class PostcodeView(View):
 class SchoolView(View):
     def get(self, request, *args, **kwargs):
         query = request.GET['q']
-        items = School.search(query)
+        type = request.GET.get('t')
+        items = School.search(query, type)
         json = {'schools':
                 [
                     {'name': item.name,
-                     'postcode': item.postcode.number} for item in items
+                     'postcode': item.postcode.number
+                     if item.postcode is not None else None}
+                    for item in items
                 ]
                 }
         return JsonResponse(json)
@@ -1080,6 +1085,44 @@ class BookingSuccessView(TemplateView):
         return self.render_to_response(
             self.get_context_data(**data)
         )
+
+
+class EmbedcodesView(TemplateView):
+    template_name = "embedcodes.html"
+
+    def get_context_data(self, **kwargs):
+        context = {}
+
+        embed_url = 'embed/' + kwargs['embed_url']
+
+        # We only want to test the part before ? (or its encoded value, %3F):
+        test_url = embed_url.split('?', 1)[0]
+        test_url = test_url.split('%3F', 1)[0]
+
+        can_embed = False
+
+        for x in urls.embedpatterns:
+            if x.regex.match(test_url):
+                can_embed = True
+                break
+
+        context['can_embed'] = can_embed
+        context['full_url'] = self.request.build_absolute_uri('/' + embed_url)
+
+        context['breadcrumbs'] = [
+            {
+                'url': '/embedcodes/',
+                'text': 'Indlering af side'
+            },
+            {
+                'url': self.request.path,
+                'text': '/' + kwargs['embed_url']
+            }
+        ]
+
+        context.update(kwargs)
+
+        return super(EmbedcodesView, self).get_context_data(**context)
 
 
 class BookingSearchView(LoginRequiredMixin, ListView):
