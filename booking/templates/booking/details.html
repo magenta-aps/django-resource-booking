@@ -7,6 +7,12 @@
 
     {% include 'common/breadcrumbrow.html' %}
 
+    <ul>
+        {% for entry in activity_log %}
+        <li>{{ entry }}</li>
+        {% endfor %}
+    </ul>
+
     <div class="row titlebar hidden-print">
         <div class="col-sm-12 col-md-9"><h2>Om bookingen</h2></div>
         <div class="divider"></div>

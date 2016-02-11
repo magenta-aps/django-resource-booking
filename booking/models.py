@@ -7,6 +7,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
+from django.forms.models import model_to_dict
 from django.utils.translation import ugettext_lazy as _
 
 from recurrence.fields import RecurrenceField
@@ -48,7 +49,81 @@ def log_action(user, obj, action_flag, change_message=''):
         change_message
     )
 
+class AutologgerMixin(object):
+    def __init__(self, *args, **kwargs):
+        super(AutologgerMixin, self).__init__(*args, **kwargs)
+        self._original_state = self._as_state()
 
+    def _as_state(self):
+        return model_to_dict(self)
+
+    def get_changed_fields(self, compare_state=None):
+        if compare_state is None:
+            compare_state = self._original_state
+        
+        new_state = self._as_state()
+
+        result = {}
+
+        for key in compare_state:
+            if key in new_state:
+                if compare_state[key] != new_state[key]:
+                    result[key] = (compare_state[key], new_state[key])
+                del new_state[key]
+            else:
+                result[key] = (compare_state[key], None)
+        
+        for key in new_state:
+            result[key] = (None, new_state[key])
+
+        return result
+
+    def field_value_to_display(self, fieldname, value):
+
+        field = self.__class__._meta.get_field(fieldname)
+        fname = field.verbose_name
+
+        if value is None:
+            return (fname, unicode(value))
+
+        if field.many_to_one:
+            try:
+                o = field.related_model.objects.get(pk=value)
+                return (fname, unicode(o))
+            except:
+                return (fname, unicode(value))
+
+        if field.many_to_many or field.one_to_many:
+            res = []
+            for x in value:
+                try:
+                    o = field.related_mode.objects.get(pk=x)
+                    res.append(unicode(o))
+                except:
+                    res.append(unicode(x))
+            return (fname, ", ".join(res))
+
+        if field.choices:
+            d = dict(field.choices)
+            if value in d:
+                return (fname, unicode(d[value]))
+        
+        return (fname, unicode(value))
+
+    def changes_to_text(self, changes):
+        if not changes:
+            return ""
+
+        result = {}
+        for key, val in changes.iteritems():
+            name, value = self.field_value_to_display(key, val[1])
+            result[name] = value
+
+        return "\n".join([
+            u"%s: >>>%s<<<" % (x, result[x]) for x in sorted(result)
+        ])
+            
+            
 class Person(models.Model):
     """A dude or chick"""
 
@@ -226,7 +301,7 @@ class Locality(models.Model):
 
 
 # Bookable resources
-class Resource(models.Model):
+class Resource(AutologgerMixin, models.Model):
     """Abstract superclass for a bookable resource of any kind."""
 
     # Resource type.
@@ -1041,7 +1116,7 @@ class Booker(models.Model):
         return "%s %s" % (self.firstname, self.lastname)
 
 
-class Booking(models.Model):
+class Booking(AutologgerMixin, models.Model):
     objects = SearchManager(
         fields=('extra_search_text'),
         config='pg_catalog.danish',
@@ -1247,6 +1322,9 @@ class Booking(models.Model):
         return " ".join(result)
 
     def save(self, *args, **kwargs):
+        
+        created = self.pk is None
+
         # Save once to store relations
         super(Booking, self).save(*args, **kwargs)
 
@@ -1255,6 +1333,12 @@ class Booking(models.Model):
 
         # Do the final save
         super(Booking, self).save(*args, **kwargs)
+
+        if created:
+            log_action(
+                self.request.user, self, LOGACTION_CREATE,
+                _(u'Booking oprettet')
+            )
 
     def get_absolute_url(self):
         return reverse('booking-view', args=[self.pk])

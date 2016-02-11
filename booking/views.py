@@ -6,7 +6,9 @@ from datetime import datetime, timedelta
 
 from dateutil import parser
 from dateutil.rrule import rrulestr
+from django.contrib.admin.models import LogEntry
 from django.contrib.auth.decorators import login_required
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
@@ -1212,6 +1214,12 @@ class BookingDetailView(DetailView):
             {'url': '#', 'text': _(u'Søgeresultatliste')},
             {'text': _(u'Detaljevisning')},
         ]
+
+
+        context['activity_log'] = LogEntry.objects.filter(
+            content_type=ContentType.objects.get_for_model(self.model),
+            object_id=self.object.pk
+        )
 
         context.update(kwargs)
 
