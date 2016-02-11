@@ -8,14 +8,19 @@
     {% include 'common/breadcrumbrow.html' %}
 
     <div class="row titlebar hidden-print">
-        <div class="col-sm-12 col-md-9"><h1>Booking #{{ object.id }}</h1></div>
+        <div class="col-sm-12 col-md-9"><h1>{% blocktrans with id=object.id %}Booking #{{ id }}{% endblocktrans %}</h1></div>
         <div class="divider"></div>
     </div>
     <div class="row">
         <div class="col-sm-12 col-md-8">
 
             <div class="panel panel-default">
-                <div class="panel-body"><strong>{{ object.booker.firstname }} {{ object.booker.lastname }}</strong> har booket <a href="{% url 'visit-view' object.visit.id %}">{{ object.visit.title }}</a></div>
+                <div class="panel-body">
+                    {% url 'visit-view' object.visit.id as visiturl %}
+                    {% blocktrans with firstname=object.booker.firstname lastname=object.booker.lastname visittitle=object.visit.title %}
+                        <strong>{{ firstname }} {{ lastname }}</strong> har booket <a href="{{ visiturl }}">{{ visittitle }}</a>
+                    {% endblocktrans %}
+                </div>
             </div>
 
             <dl class="dl-horizontal">
