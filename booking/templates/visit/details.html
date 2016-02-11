@@ -117,16 +117,9 @@
                         </dl>
                     </div>
                 </div>
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <h3 class="panel-title">Kort</h3>
-                    </div>
-                    <div class="panel-body google-maps-container">
-                        <div class="google-maps">
-                            <iframe src='https://maps.google.com/maps?q={{ object.locality.address_line }}, {{ object.locality.zip_city }}&amp;z=14&amp;output=embed&amp;iwloc=0&amp;sensor=false' width='450' height='450' frameborder='0' style='border:0' allowfullscreen></iframe>
-                        </div>
-                    </div>
-                </div>
+
+                {% include 'common/snippets/map.html' with locality=object.locality %}
+
             </form>
         </div>
     </div>
