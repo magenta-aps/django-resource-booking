@@ -7,12 +7,13 @@ from .views import MainPageView
 from booking.views import PostcodeView, SchoolView
 from booking.views import RrulestrView
 from booking.views import EditResourceInitialView, ResourceDetailView
-from booking.views import BookingView, BookingSuccessView
+from booking.views import BookingView, BookingSuccessView, BookingSearchView
 from booking.views import EditOtherResourceView, OtherResourceDetailView
 from booking.views import EditVisitView, VisitDetailView, VisitNotifyView
 from booking.views import SearchView, EmbedcodesView
 from booking.views import EmailTemplateListView, EmailTemplateEditView
 from booking.views import EmailTemplateDetailView, EmailTemplateDeleteView
+from booking.views import BookingDetailView
 
 from django.views.generic import TemplateView
 
@@ -59,7 +60,6 @@ urlpatterns = patterns(
         EditOtherResourceView.as_view(), {'clone': True},
         name='otherresource-clone'),
 
-
     url(r'^visit/create$',
         EditVisitView.as_view(success_url='create'),
         name='visit-create'),
@@ -82,6 +82,13 @@ urlpatterns = patterns(
     url(r'^visit/(?P<visit>[0-9]+)/notify$',
         VisitNotifyView.as_view(),
         name='visit-notify'),
+
+    url(r'^booking/(?P<pk>[0-9]+)/?$',
+        BookingDetailView.as_view(),
+        name='booking-view'),
+    url(r'^booking/search$',
+        BookingSearchView.as_view(),
+        name='booking-search'),
 
     # Ajax api
     url(r'^jsapi/rrulestr$', RrulestrView.as_view(), name='jsapi_rrulestr'),
