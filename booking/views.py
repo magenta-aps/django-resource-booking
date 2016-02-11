@@ -147,7 +147,7 @@ class EmailComposeView(FormMixin, TemplateView):
         if self.template_key is not None:
             template = \
                 EmailTemplate.get_template(self.template_key,
-                                           self.request.user.userprofile.unit)
+                                           self.get_unit())
             if template is not None:
                 data['subject'] = template.subject
                 data['body'] = template.body
@@ -157,6 +157,9 @@ class EmailComposeView(FormMixin, TemplateView):
         # Override in subclasses: return a list of recipient objects
         # (instances that implement get_email() and get_name())
         raise NotImplementedError
+
+    def get_unit(self):
+        return self.request.user.userprofile.unit
 
 
 class UnitAccessRequiredMixin(object):
@@ -1013,6 +1016,9 @@ class VisitNotifyView(EmailComposeView):
         ]
         context.update(kwargs)
         return super(VisitNotifyView, self).get_context_data(**context)
+
+    def get_unit(self):
+        return self.visit.unit
 
 
 class RrulestrView(View):
