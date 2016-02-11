@@ -28,14 +28,17 @@ from profile.models import EDIT_ROLES
 from profile.models import role_to_text
 
 from booking.models import OtherResource, Visit, VisitOccurrence, StudyMaterial
-from booking.models import Resource, Subject
+from booking.models import Resource, Subject, GymnasieLevel
 from booking.models import Room
 from booking.models import PostCode, School
-from booking.models import Booking
+from booking.models import Booking, Booker
+from booking.models import ResourceGymnasieFag, ResourceGrundskoleFag
 from booking.forms import ResourceInitialForm, OtherResourceForm, VisitForm
 from booking.forms import ClassBookingForm, TeacherBookingForm
 from booking.forms import VisitStudyMaterialForm, BookingSubjectLevelForm
 from booking.forms import BookerForm
+
+import urls
 
 
 i18n_test = _(u"Dette tester oversættelses-systemet")
@@ -183,11 +186,15 @@ class SearchView(ListView):
             t = self.request.GET.getlist("t")
             if t:
                 self.filters["type__in"] = t
+
             f = set(self.request.GET.getlist("f"))
-            for g in self.request.GET.getlist("g"):
-                f.add(g)
             if f:
-                self.filters["subjects__in"] = f
+                self.filters["gymnasiefag__in"] = f
+
+            g = self.request.GET.getlist("g")
+            if g:
+                self.filters["grundskolefag__in"] = f
+
             self.filters["state__in"] = [Resource.ACTIVE]
 
         return self.filters
@@ -295,7 +302,7 @@ class SearchView(ListView):
         gym_selected = self.request.GET.getlist("f")
         context["gymnasie_selected"] = gym_selected
         context["gymnasie_choices"] = self.make_facet(
-            "subjects",
+            "gymnasiefag",
             gym_subject_choices,
             gym_selected,
         )
@@ -303,7 +310,7 @@ class SearchView(ListView):
         gs_selected = self.request.GET.getlist("g")
         context["grundskole_selected"] = gs_selected
         context["grundskole_choices"] = self.make_facet(
-            "subjects",
+            "grundskolefag",
             gs_subject_choices,
             gs_selected,
         )
@@ -313,7 +320,7 @@ class SearchView(ListView):
 
         context['breadcrumbs'] = [
             {'url': reverse('search'), 'text': _(u'Søgning')},
-            {'text': _(u'Søgeresultatliste')},
+            {'text': _(u'Søgeresultat')},
         ]
 
         querylist = []
@@ -415,6 +422,126 @@ class EditResourceView(UpdateView):
                 )
         return result
 
+    def set_object(self, pk, request, is_cloning=False):
+        if is_cloning or not hasattr(self, 'object') or self.object is None:
+            if pk is None:
+                self.object = self.model()
+                try:
+                    type = int(request.GET['type'])
+                    if type in self.model.applicable_types:
+                        self.object.type = type
+                except:
+                    pass
+            else:
+                try:
+                    self.object = self.model.objects.get(id=pk)
+                    if is_cloning:
+                        self.object.pk = None
+                        self.object.id = None
+                except ObjectDoesNotExist:
+                    raise Http404
+
+    def get_context_data(self, **kwargs):
+        context = {}
+
+        context['gymnasiefag_choices'] = Subject.gymnasiefag_qs()
+        context['grundskolefag_choices'] = Subject.grundskolefag_qs()
+        context['gymnasie_level_choices'] = \
+            GymnasieLevel.objects.all().order_by('level')
+
+        context['gymnasiefag_selected'] = self.gymnasiefag_selected()
+        context['grundskolefag_selected'] = self.grundskolefag_selected()
+
+        context['klassetrin_range'] = range(1, 10)
+
+        context.update(kwargs)
+
+        return super(EditResourceView, self).get_context_data(**context)
+
+    def gymnasiefag_selected(self):
+        result = []
+        obj = self.object
+        if self.request.method == 'GET':
+            if obj and obj.pk:
+                for x in obj.resourcegymnasiefag_set.all():
+                    result.append({
+                        'submitvalue': x.as_submitvalue(),
+                        'description': x.display_value()
+                    })
+        elif self.request.method == 'POST':
+            submitvalue = self.request.POST.getlist('gymnasiefag', [])
+            for sv_text in submitvalue:
+                sv = sv_text.split(",")
+                subject_pk = sv.pop(0)
+                subject = Subject.objects.get(pk=subject_pk)
+                result.append({
+                    'submitvalue': sv_text,
+                    'description': ResourceGymnasieFag.display(
+                        subject,
+                        [GymnasieLevel.objects.get(pk=x) for x in sv]
+                    )
+                })
+
+        return result
+
+    def grundskolefag_selected(self):
+        result = []
+        obj = self.object
+        if self.request.method == 'GET':
+            if obj and obj.pk:
+                for x in obj.resourcegrundskolefag_set.all():
+                    result.append({
+                        'submitvalue': x.as_submitvalue(),
+                        'description': x.display_value()
+                    })
+        elif self.request.method == 'POST':
+            submitvalue = self.request.POST.getlist('grundskolefag', [])
+            for sv_text in submitvalue:
+                sv = sv_text.split(",")
+                subject_pk = sv.pop(0)
+                lv_min = sv.pop(0)
+                lv_max = sv.pop(0)
+                subject = Subject.objects.get(pk=subject_pk)
+                result.append({
+                    'submitvalue': sv_text,
+                    'description': ResourceGrundskoleFag.display(
+                        subject, lv_min, lv_max
+                    )
+                })
+
+        return result
+
+    def save_subjects(self, obj):
+        existing_gym_fag = {}
+        for x in obj.resourcegymnasiefag_set.all():
+            existing_gym_fag[x.as_submitvalue()] = x
+
+        for gval in self.request.POST.getlist('gymnasiefag', []):
+            if gval in existing_gym_fag:
+                del existing_gym_fag[gval]
+            else:
+                ResourceGymnasieFag.create_from_submitvalue(obj, gval)
+
+        # Delete any remaining values that were not submitted
+        for x in existing_gym_fag.itervalues():
+            x.delete()
+
+        existing_gs_fag = {}
+        for x in obj.resourcegrundskolefag_set.all():
+            existing_gs_fag[x.as_submitvalue()] = x
+
+        for gval in self.request.POST.getlist('grundskolefag', []):
+            if gval in existing_gs_fag:
+                del existing_gs_fag[gval]
+            else:
+                ResourceGrundskoleFag.create_from_submitvalue(
+                    obj, gval
+                )
+
+        # Delete any remaining values that were not submitted
+        for x in existing_gs_fag.itervalues():
+            x.delete()
+
 
 class EditOtherResourceView(EditResourceView):
 
@@ -429,39 +556,23 @@ class EditOtherResourceView(EditResourceView):
 
     def get(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
-        try:
-            self.object = OtherResource() if pk is None\
-                else OtherResource.objects.get(id=pk)
-        except ObjectDoesNotExist:
-            raise Http404
-        try:
-            type = int(request.GET['type'])
-            if type in OtherResource.applicable_types:
-                self.object.type = type
-        except:
-            pass
+        self.set_object(pk, request)
         form = self.get_form()
         return self.render_to_response(
             self.get_context_data(form=form)
         )
 
-    # Handle both forms, creating a Visit and a number of StudyMaterials
     def post(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
         is_cloning = kwargs.get("clone", False)
-        if is_cloning or not hasattr(self, 'object') or self.object is None:
-            if pk is None or is_cloning:
-                self.object = None
-            else:
-                try:
-                    self.object = OtherResource.objects.get(id=pk)
-                    if is_cloning:
-                        self.object.pk = None
-                except ObjectDoesNotExist:
-                    raise Http404
+        self.set_object(pk, request, is_cloning)
         form = self.get_form()
         if form.is_valid():
-            form.save()
+            obj = form.save()
+
+            # Save subjects
+            self.save_subjects(obj)
+
             return super(EditOtherResourceView, self).form_valid(form)
         else:
             return self.form_invalid(form)
@@ -471,6 +582,18 @@ class EditOtherResourceView(EditResourceView):
             return reverse('otherresource-view', args=[self.object.id])
         except:
             return '/'
+
+    def get_template_names(self):
+        if self.object.type is not None:
+            if self.object.type == Resource.STUDIEPRAKTIK:
+                return ["otherresource/studiepraktik.html"]
+            if self.object.type == Resource.OPEN_HOUSE:
+                return ["otherresource/open_house.html"]
+            if self.object.type == Resource.ASSIGNMENT_HELP:
+                return ["otherresource/assignment_help.html"]
+            if self.object.type == Resource.STUDY_MATERIAL:
+                return ["otherresource/study_material.html"]
+        raise "Couldn't find template for object type %d" % self.object.type
 
 
 class OtherResourceDetailView(DetailView):
@@ -530,16 +653,7 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
 
     def get(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
-        try:
-            self.object = Visit() if pk is None else Visit.objects.get(id=pk)
-        except ObjectDoesNotExist:
-            raise Http404
-        try:
-            type = int(request.GET['type'])
-            if type in Visit.applicable_types:
-                self.object.type = type
-        except:
-            pass
+        self.set_object(pk, request)
         form = self.get_form()
         fileformset = VisitStudyMaterialForm(None, instance=self.object)
         return self.render_to_response(
@@ -550,16 +664,7 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
     def post(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
         is_cloning = kwargs.get("clone", False)
-        if is_cloning or not hasattr(self, 'object') or self.object is None:
-            if pk is None or is_cloning:
-                self.object = None
-            else:
-                try:
-                    self.object = Visit.objects.get(id=pk)
-                    if is_cloning:
-                        self.object.pk = None
-                except ObjectDoesNotExist:
-                    raise Http404
+        self.set_object(pk, request, is_cloning)
         form = self.get_form()
         fileformset = VisitStudyMaterialForm(request.POST)
         if form.is_valid():
@@ -639,6 +744,9 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
                     start_datetime__in=existing_visit_occurrences
                 ).delete()
 
+            # Save subjects
+            self.save_subjects(visit)
+
             return super(EditVisitView, self).form_valid(form)
         else:
             return self.form_invalid(form, fileformset)
@@ -665,6 +773,16 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         else:
             context['existinrooms'] = []
 
+        context['gymnasiefag_choices'] = Subject.gymnasiefag_qs()
+        context['grundskolefag_choices'] = Subject.grundskolefag_qs()
+        context['gymnasie_level_choices'] = \
+            GymnasieLevel.objects.all().order_by('level')
+
+        context['gymnasiefag_selected'] = self.gymnasiefag_selected()
+        context['grundskolefag_selected'] = self.grundskolefag_selected()
+
+        context['klassetrin_range'] = range(1, 10)
+
         context.update(kwargs)
 
         return super(EditVisitView, self).get_context_data(**context)
@@ -679,6 +797,40 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         return self.render_to_response(
             self.get_context_data(form=form, fileformset=fileformset)
         )
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        # First, check all is well in superclass
+        result = super(EditVisitView, self).dispatch(*args, **kwargs)
+        # Now, check that the user belongs to the correct unit.
+        current_user = self.request.user
+        pk = kwargs.get("pk")
+        if self.object is None:
+            self.object = None if pk is None else Visit.objects.get(id=pk)
+        if self.object is not None and self.object.unit:
+            if not current_user.userprofile.can_edit(self.object):
+                raise AccessDenied(
+                    _(u"Du kan kun redigere enheder,som du selv er" +
+                      " koordinator for.")
+                )
+        return result
+
+    def get_form_kwargs(self):
+        kwargs = super(EditVisitView, self).get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+    def get_template_names(self):
+        if self.object.type is not None:
+            if self.object.type == Resource.STUDENT_FOR_A_DAY:
+                return ["visit/studentforaday.html"]
+            if self.object.type == Resource.STUDY_PROJECT:
+                return ["visit/srp.html"]
+            if self.object.type == Resource.GROUP_VISIT:
+                return ["visit/classvisit.html"]
+            if self.object.type == Resource.TEACHER_EVENT:
+                return ["visit/teachervisit.html"]
+        raise "Couldn't find template for object type %d" % self.object.type
 
 
 class VisitDetailView(DetailView):
@@ -717,7 +869,7 @@ class VisitDetailView(DetailView):
             {'url': reverse('search'), 'text': _(u'Søgning')},
             {'url': self.request.GET.get("search", reverse('search')),
              'text': _(u'Søgeresultatliste')},
-            {'text': _(u'Detaljevisning')},
+            {'text': _(u'Om tilbuddet')},
         ]
 
         context.update(kwargs)
@@ -816,11 +968,15 @@ class PostcodeView(View):
 class SchoolView(View):
     def get(self, request, *args, **kwargs):
         query = request.GET['q']
-        items = School.search(query)
+        type = request.GET.get('t')
+        items = School.search(query, type)
         json = {'schools':
                 [
                     {'name': item.name,
-                     'postcode': item.postcode.number} for item in items
+                     'postcode': item.postcode.number
+                     if item.postcode is not None else None,
+                     'type': item.type}
+                    for item in items
                 ]
                 }
         return JsonResponse(json)
@@ -842,7 +998,10 @@ class BookingView(UpdateView):
         if self.visit is None:
             return bad_request(request)
 
-        data = {'visit': self.visit}
+        data = {
+            'visit': self.visit,
+            'level_map': Booker.level_map
+        }
 
         self.object = Booking()
         data.update(self.get_forms())
@@ -855,7 +1014,10 @@ class BookingView(UpdateView):
         if self.visit is None:
             return bad_request(request)
 
-        data = {'visit': self.visit}
+        data = {
+            'visit': self.visit,
+            'level_map': Booker.level_map
+        }
 
         self.object = Booking()
         forms = self.get_forms(request.POST)
@@ -945,3 +1107,133 @@ class BookingSuccessView(TemplateView):
         return self.render_to_response(
             self.get_context_data(**data)
         )
+
+
+class EmbedcodesView(TemplateView):
+    template_name = "embedcodes.html"
+
+    def get_context_data(self, **kwargs):
+        context = {}
+
+        embed_url = 'embed/' + kwargs['embed_url']
+
+        # We only want to test the part before ? (or its encoded value, %3F):
+        test_url = embed_url.split('?', 1)[0]
+        test_url = test_url.split('%3F', 1)[0]
+
+        can_embed = False
+
+        for x in urls.embedpatterns:
+            if x.regex.match(test_url):
+                can_embed = True
+                break
+
+        context['can_embed'] = can_embed
+        context['full_url'] = self.request.build_absolute_uri('/' + embed_url)
+
+        context['breadcrumbs'] = [
+            {
+                'url': '/embedcodes/',
+                'text': 'Indlering af side'
+            },
+            {
+                'url': self.request.path,
+                'text': '/' + kwargs['embed_url']
+            }
+        ]
+
+        context.update(kwargs)
+
+        return super(EmbedcodesView, self).get_context_data(**context)
+
+
+class BookingSearchView(LoginRequiredMixin, ListView):
+    model = Booking
+    template_name = "booking/searchresult.html"
+    context_object_name = "results"
+    paginate_by = 10
+
+    def get_date_from_request(self, queryparam):
+        val = self.request.GET.get(queryparam)
+        if not val:
+            return None
+        try:
+            val = datetime.strptime(val, '%d-%m-%Y')
+            val = timezone.make_aware(val)
+        except Exception:
+            val = None
+        return val
+
+    def get_queryset(self):
+        searchexpression = self.request.GET.get("q", "")
+
+        # Filter by searchexpression
+        qs = self.model.objects.search(searchexpression)
+
+        # Filter by user access
+        qs = Booking.queryset_for_user(self.request.user, qs)
+
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = {}
+
+        # Store the querystring without the page and pagesize arguments
+        qdict = self.request.GET.copy()
+
+        if "page" in qdict:
+            qdict.pop("page")
+        if "pagesize" in qdict:
+            qdict.pop("pagesize")
+
+        context["qstring"] = qdict.urlencode()
+
+        context['pagesizes'] = [5, 10, 15, 20]
+
+        if self.request.user.userprofile.is_administrator():
+            context['unit_limit_text'] = \
+                u'Alle enheder (administrator-søgning)'
+        else:
+            context['unit_limit_text'] = \
+                u'Bookinger relateret til enheden %s' % (
+                    self.request.user.userprofile.unit
+                )
+
+        context['breadcrumbs'] = [
+            {
+                'url': reverse('booking-search'),
+                'text': _(u'Bookinger')
+            },
+            {'text': _(u'Søgeresultatliste')},
+        ]
+
+        context.update(kwargs)
+
+        return super(BookingSearchView, self).get_context_data(**context)
+
+    def get_paginate_by(self, queryset):
+        size = self.request.GET.get("pagesize", 10)
+
+        if size == "all":
+            return None
+
+        return size
+
+
+class BookingDetailView(DetailView):
+    """Display Booking details"""
+    model = Booking
+    template_name = 'booking/details.html'
+
+    def get_context_data(self, **kwargs):
+        context = {}
+
+        context['breadcrumbs'] = [
+            {'url': reverse('search'), 'text': _(u'Søgning')},
+            {'url': '#', 'text': _(u'Søgeresultatliste')},
+            {'text': _(u'Detaljevisning')},
+        ]
+
+        context.update(kwargs)
+
+        return super(BookingDetailView, self).get_context_data(**context)

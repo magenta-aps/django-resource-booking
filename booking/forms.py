@@ -8,6 +8,7 @@ from django import forms
 from django.forms import CheckboxSelectMultiple, EmailInput, RadioSelect
 from django.forms import inlineformset_factory
 from django.forms import TextInput, NumberInput, URLInput, Textarea, Select
+from django.forms import HiddenInput
 from django.utils.translation import ugettext_lazy as _
 from tinymce.widgets import TinyMCE
 
@@ -31,30 +32,39 @@ class ResourceInitialForm(forms.Form):
 
 
 class OtherResourceForm(forms.ModelForm):
+    required_css_class = 'required'
 
     class Meta:
         model = OtherResource
         fields = ('title', 'teaser', 'description', 'link',
                   'type', 'tags', 'comment',
-                  'institution_level', 'topics', 'level', 'class_level_min',
-                  'class_level_max', 'subjects', 'audience',
+                  'institution_level', 'topics', 'audience',
                   'enabled', 'unit',)
         widgets = {
-            'title': TextInput(attrs={'class': 'titlefield'}),
-            'teaser': Textarea(attrs={'rows': 3, 'maxlength': 1000}),
-            'description': TinyMCE(attrs={'rows': 10}),
+            'title': TextInput(attrs={
+                'class': 'titlefield form-control input-sm'
+            }),
+            'teaser': Textarea(attrs={
+                'rows': 3,
+                'cols': 70,
+                'maxlength': 1000,
+                'class': 'form-control input-sm'
+            }),
+            'description': TinyMCE(attrs={
+                'rows': 10,
+                'cols': 90
+            }),
             'tags': CheckboxSelectMultiple(),
             'topics': CheckboxSelectMultiple(),
-            'subjects': CheckboxSelectMultiple(),
             'audience': RadioSelect(),
-            'link': URLInput()
+            'link': URLInput(),
         }
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user')
         super(OtherResourceForm, self).__init__(*args, **kwargs)
         self.fields['unit'].queryset = self.get_unit_query_set()
-        self.fields['type'].choices = OtherResource.type_choices
+        self.fields['type'].widget = HiddenInput()
 
     def get_unit_query_set(self):
         """"Get units for which user can create events."""
@@ -68,30 +78,64 @@ class VisitForm(forms.ModelForm):
         model = Visit
         fields = ('title', 'teaser', 'description', 'price',
                   'type', 'tags', 'preparation_time', 'comment',
-                  'institution_level', 'topics', 'level', 'class_level_min',
-                  'class_level_max', 'subjects', 'audience',
+                  'institution_level', 'topics', 'audience',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'recurrences', 'duration', 'locality', 'rooms_assignment',
-                  'rooms_needed',
+                  'rooms_needed', 'tour_available',
                   'enabled', 'contact_persons', 'unit',)
         widgets = {
-            'title': TextInput(attrs={'class': 'titlefield'}),
-            'teaser': Textarea(attrs={'rows': 3, 'maxlength': 1000}),
-            'description': TinyMCE(attrs={'rows': 10}),
-            'minimum_number_of_visitors': NumberInput(attrs={'min': 1}),
-            'maximum_number_of_visitors': NumberInput(attrs={'min': 1}),
+            'title': TextInput(attrs={
+                'class': 'titlefield form-control input-sm',
+                'rows': 1, 'size': 62
+            }),
+            'teaser': Textarea(
+                attrs={
+                    'class': 'form-control input-sm',
+                    'rows': 3,
+                    'cols': 70,
+                    'maxlength': 210
+                }
+            ),
+            'description': TinyMCE(attrs={'rows': 10, 'cols': 90}),
+
+            'price': NumberInput(attrs={'class': 'form-control input-sm'}),
+            'type': Select(attrs={'class': 'form-control input-sm'}),
+            'preparation_time': NumberInput(
+                attrs={'class': 'form-control input-sm'}
+            ),
+            'comment': Textarea(attrs={'class': 'form-control input-sm'}),
+            'institution_level': Select(
+                attrs={'class': 'form-control input-sm'}
+            ),
+            'minimum_number_of_visitors': NumberInput(
+                attrs={'class': 'form-control input-sm', 'min': 1}
+            ),
+            'maximum_number_of_visitors': NumberInput(
+                attrs={'class': 'form-control input-sm', 'min': 1}
+            ),
+            'duration': Select(attrs={'class': 'form-control input-sm'}),
+            'locality': Select(attrs={'class': 'form-control input-sm'}),
+            'rooms_assignment': Select(
+                attrs={'class': 'form-control input-sm'}
+            ),
+            'unit': Select(attrs={'class': 'form-control input-sm'}),
+            'audience': RadioSelect(),
             'tags': CheckboxSelectMultiple(),
-            'topics': CheckboxSelectMultiple(),
             'contact_persons': CheckboxSelectMultiple(),
-            'subjects': CheckboxSelectMultiple(),
-            'audience': RadioSelect()
         }
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user')
         super(VisitForm, self).__init__(*args, **kwargs)
         self.fields['unit'].queryset = self.get_unit_query_set()
-        self.fields['type'].choices = Visit.type_choices
+        self.fields['type'].widget = HiddenInput()
+
+    def clean_type(self):
+        instance = getattr(self, 'instance', None)
+        if instance:
+            return instance.type
+        else:
+            return self.cleaned_data['type']
 
     def clean_locality(self):
         data = self.cleaned_data
@@ -104,7 +148,8 @@ class VisitForm(forms.ModelForm):
         cleaned_data = super(VisitForm, self).clean()
         min_visitors = cleaned_data.get('minimum_number_of_visitors')
         max_visitors = cleaned_data.get('maximum_number_of_visitors')
-        if min_visitors > max_visitors:
+        if min_visitors is not None and max_visitors is not None and \
+           min_visitors > max_visitors:
             min_error_msg = _(u"The minimum numbers of visitors " +
                               u"must not be larger than " +
                               u"the maximum number of visitors")
@@ -226,6 +271,16 @@ class BookerForm(BookingForm):
                 attendeecount_widget.attrs['max'] = \
                     visit.maximum_number_of_visitors
 
+            self.fields['school'].widget.attrs['data-institution-level'] = \
+                visit.institution_level
+
+            available_level_choices = Booker.level_map[visit.institution_level]
+            self.fields['level'].choices = [(u'', u'---------')] + [
+                (value, title)
+                for (value, title) in Booker.level_choices
+                if value in available_level_choices
+            ]
+
     def clean_postcode(self):
         postcode = self.cleaned_data.get('postcode')
         if postcode is not None:
@@ -297,6 +352,9 @@ class ClassBookingForm(BookingForm):
         else:
             self.fields['desired_time'].required = True
 
+        if visit is not None and not visit.tour_available:
+            del self.fields['tour_desired']
+
     def save(self, commit=True, *args, **kwargs):
         booking = super(ClassBookingForm, self).save(commit=False)
         data = self.cleaned_data
@@ -307,6 +365,9 @@ class ClassBookingForm(BookingForm):
                 booking.time = occurrence.start_datetime
             except:
                 pass
+        if 'tour_desired' not in data:
+            data['tour_desired'] = False
+            booking.tour_desired = False
         if commit:
             booking.save(*args, **kwargs)
         return booking

@@ -1,0 +1,11 @@
+<div class="row form-group">
+    <div>
+        {{ form.teaser.errors }}
+    </div>
+    <div class="col-sm-2">
+        <label class="{{ form.teaser.css_classes }}" for="{{ form.teaser.id_for_label }}">{{ form.teaser.label }}:</label>
+    </div>
+    <div class="col-sm-10">
+        {{ form.teaser }}
+    </div>
+</div>

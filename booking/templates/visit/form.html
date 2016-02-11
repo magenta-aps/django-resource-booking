@@ -199,66 +199,19 @@
                                 {{ form.institution_level }}
                             </div>
                         </div>
-                        <!-- <div class="row form-group">
-                            <div>{{ form.topics.errors }}</div>
-                            <div class="col-sm-2">
-                            <label for="{{ form.topics.id_for_label }}">{{ form.topics.label }}:</label>
-                            </div>
-                            <div class="col-sm-10">
-                            {{ form.topics }}
-                            </div>
-                        </div> -->
 
                         <div class="institution_level_dependent" data-display-value="1">
-                            <div class="row form-group">
-                                <div>
-                                    {{ form.level.errors }}
-                                </div>
-                                <div class="col-sm-2">
-                                    <label for="{{ form.level.id_for_label }}">{{ form.level.label }}:</label>
-                                </div>
-                                <div class="col-sm-10">
-                                    {{ form.level }}
-                                </div>
+                            <div class="row form-group" id="gymnasie-fag-edit">
+                                {% include "common/snippets/edit-gymnasiefag.html" %}
                             </div>
                         </div>
+
                         <div class="institution_level_dependent" data-display-value="2">
-                            <div class="row form-group">
-                                <div>
-                                    {{ form.class_level_min.errors }}
-                                </div>
-                                <div class="col-sm-2">
-                                    <label for="{{ form.class_level_min.id_for_label }}">{{ form.class_level_min.label }}:</label>
-                                </div>
-                                <div class="col-sm-10">
-                                    {{ form.class_level_min }}
-                                </div>
-                            </div>
-                            <div class="row form-group">
-                                <div>
-                                    {{ form.class_level_max.errors }}
-                                </div>
-                                <div class="col-sm-2">
-                                    <label for="{{ form.class_level_max.id_for_label }}">{{ form.class_level_max.label }}:</label>
-                                </div>
-                                <div class="col-sm-10">
-                                    {{ form.class_level_max }}
-                                </div>
+                            <div class="row form-group" id="grundskole-fag-edit">
+                                {% include "common/snippets/edit-grundskolefag.html" %}
                             </div>
                         </div>
-                        <div class="institution_level_dependent">
-                            <div class="row form-group">
-                                <div>
-                                    {{ form.subjects.errors }}
-                                </div>
-                                <div class="col-sm-2">
-                                    <label for="{{ form.subjects.id_for_label }}">{{ form.subjects.label }}:</label>
-                                </div>
-                                <div class="col-sm-10">
-                                    {{ form.subjects }}
-                                </div>
-                            </div>
-                        </div>
+
                         <div class="row form-group">
                             <div>
                                 {{ form.minimum_number_of_visitors.errors }}
@@ -305,7 +258,7 @@
                                         <div class="time-container">
                                             <div class="time-select">
                                                 <div>
-                                                    <select class="start-time">
+                                                    <select class="start-time form-control input-sm">
                                                         <option value="00:00">00:00</option>
                                                         <option value="00:30">00:30</option>
                                                         <option value="01:00">01:00</option>
@@ -372,7 +325,7 @@
                                     <fieldset>
                                         {{ form.duration.errors }}
                                         <label for="{{ form.duration.id_for_label }}">{{ form.duration.label }}:</label>
-                                        <select id="id_duration" name="duration">
+                                        <select id="id_duration" name="duration" class="form-control input-sm">
                                             <option value="00:00">00:00</option>
                                             <option value="00:30">00:30</option>
                                             <option value="01:00">01:00</option>
@@ -430,7 +383,7 @@
                         </div>
                     </div>
                 </div>
-           
+           </div>
 
             <div class="panel panel-default">
                 <div id="headingRooms" class="panel-heading" role="tab">
@@ -525,32 +478,32 @@
                 {% if form.enabled.errors or form.contact_persons.errors %}in{% endif %}
                 " aria-labelledby="headingContact" role="tabpanel" aria-expanded="false" style="">
                     <div class="panel-body">
-                    <div class="row form-group">
-                            <div>{{ form.unit.errors }}</div>
-                            <div class="col-sm-2">
-                            <label for="{{ form.unit.id_for_label }}">{{ form.unit.label }}:</label>
-                            </div>
-                            <div class="col-sm-10">
-                            {{ form.unit }}
-                        </div>
-                    </div>
-                    <div class="row form-group">
-                            <div>{{ form.enabled.errors }}</div>
-                            <div class="col-sm-12">
-                                <label class="radiolabel" for="{{ form.enabled.id_for_label }}">{{ form.enabled }} Kan bookes</label>
+                        <div class="row form-group">
+                                <div>{{ form.unit.errors }}</div>
+                                <div class="col-sm-2">
+                                <label for="{{ form.unit.id_for_label }}">{{ form.unit.label }}:</label>
+                                </div>
+                                <div class="col-sm-10">
+                                {{ form.unit }}
                             </div>
                         </div>
                         <div class="row form-group">
-                            <div>{{ form.contact_persons.errors }}</div>
-                            <div class="col-sm-2">
-                            <label for="{{ form.contact_persons.id_for_label }}">{{ form.contact_persons.label }}:</label>
+                                <div>{{ form.enabled.errors }}</div>
+                                <div class="col-sm-12">
+                                    <label class="radiolabel" for="{{ form.enabled.id_for_label }}">{{ form.enabled }} Kan bookes</label>
+                                </div>
                             </div>
-                            <div class="col-sm-10">
-                            {{ form.contact_persons }}
+                            <div class="row form-group">
+                                <div>{{ form.contact_persons.errors }}</div>
+                                <div class="col-sm-2">
+                                <label for="{{ form.contact_persons.id_for_label }}">{{ form.contact_persons.label }}:</label>
+                                </div>
+                                <div class="col-sm-10">
+                                {{ form.contact_persons }}
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
             </div>
             
             <div class="panel panel-default">
@@ -616,7 +569,6 @@
                 var value = select.val();
                 $(".institution_level_dependent").each(function() {
                     var attr = $(this).attr("data-display-value") || 0xFFFFFF;
-                    console.log(attr, value, parseInt(value), parseInt(attr))
                     if (parseInt(value) & parseInt(attr)) {
                         $(this).show()
                     } else {
