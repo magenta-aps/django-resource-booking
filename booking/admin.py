@@ -6,6 +6,7 @@ from .models import Link, Subject, Tag, Topic, AdditionalService
 from .models import SpecialRequirement, StudyMaterial, Locality
 from .models import GymnasieLevel, ResourceGymnasieFag, ResourceGrundskoleFag
 from .models import School, PostCode, Region, Booker, Booking, ClassBooking
+from .models import EmailTemplate
 
 # Register your models here.
 
@@ -32,3 +33,4 @@ admin.site.register(School)
 admin.site.register(Booker)
 admin.site.register(Booking)
 admin.site.register(ClassBooking)
+admin.site.register(EmailTemplate)
