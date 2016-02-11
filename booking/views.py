@@ -418,7 +418,7 @@ class EditResourceView(UpdateView):
             if not current_user.userprofile.can_edit(self.object):
                 raise AccessDenied(
                     _(u"Du kan kun redigere enheder,som du selv er" +
-                      " koordinator for.")
+                      u" koordinator for.")
                 )
         return result
 
@@ -810,8 +810,8 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         if self.object is not None and self.object.unit:
             if not current_user.userprofile.can_edit(self.object):
                 raise AccessDenied(
-                    _(u"Du kan kun redigere enheder,som du selv er" +
-                      " koordinator for.")
+                    _(u"Du kan kun redigere enheder, som du selv er" +
+                      u" koordinator for.")
                 )
         return result
 
