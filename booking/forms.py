@@ -250,6 +250,16 @@ class BookerForm(BookingForm):
                 attendeecount_widget.attrs['max'] = \
                     visit.maximum_number_of_visitors
 
+            self.fields['school'].widget.attrs['data-institution-level'] = \
+                visit.institution_level
+
+            available_level_choices = Booker.level_map[visit.institution_level]
+            self.fields['level'].choices = [(u'', u'---------')] + [
+                (value, title)
+                for (value, title) in Booker.level_choices
+                if value in available_level_choices
+            ]
+
     def clean_postcode(self):
         postcode = self.cleaned_data.get('postcode')
         if postcode is not None:
