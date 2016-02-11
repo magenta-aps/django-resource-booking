@@ -57,7 +57,6 @@ class OtherResourceForm(forms.ModelForm):
             }),
             'tags': CheckboxSelectMultiple(),
             'topics': CheckboxSelectMultiple(),
-            'subjects': CheckboxSelectMultiple(),
             'audience': RadioSelect(),
             'link': URLInput(),
         }
@@ -88,27 +87,9 @@ class VisitForm(forms.ModelForm):
                   'enabled', 'contact_persons', 'unit',)
         widgets = {
             'title': TextInput(attrs={
-                'class': 'titlefield',
+                'class': 'titlefield form-control input-sm',
                 'rows': 1, 'size': 62
             }),
-            'teaser': Textarea(attrs={
-                'rows': 3,
-                'cols': 70,
-                'maxlength': 210
-            }),
-            'description': TinyMCE(attrs={'rows': 10, 'cols': 90}),
-            'minimum_number_of_visitors': NumberInput(attrs={'min': 1}),
-            'maximum_number_of_visitors': NumberInput(attrs={'min': 1}),
-            'tags': CheckboxSelectMultiple(),
-            'contact_persons': CheckboxSelectMultiple(),
-            'subjects': CheckboxSelectMultiple(),
-            'audience': RadioSelect(),
-            'title': TextInput(
-                attrs={
-                    'class': 'titlefield form-control input-sm',
-                    'rows': 1, 'size': 62
-                }
-            ),
             'teaser': Textarea(
                 attrs={
                     'class': 'form-control input-sm',
@@ -128,14 +109,6 @@ class VisitForm(forms.ModelForm):
             'institution_level': Select(
                 attrs={'class': 'form-control input-sm'}
             ),
-            'level': Select(attrs={'class': 'form-control input-sm'}),
-            'class_level_min': Select(
-                attrs={'class': 'form-control input-sm'}
-            ),
-            'class_level_max': Select(
-                attrs={'class': 'form-control input-sm'}
-            ),
-
             'minimum_number_of_visitors': NumberInput(
                 attrs={'class': 'form-control input-sm', 'min': 1}
             ),
@@ -148,8 +121,9 @@ class VisitForm(forms.ModelForm):
                 attrs={'class': 'form-control input-sm'}
             ),
             'unit': Select(attrs={'class': 'form-control input-sm'}),
-            'subjects': CheckboxSelectMultiple(),
             'audience': RadioSelect(),
+            'tags': CheckboxSelectMultiple(),
+            'contact_persons': CheckboxSelectMultiple(),
         }
 
     def __init__(self, *args, **kwargs):
