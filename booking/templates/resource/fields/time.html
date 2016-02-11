@@ -17,8 +17,14 @@
         <input id="occurrences" name="occurrences" type="hidden">
         {% endif %}
 
-        <label id="time-select-btn" for="time-select" class="btn btn-default">{% trans 'Tilføj tidspunkt:' %}
-            <input id="time-select" name="id_time" placeholder="{% trans 'Tilføj tidspunkt:' %}">
+        <label id="time-select-btn" for="time-select" class="btn btn-default">{% trans 'Tilføj tidspunkt' %}
+            <input id="time-select" name="id_time">
         </label>
+        
+        <a href="#adv-time-select" id="adv-time-select-toggle">{% trans 'Avanceret' %} &hellip;</a>
+        <div id="adv-time-select">
+            Vis avancerede funktioner
+        </div>
+        
     </div>
 </div>

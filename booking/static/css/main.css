@@ -723,6 +723,13 @@ div ul.errorlist {
     background-color: inherit;
     border: none;
 }
+#adv-time-select {
+    display: none;
+    padding: 10px 0;
+}
+#adv-time-select-toggle {
+    
+}
 
 /*Backend specific styles end */
 @media screen and (max-width:768px) {
