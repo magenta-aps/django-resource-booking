@@ -33,7 +33,7 @@ from booking.models import OtherResource, Visit, VisitOccurrence, StudyMaterial
 from booking.models import Resource, Subject, GymnasieLevel
 from booking.models import Room
 from booking.models import PostCode, School
-from booking.models import Booking
+from booking.models import Booking, Booker
 from booking.models import ResourceGymnasieFag, ResourceGrundskoleFag
 from booking.forms import ResourceInitialForm, OtherResourceForm, VisitForm
 from booking.forms import ClassBookingForm, TeacherBookingForm
@@ -962,7 +962,8 @@ class SchoolView(View):
                 [
                     {'name': item.name,
                      'postcode': item.postcode.number
-                     if item.postcode is not None else None}
+                     if item.postcode is not None else None,
+                     'type': item.type}
                     for item in items
                 ]
                 }
@@ -985,7 +986,10 @@ class BookingView(UpdateView):
         if self.visit is None:
             return bad_request(request)
 
-        data = {'visit': self.visit}
+        data = {
+            'visit': self.visit,
+            'level_map': Booker.level_map
+        }
 
         self.object = Booking()
         data.update(self.get_forms())
@@ -998,7 +1002,10 @@ class BookingView(UpdateView):
         if self.visit is None:
             return bad_request(request)
 
-        data = {'visit': self.visit}
+        data = {
+            'visit': self.visit,
+            'level_map': Booker.level_map
+        }
 
         self.object = Booking()
         forms = self.get_forms(request.POST)
@@ -1214,7 +1221,6 @@ class BookingDetailView(DetailView):
             {'url': '#', 'text': _(u'Søgeresultatliste')},
             {'text': _(u'Detaljevisning')},
         ]
-
 
         context['activity_log'] = LogEntry.objects.filter(
             content_type=ContentType.objects.get_for_model(self.model),

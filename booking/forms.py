@@ -32,6 +32,7 @@ class ResourceInitialForm(forms.Form):
 
 
 class OtherResourceForm(forms.ModelForm):
+    required_css_class = 'required'
 
     class Meta:
         model = OtherResource
@@ -40,12 +41,21 @@ class OtherResourceForm(forms.ModelForm):
                   'institution_level', 'topics', 'audience',
                   'enabled', 'unit',)
         widgets = {
-            'title': TextInput(attrs={'class': 'titlefield'}),
-            'teaser': Textarea(attrs={'rows': 3, 'maxlength': 1000}),
-            'description': TinyMCE(attrs={'rows': 10}),
+            'title': TextInput(attrs={
+                'class': 'titlefield form-control input-sm'
+            }),
+            'teaser': Textarea(attrs={
+                'rows': 3,
+                'cols': 70,
+                'maxlength': 1000,
+                'class': 'form-control input-sm'
+            }),
+            'description': TinyMCE(attrs={
+                'rows': 10,
+                'cols': 90
+            }),
             'tags': CheckboxSelectMultiple(),
             'topics': CheckboxSelectMultiple(),
-            'subjects': CheckboxSelectMultiple(),
             'audience': RadioSelect(),
             'link': URLInput(),
         }
@@ -75,21 +85,43 @@ class VisitForm(forms.ModelForm):
                   'enabled', 'contact_persons', 'unit',)
         widgets = {
             'title': TextInput(attrs={
-                'class': 'titlefield',
+                'class': 'titlefield form-control input-sm',
                 'rows': 1, 'size': 62
             }),
-            'teaser': Textarea(attrs={
-                'rows': 3,
-                'cols': 70,
-                'maxlength': 210
-            }),
+            'teaser': Textarea(
+                attrs={
+                    'class': 'form-control input-sm',
+                    'rows': 3,
+                    'cols': 70,
+                    'maxlength': 210
+                }
+            ),
             'description': TinyMCE(attrs={'rows': 10, 'cols': 90}),
-            'minimum_number_of_visitors': NumberInput(attrs={'min': 1}),
-            'maximum_number_of_visitors': NumberInput(attrs={'min': 1}),
+
+            'price': NumberInput(attrs={'class': 'form-control input-sm'}),
+            'type': Select(attrs={'class': 'form-control input-sm'}),
+            'preparation_time': NumberInput(
+                attrs={'class': 'form-control input-sm'}
+            ),
+            'comment': Textarea(attrs={'class': 'form-control input-sm'}),
+            'institution_level': Select(
+                attrs={'class': 'form-control input-sm'}
+            ),
+            'minimum_number_of_visitors': NumberInput(
+                attrs={'class': 'form-control input-sm', 'min': 1}
+            ),
+            'maximum_number_of_visitors': NumberInput(
+                attrs={'class': 'form-control input-sm', 'min': 1}
+            ),
+            'duration': Select(attrs={'class': 'form-control input-sm'}),
+            'locality': Select(attrs={'class': 'form-control input-sm'}),
+            'rooms_assignment': Select(
+                attrs={'class': 'form-control input-sm'}
+            ),
+            'unit': Select(attrs={'class': 'form-control input-sm'}),
+            'audience': RadioSelect(),
             'tags': CheckboxSelectMultiple(),
             'contact_persons': CheckboxSelectMultiple(),
-            'subjects': CheckboxSelectMultiple(),
-            'audience': RadioSelect()
         }
 
     def __init__(self, *args, **kwargs):
@@ -238,6 +270,16 @@ class BookerForm(BookingForm):
             if visit.maximum_number_of_visitors is not None:
                 attendeecount_widget.attrs['max'] = \
                     visit.maximum_number_of_visitors
+
+            self.fields['school'].widget.attrs['data-institution-level'] = \
+                visit.institution_level
+
+            available_level_choices = Booker.level_map[visit.institution_level]
+            self.fields['level'].choices = [(u'', u'---------')] + [
+                (value, title)
+                for (value, title) in Booker.level_choices
+                if value in available_level_choices
+            ]
 
     def clean_postcode(self):
         postcode = self.cleaned_data.get('postcode')
