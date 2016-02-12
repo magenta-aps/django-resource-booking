@@ -7,22 +7,22 @@
 {% block content %}
 
 <div class="divider"></div>
-    <h1>Velkommen {{user.username}}</h1>
+    <h1>{% trans 'Velkommen' %} {{user.username}}</h1>
     
     <div class="divider"></div>
     
     <div class="row">
         <div class="col-sm-7">
-            <h1>Personlig side</h1>
-            <p>Du er logget ind som {{user.userprofile.user_role.name}}.</p>
-            <p>Her kan du se en oversigt over dine tilbud, hvilke der er bookede, og hvilke der kræver handling.</p>
+            <h1>{% trans 'Personlig side' %}</h1>
+            <p>{% trans 'Du er logget ind som' %} {{user.userprofile.user_role.name}}.</p>
+            <p>{% trans 'Her kan du se en oversigt over dine tilbud, hvilke der er bookede, og hvilke der kræver handling.' %}</p>
         </div>
         <div class="col-sm-5">
             <div class="list-group">
-              <a href="/resource/create" class="list-group-item active">+ Opret tilbud</a>
+              <a href="/resource/create" class="list-group-item active">{% trans '+ Opret tilbud' %}</a>
               {% if request.user.userprofile.can_create %}
-              <a class="list-group-item" href="{% url 'booking-search' %}">Søg i bookinger</a></a>
-              <a class="list-group-item" href="{% url 'user_list' %}">Administrér brugere</a>
+              <a class="list-group-item" href="{% url 'booking-search' %}">{% trans 'Søg i bookinger' %}</a></a>
+              <a class="list-group-item" href="{% url 'user_list' %}">{% trans 'Administrér brugere' %}</a>
               {% endif %}
             </div>
         </div>
@@ -33,7 +33,7 @@
             <div class="col-sm-4">
                 <div class="panel panel-bookings">
                     <div class="panel-heading alert-info">
-                        <h3 class="panel-title">Mine tilbud</h3><span class="badge badge-primary pull-right">3</span>
+                        <h3 class="panel-title">{% trans 'Mine tilbud' %}</h3><span class="badge badge-primary pull-right">3</span>
                     </div>
                     <div class="panel-body">
                         <div class="list-group">
@@ -71,7 +71,7 @@
             <div class="col-sm-4">
                 <div class="panel panel-bookings">
                     <div class="panel-heading alert-danger">
-                        <h3 class="panel-title">Nye/opdaterede bookings som kræver din handling</h3><span class="badge badge-danger pull-right">3</span>
+                        <h3 class="panel-title">{% trans 'Nye/opdaterede bookings som kræver din handling' %}</h3><span class="badge badge-danger pull-right">3</span>
                     </div>
                     <div class="panel-body">
                         <a href="#" class="list-group-item">
@@ -107,7 +107,7 @@
             <div class="col-sm-4">
                 <div class="panel panel-bookings">
                     <div class="panel-heading alert-success">
-                        <h3 class="panel-title">Bekræftede bookings</h3><span class="badge badge-success pull-right">5</span>
+                        <h3 class="panel-title">{% trans 'Bekræftede bookings' %}</h3><span class="badge badge-success pull-right">5</span>
                     </div>
                     <div class="panel-body">
                         <a href="#" class="list-group-item">
@@ -167,14 +167,14 @@
         <div class="modal-content">
           <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-            <h4 class="modal-title" id="SletBooking">Er du sikker?</h4>
+            <h4 class="modal-title" id="SletBooking">{% trans 'Er du sikker?' %}</h4>
           </div>
           <div class="modal-body">
-           <p>Du er ved at slette bookingen "Magnetisme og elektroner". Hvis du vil fortsætte og slette denne booking, klik på knappen "Slet denne booking".</p>
+           <p>{% trans 'Du er ved at slette bookingen "Magnetisme og elektroner". Hvis du vil fortsætte og slette denne booking, klik på knappen "Slet denne booking".' %}</p>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-default" data-dismiss="modal">Anullér</button>
-            <button type="button" class="btn btn-primary">Slet denne booking</button>
+            <button type="button" class="btn btn-primary">{% trans 'Slet denne booking' %}</button>
           </div>
         </div>
       </div>
