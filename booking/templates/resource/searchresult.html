@@ -6,7 +6,7 @@
     
     <div class="row">
         <div id="leftside" class="col-sm-6 col-md-3">
-            <button type="button" class="visible-xs btn btn-default" data-toggle="collapse" data-target="#filters" id="filter-btn">Filtrer søgeresultat <span class="glyphicon glyphicon-chevron-down hidden-print"></span></button>
+            <button type="button" class="visible-xs btn btn-default" data-toggle="collapse" data-target="#filters" id="filter-btn">{% trans 'Filtrer søgeresultat' %} <span class="glyphicon glyphicon-chevron-down hidden-print"></span></button>
             <div class="hidden-xs" id="filters">
                 <form class="" action="{% url 'search' %}" method="get" name="filter-search-results" id="filter-search-results">
                 <input type="hidden" name="q" value="{{ request.GET.q }}" />
@@ -129,7 +129,7 @@
                         <h3 class="media-heading">
                             <a href="{% if res.visit  %}{% url 'visit-view' res.visit.pk %}{% else %}{% url 'otherresource-view' res.otherresource.pk %}{% endif %}{% if fullquery %}?search={{ fullquery | urlencode }}{% endif %}">{{ res.title }}</a>
                         </h3>
-                        <p>{% if request.GET.q %}{{ res.teaser|highlight:request.GET.q }}{% else %}{{ res.teaser }}{% endif %} &hellip;</p>
+                        <p>{% if request.GET.q %}{{ res.teaser|highlight:request.GET.q }}{% else %}{{ res.teaser }}{% endif %}...</p>
                         <div class="media-info">
                             <ul class="info-list list-inline">
                                 {% if res.all_subjects %}
