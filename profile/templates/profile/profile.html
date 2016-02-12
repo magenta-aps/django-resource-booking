@@ -18,13 +18,13 @@
             <p>Her kan du se en oversigt over dine tilbud, hvilke der er bookede, og hvilke der kræver handling.</p>
         </div>
         <div class="col-sm-5">
-            <ul class="list-unstyled pull-right">
-                <li><a class="btn btn-primary pull-right" href="/resource/create">+ Opret tilbud</a></li>
-                {% if request.user.userprofile.can_create %}
-                <li><a class="btn btn-primary pull-right" href="{% url 'booking-search' %}">Søg i bookinger</a></li>
-                <li><a class="btn btn-primary pull-right" href="{% url 'user_list' %}">Administrér brugere</a></li>
-                {% endif %}
-            </ul>
+            <div class="list-group">
+              <a href="/resource/create" class="list-group-item active">+ Opret tilbud</a>
+              {% if request.user.userprofile.can_create %}
+              <a class="list-group-item" href="{% url 'booking-search' %}">Søg i bookinger</a></a>
+              <a class="list-group-item" href="{% url 'user_list' %}">Administrér brugere</a>
+              {% endif %}
+            </div>
         </div>
     </div>
     
