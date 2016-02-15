@@ -8,8 +8,17 @@
     {% include 'common/breadcrumbrow.html' %}
 
     <ul>
-        {% for entry in activity_log %}
-        <li>{{ entry }}</li>
+        {% for entry in log_entries %}
+        <li>
+            <dl class="dl-horizontal">
+                <dt>Hvad:</dt>
+                <dd>{{ entry.action_flag }}</dd>
+                <dt>Hvornår:</dt>
+                <dd>{{ entry.action_time }}</dd>
+                <dt>Besked:</dt>
+                <dd><pre>{{ entry.change_message }}</pre></dd>
+            </dl>
+        </li>
         {% endfor %}
     </ul>
 

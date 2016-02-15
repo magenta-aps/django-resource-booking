@@ -7,6 +7,7 @@ from booking.booking_workflows.forms import ChangeBookingTeachersForm
 from booking.booking_workflows.forms import ChangeBookingHostsForm
 from booking.booking_workflows.forms import ChangeBookingRoomsForm
 from booking.models import Booking
+from booking.views import AutologgerMixin
 
 
 class UpdateWithCancelView(UpdateView):
@@ -20,25 +21,25 @@ class UpdateWithCancelView(UpdateView):
             )
 
 
-class ChangeBookingStatusView(UpdateWithCancelView):
+class ChangeBookingStatusView(AutologgerMixin, UpdateWithCancelView):
     model = Booking
     form_class = ChangeBookingStatusForm
     template_name = "booking/workflow/change_status.html"
 
 
-class ChangeBookingTeachersView(UpdateWithCancelView):
+class ChangeBookingTeachersView(AutologgerMixin, UpdateWithCancelView):
     model = Booking
     form_class = ChangeBookingTeachersForm
     template_name = "booking/workflow/change_teachers.html"
 
 
-class ChangeBookingHostsView(UpdateWithCancelView):
+class ChangeBookingHostsView(AutologgerMixin, UpdateWithCancelView):
     model = Booking
     form_class = ChangeBookingHostsForm
     template_name = "booking/workflow/change_hosts.html"
 
 
-class ChangeBookingRoomsView(UpdateWithCancelView):
+class ChangeBookingRoomsView(AutologgerMixin, UpdateWithCancelView):
     model = Booking
     form_class = ChangeBookingRoomsForm
     template_name = "booking/workflow/change_rooms.html"
