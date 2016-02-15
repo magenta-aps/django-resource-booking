@@ -1,6 +1,6 @@
 {% load i18n %}
 <div class="form-group">
-    <label class="col-sm-2 control-label" for="{{ bookerform.postcode.id_for_label }}">{% trans "Gymnasiets postnr. og by*" %}</label>
+    <label class="col-sm-2 control-label {{ bookerform.postcode.css_classes }}" for="{{ bookerform.postcode.id_for_label }}">{% trans "Postnr. og by*" %}</label>
     <div class="col-sm-2{% if bookerform.postcode.errors %} has-error{% endif %}">
         {{ bookerform.postcode }}
     </div>
@@ -14,7 +14,7 @@
 </div>
 
 <div class="form-group">
-    <label class="col-sm-2 control-label" for="{{ bookerform.region.id_for_label }}">{% trans "Region*" %}</label>
+    <label class="col-sm-2 control-label {{ bookerform.region.css_classes }}" for="{{ bookerform.region.id_for_label }}">{% trans "Region*" %}</label>
     <div class="col-sm-6{% if bookerform.region.errors %} has-error{% endif %}">
         {{ bookerform.region }}
     </div>

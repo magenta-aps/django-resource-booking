@@ -10,6 +10,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
+from django.forms.models import model_to_dict
 from django.utils.translation import ugettext_lazy as _
 from django.template.base import Template
 
@@ -53,7 +54,81 @@ def log_action(user, obj, action_flag, change_message=''):
         change_message
     )
 
+class AutologgerMixin(object):
+    def __init__(self, *args, **kwargs):
+        super(AutologgerMixin, self).__init__(*args, **kwargs)
+        self._original_state = self._as_state()
 
+    def _as_state(self):
+        return model_to_dict(self)
+
+    def get_changed_fields(self, compare_state=None):
+        if compare_state is None:
+            compare_state = self._original_state
+        
+        new_state = self._as_state()
+
+        result = {}
+
+        for key in compare_state:
+            if key in new_state:
+                if compare_state[key] != new_state[key]:
+                    result[key] = (compare_state[key], new_state[key])
+                del new_state[key]
+            else:
+                result[key] = (compare_state[key], None)
+        
+        for key in new_state:
+            result[key] = (None, new_state[key])
+
+        return result
+
+    def field_value_to_display(self, fieldname, value):
+
+        field = self.__class__._meta.get_field(fieldname)
+        fname = field.verbose_name
+
+        if value is None:
+            return (fname, unicode(value))
+
+        if field.many_to_one:
+            try:
+                o = field.related_model.objects.get(pk=value)
+                return (fname, unicode(o))
+            except:
+                return (fname, unicode(value))
+
+        if field.many_to_many or field.one_to_many:
+            res = []
+            for x in value:
+                try:
+                    o = field.related_mode.objects.get(pk=x)
+                    res.append(unicode(o))
+                except:
+                    res.append(unicode(x))
+            return (fname, ", ".join(res))
+
+        if field.choices:
+            d = dict(field.choices)
+            if value in d:
+                return (fname, unicode(d[value]))
+        
+        return (fname, unicode(value))
+
+    def changes_to_text(self, changes):
+        if not changes:
+            return ""
+
+        result = {}
+        for key, val in changes.iteritems():
+            name, value = self.field_value_to_display(key, val[1])
+            result[name] = value
+
+        return "\n".join([
+            u"%s: >>>%s<<<" % (x, result[x]) for x in sorted(result)
+        ])
+            
+            
 class Person(models.Model):
     """A dude or chick"""
 
@@ -237,7 +312,7 @@ class Locality(models.Model):
 
 
 # Bookable resources
-class Resource(models.Model):
+class Resource(AutologgerMixin, models.Model):
     """Abstract superclass for a bookable resource of any kind."""
 
     # Resource type.
@@ -918,8 +993,8 @@ class School(models.Model):
         null=True
     )
 
-    ELEMENTARY_SCHOOL = 0
-    GYMNASIE = 1
+    ELEMENTARY_SCHOOL = Subject.SUBJECT_TYPE_GRUNDSKOLE
+    GYMNASIE = Subject.SUBJECT_TYPE_GYMNASIE
     type_choices = (
         (ELEMENTARY_SCHOOL, u'Folkeskole'),
         (GYMNASIE, u'Gymnasie')
@@ -955,7 +1030,11 @@ class School(models.Model):
                 (schools.high_schools, School.GYMNASIE)]:
             for name, postnr in data:
                 try:
-                    School.objects.get(name=name, postcode__number=postnr)
+                    school = School.objects.get(name=name,
+                                                postcode__number=postnr)
+                    if school.type != type:
+                        school.type = type
+                        school.save()
                 except ObjectDoesNotExist:
                     try:
                         postcode = PostCode.get(postnr)
@@ -1004,6 +1083,7 @@ class Booker(models.Model):
     line = models.IntegerField(
         choices=line_choices,
         blank=True,
+        null=True,
         verbose_name=u'Linje',
     )
 
@@ -1012,7 +1092,36 @@ class Booker(models.Model):
     g3 = 3
     student = 4
     other = 5
+    f1 = 7
+    f2 = 8
+    f3 = 9
+    f4 = 10
+    f5 = 11
+    f6 = 12
+    f7 = 13
+    f8 = 14
+    f9 = 15
+    f10 = 16
+
+    level_map = {
+        Subject.SUBJECT_TYPE_GRUNDSKOLE: [f1, f2, f3, f4, f5, f6, f7,
+                                          f8, f9, f10, other],
+        Subject.SUBJECT_TYPE_GYMNASIE: [g1, g2, g3, student, other],
+        Subject.SUBJECT_TYPE_BOTH: [f1, f2, f3, f4, f5, f6, f7, f8, f9, f10,
+                                    g1, g2, g3, student, other]
+    }
+
     level_choices = (
+        (f1, _(u'1. klasse')),
+        (f2, _(u'2. klasse')),
+        (f3, _(u'3. klasse')),
+        (f4, _(u'4. klasse')),
+        (f5, _(u'5. klasse')),
+        (f6, _(u'6. klasse')),
+        (f7, _(u'7. klasse')),
+        (f8, _(u'8. klasse')),
+        (f9, _(u'9. klasse')),
+        (f10, _(u'10. klasse')),
         (g1, _(u'1.g')),
         (g2, _(u'2.g')),
         (g3, _(u'3.g')),
@@ -1021,7 +1130,7 @@ class Booker(models.Model):
     )
     level = models.IntegerField(
         choices=level_choices,
-        blank=True,
+        blank=False,
         verbose_name=u'Niveau'
     )
 
@@ -1063,7 +1172,7 @@ class Booker(models.Model):
         return self.email
 
 
-class Booking(models.Model):
+class Booking(AutologgerMixin, models.Model):
     objects = SearchManager(
         fields=('extra_search_text'),
         config='pg_catalog.danish',
@@ -1269,6 +1378,9 @@ class Booking(models.Model):
         return " ".join(result)
 
     def save(self, *args, **kwargs):
+        
+        created = self.pk is None
+
         # Save once to store relations
         super(Booking, self).save(*args, **kwargs)
 
@@ -1277,6 +1389,12 @@ class Booking(models.Model):
 
         # Do the final save
         super(Booking, self).save(*args, **kwargs)
+
+        if created:
+            log_action(
+                self.request.user, self, LOGACTION_CREATE,
+                _(u'Booking oprettet')
+            )
 
     def get_absolute_url(self):
         return reverse('booking-view', args=[self.pk])

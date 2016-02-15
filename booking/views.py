@@ -7,7 +7,9 @@ from datetime import datetime, timedelta
 from dateutil import parser
 from dateutil.rrule import rrulestr
 from django.contrib import messages
+from django.contrib.admin.models import LogEntry
 from django.contrib.auth.decorators import login_required
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
@@ -36,7 +38,7 @@ from booking.models import GymnasieLevel
 
 from booking.models import Room
 from booking.models import PostCode, School
-from booking.models import Booking
+from booking.models import Booking, Booker
 from booking.models import ResourceGymnasieFag, ResourceGrundskoleFag
 from booking.models import EmailTemplate
 from booking.forms import ResourceInitialForm, OtherResourceForm, VisitForm
@@ -1008,7 +1010,8 @@ class SchoolView(View):
                 [
                     {'name': item.name,
                      'postcode': item.postcode.number
-                     if item.postcode is not None else None}
+                     if item.postcode is not None else None,
+                     'type': item.type}
                     for item in items
                 ]
                 }
@@ -1031,7 +1034,10 @@ class BookingView(UpdateView):
         if self.visit is None:
             return bad_request(request)
 
-        data = {'visit': self.visit}
+        data = {
+            'visit': self.visit,
+            'level_map': Booker.level_map
+        }
 
         self.object = Booking()
         data.update(self.get_forms())
@@ -1044,7 +1050,10 @@ class BookingView(UpdateView):
         if self.visit is None:
             return bad_request(request)
 
-        data = {'visit': self.visit}
+        data = {
+            'visit': self.visit,
+            'level_map': Booker.level_map
+        }
 
         self.object = Booking()
         forms = self.get_forms(request.POST)
@@ -1391,6 +1400,11 @@ class BookingDetailView(DetailView):
             {'url': '#', 'text': _(u'Søgeresultatliste')},
             {'text': _(u'Detaljevisning')},
         ]
+
+        context['activity_log'] = LogEntry.objects.filter(
+            content_type=ContentType.objects.get_for_model(self.model),
+            object_id=self.object.pk
+        )
 
         context.update(kwargs)
 
