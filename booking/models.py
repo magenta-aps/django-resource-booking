@@ -1425,10 +1425,14 @@ class EmailTemplate(models.Model):
 
     BOOKING_CREATED = 1  # Notification to coordinator
     CONFIRMATION_TO_BOOKER = 2  # Confirmation to booker
+    HOSTS_CHANGED = 3
+    ROOMS_CHANGED = 4
 
     key_choices = [
         (BOOKING_CREATED, _(u'Booking created')),
         (CONFIRMATION_TO_BOOKER, _(u'Confirmation to booker')),
+        (HOSTS_CHANGED, _(u'Hosts changed')),
+        (ROOMS_CHANGED, _(u'Rooms changed')),
     ]
     key = models.IntegerField(
         verbose_name=u'Key',
