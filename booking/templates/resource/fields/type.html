@@ -1,0 +1,25 @@
+{% load i18n %}
+<div class="panel panel-default">
+    <div id="headingCategory" class="panel-heading" role="tab">
+        <h4 class="panel-title">
+            <a class="" aria-controls="collapseCategory" aria-expanded="true" href="#collapseCategory" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Kategorisering" %}</a><span class="caret"></span>
+        </h4>
+    </div>
+    <div id="collapseCategory" class="panel-collapse collapse
+                {% if not object.pk or form.type.errors or form.tags.errors %}in{% endif %}
+                " aria-labelledby="headingCategory" role="tabpanel" aria-expanded="true" style="">
+        <div class="panel-body">
+            <div class="row form-group">
+                <div>
+                    {{ form.type.errors }}
+                </div>
+                <div class="col-sm-2">
+                    <label class="{{ form.type.css_classes }}" for="{{ form.type.id_for_label }}">{{ form.type.label }}:</label>
+                </div>
+                <div class="col-sm-10">
+                    {{ form.type }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

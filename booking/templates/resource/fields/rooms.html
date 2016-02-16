@@ -1,0 +1,62 @@
+{% load i18n %}
+
+<div class="row form-group">
+    <div>{{ form.rooms_needed.errors }}</div>
+    <div class="col-sm-12">
+        {{ form.rooms_needed }}
+        <label class="{{ form.rooms_needed.css_classes }}" for="{{ form.rooms_needed.id_for_label }}">{{ form.rooms_needed.label }}</label>
+    </div>
+</div>
+
+<div id="rooms_needed_fields">
+    <div class="row form-group">
+        <div>{{ form.rooms_assignment.errors }}</div>
+        <div class="col-sm-2">
+            <label class="{{ form.rooms_assignment.css_classes }}" for="{{ form.rooms_assignment.id_for_label }}">{{ form.rooms_assignment.label }}:</label>
+        </div>
+        <div class="col-sm-10">
+            {{ form.rooms_assignment }}
+        </div>
+    </div>
+    <div id="roomsedit">
+        <div class="row form-group">
+            <div class="col-sm-2">
+                <label class="{{ form.existingrooms.css_classes }}" for="existingrooms">{% trans "Tilføj eksisterende lokale" %}:</label>
+            </div>
+            <div class="col-sm-6">
+                <select name="existingrooms" class="form-control input-sm" id="existingrooms">
+                    <option>{% trans "Vælg lokale..." %}</option>
+                    {% for room in existingrooms %}
+                        <option value="{{room.name}}">{{room.name}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="row form-group">
+            <div class="col-sm-2">
+                <label class="{{ form.newroom.css_classes }}" for="newroom">{% trans "Tilføj nyt lokale" %}:</label>
+            </div>
+            <div class="col-sm-6">
+                <div class="input-group">
+                    <input type="text" name="newroom" id="newroom" value="" class="form-control input-sm" /><span class="input-group-btn">
+                                    <button type="button" id="addnewroom" value="{% trans "Tilføj" %}" class="btn btn-default">{% trans "Tilføj" %}</button></span>
+                </div>
+            </div>
+        </div>
+        <div><strong>{% trans "Valgte lokaler" %}:</strong></div>
+        <ul id="chosenrooms">
+            {% comment %}
+                When making changes here, also change the addRoom method
+                in booking/static/js/formutil.js which generates the
+                same HTML dynamically.
+            {% endcomment %}
+            {% for room in rooms %}
+                <li>
+                    <span class="roomname">{{ room.name }}</span>
+                    <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                    <input type="hidden" name="rooms" value="{{ room.name }}" />
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>

@@ -1,5 +1,6 @@
+{% load i18n %}
 <div class="form-group">
-    <label class="col-sm-2 control-label" for="tlf">Antal Deltagere*</label>
+    <label class="col-sm-2 control-label {{ bookerform.attendee_count.css_classes }}" for="{{ bookerform.attendee_count.id_for_label }}">{% trans "Antal Deltagere*" %}</label>
     <div class="col-sm-6{% if bookerform.attendee_count.errors %} has-error{% endif %}">
         {{ bookerform.attendee_count }}
     </div>
