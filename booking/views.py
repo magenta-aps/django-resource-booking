@@ -137,6 +137,7 @@ class EmailComposeView(FormMixin, TemplateView):
             recipients = self.lookup_recipients(
                 form.cleaned_data['recipients'])
             KUEmailMessage.send_email(template, context, recipients)
+            return super(EmailComposeView, self).form_valid(form)
 
         return self.render_to_response(
             self.get_context_data(form=form)
@@ -1035,6 +1036,9 @@ class VisitNotifyView(EmailComposeView):
 
     def get_unit(self):
         return self.visit.unit
+
+    def get_success_url(self):
+        return reverse('visit-view', args=[self.visit.id])
 
 
 class RrulestrView(View):
