@@ -3,6 +3,7 @@ import django.contrib.auth.views as auth_views
 from django.conf.urls import patterns, url
 from profile.views import ProfileView, CreateUserView, UnitListView
 from profile.views import UserListView
+from profile.views import EmailLoginView
 
 urlpatterns = patterns(
 
@@ -12,6 +13,10 @@ urlpatterns = patterns(
         name='user_profile'),
     url(r'^login/', auth_views.login,
         {'template_name': 'profile/login.html'}),
+    url(r'^email-login/(?P<slug>[a-f0-9-]+)(?P<dest_url>.*)',
+        EmailLoginView.as_view(),
+        name='email-login'
+        ),
     url(r'^logout/', auth_views.logout,
         {'template_name': 'profile/logout.html'}),
     url(r'^user/create$',

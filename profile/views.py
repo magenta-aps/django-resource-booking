@@ -1,20 +1,25 @@
 # -*- coding: utf-8 -*-
 from booking.models import Unit
 from django.db.models import Q
+from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
+from django.shortcuts import redirect
 from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext as _
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, DetailView
 from django.views.generic.edit import UpdateView, FormView
 
 from booking.views import LoginRequiredMixin, AccessDenied, EditorRequriedMixin
 from django.views.generic.list import ListView
 from profile.forms import UserCreateForm
+from profile.models import EmailLoginEntry
 from profile.models import UserProfile, UserRole, EDIT_ROLES
 from profile.models import FACULTY_EDITOR, COORDINATOR, user_role_choices
+
+import warnings
 
 
 class ProfileView(LoginRequiredMixin, TemplateView):
@@ -235,3 +240,50 @@ class UnitListView(EditorRequriedMixin, ListView):
     def get_queryset(self):
         user = self.request.user
         return user.userprofile.get_unit_queryset()
+
+
+class EmailLoginView(DetailView):
+    model = EmailLoginEntry
+    template_name = "profile/email_login.html"
+    slug_field = 'uuid'
+    expired = False
+
+    def dispatch(self, request, *args, **kwargs):
+        self.object = self.get_object()
+
+        # Already logged in users should be sent where they need to go
+        # or logged out if they are the wrong user.
+        if request.user.is_authenticated():
+            if request.user == self.object.user:
+                return self.redirect_to_destination(request, *args, **kwargs)
+            else:
+                logout(request)
+                return self.redirect_to_self(request, *args, **kwargs)
+
+        # If not expired, log the user in and send them where they need to
+        # go.
+        if not self.object.is_expired():
+            user = authenticate(user_from_email_login=self.object.user)
+            login(request, user)
+            return self.redirect_to_destination(request, *args, **kwargs)
+        else:
+            self.expired = True
+
+        return super(EmailLoginView, self).dispatch(request, *args, **kwargs)
+
+    def redirect_to_self(self, request, *args, **kwargs):
+        return redirect(self.object.as_url())
+
+    def redirect_to_destination(self, request, *args, **kwargs):
+        dest = self.object.success_url
+
+        if 'dest_url' in kwargs and kwargs['dest_url'] != dest:
+            warnings.warn(
+                "URL mistmatch when loggin user '%s' in: '%s' vs '%s'" % (
+                    self.object.user,
+                    kwargs['dest_url'],
+                    dest
+                )
+            )
+
+        return redirect(dest)
