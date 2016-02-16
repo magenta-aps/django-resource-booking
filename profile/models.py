@@ -89,6 +89,18 @@ class UserProfile(models.Model):
 
         return False
 
+    def unit_access(self, unit):
+        role = self.get_role()
+
+        if role == ADMINISTRATOR:
+            return True
+
+        if role in EDIT_ROLES:
+            qs = self.get_unit_queryset().filter(pk=unit.pk)
+            return len(qs) > 0
+
+        return False
+
     def get_unit_queryset(self):
         role = self.get_role()
 

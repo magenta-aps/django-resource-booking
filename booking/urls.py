@@ -9,8 +9,10 @@ from booking.views import RrulestrView
 from booking.views import EditResourceInitialView, ResourceDetailView
 from booking.views import BookingView, BookingSuccessView, BookingSearchView
 from booking.views import EditOtherResourceView, OtherResourceDetailView
-from booking.views import EditVisitView, VisitDetailView
+from booking.views import EditVisitView, VisitDetailView, VisitNotifyView
 from booking.views import SearchView, EmbedcodesView
+from booking.views import EmailTemplateListView, EmailTemplateEditView
+from booking.views import EmailTemplateDetailView, EmailTemplateDeleteView
 from booking.views import BookingDetailView
 
 from django.views.generic import TemplateView
@@ -77,6 +79,9 @@ urlpatterns = patterns(
     url(r'^visit/(?P<visit>[0-9]+)/book/success$',
         BookingSuccessView.as_view(),
         name='visit-book-success'),
+    url(r'^visit/(?P<visit>[0-9]+)/notify$',
+        VisitNotifyView.as_view(),
+        name='visit-notify'),
 
     url(r'^booking/(?P<pk>[0-9]+)/?$',
         BookingDetailView.as_view(),
@@ -100,7 +105,26 @@ urlpatterns = patterns(
 
     url(r'^embedcodes/(?P<embed_url>.*)$',
         EmbedcodesView.as_view(),
-        name='embedcodes')
+        name='embedcodes'),
+
+    url(r'^emailtemplate/?$',
+        EmailTemplateListView.as_view(),
+        name='emailtemplate-list'),
+    url(r'^emailtemplate/create$',
+        EmailTemplateEditView.as_view(),
+        name='emailtemplate-create'),
+    url(r'^emailtemplate/(?P<pk>[0-9]+)/edit$',
+        EmailTemplateEditView.as_view(),
+        name='emailtemplate-edit'),
+    url(r'^emailtemplate/(?P<pk>[0-9]+)/clone$',
+        EmailTemplateEditView.as_view(), {'clone': True},
+        name='emailtemplate-clone'),
+    url(r'^emailtemplate/(?P<pk>[0-9]+)/?$',
+        EmailTemplateDetailView.as_view(),
+        name='emailtemplate-view'),
+    url(r'^emailtemplate/(?P<pk>[0-9]+)/delete$',
+        EmailTemplateDeleteView.as_view(),
+        name='emailtemplate-delete')
 
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
