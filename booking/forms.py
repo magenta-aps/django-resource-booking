@@ -466,7 +466,8 @@ class BaseEmailComposeForm(forms.Form):
 class EmailComposeForm(BaseEmailComposeForm):
 
     recipients = forms.MultipleChoiceField(
-        label=_(u'Modtagere')
+        label=_(u'Modtagere'),
+        widget=CheckboxSelectMultiple
     )
 
     subject = forms.CharField(
