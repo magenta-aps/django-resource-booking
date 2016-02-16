@@ -20,6 +20,14 @@ LOGACTION_DELETE = DELETION
 # system defined ones by adding 128 to the value.
 LOGACTION_CUSTOM1 = 128 + 1
 LOGACTION_CUSTOM2 = 128 + 2
+LOGACTION_MANUAL_ENTRY = 128 + 64 + 1
+
+LOGACTION_DISPLAY_MAP = {
+    LOGACTION_CREATE: _(u'Oprettet'),
+    LOGACTION_CHANGE: _(u'Ændret'),
+    LOGACTION_DELETE: _(u'Slettet'),
+    LOGACTION_MANUAL_ENTRY: _(u'Log-post tilføjet manuelt')
+}
 
 
 def log_action(user, obj, action_flag, change_message=''):
@@ -1188,6 +1196,12 @@ class Booking(models.Model):
     workflow_status = models.IntegerField(
         choices=workflow_status_choices,
         default=WORKFLOW_STATUS_BEING_PLANNED
+    )
+
+    comments = models.TextField(
+        blank=True,
+        default='',
+        verbose_name=_(u'Interne kommentarer')
     )
 
     valid_status_changes = {

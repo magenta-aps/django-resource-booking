@@ -120,9 +120,6 @@ class AutologgerMixin(object):
     def _get_changed_fields(self, compare_state):
         new_state = self._as_state()
 
-        print compare_state
-        print new_state
-
         result = {}
 
         for key in compare_state:
@@ -224,7 +221,6 @@ class LoggedViewMixin(object):
 
             rel_model = rel.related_model
 
-            print rel_model
             if self.model not in rel_model._meta.get_parent_list():
                 continue
 
@@ -236,7 +232,7 @@ class LoggedViewMixin(object):
             object_id=self.object.pk,
             content_type__in=types
         ).order_by('action_time')
-        print qs.query
+
         return qs
 
     def get_context_data(self, **kwargs):
@@ -1311,6 +1307,8 @@ class BookingSearchView(LoginRequiredMixin, ListView):
         # Filter by user access
         qs = Booking.queryset_for_user(self.request.user, qs)
 
+        qs = qs.order_by("-pk")
+
         return qs
 
     def get_context_data(self, **kwargs):
@@ -1383,3 +1381,5 @@ ChangeBookingStatusView = booking_views.ChangeBookingStatusView
 ChangeBookingTeachersView = booking_views.ChangeBookingTeachersView
 ChangeBookingHostsView = booking_views.ChangeBookingHostsView
 ChangeBookingRoomsView = booking_views.ChangeBookingRoomsView
+ChangeBookingCommentsView = booking_views.ChangeBookingCommentsView
+BookingAddLogEntryView = booking_views.BookingAddLogEntryView

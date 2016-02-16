@@ -2,25 +2,11 @@
 {% load staticfiles %}
 {% load timedelta %}
 {% load i18n %}
+{% load booking_tags %}
 
 {% block content %}
 
     {% include 'common/breadcrumbrow.html' %}
-
-    <ul>
-        {% for entry in log_entries %}
-        <li>
-            <dl class="dl-horizontal">
-                <dt>Hvad:</dt>
-                <dd>{{ entry.action_flag }}</dd>
-                <dt>Hvornår:</dt>
-                <dd>{{ entry.action_time }}</dd>
-                <dt>Besked:</dt>
-                <dd><pre>{{ entry.change_message }}</pre></dd>
-            </dl>
-        </li>
-        {% endfor %}
-    </ul>
 
     <div class="row titlebar hidden-print">
         <div class="col-sm-12 col-md-9"><h2>Om bookingen</h2></div>
@@ -69,6 +55,11 @@
                 <dd>
                     {{ object.get_workflow_status_display }}
                     <a href="{% url 'change-booking-status' object.pk %}" role="button" class="btn btn-primary btn-xs">Skift status</a>
+                </dd>
+                <dt>Interne kommentarer</dt>
+                <dd>
+                    <pre>{{ object.comments }}</pre>
+                    <a href="{% url 'change-booking-comments' object.pk %}" role="button" class="btn btn-primary btn-xs">Redigér</a>
                 </dd>
             </dl>
             
@@ -131,6 +122,32 @@
                 {% endif %}
 
             </dl>
+
+            <div class="divider"></div>
+
+            <h2>Aktivitetslog</h2>
+
+            <ul class="list-unstyled">
+                {% for entry in log_entries %}
+                <li>
+                    <dl class="dl-horizontal">
+                        <dt>Hvem:</dt>
+                        <dd>{% if entry.user.get_full_name %}{{ entry.user.get_full_name }}{% else %}{{ entry.user }}{% endif %}</dd>
+                        <dt>Hvad:</dt>
+                        <dd>{{ entry.action_flag|logaction_type_display }}</dd>
+                        <dt>Hvornår:</dt>
+                        <dd>{{ entry.action_time }}</dd>
+                        <dt>Besked:</dt>
+                        <dd><pre>{{ entry.change_message }}</pre></dd>
+                    </dl>
+                </li>
+                {% endfor %}
+            </ul>
+            <div>
+                <a href="{% url 'booking-add-logentry' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">Tilføj ny log-post</a>&nbsp;
+            </div>
+            <div class="divider"></div>
+
 
             <div class="go-back">
                 <a href="#" class="btn btn-default" onclick="history.go(-1); return false;"><span class="glyphicon glyphicon-chevron-left"></span> {% trans 'Tilbage til søgeresultat' %}</a>
