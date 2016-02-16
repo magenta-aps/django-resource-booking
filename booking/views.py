@@ -1021,7 +1021,7 @@ class VisitNotifyView(EmailComposeView):
                 )
             self.template_key = EmailTemplate.NOTIFY_BOOKERS
 
-        if 'hosts' in types:
+        if 'contacts' in types:
             for person in self.visit.contact_persons.all():
                 self.recipients.append(
                     (
