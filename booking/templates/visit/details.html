@@ -25,6 +25,9 @@
             {% if user.userprofile.can_create %}
                 <a class="pull-right btn btn-primary margin-right-10" href="{% url 'visit-clone' object.pk %}">Opret kopi</a>
             {% endif %}
+            {% if can_edit %}
+                <a class="pull-right btn btn-primary margin-right-10" href="{% url 'visit-notify' object.pk %}?to=guests">{% trans 'Send besked til tilmeldte' %}</a>
+            {% endif %}
             
             <h1>{{ object.title }}</h1>
             <div class="well">
