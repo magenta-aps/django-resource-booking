@@ -147,15 +147,16 @@ class EmailComposeView(FormMixin, TemplateView):
         )
 
     def get_initial(self):
-        data = {}
+        initial = super(EmailComposeView, self).get_initial()
         if self.template_key is not None:
             template = \
                 EmailTemplate.get_template(self.template_key,
                                            self.get_unit())
             if template is not None:
-                data['subject'] = template.subject
-                data['body'] = template.body
-        return data
+                initial['subject'] = template.subject
+                initial['body'] = template.body
+        initial['recipients'] = [id for (id, label) in self.recipients]
+        return initial
 
     def lookup_recipients(self, recipient_ids):
         # Override in subclasses: return a list of recipient objects
