@@ -1,6 +1,6 @@
 {% extends 'index.html' %}
 {% load staticfiles %}
-{% load timedelta %}
+{% load booking_tags %}
 {% load i18n %}
 
 {% block content %}
@@ -8,7 +8,7 @@
     {% include 'common/breadcrumbrow.html' %}
 
     <div class="row titlebar hidden-print">
-        <div class="col-sm-12 col-md-9"><h2>Om tilbuddet</h2></div>
+        <div class="col-sm-12 col-md-9"><h2>{% trans 'Om tilbuddet' %}</h2></div>
         <div class="divider"></div>
     </div>
     <div class="row">
@@ -108,7 +108,7 @@
                             </dd>
                             {% if object.duration %}
                                 <dt>Varighed:</dt>
-                                <dd>{{ object.duration|timedelta }}</dd>
+                                <dd>{{ object.duration|timedelta_i18n }}</dd>
                             {% endif %}
                             {% if object.price %}
                                 <dt>Pris:</dt>
