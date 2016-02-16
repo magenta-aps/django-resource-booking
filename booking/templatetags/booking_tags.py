@@ -5,6 +5,7 @@ import datetime
 from timedelta.helpers import parse, nice_repr
 from django.utils.translation import ugettext_lazy as _
 
+
 @register.filter
 def upload_name_clean(value):
     return re.sub(r'_[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)$', r'\1', value)
