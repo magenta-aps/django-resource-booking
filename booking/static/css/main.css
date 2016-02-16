@@ -693,6 +693,11 @@ div ul.errorlist {
     font-weight: normal;
 }
 
+.email-recipients ul {
+    max-height: 120px;
+    overflow-y: auto;
+}
+
 /*Backend specific styles end */
 
 /* Embedded pages styles */

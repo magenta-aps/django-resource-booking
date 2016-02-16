@@ -1,6 +1,6 @@
 {% extends 'index.html' %}
 {% load staticfiles %}
-{% load timedelta %}
+{% load booking_tags %}
 {% load i18n %}
 
 {% block content %}
@@ -24,6 +24,9 @@
             {% endif %}
             {% if user.userprofile.can_create %}
                 <a class="pull-right btn btn-primary margin-bottom-10 margin-right-10" href="{% url 'visit-clone' object.pk %}">{% trans 'Opret kopi' %}</a>
+            {% endif %}
+            {% if can_edit %}
+                <a class="pull-right btn btn-primary margin-right-10" href="{% url 'visit-notify' object.pk %}?to=guests">{% trans 'Send besked til tilmeldte' %}</a>
             {% endif %}
             
             <h1>{{ object.title }}</h1>
@@ -110,7 +113,7 @@
                             </dd>
                             {% if object.duration %}
                                 <dt>{% trans 'Varighed' %}:</dt>
-                                <dd>{{ object.duration|timedelta }}</dd>
+                                <dd>{{ object.duration|timedelta_i18n }}</dd>
                             {% endif %}
                             {% if object.price %}
                                 <dt>{% trans 'Pris' %}:</dt>

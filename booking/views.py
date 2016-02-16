@@ -141,21 +141,23 @@ class EmailComposeView(FormMixin, TemplateView):
             recipients = self.lookup_recipients(
                 form.cleaned_data['recipients'])
             KUEmailMessage.send_email(template, context, recipients)
+            return super(EmailComposeView, self).form_valid(form)
 
         return self.render_to_response(
             self.get_context_data(form=form)
         )
 
     def get_initial(self):
-        data = {}
+        initial = super(EmailComposeView, self).get_initial()
         if self.template_key is not None:
             template = \
                 EmailTemplate.get_template(self.template_key,
                                            self.get_unit())
             if template is not None:
-                data['subject'] = template.subject
-                data['body'] = template.body
-        return data
+                initial['subject'] = template.subject
+                initial['body'] = template.body
+        initial['recipients'] = [id for (id, label) in self.recipients]
+        return initial
 
     def lookup_recipients(self, recipient_ids):
         # Override in subclasses: return a list of recipient objects
@@ -1205,6 +1207,9 @@ class VisitNotifyView(EmailComposeView):
 
     def get_unit(self):
         return self.visit.unit
+
+    def get_success_url(self):
+        return reverse('visit-view', args=[self.visit.id])
 
 
 class RrulestrView(View):
