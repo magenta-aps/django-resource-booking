@@ -2,6 +2,7 @@ from booking.models import Unit
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from django.forms import ModelChoiceField, EmailField
+from django.utils.translation import ugettext_lazy as _
 from profile.models import UserRole
 from profile.models import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
 
@@ -10,11 +11,13 @@ class UserCreateForm(UserCreationForm):
     email = EmailField(required=True)
     role = ModelChoiceField(
         required=True,
-        queryset=UserRole.objects.all()
+        queryset=UserRole.objects.all(),
+        label=_(u'Rolle')
     )
     unit = ModelChoiceField(
         required=True,
-        queryset=Unit.objects.all()
+        queryset=Unit.objects.all(),
+        label=_(u'Enhed')
     )
 
     class Meta:

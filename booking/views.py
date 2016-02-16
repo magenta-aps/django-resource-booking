@@ -101,6 +101,10 @@ class RoleRequiredMixin(object):
         )
 
 
+class EditorRequriedMixin(RoleRequiredMixin):
+    roles = EDIT_ROLES
+
+
 class SearchView(ListView):
     """Class for handling main search."""
     model = Resource
