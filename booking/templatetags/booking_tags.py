@@ -76,8 +76,10 @@ def timedelta_i18n(value, display="long", sep=", "):
 
     for i in range(len(values)):
         if values[i]:
-            words = words_singular if values[i] == 1 else words_plural
-            result.append(words[i] % values[i])
+            if values[i] == 1:
+                result.append(words_singular[i])
+            else:
+                result.append(words_plural[i] % values[i])
 
     # values with less than one second, which are considered zeroes
     if len(result) == 0:
