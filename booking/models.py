@@ -14,7 +14,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.template.base import Template
 
 from recurrence.fields import RecurrenceField
-from booking.utils import ClassProperty
+from booking.utils import ClassProperty, full_email
 from resource_booking import settings
 
 
@@ -70,6 +70,9 @@ class Person(models.Model):
 
     def get_email(self):
         return self.email
+
+    def get_full_email(self):
+        return full_email(self.email, self.name)
 
 
 # Units (faculties, institutes etc)
@@ -1159,6 +1162,9 @@ class Booker(models.Model):
     def get_name(self):
         return "%s %s" % (self.firstname, self.lastname)
 
+    def get_full_email(self):
+        return full_email(self.email, self.get_name())
+
 
 class Booking(models.Model):
     objects = SearchManager(
@@ -1513,10 +1519,12 @@ class EmailTemplate(models.Model):
 
     BOOKING_CREATED = 1
     NOTIFY_BOOKERS = 2
+    NOTIFY_HOSTS = 3
 
     key_choices = [
         (BOOKING_CREATED, _(u'Booking created')),
-        (NOTIFY_BOOKERS, _(u'Message to bookers of a visit'))
+        (NOTIFY_BOOKERS, _(u'Message to bookers of a visit')),
+        (NOTIFY_HOSTS, _(u'Message to hosts of a visit')),
     ]
     key = models.IntegerField(
         verbose_name=u'Key',
