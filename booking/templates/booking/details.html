@@ -2,6 +2,7 @@
 {% load staticfiles %}
 {% load timedelta %}
 {% load i18n %}
+{% load booking_tags %}
 
 {% block content %}
 
@@ -14,7 +15,73 @@
     <div class="row">
         <div class="col-sm-12 col-md-8">
 
-            {% include 'common/searchform.html' %}
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    {% url 'visit-view' object.visit.id as visiturl %}
+                    {% blocktrans with firstname=object.booker.firstname lastname=object.booker.lastname visittitle=object.visit.title %}
+                        <strong>{{ firstname }} {{ lastname }}</strong> har booket <a href="{{ visiturl }}">{{ visittitle }}</a>
+                    {% endblocktrans %}
+                </div>
+            </div>
+
+            <h2>Information om bookingen</h2>
+
+            <dl class="dl-horizontal">
+
+                <dt>{% trans 'Navn:' %}</dt>
+                <dd>{{ object.booker.firstname }} {{ object.booker.lastname }}</dd>
+
+
+                <dt>{% trans 'Email:' %}</dt>
+                <dd>{{ object.booker.email }}</dd>
+
+                <dt>{% trans 'Telefon:' %}</dt>
+                <dd>{{ object.booker.phone }}</dd>
+
+                <dt>{% trans 'Skole:' %}</dt>
+                <dd>{{ object.booker.school.name }}, {{ object.booker.school.postcode.number }} {{ object.booker.school.postcode.city }}</dd>
+
+                <dt>{% trans 'Retning:' %}</dt>
+                <dd>
+                    {{ object.booker.get_line_display }}
+                </dd>
+
+                {% if object.get_subjects %}
+                <dt>{% trans 'Fag:' %}</dt>
+                <dd>
+                    <ul class="list-unstyled">
+                        {% for fag in object.get_subjects %}
+                        <li>{{ fag }}</li>
+                        {% endfor %}
+                    </ul>
+                </dd>
+                {% endif %}
+
+                <dt>{% trans 'Niveau:' %}</dt>
+                <dd>
+                    {{ object.booker.get_level_display }}
+                </dd>
+
+                <dt>{% trans 'Antal deltagere:' %}</dt>
+                <dd>{{ object.booker.attendee_count }}</dd>
+
+                <dt>{% trans 'Noter:' %}</dt>
+                <dd>{{ object.booker.notes }}</dd>
+
+                {% if object.classbooking %}
+                    {% if object.classbooking.time %}
+                        <dt>{% trans 'Tidspunkt:' %}</dt>
+                        <dd>{{ object.classbooking.time }}</dd>
+                    {% elif object.classbooking.desired_time %}
+                        <dt>{% trans 'Ønsket tidspunkt:' %}</dt>
+                        <dd>{{ object.classbooking.desired_time }}</dd>
+                    {% endif %}
+
+                    <dt>{% trans 'Rundvisning:' %}</dt>
+                    <dd>{{ object.classbooking.tour_desired | yesno }}</dd>
+                {% endif %}
+
+            </dl>
 
             <div class="divider"></div>
 
@@ -43,7 +110,7 @@
                     <a href="{% url 'change-booking-hosts' object.pk %}" role="button" class="btn btn-primary btn-xs">Redigér</a>
                     {% endif %}
                 </dd>
-                <dt>Lokalerer</dt>
+                <dt>Lokaler</dt>
                 <dd>
                     {{ object.get_room_status_display }}
                     {% if object.can_assign_resources %}
@@ -55,77 +122,39 @@
                     {{ object.get_workflow_status_display }}
                     <a href="{% url 'change-booking-status' object.pk %}" role="button" class="btn btn-primary btn-xs">Skift status</a>
                 </dd>
+                <dt>Interne kommentarer</dt>
+                <dd>
+                    <pre>{{ object.comments }}</pre>
+                    <a href="{% url 'change-booking-comments' object.pk %}" role="button" class="btn btn-primary btn-xs">Redigér</a>
+                </dd>
             </dl>
             
             <div class="divider"></div>
 
-            <h2>Information om bookingen</h2>
+            <h2>Aktivitetslog</h2>
 
-            <div class="panel panel-default">
-                <div class="panel-body">
-                    {% url 'visit-view' object.visit.id as visiturl %}
-                    {% blocktrans with firstname=object.booker.firstname lastname=object.booker.lastname visittitle=object.visit.title %}
-                        <strong>{{ firstname }} {{ lastname }}</strong> har booket <a href="{{ visiturl }}">{{ visittitle }}</a>
-                    {% endblocktrans %}
-                </div>
+            <ul class="list-unstyled">
+                {% for entry in log_entries %}
+                <li>
+                    <dl class="dl-horizontal">
+                        <dt>Hvem:</dt>
+                        <dd>{% if entry.user.get_full_name %}{{ entry.user.get_full_name }}{% else %}{{ entry.user }}{% endif %}</dd>
+                        <dt>Hvad:</dt>
+                        <dd>{{ entry.action_flag|logaction_type_display }}</dd>
+                        <dt>Hvornår:</dt>
+                        <dd>{{ entry.action_time }}</dd>
+                        <dt>Besked:</dt>
+                        <dd><pre>{{ entry.change_message }}</pre></dd>
+                    </dl>
+                </li>
+                {% endfor %}
+            </ul>
+            <div>
+                <a href="{% url 'booking-add-logentry' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">Tilføj ny log-post</a>&nbsp;
             </div>
-
-            <dl class="dl-horizontal">
-
-                <dt>{% trans 'Navn:' %}</dt>
-                <dd>{{ object.booker.firstname }} {{ object.booker.lastname }}</dd>
-
-
-                <dt>{% trans 'Email:' %}</dt>
-                <dd>{{ object.booker.email }}</dd>
-
-                <dt>{% trans 'Telefon:' %}</dt>
-                <dd>{{ object.booker.phone }}</dd>
-
-                <dt>{% trans 'Skole:' %}</dt>
-                <dd>{{ object.booker.school.name }}, {{ object.booker.school.postcode.number }} {{ object.booker.school.postcode.city }}</dd>
-
-                <dt>{% trans 'Linje:' %}</dt>
-                <dd>
-                    {% for line,title in object.booker.line_choices %}
-                        {% if line == object.booker.line %}
-                            {{ title }}
-                        {% endif %}
-                    {% endfor %}
-                </dd>
-
-                <dt>{% trans 'Niveau:' %}</dt>
-                <dd>
-                    {% for level,title in object.booker.level_choices %}
-                        {% if level == object.booker.level %}
-                            {{ title }}
-                        {% endif %}
-                    {% endfor %}
-                </dd>
-
-                <dt>{% trans 'Antal deltagere:' %}</dt>
-                <dd>{{ object.booker.attendee_count }}</dd>
-
-                <dt>{% trans 'Noter:' %}</dt>
-                <dd>{{ object.booker.notes }}</dd>
-
-                {% if object.classbooking %}
-                    {% if object.classbooking.time %}
-                        <dt>{% trans 'Tidspunkt:' %}</dt>
-                        <dd>{{ object.classbooking.time }}</dd>
-                    {% elif object.classbooking.desired_time %}
-                        <dt>{% trans 'Ønsket tidspunkt:' %}</dt>
-                        <dd>{{ object.classbooking.desired_time }}</dd>
-                    {% endif %}
-
-                    <dt>{% trans 'Rundvisning:' %}</dt>
-                    <dd>{{ object.classbooking.tour_desired | yesno }}</dd>
-                {% endif %}
-
-            </dl>
-
             <div class="divider"></div>
-            
+
+
             <div class="go-back">
                 <a href="#" class="btn btn-default" onclick="history.go(-1); return false;"><span class="glyphicon glyphicon-chevron-left"></span> {% trans 'Tilbage til bookingliste' %}</a>
             </div>
