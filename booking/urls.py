@@ -13,7 +13,8 @@ from booking.views import EditVisitView, VisitDetailView, VisitNotifyView
 from booking.views import SearchView, EmbedcodesView
 from booking.views import BookingDetailView, ChangeBookingStatusView
 from booking.views import ChangeBookingTeachersView, ChangeBookingHostsView
-from booking.views import ChangeBookingRoomsView
+from booking.views import ChangeBookingRoomsView, ChangeBookingCommentsView
+from booking.views import BookingAddLogEntryView
 from booking.views import EmailTemplateListView, EmailTemplateEditView
 from booking.views import EmailTemplateDetailView, EmailTemplateDeleteView
 
@@ -100,6 +101,12 @@ urlpatterns = patterns(
     url(r'^booking/(?P<pk>[0-9]+)/change_rooms/?$',
         ChangeBookingRoomsView.as_view(),
         name='change-booking-rooms'),
+    url(r'^booking/(?P<pk>[0-9]+)/change_comments/?$',
+        ChangeBookingCommentsView.as_view(),
+        name='change-booking-comments'),
+    url(r'^booking/(?P<pk>[0-9]+)/add_logentry/?$',
+        BookingAddLogEntryView.as_view(),
+        name='booking-add-logentry'),
     url(r'^booking/search$',
         BookingSearchView.as_view(),
         name='booking-search'),

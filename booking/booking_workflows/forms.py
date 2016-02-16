@@ -42,3 +42,16 @@ class ChangeBookingRoomsForm(forms.ModelForm):
     class Meta:
         model = Booking
         fields = ['room_status']
+
+
+class ChangeBookingCommentsForm(forms.ModelForm):
+    class Meta:
+        model = Booking
+        fields = ['comments']
+
+
+class BookingAddLogEntryForm(forms.Form):
+    new_comment = forms.CharField(
+        widget=forms.Textarea,
+        label=_(u'Ny log-post')
+    )
