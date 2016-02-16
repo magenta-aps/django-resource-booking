@@ -41,22 +41,25 @@
                 <dt>{% trans 'Skole:' %}</dt>
                 <dd>{{ object.booker.school.name }}, {{ object.booker.school.postcode.number }} {{ object.booker.school.postcode.city }}</dd>
 
-                <dt>{% trans 'Linje:' %}</dt>
+                <dt>{% trans 'Retning:' %}</dt>
                 <dd>
-                    {% for line,title in object.booker.line_choices %}
-                        {% if line == object.booker.line %}
-                            {{ title }}
-                        {% endif %}
-                    {% endfor %}
+                    {{ object.booker.get_line_display }}
                 </dd>
+
+                {% if object.get_subjects %}
+                <dt>{% trans 'Fag:' %}</dt>
+                <dd>
+                    <ul class="list-unstyled">
+                        {% for fag in object.get_subjects %}
+                        <li>{{ fag }}</li>
+                        {% endfor %}
+                    </ul>
+                </dd>
+                {% endif %}
 
                 <dt>{% trans 'Niveau:' %}</dt>
                 <dd>
-                    {% for level,title in object.booker.level_choices %}
-                        {% if level == object.booker.level %}
-                            {{ title }}
-                        {% endif %}
-                    {% endfor %}
+                    {{ object.booker.get_level_display }}
                 </dd>
 
                 <dt>{% trans 'Antal deltagere:' %}</dt>
@@ -107,7 +110,7 @@
                     <a href="{% url 'change-booking-hosts' object.pk %}" role="button" class="btn btn-primary btn-xs">Redigér</a>
                     {% endif %}
                 </dd>
-                <dt>Lokalerer</dt>
+                <dt>Lokaler</dt>
                 <dd>
                     {{ object.get_room_status_display }}
                     {% if object.can_assign_resources %}

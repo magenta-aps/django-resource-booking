@@ -1294,6 +1294,12 @@ class Booking(models.Model):
 
         return " ".join(result)
 
+    def get_subjects(self):
+        if hasattr(self, 'teacherbooking'):
+            return self.teacherbooking.subjects.all()
+        else:
+            return None
+
     def save(self, *args, **kwargs):
 
         # Save once to store relations
