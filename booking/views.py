@@ -1073,13 +1073,15 @@ class BookingNotifyView(EmailComposeView):
         if type(types) is not list:
             types = [types]
         if 'guests' in types:
-                self.recipients.append(
-                        (self.booking.booker.id,
-                         self.booking.booker.get_full_email())
-                )
-                self.template_key = EmailTemplate.NOTIFY_BOOKER
+            self.recipients.append(
+                (self.booking.booker.id,
+                 self.booking.booker.get_full_email())
+            )
+            self.template_key = EmailTemplate.NOTIFY_BOOKER
         self.template_context['visit'] = self.booking.visit
-        return super(BookingNotifyView, self).dispatch(request, *args, **kwargs)
+        return super(BookingNotifyView, self).dispatch(
+            request, *args, **kwargs
+        )
 
     def lookup_recipients(self, recipient_ids):
         return list(Booker.objects.filter(id__in=recipient_ids))
