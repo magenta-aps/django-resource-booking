@@ -1594,21 +1594,26 @@ class EmailTemplate(models.Model):
         return template.render(context)
 
     @staticmethod
-    def get_template(template_key, unit):
-        template = None
-        while unit is not None and template is None:
+    def get_template(template_key, unit, include_overridden=False):
+        templates = []
+        while unit is not None and (include_overridden or len(templates) == 0):
             try:
-                template = EmailTemplate.objects.filter(
+                templates.extend(EmailTemplate.objects.filter(
                     key=template_key,
                     unit=unit
-                )[0]
+                ).all())
             except:
                 pass
             unit = unit.parent
-        if template is None:
+        if include_overridden or len(templates) == 0:
             try:
-                template = EmailTemplate.objects.filter(key=template_key,
-                                                        unit__isnull=True)[0]
+                templates.extend(
+                    EmailTemplate.objects.filter(key=template_key,
+                                                 unit__isnull=True)
+                )
             except:
                 pass
-        return template
+        if include_overridden:
+            return templates
+        else:
+            return templates[0] if len(templates) > 0 else None
