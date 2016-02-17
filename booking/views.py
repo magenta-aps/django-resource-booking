@@ -1041,7 +1041,7 @@ class VisitNotifyView(EmailComposeView):
                     )
                 )
 
-        try: # see if there's a template key defined in the URL params
+        try:  # see if there's a template key defined in the URL params
             self.template_key = int(request.GET.get("template", None))
         except (ValueError, TypeError):
             pass
@@ -1091,7 +1091,7 @@ class BookingNotifyView(EmailComposeView):
                  self.booking.booker.get_full_email())
             )
 
-        try: # see if there's a template key defined in the URL params
+        try:  # see if there's a template key defined in the URL params
             self.template_key = int(request.GET.get("template", None))
         except (ValueError, TypeError):
             pass
