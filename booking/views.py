@@ -1302,7 +1302,7 @@ class BookingView(UpdateView):
                 self.visit.unit
             )
             KUEmailMessage.send_email(
-                EmailTemplate.CONFIRMATION_TO_BOOKER,
+                EmailTemplate.NOTIFY_GUEST__BOOKING_CREATED,
                 {
                     'booking': booking,
                     'visit': booking.visit,
