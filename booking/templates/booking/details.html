@@ -14,6 +14,10 @@
     <div class="row">
         <div class="col-sm-12 col-md-8">
 
+            {% if can_notify %}
+                <a class="pull-right btn btn-primary margin-right-10" href="{% url 'booking-notify' object.pk %}?to=guests">{% trans 'Send bekræftelse til booker' %}</a>
+            {% endif %}
+
             <div class="panel panel-default">
                 <div class="panel-body">
                     {% url 'visit-view' object.visit.id as visiturl %}
@@ -171,10 +175,4 @@
 
 {% block extra_scripts %}
     <script src="/static/js/custom.js"></script>
-    <script src="{% static "js/modalframe-host.js" %}"></script>
-    <script type="text/javascript">
-        <!--
-        $('#startbooking').hostModalIframe($('#startbooking').attr("data-frametarget"));
-        //-->
-    </script>
 {% endblock %}

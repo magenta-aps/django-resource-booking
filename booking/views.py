@@ -1070,6 +1070,48 @@ class VisitNotifyView(EmailComposeView):
         return reverse('visit-view', args=[self.visit.id])
 
 
+class BookingNotifyView(EmailComposeView):
+
+    def dispatch(self, request, *args, **kwargs):
+        self.recipients = []
+        pk = kwargs['pk']
+        self.booking = Booking.objects.get(id=pk)
+        types = request.GET.get("to")
+        if type(types) is not list:
+            types = [types]
+        if 'guests' in types:
+            self.recipients.append(
+                (self.booking.booker.id,
+                 self.booking.booker.get_full_email())
+            )
+            self.template_key = EmailTemplate.NOTIFY_BOOKER
+        self.template_context['visit'] = self.booking.visit
+        return super(BookingNotifyView, self).dispatch(
+            request, *args, **kwargs
+        )
+
+    def lookup_recipients(self, recipient_ids):
+        return list(Booker.objects.filter(id__in=recipient_ids))
+
+    def get_context_data(self, **kwargs):
+        context = {}
+        context['breadcrumbs'] = [
+            {'url': reverse('search'), 'text': _(u'Søgning')},
+            {'url': reverse('search'), 'text': _(u'Søgeresultat')},
+            {'url': reverse('booking-view', args=[self.booking.id]),
+             'text': _(u'Detaljevisning')},
+            {'text': _(u'Send notifikation')},
+        ]
+        context.update(kwargs)
+        return super(BookingNotifyView, self).get_context_data(**context)
+
+    def get_unit(self):
+        return self.booking.visit.unit
+
+    def get_success_url(self):
+        return reverse('booking-view', args=[self.booking.id])
+
+
 class RrulestrView(View):
 
     def post(self, request):
@@ -1628,6 +1670,11 @@ class BookingDetailView(DetailView):
             {'url': '#', 'text': _(u'Søgeresultatliste')},
             {'text': _(u'Detaljevisning')},
         ]
+
+        user = self.request.user
+        if hasattr(user, 'userprofile') and \
+                user.userprofile.can_notify(self.object):
+            context['can_notify'] = True
 
         context.update(kwargs)
 

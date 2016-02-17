@@ -13,7 +13,7 @@ from booking.views import EditVisitView, VisitDetailView, VisitNotifyView
 from booking.views import SearchView, EmbedcodesView
 from booking.views import EmailTemplateListView, EmailTemplateEditView
 from booking.views import EmailTemplateDetailView, EmailTemplateDeleteView
-from booking.views import BookingDetailView
+from booking.views import BookingDetailView, BookingNotifyView
 
 from django.views.generic import TemplateView
 
@@ -89,6 +89,10 @@ urlpatterns = patterns(
     url(r'^booking/search$',
         BookingSearchView.as_view(),
         name='booking-search'),
+
+    url(r'^booking/(?P<pk>[0-9]+)/notify$',
+        BookingNotifyView.as_view(),
+        name='booking-notify'),
 
     # Ajax api
     url(r'^jsapi/rrulestr$', RrulestrView.as_view(), name='jsapi_rrulestr'),
