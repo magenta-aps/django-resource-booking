@@ -155,6 +155,13 @@ class EmailComposeView(FormMixin, TemplateView):
         initial['recipients'] = [id for (id, label) in self.recipients]
         return initial
 
+    def get_context_data(self, **kwargs):
+        context = super(EmailComposeView, self).get_context_data(**kwargs)
+        context['templates'] = EmailTemplate.get_template(self.template_key,
+                                                          self.get_unit(),
+                                                          True)
+        return context
+
     def lookup_recipients(self, recipient_ids):
         # Override in subclasses: return a list of recipient objects
         # (instances that implement get_email() and get_name())
