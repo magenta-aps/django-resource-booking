@@ -71,7 +71,13 @@
                         {% for template in templates reversed %}
                             <a href="{% url 'emailtemplate-view' template.id %}" class="
                             {% if forloop.last %}template-selected{% else %}template-overridden{% endif %}
-                            ">{{ template.unit.name }}</a>
+                            ">
+                                {% if template.unit %}
+                                {{ template.unit.name }}
+                                {% else %}
+                                {% trans 'Rodskabelon' %}
+                                {% endif %}
+                            </a>
                             {% if not forloop.last %} &gt; {% endif %}
                         {% endfor %}
                     </div>
