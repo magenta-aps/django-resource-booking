@@ -14,7 +14,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.template.base import Template
 
 from recurrence.fields import RecurrenceField
-from booking.utils import ClassProperty
+from booking.utils import ClassProperty, full_email
 from resource_booking import settings
 
 
@@ -70,6 +70,9 @@ class Person(models.Model):
 
     def get_email(self):
         return self.email
+
+    def get_full_email(self):
+        return full_email(self.email, self.name)
 
 
 # Units (faculties, institutes etc)
@@ -918,8 +921,8 @@ class School(models.Model):
         null=True
     )
 
-    ELEMENTARY_SCHOOL = 0
-    GYMNASIE = 1
+    ELEMENTARY_SCHOOL = Subject.SUBJECT_TYPE_GRUNDSKOLE
+    GYMNASIE = Subject.SUBJECT_TYPE_GYMNASIE
     type_choices = (
         (ELEMENTARY_SCHOOL, u'Folkeskole'),
         (GYMNASIE, u'Gymnasie')
@@ -955,7 +958,11 @@ class School(models.Model):
                 (schools.high_schools, School.GYMNASIE)]:
             for name, postnr in data:
                 try:
-                    School.objects.get(name=name, postcode__number=postnr)
+                    school = School.objects.get(name=name,
+                                                postcode__number=postnr)
+                    if school.type != type:
+                        school.type = type
+                        school.save()
                 except ObjectDoesNotExist:
                     try:
                         postcode = PostCode.get(postnr)
@@ -1004,6 +1011,7 @@ class Booker(models.Model):
     line = models.IntegerField(
         choices=line_choices,
         blank=True,
+        null=True,
         verbose_name=u'Linje',
     )
 
@@ -1012,7 +1020,36 @@ class Booker(models.Model):
     g3 = 3
     student = 4
     other = 5
+    f1 = 7
+    f2 = 8
+    f3 = 9
+    f4 = 10
+    f5 = 11
+    f6 = 12
+    f7 = 13
+    f8 = 14
+    f9 = 15
+    f10 = 16
+
+    level_map = {
+        Subject.SUBJECT_TYPE_GRUNDSKOLE: [f1, f2, f3, f4, f5, f6, f7,
+                                          f8, f9, f10, other],
+        Subject.SUBJECT_TYPE_GYMNASIE: [g1, g2, g3, student, other],
+        Subject.SUBJECT_TYPE_BOTH: [f1, f2, f3, f4, f5, f6, f7, f8, f9, f10,
+                                    g1, g2, g3, student, other]
+    }
+
     level_choices = (
+        (f1, _(u'1. klasse')),
+        (f2, _(u'2. klasse')),
+        (f3, _(u'3. klasse')),
+        (f4, _(u'4. klasse')),
+        (f5, _(u'5. klasse')),
+        (f6, _(u'6. klasse')),
+        (f7, _(u'7. klasse')),
+        (f8, _(u'8. klasse')),
+        (f9, _(u'9. klasse')),
+        (f10, _(u'10. klasse')),
         (g1, _(u'1.g')),
         (g2, _(u'2.g')),
         (g3, _(u'3.g')),
@@ -1021,7 +1058,7 @@ class Booker(models.Model):
     )
     level = models.IntegerField(
         choices=level_choices,
-        blank=True,
+        blank=False,
         verbose_name=u'Niveau'
     )
 
@@ -1056,11 +1093,14 @@ class Booker(models.Model):
             return "%s %s <%s>" % (self.firstname, self.lastname, self.email)
         return "%s %s" % (self.firstname, self.lastname)
 
-    def get_name(self):
-        return self.name
-
     def get_email(self):
         return self.email
+
+    def get_name(self):
+        return "%s %s" % (self.firstname, self.lastname)
+
+    def get_full_email(self):
+        return full_email(self.email, self.get_name())
 
 
 class Booking(models.Model):
@@ -1361,47 +1401,38 @@ class KUEmailMessage(models.Model):
         ku_email_message.save()
 
     @staticmethod
-    def send_email(template_key, context, recipients, unit=None, **kwargs):
-        template = None
-        emails = []
-
-        while unit is not None and template is not None:
-            try:
-                template = EmailTemplate.objects.filter(
-                    key=template_key,
-                    unit=unit
-                )[0]
-            except:
-                pass
-            unit = unit.parent
-        if template is None:
-            try:
-                template = EmailTemplate.objects.filter(key=template_key,
-                                                        unit__isnull=True)[0]
-            except:
-                pass
-        if template is None:
+    def send_email(template, context, recipients, unit=None, **kwargs):
+        if isinstance(template, int):
+            template_key = template
+            template = EmailTemplate.get_template(template_key, unit)
+            if template is None:
+                raise Exception(
+                    u"Template with name %s does not exist!" % template_key
+                )
+        if not isinstance(template, EmailTemplate):
             raise Exception(
-                u"Template with name %s does not exist!" % template_key
+                u"Invalid template object '%s'" % str(template)
             )
 
+        emails = {}
         if type(recipients) is not list:
             recipients = [recipients]
         for recipient in recipients:
             try:
                 address = recipient.get_email()
-                email = {'address': address}
-                try:
-                    name = recipient.get_name()
-                    email['name'] = name
-                    email['full'] = u"\"%s\" <%s>" % (name, address)
-                except:
-                    email['full'] = address
-                emails.append(email)
+                if address not in emails:
+                    email = {'address': address}
+                    try:
+                        name = recipient.get_name()
+                        email['name'] = name
+                        email['full'] = u"\"%s\" <%s>" % (name, address)
+                    except:
+                        email['full'] = address
+                    emails[address] = email
             except:
                 pass
 
-        for email in emails:
+        for email in emails.values():
             ctx = {
                 'unit': unit,
                 'recipient': email,
@@ -1409,7 +1440,7 @@ class KUEmailMessage(models.Model):
             }
             ctx.update(context)
             subject = template.expand_subject(ctx)
-            body = template.expand_body(ctx)
+            body = template.expand_body(ctx, encapsulate=True)
 
             message = EmailMessage(
                 subject=subject,
@@ -1423,12 +1454,29 @@ class KUEmailMessage(models.Model):
 
 class EmailTemplate(models.Model):
 
-    BOOKING_CREATED = 1  # Notification to coordinator
-    CONFIRMATION_TO_BOOKER = 2  # Confirmation to booker
+    NOTIFY_GUEST__BOOKING_CREATED = 1  # ticket 13806
+    NOTIFY_HOST__BOOKING_CREATED = 2  # ticket 13807
+    NOTIFY_HOST__REQ_TEACHER_VOLUNTEER = 3  # ticket 13808
+    NOTIFY_HOST__REQ_HOST_VOLUNTEER = 4  # ticket 13809
+    NOTIFY_HOST__ASSOCIATED = 5  # ticket 13810
+    NOTIFY_HOST__REQ_ROOM = 6  # ticket 13811
+    NOTIFY_GUEST__GENERAL_MSG = 7  # ticket 13812
+    NOTIFY_HOST__BOOKING_COMPLETE = 8  # ticket 13813
+    NOTIFY_ALL__BOOKING_CANCELED = 9  # ticket 13814
+    NOTITY_ALL__BOOKING_REMINDER = 10  # ticket 13815
 
     key_choices = [
-        (BOOKING_CREATED, _(u'Booking created')),
-        (CONFIRMATION_TO_BOOKER, _(u'Confirmation to booker')),
+        (NOTIFY_GUEST__BOOKING_CREATED, _(u'Gæst: Booking oprettet')),
+        (NOTIFY_GUEST__GENERAL_MSG, _(u'Gæst: Generel besked')),
+        (NOTIFY_HOST__BOOKING_CREATED, _(u'Vært: Booking oprettet')),
+        (NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
+         _(u'Vært: Frivillige undervisere')),
+        (NOTIFY_HOST__REQ_HOST_VOLUNTEER, _(u'Vært: Frivillige værter')),
+        (NOTIFY_HOST__ASSOCIATED, _(u'Vært: Tilknyttet besøg')),
+        (NOTIFY_HOST__REQ_ROOM, _(u'Vært: Forespørg lokale')),
+        (NOTIFY_HOST__BOOKING_COMPLETE, _(u'Vært: Booking færdigplanlagt')),
+        (NOTIFY_ALL__BOOKING_CANCELED, _(u'Alle: Booking aflyst')),
+        (NOTITY_ALL__BOOKING_REMINDER, _(u'Alle: Reminder om booking')),
     ]
     key = models.IntegerField(
         verbose_name=u'Key',
@@ -1456,8 +1504,14 @@ class EmailTemplate(models.Model):
     def expand_subject(self, context, keep_placeholders=False):
         return self._expand(self.subject, context, keep_placeholders)
 
-    def expand_body(self, context, keep_placeholders=False):
-        return self._expand(self.body, context, keep_placeholders)
+    def expand_body(self, context, keep_placeholders=False, encapsulate=False):
+        body = self._expand(self.body, context, keep_placeholders)
+        if encapsulate \
+                and not body.startswith(("<html", "<HTML", "<!DOCTYPE")):
+            body = "<!DOCTYPE html><html><head></head>" \
+                   "<body>%s</body>" \
+                   "</html>" % body
+        return body
 
     @staticmethod
     def _expand(text, context, keep_placeholders=False):
@@ -1467,3 +1521,28 @@ class EmailTemplate(models.Model):
         if isinstance(context, dict):
             context = make_context(context)
         return template.render(context)
+
+    @staticmethod
+    def get_template(template_key, unit, include_overridden=False):
+        templates = []
+        while unit is not None and (include_overridden or len(templates) == 0):
+            try:
+                templates.extend(EmailTemplate.objects.filter(
+                    key=template_key,
+                    unit=unit
+                ).all())
+            except:
+                pass
+            unit = unit.parent
+        if include_overridden or len(templates) == 0:
+            try:
+                templates.extend(
+                    EmailTemplate.objects.filter(key=template_key,
+                                                 unit__isnull=True)
+                )
+            except:
+                pass
+        if include_overridden:
+            return templates
+        else:
+            return templates[0] if len(templates) > 0 else None
