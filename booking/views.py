@@ -155,11 +155,12 @@ class EmailComposeView(FormMixin, TemplateView):
         return initial
 
     def get_context_data(self, **kwargs):
-        context = super(EmailComposeView, self).get_context_data(**kwargs)
+        context = {}
         context['templates'] = EmailTemplate.get_template(self.template_key,
                                                           self.get_unit(),
                                                           True)
-        return context
+        context.update(kwargs)
+        return super(EmailComposeView, self).get_context_data(**context)
 
     def lookup_recipients(self, recipient_ids):
         # Override in subclasses: return a list of recipient objects
@@ -1001,6 +1002,8 @@ class VisitDetailView(DetailView):
             {'text': _(u'Om tilbuddet')},
         ]
 
+        context['EmailTemplate'] = EmailTemplate
+
         context.update(kwargs)
 
         return super(VisitDetailView, self).get_context_data(**context)
@@ -1028,7 +1031,6 @@ class VisitNotifyView(EmailComposeView):
                         booking.booker.get_full_email()
                     )
                 )
-            self.template_key = EmailTemplate.NOTIFY_BOOKERS
 
         if 'contacts' in types:
             for person in self.visit.contact_persons.all():
@@ -1038,7 +1040,11 @@ class VisitNotifyView(EmailComposeView):
                         person.get_full_email()
                     )
                 )
-            self.template_key = EmailTemplate.NOTIFY_HOSTS
+
+        try: # see if there's a template key defined in the URL params
+            self.template_key = int(request.GET.get("template", None))
+        except (ValueError, TypeError):
+            pass
 
         self.template_context['visit'] = self.visit
         return super(VisitNotifyView, self).dispatch(request, *args, **kwargs)
@@ -1084,7 +1090,12 @@ class BookingNotifyView(EmailComposeView):
                 (self.booking.booker.id,
                  self.booking.booker.get_full_email())
             )
-            self.template_key = EmailTemplate.NOTIFY_BOOKER
+
+        try: # see if there's a template key defined in the URL params
+            self.template_key = int(request.GET.get("template", None))
+        except (ValueError, TypeError):
+            pass
+
         self.template_context['visit'] = self.booking.visit
         return super(BookingNotifyView, self).dispatch(
             request, *args, **kwargs
@@ -1280,7 +1291,7 @@ class BookingView(UpdateView):
 
             booking.save()
             KUEmailMessage.send_email(
-                EmailTemplate.BOOKING_CREATED,
+                EmailTemplate.NOTIFY_GUEST__BOOKING_CREATED,
                 {
                     'booking': booking,
                     'visit': booking.visit,
@@ -1397,7 +1408,7 @@ class EmailTemplateListView(ListView):
     model = EmailTemplate
 
     def get_context_data(self, **kwargs):
-        context = super(EmailTemplateListView, self).get_context_data(**kwargs)
+        context = {}
         context['duplicates'] = []
         for i in xrange(0, len(self.object_list)):
             objectA = self.object_list[i]
@@ -1410,7 +1421,8 @@ class EmailTemplateListView(ListView):
         context['breadcrumbs'] = [
             {'text': _(u'Emailskabelonliste')},
         ]
-        return context
+        context.update(kwargs)
+        return super(EmailTemplateListView, self).get_context_data(**context)
 
     def get_queryset(self):
         qs = super(EmailTemplateListView, self).get_queryset()
@@ -1460,7 +1472,7 @@ class EmailTemplateEditView(UpdateView, UnitAccessRequiredMixin):
         )
 
     def get_context_data(self, **kwargs):
-        context = super(EmailTemplateEditView, self).get_context_data(**kwargs)
+        context = {}
         context['breadcrumbs'] = [
             {'url': reverse('emailtemplate-list'),
              'text': _(u'Emailskabelonliste')}]
@@ -1473,7 +1485,8 @@ class EmailTemplateEditView(UpdateView, UnitAccessRequiredMixin):
         else:
             context['breadcrumbs'].append({'text': _(u'Opret')})
 
-        return context
+        context.update(kwargs)
+        return super(EmailTemplateEditView, self).get_context_data(**context)
 
     def get_form_kwargs(self):
         args = super(EmailTemplateEditView, self).get_form_kwargs()
@@ -1675,6 +1688,8 @@ class BookingDetailView(DetailView):
         if hasattr(user, 'userprofile') and \
                 user.userprofile.can_notify(self.object):
             context['can_notify'] = True
+
+        context['EmailTemplate'] = EmailTemplate
 
         context.update(kwargs)
 
