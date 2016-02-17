@@ -17,6 +17,7 @@ from booking.views import ChangeBookingRoomsView, ChangeBookingCommentsView
 from booking.views import BookingAddLogEntryView
 from booking.views import EmailTemplateListView, EmailTemplateEditView
 from booking.views import EmailTemplateDetailView, EmailTemplateDeleteView
+from booking.views import BookingNotifyView
 
 from django.views.generic import TemplateView
 
@@ -110,6 +111,10 @@ urlpatterns = patterns(
     url(r'^booking/search$',
         BookingSearchView.as_view(),
         name='booking-search'),
+
+    url(r'^booking/(?P<pk>[0-9]+)/notify$',
+        BookingNotifyView.as_view(),
+        name='booking-notify'),
 
     # Ajax api
     url(r'^jsapi/rrulestr$', RrulestrView.as_view(), name='jsapi_rrulestr'),
