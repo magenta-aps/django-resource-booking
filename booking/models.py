@@ -1333,8 +1333,9 @@ class EmailTemplate(models.Model):
         if include_overridden or len(templates) == 0:
             try:
                 templates.extend(
-                        EmailTemplate.objects.filter(key=template_key,
-                                                     unit__isnull=True))
+                    EmailTemplate.objects.filter(key=template_key,
+                                                 unit__isnull=True)
+                )
             except:
                 pass
         if include_overridden:
