@@ -1276,11 +1276,13 @@ class EmailTemplate(models.Model):
     BOOKING_CREATED = 1
     NOTIFY_BOOKERS = 2
     NOTIFY_HOSTS = 3
+    NOTIFY_BOOKER = 4
 
     key_choices = [
         (BOOKING_CREATED, _(u'Booking created')),
         (NOTIFY_BOOKERS, _(u'Message to bookers of a visit')),
         (NOTIFY_HOSTS, _(u'Message to hosts of a visit')),
+        (NOTIFY_BOOKER, _(u'Message to a booker')),
     ]
     key = models.IntegerField(
         verbose_name=u'Key',
