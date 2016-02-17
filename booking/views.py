@@ -34,7 +34,7 @@ from booking.models import Unit
 from booking.models import OtherResource
 from booking.models import GymnasieLevel
 
-from booking.models import Room
+from booking.models import Room, Person
 from booking.models import PostCode, School
 from booking.models import Booking, Booker
 from booking.models import ResourceGymnasieFag, ResourceGrundskoleFag
@@ -45,7 +45,6 @@ from booking.forms import VisitStudyMaterialForm, BookingSubjectLevelForm
 from booking.forms import BookerForm
 from booking.forms import EmailTemplateForm, EmailTemplatePreviewContextForm
 from booking.forms import EmailComposeForm
-from booking.utils import full_email
 
 import urls
 
@@ -1002,6 +1001,10 @@ class VisitDetailView(DetailView):
 
 class VisitNotifyView(EmailComposeView):
 
+    # Keep these single-char
+    RECIPIENT_BOOKER = 'b'
+    RECIPIENT_PERSON = 'p'
+
     def dispatch(self, request, *args, **kwargs):
         self.recipients = []
         pk = kwargs['visit']
@@ -1009,18 +1012,37 @@ class VisitNotifyView(EmailComposeView):
         types = request.GET.get("to")
         if type(types) is not list:
             types = [types]
+
         if 'guests' in types:
             for booking in self.visit.booking_set.all():
-                email = full_email(booking.booker.email,
-                                   booking.booker.firstname + " " +
-                                   booking.booker.lastname)
-                self.recipients.append((booking.booker.id, email))
-                self.template_key = EmailTemplate.NOTIFY_BOOKERS
+                self.recipients.append(
+                    (
+                        "%s%d" % (self.RECIPIENT_BOOKER, booking.booker.id),
+                        booking.booker.get_full_email()
+                    )
+                )
+            self.template_key = EmailTemplate.NOTIFY_BOOKERS
+
+        if 'contacts' in types:
+            for person in self.visit.contact_persons.all():
+                self.recipients.append(
+                    (
+                        "%s%d" % (self.RECIPIENT_PERSON, person.id),
+                        person.get_full_email()
+                    )
+                )
+            self.template_key = EmailTemplate.NOTIFY_HOSTS
+
         self.template_context['visit'] = self.visit
         return super(VisitNotifyView, self).dispatch(request, *args, **kwargs)
 
     def lookup_recipients(self, recipient_ids):
-        return list(Booker.objects.filter(id__in=recipient_ids))
+        booker_ids = [id[1:] for id in recipient_ids
+                      if id[0] == self.RECIPIENT_BOOKER]
+        person_ids = [id[1:] for id in recipient_ids
+                      if id[0] == self.RECIPIENT_PERSON]
+        return list(Booker.objects.filter(id__in=booker_ids)) + \
+            list(Person.objects.filter(id__in=person_ids))
 
     def get_context_data(self, **kwargs):
         context = {}
