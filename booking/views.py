@@ -1181,7 +1181,9 @@ class VisitNotifyView(EmailComposeView):
             for booking in self.visit.booking_set.all():
                 self.recipients.append(
                     (
-                        "%s%s%d" % (self.RECIPIENT_BOOKER, self.RECIPIENT_SEPARATOR, booking.booker.id),
+                        "%s%s%d" % (self.RECIPIENT_BOOKER,
+                                    self.RECIPIENT_SEPARATOR,
+                                    booking.booker.id),
                         booking.booker.get_full_email()
                     )
                 )
@@ -1190,7 +1192,9 @@ class VisitNotifyView(EmailComposeView):
             for person in self.visit.contact_persons.all():
                 self.recipients.append(
                     (
-                        "%s%s%d" % (self.RECIPIENT_PERSON, self.RECIPIENT_SEPARATOR, person.id),
+                        "%s%s%d" % (self.RECIPIENT_PERSON,
+                                    self.RECIPIENT_SEPARATOR,
+                                    person.id),
                         person.get_full_email()
                     )
                 )
@@ -1216,7 +1220,9 @@ class VisitNotifyView(EmailComposeView):
             'guests': {
                 'label': _(u'Gæster'),
                 'items': {
-                    "%s%s%d" % (self.RECIPIENT_BOOKER, self.RECIPIENT_SEPARATOR, booking.booker.id):
+                    "%s%s%d" % (self.RECIPIENT_BOOKER,
+                                self.RECIPIENT_SEPARATOR,
+                                booking.booker.id):
                     booking.booker.get_full_email()
                     for booking in self.visit.booking_set.all()
                 }
@@ -1224,7 +1230,9 @@ class VisitNotifyView(EmailComposeView):
             'contacts': {
                 'label': _(u'Kontaktpersoner'),
                 'items': {
-                    "%s%s%d" % (self.RECIPIENT_PERSON, self.RECIPIENT_SEPARATOR, person.id):
+                    "%s%s%d" % (self.RECIPIENT_PERSON,
+                                self.RECIPIENT_SEPARATOR,
+                                person.id):
                     person.get_full_email()
                     for person in self.visit.contact_persons.all()
                 }
@@ -1253,10 +1261,11 @@ class BookingNotifyView(EmailComposeView):
 
         if 'guests' in types:
             self.recipients.append(
-                ("%s%s%d" % (self.RECIPIENT_BOOKER, self.RECIPIENT_SEPARATOR, self.booking.booker.id),
+                ("%s%s%d" % (self.RECIPIENT_BOOKER,
+                             self.RECIPIENT_SEPARATOR,
+                             self.booking.booker.id),
                  self.booking.booker.get_full_email())
             )
-
 
         try:  # see if there's a template key defined in the URL params
             self.template_key = int(request.GET.get("template", None))
@@ -1281,15 +1290,18 @@ class BookingNotifyView(EmailComposeView):
             'guests': {
                 'label': _(u'Gæster'),
                 'items': {
-                    "%s%s%d" % (self.RECIPIENT_BOOKER, self.RECIPIENT_SEPARATOR, self.booking.booker.id),
+                    "%s%s%d" % (self.RECIPIENT_BOOKER,
+                                self.RECIPIENT_SEPARATOR,
+                                self.booking.booker.id),
                     self.booking.booker.get_full_email()
                 }
             },
             'contacts': {
                 'label': _(u'Kontaktpersoner'),
                 'items': {
-                    "%s%s%d" % (self.RECIPIENT_PERSON, self.RECIPIENT_SEPARATOR, person.id):
-                        person.get_full_email()
+                    "%s%s%d" % (self.RECIPIENT_PERSON,
+                                self.RECIPIENT_SEPARATOR, person.id):
+                                    person.get_full_email()
                     for person in self.booking.visit.contact_persons.all()
                     }
             }
