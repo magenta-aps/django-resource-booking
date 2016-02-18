@@ -253,3 +253,27 @@ $(function() {
     $('#grundskolefag-list .glyphicon-remove').on('click', remove_elem)
     
 })(jQuery);
+
+(function($) {
+    $('select.needed-number-select').on('change', function() {
+        var $this = $(this),
+            val = parseInt($this.val()),
+            for_id = $this.attr('data-for-id'),
+            nr_container = $('#' + for_id + '-container'),
+            text_container = $('#' + for_id + '-textcontainer');
+
+        if (val > 0) {
+            nr_container.show();
+            text_container.hide();
+        } else {
+            nr_container.find('input[type=text]').val(val);
+            if (val == 0 || val == -2) {
+                nr_container.hide();
+                text_container.hide();
+            } else if (val == -1) {
+                nr_container.hide();
+                text_container.show();
+            }
+        }
+    }).trigger("change");
+})(jQuery);

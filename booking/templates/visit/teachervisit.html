@@ -33,6 +33,7 @@
         {% csrf_token %}
 
         {{ form.non_field_errors }}
+        {{ form.errors }}
 
         <div id="accordion" class="panel-group" aria-multiselectable="true" role="tablist">
 
