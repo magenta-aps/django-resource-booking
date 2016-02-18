@@ -1451,8 +1451,6 @@ class KUEmailMessage(models.Model):
                 except:
                     pass
 
-        print emails
-
         for email in emails.values():
             ctx = {
                 'unit': unit,
