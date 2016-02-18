@@ -192,9 +192,9 @@ class EmailComposeView(FormMixin, TemplateView):
             elif type == self.RECIPIENT_CUSTOM:
                 customs.append(id)
         return list(Booker.objects.filter(id__in=booker_ids)) + \
-               list(Person.objects.filter(id__in=person_ids)) + \
-               list(User.objects.filter(username__in=user_ids)) + \
-               customs
+            list(Person.objects.filter(id__in=person_ids)) + \
+            list(User.objects.filter(username__in=user_ids)) + \
+            customs
 
     def get_unit(self):
         return self.request.user.userprofile.unit
