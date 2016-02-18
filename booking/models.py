@@ -1501,20 +1501,32 @@ class KUEmailMessage(models.Model):
         emails = {}
         if type(recipients) is not list:
             recipients = [recipients]
+
         for recipient in recipients:
-            try:
-                address = recipient.get_email()
-                if address not in emails:
-                    email = {'address': address}
-                    try:
-                        name = recipient.get_name()
-                        email['name'] = name
-                        email['full'] = u"\"%s\" <%s>" % (name, address)
-                    except:
-                        email['full'] = address
-                    emails[address] = email
-            except:
-                pass
+            name = None
+            address = None
+            if isinstance(recipient, basestring):
+                address = recipient
+            elif isinstance(recipient, User):
+                name = recipient.get_full_name()
+                address = recipient.email
+            else:
+                try:
+                    name = recipient.get_name()
+                except:
+                    pass
+                try:
+                    address = recipient.get_email()
+                except:
+                    pass
+            if address is not None and address not in emails:
+                email = {'address': address}
+                if name is not None:
+                    email['name'] = name
+                    email['full'] = u"\"%s\" <%s>" % (name, address)
+                else:
+                    email['full'] = address
+                emails[address] = email
 
         for email in emails.values():
             ctx = {
@@ -1538,17 +1550,49 @@ class KUEmailMessage(models.Model):
 
 class EmailTemplate(models.Model):
 
-    BOOKING_CREATED = 1
-    NOTIFY_BOOKERS = 2
-    NOTIFY_HOSTS = 3
-    NOTIFY_BOOKER = 4
+    NOTIFY_GUEST__BOOKING_CREATED = 1  # ticket 13806
+    NOTIFY_HOST__BOOKING_CREATED = 2  # ticket 13807
+    NOTIFY_HOST__REQ_TEACHER_VOLUNTEER = 3  # ticket 13808
+    NOTIFY_HOST__REQ_HOST_VOLUNTEER = 4  # ticket 13809
+    NOTIFY_HOST__ASSOCIATED = 5  # ticket 13810
+    NOTIFY_HOST__REQ_ROOM = 6  # ticket 13811
+    NOTIFY_GUEST__GENERAL_MSG = 7  # ticket 13812
+    NOTIFY_HOST__BOOKING_COMPLETE = 8  # ticket 13813
+    NOTIFY_ALL__BOOKING_CANCELED = 9  # ticket 13814
+    NOTITY_ALL__BOOKING_REMINDER = 10  # ticket 13815
 
     key_choices = [
-        (BOOKING_CREATED, _(u'Booking created')),
-        (NOTIFY_BOOKERS, _(u'Message to bookers of a visit')),
-        (NOTIFY_HOSTS, _(u'Message to hosts of a visit')),
-        (NOTIFY_BOOKER, _(u'Message to a booker')),
+        (NOTIFY_GUEST__BOOKING_CREATED, _(u'Gæst: Booking oprettet')),
+        (NOTIFY_GUEST__GENERAL_MSG, _(u'Gæst: Generel besked')),
+        (NOTIFY_HOST__BOOKING_CREATED, _(u'Vært: Booking oprettet')),
+        (NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
+         _(u'Vært: Frivillige undervisere')),
+        (NOTIFY_HOST__REQ_HOST_VOLUNTEER, _(u'Vært: Frivillige værter')),
+        (NOTIFY_HOST__ASSOCIATED, _(u'Vært: Tilknyttet besøg')),
+        (NOTIFY_HOST__REQ_ROOM, _(u'Vært: Forespørg lokale')),
+        (NOTIFY_HOST__BOOKING_COMPLETE, _(u'Vært: Booking færdigplanlagt')),
+        (NOTIFY_ALL__BOOKING_CANCELED, _(u'Alle: Booking aflyst')),
+        (NOTITY_ALL__BOOKING_REMINDER, _(u'Alle: Reminder om booking')),
     ]
+    visit_key_choices = [  # Templates pertaining to visits
+        (key, label)
+        for (key, label) in key_choices
+        if key in [NOTIFY_GUEST__GENERAL_MSG]
+    ]
+    booking_key_choices = [  # Templates pertaining to bookings
+        (key, label)
+        for (key, label) in key_choices
+        if key in [NOTIFY_GUEST__BOOKING_CREATED,
+                   NOTIFY_HOST__BOOKING_CREATED,
+                   NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
+                   NOTIFY_HOST__REQ_HOST_VOLUNTEER,
+                   NOTIFY_HOST__ASSOCIATED,
+                   NOTIFY_HOST__BOOKING_COMPLETE,
+                   NOTIFY_ALL__BOOKING_CANCELED,
+                   NOTITY_ALL__BOOKING_REMINDER
+                   ]
+    ]
+
     key = models.IntegerField(
         verbose_name=u'Key',
         choices=key_choices,

@@ -5,6 +5,9 @@ import datetime
 from timedelta.helpers import parse, nice_repr
 from django.utils.translation import ugettext_lazy as _
 from booking.models import LOGACTION_DISPLAY_MAP
+from django.core.serializers import serialize
+from django.db.models.query import QuerySet
+import json
 
 
 @register.filter
@@ -96,3 +99,10 @@ def logaction_type_display(value):
         return LOGACTION_DISPLAY_MAP[value]
     else:
         return 'LOGACTION_%s' % value
+
+
+@register.filter
+def jsonify(object):
+    if isinstance(object, QuerySet):
+        return serialize('json', object)
+    return json.dumps(object)
