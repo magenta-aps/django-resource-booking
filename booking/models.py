@@ -1096,6 +1096,7 @@ class EmailTemplate(models.Model):
 
     @staticmethod
     def _expand(text, context, keep_placeholders=False):
+        text = text.replace("%20", " ")
         template = Template(unicode(text))
         if keep_placeholders:
             template.engine.string_if_invalid = "{{ %s }}"
