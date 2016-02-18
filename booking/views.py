@@ -10,8 +10,8 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
-from django.db.models import Count, Min
-from django.db.models import F
+from django.db.models import Count
+from django.db.models import Min
 from django.db.models import Q
 from django.http import Http404
 from django.http import HttpResponse
