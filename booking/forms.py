@@ -405,9 +405,9 @@ class EmailTemplateForm(forms.ModelForm):
 
     def __init__(self, user, *args, **kwargs):
         super(EmailTemplateForm, self).__init__(*args, **kwargs)
-        self.fields['unit'].choices = (
+        self.fields['unit'].choices = [(None, u'---------')] + [
             (x.pk, unicode(x))
-            for x in user.userprofile.get_unit_queryset())
+            for x in user.userprofile.get_unit_queryset()]
 
 
 class EmailTemplatePreviewContextEntryForm(forms.Form):
