@@ -1541,11 +1541,13 @@ class EmailTemplate(models.Model):
     BOOKING_CREATED = 1
     NOTIFY_BOOKERS = 2
     NOTIFY_HOSTS = 3
+    NOTIFY_BOOKER = 4
 
     key_choices = [
         (BOOKING_CREATED, _(u'Booking created')),
         (NOTIFY_BOOKERS, _(u'Message to bookers of a visit')),
         (NOTIFY_HOSTS, _(u'Message to hosts of a visit')),
+        (NOTIFY_BOOKER, _(u'Message to a booker')),
     ]
     key = models.IntegerField(
         verbose_name=u'Key',
@@ -1592,21 +1594,26 @@ class EmailTemplate(models.Model):
         return template.render(context)
 
     @staticmethod
-    def get_template(template_key, unit):
-        template = None
-        while unit is not None and template is None:
+    def get_template(template_key, unit, include_overridden=False):
+        templates = []
+        while unit is not None and (include_overridden or len(templates) == 0):
             try:
-                template = EmailTemplate.objects.filter(
+                templates.extend(EmailTemplate.objects.filter(
                     key=template_key,
                     unit=unit
-                )[0]
+                ).all())
             except:
                 pass
             unit = unit.parent
-        if template is None:
+        if include_overridden or len(templates) == 0:
             try:
-                template = EmailTemplate.objects.filter(key=template_key,
-                                                        unit__isnull=True)[0]
+                templates.extend(
+                    EmailTemplate.objects.filter(key=template_key,
+                                                 unit__isnull=True)
+                )
             except:
                 pass
-        return template
+        if include_overridden:
+            return templates
+        else:
+            return templates[0] if len(templates) > 0 else None
