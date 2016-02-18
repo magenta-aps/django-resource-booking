@@ -821,6 +821,26 @@ class Visit(Resource):
         verbose_name=_(u'Formular for beregning af antal undervisere')
     )
 
+    def get_needed_hosts_display(self):
+        val = self.needed_hosts
+        for v, text in self.teacher_number_choices:
+            if v == val:
+                if val == Visit.NEEDED_NUMBER_BY_TEXT:
+                    return '%s: %s' % (text, self.needed_hosts_text)
+                else:
+                    return text
+        return _(u'Fast antal: %s') % val
+
+    def get_needed_teachers_display(self):
+        val = self.needed_teachers
+        for v, text in self.teacher_number_choices:
+            if v == val:
+                if val == Visit.NEEDED_NUMBER_BY_TEXT:
+                    return '%s: %s' % (text, self.needed_teachers_text)
+                else:
+                    return text
+        return _(u'Fast antal: %s') % val
+
     def save(self, *args, **kwargs):
         # Save once to store relations
         super(Visit, self).save(*args, **kwargs)

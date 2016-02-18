@@ -8,9 +8,9 @@
         <div class="col-sm-10">
             <select name="needed_hosts_choice" class="form-control input-sm needed-number-select" data-for-id="{{ field.id_for_label }}">
                 {% for val, text in choices %}
-                <option value="{{ val }}"{% if form.needed_hosts.value == val %} selected="selected"{% endif %}>{{ text }}</option>
+                <option value="{{ val }}"{% if field.value == val %} selected="selected"{% endif %}>{{ text }}</option>
                 {% endfor %}
-                <option value="{{ field.value|default:"1" }}">Fast antal</option>
+                <option value="{{ field.value|default:"1" }}"{% if field.value > 0 %} selected="selected" {% endif %}>Fast antal</option>
             </select>
             <div id="{{ field.id_for_label }}-container">
                 {{ field }}
