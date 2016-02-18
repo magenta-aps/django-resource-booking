@@ -123,6 +123,20 @@
             </div>
 
             <div class="panel panel-default">
+                <div id="headingTeachersAndHosts" class="panel-heading" role="tab">
+                    <h4 class="panel-title">
+                        <a class="" aria-controls="collapseTeachersAndHosts" aria-expanded="false" href="#collapseTeachersAndHosts" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Værter og undervisere" %}</a><span class="caret"></span>
+                    </h4>
+                </div>
+                <div id="collapseTeachersAndHosts" class="panel-collapse collapse
+                {% if not object.pk or form.needed_hosts.errors or form.needed_hosts_text.errors or form.needed_teachers.errors or form.needed_teachers_text.errors %}in{% endif %}
+                " aria-labelledby="headingContact" role="tabpanel" aria-expanded="false" style="">
+                    {% include 'common/snippets/edit-needed-number.html' with field=form.needed_hosts textfield=form.needed_hosts_text choices=view.model.host_number_choices %}
+                    {% include 'common/snippets/edit-needed-number.html' with field=form.needed_teachers textfield=form.needed_teachers_text choices=view.model.teacher_number_choices %}
+                </div>
+            </div>
+
+            <div class="panel panel-default">
                 <div id="headingContact" class="panel-heading" role="tab">
                     <h4 class="panel-title">
                         <a class="" aria-controls="collapseContact" aria-expanded="false" href="#collapseContact" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Kontaktinformation" %}</a><span class="caret"></span>

@@ -82,7 +82,10 @@ class VisitForm(forms.ModelForm):
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'recurrences', 'duration', 'locality', 'rooms_assignment',
                   'rooms_needed', 'tour_available',
-                  'enabled', 'contact_persons', 'unit',)
+                  'enabled', 'contact_persons', 'unit',
+                  'needed_hosts', 'needed_hosts_text', 'needed_teachers',
+                  'needed_teachers_text',
+                  )
         widgets = {
             'title': TextInput(attrs={
                 'class': 'titlefield form-control input-sm',
@@ -125,10 +128,30 @@ class VisitForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        # Provide defaults for needed_-fields if not present in submit data.
+        if 'data' in kwargs:
+            kwargs['data']['needed_hosts'] = kwargs['data'].get(
+                'needed_teachers', 0
+            )
+            kwargs['data']['needed_teachers'] = kwargs['data'].get(
+                'needed_teachers', 0
+            )
+
         self.user = kwargs.pop('user')
         super(VisitForm, self).__init__(*args, **kwargs)
         self.fields['unit'].queryset = self.get_unit_query_set()
         self.fields['type'].widget = HiddenInput()
+
+        # Add classes to certain widgets
+        for x in ('needed_hosts', 'needed_hosts_text',
+                  'needed_teachers', 'needed_teachers_text'):
+            f = self.fields[x]
+            f.widget.attrs['class'] = " ".join([
+                x for x in (
+                    f.widget.attrs.get('class'),
+                    'form-control input-sm'
+                ) if x
+            ])
 
     def clean_type(self):
         instance = getattr(self, 'instance', None)
