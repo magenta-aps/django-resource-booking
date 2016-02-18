@@ -260,13 +260,24 @@ $(function() {
             val = parseInt($this.val()),
             for_id = $this.attr('data-for-id'),
             nr_container = $('#' + for_id + '-container'),
-            text_container = $('#' + for_id + '-textcontainer');
+            text_container = $('#' + for_id + '-textcontainer'),
+            input = nr_container.find("input").first();
 
         if (val > 0) {
             nr_container.show();
             text_container.hide();
+            if (input.val() < 0 ) {
+                if (input.attr('data-previous-value')) {
+                    input.val(input.attr('data-previous-value'));
+                } else {
+                    input.val(1);
+                }
+            }
         } else {
-            nr_container.find('input[type=text]').val(val);
+            if (input.val() > 0) {
+                input.attr('data-previous-value', input.val());
+            }
+            input.val(val);
             if (val == 0 || val == -2) {
                 nr_container.hide();
                 text_container.hide();

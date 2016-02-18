@@ -133,7 +133,7 @@ class VisitForm(forms.ModelForm):
         # Provide defaults for needed_-fields if not present in submit data.
         if 'data' in kwargs:
             kwargs['data']['needed_hosts'] = kwargs['data'].get(
-                'needed_teachers', 0
+                'needed_hosts', 0
             )
             kwargs['data']['needed_teachers'] = kwargs['data'].get(
                 'needed_teachers', 0
