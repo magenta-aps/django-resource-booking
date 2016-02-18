@@ -71,6 +71,9 @@ class UserProfile(models.Model):
     def can_create(self):
         return self.get_role() in EDIT_ROLES
 
+    def is_administrator(self):
+        return self.get_role() == ADMINISTRATOR
+
     def can_edit(self, item):
         role = self.get_role()
 

@@ -2,41 +2,8 @@
     <label for="grundskolefag-edit">Grundskolefag:</label>
 </div>
 
-<div class="col-sm-10 form-group form-inline">
-    <div style="border: 1px solid black" id="grundskolefag-edit">
-        <h1 style="border-bottom: 1px solid black; background: #eee">Tilføj nyt fag</h1>
-        <div>
-            <label for="grundskolefag-fag">Fag:</label>
-            <select name="grundskolefag-fag" id="grundskolefag-fag">
-                <option value="">-- Vælg grundskolefag --</option>
-                {% for fag in grundskolefag_choices %}
-                <option value="{{fag.pk}}">{{fag.name}}</option>
-                {% endfor %}
-            </select>
-
-            <label for="grundskolefag-minclass">Fra klassetrin:</label>
-            <select name="grundskolefag-minclass" id="grundskolefag-minclass">
-                <option value="" selected="selected">-- Vælg klassetrin --</option>
-                {% for trin in klassetrin_range %}
-                <option value="{{trin}}">{{trin}}</option>
-                {% endfor %}
-                <option value="10">10</option>
-            </select>
-
-            <label for="grundskolefag-maxclass">Til klassetrin:</label>
-            <select name="grundskolefag-maxclass" id="grundskolefag-maxclass">
-                <option value="">-- Vælg klassetrin --</option>
-                {% for trin in klassetrin_range %}
-                <option value="{{trin}}">{{trin}}</option>
-                {% endfor %}
-                <option value="10" selected="selected">10</option>
-            </select>
-
-            <input type="button" id="grundskolefag-add" value="Tilføj" />
-        </div>
-    </div>
-    <div style="border: 1px solid black">
-        <h1 style="border-bottom: 1px solid black; background: #eee">Valgte fag</h1>
+<div class="col-sm-10">
+    <div>
         <div id="grundskolefag-empty">Der er ikke valgt nogen fag</div>
         <script type="text/template" id="grundskolefag-item-template">
             <li>
@@ -55,4 +22,37 @@
         {% endfor %}
         </ul>
     </div>
+    <div id="grundskolefag-edit">
+        <div class="fagedit-group">
+            <label for="grundskolefag-fag">Tilføj fag:</label>
+            <select name="grundskolefag-fag" id="grundskolefag-fag">
+                <option value="">-- Vælg grundskolefag --</option>
+                {% for fag in grundskolefag_choices %}
+                <option value="{{fag.pk}}">{{fag.name}}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="fagedit-group">
+            <label for="grundskolefag-minclass">Fra klassetrin:</label>
+            <select name="grundskolefag-minclass" id="grundskolefag-minclass">
+                <option value="" selected="selected">-- Vælg klassetrin --</option>
+                {% for trin in klassetrin_range %}
+                <option value="{{trin}}">{{trin}}</option>
+                {% endfor %}
+                <option value="10">10</option>
+            </select>
+        </div>
+        <div class="fagedit-group">
+            <label for="grundskolefag-maxclass">Til klassetrin:</label>
+            <select name="grundskolefag-maxclass" id="grundskolefag-maxclass">
+                <option value="">-- Vælg klassetrin --</option>
+                {% for trin in klassetrin_range %}
+                <option value="{{trin}}">{{trin}}</option>
+                {% endfor %}
+                <option value="10" selected="selected">10</option>
+            </select>
+        </div>
+        <input type="button" id="grundskolefag-add" value="Tilføj" />
+    </div>
+    
 </div>

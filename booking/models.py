@@ -1,5 +1,5 @@
 # encoding: utf-8
-
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from djorm_pgfulltext.models import SearchManager
 from djorm_pgfulltext.fields import VectorField
@@ -392,6 +392,14 @@ class Resource(models.Model):
             texts.append(t.name)
 
         return "\n".join(texts)
+
+    def as_searchtext(self):
+        return " ".join([unicode(x) for x in [
+            self.title,
+            self.description,
+            self.mouseover_description,
+            self.extra_search_text
+        ] if x])
 
     def get_dates_display(self):
         if self.visit:
@@ -880,13 +888,55 @@ class School(models.Model):
         null=True
     )
 
+    ELEMENTARY_SCHOOL = Subject.SUBJECT_TYPE_GRUNDSKOLE
+    GYMNASIE = Subject.SUBJECT_TYPE_GYMNASIE
+    type_choices = (
+        (ELEMENTARY_SCHOOL, u'Folkeskole'),
+        (GYMNASIE, u'Gymnasie')
+    )
+
+    type = models.IntegerField(
+        choices=type_choices,
+        default=1,
+        verbose_name=_(u'Uddannelsestype')
+    )
+
     def __unicode__(self):
         return self.name
 
     @staticmethod
-    def search(query):
+    def search(query, type=None):
         query = query.lower()
-        return School.objects.filter(name__icontains=query)
+        qs = School.objects.filter(name__icontains=query)
+        if type is not None:
+            try:
+                type = int(type)
+                if type in [id for id, title in School.type_choices]:
+                    qs = qs.filter(type=type)
+            except ValueError:
+                pass
+        return qs
+
+    @staticmethod
+    def create_defaults():
+        from booking.data import schools
+        for data, type in [
+                (schools.elementary_schools, School.ELEMENTARY_SCHOOL),
+                (schools.high_schools, School.GYMNASIE)]:
+            for name, postnr in data:
+                try:
+                    school = School.objects.get(name=name,
+                                                postcode__number=postnr)
+                    if school.type != type:
+                        school.type = type
+                        school.save()
+                except ObjectDoesNotExist:
+                    try:
+                        postcode = PostCode.get(postnr)
+                        School(name=name, postcode=postcode, type=type).save()
+                    except ObjectDoesNotExist:
+                        print "Warning: Postcode %d not found in database. " \
+                              "Not adding school %s" % (postcode, name)
 
 
 class Booker(models.Model):
@@ -928,6 +978,7 @@ class Booker(models.Model):
     line = models.IntegerField(
         choices=line_choices,
         blank=True,
+        null=True,
         verbose_name=u'Linje',
     )
 
@@ -936,7 +987,36 @@ class Booker(models.Model):
     g3 = 3
     student = 4
     other = 5
+    f1 = 7
+    f2 = 8
+    f3 = 9
+    f4 = 10
+    f5 = 11
+    f6 = 12
+    f7 = 13
+    f8 = 14
+    f9 = 15
+    f10 = 16
+
+    level_map = {
+        Subject.SUBJECT_TYPE_GRUNDSKOLE: [f1, f2, f3, f4, f5, f6, f7,
+                                          f8, f9, f10, other],
+        Subject.SUBJECT_TYPE_GYMNASIE: [g1, g2, g3, student, other],
+        Subject.SUBJECT_TYPE_BOTH: [f1, f2, f3, f4, f5, f6, f7, f8, f9, f10,
+                                    g1, g2, g3, student, other]
+    }
+
     level_choices = (
+        (f1, _(u'1. klasse')),
+        (f2, _(u'2. klasse')),
+        (f3, _(u'3. klasse')),
+        (f4, _(u'4. klasse')),
+        (f5, _(u'5. klasse')),
+        (f6, _(u'6. klasse')),
+        (f7, _(u'7. klasse')),
+        (f8, _(u'8. klasse')),
+        (f9, _(u'9. klasse')),
+        (f10, _(u'10. klasse')),
         (g1, _(u'1.g')),
         (g2, _(u'2.g')),
         (g3, _(u'3.g')),
@@ -945,7 +1025,7 @@ class Booker(models.Model):
     )
     level = models.IntegerField(
         choices=level_choices,
-        blank=True,
+        blank=False,
         verbose_name=u'Niveau'
     )
 
@@ -956,13 +1036,24 @@ class Booker(models.Model):
     )
 
     attendee_count = models.IntegerField(
-        blank=False,
+        blank=True,
+        null=True,
         verbose_name=u'Antal deltagere'
     )
     notes = models.TextField(
         blank=True,
         verbose_name=u'Bemærkninger'
     )
+
+    def as_searchtext(self):
+        return " ".join([unicode(x) for x in [
+            self.firstname,
+            self.lastname,
+            self.email,
+            self.phone,
+            self.get_level_display(),
+            self.school
+        ] if x])
 
     def __unicode__(self):
         if self.email is not None and self.email != "":
@@ -971,11 +1062,60 @@ class Booker(models.Model):
 
 
 class Booking(models.Model):
+    objects = SearchManager(
+        fields=('extra_search_text'),
+        config='pg_catalog.danish',
+        auto_update_search_field=True
+    )
+
     visit = models.ForeignKey(Visit, null=True)
     booker = models.ForeignKey(Booker)
 
+    # ts_vector field for fulltext search
+    search_index = VectorField()
+
+    # Field for concatenating search data from relations
+    extra_search_text = models.TextField(
+        blank=True,
+        default='',
+        verbose_name=_(u'Tekst-værdier til fritekstsøgning'),
+        editable=False
+    )
+
+    @classmethod
+    def queryset_for_user(cls, user, qs=None):
+        if not user or not user.userprofile:
+            return Booking.objects.none()
+
+        if qs is None:
+            qs = Booking.objects.all()
+
+        return qs.filter(visit__unit=user.userprofile.get_unit_queryset())
+
+    def as_searchtext(self):
+        result = []
+
+        if self.visit:
+            result.append(self.visit.as_searchtext())
+
+        if self.booker:
+            result.append(self.booker.as_searchtext())
+
+        return " ".join(result)
+
+    def save(self, *args, **kwargs):
+        # Save once to store relations
+        super(Booking, self).save(*args, **kwargs)
+
+        # Update search_text
+        self.extra_search_text = self.as_searchtext()
+
+        # Do the final save
+        super(Booking, self).save(*args, **kwargs)
+
 
 class ClassBooking(Booking):
+
     time = models.DateTimeField(
         null=True,
         blank=True,
@@ -993,7 +1133,16 @@ class ClassBooking(Booking):
 
 
 class TeacherBooking(Booking):
+
     subjects = models.ManyToManyField(Subject)
+
+    def as_searchtext(self):
+        result = [super(TeacherBooking, self).as_searchtext()]
+
+        for x in self.subjects.all():
+            result.append(x.name)
+
+        return " ".join(result)
 
 
 class BookingSubjectLevel(models.Model):

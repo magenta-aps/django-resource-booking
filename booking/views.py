@@ -31,12 +31,14 @@ from booking.models import OtherResource, Visit, VisitOccurrence, StudyMaterial
 from booking.models import Resource, Subject, GymnasieLevel
 from booking.models import Room
 from booking.models import PostCode, School
-from booking.models import Booking
+from booking.models import Booking, Booker
 from booking.models import ResourceGymnasieFag, ResourceGrundskoleFag
 from booking.forms import ResourceInitialForm, OtherResourceForm, VisitForm
 from booking.forms import ClassBookingForm, TeacherBookingForm
 from booking.forms import VisitStudyMaterialForm, BookingSubjectLevelForm
 from booking.forms import BookerForm
+
+import urls
 
 
 i18n_test = _(u"Dette tester oversættelses-systemet")
@@ -318,8 +320,21 @@ class SearchView(ListView):
 
         context['breadcrumbs'] = [
             {'url': reverse('search'), 'text': _(u'Søgning')},
-            {'text': _(u'Søgeresultatliste')},
+            {'text': _(u'Søgeresultat')},
         ]
+
+        querylist = []
+        for key in ['q', 'page', 'pagesize', 't', 'a', 'f', 'g', 'from', 'to']:
+            values = self.request.GET.getlist(key)
+            if values is not None and len(values) > 0:
+                for value in values:
+                    if value is not None and len(unicode(value)) > 0:
+                        querylist.append("%s=%s" % (key, value))
+        if len(querylist) > 0:
+            context['fullquery'] = reverse('search') + \
+                "?" + "&".join(querylist)
+        else:
+            context['fullquery'] = None
 
         context.update(kwargs)
         return super(SearchView, self).get_context_data(**context)
@@ -618,7 +633,8 @@ class OtherResourceDetailView(DetailView):
 
         context['breadcrumbs'] = [
             {'url': reverse('search'), 'text': _(u'Søgning')},
-            {'url': '#', 'text': _(u'Søgeresultatliste')},
+            {'url': self.request.GET.get("search", reverse('search')),
+             'text': _(u'Søgeresultatliste')},
             {'text': _(u'Detaljevisning')},
         ]
 
@@ -855,8 +871,9 @@ class VisitDetailView(DetailView):
 
         context['breadcrumbs'] = [
             {'url': reverse('search'), 'text': _(u'Søgning')},
-            {'url': '#', 'text': _(u'Søgeresultatliste')},
-            {'text': _(u'Detaljevisning')},
+            {'url': self.request.GET.get("search", reverse('search')),
+             'text': _(u'Søgeresultatliste')},
+            {'text': _(u'Om tilbuddet')},
         ]
 
         context.update(kwargs)
@@ -955,11 +972,15 @@ class PostcodeView(View):
 class SchoolView(View):
     def get(self, request, *args, **kwargs):
         query = request.GET['q']
-        items = School.search(query)
+        type = request.GET.get('t')
+        items = School.search(query, type)
         json = {'schools':
                 [
                     {'name': item.name,
-                     'postcode': item.postcode.number} for item in items
+                     'postcode': item.postcode.number
+                     if item.postcode is not None else None,
+                     'type': item.type}
+                    for item in items
                 ]
                 }
         return JsonResponse(json)
@@ -981,7 +1002,10 @@ class BookingView(UpdateView):
         if self.visit is None:
             return bad_request(request)
 
-        data = {'visit': self.visit}
+        data = {
+            'visit': self.visit,
+            'level_map': Booker.level_map
+        }
 
         self.object = Booking()
         data.update(self.get_forms())
@@ -994,7 +1018,10 @@ class BookingView(UpdateView):
         if self.visit is None:
             return bad_request(request)
 
-        data = {'visit': self.visit}
+        data = {
+            'visit': self.visit,
+            'level_map': Booker.level_map
+        }
 
         self.object = Booking()
         forms = self.get_forms(request.POST)
@@ -1084,3 +1111,133 @@ class BookingSuccessView(TemplateView):
         return self.render_to_response(
             self.get_context_data(**data)
         )
+
+
+class EmbedcodesView(TemplateView):
+    template_name = "embedcodes.html"
+
+    def get_context_data(self, **kwargs):
+        context = {}
+
+        embed_url = 'embed/' + kwargs['embed_url']
+
+        # We only want to test the part before ? (or its encoded value, %3F):
+        test_url = embed_url.split('?', 1)[0]
+        test_url = test_url.split('%3F', 1)[0]
+
+        can_embed = False
+
+        for x in urls.embedpatterns:
+            if x.regex.match(test_url):
+                can_embed = True
+                break
+
+        context['can_embed'] = can_embed
+        context['full_url'] = self.request.build_absolute_uri('/' + embed_url)
+
+        context['breadcrumbs'] = [
+            {
+                'url': '/embedcodes/',
+                'text': 'Indlering af side'
+            },
+            {
+                'url': self.request.path,
+                'text': '/' + kwargs['embed_url']
+            }
+        ]
+
+        context.update(kwargs)
+
+        return super(EmbedcodesView, self).get_context_data(**context)
+
+
+class BookingSearchView(LoginRequiredMixin, ListView):
+    model = Booking
+    template_name = "booking/searchresult.html"
+    context_object_name = "results"
+    paginate_by = 10
+
+    def get_date_from_request(self, queryparam):
+        val = self.request.GET.get(queryparam)
+        if not val:
+            return None
+        try:
+            val = datetime.strptime(val, '%d-%m-%Y')
+            val = timezone.make_aware(val)
+        except Exception:
+            val = None
+        return val
+
+    def get_queryset(self):
+        searchexpression = self.request.GET.get("q", "")
+
+        # Filter by searchexpression
+        qs = self.model.objects.search(searchexpression)
+
+        # Filter by user access
+        qs = Booking.queryset_for_user(self.request.user, qs)
+
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = {}
+
+        # Store the querystring without the page and pagesize arguments
+        qdict = self.request.GET.copy()
+
+        if "page" in qdict:
+            qdict.pop("page")
+        if "pagesize" in qdict:
+            qdict.pop("pagesize")
+
+        context["qstring"] = qdict.urlencode()
+
+        context['pagesizes'] = [5, 10, 15, 20]
+
+        if self.request.user.userprofile.is_administrator():
+            context['unit_limit_text'] = \
+                u'Alle enheder (administrator-søgning)'
+        else:
+            context['unit_limit_text'] = \
+                u'Bookinger relateret til enheden %s' % (
+                    self.request.user.userprofile.unit
+                )
+
+        context['breadcrumbs'] = [
+            {
+                'url': reverse('booking-search'),
+                'text': _(u'Bookinger')
+            },
+            {'text': _(u'Søgeresultatliste')},
+        ]
+
+        context.update(kwargs)
+
+        return super(BookingSearchView, self).get_context_data(**context)
+
+    def get_paginate_by(self, queryset):
+        size = self.request.GET.get("pagesize", 10)
+
+        if size == "all":
+            return None
+
+        return size
+
+
+class BookingDetailView(DetailView):
+    """Display Booking details"""
+    model = Booking
+    template_name = 'booking/details.html'
+
+    def get_context_data(self, **kwargs):
+        context = {}
+
+        context['breadcrumbs'] = [
+            {'url': reverse('search'), 'text': _(u'Søgning')},
+            {'url': '#', 'text': _(u'Søgeresultatliste')},
+            {'text': _(u'Detaljevisning')},
+        ]
+
+        context.update(kwargs)
+
+        return super(BookingDetailView, self).get_context_data(**context)
