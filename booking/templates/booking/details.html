@@ -23,6 +23,24 @@
                 </div>
             </div>
 
+            {% if can_edit %}
+                <div class="pull-right dropdown">
+                    <button class="btn btn-primary dropdown-toggle" type="button" id="sendNotification" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        {% trans 'Send besked' %}
+                        <span class="caret"/>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="sendNotification">
+                        <li><a href="{% url 'visit-notify' object.pk %}">{% trans 'Ingen skabelon' %}</a></li>
+                        {% if EmailTemplate.key_choices %}
+                            <li role="separator" class="divider"></li>
+                            {% for id, label in EmailTemplate.booking_key_choices %}
+                                <li><a href="{% url 'visit-notify' object.pk %}?template={{ id }}">{{ label }}</a></li>
+                            {% endfor %}
+                        {% endif %}
+                    </ul>
+                </div>
+            {% endif %}
+
             <dl class="dl-horizontal">
 
                 <dt>{% trans 'Navn:' %}</dt>
