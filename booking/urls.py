@@ -11,13 +11,13 @@ from booking.views import BookingView, BookingSuccessView, BookingSearchView
 from booking.views import EditOtherResourceView, OtherResourceDetailView
 from booking.views import EditVisitView, VisitDetailView, VisitNotifyView
 from booking.views import SearchView, EmbedcodesView
-from booking.views import BookingDetailView, ChangeBookingStatusView
-from booking.views import ChangeBookingTeachersView, ChangeBookingHostsView
-from booking.views import ChangeBookingRoomsView, ChangeBookingCommentsView
-from booking.views import BookingAddLogEntryView
+from booking.views import BookingDetailView, BookingAddLogEntryView
+from booking.views import BookingNotifyView
+from booking.views import ChangeBookingCommentsView, ChangeBookingHostsView
+from booking.views import ChangeBookingRoomsView, ChangeBookingStatusView
+from booking.views import ChangeBookingTeachersView
 from booking.views import EmailTemplateListView, EmailTemplateEditView
 from booking.views import EmailTemplateDetailView, EmailTemplateDeleteView
-from booking.views import BookingNotifyView
 
 from django.views.generic import TemplateView
 

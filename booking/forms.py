@@ -12,6 +12,7 @@ from django.forms import TextInput, NumberInput, URLInput, Textarea, Select
 from django.forms import HiddenInput
 from django.utils.translation import ugettext_lazy as _
 from tinymce.widgets import TinyMCE
+from .fields import ExtensibleMultipleChoiceField
 
 
 class UnitTypeForm(forms.ModelForm):
@@ -427,9 +428,9 @@ class EmailTemplateForm(forms.ModelForm):
 
     def __init__(self, user, *args, **kwargs):
         super(EmailTemplateForm, self).__init__(*args, **kwargs)
-        self.fields['unit'].choices = (
+        self.fields['unit'].choices = [(None, u'---------')] + [
             (x.pk, unicode(x))
-            for x in user.userprofile.get_unit_queryset())
+            for x in user.userprofile.get_unit_queryset()]
 
 
 class EmailTemplatePreviewContextEntryForm(forms.Form):
@@ -481,7 +482,7 @@ class BaseEmailComposeForm(forms.Form):
 
 class EmailComposeForm(BaseEmailComposeForm):
 
-    recipients = forms.MultipleChoiceField(
+    recipients = ExtensibleMultipleChoiceField(
         label=_(u'Modtagere'),
         widget=CheckboxSelectMultiple
     )
