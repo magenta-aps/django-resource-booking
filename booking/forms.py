@@ -324,7 +324,8 @@ class ClassBookingForm(BookingForm):
         model = ClassBooking
         fields = ('tour_desired',)
 
-    time = forms.ChoiceField(
+    time = forms.ModelChoiceField(
+        queryset=VisitOccurrence.objects.all(),
         widget=Select(
             attrs={'class': 'selectpicker form-control'}
         ),
@@ -361,10 +362,10 @@ class ClassBookingForm(BookingForm):
         booking = super(ClassBookingForm, self).save(commit=False)
         data = self.cleaned_data
         if self.scheduled:
-            occurrence_id = data.get("time")
+            occurrence_id = data.get("time").id
             try:
                 occurrence = VisitOccurrence.objects.get(id=occurrence_id)
-                booking.time = occurrence.start_datetime
+                booking.time_id = occurrence.id
             except:
                 pass
         if 'tour_desired' not in data:
@@ -404,6 +405,7 @@ class EmailTemplateForm(forms.ModelForm):
         model = EmailTemplate
         fields = ('key', 'subject', 'body', 'unit')
         widgets = {
+            'subject': TextInput(attrs={'class': 'form-control'}),
             'body': TinyMCE(attrs={'rows': 10, 'cols': 90}),
         }
 
@@ -450,3 +452,25 @@ class EmailTemplatePreviewContextEntryForm(forms.Form):
 EmailTemplatePreviewContextForm = formset_factory(
     EmailTemplatePreviewContextEntryForm
 )
+
+
+class BaseEmailComposeForm(forms.Form):
+
+    body = forms.CharField(
+        max_length=65584,
+        widget=TinyMCE(attrs={'rows': 10, 'cols': 90}),
+        label=_(u'Tekst')
+    )
+
+
+class EmailComposeForm(BaseEmailComposeForm):
+
+    recipients = forms.MultipleChoiceField(
+        label=_(u'Modtagere'),
+        widget=CheckboxSelectMultiple
+    )
+
+    subject = forms.CharField(
+        max_length=77,
+        label=_(u'Emne')
+    )
