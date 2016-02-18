@@ -152,7 +152,7 @@
             }
 
             var custom = $("<input>");
-            custom.attr({type:'email', placeholder:'{% trans 'Indtast email' %}'});
+            custom.attr({type:'email', placeholder:'{% trans 'Indtast email-adresse' %}'});
             groupContainer.append(custom);
             custom.keydown(function(event){
                 if (event.keyCode == 13) {
@@ -172,6 +172,14 @@
                 if (emailRegex.test(address)) {
                     addRecipient(customPrefix + address, address);
                 }
+            });
+
+            var clear = $("<button>");
+            clear.attr({type:"button"});
+            clear.text("{% trans 'Ryd' %}")
+            groupContainer.append(clear);
+            clear.click(function(){
+                recipientContainer.empty();
             });
         });
         //-->
