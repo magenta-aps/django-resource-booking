@@ -10,7 +10,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
-from django.db.models import Count
+from django.db.models import Count, Min
 from django.db.models import F
 from django.db.models import Q
 from django.http import Http404
@@ -163,13 +163,16 @@ class SearchView(ListView):
             # Only do date matching on resources that are actual visits
             qs = qs.filter(Q(visit__isnull=True) | date_cond)
 
+            qs = qs.distinct()
+
             self.base_queryset = qs
 
         return self.base_queryset
 
     def annotate(self, qs):
         return qs.annotate(
-            occ_starttime=F('visit__visitoccurrence__start_datetime')
+            num_occurences=Count('visit__visitoccurrence__pk'),
+            first_occurence=Min('visit__visitoccurrence__start_datetime')
         )
 
     def get_filters(self):
@@ -219,8 +222,12 @@ class SearchView(ListView):
             if not k.startswith(facet_field):
                 new_filters[k] = v
 
-        qs = self.get_base_queryset().filter(**new_filters)
-        qs = qs.values(facet_field).annotate(hits=Count("pk"))
+        base_qs = self.get_base_queryset().filter(**new_filters)
+
+        qs = Resource.objects.filter(
+            pk__in=base_qs
+        ).values(facet_field).annotate(hits=Count("pk"))
+
         for item in qs:
             hits[item[facet_field]] = item["hits"]
 

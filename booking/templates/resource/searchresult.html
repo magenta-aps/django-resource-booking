@@ -142,7 +142,18 @@
                                     </ul>
                                 </li>
                                 {% endif %}
-                                <li><strong>Hvornår: </strong><span class="type-offer">{% if res.occ_starttime %}{{ res.occ_starttime|date:"d. m. Y" }}  kl. {{ res.occ_starttime|date:"H:i" }}{% else %}-{% endif %}</span></li>
+                                {% if res.num_occurences %}
+                                <li>
+                                    <strong>Hvornår: </strong>
+                                    <span class="type-offer">
+                                        {% if res.num_occurences == 1 %}
+                                            {{ res.first_occurence|date:"d. m. Y" }} kl. {{ res.first_occurence|date:"H:i" }}
+                                        {% else %}
+                                            {{ res.num_occurences }} mulige tidspunkter, første gang {{ res.first_occurence|date:"d. m. Y" }} kl. {{ res.first_occurence|date:"H:i" }}
+                                        {% endif %}
+                                    </span>
+                                </li>
+                                {% endif %}
                                 <li><strong>Hvor: </strong><span class="type-offer">{{ res.display_locality }}</span></li>
                             </ul>
                         </div>
