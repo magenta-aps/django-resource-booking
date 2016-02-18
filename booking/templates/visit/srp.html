@@ -77,13 +77,12 @@
                     </h4>
                 </div>
                 <div id="collapseAudience" class="panel-collapse collapse
-                    {% if not object.pk or form.audience.errors or form.institution_level.errors or form.level.errors or form.class_level_min.errors or form.class_level_max.errors or form.minimum_number_of_visitors.errors or form.maximum_number_of_visitors.errors or form.subjects.errors %}in{% endif %}
+                    {% if not object.pk or form.audience.errors or form.institution_level.errors or form.level.errors or form.class_level_min.errors or form.class_level_max.errors or form.subjects.errors %}in{% endif %}
                     " aria-labelledby="headingAudience" role="tabpanel" aria-expanded="true" style="">
                     <div class="panel-body">
                         {% include 'resource/fields/audience.html' %}
                         {% include 'resource/fields/institution_level.html' %}
                         {% include 'resource/fields/subjects.html' %}
-                        {% include 'resource/fields/visitors.html' %}
                     </div>
                 </div>
             </div>
@@ -95,11 +94,10 @@
                     </h4>
                 </div>
                 <div id="collapseTimeDuration" class="panel-collapse collapse
-                {% if not object.pk or form.time.errors or form.duration.errors %}in{% endif %}
+                {% if not object.pk or form.time.errors %}in{% endif %}
                 " aria-labelledby="headingTimeDuration" role="tabpanel" aria-expanded="false" style="">
                     <div class="panel-body">
                         {% include 'resource/fields/time.html' %}
-                        {% include 'resource/fields/duration.html' %}
                     </div>
                 </div>
             </div>
@@ -127,11 +125,10 @@
                     </h4>
                 </div>
                 <div id="collapseContact" class="panel-collapse collapse
-                {% if not object.pk or form.enabled.errors or form.contact_persons.errors %}in{% endif %}
+                {% if not object.pk or form.contact_persons.errors %}in{% endif %}
                 " aria-labelledby="headingContact" role="tabpanel" aria-expanded="false" style="">
                     <div class="panel-body">
                         {% include 'resource/fields/unit.html' %}
-                        {% include 'resource/fields/enabled.html' %}
                         {% include 'resource/fields/contact.html' %}
                     </div>
                 </div>

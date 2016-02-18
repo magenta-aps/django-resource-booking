@@ -36,7 +36,7 @@ class OtherResourceForm(forms.ModelForm):
 
     class Meta:
         model = OtherResource
-        fields = ('title', 'teaser', 'description', 'link',
+        fields = ('title', 'teaser', 'description',
                   'type', 'tags', 'comment',
                   'institution_level', 'topics', 'audience',
                   'enabled', 'unit',)
@@ -57,7 +57,6 @@ class OtherResourceForm(forms.ModelForm):
             'tags': CheckboxSelectMultiple(),
             'topics': CheckboxSelectMultiple(),
             'audience': RadioSelect(),
-            'link': URLInput(),
         }
 
     def __init__(self, *args, **kwargs):
