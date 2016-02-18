@@ -35,7 +35,7 @@
                         {% if EmailTemplate.key_choices %}
                             <li role="separator" class="divider"></li>
                             {% for id, label in EmailTemplate.booking_key_choices %}
-                                <li><a href="{% url 'visit-notify' object.pk %}?template={{ id }}">{{ label }}</a></li>
+                                <li><a href="{% url 'booking-notify' object.pk %}?template={{ id }}">{{ label }}</a></li>
                             {% endfor %}
                         {% endif %}
                     </ul>

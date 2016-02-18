@@ -9,6 +9,7 @@ from dateutil.rrule import rrulestr
 from django.contrib import messages
 from django.contrib.admin.models import LogEntry
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
@@ -50,6 +51,7 @@ from booking.forms import VisitStudyMaterialForm, BookingSubjectLevelForm
 from booking.forms import BookerForm
 from booking.forms import EmailTemplateForm, EmailTemplatePreviewContextForm
 from booking.forms import EmailComposeForm
+from booking.utils import full_email
 
 import urls
 
@@ -123,6 +125,7 @@ class EmailComposeView(FormMixin, TemplateView):
 
     RECIPIENT_BOOKER = 'booker'
     RECIPIENT_PERSON = 'person'
+    RECIPIENT_USER = 'user'
     RECIPIENT_CUSTOM = 'custom'
     RECIPIENT_SEPARATOR = ':'
 
@@ -176,6 +179,7 @@ class EmailComposeView(FormMixin, TemplateView):
     def lookup_recipients(self, recipient_ids):
         booker_ids = []
         person_ids = []
+        user_ids = []
         customs = []
         for value in recipient_ids:
             (type, id) = value.split(self.RECIPIENT_SEPARATOR, 1)
@@ -183,11 +187,14 @@ class EmailComposeView(FormMixin, TemplateView):
                 booker_ids.append(id)
             elif type == self.RECIPIENT_PERSON:
                 person_ids.append(id)
+            elif type == self.RECIPIENT_USER:
+                user_ids.append(id)
             elif type == self.RECIPIENT_CUSTOM:
                 customs.append(id)
         return list(Booker.objects.filter(id__in=booker_ids)) + \
-            list(Person.objects.filter(id__in=person_ids)) + \
-            customs
+               list(Person.objects.filter(id__in=person_ids)) + \
+               list(User.objects.filter(username__in=user_ids)) + \
+               customs
 
     def get_unit(self):
         return self.request.user.userprofile.unit
@@ -1303,6 +1310,28 @@ class BookingNotifyView(EmailComposeView):
                                 self.RECIPIENT_SEPARATOR, person.id):
                                     person.get_full_email()
                     for person in self.booking.visit.contact_persons.all()
+                }
+            },
+            'hosts': {
+                'label': _(u'Værter'),
+                'items': {
+                    "%s%s%s" % (self.RECIPIENT_USER,
+                                self.RECIPIENT_SEPARATOR,
+                                user.username):
+                    full_email(user.email, user.get_full_name())
+                    for user in self.booking.hosts.all()
+                    if user.email is not None
+                    }
+            },
+            'teachers': {
+                'label': _(u'Undervisere'),
+                'items': {
+                    "%s%s%s" % (self.RECIPIENT_USER,
+                                self.RECIPIENT_SEPARATOR,
+                                user.username):
+                    full_email(user.email, user.get_full_name())
+                    for user in self.booking.teachers.all()
+                    if user.email is not None
                     }
             }
         }

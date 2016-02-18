@@ -1431,25 +1431,32 @@ class KUEmailMessage(models.Model):
         emails = {}
         if type(recipients) is not list:
             recipients = [recipients]
+
         for recipient in recipients:
+            name = None
+            address = None
             if isinstance(recipient, basestring):
                 address = recipient
-                if address not in emails:
-                    emails[address] = {'address': address, 'full': address}
+            elif isinstance(recipient, User):
+                name = recipient.get_full_name()
+                address = recipient.email
             else:
                 try:
-                    address = recipient.get_email()
-                    if address not in emails:
-                        email = {'address': address}
-                        try:
-                            name = recipient.get_name()
-                            email['name'] = name
-                            email['full'] = u"\"%s\" <%s>" % (name, address)
-                        except:
-                            email['full'] = address
-                        emails[address] = email
+                    name = recipient.get_name()
                 except:
                     pass
+                try:
+                    address = recipient.get_email()
+                except:
+                    pass
+            if address is not None and address not in emails:
+                email = {'address': address}
+                if name is not None:
+                    email['name'] = name
+                    email['full'] = u"\"%s\" <%s>" % (name, address)
+                else:
+                    email['full'] = address
+                emails[address] = email
 
         for email in emails.values():
             ctx = {
