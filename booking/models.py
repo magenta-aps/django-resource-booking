@@ -813,6 +813,69 @@ class Visit(Resource):
         verbose_name=_(u'Mulighed for rundvisning')
     )
 
+    NEEDED_NUMBER_NONE = 0
+    NEEDED_NUMBER_BY_TEXT = -1
+    NEEDED_NUMBER_BY_BOOKING = -2
+    NEEDED_NUMBER_SPECIFIED = -3
+
+    host_number_choices = (
+        (NEEDED_NUMBER_NONE, _(u'Tilbuddet kræver ikke værter')),
+        (
+            NEEDED_NUMBER_BY_TEXT,
+            _(u'Beregnet ud fra eksempelvis antal deltagere')
+        ),
+        (NEEDED_NUMBER_BY_BOOKING, _(u'Besluttes på det enkelte besøg'))
+    )
+
+    needed_hosts = models.IntegerField(
+        default=0,
+        verbose_name=_(u'Nødvendigt antal værter')
+    )
+    needed_hosts_text = models.CharField(
+        blank=True,
+        max_length=255,
+        verbose_name=_(u'Formular for beregning af antal værter')
+    )
+
+    teacher_number_choices = (
+        (NEEDED_NUMBER_NONE, _(u'Tilbuddet kræver ikke undervisere')),
+        (
+            NEEDED_NUMBER_BY_TEXT,
+            _(u'Beregnet ud fra eksempelvis antal deltagere')
+        ),
+        (NEEDED_NUMBER_BY_BOOKING, _(u'Besluttes på det enkelte besøg'))
+    )
+
+    needed_teachers = models.IntegerField(
+        default=0,
+        verbose_name=_(u'Nødvendigt antal undervisere')
+    )
+    needed_teachers_text = models.CharField(
+        blank=True,
+        max_length=255,
+        verbose_name=_(u'Formular for beregning af antal undervisere')
+    )
+
+    def get_needed_hosts_display(self):
+        val = self.needed_hosts
+        for v, text in self.teacher_number_choices:
+            if v == val:
+                if val == Visit.NEEDED_NUMBER_BY_TEXT:
+                    return '%s: %s' % (text, self.needed_hosts_text)
+                else:
+                    return text
+        return _(u'Fast antal: %s') % val
+
+    def get_needed_teachers_display(self):
+        val = self.needed_teachers
+        for v, text in self.teacher_number_choices:
+            if v == val:
+                if val == Visit.NEEDED_NUMBER_BY_TEXT:
+                    return '%s: %s' % (text, self.needed_teachers_text)
+                else:
+                    return text
+        return _(u'Fast antal: %s') % val
+
     def save(self, *args, **kwargs):
         # Save once to store relations
         super(Visit, self).save(*args, **kwargs)
