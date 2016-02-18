@@ -1292,7 +1292,7 @@ class BookingNotifyView(EmailComposeView):
                 'items': {
                     "%s%s%d" % (self.RECIPIENT_BOOKER,
                                 self.RECIPIENT_SEPARATOR,
-                                self.booking.booker.id),
+                                self.booking.booker.id):
                     self.booking.booker.get_full_email()
                 }
             },
