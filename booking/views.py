@@ -32,7 +32,7 @@ from booking.models import OtherResource, Visit, VisitOccurrence, StudyMaterial
 from booking.models import Resource, Subject, GymnasieLevel
 from booking.models import Room
 from booking.models import PostCode, School
-from booking.models import Booking
+from booking.models import Booking, Booker
 from booking.models import ResourceGymnasieFag, ResourceGrundskoleFag
 from booking.models import EmailTemplate
 from booking.forms import ResourceInitialForm, OtherResourceForm, VisitForm
@@ -121,6 +121,10 @@ class UnitAccessRequiredMixin(object):
                 return
         raise AccessDenied(_(u"You cannot edit an object for a unit "
                              u"that you don't belong to"))
+
+
+class EditorRequriedMixin(RoleRequiredMixin):
+    roles = EDIT_ROLES
 
 
 class SearchView(ListView):
@@ -342,7 +346,7 @@ class SearchView(ListView):
 
         context['breadcrumbs'] = [
             {'url': reverse('search'), 'text': _(u'Søgning')},
-            {'text': _(u'Søgeresultatliste')},
+            {'text': _(u'Søgeresultat')},
         ]
 
         context.update(kwargs)
@@ -639,8 +643,8 @@ class OtherResourceDetailView(DetailView):
 
         context['breadcrumbs'] = [
             {'url': reverse('search'), 'text': _(u'Søgning')},
-            {'url': '#', 'text': _(u'Søgeresultatliste')},
-            {'text': _(u'Detaljevisning')},
+            {'url': '#', 'text': _(u'Søgeresultat')},
+            {'text': _(u'Om tilbuddet')},
         ]
 
         context.update(kwargs)
@@ -875,8 +879,8 @@ class VisitDetailView(DetailView):
 
         context['breadcrumbs'] = [
             {'url': reverse('search'), 'text': _(u'Søgning')},
-            {'url': '#', 'text': _(u'Søgeresultatliste')},
-            {'text': _(u'Detaljevisning')},
+            {'url': '#', 'text': _(u'Søgeresultat')},
+            {'text': _(u'Om tilbuddet')},
         ]
 
         context.update(kwargs)
@@ -981,7 +985,8 @@ class SchoolView(View):
                 [
                     {'name': item.name,
                      'postcode': item.postcode.number
-                     if item.postcode is not None else None}
+                     if item.postcode is not None else None,
+                     'type': item.type}
                     for item in items
                 ]
                 }
@@ -1004,7 +1009,10 @@ class BookingView(UpdateView):
         if self.visit is None:
             return bad_request(request)
 
-        data = {'visit': self.visit}
+        data = {
+            'visit': self.visit,
+            'level_map': Booker.level_map
+        }
 
         self.object = Booking()
         data.update(self.get_forms())
@@ -1017,7 +1025,10 @@ class BookingView(UpdateView):
         if self.visit is None:
             return bad_request(request)
 
-        data = {'visit': self.visit}
+        data = {
+            'visit': self.visit,
+            'level_map': Booker.level_map
+        }
 
         self.object = Booking()
         forms = self.get_forms(request.POST)

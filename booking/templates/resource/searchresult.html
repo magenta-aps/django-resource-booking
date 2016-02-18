@@ -1,6 +1,7 @@
 {%extends "index.html" %}
 {% load staticfiles %}
 {% load booking_tags %}
+{% load i18n %}
 
 {% block content %}
     
@@ -13,7 +14,7 @@
                 <input type="hidden" name="pagesize" value="{{ paginator.per_page }}" />
                     <div class="panel panel-sidebar">
                         <div class="panel-heading">
-                            <h3 class="panel-title">Filtrer søgeresultater</h3>
+                            <h3 class="panel-title">Afgræns din søgning</h3>
                         </div>
                         <div class="panel-body">
                             <h3 class="panel-title">Hvem er du?</h3>
@@ -122,12 +123,12 @@
             <h2 class="bold">{{ paginator.count }} resultater matcher din søgning på "{{request.GET.q}}"</h2>
             <div class="divider"></div>
             <ul class="media-list">
-            {% for res in results %}
+                {% for res in results %}
                 <li class="media">
                     <div class="media-body">
                         <div class="small">{{ res.get_type_display }}</div>
                         <h3 class="media-heading"><a href="{% if res.visit  %}{% url 'visit-view' res.visit.pk %}{% else %}{% url 'otherresource-view' res.otherresource.pk %}{% endif %}">{{ res.title }}</a></h3>
-                        <p>{% if request.GET.q %}{{ res.teaser|highlight:request.GET.q }}{% else %}{{ res.teaser }}{% endif %}</p>
+                        <p>{% if request.GET.q %}{{ res.teaser|highlight:request.GET.q }}{% else %}{{ res.teaser }}{% endif %}...</p>
                         <div class="media-info">
                             <ul class="info-list list-inline">
                                 {% if res.all_subjects %}

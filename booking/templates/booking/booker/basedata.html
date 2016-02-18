@@ -1,6 +1,6 @@
 {% load i18n %}
 <div class="form-group">
-    <label class="col-sm-2 control-label" for="{{ bookerform.firstname.id_for_label }}">{% trans "For- og efternavn*" %}</label>
+    <label class="col-sm-2 control-label {{ bookerform.firstname.css_classes }}" for="{{ bookerform.firstname.id_for_label }}">{% trans "For- og efternavn*" %}</label>
     <div class="col-sm-3{% if bookerform.firstname.errors %} has-error{% endif %}">
         {{ bookerform.firstname }}
     </div>
@@ -14,7 +14,7 @@
 </div>
 
 <div class="form-group">
-    <label class="col-sm-2 control-label" for="{{ bookerform.email.id_for_label }}">{% trans "Email*" %}</label>
+    <label class="col-sm-2 control-label {{ bookerform.email.css_classes }}" for="{{ bookerform.email.id_for_label }}">{% trans "Email*" %}</label>
     <div class="col-sm-3{% if bookerform.email.errors %} has-error{% endif %}">
         {{ bookerform.email }}
     </div>
@@ -28,7 +28,7 @@
 </div>
 
 <div class="form-group">
-    <label class="col-sm-2 control-label" for="{{ bookerform.phone.id_for_label }}">{% trans "Telefonnummer*" %}</label>
+    <label class="col-sm-2 control-label {{ bookerform.phone.css_classes }}" for="{{ bookerform.phone.id_for_label }}">{% trans "Telefonnummer*" %}</label>
     <div class="col-sm-6{% if bookerform.phone.errors %} has-error{% endif %}">
         {{ bookerform.phone }}
     </div>

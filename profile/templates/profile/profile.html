@@ -1,4 +1,5 @@
 {% extends "index.html" %}
+{% load i18n %}
 
 {% block head %}
 <link rel="stylesheet" href="/static/css/personlig-side.css">
@@ -7,24 +8,33 @@
 {% block content %}
 
 <div class="divider"></div>
-    <h1>Velkommen {{user.username}}</h1>
+    <h1>{% trans 'Velkommen' %} {{user.username}}</h1>
     
     <div class="divider"></div>
     
     <div class="row">
-        <div class="col-sm-12">
-            <h1>Personlig side</h1>
-            <p><a class="btn btn-primary pull-right" href="/resource/create">+ Opret tilbud</a></p>
-            <p>Du er logget ind som {{user.userprofile.user_role.name}}.</p>
-            <p>Her kan du se en oversigt over dine tilbud, hvilke der er bookede, og hvilke der kræver handling.</p>    
+        <div class="col-sm-7">
+            <h1>{% trans 'Personlig side' %}</h1>
+            <p>{% trans 'Du er logget ind som' %} {{user.userprofile.user_role.name}}.</p>
+            <p>{% trans 'Her kan du se en oversigt over dine tilbud, hvilke der er bookede, og hvilke der kræver handling.' %}</p>
+        </div>
+        <div class="col-sm-5">
+            <div class="list-group">
+              <a href="/resource/create" class="list-group-item active">{% trans '+ Opret tilbud' %}</a>
+              {% if request.user.userprofile.can_create %}
+              <a class="list-group-item" href="{% url 'booking-search' %}">{% trans 'Søg i bookinger' %}</a></a>
+              <a class="list-group-item" href="{% url 'user_list' %}">{% trans 'Administrér brugere' %}</a>
+              {% endif %}
+            </div>
         </div>
     </div>
+    
     <div class="divider"></div>
     <div id="personalPage" class="row eq-height">
             <div class="col-sm-4">
                 <div class="panel panel-bookings">
                     <div class="panel-heading alert-info">
-                        <h3 class="panel-title">Mine tilbud</h3><span class="badge badge-primary pull-right">3</span>
+                        <h3 class="panel-title">{% trans 'Mine tilbud' %}</h3><span class="badge badge-primary pull-right">3</span>
                     </div>
                     <div class="panel-body">
                         <div class="list-group">
@@ -32,8 +42,6 @@
                                 <h2 class="list-group-item-heading">Dansk - kan du sætte kommaer?</h2>
                                 <p class="list-group-item-text">
                                     <ul>
-                                        <li>Dato: 11. februar 2016 kl. 10:00 - 12:00</li>
-                                        <li>Sted: Det humanistiske Fakultet</li>
                                         <li>Arrangør: Peter Jensen</li>
                                         <li>Type: Besøg med klassen</li>
                                     </ul>
@@ -43,8 +51,6 @@
                                 <h2 class="list-group-item-heading">Magnetisme og elektroner</h2>
                                 <p class="list-group-item-text">
                                     <ul>
-                                        <li>Dato: 11. marts 2016 kl. 10:00</li>
-                                        <li>Sted: Det Samfundsvidenskabelige Fakultet</li>
                                         <li>Arrangør: Ole Jensen</li>
                                         <li>Type: Besøg med klassen</li>
                                     </ul>
@@ -54,8 +60,6 @@
                                 <h2 class="list-group-item-heading">Hvem var Niels Bohr?</h2>
                                 <p class="list-group-item-text">
                                     <ul>
-                                        <li>Dato: 11. december 2016</li>
-                                        <li>Sted: Det Samfundsvidenskabelige Fakultet</li>
                                         <li>Arrangør: Ole Jensen</li>
                                         <li>Opgavehjælp</li>
                                     </ul>
@@ -68,15 +72,13 @@
             <div class="col-sm-4">
                 <div class="panel panel-bookings">
                     <div class="panel-heading alert-danger">
-                        <h3 class="panel-title">Nye/opdaterede bookings som kræver din handling</h3><span class="badge badge-danger pull-right">3</span>
+                        <h3 class="panel-title">{% trans 'Nye/opdaterede bookings som kræver din handling' %}</h3><span class="badge badge-danger pull-right">3</span>
                     </div>
                     <div class="panel-body">
                         <a href="#" class="list-group-item">
                             <h2 class="list-group-item-heading">Magnetisme og elektroner</h2>
                             <p class="list-group-item-text">
                                 <ul>
-                                    <li>Dato: 11. marts 2016 kl. 10:00 - 14:00</li>
-                                    <li>Sted: Det Samfundsvidenskabelige Fakultet</li>
                                     <li>Arrangør: Ole Jensen</li>
                                     <li>Type: Besøg med klassen</li>
                                 </ul>
@@ -86,8 +88,6 @@
                             <h2 class="list-group-item-heading">Biologi</h2>
                             <p class="list-group-item-text">
                                 <ul>
-                                    <li>Dato: 11. april 2016 kl. 10:00 - 12:00</li>
-                                    <li>Sted: Biologisk Institut</li>
                                     <li>Arrangør: Ole Jensen</li>
                                     <li>Type: Studerende for en dag</li>
                                 </ul>
@@ -97,8 +97,6 @@
                             <h2 class="list-group-item-heading">Atomer og molekyler</h2>
                             <p class="list-group-item-text">
                                 <ul>
-                                    <li>Dato: 20. maj 2016 kl. 09:30</li>
-                                    <li>Sted: Det Samfundsvidenskabelige Fakultet</li>
                                     <li>Arrangør: John Jensen</li>
                                     <li>Type: Besøg med klassen</li>
                                 </ul>
@@ -110,15 +108,13 @@
             <div class="col-sm-4">
                 <div class="panel panel-bookings">
                     <div class="panel-heading alert-success">
-                        <h3 class="panel-title">Bekræftede bookings</h3><span class="badge badge-success pull-right">5</span>
+                        <h3 class="panel-title">{% trans 'Bekræftede bookings' %}</h3><span class="badge badge-success pull-right">5</span>
                     </div>
                     <div class="panel-body">
                         <a href="#" class="list-group-item">
                             <h2 class="list-group-item-heading">Hvad kan vi lære af stjerner og rumfart?</h2>
                             <p class="list-group-item-text">
                                 <ul>
-                                    <li>Dato: 11. marts 2016 kl. 10:00 - 14:30</li>
-                                    <li>Sted: Det Samfundsvidenskabelige Fakultet</li>
                                     <li>Arrangør: Ole Jensen</li>
                                     <li>Type: Åbent hus</li>
                                 </ul>
@@ -128,8 +124,6 @@
                             <h2 class="list-group-item-heading">Magnetisme og elektroner</h2>
                             <p class="list-group-item-text">
                                 <ul>
-                                    <li>Dato: 11. marts 2016 kl. 12:00</li>
-                                    <li>Sted: Det Samfundsvidenskabelige Fakultet</li>
                                     <li>Arrangør: Ole Jensen</li>
                                     <li>Type: Åbent hus</li>
                                 </ul>
@@ -139,8 +133,6 @@
                             <h2 class="list-group-item-heading">Kina som sproglig og historisk stormagt</h2>
                             <p class="list-group-item-text">
                                 <ul>
-                                    <li>Dato: 11. marts 2016 kl. 12:00 - 14:00</li>
-                                    <li>Sted: Det Humanistiske Fakultet</li>
                                     <li>Arrangør: Ole Jensen</li>
                                     <li>Type: Foredrag</li>
                                 </ul>
@@ -151,8 +143,6 @@
                             <h2 class="list-group-item-heading">Magnetisme og elektroner</h2>
                             <p class="list-group-item-text">
                                 <ul>
-                                    <li>Dato: 11. marts 2016 kl. 09:00</li>
-                                    <li>Sted: Det Samfundsvidenskabelige Fakultet</li>
                                     <li>Arrangør: Ole Jensen</li>
                                     <li>Type: Besøg med klassen</li>
                                 </ul>
@@ -163,8 +153,6 @@
                             <h2 class="list-group-item-heading">Magnetisme og elektroner</h2>
                             <p class="list-group-item-text">
                                 <ul>
-                                    <li>Dato: 11. marts 2016 kl. 10:00 - 12:00</li>
-                                    <li>Sted: Det Samfundsvidenskabelige Fakultet</li>
                                     <li>Arrangør: Ole Jensen</li>
                                     <li>Type: Besøg med klassen</li>
                                 </ul>
@@ -180,14 +168,14 @@
         <div class="modal-content">
           <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-            <h4 class="modal-title" id="SletBooking">Er du sikker?</h4>
+            <h4 class="modal-title" id="SletBooking">{% trans 'Er du sikker?' %}</h4>
           </div>
           <div class="modal-body">
-           <p>Du er ved at slette bookingen "Magnetisme og elektroner". Hvis du vil fortsætte og slette denne booking, klik på knappen "Slet denne booking".</p>
+           <p>{% trans 'Du er ved at slette bookingen "Magnetisme og elektroner". Hvis du vil fortsætte og slette denne booking, klik på knappen "Slet denne booking".' %}</p>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-default" data-dismiss="modal">Anullér</button>
-            <button type="button" class="btn btn-primary">Slet denne booking</button>
+            <button type="button" class="btn btn-primary">{% trans 'Slet denne booking' %}</button>
           </div>
         </div>
       </div>
