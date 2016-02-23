@@ -1641,8 +1641,6 @@ class EmailTemplate(models.Model):
         (key, label)
         for (key, label) in key_choices
         if key in [NOTIFY_GUEST__GENERAL_MSG,
-                   NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
-                   NOTIFY_HOST__REQ_HOST_VOLUNTEER
                    ]
     ]
     booking_key_choices = [  # Templates pertaining to bookings
@@ -1651,6 +1649,8 @@ class EmailTemplate(models.Model):
         if key in [NOTIFY_GUEST__BOOKING_CREATED,
                    NOTIFY_HOST__BOOKING_CREATED,
                    NOTIFY_HOST__ASSOCIATED,
+                   NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
+                   NOTIFY_HOST__REQ_HOST_VOLUNTEER,
                    NOTIFY_HOST__BOOKING_COMPLETE,
                    NOTIFY_ALL__BOOKING_CANCELED,
                    NOTITY_ALL__BOOKING_REMINDER

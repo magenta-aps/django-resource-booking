@@ -20,7 +20,7 @@
         </div>
         <div class="col-sm-5">
             <div class="list-group">
-              <a href="/resource/create" class="list-group-item active">{% trans '+ Opret tilbud' %}</a>
+              <a href="{% url 'resource-create' %}?back={{ thisurl | urlencode }}" class="list-group-item active">{% trans '+ Opret tilbud' %}</a>
               {% if request.user.userprofile.can_create %}
                   <a class="list-group-item" href="{% url 'booking-search' %}">{% trans 'Søg i bookinger' %}</a></a>
                   <a class="list-group-item" href="{% url 'user_list' %}">{% trans 'Administrér brugere' %}</a>
