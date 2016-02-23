@@ -1571,18 +1571,19 @@ class EmailTemplateDetailView(View):
         template = EmailTemplate.objects.get(pk=pk)
 
         context = {}
-        if formset.is_valid():
-            for form in formset:
-                if form.is_valid():
-                    type = form.cleaned_data['type']
-                    value = form.cleaned_data['value']
-                    if type in self.classes.keys():
-                        clazz = self.classes[type]
-                        try:
-                            value = clazz.objects.get(pk=value)
-                        except clazz.DoesNotExist:
-                            pass
-                    context[form.cleaned_data['key']] = value
+        formset.full_clean()
+
+        for form in formset:
+            if form.is_valid():
+                type = form.cleaned_data['type']
+                value = form.cleaned_data['value']
+                if type in self.classes.keys():
+                    clazz = self.classes[type]
+                    try:
+                        value = clazz.objects.get(pk=value)
+                    except clazz.DoesNotExist:
+                        pass
+                context[form.cleaned_data['key']] = value
 
         data = {'form': formset,
                 'subject': template.expand_subject(context, True),
