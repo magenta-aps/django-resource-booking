@@ -1342,7 +1342,6 @@ class EmailTemplate(models.Model):
                     variables.append(unicode(node.filter_expression))
         return variables
 
-
     @staticmethod
     def _expand(text, context, keep_placeholders=False):
         text = text.replace("%20", " ")
