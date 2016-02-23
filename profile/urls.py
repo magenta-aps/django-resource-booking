@@ -7,7 +7,8 @@ urlpatterns = patterns(
 
     '',
     url(r'^$', ProfileView.as_view(
-        template_name='profile/profile.html')),
+        template_name='profile/profile.html'),
+        name='profile-view'),
     url(r'^login/', auth_views.login,
         {'template_name': 'profile/login.html'}),
     url(r'^logout/', auth_views.logout,

@@ -3,6 +3,7 @@ from booking.models import Unit
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
+from django.core.urlresolvers import reverse
 from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext as _
 from django.views.generic import TemplateView
@@ -17,7 +18,11 @@ from profile.models import FACULTY_EDITOR, COORDINATOR
 
 class ProfileView(LoginRequiredMixin, TemplateView):
     """Display the user's profile."""
-    pass
+    def get_context_data(self, **kwargs):
+        context = {}
+        context['thisurl'] = reverse('profile-view')
+        context.update(**kwargs)
+        return super(ProfileView, self).get_context_data(**context)
 
 
 class CreateUserView(FormView, UpdateView):

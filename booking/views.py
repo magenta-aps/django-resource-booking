@@ -19,6 +19,7 @@ from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.utils import timezone
 from django.utils.decorators import method_decorator
+from django.utils.http import urlencode, urlquote
 from django.utils.translation import ugettext as _
 from django.views.generic import View, TemplateView, ListView, DetailView
 from django.views.generic.edit import UpdateView
@@ -333,8 +334,10 @@ class SearchView(ListView):
         if len(querylist) > 0:
             context['fullquery'] = reverse('search') + \
                 "?" + "&".join(querylist)
+            context['thisurl'] = context['fullquery']
         else:
             context['fullquery'] = None
+            context['thisurl'] = reverse('search')
 
         context.update(kwargs)
         return super(SearchView, self).get_context_data(**context)
@@ -371,15 +374,24 @@ class EditResourceInitialView(TemplateView):
         form = ResourceInitialForm(request.POST)
         if form.is_valid():
             type_id = int(form.cleaned_data['type'])
+            back = urlquote(request.GET.get('back'))
             if type_id in Visit.applicable_types:
-                return redirect(reverse('visit-create') + "?type=%d" % type_id)
+                return redirect(reverse('visit-create') +
+                                "?type=%d&back=%s" % (type_id, back))
             else:
                 return redirect(reverse('otherresource-create') +
-                                "?type=%d" % type_id)
+                                "?type=%d&back=%s" % (type_id, back))
 
         return self.render_to_response(
             self.get_context_data(form=form)
         )
+
+    def get_context_data(self, **kwargs):
+        context = {}
+        context['oncancel'] = self.request.GET.get('back')
+        context.update(kwargs)
+        return super(EditResourceInitialView, self).get_context_data(**context)
+
 
 
 class ResourceDetailView(View):
@@ -453,6 +465,13 @@ class EditResourceView(UpdateView):
         context['grundskolefag_selected'] = self.grundskolefag_selected()
 
         context['klassetrin_range'] = range(1, 10)
+
+        if self.object and self.object.id:
+            context['thisurl'] = reverse('resource-edit', args=[self.object.id])
+        else:
+            context['thisurl'] = reverse('resource-create')
+
+        context['oncancel'] = self.request.GET.get('back')
 
         context.update(kwargs)
 
@@ -595,6 +614,15 @@ class EditOtherResourceView(EditResourceView):
                 return ["otherresource/study_material.html"]
         raise "Couldn't find template for object type %d" % self.object.type
 
+    def get_context_data(self, **kwargs):
+        context = {}
+        if self.object is not None and self.object.id:
+            context['thisurl'] = reverse('otherresource-edit', args=[self.object.id])
+        else:
+            context['thisurl'] = reverse('otherresource-create')
+        context.update(kwargs)
+        return super(EditOtherResourceView, self).get_context_data(**context)
+
 
 class OtherResourceDetailView(DetailView):
     """Display Visit details"""
@@ -634,6 +662,8 @@ class OtherResourceDetailView(DetailView):
              'text': _(u'Søgeresultatliste')},
             {'text': _(u'Detaljevisning')},
         ]
+
+        context['thisurl'] = reverse('otherresource-view', args=[self.object.id])
 
         context.update(kwargs)
 
@@ -783,6 +813,11 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
 
         context['klassetrin_range'] = range(1, 10)
 
+        if self.object is not None and self.object.id:
+            context['thisurl'] = reverse('visit-edit', args=[self.object.id])
+        else:
+            context['thisurl'] = reverse('visit-create')
+
         context.update(kwargs)
 
         return super(EditVisitView, self).get_context_data(**context)
@@ -871,6 +906,8 @@ class VisitDetailView(DetailView):
              'text': _(u'Søgeresultatliste')},
             {'text': _(u'Om tilbuddet')},
         ]
+
+        context['thisurl'] = reverse('visit-view', args=[self.object.id])
 
         context.update(kwargs)
 

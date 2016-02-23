@@ -20,10 +20,10 @@
             <h2>{{ object.get_type_display }}</h2>
             
             {% if can_edit %}
-                <a class="pull-right btn btn-primary edit-btn" href="{% url 'visit-edit' object.pk %}">+ Redigér</a>
+                <a class="pull-right btn btn-primary edit-btn" href="{% url 'visit-edit' object.pk %}?back={{ thisurl | urlencode }}">+ Redigér</a>
             {% endif %}
             {% if user.userprofile.can_create %}
-                <a class="pull-right btn btn-primary margin-right-10" href="{% url 'visit-clone' object.pk %}">Opret kopi</a>
+                <a class="pull-right btn btn-primary margin-right-10" href="{% url 'visit-clone' object.pk %}?back={{ thisurl | urlencode }}">Opret kopi</a>
             {% endif %}
             
             <h1>{{ object.title }}</h1>
