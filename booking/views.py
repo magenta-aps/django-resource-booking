@@ -19,7 +19,7 @@ from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.utils import timezone
 from django.utils.decorators import method_decorator
-from django.utils.http import urlencode, urlquote
+from django.utils.http import urlquote
 from django.utils.translation import ugettext as _
 from django.views.generic import View, TemplateView, ListView, DetailView
 from django.views.generic.edit import UpdateView
@@ -393,7 +393,6 @@ class EditResourceInitialView(TemplateView):
         return super(EditResourceInitialView, self).get_context_data(**context)
 
 
-
 class ResourceDetailView(View):
 
     def get(self, request, *args, **kwargs):
@@ -467,7 +466,8 @@ class EditResourceView(UpdateView):
         context['klassetrin_range'] = range(1, 10)
 
         if self.object and self.object.id:
-            context['thisurl'] = reverse('resource-edit', args=[self.object.id])
+            context['thisurl'] = reverse('resource-edit',
+                                         args=[self.object.id])
         else:
             context['thisurl'] = reverse('resource-create')
 
@@ -617,7 +617,8 @@ class EditOtherResourceView(EditResourceView):
     def get_context_data(self, **kwargs):
         context = {}
         if self.object is not None and self.object.id:
-            context['thisurl'] = reverse('otherresource-edit', args=[self.object.id])
+            context['thisurl'] = reverse('otherresource-edit',
+                                         args=[self.object.id])
         else:
             context['thisurl'] = reverse('otherresource-create')
         context.update(kwargs)
@@ -663,7 +664,8 @@ class OtherResourceDetailView(DetailView):
             {'text': _(u'Detaljevisning')},
         ]
 
-        context['thisurl'] = reverse('otherresource-view', args=[self.object.id])
+        context['thisurl'] = reverse('otherresource-view',
+                                     args=[self.object.id])
 
         context.update(kwargs)
 
