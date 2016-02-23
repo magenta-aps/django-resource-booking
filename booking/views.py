@@ -173,6 +173,8 @@ class EmailComposeView(FormMixin, TemplateView):
         context['templates'] = EmailTemplate.get_template(self.template_key,
                                                           self.get_unit(),
                                                           True)
+        context['template_key'] = self.template_key
+        context['template_unit'] = self.get_unit()
         context.update(kwargs)
         return super(EmailComposeView, self).get_context_data(**context)
 
@@ -1676,6 +1678,10 @@ class EmailTemplateEditView(UpdateView, UnitAccessRequiredMixin):
             self.object = EmailTemplate.objects.get(pk=pk)
             self.check_item(self.object)
         form = self.get_form()
+        if 'key' in request.GET:
+            form.initial['key'] = request.GET['key']
+        if 'unit' in request.GET:
+            form.initial['unit'] = request.GET['unit']
         return self.render_to_response(
             self.get_context_data(form=form)
         )
