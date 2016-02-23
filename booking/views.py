@@ -1765,6 +1765,12 @@ class EmailTemplateEditView(UpdateView, UnitAccessRequiredMixin,
         else:
             context['breadcrumbs'].append({'text': _(u'Opret')})
 
+        if self.object is not None and self.object.id is not None:
+            context['thisurl'] = reverse('emailtemplate-edit',
+                                         args=[self.object.id])
+        else:
+            context['thisurl'] = reverse('emailtemplate-create')
+
         context.update(kwargs)
         return super(EmailTemplateEditView, self).get_context_data(**context)
 
@@ -1807,13 +1813,13 @@ class EmailTemplateDetailView(View):
     def get(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
         formset = EmailTemplatePreviewContextForm()
-        template = EmailTemplate.objects.get(pk=pk)
+        self.object = EmailTemplate.objects.get(pk=pk)
 
         data = {'form': formset,
-                'subject': template.subject,
-                'body': template.body,
+                'subject': self.object.subject,
+                'body': self.object.body,
                 'objects': self._getObjectJson(),
-                'template': template
+                'template': self.object
                 }
 
         data.update(self.get_context_data())
@@ -1823,7 +1829,7 @@ class EmailTemplateDetailView(View):
     def post(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
         formset = EmailTemplatePreviewContextForm(request.POST)
-        template = EmailTemplate.objects.get(pk=pk)
+        self.object = EmailTemplate.objects.get(pk=pk)
 
         context = {}
         if formset.is_valid():
@@ -1840,10 +1846,10 @@ class EmailTemplateDetailView(View):
                     context[form.cleaned_data['key']] = value
 
         data = {'form': formset,
-                'subject': template.expand_subject(context, True),
-                'body': template.expand_body(context, True),
+                'subject': self.object.expand_subject(context, True),
+                'body': self.object.expand_body(context, True),
                 'objects': self._getObjectJson(),
-                'template': template
+                'template': self.object
                 }
         data.update(self.get_context_data())
 
@@ -1856,6 +1862,8 @@ class EmailTemplateDetailView(View):
              'text': _(u'Emailskabelonliste')},
             {'text': _(u'Emailskabelon')},
         ]
+        context['thisurl'] = reverse('emailtemplate-view',
+                                     args=[self.object.id])
         return context
 
 
