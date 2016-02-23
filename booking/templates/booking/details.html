@@ -2,6 +2,7 @@
 {% load staticfiles %}
 {% load timedelta %}
 {% load i18n %}
+{% load booking_tags %}
 
 {% block content %}
 
@@ -22,6 +23,26 @@
                     {% endblocktrans %}
                 </div>
             </div>
+
+            {% if can_edit %}
+                <div class="pull-right dropdown">
+                    <button class="btn btn-primary dropdown-toggle" type="button" id="sendNotification" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        {% trans 'Send besked' %}
+                        <span class="caret"/>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="sendNotification">
+                        <li><a href="{% url 'visit-notify' object.pk %}">{% trans 'Ingen skabelon' %}</a></li>
+                        {% if EmailTemplate.key_choices %}
+                            <li role="separator" class="divider"></li>
+                            {% for id, label in EmailTemplate.booking_key_choices %}
+                                <li><a href="{% url 'booking-notify' object.pk %}?template={{ id }}">{{ label }}</a></li>
+                            {% endfor %}
+                        {% endif %}
+                    </ul>
+                </div>
+            {% endif %}
+
+            <h2>Information om bookingen</h2>
 
             <dl class="dl-horizontal">
 
@@ -78,7 +99,77 @@
             </dl>
 
             <div class="divider"></div>
+
+            <h2>Statusoverblik</h2>
+
+            {% if not object.can_assign_resources %}
+            <p>
+                Det er ikke længere muligt at tildele ressourcer til denne
+                booking. Hvis du ønsker at rette i de tildelte ressourcer skal
+                du ændre statuses til '{{object.BEING_PLANNED_STATUS_TEXT}}'.
+            </p>
+            {% endif %}
+
+            <dl class="dl-horizontal">
+                <dt>Undervisere</dt>
+                <dd>
+                    {{ object.get_teacher_status_display }}
+                    {% if object.can_assign_resources %}
+                    <a href="{% url 'change-booking-teachers' object.pk %}" role="button" class="btn btn-primary btn-xs">Redigér</a>
+                    {% endif %}
+                </dd>
+                <dt>Værter</dt>
+                <dd>
+                    {{ object.get_host_status_display }}
+                    {% if object.can_assign_resources %}
+                    <a href="{% url 'change-booking-hosts' object.pk %}" role="button" class="btn btn-primary btn-xs">Redigér</a>
+                    {% endif %}
+                </dd>
+                <dt>Lokalerer</dt>
+                <dd>
+                    {{ object.get_room_status_display }}
+                    {% if object.can_assign_resources %}
+                    <a href="{% url 'change-booking-rooms' object.pk %}" role="button" class="btn btn-primary btn-xs">Redigér</a>
+                    {% endif %}
+                </dd>
+                <dt>Afvikling</dt>
+                <dd>
+                    {{ object.get_workflow_status_display }}
+                    <a href="{% url 'change-booking-status' object.pk %}" role="button" class="btn btn-primary btn-xs">Skift status</a>
+                </dd>
+                <dt>Interne kommentarer</dt>
+                <dd>
+                    <pre>{{ object.comments }}</pre>
+                    <a href="{% url 'change-booking-comments' object.pk %}" role="button" class="btn btn-primary btn-xs">Redigér</a>
+                </dd>
+            </dl>
             
+            <div class="divider"></div>
+
+            <h2>Aktivitetslog</h2>
+
+            <ul class="list-unstyled">
+                {% for entry in log_entries %}
+                <li>
+                    <dl class="dl-horizontal">
+                        <dt>Hvem:</dt>
+                        <dd>{% if entry.user.get_full_name %}{{ entry.user.get_full_name }}{% else %}{{ entry.user }}{% endif %}</dd>
+                        <dt>Hvad:</dt>
+                        <dd>{{ entry.action_flag|logaction_type_display }}</dd>
+                        <dt>Hvornår:</dt>
+                        <dd>{{ entry.action_time }}</dd>
+                        <dt>Besked:</dt>
+                        <dd><pre>{{ entry.change_message }}</pre></dd>
+                    </dl>
+                </li>
+                {% endfor %}
+            </ul>
+            <div>
+                <a href="{% url 'booking-add-logentry' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">Tilføj ny log-post</a>&nbsp;
+            </div>
+            <div class="divider"></div>
+
+
             <div class="go-back">
                 <a href="#" class="btn btn-default" onclick="history.go(-1); return false;"><span class="glyphicon glyphicon-chevron-left"></span> {% trans 'Tilbage til bookingliste' %}</a>
             </div>
