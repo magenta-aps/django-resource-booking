@@ -1783,6 +1783,8 @@ class BookingDetailView(LoggedViewMixin, DetailView):
 
         context['EmailTemplate'] = EmailTemplate
 
+        context['thisurl'] = reverse('booking-view', args=[self.object.id])
+
         user = self.request.user
         if hasattr(user, 'userprofile') and \
                 user.userprofile.can_notify(self.object):
