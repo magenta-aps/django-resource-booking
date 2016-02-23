@@ -737,6 +737,10 @@ a.template-overridden:visited {
     max-width: 100%;
 }
 
+table.sortable th.sort {
+    cursor: pointer
+}
+
 @media screen and (max-width:768px) {
     html,
     body {
