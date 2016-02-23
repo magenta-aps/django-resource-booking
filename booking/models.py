@@ -1733,18 +1733,18 @@ class EmailTemplate(models.Model):
         templates = []
         while unit is not None and (include_overridden or len(templates) == 0):
             try:
-                templates.extend(EmailTemplate.objects.filter(
+                templates.append(EmailTemplate.objects.filter(
                     key=template_key,
                     unit=unit
-                ).all())
+                ).all()[0])
             except:
                 pass
             unit = unit.parent
         if include_overridden or len(templates) == 0:
             try:
-                templates.extend(
+                templates.append(
                     EmailTemplate.objects.filter(key=template_key,
-                                                 unit__isnull=True)
+                                                 unit__isnull=True)[0]
                 )
             except:
                 pass
