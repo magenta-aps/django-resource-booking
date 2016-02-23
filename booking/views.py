@@ -27,6 +27,7 @@ from django.utils.decorators import method_decorator
 from django.utils.http import urlquote
 from django.utils.translation import ugettext as _
 from django.views.generic import View, TemplateView, ListView, DetailView
+from django.views.generic.base import ContextMixin
 from django.views.generic.edit import UpdateView, FormMixin, DeleteView
 from django.views.defaults import bad_request
 
@@ -117,7 +118,15 @@ class RoleRequiredMixin(object):
         )
 
 
-class EmailComposeView(FormMixin, TemplateView):
+class HasBackButtonMixin(ContextMixin):
+
+    def get_context_data(self, **kwargs):
+        context = super(HasBackButtonMixin, self).get_context_data(**kwargs)
+        context['oncancel'] = self.request.GET.get('back')
+        return context
+
+
+class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
     template_name = 'email/compose.html'
     form_class = EmailComposeForm
     recipients = []
@@ -149,7 +158,6 @@ class EmailComposeView(FormMixin, TemplateView):
             context = self.template_context
             recipients = self.lookup_recipients(
                 form.cleaned_data['recipients'])
-            print recipients
             KUEmailMessage.send_email(template, context, recipients)
             return super(EmailComposeView, self).form_valid(form)
 
@@ -607,7 +615,7 @@ class SearchView(ListView):
         return size
 
 
-class EditResourceInitialView(TemplateView):
+class EditResourceInitialView(HasBackButtonMixin, TemplateView):
 
     template_name = 'resource/form.html'
 
@@ -642,12 +650,6 @@ class EditResourceInitialView(TemplateView):
             self.get_context_data(form=form)
         )
 
-    def get_context_data(self, **kwargs):
-        context = {}
-        context['oncancel'] = self.request.GET.get('back')
-        context.update(kwargs)
-        return super(EditResourceInitialView, self).get_context_data(**context)
-
 
 class ResourceDetailView(View):
 
@@ -661,7 +663,7 @@ class ResourceDetailView(View):
         raise Http404
 
 
-class EditResourceView(UpdateView):
+class EditResourceView(HasBackButtonMixin, UpdateView):
 
     def __init__(self, *args, **kwargs):
         super(EditResourceView, self).__init__(*args, **kwargs)
@@ -727,7 +729,7 @@ class EditResourceView(UpdateView):
         else:
             context['thisurl'] = reverse('resource-create')
 
-        context['oncancel'] = self.request.GET.get('back')
+        # context['oncancel'] = self.request.GET.get('back')
 
         context.update(kwargs)
 
