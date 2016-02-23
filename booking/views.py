@@ -1707,7 +1707,8 @@ class EmailTemplateListView(ListView):
         return qs
 
 
-class EmailTemplateEditView(UpdateView, UnitAccessRequiredMixin, HasBackButtonMixin):
+class EmailTemplateEditView(UpdateView, UnitAccessRequiredMixin,
+                            HasBackButtonMixin):
     template_name = 'email/form.html'
     form_class = EmailTemplateForm
     model = EmailTemplate
