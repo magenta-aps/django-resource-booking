@@ -24,7 +24,6 @@
                 </div>
             </div>
 
-            {% if can_edit %}
                 <div class="pull-right dropdown">
                     <button class="btn btn-primary dropdown-toggle" type="button" id="sendNotification" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         {% trans 'Send besked' %}
@@ -35,12 +34,11 @@
                         {% if EmailTemplate.key_choices %}
                             <li role="separator" class="divider"></li>
                             {% for id, label in EmailTemplate.booking_key_choices %}
-                                <li><a href="{% url 'booking-notify' object.pk %}?template={{ id }}">{{ label }}</a></li>
+                                <li><a href="{% url 'booking-notify' object.pk %}?template={{ id }}&back={{ thisurl | urlencode }}">{{ label }}</a></li>
                             {% endfor %}
                         {% endif %}
                     </ul>
                 </div>
-            {% endif %}
 
             <h2>Information om bookingen</h2>
 

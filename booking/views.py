@@ -1981,6 +1981,8 @@ class BookingDetailView(LoggedViewMixin, DetailView):
 
         context['EmailTemplate'] = EmailTemplate
 
+        context['thisurl'] = reverse('booking-view', args=[self.object.id])
+
         context.update(kwargs)
 
         return super(BookingDetailView, self).get_context_data(**context)
