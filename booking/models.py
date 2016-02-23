@@ -1527,7 +1527,7 @@ class KUEmailMessage(models.Model):
     created = models.DateTimeField(
         blank=False,
         null=False,
-        default=timezone.now()
+        default=timezone.now
     )
     subject = models.TextField(blank=False, null=False)
     body = models.TextField(blank=False, null=False)
