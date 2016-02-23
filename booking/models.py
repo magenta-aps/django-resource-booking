@@ -1640,15 +1640,16 @@ class EmailTemplate(models.Model):
     visit_key_choices = [  # Templates pertaining to visits
         (key, label)
         for (key, label) in key_choices
-        if key in [NOTIFY_GUEST__GENERAL_MSG]
+        if key in [NOTIFY_GUEST__GENERAL_MSG,
+                   NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
+                   NOTIFY_HOST__REQ_HOST_VOLUNTEER
+                   ]
     ]
     booking_key_choices = [  # Templates pertaining to bookings
         (key, label)
         for (key, label) in key_choices
         if key in [NOTIFY_GUEST__BOOKING_CREATED,
                    NOTIFY_HOST__BOOKING_CREATED,
-                   NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
-                   NOTIFY_HOST__REQ_HOST_VOLUNTEER,
                    NOTIFY_HOST__ASSOCIATED,
                    NOTIFY_HOST__BOOKING_COMPLETE,
                    NOTIFY_ALL__BOOKING_CANCELED,
