@@ -9,7 +9,7 @@ from djorm_pgfulltext.fields import VectorField
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
 from django.utils.translation import ugettext_lazy as _
-from django.template.base import Template
+from django.template.base import Template, VariableNode
 
 from recurrence.fields import RecurrenceField
 from booking.utils import ClassProperty, full_email
@@ -1331,6 +1331,17 @@ class EmailTemplate(models.Model):
                    "<body>%s</body>" \
                    "</html>" % body
         return body
+
+    def get_template_variables(self):
+        variables = []
+        for item in [self.subject, self.body]:
+            text = item.replace("%20", " ")
+            template = Template(unicode(text))
+            for node in template:
+                if isinstance(node, VariableNode):
+                    variables.append(unicode(node.filter_expression))
+        return variables
+
 
     @staticmethod
     def _expand(text, context, keep_placeholders=False):
