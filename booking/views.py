@@ -1695,6 +1695,7 @@ class EmailTemplateListView(ListView):
         context['breadcrumbs'] = [
             {'text': _(u'Emailskabelonliste')},
         ]
+        context['thisurl'] = reverse('emailtemplate-list')
         context.update(kwargs)
         return super(EmailTemplateListView, self).get_context_data(**context)
 
@@ -1706,7 +1707,7 @@ class EmailTemplateListView(ListView):
         return qs
 
 
-class EmailTemplateEditView(UpdateView, UnitAccessRequiredMixin):
+class EmailTemplateEditView(UpdateView, UnitAccessRequiredMixin, HasBackButtonMixin):
     template_name = 'email/form.html'
     form_class = EmailTemplateForm
     model = EmailTemplate
@@ -1857,7 +1858,7 @@ class EmailTemplateDetailView(View):
         return context
 
 
-class EmailTemplateDeleteView(DeleteView):
+class EmailTemplateDeleteView(HasBackButtonMixin, DeleteView):
     template_name = 'email/delete.html'
     model = EmailTemplate
     success_url = reverse_lazy('emailtemplate-list')
