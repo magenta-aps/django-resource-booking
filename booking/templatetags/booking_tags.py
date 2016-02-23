@@ -1,6 +1,10 @@
 from django.template.defaultfilters import register
 import re
 from django.utils.safestring import mark_safe
+from booking.models import LOGACTION_DISPLAY_MAP
+from django.core.serializers import serialize
+from django.db.models.query import QuerySet
+import json
 
 
 @register.filter
@@ -18,3 +22,18 @@ def highlight(text, filter):
     words = filter.split(' ')
     pattern = re.compile(r"(?P<filter>%s)" % '|'.join(words), re.IGNORECASE)
     return mark_safe(re.sub(pattern, r"<mark>\g<filter></mark>", text))
+
+
+@register.filter
+def logaction_type_display(value):
+    if value in LOGACTION_DISPLAY_MAP:
+        return LOGACTION_DISPLAY_MAP[value]
+    else:
+        return 'LOGACTION_%s' % value
+
+
+@register.filter
+def jsonify(object):
+    if isinstance(object, QuerySet):
+        return serialize('json', object)
+    return json.dumps(object)
