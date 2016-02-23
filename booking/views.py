@@ -1781,6 +1781,8 @@ class BookingDetailView(LoggedViewMixin, DetailView):
             {'text': _(u'Detaljevisning')},
         ]
 
+        context['EmailTemplate'] = EmailTemplate
+
         user = self.request.user
         if hasattr(user, 'userprofile') and \
                 user.userprofile.can_notify(self.object):
