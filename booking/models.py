@@ -1273,14 +1273,29 @@ class KUEmailMessage(models.Model):
 
 class EmailTemplate(models.Model):
 
-    BOOKING_CREATED = 1
-    NOTIFY_BOOKERS = 2
-    NOTIFY_HOSTS = 3
+    NOTIFY_GUEST__BOOKING_CREATED = 1  # ticket 13806
+    NOTIFY_HOST__BOOKING_CREATED = 2  # ticket 13807
+    NOTIFY_HOST__REQ_TEACHER_VOLUNTEER = 3  # ticket 13808
+    NOTIFY_HOST__REQ_HOST_VOLUNTEER = 4  # ticket 13809
+    NOTIFY_HOST__ASSOCIATED = 5  # ticket 13810
+    NOTIFY_HOST__REQ_ROOM = 6  # ticket 13811
+    NOTIFY_GUEST__GENERAL_MSG = 7  # ticket 13812
+    NOTIFY_HOST__BOOKING_COMPLETE = 8  # ticket 13813
+    NOTIFY_ALL__BOOKING_CANCELED = 9  # ticket 13814
+    NOTITY_ALL__BOOKING_REMINDER = 10  # ticket 13815
 
     key_choices = [
-        (BOOKING_CREATED, _(u'Booking created')),
-        (NOTIFY_BOOKERS, _(u'Message to bookers of a visit')),
-        (NOTIFY_HOSTS, _(u'Message to hosts of a visit')),
+        (NOTIFY_GUEST__BOOKING_CREATED, _(u'Gæst: Booking oprettet')),
+        (NOTIFY_GUEST__GENERAL_MSG, _(u'Gæst: Generel besked')),
+        (NOTIFY_HOST__BOOKING_CREATED, _(u'Vært: Booking oprettet')),
+        (NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
+         _(u'Vært: Frivillige undervisere')),
+        (NOTIFY_HOST__REQ_HOST_VOLUNTEER, _(u'Vært: Frivillige værter')),
+        (NOTIFY_HOST__ASSOCIATED, _(u'Vært: Tilknyttet besøg')),
+        (NOTIFY_HOST__REQ_ROOM, _(u'Vært: Forespørg lokale')),
+        (NOTIFY_HOST__BOOKING_COMPLETE, _(u'Vært: Booking færdigplanlagt')),
+        (NOTIFY_ALL__BOOKING_CANCELED, _(u'Alle: Booking aflyst')),
+        (NOTITY_ALL__BOOKING_REMINDER, _(u'Alle: Reminder om booking')),
     ]
     key = models.IntegerField(
         verbose_name=u'Key',
@@ -1327,21 +1342,26 @@ class EmailTemplate(models.Model):
         return template.render(context)
 
     @staticmethod
-    def get_template(template_key, unit):
-        template = None
-        while unit is not None and template is None:
+    def get_template(template_key, unit, include_overridden=False):
+        templates = []
+        while unit is not None and (include_overridden or len(templates) == 0):
             try:
-                template = EmailTemplate.objects.filter(
+                templates.extend(EmailTemplate.objects.filter(
                     key=template_key,
                     unit=unit
-                )[0]
+                ).all())
             except:
                 pass
             unit = unit.parent
-        if template is None:
+        if include_overridden or len(templates) == 0:
             try:
-                template = EmailTemplate.objects.filter(key=template_key,
-                                                        unit__isnull=True)[0]
+                templates.extend(
+                    EmailTemplate.objects.filter(key=template_key,
+                                                 unit__isnull=True)
+                )
             except:
                 pass
-        return template
+        if include_overridden:
+            return templates
+        else:
+            return templates[0] if len(templates) > 0 else None
