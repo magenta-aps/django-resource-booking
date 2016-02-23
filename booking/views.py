@@ -1883,9 +1883,30 @@ class EmailTemplateDetailView(View):
         formset = EmailTemplatePreviewContextForm()
         template = EmailTemplate.objects.get(pk=pk)
 
+        context = {}
+        if template is not None:
+            variables = template.get_template_variables()
+            formset.initial = []
+            for variable in variables:
+                base_variable = variable.split(".")[0]
+                if base_variable not in context:
+                    type = base_variable.title()
+                    if type in self.classes.keys():
+                        clazz = self.classes[type]
+                        try:
+                            value = clazz.objects.all()[0]
+                            context[base_variable] = value
+                            formset.initial.append({
+                                'key': base_variable,
+                                'type': type,
+                                'value': value.id
+                            })
+                        except clazz.DoesNotExist:
+                            pass
+
         data = {'form': formset,
-                'subject': template.subject,
-                'body': template.body,
+                'subject': template.expand_subject(context, True),
+                'body': template.expand_body(context, True),
                 'objects': self._getObjectJson(),
                 'template': template
                 }
@@ -1900,18 +1921,19 @@ class EmailTemplateDetailView(View):
         template = EmailTemplate.objects.get(pk=pk)
 
         context = {}
-        if formset.is_valid():
-            for form in formset:
-                if form.is_valid():
-                    type = form.cleaned_data['type']
-                    value = form.cleaned_data['value']
-                    if type in self.classes.keys():
-                        clazz = self.classes[type]
-                        try:
-                            value = clazz.objects.get(pk=value)
-                        except clazz.DoesNotExist:
-                            pass
-                    context[form.cleaned_data['key']] = value
+        formset.full_clean()
+
+        for form in formset:
+            if form.is_valid():
+                type = form.cleaned_data['type']
+                value = form.cleaned_data['value']
+                if type in self.classes.keys():
+                    clazz = self.classes[type]
+                    try:
+                        value = clazz.objects.get(pk=value)
+                    except clazz.DoesNotExist:
+                        pass
+                context[form.cleaned_data['key']] = value
 
         data = {'form': formset,
                 'subject': template.expand_subject(context, True),
