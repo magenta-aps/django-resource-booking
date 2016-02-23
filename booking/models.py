@@ -443,8 +443,16 @@ class Resource(models.Model):
             return self.visit.locality
         except Visit.DoesNotExist:
             pass
-
         return "-"
+
+    def get_absolute_url(self):
+        return reverse('resource-view', args=[self.pk])
+
+    def get_url(self):
+        return settings.PUBLIC_URL + self.get_absolute_url()
+
+    def url(self):
+        return self.get_url()
 
 
 class ResourceGymnasieFag(models.Model):
@@ -671,6 +679,9 @@ class OtherResource(Resource):
         # Do the final save
         return super(OtherResource, self).save(*args, **kwargs)
 
+    def get_absolute_url(self):
+        return reverse('otherresource-view', args=[self.pk])
+
 
 class Visit(Resource):
     """A bookable visit of any kind."""
@@ -826,8 +837,10 @@ class Visit(Resource):
             )
         elif self.maximum_number_of_visitors:
             return self.maximum_number_of_visitors
-
         return None
+
+    def get_absolute_url(self):
+        return reverse('visit-view', args=[self.pk])
 
 
 class VisitOccurrence(models.Model):
@@ -1335,6 +1348,9 @@ class Booking(models.Model):
 
     def get_absolute_url(self):
         return reverse('booking-view', args=[self.pk])
+
+    def get_url(self):
+        return settings.PUBLIC_URL + self.get_absolute_url()
 
 
 class ClassBooking(Booking):
