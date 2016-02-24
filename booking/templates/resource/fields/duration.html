@@ -1,10 +1,23 @@
 {% load i18n %}
 <div class="row">
-    <div class="col-sm-12 col-md-6">
-        <fieldset>
-            {{ form.duration.errors }}
-            <label class="{{ form.duration.css_classes }}" for="{{ form.duration.id_for_label }}">{{ form.duration.label }}:</label>
-            {{ form.duration }}
-        </fieldset>
+    <div class="col-sm-10">
+        <select id="id_duration" name="duration" class="form-control">
+            <option value="00:00">Ingen</option>
+            <option value="00:30">30 minutter</option>
+            <option value="01:00">1 time</option>
+            <option value="01:30">1,5 timer</option>
+            <option value="02:00">2 timer</option>
+            <option value="02:30">2,5 timer</option>
+            <option value="03:00">3 timer</option>
+            <option value="04:00">4 timer</option>
+            <option value="05:00">5 timer</option>
+            <option value="06:00">6 timer</option>
+            <option value="07:00">7 timer</option>
+            <option value="08:00">8 timer</option>
+            <option value="09:00">9 timer</option>
+            <option value="10:00">10 timer</option>
+            <option value="11:00">11 timer</option>
+            <option value="12:00">12 timer</option>
+        </select>
     </div>
 </div>

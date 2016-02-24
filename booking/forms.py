@@ -83,7 +83,7 @@ class VisitForm(forms.ModelForm):
                   'type', 'tags', 'preparation_time', 'comment',
                   'institution_level', 'topics', 'audience',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
-                  'recurrences', 'duration', 'locality', 'rooms_assignment',
+                  'duration', 'locality', 'rooms_assignment',
                   'rooms_needed', 'tour_available',
                   'enabled', 'contact_persons', 'unit',
                   'needed_hosts', 'needed_hosts_text', 'needed_teachers',

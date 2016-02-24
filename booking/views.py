@@ -39,7 +39,6 @@ from booking.models import Resource, Subject
 from booking.models import Unit
 from booking.models import OtherResource
 from booking.models import GymnasieLevel
-
 from booking.models import Room, Person
 from booking.models import PostCode, School
 from booking.models import Booking, Booker
@@ -1144,8 +1143,8 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
     def _is_any_booking_outside_new_attendee_count_bounds(
             self,
             visit_id,
-            min,
-            max
+            min=0,
+            max=0
     ):
         if min is None or min == '':
             min = 0
@@ -1159,6 +1158,11 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         :param max:
         :return: Boolean
         """
+        if min == u'':
+            min = 0
+        if max == u'':
+            max = 0
+
         existing_bookings_outside_bounds = Booker.objects.raw('''
             select *
             from booking_booking bb
@@ -1182,8 +1186,8 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
                 messages.add_message(
                     request,
                     messages.INFO,
-                    _(u'Der findes bookinger med deltagerantal udenfor de'
-                      u'netop ændrede min-/max-grænser for deltagere!')
+                    _(u'Der findes bookinger af tilbudet med deltagerantal '
+                      u'udenfor de angivne min-/max-grænser for deltagere!')
                 )
         is_cloning = kwargs.get("clone", False)
         self.set_object(pk, request, is_cloning)
@@ -1227,7 +1231,7 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
                      for x in visit.visitoccurrence_set.all()])
 
             # convert date strings to datetimes
-            dates = request.POST.getlist(u'occurrences')
+            dates = request.POST.get(u'occurrences').split(',')
 
             datetimes = []
             if dates is not None:
