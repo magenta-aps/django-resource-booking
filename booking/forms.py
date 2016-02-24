@@ -503,4 +503,5 @@ class GuestEmailComposeForm(BaseEmailComposeForm):
                 'pattern': '(\(\+\d+\)|\+\d+)?\s*\d+[ \d]*'
             },
         ),
+        required=False
     )
