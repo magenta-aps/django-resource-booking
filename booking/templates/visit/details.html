@@ -95,7 +95,7 @@
                                 <dt>{% trans 'Arrangør:' %}</dt>
                                 <dd>
                                     {{ object.unit.contact.name }}<br/>
-                                    <a href="{% url 'email' object.unit.contact.id %}">{% trans 'Stil et spørgsmål om dette tilbud' %}</a> <span class="glyphicon glyphicon-new-window"></span>
+                                    <a href="{% url 'email' object.unit.contact.id %}?back={{ thisurl | urlencode }}">{% trans 'Stil et spørgsmål om dette tilbud' %}</a> <span class="glyphicon glyphicon-new-window"></span>
                                 </dd>
                             {% endif %}
                             

@@ -119,7 +119,15 @@ class RoleRequiredMixin(object):
         )
 
 
-class ContactComposeView(FormMixin, TemplateView):
+class HasBackButtonMixin(ContextMixin):
+
+    def get_context_data(self, **kwargs):
+        context = super(HasBackButtonMixin, self).get_context_data(**kwargs)
+        context['oncancel'] = self.request.GET.get('back')
+        return context
+
+
+class ContactComposeView(FormMixin, HasBackButtonMixin, TemplateView):
     template_name = 'email/compose.html'
     form_class = GuestEmailComposeForm
 
@@ -152,14 +160,6 @@ class ContactComposeView(FormMixin, TemplateView):
 
     def get_success_url(self):
         return self.request.GET.get("back", "/")
-
-
-class HasBackButtonMixin(ContextMixin):
-
-    def get_context_data(self, **kwargs):
-        context = super(HasBackButtonMixin, self).get_context_data(**kwargs)
-        context['oncancel'] = self.request.GET.get('back')
-        return context
 
 
 class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
