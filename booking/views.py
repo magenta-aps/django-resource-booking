@@ -246,9 +246,6 @@ class SearchView(ListView):
 
                 try:
                     b = [int(x) for x in self.request.GET.getlist("b")]
-                    visits_with_bookings = Visit.objects.filter(
-                        booking__isnull=False
-                    )
                     if SearchView.HAS_BOOKINGS in b:
                         if SearchView.HAS_NO_BOOKINGS not in b:
                             self.filters["visit__booking__isnull"] = False
@@ -314,7 +311,6 @@ class SearchView(ListView):
 
     def is_visit_facet(self, choice_tuples, selected):
         hits = {}
-        choices = []
 
         # Remove filter for the field we want to facetize
         new_filters = {}
@@ -336,7 +332,6 @@ class SearchView(ListView):
 
     def has_bookings_facet(self, choice_tuples, selected):
         hits = {}
-        choices = []
 
         # Remove filter for the field we want to facetize
         new_filters = {}
