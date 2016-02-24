@@ -888,7 +888,7 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
                      for x in visit.visitoccurrence_set.all()])
 
             # convert date strings to datetimes
-            dates = request.POST.getlist(u'occurrences')
+            dates = request.POST.get(u'occurrences').split(',')
 
             datetimes = []
             if dates is not None:

@@ -826,6 +826,9 @@ class Visit(Resource):
 
 
 class VisitOccurrence(models.Model):
+    class Meta:
+        ordering = ['start_datetime']
+
     start_datetime = models.DateTimeField(
         verbose_name=_(u'Starttidspunkt')
     )
