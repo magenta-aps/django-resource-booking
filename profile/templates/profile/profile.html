@@ -25,6 +25,11 @@
                   <a class="list-group-item" href="{% url 'booking-search' %}">{% trans 'Søg i bookinger' %}</a></a>
                   <a class="list-group-item" href="{% url 'user_list' %}">{% trans 'Administrér brugere' %}</a>
                   <a class="list-group-item" href="{% url 'emailtemplate-list' %}">{% trans 'Administrér emailskabeloner' %}</a>
+                  <a class="list-group-item" href="{% url 'admin:booking_locality_changelist' %}">Administrér lokaliteter</a>
+                  <a class="list-group-item" href="{% url 'admin:booking_person_changelist' %}">Administrér kontaktpersoner</a>
+                  {% if request.user.userprofile.can_edit_units %}
+                  <a class="list-group-item" href="{% url 'admin:booking_unit_changelist' %}">Administrér enheder</a>
+                  {% endif %}
               {% endif %}
             </div>
         </div>
