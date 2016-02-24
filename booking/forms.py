@@ -83,7 +83,7 @@ class VisitForm(forms.ModelForm):
                   'type', 'tags', 'preparation_time', 'comment',
                   'institution_level', 'topics', 'audience',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
-                  'recurrences', 'duration', 'locality', 'rooms_assignment',
+                  'duration', 'locality', 'rooms_assignment',
                   'rooms_needed', 'tour_available',
                   'enabled', 'contact_persons', 'unit',
                   'needed_hosts', 'needed_hosts_text', 'needed_teachers',
@@ -472,6 +472,7 @@ EmailTemplatePreviewContextForm = formset_factory(
 
 
 class BaseEmailComposeForm(forms.Form):
+    required_css_class = 'required'
 
     body = forms.CharField(
         max_length=65584,
@@ -490,4 +491,40 @@ class EmailComposeForm(BaseEmailComposeForm):
     subject = forms.CharField(
         max_length=77,
         label=_(u'Emne')
+    )
+
+
+class GuestEmailComposeForm(BaseEmailComposeForm):
+
+    name = forms.CharField(
+        max_length=100,
+        label=_(u'Navn'),
+        widget=TextInput(
+            attrs={
+                'class': 'form-control input-sm',
+                'placeholder': _(u'Dit navn')
+            }
+        )
+    )
+
+    email = forms.EmailField(
+        label=_(u'Email'),
+        widget=EmailInput(
+            attrs={
+                'class': 'form-control input-sm',
+                'placeholder': _(u'Din email-adresse')
+            }
+        )
+    )
+
+    phone = forms.CharField(
+        label=_(u'Telefon'),
+        widget=TextInput(
+            attrs={
+                'class': 'form-control input-sm',
+                'placeholder': _(u'Dit telefonnummer'),
+                'pattern': '(\(\+\d+\)|\+\d+)?\s*\d+[ \d]*'
+            },
+        ),
+        required=False
     )

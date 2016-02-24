@@ -39,7 +39,6 @@ from booking.models import Resource, Subject
 from booking.models import Unit
 from booking.models import OtherResource
 from booking.models import GymnasieLevel
-
 from booking.models import Room, Person
 from booking.models import PostCode, School
 from booking.models import Booking, Booker
@@ -47,7 +46,8 @@ from booking.models import ResourceGymnasieFag, ResourceGrundskoleFag
 from booking.models import EmailTemplate
 from booking.models import log_action
 from booking.models import LOGACTION_CREATE, LOGACTION_CHANGE
-from booking.forms import ResourceInitialForm, OtherResourceForm, VisitForm
+from booking.forms import ResourceInitialForm, OtherResourceForm, VisitForm, \
+    GuestEmailComposeForm
 from booking.forms import ClassBookingForm, TeacherBookingForm
 from booking.forms import VisitStudyMaterialForm, BookingSubjectLevelForm
 from booking.forms import BookerForm
@@ -124,6 +124,41 @@ class HasBackButtonMixin(ContextMixin):
         context = super(HasBackButtonMixin, self).get_context_data(**kwargs)
         context['oncancel'] = self.request.GET.get('back')
         return context
+
+
+class ContactComposeView(FormMixin, HasBackButtonMixin, TemplateView):
+    template_name = 'email/compose.html'
+    form_class = GuestEmailComposeForm
+
+    def get(self, request, *args, **kwargs):
+        form = self.get_form()
+        return self.render_to_response(
+            self.get_context_data(form=form)
+        )
+
+    def post(self, request, *args, **kwargs):
+        recipient_id = kwargs.get("recipient")
+        form = self.get_form()
+        if form.is_valid():
+            template = EmailTemplate.get_template(
+                EmailTemplate.SYSTEM__BASICMAIL_ENVELOPE,
+                None
+            )
+            if template is None:
+                raise Exception(_(u"There are no root templates with "
+                                  u"the SYSTEM__BASICMAIL_ENVELOPE key"))
+            context = {}
+            context.update(form.cleaned_data)
+            recipients = Person.objects.get(id=recipient_id)
+            KUEmailMessage.send_email(template, context, recipients)
+            return super(ContactComposeView, self).form_valid(form)
+
+        return self.render_to_response(
+            self.get_context_data(form=form)
+        )
+
+    def get_success_url(self):
+        return self.request.GET.get("back", "/")
 
 
 class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
@@ -1108,8 +1143,8 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
     def _is_any_booking_outside_new_attendee_count_bounds(
             self,
             visit_id,
-            min,
-            max
+            min=0,
+            max=0
     ):
         if min is None or min == '':
             min = 0
@@ -1123,6 +1158,11 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         :param max:
         :return: Boolean
         """
+        if min == u'':
+            min = 0
+        if max == u'':
+            max = 0
+
         existing_bookings_outside_bounds = Booker.objects.raw('''
             select *
             from booking_booking bb
@@ -1146,8 +1186,8 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
                 messages.add_message(
                     request,
                     messages.INFO,
-                    _(u'Der findes bookinger med deltagerantal udenfor de'
-                      u'netop ændrede min-/max-grænser for deltagere!')
+                    _(u'Der findes bookinger af tilbudet med deltagerantal '
+                      u'udenfor de angivne min-/max-grænser for deltagere!')
                 )
         is_cloning = kwargs.get("clone", False)
         self.set_object(pk, request, is_cloning)
@@ -1191,7 +1231,7 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
                      for x in visit.visitoccurrence_set.all()])
 
             # convert date strings to datetimes
-            dates = request.POST.getlist(u'occurrences')
+            dates = request.POST.get(u'occurrences').split(',')
 
             datetimes = []
             if dates is not None:

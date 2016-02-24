@@ -27,32 +27,79 @@
 
             <div class="panel panel-default">
                 <div class="panel-body">
-                    <div class="row form-group">
-                        <div>
-                            {{ form.recipients.errors }}
-                        </div>
-                        <div class="col-sm-2">
-                            <label class="{{ form.recipients.css_classes }}" for="{{ form.recipients.id_for_label }}">{{ form.recipients.label }}:</label>
-                        </div>
-                        <div id="recipients" class="col-sm-10">
-                            <div id="recipient-groups">{% trans 'Tilføj:' %}&nbsp;</div>
-                            <div id="recipient-list" class="email-recipients">
-                                {{ form.recipients }}
+
+                    {% if form.name %}
+                        <div class="row form-group">
+                            <div>
+                                {{ form.name.errors }}
+                            </div>
+                            <div class="col-sm-2">
+                                <label class="{{ form.name.css_classes }}" for="{{ form.name.id_for_label }}">{{ form.name.label }}:</label>
+                            </div>
+                            <div class="col-sm-10">
+                                {{ form.name }}
                             </div>
                         </div>
-                    </div>
+                    {% endif %}
 
-                    <div class="row form-group">
-                        <div>
-                            {{ form.subject.errors }}
+                    {% if form.email %}
+                        <div class="row form-group">
+                            <div>
+                                {{ form.email.errors }}
+                            </div>
+                            <div class="col-sm-2">
+                                <label class="{{ form.email.css_classes }}" for="{{ form.email.id_for_label }}">{{ form.email.label }}:</label>
+                            </div>
+                            <div class="col-sm-10">
+                                {{ form.email }}
+                            </div>
                         </div>
-                        <div class="col-sm-2">
-                            <label class="{{ form.subject.css_classes }}" for="{{ form.subject.id_for_label }}">{{ form.subject.label }}:</label>
+                    {% endif %}
+
+                    {% if form.phone %}
+                        <div class="row form-group">
+                            <div>
+                                {{ form.phone.errors }}
+                            </div>
+                            <div class="col-sm-2">
+                                <label class="{{ form.phone.css_classes }}" for="{{ form.phone.id_for_label }}">{{ form.phone.label }}:</label>
+                            </div>
+                            <div class="col-sm-10">
+                                {{ form.phone }}
+                            </div>
                         </div>
-                        <div class="col-sm-10">
-                            {{ form.subject }}
+                    {% endif %}
+
+                    {% if form.recipients %}
+                        <div class="row form-group">
+                            <div>
+                                {{ form.recipients.errors }}
+                            </div>
+                            <div class="col-sm-2">
+                                <label class="{{ form.recipients.css_classes }}" for="{{ form.recipients.id_for_label }}">{{ form.recipients.label }}:</label>
+                            </div>
+                            <div id="recipients" class="col-sm-10">
+                                <div id="recipient-groups">{% trans 'Tilføj:' %}&nbsp;</div>
+                                <div id="recipient-list" class="email-recipients">
+                                    {{ form.recipients }}
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                    {% endif %}
+
+                    {% if form.subject %}
+                        <div class="row form-group">
+                            <div>
+                                {{ form.subject.errors }}
+                            </div>
+                            <div class="col-sm-2">
+                                <label class="{{ form.subject.css_classes }}" for="{{ form.subject.id_for_label }}">{{ form.subject.label }}:</label>
+                            </div>
+                            <div class="col-sm-10">
+                                {{ form.subject }}
+                            </div>
+                        </div>
+                    {% endif %}
 
                     <div class="row form-group">
                         <div>

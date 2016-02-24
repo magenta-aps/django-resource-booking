@@ -18,6 +18,7 @@ from booking.views import ChangeBookingRoomsView, ChangeBookingStatusView
 from booking.views import ChangeBookingTeachersView
 from booking.views import EmailTemplateListView, EmailTemplateEditView
 from booking.views import EmailTemplateDetailView, EmailTemplateDeleteView
+from booking.views import ContactComposeView
 
 from django.views.generic import TemplateView
 
@@ -150,7 +151,11 @@ urlpatterns = patterns(
         name='emailtemplate-view'),
     url(r'^emailtemplate/(?P<pk>[0-9]+)/delete$',
         EmailTemplateDeleteView.as_view(),
-        name='emailtemplate-delete')
+        name='emailtemplate-delete'),
+
+    url(r'^email/(?P<recipient>[0-9]+)/?$',
+        ContactComposeView.as_view(),
+        name='email')
 
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

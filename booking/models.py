@@ -821,11 +821,19 @@ class Visit(Resource):
         blank=True,
         null=True
     )
+
+    duration_choices = []
+    for hour in range(0, 12, 1):
+        for minute in range(0, 60, 15):
+            value = "%.2d:%.2d" % (hour, minute)
+            duration_choices.append((value, value),)
+
     duration = models.CharField(
         max_length=8,
         verbose_name=_(u'Varighed'),
         blank=True,
         null=True,
+        choices=duration_choices
     )
     contact_persons = models.ManyToManyField(
         Person,
@@ -1000,6 +1008,7 @@ class VisitOccurrence(models.Model):
     class Meta:
         verbose_name = _(u"tidspunkt for besøg")
         verbose_name_plural = _(u"tidspunkter for besøg")
+        ordering = ['start_datetime']
 
     start_datetime = models.DateTimeField(
         verbose_name=_(u'Starttidspunkt')
@@ -1775,6 +1784,8 @@ class EmailTemplate(models.Model):
     NOTIFY_ALL__BOOKING_CANCELED = 9  # ticket 13814
     NOTITY_ALL__BOOKING_REMINDER = 10  # ticket 13815
 
+    SYSTEM__BASICMAIL_ENVELOPE = 11
+
     key_choices = [
         (NOTIFY_GUEST__BOOKING_CREATED, _(u'Gæst: Booking oprettet')),
         (NOTIFY_GUEST__GENERAL_MSG, _(u'Gæst: Generel besked')),
@@ -1787,6 +1798,7 @@ class EmailTemplate(models.Model):
         (NOTIFY_HOST__BOOKING_COMPLETE, _(u'Vært: Booking færdigplanlagt')),
         (NOTIFY_ALL__BOOKING_CANCELED, _(u'Alle: Booking aflyst')),
         (NOTITY_ALL__BOOKING_REMINDER, _(u'Alle: Reminder om booking')),
+        (SYSTEM__BASICMAIL_ENVELOPE, _(u'System: Indpakning af brugerbesked')),
     ]
     visit_key_choices = [  # Templates pertaining to visits
         (key, label)
