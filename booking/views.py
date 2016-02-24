@@ -6,13 +6,16 @@ from datetime import datetime, timedelta
 
 from dateutil import parser
 from dateutil.rrule import rrulestr
+from django.contrib.admin.models import LogEntry
 from django.contrib.auth.decorators import login_required
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
 from django.db.models import Count
 from django.db.models import F
 from django.db.models import Q
+from django.forms.models import model_to_dict
 from django.http import Http404
 from django.http import HttpResponse
 from django.http import JsonResponse
@@ -31,12 +34,16 @@ from booking.models import OtherResource, Visit, VisitOccurrence, StudyMaterial
 from booking.models import Resource, Subject, GymnasieLevel
 from booking.models import Room
 from booking.models import PostCode, School
-from booking.models import Booking
+from booking.models import Booking, Booker
 from booking.models import ResourceGymnasieFag, ResourceGrundskoleFag
+from booking.models import log_action
+from booking.models import LOGACTION_CREATE, LOGACTION_CHANGE
 from booking.forms import ResourceInitialForm, OtherResourceForm, VisitForm
 from booking.forms import ClassBookingForm, TeacherBookingForm
 from booking.forms import VisitStudyMaterialForm, BookingSubjectLevelForm
 from booking.forms import BookerForm
+
+import urls
 
 
 i18n_test = _(u"Dette tester oversættelses-systemet")
@@ -97,6 +104,146 @@ class RoleRequiredMixin(object):
             u"Kun brugere med disse roller kan logge ind: " +
             u",".join(txts)
         )
+
+
+class AutologgerMixin(object):
+    _old_state = {}
+
+    def _as_state(self, obj=None):
+        if obj is None:
+            obj = self.object
+        if obj and obj.pk:
+            return model_to_dict(obj)
+        else:
+            return {}
+
+    def _get_changed_fields(self, compare_state):
+        new_state = self._as_state()
+
+        result = {}
+
+        for key in compare_state:
+            if key in new_state:
+                if compare_state[key] != new_state[key]:
+                    result[key] = (compare_state[key], new_state[key])
+                del new_state[key]
+            else:
+                result[key] = (compare_state[key], None)
+
+        for key in new_state:
+            result[key] = (None, new_state[key])
+
+        return result
+
+    def _field_value_to_display(self, fieldname, value):
+        field = self.model._meta.get_field(fieldname)
+        fname = field.verbose_name
+
+        if value is None:
+            return (fname, unicode(value))
+
+        if field.many_to_one:
+            try:
+                o = field.related_model.objects.get(pk=value)
+                return (fname, unicode(o))
+            except:
+                return (fname, unicode(value))
+
+        if field.many_to_many or field.one_to_many:
+            res = []
+            for x in value:
+                try:
+                    o = field.related_model.objects.get(pk=x)
+                    res.append(unicode(o))
+                except:
+                    res.append(unicode(x))
+            return (fname, ", ".join(res))
+
+        if field.choices:
+            d = dict(field.choices)
+            if value in d:
+                return (fname, unicode(d[value]))
+
+        return (fname, unicode(value))
+
+    def _changes_to_text(self, changes):
+        if not changes:
+            return ""
+
+        result = {}
+        for key, val in changes.iteritems():
+            name, value = self._field_value_to_display(key, val[1])
+            result[name] = value
+
+        return "\n".join([
+            u"%s: >>>%s<<<" % (x, result[x]) for x in sorted(result)
+        ])
+
+    def _log_changes(self):
+        if self._old_state:
+            action = LOGACTION_CHANGE
+            msg = _(u"Ændrede felter:\n%s")
+        else:
+            action = LOGACTION_CREATE
+            msg = _(u"Oprettet med felter:\n%s")
+
+        changeset = self._get_changed_fields(self._old_state)
+
+        log_action(
+            self.request.user,
+            self.object,
+            action,
+            msg % self._changes_to_text(changeset)
+        )
+
+    def get_object(self, queryset=None):
+        res = super(AutologgerMixin, self).get_object(queryset)
+
+        self._old_state = self._as_state(res)
+
+        return res
+
+    def form_valid(self, form):
+        res = super(AutologgerMixin, self).form_valid(form)
+
+        self._log_changes()
+
+        return res
+
+
+class LoggedViewMixin(object):
+    def get_log_queryset(self):
+        types = [ContentType.objects.get_for_model(self.model)]
+
+        for rel in self.model._meta.get_all_related_objects():
+            if not rel.one_to_one:
+                continue
+
+            rel_model = rel.related_model
+
+            if self.model not in rel_model._meta.get_parent_list():
+                continue
+
+            types.append(
+                ContentType.objects.get_for_model(rel_model)
+            )
+
+        qs = LogEntry.objects.filter(
+            object_id=self.object.pk,
+            content_type__in=types
+        ).order_by('action_time')
+
+        return qs
+
+    def get_context_data(self, **kwargs):
+        return super(LoggedViewMixin, self).get_context_data(
+            log_entries=self.get_log_queryset(),
+            **kwargs
+        )
+
+
+class EditorRequriedMixin(RoleRequiredMixin):
+    roles = EDIT_ROLES
 
 
 class SearchView(ListView):
@@ -318,8 +465,21 @@ class SearchView(ListView):
 
         context['breadcrumbs'] = [
             {'url': reverse('search'), 'text': _(u'Søgning')},
-            {'text': _(u'Søgeresultatliste')},
+            {'text': _(u'Søgeresultat')},
         ]
+
+        querylist = []
+        for key in ['q', 'page', 'pagesize', 't', 'a', 'f', 'g', 'from', 'to']:
+            values = self.request.GET.getlist(key)
+            if values is not None and len(values) > 0:
+                for value in values:
+                    if value is not None and len(unicode(value)) > 0:
+                        querylist.append("%s=%s" % (key, value))
+        if len(querylist) > 0:
+            context['fullquery'] = reverse('search') + \
+                "?" + "&".join(querylist)
+        else:
+            context['fullquery'] = None
 
         context.update(kwargs)
         return super(SearchView, self).get_context_data(**context)
@@ -615,7 +775,8 @@ class OtherResourceDetailView(DetailView):
 
         context['breadcrumbs'] = [
             {'url': reverse('search'), 'text': _(u'Søgning')},
-            {'url': '#', 'text': _(u'Søgeresultatliste')},
+            {'url': self.request.GET.get("search", reverse('search')),
+             'text': _(u'Søgeresultatliste')},
             {'text': _(u'Detaljevisning')},
         ]
 
@@ -851,8 +1012,9 @@ class VisitDetailView(DetailView):
 
         context['breadcrumbs'] = [
             {'url': reverse('search'), 'text': _(u'Søgning')},
-            {'url': '#', 'text': _(u'Søgeresultatliste')},
-            {'text': _(u'Detaljevisning')},
+            {'url': self.request.GET.get("search", reverse('search')),
+             'text': _(u'Søgeresultatliste')},
+            {'text': _(u'Om tilbuddet')},
         ]
 
         context.update(kwargs)
@@ -957,15 +1119,15 @@ class SchoolView(View):
                 [
                     {'name': item.name,
                      'postcode': item.postcode.number
-                     if item.postcode is not None else None}
+                     if item.postcode is not None else None,
+                     'type': item.type}
                     for item in items
                 ]
                 }
         return JsonResponse(json)
 
 
-class BookingView(UpdateView):
-
+class BookingView(AutologgerMixin, UpdateView):
     visit = None
 
     def set_visit(self, visit_id):
@@ -980,7 +1142,10 @@ class BookingView(UpdateView):
         if self.visit is None:
             return bad_request(request)
 
-        data = {'visit': self.visit}
+        data = {
+            'visit': self.visit,
+            'level_map': Booker.level_map
+        }
 
         self.object = Booking()
         data.update(self.get_forms())
@@ -993,9 +1158,15 @@ class BookingView(UpdateView):
         if self.visit is None:
             return bad_request(request)
 
-        data = {'visit': self.visit}
+        data = {
+            'visit': self.visit,
+            'level_map': Booker.level_map
+        }
 
         self.object = Booking()
+
+        self._old_state = self._as_state()
+
         forms = self.get_forms(request.POST)
 
         # Hack: remove this form; we'll add it later when
@@ -1028,6 +1199,12 @@ class BookingView(UpdateView):
                                                       instance=booking)
                 if subjectform.is_valid():
                     subjectform.save()
+
+            self.object = booking
+            self.model = booking.__class__
+
+            self._log_changes()
+
             return redirect("/visit/%d/book/success" % self.visit.id)
         else:
             forms['subjectform'] = BookingSubjectLevelForm(request.POST)
@@ -1083,3 +1260,145 @@ class BookingSuccessView(TemplateView):
         return self.render_to_response(
             self.get_context_data(**data)
         )
+
+
+class EmbedcodesView(TemplateView):
+    template_name = "embedcodes.html"
+
+    def get_context_data(self, **kwargs):
+        context = {}
+
+        embed_url = 'embed/' + kwargs['embed_url']
+
+        # We only want to test the part before ? (or its encoded value, %3F):
+        test_url = embed_url.split('?', 1)[0]
+        test_url = test_url.split('%3F', 1)[0]
+
+        can_embed = False
+
+        for x in urls.embedpatterns:
+            if x.regex.match(test_url):
+                can_embed = True
+                break
+
+        context['can_embed'] = can_embed
+        context['full_url'] = self.request.build_absolute_uri('/' + embed_url)
+
+        context['breadcrumbs'] = [
+            {
+                'url': '/embedcodes/',
+                'text': 'Indlering af side'
+            },
+            {
+                'url': self.request.path,
+                'text': '/' + kwargs['embed_url']
+            }
+        ]
+
+        context.update(kwargs)
+
+        return super(EmbedcodesView, self).get_context_data(**context)
+
+
+class BookingSearchView(LoginRequiredMixin, ListView):
+    model = Booking
+    template_name = "booking/searchresult.html"
+    context_object_name = "results"
+    paginate_by = 10
+
+    def get_date_from_request(self, queryparam):
+        val = self.request.GET.get(queryparam)
+        if not val:
+            return None
+        try:
+            val = datetime.strptime(val, '%d-%m-%Y')
+            val = timezone.make_aware(val)
+        except Exception:
+            val = None
+        return val
+
+    def get_queryset(self):
+        searchexpression = self.request.GET.get("q", "")
+
+        # Filter by searchexpression
+        qs = self.model.objects.search(searchexpression)
+
+        # Filter by user access
+        qs = Booking.queryset_for_user(self.request.user, qs)
+
+        qs = qs.order_by("-pk")
+
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = {}
+
+        # Store the querystring without the page and pagesize arguments
+        qdict = self.request.GET.copy()
+
+        if "page" in qdict:
+            qdict.pop("page")
+        if "pagesize" in qdict:
+            qdict.pop("pagesize")
+
+        context["qstring"] = qdict.urlencode()
+
+        context['pagesizes'] = [5, 10, 15, 20]
+
+        if self.request.user.userprofile.is_administrator():
+            context['unit_limit_text'] = \
+                u'Alle enheder (administrator-søgning)'
+        else:
+            context['unit_limit_text'] = \
+                u'Bookinger relateret til enheden %s' % (
+                    self.request.user.userprofile.unit
+                )
+
+        context['breadcrumbs'] = [
+            {
+                'url': reverse('booking-search'),
+                'text': _(u'Bookinger')
+            },
+            {'text': _(u'Søgeresultatliste')},
+        ]
+
+        context.update(kwargs)
+
+        return super(BookingSearchView, self).get_context_data(**context)
+
+    def get_paginate_by(self, queryset):
+        size = self.request.GET.get("pagesize", 10)
+
+        if size == "all":
+            return None
+
+        return size
+
+
+class BookingDetailView(LoggedViewMixin, DetailView):
+    """Display Booking details"""
+    model = Booking
+    template_name = 'booking/details.html'
+
+    def get_context_data(self, **kwargs):
+        context = {}
+
+        context['breadcrumbs'] = [
+            {'url': reverse('search'), 'text': _(u'Søgning')},
+            {'url': '#', 'text': _(u'Søgeresultatliste')},
+            {'text': _(u'Detaljevisning')},
+        ]
+
+        context.update(kwargs)
+
+        return super(BookingDetailView, self).get_context_data(**context)
+
+# Late import to avoid mutual import conflicts
+import booking_workflows.views as booking_views
+
+ChangeBookingStatusView = booking_views.ChangeBookingStatusView
+ChangeBookingTeachersView = booking_views.ChangeBookingTeachersView
+ChangeBookingHostsView = booking_views.ChangeBookingHostsView
+ChangeBookingRoomsView = booking_views.ChangeBookingRoomsView
+ChangeBookingCommentsView = booking_views.ChangeBookingCommentsView
+BookingAddLogEntryView = booking_views.BookingAddLogEntryView

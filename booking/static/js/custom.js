@@ -4,6 +4,7 @@ $('.input-daterange input').each(function() {
         language: 'da',
         format: 'dd-mm-yyyy',
         weekStart: 1,
+        calendarWeeks: true,
         todayHighlight: true,
         startDate: 'Date',
         clearBtn: true,
@@ -26,4 +27,14 @@ $('#filters').on('hide.bs.collapse', function() {
 $("#reset-btn").click(function() {
     $("#searchBox").val("");
     $("form").trigger("submit")
+});
+
+// Automatically submit the search form whenever the filters are changed
+$(function() {
+    $('#filter-search-results input[type=checkbox]').on('change', function() {
+        $(this.form).trigger("submit")
+    });
+    $('#filter-search-results input.datepicker').on('changeDate', function() {
+        $(this.form).trigger("submit")
+    });
 });
