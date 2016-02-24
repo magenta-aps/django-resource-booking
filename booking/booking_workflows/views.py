@@ -49,9 +49,15 @@ class ChangeBookingHostsView(UpdateWithCancelView):
             {
                 'booking': booking,
                 'visit': booking.visit,
-                'booker': booking.booker
+                'booker': booking.booker,
+                'user': request.user,
+                'action_flag': EmailTemplate.HOSTS_CHANGED,
+                'message': unicode(EmailTemplate.key_choices[
+                    EmailTemplate.HOSTS_CHANGED
+                ][1]),
             },
             list(booking.visit.contact_persons.all()),
+            booking,
             booking.visit.unit
         )
 
@@ -78,9 +84,15 @@ class ChangeBookingRoomsView(UpdateWithCancelView):
             {
                 'booking': booking,
                 'visit': booking.visit,
-                'booker': booking.booker
+                'booker': booking.booker,
+                'user': request.user,
+                'action_flag': EmailTemplate.ROOMS_CHANGED,
+                'message': unicode(EmailTemplate.key_choices[
+                    EmailTemplate.ROOMS_CHANGED
+                ][1]),
             },
             list(booking.visit.contact_persons.all()),
+            booking,
             booking.visit.unit
         )
 

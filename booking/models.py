@@ -6,6 +6,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.template.context import make_context
 from djorm_pgfulltext.models import SearchManager
 from djorm_pgfulltext.fields import VectorField
+from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
 from django.contrib.auth.models import User
@@ -54,6 +55,7 @@ def log_action(user, obj, action_flag, change_message=''):
         change_message
     )
 
+
 class AutologgerMixin(object):
     def __init__(self, *args, **kwargs):
         super(AutologgerMixin, self).__init__(*args, **kwargs)
@@ -65,7 +67,7 @@ class AutologgerMixin(object):
     def get_changed_fields(self, compare_state=None):
         if compare_state is None:
             compare_state = self._original_state
-        
+
         new_state = self._as_state()
 
         result = {}
@@ -77,7 +79,7 @@ class AutologgerMixin(object):
                 del new_state[key]
             else:
                 result[key] = (compare_state[key], None)
-        
+
         for key in new_state:
             result[key] = (None, new_state[key])
 
@@ -112,7 +114,7 @@ class AutologgerMixin(object):
             d = dict(field.choices)
             if value in d:
                 return (fname, unicode(d[value]))
-        
+
         return (fname, unicode(value))
 
     def changes_to_text(self, changes):
@@ -127,8 +129,8 @@ class AutologgerMixin(object):
         return "\n".join([
             u"%s: >>>%s<<<" % (x, result[x]) for x in sorted(result)
         ])
-            
-            
+
+
 class Person(models.Model):
     """A dude or chick"""
 
@@ -1378,7 +1380,7 @@ class Booking(AutologgerMixin, models.Model):
         return " ".join(result)
 
     def save(self, *args, **kwargs):
-        
+
         created = self.pk is None
 
         # Save once to store relations
@@ -1458,7 +1460,7 @@ class KUEmailMessage(models.Model):
     created = models.DateTimeField(
         blank=False,
         null=False,
-        default=timezone.now()
+        default=timezone.now
     )
     subject = models.TextField(blank=False, null=False)
     body = models.TextField(blank=False, null=False)
@@ -1467,19 +1469,32 @@ class KUEmailMessage(models.Model):
         blank=False,
         null=False
     )
+    content_type = models.ForeignKey(ContentType, null=True, default=None)
+    object_id = models.PositiveIntegerField(null=True, default=None)
+    content_object = GenericForeignKey('content_type', 'object_id')
 
     @staticmethod
-    def save_email(email_message):
+    def save_email(email_message, instance):
+        """
+        :param email_message: An instance of
+        django.core.mail.message.EmailMessage
+        :param instance: The object that the message concerns i.e. Booking,
+        Visit etc.
+        :return: None
+        """
+        ctype = ContentType.objects.get_for_model(instance)
         ku_email_message = KUEmailMessage(
             subject=email_message.subject,
             body=email_message.body,
             from_email=email_message.from_email,
-            recipients=', '.join(email_message.recipients())
+            recipients=', '.join(email_message.recipients()),
+            content_type=ctype,
+            object_id=instance.id
         )
         ku_email_message.save()
 
     @staticmethod
-    def send_email(template_key, context, recipients, unit=None, **kwargs):
+    def send_email(template_key, context, recipients, instance, unit=None):
         template = None
         emails = []
 
@@ -1536,7 +1551,13 @@ class KUEmailMessage(models.Model):
                 to=[email['full']]
             )
             message.send()
-            KUEmailMessage.save_email(message)
+            KUEmailMessage.save_email(message, instance)
+            log_action(
+                ctx['user'],
+                ctx['booking'],
+                ctx['action_flag'],
+                ctx['message']
+            )
 
 
 class EmailTemplate(models.Model):

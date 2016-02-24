@@ -29,8 +29,8 @@ from django.views.defaults import bad_request
 
 from profile.models import EDIT_ROLES
 from profile.models import role_to_text
-from booking.models import Visit, VisitOccurrence, StudyMaterial, Booker, \
-    KUEmailMessage
+from booking.models import Visit, VisitOccurrence, StudyMaterial
+from booking.models import KUEmailMessage
 from booking.models import Resource, Subject
 from booking.models import Unit
 from booking.models import OtherResource
@@ -1085,9 +1085,15 @@ class BookingView(UpdateView):
                 {
                     'booking': booking,
                     'visit': booking.visit,
-                    'booker': booking.booker
+                    'booker': booking.booker,
+                    'user': request.user,
+                    'action_flag': EmailTemplate.BOOKING_CREATED,
+                    'message': unicode(EmailTemplate.key_choices[
+                        EmailTemplate.BOOKING_CREATED
+                    ][1])
                 },
                 list(self.visit.contact_persons.all()),
+                booking,
                 self.visit.unit
             )
             KUEmailMessage.send_email(
@@ -1095,9 +1101,15 @@ class BookingView(UpdateView):
                 {
                     'booking': booking,
                     'visit': booking.visit,
-                    'booker': booking.booker
+                    'booker': booking.booker,
+                    'user': request.user,
+                    'action_flag': EmailTemplate.CONFIRMATION_TO_BOOKER,
+                    'message': unicode(EmailTemplate.key_choices[
+                        EmailTemplate.CONFIRMATION_TO_BOOKER
+                    ][1]),
                 },
                 [booking.booker],
+                booking,
                 self.visit.unit
             )
 
@@ -1409,6 +1421,26 @@ class BookingDetailView(DetailView):
         context.update(kwargs)
 
         return super(BookingDetailView, self).get_context_data(**context)
+
+
+class ShowEmailLogView(ListView):
+    model = KUEmailMessage
+    template_name = 'booking/show_email_log.html'
+
+    def get_queryset(self):
+        pk = int(self.kwargs['pk'])
+        if pk is None:
+            return bad_request(self.request)
+
+        return KUEmailMessage.objects.filter(object_id=pk)
+
+    def get_context_data(self, **kwargs):
+        context = dict()
+
+        context['queryset'] = self.get_queryset()
+        context.update(kwargs)
+
+        return super(ShowEmailLogView, self).get_context_data(**context)
 
 ChangeBookingStatusView = booking_views.ChangeBookingStatusView
 ChangeBookingTeachersView = booking_views.ChangeBookingTeachersView

@@ -4,7 +4,7 @@ from django.conf import settings
 
 from .views import MainPageView
 
-from booking.views import PostcodeView, SchoolView
+from booking.views import PostcodeView, SchoolView, ShowEmailLogView
 from booking.views import RrulestrView
 from booking.views import EditResourceInitialView, ResourceDetailView
 from booking.views import BookingView, BookingSuccessView, BookingSearchView
@@ -96,6 +96,9 @@ urlpatterns = patterns(
     url(r'^booking/(?P<pk>[0-9]+)/change_rooms/?$',
         ChangeBookingRoomsView.as_view(),
         name='change-booking-rooms'),
+    url(r'^booking/(?P<pk>[0-9]+)/?show_email_log$',
+        ShowEmailLogView.as_view(),
+        name='show-email-log'),
     url(r'^booking/search$',
         BookingSearchView.as_view(),
         name='booking-search'),
