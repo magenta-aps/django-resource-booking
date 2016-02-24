@@ -226,7 +226,7 @@
                             {% endif %}
 
                             {% if object.visit.unit.contact %}
-                                <dt>Arrangør:</dt>
+                                <dt>{% trans 'Arrangør:' %}</dt>
                                 <dd>
                                     {{ object.visit.unit.contact.name }}<br/>
                                     <a href="{% url 'email' object.visit.unit.contact.id %}">{% trans 'Stil et spørgsmål om dette tilbud' %}</a> <span class="glyphicon glyphicon-new-window"></span>
