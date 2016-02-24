@@ -1401,7 +1401,7 @@ class BookingDetailView(LoggedViewMixin, DetailView):
         return super(BookingDetailView, self).get_context_data(**context)
 
 # Late import to avoid mutual import conflicts
-import booking_workflows.views as booking_views
+import booking_workflows.views as booking_views  # noqa
 
 ChangeBookingStatusView = booking_views.ChangeBookingStatusView
 ChangeBookingTeachersView = booking_views.ChangeBookingTeachersView
