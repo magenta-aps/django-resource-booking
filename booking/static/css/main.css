@@ -718,6 +718,19 @@ div ul.errorlist {
     font-weight: normal;
 }
 
+.email-recipients ul {
+    max-height: 120px;
+    overflow-y: auto;
+}
+
+a.template-overridden,
+a.template-overridden:hover,
+a.template-overridden:active,
+a.template-overridden:visited {
+    text-decoration: line-through;
+    color: #999;
+}
+
 /*Backend specific styles end */
 
 /* Embedded pages styles */
@@ -727,6 +740,10 @@ div ul.errorlist {
     margin: 0;
     border: none;
     max-width: 100%;
+}
+
+table.sortable th.sort {
+    cursor: pointer
 }
 
 @media screen and (max-width:768px) {

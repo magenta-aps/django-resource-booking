@@ -48,3 +48,9 @@ class ClassProperty(object):
 
     def __get__(self, inst, cls):
         return self.func(cls)
+
+
+def full_email(email, name=None):
+    if name is None or name == '':
+        return email
+    return "\"%s\" <%s>" % (name, email)

@@ -1,0 +1,221 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load booking_tags %}
+
+{% block head %}
+
+{% endblock %}
+
+{% block content %}
+
+    {% include 'common/breadcrumbrow.html' %}
+
+    <div class="divider"></div>
+    <div class="row form-group">
+        <div class="col-sm-8">
+            <h1>{% trans "Preview Emailskabelon" %}</h1>
+        </div>
+        <div class="col-sm-4 text-right">
+            <a href="{% url 'emailtemplate-edit' template.id %}" class="btn btn-primary">{% trans "Rediger skabelon" %}</a>
+            <a href="{% url 'emailtemplate-clone' template.id %}" class="btn btn-primary">{% trans "Kopier skabelon" %}</a>
+            <a href="{% url 'emailtemplate-delete' template.id %}" class="btn btn-primary">{% trans "Slet skabelon" %}</a>
+        </div>
+        </div>
+    <div class="row">
+        <div class="col-sm-12">
+            {% trans 'På denne side kan du afprøve skabelonens felter ved at definere en kontekst. Ved tryk på "preview" bliver skabelonen udfyldt med den angivne kontekst.' %}
+        </div>
+    </div>
+    <hr/>
+    <form action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div id="accordion" class="panel-group" aria-multiselectable="true" role="tablist">
+
+            <div class="panel panel-default">
+                <div id="headingCategory" class="panel-heading" role="tab">
+                    <h4 class="panel-title">
+                        {% trans "Context" %}
+                    </h4>
+                </div>
+                <div id="collapseTitel" class="panel-collapse collapse in" aria-labelledby="headingCategory" role="tabpanel" aria-expanded="true" style="">
+                    <div class="panel-body">
+
+                        <div class="row form-group">
+                            <div class="col-sm-3">
+                                {% trans 'Key' %}
+                            </div>
+                            <div class="col-sm-3">
+                                {% trans 'Type' %}
+                            </div>
+                            <div class="col-sm-3">
+                                {% trans 'Value' %}
+                            </div>
+                        </div>
+
+                        {{ form.management_form }}
+                        <div id="rowcontainer">
+                        {% for entry in form %}
+                            <div class="row form-group"{% if forloop.first %} id="rowprototype"{% endif %}>
+                                <div class="col-sm-3">
+                                    {{ entry.key }}
+                                </div>
+                                <div class="col-sm-3">
+                                    {{ entry.type }}
+                                </div>
+                                <div class="col-sm-3">
+                                    {{ entry.value }}
+                                </div>
+                                <div class="col-sm-2 rowadder">
+                                    <a href="javascript:void();" id="addRow">{% trans "Tilføj ny" %}</a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <fieldset>
+                    <button class="btn btn-primary" type="submit">{% trans "Opdater" %}</button>
+                </fieldset>
+
+            </div>
+
+            {% if subject or body %}
+            <div class="panel panel-default">
+                <div id="headingCategory" class="panel-heading" role="tab">
+                    <h4 class="panel-title">
+                        {% trans "Preview" %}
+                    </h4>
+                </div>
+                <div id="collapseTitel" class="panel-collapse collapse in" aria-labelledby="headingCategory" role="tabpanel" aria-expanded="true" style="">
+                    <div class="panel-body">
+
+                            {% if subject %}
+                                <h3>{% trans 'Subject' %}</h3>
+                                <blockquote>{{ subject }}</blockquote>
+                            {% endif %}
+
+                            {% if body %}
+                                <h3>{% trans 'Body' %}</h3>
+                                <blockquote>
+                                    {% autoescape off %}
+                                    {{ body }}
+                                    {% endautoescape %}
+                                </blockquote>
+                            {% endif %}
+
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+
+        <div class="divider"></div>
+    </form>
+
+
+{% endblock %}
+
+{% block extra_scripts %}
+    {{ form.media }}
+    <script type="text/javascript" src="{% static 'js/formset-row.js' %}"></script>
+
+
+    <script type="text/javascript">
+        $(function(){
+
+            var extraRows = $("#rowcontainer > div").not(":first");
+
+            var mingleRow = function(row) {
+                row.removeAttr("id");
+                row.find("label").text(null);
+                var adder = row.find(".rowadder");
+                adder.addClass("rowremover");
+                adder.removeClass("rowadder");
+                adder.find("a").text('{% trans "Fjern" %}');
+                adder.find("a").click(removeRowEvent);
+
+                $("#rowcontainer").trigger("addrow", row);
+            };
+
+            mingleRow(extraRows);
+
+            $(".rowadder a").click(function(){
+                var newRow = formset.addRow(
+                        $("#{{ form.management_form.TOTAL_FORMS.id_for_label }}"),
+                        $("#{{ form.management_form.MAX_NUM_FORMS.id_for_label }}"),
+                        $("#rowprototype"),
+                        $("#rowcontainer")
+                );
+                mingleRow(newRow);
+                return false;
+            });
+
+            var removeRowEvent = function() {
+                formset.removeRow(
+                    "#{{ form.management_form.TOTAL_FORMS.id_for_label }}",
+                    $(this).parents(".form-group")
+                );
+            };
+
+            $(".rowremover a").click(removeRowEvent);
+        });
+    </script>
+    <script type="text/javascript">
+        {% autoescape off %}
+        $(function(){
+            var objects = {{ objects }};
+            var typeClassMap = {'string': 'emailtemplate-type-string'};
+            for (var type in objects) {
+                typeClassMap[type] = 'emailtemplate-type-' + type;
+            }
+
+            var replaceWidget = function(oldField, newType) {
+                var newWidget = $("<"+newType+">");
+                newWidget.attr({id: oldField.attr("id"), name: oldField.attr("name")});
+                newWidget.addClass("form-control");
+                oldField.replaceWith(newWidget);
+                return newWidget;
+            };
+
+            var typeChanged = function(row){
+                // When a type field is changed
+                var type = row.find('.emailtemplate-type').val();
+                var valueField = row.find('.emailtemplate-value');
+                if (!valueField.hasClass(typeClassMap[type])) {
+                    var newWidget;
+                    if (type == 'string') {
+                        newWidget = replaceWidget(valueField, "input");
+                    } else if (type in objects) {
+                        newWidget = replaceWidget(valueField, "select");
+                        for (var i = 0; i < objects[type].length; i++) {
+                            var optionData = objects[type][i];
+                            var option = $("<option>");
+                            option.val(optionData.value);
+                            option.text(optionData.text);
+                            newWidget.append(option);
+                        }
+                    }
+                    if (newWidget) {
+                        newWidget.addClass("emailtemplate-value " + typeClassMap[type]);
+                    }
+                }
+            };
+
+            var rowAdded = function(event, row){
+                // When a new context row is added
+                row = $(row);
+                typeChanged(row);
+                row.find('.emailtemplate-type').change(typeChanged.bind(this, row));
+            };
+
+
+            rowAdded(null, $("#rowcontainer").find(".row"));
+            $("#rowcontainer").on("addrow", rowAdded);
+        });
+        {% endautoescape %}
+    </script>
+{% endblock %}
