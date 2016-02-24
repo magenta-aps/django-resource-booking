@@ -649,6 +649,11 @@ ul.footerlinks .footerlist-header {
 .form-group label[for*="id_"], .form-group label[for*="id_"] + input[id*="id_"] {
     margin-right: 7px;
 }
+.form-group label.required:before {
+    color: red;
+    content:  '* ';
+    display:inline;
+}
 a#attachAddFileField {
     margin-top: 10px;
     display: inline-block;

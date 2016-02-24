@@ -5,10 +5,13 @@ from djorm_pgfulltext.models import SearchManager
 from djorm_pgfulltext.fields import VectorField
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
+from django.contrib.auth.models import User
+from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext_lazy as _
 
 from recurrence.fields import RecurrenceField
 from booking.utils import ClassProperty
+
 
 LOGACTION_CREATE = ADDITION
 LOGACTION_CHANGE = CHANGE
@@ -17,6 +20,14 @@ LOGACTION_DELETE = DELETION
 # system defined ones by adding 128 to the value.
 LOGACTION_CUSTOM1 = 128 + 1
 LOGACTION_CUSTOM2 = 128 + 2
+LOGACTION_MANUAL_ENTRY = 128 + 64 + 1
+
+LOGACTION_DISPLAY_MAP = {
+    LOGACTION_CREATE: _(u'Oprettet'),
+    LOGACTION_CHANGE: _(u'Ændret'),
+    LOGACTION_DELETE: _(u'Slettet'),
+    LOGACTION_MANUAL_ENTRY: _(u'Log-post tilføjet manuelt')
+}
 
 
 def log_action(user, obj, action_flag, change_message=''):
@@ -283,26 +294,35 @@ class Resource(models.Model):
                                default=STUDY_MATERIAL)
     state = models.IntegerField(choices=state_choices, default=CREATED,
                                 verbose_name=_(u"Tilstand"))
-    title = models.CharField(max_length=60, verbose_name=_(u'Titel'))
+    title = models.CharField(
+        max_length=60,
+        blank=False,
+        verbose_name=_(u'Titel')
+    )
     teaser = models.TextField(
         max_length=210,
-        blank=True,
+        blank=False,
         verbose_name=_(u'Teaser')
     )
-    description = models.TextField(blank=True, verbose_name=_(u'Beskrivelse'))
+    description = models.TextField(
+        blank=False,
+        verbose_name=_(u'Beskrivelse')
+    )
     mouseover_description = models.CharField(
         max_length=512, blank=True, verbose_name=_(u'Mouseover-tekst')
     )
-    unit = models.ForeignKey(Unit, null=True, blank=True,
+    unit = models.ForeignKey(Unit, null=True, blank=False,
                              verbose_name=_('Enhed'))
     links = models.ManyToManyField(Link, blank=True, verbose_name=_('Links'))
     audience = models.IntegerField(choices=audience_choices,
                                    verbose_name=_(u'Målgruppe'),
-                                   default=AUDIENCE_ALL)
+                                   default=AUDIENCE_ALL,
+                                   blank=False)
 
     institution_level = models.IntegerField(choices=institution_choices,
                                             verbose_name=_(u'Institution'),
-                                            default=SECONDARY)
+                                            default=SECONDARY,
+                                            blank=False)
 
     gymnasiefag = models.ManyToManyField(
         Subject, blank=True,
@@ -848,6 +868,17 @@ class Room(models.Model):
         return self.name
 
 
+# Represents a room as saved on a booking.
+class BookedRoom(models.Model):
+    name = models.CharField(max_length=60, verbose_name=_(u'Navn'))
+
+    booking = models.ForeignKey(
+        'Booking',
+        null=False,
+        related_name='assigned_rooms'
+    )
+
+
 class Region(models.Model):
     name = models.CharField(
         max_length=16
@@ -1071,6 +1102,30 @@ class Booking(models.Model):
     visit = models.ForeignKey(Visit, null=True)
     booker = models.ForeignKey(Booker)
 
+    # Have to do late import of this here or we will get problems
+    # with cyclic dependencies
+    from profile.models import TEACHER, HOST
+
+    hosts = models.ManyToManyField(
+        User,
+        blank=True,
+        limit_choices_to={
+            'userprofile__user_role__role': HOST
+        },
+        related_name="hosted_bookings",
+        verbose_name=_(u'Værter')
+    )
+
+    teachers = models.ManyToManyField(
+        User,
+        blank=True,
+        limit_choices_to={
+            'userprofile__user_role__role': TEACHER
+        },
+        related_name="taught_bookings",
+        verbose_name=_(u'Undervisere')
+    )
+
     # ts_vector field for fulltext search
     search_index = VectorField()
 
@@ -1081,6 +1136,151 @@ class Booking(models.Model):
         verbose_name=_(u'Tekst-værdier til fritekstsøgning'),
         editable=False
     )
+
+    STATUS_NOT_NEEDED = 0
+    STATUS_OK = 1
+    STATUS_NOT_ASSIGNED = 2
+
+    host_status_choices = (
+        (STATUS_NOT_NEEDED, _(u'Tildeling af værter ikke påkrævet')),
+        (STATUS_NOT_ASSIGNED, _(u'Afventer tildeling')),
+        (STATUS_OK, _(u'Tildelt'))
+    )
+
+    host_status = models.IntegerField(
+        choices=host_status_choices,
+        default=STATUS_NOT_ASSIGNED,
+        verbose_name=_(u'Status for tildeling af værter')
+    )
+
+    teacher_status_choices = (
+        (STATUS_NOT_NEEDED, _(u'Tildeling af undervisere ikke påkrævet')),
+        (STATUS_NOT_ASSIGNED, _(u'Afventer tildeling')),
+        (STATUS_OK, _(u'Tildelt'))
+    )
+
+    teacher_status = models.IntegerField(
+        choices=teacher_status_choices,
+        default=STATUS_NOT_ASSIGNED,
+        verbose_name=_(u'Status for tildeling af undervisere')
+    )
+
+    room_status_choices = (
+        (STATUS_NOT_NEEDED, _(u'Tildeling af lokaler ikke påkrævet')),
+        (STATUS_NOT_ASSIGNED, _(u'Afventer tildeling')),
+        (STATUS_OK, _(u'Tildelt'))
+    )
+
+    room_status = models.IntegerField(
+        choices=room_status_choices,
+        default=STATUS_NOT_ASSIGNED,
+        verbose_name=_(u'Status for tildeling af lokaler')
+    )
+
+    WORKFLOW_STATUS_BEING_PLANNED = 0
+    WORKFLOW_STATUS_REJECTED = 1
+    WORKFLOW_STATUS_PLANNED = 2
+    WORKFLOW_STATUS_CONFIRMED = 3
+    WORKFLOW_STATUS_REMINDED = 4
+    WORKFLOW_STATUS_EXECUTED = 5
+    WORKFLOW_STATUS_EVALUATED = 6
+    WORKFLOW_STATUS_CANCELLED = 7
+    WORKFLOW_STATUS_NOSHOW = 8
+
+    BEING_PLANNED_STATUS_TEXT = u'Under planlægning'
+    PLANNED_STATUS_TEXT = u'Planlagt (ressourcer tildelt)'
+
+    workflow_status_choices = (
+        (WORKFLOW_STATUS_BEING_PLANNED, _(BEING_PLANNED_STATUS_TEXT)),
+        (WORKFLOW_STATUS_REJECTED, _(u'Afvist af undervisere eller værter')),
+        (WORKFLOW_STATUS_PLANNED, _(PLANNED_STATUS_TEXT)),
+        (WORKFLOW_STATUS_CONFIRMED, _(u'Bekræftet af booker')),
+        (WORKFLOW_STATUS_REMINDED, _(u'Påmindelse afsendt')),
+        (WORKFLOW_STATUS_EXECUTED, _(u'Afviklet')),
+        (WORKFLOW_STATUS_EVALUATED, _(u'Evalueret')),
+        (WORKFLOW_STATUS_CANCELLED, _(u'Aflyst')),
+        (WORKFLOW_STATUS_NOSHOW, _(u'Udeblevet')),
+    )
+
+    workflow_status = models.IntegerField(
+        choices=workflow_status_choices,
+        default=WORKFLOW_STATUS_BEING_PLANNED
+    )
+
+    comments = models.TextField(
+        blank=True,
+        default='',
+        verbose_name=_(u'Interne kommentarer')
+    )
+
+    valid_status_changes = {
+        WORKFLOW_STATUS_BEING_PLANNED: [
+            WORKFLOW_STATUS_REJECTED,
+            WORKFLOW_STATUS_PLANNED,
+            WORKFLOW_STATUS_CANCELLED,
+        ],
+        WORKFLOW_STATUS_REJECTED: [
+            WORKFLOW_STATUS_BEING_PLANNED,
+            WORKFLOW_STATUS_CANCELLED,
+        ],
+        WORKFLOW_STATUS_PLANNED: [
+            WORKFLOW_STATUS_CONFIRMED,
+            WORKFLOW_STATUS_CANCELLED,
+        ],
+        WORKFLOW_STATUS_CONFIRMED: [
+            WORKFLOW_STATUS_REMINDED,
+            WORKFLOW_STATUS_EXECUTED,
+            WORKFLOW_STATUS_CANCELLED,
+            WORKFLOW_STATUS_NOSHOW,
+        ],
+        WORKFLOW_STATUS_REMINDED: [
+            WORKFLOW_STATUS_EXECUTED,
+            WORKFLOW_STATUS_CANCELLED,
+            WORKFLOW_STATUS_NOSHOW,
+        ],
+        WORKFLOW_STATUS_EXECUTED: [
+            WORKFLOW_STATUS_EVALUATED,
+            WORKFLOW_STATUS_CANCELLED
+        ],
+        WORKFLOW_STATUS_EVALUATED: [
+            WORKFLOW_STATUS_BEING_PLANNED,
+        ],
+        WORKFLOW_STATUS_CANCELLED: [
+            WORKFLOW_STATUS_BEING_PLANNED,
+        ],
+        WORKFLOW_STATUS_NOSHOW: [
+            WORKFLOW_STATUS_BEING_PLANNED,
+        ],
+    }
+
+    def can_assign_resources(self):
+        return self.workflow_status == Booking.WORKFLOW_STATUS_BEING_PLANNED
+
+    def planned_status_is_blocked(self):
+        # It's not blocked if we can't choose it
+        ws_planned = Booking.WORKFLOW_STATUS_PLANNED
+        if ws_planned not in (x[0] for x in self.possible_status_choices()):
+            return False
+
+        statuses = (self.host_status, self.teacher_status, self.room_status)
+
+        if Booking.STATUS_NOT_ASSIGNED in statuses:
+            return True
+
+        return False
+
+    # TODO: Huske at logge status-skift via log_action
+
+    def possible_status_choices(self):
+        result = []
+
+        allowed = self.valid_status_changes[self.workflow_status]
+
+        for x in self.workflow_status_choices:
+            if x[0] in allowed:
+                result.append(x)
+
+        return result
 
     @classmethod
     def queryset_for_user(cls, user, qs=None):
@@ -1103,7 +1303,14 @@ class Booking(models.Model):
 
         return " ".join(result)
 
+    def get_subjects(self):
+        if hasattr(self, 'teacherbooking'):
+            return self.teacherbooking.subjects.all()
+        else:
+            return None
+
     def save(self, *args, **kwargs):
+
         # Save once to store relations
         super(Booking, self).save(*args, **kwargs)
 
@@ -1112,6 +1319,9 @@ class Booking(models.Model):
 
         # Do the final save
         super(Booking, self).save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        return reverse('booking-view', args=[self.pk])
 
 
 class ClassBooking(Booking):

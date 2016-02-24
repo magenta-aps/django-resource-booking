@@ -73,6 +73,7 @@ class OtherResourceForm(forms.ModelForm):
 
 
 class VisitForm(forms.ModelForm):
+    required_css_class = 'required'
 
     class Meta:
         model = Visit
@@ -136,13 +137,6 @@ class VisitForm(forms.ModelForm):
             return instance.type
         else:
             return self.cleaned_data['type']
-
-    def clean_locality(self):
-        data = self.cleaned_data
-        locality = data.get("locality")
-        if locality is None:
-            raise forms.ValidationError("This field is required")
-        return locality
 
     def clean(self):
         cleaned_data = super(VisitForm, self).clean()
