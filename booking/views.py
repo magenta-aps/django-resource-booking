@@ -134,7 +134,7 @@ class ContactComposeView(FormMixin, HasBackButtonMixin, TemplateView):
     def get(self, request, *args, **kwargs):
         form = self.get_form()
         return self.render_to_response(
-                self.get_context_data(form=form)
+            self.get_context_data(form=form)
         )
 
     def post(self, request, *args, **kwargs):

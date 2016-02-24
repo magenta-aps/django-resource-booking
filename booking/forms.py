@@ -470,6 +470,7 @@ class EmailComposeForm(BaseEmailComposeForm):
         label=_(u'Emne')
     )
 
+
 class GuestEmailComposeForm(BaseEmailComposeForm):
 
     name = forms.CharField(
@@ -496,8 +497,8 @@ class GuestEmailComposeForm(BaseEmailComposeForm):
     phone = forms.CharField(
         label=_(u'Telefon'),
         widget=TextInput(
-                attrs={'class': 'form-control input-sm',
-                       'placeholder': _(u'Dit telefonnummer'),
-                       'pattern': '(\(\+\d+\)|\+\d+)?\s*\d+[ \d]*'},
+            attrs={'class': 'form-control input-sm',
+                'placeholder': _(u'Dit telefonnummer'),
+                'pattern': '(\(\+\d+\)|\+\d+)?\s*\d+[ \d]*'},
         ),
     )
