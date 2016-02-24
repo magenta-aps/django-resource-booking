@@ -96,18 +96,17 @@
                             <dt>{% trans 'Arrangør' %}:</dt>
                             <dd><a href="#">{% trans 'Mere information om arrangøren' %}</a> <span class="glyphicon glyphicon-new-window"></span></dd>
                             
+                            {% if object.visitoccurrence_set.all %}
                             <dt>Hvornår:</dt>
-                            <!--<dd>{{ object.time }}</dd>-->
                             <dd>
-                                {% for description in object.recurrences_description %}
-                                    {{ description }}
-                                {% endfor %}
                                 <ul class="list-unstyled">
                                 {% for occurrence in object.visitoccurrence_set.all %}
                                     <li>{{ occurrence.start_datetime|date:'d-m-Y H:i' }}</li>
                                 {% endfor %}
                                 </ul>
                             </dd>
+                            {% endif %}
+
                             {% if object.duration %}
                                 <dt>{% trans 'Varighed' %}:</dt>
                                 <dd>{{ object.duration|timedelta }}</dd>
