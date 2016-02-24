@@ -702,7 +702,6 @@ class Visit(Resource):
         for minute in range(0, 60, 15):
             value = "%.2d:%.2d" % (hour, minute)
             duration_choices.append((value, value),)
-    print duration_choices
 
     duration = models.CharField(
         max_length=8,
