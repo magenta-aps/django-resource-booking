@@ -225,8 +225,13 @@
                                 <dd><strong>{{ object.visit.unit.name }}</strong><br> {{ object.visit.locality.name }}, {{ object.visit.locality.address_line }}, {{ object.visit.locality.zip_city }}</dd>
                             {% endif %}
 
-                            <dt>{% trans 'Arrangør:' %}</dt>
-                            <dd><a href="#" data-toggle="modal" data-target="#kontaktformular">{% trans 'Kontakt arrangøren' %}</a> <span class="glyphicon glyphicon-new-window"></span></dd>
+                            {% if object.visit.unit.contact %}
+                                <dt>{% trans 'Arrangør:' %}</dt>
+                                <dd>
+                                    {{ object.visit.unit.contact.name }}<br/>
+                                    <a href="{% url 'email' object.visit.unit.contact.id %}?back={{ thisurl | urlencode }}">{% trans 'Stil et spørgsmål om dette tilbud' %}</a> <span class="glyphicon glyphicon-new-window"></span>
+                                </dd>
+                            {% endif %}
 
                             <dt>{% trans 'Hvornår:' %}</dt>
                             <dd>

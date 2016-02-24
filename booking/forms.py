@@ -491,3 +491,38 @@ class EmailComposeForm(BaseEmailComposeForm):
         max_length=77,
         label=_(u'Emne')
     )
+
+
+class GuestEmailComposeForm(BaseEmailComposeForm):
+
+    name = forms.CharField(
+        max_length=100,
+        label=_(u'Navn'),
+        widget=TextInput(
+            attrs={
+                'class': 'form-control input-sm',
+                'placeholder': _(u'Dit navn')
+            }
+        )
+    )
+
+    email = forms.EmailField(
+        label=_(u'Email'),
+        widget=EmailInput(
+            attrs={
+                'class': 'form-control input-sm',
+                'placeholder': _(u'Din email-adresse')
+            }
+        )
+    )
+
+    phone = forms.CharField(
+        label=_(u'Telefon'),
+        widget=TextInput(
+            attrs={
+                'class': 'form-control input-sm',
+                'placeholder': _(u'Dit telefonnummer'),
+                'pattern': '(\(\+\d+\)|\+\d+)?\s*\d+[ \d]*'
+            },
+        ),
+    )

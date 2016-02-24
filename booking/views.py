@@ -47,7 +47,8 @@ from booking.models import ResourceGymnasieFag, ResourceGrundskoleFag
 from booking.models import EmailTemplate
 from booking.models import log_action
 from booking.models import LOGACTION_CREATE, LOGACTION_CHANGE
-from booking.forms import ResourceInitialForm, OtherResourceForm, VisitForm
+from booking.forms import ResourceInitialForm, OtherResourceForm, VisitForm, \
+    GuestEmailComposeForm
 from booking.forms import ClassBookingForm, TeacherBookingForm
 from booking.forms import VisitStudyMaterialForm, BookingSubjectLevelForm
 from booking.forms import BookerForm
@@ -124,6 +125,41 @@ class HasBackButtonMixin(ContextMixin):
         context = super(HasBackButtonMixin, self).get_context_data(**kwargs)
         context['oncancel'] = self.request.GET.get('back')
         return context
+
+
+class ContactComposeView(FormMixin, HasBackButtonMixin, TemplateView):
+    template_name = 'email/compose.html'
+    form_class = GuestEmailComposeForm
+
+    def get(self, request, *args, **kwargs):
+        form = self.get_form()
+        return self.render_to_response(
+            self.get_context_data(form=form)
+        )
+
+    def post(self, request, *args, **kwargs):
+        recipient_id = kwargs.get("recipient")
+        form = self.get_form()
+        if form.is_valid():
+            template = EmailTemplate.get_template(
+                EmailTemplate.SYSTEM__BASICMAIL_ENVELOPE,
+                None
+            )
+            if template is None:
+                raise Exception(_(u"There are no root templates with "
+                                  u"the SYSTEM__BASICMAIL_ENVELOPE key"))
+            context = {}
+            context.update(form.cleaned_data)
+            recipients = Person.objects.get(id=recipient_id)
+            KUEmailMessage.send_email(template, context, recipients)
+            return super(ContactComposeView, self).form_valid(form)
+
+        return self.render_to_response(
+            self.get_context_data(form=form)
+        )
+
+    def get_success_url(self):
+        return self.request.GET.get("back", "/")
 
 
 class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):

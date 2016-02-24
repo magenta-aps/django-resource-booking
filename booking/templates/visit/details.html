@@ -25,7 +25,7 @@
             {% if user.userprofile.can_create %}
                 <a class="pull-right btn btn-primary margin-bottom-10 margin-right-10" href="{% url 'visit-clone' object.pk %}?back={{ thisurl | urlencode }}">{% trans 'Opret kopi' %}</a>
             {% endif %}
-            
+
             <h1>{{ object.title }}</h1>
             <div class="well">
                 {% autoescape off %}
@@ -92,9 +92,15 @@
                                 <dt>{% trans 'Hvor' %}:</dt>
                                 <dd>{{ object.unit.name }}, {{ object.locality.name }}, {{ object.locality.address_line }}, {{ object.locality.zip_city }}</dd>
                             {% endif %}
-                            
-                            <dt>{% trans 'Arrangør' %}:</dt>
-                            <dd><a href="#">{% trans 'Mere information om arrangøren' %}</a> <span class="glyphicon glyphicon-new-window"></span></dd>
+
+                            {% if object.visit.unit.contact %}
+                                <dt>{% trans 'Arrangør:' %}</dt>
+                                <dd>
+                                    {{ object.unit.contact.name }}<br/>
+                                    <a href="#">{% trans 'Mere information om arrangøren' %}</a> <span class="glyphicon glyphicon-new-window"></span><br/>
+                                    <a href="{% url 'email' object.unit.contact.id %}?back={{ thisurl | urlencode }}">{% trans 'Stil et spørgsmål om dette tilbud' %}</a> <span class="glyphicon glyphicon-new-window"></span>
+                                </dd>
+                            {% endif %}
                             
                             {% if object.visitoccurrence_set.all %}
                             <dt>Hvornår:</dt>
