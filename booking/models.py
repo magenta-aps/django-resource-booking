@@ -753,11 +753,20 @@ class Visit(Resource):
         blank=True,
         null=True
     )
+
+    duration_choices = []
+    for hour in range(0, 12, 1):
+        for minute in range(0, 60, 30):
+            value = "%.2d:%.2d" % (hour, minute)
+            duration_choices.append((value, value),)
+    print duration_choices
+
     duration = models.CharField(
         max_length=8,
         verbose_name=_(u'Varighed'),
         blank=True,
         null=True,
+        choices=duration_choices
     )
     contact_persons = models.ManyToManyField(
         Person,
