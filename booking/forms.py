@@ -450,6 +450,7 @@ EmailTemplatePreviewContextForm = formset_factory(
 
 
 class BaseEmailComposeForm(forms.Form):
+    required_css_class = 'required'
 
     body = forms.CharField(
         max_length=65584,
