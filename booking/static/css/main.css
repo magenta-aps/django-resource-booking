@@ -693,6 +693,7 @@ div ul.errorlist {
     font-weight: normal;
 }
 
+<<<<<<< HEAD
 .email-recipients ul {
     max-height: 120px;
     overflow-y: auto;
@@ -704,6 +705,29 @@ a.template-overridden:active,
 a.template-overridden:visited {
     text-decoration: line-through;
     color: #999;
+}
+
+/* Datepicker */
+#time-select-btn {
+    position: relative;
+}
+#time-select {
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 0;
+    background-color: inherit;
+    border: none;
+}
+#adv-time-select {
+    display: none;
+    padding: 10px 0;
+}
+#adv-time-select-toggle {
+    
 }
 
 /*Backend specific styles end */

@@ -39,6 +39,15 @@
                 {% endautoescape %}
                 <!-- Richtext editor end -->
             </div>
+            <div>
+                {% if messages %}
+                <ul class="messages errorlist">
+                    {% for message in messages %}
+                    <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
             <div class="well order-buttons hidden-print">
                 {% if can_book %}
                 <button type="button" class="btn btn-default" data-toggle="modal" data-target="#startbooking">
