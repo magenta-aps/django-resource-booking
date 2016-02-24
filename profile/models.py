@@ -43,6 +43,11 @@ def role_to_text(role):
 
 class UserRole(models.Model):
     """"Superadmin, administrator, teacher, etc."""
+
+    class Meta:
+        verbose_name = _(u'brugerrolle')
+        verbose_name_plural = _(u'brugerroller')
+
     role = models.IntegerField(
         null=False,
         choices=user_role_choices,
@@ -57,6 +62,7 @@ class UserRole(models.Model):
 
 class UserProfile(models.Model):
     """User profile associated with each user."""
+
     user = models.OneToOneField(User)
     user_role = models.ForeignKey(UserRole)
     # Unit must always be specified for coordinators,
@@ -94,6 +100,9 @@ class UserProfile(models.Model):
             return len(qs) > 0
 
         return False
+
+    def can_edit_units(self):
+        return self.get_role() in (ADMINISTRATOR, FACULTY_EDITOR)
 
     def get_unit_queryset(self):
         role = self.get_role()
