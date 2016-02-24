@@ -7,10 +7,8 @@ from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
-
 from booking.models import Unit
 import uuid
-
 
 # User roles
 
