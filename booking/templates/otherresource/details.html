@@ -84,11 +84,13 @@
                                 <dd>{{ object.get_type_display }}</dd>
                             {% endif %}
 
-                            <dt>Arrangør:</dt>
-                            <dd>
-                                {{ object.unit.contact.name }}<br/>
-                                <a href="{% url 'email' object.unit.contact.id %}">{% trans 'Stil et spørgsmål om dette tilbud' %}</a> <span class="glyphicon glyphicon-new-window"></span>
-                            </dd>
+                            {% if object.visit.unit.contact %}
+                                <dt>Arrangør:</dt>
+                                <dd>
+                                    {{ object.unit.contact.name }}<br/>
+                                    <a href="{% url 'email' object.unit.contact.id %}">{% trans 'Stil et spørgsmål om dette tilbud' %}</a> <span class="glyphicon glyphicon-new-window"></span>
+                                </dd>
+                            {% endif %}
 
                         </dl>
                     </div>

@@ -90,12 +90,14 @@
                                 <dt>Hvor:</dt>
                                 <dd>{{ object.unit.name }}, {{ object.locality.name }}, {{ object.locality.address_line }}, {{ object.locality.zip_city }}</dd>
                             {% endif %}
-                            
-                            <dt>Arrangør:</dt>
-                            <dd>
-                                {{ object.unit.contact.name }}<br/>
-                                <a href="{% url 'email' object.unit.contact.id %}">{% trans 'Stil et spørgsmål om dette tilbud' %}</a> <span class="glyphicon glyphicon-new-window"></span>
-                            </dd>
+
+                            {% if object.visit.unit.contact %}
+                                <dt>Arrangør:</dt>
+                                <dd>
+                                    {{ object.unit.contact.name }}<br/>
+                                    <a href="{% url 'email' object.unit.contact.id %}">{% trans 'Stil et spørgsmål om dette tilbud' %}</a> <span class="glyphicon glyphicon-new-window"></span>
+                                </dd>
+                            {% endif %}
                             
                             <dt>Hvornår:</dt>
                             <!--<dd>{{ object.time }}</dd>-->
