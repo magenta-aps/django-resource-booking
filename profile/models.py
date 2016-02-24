@@ -69,6 +69,9 @@ class UserProfile(models.Model):
         return self.user_role.role
 
     def can_create(self):
+        return self.has_edit_role()
+
+    def has_edit_role(self):
         return self.get_role() in EDIT_ROLES
 
     def is_administrator(self):
