@@ -472,6 +472,7 @@ EmailTemplatePreviewContextForm = formset_factory(
 
 
 class BaseEmailComposeForm(forms.Form):
+    required_css_class = 'required'
 
     body = forms.CharField(
         max_length=65584,
@@ -525,4 +526,5 @@ class GuestEmailComposeForm(BaseEmailComposeForm):
                 'pattern': '(\(\+\d+\)|\+\d+)?\s*\d+[ \d]*'
             },
         ),
+        required=False
     )
