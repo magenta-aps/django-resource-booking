@@ -4,7 +4,6 @@
 {% load booking_tags %}
 
 {% block head %}
-    <link rel="stylesheet" href="{% static 'thirdparty/bootstrap-datetime-picker/css/bootstrap-datetimepicker.min.css' %}"/>
 {% endblock %}
 
 {% block header %}
@@ -14,7 +13,7 @@
 
     {% include 'booking/modal/header.html' %}
     <div class="modal-body">
-        <p>Udfyld venligst nedenstående formular for at booke et tilbud. Felter markeret med * er obligatoriske.</p>
+        <p>{% trans "Udfyld venligst nedenstående formular for at booke et tilbud. Felter markeret med * er obligatoriske." %}</p>
         <div class="divider"></div>
 
         <form id="bookingform" class="form-horizontal clearfix" data-toggle="validator" role="form" novalidate="true" method="POST">
@@ -39,7 +38,7 @@
                 {% for form in subjectform %}
                     {{ form.id }}
                     <div class="form-group" id="rowprototype">
-                        <label class="col-sm-2 control-label" for="{{ form.subject.id_for_label }}">Fag/Niveau</label>
+                        <label class="col-sm-2 control-label" for="{{ form.subject.id_for_label }}">{% trans "Fag/Niveau" %}</label>
                         <div class="col-sm-4">
                             {{ form.subject }}
                         </div>
@@ -47,7 +46,7 @@
                             {{ form.level }}
                         </div>
                         <div class="col-sm-2 rowadder">
-                            <a href="#" id="addRow">Tilføj ny</a>
+                            <a href="javascript:void()" id="addRow">{% trans "Tilføj ny" %}</a>
                         </div>
                     </div>
                 {% endfor %}
@@ -57,7 +56,7 @@
 
                 {% if bookingform.scheduled %}
                     <div class="form-group">
-                        <label class="col-sm-2 control-label" for="tlf">Tidspunkt*</label>
+                        <label class="col-sm-2 control-label" for="{{ bookingform.time.id_for_label }}">{% trans "Tidspunkt*" %}</label>
                         <div class="col-sm-6{% if bookingform.time.errors %} has-error{% endif %}">
                             {{ bookingform.time }}
                         </div>
@@ -67,7 +66,7 @@
                     </div>
                 {% else %}
                     <div class="form-group">
-                        <label class="col-sm-2 control-label" for="tlf">Ønsket tidspunkt*</label>
+                        <label class="col-sm-2 control-label" for="{{ bookingform.desired_time.id_for_label }}">{% trans "Ønsket tidspunkt*" %}</label>
                         <div class="col-sm-6{% if bookingform.desired_time.errors %} has-error{% endif %}">
                             {{ bookingform.desired_time }}
                         </div>
@@ -77,8 +76,9 @@
                     </div>
                 {% endif %}
 
+                {% if bookingform.tour_desired %}
                 <div class="form-group">
-                    <label class="col-sm-2 control-label" for="tlf">Rundvisning</label>
+                    <label class="col-sm-2 control-label" for="{{ bookingform.tour_desired.id_for_label }}">{% trans "Rundvisning" %}</label>
                     <div class="col-sm-6{% if bookingform.tour_desired.errors %} has-error{% endif %}">
                         {{ bookingform.tour_desired }}
                     </div>
@@ -86,9 +86,10 @@
                         {{ bookingform.tour_desired.errors }}
                     </div>
                 </div>
+                {% endif %}
 
                 <div class="form-group">
-                    <label class="col-sm-2 control-label" for="skole">Kommentarer</label>
+                    <label class="col-sm-2 control-label" for="{{ bookerform.notes.id_for_label }}">{% trans "Kommentarer" %}</label>
                     <div class="col-sm-6{% if bookerform.notes.errors %} has-error{% endif %}">
                         {{ bookerform.notes }}
                     </div>
@@ -112,16 +113,6 @@
     {% include 'booking/booker/location_script.html' %}
     {% include 'booking/booker/school_script.html' %}
 
-    <script type="text/javascript" src="{% static 'thirdparty/bootstrap-datetime-picker/js/bootstrap-datetimepicker.min.js' %}"></script>
-    <script type="text/javascript">
-        $(function(){
-            // See doc at http://www.malot.fr/bootstrap-datetimepicker/
-            $("input[name=time]").datetimepicker({
-                locale: 'da',
-                autoclose: true
-            });
-        });
-    </script>
     <script type="text/javascript">
     $(function(){
         $("#submitbutton").click(function(){
@@ -142,7 +133,7 @@
                 var adder = row.find(".rowadder");
                 adder.addClass("rowremover");
                 adder.removeClass("rowadder");
-                adder.find("a").text("Fjern");
+                adder.find("a").text('{% trans "Fjern" %}');
                 adder.find("a").click(removeRowEvent);
             };
 
