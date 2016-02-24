@@ -24,8 +24,10 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.utils import timezone
 from django.utils.decorators import method_decorator
+from django.utils.http import urlquote
 from django.utils.translation import ugettext as _
 from django.views.generic import View, TemplateView, ListView, DetailView
+from django.views.generic.base import ContextMixin
 from django.views.generic.edit import UpdateView, FormMixin, DeleteView
 from django.views.defaults import bad_request
 
@@ -116,7 +118,15 @@ class RoleRequiredMixin(object):
         )
 
 
-class EmailComposeView(FormMixin, TemplateView):
+class HasBackButtonMixin(ContextMixin):
+
+    def get_context_data(self, **kwargs):
+        context = super(HasBackButtonMixin, self).get_context_data(**kwargs)
+        context['oncancel'] = self.request.GET.get('back')
+        return context
+
+
+class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
     template_name = 'email/compose.html'
     form_class = EmailComposeForm
     recipients = []
@@ -172,6 +182,8 @@ class EmailComposeView(FormMixin, TemplateView):
         context['templates'] = EmailTemplate.get_template(self.template_key,
                                                           self.get_unit(),
                                                           True)
+        context['template_key'] = self.template_key
+        context['template_unit'] = self.get_unit()
         context.update(kwargs)
         return super(EmailComposeView, self).get_context_data(**context)
 
@@ -703,8 +715,10 @@ class SearchView(ListView):
         if len(querylist) > 0:
             context['fullquery'] = reverse('search') + \
                 "?" + "&".join(querylist)
+            context['thisurl'] = context['fullquery']
         else:
             context['fullquery'] = None
+            context['thisurl'] = reverse('search')
 
         if (self.request.user.is_authenticated() and
                 self.request.user.userprofile.has_edit_role()):
@@ -753,7 +767,7 @@ class SearchView(ListView):
         return size
 
 
-class EditResourceInitialView(TemplateView):
+class EditResourceInitialView(HasBackButtonMixin, TemplateView):
 
     template_name = 'resource/form.html'
 
@@ -776,11 +790,13 @@ class EditResourceInitialView(TemplateView):
         form = ResourceInitialForm(request.POST)
         if form.is_valid():
             type_id = int(form.cleaned_data['type'])
+            back = urlquote(request.GET.get('back'))
             if type_id in Visit.applicable_types:
-                return redirect(reverse('visit-create') + "?type=%d" % type_id)
+                return redirect(reverse('visit-create') +
+                                "?type=%d&back=%s" % (type_id, back))
             else:
                 return redirect(reverse('otherresource-create') +
-                                "?type=%d" % type_id)
+                                "?type=%d&back=%s" % (type_id, back))
 
         return self.render_to_response(
             self.get_context_data(form=form)
@@ -799,7 +815,7 @@ class ResourceDetailView(View):
         raise Http404
 
 
-class EditResourceView(UpdateView):
+class EditResourceView(HasBackButtonMixin, UpdateView):
 
     def __init__(self, *args, **kwargs):
         super(EditResourceView, self).__init__(*args, **kwargs)
@@ -858,6 +874,14 @@ class EditResourceView(UpdateView):
         context['grundskolefag_selected'] = self.grundskolefag_selected()
 
         context['klassetrin_range'] = range(1, 10)
+
+        if self.object and self.object.id:
+            context['thisurl'] = reverse('resource-edit',
+                                         args=[self.object.id])
+        else:
+            context['thisurl'] = reverse('resource-create')
+
+        # context['oncancel'] = self.request.GET.get('back')
 
         context.update(kwargs)
 
@@ -1003,6 +1027,16 @@ class EditOtherResourceView(EditResourceView):
         raise Exception("Couldn't find template for "
                         "object type %d" % self.object.type)
 
+    def get_context_data(self, **kwargs):
+        context = {}
+        if self.object is not None and self.object.id:
+            context['thisurl'] = reverse('otherresource-edit',
+                                         args=[self.object.id])
+        else:
+            context['thisurl'] = reverse('otherresource-create')
+        context.update(kwargs)
+        return super(EditOtherResourceView, self).get_context_data(**context)
+
 
 class OtherResourceDetailView(DetailView):
     """Display Visit details"""
@@ -1042,6 +1076,9 @@ class OtherResourceDetailView(DetailView):
              'text': _(u'Søgeresultat')},
             {'text': _(u'Om tilbuddet')},
         ]
+
+        context['thisurl'] = reverse('otherresource-view',
+                                     args=[self.object.id])
 
         context.update(kwargs)
 
@@ -1232,6 +1269,11 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
 
         context['klassetrin_range'] = range(1, 10)
 
+        if self.object is not None and self.object.id:
+            context['thisurl'] = reverse('visit-edit', args=[self.object.id])
+        else:
+            context['thisurl'] = reverse('visit-create')
+
         context.update(kwargs)
 
         return super(EditVisitView, self).get_context_data(**context)
@@ -1321,6 +1363,8 @@ class VisitDetailView(DetailView):
              'text': _(u'Søgeresultat')},
             {'text': _(u'Om tilbuddet')},
         ]
+
+        context['thisurl'] = reverse('visit-view', args=[self.object.id])
 
         context['EmailTemplate'] = EmailTemplate
 
@@ -1878,6 +1922,10 @@ class BookingDetailView(LoggedViewMixin, DetailView):
             {'text': _(u'Detaljevisning')},
         ]
 
+        context['EmailTemplate'] = EmailTemplate
+
+        context['thisurl'] = reverse('booking-view', args=[self.object.id])
+
         user = self.request.user
         if hasattr(user, 'userprofile') and \
                 user.userprofile.can_notify(self.object):
@@ -1916,6 +1964,7 @@ class EmailTemplateListView(ListView):
         context['breadcrumbs'] = [
             {'text': _(u'Emailskabelonliste')},
         ]
+        context['thisurl'] = reverse('emailtemplate-list')
         context.update(kwargs)
         return super(EmailTemplateListView, self).get_context_data(**context)
 
@@ -1927,7 +1976,8 @@ class EmailTemplateListView(ListView):
         return qs
 
 
-class EmailTemplateEditView(UpdateView, UnitAccessRequiredMixin):
+class EmailTemplateEditView(UpdateView, UnitAccessRequiredMixin,
+                            HasBackButtonMixin):
     template_name = 'email/form.html'
     form_class = EmailTemplateForm
     model = EmailTemplate
@@ -1940,6 +1990,10 @@ class EmailTemplateEditView(UpdateView, UnitAccessRequiredMixin):
             self.object = EmailTemplate.objects.get(pk=pk)
             self.check_item(self.object)
         form = self.get_form()
+        if 'key' in request.GET:
+            form.initial['key'] = request.GET['key']
+        if 'unit' in request.GET:
+            form.initial['unit'] = request.GET['unit']
         return self.render_to_response(
             self.get_context_data(form=form)
         )
@@ -1979,6 +2033,12 @@ class EmailTemplateEditView(UpdateView, UnitAccessRequiredMixin):
             ])
         else:
             context['breadcrumbs'].append({'text': _(u'Opret')})
+
+        if self.object is not None and self.object.id is not None:
+            context['thisurl'] = reverse('emailtemplate-edit',
+                                         args=[self.object.id])
+        else:
+            context['thisurl'] = reverse('emailtemplate-create')
 
         context.update(kwargs)
         return super(EmailTemplateEditView, self).get_context_data(**context)
@@ -2022,11 +2082,11 @@ class EmailTemplateDetailView(View):
     def get(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
         formset = EmailTemplatePreviewContextForm()
-        template = EmailTemplate.objects.get(pk=pk)
+        self.object = EmailTemplate.objects.get(pk=pk)
 
         context = {}
-        if template is not None:
-            variables = template.get_template_variables()
+        if self.object is not None:
+            variables = self.object.get_template_variables()
             formset.initial = []
             for variable in variables:
                 base_variable = variable.split(".")[0]
@@ -2046,10 +2106,10 @@ class EmailTemplateDetailView(View):
                             pass
 
         data = {'form': formset,
-                'subject': template.expand_subject(context, True),
-                'body': template.expand_body(context, True),
+                'subject': self.object.expand_subject(context, True),
+                'body': self.object.expand_body(context, True),
                 'objects': self._getObjectJson(),
-                'template': template
+                'template': self.object
                 }
 
         data.update(self.get_context_data())
@@ -2059,7 +2119,7 @@ class EmailTemplateDetailView(View):
     def post(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
         formset = EmailTemplatePreviewContextForm(request.POST)
-        template = EmailTemplate.objects.get(pk=pk)
+        self.object = EmailTemplate.objects.get(pk=pk)
 
         context = {}
         formset.full_clean()
@@ -2077,10 +2137,10 @@ class EmailTemplateDetailView(View):
                 context[form.cleaned_data['key']] = value
 
         data = {'form': formset,
-                'subject': template.expand_subject(context, True),
-                'body': template.expand_body(context, True),
+                'subject': self.object.expand_subject(context, True),
+                'body': self.object.expand_body(context, True),
                 'objects': self._getObjectJson(),
-                'template': template
+                'template': self.object
                 }
         data.update(self.get_context_data())
 
@@ -2093,10 +2153,12 @@ class EmailTemplateDetailView(View):
              'text': _(u'Emailskabelonliste')},
             {'text': _(u'Emailskabelon')},
         ]
+        context['thisurl'] = reverse('emailtemplate-view',
+                                     args=[self.object.id])
         return context
 
 
-class EmailTemplateDeleteView(DeleteView):
+class EmailTemplateDeleteView(HasBackButtonMixin, DeleteView):
     template_name = 'email/delete.html'
     model = EmailTemplate
     success_url = reverse_lazy('emailtemplate-list')

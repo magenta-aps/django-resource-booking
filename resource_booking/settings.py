@@ -100,7 +100,8 @@ NPM_FILE_PATTERNS = {
     'bootstrap-datetime-picker': ['js/bootstrap-datetimepicker.min.js',
                                   'js/locales/bootstrap-datetimepicker.da.js',
                                   'css/bootstrap-datetimepicker.min.css'],
-    'bootstrap-3-typeahead': ['bootstrap3-typeahead.min.js']
+    'bootstrap-3-typeahead': ['bootstrap3-typeahead.min.js'],
+    'jquery-table-sort': ['jquery.table_sort.min.js']
 }
 
 # Django-tinymce config

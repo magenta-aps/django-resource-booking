@@ -17,9 +17,9 @@
             <h1>{% trans "Preview Emailskabelon" %}</h1>
         </div>
         <div class="col-sm-4 text-right">
-            <a href="{% url 'emailtemplate-edit' template.id %}" class="btn btn-primary">{% trans "Rediger skabelon" %}</a>
-            <a href="{% url 'emailtemplate-clone' template.id %}" class="btn btn-primary">{% trans "Kopier skabelon" %}</a>
-            <a href="{% url 'emailtemplate-delete' template.id %}" class="btn btn-primary">{% trans "Slet skabelon" %}</a>
+            <a href="{% url 'emailtemplate-edit' template.id %}?back={{ thisurl | urlencode }}" class="btn btn-primary">{% trans "Rediger skabelon" %}</a>
+            <a href="{% url 'emailtemplate-clone' template.id %}?back={{ thisurl | urlencode }}" class="btn btn-primary">{% trans "Kopier skabelon" %}</a>
+            <a href="{% url 'emailtemplate-delete' template.id %}?back={{ thisurl | urlencode }}" class="btn btn-primary">{% trans "Slet skabelon" %}</a>
         </div>
         </div>
     <div class="row">
