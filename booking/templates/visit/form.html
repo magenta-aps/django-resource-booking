@@ -24,9 +24,9 @@
         <div class="col-sm-8">
             <h1>{% if object %}{% trans "Rediger tilbud" %}{% else %}{% trans "Nyt tilbud" %}{% endif %}</h1>
         </div>
-    <div class="col-sm-4 text-right">
-        <a href="#" class="btn btn-default btn-sm openall">Udvid alle felter</a> <a href="#" class="btn btn-default btn-sm closeall">Luk alle felter</a>
-    </div>
+        <div class="col-sm-4 text-right">
+            <a href="#" class="btn btn-default btn-sm openall">{% trans "Udvid alle felter" %}</a> <a href="#" class="btn btn-default btn-sm closeall">{% trans "Luk alle felter" %}</a>
+        </div>
     </div>
     <hr/>
     <form action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
@@ -35,7 +35,7 @@
         {{ form.non_field_errors }}
 
         <div id="accordion" class="panel-group" aria-multiselectable="true" role="tablist">
-        <div class="panel panel-default">
+            <div class="panel panel-default">
                 <div id="headingCategory" class="panel-heading" role="tab">
                     <h4 class="panel-title">
                         <a class="" aria-controls="collapseCategory" aria-expanded="true" href="#collapseCategory" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Kategorisering" %}</a><span class="caret"></span>
@@ -45,13 +45,15 @@
                 {% if not object.pk or form.type.errors or form.tags.errors %}in{% endif %}
                 " aria-labelledby="headingCategory" role="tabpanel" aria-expanded="true" style="">
                     <div class="panel-body">
-                    <div class="row form-group">
-                            <div>{{ form.type.errors }}</div>
+                        <div class="row form-group">
+                            <div>
+                                {{ form.type.errors }}
+                            </div>
                             <div class="col-sm-2">
                             <label class="{{ form.type.css_classes }}" for="{{ form.type.id_for_label }}">{{ form.type.label }}:</label>
                             </div>
                             <div class="col-sm-10">
-                            {{ form.type }}
+                                {{ form.type }}
                             </div>
                         </div>
                     </div>
@@ -67,13 +69,15 @@
                 {% if not object.pk or form.title.errors or form.title.errors %}in{% endif %}
                 " aria-labelledby="headingCategory" role="tabpanel" aria-expanded="true" style="">
                     <div class="panel-body">
-                    <div class="row form-group">
-                            <div>{{ form.title.errors }}</div>
+                        <div class="row form-group">
+                            <div>
+                                {{ form.title.errors }}
+                            </div>
                             <div class="col-sm-2">
                             <label class="{{ form.title.css_classes }}" for="{{ form.title.id_for_label }}">{{ form.title.label }}:</label>
                             </div>
                             <div class="col-sm-10">
-                            {{ form.title }}
+                                {{ form.title }}
                             </div>
                         </div>
                     </div>
@@ -92,30 +96,36 @@
                 " aria-labelledby="headingDescription" role="tabpanel">
                     <div class="panel-body">
                         <div class="row form-group">
-                            <div>{{ form.teaser.errors }}</div>
+                            <div>
+                                {{ form.teaser.errors }}
+                            </div>
                             <div class="col-sm-2">
-                            <label class="{{ form.teaser.css_classes }}" for="{{ form.teaser.id_for_label }}">{{ form.teaser.label }}:</label>
+                                <label for="{{ form.teaser.id_for_label }}">{{ form.teaser.label }}:</label>
                             </div>
                             <div class="col-sm-10">
-                            {{ form.teaser }}
+                                {{ form.teaser }}
                             </div>
                         </div>
                         <div class="row form-group">
-                            <div>{{ form.description.errors }}</div>
+                            <div>
+                                {{ form.description.errors }}
+                            </div>
                             <div class="col-sm-2">
-                            <label class="{{ form.description.css_classes }}" for="{{ form.description.id_for_label }}">{{ form.description.label }}:</label>
+                                <label for="{{ form.description.id_for_label }}">{{ form.description.label }}:</label>
                             </div>
                             <div class="col-sm-10">
-                            {{ form.description }}
+                                {{ form.description }}
                             </div>
                         </div>
                         <div class="row form-group">
-                            <div>{{ form.price.errors }}</div>
+                            <div>
+                                {{ form.price.errors }}
+                            </div>
                             <div class="col-sm-2">
-                            <label class="{{ form.price.css_classes }}" for="{{ form.price.id_for_label }}">{{ form.price.label }}:</label>
+                                <label for="{{ form.price.id_for_label }}">{{ form.price.label }}:</label>
                             </div>
                             <div class="col-sm-10">
-                            {{ form.price }}
+                                {{ form.price }}
                             </div>
                         </div>
                         <div class="row form-group">
@@ -123,22 +133,26 @@
                             <label>{% trans "Vedhæftede filer" %}:</label>
                             </div>
                             <div class="col-sm-10">
-                            <ul>
-                            {% for material in fileformset.studymaterials %}
-                                <li>
-                                    <a href="{{ MEDIA_URL }}{{ material.file.url }}">{{ material.file.name | upload_name_strip_path }}</a>
-                                </li>
-                            {% endfor %}
-                            </ul>
-                            {{ fileformset.management_form }}
-                            <div id="attachFileFields">
-                            {% for fileform in fileformset %}
-                                {{ fileform.file }}
-                            {% endfor %}
+                                {% if fileformset.studymaterials %}
+                                <ul>
+                                {% for material in fileformset.studymaterials %}
+                                    <li>
+                                        <a href="{{ MEDIA_URL }}{{ material.file.url }}">{{ material.file.name | upload_name_strip_path }}</a>
+                                    </li>
+                                {% endfor %}
+                                </ul>
+                                {% endif %}
+                                {{ fileformset.management_form }}
+                                <div id="attachFileFields">
+                                {% for fileform in fileformset %}
+                                    <div class="fileupload">
+                                        {{ fileform.file }}
+                                    </div>
+                                {% endfor %}
+                                </div>
+                                <a id="attachAddFileField">{% trans "Tilføj ny fil" %}</a>
                             </div>
-                            <a id="attachAddFileField">{% trans "Tilføj ny fil" %}</a>
                         </div>
-                    </div>
                     </div>
                 </div>
             </div>
@@ -154,92 +168,61 @@
                     " aria-labelledby="headingAudience" role="tabpanel" aria-expanded="true" style="">
                     <div class="panel-body">
                         <div class="row form-group">
-                            <div>{{ form.audience.errors }}</div>
+                            <div>
+                                {{ form.audience.errors }}
+                            </div>
                             <div class="col-sm-2">
-                            <label for="{{ form.audience.id_for_label }}">{{ form.audience.label }}:</label>
+                                <label for="{{ form.audience.id_for_label }}">{{ form.audience.label }}:</label>
                             </div>
                             <div class="col-sm-10">
-                            {{ form.audience }}
+                                {{ form.audience }}
                             </div>
                         </div>
 
                         <div class="row form-group">
-                            <div>{{ form.institution_level.errors }}</div>
+                            <div>
+                                {{ form.institution_level.errors }}
+                            </div>
                             <div class="col-sm-2">
-                            <label class="{{ form.institution_level.css_classes }}" for="{{ form.institution_level.id_for_label }}">{{ form.institution_level.label }}:</label>
+                                <label for="{{ form.institution_level.id_for_label }}">{{ form.institution_level.label }}:</label>
                             </div>
                             <div class="col-sm-10">
-                            {{ form.institution_level }}
+                                {{ form.institution_level }}
                             </div>
                         </div>
-                        <!-- <div class="row form-group">
-                            <div>{{ form.topics.errors }}</div>
-                            <div class="col-sm-2">
-                            <label for="{{ form.topics.id_for_label }}">{{ form.topics.label }}:</label>
-                            </div>
-                            <div class="col-sm-10">
-                            {{ form.topics }}
-                            </div>
-                        </div> -->
 
                         <div class="institution_level_dependent" data-display-value="1">
-                            <div class="row form-group">
-                                <div>{{ form.level.errors }}</div>
-                                <div class="col-sm-2">
-                                <label class="{{ form.level.css_classes }}" for="{{ form.level.id_for_label }}">{{ form.level.label }}:</label>
-                                </div>
-                                <div class="col-sm-10">
-                                {{ form.level }}
-                                </div>
+                            <div class="row form-group" id="gymnasie-fag-edit">
+                                {% include "common/snippets/edit-gymnasiefag.html" %}
                             </div>
                         </div>
+
                         <div class="institution_level_dependent" data-display-value="2">
-                            <div class="row form-group">
-                                <div>{{ form.class_level_min.errors }}</div>
-                                <div class="col-sm-2">
-                                <label class="{{ form.class_level.css_classes }}" for="{{ form.class_level_min.id_for_label }}">{{ form.class_level_min.label }}:</label>
-                                </div>
-                                <div class="col-sm-10">
-                                {{ form.class_level_min }}
-                                </div>
-                            </div>
-                            <div class="row form-group">
-                                <div>{{ form.class_level_max.errors }}</div>
-                                <div class="col-sm-2">
-                                <label class="{{ form.class_level_max.css_classes }}" for="{{ form.class_level_max.id_for_label }}">{{ form.class_level_max.label }}:</label>
-                                </div>
-                                <div class="col-sm-10">
-                                {{ form.class_level_max }}
-                                </div>
+                            <div class="row form-group" id="grundskole-fag-edit">
+                                {% include "common/snippets/edit-grundskolefag.html" %}
                             </div>
                         </div>
-                        <div class="institution_level_dependent">
-                            <div class="row form-group">
-                                <div>{{ form.subjects.errors }}</div>
-                                <div class="col-sm-2">
-                                <label class="{{ form.subjects.css_classes }}" for="{{ form.subjects.id_for_label }}">{{ form.subjects.label }}:</label>
-                                </div>
-                                <div class="col-sm-10">
-                                {{ form.subjects }}
-                                </div>
+
+                        <div class="row form-group">
+                            <div>
+                                {{ form.minimum_number_of_visitors.errors }}
+                            </div>
+                            <div class="col-sm-2">
+                                <label for="{{ form.minimum_number_of_visitors.id_for_label }}">{{ form.minimum_number_of_visitors.label }}:</label>
+                            </div>
+                            <div class="col-sm-10">
+                                {{ form.minimum_number_of_visitors }}
                             </div>
                         </div>
                         <div class="row form-group">
-                            <div>{{ form.minimum_number_of_visitors.errors }}</div>
+                            <div>
+                                {{ form.maximum_number_of_visitors.errors }}
+                            </div>
                             <div class="col-sm-2">
-                            <label class="{{ form.minimum_number_of_visitors.css_classes }}" for="{{ form.minimum_number_of_visitors.id_for_label }}">{{ form.minimum_number_of_visitors.label }}:</label>
+                                <label for="{{ form.maximum_number_of_visitors.id_for_label }}">{{ form.maximum_number_of_visitors.label }}:</label>
                             </div>
                             <div class="col-sm-10">
-                            {{ form.minimum_number_of_visitors }}
-                            </div>
-                        </div>
-                        <div class="row form-group">
-                            <div>{{ form.maximum_number_of_visitors.errors }}</div>
-                            <div class="col-sm-2">
-                            <label class="{{ form.maximum_number_of_visitors.css_classes }}" for="{{ form.maximum_number_of_visitors.id_for_label }}">{{ form.maximum_number_of_visitors.label }}:</label>
-                            </div>
-                            <div class="col-sm-10">
-                            {{ form.maximum_number_of_visitors }}
+                                {{ form.maximum_number_of_visitors }}
                             </div>
                         </div>
                     </div>
@@ -390,7 +373,7 @@
                         </div>
                     </div>
                 </div>
-           
+           </div>
 
             <div class="panel panel-default">
                 <div id="headingRooms" class="panel-heading" role="tab">
@@ -485,32 +468,32 @@
                 {% if not object.pk or form.enabled.errors or form.contact_persons.errors %}in{% endif %}
                 " aria-labelledby="headingContact" role="tabpanel" aria-expanded="false" style="">
                     <div class="panel-body">
-                    <div class="row form-group">
-                            <div>{{ form.unit.errors }}</div>
-                            <div class="col-sm-2">
-                            <label class="{{ form.unit.css_classes }}" for="{{ form.unit.id_for_label }}">{{ form.unit.label }}:</label>
-                            </div>
-                            <div class="col-sm-10">
-                            {{ form.unit }}
-                        </div>
-                    </div>
-                    <div class="row form-group">
-                            <div>{{ form.enabled.errors }}</div>
-                            <div class="col-sm-12">
-                                <label class="radiolabel" for="{{ form.enabled.id_for_label }}">{{ form.enabled }} Kan bookes</label>
+                        <div class="row form-group">
+                                <div>{{ form.unit.errors }}</div>
+                                <div class="col-sm-2">
+                                <label for="{{ form.unit.id_for_label }}">{{ form.unit.label }}:</label>
+                                </div>
+                                <div class="col-sm-10">
+                                {{ form.unit }}
                             </div>
                         </div>
                         <div class="row form-group">
-                            <div>{{ form.contact_persons.errors }}</div>
-                            <div class="col-sm-2">
-                            <label for="{{ form.contact_persons.id_for_label }}">{{ form.contact_persons.label }}:</label>
+                                <div>{{ form.enabled.errors }}</div>
+                                <div class="col-sm-12">
+                                    <label class="radiolabel" for="{{ form.enabled.id_for_label }}">{{ form.enabled }} Kan bookes</label>
+                                </div>
                             </div>
-                            <div class="col-sm-10">
-                            {{ form.contact_persons }}
+                            <div class="row form-group">
+                                <div>{{ form.contact_persons.errors }}</div>
+                                <div class="col-sm-2">
+                                <label for="{{ form.contact_persons.id_for_label }}">{{ form.contact_persons.label }}:</label>
+                                </div>
+                                <div class="col-sm-10">
+                                {{ form.contact_persons }}
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
             </div>
             
             <div class="panel panel-default">
@@ -524,8 +507,7 @@
                         <div class="row form-group">  
                             <div>{{ form.preparation_time.errors }}</div>
                             <div class="col-sm-2">
-                            <label for="{{
-                                form.preparation_time.id_for_label }}">{{ form.preparation_time.label }}:</label>
+                            <label for="{{ form.preparation_time.id_for_label }}">{{ form.preparation_time.label }}:</label>
                                 </div>
                                 <div class="col-sm-2">
                             {{ form.preparation_time }}
@@ -534,8 +516,7 @@
                         <div class="row form-group">  
                             <div>{{ form.comment.errors }}</div>
                             <div class="col-sm-2">
-                            <label for="{{
-                                form.comment.id_for_label }}">{{ form.comment.label }}:</label>
+                            <label for="{{ form.comment.id_for_label }}">{{ form.comment.label }}:</label>
                                 </div>
                                 <div class="col-sm-10">
                             {{ form.comment }}
@@ -544,7 +525,7 @@
                     </div>
                 </div>
             </div>
-</div>
+        </div>
         {% include 'common/save_cancel.html' %}
         <div class="divider"></div>
     </form>
@@ -556,26 +537,19 @@
     {{ form.media }}
     <script type="text/javascript" src="{% static 'thirdparty/bootstrap-datetime-picker/js/bootstrap-datetimepicker.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/formutil.js' %}"></script>
-    <script type="text/javascript"><!--
-        $(function(){
-            var totalFormsField = $("#{{ fileformset.management_form.TOTAL_FORMS.id_for_label }}"),
-                maxForms = parseInt($("#{{ fileformset.management_form.MAX_NUM_FORMS.id_for_label }}").val()) || 1000,
-                fieldContainer = $("#attachFileFields"),
-                numberFinder = /\d+/;
+    <script type="text/javascript" src="{% static 'js/formset-row.js' %}"></script>
 
+    <script type="text/javascript"><!--
+
+        $(function(){
             $("#attachAddFileField").click(function(){
-                if (fieldContainer.find("input[type=file]").length < maxForms) {
-                    var newFileField = fieldContainer.find("input[type=file]").last().clone();
-                    var match = numberFinder.exec(newFileField.attr("id"));
-                    if (match) {
-                        var number = parseInt(match[0], 10) + 1;
-                        newFileField.attr("id", newFileField.attr("id").replace(numberFinder, number));
-                        newFileField.attr("name", newFileField.attr("name").replace(numberFinder, number));
-                        newFileField.val(null);
-                        fieldContainer.append(newFileField);
-                        totalFormsField.val(fieldContainer.find("input[type=file]").length);
-                    }
-                }
+                formset.addRow(
+                        $("#{{ fileformset.management_form.TOTAL_FORMS.id_for_label }}"),
+                        $("#{{ fileformset.management_form.MAX_NUM_FORMS.id_for_label }}"),
+                        $(".fileupload").first(),
+                        $("#attachFileFields")
+                );
+                return false;
             });
         });
 
@@ -585,7 +559,6 @@
                 var value = select.val();
                 $(".institution_level_dependent").each(function() {
                     var attr = $(this).attr("data-display-value") || 0xFFFFFF;
-                    console.log(attr, value, parseInt(value), parseInt(attr))
                     if (parseInt(value) & parseInt(attr)) {
                         $(this).show()
                     } else {

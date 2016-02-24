@@ -98,7 +98,9 @@ strong,
 .inline-block {
     display: inline-block;
 }
-
+.margin-right-10 {
+    margin-right: 10px;
+}
 .divider {
     height: 20px;
 }
@@ -601,8 +603,8 @@ ul.footerlinks .footerlist-header {
 }
 
 .modal-content iframe {
-    width: 100%;
     border: 0 none;
+    width: 100%;
 }
 
 .stepwizard-step p {
@@ -696,6 +698,26 @@ div ul.errorlist {
     list-style-position: inside;
     max-width: 70%;
 }
+
+/* gymnasiefag-edit & grundskolefag-edit */
+#gymnasiefag-fag,
+#gymnasiefag-levels,
+#grundskolefag-fag,
+#grundskolefag-minclass,
+#grundskolefag-maxclass {
+    margin-right: 10px;
+}
+#gymnasiefag-empty,
+#grundskolefag-empty {
+    margin-bottom: 10px;
+}
+.fagedit-group {
+    display: inline-block;
+}
+.fagedit-group label {
+    font-weight: normal;
+}
+
 /*Backend specific styles end */
 @media screen and (max-width:768px) {
     html,

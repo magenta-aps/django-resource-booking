@@ -1,0 +1,41 @@
+{% load i18n %}
+<div class="row">
+    <div class="col-sm-8">
+        <ol class="breadcrumb hidden-xs">
+            <li>{% trans 'Du er her:' %}</li>
+            {% for breadcrumb in breadcrumbs %}
+                {% if not forloop.last %}
+                    <li><a href="{{ breadcrumb.url }}">{{ breadcrumb.text }}</a></li>
+                {% else %}
+                    <li class="active">{{ breadcrumb.text }}</li>
+                {% endif %}
+            {% endfor %}
+        </ol>
+    </div>
+    <div class="col-sm-4 text-right small-icons hidden-print">
+        <a title="E-mail" href="#" class="glyphicon glyphicon-envelope print-icon" aria-hidden="true">
+            <span class="sr-only">{% trans 'Send via e-mail' %}</span>
+        </a>
+        <a title="Print" href="#" onclick="window.print();return false" aria-hidden="true" class="glyphicon glyphicon-print print-icon">
+            <span class="sr-only">{% trans 'Print' %}</span>
+        </a>
+        <!--AddThis Button BEGIN -->
+        <script type="text/javascript">
+            <!--
+            var addthis_config = {
+                ui_click: 'true',
+                services_compact: 'facebook,twitter,blogger,digg,reddit,gmail,google,linkedin,myspace,delicious,favorites',
+                services_exclude: 'email,print',
+                ui_header_color: '#ffffff',
+                ui_header_background: '#666666',
+                ui_cobrand: 'www.ku.dk'
+            }
+            // -->
+        </script>
+        <a href="https://www.addthis.com/bookmark.php?v=250&amp;pub=copenhagenuni" class="addthis_button_compact">
+            <img src="/static/img/shareknap_dk.gif" width="28" height="12" alt="Bookmark and Share" style="border:0" />
+        </a>
+        <script type="text/javascript" src="https://s7.addthis.com/js/250/addthis_widget.js#pub=copenhagenuni"></script>
+        <!-- AddThis Button END -->
+    </div>
+</div>

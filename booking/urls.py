@@ -6,9 +6,11 @@ from .views import MainPageView
 
 from booking.views import PostcodeView, SchoolView
 from booking.views import RrulestrView
-from booking.views import EditVisit, VisitDetailView, SearchView
+from booking.views import EditResourceInitialView, ResourceDetailView
 from booking.views import BookingView, BookingSuccessView
-
+from booking.views import EditOtherResourceView, OtherResourceDetailView
+from booking.views import EditVisitView, VisitDetailView
+from booking.views import SearchView
 
 from django.views.generic import TemplateView
 
@@ -61,26 +63,60 @@ urlpatterns = patterns(
         template_name='iframe-index.html'),
         name='iframe_search'),
 
+    url(r'^resource/create$',
+        EditResourceInitialView.as_view(),
+        name='resource-create'),
+    url(r'^resource/(?P<pk>[0-9]+)/$',
+        ResourceDetailView.as_view(),
+        name='resource-view'),
+    url(r'^resource/(?P<pk>[0-9]+)/edit$',
+        EditResourceInitialView.as_view(),
+        name='resource-edit'),
+
+    url(r'^otherresource/create$',
+        EditOtherResourceView.as_view(success_url='create'),
+        name='otherresource-create'),
+    url(r'^otherresource/(?P<pk>[0-9]+)/?$',
+        OtherResourceDetailView.as_view(),
+        name='otherresource-view'),
+    url(r'^otherresource/(?P<pk>[0-9]+)/edit$',
+        EditOtherResourceView.as_view(), name='otherresource-edit'),
+    url(r'^otherresource/(?P<pk>[0-9]+)/clone$',
+        EditOtherResourceView.as_view(), {'clone': True},
+        name='otherresource-clone'),
+
+
     url(r'^visit/create$',
-        EditVisit.as_view(success_url='create'), name='visit_create'),
+        EditVisitView.as_view(success_url='create'),
+        name='visit-create'),
     url(r'^visit/(?P<pk>[0-9]+)/?$',
-        VisitDetailView.as_view(), name='visit'),
+        VisitDetailView.as_view(),
+        name='visit-view'),
     url(r'^visit/(?P<pk>[0-9]+)/edit$',
-        EditVisit.as_view(), name='visit_edit'),
+        EditVisitView.as_view(),
+        name='visit-edit'),
     url(r'^visit/(?P<pk>[0-9]+)/clone$',
-        EditVisit.as_view(), {'clone': True}, name='visit_clone'),
+        EditVisitView.as_view(),
+        {'clone': True},
+        name='visit-clone'),
+    url(r'^visit/(?P<visit>[0-9]+)/book$',
+        BookingView.as_view(),
+        name='visit-book'),
+    url(r'^visit/(?P<visit>[0-9]+)/book/success$',
+        BookingSuccessView.as_view(),
+        name='visit-book-success'),
 
     # Ajax api
     url(r'^jsapi/rrulestr$', RrulestrView.as_view(), name='jsapi_rrulestr'),
 
     url(r'^tinymce/', include('tinymce.urls')),
 
-    url(r'^visit/(?P<visit>[0-9]+)/book$', BookingView.as_view(),
-        name='book-visit'),
-    url(r'^visit/(?P<visit>[0-9]+)/book/success$',
-        BookingSuccessView.as_view(), name='book-visit-success'),
 
-    url(r'^postcode/(?P<code>[0-9]{4})$', PostcodeView.as_view()),
-    url(r'^school', SchoolView.as_view()),
+    url(r'^postcode/(?P<code>[0-9]{4})$',
+        PostcodeView.as_view(),
+        name='postcode'),
+    url(r'^school',
+        SchoolView.as_view(),
+        name='school'),
 
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,0 +1,11 @@
+<div class="row form-group">
+    <div>
+        {{ form.audience.errors }}
+    </div>
+    <div class="col-sm-2">
+        <label class="{{ form.audience.css_classes }}" for="{{ form.audience.id_for_label }}">{{ form.audience.label }}:</label>
+    </div>
+    <div class="col-sm-10">
+        {{ form.audience }}
+    </div>
+</div>

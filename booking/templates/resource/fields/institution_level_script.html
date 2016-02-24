@@ -1,0 +1,54 @@
+<script type="text/javascript">
+    <!--
+        $(function(){
+            var select = $("#{{ form.institution_level.id_for_label }}");
+            var changeDisplay = function(){
+                var value = select.val();
+                $(".institution_level_dependent").each(function() {
+                    var attr = $(this).attr("data-display-value") || 0xFFFFFF;
+                    console.log(attr, value, parseInt(value), parseInt(attr))
+                    if (parseInt(value) & parseInt(attr)) {
+                        $(this).show()
+                    } else {
+                        $(this).hide()
+                    }
+                })
+            };
+            select.change(changeDisplay);
+            changeDisplay();
+        });
+
+        $(function(){
+            var type_map = {
+                "Gymnasie": 1,
+                "Grundskole": 2,
+                "Begge": 3
+            };
+            $('#{{form.institution_level.id_for_label }}').on("change", function() {
+                var val = parseInt($(this).val()) || 0xFFFFFF;
+                $('input[name=subjects]').each(function() {
+                    var txt = $(this).parent().text().match(
+                            /\((Gymnasie|Grundskole|Begge)\)/
+                    );
+                    if (txt && txt.length) {
+                        txt = txt[1];
+                    }
+                    v = type_map[txt || ''];
+                    if (v && parseInt(v) & val) {
+                        $(this).parent().show();
+                        if ($(this).attr("data-prev-selected")) {
+                            $(this).removeAttr("data-prev-selected");
+                            $(this).prop("checked", true);
+                        }
+                    } else {
+                        $(this).parent().hide();
+                        if ($(this).is(":checked")) {
+                            $(this).prop("checked", false);
+                            $(this).attr("data-prev-selected", "yes");
+                        }
+                    }
+                });
+            }).trigger("change");
+        });
+    //-->
+</script>

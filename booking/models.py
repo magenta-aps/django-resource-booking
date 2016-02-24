@@ -1,5 +1,5 @@
 # encoding: utf-8
-
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from djorm_pgfulltext.models import SearchManager
 from djorm_pgfulltext.fields import VectorField
@@ -8,6 +8,7 @@ from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
 from django.utils.translation import ugettext_lazy as _
 
 from recurrence.fields import RecurrenceField
+from booking.utils import ClassProperty
 
 LOGACTION_CREATE = ADDITION
 LOGACTION_CHANGE = CHANGE
@@ -119,6 +120,22 @@ class Subject(models.Model):
 
     def __unicode__(self):
         return '%s (%s)' % (self.name, self.get_subject_type_display())
+
+    @classmethod
+    def gymnasiefag_qs(cls):
+        return Subject.objects.filter(
+            subject_type__in=[
+                cls.SUBJECT_TYPE_GYMNASIE, cls.SUBJECT_TYPE_BOTH
+            ]
+        )
+
+    @classmethod
+    def grundskolefag_qs(cls):
+        return Subject.objects.filter(
+            subject_type__in=[
+                cls.SUBJECT_TYPE_GRUNDSKOLE, cls.SUBJECT_TYPE_BOTH
+            ]
+        )
 
 
 class Link(models.Model):
@@ -250,15 +267,6 @@ class Resource(models.Model):
 
     institution_choices = Subject.type_choices
 
-    # Level choices - A, B or C
-    A = 0
-    B = 1
-    C = 2
-
-    level_choices = (
-        (A, u'A'), (B, u'B'), (C, u'C')
-    )
-
     # Resource state - created, active and discontinued.
     CREATED = 0
     ACTIVE = 1
@@ -270,22 +278,25 @@ class Resource(models.Model):
         (DISCONTINUED, _(u"Ophørt"))
     )
 
-    class_level_choices = [(i, unicode(i)) for i in range(0, 11)]
-
     enabled = models.BooleanField(verbose_name=_(u'Aktiv'), default=True)
     type = models.IntegerField(choices=resource_type_choices,
                                default=STUDY_MATERIAL)
     state = models.IntegerField(choices=state_choices, default=CREATED,
                                 verbose_name=_(u"Tilstand"))
     title = models.CharField(
-        blank=False, max_length=60, verbose_name=_(u'Titel')
+        max_length=60,
+        blank=False,
+        verbose_name=_(u'Titel')
     )
     teaser = models.TextField(
         max_length=210,
         blank=False,
         verbose_name=_(u'Teaser')
     )
-    description = models.TextField(blank=False, verbose_name=_(u'Beskrivelse'))
+    description = models.TextField(
+        blank=False,
+        verbose_name=_(u'Beskrivelse')
+    )
     mouseover_description = models.CharField(
         max_length=512, blank=True, verbose_name=_(u'Mouseover-tekst')
     )
@@ -294,23 +305,28 @@ class Resource(models.Model):
     links = models.ManyToManyField(Link, blank=True, verbose_name=_('Links'))
     audience = models.IntegerField(choices=audience_choices,
                                    verbose_name=_(u'Målgruppe'),
-                                   default=AUDIENCE_ALL)
+                                   default=AUDIENCE_ALL,
+                                   blank=False)
+
     institution_level = models.IntegerField(choices=institution_choices,
                                             verbose_name=_(u'Institution'),
-                                            default=SECONDARY)
-    subjects = models.ManyToManyField(Subject, blank=False,
-                                      verbose_name=_(u'Fag'))
-    level = models.IntegerField(choices=level_choices,
-                                verbose_name=_(u"Niveau"),
-                                blank=True,
-                                null=True)
-    # TODO: We should validate that min <= max here.
-    class_level_min = models.IntegerField(choices=class_level_choices,
-                                          default=0,
-                                          verbose_name=_(u'Klassetrin fra'))
-    class_level_max = models.IntegerField(choices=class_level_choices,
-                                          default=10,
-                                          verbose_name=_(u'Klassetrin til'))
+                                            default=SECONDARY,
+                                            blank=False)
+
+    gymnasiefag = models.ManyToManyField(
+        Subject, blank=True,
+        verbose_name=_(u'Gymnasiefag'),
+        through='ResourceGymnasieFag',
+        related_name='gymnasie_resources'
+    )
+
+    grundskolefag = models.ManyToManyField(
+        Subject, blank=True,
+        verbose_name=_(u'Grundskolefag'),
+        through='ResourceGrundskoleFag',
+        related_name='grundskole_resources'
+    )
+
     tags = models.ManyToManyField(Tag, blank=True, verbose_name=_(u'Tags'))
     topics = models.ManyToManyField(
         Topic, blank=True, verbose_name=_(u'Emner')
@@ -341,7 +357,7 @@ class Resource(models.Model):
     )
 
     def __unicode__(self):
-        return self.title
+        return self.title + "(%s)" % str(self.id)
 
     def generate_extra_search_text(self):
         texts = []
@@ -372,12 +388,9 @@ class Resource(models.Model):
         # Display-value for institution_level
         texts.append(self.get_institution_level_display() or "")
 
-        # Name of all subjects
-        for s in self.subjects.all():
-            texts.append(s.name)
-
-        # Display-value for level
-        texts.append(self.get_level_display() or "")
+        # All subjects
+        for x in self.all_subjects():
+            texts.append(x.display_value())
 
         # Name of all tags
         for t in self.tags.all():
@@ -395,44 +408,11 @@ class Resource(models.Model):
 
         return "-"
 
-    def get_subjects_display(self):
-        res = []
-        gym = []
-        gs = []
-
-        for fag in self.subjects.all():
-            if fag.subject_type & Subject.SUBJECT_TYPE_GYMNASIE:
-                gym.append(fag)
-            if fag.subject_type & Subject.SUBJECT_TYPE_GRUNDSKOLE:
-                gs.append(fag)
-
-        if (self.institution_level & Subject.SUBJECT_TYPE_GYMNASIE and
-                len(gym) > 0):
-            res.append(_(u"Gymnasie"))
-            if self.level:
-                res.append(_(u" (niveau %s)") % self.get_level_display())
-            res.append(u": ")
-            res.append(", ".join([x.name for x in gym]))
-            res.append(". ")
-
-        if (self.institution_level & Subject.SUBJECT_TYPE_GRUNDSKOLE and
-                len(gs) > 0):
-            res.append(_(u"Grundskole"))
-            if self.class_level_min:
-                res.append(_(u" (klassetrin "))
-                res.append(self.class_level_min)
-                if self.class_level_max != self.class_level_min:
-                    res.append("-")
-                    res.append(self.class_level_max)
-                res.append(u")")
-            else:
-                if self.class_level_max:
-                    res.append(_(u" (klassetrin %s)") % self.class_level_max)
-            res.append(u": ")
-            res.append(", ".join([x.name for x in gs]))
-            res.append(u". ")
-
-        return "".join([unicode(x) for x in res])
+    def all_subjects(self):
+        return (
+            [x for x in self.resourcegymnasiefag_set.all()] +
+            [x for x in self.resourcegrundskolefag_set.all()]
+        )
 
     def display_locality(self):
         try:
@@ -441,6 +421,162 @@ class Resource(models.Model):
             pass
 
         return "-"
+
+
+class ResourceGymnasieFag(models.Model):
+    class Meta:
+        verbose_name = _(u"Gymnasiefagtilknytning")
+        verbose_name_plural = _(u"Gymnasiefagtilknytninger")
+
+    class_level_choices = [(i, unicode(i)) for i in range(0, 11)]
+
+    resource = models.ForeignKey(Resource, blank=False, null=False)
+    subject = models.ForeignKey(
+        Subject, blank=False, null=False,
+        limit_choices_to={
+            'subject_type__in': [
+                Subject.SUBJECT_TYPE_GYMNASIE,
+                Subject.SUBJECT_TYPE_BOTH
+            ]
+        }
+    )
+
+    level = models.ManyToManyField('GymnasieLevel')
+
+    @classmethod
+    def create_from_submitvalue(cls, resource, value):
+        f = ResourceGymnasieFag(resource=resource)
+
+        values = value.split(",")
+
+        # First element in value list is pk of subject
+        f.subject = Subject.objects.get(pk=values.pop(0))
+
+        f.save()
+
+        # Rest of value list is pks for subject levels
+        for x in values:
+            l = GymnasieLevel.objects.get(pk=x)
+            f.level.add(l)
+
+        return f
+
+    def __unicode__(self):
+        return u"%s (for '%s')" % (self.display_value(), self.resource.title)
+
+    def ordered_levels(self):
+        return [x for x in self.level.all().order_by('level')]
+
+    @classmethod
+    def display(cls, subject, levels):
+        levels = [unicode(x) for x in levels]
+
+        nr_levels = len(levels)
+        if nr_levels == 1:
+            levels_desc = levels[0]
+        elif nr_levels == 2:
+            levels_desc = u'%s eller %s' % (levels[0], levels[1])
+        elif nr_levels > 2:
+            last = levels.pop()
+            levels_desc = u'%s eller %s' % (", ".join(levels), last)
+
+        if levels_desc:
+            return u'%s på %s niveau' % (
+                unicode(subject.name), levels_desc
+            )
+        else:
+            return unicode(subject.name)
+
+    def display_value(self):
+        return ResourceGymnasieFag.display(
+            self.subject, self.ordered_levels()
+        )
+
+    def as_submitvalue(self):
+        res = unicode(self.subject.pk)
+        levels = ",".join([unicode(x.pk) for x in self.ordered_levels()])
+
+        if levels:
+            res = ",".join([res, levels])
+
+        return res
+
+
+class ResourceGrundskoleFag(models.Model):
+    class Meta:
+        verbose_name = _(u"Grundskolefagtilknytning")
+        verbose_name_plural = _(u"Grundskolefagtilknytninger")
+
+    class_level_choices = [(i, unicode(i)) for i in range(0, 11)]
+
+    resource = models.ForeignKey(Resource, blank=False, null=False)
+    subject = models.ForeignKey(
+        Subject, blank=False, null=False,
+        limit_choices_to={
+            'subject_type__in': [
+                Subject.SUBJECT_TYPE_GRUNDSKOLE,
+                Subject.SUBJECT_TYPE_BOTH
+            ]
+        }
+    )
+
+    # TODO: We should validate that min <= max here.
+    class_level_min = models.IntegerField(choices=class_level_choices,
+                                          default=0,
+                                          verbose_name=_(u'Klassetrin fra'))
+    class_level_max = models.IntegerField(choices=class_level_choices,
+                                          default=10,
+                                          verbose_name=_(u'Klassetrin til'))
+
+    @classmethod
+    def create_from_submitvalue(cls, resource, value):
+        f = ResourceGrundskoleFag(resource=resource)
+
+        values = value.split(",")
+
+        # First element in value list is pk of subject
+        f.subject = Subject.objects.get(pk=values.pop(0))
+
+        f.class_level_min = values.pop(0) or 0
+        f.class_level_max = values.pop(0) or 0
+
+        f.save()
+
+        return f
+
+    def __unicode__(self):
+        return u"%s (for '%s')" % (self.display_value(), self.resource.title)
+
+    @classmethod
+    def display(cls, subject, clevel_min, clevel_max):
+        class_range = []
+        if clevel_min:
+            class_range.append(clevel_min)
+            if clevel_max != clevel_min:
+                class_range.append(clevel_max)
+        else:
+            if clevel_max:
+                class_range.append(clevel_max)
+
+        if len(class_range) > 0:
+            return u'%s på klassetrin %s' % (
+                subject.name,
+                "-".join([unicode(x) for x in class_range])
+            )
+        else:
+            return unicode(subject.name)
+
+    def display_value(self):
+        return ResourceGrundskoleFag.display(
+            self.subject, self.class_level_min, self.class_level_max
+        )
+
+    def as_submitvalue(self):
+        return ",".join([
+            unicode(self.subject.pk),
+            unicode(self.class_level_min or 0),
+            unicode(self.class_level_max or 0)
+        ])
 
 
 class GymnasieLevel(models.Model):
@@ -458,6 +594,15 @@ class GymnasieLevel(models.Model):
                                 blank=True,
                                 null=True)
 
+    @classmethod
+    def create_defaults(cls):
+        for val, desc in GymnasieLevel.level_choices:
+            try:
+                GymnasieLevel.objects.filter(level=val)[0]
+            except IndexError:
+                o = GymnasieLevel(level=val)
+                o.save()
+
     def __unicode__(self):
         return self.get_level_display()
 
@@ -473,6 +618,23 @@ class OtherResource(Resource):
         ),
         config='pg_catalog.danish',
         auto_update_search_field=True
+    )
+
+    applicable_types = [Resource.OTHER_OFFERS, Resource.STUDY_MATERIAL,
+                        Resource.OPEN_HOUSE, Resource.ASSIGNMENT_HELP,
+                        Resource.STUDIEPRAKTIK]
+
+    @ClassProperty
+    def type_choices(self):
+        return (type for type in
+                Resource.resource_type_choices
+                if type[0] in OtherResource.applicable_types)
+
+    link = models.URLField(
+        verbose_name=u'Link',
+        max_length=256,
+        blank=True,
+        null=True
     )
 
     def save(self, *args, **kwargs):
@@ -499,6 +661,15 @@ class Visit(Resource):
         auto_update_search_field=True
     )
 
+    applicable_types = [Resource.STUDENT_FOR_A_DAY, Resource.GROUP_VISIT,
+                        Resource.STUDY_PROJECT, Resource.TEACHER_EVENT]
+
+    @ClassProperty
+    def type_choices(self):
+        return (x for x in
+                Resource.resource_type_choices
+                if x[0] in Visit.applicable_types)
+
     rooms_needed = models.BooleanField(
         default=True,
         verbose_name=_(u"Tilbuddet kræver brug af et eller flere lokaler")
@@ -513,12 +684,18 @@ class Visit(Resource):
     )
 
     rooms_assignment = models.IntegerField(
-        choices=rooms_assignment_choices, default=ROOMS_ASSIGNED_ON_VISIT,
-        verbose_name=_(u"Tildeling af lokale(r)")
+        choices=rooms_assignment_choices,
+        default=ROOMS_ASSIGNED_ON_VISIT,
+        verbose_name=_(u"Tildeling af lokale(r)"),
+        blank=True,
+        null=True
     )
 
     locality = models.ForeignKey(
-        Locality, verbose_name=_(u'Lokalitet'), blank=True, null=True
+        Locality,
+        verbose_name=_(u'Lokalitet'),
+        blank=True,
+        null=True
     )
     duration = models.CharField(
         max_length=8,
@@ -532,10 +709,17 @@ class Visit(Resource):
         verbose_name=_(u'Kontaktpersoner')
     )
     do_send_evaluation = models.BooleanField(
-        verbose_name=_(u"Udsend evaluering"), default=False
+        verbose_name=_(u"Udsend evaluering"),
+        default=False
     )
-    price = models.DecimalField(default=0, blank=True, max_digits=10,
-                                decimal_places=2, verbose_name=_(u'Pris'))
+    price = models.DecimalField(
+        default=0,
+        null=True,
+        blank=True,
+        max_digits=10,
+        decimal_places=2,
+        verbose_name=_(u'Pris')
+    )
     additional_services = models.ManyToManyField(
         AdditionalService,
         verbose_name=_(u'Ekstra ydelser'),
@@ -546,8 +730,10 @@ class Visit(Resource):
         verbose_name=_(u'Særlige krav'),
         blank=True
     )
-    is_group_visit = models.BooleanField(default=True,
-                                         verbose_name=_(u'Gruppebesøg'))
+    is_group_visit = models.BooleanField(
+        default=True,
+        verbose_name=_(u'Gruppebesøg')
+    )
     # Min/max number of visitors - only relevant for group visits.
     minimum_number_of_visitors = models.IntegerField(
         null=True,
@@ -568,11 +754,18 @@ class Visit(Resource):
     )
     preparation_time = models.IntegerField(
         default=0,
+        null=True,
         verbose_name=_(u'Forberedelsestid (i timer)')
     )
     recurrences = RecurrenceField(
         null=True,
+        blank=True,
         verbose_name=_(u'Gentagelser')
+    )
+    tour_available = models.BooleanField(
+        default=False,
+        blank=True,
+        verbose_name=_(u'Mulighed for rundvisning')
     )
 
     def save(self, *args, **kwargs):
@@ -696,13 +889,51 @@ class School(models.Model):
         null=True
     )
 
+    ELEMENTARY_SCHOOL = 0
+    GYMNASIE = 1
+    type_choices = (
+        (ELEMENTARY_SCHOOL, u'Folkeskole'),
+        (GYMNASIE, u'Gymnasie')
+    )
+
+    type = models.IntegerField(
+        choices=type_choices,
+        default=1,
+        verbose_name=_(u'Uddannelsestype')
+    )
+
     def __unicode__(self):
         return self.name
 
     @staticmethod
-    def search(query):
+    def search(query, type=None):
         query = query.lower()
-        return School.objects.filter(name__icontains=query)
+        qs = School.objects.filter(name__icontains=query)
+        if type is not None:
+            try:
+                type = int(type)
+                if type in [id for id, title in School.type_choices]:
+                    qs = qs.filter(type=type)
+            except ValueError:
+                pass
+        return qs
+
+    @staticmethod
+    def create_defaults():
+        from booking.data import schools
+        for data, type in [
+                (schools.elementary_schools, School.ELEMENTARY_SCHOOL),
+                (schools.high_schools, School.GYMNASIE)]:
+            for name, postnr in data:
+                try:
+                    School.objects.get(name=name, postcode__number=postnr)
+                except ObjectDoesNotExist:
+                    try:
+                        postcode = PostCode.get(postnr)
+                        School(name=name, postcode=postcode, type=type).save()
+                    except ObjectDoesNotExist:
+                        print "Warning: Postcode %d not found in database. " \
+                              "Not adding school %s" % (postcode, name)
 
 
 class Booker(models.Model):
@@ -772,7 +1003,8 @@ class Booker(models.Model):
     )
 
     attendee_count = models.IntegerField(
-        blank=False,
+        blank=True,
+        null=True,
         verbose_name=u'Antal deltagere'
     )
     notes = models.TextField(
