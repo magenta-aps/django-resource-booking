@@ -92,7 +92,10 @@
                             {% endif %}
                             
                             <dt>Arrangør:</dt>
-                            <dd><a href="#" data-toggle="modal" data-target="#kontaktformular">Stil et spørgsmål om dette tilbud</a> <span class="glyphicon glyphicon-new-window"></span></dd>
+                            <dd>
+                                {{ object.unit.contact.name }}<br/>
+                                <a href="{% url 'email' object.unit.contact.id %}">{% trans 'Stil et spørgsmål om dette tilbud' %}</a> <span class="glyphicon glyphicon-new-window"></span>
+                            </dd>
                             
                             <dt>Hvornår:</dt>
                             <!--<dd>{{ object.time }}</dd>-->
