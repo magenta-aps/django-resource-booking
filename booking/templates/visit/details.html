@@ -55,10 +55,12 @@
                     <span class="glyphicon glyphicon-chevron-right"></span>
                 </button>
                 {% endif %}
-                <button type="button" class="btn btn-default" data-toggle="modal" data-target="#kontaktformular">
-                    {% trans 'Spørg om tilbud' %}
-                    <span class="glyphicon glyphicon-question-sign"></span>
-                </button>
+                {% if object.unit.contact %}
+                    <a href="{% url 'email' object.unit.contact.id %}?back={{ thisurl | urlencode }}" class="btn btn-default">
+                        {% trans 'Spørg om tilbud' %}
+                        <span class="glyphicon glyphicon-question-sign"></span>
+                    </a>
+                {% endif %}
             </div>
             {% if can_book %}
             <div class="disclaimer">{% trans 'Bemærk at din bestilling først er bindende, når du har modtaget en bekræftelse fra den ansvarlige arrangør fra Københavns Universitet.' %}</div>
@@ -107,7 +109,6 @@
                                 <dd>
                                     {{ object.unit.contact.name }}<br/>
                                     <a href="#">{% trans 'Mere information om arrangøren' %}</a> <span class="glyphicon glyphicon-new-window"></span><br/>
-                                    <a href="{% url 'email' object.unit.contact.id %}?back={{ thisurl | urlencode }}">{% trans 'Stil et spørgsmål om dette tilbud' %}</a> <span class="glyphicon glyphicon-new-window"></span>
                                 </dd>
                             {% endif %}
                             
