@@ -1,9 +1,14 @@
 # encoding: utf-8
+from datetime import timedelta
 from django.db import models
+from django.conf import settings
 from django.contrib.auth.models import User
+from django.core.urlresolvers import reverse
 from django.db.models import Q
+from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from booking.models import Unit
+import uuid
 
 # User roles
 
@@ -66,6 +71,9 @@ class UserProfile(models.Model):
         """Return the role code, i.e. TEACHER, HOST, etc."""
         return self.user_role.role
 
+    def get_role_name(self):
+        return self.user_role.name
+
     def can_create(self):
         return self.get_role() in EDIT_ROLES
 
@@ -108,3 +116,45 @@ class UserProfile(models.Model):
 
         # Everyone else just get access to their own group
         return Unit.objects.filter(pk=unit.pk)
+
+
+class EmailLoginEntry(models.Model):
+    uuid = models.UUIDField(default=uuid.uuid4)
+    success_url = models.CharField(max_length=2024)
+    user = models.ForeignKey(User)
+    created = models.DateTimeField(default=timezone.now)
+    expires_in = models.DurationField(default=timedelta(hours=48))
+
+    def as_url(self):
+        return reverse('email-login', args=[self.uuid, self.success_url])
+
+    def as_full_url(self, request):
+        return request.build_absolute_uri(self.as_url())
+
+    def as_public_url(self):
+        return settings.PUBLIC_URL + self.as_url()
+
+    def is_expired(self):
+        return (self.created + self.expires_in) < timezone.now()
+
+    def __unicode__(self):
+        return unicode(self.as_public_url())
+
+    @classmethod
+    def create_from_url(cls, user, url, **kwargs):
+        attrs = {
+            'user': user,
+            'success_url': url,
+        }
+        attrs.update(kwargs)
+
+        return cls.objects.create(**attrs)
+
+    @classmethod
+    def create_from_reverse(cls, user, rev_tag, *args, **kwargs):
+        if len(args) > 0:
+            url = reverse(rev_tag, args=args)
+        else:
+            url = reverse(rev_tag)
+
+        return cls.create_from_url(user, url, **kwargs)
