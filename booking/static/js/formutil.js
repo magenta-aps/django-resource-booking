@@ -111,7 +111,10 @@ $(function() {
 });
 
 (function($) {
-    var item_template = $('#gymnasiefag-item-template').get(0).innerHTML;
+    var item_template = $('#gymnasiefag-item-template').get(0).innerHTML,
+        $fag_select = $('#gymnasiefag-fag');
+
+    $fag_select.attr('data-reset-value', $fag_select.val())
     
     function check_list_display() {
         if($('#gymnasiefag-list li').length > 0) {
@@ -123,7 +126,7 @@ $(function() {
         }
     }
     check_list_display();
-    
+
     function build_description(fag_desc, level_texts) {
         var result = fag_desc
         if (level_texts.length > 0) {
@@ -139,12 +142,12 @@ $(function() {
             if (level_texts.length > 0) {
                 str = level_texts.join(", ") + ", " + str
             }
-            
+
             result = result + ' på ' + str + ' niveau';
         }
         return result
     }
-    
+
     function remove_elem() {
         $(this).parents('li').first().remove()
         check_list_display()
@@ -183,13 +186,27 @@ $(function() {
         elem.find('.glyphicon-remove').on('click', remove_elem);
         $('#gymnasiefag-list').append(elem);
         check_list_display();
+
+        $fag_select.val($fag_select.attr('data-reset-value'));
+        $('#gymnasiefag-levels input[type=checkbox]').each(function() {
+            $(this).prop('checked', false)
+        });
     });
     $('#gymnasiefag-list .glyphicon-remove').on('click', remove_elem);
 })(jQuery);
 
 (function($) {
-    var item_template = $('#grundskolefag-item-template').get(0).innerHTML;
+    var item_template = $('#grundskolefag-item-template').get(0).innerHTML,
+        reset_elems = [
+            $('#grundskolefag-fag'),
+            $('#grundskolefag-minclass'),
+            $('#grundskolefag-maxclass')
+        ];
     
+    $.each(reset_elems, function() {
+        $(this).attr('data-reset-value', $(this).val())
+    });
+
     function check_list_display() {
         if($('#grundskolefag-list li').length > 0) {
             $('#grundskolefag-list').show()
@@ -249,6 +266,10 @@ $(function() {
         elem.find('.glyphicon-remove').on('click', remove_elem);
         $('#grundskolefag-list').append(elem);
         check_list_display();
+        
+        $.each(reset_elems, function() {
+            $(this).val($(this).attr('data-reset-value'))
+        });
     });
     $('#grundskolefag-list .glyphicon-remove').on('click', remove_elem)
     
