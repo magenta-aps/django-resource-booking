@@ -50,7 +50,7 @@
                                 {{ form.type.errors }}
                             </div>
                             <div class="col-sm-2">
-                                <label class="{{ form.type.css_classes }}" for="{{ form.type.id_for_label }}">{{ form.type.label }}:</label>
+                            <label class="{{ form.type.css_classes }}" for="{{ form.type.id_for_label }}">{{ form.type.label }}:</label>
                             </div>
                             <div class="col-sm-10">
                                 {{ form.type }}
@@ -74,7 +74,7 @@
                                 {{ form.title.errors }}
                             </div>
                             <div class="col-sm-2">
-                                <label class="{{ form.title.css_classes }}" for="{{ form.title.id_for_label }}">{{ form.title.label }}:</label>
+                            <label class="{{ form.title.css_classes }}" for="{{ form.title.id_for_label }}">{{ form.title.label }}:</label>
                             </div>
                             <div class="col-sm-10">
                                 {{ form.title }}
@@ -130,7 +130,7 @@
                         </div>
                         <div class="row form-group">
                             <div class="col-sm-2">
-                                <label>{% trans "Vedhæftede filer" %}:</label>
+                            <label>{% trans "Vedhæftede filer" %}:</label>
                             </div>
                             <div class="col-sm-10">
                                 {% if fileformset.studymaterials %}
@@ -315,8 +315,8 @@
 
                                     <fieldset>
                                         {{ form.duration.errors }}
-                                        <label class="form_control input-sm {{ form.duration.css_classes }}" for="{{ form.duration.id_for_label }}">{{ form.duration.label }}:</label>
-                                        <select id="id_duration" name="duration">
+                                        <label class="{{ form.duration.css_classes }}" for="{{ form.duration.id_for_label }}">{{ form.duration.label }}:</label>
+                                        <select id="id_duration" name="duration" class="form-control input-sm">
                                             <option value="00:00">00:00</option>
                                             <option value="00:30">00:30</option>
                                             <option value="01:00">01:00</option>
