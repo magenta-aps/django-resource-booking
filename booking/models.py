@@ -699,7 +699,7 @@ class Visit(Resource):
 
     duration_choices = []
     for hour in range(0, 12, 1):
-        for minute in range(0, 60, 30):
+        for minute in range(0, 60, 15):
             value = "%.2d:%.2d" % (hour, minute)
             duration_choices.append((value, value),)
     print duration_choices
