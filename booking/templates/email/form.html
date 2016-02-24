@@ -8,14 +8,20 @@
 {% endblock %}
 
 {% block content %}
+
+    {% include 'common/breadcrumbrow.html' %}
+
     <div class="divider"></div>
     <div class="row form-group">
         <div class="col-sm-8">
             <h1>{% if object.pk %}{% trans "Rediger emailskabelon" %}{% else %}{% trans "Ny emailskabelon" %}{% endif %}</h1>
         </div>
-        <div class="col-sm-4 text-right">
-            <a href="#" class="btn btn-default btn-sm openall">{% trans "Udvid alle felter" %}</a> <a href="#" class="btn btn-default btn-sm closeall">{% trans "Luk alle felter" %}</a>
-        </div>
+        {% if object.pk %}
+            <div class="col-sm-4 text-right">
+                <a href="{% url 'emailtemplate-view' object.pk %}" class="btn btn-primary">{% trans "Preview skabelon" %}</a>
+                <a href="{% url 'emailtemplate-delete' object.pk %}" class="btn btn-primary">{% trans "Slet skabelon" %}</a>
+            </div>
+        {% endif %}
     </div>
     <hr/>
     <form action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
@@ -25,17 +31,9 @@
 
         <div id="accordion" class="panel-group" aria-multiselectable="true" role="tablist">
 
-            {{ form.type }}
-
             <div class="panel panel-default">
-                <div id="headingCategory" class="panel-heading" role="tab">
-                    <h4 class="panel-title">
-                        <a class="" aria-controls="collapseTitel" aria-expanded="false" href="#collapseTitel" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Name" %}</a><span class="caret"></span>
-                    </h4>
-                </div>
-                <div id="collapseTitel" class="panel-collapse collapse
-                {% if not form.errors or form.name.errors or form.name.errors %}in{% endif %}
-                " aria-labelledby="headingCategory" role="tabpanel" aria-expanded="true" style="">
+
+                <div class="" aria-labelledby="headingCategory" role="tabpanel" aria-expanded="true" style="">
                     <div class="panel-body">
                         <div class="row form-group">
                             <div>

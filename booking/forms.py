@@ -400,12 +400,20 @@ BookingSubjectLevelForm = \
 
 
 class EmailTemplateForm(forms.ModelForm):
+
     class Meta:
         model = EmailTemplate
         fields = ('key', 'subject', 'body', 'unit')
         widgets = {
-            'body': TinyMCE(attrs={'rows': 10, 'cols': 90})
+            'subject': TextInput(attrs={'class': 'form-control'}),
+            'body': TinyMCE(attrs={'rows': 10, 'cols': 90}),
         }
+
+    def __init__(self, user, *args, **kwargs):
+        super(EmailTemplateForm, self).__init__(*args, **kwargs)
+        self.fields['unit'].choices = (
+            (x.pk, unicode(x))
+            for x in user.userprofile.get_unit_queryset())
 
 
 class EmailTemplatePreviewContextEntryForm(forms.Form):
@@ -444,3 +452,25 @@ class EmailTemplatePreviewContextEntryForm(forms.Form):
 EmailTemplatePreviewContextForm = formset_factory(
     EmailTemplatePreviewContextEntryForm
 )
+
+
+class BaseEmailComposeForm(forms.Form):
+
+    body = forms.CharField(
+        max_length=65584,
+        widget=TinyMCE(attrs={'rows': 10, 'cols': 90}),
+        label=_(u'Tekst')
+    )
+
+
+class EmailComposeForm(BaseEmailComposeForm):
+
+    recipients = forms.MultipleChoiceField(
+        label=_(u'Modtagere'),
+        widget=CheckboxSelectMultiple
+    )
+
+    subject = forms.CharField(
+        max_length=77,
+        label=_(u'Emne')
+    )

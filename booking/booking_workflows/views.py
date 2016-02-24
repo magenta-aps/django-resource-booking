@@ -44,20 +44,20 @@ class ChangeBookingHostsView(UpdateWithCancelView):
             booking = Booking.objects.get(pk=pk)
         else:
             return bad_request(request)
-        KUEmailMessage.send_email(
-            EmailTemplate.HOSTS_CHANGED,
+        KUEmailMessage.send_email(  # Todo: check these templates!
+            EmailTemplate.NOTIFY_HOST__ASSOCIATED,
             {
                 'booking': booking,
                 'visit': booking.visit,
                 'booker': booking.booker,
                 'user': request.user,
-                'action_flag': EmailTemplate.HOSTS_CHANGED,
+                'action_flag': EmailTemplate.NOTIFY_HOST__ASSOCIATED,
                 'message': unicode(EmailTemplate.key_choices[
-                    EmailTemplate.HOSTS_CHANGED
+                    EmailTemplate.NOTIFY_HOST__ASSOCIATED
                 ][1]),
             },
             list(booking.visit.contact_persons.all()),
-            booking,
+            # booking,
             booking.visit.unit
         )
 
@@ -79,20 +79,20 @@ class ChangeBookingRoomsView(UpdateWithCancelView):
             booking = Booking.objects.get(pk=pk)
         else:
             return bad_request(request)
-        KUEmailMessage.send_email(
-            EmailTemplate.ROOMS_CHANGED,
+        KUEmailMessage.send_email(  # Todo: check these templates!
+            EmailTemplate.NOTIFY_HOST__REQ_ROOM,
             {
                 'booking': booking,
                 'visit': booking.visit,
                 'booker': booking.booker,
                 'user': request.user,
-                'action_flag': EmailTemplate.ROOMS_CHANGED,
+                'action_flag': EmailTemplate.NOTIFY_HOST__REQ_ROOM,
                 'message': unicode(EmailTemplate.key_choices[
-                    EmailTemplate.ROOMS_CHANGED
+                    EmailTemplate.NOTIFY_HOST__REQ_ROOM
                 ][1]),
             },
             list(booking.visit.contact_persons.all()),
-            booking,
+            # booking,
             booking.visit.unit
         )
 
