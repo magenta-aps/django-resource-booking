@@ -4,13 +4,16 @@ from booking.models import Unit
 from booking.models import Resource, OtherResource, Visit, VisitOccurrence
 from booking.models import Booker, Region, PostCode, School
 from booking.models import ClassBooking, TeacherBooking, BookingSubjectLevel
+from booking.models import EmailTemplate
 from django import forms
-from django.forms import CheckboxSelectMultiple, EmailInput, RadioSelect
+from django.forms import CheckboxSelectMultiple, EmailInput, RadioSelect, \
+    formset_factory
 from django.forms import inlineformset_factory
 from django.forms import TextInput, NumberInput, Textarea, Select
 from django.forms import HiddenInput
 from django.utils.translation import ugettext_lazy as _
 from tinymce.widgets import TinyMCE
+from .fields import ExtensibleMultipleChoiceField
 
 
 class UnitTypeForm(forms.ModelForm):
@@ -315,7 +318,8 @@ class ClassBookingForm(BookingForm):
         model = ClassBooking
         fields = ('tour_desired',)
 
-    time = forms.ChoiceField(
+    time = forms.ModelChoiceField(
+        queryset=VisitOccurrence.objects.all(),
         widget=Select(
             attrs={'class': 'selectpicker form-control'}
         ),
@@ -352,10 +356,10 @@ class ClassBookingForm(BookingForm):
         booking = super(ClassBookingForm, self).save(commit=False)
         data = self.cleaned_data
         if self.scheduled:
-            occurrence_id = data.get("time")
+            occurrence_id = data.get("time").id
             try:
                 occurrence = VisitOccurrence.objects.get(id=occurrence_id)
-                booking.time = occurrence.start_datetime
+                booking.time_id = occurrence.id
             except:
                 pass
         if 'tour_desired' not in data:
@@ -387,3 +391,117 @@ BookingSubjectLevelForm = \
                               )
                           }
                           )
+
+
+class EmailTemplateForm(forms.ModelForm):
+
+    class Meta:
+        model = EmailTemplate
+        fields = ('key', 'subject', 'body', 'unit')
+        widgets = {
+            'subject': TextInput(attrs={'class': 'form-control'}),
+            'body': TinyMCE(attrs={'rows': 10, 'cols': 90}),
+        }
+
+    def __init__(self, user, *args, **kwargs):
+        super(EmailTemplateForm, self).__init__(*args, **kwargs)
+        self.fields['unit'].choices = (
+            (x.pk, unicode(x))
+            for x in user.userprofile.get_unit_queryset())
+
+
+class EmailTemplatePreviewContextEntryForm(forms.Form):
+    key = forms.CharField(
+        max_length=256,
+        widget=TextInput(attrs={'class': 'form-control emailtemplate-key'})
+    )
+    type = forms.ChoiceField(
+        choices=(
+            ('string', 'String'),
+            ('Unit', 'Unit'),
+            # ('OtherResource': OtherResource),
+            ('Visit', 'Visit'),
+            # ('VisitOccurrence', VisitOccurrence),
+            # ('StudyMaterial', StudyMaterial),
+            # ('Resource',Resource),
+            # ('Subject', Subject),
+            # ('GymnasieLevel', GymnasieLevel),
+            # ('Room', Room),
+            # ('PostCode', PostCode),
+            # ('School', School),
+            ('Booking', 'Booking'),
+        ),
+        widget=Select(attrs={'class': 'form-control emailtemplate-type'})
+    )
+    value = forms.CharField(
+        max_length=1024,
+        widget=TextInput(
+            attrs={
+                'class': 'form-control emailtemplate-value '
+                         'emailtemplate-type-string'
+            }
+        )
+    )
+
+EmailTemplatePreviewContextForm = formset_factory(
+    EmailTemplatePreviewContextEntryForm
+)
+
+
+class BaseEmailComposeForm(forms.Form):
+    required_css_class = 'required'
+
+    body = forms.CharField(
+        max_length=65584,
+        widget=TinyMCE(attrs={'rows': 10, 'cols': 90}),
+        label=_(u'Tekst')
+    )
+
+
+class EmailComposeForm(BaseEmailComposeForm):
+
+    recipients = ExtensibleMultipleChoiceField(
+        label=_(u'Modtagere'),
+        widget=CheckboxSelectMultiple
+    )
+
+    subject = forms.CharField(
+        max_length=77,
+        label=_(u'Emne')
+    )
+
+
+class GuestEmailComposeForm(BaseEmailComposeForm):
+
+    name = forms.CharField(
+        max_length=100,
+        label=_(u'Navn'),
+        widget=TextInput(
+            attrs={
+                'class': 'form-control input-sm',
+                'placeholder': _(u'Dit navn')
+            }
+        )
+    )
+
+    email = forms.EmailField(
+        label=_(u'Email'),
+        widget=EmailInput(
+            attrs={
+                'class': 'form-control input-sm',
+                'placeholder': _(u'Din email-adresse')
+            }
+        )
+    )
+
+    phone = forms.CharField(
+        label=_(u'Telefon'),
+        widget=TextInput(
+            attrs={
+                'class': 'form-control input-sm',
+                'placeholder': _(u'Dit telefonnummer'),
+                'pattern': '(\(\+\d+\)|\+\d+)?\s*\d+[ \d]*'
+            },
+        ),
+        required=False
+    )

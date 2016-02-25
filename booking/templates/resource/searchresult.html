@@ -1,6 +1,7 @@
 {%extends "index.html" %}
 {% load staticfiles %}
 {% load booking_tags %}
+{% load i18n %}
 
 {% block content %}
     
@@ -107,7 +108,7 @@
             {% include 'common/breadcrumbrow.html' %}
             
             {% if user.userprofile.can_create %}
-                <a class="pull-right btn btn-primary" href="{% url 'resource-create' %}">+ Opret tilbud</a>
+                <a class="pull-right btn btn-primary" href="{% url 'resource-create' %}?back={{ thisurl | urlencode }}">+ Opret tilbud</a>
             {% endif %}
             
             <h1>Søgeresultat</h1>

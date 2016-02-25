@@ -22,10 +22,10 @@
             <h2>{{ object.get_type_display }}</h2>
             
             {% if can_edit %}
-                <a class="pull-right btn btn-primary edit-btn" href="{% url 'otherresource-edit' object.pk %}">{% trans '+ Redigér' %}</a>
+                <a class="pull-right btn btn-primary edit-btn" href="{% url 'otherresource-edit' object.pk %}?back={{ thisurl | urlencode }}">{% trans '+ Redigér' %}</a>
             {% endif %}
             {% if user.userprofile.can_create %}
-                <a class="pull-right btn btn-primary" href="{% url 'otherresource-clone' object.pk %}">{% trans 'Opret kopi' %}</a>
+                <a class="pull-right btn btn-primary" href="{% url 'otherresource-clone' object.pk %}?back={{ thisurl | urlencode }}">{% trans 'Opret kopi' %}</a>
             {% endif %}
             
             <h1>{{ object.title }}</h1>
@@ -83,9 +83,14 @@
                                 <dt>{% trans 'Hvad:' %}</dt>
                                 <dd>{{ object.get_type_display }}</dd>
                             {% endif %}
-                            
-                            <dt>{% trans 'Arrangør:' %}</dt>
-                            <dd><a href="#" data-toggle="modal" data-target="#kontaktformular">{% trans 'Kontakt arrangøren' %}</a> <span class="glyphicon glyphicon-new-window"></span></dd>
+
+                            {% if object.visit.unit.contact %}
+                                <dt>{% trans 'Arrangør:' %}</dt>
+                                <dd>
+                                    {{ object.unit.contact.name }}<br/>
+                                    <a href="{% url 'email' object.unit.contact.id %}">{% trans 'Stil et spørgsmål om dette tilbud' %}</a> <span class="glyphicon glyphicon-new-window"></span>
+                                </dd>
+                            {% endif %}
 
                         </dl>
                     </div>
