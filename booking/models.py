@@ -256,7 +256,7 @@ class Resource(models.Model):
         (TEACHER_EVENT, _(u"Lærerarrangement")),
         (GROUP_VISIT, _(u"Besøg med klassen")),
         (STUDY_PROJECT, _(u"Studieretningsprojekt")),
-        (ASSIGNMENT_HELP, _(u"Opgavehjælp")),
+        (ASSIGNMENT_HELP, _(u"Lektiehjælp")),
         (OTHER_OFFERS,  _(u"Andre tilbud")),
         (STUDY_MATERIAL, _(u"Undervisningsmateriale"))
     )
