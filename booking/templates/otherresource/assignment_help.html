@@ -48,13 +48,12 @@
                     </h4>
                 </div>
                 <div id="collapseDescription" class="panel-collapse collapse
-                {% if not object.pk or form.state.errors or form.teaser.errors or form.description.errors or form.link.errors %}in{% endif %}
+                {% if not object.pk or form.state.errors or form.teaser.errors or form.description.errors %}in{% endif %}
                 " aria-labelledby="headingDescription" role="tabpanel">
                     <div class="panel-body">
                         {% include 'resource/fields/state.html' %}
                         {% include 'resource/fields/teaser.html' %}
                         {% include 'resource/fields/description.html' %}
-                        {% include 'resource/fields/link.html' %}
                     </div>
                 </div>
             </div>

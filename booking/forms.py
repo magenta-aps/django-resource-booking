@@ -8,7 +8,7 @@ from booking.models import EmailTemplate
 from django import forms
 from django.forms import CheckboxSelectMultiple, RadioSelect, EmailInput
 from django.forms import formset_factory, inlineformset_factory
-from django.forms import TextInput, NumberInput, URLInput, Textarea, Select
+from django.forms import TextInput, NumberInput, Textarea, Select
 from django.forms import HiddenInput
 from django.utils.translation import ugettext_lazy as _
 from tinymce.widgets import TinyMCE
@@ -38,7 +38,7 @@ class OtherResourceForm(forms.ModelForm):
 
     class Meta:
         model = OtherResource
-        fields = ('title', 'teaser', 'description', 'link', 'state',
+        fields = ('title', 'teaser', 'description', 'state',
                   'type', 'tags', 'comment',
                   'institution_level', 'topics', 'audience',
                   'enabled', 'unit',)
@@ -59,7 +59,6 @@ class OtherResourceForm(forms.ModelForm):
             'tags': CheckboxSelectMultiple(),
             'topics': CheckboxSelectMultiple(),
             'audience': RadioSelect(),
-            'link': URLInput(),
         }
 
     def __init__(self, *args, **kwargs):
