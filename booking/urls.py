@@ -15,8 +15,9 @@ from booking.views import EmailTemplateEditView, EmailTemplateDetailView
 from booking.views import EmailTemplateDeleteView, EmailTemplateListView
 from booking.views import BookingDetailView, ChangeBookingStatusView
 from booking.views import ChangeBookingTeachersView, ChangeBookingHostsView
-from booking.views import ChangeBookingRoomsView
 from booking.views import BookingNotifyView
+from booking.views import ChangeBookingRoomsView, ChangeBookingCommentsView
+from booking.views import BookingAddLogEntryView
 
 from django.views.generic import TemplateView
 
@@ -104,6 +105,12 @@ urlpatterns = patterns(
     url(r'^booking/(?P<pk>[0-9]+)/?show_email_log$',
         ShowEmailLogView.as_view(),
         name='show-email-log'),
+    url(r'^booking/(?P<pk>[0-9]+)/change_comments/?$',
+        ChangeBookingCommentsView.as_view(),
+        name='change-booking-comments'),
+    url(r'^booking/(?P<pk>[0-9]+)/add_logentry/?$',
+        BookingAddLogEntryView.as_view(),
+        name='booking-add-logentry'),
     url(r'^booking/search$',
         BookingSearchView.as_view(),
         name='booking-search'),

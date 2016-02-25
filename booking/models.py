@@ -11,7 +11,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
-from django.forms.models import model_to_dict
 from django.utils.translation import ugettext_lazy as _
 from django.template.base import Template
 
@@ -27,6 +26,14 @@ LOGACTION_DELETE = DELETION
 # system defined ones by adding 128 to the value.
 LOGACTION_CUSTOM1 = 128 + 1
 LOGACTION_CUSTOM2 = 128 + 2
+LOGACTION_MANUAL_ENTRY = 128 + 64 + 1
+
+LOGACTION_DISPLAY_MAP = {
+    LOGACTION_CREATE: _(u'Oprettet'),
+    LOGACTION_CHANGE: _(u'Ændret'),
+    LOGACTION_DELETE: _(u'Slettet'),
+    LOGACTION_MANUAL_ENTRY: _(u'Log-post tilføjet manuelt')
+}
 
 
 def log_action(user, obj, action_flag, change_message=''):
@@ -54,81 +61,6 @@ def log_action(user, obj, action_flag, change_message=''):
         action_flag,
         change_message
     )
-
-
-class AutologgerMixin(object):
-    def __init__(self, *args, **kwargs):
-        super(AutologgerMixin, self).__init__(*args, **kwargs)
-        self._original_state = self._as_state()
-
-    def _as_state(self):
-        return model_to_dict(self)
-
-    def get_changed_fields(self, compare_state=None):
-        if compare_state is None:
-            compare_state = self._original_state
-
-        new_state = self._as_state()
-
-        result = {}
-
-        for key in compare_state:
-            if key in new_state:
-                if compare_state[key] != new_state[key]:
-                    result[key] = (compare_state[key], new_state[key])
-                del new_state[key]
-            else:
-                result[key] = (compare_state[key], None)
-
-        for key in new_state:
-            result[key] = (None, new_state[key])
-
-        return result
-
-    def field_value_to_display(self, fieldname, value):
-
-        field = self.__class__._meta.get_field(fieldname)
-        fname = field.verbose_name
-
-        if value is None:
-            return (fname, unicode(value))
-
-        if field.many_to_one:
-            try:
-                o = field.related_model.objects.get(pk=value)
-                return (fname, unicode(o))
-            except:
-                return (fname, unicode(value))
-
-        if field.many_to_many or field.one_to_many:
-            res = []
-            for x in value:
-                try:
-                    o = field.related_mode.objects.get(pk=x)
-                    res.append(unicode(o))
-                except:
-                    res.append(unicode(x))
-            return (fname, ", ".join(res))
-
-        if field.choices:
-            d = dict(field.choices)
-            if value in d:
-                return (fname, unicode(d[value]))
-
-        return (fname, unicode(value))
-
-    def changes_to_text(self, changes):
-        if not changes:
-            return ""
-
-        result = {}
-        for key, val in changes.iteritems():
-            name, value = self.field_value_to_display(key, val[1])
-            result[name] = value
-
-        return "\n".join([
-            u"%s: >>>%s<<<" % (x, result[x]) for x in sorted(result)
-        ])
 
 
 class Person(models.Model):
@@ -317,7 +249,7 @@ class Locality(models.Model):
 
 
 # Bookable resources
-class Resource(AutologgerMixin, models.Model):
+class Resource(models.Model):
     """Abstract superclass for a bookable resource of any kind."""
 
     # Resource type.
@@ -377,26 +309,35 @@ class Resource(AutologgerMixin, models.Model):
                                default=STUDY_MATERIAL)
     state = models.IntegerField(choices=state_choices, default=CREATED,
                                 verbose_name=_(u"Tilstand"))
-    title = models.CharField(max_length=60, verbose_name=_(u'Titel'))
+    title = models.CharField(
+        max_length=60,
+        blank=False,
+        verbose_name=_(u'Titel')
+    )
     teaser = models.TextField(
         max_length=210,
-        blank=True,
+        blank=False,
         verbose_name=_(u'Teaser')
     )
-    description = models.TextField(blank=True, verbose_name=_(u'Beskrivelse'))
+    description = models.TextField(
+        blank=False,
+        verbose_name=_(u'Beskrivelse')
+    )
     mouseover_description = models.CharField(
         max_length=512, blank=True, verbose_name=_(u'Mouseover-tekst')
     )
-    unit = models.ForeignKey(Unit, null=True, blank=True,
+    unit = models.ForeignKey(Unit, null=True, blank=False,
                              verbose_name=_('Enhed'))
     links = models.ManyToManyField(Link, blank=True, verbose_name=_('Links'))
     audience = models.IntegerField(choices=audience_choices,
                                    verbose_name=_(u'Målgruppe'),
-                                   default=AUDIENCE_ALL)
+                                   default=AUDIENCE_ALL,
+                                   blank=False)
 
     institution_level = models.IntegerField(choices=institution_choices,
                                             verbose_name=_(u'Institution'),
-                                            default=SECONDARY)
+                                            default=SECONDARY,
+                                            blank=False)
 
     gymnasiefag = models.ManyToManyField(
         Subject, blank=True,
@@ -1180,7 +1121,7 @@ class Booker(models.Model):
         return full_email(self.email, self.get_name())
 
 
-class Booking(AutologgerMixin, models.Model):
+class Booking(models.Model):
     objects = SearchManager(
         fields=('extra_search_text'),
         config='pg_catalog.danish',
@@ -1295,6 +1236,12 @@ class Booking(AutologgerMixin, models.Model):
         default=WORKFLOW_STATUS_BEING_PLANNED
     )
 
+    comments = models.TextField(
+        blank=True,
+        default='',
+        verbose_name=_(u'Interne kommentarer')
+    )
+
     valid_status_changes = {
         WORKFLOW_STATUS_BEING_PLANNED: [
             WORKFLOW_STATUS_REJECTED,
@@ -1385,9 +1332,13 @@ class Booking(AutologgerMixin, models.Model):
 
         return " ".join(result)
 
-    def save(self, *args, **kwargs):
+    def get_subjects(self):
+        if hasattr(self, 'teacherbooking'):
+            return self.teacherbooking.subjects.all()
+        else:
+            return None
 
-        created = self.pk is None
+    def save(self, *args, **kwargs):
 
         # Save once to store relations
         super(Booking, self).save(*args, **kwargs)
@@ -1397,12 +1348,6 @@ class Booking(AutologgerMixin, models.Model):
 
         # Do the final save
         super(Booking, self).save(*args, **kwargs)
-
-        if created:
-            log_action(
-                self.request.user, self, LOGACTION_CREATE,
-                _(u'Booking oprettet')
-            )
 
     def get_absolute_url(self):
         return reverse('booking-view', args=[self.pk])
