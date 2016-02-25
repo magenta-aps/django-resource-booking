@@ -146,7 +146,7 @@
                                 </ul>
                             </dd>
 
-                            {% if object.visit.duration %}
+                            {% if object.visit.duration and object.visit.duration != '00:00' %}
                                 <dt>{% trans 'Varighed:' %}</dt>
                                 <dd>{{ object.visit.duration|timedelta }}</dd>
                             {% endif %}
