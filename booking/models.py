@@ -60,10 +60,18 @@ def log_action(user, obj, action_flag, change_message=''):
 class Person(models.Model):
     """A dude or chick"""
 
+    class Meta:
+        verbose_name = _(u'kontaktperson')
+        verbose_name_plural = _(u'kontaktpersoner')
+
     # Eventually this could just be a pointer to AD
     name = models.CharField(max_length=50)
     email = models.EmailField(max_length=64, null=True, blank=True)
     phone = models.CharField(max_length=14, null=True, blank=True)
+
+    unit = models.ForeignKey("Unit", blank=True, null=True)
+
+    allow_null_unit_editing = True
 
     def __unicode__(self):
         return self.name
@@ -72,6 +80,11 @@ class Person(models.Model):
 # Units (faculties, institutes etc)
 class UnitType(models.Model):
     """A type of organization, e.g. 'faculty' """
+
+    class Meta:
+        verbose_name = _(u"enhedstype")
+        verbose_name_plural = _(u"Enhedstyper")
+
     name = models.CharField(max_length=25)
 
     def __unicode__(self):
@@ -80,10 +93,19 @@ class UnitType(models.Model):
 
 class Unit(models.Model):
     """A generic organizational unit, such as a faculty or an institute"""
+
+    class Meta:
+        verbose_name = _(u"enhed")
+        verbose_name_plural = _(u"enheder")
+
     name = models.CharField(max_length=100)
     type = models.ForeignKey(UnitType)
     parent = models.ForeignKey('self', null=True, blank=True)
-    contact = models.ForeignKey(Person, null=True, blank=True)
+    contact = models.ForeignKey(
+        Person, null=True, blank=True,
+        verbose_name=_(u'Kontaktperson'),
+        related_name="contactperson_for_units"
+    )
 
     def belongs_to(self, unit):
         if self == unit:
@@ -108,6 +130,11 @@ class Unit(models.Model):
 # Master data related to bookable resources start here
 class Subject(models.Model):
     """A relevant subject from primary or secondary education."""
+
+    class Meta:
+        verbose_name = _(u"fag")
+        verbose_name_plural = _(u"fag")
+
     SUBJECT_TYPE_GYMNASIE = 2**0
     SUBJECT_TYPE_GRUNDSKOLE = 2**1
     # NEXT_VALUE = 2**2
@@ -172,6 +199,11 @@ class Tag(models.Model):
 
 class Topic(models.Model):
     """Tag class, just name and description fields."""
+
+    class Meta:
+        verbose_name = _(u"emne")
+        verbose_name_plural = _(u"emner")
+
     name = models.CharField(max_length=256)
     description = models.TextField(blank=True)
 
@@ -181,6 +213,11 @@ class Topic(models.Model):
 
 class AdditionalService(models.Model):
     """Additional services, i.e. tour of the place, food and drink, etc."""
+
+    class Meta:
+        verbose_name = _(u'ekstra ydelse')
+        verbose_name_plural = _(u'ekstra ydelser')
+
     name = models.CharField(max_length=256)
     description = models.TextField(blank=True)
 
@@ -190,6 +227,11 @@ class AdditionalService(models.Model):
 
 class SpecialRequirement(models.Model):
     """Special requirements for visit - e.g., driver's license."""
+
+    class Meta:
+        verbose_name = _(u'særligt krav')
+        verbose_name_plural = _(u'særlige ydelser')
+
     name = models.CharField(max_length=256)
     description = models.TextField(blank=True)
 
@@ -199,6 +241,11 @@ class SpecialRequirement(models.Model):
 
 class StudyMaterial(models.Model):
     """Material for the students to study before visiting."""
+
+    class Meta:
+        verbose_name = _(u'undervisningsmateriale')
+        verbose_name_plural = _(u'undervisningsmaterialer')
+
     URL = 0
     ATTACHMENT = 1
     study_material_choices = (
@@ -220,6 +267,11 @@ class StudyMaterial(models.Model):
 
 class Locality(models.Model):
     """A locality where a visit may take place."""
+
+    class Meta:
+        verbose_name = _(u'lokalitet')
+        verbose_name_plural = _(u'lokaliteter')
+
     name = models.CharField(max_length=256, verbose_name=_(u'Navn'))
     description = models.TextField(blank=True, verbose_name=_(u'Beskrivelse'))
     address_line = models.CharField(max_length=256, verbose_name=_(u'Adresse'))
@@ -444,8 +496,8 @@ class Resource(models.Model):
 
 class ResourceGymnasieFag(models.Model):
     class Meta:
-        verbose_name = _(u"Gymnasiefagtilknytning")
-        verbose_name_plural = _(u"Gymnasiefagtilknytninger")
+        verbose_name = _(u"gymnasiefagtilknytning")
+        verbose_name_plural = _(u"gymnasiefagtilknytninger")
 
     class_level_choices = [(i, unicode(i)) for i in range(0, 11)]
 
@@ -523,8 +575,8 @@ class ResourceGymnasieFag(models.Model):
 
 class ResourceGrundskoleFag(models.Model):
     class Meta:
-        verbose_name = _(u"Grundskolefagtilknytning")
-        verbose_name_plural = _(u"Grundskolefagtilknytninger")
+        verbose_name = _(u"grundskolefagtilknytning")
+        verbose_name_plural = _(u"grundskolefagtilknytninger")
 
     class_level_choices = [(i, unicode(i)) for i in range(0, 11)]
 
@@ -599,6 +651,12 @@ class ResourceGrundskoleFag(models.Model):
 
 
 class GymnasieLevel(models.Model):
+
+    class Meta:
+        verbose_name = _(u'Gymnasieniveau')
+        verbose_name_plural = _(u'Gymnasieniveauer')
+        ordering = ['level']
+
     # Level choices - A, B or C
     A = 0
     B = 1
@@ -628,6 +686,11 @@ class GymnasieLevel(models.Model):
 
 class OtherResource(Resource):
     """A non-bookable, non-visit resource, basically material on the Web."""
+
+    class Meta:
+        verbose_name = _(u"tilbud uden booking")
+        verbose_name_plural = _(u"tilbud uden booking")
+
     objects = SearchManager(
         fields=(
             'title',
@@ -669,6 +732,11 @@ class OtherResource(Resource):
 
 class Visit(Resource):
     """A bookable visit of any kind."""
+
+    class Meta:
+        verbose_name = _("tilbud med booking")
+        verbose_name_plural = _("tilbud med booking")
+
     objects = SearchManager(
         fields=(
             'title',
@@ -826,7 +894,10 @@ class Visit(Resource):
 
 
 class VisitOccurrence(models.Model):
+
     class Meta:
+        verbose_name = _(u"tidspunkt for besøg")
+        verbose_name_plural = _(u"tidspunkter for besøg")
         ordering = ['start_datetime']
 
     start_datetime = models.DateTimeField(
@@ -858,8 +929,28 @@ class VisitOccurrence(models.Model):
 
         return result
 
+    def __unicode__(self):
+        if self.end_datetime2:
+            return _(u'%s fra %s til %s eller %s') % (
+                self.visit.title,
+                self.start_datetime.isoformat(" ")[0:16],
+                self.end_datetime1.isoformat(" ")[0:16],
+                self.end_datetime2.isoformat(" ")[0:16]
+            )
+        else:
+            return _(u'%s fra %s til %s') % (
+                self.visit.title,
+                self.start_datetime.isoformat(" ")[0:16],
+                self.end_datetime1.isoformat(" ")[0:16]
+            )
+
 
 class Room(models.Model):
+
+    class Meta:
+        verbose_name = _(u"lokale for tilbud")
+        verbose_name_plural = _(u"lokaler for tilbud")
+
     visit = models.ForeignKey(
         Visit, verbose_name=_(u'Besøg'), blank=False
     )
@@ -873,6 +964,11 @@ class Room(models.Model):
 
 # Represents a room as saved on a booking.
 class BookedRoom(models.Model):
+
+    class Meta:
+        verbose_name = _(u'lokale for booking')
+        verbose_name_plural = _(u'lokaler for bookinger')
+
     name = models.CharField(max_length=60, verbose_name=_(u'Navn'))
 
     booking = models.ForeignKey(
@@ -883,6 +979,11 @@ class BookedRoom(models.Model):
 
 
 class Region(models.Model):
+
+    class Meta:
+        verbose_name = _(u'region')
+        verbose_name_plural = _(u'regioner')
+
     name = models.CharField(
         max_length=16
     )
@@ -892,6 +993,11 @@ class Region(models.Model):
 
 
 class PostCode(models.Model):
+
+    class Meta:
+        verbose_name = _(u'postnummer')
+        verbose_name_plural = _(u'postnumre')
+
     number = models.IntegerField(
         primary_key=True
     )
@@ -914,6 +1020,11 @@ class PostCode(models.Model):
 
 
 class School(models.Model):
+
+    class Meta:
+        verbose_name = _(u'uddannelsesinstitution')
+        verbose_name_plural = _(u'uddannelsesinstitutioner')
+
     name = models.CharField(
         max_length=128,
     )
@@ -974,6 +1085,11 @@ class School(models.Model):
 
 
 class Booker(models.Model):
+
+    class Meta:
+        verbose_name = _(u'besøgende')
+        verbose_name_plural = _(u'besøgende')
+
     # A person booking a visit
     firstname = models.CharField(
         max_length=64,
@@ -1096,6 +1212,11 @@ class Booker(models.Model):
 
 
 class Booking(models.Model):
+
+    class Meta:
+        verbose_name = _(u'booking')
+        verbose_name_plural = _(u'bookinger')
+
     objects = SearchManager(
         fields=('extra_search_text'),
         config='pg_catalog.danish',
@@ -1329,6 +1450,10 @@ class Booking(models.Model):
 
 class ClassBooking(Booking):
 
+    class Meta:
+        verbose_name = _(u'booking for klassebesøg')
+        verbose_name_plural = _(u'bookinger for klassebesøg')
+
     time = models.DateTimeField(
         null=True,
         blank=True,
@@ -1347,6 +1472,10 @@ class ClassBooking(Booking):
 
 class TeacherBooking(Booking):
 
+    class Meta:
+        verbose_name = _(u'booking for lærerarrangement')
+        verbose_name_plural = _(u'bookinger for lærerarrangementer')
+
     subjects = models.ManyToManyField(Subject)
 
     def as_searchtext(self):
@@ -1359,6 +1488,10 @@ class TeacherBooking(Booking):
 
 
 class BookingSubjectLevel(models.Model):
+
+    class Meta:
+        verbose_name = _('fagniveau for booking')
+        verbose_name_plural = _('fagniveauer for bookinger')
 
     booking = models.ForeignKey(Booking, blank=False, null=False)
     subject = models.ForeignKey(
