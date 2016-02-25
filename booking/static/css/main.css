@@ -726,6 +726,11 @@ a.template-overridden:visited {
     color: #999;
 }
 
+#recipient-groups input {
+    width: auto;
+    display: inline;
+}
+
 /*Backend specific styles end */
 
 /* Embedded pages styles */
