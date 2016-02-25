@@ -3,9 +3,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
-
 from booking.models import Unit
-
 
 # User roles
 
@@ -73,6 +71,11 @@ class UserProfile(models.Model):
 
     def is_administrator(self):
         return self.get_role() == ADMINISTRATOR
+
+    def can_notify(self, item=None):
+        # Return whether the user can send email notifications
+        # (for the given item)
+        return self.get_role() in EDIT_ROLES
 
     def can_edit(self, item):
         role = self.get_role()
