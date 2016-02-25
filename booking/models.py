@@ -753,23 +753,23 @@ class Visit(Resource):
         verbose_name=_(u'Kontaktpersoner')
     )
     price = models.DecimalField(
-            default=0,
-            null=True,
-            blank=True,
-            max_digits=10,
-            decimal_places=2,
-            verbose_name=_(u'Pris')
+        default=0,
+        null=True,
+        blank=True,
+        max_digits=10,
+        decimal_places=2,
+        verbose_name=_(u'Pris')
     )
     # Min/max number of visitors - only relevant for group visits.
     minimum_number_of_visitors = models.IntegerField(
-            null=True,
-            blank=True,
-            verbose_name=_(u'Mindste antal deltagere')
+        null=True,
+        blank=True,
+        verbose_name=_(u'Mindste antal deltagere')
     )
     maximum_number_of_visitors = models.IntegerField(
-            null=True,
-            blank=True,
-            verbose_name=_(u'Højeste antal deltagere')
+        null=True,
+        blank=True,
+        verbose_name=_(u'Højeste antal deltagere')
     )
 
     do_send_evaluation = models.BooleanField(
