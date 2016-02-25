@@ -693,7 +693,6 @@ div ul.errorlist {
     font-weight: normal;
 }
 
-<<<<<<< HEAD
 .email-recipients ul {
     max-height: 120px;
     overflow-y: auto;
@@ -727,7 +726,12 @@ a.template-overridden:visited {
     padding: 10px 0;
 }
 #adv-time-select-toggle {
-    
+
+}
+
+#recipient-groups input {
+    width: auto;
+    display: inline;
 }
 
 /*Backend specific styles end */

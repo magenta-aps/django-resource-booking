@@ -322,7 +322,7 @@ class Resource(models.Model):
         (TEACHER_EVENT, _(u"Lærerarrangement")),
         (GROUP_VISIT, _(u"Besøg med klassen")),
         (STUDY_PROJECT, _(u"Studieretningsprojekt")),
-        (ASSIGNMENT_HELP, _(u"Opgavehjælp")),
+        (ASSIGNMENT_HELP, _(u"Lektiehjælp")),
         (OTHER_OFFERS,  _(u"Andre tilbud")),
         (STUDY_MATERIAL, _(u"Undervisningsmateriale"))
     )
@@ -745,13 +745,6 @@ class OtherResource(Resource):
         return (type for type in
                 Resource.resource_type_choices
                 if type[0] in OtherResource.applicable_types)
-
-    link = models.URLField(
-        verbose_name=u'Link',
-        max_length=256,
-        blank=True,
-        null=True
-    )
 
     def save(self, *args, **kwargs):
         # Save once to store relations

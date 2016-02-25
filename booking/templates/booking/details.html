@@ -1,6 +1,6 @@
 {% extends 'index.html' %}
 {% load staticfiles %}
-{% load timedelta %}
+{% load booking_tags %}
 {% load i18n %}
 {% load booking_tags %}
 
@@ -244,9 +244,9 @@
                                 </ul>
                             </dd>
 
-                            {% if object.visit.duration %}
+                            {% if object.visit.duration and object.visit.duration != '00:00' %}
                                 <dt>{% trans 'Varighed:' %}</dt>
-                                <dd>{{ object.visit.duration|timedelta }}</dd>
+                                <dd>{{ object.visit.duration|timedelta_i18n }}</dd>
                             {% endif %}
 
                             {% if object.visit.price %}
