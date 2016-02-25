@@ -19,6 +19,11 @@ window.modal = {
 };
 
 $(function(){
+
+    var addIdToHash = function(url, id) {
+        return url + (url.indexOf("#") ? "#":";") + "id=" + id;
+    };
+
     modalOpeners = $("*[data-toggle='modal'][data-modal-href]");
     if (modalOpeners.length) {
         var modalHost = $("#modalhost");
@@ -28,15 +33,15 @@ $(function(){
         iframe.load(function(){
             var loc = iframe.get(0).contentDocument.location;
             if (loc.href != "about:blank" && !/[#;]id=[^;]/.exec(loc.hash)) {
-                loc.hash += (loc.hash.indexOf("#") ? "#":";") + "id=" + id;
+                loc.hash = addIdToHash(loc.hash, id);
             }
         });
 
         modalOpeners.each(function(){
             var link = $(this);
             link.click(function(){
-                var url = link.attr("data-modal-href");
-                url += (url.indexOf("#") ? "#":";") + "id=" + id;
+                var url = link.attr("href") || link.attr("data-modal-href");
+                url = addIdToHash(url, id);
                 iframe.attr("src", url);
             });
         });
