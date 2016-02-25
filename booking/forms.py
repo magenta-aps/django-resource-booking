@@ -7,7 +7,7 @@ from booking.models import ClassBooking, TeacherBooking, BookingSubjectLevel
 from django import forms
 from django.forms import CheckboxSelectMultiple, EmailInput, RadioSelect
 from django.forms import inlineformset_factory
-from django.forms import TextInput, NumberInput, URLInput, Textarea, Select
+from django.forms import TextInput, NumberInput, Textarea, Select
 from django.forms import HiddenInput
 from django.utils.translation import ugettext_lazy as _
 from tinymce.widgets import TinyMCE
