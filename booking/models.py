@@ -728,19 +728,18 @@ class Visit(Resource):
         null=True
     )
 
-    locality = models.ForeignKey(
-        Locality,
-        verbose_name=_(u'Lokalitet'),
-        blank=True,
-        null=True
-    )
-
     duration_choices = []
     for hour in range(0, 12, 1):
         for minute in range(0, 60, 15):
             value = "%.2d:%.2d" % (hour, minute)
             duration_choices.append((value, value),)
 
+    locality = models.ForeignKey(
+        Locality,
+        verbose_name=_(u'Lokalitet'),
+        blank=True,
+        null=True
+    )
     duration = models.CharField(
         max_length=8,
         verbose_name=_(u'Varighed'),
@@ -753,17 +752,29 @@ class Visit(Resource):
         blank=True,
         verbose_name=_(u'Kontaktpersoner')
     )
+    price = models.DecimalField(
+            default=0,
+            null=True,
+            blank=True,
+            max_digits=10,
+            decimal_places=2,
+            verbose_name=_(u'Pris')
+    )
+    # Min/max number of visitors - only relevant for group visits.
+    minimum_number_of_visitors = models.IntegerField(
+            null=True,
+            blank=True,
+            verbose_name=_(u'Mindste antal deltagere')
+    )
+    maximum_number_of_visitors = models.IntegerField(
+            null=True,
+            blank=True,
+            verbose_name=_(u'Højeste antal deltagere')
+    )
+
     do_send_evaluation = models.BooleanField(
         verbose_name=_(u"Udsend evaluering"),
         default=False
-    )
-    price = models.DecimalField(
-        default=0,
-        null=True,
-        blank=True,
-        max_digits=10,
-        decimal_places=2,
-        verbose_name=_(u'Pris')
     )
     additional_services = models.ManyToManyField(
         AdditionalService,
@@ -778,17 +789,6 @@ class Visit(Resource):
     is_group_visit = models.BooleanField(
         default=True,
         verbose_name=_(u'Gruppebesøg')
-    )
-    # Min/max number of visitors - only relevant for group visits.
-    minimum_number_of_visitors = models.IntegerField(
-        null=True,
-        blank=True,
-        verbose_name=_(u'Mindste antal deltagere')
-    )
-    maximum_number_of_visitors = models.IntegerField(
-        null=True,
-        blank=True,
-        verbose_name=_(u'Højeste antal deltagere')
     )
     do_create_waiting_list = models.BooleanField(
         default=False, verbose_name=_(u'Opret venteliste')
