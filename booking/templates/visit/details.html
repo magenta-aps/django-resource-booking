@@ -106,7 +106,7 @@
                                 {% endfor %}
                                 </ul>
                             </dd>
-                            {% if object.duration %}
+                            {% if object.duration and object.duration != '00:00' %}
                                 <dt>Varighed:</dt>
                                 <dd>{{ object.duration|timedelta }}</dd>
                             {% endif %}
