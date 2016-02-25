@@ -489,7 +489,10 @@ class EmailComposeForm(BaseEmailComposeForm):
 
     subject = forms.CharField(
         max_length=77,
-        label=_(u'Emne')
+        label=_(u'Emne'),
+        widget=TextInput(attrs={
+            'class': 'form-control'
+        })
     )
 
 

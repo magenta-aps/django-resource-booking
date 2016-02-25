@@ -191,12 +191,14 @@
                 var button = $("<button>");
                 button.text(label);
                 button.attr({type:"button"});
+                button.addClass("btn btn-default");
                 groupContainer.append(button);
                 button.click(addGroup.bind(null, groupName));
             }
 
             var custom = $("<input>");
             custom.attr({type:'email', placeholder:'{% trans 'Indtast email-adresse' %}'});
+            custom.addClass("form-control");
             groupContainer.append(custom);
             custom.keydown(function(event){
                 if (event.keyCode == 13) {
@@ -221,6 +223,7 @@
             var clear = $("<button>");
             clear.attr({type:"button"});
             clear.text("{% trans 'Ryd' %}")
+            clear.addClass("btn btn-default");
             groupContainer.append(clear);
             clear.click(function(){
                 recipientContainer.empty();
