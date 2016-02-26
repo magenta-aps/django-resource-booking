@@ -417,7 +417,6 @@ hr {
 .disclaimer {
     margin: 20px 0;
 }
-
 .items-pr-side {
     width: 150px;
     float: right;
@@ -481,7 +480,9 @@ a>.caret:active {
 .datepicker-switch {
     text-transform: capitalize;
 }
-
+#dato {
+    margin-bottom: 2px;
+}
 .row.no-gutter > [class*="col-"] {
     padding-right: 0;
     padding-left: 0;
