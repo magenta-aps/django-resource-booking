@@ -115,7 +115,7 @@
                             {% if object.visitoccurrence_set.all %}
                             <dt>Hvornår:</dt>
                             <dd>
-                                <ul class="list-unstyled">
+                                <ul class="list-unstyled" id="dato">
                                 {% for occurrence in object.visitoccurrence_set.all %}
                                     <li>{{ occurrence.start_datetime|date:'d-m-Y H:i' }}</li>
                                 {% endfor %}
