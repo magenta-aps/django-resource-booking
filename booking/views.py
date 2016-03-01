@@ -1492,7 +1492,11 @@ class VisitNotifyView(EmailComposeView):
         return self.visit.unit
 
     def get_success_url(self):
-        return reverse('visit-view', args=[self.visit.id])
+        return reverse('visit-notify-success', args=[self.visit.id])
+
+
+class VisitNotifySuccessView(TemplateView):
+    template_name = "email/success.html"
 
 
 class BookingNotifyView(EmailComposeView):
@@ -1582,7 +1586,11 @@ class BookingNotifyView(EmailComposeView):
         return self.booking.visit.unit
 
     def get_success_url(self):
-        return reverse('booking-view', args=[self.booking.id])
+        return reverse('booking-notify-success', args=[self.booking.id])
+
+
+class BookingNotifySuccessView(TemplateView):
+    template_name = "email/success.html"
 
 
 class RrulestrView(View):
