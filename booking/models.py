@@ -98,6 +98,11 @@ class Unit(models.Model):
     type = models.ForeignKey(UnitType)
     parent = models.ForeignKey('self', null=True, blank=True)
     contact = models.ForeignKey(Person, null=True, blank=True)
+    url = models.URLField(
+        verbose_name=u'Hjemmeside',
+        null=True,
+        blank=True
+    )
 
     def belongs_to(self, unit):
         if self == unit:
