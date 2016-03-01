@@ -120,6 +120,11 @@ class Unit(models.Model):
         verbose_name=_(u'Kontaktperson'),
         related_name="contactperson_for_units"
     )
+    url = models.URLField(
+            verbose_name=u'Hjemmeside',
+            null=True,
+            blank=True
+    )
 
     def belongs_to(self, unit):
         if self == unit:
