@@ -22,10 +22,10 @@
             <h2>{{ object.get_type_display }}</h2>
             
             {% if can_edit %}
-                <a class="pull-right btn btn-primary edit-btn" href="{% url 'otherresource-edit' object.pk %}">{% trans '+ Redigér' %}</a>
+                <a class="pull-right btn btn-primary edit-btn" href="{% url 'otherresource-edit' object.pk %}?back={{ thisurl | urlencode }}">{% trans '+ Redigér' %}</a>
             {% endif %}
             {% if user.userprofile.can_create %}
-                <a class="pull-right btn btn-primary" href="{% url 'otherresource-clone' object.pk %}">{% trans 'Opret kopi' %}</a>
+                <a class="pull-right btn btn-primary" href="{% url 'otherresource-clone' object.pk %}?back={{ thisurl | urlencode }}">{% trans 'Opret kopi' %}</a>
             {% endif %}
             
             <h1>{{ object.title }}</h1>
