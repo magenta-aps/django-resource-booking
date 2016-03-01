@@ -5,9 +5,10 @@ from booking.models import Resource, OtherResource, Visit, VisitOccurrence
 from booking.models import Booker, Region, PostCode, School
 from booking.models import ClassBooking, TeacherBooking, BookingSubjectLevel
 from booking.models import EmailTemplate
+from booking.models import VisitAutosend
 from django import forms
 from django.forms import CheckboxSelectMultiple, EmailInput, RadioSelect, \
-    formset_factory
+    formset_factory, MultipleChoiceField
 from django.forms import inlineformset_factory
 from django.forms import TextInput, NumberInput, URLInput, Textarea, Select
 from django.forms import HiddenInput
@@ -86,7 +87,7 @@ class VisitForm(forms.ModelForm):
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'recurrences', 'duration', 'locality', 'rooms_assignment',
                   'rooms_needed', 'tour_available',
-                  'enabled', 'contact_persons', 'unit',)
+                  'enabled', 'contact_persons', 'unit')
         widgets = {
             'title': TextInput(attrs={
                 'class': 'titlefield form-control input-sm',
@@ -125,7 +126,7 @@ class VisitForm(forms.ModelForm):
             'unit': Select(attrs={'class': 'form-control input-sm'}),
             'audience': RadioSelect(),
             'tags': CheckboxSelectMultiple(),
-            'contact_persons': CheckboxSelectMultiple(),
+            'contact_persons': CheckboxSelectMultiple()
         }
 
     def __init__(self, *args, **kwargs):
@@ -174,6 +175,17 @@ class VisitStudyMaterialForm(VisitStudyMaterialFormBase):
     def __init__(self, data, instance=None):
         super(VisitStudyMaterialForm, self).__init__(data)
         self.studymaterials = StudyMaterial.objects.filter(visit=instance)
+
+
+class VisitAutosendForm(forms.Form):
+
+    autosend = MultipleChoiceField(
+        widget=CheckboxSelectMultiple,
+        choices=EmailTemplate.key_choices
+    )
+
+    def __init__(self, visit):
+        self.autosend.initial = [autosend.template_key for autosend in visit.visitautosend_set.all()]
 
 
 class BookingForm(forms.ModelForm):

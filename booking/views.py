@@ -53,6 +53,7 @@ from booking.forms import VisitStudyMaterialForm, BookingSubjectLevelForm
 from booking.forms import BookerForm
 from booking.forms import EmailTemplateForm, EmailTemplatePreviewContextForm
 from booking.forms import EmailComposeForm
+from booking.forms import VisitAutosendForm
 from booking.utils import full_email
 
 import urls
@@ -958,8 +959,10 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         self.set_object(pk, request)
         form = self.get_form()
         fileformset = VisitStudyMaterialForm(None, instance=self.object)
+        autosendform = VisitAutosendForm(self.object)
         return self.render_to_response(
-            self.get_context_data(form=form, fileformset=fileformset)
+            self.get_context_data(form=form, fileformset=fileformset,
+                                  autosendform=autosendform)
         )
 
     def _is_any_booking_outside_new_attendee_count_bounds(
@@ -1618,6 +1621,8 @@ class BookingView(AutologgerMixin, UpdateView):
             self.model = booking.__class__
 
             self._log_changes()
+
+
 
             return redirect("/visit/%d/book/success" % self.visit.id)
         else:
