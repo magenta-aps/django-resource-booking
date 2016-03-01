@@ -127,7 +127,7 @@ class HasBackButtonMixin(ContextMixin):
 
 
 class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
-    template_name = 'email/compose.html'
+    template_name = 'email/compose_modal.html'
     form_class = EmailComposeForm
     recipients = []
     template_key = None

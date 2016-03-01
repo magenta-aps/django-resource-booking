@@ -24,7 +24,7 @@ $(function(){
         return url + (url.indexOf("#") ? "#":";") + "id=" + id;
     };
 
-    modalOpeners = $("*[data-toggle='modal'][data-modal-href]");
+    modalOpeners = $("[data-toggle='modal'][data-modal-href], [data-toggle='modal'][href]");
     if (modalOpeners.length) {
         var modalHost = $("#modalhost");
         var container = modalHost.find(".modal-content");
@@ -39,7 +39,7 @@ $(function(){
 
         modalOpeners.each(function(){
             var link = $(this);
-            link.click(function(){
+            link.click(function(event){
                 var url = link.attr("href") || link.attr("data-modal-href");
                 url = addIdToHash(url, id);
                 iframe.attr("src", url);
