@@ -24,6 +24,22 @@
                 </div>
             </div>
 
+                <div class="pull-right dropdown">
+                    <button class="btn btn-primary dropdown-toggle" type="button" id="sendNotification" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        {% trans 'Send besked' %}
+                        <span class="caret"/>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="sendNotification">
+                        <li><a href="{% url 'visit-notify' object.pk %}">{% trans 'Ingen skabelon' %}</a></li>
+                        {% if EmailTemplate.key_choices %}
+                            <li role="separator" class="divider"></li>
+                            {% for id, label in EmailTemplate.booking_key_choices %}
+                                <li><a href="{% url 'booking-notify' object.pk %}?template={{ id }}&back={{ thisurl | urlencode }}">{{ label }}</a></li>
+                            {% endfor %}
+                        {% endif %}
+                    </ul>
+                </div>
+
             <h2>Information om bookingen</h2>
 
             <dl class="dl-horizontal">
@@ -247,10 +263,4 @@
 
 {% block extra_scripts %}
     <script src="/static/js/custom.js"></script>
-    <script src="{% static "js/modalframe-host.js" %}"></script>
-    <script type="text/javascript">
-        <!--
-        $('#startbooking').hostModalIframe($('#startbooking').attr("data-frametarget"));
-        //-->
-    </script>
 {% endblock %}

@@ -1,8 +1,8 @@
 $(function() {
     window.formset = {
         _replaceCounter: function(string, newIndex){
-            return string.replace(/_set-(\d)-/, function(match, group, index, full) {
-                return "_set-" + (newIndex) + "-";
+            return string.replace(/-(\d)-/, function(match, group, index, full) {
+                return "-" + (newIndex) + "-";
             });
         },
         addRow: function(totalRowsEl, maxRowsEl, rowPrototype, container) {
@@ -18,6 +18,7 @@ $(function() {
                     this.id = formset._replaceCounter(this.id, totalRows);
                     this.name = formset._replaceCounter(this.name, totalRows);
                     this.value = "";
+                    console.log(this);
                 });
                 $(container).append(newRow);
                 totalRowsEl.val(totalRows + 1);

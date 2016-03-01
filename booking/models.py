@@ -1,6 +1,9 @@
 # encoding: utf-8
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.mail.message import EmailMessage
 from django.db import models
+from django.utils import timezone
+from django.core.exceptions import ObjectDoesNotExist
+from django.template.context import make_context
 from djorm_pgfulltext.models import SearchManager
 from djorm_pgfulltext.fields import VectorField
 from django.contrib.contenttypes.models import ContentType
@@ -8,9 +11,11 @@ from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext_lazy as _
+from django.template.base import Template
 
 from recurrence.fields import RecurrenceField
-from booking.utils import ClassProperty
+from booking.utils import ClassProperty, full_email
+from resource_booking import settings
 
 
 LOGACTION_CREATE = ADDITION
@@ -67,6 +72,15 @@ class Person(models.Model):
 
     def __unicode__(self):
         return self.name
+
+    def get_name(self):
+        return self.name
+
+    def get_email(self):
+        return self.email
+
+    def get_full_email(self):
+        return full_email(self.email, self.name)
 
 
 # Units (faculties, institutes etc)
@@ -855,6 +869,11 @@ class VisitOccurrence(models.Model):
 
         return result
 
+    def is_booked(self):
+        """Has this VisitOccurrence instance been booked yet?"""
+        class_booking = ClassBooking.objects.get(time_id=self.id)
+        return class_booking is not None
+
 
 class Room(models.Model):
     visit = models.ForeignKey(
@@ -1091,6 +1110,15 @@ class Booker(models.Model):
             return "%s %s <%s>" % (self.firstname, self.lastname, self.email)
         return "%s %s" % (self.firstname, self.lastname)
 
+    def get_email(self):
+        return self.email
+
+    def get_name(self):
+        return "%s %s" % (self.firstname, self.lastname)
+
+    def get_full_email(self):
+        return full_email(self.email, self.get_name())
+
 
 class Booking(models.Model):
     objects = SearchManager(
@@ -1325,8 +1353,8 @@ class Booking(models.Model):
 
 
 class ClassBooking(Booking):
-
-    time = models.DateTimeField(
+    time = models.ForeignKey(
+        VisitOccurrence,
         null=True,
         blank=True,
         verbose_name=u'Tidspunkt'
@@ -1374,3 +1402,208 @@ class BookingSubjectLevel(models.Model):
 
     def display_value(self):
         return u'%s på %s niveau' % (self.subject.name, self.level)
+
+
+class KUEmailMessage(models.Model):
+    """Email data for logging purposes."""
+    created = models.DateTimeField(
+        blank=False,
+        null=False,
+        default=timezone.now()
+    )
+    subject = models.TextField(blank=False, null=False)
+    body = models.TextField(blank=False, null=False)
+    from_email = models.TextField(blank=False, null=False)
+    recipients = models.TextField(
+        blank=False,
+        null=False
+    )
+
+    @staticmethod
+    def save_email(email_message):
+        ku_email_message = KUEmailMessage(
+            subject=email_message.subject,
+            body=email_message.body,
+            from_email=email_message.from_email,
+            recipients=', '.join(email_message.recipients())
+        )
+        ku_email_message.save()
+
+    @staticmethod
+    def send_email(template, context, recipients, unit=None, **kwargs):
+        if isinstance(template, int):
+            template_key = template
+            template = EmailTemplate.get_template(template_key, unit)
+            if template is None:
+                raise Exception(
+                    u"Template with name %s does not exist!" % template_key
+                )
+        if not isinstance(template, EmailTemplate):
+            raise Exception(
+                u"Invalid template object '%s'" % str(template)
+            )
+
+        emails = {}
+        if type(recipients) is not list:
+            recipients = [recipients]
+
+        for recipient in recipients:
+            name = None
+            address = None
+            if isinstance(recipient, basestring):
+                address = recipient
+            elif isinstance(recipient, User):
+                name = recipient.get_full_name()
+                address = recipient.email
+            else:
+                try:
+                    name = recipient.get_name()
+                except:
+                    pass
+                try:
+                    address = recipient.get_email()
+                except:
+                    pass
+            if address is not None and address not in emails:
+                email = {'address': address}
+                if name is not None:
+                    email['name'] = name
+                    email['full'] = u"\"%s\" <%s>" % (name, address)
+                else:
+                    email['full'] = address
+                emails[address] = email
+
+        for email in emails.values():
+            ctx = {
+                'unit': unit,
+                'recipient': email,
+                'sender': settings.DEFAULT_FROM_EMAIL
+            }
+            ctx.update(context)
+            subject = template.expand_subject(ctx)
+            body = template.expand_body(ctx, encapsulate=True)
+
+            message = EmailMessage(
+                subject=subject,
+                body=body,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[email['full']]
+            )
+            message.send()
+            KUEmailMessage.save_email(message)
+
+
+class EmailTemplate(models.Model):
+
+    NOTIFY_GUEST__BOOKING_CREATED = 1  # ticket 13806
+    NOTIFY_HOST__BOOKING_CREATED = 2  # ticket 13807
+    NOTIFY_HOST__REQ_TEACHER_VOLUNTEER = 3  # ticket 13808
+    NOTIFY_HOST__REQ_HOST_VOLUNTEER = 4  # ticket 13809
+    NOTIFY_HOST__ASSOCIATED = 5  # ticket 13810
+    NOTIFY_HOST__REQ_ROOM = 6  # ticket 13811
+    NOTIFY_GUEST__GENERAL_MSG = 7  # ticket 13812
+    NOTIFY_HOST__BOOKING_COMPLETE = 8  # ticket 13813
+    NOTIFY_ALL__BOOKING_CANCELED = 9  # ticket 13814
+    NOTITY_ALL__BOOKING_REMINDER = 10  # ticket 13815
+
+    key_choices = [
+        (NOTIFY_GUEST__BOOKING_CREATED, _(u'Gæst: Booking oprettet')),
+        (NOTIFY_GUEST__GENERAL_MSG, _(u'Gæst: Generel besked')),
+        (NOTIFY_HOST__BOOKING_CREATED, _(u'Vært: Booking oprettet')),
+        (NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
+         _(u'Vært: Frivillige undervisere')),
+        (NOTIFY_HOST__REQ_HOST_VOLUNTEER, _(u'Vært: Frivillige værter')),
+        (NOTIFY_HOST__ASSOCIATED, _(u'Vært: Tilknyttet besøg')),
+        (NOTIFY_HOST__REQ_ROOM, _(u'Vært: Forespørg lokale')),
+        (NOTIFY_HOST__BOOKING_COMPLETE, _(u'Vært: Booking færdigplanlagt')),
+        (NOTIFY_ALL__BOOKING_CANCELED, _(u'Alle: Booking aflyst')),
+        (NOTITY_ALL__BOOKING_REMINDER, _(u'Alle: Reminder om booking')),
+    ]
+    visit_key_choices = [  # Templates pertaining to visits
+        (key, label)
+        for (key, label) in key_choices
+        if key in [NOTIFY_GUEST__GENERAL_MSG,
+                   ]
+    ]
+    booking_key_choices = [  # Templates pertaining to bookings
+        (key, label)
+        for (key, label) in key_choices
+        if key in [NOTIFY_GUEST__BOOKING_CREATED,
+                   NOTIFY_HOST__BOOKING_CREATED,
+                   NOTIFY_HOST__ASSOCIATED,
+                   NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
+                   NOTIFY_HOST__REQ_HOST_VOLUNTEER,
+                   NOTIFY_HOST__BOOKING_COMPLETE,
+                   NOTIFY_ALL__BOOKING_CANCELED,
+                   NOTITY_ALL__BOOKING_REMINDER
+                   ]
+    ]
+
+    key = models.IntegerField(
+        verbose_name=u'Key',
+        choices=key_choices,
+        default=1
+    )
+
+    subject = models.CharField(
+        max_length=77,
+        verbose_name=u'Emne'
+    )
+
+    body = models.CharField(
+        max_length=65584,
+        verbose_name=u'Tekst'
+    )
+
+    unit = models.ForeignKey(
+        Unit,
+        verbose_name=u'Enhed',
+        null=True,
+        blank=True
+    )
+
+    def expand_subject(self, context, keep_placeholders=False):
+        return self._expand(self.subject, context, keep_placeholders)
+
+    def expand_body(self, context, keep_placeholders=False, encapsulate=False):
+        body = self._expand(self.body, context, keep_placeholders)
+        if encapsulate \
+                and not body.startswith(("<html", "<HTML", "<!DOCTYPE")):
+            body = "<!DOCTYPE html><html><head></head>" \
+                   "<body>%s</body>" \
+                   "</html>" % body
+        return body
+
+    @staticmethod
+    def _expand(text, context, keep_placeholders=False):
+        template = Template(unicode(text))
+        if keep_placeholders:
+            template.engine.string_if_invalid = "{{ %s }}"
+        if isinstance(context, dict):
+            context = make_context(context)
+        return template.render(context)
+
+    @staticmethod
+    def get_template(template_key, unit, include_overridden=False):
+        templates = []
+        while unit is not None and (include_overridden or len(templates) == 0):
+            try:
+                templates.extend(EmailTemplate.objects.filter(
+                    key=template_key,
+                    unit=unit
+                ).all())
+            except:
+                pass
+            unit = unit.parent
+        if include_overridden or len(templates) == 0:
+            try:
+                templates.extend(
+                    EmailTemplate.objects.filter(key=template_key,
+                                                 unit__isnull=True)
+                )
+            except:
+                pass
+        if include_overridden:
+            return templates
+        else:
+            return templates[0] if len(templates) > 0 else None

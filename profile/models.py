@@ -80,6 +80,11 @@ class UserProfile(models.Model):
     def is_administrator(self):
         return self.get_role() == ADMINISTRATOR
 
+    def can_notify(self, item=None):
+        # Return whether the user can send email notifications
+        # (for the given item)
+        return self.get_role() in EDIT_ROLES
+
     def can_edit(self, item):
         role = self.get_role()
 
@@ -91,6 +96,18 @@ class UserProfile(models.Model):
 
         if role in EDIT_ROLES:
             qs = self.get_unit_queryset().filter(pk=item.unit.pk)
+            return len(qs) > 0
+
+        return False
+
+    def unit_access(self, unit):
+        role = self.get_role()
+
+        if role == ADMINISTRATOR:
+            return True
+
+        if role in EDIT_ROLES:
+            qs = self.get_unit_queryset().filter(pk=unit.pk)
             return len(qs) > 0
 
         return False

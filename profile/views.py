@@ -24,7 +24,11 @@ import warnings
 
 class ProfileView(LoginRequiredMixin, TemplateView):
     """Display the user's profile."""
-    pass
+    def get_context_data(self, **kwargs):
+        context = {}
+        context['thisurl'] = reverse('profile-view')
+        context.update(**kwargs)
+        return super(ProfileView, self).get_context_data(**context)
 
 
 class CreateUserView(FormView, UpdateView):
