@@ -1300,6 +1300,7 @@ class VisitNotifyView(EmailComposeView):
                 }
             }
         }
+        context['modal'] = VisitNotifyView.modal
 
         context.update(kwargs)
         return super(VisitNotifyView, self).get_context_data(**context)
@@ -2010,6 +2011,8 @@ class BookingDetailView(LoggedViewMixin, DetailView):
         context['EmailTemplate'] = EmailTemplate
 
         context['thisurl'] = reverse('booking-view', args=[self.object.id])
+
+        context['modal'] = BookingNotifyView.modal
 
         context.update(kwargs)
 
