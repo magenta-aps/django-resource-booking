@@ -21,6 +21,7 @@ from booking.views import ChangeBookingTeachersView, ChangeBookingHostsView
 from booking.views import ChangeBookingRoomsView, ChangeBookingCommentsView
 from booking.views import BookingAddLogEntryView
 
+
 from django.views.generic import TemplateView
 
 js_info_dict = {
