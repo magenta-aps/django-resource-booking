@@ -1369,6 +1369,7 @@ class Booking(models.Model):
 
 
 class ClassBooking(Booking):
+
     time = models.ForeignKey(
         VisitOccurrence,
         null=True,
