@@ -179,7 +179,7 @@ class VisitStudyMaterialForm(VisitStudyMaterialFormBase):
 
 class VisitAutosendForm(forms.Form):
 
-    autosend = MultipleChoiceField(
+    autosend = forms.MultipleChoiceField(
         widget=CheckboxSelectMultiple,
         choices=EmailTemplate.key_choices
     )

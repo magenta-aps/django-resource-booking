@@ -45,6 +45,7 @@ from booking.models import PostCode, School
 from booking.models import Booking, Booker
 from booking.models import ResourceGymnasieFag, ResourceGrundskoleFag
 from booking.models import EmailTemplate
+from booking.models import VisitAutosend
 from booking.models import log_action
 from booking.models import LOGACTION_CREATE, LOGACTION_CHANGE
 from booking.forms import ResourceInitialForm, OtherResourceForm, VisitForm
@@ -959,7 +960,11 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         self.set_object(pk, request)
         form = self.get_form()
         fileformset = VisitStudyMaterialForm(None, instance=self.object)
-        autosendform = VisitAutosendForm(self.object)
+        autosendform = VisitAutosendForm()
+        autosendform.initial['autosend'] = [
+            autosend.template_key
+            for autosend in self.object.visitautosend_set.all()
+        ]
         return self.render_to_response(
             self.get_context_data(form=form, fileformset=fileformset,
                                   autosendform=autosendform)
@@ -1013,10 +1018,29 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         self.set_object(pk, request, is_cloning)
         form = self.get_form()
         fileformset = VisitStudyMaterialForm(request.POST)
+        autosendform = VisitAutosendForm(request.POST)
         if form.is_valid():
             visit = form.save()
-            if fileformset.is_valid():
+            if fileformset.is_valid() and autosendform.is_valid():
                 visit.save()
+
+                # Update autosend
+                new_autosend_keys = autosendform.cleaned_data['autosend']
+                existing_autosend = visit.visitautosend_set.all()
+                for autosend in existing_autosend:
+                    if autosend.template_key not in new_autosend_keys:
+                        autosend.delete()
+                existing_autosend_keys = [
+                    autosend.template_key
+                    for autosend in existing_autosend
+                ]
+                for template_key in new_autosend_keys:
+                    if template_key not in existing_autosend_keys:
+                        autosend = VisitAutosend(
+                            visit=visit,
+                            template_key=template_key
+                        )
+                        visit.visitautosend_set.add(autosend)
 
                 # Update rooms
                 existing_rooms = set([x.name for x in visit.room_set.all()])
