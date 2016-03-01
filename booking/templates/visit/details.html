@@ -84,10 +84,12 @@
                     </div>
                     <div class="panel-body">
                         <dl class="dl-horizontal">
+
                             {% if object.get_audience_display %}
                                 <dt>{% trans 'Henvendt til'%}:</dt>
                                 <dd>{{ object.get_audience_display }}</dd>
                             {% endif %}
+
                             {% if object.resource_ptr.all_subjects  %}
                                 <dt>{% trans 'Fag/niveau' %}:</dt>
                                 <dd>
@@ -98,21 +100,36 @@
                                     </ul>
                                 </dd>
                             {% endif %}
+
                             {% if object.num_of_participants_display %}
                                 <dt>{% trans 'Max antal' %}:</dt>
                                 <dd>{{ object.num_of_participants_display }}</dd>
                             {% endif %}
+
                             {% if object.get_type_display %}
                                 <dt>{% trans 'Hvad' %}:</dt>
                                 <dd>{{ object.get_type_display }}</dd>
                             {% endif %}
+
                             {% if object.locality %}
                                 <dt>{% trans 'Hvor' %}:</dt>
-                                <dd>{{ object.unit.name }}, {{ object.locality.name }}, {{ object.locality.address_line }}, {{ object.locality.zip_city }}</dd>
+                                <dd>
+                                    {{ object.locality.name }},<br/>
+                                    {{ object.locality.address_line }},<br/>
+                                    {{ object.locality.zip_city }}
+                                </dd>
                             {% endif %}
-                            
-                            <dt>{% trans 'Arrangør' %}:</dt>
-                            <dd><a href="#">{% trans 'Mere information om arrangøren' %}</a> <span class="glyphicon glyphicon-new-window"></span></dd>
+
+                            <dt>{% trans 'Arrangør:' %}</dt>
+                            <dd>
+                                {% if object.unit.url %}
+                                    <a href="{{ object.unit.url }}" target="_blank">
+                                {% endif %}
+                                <strong>{{ object.unit.name }}</strong>
+                                {% if object.unit.url %}
+                                    </a> <span class="glyphicon glyphicon-new-window"></span>
+                                {% endif %}
+                            </dd>
                             
                             <dt>Hvornår:</dt>
                             <!--<dd>{{ object.time }}</dd>-->
@@ -126,10 +143,12 @@
                                 {% endfor %}
                                 </ul>
                             </dd>
+
                             {% if object.duration %}
                                 <dt>{% trans 'Varighed' %}:</dt>
                                 <dd>{{ object.duration|timedelta }}</dd>
                             {% endif %}
+
                             {% if object.price %}
                                 <dt>{% trans 'Pris' %}:</dt>
                                 <dd>{{ object.price }}</dd>
