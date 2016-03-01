@@ -42,7 +42,6 @@ INSTALLED_APPS = (
     'timedelta',
     'tinymce',
     'djangosaml2',
-    'django_extensions'
 )
 
 MIDDLEWARE_CLASSES = (
