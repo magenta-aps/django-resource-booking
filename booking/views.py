@@ -1870,7 +1870,7 @@ class EmailTemplateEditView(UpdateView, UnitAccessRequiredMixin,
         if 'unit' in request.GET:
             form.initial['unit'] = request.GET['unit']
         return self.render_to_response(
-                self.get_context_data(form=form)
+            self.get_context_data(form=form)
         )
 
     def post(self, request, *args, **kwargs):
@@ -1892,7 +1892,7 @@ class EmailTemplateEditView(UpdateView, UnitAccessRequiredMixin,
             return redirect(reverse('emailtemplate-list'))
 
         return self.render_to_response(
-                self.get_context_data(**context)
+            self.get_context_data(**context)
         )
 
     def get_context_data(self, **kwargs):
@@ -1946,12 +1946,12 @@ class EmailTemplateDetailView(View):
     @staticmethod
     def _getObjectJson():
         return json.dumps({
-                              key: [
-                                  {'text': unicode(object), 'value': object.id}
-                                  for object in type.objects.all()
-                                  ]
-                              for key, type in EmailTemplateDetailView.classes.items()
-                              })
+            key: [
+                {'text': unicode(object), 'value': object.id}
+                for object in type.objects.all()
+            ]
+            for key, type in EmailTemplateDetailView.classes.items()
+        })
 
     @method_decorator(login_required)
     def get(self, request, *args, **kwargs):
