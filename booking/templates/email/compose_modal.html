@@ -1,4 +1,4 @@
-{% extends 'index.html' %}
+{% extends 'lightbox-index.html' %}
 {% load i18n %}
 {% load staticfiles %}
 {% load booking_tags %}
@@ -8,8 +8,6 @@
 {% endblock %}
 
 {% block content %}
-
-    {% include 'common/breadcrumbrow.html' %}
 
     <div class="divider"></div>
     <div class="row form-group">
@@ -120,14 +118,14 @@
                             <div class="col-sm-10">
                                 {% if templates %}
                                     {% for template in templates reversed %}
-                                        <a href="{% url 'emailtemplate-view' template.id %}" class="
+                                        <a href="{% url 'emailtemplate-view' template.id %}" target="_blank" class="
                                         {% if forloop.last %}template-selected{% else %}template-overridden{% endif %}
                                         ">{% if template.unit %}{{ template.unit.name }}{% else %}{% trans 'Rodskabelon' %}{% endif %}</a>
                                         {% if not forloop.last %} &gt; {% endif %}
                                     {% endfor %}
                                 {% else %}
                                     {% trans 'Ingen skabeloner fundet' %}
-                                    <a href="{% url 'emailtemplate-create' %}?unit={{ template_unit.id }}&key={{ template_key }}">{% trans 'Opret skabelon' %}</a>
+                                    <a href="{% url 'emailtemplate-create' %}?unit={{ template_unit.id }}&key={{ template_key }}" target="_blank">{% trans 'Opret skabelon' %}</a>
                                 {% endif %}
                             </div>
                         </div>
@@ -150,7 +148,7 @@
     {% if recp %}
     <script type="text/javascript">
         {% autoescape off %}
-        <!--
+            <!--
             var recipients = {{ recp | jsonify }};
             var groupContainer = $("#recipient-groups");
             var recipientContainer = $("#recipient-list > ul");
@@ -173,6 +171,7 @@
                         'value':value
                     });
                     recipientContainer.append(li);
+                    modal.updateHeight();
                 }
             };
 
@@ -189,14 +188,12 @@
                 var button = $("<button>");
                 button.text(label);
                 button.attr({type:"button"});
-                button.addClass("btn btn-default");
                 groupContainer.append(button);
                 button.click(addGroup.bind(null, groupName));
             }
 
             var custom = $("<input>");
             custom.attr({type:'email', placeholder:'{% trans 'Indtast email-adresse' %}'});
-            custom.addClass("form-control");
             groupContainer.append(custom);
             custom.keydown(function(event){
                 if (event.keyCode == 13) {
@@ -218,16 +215,21 @@
                 }
             });
 
+            $(".cancelbutton").click(function(event){
+                modal.close();
+                event.preventDefault();
+                return false;
+            });
+
             var clear = $("<button>");
             clear.attr({type:"button"});
-            clear.text("{% trans 'Ryd' %}")
-            clear.addClass("btn btn-default");
+            clear.text("{% trans 'Ryd' %}");
             groupContainer.append(clear);
             clear.click(function(){
                 recipientContainer.empty();
+                modal.updateHeight();
             });
-
-        //-->
+            //-->
         {% endautoescape %}
     </script>
     {% endif %}

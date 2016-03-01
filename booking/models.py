@@ -308,26 +308,35 @@ class Resource(models.Model):
                                default=STUDY_MATERIAL)
     state = models.IntegerField(choices=state_choices, default=CREATED,
                                 verbose_name=_(u"Tilstand"))
-    title = models.CharField(max_length=60, verbose_name=_(u'Titel'))
+    title = models.CharField(
+        max_length=60,
+        blank=False,
+        verbose_name=_(u'Titel')
+    )
     teaser = models.TextField(
         max_length=210,
-        blank=True,
+        blank=False,
         verbose_name=_(u'Teaser')
     )
-    description = models.TextField(blank=True, verbose_name=_(u'Beskrivelse'))
+    description = models.TextField(
+        blank=False,
+        verbose_name=_(u'Beskrivelse')
+    )
     mouseover_description = models.CharField(
         max_length=512, blank=True, verbose_name=_(u'Mouseover-tekst')
     )
-    unit = models.ForeignKey(Unit, null=True, blank=True,
+    unit = models.ForeignKey(Unit, null=True, blank=False,
                              verbose_name=_('Enhed'))
     links = models.ManyToManyField(Link, blank=True, verbose_name=_('Links'))
     audience = models.IntegerField(choices=audience_choices,
                                    verbose_name=_(u'Målgruppe'),
-                                   default=AUDIENCE_ALL)
+                                   default=AUDIENCE_ALL,
+                                   blank=False)
 
     institution_level = models.IntegerField(choices=institution_choices,
                                             verbose_name=_(u'Institution'),
-                                            default=SECONDARY)
+                                            default=SECONDARY,
+                                            blank=False)
 
     gymnasiefag = models.ManyToManyField(
         Subject, blank=True,
@@ -443,8 +452,16 @@ class Resource(models.Model):
             return self.visit.locality
         except Visit.DoesNotExist:
             pass
-
         return "-"
+
+    def get_absolute_url(self):
+        return reverse('resource-view', args=[self.pk])
+
+    def get_url(self):
+        return settings.PUBLIC_URL + self.get_absolute_url()
+
+    def url(self):
+        return self.get_url()
 
 
 class ResourceGymnasieFag(models.Model):
@@ -671,6 +688,9 @@ class OtherResource(Resource):
         # Do the final save
         return super(OtherResource, self).save(*args, **kwargs)
 
+    def get_absolute_url(self):
+        return reverse('otherresource-view', args=[self.pk])
+
 
 class Visit(Resource):
     """A bookable visit of any kind."""
@@ -826,8 +846,10 @@ class Visit(Resource):
             )
         elif self.maximum_number_of_visitors:
             return self.maximum_number_of_visitors
-
         return None
+
+    def get_absolute_url(self):
+        return reverse('visit-view', args=[self.pk])
 
 
 class VisitOccurrence(models.Model):
@@ -1322,6 +1344,12 @@ class Booking(models.Model):
 
         return " ".join(result)
 
+    def get_subjects(self):
+        if hasattr(self, 'teacherbooking'):
+            return self.teacherbooking.subjects.all()
+        else:
+            return None
+
     def save(self, *args, **kwargs):
 
         # Save once to store relations
@@ -1335,6 +1363,9 @@ class Booking(models.Model):
 
     def get_absolute_url(self):
         return reverse('booking-view', args=[self.pk])
+
+    def get_url(self):
+        return settings.PUBLIC_URL + self.get_absolute_url()
 
 
 class ClassBooking(Booking):
@@ -1507,16 +1538,17 @@ class EmailTemplate(models.Model):
     visit_key_choices = [  # Templates pertaining to visits
         (key, label)
         for (key, label) in key_choices
-        if key in [NOTIFY_GUEST__GENERAL_MSG]
+        if key in []
     ]
     booking_key_choices = [  # Templates pertaining to bookings
         (key, label)
         for (key, label) in key_choices
         if key in [NOTIFY_GUEST__BOOKING_CREATED,
+                   NOTIFY_GUEST__GENERAL_MSG,
                    NOTIFY_HOST__BOOKING_CREATED,
+                   NOTIFY_HOST__ASSOCIATED,
                    NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
                    NOTIFY_HOST__REQ_HOST_VOLUNTEER,
-                   NOTIFY_HOST__ASSOCIATED,
                    NOTIFY_HOST__BOOKING_COMPLETE,
                    NOTIFY_ALL__BOOKING_CANCELED,
                    NOTITY_ALL__BOOKING_REMINDER
@@ -1572,18 +1604,18 @@ class EmailTemplate(models.Model):
         templates = []
         while unit is not None and (include_overridden or len(templates) == 0):
             try:
-                templates.extend(EmailTemplate.objects.filter(
+                templates.append(EmailTemplate.objects.filter(
                     key=template_key,
                     unit=unit
-                ).all())
+                ).all()[0])
             except:
                 pass
             unit = unit.parent
         if include_overridden or len(templates) == 0:
             try:
-                templates.extend(
+                templates.append(
                     EmailTemplate.objects.filter(key=template_key,
-                                                 unit__isnull=True)
+                                                 unit__isnull=True)[0]
                 )
             except:
                 pass

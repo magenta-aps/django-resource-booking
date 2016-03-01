@@ -67,6 +67,10 @@ h5 {
     font-size: 14px;
 }
 
+a {
+    cursor: pointer;
+}
+
 a:not(.btn),
 a:not(.btn):hover,
 a:not(.btn):active {
@@ -674,6 +678,11 @@ ul.footerlinks .footerlist-header {
 .form-group label[for*="id_"], .form-group label[for*="id_"] + input[id*="id_"] {
     margin-right: 7px;
 }
+.form-group label.required:before {
+    color: red;
+    content:  '* ';
+    display:inline;
+}
 a#attachAddFileField {
     margin-top: 10px;
     display: inline-block;
@@ -740,6 +749,15 @@ a.template-overridden:visited {
     margin: 0;
     border: none;
     max-width: 100%;
+}
+
+table.sortable th.sort {
+    cursor: pointer
+}
+
+body.lightbox {
+    margin-left: 10px;
+    overflow: hidden;
 }
 
 @media screen and (max-width:768px) {

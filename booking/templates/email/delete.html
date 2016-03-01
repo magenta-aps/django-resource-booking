@@ -20,6 +20,6 @@
             <dd>{{ object.body }}</dd>
         </dl>
         <button type="submit" class="btn btn-primary">{% trans 'Yes' %}</button>
-        <a href="javascript:history.back()" class="btn btn-primary">{% trans 'No' %}</a>
+        <a class="btn btn-primary" href="{% if oncancel %}{{ oncancel }}{% else %}javascript:history.back(){% endif %}">{% trans 'No' %}</a>
     </form>
 {% endblock %}

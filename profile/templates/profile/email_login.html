@@ -1,0 +1,30 @@
+{% extends "index.html" %}
+{% load i18n %}
+
+{% block content %}
+{% include 'common/breadcrumbrow.html' %}
+
+<h1>Log ind via E-mail URL</h1>
+
+<div class="divider"></div>
+    <div class="row">
+        <div class="col-sm-12">
+            {% if view.expired %}
+            <p>
+                {% blocktrans %}
+                Det link du har klikket på er udløbet og kan ikke længere
+                bruges til at logge ind i systemet.
+                {% endblocktrans %}
+                {## TODO: Link til andre login-metoder? ##}
+            </p>
+            {% else %}
+            <p>
+                {% blocktrans %}
+                Der opstod en fejl under login med det angivne link.
+                {% endblocktrans %}
+            </p>
+            {% endif %}
+        </div>
+    </div>
+<div class="divider"></div>
+{% endblock %}
