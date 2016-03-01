@@ -31,11 +31,12 @@
                         <span class="caret"/>
                     </button>
                     <ul class="dropdown-menu" aria-labelledby="sendNotification">
-                        <li><a href="{% url 'visit-notify' object.pk %}">{% trans 'Ingen skabelon' %}</a></li>
+                        <li><a data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'booking-notify' object.pk %}">{% trans 'Ingen skabelon' %}</a></li>
                         {% if EmailTemplate.key_choices %}
                             <li role="separator" class="divider"></li>
                             {% for id, label in EmailTemplate.booking_key_choices %}
-                                <li><a href="{% url 'booking-notify' object.pk %}?template={{ id }}&back={{ thisurl | urlencode }}">{{ label }}</a></li>
+                                <!--<li><a href="{% url 'booking-notify' object.pk %}?template={{ id }}&back={{ thisurl | urlencode }}">{{ label }}</a></li>-->
+                                <li><a data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'booking-notify' object.pk %}?template={{ id }}">{{ label }}</a></li>
                             {% endfor %}
                         {% endif %}
                     </ul>
@@ -264,9 +265,11 @@
     </div>
 
     {% include 'common/modal_contact.html' %}
+    {% include 'common/modal_framehost.html' %}
 
 {% endblock %}
 
 {% block extra_scripts %}
     <script src="/static/js/custom.js"></script>
+    <script src="{% static "js/modalframe-host.js" %}"></script>
 {% endblock %}
