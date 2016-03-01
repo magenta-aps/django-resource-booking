@@ -183,6 +183,8 @@
                 recipientContainer.empty();
                 modal.updateHeight();
             });
+
+            $("a[href]").not("[href^=javascript]").attr("target", "_blank");
         //-->
         {% endautoescape %}
     </script>
