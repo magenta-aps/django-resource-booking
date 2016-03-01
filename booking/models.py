@@ -121,9 +121,9 @@ class Unit(models.Model):
         related_name="contactperson_for_units"
     )
     url = models.URLField(
-            verbose_name=u'Hjemmeside',
-            null=True,
-            blank=True
+        verbose_name=u'Hjemmeside',
+        null=True,
+        blank=True
     )
 
     def belongs_to(self, unit):
