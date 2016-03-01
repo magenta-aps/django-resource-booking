@@ -69,6 +69,7 @@
                                 <dt>{% trans 'Henvendt til:' %}</dt>
                                 <dd>{{ object.get_audience_display }}</dd>
                             {% endif %}
+
                             {% if object.resource_ptr.all_subjects  %}
                                 <dt>{% trans 'Fag/niveau:' %}</dt>
                                 <dd>
@@ -79,18 +80,22 @@
                                     </ul>
                                 </dd>
                             {% endif %}
+
                             {% if object.get_type_display %}
                                 <dt>{% trans 'Hvad:' %}</dt>
                                 <dd>{{ object.get_type_display }}</dd>
                             {% endif %}
 
-                            {% if object.visit.unit.contact %}
-                                <dt>{% trans 'Arrangør:' %}</dt>
-                                <dd>
-                                    {{ object.unit.contact.name }}<br/>
-                                    <a href="{% url 'email' object.unit.contact.id %}">{% trans 'Stil et spørgsmål om dette tilbud' %}</a> <span class="glyphicon glyphicon-new-window"></span>
-                                </dd>
-                            {% endif %}
+                            <dt>{% trans 'Arrangør:' %}</dt>
+                            <dd>
+                                {% if object.unit.url %}
+                                    <a href="{{ object.unit.url }}" target="_blank">
+                                {% endif %}
+                                <strong>{{ object.unit.name }}</strong>
+                                {% if object.unit.url %}
+                                    </a> <span class="glyphicon glyphicon-new-window"></span>
+                                {% endif %}
+                            </dd>
 
                         </dl>
                     </div>

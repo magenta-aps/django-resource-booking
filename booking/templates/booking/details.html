@@ -228,15 +228,23 @@
 
                             {% if object.visit.locality %}
                                 <dt>{% trans 'Hvor:' %}</dt>
-                                <dd><strong>{{ object.visit.unit.name }}</strong><br> {{ object.visit.locality.name }}, {{ object.visit.locality.address_line }}, {{ object.visit.locality.zip_city }}</dd>
-                            {% endif %}
-
-                            {% if object.visit.unit.contact %}
-                                <dt>{% trans 'Arrangør:' %}</dt>
                                 <dd>
-                                    {{ object.visit.unit.contact.name }}
+                                    {{ object.visit.locality.name }},<br/>
+                                    {{ object.visit.locality.address_line }},<br/>
+                                    {{ object.visit.locality.zip_city }}
                                 </dd>
                             {% endif %}
+
+                            <dt>{% trans 'Arrangør:' %}</dt>
+                            <dd>
+                                {% if object.visit.unit.url %}
+                                    <a href="{{ object.visit.unit.url }}" target="_blank">
+                                {% endif %}
+                                <strong>{{ object.visit.unit.name }}</strong>
+                                {% if object.visit.unit.url %}
+                                    </a> <span class="glyphicon glyphicon-new-window"></span>
+                                {% endif %}
+                            </dd>
 
                             <dt>{% trans 'Hvornår:' %}</dt>
                             <dd>
