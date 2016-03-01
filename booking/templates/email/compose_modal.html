@@ -125,6 +125,7 @@
                         'value':value
                     });
                     recipientContainer.append(li);
+                    modal.updateHeight();
                 }
             };
 
@@ -180,6 +181,7 @@
             groupContainer.append(clear);
             clear.click(function(){
                 recipientContainer.empty();
+                modal.updateHeight();
             });
         //-->
         {% endautoescape %}
