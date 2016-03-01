@@ -30,7 +30,8 @@ from django.views.defaults import bad_request
 
 from profile.models import EDIT_ROLES
 from profile.models import role_to_text
-from booking.models import Visit, VisitOccurrence, StudyMaterial
+from booking.models import Visit, VisitOccurrence, StudyMaterial, \
+    LOGACTION_MAIL_SENT
 from booking.models import KUEmailMessage
 from booking.models import Resource, Subject
 from booking.models import Unit
@@ -1438,19 +1439,18 @@ class BookingView(AutologgerMixin, UpdateView):
 
             booking.save()
             KUEmailMessage.send_email(
-                EmailTemplate.NOTIFY_GUEST__BOOKING_CREATED,
+                EmailTemplate.NOTIFY_ALL_STAFF__BOOKING_CREATED,
                 {
                     'booking': booking,
                     'visit': booking.visit,
                     'booker': booking.booker,
                     'user': request.user,
-                    'action_flag': EmailTemplate.BOOKING_CREATED,
+                    'action_flag': LOGACTION_MAIL_SENT,
                     'message': unicode(EmailTemplate.key_choices[
-                        EmailTemplate.BOOKING_CREATED
+                        EmailTemplate.NOTIFY_ALL_STAFF__BOOKING_CREATED
                     ][1])
                 },
                 list(self.visit.contact_persons.all()),
-                # booking,
                 self.visit.unit
             )
             KUEmailMessage.send_email(
@@ -1460,13 +1460,12 @@ class BookingView(AutologgerMixin, UpdateView):
                     'visit': booking.visit,
                     'booker': booking.booker,
                     'user': request.user,
-                    'action_flag': EmailTemplate.CONFIRMATION_TO_BOOKER,
+                    'action_flag': LOGACTION_MAIL_SENT,
                     'message': unicode(EmailTemplate.key_choices[
-                        EmailTemplate.CONFIRMATION_TO_BOOKER
+                        EmailTemplate.NOTIFY_GUEST__BOOKING_CREATED
                     ][1]),
                 },
                 [booking.booker],
-                # booking,
                 self.visit.unit
             )
 
@@ -1877,7 +1876,7 @@ class BookingDetailView(LoggedViewMixin, DetailView):
 
 
 class ShowEmailLogView(ListView):
-    model = KUEmailMessage
+    model = LogEntry
     template_name = 'booking/show_email_log.html'
 
     def get_queryset(self):
@@ -1885,7 +1884,10 @@ class ShowEmailLogView(ListView):
         if pk is None:
             return bad_request(self.request)
 
-        return KUEmailMessage.objects.filter(object_id=pk)
+        return LogEntry.objects.filter(
+            object_id=pk,
+            action_flag=LOGACTION_MAIL_SENT
+        ).order_by('action_time')
 
     def get_context_data(self, **kwargs):
         context = dict()

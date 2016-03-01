@@ -24,7 +24,7 @@ LOGACTION_CHANGE = CHANGE
 LOGACTION_DELETE = DELETION
 # If we need to add additional values make sure they do not conflict with
 # system defined ones by adding 128 to the value.
-LOGACTION_CUSTOM1 = 128 + 1
+LOGACTION_MAIL_SENT = 128 + 1
 LOGACTION_CUSTOM2 = 128 + 2
 LOGACTION_MANUAL_ENTRY = 128 + 64 + 1
 
@@ -32,6 +32,7 @@ LOGACTION_DISPLAY_MAP = {
     LOGACTION_CREATE: _(u'Oprettet'),
     LOGACTION_CHANGE: _(u'Ændret'),
     LOGACTION_DELETE: _(u'Slettet'),
+    LOGACTION_MAIL_SENT: _(u'Mail sendt'),
     LOGACTION_MANUAL_ENTRY: _(u'Log-post tilføjet manuelt')
 }
 
@@ -1494,41 +1495,42 @@ class KUEmailMessage(models.Model):
                 to=[email['full']]
             )
             message.send()
-            # Todo: Fix logging
-            # KUEmailMessage.save_email(message, instance)
+            KUEmailMessage.save_email(message, ctx['booking'])
             log_action(
                 ctx['user'],
                 ctx['booking'],
                 ctx['action_flag'],
-                ctx['message']
+                u'Email sendt - Aktionbesked: %s' % ctx['message']
             )
 
 
 class EmailTemplate(models.Model):
 
-    NOTIFY_GUEST__BOOKING_CREATED = 1  # ticket 13806
-    NOTIFY_HOST__BOOKING_CREATED = 2  # ticket 13807
-    NOTIFY_HOST__REQ_TEACHER_VOLUNTEER = 3  # ticket 13808
-    NOTIFY_HOST__REQ_HOST_VOLUNTEER = 4  # ticket 13809
-    NOTIFY_HOST__ASSOCIATED = 5  # ticket 13810
-    NOTIFY_HOST__REQ_ROOM = 6  # ticket 13811
-    NOTIFY_GUEST__GENERAL_MSG = 7  # ticket 13812
-    NOTIFY_HOST__BOOKING_COMPLETE = 8  # ticket 13813
-    NOTIFY_ALL__BOOKING_CANCELED = 9  # ticket 13814
-    NOTITY_ALL__BOOKING_REMINDER = 10  # ticket 13815
+    NOTIFY_GUEST__BOOKING_CREATED = 0  # ticket 13806
+    NOTIFY_HOST__BOOKING_CREATED = 1  # ticket 13807
+    NOTIFY_HOST__REQ_TEACHER_VOLUNTEER = 2  # ticket 13808
+    NOTIFY_HOST__REQ_HOST_VOLUNTEER = 3  # ticket 13809
+    NOTIFY_HOST__ASSOCIATED = 4  # ticket 13810
+    NOTIFY_HOST__REQ_ROOM = 5  # ticket 13811
+    NOTIFY_GUEST__GENERAL_MSG = 6  # ticket 13812
+    NOTIFY_HOST__BOOKING_COMPLETE = 7  # ticket 13813
+    NOTIFY_ALL__BOOKING_CANCELED = 8  # ticket 13814
+    NOTITY_ALL__BOOKING_REMINDER = 9  # ticket 13815
+    NOTIFY_ALL_STAFF__BOOKING_CREATED = 10
 
     key_choices = [
         (NOTIFY_GUEST__BOOKING_CREATED, _(u'Gæst: Booking oprettet')),
-        (NOTIFY_GUEST__GENERAL_MSG, _(u'Gæst: Generel besked')),
         (NOTIFY_HOST__BOOKING_CREATED, _(u'Vært: Booking oprettet')),
         (NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
          _(u'Vært: Frivillige undervisere')),
         (NOTIFY_HOST__REQ_HOST_VOLUNTEER, _(u'Vært: Frivillige værter')),
         (NOTIFY_HOST__ASSOCIATED, _(u'Vært: Tilknyttet besøg')),
         (NOTIFY_HOST__REQ_ROOM, _(u'Vært: Forespørg lokale')),
+        (NOTIFY_GUEST__GENERAL_MSG, _(u'Gæst: Generel besked')),
         (NOTIFY_HOST__BOOKING_COMPLETE, _(u'Vært: Booking færdigplanlagt')),
         (NOTIFY_ALL__BOOKING_CANCELED, _(u'Alle: Booking aflyst')),
         (NOTITY_ALL__BOOKING_REMINDER, _(u'Alle: Reminder om booking')),
+        (NOTIFY_ALL_STAFF__BOOKING_CREATED, _(u'Alle: Booking oprettet')),
     ]
     key = models.IntegerField(
         verbose_name=u'Key',

@@ -12,7 +12,8 @@ from booking.booking_workflows.forms import ChangeBookingHostsForm
 from booking.booking_workflows.forms import ChangeBookingRoomsForm
 from booking.booking_workflows.forms import ChangeBookingCommentsForm
 from booking.booking_workflows.forms import BookingAddLogEntryForm
-from booking.models import Booking, KUEmailMessage, EmailTemplate
+from booking.models import Booking, KUEmailMessage, EmailTemplate, \
+    LOGACTION_MAIL_SENT
 from booking.models import LOGACTION_MANUAL_ENTRY
 from booking.models import log_action
 from booking.views import AutologgerMixin
@@ -59,13 +60,12 @@ class ChangeBookingHostsView(AutologgerMixin, UpdateWithCancelView):
                 'visit': booking.visit,
                 'booker': booking.booker,
                 'user': request.user,
-                'action_flag': EmailTemplate.NOTIFY_HOST__ASSOCIATED,
+                'action_flag': LOGACTION_MAIL_SENT,
                 'message': unicode(EmailTemplate.key_choices[
                     EmailTemplate.NOTIFY_HOST__ASSOCIATED
                 ][1]),
             },
             list(booking.visit.contact_persons.all()),
-            # booking,
             booking.visit.unit
         )
 
@@ -94,13 +94,12 @@ class ChangeBookingRoomsView(AutologgerMixin, UpdateWithCancelView):
                 'visit': booking.visit,
                 'booker': booking.booker,
                 'user': request.user,
-                'action_flag': EmailTemplate.NOTIFY_HOST__REQ_ROOM,
+                'action_flag': LOGACTION_MAIL_SENT,
                 'message': unicode(EmailTemplate.key_choices[
                     EmailTemplate.NOTIFY_HOST__REQ_ROOM
                 ][1]),
             },
             list(booking.visit.contact_persons.all()),
-            # booking,
             booking.visit.unit
         )
 
@@ -159,4 +158,3 @@ class BookingAddLogEntryView(FormView):
 
     def get_success_url(self):
         return reverse('booking-view', args=[self.booking.pk])
-
