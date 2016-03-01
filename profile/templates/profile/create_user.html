@@ -1,6 +1,17 @@
 {% extends "index.html" %}
 
 {% block content %}
+{% include 'common/breadcrumbrow.html' %}
+
+{% if object.pk %}
+<h1>Rediger bruger '{{ object.username }}'</h1>
+{% else %}
+<h1>Opret ny bruger</h1>
+{% endif %}
+
+<div class="divider"></div>
+<div class="row">
+<div class="col-sm-12">
 <form method="POST">
     {% csrf_token %}
     <div>
@@ -49,4 +60,6 @@
 
     <input class="btn btn-primary" type="submit", value="Gem" name="submit" />
 </form>
+</div>
+</div>
 {% endblock %}

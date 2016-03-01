@@ -42,10 +42,10 @@
             <div class="well order-buttons hidden-print">
                 <!-- Display according to business logic -->
                 {% if can_book %}
-                <button type="button" class="btn btn-default" data-toggle="modal" data-target="#startbooking">
+                <a class="btn btn-default" data-toggle="modal" data-target="#modalhost" href="{% url 'visit-book' object.id %}">
                     Tilmeld
                     <span class="glyphicon glyphicon-chevron-right"></span>
-                </button>
+                </a>
                 {% endif %}
                 <!-- Display according to business logic -->
             </div>
@@ -126,13 +126,7 @@
 
     {% include 'common/modal_contact.html' %}
 
-<!-- Modal start -->
-    <div class="modal fade" id="startbooking" tabindex="-1" role="Popup-bookingflow" aria-labelledby="overskrift" data-frametarget="/visit/{{ object.id }}/book">
-        <div class="modal-dialog modal-lg" role="Bookingflow">
-            <div class="modal-content" id="booking-container"></div>
-        </div>
-    </div>
-    <!-- Modal end -->
+    {% include 'common/modal_framehost.html' %}
 {% endblock %}
 {% block footer %}
     <div class="container">
@@ -162,9 +156,4 @@
 {% block extra_scripts %}
     <script src="/static/js/custom.js"></script>
     <script src="{% static "js/modalframe-host.js" %}"></script>
-    <script type="text/javascript">
-    <!--
-    $('#startbooking').hostModalIframe($('#startbooking').attr("data-frametarget"));
-    //-->
-    </script>
 {% endblock %}

@@ -308,26 +308,35 @@ class Resource(models.Model):
                                default=STUDY_MATERIAL)
     state = models.IntegerField(choices=state_choices, default=CREATED,
                                 verbose_name=_(u"Tilstand"))
-    title = models.CharField(max_length=60, verbose_name=_(u'Titel'))
+    title = models.CharField(
+        max_length=60,
+        blank=False,
+        verbose_name=_(u'Titel')
+    )
     teaser = models.TextField(
         max_length=210,
-        blank=True,
+        blank=False,
         verbose_name=_(u'Teaser')
     )
-    description = models.TextField(blank=True, verbose_name=_(u'Beskrivelse'))
+    description = models.TextField(
+        blank=False,
+        verbose_name=_(u'Beskrivelse')
+    )
     mouseover_description = models.CharField(
         max_length=512, blank=True, verbose_name=_(u'Mouseover-tekst')
     )
-    unit = models.ForeignKey(Unit, null=True, blank=True,
+    unit = models.ForeignKey(Unit, null=True, blank=False,
                              verbose_name=_('Enhed'))
     links = models.ManyToManyField(Link, blank=True, verbose_name=_('Links'))
     audience = models.IntegerField(choices=audience_choices,
                                    verbose_name=_(u'Målgruppe'),
-                                   default=AUDIENCE_ALL)
+                                   default=AUDIENCE_ALL,
+                                   blank=False)
 
     institution_level = models.IntegerField(choices=institution_choices,
                                             verbose_name=_(u'Institution'),
-                                            default=SECONDARY)
+                                            default=SECONDARY,
+                                            blank=False)
 
     gymnasiefag = models.ManyToManyField(
         Subject, blank=True,
@@ -1334,6 +1343,12 @@ class Booking(models.Model):
             result.append(self.booker.as_searchtext())
 
         return " ".join(result)
+
+    def get_subjects(self):
+        if hasattr(self, 'teacherbooking'):
+            return self.teacherbooking.subjects.all()
+        else:
+            return None
 
     def save(self, *args, **kwargs):
 

@@ -18,28 +18,32 @@ window.modal = {
     }
 };
 
+$(function(){
 
-$.fn.extend({
-    'hostModalIframe': function(url) {
+    var addIdToHash = function(url, id) {
+        return url + (url.indexOf("#") ? "#":";") + "id=" + id;
+    };
 
-        var id = modal.add(this);
-        url += ((url.indexOf("#")==-1) ? "#":";" ) + "id=" + id;
-
-        this.on('shown.bs.modal', function () {
-            var container = $(this).find(".modal-content");
-            if (!container.find("iframe").length) {
-                var iframe = $("<iframe>");
-                iframe.attr("src", url);
-                container.append(iframe);
-
-                iframe.load(function(){
-                    var loc = iframe.get(0).contentDocument.location;
-                    if (!/[#;]id=[^;]/.exec(loc.hash)) {
-                        loc.hash += (loc.hash.indexOf("#") ? "#":";") + "id=" + id;
-                        modal.modals[id].setId(id);
-                    }
-                });
+    modalOpeners = $("*[data-toggle='modal'][data-modal-href]");
+    if (modalOpeners.length) {
+        var modalHost = $("#modalhost");
+        var container = modalHost.find(".modal-content");
+        var iframe = container.find("iframe");
+        var id = modal.add(modalHost);
+        iframe.load(function(){
+            var loc = iframe.get(0).contentDocument.location;
+            if (loc.href != "about:blank" && !/[#;]id=[^;]/.exec(loc.hash)) {
+                loc.hash = addIdToHash(loc.hash, id);
             }
+        });
+
+        modalOpeners.each(function(){
+            var link = $(this);
+            link.click(function(){
+                var url = link.attr("href") || link.attr("data-modal-href");
+                url = addIdToHash(url, id);
+                iframe.attr("src", url);
+            });
         });
     }
 });
