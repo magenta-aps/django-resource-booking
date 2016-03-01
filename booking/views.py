@@ -960,11 +960,9 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         self.set_object(pk, request)
         form = self.get_form()
         fileformset = VisitStudyMaterialForm(None, instance=self.object)
-        autosendform = VisitAutosendForm()
-        autosendform.initial['autosend'] = [
-            autosend.template_key
-            for autosend in self.object.visitautosend_set.all()
-        ]
+
+        autosendform = VisitAutosendForm(self.object)
+
         return self.render_to_response(
             self.get_context_data(form=form, fileformset=fileformset,
                                   autosendform=autosendform)
@@ -1024,23 +1022,25 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
             if fileformset.is_valid() and autosendform.is_valid():
                 visit.save()
 
-                # Update autosend
-                new_autosend_keys = autosendform.cleaned_data['autosend']
-                existing_autosend = visit.visitautosend_set.all()
-                for autosend in existing_autosend:
-                    if autosend.template_key not in new_autosend_keys:
-                        autosend.delete()
-                existing_autosend_keys = [
-                    autosend.template_key
-                    for autosend in existing_autosend
-                ]
-                for template_key in new_autosend_keys:
-                    if template_key not in existing_autosend_keys:
-                        autosend = VisitAutosend(
-                            visit=visit,
-                            template_key=template_key
-                        )
-                        visit.visitautosend_set.add(autosend)
+                autosendform = VisitAutosendForm(visit, request.POST)
+                if autosendform.is_valid():
+                    # Update autosend
+                    new_autosend_keys = autosendform.cleaned_data['autosend']
+                    existing_autosend = visit.visitautosend_set.all()
+                    for autosend in existing_autosend:
+                        if autosend.template_key not in new_autosend_keys:
+                            autosend.delete()
+                    existing_autosend_keys = [
+                        autosend.template_key
+                        for autosend in existing_autosend
+                    ]
+                    for template_key in new_autosend_keys:
+                        if template_key not in existing_autosend_keys:
+                            autosend = VisitAutosend(
+                                visit=visit,
+                                template_key=template_key
+                            )
+                            visit.visitautosend_set.add(autosend)
 
                 # Update rooms
                 existing_rooms = set([x.name for x in visit.room_set.all()])
@@ -1612,26 +1612,31 @@ class BookingView(AutologgerMixin, UpdateView):
                 booking.booker = forms['bookerform'].save()
 
             booking.save()
-            KUEmailMessage.send_email(
-                EmailTemplate.NOTIFY_GUEST__BOOKING_CREATED,
-                {
-                    'booking': booking,
-                    'visit': booking.visit,
-                    'booker': booking.booker
-                },
-                list(self.visit.contact_persons.all()),
-                self.visit.unit
-            )
-            KUEmailMessage.send_email(
-                EmailTemplate.NOTIFY_GUEST__BOOKING_CREATED,
-                {
-                    'booking': booking,
-                    'visit': booking.visit,
-                    'booker': booking.booker
-                },
-                [booking.booker],
-                self.visit.unit
-            )
+
+            if self.visit.autosend_enabled(
+                    EmailTemplate.NOTIFY_GUEST__BOOKING_CREATED):
+                KUEmailMessage.send_email(
+                    EmailTemplate.NOTIFY_GUEST__BOOKING_CREATED,
+                    {
+                        'booking': booking,
+                        'visit': booking.visit,
+                        'booker': booking.booker
+                    },
+                    list(self.visit.contact_persons.all()),
+                    self.visit.unit
+                )
+            if self.visit.autosend_enabled(
+                    EmailTemplate.NOTIFY_GUEST__BOOKING_CREATED):
+                KUEmailMessage.send_email(
+                    EmailTemplate.NOTIFY_GUEST__BOOKING_CREATED,
+                    {
+                        'booking': booking,
+                        'visit': booking.visit,
+                        'booker': booking.booker
+                    },
+                    [booking.booker],
+                    self.visit.unit
+                )
 
             # We can't fetch this form before we have
             # a saved booking object to feed it, or we'll get an error
