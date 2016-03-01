@@ -1592,7 +1592,17 @@ class BookingView(AutologgerMixin, UpdateView):
                     'visit': booking.visit,
                     'booker': booking.booker
                 },
-                [x for x in self.visit.contact_persons.all()],
+                list(self.visit.contact_persons.all()),
+                self.visit.unit
+            )
+            KUEmailMessage.send_email(
+                EmailTemplate.NOTIFY_GUEST__BOOKING_CREATED,
+                {
+                    'booking': booking,
+                    'visit': booking.visit,
+                    'booker': booking.booker
+                },
+                [booking.booker],
                 self.visit.unit
             )
 
