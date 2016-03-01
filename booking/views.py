@@ -162,11 +162,12 @@ class ContactComposeView(FormMixin, HasBackButtonMixin, TemplateView):
 
 
 class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
-    template_name = 'email/compose_modal.html'
+    template_name = 'email/compose.html'
     form_class = EmailComposeForm
     recipients = []
     template_key = None
     template_context = {}
+    modal = True
 
     RECIPIENT_BOOKER = 'booker'
     RECIPIENT_PERSON = 'person'
@@ -219,6 +220,7 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
                                                           True)
         context['template_key'] = self.template_key
         context['template_unit'] = self.get_unit()
+        context['modal'] = self.modal
         context.update(kwargs)
         return super(EmailComposeView, self).get_context_data(**context)
 
@@ -244,6 +246,12 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
 
     def get_unit(self):
         return self.request.user.userprofile.unit
+
+    def get_template_names(self):
+        if self.modal:
+            return ['email/compose_modal.html']
+        else:
+            return ['email/compose.html']
 
 
 class EditorRequriedMixin(RoleRequiredMixin):
@@ -1492,7 +1500,10 @@ class VisitNotifyView(EmailComposeView):
         return self.visit.unit
 
     def get_success_url(self):
-        return reverse('visit-notify-success', args=[self.visit.id])
+        if self.modal:
+            return reverse('visit-notify-success', args=[self.visit.id])
+        else:
+            return reverse('visit-view', args=[self.visit.id])
 
 
 class VisitNotifySuccessView(TemplateView):
@@ -1586,7 +1597,10 @@ class BookingNotifyView(EmailComposeView):
         return self.booking.visit.unit
 
     def get_success_url(self):
-        return reverse('booking-notify-success', args=[self.booking.id])
+        if self.modal:
+            return reverse('booking-notify-success', args=[self.booking.id])
+        else:
+            return reverse('booking-view', args=[self.booking.id])
 
 
 class BookingNotifySuccessView(TemplateView):

@@ -28,7 +28,7 @@
             <div class="panel panel-default">
                 <div class="panel-body">
 
-                    {% if form.name %}
+                    {% if form.name != None %}
                         <div class="row form-group">
                             <div>
                                 {{ form.name.errors }}
@@ -42,7 +42,7 @@
                         </div>
                     {% endif %}
 
-                    {% if form.email %}
+                    {% if form.email != None %}
                         <div class="row form-group">
                             <div>
                                 {{ form.email.errors }}
@@ -56,7 +56,7 @@
                         </div>
                     {% endif %}
 
-                    {% if form.phone %}
+                    {% if form.phone != None %}
                         <div class="row form-group">
                             <div>
                                 {{ form.phone.errors }}
@@ -70,7 +70,7 @@
                         </div>
                     {% endif %}
 
-                    {% if form.recipients %}
+                    {% if form.recipients != None %}
                         <div class="row form-group">
                             <div>
                                 {{ form.recipients.errors }}
@@ -87,7 +87,7 @@
                         </div>
                     {% endif %}
 
-                    {% if form.subject %}
+                    {% if form.subject != None %}
                         <div class="row form-group">
                             <div>
                                 {{ form.subject.errors }}
@@ -152,7 +152,6 @@
     <script type="text/javascript">
         {% autoescape off %}
         <!--
-        $(function(){
             var recipients = {{ recp | jsonify }};
             var groupContainer = $("#recipient-groups");
             var recipientContainer = $("#recipient-list > ul");
@@ -195,6 +194,7 @@
                 groupContainer.append(button);
                 button.click(addGroup.bind(null, groupName));
             }
+            console.log(recipients);
 
             var custom = $("<input>");
             custom.attr({type:'email', placeholder:'{% trans 'Indtast email-adresse' %}'});
@@ -228,7 +228,7 @@
             clear.click(function(){
                 recipientContainer.empty();
             });
-        });
+
         //-->
         {% endautoescape %}
     </script>
