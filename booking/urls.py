@@ -9,11 +9,13 @@ from booking.views import RrulestrView
 from booking.views import EditResourceInitialView, ResourceDetailView
 from booking.views import BookingView, BookingSuccessView, BookingSearchView
 from booking.views import EditOtherResourceView, OtherResourceDetailView
-from booking.views import EditVisitView, VisitDetailView, VisitNotifyView
+from booking.views import EditVisitView, VisitDetailView
+from booking.views import VisitNotifyView, VisitNotifySuccessView
 from booking.views import SearchView, EmbedcodesView
 from booking.views import EmailTemplateListView, EmailTemplateEditView
 from booking.views import EmailTemplateDetailView, EmailTemplateDeleteView
 from booking.views import BookingDetailView, BookingNotifyView
+from booking.views import BookingNotifySuccessView
 from booking.views import ChangeBookingStatusView
 from booking.views import ChangeBookingTeachersView, ChangeBookingHostsView
 from booking.views import ChangeBookingRoomsView, ChangeBookingCommentsView
@@ -86,6 +88,9 @@ urlpatterns = patterns(
     url(r'^visit/(?P<visit>[0-9]+)/notify$',
         VisitNotifyView.as_view(),
         name='visit-notify'),
+    url(r'^visit/(?P<visit>[0-9]+)/notify/success$',
+        VisitNotifySuccessView.as_view(),
+        name='visit-notify-success'),
 
     url(r'^booking/(?P<pk>[0-9]+)/?$',
         BookingDetailView.as_view(),
@@ -115,6 +120,9 @@ urlpatterns = patterns(
     url(r'^booking/(?P<pk>[0-9]+)/notify$',
         BookingNotifyView.as_view(),
         name='booking-notify'),
+    url(r'^booking/(?P<visit>[0-9]+)/notify/success$',
+        BookingNotifySuccessView.as_view(),
+        name='booking-notify-success'),
 
     # Ajax api
     url(r'^jsapi/rrulestr$', RrulestrView.as_view(), name='jsapi_rrulestr'),

@@ -1,0 +1,22 @@
+{% extends 'lightbox-index.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load booking_tags %}
+
+{% block head %}
+{% endblock %}
+
+{% block header %}
+{% endblock %}
+
+{% block content %}
+
+    <div class="modal-body">
+        <p>{% trans "Beskeden er afsendt." %}</p>
+    </div>
+
+    <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-dismiss="modal">{% trans "OK" %}</button>
+    </div>
+
+{% endblock %}
