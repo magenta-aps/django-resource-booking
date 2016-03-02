@@ -5,10 +5,9 @@ from booking.models import Resource, OtherResource, Visit, VisitOccurrence
 from booking.models import Booker, Region, PostCode, School
 from booking.models import ClassBooking, TeacherBooking, BookingSubjectLevel
 from booking.models import EmailTemplate
-from booking.models import VisitAutosend
 from django import forms
 from django.forms import CheckboxSelectMultiple, EmailInput, RadioSelect, \
-    formset_factory, MultipleChoiceField
+    formset_factory
 from django.forms import inlineformset_factory
 from django.forms import TextInput, NumberInput, URLInput, Textarea, Select
 from django.forms import HiddenInput

@@ -1015,50 +1015,32 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         is_cloning = kwargs.get("clone", False)
         self.set_object(pk, request, is_cloning)
         form = self.get_form()
-        fileformset = VisitStudyMaterialForm(request.POST)
-        autosendform = VisitAutosendForm(request.POST)
+
         if form.is_valid():
             visit = form.save()
-            if fileformset.is_valid() and autosendform.is_valid():
-                visit.save()
 
-                autosendform = VisitAutosendForm(visit, request.POST)
-                if autosendform.is_valid():
-                    # Update autosend
-                    new_autosend_keys = autosendform.cleaned_data['autosend']
-                    existing_autosend = visit.visitautosend_set.all()
-                    for autosend in existing_autosend:
-                        if autosend.template_key not in new_autosend_keys:
-                            autosend.delete()
-                    existing_autosend_keys = [
-                        autosend.template_key
-                        for autosend in existing_autosend
+            autosendform = VisitAutosendForm(visit, request.POST)
+            if autosendform.is_valid():
+                # Update autosend
+                new_autosend_keys = autosendform.cleaned_data['autosend']
+                existing_autosend = visit.visitautosend_set.all()
+                existing_autosend_keys = [
+                    autosend.template_key
+                    for autosend in existing_autosend
                     ]
-                    for template_key in new_autosend_keys:
-                        if template_key not in existing_autosend_keys:
-                            autosend = VisitAutosend(
-                                visit=visit,
-                                template_key=template_key
-                            )
-                            visit.visitautosend_set.add(autosend)
+                for autosend in existing_autosend:
+                    if autosend.template_key not in new_autosend_keys:
+                        autosend.delete()
+                for template_key in new_autosend_keys:
+                    if template_key not in existing_autosend_keys:
+                        autosend = VisitAutosend(
+                            visit=visit,
+                            template_key=template_key
+                        )
+                        visit.visitautosend_set.add(autosend)
 
-                # Update rooms
-                existing_rooms = set([x.name for x in visit.room_set.all()])
-
-                new_rooms = request.POST.getlist("rooms")
-                for roomname in new_rooms:
-                    if roomname in existing_rooms:
-                        existing_rooms.remove(roomname)
-                    else:
-                        new_room = Room(visit=visit, name=roomname)
-                        new_room.save()
-
-                # Delete any rooms left in existing rooms
-                if len(existing_rooms) > 0:
-                    visit.room_set.all().filter(
-                        name__in=existing_rooms
-                    ).delete()
-
+            fileformset = VisitStudyMaterialForm(request.POST)
+            if fileformset.is_valid():
                 # Attach uploaded files
                 for fileform in fileformset:
                     try:
@@ -1069,6 +1051,24 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
                         instance.save()
                     except:
                         pass
+
+            # Update rooms
+            existing_rooms = set([x.name for x in visit.room_set.all()])
+
+            new_rooms = request.POST.getlist("rooms")
+            for roomname in new_rooms:
+                if roomname in existing_rooms:
+                    existing_rooms.remove(roomname)
+                else:
+                    new_room = Room(visit=visit, name=roomname)
+                    new_room.save()
+
+            # Delete any rooms left in existing rooms
+            if len(existing_rooms) > 0:
+                visit.room_set.all().filter(
+                    name__in=existing_rooms
+                ).delete()
+
             # update occurrences
             existing_visit_occurrences = \
                 set([x.start_datetime
@@ -1651,8 +1651,6 @@ class BookingView(AutologgerMixin, UpdateView):
 
             self._log_changes()
 
-
-
             return redirect("/visit/%d/book/success" % self.visit.id)
         else:
             forms['subjectform'] = BookingSubjectLevelForm(request.POST)
@@ -1746,10 +1744,6 @@ class EmbedcodesView(TemplateView):
         context.update(kwargs)
 
         return super(EmbedcodesView, self).get_context_data(**context)
-
-
-
-
 
 
 class BookingSearchView(LoginRequiredMixin, ListView):

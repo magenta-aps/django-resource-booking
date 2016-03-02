@@ -277,7 +277,7 @@ class EmailTemplate(models.Model):
                            (key, label)
                            for (key, label) in key_choices
                            if key in []
-                           ]
+        ]
     booking_key_choices = [  # Templates pertaining to bookings
                              (key, label)
                              for (key, label) in key_choices
@@ -291,29 +291,29 @@ class EmailTemplate(models.Model):
                                         NOTIFY_ALL__BOOKING_CANCELED,
                                         NOTITY_ALL__BOOKING_REMINDER
                                         ]
-                             ]
+        ]
 
     key = models.IntegerField(
-            verbose_name=u'Key',
-            choices=key_choices,
-            default=1
+        verbose_name=u'Key',
+        choices=key_choices,
+        default=1
     )
 
     subject = models.CharField(
-            max_length=77,
-            verbose_name=u'Emne'
+        max_length=77,
+        verbose_name=u'Emne'
     )
 
     body = models.CharField(
-            max_length=65584,
-            verbose_name=u'Tekst'
+        max_length=65584,
+        verbose_name=u'Tekst'
     )
 
     unit = models.ForeignKey(
-            Unit,
-            verbose_name=u'Enhed',
-            null=True,
-            blank=True
+        Unit,
+        verbose_name=u'Enhed',
+        null=True,
+        blank=True
     )
 
     def expand_subject(self, context, keep_placeholders=False):
@@ -343,8 +343,8 @@ class EmailTemplate(models.Model):
         while unit is not None and (include_overridden or len(templates) == 0):
             try:
                 templates.append(EmailTemplate.objects.filter(
-                        key=template_key,
-                        unit=unit
+                    key=template_key,
+                    unit=unit
                 ).all()[0])
             except:
                 pass
@@ -352,8 +352,8 @@ class EmailTemplate(models.Model):
         if include_overridden or len(templates) == 0:
             try:
                 templates.append(
-                        EmailTemplate.objects.filter(key=template_key,
-                                                     unit__isnull=True)[0]
+                    EmailTemplate.objects.filter(key=template_key,
+                                                 unit__isnull=True)[0]
                 )
             except:
                 pass
@@ -969,7 +969,7 @@ class Visit(Resource):
 
     def autosend_enabled(self, template_key):
         return self.visitautosend_set.\
-                   filter(template_key=template_key).count() > 0
+            filter(template_key=template_key).count() > 0
 
 
 class VisitOccurrence(models.Model):
