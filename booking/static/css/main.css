@@ -86,14 +86,7 @@ strong,
     filter: progid: DXImageTransform.Microsoft.gradient( startColorstr='#fafafa', endColorstr='#e6e6e6', GradientType=0);
 }
 .label {
-    font-size: 86%;
-}
-.label-default {
-    letter-spacing: 0.7px;
-    color: #666;
-    background-color: #fff;
-    border: 1px solid #999;
-    margin-right: 5px;
+    font-size: 90%;
 }
 .inline-block {
     display: inline-block;
@@ -783,7 +776,7 @@ div ul.errorlist {
         border-right: 1px solid #ccc;
     }
     .grey-line {
-        height: 25px;
+        height: 2px;
         border-bottom: 1px solid #ccc;
     }
     #branding-images {
@@ -800,6 +793,9 @@ div ul.errorlist {
     }
     #logo a {
         color: #666;
+    }
+    .navbar {
+        margin-bottom:10px;
     }
     .navbar-default .navbar-nav>li>a {
         color: #eee;
