@@ -1807,18 +1807,7 @@ class BookingView(AutologgerMixin, UpdateView):
 
             booking.autosend(EmailTemplate.NOTIFY_GUEST__BOOKING_CREATED)
 
-            if self.visit.autosend_enabled(
-                    EmailTemplate.NOTIFY_HOST__BOOKING_CREATED):
-                KUEmailMessage.send_email(
-                    EmailTemplate.NOTIFY_HOST__BOOKING_CREATED,
-                    {
-                        'booking': booking,
-                        'visit': booking.visit,
-                        'booker': booking.booker
-                    },
-                    [booking.booker],
-                    self.visit.unit
-                )
+            booking.autosend(EmailTemplate.NOTIFY_HOST__BOOKING_CREATED)
 
             # We can't fetch this form before we have
             # a saved booking object to feed it, or we'll get an error
