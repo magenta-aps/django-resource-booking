@@ -34,7 +34,8 @@ class ChangeBookingStatusView(AutologgerMixin, UpdateWithCancelView):
 
     def form_valid(self, form):
         response = super(ChangeBookingStatusView, self).form_valid(form)
-        if form.cleaned_data['workflow_status'] == Booking.WORKFLOW_STATUS_PLANNED:
+        if form.cleaned_data['workflow_status'] == \
+                Booking.WORKFLOW_STATUS_PLANNED:
             # Booking is planned
             self.object.autosend(EmailTemplate.NOTIFY_ALL__BOOKING_COMPLETE)
         return response

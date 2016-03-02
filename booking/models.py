@@ -292,19 +292,22 @@ class EmailTemplate(models.Model):
                                         NOTITY_ALL__BOOKING_REMINDER
                                         ]
         ]
-    booking_recipient_visit_contacts_keys = [NOTIFY_HOST__BOOKING_CREATED,
-                                             NOTIFY_HOST__ASSOCIATED,
-                                             NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
-                                             NOTIFY_HOST__REQ_HOST_VOLUNTEER,
-                                             NOTIFY_ALL__BOOKING_COMPLETE,
-                                             NOTIFY_ALL__BOOKING_CANCELED,
-                                             NOTITY_ALL__BOOKING_REMINDER]
-    booking_recipient_booker_keys = [NOTIFY_GUEST__BOOKING_CREATED,
-                                     NOTIFY_GUEST__GENERAL_MSG,
-                                     NOTIFY_ALL__BOOKING_COMPLETE,
-                                     NOTIFY_ALL__BOOKING_CANCELED,
-                                     NOTITY_ALL__BOOKING_REMINDER]
-
+    booking_recipient_visit_contacts_keys = [
+        NOTIFY_HOST__BOOKING_CREATED,
+        NOTIFY_HOST__ASSOCIATED,
+        NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
+        NOTIFY_HOST__REQ_HOST_VOLUNTEER,
+        NOTIFY_ALL__BOOKING_COMPLETE,
+        NOTIFY_ALL__BOOKING_CANCELED,
+        NOTITY_ALL__BOOKING_REMINDER
+    ]
+    booking_recipient_booker_keys = [
+        NOTIFY_GUEST__BOOKING_CREATED,
+        NOTIFY_GUEST__GENERAL_MSG,
+        NOTIFY_ALL__BOOKING_COMPLETE,
+        NOTIFY_ALL__BOOKING_CANCELED,
+        NOTITY_ALL__BOOKING_REMINDER
+    ]
 
     key = models.IntegerField(
         verbose_name=u'Key',
