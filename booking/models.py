@@ -313,7 +313,7 @@ class EmailTemplate(models.Model):
     NOTIFY_HOST__ASSOCIATED = 5  # ticket 13810
     NOTIFY_HOST__REQ_ROOM = 6  # ticket 13811
     NOTIFY_GUEST__GENERAL_MSG = 7  # ticket 13812
-    NOTIFY_HOST__BOOKING_COMPLETE = 8  # ticket 13813
+    NOTIFY_ALL__BOOKING_COMPLETE = 8  # ticket 13813
     NOTIFY_ALL__BOOKING_CANCELED = 9  # ticket 13814
     NOTITY_ALL__BOOKING_REMINDER = 10  # ticket 13815
 
@@ -326,7 +326,7 @@ class EmailTemplate(models.Model):
         (NOTIFY_HOST__REQ_HOST_VOLUNTEER, _(u'Vært: Frivillige værter')),
         (NOTIFY_HOST__ASSOCIATED, _(u'Vært: Tilknyttet besøg')),
         (NOTIFY_HOST__REQ_ROOM, _(u'Vært: Forespørg lokale')),
-        (NOTIFY_HOST__BOOKING_COMPLETE, _(u'Vært: Booking færdigplanlagt')),
+        (NOTIFY_ALL__BOOKING_COMPLETE, _(u'Alle: Booking færdigplanlagt')),
         (NOTIFY_ALL__BOOKING_CANCELED, _(u'Alle: Booking aflyst')),
         (NOTITY_ALL__BOOKING_REMINDER, _(u'Alle: Reminder om booking')),
     ]
@@ -344,11 +344,24 @@ class EmailTemplate(models.Model):
                                         NOTIFY_HOST__ASSOCIATED,
                                         NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
                                         NOTIFY_HOST__REQ_HOST_VOLUNTEER,
-                                        NOTIFY_HOST__BOOKING_COMPLETE,
+                                        NOTIFY_ALL__BOOKING_COMPLETE,
                                         NOTIFY_ALL__BOOKING_CANCELED,
                                         NOTITY_ALL__BOOKING_REMINDER
                                         ]
         ]
+    booking_recipient_visit_contacts_keys = [NOTIFY_HOST__BOOKING_CREATED,
+                                             NOTIFY_HOST__ASSOCIATED,
+                                             NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
+                                             NOTIFY_HOST__REQ_HOST_VOLUNTEER,
+                                             NOTIFY_ALL__BOOKING_COMPLETE,
+                                             NOTIFY_ALL__BOOKING_CANCELED,
+                                             NOTITY_ALL__BOOKING_REMINDER]
+    booking_recipient_booker_keys = [NOTIFY_GUEST__BOOKING_CREATED,
+                                     NOTIFY_GUEST__GENERAL_MSG,
+                                     NOTIFY_ALL__BOOKING_COMPLETE,
+                                     NOTIFY_ALL__BOOKING_CANCELED,
+                                     NOTITY_ALL__BOOKING_REMINDER]
+
 
     key = models.IntegerField(
         verbose_name=u'Key',
@@ -1742,6 +1755,26 @@ class Booking(models.Model):
 
     def get_url(self):
         return settings.PUBLIC_URL + self.get_absolute_url()
+
+    def autosend(self, template_key):
+        if self.visit.autosend_enabled(template_key):
+            recipients = set()
+            if template_key in EmailTemplate.\
+                    booking_recipient_visit_contacts_keys:
+                recipients.update(self.visit.contact_persons.all())
+            if template_key in EmailTemplate.booking_recipient_booker_keys:
+                recipients.add(self.booker)
+
+            KUEmailMessage.send_email(
+                template_key,
+                {
+                    'booking': self,
+                    'visit': self.visit,
+                    'booker': self.booker
+                },
+                list(recipients),
+                self.visit.unit
+            )
 
 
 class ClassBooking(Booking):
