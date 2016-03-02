@@ -4,6 +4,7 @@ from django.utils.safestring import mark_safe
 import datetime
 from timedelta.helpers import parse, nice_repr
 from django.utils.translation import ugettext_lazy as _
+from booking.models import LOGACTION_DISPLAY_MAP
 
 
 @register.filter
@@ -87,3 +88,11 @@ def timedelta_i18n(value, display="long", sep=", "):
         result.append(words_plural[-1] % 0)
 
     return sep.join(result)
+
+
+@register.filter
+def logaction_type_display(value):
+    if value in LOGACTION_DISPLAY_MAP:
+        return LOGACTION_DISPLAY_MAP[value]
+    else:
+        return 'LOGACTION_%s' % value

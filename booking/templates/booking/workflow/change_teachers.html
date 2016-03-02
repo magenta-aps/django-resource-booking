@@ -1,0 +1,23 @@
+{% extends 'index.html' %}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block content %}
+    {% include 'common/breadcrumbrow.html' %}
+
+    <div class="row titlebar hidden-print">
+        <div class="col-sm-12 col-md-9"><h2>Redigér undervisere for booking {{ object.pk }}</h2></div>
+        <div class="divider"></div>
+    </div>
+    <div class="row">
+        <div class="col-sm-12 col-md-8">
+            <form name="changebookinteachersform" id="changebookinteachersform"
+                action="{% url 'change-booking-teachers' object.pk %}" method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <input class="btn btn-success btn-sm" type="submit" value="Opdater" name="confirm" />
+                <input class="btn btn-danger btn-sm" type="submit" value="Annullér" name="cancel" />
+            </form>
+        </div>
+    </div>
+{% endblock %}
