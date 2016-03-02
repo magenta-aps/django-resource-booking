@@ -335,6 +335,7 @@ class BookerForm(BookingForm):
                 PostCode.objects.get(number=postcode)
             except:
                 raise forms.ValidationError(_(u'Ukendt postnummer'))
+        return postcode
 
     def clean(self):
         cleaned_data = super(BookerForm, self).clean()
