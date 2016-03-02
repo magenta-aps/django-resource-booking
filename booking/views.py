@@ -1834,7 +1834,9 @@ class BookingView(AutologgerMixin, UpdateView):
     def get_forms(self, data=None):
         forms = {}
         if self.visit is not None:
-            forms['bookerform'] = BookerForm(data, visit=self.visit)
+            forms['bookerform'] = \
+                BookerForm(data, visit=self.visit,
+                           language=self.request.LANGUAGE_CODE)
 
             if self.visit.type == Resource.GROUP_VISIT:
                 forms['bookingform'] = ClassBookingForm(data, visit=self.visit)

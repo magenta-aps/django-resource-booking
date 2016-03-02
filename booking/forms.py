@@ -229,19 +229,19 @@ class BookerForm(BookingForm):
         widgets = {
             'firstname': TextInput(
                 attrs={'class': 'form-control input-sm',
-                       'placeholder': 'Fornavn'}
+                       'placeholder': _(u'Fornavn')}
             ),
             'lastname': TextInput(
                 attrs={'class': 'form-control input-sm',
-                       'placeholder': 'Efternavn'}
+                       'placeholder': _(u'Efternavn')}
             ),
             'email': EmailInput(
                 attrs={'class': 'form-control input-sm',
-                       'placeholder': 'Email'}
+                       'placeholder': _(u'Email')}
             ),
             'phone': TextInput(
                 attrs={'class': 'form-control input-sm',
-                       'placeholder': 'Telefonnummer',
+                       'placeholder': _(u'Telefonnummer'),
                        'pattern': '(\(\+\d+\)|\+\d+)?\s*\d+[ \d]*'},
             ),
             'line': Select(
@@ -262,7 +262,7 @@ class BookerForm(BookingForm):
     repeatemail = forms.CharField(
         widget=TextInput(
             attrs={'class': 'form-control input-sm',
-                   'placeholder': 'Gentag email'}
+                   'placeholder': _(u'Gentag email')}
         )
     )
     school = forms.CharField(
@@ -274,7 +274,7 @@ class BookerForm(BookingForm):
     postcode = forms.IntegerField(
         widget=NumberInput(
             attrs={'class': 'form-control input-sm',
-                   'placeholder': 'Postnummer',
+                   'placeholder': _(u'Postnummer'),
                    'min': '1000', 'max': '9999'}
         ),
         required=False
@@ -282,7 +282,7 @@ class BookerForm(BookingForm):
     city = forms.CharField(
         widget=TextInput(
             attrs={'class': 'form-control input-sm',
-                   'placeholder': 'By'}
+                   'placeholder': _(u'By')}
         ),
         required=False
     )
@@ -294,7 +294,7 @@ class BookerForm(BookingForm):
         required=False
     )
 
-    def __init__(self, data=None, visit=None, *args, **kwargs):
+    def __init__(self, data=None, visit=None, language='da', *args, **kwargs):
         super(BookerForm, self).__init__(data, *args, **kwargs)
         attendeecount_widget = self.fields['attendee_count'].widget
         attendeecount_widget.attrs['min'] = 1
@@ -316,13 +316,25 @@ class BookerForm(BookingForm):
                 if value in available_level_choices
             ]
 
+        # Eventually we may want a prettier solution,
+        # but for now this will have to do
+        if language == 'en':
+            self.fields['region'].choices = [
+                (
+                    region.id,
+                    region.name_en
+                    if region.name_en is not None else region.name
+                )
+                for region in Region.objects.all()
+            ]
+
     def clean_postcode(self):
         postcode = self.cleaned_data.get('postcode')
         if postcode is not None:
             try:
                 PostCode.objects.get(number=postcode)
             except:
-                raise forms.ValidationError(u"Ukendt postnummer")
+                raise forms.ValidationError(_(u'Ukendt postnummer'))
 
     def clean(self):
         cleaned_data = super(BookerForm, self).clean()
@@ -331,8 +343,9 @@ class BookerForm(BookingForm):
 
         if email is not None and repeatemail is not None \
                 and email != repeatemail:
-            error = forms.ValidationError(u"Indtast den samme email-adresse " +
-                                          u"i begge felter")
+            error = forms.ValidationError(
+                _(u"Indtast den samme email-adresse i begge felter")
+            )
             self.add_error('repeatemail', error)
 
     def save(self):

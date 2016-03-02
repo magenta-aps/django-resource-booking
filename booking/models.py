@@ -1243,7 +1243,15 @@ class Region(models.Model):
         verbose_name_plural = _(u'regioner')
 
     name = models.CharField(
-        max_length=16
+        max_length=16,
+        verbose_name=_(u'Navn')
+    )
+
+    # Not pretty, but it gets the job done for now
+    name_en = models.CharField(
+        max_length=16,
+        null=True,
+        verbose_name=_(u'Engelsk navn')
     )
 
     def __unicode__(self):
