@@ -1805,18 +1805,8 @@ class BookingView(AutologgerMixin, UpdateView):
 
             booking.save()
 
-            if self.visit.autosend_enabled(
-                    EmailTemplate.NOTIFY_GUEST__BOOKING_CREATED):
-                KUEmailMessage.send_email(
-                    EmailTemplate.NOTIFY_GUEST__BOOKING_CREATED,
-                    {
-                        'booking': booking,
-                        'visit': booking.visit,
-                        'booker': booking.booker
-                    },
-                    list(self.visit.contact_persons.all()),
-                    self.visit.unit
-                )
+            booking.autosend(EmailTemplate.NOTIFY_GUEST__BOOKING_CREATED)
+
             if self.visit.autosend_enabled(
                     EmailTemplate.NOTIFY_HOST__BOOKING_CREATED):
                 KUEmailMessage.send_email(
