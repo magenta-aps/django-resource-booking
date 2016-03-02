@@ -11,7 +11,7 @@ from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext_lazy as _
-from django.template.base import Template, VariableNode
+from django.template.base import Template
 
 from recurrence.fields import RecurrenceField
 from booking.utils import ClassProperty, full_email
