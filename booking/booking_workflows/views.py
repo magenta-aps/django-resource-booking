@@ -10,7 +10,7 @@ from booking.booking_workflows.forms import ChangeBookingHostsForm
 from booking.booking_workflows.forms import ChangeBookingRoomsForm
 from booking.booking_workflows.forms import ChangeBookingCommentsForm
 from booking.booking_workflows.forms import BookingAddLogEntryForm
-from booking.models import Booking
+from booking.models import Booking, EmailTemplate
 from booking.models import LOGACTION_MANUAL_ENTRY
 from booking.models import log_action
 from booking.views import AutologgerMixin
@@ -31,6 +31,13 @@ class ChangeBookingStatusView(AutologgerMixin, UpdateWithCancelView):
     model = Booking
     form_class = ChangeBookingStatusForm
     template_name = "booking/workflow/change_status.html"
+
+    def form_valid(self, form):
+        response = super(ChangeBookingStatusView, self).form_valid(form)
+        if form.cleaned_data['workflow_status'] == Booking.WORKFLOW_STATUS_PLANNED:
+            # Booking is planned
+            self.object.autosend(EmailTemplate.NOTIFY_ALL__BOOKING_COMPLETE)
+        return response
 
 
 class ChangeBookingTeachersView(AutologgerMixin, UpdateWithCancelView):
