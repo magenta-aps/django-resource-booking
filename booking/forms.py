@@ -86,7 +86,7 @@ class VisitForm(forms.ModelForm):
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'recurrences', 'duration', 'locality', 'rooms_assignment',
                   'rooms_needed', 'tour_available',
-                  'enabled', 'contact_persons', 'unit',)
+                  'enabled', 'contact_persons', 'unit')
         widgets = {
             'title': TextInput(attrs={
                 'class': 'titlefield form-control input-sm',
@@ -125,7 +125,7 @@ class VisitForm(forms.ModelForm):
             'unit': Select(attrs={'class': 'form-control input-sm'}),
             'audience': RadioSelect(),
             'tags': CheckboxSelectMultiple(),
-            'contact_persons': CheckboxSelectMultiple(),
+            'contact_persons': CheckboxSelectMultiple()
         }
 
     def __init__(self, *args, **kwargs):
@@ -174,6 +174,22 @@ class VisitStudyMaterialForm(VisitStudyMaterialFormBase):
     def __init__(self, data, instance=None):
         super(VisitStudyMaterialForm, self).__init__(data)
         self.studymaterials = StudyMaterial.objects.filter(visit=instance)
+
+
+class VisitAutosendForm(forms.Form):
+
+    autosend = forms.MultipleChoiceField(
+        widget=CheckboxSelectMultiple,
+        choices=EmailTemplate.key_choices
+    )
+
+    def __init__(self, visit=None, *args, **kwargs):
+        super(VisitAutosendForm, self).__init__(*args, **kwargs)
+        if visit is not None:
+            self.initial['autosend'] = [
+                autosend.template_key
+                for autosend in visit.visitautosend_set.all()
+            ]
 
 
 class BookingForm(forms.ModelForm):
