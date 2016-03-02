@@ -22,6 +22,7 @@ from booking.views import EmailTemplateDetailView, EmailTemplateDeleteView
 from booking.views import ContactComposeView
 
 
+
 from django.views.generic import TemplateView
 
 js_info_dict = {
