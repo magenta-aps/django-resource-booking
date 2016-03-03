@@ -180,16 +180,14 @@ class VisitAutosendForm(forms.Form):
 
     autosend = forms.MultipleChoiceField(
         widget=CheckboxSelectMultiple,
-        choices=EmailTemplate.key_choices
+        choices=[
+            (key, label) for (key, label) in EmailTemplate.key_choices
+            if key in EmailTemplate.visit_autosend_keys
+        ]
     )
 
-    def __init__(self, visit=None, *args, **kwargs):
-        super(VisitAutosendForm, self).__init__(*args, **kwargs)
-        if visit is not None:
-            self.initial['autosend'] = [
-                autosend.template_key
-                for autosend in visit.visitautosend_set.all()
-            ]
+    def __init__(self, data=None, *args, **kwargs):
+        super(VisitAutosendForm, self).__init__(data, *args, **kwargs)
 
 
 class BookingForm(forms.ModelForm):
