@@ -961,7 +961,14 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         form = self.get_form()
         fileformset = VisitStudyMaterialForm(None, instance=self.object)
 
-        autosendform = VisitAutosendForm(self.object)
+        autosendform = VisitAutosendForm(
+            {
+                'autosend': [
+                    autosend.template_key
+                    for autosend in self.object.visitautosend_set.all()
+                ]
+            }
+        )
 
         return self.render_to_response(
             self.get_context_data(form=form, fileformset=fileformset,
@@ -1015,11 +1022,12 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         is_cloning = kwargs.get("clone", False)
         self.set_object(pk, request, is_cloning)
         form = self.get_form()
+        fileformset = VisitStudyMaterialForm(request.POST)
+        autosendform = VisitAutosendForm(request.POST)
 
         if form.is_valid():
             visit = form.save()
 
-            autosendform = VisitAutosendForm(visit, request.POST)
             if autosendform.is_valid():
                 # Update autosend
                 new_autosend_keys = autosendform.cleaned_data['autosend']
@@ -1039,7 +1047,6 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
                         )
                         visit.visitautosend_set.add(autosend)
 
-            fileformset = VisitStudyMaterialForm(request.POST)
             if fileformset.is_valid():
                 # Attach uploaded files
                 for fileform in fileformset:
@@ -1119,7 +1126,13 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
 
             return super(EditVisitView, self).form_valid(form)
         else:
-            return self.form_invalid(form, fileformset)
+            return self.form_invalid(
+                {
+                    'form': form,
+                    'fileformset': fileformset,
+                    'autosendform': autosendform
+                }
+            )
 
     def get_context_data(self, **kwargs):
         context = {}
@@ -1168,9 +1181,9 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         except:
             return '/'
 
-    def form_invalid(self, form, fileformset=None):
+    def form_invalid(self, forms):
         return self.render_to_response(
-            self.get_context_data(form=form, fileformset=fileformset)
+            self.get_context_data(**forms)
         )
 
     @method_decorator(login_required)
@@ -1613,22 +1626,12 @@ class BookingView(AutologgerMixin, UpdateView):
 
             booking.save()
 
+            booking.autosend(EmailTemplate.NOTIFY_GUEST__BOOKING_CREATED)
+
             if self.visit.autosend_enabled(
-                    EmailTemplate.NOTIFY_GUEST__BOOKING_CREATED):
+                    EmailTemplate.NOTIFY_HOST__BOOKING_CREATED):
                 KUEmailMessage.send_email(
-                    EmailTemplate.NOTIFY_GUEST__BOOKING_CREATED,
-                    {
-                        'booking': booking,
-                        'visit': booking.visit,
-                        'booker': booking.booker
-                    },
-                    list(self.visit.contact_persons.all()),
-                    self.visit.unit
-                )
-            if self.visit.autosend_enabled(
-                    EmailTemplate.NOTIFY_GUEST__BOOKING_CREATED):
-                KUEmailMessage.send_email(
-                    EmailTemplate.NOTIFY_GUEST__BOOKING_CREATED,
+                    EmailTemplate.NOTIFY_HOST__BOOKING_CREATED,
                     {
                         'booking': booking,
                         'visit': booking.visit,
