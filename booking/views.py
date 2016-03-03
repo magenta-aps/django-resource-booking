@@ -1818,6 +1818,8 @@ class BookingView(AutologgerMixin, UpdateView):
                 booking.booker = forms['bookerform'].save()
 
             booking.save()
+            # Trigger updating of search index
+            booking.visitoccurrence.save()
 
             booking.autosend(EmailTemplate.NOTIFY_GUEST__BOOKING_CREATED)
 
