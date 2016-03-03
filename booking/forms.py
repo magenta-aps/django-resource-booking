@@ -202,7 +202,7 @@ class VisitAutosendForm(forms.Form):
 
     autosend = forms.MultipleChoiceField(
         widget=CheckboxSelectMultiple,
-        choices=EmailTemplate.key_choices
+        choices=EmailTemplate.autosend_visit_key_choices
     )
 
     def __init__(self, data=None, *args, **kwargs):
