@@ -962,12 +962,12 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         fileformset = VisitStudyMaterialForm(None, instance=self.object)
 
         autosendform = VisitAutosendForm(
-                {
-                    'autosend': [
-                        autosend.template_key
-                        for autosend in self.object.visitautosend_set.all()
-                    ]
-                }
+            {
+                'autosend': [
+                    autosend.template_key
+                    for autosend in self.object.visitautosend_set.all()
+                ]
+            }
         )
 
         return self.render_to_response(
@@ -1126,7 +1126,13 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
 
             return super(EditVisitView, self).form_valid(form)
         else:
-            return self.form_invalid(form, fileformset, autosendform)
+            return self.form_invalid(
+                {
+                    'form': form,
+                    'fileformset': fileformset,
+                    'autosendform': autosendform
+                }
+            )
 
     def get_context_data(self, **kwargs):
         context = {}
@@ -1175,9 +1181,9 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         except:
             return '/'
 
-    def form_invalid(self, form, fileformset=None, autosendform=None):
+    def form_invalid(self, forms):
         return self.render_to_response(
-            self.get_context_data(form=form, fileformset=fileformset, autosendform=autosendform)
+            self.get_context_data(**forms)
         )
 
     @method_decorator(login_required)
