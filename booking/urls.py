@@ -7,18 +7,23 @@ from .views import MainPageView
 from booking.views import PostcodeView, SchoolView
 from booking.views import RrulestrView
 from booking.views import EditResourceInitialView, ResourceDetailView
-from booking.views import BookingView, BookingSuccessView, BookingSearchView
+from booking.views import BookingView, BookingSuccessView
+from booking.views import VisitOccurrenceSearchView
 from booking.views import EditOtherResourceView, OtherResourceDetailView
 from booking.views import EditVisitView, VisitDetailView, VisitNotifyView
 from booking.views import SearchView, EmbedcodesView
-from booking.views import BookingDetailView, BookingAddLogEntryView
-from booking.views import BookingNotifyView
-from booking.views import ChangeBookingCommentsView, ChangeBookingHostsView
-from booking.views import ChangeBookingRoomsView, ChangeBookingStatusView
-from booking.views import ChangeBookingTeachersView
 from booking.views import EmailTemplateListView, EmailTemplateEditView
 from booking.views import EmailTemplateDetailView, EmailTemplateDeleteView
 from booking.views import ContactComposeView
+from booking.views import BookingDetailView, ChangeVisitOccurrenceStatusView
+from booking.views import BookingNotifyView
+from booking.views import ChangeVisitOccurrenceStartTimeView
+from booking.views import ChangeVisitOccurrenceTeachersView
+from booking.views import ChangeVisitOccurrenceHostsView
+from booking.views import ChangeVisitOccurrenceRoomsView
+from booking.views import ChangeVisitOccurrenceCommentsView
+from booking.views import VisitOccurrenceAddLogEntryView
+from booking.views import VisitOccurrenceDetailView
 
 from django.views.generic import TemplateView
 
@@ -88,30 +93,37 @@ urlpatterns = patterns(
         VisitNotifyView.as_view(),
         name='visit-notify'),
 
+    url(r'^visit/occurrence/(?P<pk>[0-9]+)$',
+        VisitOccurrenceDetailView.as_view(),
+        name='visit-occ-view'),
+
     url(r'^booking/(?P<pk>[0-9]+)/?$',
         BookingDetailView.as_view(),
         name='booking-view'),
-    url(r'^booking/(?P<pk>[0-9]+)/change_status/?$',
-        ChangeBookingStatusView.as_view(),
-        name='change-booking-status'),
-    url(r'^booking/(?P<pk>[0-9]+)/change_teachers/?$',
-        ChangeBookingTeachersView.as_view(),
-        name='change-booking-teachers'),
-    url(r'^booking/(?P<pk>[0-9]+)/change_hosts/?$',
-        ChangeBookingHostsView.as_view(),
-        name='change-booking-hosts'),
-    url(r'^booking/(?P<pk>[0-9]+)/change_rooms/?$',
-        ChangeBookingRoomsView.as_view(),
-        name='change-booking-rooms'),
-    url(r'^booking/(?P<pk>[0-9]+)/change_comments/?$',
-        ChangeBookingCommentsView.as_view(),
-        name='change-booking-comments'),
-    url(r'^booking/(?P<pk>[0-9]+)/add_logentry/?$',
-        BookingAddLogEntryView.as_view(),
-        name='booking-add-logentry'),
-    url(r'^booking/search$',
-        BookingSearchView.as_view(),
-        name='booking-search'),
+    url(r'^visit/occurrence/(?P<pk>[0-9]+)/change_status/?$',
+        ChangeVisitOccurrenceStatusView.as_view(),
+        name='change-visit-occ-status'),
+    url(r'^visit/occurrence/(?P<pk>[0-9]+)/change_starttime/?$',
+        ChangeVisitOccurrenceStartTimeView.as_view(),
+        name='change-visit-occ-starttime'),
+    url(r'^visit/occurrence/(?P<pk>[0-9]+)/change_teachers/?$',
+        ChangeVisitOccurrenceTeachersView.as_view(),
+        name='change-visit-occ-teachers'),
+    url(r'^visit/occurrence/(?P<pk>[0-9]+)/change_hosts/?$',
+        ChangeVisitOccurrenceHostsView.as_view(),
+        name='change-visit-occ-hosts'),
+    url(r'^visit/occurrence/(?P<pk>[0-9]+)/change_rooms/?$',
+        ChangeVisitOccurrenceRoomsView.as_view(),
+        name='change-visit-occ-rooms'),
+    url(r'^visit/occurrence/(?P<pk>[0-9]+)/change_comments/?$',
+        ChangeVisitOccurrenceCommentsView.as_view(),
+        name='change-visit-occ-comments'),
+    url(r'^visit/occurrence/(?P<pk>[0-9]+)/add_logentry/?$',
+        VisitOccurrenceAddLogEntryView.as_view(),
+        name='visit-occ-add-logentry'),
+    url(r'^visit/occurrence/search$',
+        VisitOccurrenceSearchView.as_view(),
+        name='visit-occ-search'),
 
     url(r'^booking/(?P<pk>[0-9]+)/notify$',
         BookingNotifyView.as_view(),
