@@ -142,6 +142,12 @@ class Unit(models.Model):
     def __unicode__(self):
         return "%s (%s)" % (self.name, self.type.name)
 
+    def get_users(self, role=None):
+        if role is not None:
+            return self.userprofile_set.filter(user_role__role=role).all()
+        else:
+            return self.userprofile_set.all()
+
 
 # Master data related to bookable resources start here
 class Subject(models.Model):
@@ -362,7 +368,6 @@ class EmailTemplate(models.Model):
         NOTIFY_HOST__BOOKING_CREATED,
         NOTIFY_HOST__ASSOCIATED,
         NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
-        NOTIFY_HOST__REQ_HOST_VOLUNTEER,
         NOTIFY_ALL__BOOKING_COMPLETE,
         NOTIFY_ALL__BOOKING_CANCELED,
         NOTITY_ALL__BOOKING_REMINDER
@@ -374,6 +379,10 @@ class EmailTemplate(models.Model):
         NOTIFY_ALL__BOOKING_COMPLETE,
         NOTIFY_ALL__BOOKING_CANCELED,
         NOTITY_ALL__BOOKING_REMINDER
+    ]
+    # Templates that will be autosent to hosts in the unit
+    booking_recipient_hosts_keys = [
+        NOTIFY_HOST__REQ_HOST_VOLUNTEER
     ]
 
     key = models.IntegerField(
@@ -1760,6 +1769,10 @@ class Booking(models.Model):
                     recipients.update(self.visit.contact_persons.all())
                 if template_key in EmailTemplate.booking_recipient_booker_keys:
                     recipients.add(self.booker)
+                if template_key in EmailTemplate.booking_recipient_hosts_keys:
+                    from profile import HOST
+                    unit = self.visitoccurrence.visit.unit
+                    recipients.update(unit.get_users(HOST))
 
             KUEmailMessage.send_email(
                 template_key,
