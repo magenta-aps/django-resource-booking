@@ -32,9 +32,9 @@
                     </button>
                     <ul class="dropdown-menu" aria-labelledby="sendNotification">
                         <li><a data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'booking-notify' object.pk %}">{% trans 'Ingen skabelon' %}</a></li>
-                        {% if EmailTemplate.key_choices %}
+                        {% if emailtemplates %}
                             <li role="separator" class="divider"></li>
-                            {% for id, label in EmailTemplate.booking_key_choices %}
+                            {% for id, label in emailtemplates %}
                                 <li>
                                     {% if modal %}
                                         <a data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'booking-notify' object.pk %}?template={{ id }}">{{ label }}</a>

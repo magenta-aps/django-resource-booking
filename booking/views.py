@@ -2036,6 +2036,16 @@ class BookingDetailView(LoggedViewMixin, DetailView):
                 user.userprofile.can_notify(self.object):
             context['can_notify'] = True
 
+        context['emailtemplates'] = [
+            (key, label)
+            for (key, label) in EmailTemplate.key_choices
+            if key in EmailTemplate.booking_manual_keys
+        ]
+
+        context['thisurl'] = reverse('booking-view', args=[self.object.id])
+
+        context['modal'] = BookingNotifyView.modal
+
         context.update(kwargs)
 
         return super(BookingDetailView, self).get_context_data(**context)

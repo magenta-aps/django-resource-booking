@@ -317,6 +317,7 @@ class EmailTemplate(models.Model):
     NOTIFY_ALL__BOOKING_CANCELED = 9  # ticket 13814
     NOTITY_ALL__BOOKING_REMINDER = 10  # ticket 13815
 
+    # Choice labels
     key_choices = [
         (NOTIFY_GUEST__BOOKING_CREATED, _(u'Gæst: Booking oprettet')),
         (NOTIFY_GUEST__GENERAL_MSG, _(u'Gæst: Generel besked')),
@@ -330,40 +331,14 @@ class EmailTemplate(models.Model):
         (NOTIFY_ALL__BOOKING_CANCELED, _(u'Alle: Booking aflyst')),
         (NOTITY_ALL__BOOKING_REMINDER, _(u'Alle: Reminder om booking')),
     ]
-    visit_key_choices = [  # Templates pertaining to visits
-                           (key, label)
-                           for (key, label) in key_choices
-                           if key in []
-        ]
-    booking_key_choices = [  # Templates pertaining to bookings
-                             (key, label)
-                             for (key, label) in key_choices
-                             if key in [NOTIFY_GUEST__BOOKING_CREATED,
-                                        NOTIFY_GUEST__GENERAL_MSG,
-                                        NOTIFY_HOST__BOOKING_CREATED,
-                                        NOTIFY_HOST__ASSOCIATED,
-                                        NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
-                                        NOTIFY_HOST__REQ_HOST_VOLUNTEER,
-                                        NOTIFY_ALL__BOOKING_COMPLETE,
-                                        NOTIFY_ALL__BOOKING_CANCELED,
-                                        NOTITY_ALL__BOOKING_REMINDER
-                                        ]
-        ]
-    autosend_visit_key_choices = [
-        (key, label)
-        for (key, label) in key_choices
-        if key in [
-            NOTIFY_GUEST__BOOKING_CREATED,
-            NOTIFY_HOST__BOOKING_CREATED,
-            NOTIFY_HOST__ASSOCIATED,
-            NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
-            NOTIFY_HOST__REQ_HOST_VOLUNTEER,
-            NOTIFY_ALL__BOOKING_COMPLETE,
-            NOTIFY_ALL__BOOKING_CANCELED,
-            NOTITY_ALL__BOOKING_REMINDER
-        ]
-    ]
-    booking_recipient_visit_contacts_keys = [
+
+    # Templates available for manual sending from visits
+    visit_manual_keys = []
+
+    # Templates available for manual sending from bookings
+    booking_manual_keys = [
+        NOTIFY_GUEST__BOOKING_CREATED,
+        NOTIFY_GUEST__GENERAL_MSG,
         NOTIFY_HOST__BOOKING_CREATED,
         NOTIFY_HOST__ASSOCIATED,
         NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
@@ -372,6 +347,30 @@ class EmailTemplate(models.Model):
         NOTIFY_ALL__BOOKING_CANCELED,
         NOTITY_ALL__BOOKING_REMINDER
     ]
+
+    # Templates available for autosending (config in visits)
+    visit_autosend_keys = [
+        NOTIFY_GUEST__BOOKING_CREATED,
+        NOTIFY_HOST__BOOKING_CREATED,
+        NOTIFY_HOST__ASSOCIATED,
+        NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
+        NOTIFY_HOST__REQ_HOST_VOLUNTEER,
+        NOTIFY_ALL__BOOKING_COMPLETE,
+        NOTIFY_ALL__BOOKING_CANCELED,
+        NOTITY_ALL__BOOKING_REMINDER
+    ]
+
+    # Templates that will be autosent to visit.contact_persons
+    booking_recipient_contacts_keys = [
+        NOTIFY_HOST__BOOKING_CREATED,
+        NOTIFY_HOST__ASSOCIATED,
+        NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
+        NOTIFY_HOST__REQ_HOST_VOLUNTEER,
+        NOTIFY_ALL__BOOKING_COMPLETE,
+        NOTIFY_ALL__BOOKING_CANCELED,
+        NOTITY_ALL__BOOKING_REMINDER
+    ]
+    # Templates that will be autosent to booker
     booking_recipient_booker_keys = [
         NOTIFY_GUEST__BOOKING_CREATED,
         NOTIFY_GUEST__GENERAL_MSG,
@@ -1784,8 +1783,7 @@ class Booking(models.Model):
     def autosend(self, template_key):
         if self.visit.autosend_enabled(template_key):
             recipients = set()
-            if template_key in EmailTemplate.\
-                    booking_recipient_visit_contacts_keys:
+            if template_key in EmailTemplate.booking_recipient_contacts_keys:
                 recipients.update(self.visit.contact_persons.all())
             if template_key in EmailTemplate.booking_recipient_booker_keys:
                 recipients.add(self.booker)
