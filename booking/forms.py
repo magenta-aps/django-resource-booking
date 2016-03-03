@@ -1,7 +1,7 @@
 from booking.models import StudyMaterial
 from booking.models import UnitType
 from booking.models import Unit
-from booking.models import Resource, OtherResource, Visit, VisitOccurrence
+from booking.models import Resource, OtherResource, Visit
 from booking.models import Booker, Region, PostCode, School
 from booking.models import ClassBooking, TeacherBooking, BookingSubjectLevel
 from django import forms
