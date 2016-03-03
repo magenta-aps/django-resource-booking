@@ -1215,7 +1215,7 @@ class VisitOccurrence(models.Model):
             result.append(self.visit.as_searchtext())
 
         if self.bookings:
-            for booking in self.bookings:
+            for booking in self.bookings.all():
                 result.append(booking.as_searchtext())
 
         return " ".join(result)

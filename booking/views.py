@@ -1186,6 +1186,8 @@ class BookingView(AutologgerMixin, UpdateView):
                 booking.booker = forms['bookerform'].save()
 
             booking.save()
+            # Trigger updating of search index
+            booking.visitoccurrence.save()
 
             # We can't fetch this form before we have
             # a saved booking object to feed it, or we'll get an error
