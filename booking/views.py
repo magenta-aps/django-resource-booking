@@ -1079,10 +1079,10 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
             # update occurrences
             existing_visit_occurrences = \
                 set([x.start_datetime
-                     for x in visit.visitoccurrence_set.all()])
+                     for x in visit.bookable_occurrences])
 
             # convert date strings to datetimes
-            dates = request.POST.getlist(u'occurrences')
+            dates = request.POST.get(u'occurrences').split(',')
 
             datetimes = []
             if dates is not None:
@@ -1098,26 +1098,13 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
                 if date_t in existing_visit_occurrences:
                     existing_visit_occurrences.remove(date_t)
                 else:
-                    duration = request.POST[u'duration']
-                    hours = int(duration[0:2])
-                    minutes = int(duration[3:5])
-                    end_datetime = date_t
-                    if duration is not None:
-                        end_datetime = date_t + timedelta(
-                            hours=hours,
-                            minutes=minutes
-                        )
-                    instance = VisitOccurrence(
-                        start_datetime=date_t,
-                        end_datetime1=end_datetime,
-                        visit=visit
-                    )
+                    instance = visit.make_occurrence(date_t, True)
                     instance.save()
             # If the set of existing occurrences still is not empty,
             # it means that the user un-ticket one or more existing.
             # So, we remove those to...
             if len(existing_visit_occurrences) > 0:
-                visit.visitoccurrence_set.all().filter(
+                visit.bookable_occurrences.filter(
                     start_datetime__in=existing_visit_occurrences
                 ).delete()
 
@@ -1614,13 +1601,22 @@ class BookingView(AutologgerMixin, UpdateView):
         for (name, form) in forms.items():
             if not form.is_valid():
                 valid = False
+                print form.errors
 
         if valid:
             if 'bookingform' in forms:
                 booking = forms['bookingform'].save(commit=False)
             else:
                 booking = self.object
-            booking.visit = self.visit
+
+            if not booking.visitoccurrence:
+                # Make an anonymous visitoccurrence
+                occ = self.visit.make_occurrence(
+                    None, False
+                )
+                occ.save()
+                booking.visitoccurrence = occ
+
             if 'bookerform' in forms:
                 booking.booker = forms['bookerform'].save()
 
@@ -1647,6 +1643,7 @@ class BookingView(AutologgerMixin, UpdateView):
 
             return redirect("/visit/%d/book/success" % self.visit.id)
         else:
+            print "there was an error"
             forms['subjectform'] = BookingSubjectLevelForm(request.POST)
 
         data.update(forms)
@@ -1740,8 +1737,8 @@ class EmbedcodesView(TemplateView):
         return super(EmbedcodesView, self).get_context_data(**context)
 
 
-class BookingSearchView(LoginRequiredMixin, ListView):
-    model = Booking
+class VisitOccurrenceSearchView(LoginRequiredMixin, ListView):
+    model = VisitOccurrence
     template_name = "booking/searchresult.html"
     context_object_name = "results"
     paginate_by = 10
@@ -1796,15 +1793,17 @@ class BookingSearchView(LoginRequiredMixin, ListView):
 
         context['breadcrumbs'] = [
             {
-                'url': reverse('booking-search'),
-                'text': _(u'Bookinger')
+                'url': reverse('visit-occ-search'),
+                'text': _(u'Planlagte besøg/besøg under planlægning')
             },
             {'text': _(u'Søgeresultatliste')},
         ]
 
         context.update(kwargs)
 
-        return super(BookingSearchView, self).get_context_data(**context)
+        return super(VisitOccurrenceSearchView, self).get_context_data(
+            **context
+        )
 
     def get_paginate_by(self, queryset):
         size = self.request.GET.get("pagesize", 10)
@@ -1850,15 +1849,26 @@ class BookingDetailView(LoggedViewMixin, DetailView):
 
         return super(BookingDetailView, self).get_context_data(**context)
 
-# Late import to avoid mutual import conflicts
-import booking_workflows.views as booking_views
 
-ChangeBookingStatusView = booking_views.ChangeBookingStatusView
-ChangeBookingTeachersView = booking_views.ChangeBookingTeachersView
-ChangeBookingHostsView = booking_views.ChangeBookingHostsView
-ChangeBookingRoomsView = booking_views.ChangeBookingRoomsView
-ChangeBookingCommentsView = booking_views.ChangeBookingCommentsView
-BookingAddLogEntryView = booking_views.BookingAddLogEntryView
+class VisitOccurrenceDetailView(LoggedViewMixin, DetailView):
+    """Display Booking details"""
+    model = VisitOccurrence
+    template_name = 'visitoccurrence/details.html'
+
+    def get_context_data(self, **kwargs):
+        context = {}
+
+        context['breadcrumbs'] = [
+            {'url': reverse('search'), 'text': _(u'Søgning')},
+            {'url': '#', 'text': _(u'Søgeresultatliste')},
+            {'text': _(u'Detaljevisning')},
+        ]
+
+        context.update(kwargs)
+
+        return super(VisitOccurrenceDetailView, self).get_context_data(
+            **context
+        )
 
 
 class EmailTemplateListView(ListView):
@@ -2067,3 +2077,20 @@ class EmailTemplateDeleteView(HasBackButtonMixin, DeleteView):
             {'text': _(u'Slet')},
         ]
         return context
+
+
+import booking_workflows.views as booking_views  # noqa
+
+ChangeVisitOccurrenceStatusView = \
+    booking_views.ChangeVisitOccurrenceStatusView
+ChangeVisitOccurrenceStartTimeView = \
+    booking_views.ChangeVisitOccurrenceStartTimeView
+ChangeVisitOccurrenceTeachersView = \
+    booking_views.ChangeVisitOccurrenceTeachersView
+ChangeVisitOccurrenceHostsView = \
+    booking_views.ChangeVisitOccurrenceHostsView
+ChangeVisitOccurrenceRoomsView = \
+    booking_views.ChangeVisitOccurrenceRoomsView
+ChangeVisitOccurrenceCommentsView = \
+    booking_views.ChangeVisitOccurrenceCommentsView
+VisitOccurrenceAddLogEntryView = booking_views.VisitOccurrenceAddLogEntryView
