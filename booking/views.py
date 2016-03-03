@@ -1824,6 +1824,8 @@ class BookingView(AutologgerMixin, UpdateView):
 
             booking.autosend(EmailTemplate.NOTIFY_HOST__REQ_TEACHER_VOLUNTEER)
 
+            booking.autosend(EmailTemplate.NOTIFY_HOST__REQ_HOST_VOLUNTEER)
+
             # We can't fetch this form before we have
             # a saved booking object to feed it, or we'll get an error
             if hadSubjectForm:
