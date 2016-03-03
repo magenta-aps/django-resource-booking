@@ -871,6 +871,10 @@ class Visit(Resource):
         return super(Visit, self).save(*args, **kwargs)
 
     @property
+    def bookable_occurrences(self):
+        return self.visitoccurrence_set.filter(bookable=True)
+
+    @property
     def recurrences_description(self):
         if self.recurrences and self.recurrences.rrules:
             return [d.to_text() for d in self.recurrences.rrules]
@@ -897,6 +901,15 @@ class Visit(Resource):
 
         return None
 
+    def make_occurrence(self, starttime=None, bookable=False, **kwargs):
+        occ = VisitOccurrence(
+            visit=self,
+            start_datetime=starttime,
+            bookable=bookable,
+            **kwargs
+        )
+        return occ
+
 
 class VisitOccurrence(models.Model):
 
@@ -918,7 +931,14 @@ class VisitOccurrence(models.Model):
 
     start_datetime = models.DateTimeField(
         verbose_name=_(u'Starttidspunkt'),
-        null=True
+        null=True,
+        blank=True
+    )
+
+    # Whether the occurrence is publicly bookable
+    bookable = models.BooleanField(
+        default=False,
+        verbose_name=_(u'Kan bookes')
     )
 
     desired_time = models.CharField(
@@ -1098,6 +1118,10 @@ class VisitOccurrence(models.Model):
         return self.workflow_status == being_planned
 
     def planned_status_is_blocked(self):
+        # We have to have a chosen starttime before we are planned
+        if not self.start_datetime:
+            return True
+
         # It's not blocked if we can't choose it
         ws_planned = VisitOccurrence.WORKFLOW_STATUS_PLANNED
         if ws_planned not in (x[0] for x in self.possible_status_choices()):
@@ -1150,7 +1174,7 @@ class VisitOccurrence(models.Model):
         return self.start_datetime or _(u'på ikke-fastlagt tidspunkt')
 
     def nr_bookers(self):
-        nr = len(Booker.objects.filter(booking__visitoccurence=self))
+        nr = len(Booker.objects.filter(booking__visitoccurrence=self))
         nr += self.nr_additional_participants()
         return nr
 
@@ -1161,7 +1185,10 @@ class VisitOccurrence(models.Model):
         return res['attendees'] or 0
 
     def __unicode__(self):
-        return u'%s @ %s' % (self.visit.title, self.display_value)
+        if self.start_datetime:
+            return u'%s @ %s' % (self.visit.title, self.display_value)
+        else:
+            return u'%s (uden fastlagt tidspunkt)' % (self.visit.title)
 
     def get_override_attr(self, attrname):
         result = getattr(self, 'override_' + attrname, None)
@@ -1481,7 +1508,7 @@ class Booking(models.Model):
 
     booker = models.ForeignKey(Booker)
 
-    visitoccurence = models.ForeignKey(
+    visitoccurrence = models.ForeignKey(
         VisitOccurrence,
         null=True,
         related_name='bookings'
@@ -1492,10 +1519,10 @@ class Booking(models.Model):
         verbose_name=u'Bemærkninger'
     )
 
-    def get_occurence_attr(self, attrname):
-        if not self.visitoccurence:
+    def get_occurrence_attr(self, attrname):
+        if not self.visitoccurrence:
             return None
-        return getattr(self.visitoccurence, attrname, None)
+        return getattr(self.visitoccurrence, attrname, None)
 
     def raise_readonly_attr_error(self, attrname):
         raise Exception(
@@ -1507,9 +1534,9 @@ class Booking(models.Model):
     # Adds property to this class that will fetch the same attribute on
     # the associated visitoccorrence, if available. The property will raise
     # an exception on assignment.
-    def add_occurence_attr(cls, attrname):
+    def add_occurrence_attr(cls, attrname):
         setattr(cls, attrname, property(
-            lambda self: self.get_occurence_attr(attrname),
+            lambda self: self.get_occurtence_attr(attrname),
             lambda self, val: self.raise_readonly_attr_error(attrname)
         ))
 
@@ -1532,16 +1559,14 @@ class Booking(models.Model):
             self.notes
         ] if x])
 
-
-Booking.add_occurence_attr('visit')
-Booking.add_occurence_attr('hosts')
-Booking.add_occurence_attr('teachers')
-Booking.add_occurence_attr('host_status')
-Booking.add_occurence_attr('teacher_status')
-Booking.add_occurence_attr('room_status')
-Booking.add_occurence_attr('workflow_status')
-Booking.add_occurence_attr('comments')
-
+Booking.add_occurrence_attr('visit')
+Booking.add_occurrence_attr('hosts')
+Booking.add_occurrence_attr('teachers')
+Booking.add_occurrence_attr('host_status')
+Booking.add_occurrence_attr('teacher_status')
+Booking.add_occurrence_attr('room_status')
+Booking.add_occurrence_attr('workflow_status')
+Booking.add_occurrence_attr('comments')
 
 class ClassBooking(Booking):
 
