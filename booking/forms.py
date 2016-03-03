@@ -183,12 +183,12 @@ class VisitAutosendForm(forms.Form):
         choices=EmailTemplate.key_choices
     )
 
-    def __init__(self, visit=None, *args, **kwargs):
-        super(VisitAutosendForm, self).__init__(*args, **kwargs)
-        if visit is not None:
+    def __init__(self, data=None, instance=None, *args, **kwargs):
+        super(VisitAutosendForm, self).__init__(data, *args, **kwargs)
+        if instance is not None:
             self.initial['autosend'] = [
                 autosend.template_key
-                for autosend in visit.visitautosend_set.all()
+                for autosend in instance.visitautosend_set.all()
             ]
 
 

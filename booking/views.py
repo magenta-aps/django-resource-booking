@@ -961,7 +961,7 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         form = self.get_form()
         fileformset = VisitStudyMaterialForm(None, instance=self.object)
 
-        autosendform = VisitAutosendForm(self.object)
+        autosendform = VisitAutosendForm(None, instance=self.object)
 
         return self.render_to_response(
             self.get_context_data(form=form, fileformset=fileformset,
@@ -1015,11 +1015,12 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         is_cloning = kwargs.get("clone", False)
         self.set_object(pk, request, is_cloning)
         form = self.get_form()
+        fileformset = VisitStudyMaterialForm(request.POST)
 
         if form.is_valid():
             visit = form.save()
 
-            autosendform = VisitAutosendForm(visit, request.POST)
+            autosendform = VisitAutosendForm(request.POST, instance=visit)
             if autosendform.is_valid():
                 # Update autosend
                 new_autosend_keys = autosendform.cleaned_data['autosend']
@@ -1039,7 +1040,6 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
                         )
                         visit.visitautosend_set.add(autosend)
 
-            fileformset = VisitStudyMaterialForm(request.POST)
             if fileformset.is_valid():
                 # Attach uploaded files
                 for fileform in fileformset:
