@@ -51,12 +51,12 @@
             {% for res in results %}
                 <li class="media">
                     <div class="media-body">
-                        <strong><a href="{% url 'visit-occ-details' res.pk %}">{% trans 'Planlagt besøg/besøg under planlægning' %} {{ res.pk }}</a></strong>
+                        <strong><a href="{% url 'visit-occ-view' res.pk %}">{% trans 'Planlagt besøg/besøg under planlægning' %} {{ res.pk }}</a></strong>
                         <dl class="dl-horizontal">
                             <dt>Tilbud:</dt>
                             <dd><a href="{% url 'visit-view' res.visit.pk %}">{{ res.visit.title }}</a></dd>
                             <dt>Booket af:</dt>
-                            <dd>{{ res.booker }}</dd>
+                            <dd>{{ res.nr_bookers }} personer</dd>
                         </dl>
                     </div>
                 </li>
