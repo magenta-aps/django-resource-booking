@@ -1115,6 +1115,10 @@ class VisitOccurrence(models.Model):
         return self.workflow_status == being_planned
 
     def planned_status_is_blocked(self):
+        # We have to have a chosen starttime before we are planned
+        if not self.start_datetime:
+            return True
+
         # It's not blocked if we can't choose it
         ws_planned = VisitOccurrence.WORKFLOW_STATUS_PLANNED
         if ws_planned not in (x[0] for x in self.possible_status_choices()):
