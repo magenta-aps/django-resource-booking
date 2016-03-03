@@ -1788,7 +1788,7 @@ recurrence.display.labels = {
     'date': gettext('Date'),
     'time': gettext('Time'),
     'repeat_until': gettext('Repeat until'),
-    'exclude_occurrences': gettext('Exclude these occurences'),
+    'exclude_occurrences': gettext('Exclude these occurrences'),
     'exclude_date': gettext('Exclude this date'),
     'add_rule': gettext('Add rule'),
     'add_date': gettext('Add date'),

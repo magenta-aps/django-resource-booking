@@ -1,0 +1,38 @@
+<script type="text/javascript"><!--
+    $(function(){
+        
+        // See doc at http://www.malot.fr/bootstrap-datetimepicker/
+        var dp = $("#time-select").datetimepicker({
+            language: 'da',
+            format: 'dd-mm-yyyy hh:ii',
+            weekStart: 1,
+            todayHighlight: true,
+            startDate: 'Date',
+            clearBtn: true,
+            autoclose: true,
+            bootcssVer: 3
+        });
+    
+        dp.on('changeDate', function(ev){
+            $("#existing-recurrence-dates").append('<li data-date="' + $("#time-select").val() + '">' + $("#time-select").val() + ' <button onclick="$(this).parent().detach();">x</button></li>');
+            var arr = $("#existing-recurrence-dates>li").map(function() { return $(this).data('date') }).get();
+            $("#occurrences").val(arr);
+        });
+        
+        $('#time-select-btn').on('click', function() {
+            dp.datetimepicker('show');
+        });
+    
+        $(".button-remove").on('click', function(){
+            $(this).parent().detach();
+            var arr = $("#existing-recurrence-dates>li").map(function() { return $(this).data('date') }).get();
+            $("#occurrences").val(arr);
+        });
+        
+        $("#adv-time-select-toggle").on('click', function(e) {
+            e.preventDefault();
+            $("#adv-time-select").toggle();    
+        });
+        
+    });
+//--></script>

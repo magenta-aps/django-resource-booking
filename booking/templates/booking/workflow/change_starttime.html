@@ -1,0 +1,47 @@
+{% extends 'index.html' %}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block head %}
+    <link rel="stylesheet" href="{% static 'thirdparty/bootstrap-datetime-picker/css/bootstrap-datetimepicker.min.css' %}"/>
+{% endblock %}
+
+{% block content %}
+    {% include 'common/breadcrumbrow.html' %}
+
+    <div class="row titlebar hidden-print">
+        <div class="col-sm-12 col-md-9"><h2>Redigér tidspunkt for {{ object }}</h2></div>
+        <div class="divider"></div>
+    </div>
+    <div class="row">
+        <div class="col-sm-12 col-md-8">
+            <form name="changebookinroomsform" id="changebookinroomsform"
+                action="{% url 'change-visit-occ-starttime' object.pk %}" method="post">
+                {% csrf_token %}
+                {{ form }}
+                <div>
+                <input class="btn btn-success btn-sm" type="submit" value="Opdater" name="confirm" />
+                <input class="btn btn-danger btn-sm" type="submit" value="Annullér" name="cancel" />
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_scripts %}
+    <script type="text/javascript" src="{% static 'thirdparty/bootstrap-datetime-picker/js/bootstrap-datetimepicker.min.js' %}"></script>
+    <script type="text/javascript"><!--
+        $(function(){
+            var dp = $("#id_start_datetime").datetimepicker({
+                language: 'da',
+                format: 'yyyy-mm-dd hh:ii',
+                weekStart: 1,
+                todayHighlight: true,
+                startDate: 'Date',
+                clearBtn: true,
+                autoclose: true,
+                bootcssVer: 3
+            });
+        });
+    //--></script>
+{% endblock %}
