@@ -12,6 +12,70 @@
                 <input type="hidden" name="q" value="{{ request.GET.q }}" />
                 <input type="hidden" name="pagesize" value="{{ paginator.per_page }}" />
                     <div class="panel panel-sidebar">
+                        {% if has_edit_role %}
+                            <div class="panel-heading">
+                                <h3 class="panel-title">Admin-afgrænsning</h3>
+                            </div>
+                            <div class="panel-body">
+                                <h3 class="panel-title">Redigerings-status for tilbud</h3>
+                                <hr>
+                                <div class="input-group">
+                                    {% for c in state_choices %}
+                                    <div class="checkbox">
+                                        <label class="control-label" for="state-choice-{{c.value}}">
+                                            <input name="s" id="state-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}>{{c.label}}
+                                            {% if c.hits %}
+                                                <span title="{{ c.hits }} resultater" class="type-hits">({{ c.hits }})</span>
+                                            {% endif %}
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                <h3 class="panel-title">Tilbud er aktivt</h3>
+                                <hr>
+                                <div class="input-group">
+                                    {% for c in enabled_choices %}
+                                    <div class="checkbox">
+                                        <label class="control-label" for="enabled-choice-{{c.value}}">
+                                            <input name="e" id="enabled-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}>{{c.label}}
+                                            {% if c.hits %}
+                                                <span title="{{ c.hits }} resultater" class="type-hits">({{ c.hits }})</span>
+                                            {% endif %}
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                <h3 class="panel-title">Besøg/ikke besøg</h3>
+                                <hr>
+                                <div class="input-group">
+                                    {% for c in is_visit_choices %}
+                                    <div class="checkbox">
+                                        <label class="control-label" for="is-visit-choice-{{c.value}}">
+                                            <input name="v" id="is-visit-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}>{{c.label}}
+                                            {% if c.hits %}
+                                                <span title="{{ c.hits }} resultater" class="type-hits">({{ c.hits }})</span>
+                                            {% endif %}
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                <h3 class="panel-title">Tilknytning af bookinger</h3>
+                                <hr>
+                                <div class="input-group">
+                                    {% for c in has_bookings_choices %}
+                                    <div class="checkbox">
+                                        <label class="control-label" for="has-bookings-choice-{{c.value}}">
+                                            <input name="b" id="has-bookings-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}>{{c.label}}
+                                            {% if c.hits %}
+                                                <span title="{{ c.hits }} resultater" class="type-hits">({{ c.hits }})</span>
+                                            {% endif %}
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                        {% endif %}
                         <div class="panel-heading">
                             <h3 class="panel-title">Afgræns din søgning</h3>
                         </div>
@@ -105,7 +169,7 @@
         <div id="main" class="col-sm-12 col-md-9">
 
             {% include 'common/breadcrumbrow.html' %}
-            
+
             {% if user.userprofile.can_create %}
                 <a class="pull-right btn btn-primary" href="{% url 'resource-create' %}">+ Opret tilbud</a>
             {% endif %}
@@ -142,8 +206,17 @@
                                     </ul>
                                 </li>
                                 {% endif %}
-                                {% if res.occ_starttime %}
-                                <li><strong>Hvornår: </strong><span class="type-offer">{{ res.occ_starttime|date:"d. m. Y" }}  kl. {{ res.occ_starttime|date:"H:i" }}</span></li>
+                                {% if res.num_occurences %}
+                                <li>
+                                    <strong>Hvornår: </strong>
+                                    <span class="type-offer">
+                                        {% if res.num_occurences == 1 %}
+                                            {{ res.first_occurence|date:"d. m. Y" }} kl. {{ res.first_occurence|date:"H:i" }}
+                                        {% else %}
+                                            {{ res.num_occurences }} mulige tidspunkter, første gang {{ res.first_occurence|date:"d. m. Y" }} kl. {{ res.first_occurence|date:"H:i" }}
+                                        {% endif %}
+                                    </span>
+                                </li>
                                 {% endif %}
                                 <li><strong>Hvor: </strong><span class="type-offer">{{ res.display_locality }}</span></li>
                             </ul>

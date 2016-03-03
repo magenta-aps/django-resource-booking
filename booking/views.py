@@ -13,7 +13,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
 from django.db.models import Count
-from django.db.models import F
+from django.db.models import Min
 from django.db.models import Q
 from django.forms.models import model_to_dict
 from django.http import Http404
@@ -257,6 +257,27 @@ class SearchView(ListView):
     from_datetime = None
     to_datetime = None
 
+    boolean_choice = (
+        (1, _(u'Ja')),
+        (0, _(u'Nej')),
+    )
+
+    IS_VISIT = 1
+    IS_NOT_VISIT = 2
+
+    is_visit_choices = (
+        (IS_VISIT, _(u'Besøg')),
+        (IS_NOT_VISIT, _(u'Ikke besøg'))
+    )
+
+    HAS_BOOKINGS = 1
+    HAS_NO_BOOKINGS = 2
+
+    has_bookings_choices = (
+        (HAS_BOOKINGS, _(u'Har bookinger tilknyttet')),
+        (HAS_NO_BOOKINGS, _(u'Har ikke bookinger tilknyttet')),
+    )
+
     def get_date_from_request(self, queryparam):
         val = self.request.GET.get(queryparam)
         if not val:
@@ -274,6 +295,10 @@ class SearchView(ListView):
 
             qs = self.model.objects.search(searchexpression)
 
+            qs = qs.annotate(
+                num_bookings=Count('visit__visitoccurrence__bookings')
+            )
+
             date_cond = None
 
             # Filter on from-time if one is specified or from current time
@@ -285,8 +310,8 @@ class SearchView(ListView):
 
             # Search for either resources without dates specified or
             # resources that have times available in the future
-            date_cond = Q(
-                Q(visit__visitoccurrence__start_datetime__isnull=True) |
+            date_cond = (
+                Q(visit__visitoccurrence__bookable=True) &
                 Q(visit__visitoccurrence__start_datetime__gt=t_from)
             )
 
@@ -295,18 +320,20 @@ class SearchView(ListView):
             t_to = self.get_date_from_request("to")
             if t_to:
                 date_cond = date_cond & Q(
-                    Q(
-                        Q(visit__visitoccurrence__end_datetime2__isnull=True) &
-                        Q(visit__visitoccurrence__end_datetime1__lte=t_to)
-                    ) |
-                    Q(
-                        visit__visitoccurrence__end_datetime2__lte=t_to
-                    )
+                    Q(visit__visitoccurrence__start_datetime__lte=t_from)
                 )
             self.to_datetime = t_to
 
-            # Only do date matching on resources that are actual visits
-            qs = qs.filter(Q(visit__isnull=True) | date_cond)
+            qs = qs.filter(
+                # Stuff that is not bookable
+                Q(visit__isnull=True) |
+                # Anything without any specific booking times
+                Q(visit__visitoccurrence__isnull=True) |
+                # Bookable occurences that matches the date conditions
+                date_cond
+            )
+
+            qs = qs.distinct()
 
             self.base_queryset = qs
 
@@ -314,7 +341,8 @@ class SearchView(ListView):
 
     def annotate(self, qs):
         return qs.annotate(
-            occ_starttime=F('visit__visitoccurrence__start_datetime')
+            num_occurences=Count('visit__visitoccurrence__pk'),
+            first_occurence=Min('visit__visitoccurrence__start_datetime')
         )
 
     def get_filters(self):
@@ -340,7 +368,44 @@ class SearchView(ListView):
             if g:
                 self.filters["grundskolefag__in"] = f
 
-            self.filters["state__in"] = [Resource.ACTIVE]
+            if (self.request.user.is_authenticated() and
+                    self.request.user.userprofile.has_edit_role()):
+
+                s = self.request.GET.getlist("s")
+                if s:
+                    self.filters["state__in"] = s
+
+                e = self.request.GET.getlist("e")
+                if e:
+                    try:
+                        self.filters["enabled__in"] = [int(x) for x in e]
+                    except:
+                        pass
+
+                try:
+                    v = [int(x) for x in self.request.GET.getlist("v")]
+                    if SearchView.IS_VISIT in v:
+                        if SearchView.IS_NOT_VISIT not in v:
+                            self.filters["visit__pk__isnull"] = False
+                    elif SearchView.IS_NOT_VISIT in v:
+                        if SearchView.IS_VISIT not in v:
+                            self.filters["otherresource__pk__isnull"] = False
+                except Exception as e:
+                    print e
+
+                try:
+                    b = [int(x) for x in self.request.GET.getlist("b")]
+                    if SearchView.HAS_BOOKINGS in b:
+                        if SearchView.HAS_NO_BOOKINGS not in b:
+                            self.filters["num_bookings__gt"] = 0
+                    elif SearchView.HAS_NO_BOOKINGS in b:
+                        if SearchView.HAS_BOOKINGS not in b:
+                            self.filters["num_bookings"] = 0
+                except Exception as e:
+                    print e
+
+            else:
+                self.filters["state__in"] = [Resource.ACTIVE]
 
         return self.filters
 
@@ -354,9 +419,7 @@ class SearchView(ListView):
                    selected_value='checked="checked"',
                    add_to_all=None):
 
-        selected = set(selected)
         hits = {}
-        choices = []
 
         # Remove filter for the field we want to facetize
         new_filters = {}
@@ -364,8 +427,12 @@ class SearchView(ListView):
             if not k.startswith(facet_field):
                 new_filters[k] = v
 
-        qs = self.get_base_queryset().filter(**new_filters)
-        qs = qs.values(facet_field).annotate(hits=Count("pk"))
+        base_qs = self.get_base_queryset().filter(**new_filters)
+
+        qs = Resource.objects.filter(
+            pk__in=base_qs
+        ).values(facet_field).annotate(hits=Count("pk"))
+
         for item in qs:
             hits[item[facet_field]] = item["hits"]
 
@@ -388,12 +455,64 @@ class SearchView(ListView):
                 else:
                     hits[v] = to_add
 
+        return self.choices_from_hits(choice_tuples, hits, selected,
+                                      selected_value=selected_value)
+
+    def is_visit_facet(self, choice_tuples, selected):
+        hits = {}
+
+        # Remove filter for the field we want to facetize
+        new_filters = {}
+        for k, v in self.get_filters().iteritems():
+            if k not in ("visit__pk__isnull", "otherresource__pk__isnull"):
+                new_filters[k] = v
+
+        qs = self.get_base_queryset().filter(**new_filters).distinct()
+
+        nr_visits = len(qs.filter(visit__pk__isnull=False))
+        if nr_visits > 0:
+            hits[SearchView.IS_VISIT] = nr_visits
+
+        non_visits = len(qs.filter(otherresource__pk__isnull=False))
+        if non_visits > 0:
+            hits[SearchView.IS_NOT_VISIT] = non_visits
+
+        return self.choices_from_hits(choice_tuples, hits, selected)
+
+    def has_bookings_facet(self, choice_tuples, selected):
+        hits = {}
+
+        # Remove filter for the field we want to facetize
+        new_filters = {}
+        new_filters.update(self.get_filters())
+        if "num_bookings" in new_filters:
+            del new_filters["num_bookings"]
+        if "num_bookings__gt" in new_filters:
+            del new_filters["num_bookings__gt"]
+
+        qs = self.get_base_queryset().filter(**new_filters).distinct()
+
+        has_bookings = len(qs.exclude(num_bookings=0))
+        if has_bookings > 0:
+            hits[SearchView.HAS_BOOKINGS] = has_bookings
+
+        has_no_bookings = len(qs.filter(num_bookings=0))
+        if has_no_bookings > 0:
+            hits[SearchView.HAS_NO_BOOKINGS] = has_no_bookings
+
+        return self.choices_from_hits(choice_tuples, hits, selected)
+
+    def choices_from_hits(self, choice_tuples, hits, selected,
+                          selected_value='checked="checked"'):
+        selected = set(selected)
+        choices = []
+
         for value, name in choice_tuples:
             if value not in hits:
                 continue
 
             if unicode(value) in selected:
-                sel = selected_value
+                sel = 'checked="checked"'
             else:
                 sel = ''
 
@@ -480,6 +599,41 @@ class SearchView(ListView):
                 "?" + "&".join(querylist)
         else:
             context['fullquery'] = None
+
+        if (self.request.user.is_authenticated() and
+                self.request.user.userprofile.has_edit_role()):
+
+            context['has_edit_role'] = True
+
+            state_selected = self.request.GET.getlist("s")
+            context["state_selected"] = state_selected
+            context['state_choices'] = self.make_facet(
+                'state',
+                self.model.state_choices,
+                state_selected
+            )
+
+            enabled_selected = self.request.GET.getlist("e")
+            context["enabled_selected"] = state_selected
+            context['enabled_choices'] = self.make_facet(
+                'enabled',
+                SearchView.boolean_choice,
+                enabled_selected
+            )
+
+            is_visit_selected = self.request.GET.getlist("v")
+            context["is_visit_selected"] = is_visit_selected
+            context["is_visit_choices"] = self.is_visit_facet(
+                SearchView.is_visit_choices,
+                is_visit_selected
+            )
+
+            has_bookings_selected = self.request.GET.getlist("b")
+            context["has_bookings_selected"] = is_visit_selected
+            context["has_bookings_choices"] = self.has_bookings_facet(
+                SearchView.has_bookings_choices,
+                has_bookings_selected
+            )
 
         context.update(kwargs)
         return super(SearchView, self).get_context_data(**context)
