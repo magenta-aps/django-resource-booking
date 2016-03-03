@@ -6,7 +6,7 @@
     {% include 'common/breadcrumbrow.html' %}
 
     <div class="row titlebar hidden-print">
-        <div class="col-sm-12 col-md-9"><h2>Skift status for booking {{ object.pk }}</h2></div>
+        <div class="col-sm-12 col-md-9"><h2>Skift status for {{ object }}</h2></div>
         <div class="divider"></div>
     </div>
     <div class="row">
@@ -15,13 +15,13 @@
             <p>
                 Bemærk at det ikke er skifte til status
                 '{{ object.PLANNED_STATUS_TEXT }}' med mindre der er blevet tildelt
-                både undervisere, værter og lokaler.
-                <a href="{% url 'booking-view' object.pk %}">Klik her for at vende
+                både starttidspunkt, undervisere, værter og lokaler.
+                <a href="{% url 'visit-occ-view' object.pk %}">Klik her for at vende
                 tilbage og rette i tildelingerne</a>.
             </p>
             {% endif %}
             <form name="changebookinstatusform" id="changebookinstatusform"
-                action="{% url 'change-booking-status' object.pk %}" method="post">
+                action="{% url 'change-visit-occ-status' object.pk %}" method="post">
                 {% csrf_token %}
                 {{ form }}
                 <input class="btn btn-success btn-sm" type="submit" value="Skift status" name="confirm" />

@@ -43,7 +43,8 @@ INSTALLED_APPS = (
     'recurrence',
     'timedelta',
     'tinymce',
-    'djangosaml2'
+    'djangosaml2',
+    'django_extensions'
 )
 
 MIDDLEWARE_CLASSES = (
@@ -62,7 +63,7 @@ ROOT_URLCONF = 'resource_booking.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'override_templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

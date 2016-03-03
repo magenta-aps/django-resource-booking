@@ -1,4 +1,5 @@
 {% extends "index.html" %}
+{% load i18n %}
 
 {% block head %}
 <link rel="stylesheet" href="/static/css/personlig-side.css">
@@ -16,14 +17,19 @@
             <h1>Personlig side</h1>
             <p><a class="btn btn-primary pull-right" href="{% url 'resource-create' %}?back={{ thisurl }}">+ Opret tilbud</a></p>
             <p>Du er logget ind som {{user.userprofile.user_role.name}}.</p>
-            <p>Her kan du se en oversigt over dine tilbud, hvilke der er bookede, og hvilke der kræver handling.</p>    
+            <p>Her kan du se en oversigt over dine tilbud, hvilke der er bookede, og hvilke der kræver handling.</p>
         </div>
     </div>
     {% if request.user.userprofile.can_create %}
     <div class="divider"></div>
     <ul>
-        <li><a href="{% url 'booking-search' %}">Søg i bookinger</a></li>
+        <li><a href="{% url 'visit-occ-search' %}">Søg i {% trans 'besøg under planlægning' %}</a></li>
         <li><a href="{% url 'user_list' %}">Administrér brugere</a></li>
+        <li><a href="{% url 'admin:booking_locality_changelist' %}">Administrér lokaliteter</a></li>
+        <li><a href="{% url 'admin:booking_person_changelist' %}">Administrér kontaktpersoner</a></li>
+        {% if request.user.userprofile.can_edit_units %}
+        <li><a href="{% url 'admin:booking_unit_changelist' %}">Administrér enheder</a></li>
+        {% endif %}
     </ul>
     {% endif %}
     <div class="divider"></div>

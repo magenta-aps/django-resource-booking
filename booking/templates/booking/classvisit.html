@@ -56,12 +56,12 @@
 
                 {% if bookingform.scheduled %}
                     <div class="form-group">
-                        <label class="col-sm-2 control-label" for="{{ bookingform.time.id_for_label }}">{% trans "Tidspunkt*" %}</label>
-                        <div class="col-sm-6{% if bookingform.time.errors %} has-error{% endif %}">
-                            {{ bookingform.time }}
+                        <label class="col-sm-2 control-label" for="{{ bookingform.visitoccurrence.id_for_label }}">{{ bookingform.visitoccurrence.label }}</label>
+                        <div class="col-sm-6{% if bookingform.visitoccurrence.errors %} has-error{% endif %}">
+                            {{ bookingform.visitoccurrence }}
                         </div>
                         <div class="col-sm-3 help-block with-errors">
-                            {{ bookingform.time.errors }}
+                            {{ bookingform.visitoccurrence.errors }}
                         </div>
                     </div>
                 {% else %}
@@ -89,12 +89,12 @@
                 {% endif %}
 
                 <div class="form-group">
-                    <label class="col-sm-2 control-label" for="{{ bookerform.notes.id_for_label }}">{% trans "Kommentarer" %}</label>
-                    <div class="col-sm-6{% if bookerform.notes.errors %} has-error{% endif %}">
-                        {{ bookerform.notes }}
+                    <label class="col-sm-2 control-label" for="{{ bookingform.notes.id_for_label }}">{% trans "Kommentarer" %}</label>
+                    <div class="col-sm-6{% if bookingform.notes.errors %} has-error{% endif %}">
+                        {{ bookingform.notes }}
                     </div>
                     <div class="col-sm-3 help-block with-errors">
-                        {{ bookerform.notes.errors }}
+                        {{ bookingform.notes.errors }}
                     </div>
                 </div>
             </div>
@@ -113,16 +113,16 @@
     {% include 'booking/booker/location_script.html' %}
     {% include 'booking/booker/school_script.html' %}
 
-    <script type="text/javascript">
+    <script type="text/javascript"><!--
     $(function(){
         $("#submitbutton").click(function(){
             $("#bookingform").submit();
         });
     });
-    </script>
+    //--></script>
 
     <script type="text/javascript" src="{% static 'js/formset-row.js' %}"></script>
-    <script type="text/javascript">
+    <script type="text/javascript"><!--
         $(function(){
 
             var extraRows = $("#rowcontainer > div").not(":first");
@@ -161,5 +161,5 @@
 
             $(".rowremover a").click(removeRowEvent);
         });
-    </script>
+    //--></script>
 {% endblock %}
