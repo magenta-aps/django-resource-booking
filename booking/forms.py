@@ -180,7 +180,10 @@ class VisitAutosendForm(forms.Form):
 
     autosend = forms.MultipleChoiceField(
         widget=CheckboxSelectMultiple,
-        choices=EmailTemplate.autosend_visit_key_choices
+        choices=[
+            (key, label) for (key, label) in EmailTemplate.key_choices
+            if key in EmailTemplate.visit_autosend_keys
+        ]
     )
 
     def __init__(self, data=None, *args, **kwargs):

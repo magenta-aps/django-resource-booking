@@ -276,46 +276,35 @@ class EmailTemplate(models.Model):
     ]
 
     # Templates available for manual sending from visits
-    visit_key_choices = [
-        (key, label)
-        for (key, label) in key_choices
-        if key in []
-    ]
+    visit_manual_keys = []
 
     # Templates available for manual sending from bookings
-    booking_key_choices = [
-         (key, label)
-         for (key, label) in key_choices
-         if key in [NOTIFY_GUEST__BOOKING_CREATED,
-                    NOTIFY_GUEST__GENERAL_MSG,
-                    NOTIFY_HOST__BOOKING_CREATED,
-                    NOTIFY_HOST__ASSOCIATED,
-                    NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
-                    NOTIFY_HOST__REQ_HOST_VOLUNTEER,
-                    NOTIFY_ALL__BOOKING_COMPLETE,
-                    NOTIFY_ALL__BOOKING_CANCELED,
-                    NOTITY_ALL__BOOKING_REMINDER
-        ]
+    booking_manual_keys = [
+        NOTIFY_GUEST__BOOKING_CREATED,
+        NOTIFY_GUEST__GENERAL_MSG,
+        NOTIFY_HOST__BOOKING_CREATED,
+        NOTIFY_HOST__ASSOCIATED,
+        NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
+        NOTIFY_HOST__REQ_HOST_VOLUNTEER,
+        NOTIFY_ALL__BOOKING_COMPLETE,
+        NOTIFY_ALL__BOOKING_CANCELED,
+        NOTITY_ALL__BOOKING_REMINDER
     ]
 
     # Templates available for autosending (config in visits)
-    autosend_visit_key_choices = [
-        (key, label)
-        for (key, label) in key_choices
-        if key in [
-            NOTIFY_GUEST__BOOKING_CREATED,
-            NOTIFY_HOST__BOOKING_CREATED,
-            NOTIFY_HOST__ASSOCIATED,
-            NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
-            NOTIFY_HOST__REQ_HOST_VOLUNTEER,
-            NOTIFY_ALL__BOOKING_COMPLETE,
-            NOTIFY_ALL__BOOKING_CANCELED,
-            NOTITY_ALL__BOOKING_REMINDER
-        ]
+    visit_autosend_keys = [
+        NOTIFY_GUEST__BOOKING_CREATED,
+        NOTIFY_HOST__BOOKING_CREATED,
+        NOTIFY_HOST__ASSOCIATED,
+        NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
+        NOTIFY_HOST__REQ_HOST_VOLUNTEER,
+        NOTIFY_ALL__BOOKING_COMPLETE,
+        NOTIFY_ALL__BOOKING_CANCELED,
+        NOTITY_ALL__BOOKING_REMINDER
     ]
 
     # Templates that will be autosent to visit.contact_persons
-    booking_recipient_visit_contacts_keys = [
+    booking_recipient_contacts_keys = [
         NOTIFY_HOST__BOOKING_CREATED,
         NOTIFY_HOST__ASSOCIATED,
         NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
@@ -1539,8 +1528,7 @@ class Booking(models.Model):
     def autosend(self, template_key):
         if self.visit.autosend_enabled(template_key):
             recipients = set()
-            if template_key in EmailTemplate.\
-                    booking_recipient_visit_contacts_keys:
+            if template_key in EmailTemplate.booking_recipient_contacts_keys:
                 recipients.update(self.visit.contact_persons.all())
             if template_key in EmailTemplate.booking_recipient_booker_keys:
                 recipients.add(self.booker)
