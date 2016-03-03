@@ -1,6 +1,7 @@
 # encoding: utf-8
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+from django.db.models import Sum
 from djorm_pgfulltext.models import SearchManager
 from djorm_pgfulltext.fields import VectorField
 from django.contrib.contenttypes.models import ContentType
@@ -12,6 +13,7 @@ from django.utils.translation import ugettext_lazy as _
 from recurrence.fields import RecurrenceField
 from booking.utils import ClassProperty
 
+import datetime
 
 LOGACTION_CREATE = ADDITION
 LOGACTION_CHANGE = CHANGE
@@ -896,53 +898,313 @@ class Visit(Resource):
 class VisitOccurrence(models.Model):
 
     class Meta:
-        verbose_name = _(u"tidspunkt for besøg")
-        verbose_name_plural = _(u"tidspunkter for besøg")
+        verbose_name = _(u"planlagt besøg/besøg under planlægning")
+        verbose_name_plural = _(u"planlagte besøg/besøg under planlægning")
         ordering = ['start_datetime']
 
-    start_datetime = models.DateTimeField(
-        verbose_name=_(u'Starttidspunkt')
+    objects = SearchManager(
+        fields=('extra_search_text'),
+        config='pg_catalog.danish',
+        auto_update_search_field=True
     )
-    end_datetime1 = models.DateTimeField(
-        verbose_name=_(u'Sluttidspunkt')
-    )
-    end_datetime2 = models.DateTimeField(
-        verbose_name=_(u'Alternativt sluttidspunkt'),
-        blank=True,
-        null=True
-    )
+
     visit = models.ForeignKey(
         Visit,
         on_delete=models.CASCADE
     )
 
+    start_datetime = models.DateTimeField(
+        verbose_name=_(u'Starttidspunkt'),
+        null=True
+    )
+
+    desired_time = models.CharField(
+        null=True,
+        blank=True,
+        max_length=2000,
+        verbose_name=u'Ønsket tidspunkt'
+    )
+
+    override_duration = models.CharField(
+        max_length=8,
+        verbose_name=_(u'Varighed'),
+        blank=True,
+        null=True,
+    )
+
+    override_locality = models.ForeignKey(
+        Locality,
+        verbose_name=_(u'Lokalitet'),
+        blank=True,
+        null=True
+    )
+
+    # Have to do late import of this here or we will get problems
+    # with cyclic dependencies
+    from profile.models import TEACHER, HOST
+
+    hosts = models.ManyToManyField(
+        User,
+        blank=True,
+        limit_choices_to={
+            'userprofile__user_role__role': HOST
+        },
+        related_name="hosted_bookings",
+        verbose_name=_(u'Værter')
+    )
+
+    teachers = models.ManyToManyField(
+        User,
+        blank=True,
+        limit_choices_to={
+            'userprofile__user_role__role': TEACHER
+        },
+        related_name="taught_bookings",
+        verbose_name=_(u'Undervisere')
+    )
+
+    STATUS_NOT_NEEDED = 0
+    STATUS_OK = 1
+    STATUS_NOT_ASSIGNED = 2
+
+    host_status_choices = (
+        (STATUS_NOT_NEEDED, _(u'Tildeling af værter ikke påkrævet')),
+        (STATUS_NOT_ASSIGNED, _(u'Afventer tildeling')),
+        (STATUS_OK, _(u'Tildelt'))
+    )
+
+    host_status = models.IntegerField(
+        choices=host_status_choices,
+        default=STATUS_NOT_ASSIGNED,
+        verbose_name=_(u'Status for tildeling af værter')
+    )
+
+    teacher_status_choices = (
+        (STATUS_NOT_NEEDED, _(u'Tildeling af undervisere ikke påkrævet')),
+        (STATUS_NOT_ASSIGNED, _(u'Afventer tildeling')),
+        (STATUS_OK, _(u'Tildelt'))
+    )
+
+    teacher_status = models.IntegerField(
+        choices=teacher_status_choices,
+        default=STATUS_NOT_ASSIGNED,
+        verbose_name=_(u'Status for tildeling af undervisere')
+    )
+
+    room_status_choices = (
+        (STATUS_NOT_NEEDED, _(u'Tildeling af lokaler ikke påkrævet')),
+        (STATUS_NOT_ASSIGNED, _(u'Afventer tildeling')),
+        (STATUS_OK, _(u'Tildelt'))
+    )
+
+    room_status = models.IntegerField(
+        choices=room_status_choices,
+        default=STATUS_NOT_ASSIGNED,
+        verbose_name=_(u'Status for tildeling af lokaler')
+    )
+
+    WORKFLOW_STATUS_BEING_PLANNED = 0
+    WORKFLOW_STATUS_REJECTED = 1
+    WORKFLOW_STATUS_PLANNED = 2
+    WORKFLOW_STATUS_CONFIRMED = 3
+    WORKFLOW_STATUS_REMINDED = 4
+    WORKFLOW_STATUS_EXECUTED = 5
+    WORKFLOW_STATUS_EVALUATED = 6
+    WORKFLOW_STATUS_CANCELLED = 7
+    WORKFLOW_STATUS_NOSHOW = 8
+
+    BEING_PLANNED_STATUS_TEXT = u'Under planlægning'
+    PLANNED_STATUS_TEXT = u'Planlagt (ressourcer tildelt)'
+
+    workflow_status_choices = (
+        (WORKFLOW_STATUS_BEING_PLANNED, _(BEING_PLANNED_STATUS_TEXT)),
+        (WORKFLOW_STATUS_REJECTED, _(u'Afvist af undervisere eller værter')),
+        (WORKFLOW_STATUS_PLANNED, _(PLANNED_STATUS_TEXT)),
+        (WORKFLOW_STATUS_CONFIRMED, _(u'Bekræftet af booker')),
+        (WORKFLOW_STATUS_REMINDED, _(u'Påmindelse afsendt')),
+        (WORKFLOW_STATUS_EXECUTED, _(u'Afviklet')),
+        (WORKFLOW_STATUS_EVALUATED, _(u'Evalueret')),
+        (WORKFLOW_STATUS_CANCELLED, _(u'Aflyst')),
+        (WORKFLOW_STATUS_NOSHOW, _(u'Udeblevet')),
+    )
+
+    workflow_status = models.IntegerField(
+        choices=workflow_status_choices,
+        default=WORKFLOW_STATUS_BEING_PLANNED
+    )
+
+    comments = models.TextField(
+        blank=True,
+        default='',
+        verbose_name=_(u'Interne kommentarer')
+    )
+
+    # ts_vector field for fulltext search
+    search_index = VectorField()
+
+    # Field for concatenating search data from relations
+    extra_search_text = models.TextField(
+        blank=True,
+        default='',
+        verbose_name=_(u'Tekst-værdier til fritekstsøgning'),
+        editable=False
+    )
+
+    valid_status_changes = {
+        WORKFLOW_STATUS_BEING_PLANNED: [
+            WORKFLOW_STATUS_REJECTED,
+            WORKFLOW_STATUS_PLANNED,
+            WORKFLOW_STATUS_CANCELLED,
+        ],
+        WORKFLOW_STATUS_REJECTED: [
+            WORKFLOW_STATUS_BEING_PLANNED,
+            WORKFLOW_STATUS_CANCELLED,
+        ],
+        WORKFLOW_STATUS_PLANNED: [
+            WORKFLOW_STATUS_CONFIRMED,
+            WORKFLOW_STATUS_CANCELLED,
+        ],
+        WORKFLOW_STATUS_CONFIRMED: [
+            WORKFLOW_STATUS_REMINDED,
+            WORKFLOW_STATUS_EXECUTED,
+            WORKFLOW_STATUS_CANCELLED,
+            WORKFLOW_STATUS_NOSHOW,
+        ],
+        WORKFLOW_STATUS_REMINDED: [
+            WORKFLOW_STATUS_EXECUTED,
+            WORKFLOW_STATUS_CANCELLED,
+            WORKFLOW_STATUS_NOSHOW,
+        ],
+        WORKFLOW_STATUS_EXECUTED: [
+            WORKFLOW_STATUS_EVALUATED,
+            WORKFLOW_STATUS_CANCELLED
+        ],
+        WORKFLOW_STATUS_EVALUATED: [
+            WORKFLOW_STATUS_BEING_PLANNED,
+        ],
+        WORKFLOW_STATUS_CANCELLED: [
+            WORKFLOW_STATUS_BEING_PLANNED,
+        ],
+        WORKFLOW_STATUS_NOSHOW: [
+            WORKFLOW_STATUS_BEING_PLANNED,
+        ],
+    }
+
+    def can_assign_resources(self):
+        being_planned = VisitOccurrence.WORKFLOW_STATUS_BEING_PLANNED
+        return self.workflow_status == being_planned
+
+    def planned_status_is_blocked(self):
+        # It's not blocked if we can't choose it
+        ws_planned = VisitOccurrence.WORKFLOW_STATUS_PLANNED
+        if ws_planned not in (x[0] for x in self.possible_status_choices()):
+            return False
+
+        statuses = (self.host_status, self.teacher_status, self.room_status)
+
+        if VisitOccurrence.STATUS_NOT_ASSIGNED in statuses:
+            return True
+
+        return False
+
+    def possible_status_choices(self):
+        result = []
+
+        allowed = self.valid_status_changes[self.workflow_status]
+
+        for x in self.workflow_status_choices:
+            if x[0] in allowed:
+                result.append(x)
+
+        return result
+
+    def get_subjects(self):
+        if hasattr(self, 'teacherbooking'):
+            return self.teacherbooking.subjects.all()
+        else:
+            return None
+
     @property
     def display_value(self):
-        if not self.start_datetime or not self.end_datetime1:
+        if not self.start_datetime:
             return None
 
         result = self.start_datetime.strftime('%d. %m %Y %H:%M')
 
-        endtime = self.end_datetime2 or self.end_datetime1
-        if endtime:
-            result += endtime.strftime(' %H:%M')
+        if self.duration:
+            try:
+                (hours, mins) = self.duration.split(":", 2)
+                endtime = self.start_datetime + datetime.timedelta(
+                    hours=int(hours), minutes=int(mins)
+                )
+                result += endtime.strftime('-%H:%M')
+            except Exception as e:
+                print e
 
         return result
 
+    def date_display(self):
+        return self.start_datetime or _(u'på ikke-fastlagt tidspunkt')
+
+    def nr_bookers(self):
+        nr = len(Booker.objects.filter(booking__visitoccurence=self))
+        nr += self.nr_additional_participants()
+        return nr
+
+    def nr_additional_participants(self):
+        res = VisitOccurrence.objects.filter(pk=self.pk).aggregate(
+            attendees=Sum('bookings__booker__attendee_count')
+        )
+        return res['attendees'] or 0
+
     def __unicode__(self):
-        if self.end_datetime2:
-            return _(u'%s fra %s til %s eller %s') % (
-                self.visit.title,
-                self.start_datetime.isoformat(" ")[0:16],
-                self.end_datetime1.isoformat(" ")[0:16],
-                self.end_datetime2.isoformat(" ")[0:16]
-            )
-        else:
-            return _(u'%s fra %s til %s') % (
-                self.visit.title,
-                self.start_datetime.isoformat(" ")[0:16],
-                self.end_datetime1.isoformat(" ")[0:16]
-            )
+        return u'%s @ %s' % (self.visit.title, self.display_value)
+
+    def get_override_attr(self, attrname):
+        result = getattr(self, 'override_' + attrname, None)
+
+        if result is None and self.visit:
+            result = getattr(self.visit, attrname)
+
+        return result
+
+    def set_override_attr(self, attrname, val):
+        setattr(self, 'override_' + attrname, val)
+
+    @classmethod
+    def add_override_property(cls, attrname):
+        setattr(cls, attrname, property(
+            lambda self: self.get_override_attr(attrname),
+            lambda self, val: self.set_override_attr(attrname, val)
+        ))
+
+    def as_searchtext(self):
+        result = []
+
+        if self.visit:
+            result.append(self.visit.as_searchtext())
+
+        if self.booking:
+            result.append(self.booking.as_searchtext())
+
+        return " ".join(result)
+
+    def save(self, *args, **kwargs):
+
+        # Save once to store relations
+        super(VisitOccurrence, self).save(*args, **kwargs)
+
+        # Update search_text
+        self.extra_search_text = self.as_searchtext()
+
+        # Do the final save
+        super(VisitOccurrence, self).save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        return reverse('visit-occ-view', args=[self.pk])
+
+VisitOccurrence.add_override_property('duration')
+VisitOccurrence.add_override_property('locality')
 
 
 class Room(models.Model):
@@ -1190,10 +1452,6 @@ class Booker(models.Model):
         null=True,
         verbose_name=u'Antal deltagere'
     )
-    notes = models.TextField(
-        blank=True,
-        verbose_name=u'Bemærkninger'
-    )
 
     def as_searchtext(self):
         return " ".join([unicode(x) for x in [
@@ -1217,194 +1475,39 @@ class Booking(models.Model):
         verbose_name = _(u'booking')
         verbose_name_plural = _(u'bookinger')
 
-    objects = SearchManager(
-        fields=('extra_search_text'),
-        config='pg_catalog.danish',
-        auto_update_search_field=True
-    )
-
-    visit = models.ForeignKey(Visit, null=True)
     booker = models.ForeignKey(Booker)
 
-    # Have to do late import of this here or we will get problems
-    # with cyclic dependencies
-    from profile.models import TEACHER, HOST
+    visitoccurence = models.ForeignKey(
+        VisitOccurrence,
+        null=True,
+        related_name='bookings'
+    )
 
-    hosts = models.ManyToManyField(
-        User,
+    notes = models.TextField(
         blank=True,
-        limit_choices_to={
-            'userprofile__user_role__role': HOST
-        },
-        related_name="hosted_bookings",
-        verbose_name=_(u'Værter')
+        verbose_name=u'Bemærkninger'
     )
 
-    teachers = models.ManyToManyField(
-        User,
-        blank=True,
-        limit_choices_to={
-            'userprofile__user_role__role': TEACHER
-        },
-        related_name="taught_bookings",
-        verbose_name=_(u'Undervisere')
-    )
+    def get_occurence_attr(self, attrname):
+        if not self.visitoccurence:
+            return None
+        return getattr(self.visitoccurence, attrname, None)
 
-    # ts_vector field for fulltext search
-    search_index = VectorField()
+    def raise_readonly_attr_error(self, attrname):
+        raise Exception(
+            _("Attribute %s on Booking is readonly.") % attrname +
+            _("Set it on the VisitOccurance instead.")
+        )
 
-    # Field for concatenating search data from relations
-    extra_search_text = models.TextField(
-        blank=True,
-        default='',
-        verbose_name=_(u'Tekst-værdier til fritekstsøgning'),
-        editable=False
-    )
-
-    STATUS_NOT_NEEDED = 0
-    STATUS_OK = 1
-    STATUS_NOT_ASSIGNED = 2
-
-    host_status_choices = (
-        (STATUS_NOT_NEEDED, _(u'Tildeling af værter ikke påkrævet')),
-        (STATUS_NOT_ASSIGNED, _(u'Afventer tildeling')),
-        (STATUS_OK, _(u'Tildelt'))
-    )
-
-    host_status = models.IntegerField(
-        choices=host_status_choices,
-        default=STATUS_NOT_ASSIGNED,
-        verbose_name=_(u'Status for tildeling af værter')
-    )
-
-    teacher_status_choices = (
-        (STATUS_NOT_NEEDED, _(u'Tildeling af undervisere ikke påkrævet')),
-        (STATUS_NOT_ASSIGNED, _(u'Afventer tildeling')),
-        (STATUS_OK, _(u'Tildelt'))
-    )
-
-    teacher_status = models.IntegerField(
-        choices=teacher_status_choices,
-        default=STATUS_NOT_ASSIGNED,
-        verbose_name=_(u'Status for tildeling af undervisere')
-    )
-
-    room_status_choices = (
-        (STATUS_NOT_NEEDED, _(u'Tildeling af lokaler ikke påkrævet')),
-        (STATUS_NOT_ASSIGNED, _(u'Afventer tildeling')),
-        (STATUS_OK, _(u'Tildelt'))
-    )
-
-    room_status = models.IntegerField(
-        choices=room_status_choices,
-        default=STATUS_NOT_ASSIGNED,
-        verbose_name=_(u'Status for tildeling af lokaler')
-    )
-
-    WORKFLOW_STATUS_BEING_PLANNED = 0
-    WORKFLOW_STATUS_REJECTED = 1
-    WORKFLOW_STATUS_PLANNED = 2
-    WORKFLOW_STATUS_CONFIRMED = 3
-    WORKFLOW_STATUS_REMINDED = 4
-    WORKFLOW_STATUS_EXECUTED = 5
-    WORKFLOW_STATUS_EVALUATED = 6
-    WORKFLOW_STATUS_CANCELLED = 7
-    WORKFLOW_STATUS_NOSHOW = 8
-
-    BEING_PLANNED_STATUS_TEXT = u'Under planlægning'
-    PLANNED_STATUS_TEXT = u'Planlagt (ressourcer tildelt)'
-
-    workflow_status_choices = (
-        (WORKFLOW_STATUS_BEING_PLANNED, _(BEING_PLANNED_STATUS_TEXT)),
-        (WORKFLOW_STATUS_REJECTED, _(u'Afvist af undervisere eller værter')),
-        (WORKFLOW_STATUS_PLANNED, _(PLANNED_STATUS_TEXT)),
-        (WORKFLOW_STATUS_CONFIRMED, _(u'Bekræftet af booker')),
-        (WORKFLOW_STATUS_REMINDED, _(u'Påmindelse afsendt')),
-        (WORKFLOW_STATUS_EXECUTED, _(u'Afviklet')),
-        (WORKFLOW_STATUS_EVALUATED, _(u'Evalueret')),
-        (WORKFLOW_STATUS_CANCELLED, _(u'Aflyst')),
-        (WORKFLOW_STATUS_NOSHOW, _(u'Udeblevet')),
-    )
-
-    workflow_status = models.IntegerField(
-        choices=workflow_status_choices,
-        default=WORKFLOW_STATUS_BEING_PLANNED
-    )
-
-    comments = models.TextField(
-        blank=True,
-        default='',
-        verbose_name=_(u'Interne kommentarer')
-    )
-
-    valid_status_changes = {
-        WORKFLOW_STATUS_BEING_PLANNED: [
-            WORKFLOW_STATUS_REJECTED,
-            WORKFLOW_STATUS_PLANNED,
-            WORKFLOW_STATUS_CANCELLED,
-        ],
-        WORKFLOW_STATUS_REJECTED: [
-            WORKFLOW_STATUS_BEING_PLANNED,
-            WORKFLOW_STATUS_CANCELLED,
-        ],
-        WORKFLOW_STATUS_PLANNED: [
-            WORKFLOW_STATUS_CONFIRMED,
-            WORKFLOW_STATUS_CANCELLED,
-        ],
-        WORKFLOW_STATUS_CONFIRMED: [
-            WORKFLOW_STATUS_REMINDED,
-            WORKFLOW_STATUS_EXECUTED,
-            WORKFLOW_STATUS_CANCELLED,
-            WORKFLOW_STATUS_NOSHOW,
-        ],
-        WORKFLOW_STATUS_REMINDED: [
-            WORKFLOW_STATUS_EXECUTED,
-            WORKFLOW_STATUS_CANCELLED,
-            WORKFLOW_STATUS_NOSHOW,
-        ],
-        WORKFLOW_STATUS_EXECUTED: [
-            WORKFLOW_STATUS_EVALUATED,
-            WORKFLOW_STATUS_CANCELLED
-        ],
-        WORKFLOW_STATUS_EVALUATED: [
-            WORKFLOW_STATUS_BEING_PLANNED,
-        ],
-        WORKFLOW_STATUS_CANCELLED: [
-            WORKFLOW_STATUS_BEING_PLANNED,
-        ],
-        WORKFLOW_STATUS_NOSHOW: [
-            WORKFLOW_STATUS_BEING_PLANNED,
-        ],
-    }
-
-    def can_assign_resources(self):
-        return self.workflow_status == Booking.WORKFLOW_STATUS_BEING_PLANNED
-
-    def planned_status_is_blocked(self):
-        # It's not blocked if we can't choose it
-        ws_planned = Booking.WORKFLOW_STATUS_PLANNED
-        if ws_planned not in (x[0] for x in self.possible_status_choices()):
-            return False
-
-        statuses = (self.host_status, self.teacher_status, self.room_status)
-
-        if Booking.STATUS_NOT_ASSIGNED in statuses:
-            return True
-
-        return False
-
-    # TODO: Huske at logge status-skift via log_action
-
-    def possible_status_choices(self):
-        result = []
-
-        allowed = self.valid_status_changes[self.workflow_status]
-
-        for x in self.workflow_status_choices:
-            if x[0] in allowed:
-                result.append(x)
-
-        return result
+    @classmethod
+    # Adds property to this class that will fetch the same attribute on
+    # the associated visitoccorrence, if available. The property will raise
+    # an exception on assignment.
+    def add_occurence_attr(cls, attrname):
+        setattr(cls, attrname, property(
+            lambda self: self.get_occurence_attr(attrname),
+            lambda self, val: self.raise_readonly_attr_error(attrname)
+        ))
 
     @classmethod
     def queryset_for_user(cls, user, qs=None):
@@ -1416,36 +1519,17 @@ class Booking(models.Model):
 
         return qs.filter(visit__unit=user.userprofile.get_unit_queryset())
 
-    def as_searchtext(self):
-        result = []
-
-        if self.visit:
-            result.append(self.visit.as_searchtext())
-
-        if self.booker:
-            result.append(self.booker.as_searchtext())
-
-        return " ".join(result)
-
-    def get_subjects(self):
-        if hasattr(self, 'teacherbooking'):
-            return self.teacherbooking.subjects.all()
-        else:
-            return None
-
-    def save(self, *args, **kwargs):
-
-        # Save once to store relations
-        super(Booking, self).save(*args, **kwargs)
-
-        # Update search_text
-        self.extra_search_text = self.as_searchtext()
-
-        # Do the final save
-        super(Booking, self).save(*args, **kwargs)
-
     def get_absolute_url(self):
         return reverse('booking-view', args=[self.pk])
+
+Booking.add_occurence_attr('visit')
+Booking.add_occurence_attr('hosts')
+Booking.add_occurence_attr('teachers')
+Booking.add_occurence_attr('host_status')
+Booking.add_occurence_attr('teacher_status')
+Booking.add_occurence_attr('room_status')
+Booking.add_occurence_attr('workflow_status')
+Booking.add_occurence_attr('comments')
 
 
 class ClassBooking(Booking):
@@ -1454,17 +1538,6 @@ class ClassBooking(Booking):
         verbose_name = _(u'booking for klassebesøg')
         verbose_name_plural = _(u'bookinger for klassebesøg')
 
-    time = models.DateTimeField(
-        null=True,
-        blank=True,
-        verbose_name=u'Tidspunkt'
-    )
-    desired_time = models.CharField(
-        null=True,
-        blank=True,
-        max_length=2000,
-        verbose_name=u'Ønsket tidspunkt'
-    )
     tour_desired = models.BooleanField(
         verbose_name=u'Rundvisning ønsket'
     )

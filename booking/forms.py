@@ -184,7 +184,7 @@ class BookerForm(BookingForm):
     class Meta:
         model = Booker
         fields = ('firstname', 'lastname', 'email', 'phone', 'line',
-                  'level', 'attendee_count', 'notes')
+                  'level', 'attendee_count')
         widgets = {
             'firstname': TextInput(
                 attrs={'class': 'form-control input-sm',
@@ -212,10 +212,6 @@ class BookerForm(BookingForm):
             'attendee_count': NumberInput(
                 attrs={'class': 'form-control input-sm', 'min': 0}
             ),
-            'notes': Textarea(
-                attrs={'class': 'form-control input-sm'}
-            ),
-
         }
 
     repeatemail = forms.CharField(

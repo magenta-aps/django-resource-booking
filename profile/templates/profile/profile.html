@@ -1,4 +1,5 @@
 {% extends "index.html" %}
+{% load i18n %}
 
 {% block head %}
 <link rel="stylesheet" href="/static/css/personlig-side.css">
@@ -22,7 +23,7 @@
     {% if request.user.userprofile.can_create %}
     <div class="divider"></div>
     <ul>
-        <li><a href="{% url 'booking-search' %}">Søg i bookinger</a></li>
+        <li><a href="{% url 'visit-occ-search' %}">Søg i {% trans 'besøg under planlægning' %}</a></li>
         <li><a href="{% url 'user_list' %}">Administrér brugere</a></li>
         <li><a href="{% url 'admin:booking_locality_changelist' %}">Administrér lokaliteter</a></li>
         <li><a href="{% url 'admin:booking_person_changelist' %}">Administrér kontaktpersoner</a></li>

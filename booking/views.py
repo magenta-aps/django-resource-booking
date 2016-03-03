@@ -1300,8 +1300,8 @@ class EmbedcodesView(TemplateView):
         return super(EmbedcodesView, self).get_context_data(**context)
 
 
-class BookingSearchView(LoginRequiredMixin, ListView):
-    model = Booking
+class VisitOccurrenceSearchView(LoginRequiredMixin, ListView):
+    model = VisitOccurrence
     template_name = "booking/searchresult.html"
     context_object_name = "results"
     paginate_by = 10
@@ -1356,15 +1356,17 @@ class BookingSearchView(LoginRequiredMixin, ListView):
 
         context['breadcrumbs'] = [
             {
-                'url': reverse('booking-search'),
-                'text': _(u'Bookinger')
+                'url': reverse('visit-occ-search'),
+                'text': _(u'Planlagte besøg/besøg under planlægning')
             },
             {'text': _(u'Søgeresultatliste')},
         ]
 
         context.update(kwargs)
 
-        return super(BookingSearchView, self).get_context_data(**context)
+        return super(VisitOccurrenceSearchView, self).get_context_data(
+            **context
+        )
 
     def get_paginate_by(self, queryset):
         size = self.request.GET.get("pagesize", 10)
@@ -1393,12 +1395,41 @@ class BookingDetailView(LoggedViewMixin, DetailView):
 
         return super(BookingDetailView, self).get_context_data(**context)
 
-# Late import to avoid mutual import conflicts
-import booking_workflows.views as booking_views
 
-ChangeBookingStatusView = booking_views.ChangeBookingStatusView
-ChangeBookingTeachersView = booking_views.ChangeBookingTeachersView
-ChangeBookingHostsView = booking_views.ChangeBookingHostsView
-ChangeBookingRoomsView = booking_views.ChangeBookingRoomsView
-ChangeBookingCommentsView = booking_views.ChangeBookingCommentsView
-BookingAddLogEntryView = booking_views.BookingAddLogEntryView
+class VisitOccurrenceDetailView(LoggedViewMixin, DetailView):
+    """Display Booking details"""
+    model = VisitOccurrence
+    template_name = 'visitoccurrence/details.html'
+
+    def get_context_data(self, **kwargs):
+        context = {}
+
+        context['breadcrumbs'] = [
+            {'url': reverse('search'), 'text': _(u'Søgning')},
+            {'url': '#', 'text': _(u'Søgeresultatliste')},
+            {'text': _(u'Detaljevisning')},
+        ]
+
+        context.update(kwargs)
+
+        return super(VisitOccurrenceDetailView, self).get_context_data(
+            **context
+        )
+
+
+# Late import to avoid mutual import conflicts
+import booking_workflows.views as booking_views  # noqa
+
+ChangeVisitOccurrenceStatusView = \
+    booking_views.ChangeVisitOccurrenceStatusView
+ChangeVisitOccurrenceStartTimeView = \
+    booking_views.ChangeVisitOccurrenceStartTimeView
+ChangeVisitOccurrenceTeachersView = \
+    booking_views.ChangeVisitOccurrenceTeachersView
+ChangeVisitOccurrenceHostsView = \
+    booking_views.ChangeVisitOccurrenceHostsView
+ChangeVisitOccurrenceRoomsView = \
+    booking_views.ChangeVisitOccurrenceRoomsView
+ChangeVisitOccurrenceCommentsView = \
+    booking_views.ChangeVisitOccurrenceCommentsView
+VisitOccurrenceAddLogEntryView = booking_views.VisitOccurrenceAddLogEntryView
