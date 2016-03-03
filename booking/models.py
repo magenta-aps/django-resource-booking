@@ -1568,6 +1568,7 @@ Booking.add_occurrence_attr('room_status')
 Booking.add_occurrence_attr('workflow_status')
 Booking.add_occurrence_attr('comments')
 
+
 class ClassBooking(Booking):
 
     class Meta:
