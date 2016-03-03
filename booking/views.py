@@ -45,6 +45,7 @@ from booking.models import PostCode, School
 from booking.models import Booking, Booker
 from booking.models import ResourceGymnasieFag, ResourceGrundskoleFag
 from booking.models import EmailTemplate
+from booking.models import VisitAutosend
 from booking.models import log_action
 from booking.models import LOGACTION_CREATE, LOGACTION_CHANGE
 from booking.forms import ResourceInitialForm, OtherResourceForm, VisitForm
@@ -53,6 +54,7 @@ from booking.forms import VisitStudyMaterialForm, BookingSubjectLevelForm
 from booking.forms import BookerForm
 from booking.forms import EmailTemplateForm, EmailTemplatePreviewContextForm
 from booking.forms import EmailComposeForm
+from booking.forms import VisitAutosendForm
 from booking.utils import full_email
 
 import urls
@@ -958,8 +960,19 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         self.set_object(pk, request)
         form = self.get_form()
         fileformset = VisitStudyMaterialForm(None, instance=self.object)
+
+        autosendform = VisitAutosendForm(
+            {
+                'autosend': [
+                    autosend.template_key
+                    for autosend in self.object.visitautosend_set.all()
+                ]
+            }
+        )
+
         return self.render_to_response(
-            self.get_context_data(form=form, fileformset=fileformset)
+            self.get_context_data(form=form, fileformset=fileformset,
+                                  autosendform=autosendform)
         )
 
     def _is_any_booking_outside_new_attendee_count_bounds(
@@ -1010,28 +1023,31 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         self.set_object(pk, request, is_cloning)
         form = self.get_form()
         fileformset = VisitStudyMaterialForm(request.POST)
+        autosendform = VisitAutosendForm(request.POST)
+
         if form.is_valid():
             visit = form.save()
+
+            if autosendform.is_valid():
+                # Update autosend
+                new_autosend_keys = autosendform.cleaned_data['autosend']
+                existing_autosend = visit.visitautosend_set.all()
+                existing_autosend_keys = [
+                    autosend.template_key
+                    for autosend in existing_autosend
+                    ]
+                for autosend in existing_autosend:
+                    if autosend.template_key not in new_autosend_keys:
+                        autosend.delete()
+                for template_key in new_autosend_keys:
+                    if template_key not in existing_autosend_keys:
+                        autosend = VisitAutosend(
+                            visit=visit,
+                            template_key=template_key
+                        )
+                        visit.visitautosend_set.add(autosend)
+
             if fileformset.is_valid():
-                visit.save()
-
-                # Update rooms
-                existing_rooms = set([x.name for x in visit.room_set.all()])
-
-                new_rooms = request.POST.getlist("rooms")
-                for roomname in new_rooms:
-                    if roomname in existing_rooms:
-                        existing_rooms.remove(roomname)
-                    else:
-                        new_room = Room(visit=visit, name=roomname)
-                        new_room.save()
-
-                # Delete any rooms left in existing rooms
-                if len(existing_rooms) > 0:
-                    visit.room_set.all().filter(
-                        name__in=existing_rooms
-                    ).delete()
-
                 # Attach uploaded files
                 for fileform in fileformset:
                     try:
@@ -1042,6 +1058,24 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
                         instance.save()
                     except:
                         pass
+
+            # Update rooms
+            existing_rooms = set([x.name for x in visit.room_set.all()])
+
+            new_rooms = request.POST.getlist("rooms")
+            for roomname in new_rooms:
+                if roomname in existing_rooms:
+                    existing_rooms.remove(roomname)
+                else:
+                    new_room = Room(visit=visit, name=roomname)
+                    new_room.save()
+
+            # Delete any rooms left in existing rooms
+            if len(existing_rooms) > 0:
+                visit.room_set.all().filter(
+                    name__in=existing_rooms
+                ).delete()
+
             # update occurrences
             existing_visit_occurrences = \
                 set([x.start_datetime
@@ -1092,7 +1126,13 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
 
             return super(EditVisitView, self).form_valid(form)
         else:
-            return self.form_invalid(form, fileformset)
+            return self.form_invalid(
+                {
+                    'form': form,
+                    'fileformset': fileformset,
+                    'autosendform': autosendform
+                }
+            )
 
     def get_context_data(self, **kwargs):
         context = {}
@@ -1141,9 +1181,9 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         except:
             return '/'
 
-    def form_invalid(self, form, fileformset=None):
+    def form_invalid(self, forms):
         return self.render_to_response(
-            self.get_context_data(form=form, fileformset=fileformset)
+            self.get_context_data(**forms)
         )
 
     @method_decorator(login_required)
@@ -1585,26 +1625,21 @@ class BookingView(AutologgerMixin, UpdateView):
                 booking.booker = forms['bookerform'].save()
 
             booking.save()
-            KUEmailMessage.send_email(
-                EmailTemplate.NOTIFY_GUEST__BOOKING_CREATED,
-                {
-                    'booking': booking,
-                    'visit': booking.visit,
-                    'booker': booking.booker
-                },
-                list(self.visit.contact_persons.all()),
-                self.visit.unit
-            )
-            KUEmailMessage.send_email(
-                EmailTemplate.NOTIFY_GUEST__BOOKING_CREATED,
-                {
-                    'booking': booking,
-                    'visit': booking.visit,
-                    'booker': booking.booker
-                },
-                [booking.booker],
-                self.visit.unit
-            )
+
+            booking.autosend(EmailTemplate.NOTIFY_GUEST__BOOKING_CREATED)
+
+            if self.visit.autosend_enabled(
+                    EmailTemplate.NOTIFY_HOST__BOOKING_CREATED):
+                KUEmailMessage.send_email(
+                    EmailTemplate.NOTIFY_HOST__BOOKING_CREATED,
+                    {
+                        'booking': booking,
+                        'visit': booking.visit,
+                        'booker': booking.booker
+                    },
+                    [booking.booker],
+                    self.visit.unit
+                )
 
             # We can't fetch this form before we have
             # a saved booking object to feed it, or we'll get an error
@@ -1810,7 +1845,11 @@ class BookingDetailView(LoggedViewMixin, DetailView):
                 user.userprofile.can_notify(self.object):
             context['can_notify'] = True
 
-        context['EmailTemplate'] = EmailTemplate
+        context['emailtemplates'] = [
+            (key, label)
+            for (key, label) in EmailTemplate.key_choices
+            if key in EmailTemplate.booking_manual_keys
+        ]
 
         context['thisurl'] = reverse('booking-view', args=[self.object.id])
 
