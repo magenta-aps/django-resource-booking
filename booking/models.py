@@ -413,6 +413,7 @@ class Resource(models.Model):
     objects = SearchManager(
         fields=(
             'title',
+            'teaser',
             'description',
             'mouseover_description',
             'extra_search_text'
@@ -470,6 +471,7 @@ class Resource(models.Model):
     def as_searchtext(self):
         return " ".join([unicode(x) for x in [
             self.title,
+            self.teaser,
             self.description,
             self.mouseover_description,
             self.extra_search_text
@@ -742,6 +744,7 @@ class Visit(Resource):
     objects = SearchManager(
         fields=(
             'title',
+            'teaser',
             'description',
             'mouseover_description',
             'extra_search_text'
@@ -1184,8 +1187,9 @@ class VisitOccurrence(models.Model):
         if self.visit:
             result.append(self.visit.as_searchtext())
 
-        if self.booking:
-            result.append(self.booking.as_searchtext())
+        if self.bookings:
+            for booking in self.bookings:
+                result.append(booking.as_searchtext())
 
         return " ".join(result)
 
@@ -1521,6 +1525,13 @@ class Booking(models.Model):
 
     def get_absolute_url(self):
         return reverse('booking-view', args=[self.pk])
+
+    def as_searchtext(self):
+        return " ".join([unicode(x) for x in [
+            self.booker.as_searchtext(),
+            self.notes
+        ] if x])
+
 
 Booking.add_occurence_attr('visit')
 Booking.add_occurence_attr('hosts')
