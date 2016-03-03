@@ -1525,13 +1525,19 @@ class Booking(models.Model):
     def get_url(self):
         return settings.PUBLIC_URL + self.get_absolute_url()
 
-    def autosend(self, template_key):
+    def autosend(self, template_key, recipients=None,
+                 only_these_recipients=False):
         if self.visit.autosend_enabled(template_key):
-            recipients = set()
-            if template_key in EmailTemplate.booking_recipient_contacts_keys:
-                recipients.update(self.visit.contact_persons.all())
-            if template_key in EmailTemplate.booking_recipient_booker_keys:
-                recipients.add(self.booker)
+            if recipients is None:
+                recipients = set()
+            else:
+                recipients = set(recipients)
+            if not only_these_recipients:
+                if template_key in \
+                        EmailTemplate.booking_recipient_contacts_keys:
+                    recipients.update(self.visit.contact_persons.all())
+                if template_key in EmailTemplate.booking_recipient_booker_keys:
+                    recipients.add(self.booker)
 
             KUEmailMessage.send_email(
                 template_key,
