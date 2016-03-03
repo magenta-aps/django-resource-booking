@@ -42,7 +42,7 @@
             <div class="well order-buttons hidden-print">
                 <!-- Display according to business logic -->
                 {% if can_book %}
-                <a class="btn btn-default" data-toggle="modal" data-target="#modalhost" href="{% url 'visit-book' object.id %}">
+                <a class="btn btn-default" data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'visit-book' object.id %}">
                     Tilmeld
                     <span class="glyphicon glyphicon-chevron-right"></span>
                 </a>

@@ -4,13 +4,15 @@ from django.core.urlresolvers import reverse
 from django.http import Http404
 from django.shortcuts import redirect
 from django.views.generic import UpdateView, FormView
-from booking.booking_workflows.forms import ChangeBookingStatusForm
-from booking.booking_workflows.forms import ChangeBookingTeachersForm
-from booking.booking_workflows.forms import ChangeBookingHostsForm
-from booking.booking_workflows.forms import ChangeBookingRoomsForm
-from booking.booking_workflows.forms import ChangeBookingCommentsForm
-from booking.booking_workflows.forms import BookingAddLogEntryForm
 from booking.models import Booking, EmailTemplate
+from booking.booking_workflows.forms import ChangeVisitOccurrenceStatusForm
+from booking.booking_workflows.forms import ChangeVisitOccurrenceTeachersForm
+from booking.booking_workflows.forms import ChangeVisitOccurrenceHostsForm
+from booking.booking_workflows.forms import ChangeVisitOccurrenceRoomsForm
+from booking.booking_workflows.forms import ChangeVisitOccurrenceCommentsForm
+from booking.booking_workflows.forms import VisitOccurrenceAddLogEntryForm
+from booking.booking_workflows.forms import ChangeVisitOccurrenceStartTimeForm
+from booking.models import VisitOccurrence
 from booking.models import LOGACTION_MANUAL_ENTRY
 from booking.models import log_action
 from booking.views import AutologgerMixin
@@ -27,13 +29,21 @@ class UpdateWithCancelView(UpdateView):
             )
 
 
-class ChangeBookingStatusView(AutologgerMixin, UpdateWithCancelView):
-    model = Booking
-    form_class = ChangeBookingStatusForm
+class ChangeVisitOccurrenceStartTimeView(AutologgerMixin,
+                                         UpdateWithCancelView):
+    model = VisitOccurrence
+    form_class = ChangeVisitOccurrenceStartTimeForm
+    template_name = "booking/workflow/change_starttime.html"
+
+
+class ChangeVisitOccurrenceStatusView(AutologgerMixin, UpdateWithCancelView):
+    model = VisitOccurrence
+    form_class = ChangeVisitOccurrenceStatusForm
     template_name = "booking/workflow/change_status.html"
 
     def form_valid(self, form):
-        response = super(ChangeBookingStatusView, self).form_valid(form)
+        response = super(ChangeVisitOccurrenceStatusView, self).\
+            form_valid(form)
         status = form.cleaned_data['workflow_status']
         if status == Booking.WORKFLOW_STATUS_PLANNED:
             # Booking is planned
@@ -44,69 +54,68 @@ class ChangeBookingStatusView(AutologgerMixin, UpdateWithCancelView):
         return response
 
 
-class ChangeBookingTeachersView(AutologgerMixin, UpdateWithCancelView):
-    model = Booking
-    form_class = ChangeBookingTeachersForm
+class ChangeVisitOccurrenceTeachersView(AutologgerMixin, UpdateWithCancelView):
+    model = VisitOccurrence
+    form_class = ChangeVisitOccurrenceTeachersForm
     template_name = "booking/workflow/change_teachers.html"
 
 
-class ChangeBookingHostsView(AutologgerMixin, UpdateWithCancelView):
-    model = Booking
-    form_class = ChangeBookingHostsForm
+class ChangeVisitOccurrenceHostsView(AutologgerMixin, UpdateWithCancelView):
+    model = VisitOccurrence
+    form_class = ChangeVisitOccurrenceHostsForm
     template_name = "booking/workflow/change_hosts.html"
 
 
-class ChangeBookingRoomsView(AutologgerMixin, UpdateWithCancelView):
-    model = Booking
-    form_class = ChangeBookingRoomsForm
+class ChangeVisitOccurrenceRoomsView(AutologgerMixin, UpdateWithCancelView):
+    model = VisitOccurrence
+    form_class = ChangeVisitOccurrenceRoomsForm
     template_name = "booking/workflow/change_rooms.html"
 
 
-class ChangeBookingCommentsView(AutologgerMixin, UpdateWithCancelView):
-    model = Booking
-    form_class = ChangeBookingCommentsForm
+class ChangeVisitOccurrenceCommentsView(AutologgerMixin, UpdateWithCancelView):
+    model = VisitOccurrence
+    form_class = ChangeVisitOccurrenceCommentsForm
     template_name = "booking/workflow/change_comments.html"
 
 
-class BookingAddLogEntryView(FormView):
-    model = Booking
-    form_class = BookingAddLogEntryForm
+class VisitOccurrenceAddLogEntryView(FormView):
+    model = VisitOccurrence
+    form_class = VisitOccurrenceAddLogEntryForm
     template_name = "booking/workflow/add_logentry.html"
-    booking = None
+    object = None
 
     def dispatch(self, request, *args, **kwargs):
         try:
-            self.booking = self.model.objects.get(pk=kwargs['pk'])
+            self.object = self.model.objects.get(pk=kwargs['pk'])
         except:
-            raise Http404("Booking not found")
+            raise Http404("VisitOccurrence not found")
 
-        return super(BookingAddLogEntryView, self).dispatch(
+        return super(VisitOccurrenceAddLogEntryView, self).dispatch(
             request, *args, **kwargs
         )
 
     def post(self, request, *args, **kwargs):
         if "cancel" in request.POST:
-            self.object = self.get_object()
             return redirect(self.get_success_url())
         else:
-            return super(BookingAddLogEntryView, self).post(
+            return super(VisitOccurrenceAddLogEntryView, self).post(
                 request, *args, **kwargs
             )
 
     def get_context_data(self, **kwargs):
-        return super(BookingAddLogEntryView, self).get_context_data(
-            booking=self.booking,
+        return super(VisitOccurrenceAddLogEntryView, self).get_context_data(
+            object=self.object,
             **kwargs
         )
 
     def form_valid(self, form):
         log_action(
             self.request.user,
-            self.booking,
+            self.object,
             LOGACTION_MANUAL_ENTRY,
             form.cleaned_data['new_comment']
         )
-        return super(BookingAddLogEntryView, self).form_valid(form)
+        return super(VisitOccurrenceAddLogEntryView, self).form_valid(form)
 
     def get_success_url(self):
-        return reverse('booking-view', args=[self.booking.pk])
+        return reverse('visit-occ-view', args=[self.object.pk])
