@@ -12,6 +12,7 @@ from booking.booking_workflows.forms import ChangeVisitOccurrenceCommentsForm
 from booking.booking_workflows.forms import VisitOccurrenceAddLogEntryForm
 from booking.booking_workflows.forms import ChangeVisitOccurrenceStartTimeForm
 from booking.models import VisitOccurrence
+from booking.models import EmailTemplate
 from booking.models import LOGACTION_MANUAL_ENTRY
 from booking.models import log_action
 from booking.views import AutologgerMixin
@@ -39,6 +40,19 @@ class ChangeVisitOccurrenceStatusView(AutologgerMixin, UpdateWithCancelView):
     model = VisitOccurrence
     form_class = ChangeVisitOccurrenceStatusForm
     template_name = "booking/workflow/change_status.html"
+
+    def form_valid(self, form):
+        response = super(ChangeVisitOccurrenceStatusView, self).form_valid(
+            form
+        )
+        status = form.cleaned_data['workflow_status']
+        if status == VisitOccurrence.WORKFLOW_STATUS_PLANNED:
+            # Booking is planned
+            self.object.autosend(EmailTemplate.NOTIFY_ALL__BOOKING_COMPLETE)
+        if status == VisitOccurrence.WORKFLOW_STATUS_CANCELLED:
+            # Booking is cancelled
+            self.object.autosend(EmailTemplate.NOTIFY_ALL__BOOKING_CANCELED)
+        return response
 
 
 class ChangeVisitOccurrenceTeachersView(AutologgerMixin, UpdateWithCancelView):

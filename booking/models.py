@@ -12,7 +12,7 @@ from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext_lazy as _
-from django.template.base import Template, VariableNode
+from django.template.base import Template
 
 from recurrence.fields import RecurrenceField
 from booking.utils import ClassProperty, full_email
@@ -121,6 +121,11 @@ class Unit(models.Model):
         Person, null=True, blank=True,
         verbose_name=_(u'Kontaktperson'),
         related_name="contactperson_for_units"
+    )
+    url = models.URLField(
+        verbose_name=u'Hjemmeside',
+        null=True,
+        blank=True
     )
 
     def belongs_to(self, unit):
@@ -299,6 +304,151 @@ class Locality(models.Model):
 
     def __unicode__(self):
         return self.name
+
+
+class EmailTemplate(models.Model):
+
+    NOTIFY_GUEST__BOOKING_CREATED = 1  # ticket 13806
+    NOTIFY_HOST__BOOKING_CREATED = 2  # ticket 13807
+    NOTIFY_HOST__REQ_TEACHER_VOLUNTEER = 3  # ticket 13808
+    NOTIFY_HOST__REQ_HOST_VOLUNTEER = 4  # ticket 13809
+    NOTIFY_HOST__ASSOCIATED = 5  # ticket 13810
+    NOTIFY_HOST__REQ_ROOM = 6  # ticket 13811
+    NOTIFY_GUEST__GENERAL_MSG = 7  # ticket 13812
+    NOTIFY_ALL__BOOKING_COMPLETE = 8  # ticket 13813
+    NOTIFY_ALL__BOOKING_CANCELED = 9  # ticket 13814
+    NOTITY_ALL__BOOKING_REMINDER = 10  # ticket 13815
+
+    # Choice labels
+    key_choices = [
+        (NOTIFY_GUEST__BOOKING_CREATED, _(u'Gæst: Booking oprettet')),
+        (NOTIFY_GUEST__GENERAL_MSG, _(u'Gæst: Generel besked')),
+        (NOTIFY_HOST__BOOKING_CREATED, _(u'Vært: Booking oprettet')),
+        (NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
+         _(u'Vært: Frivillige undervisere')),
+        (NOTIFY_HOST__REQ_HOST_VOLUNTEER, _(u'Vært: Frivillige værter')),
+        (NOTIFY_HOST__ASSOCIATED, _(u'Vært: Tilknyttet besøg')),
+        (NOTIFY_HOST__REQ_ROOM, _(u'Vært: Forespørg lokale')),
+        (NOTIFY_ALL__BOOKING_COMPLETE, _(u'Alle: Booking færdigplanlagt')),
+        (NOTIFY_ALL__BOOKING_CANCELED, _(u'Alle: Booking aflyst')),
+        (NOTITY_ALL__BOOKING_REMINDER, _(u'Alle: Reminder om booking')),
+    ]
+
+    # Templates available for manual sending from visits
+    visit_manual_keys = []
+
+    # Templates available for manual sending from bookings
+    booking_manual_keys = [
+        NOTIFY_GUEST__BOOKING_CREATED,
+        NOTIFY_GUEST__GENERAL_MSG,
+        NOTIFY_HOST__BOOKING_CREATED,
+        NOTIFY_HOST__ASSOCIATED,
+        NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
+        NOTIFY_HOST__REQ_HOST_VOLUNTEER,
+        NOTIFY_ALL__BOOKING_COMPLETE,
+        NOTIFY_ALL__BOOKING_CANCELED,
+        NOTITY_ALL__BOOKING_REMINDER
+    ]
+
+    # Templates available for autosending (config in visits)
+    visit_autosend_keys = [
+        NOTIFY_GUEST__BOOKING_CREATED,
+        NOTIFY_HOST__BOOKING_CREATED,
+        NOTIFY_HOST__ASSOCIATED,
+        NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
+        NOTIFY_HOST__REQ_HOST_VOLUNTEER,
+        NOTIFY_ALL__BOOKING_COMPLETE,
+        NOTIFY_ALL__BOOKING_CANCELED,
+        NOTITY_ALL__BOOKING_REMINDER
+    ]
+
+    # Templates that will be autosent to visit.contact_persons
+    booking_recipient_contacts_keys = [
+        NOTIFY_HOST__BOOKING_CREATED,
+        NOTIFY_HOST__ASSOCIATED,
+        NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
+        NOTIFY_HOST__REQ_HOST_VOLUNTEER,
+        NOTIFY_ALL__BOOKING_COMPLETE,
+        NOTIFY_ALL__BOOKING_CANCELED,
+        NOTITY_ALL__BOOKING_REMINDER
+    ]
+    # Templates that will be autosent to booker
+    booking_recipient_booker_keys = [
+        NOTIFY_GUEST__BOOKING_CREATED,
+        NOTIFY_GUEST__GENERAL_MSG,
+        NOTIFY_ALL__BOOKING_COMPLETE,
+        NOTIFY_ALL__BOOKING_CANCELED,
+        NOTITY_ALL__BOOKING_REMINDER
+    ]
+
+    key = models.IntegerField(
+        verbose_name=u'Key',
+        choices=key_choices,
+        default=1
+    )
+
+    subject = models.CharField(
+        max_length=77,
+        verbose_name=u'Emne'
+    )
+
+    body = models.CharField(
+        max_length=65584,
+        verbose_name=u'Tekst'
+    )
+
+    unit = models.ForeignKey(
+        Unit,
+        verbose_name=u'Enhed',
+        null=True,
+        blank=True
+    )
+
+    def expand_subject(self, context, keep_placeholders=False):
+        return self._expand(self.subject, context, keep_placeholders)
+
+    def expand_body(self, context, keep_placeholders=False, encapsulate=False):
+        body = self._expand(self.body, context, keep_placeholders)
+        if encapsulate \
+                and not body.startswith(("<html", "<HTML", "<!DOCTYPE")):
+            body = "<!DOCTYPE html><html><head></head>" \
+                   "<body>%s</body>" \
+                   "</html>" % body
+        return body
+
+    @staticmethod
+    def _expand(text, context, keep_placeholders=False):
+        template = Template(unicode(text))
+        if keep_placeholders:
+            template.engine.string_if_invalid = "{{ %s }}"
+        if isinstance(context, dict):
+            context = make_context(context)
+        return template.render(context)
+
+    @staticmethod
+    def get_template(template_key, unit, include_overridden=False):
+        templates = []
+        while unit is not None and (include_overridden or len(templates) == 0):
+            try:
+                templates.append(EmailTemplate.objects.filter(
+                    key=template_key,
+                    unit=unit
+                ).all()[0])
+            except:
+                pass
+            unit = unit.parent
+        if include_overridden or len(templates) == 0:
+            try:
+                templates.append(
+                    EmailTemplate.objects.filter(key=template_key,
+                                                 unit__isnull=True)[0]
+                )
+            except:
+                pass
+        if include_overridden:
+            return templates
+        else:
+            return templates[0] if len(templates) > 0 else None
 
 
 # Bookable resources
@@ -1010,6 +1160,10 @@ class Visit(Resource):
         )
         return occ
 
+    def autosend_enabled(self, template_key):
+        return self.visitautosend_set.\
+            filter(template_key=template_key).count() > 0
+
 
 class VisitOccurrence(models.Model):
 
@@ -1341,6 +1495,15 @@ VisitOccurrence.add_override_property('duration')
 VisitOccurrence.add_override_property('locality')
 
 
+class VisitAutosend(models.Model):
+    visit = models.ForeignKey(
+        Visit, verbose_name=_(u'Besøg'), blank=False
+    )
+    template_key = models.IntegerField(
+        choices=EmailTemplate.key_choices
+    )
+
+
 class Room(models.Model):
 
     class Meta:
@@ -1381,7 +1544,15 @@ class Region(models.Model):
         verbose_name_plural = _(u'regioner')
 
     name = models.CharField(
-        max_length=16
+        max_length=16,
+        verbose_name=_(u'Navn')
+    )
+
+    # Not pretty, but it gets the job done for now
+    name_en = models.CharField(
+        max_length=16,
+        null=True,
+        verbose_name=_(u'Engelsk navn')
     )
 
     def __unicode__(self):
@@ -1710,6 +1881,25 @@ class Booking(models.Model):
     def get_url(self):
         return settings.PUBLIC_URL + self.get_absolute_url()
 
+    def autosend(self, template_key):
+        if self.visit.autosend_enabled(template_key):
+            recipients = set()
+            if template_key in EmailTemplate.booking_recipient_contacts_keys:
+                recipients.update(self.visit.contact_persons.all())
+            if template_key in EmailTemplate.booking_recipient_booker_keys:
+                recipients.add(self.booker)
+
+            KUEmailMessage.send_email(
+                template_key,
+                {
+                    'booking': self,
+                    'visit': self.visit,
+                    'booker': self.booker
+                },
+                list(recipients),
+                self.visit.unit
+            )
+
 Booking.add_occurrence_attr('visit')
 Booking.add_occurrence_attr('hosts')
 Booking.add_occurrence_attr('teachers')
@@ -1860,133 +2050,3 @@ class KUEmailMessage(models.Model):
             )
             message.send()
             KUEmailMessage.save_email(message)
-
-
-class EmailTemplate(models.Model):
-
-    NOTIFY_GUEST__BOOKING_CREATED = 1  # ticket 13806
-    NOTIFY_HOST__BOOKING_CREATED = 2  # ticket 13807
-    NOTIFY_HOST__REQ_TEACHER_VOLUNTEER = 3  # ticket 13808
-    NOTIFY_HOST__REQ_HOST_VOLUNTEER = 4  # ticket 13809
-    NOTIFY_HOST__ASSOCIATED = 5  # ticket 13810
-    NOTIFY_HOST__REQ_ROOM = 6  # ticket 13811
-    NOTIFY_GUEST__GENERAL_MSG = 7  # ticket 13812
-    NOTIFY_HOST__BOOKING_COMPLETE = 8  # ticket 13813
-    NOTIFY_ALL__BOOKING_CANCELED = 9  # ticket 13814
-    NOTITY_ALL__BOOKING_REMINDER = 10  # ticket 13815
-
-    SYSTEM__BASICMAIL_ENVELOPE = 11
-
-    key_choices = [
-        (NOTIFY_GUEST__BOOKING_CREATED, _(u'Gæst: Booking oprettet')),
-        (NOTIFY_GUEST__GENERAL_MSG, _(u'Gæst: Generel besked')),
-        (NOTIFY_HOST__BOOKING_CREATED, _(u'Vært: Booking oprettet')),
-        (NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
-         _(u'Vært: Frivillige undervisere')),
-        (NOTIFY_HOST__REQ_HOST_VOLUNTEER, _(u'Vært: Frivillige værter')),
-        (NOTIFY_HOST__ASSOCIATED, _(u'Vært: Tilknyttet besøg')),
-        (NOTIFY_HOST__REQ_ROOM, _(u'Vært: Forespørg lokale')),
-        (NOTIFY_HOST__BOOKING_COMPLETE, _(u'Vært: Booking færdigplanlagt')),
-        (NOTIFY_ALL__BOOKING_CANCELED, _(u'Alle: Booking aflyst')),
-        (NOTITY_ALL__BOOKING_REMINDER, _(u'Alle: Reminder om booking')),
-        (SYSTEM__BASICMAIL_ENVELOPE, _(u'System: Indpakning af brugerbesked')),
-    ]
-    visit_key_choices = [  # Templates pertaining to visits
-        (key, label)
-        for (key, label) in key_choices
-        if key in []
-    ]
-    booking_key_choices = [  # Templates pertaining to bookings
-        (key, label)
-        for (key, label) in key_choices
-        if key in [NOTIFY_GUEST__BOOKING_CREATED,
-                   NOTIFY_GUEST__GENERAL_MSG,
-                   NOTIFY_HOST__BOOKING_CREATED,
-                   NOTIFY_HOST__ASSOCIATED,
-                   NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
-                   NOTIFY_HOST__REQ_HOST_VOLUNTEER,
-                   NOTIFY_HOST__BOOKING_COMPLETE,
-                   NOTIFY_ALL__BOOKING_CANCELED,
-                   NOTITY_ALL__BOOKING_REMINDER
-                   ]
-    ]
-
-    key = models.IntegerField(
-        verbose_name=u'Key',
-        choices=key_choices,
-        default=1
-    )
-
-    subject = models.CharField(
-        max_length=77,
-        verbose_name=u'Emne'
-    )
-
-    body = models.CharField(
-        max_length=65584,
-        verbose_name=u'Tekst'
-    )
-
-    unit = models.ForeignKey(
-        Unit,
-        verbose_name=u'Enhed',
-        null=True,
-        blank=True
-    )
-
-    def expand_subject(self, context, keep_placeholders=False):
-        return self._expand(self.subject, context, keep_placeholders)
-
-    def expand_body(self, context, keep_placeholders=False, encapsulate=False):
-        body = self._expand(self.body, context, keep_placeholders)
-        if encapsulate \
-                and not body.startswith(("<html", "<HTML", "<!DOCTYPE")):
-            body = "<!DOCTYPE html><html><head></head>" \
-                   "<body>%s</body>" \
-                   "</html>" % body
-        return body
-
-    def get_template_variables(self):
-        variables = []
-        for item in [self.subject, self.body]:
-            text = item.replace("%20", " ")
-            template = Template(unicode(text))
-            for node in template:
-                if isinstance(node, VariableNode):
-                    variables.append(unicode(node.filter_expression))
-        return variables
-
-    @staticmethod
-    def _expand(text, context, keep_placeholders=False):
-        text = text.replace("%20", " ")
-        template = Template(unicode(text))
-        if keep_placeholders:
-            template.engine.string_if_invalid = "{{ %s }}"
-        if isinstance(context, dict):
-            context = make_context(context)
-        return template.render(context)
-
-    @staticmethod
-    def get_template(template_key, unit, include_overridden=False):
-        templates = []
-        while unit is not None and (include_overridden or len(templates) == 0):
-            try:
-                templates.append(EmailTemplate.objects.filter(
-                    key=template_key,
-                    unit=unit
-                ).all()[0])
-            except:
-                pass
-            unit = unit.parent
-        if include_overridden or len(templates) == 0:
-            try:
-                templates.append(
-                    EmailTemplate.objects.filter(key=template_key,
-                                                 unit__isnull=True)[0]
-                )
-            except:
-                pass
-        if include_overridden:
-            return templates
-        else:
-            return templates[0] if len(templates) > 0 else None

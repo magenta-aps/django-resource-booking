@@ -1,5 +1,5 @@
 {% load i18n %}
 <fieldset>
     <button class="btn btn-primary" type="submit">{% trans "Send" %}</button>
-    <a class="btn btn-default" href="{% if oncancel %}{{ oncancel }}{% else %}javascript:history.back(){% endif %}">{% trans "Annullér" %}</a>
+    <a class="btn btn-default cancelbutton" href="{% if oncancel %}{{ oncancel }}{% else %}javascript:history.back(){% endif %}">{% trans "Annullér" %}</a>
 </fieldset>

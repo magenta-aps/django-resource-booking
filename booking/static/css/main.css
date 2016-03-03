@@ -67,6 +67,10 @@ h5 {
     font-size: 14px;
 }
 
+a {
+    cursor: pointer;
+}
+
 a:not(.btn),
 a:not(.btn):hover,
 a:not(.btn):active {
@@ -748,6 +752,11 @@ a.template-overridden:visited {
 
 table.sortable th.sort {
     cursor: pointer
+}
+
+body.lightbox {
+    margin-left: 10px;
+    overflow: hidden;
 }
 
 @media screen and (max-width:768px) {

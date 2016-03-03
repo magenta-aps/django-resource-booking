@@ -31,16 +31,23 @@
                         <span class="caret"/>
                     </button>
                     <ul class="dropdown-menu" aria-labelledby="sendNotification">
-                        <li><a href="{% url 'visit-notify' object.pk %}">{% trans 'Ingen skabelon' %}</a></li>
-                        {% if EmailTemplate.key_choices %}
+                        <li><a data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'booking-notify' object.pk %}">{% trans 'Ingen skabelon' %}</a></li>
+                        {% if emailtemplates %}
                             <li role="separator" class="divider"></li>
-                            {% for id, label in EmailTemplate.booking_key_choices %}
-                                <li><a href="{% url 'booking-notify' object.pk %}?template={{ id }}&back={{ thisurl | urlencode }}">{{ label }}</a></li>
+                            {% for id, label in emailtemplates %}
+                                <li>
+                                    {% if modal %}
+                                        <a data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'booking-notify' object.pk %}?template={{ id }}">{{ label }}</a>
+                                    {% else %}
+                                        <a href="{% url 'booking-notify' object.pk %}?template={{ id }}&back={{ thisurl | urlencode }}">{{ label }}</a>
+                                    {% endif %}
+                                </li>
                             {% endfor %}
                         {% endif %}
                     </ul>
                 </div>
             {% endif %}
+
 
             <h2>Information om bookingen</h2>
 
@@ -102,6 +109,7 @@
             </dl>
 
             <div class="divider"></div>
+
 
             <h2>Statusoverblik</h2>
 
@@ -222,15 +230,23 @@
 
                             {% if object.visit.locality %}
                                 <dt>{% trans 'Hvor:' %}</dt>
-                                <dd><strong>{{ object.visit.unit.name }}</strong><br> {{ object.visit.locality.name }}, {{ object.visit.locality.address_line }}, {{ object.visit.locality.zip_city }}</dd>
-                            {% endif %}
-
-                            {% if object.visit.unit.contact %}
-                                <dt>{% trans 'Arrangør:' %}</dt>
                                 <dd>
-                                    {{ object.visit.unit.contact.name }}
+                                    {{ object.visit.locality.name }},<br/>
+                                    {{ object.visit.locality.address_line }},<br/>
+                                    {{ object.visit.locality.zip_city }}
                                 </dd>
                             {% endif %}
+
+                            <dt>{% trans 'Arrangør:' %}</dt>
+                            <dd>
+                                {% if object.visit.unit.url %}
+                                    <a href="{{ object.visit.unit.url }}" target="_blank">
+                                {% endif %}
+                                <strong>{{ object.visit.unit.name }}</strong>
+                                {% if object.visit.unit.url %}
+                                    </a> <span class="glyphicon glyphicon-new-window"></span>
+                                {% endif %}
+                            </dd>
 
                             <dt>{% trans 'Hvornår:' %}</dt>
                             <dd>
@@ -264,9 +280,11 @@
     </div>
 
     {% include 'common/modal_contact.html' %}
+    {% include 'common/modal_framehost.html' %}
 
 {% endblock %}
 
 {% block extra_scripts %}
     <script src="/static/js/custom.js"></script>
+    <script src="{% static "js/modalframe-host.js" %}"></script>
 {% endblock %}
