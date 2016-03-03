@@ -722,6 +722,7 @@ div ul.errorlist {
     font-weight: normal;
 }
 
+
 .email-recipients ul {
     max-height: 120px;
     overflow-y: auto;
@@ -738,6 +739,29 @@ a.template-overridden:visited {
 #recipient-groups input {
     width: auto;
     display: inline;
+}
+
+/* Datepicker */
+#time-select-btn {
+    position: relative;
+}
+#time-select {
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 0;
+    background-color: inherit;
+    border: none;
+}
+#adv-time-select {
+    display: none;
+    padding: 10px 0;
+}
+#adv-time-select-toggle {
+    
 }
 
 /*Backend specific styles end */
