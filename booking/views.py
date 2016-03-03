@@ -1601,6 +1601,7 @@ class BookingView(AutologgerMixin, UpdateView):
         for (name, form) in forms.items():
             if not form.is_valid():
                 valid = False
+                print form.errors
 
         if valid:
             if 'bookingform' in forms:
@@ -1651,6 +1652,7 @@ class BookingView(AutologgerMixin, UpdateView):
 
             return redirect("/visit/%d/book/success" % self.visit.id)
         else:
+            print "there was an error"
             forms['subjectform'] = BookingSubjectLevelForm(request.POST)
 
         data.update(forms)
@@ -1876,17 +1878,6 @@ class VisitOccurrenceDetailView(LoggedViewMixin, DetailView):
         return super(VisitOccurrenceDetailView, self).get_context_data(
             **context
         )
-
-
-# Late import to avoid mutual import conflicts
-import booking_workflows.views as booking_views
-
-ChangeBookingStatusView = booking_views.ChangeBookingStatusView
-ChangeBookingTeachersView = booking_views.ChangeBookingTeachersView
-ChangeBookingHostsView = booking_views.ChangeBookingHostsView
-ChangeBookingRoomsView = booking_views.ChangeBookingRoomsView
-ChangeBookingCommentsView = booking_views.ChangeBookingCommentsView
-BookingAddLogEntryView = booking_views.BookingAddLogEntryView
 
 
 class EmailTemplateListView(ListView):

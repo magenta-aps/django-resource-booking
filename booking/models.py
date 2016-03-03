@@ -1701,6 +1701,7 @@ class Booking(models.Model):
     visitoccurrence = models.ForeignKey(
         VisitOccurrence,
         null=True,
+        blank=True,
         related_name='bookings'
     )
 
@@ -1726,7 +1727,7 @@ class Booking(models.Model):
     # an exception on assignment.
     def add_occurrence_attr(cls, attrname):
         setattr(cls, attrname, property(
-            lambda self: self.get_occurtence_attr(attrname),
+            lambda self: self.get_occurrence_attr(attrname),
             lambda self, val: self.raise_readonly_attr_error(attrname)
         ))
 
