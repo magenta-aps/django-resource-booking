@@ -13,7 +13,6 @@ from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext_lazy as _
 from django.template.base import Template
-from profile.models import UserProfile
 
 from recurrence.fields import RecurrenceField
 from booking.utils import ClassProperty, full_email
@@ -148,7 +147,6 @@ class Unit(models.Model):
             return self.userprofile_set.filter(user_role__role=role).all()
         else:
             return self.userprofile_set.all()
-
 
 
 # Master data related to bookable resources start here
