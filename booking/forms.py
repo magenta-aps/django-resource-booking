@@ -1,7 +1,7 @@
 from booking.models import StudyMaterial
 from booking.models import UnitType
 from booking.models import Unit
-from booking.models import Resource, OtherResource, Visit, VisitOccurrence
+from booking.models import Resource, OtherResource, Visit
 from booking.models import Booker, Region, PostCode, School
 from booking.models import ClassBooking, TeacherBooking, BookingSubjectLevel
 from booking.models import EmailTemplate
@@ -11,6 +11,7 @@ from django.forms import CheckboxSelectMultiple, EmailInput, RadioSelect, \
 from django.forms import inlineformset_factory
 from django.forms import TextInput, NumberInput, URLInput, Textarea, Select
 from django.forms import HiddenInput
+from django.utils import formats
 from django.utils.translation import ugettext_lazy as _
 from tinymce.widgets import TinyMCE
 from .fields import ExtensibleMultipleChoiceField
@@ -84,7 +85,7 @@ class VisitForm(forms.ModelForm):
                   'type', 'tags', 'preparation_time', 'comment',
                   'institution_level', 'topics', 'audience',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
-                  'recurrences', 'duration', 'locality', 'rooms_assignment',
+                  'duration', 'locality', 'rooms_assignment',
                   'rooms_needed', 'tour_available',
                   'enabled', 'contact_persons', 'unit')
         widgets = {
@@ -180,16 +181,14 @@ class VisitAutosendForm(forms.Form):
 
     autosend = forms.MultipleChoiceField(
         widget=CheckboxSelectMultiple,
-        choices=EmailTemplate.key_choices
+        choices=[
+            (key, label) for (key, label) in EmailTemplate.key_choices
+            if key in EmailTemplate.visit_autosend_keys
+        ]
     )
 
-    def __init__(self, visit=None, *args, **kwargs):
-        super(VisitAutosendForm, self).__init__(*args, **kwargs)
-        if visit is not None:
-            self.initial['autosend'] = [
-                autosend.template_key
-                for autosend in visit.visitautosend_set.all()
-            ]
+    def __init__(self, data=None, *args, **kwargs):
+        super(VisitAutosendForm, self).__init__(data, *args, **kwargs)
 
 
 class BookingForm(forms.ModelForm):
@@ -203,7 +202,7 @@ class BookerForm(BookingForm):
     class Meta:
         model = Booker
         fields = ('firstname', 'lastname', 'email', 'phone', 'line',
-                  'level', 'attendee_count', 'notes')
+                  'level', 'attendee_count')
         widgets = {
             'firstname': TextInput(
                 attrs={'class': 'form-control input-sm',
@@ -231,10 +230,6 @@ class BookerForm(BookingForm):
             'attendee_count': NumberInput(
                 attrs={'class': 'form-control input-sm', 'min': 0}
             ),
-            'notes': Textarea(
-                attrs={'class': 'form-control input-sm'}
-            ),
-
         }
 
     repeatemail = forms.CharField(
@@ -334,36 +329,38 @@ class ClassBookingForm(BookingForm):
 
     class Meta:
         model = ClassBooking
-        fields = ('tour_desired',)
+        fields = ('tour_desired', 'visitoccurrence', 'notes')
+        labels = {
+            'visitoccurrence': _(u"Tidspunkt")
+        }
 
-    time = forms.ModelChoiceField(
-        queryset=VisitOccurrence.objects.all(),
-        widget=Select(
-            attrs={'class': 'selectpicker form-control'}
-        ),
-        required=False
-    )
     desired_time = forms.CharField(
         widget=Textarea(attrs={'class': 'form-control input-sm'}),
         required=False
     )
 
     scheduled = False
+    visit = None
 
     def __init__(self, data=None, visit=None, *args, **kwargs):
         super(ClassBookingForm, self).__init__(data, *args, **kwargs)
 
+        self.visit = visit
+
         # self.scheduled = visit is not None and \
         #    visit.type == Resource.FIXED_SCHEDULE_GROUP_VISIT
-        self.scheduled = visit is not None
+        self.scheduled = (
+            visit is not None and
+            len(visit.bookable_occurrences) > 0
+        )
 
         if self.scheduled:
-            time_choices = [
-                (x.id, x.start_datetime.strftime("%d-%m-%Y %H:%M"))
-                for x in visit.visitoccurrence_set.all()
-                ]
-            self.fields['time'].choices = time_choices
-            self.fields['time'].required = True
+            self.fields['visitoccurrence'].choices = (
+                (x.pk, formats.date_format(
+                    x.start_datetime, "DATETIME_FORMAT"
+                )) for x in visit.bookable_occurrences
+            )
+            self.fields['visitoccurrence'].required = True
         else:
             self.fields['desired_time'].required = True
 
@@ -373,13 +370,7 @@ class ClassBookingForm(BookingForm):
     def save(self, commit=True, *args, **kwargs):
         booking = super(ClassBookingForm, self).save(commit=False)
         data = self.cleaned_data
-        if self.scheduled:
-            occurrence_id = data.get("time").id
-            try:
-                occurrence = VisitOccurrence.objects.get(id=occurrence_id)
-                booking.time_id = occurrence.id
-            except:
-                pass
+
         if 'tour_desired' not in data:
             data['tour_desired'] = False
             booking.tour_desired = False
