@@ -367,7 +367,6 @@ class EmailTemplate(models.Model):
     booking_recipient_contacts_keys = [
         NOTIFY_HOST__BOOKING_CREATED,
         NOTIFY_HOST__ASSOCIATED,
-        NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
         NOTIFY_ALL__BOOKING_COMPLETE,
         NOTIFY_ALL__BOOKING_CANCELED,
         NOTITY_ALL__BOOKING_REMINDER
@@ -383,6 +382,10 @@ class EmailTemplate(models.Model):
     # Templates that will be autosent to hosts in the unit
     booking_recipient_hosts_keys = [
         NOTIFY_HOST__REQ_HOST_VOLUNTEER
+    ]
+    # Templates that will be autosent to teachers in the unit
+    booking_recipient_teachers_keys = [
+        NOTIFY_HOST__REQ_TEACHER_VOLUNTEER
     ]
 
     key = models.IntegerField(
@@ -1767,12 +1770,20 @@ class Booking(models.Model):
                 if template_key in \
                         EmailTemplate.booking_recipient_contacts_keys:
                     recipients.update(self.visit.contact_persons.all())
+
                 if template_key in EmailTemplate.booking_recipient_booker_keys:
                     recipients.add(self.booker)
+
                 if template_key in EmailTemplate.booking_recipient_hosts_keys:
                     from profile import HOST
                     unit = self.visitoccurrence.visit.unit
                     recipients.update(unit.get_users(HOST))
+
+                if template_key in \
+                        EmailTemplate.booking_recipient_teachers_keys:
+                    from profile import TEACHER
+                    unit = self.visitoccurrence.visit.unit
+                    recipients.update(unit.get_users(TEACHER))
 
             KUEmailMessage.send_email(
                 template_key,
