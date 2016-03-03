@@ -454,6 +454,10 @@ class SearchView(ListView):
 
             qs = self.model.objects.search(searchexpression)
 
+            qs = qs.annotate(
+                num_bookings=Count('visit__visitoccurrence__bookings')
+            )
+
             date_cond = None
 
             # Filter on from-time if one is specified or from current time
@@ -465,8 +469,8 @@ class SearchView(ListView):
 
             # Search for either resources without dates specified or
             # resources that have times available in the future
-            date_cond = Q(
-                Q(visit__visitoccurrence__start_datetime__isnull=True) |
+            date_cond = (
+                Q(visit__visitoccurrence__bookable=True) &
                 Q(visit__visitoccurrence__start_datetime__gt=t_from)
             )
 
@@ -475,18 +479,18 @@ class SearchView(ListView):
             t_to = self.get_date_from_request("to")
             if t_to:
                 date_cond = date_cond & Q(
-                    Q(
-                        Q(visit__visitoccurrence__end_datetime2__isnull=True) &
-                        Q(visit__visitoccurrence__end_datetime1__lte=t_to)
-                    ) |
-                    Q(
-                        visit__visitoccurrence__end_datetime2__lte=t_to
-                    )
+                    Q(visit__visitoccurrence__start_datetime__lte=t_from)
                 )
             self.to_datetime = t_to
 
-            # Only do date matching on resources that are actual visits
-            qs = qs.filter(Q(visit__isnull=True) | date_cond)
+            qs = qs.filter(
+                # Stuff that is not bookable
+                Q(visit__isnull=True) |
+                # Anything without any specific booking times
+                Q(visit__visitoccurrence__isnull=True) |
+                # Bookable occurences that matches the date conditions
+                date_cond
+            )
 
             qs = qs.distinct()
 
@@ -552,10 +556,10 @@ class SearchView(ListView):
                     b = [int(x) for x in self.request.GET.getlist("b")]
                     if SearchView.HAS_BOOKINGS in b:
                         if SearchView.HAS_NO_BOOKINGS not in b:
-                            self.filters["visit__booking__isnull"] = False
+                            self.filters["num_bookings__gt"] = 0
                     elif SearchView.HAS_NO_BOOKINGS in b:
                         if SearchView.HAS_BOOKINGS not in b:
-                            self.filters["visit__booking__isnull"] = True
+                            self.filters["num_bookings"] = 0
                 except Exception as e:
                     print e
 
@@ -640,16 +644,18 @@ class SearchView(ListView):
         # Remove filter for the field we want to facetize
         new_filters = {}
         new_filters.update(self.get_filters())
-        if "visit__booking__isnull" in new_filters:
-            del new_filters["visit__booking__isnull"]
+        if "num_bookings" in new_filters:
+            del new_filters["num_bookings"]
+        if "num_bookings__gt" in new_filters:
+            del new_filters["num_bookings__gt"]
 
         qs = self.get_base_queryset().filter(**new_filters).distinct()
 
-        has_bookings = len(qs.filter(visit__booking__isnull=False))
+        has_bookings = len(qs.exclude(num_bookings=0))
         if has_bookings > 0:
             hits[SearchView.HAS_BOOKINGS] = has_bookings
 
-        has_no_bookings = len(qs.filter(visit__booking__isnull=True))
+        has_no_bookings = len(qs.filter(num_bookings=0))
         if has_no_bookings > 0:
             hits[SearchView.HAS_NO_BOOKINGS] = has_no_bookings
 
