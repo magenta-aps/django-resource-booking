@@ -961,7 +961,14 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         form = self.get_form()
         fileformset = VisitStudyMaterialForm(None, instance=self.object)
 
-        autosendform = VisitAutosendForm(None, instance=self.object)
+        autosendform = VisitAutosendForm(
+                {
+                    'autosend': [
+                        autosend.template_key
+                        for autosend in self.object.visitautosend_set.all()
+                    ]
+                }
+        )
 
         return self.render_to_response(
             self.get_context_data(form=form, fileformset=fileformset,
@@ -1016,12 +1023,11 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         self.set_object(pk, request, is_cloning)
         form = self.get_form()
         fileformset = VisitStudyMaterialForm(request.POST)
-        autosendform = VisitAutosendForm(request.POST, instance=self.object)
+        autosendform = VisitAutosendForm(request.POST)
 
         if form.is_valid():
             visit = form.save()
 
-            # autosendform = VisitAutosendForm(request.POST, instance=visit)
             if autosendform.is_valid():
                 # Update autosend
                 new_autosend_keys = autosendform.cleaned_data['autosend']
