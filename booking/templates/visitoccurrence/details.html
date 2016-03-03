@@ -61,7 +61,7 @@
                         Ikke angivet
                     {% endif %}
                     {% if object.can_assign_resources %}
-                    <a href="#" role="button" class="btn btn-primary btn-xs">Redigér</a>
+                    <a href="{% url 'change-visit-occ-starttime' object.pk %}" role="button" class="btn btn-primary btn-xs">Redigér</a>
                     {% endif %}
                 </dd>
                 <dt>Undervisere</dt>

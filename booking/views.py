@@ -847,7 +847,7 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
             # update occurrences
             existing_visit_occurrences = \
                 set([x.start_datetime
-                     for x in visit.visitoccurrence_set.all()])
+                     for x in visit.bookable_occurrences])
 
             # convert date strings to datetimes
             dates = request.POST.get(u'occurrences').split(',')
@@ -866,26 +866,13 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
                 if date_t in existing_visit_occurrences:
                     existing_visit_occurrences.remove(date_t)
                 else:
-                    duration = request.POST[u'duration']
-                    hours = int(duration[0:2])
-                    minutes = int(duration[3:5])
-                    end_datetime = date_t
-                    if duration is not None:
-                        end_datetime = date_t + timedelta(
-                            hours=hours,
-                            minutes=minutes
-                        )
-                    instance = VisitOccurrence(
-                        start_datetime=date_t,
-                        end_datetime1=end_datetime,
-                        visit=visit
-                    )
+                    instance = visit.make_occurrence(date_t, True)
                     instance.save()
             # If the set of existing occurrences still is not empty,
             # it means that the user un-ticket one or more existing.
             # So, we remove those to...
             if len(existing_visit_occurrences) > 0:
-                visit.visitoccurrence_set.all().filter(
+                visit.bookable_occurrences.filter(
                     start_datetime__in=existing_visit_occurrences
                 ).delete()
 
@@ -1186,7 +1173,15 @@ class BookingView(AutologgerMixin, UpdateView):
                 booking = forms['bookingform'].save(commit=False)
             else:
                 booking = self.object
-            booking.visit = self.visit
+
+            if not booking.visitoccurrence:
+                # Make an anonymous visitoccurrence
+                occ = self.visit.make_occurrence(
+                    None, False
+                )
+                occ.save()
+                booking.visitoccurrence = occ
+
             if 'bookerform' in forms:
                 booking.booker = forms['bookerform'].save()
 

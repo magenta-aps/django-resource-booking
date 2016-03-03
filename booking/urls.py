@@ -13,6 +13,7 @@ from booking.views import EditOtherResourceView, OtherResourceDetailView
 from booking.views import EditVisitView, VisitDetailView
 from booking.views import SearchView, EmbedcodesView
 from booking.views import BookingDetailView, ChangeVisitOccurrenceStatusView
+from booking.views import ChangeVisitOccurrenceStartTimeView
 from booking.views import ChangeVisitOccurrenceTeachersView
 from booking.views import ChangeVisitOccurrenceHostsView
 from booking.views import ChangeVisitOccurrenceRoomsView
@@ -85,32 +86,35 @@ urlpatterns = patterns(
         BookingSuccessView.as_view(),
         name='visit-book-success'),
 
-    url(r'^visit/occurence/(?P<pk>[0-9]+)$',
+    url(r'^visit/occurrence/(?P<pk>[0-9]+)$',
         VisitOccurrenceDetailView.as_view(),
         name='visit-occ-view'),
 
     url(r'^booking/(?P<pk>[0-9]+)/?$',
         BookingDetailView.as_view(),
         name='booking-view'),
-    url(r'^visit-occ/(?P<pk>[0-9]+)/change_status/?$',
+    url(r'^visit/occurrence/(?P<pk>[0-9]+)/change_status/?$',
         ChangeVisitOccurrenceStatusView.as_view(),
         name='change-visit-occ-status'),
-    url(r'^visit-occ/(?P<pk>[0-9]+)/change_teachers/?$',
+    url(r'^visit/occurrence/(?P<pk>[0-9]+)/change_starttime/?$',
+        ChangeVisitOccurrenceStartTimeView.as_view(),
+        name='change-visit-occ-starttime'),
+    url(r'^visit/occurrence/(?P<pk>[0-9]+)/change_teachers/?$',
         ChangeVisitOccurrenceTeachersView.as_view(),
         name='change-visit-occ-teachers'),
-    url(r'^visit-occ/(?P<pk>[0-9]+)/change_hosts/?$',
+    url(r'^visit/occurrence/(?P<pk>[0-9]+)/change_hosts/?$',
         ChangeVisitOccurrenceHostsView.as_view(),
         name='change-visit-occ-hosts'),
-    url(r'^visit-occ/(?P<pk>[0-9]+)/change_rooms/?$',
+    url(r'^visit/occurrence/(?P<pk>[0-9]+)/change_rooms/?$',
         ChangeVisitOccurrenceRoomsView.as_view(),
         name='change-visit-occ-rooms'),
-    url(r'^visit-occ/(?P<pk>[0-9]+)/change_comments/?$',
+    url(r'^visit/occurrence/(?P<pk>[0-9]+)/change_comments/?$',
         ChangeVisitOccurrenceCommentsView.as_view(),
         name='change-visit-occ-comments'),
-    url(r'^visit-occ/(?P<pk>[0-9]+)/add_logentry/?$',
+    url(r'^visit/occurrence/(?P<pk>[0-9]+)/add_logentry/?$',
         VisitOccurrenceAddLogEntryView.as_view(),
         name='visit-occ-add-logentry'),
-    url(r'^visit-occ/search$',
+    url(r'^visit/occurrence/search$',
         VisitOccurrenceSearchView.as_view(),
         name='visit-occ-search'),
 
