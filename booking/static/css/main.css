@@ -514,7 +514,7 @@ ul.footerlinks {
 }
 .footer-columns [class*="col-"]:last-child > ul.footerlinks {
     float: right;
-
+} 
 ul.footerlinks li {
     padding-right: 10px;
     margin-top: 2px;
