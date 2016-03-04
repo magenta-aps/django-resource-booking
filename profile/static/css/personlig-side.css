@@ -45,7 +45,7 @@
 }
 
 #personalPage .panel.panel-bookings .panel-heading .panel-title {
-    font-size: 14px;
+    font-size: 13px;
     display: inline-block;
     max-width: 85%;
     color: #333;
@@ -107,6 +107,7 @@
 #filter-panel .input-group:nth-child(3) {
     width: 28%;
 }
+
 @media screen and (max-width:768px) {
     #filter-panel .input-group {
         margin-bottom: 10px;
