@@ -19,32 +19,35 @@
             <div class="divider"></div>
         </div>
         <div class="col-sm-6">
-        <div class="list-group admin-links">              
-              {% if request.user.userprofile.can_create %}
-                  <a class="list-group-item" href="{% url 'booking-search' %}"><h4 class="list-group-item-heading">{% trans 'Søg i bookinger' %}</h4><p class="list-group-item-text">Søg i bookings der ligger i systemet.</p></a>
-              {% endif %}
+            <div class="list-group admin-links">
+                {% if request.user.userprofile.can_create %}
+                    <a class="list-group-item" href="{% url 'visit-occ-search' %}"><h4 class="list-group-item-heading">{% trans 'Søg i bookinger' %}</h4><p class="list-group-item-text">{% trans 'Søg i bookings der ligger i systemet.' %}</p></a>
+                {% endif %}
             </div>
+        </div>
+        <div class="col-sm-6">
+            <div class="text-right">
+                <a href="{% url 'resource-create' %}?back={{ thisurl | urlencode }}" class="btn btn-primary margin-bottom-5">{% trans '+ Opret tilbud' %}</a>                
+                <a href="#adminblock" class="btn btn-primary margin-bottom-5" role="button" data-toggle="collapse" aria-expanded="false" aria-controls="adminblock">{% trans 'Administration' %} <span class="glyphicon glyphicon-cog"></span> </a>
             </div>
-            <div class="col-sm-6">
-                <div class="text-right">
-                    <a href="{% url 'resource-create' %}?back={{ thisurl | urlencode }}" class="btn btn-primary margin-bottom-5">Opret nyt tilbud <span class="glyphicon glyphicon-plus"></span> </a>
-                    <a href="#adminblock" class="btn btn-primary margin-bottom-5" role="button" data-toggle="collapse" aria-expanded="false" aria-controls="adminblock">Administration <span class="glyphicon glyphicon-cog"></span> </a>
-                </div>
             <div class="collapse list-group admin-links" id="adminblock">
-                  <a class="list-group-item" href="{% url 'user_list' %}"><h4 class="list-group-item-heading">{% trans 'Administrér brugere' %}</h4><p class="list-group-item-text">Opret og redigér brugere af bookingsystemet.</p></a>
-                  <a class="list-group-item" href="#"><h4 class="list-group-item-heading">{% trans 'Administrér emailskabeloner' %}</h4><p class="list-group-item-text">Opret og redigér overordnede e-mails.</p></a>
-                  <a class="list-group-item" href="{% url 'admin:booking_locality_changelist' %}"><h4 class="list-group-item-heading">Administrér adresser</h4><p class="list-group-item-text">Opret og redigér lokaler, køretøjer og andre ressourcer.</p></a>
-                  <a class="list-group-item" href="{% url 'admin:booking_person_changelist' %}"><h4 class="list-group-item-heading">Administrér kontaktpersoner</h4><p class="list-group-item-text">Opret og redigér personer, der kan modtage forespørgsler på tilbud.</p></a>
-                  {% if request.user.userprofile.can_edit_units %}
-                  <a class="list-group-item" href="{% url 'admin:booking_unit_changelist' %}"><h4 class="list-group-item-heading">Administrér enheder</h4><p class="list-group-item-text">Tilpas information på fakultet, institut, mv.</p></a>
-                  {% endif %}
-                   <a class="list-group-item" href="{% url 'user_list' %}"><h4 class="list-group-item-heading">{% trans 'Statistik' %}</h4><p class="list-group-item-text">Her har du adgang til at trække statistik på tilbud og bookings.</p></a>  
+                {% if request.user.userprofile.can_create %}
+                    <a class="list-group-item" href="{% url 'user_list' %}"><h4 class="list-group-item-heading">{% trans 'Administrér brugere' %}</h4><p class="list-group-item-text">Opret og redigér brugere af bookingsystemet.</p></a>
+                    <a class="list-group-item" href="{% url 'emailtemplate-list' %}"><h4 class="list-group-item-heading">{% trans 'Administrér emailskabeloner' %}</h4><p class="list-group-item-text">Opret og redigér overordnede e-mails.</p></a>
+                    <a class="list-group-item" href="{% url 'admin:booking_locality_changelist' %}"><h4 class="list-group-item-heading">Administrér adresser</h4><p class="list-group-item-text">Opret og redigér lokaler, køretøjer og andre ressourcer.</p></a>
+                    <a class="list-group-item" href="{% url 'admin:booking_person_changelist' %}"><h4 class="list-group-item-heading">Administrér kontaktpersoner</h4><p class="list-group-item-text">Opret og redigér personer, der kan modtage forespørgsler på tilbud.</p></a>
+                    {% if request.user.userprofile.can_edit_units %}
+                        <a class="list-group-item" href="{% url 'admin:booking_unit_changelist' %}"><h4 class="list-group-item-heading">{% trans 'Administrér enheder' %}</h4><p class="list-group-item-text">{% trans 'Tilpas information på fakultet, institut, mv.' %}</p></a>
+                    {% endif %}
+                    <a class="list-group-item" href="{% url 'user_list' %}"><h4 class="list-group-item-heading">{% trans 'Statistik' %}</h4><p class="list-group-item-text">Her har du adgang til at trække statistik på tilbud og bookings.</p></a>
+                {% endif %}
+                <a class="list-group-item" href="#"><h4 class="list-group-item-heading">{% trans 'Statistik' %}</h4><p class="list-group-item-text">Her har du adgang til at trække statistik på tilbud og bookings.</p></a>  
             </div>
         </div>
     </div>
     
     <div class="divider"></div>
-    <h2>Søg i tilbud og bookings</h2>
+    <h2>{% trans 'Søg i tilbud og bookings' %}</h2>
     <div class="row">
         <div class="col-sm-12">
             <div id="filter-panel" class="filter-panel">
@@ -88,67 +91,19 @@
             </div>
         </div>
     </div>
+
     <div class="divider"></div>
     <div id="personalPage" class="row eq-height">
-            <div class="col-sm-4">
-                <div class="panel panel-bookings">
-                    <div class="panel-heading alert-info">
-                        <h3 class="panel-title">{% trans 'Mine tilbud' %}</h3><span class="badge badge-primary pull-right">3</span>
-                    </div>
-                    <div class="panel-body">
-                        <div class="list-group">
-                            <div class="list-group-item clearfix">
-                                <a href="#" title="Se tilbuddets detaljer og evt. bookings">
-                                    <h2 class="list-group-item-heading">Dansk - kan du sætte kommaer?</h2>
-                                    <div class="list-group-item-text">
-                                        <ul>
-                                            <li>#201574</li>
-                                            <li>Dato/tid: 23.03.2016 kl. 09:00</li>
-                                            <li>Antal tilmeldte: 30</li>
-                                        </ul>
-                                    </div>
-                                </a>
-                                <div class="tools"><span class="edit-tools pull-left"><a href="#">Rediger</a> | <a href="#">kopiér</a></span><span class="label label-default pull-right">Kladde</span></div>
-                            </div>
-                            <div class="list-group-item clearfix">
-                                <a href="#" title="Se tilbuddets detaljer og evt. bookings">
-                                    <h2 class="list-group-item-heading">Magnetisme og elektroner</h2>
-                                    <div class="list-group-item-text">
-                                        <ul>
-                                            <li>#201574</li>
-                                            <li>Dato/tid: 23.03.2016 kl. 09:00</li>
-                                            <li>Antal tilmeldte: 30</li>
-                                        </ul>
-                                    </div>
-                                </a>
-                                <div class="tools"><span class="edit-tools pull-left"><a href="#">Rediger</a> | <a href="#">kopiér</a></span><span class="label label-info pull-right">Ikke publiceret</span></div>
-                            </div>
-                            <div class="list-group-item clearfix">
-                                <a href="#" title="Se tilbuddets detaljer og evt. bookings">
-                                    <h2 class="list-group-item-heading">Hvem var Niels Bohr?</h2>
-                                    <div class="list-group-item-text">
-                                        <ul>
-                                            <li>#201574</li>
-                                            <li>Dato/tid: 23.03.2016 kl. 09:00</li>
-                                            <li>Antal tilmeldte: 30</li>
-                                        </ul>
-                                    </div>
-                                </a>
-                                <div class="tools"><span class="edit-tools pull-left"><a href="#">Rediger</a> | <a href="#">kopiér</a></span><span class="label label-primary pull-right">Publliceret</span></div>
-                            </div>
-                        </div>
-                    </div>
+        <div class="col-sm-4">
+            <div class="panel panel-bookings">
+                <div class="panel-heading alert-info">
+                    <h3 class="panel-title">{% trans 'Mine tilbud' %}</h3><span class="badge badge-primary pull-right">3</span>
                 </div>
-            </div>
-            <div class="col-sm-4">
-                <div class="panel panel-bookings">
-                    <div class="panel-heading alert-danger">
-                        <h3 class="panel-title">{% trans 'Bookings der kræver handling' %}</h3><span class="badge badge-danger pull-right">3</span>
-                    </div>
-                    <div class="panel-body">
+                <div class="panel-body">
+                    <div class="list-group">
                         <div class="list-group-item clearfix">
                             <a href="#" title="Se tilbuddets detaljer og evt. bookings">
-                                <h2 class="list-group-item-heading">Biologi</h2>
+                                <h2 class="list-group-item-heading">Dansk - kan du sætte kommaer?</h2>
                                 <div class="list-group-item-text">
                                     <ul>
                                         <li>#201574</li>
@@ -157,11 +112,11 @@
                                     </ul>
                                 </div>
                             </a>
-                            <div class="tools"><span class="edit-tools pull-left"><a href="#">Rediger</a> | <a href="#">kopiér</a></span><span class="label label-danger pull-right">Afventer</span></div>
+                            <div class="tools"><span class="edit-tools pull-left"><a href="#">Rediger</a> | <a href="#">kopiér</a></span><span class="label label-default pull-right">Kladde</span></div>
                         </div>
                         <div class="list-group-item clearfix">
                             <a href="#" title="Se tilbuddets detaljer og evt. bookings">
-                                <h2 class="list-group-item-heading">Atomer og molekyler</h2>
+                                <h2 class="list-group-item-heading">Magnetisme og elektroner</h2>
                                 <div class="list-group-item-text">
                                     <ul>
                                         <li>#201574</li>
@@ -170,11 +125,11 @@
                                     </ul>
                                 </div>
                             </a>
-                            <div class="tools"><span class="edit-tools pull-left"><a href="#">Rediger</a> | <a href="#">kopiér</a></span><span class="label label-danger pull-right">Afventer</span></div>
+                            <div class="tools"><span class="edit-tools pull-left"><a href="#">Rediger</a> | <a href="#">kopiér</a></span><span class="label label-info pull-right">Ikke publiceret</span></div>
                         </div>
                         <div class="list-group-item clearfix">
                             <a href="#" title="Se tilbuddets detaljer og evt. bookings">
-                                <h2 class="list-group-item-heading">Biologi</h2>
+                                <h2 class="list-group-item-heading">Hvem var Niels Bohr?</h2>
                                 <div class="list-group-item-text">
                                     <ul>
                                         <li>#201574</li>
@@ -183,84 +138,154 @@
                                     </ul>
                                 </div>
                             </a>
-                            <div class="tools"><span class="edit-tools pull-left"><a href="#">Rediger</a> | <a href="#">kopiér</a></span><span class="label label-danger pull-right">Afventer</span></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-4">
-                <div class="panel panel-bookings">
-                    <div class="panel-heading alert-success">
-                        <h3 class="panel-title">{% trans 'Bekræftede bookings' %}</h3><span class="badge badge-success pull-right">5</span>
-                    </div>
-                    <div class="panel-body">
-                        <div class="list-group-item clearfix">
-                            <a href="#" title="Se tilbuddets detaljer og evt. bookings">
-                                <h2 class="list-group-item-heading">Hvad kan vi lære af stjerner og rumfart</h2>
-                                <div class="list-group-item-text">
-                                    <ul>
-                                        <li>#201574</li>
-                                        <li>Dato/tid: 23.03.2016 kl. 09:00</li>
-                                        <li>Antal tilmeldte: 30</li>
-                                    </ul>
-                                </div>
-                            </a>
-                            <div class="tools"><span class="edit-tools pull-left"><a href="#">Rediger</a> | <a href="#">kopiér</a></span><span class="label label-success pull-right">Planlagt</span></div>
-                        </div>
-                        <div class="list-group-item clearfix">
-                            <a href="#" title="Se tilbuddets detaljer og evt. bookings">
-                                <h2 class="list-group-item-heading">Hvad kan vi lære af stjerner og rumfart</h2>
-                                <div class="list-group-item-text">
-                                    <ul>
-                                        <li>#201574</li>
-                                        <li>Dato/tid: 23.03.2016 kl. 09:00</li>
-                                        <li>Antal tilmeldte: 30</li>
-                                    </ul>
-                                </div>
-                            </a>
-                            <div class="tools"><span class="edit-tools pull-left"><a href="#">Rediger</a> | <a href="#">kopiér</a></span><span class="label label-success pull-right">Planlagt</span></div>
-                        </div>
-                        <div class="list-group-item clearfix">
-                            <a href="#" title="Se tilbuddets detaljer og evt. bookings">
-                                <h2 class="list-group-item-heading">Kina som sproglig og historisk stormagt</h2>
-                                <div class="list-group-item-text">
-                                    <ul>
-                                        <li>#201574</li>
-                                        <li>Dato/tid: 23.03.2016 kl. 09:00</li>
-                                        <li>Antal tilmeldte: 30</li>
-                                    </ul>
-                                </div>
-                            </a>
-                            <div class="tools"><span class="edit-tools pull-left"><a href="#">Rediger</a> | <a href="#">kopiér</a></span><span class="label label-success pull-right">Planlagt</span></div>
-                        </div>
-                        <div class="list-group-item clearfix">
-                            <a href="#" title="Se tilbuddets detaljer og evt. bookings">
-                                <h2 class="list-group-item-heading">Hvad kan vi lære af stjerner og rumfart</h2>
-                                <div class="list-group-item-text">
-                                    <ul>
-                                        <li>#201574</li>
-                                        <li>Dato/tid: 23.03.2015 kl. 09:00</li>
-                                        <li>Antal tilmeldte: 30</li>
-                                    </ul>
-                                </div>
-                            </a>
-                            <div class="tools"><span class="edit-tools pull-left"><a href="#">Rediger</a> | <a href="#">kopiér</a></span><span class="label label-warning pull-right">Afviklet</span></div>
-                        </div>
-                        <div class="list-group-item clearfix">
-                            <a href="#" title="Se tilbuddets detaljer og evt. bookings">
-                                <h2 class="list-group-item-heading">Hvad kan vi lære af stjerner og rumfart</h2>
-                                <div class="list-group-item-text">
-                                    <ul>
-                                        <li>#201574</li>
-                                        <li>Dato/tid: 23.03.2015 kl. 09:00</li>
-                                        <li>Antal tilmeldte: 30</li>
-                                    </ul>
-                                </div>
-                            </a>
-                            <div class="tools"><span class="edit-tools pull-left"><a href="#">Rediger</a> | <a href="#">kopiér</a></span><span class="label label-warning pull-right">Aflyst</span></div>
+                            <div class="tools"><span class="edit-tools pull-left"><a href="#">Rediger</a> | <a href="#">kopiér</a></span><span class="label label-primary pull-right">Publliceret</span></div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+        <div class="col-sm-4">
+            <div class="panel panel-bookings">
+                <div class="panel-heading alert-danger">
+                    <h3 class="panel-title">{% trans 'Bookings der kræver handling' %}</h3><span class="badge badge-danger pull-right">3</span>
+                </div>
+                <div class="panel-body">
+                    <div class="list-group-item clearfix">
+                        <a href="#" title="Se tilbuddets detaljer og evt. bookings">
+                            <h2 class="list-group-item-heading">Biologi</h2>
+                            <div class="list-group-item-text">
+                                <ul>
+                                    <li>#201574</li>
+                                    <li>Dato/tid: 23.03.2016 kl. 09:00</li>
+                                    <li>Antal tilmeldte: 30</li>
+                                </ul>
+                            </div>
+                        </a>
+                        <div class="tools"><span class="edit-tools pull-left"><a href="#">Rediger</a> | <a href="#">kopiér</a></span><span class="label label-danger pull-right">Afventer</span></div>
+                    </div>
+                    <div class="list-group-item clearfix">
+                        <a href="#" title="Se tilbuddets detaljer og evt. bookings">
+                            <h2 class="list-group-item-heading">Atomer og molekyler</h2>
+                            <div class="list-group-item-text">
+                                <ul>
+                                    <li>#201574</li>
+                                    <li>Dato/tid: 23.03.2016 kl. 09:00</li>
+                                    <li>Antal tilmeldte: 30</li>
+                                </ul>
+                            </div>
+                        </a>
+                        <div class="tools"><span class="edit-tools pull-left"><a href="#">Rediger</a> | <a href="#">kopiér</a></span><span class="label label-danger pull-right">Afventer</span></div>
+                    </div>
+                    <div class="list-group-item clearfix">
+                        <a href="#" title="Se tilbuddets detaljer og evt. bookings">
+                            <h2 class="list-group-item-heading">Biologi</h2>
+                            <div class="list-group-item-text">
+                                <ul>
+                                    <li>#201574</li>
+                                    <li>Dato/tid: 23.03.2016 kl. 09:00</li>
+                                    <li>Antal tilmeldte: 30</li>
+                                </ul>
+                            </div>
+                        </a>
+                        <div class="tools"><span class="edit-tools pull-left"><a href="#">Rediger</a> | <a href="#">kopiér</a></span><span class="label label-danger pull-right">Afventer</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+                    <div class="col-sm-4">
+            <div class="panel panel-bookings">
+                <div class="panel-heading alert-success">
+                    <h3 class="panel-title">{% trans 'Bekræftede bookings' %}</h3><span class="badge badge-success pull-right">5</span>
+                </div>
+                <div class="panel-body">
+                    <div class="list-group-item clearfix">
+                        <a href="#" title="Se tilbuddets detaljer og evt. bookings">
+                            <h2 class="list-group-item-heading">Hvad kan vi lære af stjerner og rumfart</h2>
+                            <div class="list-group-item-text">
+                                <ul>
+                                    <li>#201574</li>
+                                    <li>Dato/tid: 23.03.2016 kl. 09:00</li>
+                                    <li>Antal tilmeldte: 30</li>
+                                </ul>
+                            </div>
+                        </a>
+                        <div class="tools"><span class="edit-tools pull-left"><a href="#">Rediger</a> | <a href="#">kopiér</a></span><span class="label label-success pull-right">Planlagt</span></div>
+                    </div>
+                    <div class="list-group-item clearfix">
+                        <a href="#" title="Se tilbuddets detaljer og evt. bookings">
+                            <h2 class="list-group-item-heading">Hvad kan vi lære af stjerner og rumfart</h2>
+                            <div class="list-group-item-text">
+                                <ul>
+                                    <li>#201574</li>
+                                    <li>Dato/tid: 23.03.2016 kl. 09:00</li>
+                                    <li>Antal tilmeldte: 30</li>
+                                </ul>
+                            </div>
+                        </a>
+                        <div class="tools"><span class="edit-tools pull-left"><a href="#">Rediger</a> | <a href="#">kopiér</a></span><span class="label label-success pull-right">Planlagt</span></div>
+                    </div>
+                    <div class="list-group-item clearfix">
+                        <a href="#" title="Se tilbuddets detaljer og evt. bookings">
+                            <h2 class="list-group-item-heading">Kina som sproglig og historisk stormagt</h2>
+                            <div class="list-group-item-text">
+                                <ul>
+                                    <li>#201574</li>
+                                    <li>Dato/tid: 23.03.2016 kl. 09:00</li>
+                                    <li>Antal tilmeldte: 30</li>
+                                </ul>
+                            </div>
+                        </a>
+                        <div class="tools"><span class="edit-tools pull-left"><a href="#">Rediger</a> | <a href="#">kopiér</a></span><span class="label label-success pull-right">Planlagt</span></div>
+                    </div>
+                    <div class="list-group-item clearfix">
+                        <a href="#" title="Se tilbuddets detaljer og evt. bookings">
+                            <h2 class="list-group-item-heading">Hvad kan vi lære af stjerner og rumfart</h2>
+                            <div class="list-group-item-text">
+                                <ul>
+                                    <li>#201574</li>
+                                    <li>Dato/tid: 23.03.2015 kl. 09:00</li>
+                                    <li>Antal tilmeldte: 30</li>
+                                </ul>
+                            </div>
+                        </a>
+                        <div class="tools"><span class="edit-tools pull-left"><a href="#">Rediger</a> | <a href="#">kopiér</a></span><span class="label label-warning pull-right">Afviklet</span></div>
+                    </div>
+                    <div class="list-group-item clearfix">
+                        <a href="#" title="Se tilbuddets detaljer og evt. bookings">
+                            <h2 class="list-group-item-heading">Hvad kan vi lære af stjerner og rumfart</h2>
+                            <div class="list-group-item-text">
+                                <ul>
+                                    <li>#201574</li>
+                                    <li>Dato/tid: 23.03.2015 kl. 09:00</li>
+                                    <li>Antal tilmeldte: 30</li>
+                                </ul>
+                            </div>
+                        </a>
+                        <div class="tools"><span class="edit-tools pull-left"><a href="#">Rediger</a> | <a href="#">kopiér</a></span><span class="label label-warning pull-right">Aflyst</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal delete booking -->
+    <div class="modal fade deleteBooking" tabindex="-1" role="dialog" aria-labelledby="SletBooking">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="SletBooking">{% trans 'Er du sikker?' %}</h4>
+          </div>
+          <div class="modal-body">
+           <p>{% trans 'Du er ved at slette bookingen "Magnetisme og elektroner". Hvis du vil fortsætte og slette denne booking, klik på knappen "Slet denne booking".' %}</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Anullér</button>
+            <button type="button" class="btn btn-primary">{% trans 'Slet denne booking' %}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Modal delete booking end -->
+    
 {% endblock %}
