@@ -67,6 +67,10 @@ h5 {
     font-size: 14px;
 }
 
+a {
+    cursor: pointer;
+}
+
 a:not(.btn),
 a:not(.btn):hover,
 a:not(.btn):active {
@@ -88,6 +92,14 @@ strong,
 .label {
     font-size: 90%;
 }
+.label-default {
+    letter-spacing: 0.7px;
+    color: #666;
+    background-color: #fff;
+    border: 1px solid #999;
+    margin-right: 5px;
+}
+
 .inline-block {
     display: inline-block;
 }
@@ -612,7 +624,13 @@ ul.footerlinks .footerlist-header {
     width: 100%;
 }
 
-#admin-input input[type="text"], #admin-input input[type="email"], #admin-input input[type="password"], #admin-input select, #id_type, select, #embediframeform [type="text"] {
+#admin-input input[type="text"],
+#admin-input input[type="email"],
+#admin-input input[type="password"],
+#admin-input select,
+#id_type,
+select,
+#embediframeform [type="text"] {
     display: block;
     width: 100%;
     height: 30px;
@@ -665,7 +683,8 @@ a#attachAddFileField {
     font-weight: bold;
     cursor: pointer;
 }
-#chosenrooms .glyphicon-remove, #gymnasiefag-list .glyphicon-remove {
+#chosenrooms .glyphicon-remove,
+#gymnasiefag-list .glyphicon-remove {
     cursor: pointer;
     font-size: 14px;
     color: #a94442;
@@ -699,6 +718,47 @@ div ul.errorlist {
     font-weight: normal;
 }
 
+.email-recipients ul {
+    max-height: 120px;
+    overflow-y: auto;
+}
+
+a.template-overridden,
+a.template-overridden:hover,
+a.template-overridden:active,
+a.template-overridden:visited {
+    text-decoration: line-through;
+    color: #999;
+}
+
+/* Datepicker */
+#time-select-btn {
+    position: relative;
+}
+#time-select {
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 0;
+    background-color: inherit;
+    border: none;
+}
+#adv-time-select {
+    display: none;
+    padding: 10px 0;
+}
+#adv-time-select-toggle {
+
+}
+
+#recipient-groups input {
+    width: auto;
+    display: inline;
+}
+
 /*Backend specific styles end */
 
 /* Embedded pages styles */
@@ -708,6 +768,15 @@ div ul.errorlist {
     margin: 0;
     border: none;
     max-width: 100%;
+}
+
+table.sortable th.sort {
+    cursor: pointer
+}
+
+body.lightbox {
+    margin-left: 10px;
+    overflow: hidden;
 }
 
 @media screen and (max-width:768px) {
