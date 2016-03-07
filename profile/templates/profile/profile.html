@@ -41,11 +41,12 @@
                     {% endif %}
                     <a class="list-group-item" href="{% url 'user_list' %}"><h4 class="list-group-item-heading">{% trans 'Statistik' %}</h4><p class="list-group-item-text">Her har du adgang til at trække statistik på tilbud og bookings.</p></a>
                 {% endif %}
-                <a class="list-group-item" href="#"><h4 class="list-group-item-heading">{% trans 'Statistik' %}</h4><p class="list-group-item-text">Her har du adgang til at trække statistik på tilbud og bookings.</p></a>  
+                <a class="list-group-item" href="#"><h4 class="list-group-item-heading">{% trans 'Statistik' %}</h4><p class="list-group-item-text">Her har du adgang til at trække statistik på tilbud og bookings.</p></a>
             </div>
         </div>
     </div>
-    
+
+    {% if not "slået fra indtil videre, genindføres måske i en senere fase" %}
     <div class="divider"></div>
     <h2>{% trans 'Søg i tilbud og bookings' %}</h2>
     <div class="row">
@@ -91,6 +92,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
 
     <div class="divider"></div>
     <div id="personalPage" class="row eq-height">
