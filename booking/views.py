@@ -1210,8 +1210,9 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
                 messages.add_message(
                     request,
                     messages.INFO,
-                    _(u'Der findes bookinger af tilbudet med deltagerantal '
-                      u'udenfor de angivne min-/max-grænser for deltagere!')
+                    _(u'Der findes arrangementer for tilbudet med '
+                      u'deltagerantal udenfor de angivne min-/max-grænser for '
+                      u'deltagere!')
                 )
         is_cloning = kwargs.get("clone", False)
         self.set_object(pk, request, is_cloning)
@@ -1993,7 +1994,7 @@ class VisitOccurrenceSearchView(LoginRequiredMixin, ListView):
         context['breadcrumbs'] = [
             {
                 'url': reverse('visit-occ-search'),
-                'text': _(u'Planlagte besøg/besøg under planlægning')
+                'text': _(u'Arrangmenter')
             },
             {'text': _(u'Søgeresultatliste')},
         ]
