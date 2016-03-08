@@ -113,6 +113,7 @@ class Unit(models.Model):
     class Meta:
         verbose_name = _(u"enhed")
         verbose_name_plural = _(u"enheder")
+        ordering = ['name']
 
     name = models.CharField(max_length=100)
     type = models.ForeignKey(UnitType)
