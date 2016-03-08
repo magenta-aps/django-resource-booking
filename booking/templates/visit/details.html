@@ -77,7 +77,7 @@
                     </div>
                     <div class="panel-body">
                         <dl class="dl-horizontal">
-                            
+
                             {% if object.get_audience_display %}
                                 <dt>{% trans 'Henvendt til'%}:</dt>
                                 <dd>{{ object.get_audience_display }}</dd>
@@ -124,15 +124,28 @@
                                 {% endif %}
                             </dd>
                             
-                            {% if object.visitoccurrence_set.all %}
-                            <dt>Hvornår:</dt>
-                            <dd>
-                                <ul class="list-unstyled" id="dato">
-                                {% for occurrence in object.visitoccurrence_set.all %}
-                                    <li>{{ occurrence.start_datetime|date:'d-m-Y H:i' }}</li>
-                                {% endfor %}
-                                </ul>
-                            </dd>
+                            {% if request.user.userprofile.can_create %}
+                                {% if object.visitoccurrence_set.all %}
+                                <dt>Hvornår:</dt>
+                                <dd>
+                                    <ul class="list-unstyled" id="dato">
+                                    {% for event in object.visitoccurrence_set.all %}
+                                        <li><a href="{% url 'visit-occ-view' event.pk %}">{{ event.start_datetime|date:'d-m-Y H:i' }}{% if event.expired %} (udløbet){% endif %}</a></li>
+                                    {% endfor %}
+                                    </ul>
+                                </dd>
+                                {% endif %}
+                            {% else %}
+                                {% if object.future_events %}
+                                <dt>Hvornår:</dt>
+                                <dd>
+                                    <ul class="list-unstyled" id="dato">
+                                    {% for event in object.future_events %}
+                                        <li>{{ event.start_datetime|date:'d-m-Y H:i' }}</li>
+                                    {% endfor %}
+                                    </ul>
+                                </dd>
+                                {% endif %}
                             {% endif %}
 
                             {% if object.duration %}

@@ -121,8 +121,8 @@
                 <div id="collapseTeachersAndHosts" class="panel-collapse collapse
                 {% if not object.pk or form.needed_hosts.errors or form.needed_hosts_text.errors or form.needed_teachers.errors or form.needed_teachers_text.errors %}in{% endif %}
                 " aria-labelledby="headingContact" role="tabpanel" aria-expanded="false" style="">
-                    {% include 'common/snippets/edit-needed-number.html' with field=form.needed_hosts textfield=form.needed_hosts_text choices=view.model.host_number_choices %}
-                    {% include 'common/snippets/edit-needed-number.html' with field=form.needed_teachers textfield=form.needed_teachers_text choices=view.model.teacher_number_choices %}
+                    {% include 'common/snippets/edit-needed-number.html' with field=form.needed_hosts %}
+                    {% include 'common/snippets/edit-needed-number.html' with field=form.needed_teachers  %}
                 </div>
             </div>
 

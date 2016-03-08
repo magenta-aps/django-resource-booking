@@ -1050,67 +1050,25 @@ class Visit(Resource):
     )
 
     NEEDED_NUMBER_NONE = 0
-    NEEDED_NUMBER_BY_TEXT = -1
-    NEEDED_NUMBER_BY_BOOKING = -2
-    NEEDED_NUMBER_SPECIFIED = -3
+    NEEDED_NUMBER_MORE_THAN_TEN = -10
 
-    host_number_choices = (
-        (NEEDED_NUMBER_NONE, _(u'Tilbuddet kræver ikke værter')),
-        (
-            NEEDED_NUMBER_BY_TEXT,
-            _(u'Beregnet ud fra eksempelvis antal deltagere')
-        ),
-        (NEEDED_NUMBER_BY_BOOKING, _(u'Besluttes på det enkelte besøg'))
+    needed_number_choices = (
+        ((NEEDED_NUMBER_NONE, _(u'Ingen')),) +
+        tuple((x, unicode(x)) for x in range(1, 11)) +
+        ((NEEDED_NUMBER_MORE_THAN_TEN, _(u'Mere end 10')),)
     )
 
     needed_hosts = models.IntegerField(
         default=0,
-        verbose_name=_(u'Nødvendigt antal værter')
-    )
-    needed_hosts_text = models.CharField(
-        blank=True,
-        max_length=255,
-        verbose_name=_(u'Formular for beregning af antal værter')
-    )
-
-    teacher_number_choices = (
-        (NEEDED_NUMBER_NONE, _(u'Tilbuddet kræver ikke undervisere')),
-        (
-            NEEDED_NUMBER_BY_TEXT,
-            _(u'Beregnet ud fra eksempelvis antal deltagere')
-        ),
-        (NEEDED_NUMBER_BY_BOOKING, _(u'Besluttes på det enkelte besøg'))
+        verbose_name=_(u'Nødvendigt antal værter'),
+        choices=needed_number_choices
     )
 
     needed_teachers = models.IntegerField(
         default=0,
-        verbose_name=_(u'Nødvendigt antal undervisere')
+        verbose_name=_(u'Nødvendigt antal undervisere'),
+        choices=needed_number_choices
     )
-    needed_teachers_text = models.CharField(
-        blank=True,
-        max_length=255,
-        verbose_name=_(u'Formular for beregning af antal undervisere')
-    )
-
-    def get_needed_hosts_display(self):
-        val = self.needed_hosts
-        for v, text in self.teacher_number_choices:
-            if v == val:
-                if val == Visit.NEEDED_NUMBER_BY_TEXT:
-                    return '%s: %s' % (text, self.needed_hosts_text)
-                else:
-                    return text
-        return _(u'Fast antal: %s') % val
-
-    def get_needed_teachers_display(self):
-        val = self.needed_teachers
-        for v, text in self.teacher_number_choices:
-            if v == val:
-                if val == Visit.NEEDED_NUMBER_BY_TEXT:
-                    return '%s: %s' % (text, self.needed_teachers_text)
-                else:
-                    return text
-        return _(u'Fast antal: %s') % val
 
     def save(self, *args, **kwargs):
         # Save once to store relations
@@ -1125,6 +1083,12 @@ class Visit(Resource):
     @property
     def bookable_occurrences(self):
         return self.visitoccurrence_set.filter(bookable=True)
+
+    @property
+    def future_events(self):
+        return self.bookable_occurrences.filter(
+            start_datetime__gte=timezone.now()
+        )
 
     @property
     def recurrences_description(self):
@@ -1427,6 +1391,12 @@ class VisitOccurrence(models.Model):
                 print e
 
         return result
+
+    @property
+    def expired(self):
+        if self.start_datetime and self.start_datetime <= timezone.now():
+            return "expired"
+        return ""
 
     def is_booked(self):
         """Has this VisitOccurrence instance been booked yet?"""
