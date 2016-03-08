@@ -12,33 +12,43 @@
                         toggleEnabled($(this), key, enable);
                     });
                 } else if (element.length === 1) {
-                    var d = element.data("disable") || {};
-                    d[key] = !!enable;
-                    var doEnable = true;
-                    for (var k in d) {
-                        if (d[k] === false) {
-                            doEnable = false;
-                            break;
+                    if (element.attr("type") !== "hidden") {
+                        var d = element.data("disable") || {};
+                        d[key] = !!enable;
+                        var doEnable = true;
+                        for (var k in d) {
+                            if (d[k] === false) {
+                                doEnable = false;
+                                break;
+                            }
                         }
-                    }
-                    if (doEnable) {
-                        element.removeAttr("disabled");
-                    } else {
-                        element.attr("disabled", "disabled");
-                    }
-                    var id = element.attr("id");
-                    if (id) {
-                        var keeperId = id+"_keeper";
                         if (doEnable) {
-                            $("#"+keeperId).remove();
+                            element.removeAttr("disabled");
                         } else {
-                            var keeper = $("<input>").attr({type: 'hidden', id: keeperId, name: element.attr('name')});
-                            keeper.val(element.val());
-                            element.parent().append(keeper);
+                            element.attr("disabled", "disabled");
                         }
-                        $("label[for='" + id + "']").toggleClass("deletion", !doEnable);
+
+                        var id = element.attr("id");
+                        if (id) {
+                            var keeperId = id + "_keeper";
+                            if (doEnable) {
+                                $("#" + keeperId).remove();
+                            } else if (element.attr("type") !== "checkbox") {
+                                var keeper = $("#"+keeperId);
+                                if (keeper.length == 0) {
+                                    keeper = $("<input>").attr({
+                                        type: 'hidden',
+                                        id: keeperId,
+                                        name: element.attr('name')
+                                    });
+                                }
+                                keeper.val(element.val());
+                                element.parent().append(keeper);
+                            }
+                            $("label[for='" + id + "']").toggleClass("deletion", !doEnable);
+                        }
+                        element.data("disable", d);
                     }
-                    element.data("disable", d);
                 }
             };
 

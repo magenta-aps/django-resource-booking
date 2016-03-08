@@ -154,6 +154,20 @@ class Unit(models.Model):
         else:
             return self.userprofile_set.all()
 
+    def get_recipients(self, template_key):
+        recipients = []
+        if template_key in EmailTemplate.unit_hosts_keys:
+            print "We may add hosts from unit"
+            from profile.models import HOST
+            recipients.extend(self.get_users(HOST))
+
+        if template_key in \
+                EmailTemplate.unit_teachers_keys:
+            print "We may add teachers from unit"
+            from profile.models import TEACHER
+            recipients.extend(self.get_users(TEACHER))
+        return recipients
+
 
 # Master data related to bookable resources start here
 class Subject(models.Model):
@@ -378,7 +392,6 @@ class EmailTemplate(models.Model):
     booking_recipient_contacts_keys = [
         NOTIFY_HOST__BOOKING_CREATED,
         NOTIFY_HOST__ASSOCIATED,
-        NOTIFY_ALL__BOOKING_COMPLETE,
         NOTIFY_ALL__BOOKING_CANCELED,
         NOTITY_ALL__BOOKING_REMINDER
     ]
@@ -391,12 +404,22 @@ class EmailTemplate(models.Model):
         NOTITY_ALL__BOOKING_REMINDER
     ]
     # Templates that will be autosent to hosts in the unit
-    booking_recipient_hosts_keys = [
+    unit_hosts_keys = [
         NOTIFY_HOST__REQ_HOST_VOLUNTEER
     ]
     # Templates that will be autosent to teachers in the unit
-    booking_recipient_teachers_keys = [
+    unit_teachers_keys = [
         NOTIFY_HOST__REQ_TEACHER_VOLUNTEER
+    ]
+    # Templates that will be autosent to hosts in the occurrence
+    occurrence_hosts_keys = [
+        NOTIFY_ALL__BOOKING_COMPLETE,
+        NOTIFY_ALL__BOOKING_CANCELED
+    ]
+    # Templates that will be autosent to teachers in the occurrence
+    occurrence_teachers_keys = [
+        NOTIFY_ALL__BOOKING_COMPLETE,
+        NOTIFY_ALL__BOOKING_CANCELED
     ]
 
     key = models.IntegerField(
@@ -1182,14 +1205,26 @@ class Visit(Resource):
         return occ
 
     def get_autosend(self, template_key):
+        print "Find autosends in visit %d with template key %d" % (self.id, template_key)
         try:
-            return self.visitautosend_set.filter(
+            item = self.visitautosend_set.filter(
                 template_key=template_key, enabled=True)[0]
+            print "Found"
+            return item
         except:
+            print "None found"
             return None
 
     def autosend_enabled(self, template_key):
         return self.get_autosend(template_key) is not None
+
+    def get_recipients(self, template_key):
+        recipients = self.unit.get_recipients(template_key)
+        if template_key in \
+                EmailTemplate.booking_recipient_contacts_keys:
+            print "We may add contacts"
+            recipients.extend(self.contact_persons.all())
+        return recipients
 
 
 class VisitOccurrence(models.Model):
@@ -1519,23 +1554,83 @@ class VisitOccurrence(models.Model):
     def get_absolute_url(self):
         return reverse('visit-occ-view', args=[self.pk])
 
+    def get_recipients(self, template_key):
+        recipients = []
+        if template_key in EmailTemplate.occurrence_hosts_keys:
+            print "We may add hosts from occurrence"
+            recipients.extend(self.hosts.all())
+        if template_key in \
+                EmailTemplate.occurrence_teachers_keys:
+            print "We may add teachers from occurrence"
+            recipients.extend(self.teachers.all())
+        return recipients
+
     def autosend_inherits(self, template_key):
-        return self.visitoccurrenceautosend_set.\
+        s = self.visitoccurrenceautosend_set.\
             filter(template_key=template_key, inherit=True).\
             count() > 0
+        print "Template %d inherits: %s" % (template_key, "yes" if s else "no")
+        return s
 
     def get_autosend(self, template_key, follow_inherit=True):
         if follow_inherit and self.autosend_inherits(template_key):
             return self.visit.get_autosend(template_key)
         else:
+            print "Find autosends in occurrence %d with template key %d" % (self.id, template_key)
             try:
-                return self.visitoccurrenceautosend_set.filter(
+                item = self.visitoccurrenceautosend_set.filter(
                     template_key=template_key, enabled=True)[0]
-            except:
+                print "Found"
+                return item
+            except Exception as e:
+                print "None found"
                 return None
 
     def autosend_enabled(self, template_key):
         return self.get_autosend(template_key, True) is not None
+
+    # Sends a message to defined recipients pertaining to the VisitOccurrence
+    def autosend(self, template_key, recipients=None,
+                 only_these_recipients=False):
+        print "VisitOccurrence.autosend(%d)" % template_key
+        if self.autosend_enabled(template_key):
+            print "autosend is enabled for this template"
+            visit = self.visit
+            unit = visit.unit
+            if recipients is None:
+                recipients = set()
+            else:
+                recipients = set(recipients)
+            if not only_these_recipients:
+                recipients.update(self.get_recipients(template_key))
+
+            print "Recipients: %s" % unicode(recipients)
+            KUEmailMessage.send_email(
+                template_key,
+                {'occurrence': self, 'visit': visit},
+                list(recipients),
+                unit
+            )
+
+            if not only_these_recipients and \
+                template_key in EmailTemplate.booking_recipient_booker_keys:
+                print "Also sending to bookers:"
+                for booking in self.bookings.all():
+                    print booking.booker.get_full_email()
+                    KUEmailMessage.send_email(
+                        template_key,
+                        {
+                            'occurrence': self,
+                            'visit': visit,
+                            'booking': booking,
+                            'booker': booking.booker
+                        },
+                        booking.booker,
+                        unit
+                    )
+        else:
+            print "autosend is disabled for this template"
+
 
 
 VisitOccurrence.add_override_property('duration')
@@ -1957,42 +2052,40 @@ class Booking(models.Model):
     def get_url(self):
         return settings.PUBLIC_URL + self.get_absolute_url()
 
+    def get_recipients(self, template_key):
+        recipients = self.visitoccurrence.get_recipients(template_key)
+        if template_key in EmailTemplate.booking_recipient_booker_keys:
+            print "We may add booker"
+            recipients.add(self.booker)
+        return recipients
+
     def autosend(self, template_key, recipients=None,
                  only_these_recipients=False):
+        print "VisitOccurrence.autosend(%d)" % template_key
         if self.visitoccurrence.autosend_enabled(template_key):
+            print "autosend is enabled for this template"
+            visit = self.visitoccurrence.visit
+            unit = visit.unit
             if recipients is None:
                 recipients = set()
             else:
                 recipients = set(recipients)
             if not only_these_recipients:
-                if template_key in \
-                        EmailTemplate.booking_recipient_contacts_keys:
-                    recipients.update(self.visit.contact_persons.all())
+                recipients.update(self.get_recipients(template_key))
 
-                if template_key in EmailTemplate.booking_recipient_booker_keys:
-                    recipients.add(self.booker)
-
-                if template_key in EmailTemplate.booking_recipient_hosts_keys:
-                    from profile import HOST
-                    unit = self.visitoccurrence.visit.unit
-                    recipients.update(unit.get_users(HOST))
-
-                if template_key in \
-                        EmailTemplate.booking_recipient_teachers_keys:
-                    from profile import TEACHER
-                    unit = self.visitoccurrence.visit.unit
-                    recipients.update(unit.get_users(TEACHER))
-
+            print "Recipients: %s" % unicode(recipients)
             KUEmailMessage.send_email(
                 template_key,
                 {
                     'booking': self,
-                    'visit': self.visit,
+                    'visit': visit,
                     'booker': self.booker
                 },
                 list(recipients),
-                self.visit.unit
+                unit
             )
+        else:
+            print "autosend is disabled for this template"
 
     def as_searchtext(self):
         return " ".join([unicode(x) for x in [

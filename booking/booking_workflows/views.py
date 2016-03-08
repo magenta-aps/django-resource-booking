@@ -49,9 +49,11 @@ class ChangeVisitOccurrenceStatusView(AutologgerMixin, UpdateWithCancelView):
         status = form.cleaned_data['workflow_status']
         if status == VisitOccurrence.WORKFLOW_STATUS_PLANNED:
             # Booking is planned
+            print "Booking is planned"
             self.object.autosend(EmailTemplate.NOTIFY_ALL__BOOKING_COMPLETE)
         if status == VisitOccurrence.WORKFLOW_STATUS_CANCELLED:
             # Booking is cancelled
+            print "Booking is cancelled"
             self.object.autosend(EmailTemplate.NOTIFY_ALL__BOOKING_CANCELED)
         return response
 
