@@ -16,15 +16,35 @@
             };
 
             var fixRow = function(row) {
-                var templateSelect = row.find("[name$='-template_key']")
+                var templateSelect = row.find("[name$='-template_key']");
                 templateSelect.change(function(){
                     toggleReminder(row);
+                    disableAlreadySelected();
                 });
                 toggleReminder(row);
             };
 
+            var disableAlreadySelected = function() {
+                var selects = $("[name$='-template_key']"),
+                    selected = {};
+                selects.each(function() {
+                    var value = $(this).val();
+                    if (value !== "") {
+                        selected[value] = true;
+                    }
+                });
+                selects.find("option").each(function(){
+                    if (selected[this.value] && !this.selected) {
+                        this.disabled = "disabled";
+                    } else {
+                        this.disabled = null;
+                    }
+                });
+            };
+
             $(".autosend-row").each(function() {
                 fixRow($(this));
+                disableAlreadySelected();
             });
 
             $("#addAutosend").click(function(){
@@ -36,13 +56,10 @@
                 );
                 if (row) {
                     fixRow(row);
+                    disableAlreadySelected();
                 }
-
-
-
                 return false;
             });
-            console.log($("#addAutosend"));
         });
     //-->
 </script>
