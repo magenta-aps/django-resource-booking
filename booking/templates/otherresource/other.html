@@ -48,10 +48,9 @@
                     </h4>
                 </div>
                 <div id="collapseDescription" class="panel-collapse collapse
-                {% if not object.pk or form.state.errors or form.teaser.errors or form.description.errors %}in{% endif %}
+                {% if not object.pk or form.teaser.errors or form.description.errors %}in{% endif %}
                 " aria-labelledby="headingDescription" role="tabpanel">
                     <div class="panel-body">
-                        {% include 'resource/fields/state.html' %}
                         {% include 'resource/fields/teaser.html' %}
                         {% include 'resource/fields/description.html' %}
                     </div>
@@ -65,7 +64,7 @@
                     </h4>
                 </div>
                 <div id="collapseAudience" class="panel-collapse collapse
-                    {% if not object.pk or form.audience.errors or form.institution_level.errors or form.subjects.errors or form.level.errors %}in{% endif %}
+                    {% if not object.pk or form.audience.errors or form.institution_level.errors or form.subjects.errors or form.level.errors or form.class_level_min.errors or form.class_level_max.errors %}in{% endif %}
                     " aria-labelledby="headingAudience" role="tabpanel" aria-expanded="true" style="">
                     <div class="panel-body">
                         {% include 'resource/fields/audience.html' %}

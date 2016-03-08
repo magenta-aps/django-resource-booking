@@ -14,10 +14,10 @@ from booking.views import EditVisitView, VisitDetailView
 from booking.views import VisitNotifyView, VisitNotifySuccessView
 from booking.views import SearchView, EmbedcodesView
 
+from booking.views import BookingNotifyView, BookingNotifySuccessView
 from booking.views import EmailTemplateListView, EmailTemplateEditView
 from booking.views import EmailTemplateDetailView, EmailTemplateDeleteView
-from booking.views import BookingNotifyView
-from booking.views import BookingNotifySuccessView
+from booking.views import ContactComposeView
 from booking.views import BookingDetailView, ChangeVisitOccurrenceStatusView
 from booking.views import ChangeVisitOccurrenceStartTimeView
 from booking.views import ChangeVisitOccurrenceTeachersView
@@ -176,7 +176,11 @@ urlpatterns = patterns(
         name='emailtemplate-view'),
     url(r'^emailtemplate/(?P<pk>[0-9]+)/delete$',
         EmailTemplateDeleteView.as_view(),
-        name='emailtemplate-delete')
+        name='emailtemplate-delete'),
+
+    url(r'^email/(?P<recipient>[0-9]+)/?$',
+        ContactComposeView.as_view(),
+        name='email')
 
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

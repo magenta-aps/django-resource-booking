@@ -22,7 +22,7 @@
     <div class="divider"></div>
     <div class="row form-group">
         <div class="col-sm-8">
-            <h1>{% if object %}{% trans "Rediger tilbud" %}{% else %}{% trans "Nyt tilbud" %}{% endif %}</h1>
+            <h1>{% if object.pk %}{% trans "Rediger tilbud" %}{% else %}{% trans "Nyt tilbud" %}{% endif %}</h1>
         </div>
         <div class="col-sm-4 text-right">
             <a href="#" class="btn btn-default btn-sm openall">{% trans "Udvid alle felter" %}</a> <a href="#" class="btn btn-default btn-sm closeall">{% trans "Luk alle felter" %}</a>
@@ -100,7 +100,7 @@
                                 {{ form.teaser.errors }}
                             </div>
                             <div class="col-sm-2">
-                                <label for="{{ form.teaser.id_for_label }}">{{ form.teaser.label }}:</label>
+                                <label class="{{ form.teaser.css_classes }}" for="{{ form.teaser.id_for_label }}">{{ form.teaser.label }}:</label>
                             </div>
                             <div class="col-sm-10">
                                 {{ form.teaser }}
@@ -111,7 +111,7 @@
                                 {{ form.description.errors }}
                             </div>
                             <div class="col-sm-2">
-                                <label for="{{ form.description.id_for_label }}">{{ form.description.label }}:</label>
+                                <label class="{{ form.description.css_classes }}" for="{{ form.description.id_for_label }}">{{ form.description.label }}:</label>
                             </div>
                             <div class="col-sm-10">
                                 {{ form.description }}
@@ -122,7 +122,7 @@
                                 {{ form.price.errors }}
                             </div>
                             <div class="col-sm-2">
-                                <label for="{{ form.price.id_for_label }}">{{ form.price.label }}:</label>
+                                <label class="{{ form.price.css_classes }}" for="{{ form.price.id_for_label }}">{{ form.price.label }}:</label>
                             </div>
                             <div class="col-sm-10">
                                 {{ form.price }}
@@ -172,7 +172,7 @@
                                 {{ form.audience.errors }}
                             </div>
                             <div class="col-sm-2">
-                                <label for="{{ form.audience.id_for_label }}">{{ form.audience.label }}:</label>
+                                <label class="{{ form.level.css_classes }}" for="{{ form.audience.id_for_label }}">{{ form.audience.label }}:</label>
                             </div>
                             <div class="col-sm-10">
                                 {{ form.audience }}
@@ -184,7 +184,7 @@
                                 {{ form.institution_level.errors }}
                             </div>
                             <div class="col-sm-2">
-                                <label for="{{ form.institution_level.id_for_label }}">{{ form.institution_level.label }}:</label>
+                                <label class="{{ form.institution_level.css_classes }}" for="{{ form.institution_level.id_for_label }}">{{ form.institution_level.label }}:</label>
                             </div>
                             <div class="col-sm-10">
                                 {{ form.institution_level }}
@@ -208,7 +208,7 @@
                                 {{ form.minimum_number_of_visitors.errors }}
                             </div>
                             <div class="col-sm-2">
-                                <label for="{{ form.minimum_number_of_visitors.id_for_label }}">{{ form.minimum_number_of_visitors.label }}:</label>
+                                <label class="{{ form.minimum_number_of_visitors.css_classes }}" for="{{ form.minimum_number_of_visitors.id_for_label }}">{{ form.minimum_number_of_visitors.label }}:</label>
                             </div>
                             <div class="col-sm-10">
                                 {{ form.minimum_number_of_visitors }}
@@ -219,7 +219,7 @@
                                 {{ form.maximum_number_of_visitors.errors }}
                             </div>
                             <div class="col-sm-2">
-                                <label for="{{ form.maximum_number_of_visitors.id_for_label }}">{{ form.maximum_number_of_visitors.label }}:</label>
+                                <label class="{{ form.maximum_number_of_visitors.css_classes }}" for="{{ form.maximum_number_of_visitors.id_for_label }}">{{ form.maximum_number_of_visitors.label }}:</label>
                             </div>
                             <div class="col-sm-10">
                                 {{ form.maximum_number_of_visitors }}
@@ -315,34 +315,8 @@
 
                                     <fieldset>
                                         {{ form.duration.errors }}
-                                        <label class="{{ form.duration.css_classes }}" for="{{ form.duration.id_for_label }}">{{ form.duration.label }}:</label>
-                                        <select id="id_duration" name="duration" class="form-control input-sm">
-                                            <option value="00:00">00:00</option>
-                                            <option value="00:30">00:30</option>
-                                            <option value="01:00">01:00</option>
-                                            <option value="01:30">01:30</option>
-                                            <option value="02:00">02:00</option>
-                                            <option value="02:30">02:30</option>
-                                            <option value="03:00">03:00</option>
-                                            <option value="03:30">03:30</option>
-                                            <option value="04:00">04:00</option>
-                                            <option value="04:30">04:30</option>
-                                            <option value="05:00">05:00</option>
-                                            <option value="05:30">05:30</option>
-                                            <option value="06:00">06:00</option>
-                                            <option value="06:30">06:30</option>
-                                            <option value="07:00">07:00</option>
-                                            <option value="07:30">07:30</option>
-                                            <option value="08:00">08:00</option>
-                                            <option value="08:30">08:30</option>
-                                            <option value="09:00">09:00</option>
-                                            <option value="09:30">09:30</option>
-                                            <option value="10:00">10:00</option>
-                                            <option value="10:30">10:30</option>
-                                            <option value="11:00">11:00</option>
-                                            <option value="11:30">11:30</option>
-                                            <option value="12:00">12:00</option>
-                                        </select>
+                                        <label class="form_control input-sm {{ form.duration.css_classes }}" for="{{ form.duration.id_for_label }}">{{ form.duration.label }}:</label>
+                                        {{ form.duration }}
                                     </fieldset>
                                     <fieldset>
                                         {{ form.recurrences.errors }}
@@ -476,26 +450,26 @@
                 " aria-labelledby="headingContact" role="tabpanel" aria-expanded="false" style="">
                     <div class="panel-body">
                         <div class="row form-group">
-                                <div>{{ form.unit.errors }}</div>
+                            <div>{{ form.unit.errors }}</div>
                                 <div class="col-sm-2">
-                                <label for="{{ form.unit.id_for_label }}">{{ form.unit.label }}:</label>
+                                <label class="{{ form.unit.css_classes }}" for="{{ form.unit.id_for_label }}">{{ form.unit.label }}:</label>
                                 </div>
                                 <div class="col-sm-10">
                                 {{ form.unit }}
                             </div>
                         </div>
                         <div class="row form-group">
-                                <div>{{ form.enabled.errors }}</div>
-                                <div class="col-sm-12">
-                                    <label class="radiolabel" for="{{ form.enabled.id_for_label }}">{{ form.enabled }} Kan bookes</label>
-                                </div>
+                            <div>{{ form.enabled.errors }}</div>
+                            <div class="col-sm-12">
+                                <label class="radiolabel" for="{{ form.enabled.id_for_label }}">{{ form.enabled }} Kan bookes</label>
                             </div>
-                            <div class="row form-group">
-                                <div>{{ form.contact_persons.errors }}</div>
-                                <div class="col-sm-2">
+                        </div>
+                        <div class="row form-group">
+                            <div>{{ form.contact_persons.errors }}</div>
+                            <div class="col-sm-2">
                                 <label for="{{ form.contact_persons.id_for_label }}">{{ form.contact_persons.label }}:</label>
-                                </div>
-                                <div class="col-sm-10">
+                            </div>
+                            <div class="col-sm-10">
                                 {{ form.contact_persons }}
                             </div>
                         </div>

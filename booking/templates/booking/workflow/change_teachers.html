@@ -11,6 +11,14 @@
     </div>
     <div class="row">
         <div class="col-sm-12 col-md-8">
+            På besøget tilknyttet denne booking, "{{ object.visit.title }}",
+            er der angivet følgende om det nødvendige antal af undervisere:<br />
+            <em>{{ object.visit.get_needed_teachers_display }}</em>
+        </div>
+    </div>
+    <div class="divider"></div>
+    <div class="row">
+        <div class="col-sm-12 col-md-8">
             <form name="changebookinteachersform" id="changebookinteachersform"
                 action="{% url 'change-visit-occ-teachers' object.pk %}" method="post">
                 {% csrf_token %}

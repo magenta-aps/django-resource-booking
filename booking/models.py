@@ -1,10 +1,10 @@
 # encoding: utf-8
 from django.core.mail.message import EmailMessage
 from django.db import models
-from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
-from django.template.context import make_context
 from django.db.models import Sum
+from django.template.context import make_context
+from django.utils import timezone
 from djorm_pgfulltext.models import SearchManager
 from djorm_pgfulltext.fields import VectorField
 from django.contrib.contenttypes.models import ContentType
@@ -113,6 +113,7 @@ class Unit(models.Model):
     class Meta:
         verbose_name = _(u"enhed")
         verbose_name_plural = _(u"enheder")
+        ordering = ['name']
 
     name = models.CharField(max_length=100)
     type = models.ForeignKey(UnitType)
@@ -121,6 +122,11 @@ class Unit(models.Model):
         Person, null=True, blank=True,
         verbose_name=_(u'Kontaktperson'),
         related_name="contactperson_for_units"
+    )
+    url = models.URLField(
+        verbose_name=u'Hjemmeside',
+        null=True,
+        blank=True
     )
 
     def belongs_to(self, unit):
@@ -486,7 +492,7 @@ class Resource(models.Model):
         (TEACHER_EVENT, _(u"Lærerarrangement")),
         (GROUP_VISIT, _(u"Besøg med klassen")),
         (STUDY_PROJECT, _(u"Studieretningsprojekt")),
-        (ASSIGNMENT_HELP, _(u"Opgavehjælp")),
+        (ASSIGNMENT_HELP, _(u"Lektiehjælp")),
         (OTHER_OFFERS,  _(u"Andre tilbud")),
         (STUDY_MATERIAL, _(u"Undervisningsmateriale"))
     )
@@ -508,6 +514,15 @@ class Resource(models.Model):
 
     institution_choices = Subject.type_choices
 
+    # Level choices - A, B or C
+    A = 0
+    B = 1
+    C = 2
+
+    level_choices = (
+        (A, u'A'), (B, u'B'), (C, u'C')
+    )
+
     # Resource state - created, active and discontinued.
     CREATED = 0
     ACTIVE = 1
@@ -518,6 +533,8 @@ class Resource(models.Model):
         (ACTIVE, _(u"Aktivt")),
         (DISCONTINUED, _(u"Ophørt"))
     )
+
+    class_level_choices = [(i, unicode(i)) for i in range(0, 11)]
 
     enabled = models.BooleanField(verbose_name=_(u'Aktiv'), default=True)
     type = models.IntegerField(choices=resource_type_choices,
@@ -583,12 +600,14 @@ class Resource(models.Model):
     extra_search_text = models.TextField(
         blank=True,
         default='',
-        verbose_name=_(u'Tekst-værdier til fritekstsøgning')
+        verbose_name=_(u'Tekst-værdier til fritekstsøgning'),
+        editable=False
     )
 
     objects = SearchManager(
         fields=(
             'title',
+            'teaser',
             'description',
             'mouseover_description',
             'extra_search_text'
@@ -646,6 +665,7 @@ class Resource(models.Model):
     def as_searchtext(self):
         return " ".join([unicode(x) for x in [
             self.title,
+            self.teaser,
             self.description,
             self.mouseover_description,
             self.extra_search_text
@@ -898,13 +918,6 @@ class OtherResource(Resource):
                 Resource.resource_type_choices
                 if type[0] in OtherResource.applicable_types)
 
-    link = models.URLField(
-        verbose_name=u'Link',
-        max_length=256,
-        blank=True,
-        null=True
-    )
-
     def save(self, *args, **kwargs):
         # Save once to store relations
         super(OtherResource, self).save(*args, **kwargs)
@@ -929,6 +942,7 @@ class Visit(Resource):
     objects = SearchManager(
         fields=(
             'title',
+            'teaser',
             'description',
             'mouseover_description',
             'extra_search_text'
@@ -973,11 +987,19 @@ class Visit(Resource):
         blank=True,
         null=True
     )
+
+    duration_choices = []
+    for hour in range(0, 12, 1):
+        for minute in range(0, 60, 15):
+            value = "%.2d:%.2d" % (hour, minute)
+            duration_choices.append((value, value),)
+
     duration = models.CharField(
         max_length=8,
         verbose_name=_(u'Varighed'),
         blank=True,
         null=True,
+        choices=duration_choices
     )
     contact_persons = models.ManyToManyField(
         Person,
@@ -1044,6 +1066,69 @@ class Visit(Resource):
         verbose_name=_(u'Mulighed for rundvisning')
     )
 
+    NEEDED_NUMBER_NONE = 0
+    NEEDED_NUMBER_BY_TEXT = -1
+    NEEDED_NUMBER_BY_BOOKING = -2
+    NEEDED_NUMBER_SPECIFIED = -3
+
+    host_number_choices = (
+        (NEEDED_NUMBER_NONE, _(u'Tilbuddet kræver ikke værter')),
+        (
+            NEEDED_NUMBER_BY_TEXT,
+            _(u'Beregnet ud fra eksempelvis antal deltagere')
+        ),
+        (NEEDED_NUMBER_BY_BOOKING, _(u'Besluttes på det enkelte besøg'))
+    )
+
+    needed_hosts = models.IntegerField(
+        default=0,
+        verbose_name=_(u'Nødvendigt antal værter')
+    )
+    needed_hosts_text = models.CharField(
+        blank=True,
+        max_length=255,
+        verbose_name=_(u'Formular for beregning af antal værter')
+    )
+
+    teacher_number_choices = (
+        (NEEDED_NUMBER_NONE, _(u'Tilbuddet kræver ikke undervisere')),
+        (
+            NEEDED_NUMBER_BY_TEXT,
+            _(u'Beregnet ud fra eksempelvis antal deltagere')
+        ),
+        (NEEDED_NUMBER_BY_BOOKING, _(u'Besluttes på det enkelte besøg'))
+    )
+
+    needed_teachers = models.IntegerField(
+        default=0,
+        verbose_name=_(u'Nødvendigt antal undervisere')
+    )
+    needed_teachers_text = models.CharField(
+        blank=True,
+        max_length=255,
+        verbose_name=_(u'Formular for beregning af antal undervisere')
+    )
+
+    def get_needed_hosts_display(self):
+        val = self.needed_hosts
+        for v, text in self.teacher_number_choices:
+            if v == val:
+                if val == Visit.NEEDED_NUMBER_BY_TEXT:
+                    return '%s: %s' % (text, self.needed_hosts_text)
+                else:
+                    return text
+        return _(u'Fast antal: %s') % val
+
+    def get_needed_teachers_display(self):
+        val = self.needed_teachers
+        for v, text in self.teacher_number_choices:
+            if v == val:
+                if val == Visit.NEEDED_NUMBER_BY_TEXT:
+                    return '%s: %s' % (text, self.needed_teachers_text)
+                else:
+                    return text
+        return _(u'Fast antal: %s') % val
+
     def save(self, *args, **kwargs):
         # Save once to store relations
         super(Visit, self).save(*args, **kwargs)
@@ -1087,10 +1172,6 @@ class Visit(Resource):
     def get_absolute_url(self):
         return reverse('visit-view', args=[self.pk])
 
-    def autosend_enabled(self, template_key):
-        return self.visitautosend_set.\
-            filter(template_key=template_key).count() > 0
-
     def make_occurrence(self, starttime=None, bookable=False, **kwargs):
         occ = VisitOccurrence(
             visit=self,
@@ -1099,6 +1180,10 @@ class Visit(Resource):
             **kwargs
         )
         return occ
+
+    def autosend_enabled(self, template_key):
+        return self.visitautosend_set.\
+            filter(template_key=template_key).count() > 0
 
 
 class VisitOccurrence(models.Model):
@@ -1360,6 +1445,10 @@ class VisitOccurrence(models.Model):
 
         return result
 
+    def is_booked(self):
+        """Has this VisitOccurrence instance been booked yet?"""
+        return len(self.booking_set.all()) > 0
+
     def date_display(self):
         return self.start_datetime or _(u'på ikke-fastlagt tidspunkt')
 
@@ -1404,8 +1493,9 @@ class VisitOccurrence(models.Model):
         if self.visit:
             result.append(self.visit.as_searchtext())
 
-        # if self.booking:
-        #    result.append(self.booking.as_searchtext())
+        if self.bookings:
+            for booking in self.bookings.all():
+                result.append(booking.as_searchtext())
 
         return " ".join(result)
 
@@ -1501,11 +1591,28 @@ class Region(models.Model):
         verbose_name_plural = _(u'regioner')
 
     name = models.CharField(
-        max_length=16
+        max_length=16,
+        verbose_name=_(u'Navn')
+    )
+
+    # Not pretty, but it gets the job done for now
+    name_en = models.CharField(
+        max_length=16,
+        null=True,
+        verbose_name=_(u'Engelsk navn')
     )
 
     def __unicode__(self):
         return self.name
+
+    @staticmethod
+    def create_defaults():
+        from booking.data import regions
+        for name in regions.regions:
+            try:
+                Region.objects.get(name=name)
+            except ObjectDoesNotExist:
+                Region(name=name).save()
 
 
 class PostCode(models.Model):
@@ -1533,6 +1640,38 @@ class PostCode(models.Model):
             return PostCode.objects.get(number=int(code))
         except PostCode.DoesNotExist:
             return None
+
+    @staticmethod
+    def create_defaults():
+        Region.create_defaults()
+        from booking.data import postcodes
+        regions = {}
+        for postcode_def in postcodes.postcodes:
+            postcode_number = postcode_def['number']
+            city_name = postcode_def['city']
+            region_name = postcode_def['region']
+            region = regions.get(region_name)
+            if region is None:
+                try:
+                    region = Region.objects.get(name=region_name)
+                    regions[region_name] = region
+                except Region.DoesNotExist:
+                    print "Unknown region '%s'. May be a typo, please fix in " \
+                          "booking/data/postcodes.py" % region_name
+                    return
+            try:
+                postcode = PostCode.objects.get(number=postcode_number)
+            except PostCode.DoesNotExist:
+                postcode = PostCode(number=postcode_number,
+                                    city=city_name, region=region)
+                postcode.save()
+            else:
+                if postcode.city != city_name:
+                    postcode.city = city_name
+                    postcode.save()
+                if postcode.region != region:
+                    postcode.region = region
+                    postcode.save()
 
 
 class School(models.Model):
@@ -1580,6 +1719,7 @@ class School(models.Model):
 
     @staticmethod
     def create_defaults():
+        PostCode.create_defaults()
         from booking.data import schools
         for data, type in [
                 (schools.elementary_schools, School.ELEMENTARY_SCHOOL),
@@ -1591,11 +1731,11 @@ class School(models.Model):
                     if school.type != type:
                         school.type = type
                         school.save()
-                except ObjectDoesNotExist:
+                except School.DoesNotExist:
                     try:
                         postcode = PostCode.get(postnr)
                         School(name=name, postcode=postcode, type=type).save()
-                    except ObjectDoesNotExist:
+                    except PostCode.DoesNotExist:
                         print "Warning: Postcode %d not found in database. " \
                               "Not adding school %s" % (postcode, name)
 
@@ -1826,6 +1966,11 @@ class Booking(models.Model):
                 self.visit.unit
             )
 
+    def as_searchtext(self):
+        return " ".join([unicode(x) for x in [
+            self.booker.as_searchtext(),
+            self.notes
+        ] if x])
 
 Booking.add_occurrence_attr('visit')
 Booking.add_occurrence_attr('hosts')
@@ -1895,7 +2040,7 @@ class KUEmailMessage(models.Model):
     created = models.DateTimeField(
         blank=False,
         null=False,
-        default=timezone.now()
+        default=timezone.now
     )
     subject = models.TextField(blank=False, null=False)
     body = models.TextField(blank=False, null=False)

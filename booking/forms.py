@@ -6,10 +6,9 @@ from booking.models import Booker, Region, PostCode, School
 from booking.models import ClassBooking, TeacherBooking, BookingSubjectLevel
 from booking.models import EmailTemplate
 from django import forms
-from django.forms import CheckboxSelectMultiple, EmailInput, RadioSelect, \
-    formset_factory
-from django.forms import inlineformset_factory
-from django.forms import TextInput, NumberInput, URLInput, Textarea, Select
+from django.forms import CheckboxSelectMultiple, RadioSelect, EmailInput
+from django.forms import formset_factory, inlineformset_factory
+from django.forms import TextInput, NumberInput, Textarea, Select
 from django.forms import HiddenInput
 from django.utils import formats
 from django.utils.translation import ugettext_lazy as _
@@ -40,7 +39,7 @@ class OtherResourceForm(forms.ModelForm):
 
     class Meta:
         model = OtherResource
-        fields = ('title', 'teaser', 'description', 'link',
+        fields = ('title', 'teaser', 'description', 'state',
                   'type', 'tags', 'comment',
                   'institution_level', 'topics', 'audience',
                   'enabled', 'unit',)
@@ -61,7 +60,6 @@ class OtherResourceForm(forms.ModelForm):
             'tags': CheckboxSelectMultiple(),
             'topics': CheckboxSelectMultiple(),
             'audience': RadioSelect(),
-            'link': URLInput(),
         }
 
     def __init__(self, *args, **kwargs):
@@ -81,13 +79,17 @@ class VisitForm(forms.ModelForm):
 
     class Meta:
         model = Visit
-        fields = ('title', 'teaser', 'description', 'price',
+        fields = ('title', 'teaser', 'description', 'price', 'state',
                   'type', 'tags', 'preparation_time', 'comment',
                   'institution_level', 'topics', 'audience',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'duration', 'locality', 'rooms_assignment',
                   'rooms_needed', 'tour_available',
-                  'enabled', 'contact_persons', 'unit')
+                  'enabled', 'contact_persons', 'unit',
+                  'needed_hosts', 'needed_hosts_text', 'needed_teachers',
+                  'needed_teachers_text',
+                  )
+
         widgets = {
             'title': TextInput(attrs={
                 'class': 'titlefield form-control input-sm',
@@ -130,10 +132,30 @@ class VisitForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        # Provide defaults for needed_-fields if not present in submit data.
+        if 'data' in kwargs:
+            kwargs['data']['needed_hosts'] = kwargs['data'].get(
+                'needed_hosts', 0
+            )
+            kwargs['data']['needed_teachers'] = kwargs['data'].get(
+                'needed_teachers', 0
+            )
+
         self.user = kwargs.pop('user')
         super(VisitForm, self).__init__(*args, **kwargs)
         self.fields['unit'].queryset = self.get_unit_query_set()
         self.fields['type'].widget = HiddenInput()
+
+        # Add classes to certain widgets
+        for x in ('needed_hosts', 'needed_hosts_text',
+                  'needed_teachers', 'needed_teachers_text'):
+            f = self.fields[x]
+            f.widget.attrs['class'] = " ".join([
+                x for x in (
+                    f.widget.attrs.get('class'),
+                    'form-control input-sm'
+                ) if x
+            ])
 
     def clean_type(self):
         instance = getattr(self, 'instance', None)
@@ -207,19 +229,19 @@ class BookerForm(BookingForm):
         widgets = {
             'firstname': TextInput(
                 attrs={'class': 'form-control input-sm',
-                       'placeholder': 'Fornavn'}
+                       'placeholder': _(u'Fornavn')}
             ),
             'lastname': TextInput(
                 attrs={'class': 'form-control input-sm',
-                       'placeholder': 'Efternavn'}
+                       'placeholder': _(u'Efternavn')}
             ),
             'email': EmailInput(
                 attrs={'class': 'form-control input-sm',
-                       'placeholder': 'Email'}
+                       'placeholder': _(u'Email')}
             ),
             'phone': TextInput(
                 attrs={'class': 'form-control input-sm',
-                       'placeholder': 'Telefonnummer',
+                       'placeholder': _(u'Telefonnummer'),
                        'pattern': '(\(\+\d+\)|\+\d+)?\s*\d+[ \d]*'},
             ),
             'line': Select(
@@ -236,7 +258,7 @@ class BookerForm(BookingForm):
     repeatemail = forms.CharField(
         widget=TextInput(
             attrs={'class': 'form-control input-sm',
-                   'placeholder': 'Gentag email'}
+                   'placeholder': _(u'Gentag email')}
         )
     )
     school = forms.CharField(
@@ -248,7 +270,7 @@ class BookerForm(BookingForm):
     postcode = forms.IntegerField(
         widget=NumberInput(
             attrs={'class': 'form-control input-sm',
-                   'placeholder': 'Postnummer',
+                   'placeholder': _(u'Postnummer'),
                    'min': '1000', 'max': '9999'}
         ),
         required=False
@@ -256,7 +278,7 @@ class BookerForm(BookingForm):
     city = forms.CharField(
         widget=TextInput(
             attrs={'class': 'form-control input-sm',
-                   'placeholder': 'By'}
+                   'placeholder': _(u'By')}
         ),
         required=False
     )
@@ -268,7 +290,7 @@ class BookerForm(BookingForm):
         required=False
     )
 
-    def __init__(self, data=None, visit=None, *args, **kwargs):
+    def __init__(self, data=None, visit=None, language='da', *args, **kwargs):
         super(BookerForm, self).__init__(data, *args, **kwargs)
         attendeecount_widget = self.fields['attendee_count'].widget
         attendeecount_widget.attrs['min'] = 1
@@ -290,6 +312,18 @@ class BookerForm(BookingForm):
                 if value in available_level_choices
             ]
 
+        # Eventually we may want a prettier solution,
+        # but for now this will have to do
+        if language == 'en':
+            self.fields['region'].choices = [
+                (
+                    region.id,
+                    region.name_en
+                    if region.name_en is not None else region.name
+                )
+                for region in Region.objects.all()
+            ]
+
     def clean_postcode(self):
         postcode = self.cleaned_data.get('postcode')
         if postcode is not None:
@@ -306,8 +340,9 @@ class BookerForm(BookingForm):
 
         if email is not None and repeatemail is not None \
                 and email != repeatemail:
-            error = forms.ValidationError(u"Indtast den samme email-adresse " +
-                                          u"i begge felter")
+            error = forms.ValidationError(
+                _(u"Indtast den samme email-adresse i begge felter")
+            )
             self.add_error('repeatemail', error)
 
     def save(self):
@@ -415,9 +450,9 @@ class EmailTemplateForm(forms.ModelForm):
 
     def __init__(self, user, *args, **kwargs):
         super(EmailTemplateForm, self).__init__(*args, **kwargs)
-        self.fields['unit'].choices = (
+        self.fields['unit'].choices = [(None, u'---------')] + [
             (x.pk, unicode(x))
-            for x in user.userprofile.get_unit_queryset())
+            for x in user.userprofile.get_unit_queryset()]
 
 
 class EmailTemplatePreviewContextEntryForm(forms.Form):
@@ -459,6 +494,7 @@ EmailTemplatePreviewContextForm = formset_factory(
 
 
 class BaseEmailComposeForm(forms.Form):
+    required_css_class = 'required'
 
     body = forms.CharField(
         max_length=65584,
@@ -476,5 +512,44 @@ class EmailComposeForm(BaseEmailComposeForm):
 
     subject = forms.CharField(
         max_length=77,
-        label=_(u'Emne')
+        label=_(u'Emne'),
+        widget=TextInput(attrs={
+            'class': 'form-control'
+        })
+    )
+
+
+class GuestEmailComposeForm(BaseEmailComposeForm):
+
+    name = forms.CharField(
+        max_length=100,
+        label=_(u'Navn'),
+        widget=TextInput(
+            attrs={
+                'class': 'form-control input-sm',
+                'placeholder': _(u'Dit navn')
+            }
+        )
+    )
+
+    email = forms.EmailField(
+        label=_(u'Email'),
+        widget=EmailInput(
+            attrs={
+                'class': 'form-control input-sm',
+                'placeholder': _(u'Din email-adresse')
+            }
+        )
+    )
+
+    phone = forms.CharField(
+        label=_(u'Telefon'),
+        widget=TextInput(
+            attrs={
+                'class': 'form-control input-sm',
+                'placeholder': _(u'Dit telefonnummer'),
+                'pattern': '(\(\+\d+\)|\+\d+)?\s*\d+[ \d]*'
+            },
+        ),
+        required=False
     )

@@ -4,7 +4,6 @@ from django.core.urlresolvers import reverse
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import redirect
 from django.views.generic import UpdateView, FormView
-from booking.models import Booking, EmailTemplate
 from booking.booking_workflows.forms import ChangeVisitOccurrenceStatusForm, \
     VisitOccurrenceAutosendFormSet
 from booking.booking_workflows.forms import ChangeVisitOccurrenceTeachersForm
@@ -14,6 +13,7 @@ from booking.booking_workflows.forms import ChangeVisitOccurrenceCommentsForm
 from booking.booking_workflows.forms import VisitOccurrenceAddLogEntryForm
 from booking.booking_workflows.forms import ChangeVisitOccurrenceStartTimeForm
 from booking.models import VisitOccurrence
+from booking.models import EmailTemplate
 from booking.models import LOGACTION_MANUAL_ENTRY
 from booking.models import log_action
 from booking.views import AutologgerMixin
@@ -43,13 +43,14 @@ class ChangeVisitOccurrenceStatusView(AutologgerMixin, UpdateWithCancelView):
     template_name = "booking/workflow/change_status.html"
 
     def form_valid(self, form):
-        response = super(ChangeVisitOccurrenceStatusView, self).\
-            form_valid(form)
+        response = super(ChangeVisitOccurrenceStatusView, self).form_valid(
+            form
+        )
         status = form.cleaned_data['workflow_status']
-        if status == Booking.WORKFLOW_STATUS_PLANNED:
+        if status == VisitOccurrence.WORKFLOW_STATUS_PLANNED:
             # Booking is planned
             self.object.autosend(EmailTemplate.NOTIFY_ALL__BOOKING_COMPLETE)
-        if status == Booking.WORKFLOW_STATUS_CANCELLED:
+        if status == VisitOccurrence.WORKFLOW_STATUS_CANCELLED:
             # Booking is cancelled
             self.object.autosend(EmailTemplate.NOTIFY_ALL__BOOKING_CANCELED)
         return response

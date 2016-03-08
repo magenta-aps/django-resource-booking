@@ -8,7 +8,7 @@
     {% include 'common/breadcrumbrow.html' %}
 
     <div class="row titlebar hidden-print">
-        <div class="col-sm-12 col-md-9"><h2>Om tilbuddet</h2></div>
+        <div class="col-sm-12 col-md-9"><h2>{% trans 'Om tilbuddet' %}</h2></div>
         <div class="divider"></div>
     </div>
     <div class="row">
@@ -20,12 +20,12 @@
             <h2>{{ object.get_type_display }}</h2>
             
             {% if can_edit %}
-                <a class="pull-right btn btn-primary edit-btn" href="{% url 'visit-edit' object.pk %}?back={{ thisurl | urlencode }}">+ Redigér</a>
+                <a class="pull-right btn btn-primary margin-bottom-10" href="{% url 'visit-edit' object.pk %}">{% trans '+ Redigér' %}</a>
             {% endif %}
             {% if user.userprofile.can_create %}
-                <a class="pull-right btn btn-primary margin-right-10" href="{% url 'visit-clone' object.pk %}?back={{ thisurl | urlencode }}">Opret kopi</a>
+                <a class="pull-right btn btn-primary margin-bottom-10 margin-right-10" href="{% url 'visit-clone' object.pk %}">{% trans 'Opret kopi' %}</a>
             {% endif %}
-
+            
             <h1>{{ object.title }}</h1>
             <div class="well">
                 {% autoescape off %}
@@ -39,37 +39,53 @@
                 {% endautoescape %}
                 <!-- Richtext editor end -->
             </div>
+            <div>
+                {% if messages %}
+                <ul class="messages errorlist">
+                    {% for message in messages %}
+                    <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
             <div class="well order-buttons hidden-print">
-                <!-- Display according to business logic -->
                 {% if can_book %}
+
                 <a class="btn btn-default" data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'visit-book' object.id %}">
-                    Tilmeld
+                    {% trans 'Tilmeld' %}
                     <span class="glyphicon glyphicon-chevron-right"></span>
                 </a>
                 {% endif %}
-                <!-- Display according to business logic -->
+                {% if object.unit.contact %}
+                    <a href="{% url 'email' object.unit.contact.id %}?back={{ thisurl | urlencode }}" class="btn btn-default">
+                        {% trans 'Spørg om tilbud' %}
+                        <span class="glyphicon glyphicon-question-sign"></span>
+                    </a>
+                {% endif %}
             </div>
             {% if can_book %}
-            <div class="disclaimer">Bemærk at din bestilling først er bindende, når du har modtaget en bekræftelse fra den ansvarlige arrangør fra Københavns Universitet.</div>
+                <div class="disclaimer">{% trans 'Bemærk at din bestilling først er bindende, når du har modtaget en bekræftelse fra den ansvarlige arrangør fra Københavns Universitet.' %}</div>
             {% endif %}
             <div class="go-back">
-                <a href="#" class="btn btn-default" onclick="history.go(-1); return false;"><span class="glyphicon glyphicon-chevron-left"></span> Tilbage til søgeresultat</a>
+                <a href="#" class="btn btn-default" onclick="history.go(-1); return false;"><span class="glyphicon glyphicon-chevron-left"></span> {% trans 'Tilbage til søgeresultat' %}</a>
             </div>
         </div>
         <div class="col-sm-6 col-md-4">
             <form class="form-horizontal">
                 <div class="panel panel-default">
                     <div class="panel-heading">
-                        <h3 class="panel-title">Hvem, hvor og hvornår</h3>
+                        <h3 class="panel-title">{% trans 'Hvem, hvor og hvornår' %}</h3>
                     </div>
                     <div class="panel-body">
                         <dl class="dl-horizontal">
+                            
                             {% if object.get_audience_display %}
-                                <dt>Henvendt til:</dt>
+                                <dt>{% trans 'Henvendt til'%}:</dt>
                                 <dd>{{ object.get_audience_display }}</dd>
                             {% endif %}
+                            
                             {% if object.resource_ptr.all_subjects  %}
-                                <dt>{% trans 'Fag/niveau:' %}</dt>
+                                <dt>{% trans 'Fag/niveau' %}:</dt>
                                 <dd>
                                     <ul class="type-offer list-inline">
                                         {% for x in object.resource_ptr.all_subjects %}
@@ -78,42 +94,58 @@
                                     </ul>
                                 </dd>
                             {% endif %}
+                            
                             {% if object.num_of_participants_display %}
-                                <dt>Max antal:</dt>
+                                <dt>{% trans 'Antal' %}:</dt>
                                 <dd>{{ object.num_of_participants_display }}</dd>
                             {% endif %}
+                            
                             {% if object.get_type_display %}
-                                <dt>Hvad:</dt>
+                                <dt>{% trans 'Hvad' %}:</dt>
                                 <dd>{{ object.get_type_display }}</dd>
                             {% endif %}
+                            
                             {% if object.locality %}
-                                <dt>Hvor:</dt>
-                                <dd>{{ object.unit.name }}, {{ object.locality.name }}, {{ object.locality.address_line }}, {{ object.locality.zip_city }}</dd>
+                                <dt>{% trans 'Hvor' %}:</dt>
+                                <dd>
+                                    {{ object.locality.name }}<br>
+                                    {{ object.locality.address_line }}<br>
+                                    {{ object.locality.zip_city }}
+                                </dd>
                             {% endif %}
                             
-                            <dt>Arrangør:</dt>
-                            <dd><a href="#" data-toggle="modal" data-target="#kontaktformular">Stil et spørgsmål om dette tilbud</a> <span class="glyphicon glyphicon-new-window"></span></dd>
-                            
-                            <dt>Hvornår:</dt>
-                            <!--<dd>{{ object.time }}</dd>-->
+                            <dt>{% trans 'Arrangør' %}:</dt>
                             <dd>
-                                {% for description in object.recurrences_description %}
-                                    {{ description }}
-                                {% endfor %}
-                                <ul class="list-unstyled">
+                                {% if object.unit.url %}
+                                    <a href="{{ object.unit.url }}" target="_blank">
+                                {% endif %}
+                                <strong>{{ object.unit.name }}</strong>
+                                {% if object.unit.url %}
+                                    </a> <span class="glyphicon glyphicon-new-window"></span>
+                                {% endif %}
+                            </dd>
+                            
+                            {% if object.visitoccurrence_set.all %}
+                            <dt>Hvornår:</dt>
+                            <dd>
+                                <ul class="list-unstyled" id="dato">
                                 {% for occurrence in object.visitoccurrence_set.all %}
                                     <li>{{ occurrence.start_datetime|date:'d-m-Y H:i' }}</li>
                                 {% endfor %}
                                 </ul>
                             </dd>
+                            {% endif %}
+
                             {% if object.duration %}
-                                <dt>Varighed:</dt>
+                                <dt>{% trans 'Varighed' %}:</dt>
                                 <dd>{{ object.duration|timedelta }}</dd>
                             {% endif %}
+                            
                             {% if object.price %}
-                                <dt>Pris:</dt>
+                                <dt>{% trans 'Pris' %}:</dt>
                                 <dd>{{ object.price }}</dd>
                             {% endif %}
+                            
                         </dl>
                     </div>
                 </div>
@@ -125,10 +157,13 @@
     </div>
 
     {% include 'common/modal_contact.html' %}
-
+    
     {% include 'common/modal_framehost.html' %}
+
 {% endblock %}
+
 {% block footer %}
+    
     <div class="container">
         <div class="row">
             <footer>
@@ -152,8 +187,12 @@
             </footer>
         </div>
     </div>
+
 {% endblock %}
+
 {% block extra_scripts %}
+
     <script src="/static/js/custom.js"></script>
     <script src="{% static "js/modalframe-host.js" %}"></script>
+    
 {% endblock %}
