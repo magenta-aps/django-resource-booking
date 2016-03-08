@@ -86,8 +86,7 @@ class VisitForm(forms.ModelForm):
                   'duration', 'locality', 'rooms_assignment',
                   'rooms_needed', 'tour_available',
                   'enabled', 'contact_persons', 'unit',
-                  'needed_hosts', 'needed_hosts_text', 'needed_teachers',
-                  'needed_teachers_text',
+                  'needed_hosts', 'needed_teachers',
                   )
 
         widgets = {
@@ -147,8 +146,7 @@ class VisitForm(forms.ModelForm):
         self.fields['type'].widget = HiddenInput()
 
         # Add classes to certain widgets
-        for x in ('needed_hosts', 'needed_hosts_text',
-                  'needed_teachers', 'needed_teachers_text'):
+        for x in ('needed_hosts', 'needed_teachers'):
             f = self.fields[x]
             f.widget.attrs['class'] = " ".join([
                 x for x in (

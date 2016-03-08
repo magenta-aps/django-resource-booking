@@ -6,32 +6,7 @@
             <label for="{{ field.id_for_label }}">{{ field.label }}:</label>
         </div>
         <div class="col-sm-10">
-            <select name="needed_hosts_choice" class="form-control input-sm needed-number-select" data-for-id="{{ field.id_for_label }}">
-                {% for val, text in choices %}
-                <option value="{{ val }}"{% if field.value == val %} selected="selected"{% endif %}>{{ text }}</option>
-                {% endfor %}
-                <option value="{{ field.value|default:"1" }}"{% if field.value > 0 %} selected="selected" {% endif %}>Fast antal</option>
-            </select>
-            <div id="{{ field.id_for_label }}-container">
-                {{ field }}
-            </div>
-        </div>
-    </div>                        
-</div>
-<div class="panel-body"  id="{{ field.id_for_label }}-textcontainer">
-    <div class="row form-group">
-        <div>{{ textfield.errors }}</div>
-        <div class="col-sm-2">
-            <label for="{{ form.needed_hosts.id_for_label }}">{{ textfield.label }}:</label>
-        </div>
-        <div class="col-sm-10">
-            <p>
-                {% blocktrans %}
-                Angiv en regel der kan bruges til at beregne antallet ud fra oplysninger på bookingen.
-                Det kunne for eksempel være "1 for hver 10 deltagere".
-                {% endblocktrans %}
-            </p>
-            {{ textfield }}
+            {{ field }}
         </div>
     </div>                        
 </div>

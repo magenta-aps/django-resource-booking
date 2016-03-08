@@ -64,7 +64,7 @@
             <ul class="list-inline">
                 <li><a href="/profile">Min side</a></li>
                 <li><a href="{% url 'search' %}">Tilbud</a></li>
-                <li>Bookings</li>
+                <li><a href="{% url 'visit-occ-search' %}">Arrangementer</a></li>
                 <li><a href="{% url 'admin:index' %}">Administration</a></li>
                 {% if view.kwargs.can_be_embedded %}
                 <li><a href="{% url 'embedcodes' view.request.get_full_path|slice:"1:" %}">Indlejr side</a></li>

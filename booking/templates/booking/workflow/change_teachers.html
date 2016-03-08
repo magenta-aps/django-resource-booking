@@ -6,14 +6,13 @@
     {% include 'common/breadcrumbrow.html' %}
 
     <div class="row titlebar hidden-print">
-        <div class="col-sm-12 col-md-9"><h2>Redigér undervisere for booking {{ object }}</h2></div>
+        <div class="col-sm-12 col-md-9"><h2>Redigér undervisere for {{ object }}</h2></div>
         <div class="divider"></div>
     </div>
     <div class="row">
         <div class="col-sm-12 col-md-8">
-            På besøget tilknyttet denne booking, "{{ object.visit.title }}",
-            er der angivet følgende om det nødvendige antal af undervisere:<br />
-            <em>{{ object.visit.get_needed_teachers_display }}</em>
+            Antal nødvendige undervisere angivet på "{{ object.visit.title }}":
+            {{ object.visit.get_needed_teachers_display }}
         </div>
     </div>
     <div class="divider"></div>

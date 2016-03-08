@@ -46,9 +46,10 @@
 
             {% if not object.can_assign_resources %}
             <p>
-                Det er ikke længere muligt at tildele ressourcer til denne
-                booking. Hvis du ønsker at rette i de tildelte ressourcer skal
-                du ændre statuses til '{{object.BEING_PLANNED_STATUS_TEXT}}'.
+                Det er ikke længere muligt at tildele ressourcer til dette
+                arrangement. Hvis du ønsker at rette i de tildelte ressourcer
+                skal du ændre statuses til
+                '{{object.BEING_PLANNED_STATUS_TEXT}}'.
             </p>
             {% endif %}
 
