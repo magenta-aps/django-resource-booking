@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 
 from django.core.urlresolvers import reverse
-from django.http import Http404
+from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import redirect
 from django.views.generic import UpdateView, FormView
 from booking.models import Booking, EmailTemplate
-from booking.booking_workflows.forms import ChangeVisitOccurrenceStatusForm
+from booking.booking_workflows.forms import ChangeVisitOccurrenceStatusForm, \
+    VisitOccurrenceAutosendFormSet
 from booking.booking_workflows.forms import ChangeVisitOccurrenceTeachersForm
 from booking.booking_workflows.forms import ChangeVisitOccurrenceHostsForm
 from booking.booking_workflows.forms import ChangeVisitOccurrenceRoomsForm
@@ -116,6 +117,19 @@ class VisitOccurrenceAddLogEntryView(FormView):
             form.cleaned_data['new_comment']
         )
         return super(VisitOccurrenceAddLogEntryView, self).form_valid(form)
+
+    def get_success_url(self):
+        return reverse('visit-occ-view', args=[self.object.pk])
+
+
+class ChangeVisitOccurrenceAutosendView(AutologgerMixin, UpdateWithCancelView):
+    model = VisitOccurrence
+    form_class = VisitOccurrenceAutosendFormSet
+    template_name = "booking/workflow/change_autosend.html"
+
+    def form_valid(self, form):
+        form.save()
+        return HttpResponseRedirect(self.get_success_url())
 
     def get_success_url(self):
         return reverse('visit-occ-view', args=[self.object.pk])

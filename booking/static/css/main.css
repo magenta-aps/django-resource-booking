@@ -759,6 +759,14 @@ a.template-overridden:visited {
     
 }
 
+/* Autosend form */
+.autosend-row {
+    width: 100%;
+    border: 1px solid #eee;
+    margin: 1px 0;
+    padding: 1px;
+}
+
 /*Backend specific styles end */
 
 /* Embedded pages styles */

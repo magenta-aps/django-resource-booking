@@ -363,6 +363,11 @@ class EmailTemplate(models.Model):
         NOTITY_ALL__BOOKING_REMINDER
     ]
 
+    # Templates available for autosending (config in booking)
+    booking_autosend_keys = [
+        NOTITY_ALL__BOOKING_REMINDER
+    ]
+
     # Templates that will be autosent to visit.contact_persons
     booking_recipient_contacts_keys = [
         NOTIFY_HOST__BOOKING_CREATED,
@@ -1096,15 +1101,6 @@ class Visit(Resource):
         return occ
 
 
-class VisitAutosend(models.Model):
-    visit = models.ForeignKey(
-        Visit, verbose_name=_(u'Besøg'), blank=False
-    )
-    template_key = models.IntegerField(
-        choices=EmailTemplate.key_choices
-    )
-
-
 class VisitOccurrence(models.Model):
 
     class Meta:
@@ -1429,6 +1425,40 @@ class VisitOccurrence(models.Model):
 
 VisitOccurrence.add_override_property('duration')
 VisitOccurrence.add_override_property('locality')
+
+
+class Autosend(models.Model):
+    template_key = models.IntegerField(
+        choices=EmailTemplate.key_choices,
+        verbose_name=_(u'Skabelon')
+    )
+    days = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        verbose_name=_(u'Afsendes dage inden besøget'),
+    )
+    enabled = models.BooleanField(
+        verbose_name=_(u'Aktiv')
+    )
+
+
+class VisitAutosend(Autosend):
+    visit = models.ForeignKey(
+        Visit,
+        verbose_name=_(u'Besøg'),
+        blank=False
+    )
+
+
+class VisitOccurrenceAutosend(Autosend):
+    visitoccurrence = models.ForeignKey(
+        VisitOccurrence,
+        verbose_name=_(u'BesøgForekomst'),
+        blank=False
+    )
+    inherit = models.BooleanField(
+        verbose_name=_(u'Nedarv fra tilbud')
+    )
 
 
 class Room(models.Model):

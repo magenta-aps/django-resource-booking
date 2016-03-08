@@ -1,0 +1,48 @@
+{% load staticfiles %}
+<script type="text/javascript" src="{% static 'js/formset-row.js' %}"></script>
+
+<script type="text/javascript">
+    <!--
+        $(function(){
+
+            var toggleReminder = function(row) {
+                var value = parseInt(row.find("[name$='-template_key']").val(), 10);
+                var daysInput = row.find("[name$='-days']");
+                if (value === 10) { // Send reminder
+                    daysInput.removeAttr("disabled");
+                } else {
+                    daysInput.attr("disabled", "disabled");
+                }
+            };
+
+            var fixRow = function(row) {
+                var templateSelect = row.find("[name$='-template_key']")
+                templateSelect.change(function(){
+                    toggleReminder(row);
+                });
+                toggleReminder(row);
+            };
+
+            $(".autosend-row").each(function() {
+                fixRow($(this));
+            });
+
+            $("#addAutosend").click(function(){
+                var row = formset.addRow(
+                        $("#{{ autosendformset.management_form.TOTAL_FORMS.id_for_label }}"),
+                        $("#{{ autosendformset.management_form.MAX_NUM_FORMS.id_for_label }}"),
+                        $(".autosend-row").first(),
+                        $("#autosend-list")
+                );
+                if (row) {
+                    fixRow(row);
+                }
+
+
+
+                return false;
+            });
+            console.log($("#addAutosend"));
+        });
+    //-->
+</script>

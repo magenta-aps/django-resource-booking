@@ -1,4 +1,4 @@
-from booking.models import StudyMaterial
+from booking.models import StudyMaterial, VisitAutosend
 from booking.models import UnitType
 from booking.models import Unit
 from booking.models import Resource, OtherResource, Visit
@@ -177,18 +177,19 @@ class VisitStudyMaterialForm(VisitStudyMaterialFormBase):
         self.studymaterials = StudyMaterial.objects.filter(visit=instance)
 
 
-class VisitAutosendForm(forms.Form):
+class VisitAutosendForm(forms.ModelForm):
+    class Meta:
+        model = VisitAutosend
+        fields = ('enabled', 'days', 'template_key')
 
-    autosend = forms.MultipleChoiceField(
-        widget=CheckboxSelectMultiple,
-        choices=[
-            (key, label) for (key, label) in EmailTemplate.key_choices
-            if key in EmailTemplate.visit_autosend_keys
-        ]
-    )
 
-    def __init__(self, data=None, *args, **kwargs):
-        super(VisitAutosendForm, self).__init__(data, *args, **kwargs)
+VisitAutosendFormSet = inlineformset_factory(
+    Visit,
+    VisitAutosend,
+    fields=('template_key', 'enabled', 'days'),
+    can_delete=True,
+    extra=1
+)
 
 
 class BookingForm(forms.ModelForm):

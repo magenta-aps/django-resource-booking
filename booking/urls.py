@@ -26,6 +26,7 @@ from booking.views import ChangeVisitOccurrenceRoomsView
 from booking.views import ChangeVisitOccurrenceCommentsView
 from booking.views import VisitOccurrenceAddLogEntryView
 from booking.views import VisitOccurrenceDetailView
+from booking.views import ChangeVisitOccurrenceAutosendView
 
 
 from django.views.generic import TemplateView
@@ -130,6 +131,9 @@ urlpatterns = patterns(
     url(r'^visit/occurrence/search$',
         VisitOccurrenceSearchView.as_view(),
         name='visit-occ-search'),
+    url(r'^visit/occurrence/(?P<pk>[0-9]+)/change_autosend/?$',
+        ChangeVisitOccurrenceAutosendView.as_view(),
+        name='change-visit-occ-autosend'),
 
     url(r'^booking/(?P<pk>[0-9]+)/notify$',
         BookingNotifyView.as_view(),
