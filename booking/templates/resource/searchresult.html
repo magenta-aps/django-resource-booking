@@ -4,79 +4,20 @@
 {% load i18n %}
 
 {% block content %}
-    
-    <div class="row">
+        <div class="row">
         <div id="leftside" class="col-sm-6 col-md-3">
             <button type="button" class="visible-xs btn btn-default" data-toggle="collapse" data-target="#filters" id="filter-btn">{% trans 'Filtrer søgeresultat' %} <span class="glyphicon glyphicon-chevron-down hidden-print"></span></button>
             <div class="hidden-xs" id="filters">
                 <form class="" action="{% url 'search' %}" method="get" name="filter-search-results" id="filter-search-results">
-                <input type="hidden" name="q" value="{{ request.GET.q }}" />
+                {% if adminform %}
+                    {% for field in adminform %}
+                        {{ field.as_hidden }}
+                    {% endfor %}
+                {% else %}
+                    <input type="hidden" name="q" value="{{ request.GET.q }}" />
+                {% endif %}
                 <input type="hidden" name="pagesize" value="{{ paginator.per_page }}" />
                     <div class="panel panel-sidebar">
-                        {% if has_edit_role %}
-                            <div class="panel-heading">
-                                <h3 class="panel-title">Admin-afgrænsning</h3>
-                            </div>
-                            <div class="panel-body">
-                                <h3 class="panel-title">Redigerings-status for tilbud</h3>
-                                <hr>
-                                <div class="input-group">
-                                    {% for c in state_choices %}
-                                    <div class="checkbox">
-                                        <label class="control-label" for="state-choice-{{c.value}}">
-                                            <input name="s" id="state-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}>{{c.label}}
-                                            {% if c.hits %}
-                                                <span title="{{ c.hits }} resultater" class="type-hits">({{ c.hits }})</span>
-                                            {% endif %}
-                                        </label>
-                                    </div>
-                                    {% endfor %}
-                                </div>
-                                <h3 class="panel-title">Tilbud er aktivt</h3>
-                                <hr>
-                                <div class="input-group">
-                                    {% for c in enabled_choices %}
-                                    <div class="checkbox">
-                                        <label class="control-label" for="enabled-choice-{{c.value}}">
-                                            <input name="e" id="enabled-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}>{{c.label}}
-                                            {% if c.hits %}
-                                                <span title="{{ c.hits }} resultater" class="type-hits">({{ c.hits }})</span>
-                                            {% endif %}
-                                        </label>
-                                    </div>
-                                    {% endfor %}
-                                </div>
-                                <h3 class="panel-title">Besøg/ikke besøg</h3>
-                                <hr>
-                                <div class="input-group">
-                                    {% for c in is_visit_choices %}
-                                    <div class="checkbox">
-                                        <label class="control-label" for="is-visit-choice-{{c.value}}">
-                                            <input name="v" id="is-visit-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}>{{c.label}}
-                                            {% if c.hits %}
-                                                <span title="{{ c.hits }} resultater" class="type-hits">({{ c.hits }})</span>
-                                            {% endif %}
-                                        </label>
-                                    </div>
-                                    {% endfor %}
-                                </div>
-                                <h3 class="panel-title">Tilknytning af bookinger</h3>
-                                <hr>
-                                <div class="input-group">
-                                    {% for c in has_bookings_choices %}
-                                    <div class="checkbox">
-                                        <label class="control-label" for="has-bookings-choice-{{c.value}}">
-                                            <input name="b" id="has-bookings-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}>{{c.label}}
-                                            {% if c.hits %}
-                                                <span title="{{ c.hits }} resultater" class="type-hits">({{ c.hits }})</span>
-                                            {% endif %}
-                                        </label>
-                                    </div>
-                                    {% endfor %}
-                                </div>
-                            </div>
-
-                        {% endif %}
                         <div class="panel-heading">
                             <h3 class="panel-title">Afgræns din søgning</h3>
                         </div>
@@ -174,11 +115,15 @@
             {% if user.userprofile.can_create %}
                 <a class="pull-right btn btn-primary" href="{% url 'resource-create' %}?back={{ thisurl | urlencode }}">+ Opret tilbud</a>
             {% endif %}
-            
+
             <h1>Søgeresultat</h1>
             <div class="divider"></div>
 
+            {% if request.user.is_authenticated %}
+            {% include 'resource/searchresult-adminform.html' with form=adminform %}
+            {% else %}
             {% include 'common/searchform.html' %}
+            {% endif %}
 
             <div class="divider"></div>
             {% if not results %}

@@ -1,8 +1,9 @@
 # encoding: utf-8
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail.message import EmailMessage
 from django.db import models
-from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Sum
+from django.db.models import Q
 from django.template.context import make_context
 from django.utils import timezone
 from djorm_pgfulltext.models import SearchManager
@@ -144,6 +145,18 @@ class Unit(models.Model):
         for u in offspring:
             all_children = all_children | u.get_descendants()
         return all_children | Unit.objects.filter(pk=self.pk)
+
+    def get_faculty_queryset(self):
+        u = self
+
+        # Go through parent relations until we hit a "fakultet"
+        while u and u.type and u.type.name != "Fakultet":
+            u = u.parent
+
+        if u:
+            return Unit.objects.filter(Q(pk=u.pk) | Q(parent=u))
+        else:
+            return Unit.objects.none()
 
     def __unicode__(self):
         return "%s (%s)" % (self.name, self.type.name)
