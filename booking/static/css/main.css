@@ -767,6 +767,10 @@ a.template-overridden:visited {
     padding: 1px;
 }
 
+.autosend-row label.deletion {
+    opacity: 0.5;
+}
+
 /*Backend specific styles end */
 
 /* Embedded pages styles */

@@ -5,14 +5,38 @@
     <!--
         $(function(){
 
+            // Enables/disables input elements and labels
+            var toggleEnabled = function(element, key, enable) {
+                if (element.length > 1) {
+                    element.each(function(){
+                        toggleEnabled($(this), key, enable);
+                    });
+                } else if (element.length === 1) {
+                    var d = element.data("disable") || {};
+                    d[key] = !!enable;
+                    var doEnable = true;
+                    for (var k in d) {
+                        if (d[k] === false) {
+                            doEnable = false;
+                            break;
+                        }
+                    }
+                    if (doEnable) {
+                        element.removeAttr("disabled");
+                    } else {
+                        element.attr("disabled", "disabled");
+                    }
+                    if (element.attr("id")) {
+                        $("label[for='" + element.attr("id") + "']").toggleClass("deletion", !doEnable);
+                    }
+                    element.data("disable", d);
+                }
+            };
+
             var toggleReminder = function(row) {
                 var value = parseInt(row.find("[name$='-template_key']").val(), 10);
                 var daysInput = row.find("[name$='-days']");
-                if (value === 10) { // Send reminder
-                    daysInput.removeAttr("disabled");
-                } else {
-                    daysInput.attr("disabled", "disabled");
-                }
+                toggleEnabled(daysInput, "reminder", value === 10);
             };
 
             var fixRow = function(row) {
@@ -22,6 +46,12 @@
                     disableAlreadySelected();
                 });
                 toggleReminder(row);
+                var deleteField = row.find("[name$='-DELETE']");
+                deleteField.change(function(){
+                    toggleEnabled(row.find("input,select").not($(this)), "delete", !$(this).prop("checked"));
+                });
+                deleteField.prop("checked", false);
+                toggleEnabled(row.find("input,select").not(deleteField), "delete", !deleteField.prop("checked"));
             };
 
             var disableAlreadySelected = function() {
