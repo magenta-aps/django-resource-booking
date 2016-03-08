@@ -68,5 +68,6 @@ VisitOccurrenceAutosendFormSet = inlineformset_factory(
     VisitOccurrenceAutosend,
     fields=('template_key', 'enabled', 'inherit', 'days'),
     can_delete=True,
-    extra=1
+    extra=0,
+    min_num=1
 )

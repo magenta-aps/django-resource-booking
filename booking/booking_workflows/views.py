@@ -134,3 +134,18 @@ class ChangeVisitOccurrenceAutosendView(AutologgerMixin, UpdateWithCancelView):
 
     def get_success_url(self):
         return reverse('visit-occ-view', args=[self.object.pk])
+
+    def get_context_data(self, **kwargs):
+        context = {}
+        context['inherited'] = {
+            item.template_key:
+            {
+                'template_key': item.template_key,
+                'enabled': item.enabled,
+                'days': item.days
+            }
+            for item in self.object.visit.visitautosend_set.all()
+        }
+        context.update(kwargs)
+        return super(ChangeVisitOccurrenceAutosendView, self).\
+            get_context_data(**context)

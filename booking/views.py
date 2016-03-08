@@ -1208,7 +1208,9 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         self.set_object(pk, request, is_cloning)
         form = self.get_form()
         fileformset = VisitStudyMaterialForm(request.POST)
-        autosendformset = VisitAutosendFormSet(request.POST)
+        autosendformset = VisitAutosendFormSet(
+            request.POST, instance=self.object
+        )
 
         if form.is_valid():
             visit = form.save()
@@ -1216,25 +1218,10 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
             if autosendformset.is_valid():
                 # Update autosend
                 for autosendform in autosendformset:
-                    instance = autosendform.save()
-                """
-                new_autosend_keys = autosendform.cleaned_data['autosend']
-                existing_autosend = visit.visitautosend_set.all()
-                existing_autosend_keys = [
-                    autosend.template_key
-                    for autosend in existing_autosend
-                    ]
-                for autosend in existing_autosend:
-                    if autosend.template_key not in new_autosend_keys:
-                        autosend.delete()
-                for template_key in new_autosend_keys:
-                    if template_key not in existing_autosend_keys:
-                        autosend = VisitAutosend(
-                            visit=visit,
-                            template_key=template_key
-                        )
-                        visit.visitautosend_set.add(autosend)
-                """
+                    try:
+                        autosendform.save()
+                    except:
+                        pass
 
             if fileformset.is_valid():
                 # Attach uploaded files

@@ -369,8 +369,8 @@ class EmailTemplate(models.Model):
         NOTITY_ALL__BOOKING_REMINDER
     ]
 
-    # Templates available for autosending (config in booking)
-    booking_autosend_keys = [
+    # Templates available for autosending (config in visitoccurrence)
+    visitoccurrence_autosend_keys = [
         NOTITY_ALL__BOOKING_REMINDER
     ]
 
@@ -1181,9 +1181,15 @@ class Visit(Resource):
         )
         return occ
 
+    def get_autosend(self, template_key):
+        try:
+            return self.visitautosend_set.filter(
+                template_key=template_key, enabled=True)[0]
+        except:
+            return None
+
     def autosend_enabled(self, template_key):
-        return self.visitautosend_set.\
-            filter(template_key=template_key).count() > 0
+        return self.get_autosend(template_key) is not None
 
 
 class VisitOccurrence(models.Model):
@@ -1513,6 +1519,25 @@ class VisitOccurrence(models.Model):
     def get_absolute_url(self):
         return reverse('visit-occ-view', args=[self.pk])
 
+    def autosend_inherits(self, template_key):
+        return self.visitoccurrenceautosend_set.\
+            filter(template_key=template_key, inherit=True).\
+            count() > 0
+
+    def get_autosend(self, template_key, follow_inherit=True):
+        if follow_inherit and self.autosend_inherits(template_key):
+            return self.visit.get_autosend(template_key)
+        else:
+            try:
+                return self.visitoccurrenceautosend_set.filter(
+                    template_key=template_key, enabled=True)[0]
+            except:
+                return None
+
+    def autosend_enabled(self, template_key):
+        return self.get_autosend(template_key, True) is not None
+
+
 VisitOccurrence.add_override_property('duration')
 VisitOccurrence.add_override_property('locality')
 
@@ -1520,7 +1545,9 @@ VisitOccurrence.add_override_property('locality')
 class Autosend(models.Model):
     template_key = models.IntegerField(
         choices=EmailTemplate.key_choices,
-        verbose_name=_(u'Skabelon')
+        verbose_name=_(u'Skabelon'),
+        blank=False,
+        null=False
     )
     days = models.PositiveSmallIntegerField(
         null=True,
@@ -1528,7 +1555,8 @@ class Autosend(models.Model):
         verbose_name=_(u'Afsendes dage inden besøget'),
     )
     enabled = models.BooleanField(
-        verbose_name=_(u'Aktiv')
+        verbose_name=_(u'Aktiv'),
+        default=True
     )
 
 
@@ -1931,7 +1959,7 @@ class Booking(models.Model):
 
     def autosend(self, template_key, recipients=None,
                  only_these_recipients=False):
-        if self.visit.autosend_enabled(template_key):
+        if self.visitoccurrence.autosend_enabled(template_key):
             if recipients is None:
                 recipients = set()
             else:

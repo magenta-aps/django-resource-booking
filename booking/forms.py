@@ -199,18 +199,13 @@ class VisitStudyMaterialForm(VisitStudyMaterialFormBase):
         self.studymaterials = StudyMaterial.objects.filter(visit=instance)
 
 
-class VisitAutosendForm(forms.ModelForm):
-    class Meta:
-        model = VisitAutosend
-        fields = ('enabled', 'days', 'template_key')
-
-
 VisitAutosendFormSet = inlineformset_factory(
     Visit,
     VisitAutosend,
     fields=('template_key', 'enabled', 'days'),
     can_delete=True,
-    extra=1
+    min_num=1,
+    extra=0
 )
 
 
