@@ -1190,16 +1190,13 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         if max == u'':
             max = 0
 
-        existing_bookings_outside_bounds = Booker.objects.raw('''
-            select *
-            from booking_booking bb
-            join booking_booker bkr on (bb.booker_id = bkr.id)
-            join booking_visit bv on (bb.visit_id = bv.resource_ptr_id)
-            where bv.resource_ptr_id = %s
-            and bkr.attendee_count
-            not between %s and %s
-        ''', [visit_id, min, max])
-        return len(list(existing_bookings_outside_bounds)) > 0
+        existing_bookings_outside_bounds = Booker.objects.filter(
+            booking__visitoccurrence__visit__pk=visit_id
+        ).exclude(
+            attendee_count__gte=min,
+            attendee_count__lte=max
+        )
+        return existing_bookings_outside_bounds.exists()
 
     # Handle both forms, creating a Visit and a number of StudyMaterials
     def post(self, request, *args, **kwargs):
