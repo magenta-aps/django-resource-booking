@@ -1994,7 +1994,7 @@ class VisitOccurrenceSearchView(LoginRequiredMixin, ListView):
         context['breadcrumbs'] = [
             {
                 'url': reverse('visit-occ-search'),
-                'text': _(u'Arrangmenter')
+                'text': _(u'Arrangementer')
             },
             {'text': _(u'Søgeresultatliste')},
         ]
