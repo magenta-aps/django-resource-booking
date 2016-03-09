@@ -44,7 +44,6 @@ from booking.models import PostCode, School
 from booking.models import Booking, Booker
 from booking.models import ResourceGymnasieFag, ResourceGrundskoleFag
 from booking.models import EmailTemplate
-from booking.models import VisitAutosend
 from booking.models import log_action
 from booking.models import LOGACTION_CREATE, LOGACTION_CHANGE
 from booking.forms import ResourceInitialForm, OtherResourceForm, VisitForm, \
@@ -54,7 +53,8 @@ from booking.forms import VisitStudyMaterialForm, BookingSubjectLevelForm
 from booking.forms import BookerForm
 from booking.forms import EmailTemplateForm, EmailTemplatePreviewContextForm
 from booking.forms import EmailComposeForm
-from booking.forms import VisitAutosendForm
+from booking.forms import AdminVisitSearchForm
+from booking.forms import VisitAutosendFormSet
 from booking.utils import full_email
 
 import urls
@@ -425,27 +425,25 @@ class SearchView(ListView):
     filters = None
     from_datetime = None
     to_datetime = None
+    admin_form = None
 
     boolean_choice = (
         (1, _(u'Ja')),
         (0, _(u'Nej')),
     )
 
-    IS_VISIT = 1
-    IS_NOT_VISIT = 2
+    def get_admin_form(self):
+        if self.admin_form is None:
+            if self.request.user.is_authenticated():
+                self.admin_form = AdminVisitSearchForm(
+                    self.request.GET,
+                    user=self.request.user
+                )
+                self.admin_form.is_valid()
+            else:
+                self.admin_form = False
 
-    is_visit_choices = (
-        (IS_VISIT, _(u'Besøg')),
-        (IS_NOT_VISIT, _(u'Ikke besøg'))
-    )
-
-    HAS_BOOKINGS = 1
-    HAS_NO_BOOKINGS = 2
-
-    has_bookings_choices = (
-        (HAS_BOOKINGS, _(u'Har bookinger tilknyttet')),
-        (HAS_NO_BOOKINGS, _(u'Har ikke bookinger tilknyttet')),
-    )
+        return self.admin_form
 
     def get_date_from_request(self, queryparam):
         val = self.request.GET.get(queryparam)
@@ -518,65 +516,118 @@ class SearchView(ListView):
         if self.filters is None:
             self.filters = {}
 
-            # Audience will always include a search for resources marked for
-            # all audiences.
-            a = self.request.GET.getlist("a")
-            if a:
-                a.append(Resource.AUDIENCE_ALL)
-                self.filters["audience__in"] = a
-
-            t = self.request.GET.getlist("t")
-            if t:
-                self.filters["type__in"] = t
-
-            f = set(self.request.GET.getlist("f"))
-            if f:
-                self.filters["gymnasiefag__in"] = f
-
-            g = self.request.GET.getlist("g")
-            if g:
-                self.filters["grundskolefag__in"] = f
-
-            if (self.request.user.is_authenticated() and
-                    self.request.user.userprofile.has_edit_role()):
-
-                s = self.request.GET.getlist("s")
-                if s:
-                    self.filters["state__in"] = s
-
-                e = self.request.GET.getlist("e")
-                if e:
-                    try:
-                        self.filters["enabled__in"] = [int(x) for x in e]
-                    except:
-                        pass
-
+            for filter_method in (
+                self.filter_by_audience,
+                self.filter_by_type,
+                self.filter_by_gymnasiefag,
+                self.filter_by_grundskolefag
+            ):
                 try:
-                    v = [int(x) for x in self.request.GET.getlist("v")]
-                    if SearchView.IS_VISIT in v:
-                        if SearchView.IS_NOT_VISIT not in v:
-                            self.filters["visit__pk__isnull"] = False
-                    elif SearchView.IS_NOT_VISIT in v:
-                        if SearchView.IS_VISIT not in v:
-                            self.filters["otherresource__pk__isnull"] = False
+                    filter_method()
                 except Exception as e:
-                    print e
+                    print "Error while filtering query: %s" % e
 
-                try:
-                    b = [int(x) for x in self.request.GET.getlist("b")]
-                    if SearchView.HAS_BOOKINGS in b:
-                        if SearchView.HAS_NO_BOOKINGS not in b:
-                            self.filters["num_bookings__gt"] = 0
-                    elif SearchView.HAS_NO_BOOKINGS in b:
-                        if SearchView.HAS_BOOKINGS not in b:
-                            self.filters["num_bookings"] = 0
-                except Exception as e:
-                    print e
-
+            if not self.request.user.is_authenticated():
+                self.filter_for_public_view()
             else:
-                self.filters["state__in"] = [Resource.ACTIVE]
+                self.filter_for_admin_view(self.get_admin_form())
 
         return self.filters
+
+    def filter_for_public_view(self):
+        # Public users can only see active resources
+        self.filters["state__in"] = [Resource.ACTIVE]
+
+    def filter_by_audience(self):
+        # Audience will always include a search for resources marked for
+        # all audiences.
+        a = [x for x in self.request.GET.getlist("a")]
+        if a:
+            a.append(Resource.AUDIENCE_ALL)
+            self.filters["audience__in"] = a
+
+    def filter_by_type(self):
+        t = self.request.GET.getlist("t")
+        if t:
+            self.filters["type__in"] = t
+
+    def filter_by_gymnasiefag(self):
+        f = set(self.request.GET.getlist("f"))
+        if f:
+            self.filters["gymnasiefag__in"] = f
+
+    def filter_by_grundskolefag(self):
+        g = self.request.GET.getlist("g")
+        if g:
+            self.filters["grundskolefag__in"] = g
+
+    def filter_for_admin_view(self, form):
+        for filter_method in (
+            self.filter_by_state,
+            self.filter_by_enabled,
+            self.filter_by_is_visit,
+            self.filter_by_has_bookings,
+            self.filter_by_unit,
+        ):
+            try:
+                filter_method(form)
+            except Exception as e:
+                print "Error while admin-filtering query: %s" % e
+
+    def filter_by_state(self, form):
+        s = form.cleaned_data.get("s", "")
+        if s != "":
+            self.filters["state"] = s
+
+    def filter_by_enabled(self, form):
+        e = form.cleaned_data.get("e", "")
+        if e != "":
+            self.filters["enabled"] = e
+
+    def filter_by_is_visit(self, form):
+        v = form.cleaned_data.get("v", "")
+
+        if v == "":
+            return
+
+        v = int(v)
+
+        if v == AdminVisitSearchForm.IS_VISIT:
+            self.filters["visit__pk__isnull"] = False
+        elif v == AdminVisitSearchForm.IS_NOT_VISIT:
+            self.filters["otherresource__pk__isnull"] = False
+
+    def filter_by_has_bookings(self, form):
+        b = form.cleaned_data.get("b", "")
+
+        if b == "":
+            return
+
+        b = int(b)
+
+        if b == AdminVisitSearchForm.HAS_BOOKINGS:
+            self.filters["num_bookings__gt"] = 0
+        elif b == AdminVisitSearchForm.HAS_NO_BOOKINGS:
+            self.filters["num_bookings"] = 0
+
+    def filter_by_unit(self, form):
+        u = form.cleaned_data.get("u", "")
+
+        if u == "":
+            return
+
+        u = int(u)
+
+        if u == AdminVisitSearchForm.MY_UNIT:
+            self.filters["unit"] = self.request.user.userprofile.unit
+        elif u == AdminVisitSearchForm.MY_FACULTY:
+            self.filters["unit"] = \
+                self.request.user.userprofile.unit.get_faculty_queryset()
+        elif u == AdminVisitSearchForm.MY_UNITS:
+            self.filters["unit"] = \
+                self.user.userprofile.get_unit_queryset()
+        else:
+            self.filters["unit__pk"] = u
 
     def get_queryset(self):
         filters = self.get_filters()
@@ -627,50 +678,6 @@ class SearchView(ListView):
         return self.choices_from_hits(choice_tuples, hits, selected,
                                       selected_value=selected_value)
 
-    def is_visit_facet(self, choice_tuples, selected):
-        hits = {}
-
-        # Remove filter for the field we want to facetize
-        new_filters = {}
-        for k, v in self.get_filters().iteritems():
-            if k not in ("visit__pk__isnull", "otherresource__pk__isnull"):
-                new_filters[k] = v
-
-        qs = self.get_base_queryset().filter(**new_filters).distinct()
-
-        nr_visits = len(qs.filter(visit__pk__isnull=False))
-        if nr_visits > 0:
-            hits[SearchView.IS_VISIT] = nr_visits
-
-        non_visits = len(qs.filter(otherresource__pk__isnull=False))
-        if non_visits > 0:
-            hits[SearchView.IS_NOT_VISIT] = non_visits
-
-        return self.choices_from_hits(choice_tuples, hits, selected)
-
-    def has_bookings_facet(self, choice_tuples, selected):
-        hits = {}
-
-        # Remove filter for the field we want to facetize
-        new_filters = {}
-        new_filters.update(self.get_filters())
-        if "num_bookings" in new_filters:
-            del new_filters["num_bookings"]
-        if "num_bookings__gt" in new_filters:
-            del new_filters["num_bookings__gt"]
-
-        qs = self.get_base_queryset().filter(**new_filters).distinct()
-
-        has_bookings = len(qs.exclude(num_bookings=0))
-        if has_bookings > 0:
-            hits[SearchView.HAS_BOOKINGS] = has_bookings
-
-        has_no_bookings = len(qs.filter(num_bookings=0))
-        if has_no_bookings > 0:
-            hits[SearchView.HAS_NO_BOOKINGS] = has_no_bookings
-
-        return self.choices_from_hits(choice_tuples, hits, selected)
-
     def choices_from_hits(self, choice_tuples, hits, selected,
                           selected_value='checked="checked"'):
         selected = set(selected)
@@ -696,6 +703,8 @@ class SearchView(ListView):
 
     def get_context_data(self, **kwargs):
         context = {}
+
+        context['adminform'] = self.get_admin_form()
 
         # Store the querystring without the page and pagesize arguments
         qdict = self.request.GET.copy()
@@ -775,36 +784,6 @@ class SearchView(ListView):
                 self.request.user.userprofile.has_edit_role()):
 
             context['has_edit_role'] = True
-
-            state_selected = self.request.GET.getlist("s")
-            context["state_selected"] = state_selected
-            context['state_choices'] = self.make_facet(
-                'state',
-                self.model.state_choices,
-                state_selected
-            )
-
-            enabled_selected = self.request.GET.getlist("e")
-            context["enabled_selected"] = state_selected
-            context['enabled_choices'] = self.make_facet(
-                'enabled',
-                SearchView.boolean_choice,
-                enabled_selected
-            )
-
-            is_visit_selected = self.request.GET.getlist("v")
-            context["is_visit_selected"] = is_visit_selected
-            context["is_visit_choices"] = self.is_visit_facet(
-                SearchView.is_visit_choices,
-                is_visit_selected
-            )
-
-            has_bookings_selected = self.request.GET.getlist("b")
-            context["has_bookings_selected"] = is_visit_selected
-            context["has_bookings_choices"] = self.has_bookings_facet(
-                SearchView.has_bookings_choices,
-                has_bookings_selected
-            )
 
         context.update(kwargs)
         return super(SearchView, self).get_context_data(**context)
@@ -1152,19 +1131,11 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         self.set_object(pk, request)
         form = self.get_form()
         fileformset = VisitStudyMaterialForm(None, instance=self.object)
-
-        autosendform = VisitAutosendForm(
-            {
-                'autosend': [
-                    autosend.template_key
-                    for autosend in self.object.visitautosend_set.all()
-                ]
-            }
-        )
+        autosendformset = VisitAutosendFormSet(None, instance=self.object)
 
         return self.render_to_response(
             self.get_context_data(form=form, fileformset=fileformset,
-                                  autosendform=autosendform)
+                                  autosendformset=autosendformset)
         )
 
     def _is_any_booking_outside_new_attendee_count_bounds(
@@ -1218,29 +1189,20 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         self.set_object(pk, request, is_cloning)
         form = self.get_form()
         fileformset = VisitStudyMaterialForm(request.POST)
-        autosendform = VisitAutosendForm(request.POST)
+        autosendformset = VisitAutosendFormSet(
+            request.POST, instance=self.object
+        )
 
         if form.is_valid():
             visit = form.save()
 
-            if autosendform.is_valid():
+            if autosendformset.is_valid():
                 # Update autosend
-                new_autosend_keys = autosendform.cleaned_data['autosend']
-                existing_autosend = visit.visitautosend_set.all()
-                existing_autosend_keys = [
-                    autosend.template_key
-                    for autosend in existing_autosend
-                    ]
-                for autosend in existing_autosend:
-                    if autosend.template_key not in new_autosend_keys:
-                        autosend.delete()
-                for template_key in new_autosend_keys:
-                    if template_key not in existing_autosend_keys:
-                        autosend = VisitAutosend(
-                            visit=visit,
-                            template_key=template_key
-                        )
-                        visit.visitautosend_set.add(autosend)
+                for autosendform in autosendformset:
+                    try:
+                        autosendform.save()
+                    except:
+                        pass
 
             if fileformset.is_valid():
                 # Attach uploaded files
@@ -1312,7 +1274,7 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
                 {
                     'form': form,
                     'fileformset': fileformset,
-                    'autosendform': autosendform
+                    'autosendformset': autosendformset
                 }
             )
 
@@ -1352,6 +1314,14 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
             context['thisurl'] = reverse('visit-edit', args=[self.object.id])
         else:
             context['thisurl'] = reverse('visit-create')
+
+        context['template_keys'] = list(
+            set(
+                template.key
+                for template in EmailTemplate.get_templates(self.object.unit)
+            )
+        )
+        context['unit'] = self.object.unit
 
         context.update(kwargs)
 
@@ -2320,4 +2290,6 @@ ChangeVisitOccurrenceRoomsView = \
     booking_views.ChangeVisitOccurrenceRoomsView
 ChangeVisitOccurrenceCommentsView = \
     booking_views.ChangeVisitOccurrenceCommentsView
+ChangeVisitOccurrenceAutosendView = \
+    booking_views.ChangeVisitOccurrenceAutosendView
 VisitOccurrenceAddLogEntryView = booking_views.VisitOccurrenceAddLogEntryView

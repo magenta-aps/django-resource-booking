@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from django.core.urlresolvers import reverse
-from django.http import Http404
+from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import redirect
 from django.views.generic import UpdateView, FormView
-from booking.booking_workflows.forms import ChangeVisitOccurrenceStatusForm
+from booking.booking_workflows.forms import ChangeVisitOccurrenceStatusForm, \
+    VisitOccurrenceAutosendFormSet
 from booking.booking_workflows.forms import ChangeVisitOccurrenceTeachersForm
 from booking.booking_workflows.forms import ChangeVisitOccurrenceHostsForm
 from booking.booking_workflows.forms import ChangeVisitOccurrenceRoomsForm
@@ -66,6 +67,32 @@ class ChangeVisitOccurrenceHostsView(AutologgerMixin, UpdateWithCancelView):
     form_class = ChangeVisitOccurrenceHostsForm
     template_name = "booking/workflow/change_hosts.html"
 
+    # When the status or host list changes, autosend emails
+    def form_valid(self, form):
+        old = self.get_object()
+        response = super(ChangeVisitOccurrenceHostsView, self).form_valid(form)
+        if form.cleaned_data['host_status'] == VisitOccurrence.STATUS_OK:
+            new_hosts = self.object.hosts.all()
+            if old.host_status != VisitOccurrence.STATUS_OK:
+                # Status changed from not-ok to ok, notify all hosts
+                recipients = new_hosts
+            else:
+                # Status was also ok before, send message to hosts
+                # that weren't there before
+                recipients = [
+                    host
+                    for host in new_hosts
+                    if host not in old.hosts.all()
+                ]
+            if len(recipients):
+                # Send a message to only these recipients
+                self.object.autosend(
+                    EmailTemplate.NOTIFY_HOST__ASSOCIATED,
+                    recipients,
+                    True
+                )
+        return response
+
 
 class ChangeVisitOccurrenceRoomsView(AutologgerMixin, UpdateWithCancelView):
     model = VisitOccurrence
@@ -120,3 +147,36 @@ class VisitOccurrenceAddLogEntryView(FormView):
 
     def get_success_url(self):
         return reverse('visit-occ-view', args=[self.object.pk])
+
+
+class ChangeVisitOccurrenceAutosendView(AutologgerMixin, UpdateWithCancelView):
+    model = VisitOccurrence
+    form_class = VisitOccurrenceAutosendFormSet
+    template_name = "booking/workflow/change_autosend.html"
+
+    def form_valid(self, form):
+        form.save()
+        return HttpResponseRedirect(self.get_success_url())
+
+    def get_success_url(self):
+        return reverse('visit-occ-view', args=[self.object.pk])
+
+    def get_context_data(self, **kwargs):
+        context = {}
+        context['inherited'] = {
+            item.template_key:
+            {
+                'template_key': item.template_key,
+                'enabled': item.enabled,
+                'days': item.days
+            }
+            for item in self.object.visit.visitautosend_set.all()
+        }
+        context['template_keys'] = list(set(
+            template.key
+            for template in EmailTemplate.get_templates(self.object.visit.unit)
+        ))
+        context['unit'] = self.object.visit.unit
+        context.update(kwargs)
+        return super(ChangeVisitOccurrenceAutosendView, self).\
+            get_context_data(**context)
