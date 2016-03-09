@@ -1334,9 +1334,12 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         else:
             context['thisurl'] = reverse('visit-create')
 
-        context['template_keys'] = list(set(
-            template.key for template in EmailTemplate.get_templates(self.object.unit)
-        ))
+        context['template_keys'] = list(
+            set(
+                template.key
+                for template in EmailTemplate.get_templates(self.object.unit)
+            )
+        )
         context['unit'] = self.object.unit
 
         context.update(kwargs)
@@ -1783,7 +1786,6 @@ class BookingView(AutologgerMixin, UpdateView):
         for (name, form) in forms.items():
             if not form.is_valid():
                 valid = False
-                print form.errors
 
         if valid:
             if 'bookingform' in forms:
@@ -1829,7 +1831,6 @@ class BookingView(AutologgerMixin, UpdateView):
 
             return redirect("/visit/%d/book/success" % self.visit.id)
         else:
-            print "there was an error"
             forms['subjectform'] = BookingSubjectLevelForm(request.POST)
 
         data.update(forms)

@@ -49,11 +49,9 @@ class ChangeVisitOccurrenceStatusView(AutologgerMixin, UpdateWithCancelView):
         status = form.cleaned_data['workflow_status']
         if status == VisitOccurrence.WORKFLOW_STATUS_PLANNED:
             # Booking is planned
-            print "Booking is planned"
             self.object.autosend(EmailTemplate.NOTIFY_ALL__BOOKING_COMPLETE)
         if status == VisitOccurrence.WORKFLOW_STATUS_CANCELLED:
             # Booking is cancelled
-            print "Booking is cancelled"
             self.object.autosend(EmailTemplate.NOTIFY_ALL__BOOKING_CANCELED)
         return response
 
@@ -69,6 +67,7 @@ class ChangeVisitOccurrenceHostsView(AutologgerMixin, UpdateWithCancelView):
     form_class = ChangeVisitOccurrenceHostsForm
     template_name = "booking/workflow/change_hosts.html"
 
+    # When the status or host list changes, autosend emails
     def form_valid(self, form):
         old = self.get_object()
         response = super(ChangeVisitOccurrenceHostsView, self).form_valid(form)
@@ -81,9 +80,9 @@ class ChangeVisitOccurrenceHostsView(AutologgerMixin, UpdateWithCancelView):
                 # Status was also ok before, send message to hosts
                 # that weren't there before
                 recipients = [
-                    teacher
-                    for teacher in new_hosts
-                    if teacher not in old.hosts.all()
+                    host
+                    for host in new_hosts
+                    if host not in old.hosts.all()
                 ]
             if len(recipients):
                 # Send a message to only these recipients
@@ -174,7 +173,8 @@ class ChangeVisitOccurrenceAutosendView(AutologgerMixin, UpdateWithCancelView):
             for item in self.object.visit.visitautosend_set.all()
         }
         context['template_keys'] = list(set(
-            template.key for template in EmailTemplate.get_templates(self.object.visit.unit)
+            template.key
+            for template in EmailTemplate.get_templates(self.object.visit.unit)
         ))
         context['unit'] = self.object.visit.unit
         context.update(kwargs)

@@ -1219,14 +1219,11 @@ class Visit(Resource):
         return occ
 
     def get_autosend(self, template_key):
-        print "Find autosends in visit %d with template key %d" % (self.id, template_key)
         try:
             item = self.visitautosend_set.filter(
                 template_key=template_key, enabled=True)[0]
-            print "Found"
             return item
         except:
-            print "None found"
             return None
 
     def autosend_enabled(self, template_key):
@@ -1236,7 +1233,6 @@ class Visit(Resource):
         recipients = self.unit.get_recipients(template_key)
         if template_key in \
                 EmailTemplate.booking_recipient_contacts_keys:
-            print "We may add contacts"
             recipients.extend(self.contact_persons.all())
         return recipients
 
@@ -1571,11 +1567,9 @@ class VisitOccurrence(models.Model):
     def get_recipients(self, template_key):
         recipients = []
         if template_key in EmailTemplate.occurrence_hosts_keys:
-            print "We may add hosts from occurrence"
             recipients.extend(self.hosts.all())
         if template_key in \
                 EmailTemplate.occurrence_teachers_keys:
-            print "We may add teachers from occurrence"
             recipients.extend(self.teachers.all())
         return recipients
 
@@ -1583,21 +1577,17 @@ class VisitOccurrence(models.Model):
         s = self.visitoccurrenceautosend_set.\
             filter(template_key=template_key, inherit=True).\
             count() > 0
-        print "Template %d inherits: %s" % (template_key, "yes" if s else "no")
         return s
 
     def get_autosend(self, template_key, follow_inherit=True):
         if follow_inherit and self.autosend_inherits(template_key):
             return self.visit.get_autosend(template_key)
         else:
-            print "Find autosends in occurrence %d with template key %d" % (self.id, template_key)
             try:
                 item = self.visitoccurrenceautosend_set.filter(
                     template_key=template_key, enabled=True)[0]
-                print "Found"
                 return item
-            except Exception as e:
-                print "None found"
+            except:
                 return None
 
     def autosend_enabled(self, template_key):
@@ -1606,9 +1596,7 @@ class VisitOccurrence(models.Model):
     # Sends a message to defined recipients pertaining to the VisitOccurrence
     def autosend(self, template_key, recipients=None,
                  only_these_recipients=False):
-        print "VisitOccurrence.autosend(%d)" % template_key
         if self.autosend_enabled(template_key):
-            print "autosend is enabled for this template"
             visit = self.visit
             unit = visit.unit
             if recipients is None:
@@ -1618,7 +1606,6 @@ class VisitOccurrence(models.Model):
             if not only_these_recipients:
                 recipients.update(self.get_recipients(template_key))
 
-            print "Recipients: %s" % unicode(recipients)
             KUEmailMessage.send_email(
                 template_key,
                 {'occurrence': self, 'visit': visit},
@@ -1627,10 +1614,9 @@ class VisitOccurrence(models.Model):
             )
 
             if not only_these_recipients and \
-                template_key in EmailTemplate.booking_recipient_booker_keys:
-                print "Also sending to bookers:"
+                    template_key in \
+                    EmailTemplate.booking_recipient_booker_keys:
                 for booking in self.bookings.all():
-                    print booking.booker.get_full_email()
                     KUEmailMessage.send_email(
                         template_key,
                         {
@@ -1642,9 +1628,6 @@ class VisitOccurrence(models.Model):
                         booking.booker,
                         unit
                     )
-        else:
-            print "autosend is disabled for this template"
-
 
 
 VisitOccurrence.add_override_property('duration')
