@@ -660,7 +660,7 @@ select,
     margin-bottom: 10px;
 }
 label[for="gymnasiefag-fag"] {
-   font-weight: bold!important;
+    font-weight: bold!important;
 }
 .lengthcounter {
     margin-left: 7px;
@@ -693,6 +693,15 @@ div ul.errorlist {
     color: #a94442;
     background-color: #f2dede;
     border: 1px solid #a94442;
+    padding: 10px;
+    display: inline-block;
+    list-style-position: inside;
+    max-width: 70%;
+}
+div ul.warninglist {
+    color: #8a6d3b;
+    background-color: #fcf8e3;
+    border: 1px solid #8a6d3b;
     padding: 10px;
     display: inline-block;
     list-style-position: inside;
@@ -752,6 +761,18 @@ a.template-overridden:visited {
 }
 #adv-time-select-toggle {
 
+}
+
+/* Autosend form */
+.autosend-row {
+    width: 100%;
+    border: 1px solid #eee;
+    margin: 1px 0;
+    padding: 1px;
+}
+
+.autosend-row label.deletion {
+    opacity: 0.5;
 }
 
 #recipient-groups input {
@@ -936,6 +957,12 @@ body.lightbox {
     .dl-horizontal dd {
         margin-left: 110px;
         padding-top: 7px;
+    }
+    .dl-horizontal.status dt {
+        width: 145px;
+    }
+    .dl-horizontal.status dd {
+        margin-left: 150px;
     }
     #startbookingform .form-group [class*="col-"] + [class*="col-"] {
         padding-left: 0;
