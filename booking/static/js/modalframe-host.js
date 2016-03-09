@@ -25,6 +25,7 @@ $(function(){
     };
 
     modalOpeners = $("[data-toggle='modal'][data-modal-href], [data-toggle='modal'][href]");
+    console.log("modalOpeners",modalOpeners);
     if (modalOpeners.length) {
         var modalHost = $("#modalhost");
         var container = modalHost.find(".modal-content");
@@ -40,8 +41,10 @@ $(function(){
         modalOpeners.each(function(){
             var link = $(this);
             link.click(function(event){
+                console.log("clicked", link, iframe);
                 var url = link.attr("href") || link.attr("data-modal-href");
                 url = addIdToHash(url, id);
+                console.log(url);
                 iframe.attr("src", url);
             });
         });

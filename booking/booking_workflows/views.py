@@ -87,7 +87,7 @@ class ChangeVisitOccurrenceHostsView(AutologgerMixin, UpdateWithCancelView):
             if len(recipients):
                 # Send a message to only these recipients
                 self.object.autosend(
-                    EmailTemplate.NOTIFY_HOST__ASSOCIATED,
+                    EmailTemplate.occurrence_added_host_key,
                     recipients,
                     True
                 )
