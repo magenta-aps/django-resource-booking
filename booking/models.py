@@ -157,13 +157,11 @@ class Unit(models.Model):
     def get_recipients(self, template_key):
         recipients = []
         if template_key in EmailTemplate.unit_hosts_keys:
-            print "We may add hosts from unit"
             from profile.models import HOST
             recipients.extend(self.get_users(HOST))
 
         if template_key in \
                 EmailTemplate.unit_teachers_keys:
-            print "We may add teachers from unit"
             from profile.models import TEACHER
             recipients.extend(self.get_users(TEACHER))
         return recipients
@@ -354,6 +352,12 @@ class EmailTemplate(models.Model):
         (NOTIFY_ALL__BOOKING_CANCELED, _(u'Alle: Booking aflyst')),
         (NOTITY_ALL__BOOKING_REMINDER, _(u'Alle: Reminder om booking')),
     ]
+
+    @staticmethod
+    def get_name(template_key):
+        for key, label in EmailTemplate.key_choices:
+            if key == template_key:
+                return label
 
     # Templates available for manual sending from visits
     visit_manual_keys = []
@@ -1629,6 +1633,10 @@ class VisitOccurrence(models.Model):
                         unit
                     )
 
+    def get_autosend_display(self):
+        autosends = self.visitoccurrenceautosend_set.filter(enabled=True)
+        return ', '.join([autosend.get_name() for autosend in autosends])
+
 
 VisitOccurrence.add_override_property('duration')
 VisitOccurrence.add_override_property('locality')
@@ -1650,6 +1658,9 @@ class Autosend(models.Model):
         verbose_name=_(u'Aktiv'),
         default=True
     )
+
+    def get_name(self):
+        return str(EmailTemplate.get_name(self.template_key))
 
 
 class VisitAutosend(Autosend):
