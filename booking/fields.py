@@ -5,7 +5,6 @@ from django.forms.fields import MultipleChoiceField
 
 from .widgets import DurationWidget
 
-
 COLUMN_TYPES = defaultdict(lambda: "char(20)")
 COLUMN_TYPES["django.db.backends.postgresql_psycopg2"] = "interval"
 COLUMN_TYPES["django.contrib.gis.db.backends.postgis"] = "interval"

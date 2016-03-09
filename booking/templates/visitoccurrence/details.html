@@ -53,7 +53,7 @@
             </p>
             {% endif %}
 
-            <dl class="dl-horizontal">
+            <dl class="dl-horizontal status">
                 <dt>Tidspunkt</dt>
                 <dd>
                     {% if object.start_datetime %}
@@ -84,6 +84,13 @@
                     {{ object.get_room_status_display }}
                     {% if object.can_assign_resources %}
                     <a href="{% url 'change-visit-occ-rooms' object.pk %}" role="button" class="btn btn-primary btn-xs">Redigér</a>
+                    {% endif %}
+                </dd>
+                <dt>Automatisk email</dt>
+                <dd>
+                    {{ object.get_autosend_display }}
+                    {% if object.can_assign_resources %}
+                        <a href="{% url 'change-visit-occ-autosend' object.pk %}" role="button" class="btn btn-primary btn-xs">Redigér</a>
                     {% endif %}
                 </dd>
                 <dt>Afvikling</dt>

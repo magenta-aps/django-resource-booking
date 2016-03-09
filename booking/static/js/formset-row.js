@@ -18,7 +18,9 @@ $(function() {
                     this.id = formset._replaceCounter(this.id, totalRows);
                     this.name = formset._replaceCounter(this.name, totalRows);
                     this.value = "";
-                    console.log(this);
+                });
+                newRow.find("label").each(function(){
+                    this.htmlFor = formset._replaceCounter(this.htmlFor, totalRows);
                 });
                 $(container).append(newRow);
                 totalRowsEl.val(totalRows + 1);
