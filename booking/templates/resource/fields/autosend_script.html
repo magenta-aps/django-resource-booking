@@ -125,7 +125,7 @@
 
             var checkTemplateExistence = function(row) {
                 var templateSelect = row.find("[name$='-template_key']");
-                var key = templateSelect.val(),
+                var key = parseInt(templateSelect.val(), 10),
                     id = "missingtemplate";
                 if (window.template_keys && $.inArray(key, window.template_keys) == -1) {
                     var url = "{% url "emailtemplate-create" %}?key=" + key + "&unit={{ unit.id }}";
