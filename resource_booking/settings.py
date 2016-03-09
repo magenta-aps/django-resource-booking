@@ -9,6 +9,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.8/ref/settings/
 """
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+
 import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -44,6 +45,7 @@ INSTALLED_APPS = (
     'timedelta',
     'tinymce',
     'djangosaml2',
+    'django_cron',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -200,3 +202,7 @@ if USE_SAML:
         AUTHENTICATION_BACKENDS.insert(1, 'djangosaml2.backends.Saml2Backend')
     else:
         AUTHENTICATION_BACKENDS.append('djangosaml2.backends.Saml2Backend')
+
+CRON_CLASSES = [
+    "booking.cron.ReminderJob"
+]
