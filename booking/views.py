@@ -44,7 +44,6 @@ from booking.models import PostCode, School
 from booking.models import Booking, Booker
 from booking.models import ResourceGymnasieFag, ResourceGrundskoleFag
 from booking.models import EmailTemplate
-from booking.models import VisitAutosend
 from booking.models import log_action
 from booking.models import LOGACTION_CREATE, LOGACTION_CHANGE
 from booking.forms import ResourceInitialForm, OtherResourceForm, VisitForm, \
@@ -54,8 +53,8 @@ from booking.forms import VisitStudyMaterialForm, BookingSubjectLevelForm
 from booking.forms import BookerForm
 from booking.forms import EmailTemplateForm, EmailTemplatePreviewContextForm
 from booking.forms import EmailComposeForm
-from booking.forms import VisitAutosendForm
 from booking.forms import AdminVisitSearchForm
+from booking.forms import VisitAutosendFormSet
 from booking.utils import full_email
 
 import urls
@@ -1132,19 +1131,11 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         self.set_object(pk, request)
         form = self.get_form()
         fileformset = VisitStudyMaterialForm(None, instance=self.object)
-
-        autosendform = VisitAutosendForm(
-            {
-                'autosend': [
-                    autosend.template_key
-                    for autosend in self.object.visitautosend_set.all()
-                ]
-            }
-        )
+        autosendformset = VisitAutosendFormSet(None, instance=self.object)
 
         return self.render_to_response(
             self.get_context_data(form=form, fileformset=fileformset,
-                                  autosendform=autosendform)
+                                  autosendformset=autosendformset)
         )
 
     def _is_any_booking_outside_new_attendee_count_bounds(
@@ -1198,29 +1189,20 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         self.set_object(pk, request, is_cloning)
         form = self.get_form()
         fileformset = VisitStudyMaterialForm(request.POST)
-        autosendform = VisitAutosendForm(request.POST)
+        autosendformset = VisitAutosendFormSet(
+            request.POST, instance=self.object
+        )
 
         if form.is_valid():
             visit = form.save()
 
-            if autosendform.is_valid():
+            if autosendformset.is_valid():
                 # Update autosend
-                new_autosend_keys = autosendform.cleaned_data['autosend']
-                existing_autosend = visit.visitautosend_set.all()
-                existing_autosend_keys = [
-                    autosend.template_key
-                    for autosend in existing_autosend
-                    ]
-                for autosend in existing_autosend:
-                    if autosend.template_key not in new_autosend_keys:
-                        autosend.delete()
-                for template_key in new_autosend_keys:
-                    if template_key not in existing_autosend_keys:
-                        autosend = VisitAutosend(
-                            visit=visit,
-                            template_key=template_key
-                        )
-                        visit.visitautosend_set.add(autosend)
+                for autosendform in autosendformset:
+                    try:
+                        autosendform.save()
+                    except:
+                        pass
 
             if fileformset.is_valid():
                 # Attach uploaded files
@@ -1292,7 +1274,7 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
                 {
                     'form': form,
                     'fileformset': fileformset,
-                    'autosendform': autosendform
+                    'autosendformset': autosendformset
                 }
             )
 
@@ -1332,6 +1314,14 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
             context['thisurl'] = reverse('visit-edit', args=[self.object.id])
         else:
             context['thisurl'] = reverse('visit-create')
+
+        context['template_keys'] = list(
+            set(
+                template.key
+                for template in EmailTemplate.get_templates(self.object.unit)
+            )
+        )
+        context['unit'] = self.object.unit
 
         context.update(kwargs)
 
@@ -2300,4 +2290,6 @@ ChangeVisitOccurrenceRoomsView = \
     booking_views.ChangeVisitOccurrenceRoomsView
 ChangeVisitOccurrenceCommentsView = \
     booking_views.ChangeVisitOccurrenceCommentsView
+ChangeVisitOccurrenceAutosendView = \
+    booking_views.ChangeVisitOccurrenceAutosendView
 VisitOccurrenceAddLogEntryView = booking_views.VisitOccurrenceAddLogEntryView

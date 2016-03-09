@@ -86,6 +86,13 @@
                     <a href="{% url 'change-visit-occ-rooms' object.pk %}" role="button" class="btn btn-primary btn-xs">Redigér</a>
                     {% endif %}
                 </dd>
+                <dt>Automatisk email</dt>
+                <dd>
+                    {{ object.get_autosend_display }}
+                    {% if object.can_assign_resources %}
+                        <a href="{% url 'change-visit-occ-autosend' object.pk %}" role="button" class="btn btn-primary btn-xs">Redigér</a>
+                    {% endif %}
+                </dd>
                 <dt>Afvikling</dt>
                 <dd>
                     {{ object.get_workflow_status_display }}
