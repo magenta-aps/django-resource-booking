@@ -12,7 +12,7 @@ from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext_lazy as _
-from django.template.base import Template
+from django.template.base import Template, VariableNode
 
 from recurrence.fields import RecurrenceField
 from booking.utils import ClassProperty, full_email
@@ -506,6 +506,16 @@ class EmailTemplate(models.Model):
         if include_inherited and unit is not None and unit.parent != unit:
             templates.extend(EmailTemplate.get_templates(unit.parent, True))
         return templates
+
+    def get_template_variables(self):
+        variables = []
+        for item in [self.subject, self.body]:
+            text = item.replace("%20", " ")
+            template = Template(unicode(text))
+            for node in template:
+                if isinstance(node, VariableNode):
+                    variables.append(unicode(node.filter_expression))
+        return variables
 
 
 # Bookable resources
