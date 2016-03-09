@@ -375,6 +375,7 @@ class EmailTemplate(models.Model):
         NOTITY_ALL__BOOKING_REMINDER
     ]
 
+    """
     # Templates available for autosending (config in visits)
     visit_autosend_keys = [
         NOTIFY_GUEST__BOOKING_CREATED,
@@ -391,18 +392,17 @@ class EmailTemplate(models.Model):
     visitoccurrence_autosend_keys = [
         NOTITY_ALL__BOOKING_REMINDER
     ]
+    """
 
     # Templates that will be autosent to visit.contact_persons
     booking_recipient_contacts_keys = [
         NOTIFY_HOST__BOOKING_CREATED,
-        NOTIFY_HOST__ASSOCIATED,
         NOTIFY_ALL__BOOKING_CANCELED,
         NOTITY_ALL__BOOKING_REMINDER
     ]
     # Templates that will be autosent to booker
     booking_recipient_booker_keys = [
         NOTIFY_GUEST__BOOKING_CREATED,
-        NOTIFY_GUEST__GENERAL_MSG,
         NOTIFY_ALL__BOOKING_COMPLETE,
         NOTIFY_ALL__BOOKING_CANCELED,
         NOTITY_ALL__BOOKING_REMINDER
@@ -418,13 +418,18 @@ class EmailTemplate(models.Model):
     # Templates that will be autosent to hosts in the occurrence
     occurrence_hosts_keys = [
         NOTIFY_ALL__BOOKING_COMPLETE,
-        NOTIFY_ALL__BOOKING_CANCELED
+        NOTIFY_ALL__BOOKING_CANCELED,
+        NOTITY_ALL__BOOKING_REMINDER
     ]
     # Templates that will be autosent to teachers in the occurrence
     occurrence_teachers_keys = [
         NOTIFY_ALL__BOOKING_COMPLETE,
-        NOTIFY_ALL__BOOKING_CANCELED
+        NOTIFY_ALL__BOOKING_CANCELED,
+        NOTITY_ALL__BOOKING_REMINDER
     ]
+    # Template that will be autosent to hosts
+    # when they are added to an occurrence
+    occurrence_added_host_key = NOTIFY_HOST__ASSOCIATED
 
     key = models.IntegerField(
         verbose_name=u'Key',
