@@ -36,6 +36,36 @@
                         {% endif %}
                     </div>
                     {% endif %}
+                    {% if modal %}
+                WE ARE MODAL
+                {% else %}
+                        WE ARE NOT MODAL
+                {% endif %}
+                    {% if can_notify %}
+                        <div class="pull-right dropdown">
+                            <button class="btn btn-primary dropdown-toggle" type="button" id="sendNotification" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                {% trans 'Send besked' %}
+                                <span class="caret"/>
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="sendNotification">
+                                <li><a data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'visit-occ-notify' object.pk %}">{% trans 'Ingen skabelon' %}</a></li>
+                                {% if emailtemplates %}
+                                    <li role="separator" class="divider"></li>
+                                    {% for id, label in emailtemplates %}
+                                        <li>
+                                            {% if modal %}
+                                                <a data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'visit-occ-notify' object.pk %}?template={{ id }}">{{ label }}</a>
+                                            {% else %}
+                                                <a href="{% url 'visit-occ-notify' object.pk %}?template={{ id }}&back={{ thisurl | urlencode }}">{{ label }}</a>
+                                            {% endif %}
+                                        </li>
+                                    {% endfor %}
+                                {% endif %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+
                 </div>
             </div>
 
@@ -137,15 +167,11 @@
     </div>
 
     {% include 'common/modal_contact.html' %}
+    {% include 'common/modal_framehost.html' %}
 
 {% endblock %}
 
 {% block extra_scripts %}
     <script src="/static/js/custom.js"></script>
     <script src="{% static "js/modalframe-host.js" %}"></script>
-    <script type="text/javascript">
-        <!--
-        $('#startbooking').hostModalIframe($('#startbooking').attr("data-frametarget"));
-        //-->
-    </script>
 {% endblock %}

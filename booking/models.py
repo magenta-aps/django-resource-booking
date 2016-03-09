@@ -150,20 +150,27 @@ class Unit(models.Model):
 
     def get_users(self, role=None):
         if role is not None:
-            return self.userprofile_set.filter(user_role__role=role).all()
+            profiles = self.userprofile_set.filter(user_role__role=role).all()
         else:
-            return self.userprofile_set.all()
+            profiles = self.userprofile_set.all()
+        return [profile.user for profile in profiles]
+
+    def get_hosts(self):
+        from profile.models import HOST
+        return self.get_users(HOST)
+
+    def get_teachers(self):
+        from profile.models import TEACHER
+        return self.get_users(TEACHER)
 
     def get_recipients(self, template_key):
         recipients = []
         if template_key in EmailTemplate.unit_hosts_keys:
-            from profile.models import HOST
-            recipients.extend(self.get_users(HOST))
+            recipients.extend(self.get_hosts())
 
         if template_key in \
                 EmailTemplate.unit_teachers_keys:
-            from profile.models import TEACHER
-            recipients.extend(self.get_users(TEACHER))
+            recipients.extend(self.get_teachers())
         return recipients
 
 
@@ -359,8 +366,16 @@ class EmailTemplate(models.Model):
             if key == template_key:
                 return label
 
-    # Templates available for manual sending from visits
-    visit_manual_keys = []
+    # Templates available for manual sending from visit occurrences
+    visitoccurrence_manual_keys = [
+        NOTIFY_GUEST__GENERAL_MSG,
+        NOTIFY_HOST__ASSOCIATED,
+        NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
+        NOTIFY_HOST__REQ_HOST_VOLUNTEER,
+        NOTIFY_ALL__BOOKING_COMPLETE,
+        NOTIFY_ALL__BOOKING_CANCELED,
+        NOTITY_ALL__BOOKING_REMINDER
+    ]
 
     # Templates available for manual sending from bookings
     booking_manual_keys = [
@@ -510,7 +525,7 @@ class EmailTemplate(models.Model):
             templates = list(EmailTemplate.objects.filter(
                 unit=unit
             ).all())
-        if include_inherited and unit is not None:
+        if include_inherited and unit is not None and unit.parent != unit:
             templates.extend(EmailTemplate.get_templates(unit.parent, True))
         return templates
 
