@@ -698,6 +698,15 @@ div ul.errorlist {
     list-style-position: inside;
     max-width: 70%;
 }
+div ul.warninglist {
+    color: #8a6d3b;
+    background-color: #fcf8e3;
+    border: 1px solid #8a6d3b;
+    padding: 10px;
+    display: inline-block;
+    list-style-position: inside;
+    max-width: 70%;
+}
 
 /* gymnasiefag-edit & grundskolefag-edit */
 #gymnasiefag-fag,

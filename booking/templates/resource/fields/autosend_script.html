@@ -3,6 +3,12 @@
 
 <script type="text/javascript">
     <!--
+
+    {% autoescape off %}
+        var inherited = {{ inherited | jsonify }};
+        var template_keys = {{ template_keys | jsonify }};
+    {% endautoescape %}
+
         $(function(){
 
             // Enables/disables input elements and labels
@@ -92,6 +98,42 @@
                 }
             };
 
+            var addWarning = function(row, id, warningText) {
+                var warning = $("li#"+id);
+                if (warning.length == 0) {
+                    var warningList = row.find(".warninglist");
+                    if (warningList.length == 0) {
+                        var templateSelect = row.find("[name$='-template_key']");
+                        warningList = $("<ul>").addClass("warninglist");
+                        templateSelect.before(warningList);
+                    }
+                    warning = $("<li>").attr({id: id});
+                    warningList.append(warning);
+                }
+                warning.html(warningText);
+            };
+
+            var removeWarning = function(id) {
+                var warning = $("li#"+id);
+                var parent = warning.parent();
+                warning.remove();
+                if (parent.children().length == 0) {
+                    parent.remove();
+                }
+            };
+
+            var checkTemplateExistence = function(row) {
+                var templateSelect = row.find("[name$='-template_key']");
+                var key = templateSelect.val()
+                    id = "missingtemplate";
+                if (window.template_keys && $.inArray(key, window.template_keys) == -1) {
+                    var url = "{% url "emailtemplate-create" %}?key=" + key + "&unit={{ unit.id }}";
+                    addWarning(row, id, "Der er ingen skabelon til denne hændelse! <a href=\""+url+"\" target=\"_blank\">Opret</a>");
+                } else {
+                    removeWarning(id);
+                }
+            };
+
             // Updates existing rows (on load) and new rows (on add)
             var fixRow = function(row) {
                 var templateSelect = row.find("[name$='-template_key']");
@@ -99,6 +141,7 @@
                     toggleReminder(row);
                     toggleInherit(row);
                     disableAlreadySelected();
+                    checkTemplateExistence(row);
                 });
                 toggleReminder(row);
 
@@ -114,6 +157,7 @@
                     toggleInherit(row);
                 });
                 toggleInherit(row);
+                checkTemplateExistence(row);
             };
 
             // Disables template options that are selected in another row (so each template key can only be selected in one row)

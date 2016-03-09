@@ -1334,6 +1334,11 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         else:
             context['thisurl'] = reverse('visit-create')
 
+        context['template_keys'] = list(set(
+            template.key for template in EmailTemplate.get_templates(self.object.unit)
+        ))
+        context['unit'] = self.object.unit
+
         context.update(kwargs)
 
         return super(EditVisitView, self).get_context_data(**context)

@@ -491,6 +491,20 @@ class EmailTemplate(models.Model):
         else:
             return templates[0] if len(templates) > 0 else None
 
+    @staticmethod
+    def get_templates(unit, include_inherited=True):
+        if unit is None:
+            templates = EmailTemplate.objects.filter(
+                unit__isnull=True
+            ).all()
+        else:
+            templates = list(EmailTemplate.objects.filter(
+                unit=unit
+            ).all())
+        if include_inherited and unit is not None:
+            templates.extend(EmailTemplate.get_templates(unit.parent, True))
+        return templates
+
 
 # Bookable resources
 class Resource(models.Model):

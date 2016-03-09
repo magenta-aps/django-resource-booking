@@ -68,22 +68,13 @@ class ChangeVisitOccurrenceHostsView(AutologgerMixin, UpdateWithCancelView):
     model = VisitOccurrence
     form_class = ChangeVisitOccurrenceHostsForm
     template_name = "booking/workflow/change_hosts.html"
-    old = {}
-
-    def post(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        self.old = {
-            'host_status': self.object.host_status,
-            'hosts': self.object.hosts.all()
-        }
-        return super(ChangeVisitOccurrenceHostsView, self).\
-            post(request, *args, **kwargs)
 
     def form_valid(self, form):
+        old = self.get_object()
         response = super(ChangeVisitOccurrenceHostsView, self).form_valid(form)
         if form.cleaned_data['host_status'] == VisitOccurrence.STATUS_OK:
             new_hosts = self.object.hosts.all()
-            if self.old['host_status'] != VisitOccurrence.STATUS_OK:
+            if old.host_status != VisitOccurrence.STATUS_OK:
                 # Status changed from not-ok to ok, notify all hosts
                 recipients = new_hosts
             else:
@@ -92,7 +83,7 @@ class ChangeVisitOccurrenceHostsView(AutologgerMixin, UpdateWithCancelView):
                 recipients = [
                     teacher
                     for teacher in new_hosts
-                    if teacher not in self.old['hosts']
+                    if teacher not in old.hosts.all()
                 ]
             if len(recipients):
                 # Send a message to only these recipients
@@ -182,6 +173,10 @@ class ChangeVisitOccurrenceAutosendView(AutologgerMixin, UpdateWithCancelView):
             }
             for item in self.object.visit.visitautosend_set.all()
         }
+        context['template_keys'] = list(set(
+            template.key for template in EmailTemplate.get_templates(self.object.visit.unit)
+        ))
+        context['unit'] = self.object.visit.unit
         context.update(kwargs)
         return super(ChangeVisitOccurrenceAutosendView, self).\
             get_context_data(**context)

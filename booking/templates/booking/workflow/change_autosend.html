@@ -34,11 +34,6 @@
 {% endblock %}
 
 {% block extra_scripts %}
-    <script type="text/javascript">
-        {% autoescape off %}
-        var inherited = {{ inherited | jsonify }};
-        {% endautoescape %}
-    </script>
     {% with autosendformset=form %}
     {% include 'resource/fields/autosend_script.html' %}
     {% endwith %}
