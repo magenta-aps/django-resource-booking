@@ -50,7 +50,6 @@
             </div>
             <div class="well order-buttons hidden-print">
                 {% if can_book %}
-
                 <a class="btn btn-default" data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'visit-book' object.id %}">
                     {% trans 'Tilmeld' %}
                     <span class="glyphicon glyphicon-chevron-right"></span>
@@ -207,5 +206,5 @@
 
     <script src="/static/js/custom.js"></script>
     <script src="{% static "js/modalframe-host.js" %}"></script>
-    
+
 {% endblock %}

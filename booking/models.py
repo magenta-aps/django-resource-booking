@@ -1485,7 +1485,7 @@ class VisitOccurrence(models.Model):
 
     def is_booked(self):
         """Has this VisitOccurrence instance been booked yet?"""
-        return len(self.booking_set.all()) > 0
+        return len(self.bookings.all()) > 0
 
     def date_display(self):
         return self.start_datetime or _(u'på ikke-fastlagt tidspunkt')
