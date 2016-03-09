@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from booking.models import StudyMaterial
 from booking.models import UnitType
 from booking.models import Unit
@@ -14,6 +16,127 @@ from django.utils import formats
 from django.utils.translation import ugettext_lazy as _
 from tinymce.widgets import TinyMCE
 from .fields import ExtensibleMultipleChoiceField
+
+
+class AdminVisitSearchForm(forms.Form):
+
+    q = forms.CharField(
+        label=_(u'Fritekst'),
+        max_length=60,
+        required=False
+    )
+
+    s = forms.ChoiceField(
+        label=_(u'Status'),
+        choices=(('', _(u'[Vælg status]')),) + Resource.state_choices,
+        required=False
+    )
+
+    e = forms.ChoiceField(
+        label=_(u'Tilbud er aktivt'),
+        choices=(
+            (None, _(u'[Vælg]')),
+            (1, _(u'Ja')),
+            (0, _(u'Nej')),
+        ),
+        required=False
+    )
+
+    IS_VISIT = 1
+    IS_NOT_VISIT = 2
+
+    v = forms.ChoiceField(
+        label=_(u'Besøg / ikke besøg'),
+        choices=(
+            (None, _(u'[Vælg]')),
+            (IS_VISIT, _(u'Tilbud med besøg')),
+            (IS_NOT_VISIT, _(u'Tilbud uden besøg')),
+        ),
+        required=False
+    )
+
+    HAS_BOOKINGS = 1
+    HAS_NO_BOOKINGS = 2
+
+    b = forms.ChoiceField(
+        label=_(u'Bookinger'),
+        choices=(
+            (None, _(u'[Vælg]')),
+            (HAS_BOOKINGS, _(u'Tilbud der har bookinger')),
+            (HAS_NO_BOOKINGS, _(u'Tilbud der ikke har bookinger')),
+        ),
+        required=False
+    )
+
+    MY_UNIT = -1
+    MY_FACULTY = -2
+    MY_UNITS = -3
+
+    u = forms.ChoiceField(
+        label=_(u'Enhed'),
+        required=False
+    )
+
+    to_date = forms.DateField(
+        label=_(u'Dato til'),
+        required=False
+    )
+
+    from_date = forms.DateField(
+        label=_(u'Dato fra'),
+        required=False
+    )
+
+    def __init__(self, qdict, *args, **kwargs):
+        self.user = kwargs.pop("user")
+
+        super(AdminVisitSearchForm, self).__init__(qdict, *args, **kwargs)
+
+        self.fields['u'].choices = self.get_unit_choices()
+
+        extra_classes = {
+            'from_date': 'datepicker datepicker-admin',
+            'to_date': 'datepicker datepicker-admin'
+        }
+
+        # Add classnames to all fields
+        for fname, f in self.fields.iteritems():
+            f.widget.attrs['class'] = " ".join([
+                x for x in (
+                    f.widget.attrs.get('class'),
+                    'form-control input-sm',
+                    extra_classes.get(fname)
+                ) if x
+            ])
+
+        self.hiddenfields = []
+        for x in ("a", "t", "f", "g"):
+            for y in qdict.getlist(x, []):
+                self.hiddenfields.append((x, y,))
+
+    def get_unit_choices(self):
+        choices = [
+            (None, _(u'[Vælg]')),
+            (self.MY_UNIT, _(u'Tilbud under min enhed')),
+            (self.MY_FACULTY, _(u'Tilbud under mit fakultet')),
+            (
+                self.MY_UNITS,
+                _(u'Tilbud under alle enheder jeg kan administrere')
+            ),
+            (None, '======'),
+        ]
+
+        for x in self.user.userprofile.get_unit_queryset():
+            choices.append((x.pk, unicode(x)))
+
+        return choices
+
+    def add_prefix(self, field_name):
+        # Remove _date postfix from date fields
+        if field_name in ('from_date', 'to_date'):
+            field_name = field_name[:-5]
+
+        return super(AdminVisitSearchForm, self).add_prefix(field_name)
 
 
 class UnitTypeForm(forms.ModelForm):
