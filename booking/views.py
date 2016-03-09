@@ -560,7 +560,7 @@ class SearchView(ListView):
     def filter_by_grundskolefag(self):
         g = self.request.GET.getlist("g")
         if g:
-            self.filters["grundskolefag__in"] = f
+            self.filters["grundskolefag__in"] = g
 
     def filter_for_admin_view(self, form):
         for filter_method in (
