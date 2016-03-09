@@ -1,4 +1,5 @@
 {% load staticfiles %}
+{% load i18n %}
 <script type="text/javascript" src="{% static 'js/formset-row.js' %}"></script>
 
 <script type="text/javascript">
@@ -124,11 +125,11 @@
 
             var checkTemplateExistence = function(row) {
                 var templateSelect = row.find("[name$='-template_key']");
-                var key = templateSelect.val()
+                var key = templateSelect.val(),
                     id = "missingtemplate";
                 if (window.template_keys && $.inArray(key, window.template_keys) == -1) {
                     var url = "{% url "emailtemplate-create" %}?key=" + key + "&unit={{ unit.id }}";
-                    addWarning(row, id, "Der er ingen skabelon til denne hændelse! <a href=\""+url+"\" target=\"_blank\">Opret</a>");
+                    addWarning(row, id, "{% trans "Der er ingen skabelon til denne hændelse!" %} <a href=\""+url+"\" target=\"_blank\">{% trans "Opret" %}</a>");
                 } else {
                     removeWarning(id);
                 }
