@@ -1,38 +1,66 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.5.0/js/bootstrap-datepicker.min.js"></script>
+<script src="/static/js/bootstrap-datepicker.da.min.js"></script>
+<script src="/static/js/picker.time.js"></script>
+
 <script type="text/javascript"><!--
     $(function(){
         
-        // See doc at http://www.malot.fr/bootstrap-datetimepicker/
-        var dp = $("#time-select").datetimepicker({
+        
+        // Adding a date using Bootstrap datepicker 
+        
+        var datepick = $('#id_datepick').datepicker({
             language: 'da',
-            format: 'dd-mm-yyyy hh:ii',
+            format: 'dd-mm-yyyy',
             weekStart: 1,
+            calendarWeeks: true,
             todayHighlight: true,
             startDate: 'Date',
             clearBtn: true,
-            autoclose: true,
-            bootcssVer: 3
-        });
-    
-        dp.on('changeDate', function(ev){
-            $("#existing-recurrence-dates").append('<li data-date="' + $("#time-select").val() + '">' + $("#time-select").val() + ' <button onclick="$(this).parent().detach();">x</button></li>');
-            var arr = $("#existing-recurrence-dates>li").map(function() { return $(this).data('date') }).get();
-            $("#occurrences").val(arr);
+            autoclose: true
         });
         
-        $('#time-select-btn').on('click', function() {
-            dp.datetimepicker('show');
-        });
-    
-        $(".button-remove").on('click', function(){
-            $(this).parent().detach();
-            var arr = $("#existing-recurrence-dates>li").map(function() { return $(this).data('date') }).get();
-            $("#occurrences").val(arr);
+        datepick.on('changeDate', function(ev){
+            $("#existing-recurrence-dates").append('<li data-date="' + datepick.val() + '">' + datepick.val() + ' <input class="btn-add-time timepick" type="text" name="timepick" placeholder="Tilføj tid"><button type="button" class="btn-rm-date">x</button></li>');
+            UpdateDateList();
         });
         
-        $("#adv-time-select-toggle").on('click', function(e) {
-            e.preventDefault();
-            $("#adv-time-select").toggle();    
+        
+        // Refresh avilable dates list
+        
+        function UpdateDateList() {
+            var arr = $("#existing-recurrence-dates>li").map(function() {
+                if ($(this).find('.btn-add-time').val() != undefined) {
+                    var date = $(this).data('date') + ' ' + $(this).find('.btn-add-time').val();
+                } else {
+                    var date = $(this).data('date');
+                };
+                return date;
+            }).get();
+            $("#occurrences").val(arr);
+        };
+        
+        
+        // Dates list functions
+        
+        $('#existing-recurrence-dates').on('click', '.btn-rm-date', function(ev) { // Remove date-time
+            ev.preventDefault();
+            var el = $(this);
+            el.parent().detach();
+            UpdateDateList();
         });
+        
+        $('#existing-recurrence-dates').on('click', '.btn-add-time', function(ev) { // Adding time using Pickadate.js
+            ev.preventDefault();
+            var tinput = $('.btn-add-time');
+            var telement = $(this).parent();
+            var timepick = tinput.pickatime({
+                format: 'H:i',
+                onClose: function() {
+                    UpdateDateList();
+                }
+            });
+        });
+        
         
     });
 //--></script>

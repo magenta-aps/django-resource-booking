@@ -12,23 +12,19 @@
         <ul id="existing-recurrence-dates" class="list-unstyled" data-visit-id="{{ object.id }}">
             {% for occurrence in object.visitoccurrence_set.all %}
                 <li data-date="{{ occurrence.start_datetime|date:'d-m-Y H:i' }}">{{ occurrence.start_datetime|date:'d-m-Y H:i' }}
-                {% if not occurrence.is_booked %}
-                    <button class="button-remove">x</button>
-                {% endif %}
+                    {% if not occurrence.is_booked %}
+                        <input class="btn-add-time timepick" type="text" name="timepick" placeholder="Tilføj tid">
+                        <button type="button" class="btn-rm-date">x</button>
+                    {% endif %}
                 </li>
             {% endfor %}
         </ul>
         <input id="occurrences" name="occurrences" type="hidden">
         {% endif %}
-
-        <label id="time-select-btn" for="time-select" class="btn btn-default">{% trans 'Tilføj tidspunkt' %}
-            <input id="time-select" name="id_time">
-        </label>
         
-        <a href="#adv-time-select" id="adv-time-select-toggle">{% trans 'Avanceret' %} &hellip;</a>
-        <div id="adv-time-select">
-            Vis avancerede funktioner
-        </div>
+        <label class="btn btn-default">
+            <input id="id_datepick" type="text" name="datepick" class="datepicker">{% trans 'Tilføj dato' %}
+        </label>
         
     </div>
 </div>
