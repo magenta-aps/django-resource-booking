@@ -2,7 +2,7 @@ from django.conf.urls import patterns, url, include
 from django.conf.urls.static import static
 from django.conf import settings
 
-from .views import MainPageView
+from .views import MainPageView, VisitOccurrenceNotifyView
 
 from booking.views import PostcodeView, SchoolView
 from booking.views import RrulestrView
@@ -11,10 +11,10 @@ from booking.views import BookingView, BookingSuccessView
 from booking.views import VisitOccurrenceSearchView
 from booking.views import EditOtherResourceView, OtherResourceDetailView
 from booking.views import EditVisitView, VisitDetailView
-from booking.views import VisitNotifyView, VisitNotifySuccessView
+from booking.views import EmailSuccessView
 from booking.views import SearchView, EmbedcodesView
 
-from booking.views import BookingNotifyView, BookingNotifySuccessView
+from booking.views import BookingNotifyView
 from booking.views import EmailTemplateListView, EmailTemplateEditView
 from booking.views import EmailTemplateDetailView, EmailTemplateDeleteView
 from booking.views import ContactComposeView
@@ -93,12 +93,13 @@ urlpatterns = patterns(
     url(r'^visit/(?P<visit>[0-9]+)/book/success$',
         BookingSuccessView.as_view(),
         name='visit-book-success'),
-    url(r'^visit/(?P<visit>[0-9]+)/notify$',
-        VisitNotifyView.as_view(),
-        name='visit-notify'),
-    url(r'^visit/(?P<visit>[0-9]+)/notify/success$',
-        VisitNotifySuccessView.as_view(),
-        name='visit-notify-success'),
+
+    url(r'^visit/occurrence/(?P<pk>[0-9]+)/notify$',
+        VisitOccurrenceNotifyView.as_view(),
+        name='visit-occ-notify'),
+    url(r'^visit/occurrence/(?P<pk>[0-9]+)/notify/success$',
+        EmailSuccessView.as_view(),
+        name='visit-occ-notify-success'),
 
     url(r'^visit/occurrence/(?P<pk>[0-9]+)$',
         VisitOccurrenceDetailView.as_view(),
@@ -139,7 +140,7 @@ urlpatterns = patterns(
         BookingNotifyView.as_view(),
         name='booking-notify'),
     url(r'^booking/(?P<visit>[0-9]+)/notify/success$',
-        BookingNotifySuccessView.as_view(),
+        EmailSuccessView.as_view(),
         name='booking-notify-success'),
 
     # Ajax api

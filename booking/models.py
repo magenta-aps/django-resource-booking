@@ -163,20 +163,27 @@ class Unit(models.Model):
 
     def get_users(self, role=None):
         if role is not None:
-            return self.userprofile_set.filter(user_role__role=role).all()
+            profiles = self.userprofile_set.filter(user_role__role=role).all()
         else:
-            return self.userprofile_set.all()
+            profiles = self.userprofile_set.all()
+        return [profile.user for profile in profiles]
+
+    def get_hosts(self):
+        from profile.models import HOST
+        return self.get_users(HOST)
+
+    def get_teachers(self):
+        from profile.models import TEACHER
+        return self.get_users(TEACHER)
 
     def get_recipients(self, template_key):
         recipients = []
         if template_key in EmailTemplate.unit_hosts_keys:
-            from profile.models import HOST
-            recipients.extend(self.get_users(HOST))
+            recipients.extend(self.get_hosts())
 
         if template_key in \
                 EmailTemplate.unit_teachers_keys:
-            from profile.models import TEACHER
-            recipients.extend(self.get_users(TEACHER))
+            recipients.extend(self.get_teachers())
         return recipients
 
 
@@ -372,50 +379,36 @@ class EmailTemplate(models.Model):
             if key == template_key:
                 return label
 
-    # Templates available for manual sending from visits
-    visit_manual_keys = []
+    # Templates available for manual sending from visit occurrences
+    visitoccurrence_manual_keys = [
+        NOTIFY_GUEST__GENERAL_MSG,
+        NOTIFY_HOST__ASSOCIATED,
+        NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
+        NOTIFY_HOST__REQ_HOST_VOLUNTEER,
+        NOTIFY_HOST__REQ_ROOM,
+        NOTIFY_ALL__BOOKING_COMPLETE,
+        NOTIFY_ALL__BOOKING_CANCELED,
+        NOTITY_ALL__BOOKING_REMINDER
+    ]
 
     # Templates available for manual sending from bookings
     booking_manual_keys = [
         NOTIFY_GUEST__BOOKING_CREATED,
         NOTIFY_GUEST__GENERAL_MSG,
-        NOTIFY_HOST__BOOKING_CREATED,
-        NOTIFY_HOST__ASSOCIATED,
-        NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
-        NOTIFY_HOST__REQ_HOST_VOLUNTEER,
         NOTIFY_ALL__BOOKING_COMPLETE,
         NOTIFY_ALL__BOOKING_CANCELED,
-        NOTITY_ALL__BOOKING_REMINDER
-    ]
-
-    # Templates available for autosending (config in visits)
-    visit_autosend_keys = [
-        NOTIFY_GUEST__BOOKING_CREATED,
-        NOTIFY_HOST__BOOKING_CREATED,
-        NOTIFY_HOST__ASSOCIATED,
-        NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
-        NOTIFY_HOST__REQ_HOST_VOLUNTEER,
-        NOTIFY_ALL__BOOKING_COMPLETE,
-        NOTIFY_ALL__BOOKING_CANCELED,
-        NOTITY_ALL__BOOKING_REMINDER
-    ]
-
-    # Templates available for autosending (config in visitoccurrence)
-    visitoccurrence_autosend_keys = [
         NOTITY_ALL__BOOKING_REMINDER
     ]
 
     # Templates that will be autosent to visit.contact_persons
-    booking_recipient_contacts_keys = [
+    contact_person_keys = [
         NOTIFY_HOST__BOOKING_CREATED,
-        NOTIFY_HOST__ASSOCIATED,
         NOTIFY_ALL__BOOKING_CANCELED,
         NOTITY_ALL__BOOKING_REMINDER
     ]
     # Templates that will be autosent to booker
-    booking_recipient_booker_keys = [
+    booker_keys = [
         NOTIFY_GUEST__BOOKING_CREATED,
-        NOTIFY_GUEST__GENERAL_MSG,
         NOTIFY_ALL__BOOKING_COMPLETE,
         NOTIFY_ALL__BOOKING_CANCELED,
         NOTITY_ALL__BOOKING_REMINDER
@@ -431,13 +424,18 @@ class EmailTemplate(models.Model):
     # Templates that will be autosent to hosts in the occurrence
     occurrence_hosts_keys = [
         NOTIFY_ALL__BOOKING_COMPLETE,
-        NOTIFY_ALL__BOOKING_CANCELED
+        NOTIFY_ALL__BOOKING_CANCELED,
+        NOTITY_ALL__BOOKING_REMINDER
     ]
     # Templates that will be autosent to teachers in the occurrence
     occurrence_teachers_keys = [
         NOTIFY_ALL__BOOKING_COMPLETE,
-        NOTIFY_ALL__BOOKING_CANCELED
+        NOTIFY_ALL__BOOKING_CANCELED,
+        NOTITY_ALL__BOOKING_REMINDER
     ]
+    # Template that will be autosent to hosts
+    # when they are added to an occurrence
+    occurrence_added_host_key = NOTIFY_HOST__ASSOCIATED
 
     key = models.IntegerField(
         verbose_name=u'Key',
@@ -518,7 +516,7 @@ class EmailTemplate(models.Model):
             templates = list(EmailTemplate.objects.filter(
                 unit=unit
             ).all())
-        if include_inherited and unit is not None:
+        if include_inherited and unit is not None and unit.parent != unit:
             templates.extend(EmailTemplate.get_templates(unit.parent, True))
         return templates
 
@@ -1213,7 +1211,7 @@ class Visit(Resource):
     def get_recipients(self, template_key):
         recipients = self.unit.get_recipients(template_key)
         if template_key in \
-                EmailTemplate.booking_recipient_contacts_keys:
+                EmailTemplate.contact_person_keys:
             recipients.extend(self.contact_persons.all())
         return recipients
 
@@ -1602,7 +1600,7 @@ class VisitOccurrence(models.Model):
 
             if not only_these_recipients and \
                     template_key in \
-                    EmailTemplate.booking_recipient_booker_keys:
+                    EmailTemplate.booker_keys:
                 for booking in self.bookings.all():
                     KUEmailMessage.send_email(
                         template_key,
@@ -2045,7 +2043,7 @@ class Booking(models.Model):
 
     def get_recipients(self, template_key):
         recipients = self.visitoccurrence.get_recipients(template_key)
-        if template_key in EmailTemplate.booking_recipient_booker_keys:
+        if template_key in EmailTemplate.booker_keys:
             print "We may add booker"
             recipients.add(self.booker)
         return recipients
