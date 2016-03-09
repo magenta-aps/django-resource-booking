@@ -434,12 +434,15 @@ class SearchView(ListView):
     )
 
     def get_admin_form(self):
-        if not self.admin_form:
-            self.admin_form = AdminVisitSearchForm(
-                self.request.GET,
-                user=self.request.user
-            )
-            self.admin_form.is_valid()
+        if self.admin_form is None:
+            if self.request.user.is_authenticated():
+                self.admin_form = AdminVisitSearchForm(
+                    self.request.GET,
+                    user=self.request.user
+                )
+                self.admin_form.is_valid()
+            else:
+                self.admin_form = False
 
         return self.admin_form
 

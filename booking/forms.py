@@ -77,6 +77,16 @@ class AdminVisitSearchForm(forms.Form):
         required=False
     )
 
+    to_date = forms.DateField(
+        label=_(u'Dato til'),
+        required=False
+    )
+
+    from_date = forms.DateField(
+        label=_(u'Dato fra'),
+        required=False
+    )
+
     def __init__(self, qdict, *args, **kwargs):
         self.user = kwargs.pop("user")
 
@@ -84,17 +94,23 @@ class AdminVisitSearchForm(forms.Form):
 
         self.fields['u'].choices = self.get_unit_choices()
 
+        extra_classes = {
+            'from_date': 'datepicker datepicker-admin',
+            'to_date': 'datepicker datepicker-admin'
+        }
+
         # Add classnames to all fields
         for fname, f in self.fields.iteritems():
             f.widget.attrs['class'] = " ".join([
                 x for x in (
                     f.widget.attrs.get('class'),
-                    'form-control input-sm'
+                    'form-control input-sm',
+                    extra_classes.get(fname)
                 ) if x
             ])
 
         self.hiddenfields = []
-        for x in ("a", "t", "f", "g", "from", "to"):
+        for x in ("a", "t", "f", "g"):
             for y in qdict.getlist(x, []):
                 self.hiddenfields.append((x, y,))
 
@@ -114,6 +130,13 @@ class AdminVisitSearchForm(forms.Form):
             choices.append((x.pk, unicode(x)))
 
         return choices
+
+    def add_prefix(self, field_name):
+        # Remove _date postfix from date fields
+        if field_name in ('from_date', 'to_date'):
+            field_name = field_name[:-5]
+
+        return super(AdminVisitSearchForm, self).add_prefix(field_name)
 
 
 class UnitTypeForm(forms.ModelForm):
