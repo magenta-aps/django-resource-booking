@@ -1653,6 +1653,13 @@ class Autosend(models.Model):
     def get_name(self):
         return str(EmailTemplate.get_name(self.template_key))
 
+    def __unicode__(self):
+        return "[%d] %s (%s)" % (
+            self.id,
+            self.get_name(),
+            "enabled" if self.enabled else "disabled"
+        )
+
 
 class VisitAutosend(Autosend):
     visit = models.ForeignKey(
@@ -1660,6 +1667,12 @@ class VisitAutosend(Autosend):
         verbose_name=_(u'Besøg'),
         blank=False
     )
+
+    def __unicode__(self):
+        return "%s on %s" % (
+            super(VisitAutosend, self).__unicode__(),
+            self.visit.__unicode__()
+        )
 
 
 class VisitOccurrenceAutosend(Autosend):
@@ -1671,6 +1684,16 @@ class VisitOccurrenceAutosend(Autosend):
     inherit = models.BooleanField(
         verbose_name=_(u'Nedarv fra tilbud')
     )
+
+    def get_inherited(self):
+        if self.inherit:
+            return self.visitoccurrence.visit.get_autosend(self.template_key)
+
+    def __unicode__(self):
+        return "%s on %s" % (
+            super(VisitOccurrenceAutosend, self).__unicode__(),
+            self.visitoccurrence.__unicode__()
+        )
 
 
 class Room(models.Model):
