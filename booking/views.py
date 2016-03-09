@@ -1460,7 +1460,8 @@ class VisitOccurrenceNotifyView(EmailComposeView):
         self.object = VisitOccurrence.objects.get(id=pk)
 
         self.template_context['visit'] = self.object.visit
-        return super(VisitOccurrenceNotifyView, self).dispatch(request, *args, **kwargs)
+        return super(VisitOccurrenceNotifyView, self).\
+            dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         visitoccurrence = self.object
@@ -1501,10 +1502,12 @@ class VisitOccurrenceNotifyView(EmailComposeView):
                     "%s%s%s" % (self.RECIPIENT_USER,
                                 self.RECIPIENT_SEPARATOR,
                                 user.username):
-                        full_email(user.email, user.get_full_name())
+                                    full_email(
+                                        user.email,
+                                        user.get_full_name())
                     for user in visitoccurrence.hosts.all()
                     if user.email is not None
-                    }
+                }
             },
             'assigned_teachers': {
                 'label': _(u'Tildelte undervisere'),
@@ -1512,10 +1515,12 @@ class VisitOccurrenceNotifyView(EmailComposeView):
                     "%s%s%s" % (self.RECIPIENT_USER,
                                 self.RECIPIENT_SEPARATOR,
                                 user.username):
-                        full_email(user.email, user.get_full_name())
+                                    full_email(
+                                        user.email,
+                                        user.get_full_name())
                     for user in visitoccurrence.teachers.all()
                     if user.email is not None
-                    }
+                }
             },
             'potential_hosts': {
                 'label': _(u'Potentielle værter'),
@@ -1523,10 +1528,12 @@ class VisitOccurrenceNotifyView(EmailComposeView):
                     "%s%s%s" % (self.RECIPIENT_USER,
                                 self.RECIPIENT_SEPARATOR,
                                 user.username):
-                        full_email(user.email, user.get_full_name())
+                                    full_email(
+                                        user.email,
+                                        user.get_full_name())
                     for user in unit.get_hosts()
                     if user.email is not None
-                    }
+                }
             },
             'potential_teachers': {
                 'label': _(u'Potentielle undervisere'),
@@ -1534,14 +1541,17 @@ class VisitOccurrenceNotifyView(EmailComposeView):
                     "%s%s%s" % (self.RECIPIENT_USER,
                                 self.RECIPIENT_SEPARATOR,
                                 user.username):
-                        full_email(user.email, user.get_full_name())
+                                    full_email(
+                                        user.email,
+                                        user.get_full_name())
                     for user in unit.get_teachers()
                     if user.email is not None
-                    }
+                }
             }
         }
         context.update(kwargs)
-        return super(VisitOccurrenceNotifyView, self).get_context_data(**context)
+        return super(VisitOccurrenceNotifyView, self).\
+            get_context_data(**context)
 
     def get_unit(self):
         return self.object.visit.unit
@@ -2065,7 +2075,6 @@ class VisitOccurrenceDetailView(LoggedViewMixin, DetailView):
         if hasattr(user, 'userprofile') and \
                 user.userprofile.can_notify(self.object):
             context['can_notify'] = True
-
 
         context.update(kwargs)
 
