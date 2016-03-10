@@ -315,32 +315,6 @@ class StudyMaterial(models.Model):
     type = models.IntegerField(choices=study_material_choices, default=URL)
     url = models.URLField(null=True, blank=True)
     file = models.FileField(upload_to='material', null=True, blank=True)
-    visit = models.ForeignKey('Visit', on_delete=models.CASCADE)
-
-    def __unicode__(self):
-        s = u"{0}: {1}".format(
-            u'URL' if self.type == self.URL else _(u"Vedhæftet fil"),
-            self.url if self.type == self.URL else self.file
-        )
-        return s
-
-
-class StudyMaterial_Migrate(models.Model):
-    """Material for the students to study before visiting."""
-
-    class Meta:
-        verbose_name = _(u'undervisningsmateriale')
-        verbose_name_plural = _(u'undervisningsmaterialer')
-
-    URL = 0
-    ATTACHMENT = 1
-    study_material_choices = (
-        (URL, _(u"URL")),
-        (ATTACHMENT, _(u"Vedhæftet fil"))
-    )
-    type = models.IntegerField(choices=study_material_choices, default=URL)
-    url = models.URLField(null=True, blank=True)
-    file = models.FileField(upload_to='material', null=True, blank=True)
     resource = models.ForeignKey('Resource', null=True,
                                  on_delete=models.CASCADE,
                                  )
@@ -661,32 +635,32 @@ class Resource(models.Model):
                                             default=SECONDARY,
                                             blank=False)
 
-    locality_migrate = models.ForeignKey(
+    locality = models.ForeignKey(
         Locality,
         verbose_name=_(u'Lokalitet'),
         blank=True,
         null=True
     )
 
-    recurrences_migrate = RecurrenceField(
+    recurrences = RecurrenceField(
         null=True,
         blank=True,
         verbose_name=_(u'Gentagelser')
     )
 
-    contact_persons_migrate = models.ManyToManyField(
+    contact_persons = models.ManyToManyField(
         Person,
         blank=True,
         verbose_name=_(u'Kontaktpersoner')
     )
 
-    preparation_time_migrate = models.IntegerField(
+    preparation_time = models.IntegerField(
         default=0,
         null=True,
         verbose_name=_(u'Forberedelsestid (i timer)')
     )
 
-    price_migrate = models.DecimalField(
+    price = models.DecimalField(
         default=0,
         null=True,
         blank=True,
@@ -822,26 +796,6 @@ class Resource(models.Model):
 
     def url(self):
         return self.get_url()
-
-    @staticmethod
-    def migrate_fields():
-        for visit in Visit.objects.all():
-            for person in visit.contact_persons.all():
-                visit.contact_persons_migrate.add(person)
-            visit.locality_migrate = visit.locality
-            visit.preparation_time_migrate = visit.preparation_time
-            visit.price_migrate = visit.price
-            visit.recurrences_migrate = visit.recurrences
-            visit.save()
-        for studymaterial in StudyMaterial.objects.all():
-            if visit.studymaterial_migrate_set is None or \
-                    len(visit.studymaterial_migrate_set.all()) == 0:
-                new_studymaterial = StudyMaterial_Migrate()
-                new_studymaterial.resource = studymaterial.visit
-                new_studymaterial.file = studymaterial.file
-                new_studymaterial.type = studymaterial.type
-                new_studymaterial.url = studymaterial.url
-                new_studymaterial.save()
 
 
 class ResourceGymnasieFag(models.Model):
@@ -1125,13 +1079,6 @@ class Visit(Resource):
         null=True
     )
 
-    locality = models.ForeignKey(
-        Locality,
-        verbose_name=_(u'Lokalitet'),
-        blank=True,
-        null=True
-    )
-
     duration_choices = []
     for hour in range(0, 12, 1):
         for minute in range(0, 60, 15):
@@ -1145,23 +1092,12 @@ class Visit(Resource):
         null=True,
         choices=duration_choices
     )
-    contact_persons = models.ManyToManyField(
-        Person,
-        blank=True,
-        verbose_name=_(u'Kontaktpersoner')
-    )
+
     do_send_evaluation = models.BooleanField(
         verbose_name=_(u"Udsend evaluering"),
         default=False
     )
-    price = models.DecimalField(
-        default=0,
-        null=True,
-        blank=True,
-        max_digits=10,
-        decimal_places=2,
-        verbose_name=_(u'Pris')
-    )
+
     additional_services = models.ManyToManyField(
         AdditionalService,
         verbose_name=_(u'Ekstra ydelser'),
@@ -1194,16 +1130,7 @@ class Visit(Resource):
         default=False,
         verbose_name=_(u'Vis nedtælling')
     )
-    preparation_time = models.IntegerField(
-        default=0,
-        null=True,
-        verbose_name=_(u'Forberedelsestid (i timer)')
-    )
-    recurrences = RecurrenceField(
-        null=True,
-        blank=True,
-        verbose_name=_(u'Gentagelser')
-    )
+
     tour_available = models.BooleanField(
         default=False,
         blank=True,
