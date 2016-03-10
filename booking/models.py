@@ -347,8 +347,8 @@ class StudyMaterial_Migrate(models.Model):
 
     def __unicode__(self):
         s = u"{0}: {1}".format(
-                u'URL' if self.type == self.URL else _(u"Vedhæftet fil"),
-                self.url if self.type == self.URL else self.file
+            u'URL' if self.type == self.URL else _(u"Vedhæftet fil"),
+            self.url if self.type == self.URL else self.file
         )
         return s
 
@@ -834,7 +834,8 @@ class Resource(models.Model):
             visit.recurrences_migrate = visit.recurrences
             visit.save()
         for studymaterial in StudyMaterial.objects.all():
-            if visit.studymaterial_migrate_set is None or len(visit.studymaterial_migrate_set) == 0:
+            if visit.studymaterial_migrate_set is None or \
+                    len(visit.studymaterial_migrate_set) == 0:
                 new_studymaterial = StudyMaterial_Migrate()
                 new_studymaterial.resource = studymaterial.visit
                 new_studymaterial.file = studymaterial.file
