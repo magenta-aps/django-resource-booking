@@ -1008,7 +1008,7 @@ class OtherResource(Resource):
 
     applicable_types = [Resource.OTHER_OFFERS, Resource.STUDY_MATERIAL,
                         Resource.OPEN_HOUSE, Resource.ASSIGNMENT_HELP,
-                        Resource.STUDIEPRAKTIK]
+                        Resource.STUDIEPRAKTIK, Resource.STUDY_PROJECT]
 
     @ClassProperty
     def type_choices(self):
@@ -1050,7 +1050,7 @@ class Visit(Resource):
     )
 
     applicable_types = [Resource.STUDENT_FOR_A_DAY, Resource.GROUP_VISIT,
-                        Resource.STUDY_PROJECT, Resource.TEACHER_EVENT]
+                        Resource.TEACHER_EVENT]
 
     @ClassProperty
     def type_choices(self):

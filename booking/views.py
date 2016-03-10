@@ -50,10 +50,11 @@ from booking.forms import ResourceInitialForm, OtherResourceForm, VisitForm, \
     GuestEmailComposeForm
 
 from booking.forms import StudentForADayForm, InternshipForm, OpenHouseForm, \
-    TeacherVisitForm, ClassVisitForm, StudyProjectForm
+    TeacherVisitForm, ClassVisitForm, StudyProjectForm, AssignmentHelpForm, \
+    StudyMaterialForm
 
 from booking.forms import ClassBookingForm, TeacherBookingForm
-from booking.forms import VisitStudyMaterialForm, BookingSubjectLevelForm
+from booking.forms import ResourceStudyMaterialForm, BookingSubjectLevelForm
 from booking.forms import BookerForm
 from booking.forms import EmailTemplateForm, EmailTemplatePreviewContextForm
 from booking.forms import EmailComposeForm
@@ -888,6 +889,33 @@ class EditResourceView(HasBackButtonMixin, UpdateView):
                 )
         return result
 
+    forms = {}
+
+    def get_form_class(self):
+        if self.object.type in self.forms:
+            return self.forms[self.object.type]
+        return self.form_class
+
+    def get_forms(self, request):
+        if request.method == 'GET':
+            return {
+                'form': self.get_form(),
+                'fileformset': ResourceStudyMaterialForm(None, instance=self.object)
+            }
+        if request.method == 'POST':
+            return {
+                'form': self.get_form(),
+                'fileformset': ResourceStudyMaterialForm(request.POST),
+            }
+
+    def get(self, request, *args, **kwargs):
+        pk = kwargs.get("pk")
+        self.set_object(pk, request)
+
+        return self.render_to_response(
+            self.get_context_data(**self.get_forms(request))
+        )
+
     def set_object(self, pk, request, is_cloning=False):
         if is_cloning or not hasattr(self, 'object') or self.object is None:
             if pk is None:
@@ -1023,18 +1051,18 @@ class EditOtherResourceView(EditResourceView):
     form_class = OtherResourceForm
     model = OtherResource
 
+    forms = {
+        Resource.STUDIEPRAKTIK: InternshipForm,
+        Resource.OPEN_HOUSE: OpenHouseForm,
+        Resource.STUDY_PROJECT: StudyProjectForm,
+        Resource.ASSIGNMENT_HELP: AssignmentHelpForm,
+        Resource.STUDY_MATERIAL: StudyMaterialForm
+    }
+
     # Display a view with two form objects; one for the regular model,
     # and one for the file upload
 
     roles = EDIT_ROLES
-
-    def get(self, request, *args, **kwargs):
-        pk = kwargs.get("pk")
-        self.set_object(pk, request)
-        form = self.get_form()
-        return self.render_to_response(
-            self.get_context_data(form=form)
-        )
 
     def post(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
@@ -1056,21 +1084,6 @@ class EditOtherResourceView(EditResourceView):
             return reverse('otherresource-view', args=[self.object.id])
         except:
             return '/'
-
-    def get_template_names(self):
-        if self.object.type is not None:
-            if self.object.type == Resource.STUDIEPRAKTIK:
-                return ["otherresource/studiepraktik.html"]
-            if self.object.type == Resource.OPEN_HOUSE:
-                return ["otherresource/open_house.html"]
-            if self.object.type == Resource.ASSIGNMENT_HELP:
-                return ["otherresource/assignment_help.html"]
-            if self.object.type == Resource.STUDY_MATERIAL:
-                return ["otherresource/study_material.html"]
-            if self.object.type == Resource.OTHER_OFFERS:
-                return ["otherresource/other.html"]
-        raise Exception("Couldn't find template for "
-                        "object type %d" % self.object.type)
 
     def get_context_data(self, **kwargs):
         context = {}
@@ -1147,22 +1160,22 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         Resource.GROUP_VISIT: ClassVisitForm
     }
 
+    def get_forms(self, request):
+        forms = super(EditVisitView, self).get_forms(request)
+        if request.method == 'GET':
+            forms['autosendformset'] = VisitAutosendFormSet(
+                None, instance=self.object
+            )
+        if request.method == 'POST':
+            forms['autosendformset'] = VisitAutosendFormSet(
+                request.POST, instance=self.object
+            )
+        return forms
+
     def get_form_class(self):
         if self.object.type in self.forms:
             return self.forms[self.object.type]
         return self.form_class
-
-    def get(self, request, *args, **kwargs):
-        pk = kwargs.get("pk")
-        self.set_object(pk, request)
-        form = self.get_form()
-        fileformset = VisitStudyMaterialForm(None, instance=self.object)
-        autosendformset = VisitAutosendFormSet(None, instance=self.object)
-
-        return self.render_to_response(
-            self.get_context_data(form=form, fileformset=fileformset,
-                                  autosendformset=autosendformset)
-        )
 
     def _is_any_booking_outside_new_attendee_count_bounds(
             self,
@@ -1214,7 +1227,7 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         is_cloning = kwargs.get("clone", False)
         self.set_object(pk, request, is_cloning)
         form = self.get_form()
-        fileformset = VisitStudyMaterialForm(request.POST)
+        fileformset = ResourceStudyMaterialForm(request.POST)
         autosendformset = VisitAutosendFormSet(
             request.POST, instance=self.object
         )

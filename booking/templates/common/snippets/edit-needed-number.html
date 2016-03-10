@@ -1,4 +1,5 @@
 {% load i18n %}
+{% if field %}
 <div class="panel-body">
     <div class="row form-group">
         <div>{{ field.errors }}</div>
@@ -10,3 +11,4 @@
         </div>
     </div>                        
 </div>
+{% endif %}

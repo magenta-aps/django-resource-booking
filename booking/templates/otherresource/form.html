@@ -10,7 +10,7 @@
     <div class="divider"></div>
     <div class="row form-group">
         <div class="col-sm-8">
-            <h1>{% if object %}{% trans "Rediger tilbud" %}{% else %}{% trans "Nyt tilbud" %}{% endif %}</h1>
+            <h1>{% if object.pk %}{% trans "Rediger tilbud" %}{% else %}{% trans "Nyt tilbud" %}{% endif %}</h1>
         </div>
         <div class="col-sm-4 text-right">
             <a href="#" class="btn btn-default btn-sm openall">{% trans "Udvid alle felter" %}</a> <a href="#" class="btn btn-default btn-sm closeall">{% trans "Luk alle felter" %}</a>
@@ -23,37 +23,10 @@
         {{ form.non_field_errors }}
 
         <div id="accordion" class="panel-group" aria-multiselectable="true" role="tablist">
-            <div class="panel panel-default">
-                <div id="headingCategory" class="panel-heading" role="tab">
-                    <h4 class="panel-title">
-                        <a class="" aria-controls="collapseCategory" aria-expanded="true" href="#collapseCategory" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Kategorisering" %}</a><span class="caret"></span>
-                    </h4>
-                </div>
-                <div id="collapseCategory" class="panel-collapse collapse in" aria-labelledby="headingCategory" role="tabpanel" aria-expanded="true" style="">
-                    <div class="panel-body">
-                        <div class="row form-group">
-                            <div>
-                                {{ form.type.errors }}
-                            </div>
-                            <div class="col-sm-2">
-                                <label for="{{ form.type.id_for_label }}">{{ form.type.label }}:</label>
-                            </div>
-                            <div class="col-sm-10">
-                                {{ form.type }}
-                            </div>
-                        </div>
-                        <!-- <div class="row form-group">
-                            <div>{{ form.tags.errors }}</div>
-                            <div class="col-sm-2">
-                            <label for="{{ form.tags.id_for_label }}">{{ form.tags.label }}:</label>
-                            </div>
-                            <div class="col-sm-10">
-                            {{ form.tags }}
-                            </div>
-                        </div> -->
-                    </div>
-                </div>
-            </div>
+
+            {{ form.type }}
+
+            {% if form.title %}
             <div class="panel panel-default">
                 <div id="headingCategory" class="panel-heading" role="tab">
                     <h4 class="panel-title">
@@ -61,25 +34,16 @@
                     </h4>
                 </div>
                 <div id="collapseTitel" class="panel-collapse collapse
-                {% if form.title.errors %}in{% endif %}
-                " aria-labelledby="headingCategory" role="tabpanel" aria-expanded="false" style="">
+                {% if not object.pk or not form.errors or form.title.errors or form.title.errors %}in{% endif %}
+                " aria-labelledby="headingCategory" role="tabpanel" aria-expanded="true" style="">
                     <div class="panel-body">
-                        <div class="row form-group">
-                            <div>
-                                {{ form.title.errors }}
-                            </div>
-                            <div class="col-sm-2">
-                                <label for="{{ form.title.id_for_label }}">{{ form.title.label }}:</label>
-                            </div>
-                            <div class="col-sm-10">
-                                {{ form.title }}
-                            </div>
-                        </div>
+                        {% include 'resource/fields/title.html' %}
                     </div>
                 </div>
             </div>
+            {% endif %}
 
-            
+            {% if form.state or form.teaser or form.description or form.price or fileformset %}
             <div class="panel panel-default">
                 <div id="headingDescription" class="panel-heading" role="tab">
                     <h4 class="panel-title">
@@ -87,46 +51,20 @@
                     </h4>
                 </div>
                 <div id="collapseDescription" class="panel-collapse collapse
-                {% if form.teaser.errors or form.description.errors or form.link.errors %}in{% endif %}
+                {% if not object.pk or form.state.errors or form.teaser.errors or form.description.errors or form.price.errors or fileformset.errors %}in{% endif %}
                 " aria-labelledby="headingDescription" role="tabpanel">
                     <div class="panel-body">
-                        <div class="row form-group">
-                            <div>
-                                {{ form.teaser.errors }}
-                            </div>
-                            <div class="col-sm-2">
-                                <label for="{{ form.teaser.id_for_label }}">{{ form.teaser.label }}:</label>
-                            </div>
-                            <div class="col-sm-10">
-                                {{ form.teaser }}
-                            </div>
-                        </div>
-                        <div class="row form-group">
-                            <div>
-                                {{ form.description.errors }}
-                            </div>
-                            <div class="col-sm-2">
-                                <label for="{{ form.description.id_for_label }}">{{ form.description.label }}:</label>
-                            </div>
-                            <div class="col-sm-10">
-                                {{ form.description }}
-                            </div>
-                        </div>
-                        <div class="row form-group">
-                            <div>
-                                {{ form.link.errors }}
-                            </div>
-                            <div class="col-sm-2">
-                                <label for="{{ form.link.id_for_label }}">{{ form.link.label }}:</label>
-                            </div>
-                            <div class="col-sm-10">
-                                {{ form.link }}
-                            </div>
-                        </div>
+                        {% include 'resource/fields/state.html' %}
+                        {% include 'resource/fields/teaser.html' %}
+                        {% include 'resource/fields/description.html' %}
+                        {% include 'resource/fields/price.html' %}
+                        {% include 'resource/fields/studymaterials.html' %}
                     </div>
                 </div>
             </div>
+            {% endif %}
 
+            {% if form.audience or form.institution_level or form.level or form.class_level_min or form.class_level_max or form.minimum_number_of_visitors or form.maximum_number_of_visitors or form.subjects %}
             <div class="panel panel-default">
                 <div id="headingAudience" class="panel-heading" role="tab">
                     <h4 class="panel-title">
@@ -134,56 +72,54 @@
                     </h4>
                 </div>
                 <div id="collapseAudience" class="panel-collapse collapse
-                    {% if form.audience.errors or form.institution_level.errors or form.topics.errors or form.level.errors or form.class_level_min.errors or form.class_level_max.errors or form.minimum_number_of_visitors.errors or form.maximum_number_of_visitors.errors or form.subjects.errors %}in{% endif %}
+                    {% if not object.pk or form.audience.errors or form.institution_level.errors or form.subjects.errors or form.level.errors or form.class_level_min.errors or form.class_level_max.errors %}in{% endif %}
                     " aria-labelledby="headingAudience" role="tabpanel" aria-expanded="true" style="">
                     <div class="panel-body">
-                        <div class="row form-group">
-                            <div>
-                                {{ form.audience.errors }}
-                            </div>
-                            <div class="col-sm-2">
-                                <label for="{{ form.audience.id_for_label }}">{{ form.audience.label }}:</label>
-                            </div>
-                            <div class="col-sm-10">
-                                {{ form.audience }}
-                            </div>
-                        </div>
-
-                        <div class="row form-group">
-                            <div>
-                                {{ form.institution_level.errors }}
-                            </div>
-                            <div class="col-sm-2">
-                                <label for="{{ form.institution_level.id_for_label }}">{{ form.institution_level.label }}:</label>
-                            </div>
-                            <div class="col-sm-10">
-                                {{ form.institution_level }}
-                            </div>
-                        </div>
-                        <!-- <div class="row form-group">
-                            <div>{{ form.topics.errors }}</div>
-                            <div class="col-sm-2">
-                            <label for="{{ form.topics.id_for_label }}">{{ form.topics.label }}:</label>
-                            </div>
-                            <div class="col-sm-10">
-                            {{ form.topics }}
-                            </div>
-                        </div> -->
-
-                        <div class="institution_level_dependent" data-display-value="1">
-                            <div class="row form-group" id="gymnasie-fag-edit">
-                                {% include "common/snippets/edit-gymnasiefag.html" %}
-                            </div>
-                        </div>
-                        <div class="institution_level_dependent" data-display-value="2">
-                            <div class="row form-group" id="grundskole-fag-edit">
-                                {% include "common/snippets/edit-grundskolefag.html" %}
-                            </div>
-                        </div>
+                        {% include 'resource/fields/audience.html' %}
+                        {% include 'resource/fields/institution_level.html' %}
+                        {% include 'resource/fields/subjects.html' %}
                     </div>
                 </div>
             </div>
+            {% endif %}
 
+            {% if form.time or form.duration %}
+            <div class="panel panel-default">
+                <div id="headingTimeDuration" class="panel-heading" role="tab">
+                    <h4 class="panel-title">
+                        <a class="" aria-controls="collapseTimeDuration" aria-expanded="false" href="#collapseTimeDuration" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Tidspunkt og varighed" %}</a><span class="caret"></span>
+                    </h4>
+                </div>
+                <div id="collapseTimeDuration" class="panel-collapse collapse
+                {% if not object.pk or form.time.errors or form.duration.errors %}in{% endif %}
+                " aria-labelledby="headingTimeDuration" role="tabpanel" aria-expanded="false" style="">
+                    <div class="panel-body">
+                        {% include 'resource/fields/time.html' %}
+                        {% include 'resource/fields/duration.html' %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if form.rooms_needed or form.rooms_assignment or form.locality %}
+            <div class="panel panel-default">
+                <div id="headingRooms" class="panel-heading" role="tab">
+                    <h4 class="panel-title">
+                        <a class="" aria-controls="collapseRooms" aria-expanded="false" href="#collapseRooms" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Lokalitet og lokaler" %}</a><span class="caret"></span>
+                    </h4>
+                </div>
+                <div id="collapseRooms" class="panel-collapse collapse
+                {% if not object.pk or form.rooms_needed.errors or form.rooms_assignment.errors or form.locality.errors %}in{% endif %}
+                " aria-labelledby="headingContact" role="tabpanel" aria-expanded="false" style="">
+                    <div class="panel-body">
+                        {% include 'resource/fields/locality.html' %}
+                        {% include 'resource/fields/rooms.html' %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if form.unit or form.enabled or form.contact_persons %}
             <div class="panel panel-default">
                 <div id="headingContact" class="panel-heading" role="tab">
                     <h4 class="panel-title">
@@ -191,46 +127,34 @@
                     </h4>
                 </div>
                 <div id="collapseContact" class="panel-collapse collapse
-                {% if form.unit.errors %}in{% endif %}
+                {% if not object.pk or form.unit.errors or form.enabled.errors or form.contact_persons.errors %}in{% endif %}
                 " aria-labelledby="headingContact" role="tabpanel" aria-expanded="false" style="">
                     <div class="panel-body">
-                        <div class="row form-group">
-                            <div>
-                                {{ form.unit.errors }}
-                            </div>
-                            <div class="col-sm-2">
-                                <label for="{{ form.unit.id_for_label }}">{{ form.unit.label }}:</label>
-                            </div>
-                            <div class="col-sm-10">
-                                {{ form.unit }}
-                            </div>
-                        </div>
+                        {% include 'resource/fields/unit.html' %}
+                        {% include 'resource/fields/enabled.html' %}
+                        {% include 'resource/fields/contact.html' %}
                     </div>
                 </div>
             </div>
-            
+            {% endif %}
+
+            {% if form.preparation_time or form.comment %}
             <div class="panel panel-default">
                 <div id="headingInternal" class="panel-heading" role="tab">
                     <h4 class="panel-title">
                         <a class="" aria-controls="collapseInternal" aria-expanded="true" href="#collapseInternal" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Interne oplysninger" %}</a><span class="caret"></span>
                     </h4>
                 </div>
-                <div id="collapseInternal" class="panel-collapse collapse {% if form.enabled.errors or form.contact_persons.errors %}in{% endif %} " aria-labelledby="headingContact" role="tabpanel" aria-expanded="true" style="">
+                <div id="collapseInternal" class="panel-collapse collapse
+                {% if not object.pk or form.preparation_time.errors or form.comment.errors %}in{% endif %}
+                " aria-labelledby="headingInternal" role="tabpanel" aria-expanded="true" style="">
                     <div class="panel-body">
-                        <div class="row form-group">  
-                            <div>
-                                {{ form.comment.errors }}
-                            </div>
-                            <div class="col-sm-2">
-                                <label for="{{ form.comment.id_for_label }}">{{ form.comment.label }}:</label>
-                            </div>
-                            <div class="col-sm-10">
-                                {{ form.comment }}
-                            </div>
-                        </div>
+                        {% include 'resource/fields/preparation.html' %}
+                        {% include 'resource/fields/comment.html' %}
                     </div>
                 </div>
             </div>
+            {% endif %}
         </div>
         {% include 'common/save_cancel.html' %}
         <div class="divider"></div>
@@ -242,73 +166,29 @@
     
     {{ form.media }}
     <script type="text/javascript" src="{% static 'js/formutil.js' %}"></script>
+
+    {% include 'resource/fields/studymaterials_script.html' %}
+
+    {% include 'resource/fields/institution_level_script.html' %}
+
     <script type="text/javascript"><!--
 
-        $(function(){
-            var select = $("#{{ form.institution_level.id_for_label }}");
-            var changeDisplay = function(){
-                var value = select.val();
-                $(".institution_level_dependent").each(function() {
-                    var attr = $(this).attr("data-display-value") || 0xFFFFFF;
-                    console.log(attr, value, parseInt(value), parseInt(attr))
-                    if (parseInt(value) & parseInt(attr)) {
-                        $(this).show()
-                    } else {
-                        $(this).hide()
-                    }
-                })
-            };
-            select.change(changeDisplay);
-            changeDisplay();
-            // Toggle arrows
-            $('.collapse').on('show.bs.collapse', function() {
-            $(this).prev().find(".caret").addClass("caret-up");
-            });
-            $('.collapse').on('hide.bs.collapse', function() {
-                $(this).prev().find(".caret").removeClass("caret-up");
-            });
-            $('.closeall').click(function(){
-              $('.panel-collapse.in').collapse('hide');
-            });
-            $('.openall').click(function(){
-              $('.panel-collapse:not(".in")').collapse('show');
-            });
-        });
+		$(function() {
+		    // Toggle arrows
+		    $('.collapse').on('show.bs.collapse', function() {
+		        $(this).prev().find(".caret").addClass("caret-up");
+		    });
+		    $('.collapse').on('hide.bs.collapse', function() {
+		        $(this).prev().find(".caret").removeClass("caret-up");
+		    });
+		    $('.closeall').click(function(){
+		        $('.panel-collapse.in').collapse('hide');
+		    });
+		    $('.openall').click(function(){
+		        $('.panel-collapse:not(".in")').collapse('show');
+		    });
+		});
 
-        (function(select_id) {
-            var type_map = {
-                "Gymnasie": 1,
-                "Grundskole": 2,
-                "Begge": 3
-            };
-            $(function() {
-                $(select_id).on("change", function() {
-                    var val = parseInt($(this).val()) || 0xFFFFFF;
-                    $('input[name=subjects]').each(function() {
-                        var txt = $(this).parent().text().match(
-                            /\((Gymnasie|Grundskole|Begge)\)/
-                        );
-                        if (txt && txt.length) {
-                            txt = txt[1];
-                        }
-                        v = type_map[txt || ''];
-                        if (v && parseInt(v) & val) {
-                            $(this).parent().show();
-                            if ($(this).attr("data-prev-selected")) {
-                                $(this).removeAttr("data-prev-selected");
-                                $(this).prop("checked", true);
-                            }
-                        } else {
-                            $(this).parent().hide();
-                            if ($(this).is(":checked")) {
-                                $(this).prop("checked", false);
-                                $(this).attr("data-prev-selected", "yes");
-                            }
-                        }
-                    });
-                }).trigger("change");
-            });
-        })('#{{form.institution_level.id_for_label }}')
     //--></script>
     
 {% endblock %}
