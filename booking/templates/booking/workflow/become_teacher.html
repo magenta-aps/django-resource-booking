@@ -1,0 +1,47 @@
+{% extends 'index.html' %}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block content %}
+    {% include 'common/breadcrumbrow.html' %}
+
+    <div class="row titlebar hidden-print">
+        <div class="col-sm-12 col-md-9"><h2>Bliv underviser for {{ object }}</h2></div>
+        <div class="divider"></div>
+    </div>
+    <div class="row">
+        <div class="col-sm-12 col-md-8">
+            {% if view.is_valid %}
+                {% if request.method == "GET" %}
+                    <form name="becometeacherform" id="becometeacherform"
+                        action="{% url 'become-teacher' object.pk %}" method="post">
+                        {% csrf_token %}
+                        <p>Ønsker du at blive underviser for arrangementet {{ object }}?</p>
+                        <input class="btn btn-success btn-sm" type="submit" value="Ja" name="confirm" />
+                        <input class="btn btn-danger btn-sm" type="submit" value="Nej" name="cancel" />
+                    </form>
+                {% else %}
+                <p>
+                    Du er nu blevet sat som underviser for arrangementet {{ object }}.
+                </p>
+                <p>
+                    <a href="{% url 'visit-occ-view' object.pk %}">Klik her for at vende tilbage til arrangementet</a>
+                </p>
+                {% endif %}
+            {% else %}
+            <p>
+                Det er ikke muligt at blive underviser for arrangementet på
+                grund af følgende:
+                <ul>
+                {% for error in view.errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+                </ul>
+            </p>
+            <p>
+                <a href="{% url 'visit-occ-view' object.pk %}">Klik her for at vende tilbage til arrangementet</a>
+            </p>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

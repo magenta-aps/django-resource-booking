@@ -33,7 +33,7 @@ class KUBookingModelAdmin(admin.ModelAdmin):
         return request.user.userprofile.get_role() in EDIT_ROLES
 
     def has_change_permission(self, request, obj=None):
-        if request.user.userprofile.is_administrator():
+        if request.user.userprofile.is_administrator:
             return True
 
         role = request.user.userprofile.get_role()
@@ -52,7 +52,7 @@ class KUBookingModelAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         qs = super(KUBookingModelAdmin, self).get_queryset(request)
 
-        if request.user.userprofile.is_administrator():
+        if request.user.userprofile.is_administrator:
             return qs
 
         # Filter anything that has a unit to the units the user has access to
@@ -71,7 +71,7 @@ class KUBookingModelAdmin(admin.ModelAdmin):
             request, obj, **kwargs
         )
 
-        if request.user.userprofile.is_administrator():
+        if request.user.userprofile.is_administrator:
             return form
 
         if hasattr(self.model, 'unit') and 'unit' in form.base_fields:
@@ -100,7 +100,7 @@ class KUBookingUnitAdmin(KUBookingModelAdmin):
         # Limit parent choices to faculties the user has access to
         unit_qs = profile.get_unit_queryset().filter(type__name="Fakultet")
         form.base_fields['parent'].queryset = unit_qs
-        if not profile.is_administrator():
+        if not profile.is_administrator:
             # All units must have faculty parent
             form.base_fields['parent'].empty_label = None
 

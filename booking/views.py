@@ -62,6 +62,26 @@ import urls
 
 i18n_test = _(u"Dette tester oversættelses-systemet")
 
+
+# Method for importing views from another module
+def import_views(from_module):
+    module_prefix = from_module.__name__
+    import_dict = globals()
+    for name, value in from_module.__dict__.iteritems():
+        # Skip stuff that is not classes
+        if not isinstance(value, type):
+            continue
+        # Skip stuff that is not views
+        if not issubclass(value, View):
+            continue
+
+        # Skip stuff that is not native to the booking.models module
+        if not value.__module__ == module_prefix:
+            continue
+
+        import_dict[name] = value
+
+
 # A couple of generic superclasses for crud views
 # Our views will inherit from these and from django.views.generic classes
 
@@ -1964,7 +1984,7 @@ class VisitOccurrenceSearchView(LoginRequiredMixin, ListView):
 
         context['pagesizes'] = [5, 10, 15, 20]
 
-        if self.request.user.userprofile.is_administrator():
+        if self.request.user.userprofile.is_administrator:
             context['unit_limit_text'] = \
                 u'Alle enheder (administrator-søgning)'
         else:
@@ -2038,9 +2058,11 @@ class VisitOccurrenceDetailView(LoggedViewMixin, DetailView):
         context = {}
 
         context['breadcrumbs'] = [
-            {'url': reverse('search'), 'text': _(u'Søgning')},
-            {'url': '#', 'text': _(u'Søgeresultatliste')},
-            {'text': _(u'Detaljevisning')},
+            {
+                'url': reverse('visit-occ-search'),
+                'text': _(u'Søg i arrangementer')
+            },
+            {'text': _(u'Arrangement #%s') % self.object.pk},
         ]
 
         context['thisurl'] = reverse('visit-occ-view', args=[self.object.id])
@@ -2051,6 +2073,10 @@ class VisitOccurrenceDetailView(LoggedViewMixin, DetailView):
             for (key, label) in EmailTemplate.key_choices
             if key in EmailTemplate.visitoccurrence_manual_keys
         ]
+
+        context['can_edit'] = self.request.user.userprofile.can_edit(
+            self.object
+        )
 
         user = self.request.user
         if hasattr(user, 'userprofile') and \
@@ -2294,21 +2320,5 @@ class EmailTemplateDeleteView(HasBackButtonMixin, DeleteView):
         return context
 
 
-# Late import to avoid mutual import conflicts
-import booking_workflows.views as booking_views  # noqa
-
-ChangeVisitOccurrenceStatusView = \
-    booking_views.ChangeVisitOccurrenceStatusView
-ChangeVisitOccurrenceStartTimeView = \
-    booking_views.ChangeVisitOccurrenceStartTimeView
-ChangeVisitOccurrenceTeachersView = \
-    booking_views.ChangeVisitOccurrenceTeachersView
-ChangeVisitOccurrenceHostsView = \
-    booking_views.ChangeVisitOccurrenceHostsView
-ChangeVisitOccurrenceRoomsView = \
-    booking_views.ChangeVisitOccurrenceRoomsView
-ChangeVisitOccurrenceCommentsView = \
-    booking_views.ChangeVisitOccurrenceCommentsView
-ChangeVisitOccurrenceAutosendView = \
-    booking_views.ChangeVisitOccurrenceAutosendView
-VisitOccurrenceAddLogEntryView = booking_views.VisitOccurrenceAddLogEntryView
+import booking_workflows.views  # noqa
+import_views(booking_workflows.views)
