@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-
-from booking.models import VisitOccurrence
+from booking.models import VisitOccurrence, VisitOccurrenceAutosend
 from django import forms
+from django.forms import inlineformset_factory
 from django.utils.translation import ugettext_lazy as _
 
 
@@ -62,3 +62,12 @@ class VisitOccurrenceAddLogEntryForm(forms.Form):
         widget=forms.Textarea,
         label=_(u'Ny log-post')
     )
+
+VisitOccurrenceAutosendFormSet = inlineformset_factory(
+    VisitOccurrence,
+    VisitOccurrenceAutosend,
+    fields=('template_key', 'enabled', 'inherit', 'days'),
+    can_delete=True,
+    extra=0,
+    min_num=1
+)

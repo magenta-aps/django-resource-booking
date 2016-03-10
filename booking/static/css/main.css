@@ -514,7 +514,7 @@ ul.footerlinks {
 }
 .footer-columns [class*="col-"]:last-child > ul.footerlinks {
     float: right;
-} 
+}
 ul.footerlinks li {
     padding-right: 10px;
     margin-top: 2px;
@@ -655,12 +655,14 @@ select,
     font-size: 11px!important;
 }
 
+
 /*Backend specific styles start */
+
 .edit-btn {
     margin-bottom: 10px;
 }
 label[for="gymnasiefag-fag"] {
-   font-weight: bold!important;
+    font-weight: bold!important;
 }
 .lengthcounter {
     margin-left: 7px;
@@ -698,8 +700,19 @@ div ul.errorlist {
     list-style-position: inside;
     max-width: 70%;
 }
+div ul.warninglist {
+    color: #8a6d3b;
+    background-color: #fcf8e3;
+    border: 1px solid #8a6d3b;
+    padding: 10px;
+    display: inline-block;
+    list-style-position: inside;
+    max-width: 70%;
+}
+
 
 /* gymnasiefag-edit & grundskolefag-edit */
+
 #gymnasiefag-fag,
 #gymnasiefag-levels,
 #grundskolefag-fag,
@@ -748,11 +761,37 @@ a.template-overridden:visited {
     line-height: 0;
 }
 
+
+/* Autosend form */
+
+.autosend-row {
+    width: 100%;
+    border: 1px solid #eee;
+    margin: 1px 0;
+    padding: 1px;
+}
+
+.autosend-row label.deletion {
+    opacity: 0.5;
+}
+
+#recipient-groups input {
+    width: auto;
+    display: inline;
+}
+
+/* > Admin-visit-search start */
+
+#adminvisitsearch .dl-horizontal dt {
+    white-space: normal;
+}
+
+/* > Admin-visit-search end */
+
+
 /*Backend specific styles end */
 
-
 /* Embedded pages styles */
-
 .embedded > .container {
     width: 100%;
     padding: 0;
@@ -769,7 +808,6 @@ body.lightbox {
     margin-left: 10px;
     overflow: hidden;
 }
-
 
 @media screen and (max-width:768px) {
     html,
@@ -919,6 +957,12 @@ body.lightbox {
     .dl-horizontal dd {
         margin-left: 110px;
         padding-top: 7px;
+    }
+    .dl-horizontal.status dt {
+        width: 145px;
+    }
+    .dl-horizontal.status dd {
+        margin-left: 150px;
     }
     #startbookingform .form-group [class*="col-"] + [class*="col-"] {
         padding-left: 0;
