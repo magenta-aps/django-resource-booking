@@ -316,6 +316,9 @@ class StudyMaterial(models.Model):
     url = models.URLField(null=True, blank=True)
     file = models.FileField(upload_to='material', null=True, blank=True)
     visit = models.ForeignKey('Visit', on_delete=models.CASCADE)
+    resource = models.ForeignKey('Resource', null=True,
+                                 on_delete=models.CASCADE,
+                                 related_name='material')
 
     def __unicode__(self):
         s = u"{0}: {1}".format(
@@ -632,6 +635,40 @@ class Resource(models.Model):
                                             verbose_name=_(u'Institution'),
                                             default=SECONDARY,
                                             blank=False)
+
+    locality_migrate = models.ForeignKey(
+        Locality,
+        verbose_name=_(u'Lokalitet'),
+        blank=True,
+        null=True
+    )
+
+    recurrences_migrate = RecurrenceField(
+        null=True,
+        blank=True,
+        verbose_name=_(u'Gentagelser')
+    )
+
+    contact_persons_migrate = models.ManyToManyField(
+        Person,
+        blank=True,
+        verbose_name=_(u'Kontaktpersoner')
+    )
+
+    preparation_time_migrate = models.IntegerField(
+        default=0,
+        null=True,
+        verbose_name=_(u'Forberedelsestid (i timer)')
+    )
+
+    price_migrate = models.DecimalField(
+        default=0,
+        null=True,
+        blank=True,
+        max_digits=10,
+        decimal_places=2,
+        verbose_name=_(u'Pris')
+    )
 
     gymnasiefag = models.ManyToManyField(
         Subject, blank=True,
