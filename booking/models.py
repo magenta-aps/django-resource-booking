@@ -798,6 +798,20 @@ class Resource(models.Model):
     def url(self):
         return self.get_url()
 
+    @staticmethod
+    def migrate_fields():
+        for visit in Visit.objects.all():
+            for person in visit.contact_persons.all():
+                visit.contact_persons_migrate.add(person)
+            visit.locality_migrate = visit.locality
+            visit.preparation_time_migrate = visit.preparation_time
+            visit.price_migrate = visit.price
+            visit.recurrences_migrate = visit.recurrences
+            visit.save()
+        for studymaterial in StudyMaterial.objects.all():
+            studymaterial.resource = studymaterial.visit
+            studymaterial.save()
+
 
 class ResourceGymnasieFag(models.Model):
     class Meta:
