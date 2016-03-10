@@ -835,7 +835,7 @@ class Resource(models.Model):
             visit.save()
         for studymaterial in StudyMaterial.objects.all():
             if visit.studymaterial_migrate_set is None or \
-                    len(visit.studymaterial_migrate_set) == 0:
+                    len(visit.studymaterial_migrate_set.all()) == 0:
                 new_studymaterial = StudyMaterial_Migrate()
                 new_studymaterial.resource = studymaterial.visit
                 new_studymaterial.file = studymaterial.file
