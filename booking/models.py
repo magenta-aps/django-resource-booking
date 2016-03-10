@@ -316,7 +316,7 @@ class StudyMaterial(models.Model):
     url = models.URLField(null=True, blank=True)
     file = models.FileField(upload_to='material', null=True, blank=True)
     visit = models.ForeignKey('Visit', on_delete=models.CASCADE)
-    #resource = models.ForeignKey('Resource', null=True,
+    # resource = models.ForeignKey('Resource', null=True,
     #                             on_delete=models.CASCADE,
     #                             related_name='material')
 
@@ -808,7 +808,7 @@ class Resource(models.Model):
             visit.price_migrate = visit.price
             visit.recurrences_migrate = visit.recurrences
             visit.save()
-        #for studymaterial in StudyMaterial.objects.all():
+        # for studymaterial in StudyMaterial.objects.all():
         #    studymaterial.resource = studymaterial.visit
         #    studymaterial.save()
 
