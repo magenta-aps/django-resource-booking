@@ -299,7 +299,7 @@ class SpecialRequirement(models.Model):
         return self.name
 
 
-class StudyMaterial_Migrate(models.Model):
+class StudyMaterial(models.Model):
     """Material for the students to study before visiting."""
 
     class Meta:
