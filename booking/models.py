@@ -1573,6 +1573,14 @@ class VisitOccurrence(models.Model):
             return "expired"
         return ""
 
+    @property
+    def needs_teachers(self):
+        return len(self.teachers.all()) < self.visit.needed_teachers
+
+    @property
+    def needs_hosts(self):
+        return len(self.hosts.all()) < self.visit.needed_hosts
+
     def is_booked(self):
         """Has this VisitOccurrence instance been booked yet?"""
         return len(self.bookings.all()) > 0

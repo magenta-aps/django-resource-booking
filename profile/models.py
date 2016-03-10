@@ -86,6 +86,23 @@ class UserProfile(models.Model):
     def has_edit_role(self):
         return self.get_role() in EDIT_ROLES
 
+    @property
+    def is_host(self):
+        return self.get_role() == HOST
+
+    @property
+    def is_teacher(self):
+        return self.get_role() == TEACHER
+
+    @property
+    def is_coordinator(self):
+        return self.get_role() == COORDINATOR
+
+    @property
+    def is_faculty_editor(self):
+        return self.get_role() == FACULTY_EDITOR
+
+    @property
     def is_administrator(self):
         return self.get_role() == ADMINISTRATOR
 
@@ -127,7 +144,7 @@ class UserProfile(models.Model):
     def get_unit_queryset(self):
         role = self.get_role()
 
-        if not role:
+        if role is None:
             return Unit.objects.none()
 
         if role == ADMINISTRATOR:
