@@ -317,7 +317,7 @@ class VisitStudyMaterialForm(VisitStudyMaterialFormBase):
 
     def __init__(self, data, instance=None):
         super(VisitStudyMaterialForm, self).__init__(data)
-        self.studymaterials = StudyMaterial.objects.filter(visit=instance)
+        self.studymaterials = StudyMaterial.objects.filter(resource=instance)
 
 
 VisitAutosendFormSet = inlineformset_factory(
