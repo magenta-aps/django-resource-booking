@@ -316,14 +316,39 @@ class StudyMaterial(models.Model):
     url = models.URLField(null=True, blank=True)
     file = models.FileField(upload_to='material', null=True, blank=True)
     visit = models.ForeignKey('Visit', on_delete=models.CASCADE)
-    # resource = models.ForeignKey('Resource', null=True,
-    #                             on_delete=models.CASCADE,
-    #                             related_name='material')
 
     def __unicode__(self):
         s = u"{0}: {1}".format(
             u'URL' if self.type == self.URL else _(u"Vedhæftet fil"),
             self.url if self.type == self.URL else self.file
+        )
+        return s
+
+
+class StudyMaterial_Migrate(models.Model):
+    """Material for the students to study before visiting."""
+
+    class Meta:
+        verbose_name = _(u'undervisningsmateriale')
+        verbose_name_plural = _(u'undervisningsmaterialer')
+
+    URL = 0
+    ATTACHMENT = 1
+    study_material_choices = (
+        (URL, _(u"URL")),
+        (ATTACHMENT, _(u"Vedhæftet fil"))
+    )
+    type = models.IntegerField(choices=study_material_choices, default=URL)
+    url = models.URLField(null=True, blank=True)
+    file = models.FileField(upload_to='material', null=True, blank=True)
+    resource = models.ForeignKey('Resource', null=True,
+                                 on_delete=models.CASCADE,
+                                 )
+
+    def __unicode__(self):
+        s = u"{0}: {1}".format(
+                u'URL' if self.type == self.URL else _(u"Vedhæftet fil"),
+                self.url if self.type == self.URL else self.file
         )
         return s
 
@@ -808,9 +833,14 @@ class Resource(models.Model):
             visit.price_migrate = visit.price
             visit.recurrences_migrate = visit.recurrences
             visit.save()
-        # for studymaterial in StudyMaterial.objects.all():
-        #    studymaterial.resource = studymaterial.visit
-        #    studymaterial.save()
+        for studymaterial in StudyMaterial.objects.all():
+            if visit.studymaterial_migrate_set is None or len(visit.studymaterial_migrate_set) == 0:
+                new_studymaterial = StudyMaterial_Migrate()
+                new_studymaterial.resource = studymaterial.visit
+                new_studymaterial.file = studymaterial.file
+                new_studymaterial.type = studymaterial.type
+                new_studymaterial.url = studymaterial.url
+                new_studymaterial.save()
 
 
 class ResourceGymnasieFag(models.Model):
