@@ -307,6 +307,84 @@ class VisitForm(forms.ModelForm):
         return user.userprofile.get_unit_queryset()
 
 
+class StudentForADayForm(VisitForm):
+    class Meta:
+        model = Visit
+        fields = ('type', 'title', 'teaser', 'description', 'state',
+                  'institution_level', 'topics', 'audience',
+                  'duration', 'locality',
+                  'enabled', 'contact_persons', 'unit',
+                  'needed_hosts', 'needed_teachers',
+                  'preparation_time', 'comment',
+                  )
+
+
+class InternshipForm(VisitForm):
+    class Meta:
+        model = Visit
+        fields = ('type', 'title', 'teaser', 'description', 'state',
+                  'institution_level', 'topics', 'audience',
+                  'locality',
+                  'enabled', 'contact_persons', 'unit',
+                  'needed_hosts', 'needed_teachers',
+                  'preparation_time', 'comment',
+                  )
+
+
+
+class OpenHouseForm(VisitForm):
+    class Meta:
+        model = Visit
+        fields = ('type', 'title', 'teaser', 'description', 'state',
+                  'institution_level', 'topics', 'audience',
+                  'locality',
+                  'enabled', 'contact_persons', 'unit',
+                  'needed_hosts', 'needed_teachers',
+                  'preparation_time', 'comment',
+                  )
+
+
+class TeacherVisitForm(VisitForm):
+    class Meta:
+        model = Visit
+        fields = ('type', 'title', 'teaser', 'description', 'price', 'state',
+                  'institution_level', 'topics', 'audience',
+                  'minimum_number_of_visitors', 'maximum_number_of_visitors',
+                  'duration', 'locality', 'rooms_assignment',
+                  'rooms_needed',
+                  'enabled', 'contact_persons', 'unit',
+                  'needed_hosts', 'needed_teachers',
+                  'preparation_time', 'comment',
+                  )
+
+
+class ClassVisitForm(VisitForm):
+    class Meta:
+        model = Visit
+        fields = ('type', 'title', 'teaser', 'description', 'price', 'state',
+                  'institution_level', 'topics', 'audience',
+                  'minimum_number_of_visitors', 'maximum_number_of_visitors',
+                  'duration', 'locality', 'rooms_assignment',
+                  'rooms_needed', 'tour_available',
+                  'enabled', 'contact_persons', 'unit',
+                  'needed_hosts', 'needed_teachers',
+                  'preparation_time', 'comment',
+                  )
+
+
+class StudyProjectForm(VisitForm):
+    class Meta:
+        model = Visit
+        fields = ('type', 'title', 'teaser', 'description', 'state',
+                  'institution_level', 'topics', 'audience',
+                  'locality', 'rooms_assignment',
+                  'rooms_needed',
+                  'enabled', 'contact_persons', 'unit',
+                  'needed_hosts', 'needed_teachers',
+                  'preparation_time', 'comment',
+                  )
+
+
 VisitStudyMaterialFormBase = inlineformset_factory(Visit,
                                                    StudyMaterial,
                                                    fields=('file',),

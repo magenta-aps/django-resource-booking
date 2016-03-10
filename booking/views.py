@@ -48,6 +48,10 @@ from booking.models import log_action
 from booking.models import LOGACTION_CREATE, LOGACTION_CHANGE
 from booking.forms import ResourceInitialForm, OtherResourceForm, VisitForm, \
     GuestEmailComposeForm
+
+from booking.forms import StudentForADayForm, InternshipForm, OpenHouseForm, \
+    TeacherVisitForm, ClassVisitForm, StudyProjectForm
+
 from booking.forms import ClassBookingForm, TeacherBookingForm
 from booking.forms import VisitStudyMaterialForm, BookingSubjectLevelForm
 from booking.forms import BookerForm
@@ -1137,6 +1141,17 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
 
     roles = EDIT_ROLES
 
+    forms = {
+        Resource.STUDENT_FOR_A_DAY: StudentForADayForm,
+        Resource.TEACHER_EVENT: TeacherVisitForm,
+        Resource.GROUP_VISIT: ClassVisitForm
+    }
+
+    def get_form_class(self):
+        if self.object.type in self.forms:
+            return self.forms[self.object.type]
+        return self.form_class
+
     def get(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
         self.set_object(pk, request)
@@ -1374,13 +1389,13 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
     def get_template_names(self):
         if self.object.type is not None:
             if self.object.type == Resource.STUDENT_FOR_A_DAY:
-                return ["visit/studentforaday.html"]
-            if self.object.type == Resource.STUDY_PROJECT:
-                return ["visit/srp.html"]
+                return ["visit/form.html"]
+            #if self.object.type == Resource.STUDY_PROJECT:
+            #    return ["visit/srp.html"]
             if self.object.type == Resource.GROUP_VISIT:
                 return ["visit/classvisit.html"]
             if self.object.type == Resource.TEACHER_EVENT:
-                return ["visit/teachervisit.html"]
+                return ["visit/form.html"]
         raise Exception("Couldn't find template for "
                         "object type %d" % self.object.type)
 

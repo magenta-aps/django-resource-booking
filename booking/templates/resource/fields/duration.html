@@ -1,7 +1,8 @@
 {% load i18n %}
+{% if form.duration %}
 <div class="row">
     <div class="col-sm-10">
-        <select id="id_duration" name="duration" class="form-control">
+        <select id="{{ form.duration.id_for_label }}" name="{{ form.duration.name }}" class="form-control">
             <option value="00:00">Ingen</option>
             <option value="00:30">30 minutter</option>
             <option value="01:00">1 time</option>
@@ -21,3 +22,4 @@
         </select>
     </div>
 </div>
+{% endif %}
