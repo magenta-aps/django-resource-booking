@@ -1,4 +1,5 @@
 {% load i18n %}
+{% load booking_tags %}
 {% if fileformset %}
 <div class="row form-group">
     <div class="col-sm-2">
@@ -9,7 +10,7 @@
             <ul>
                 {% for material in fileformset.studymaterials %}
                     <li>
-                        <a href="{{ MEDIA_URL }}{{ material.file.url }}">{{ material.file.name | upload_name_strip_path }}</a>
+                        <a href="{{ MEDIA_URL }}{{ material.file.url }}">{{ material.file.name | upload_name_strip_path }} ({{ material.file.size | filesizeformat }})</a>
                     </li>
                 {% endfor %}
             </ul>
