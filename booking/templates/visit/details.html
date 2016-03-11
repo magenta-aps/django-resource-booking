@@ -2,6 +2,7 @@
 {% load staticfiles %}
 {% load timedelta %}
 {% load i18n %}
+{% load booking_tags %}
 
 {% block content %}
 
@@ -48,6 +49,15 @@
                 </ul>
                 {% endif %}
             </div>
+            {% if object.studymaterial_set %}
+                <ul>
+                {% for material in object.studymaterial_set.all %}
+                    <li>
+                        <a href="{{ MEDIA_URL }}{{ material.file.url }}">{{ material.file.name | upload_name_strip_path }}</a>
+                    </li>
+                {% endfor %}
+                </ul>
+            {% endif %}
             <div class="well order-buttons hidden-print">
                 {% if can_book %}
                 <a class="btn btn-default" data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'visit-book' object.id %}">
