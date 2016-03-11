@@ -3,7 +3,8 @@
 from django.core.urlresolvers import reverse
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import redirect
-from django.views.generic import UpdateView, FormView
+from django.utils.translation import ugettext as _
+from django.views.generic import UpdateView, FormView, DetailView
 from booking.booking_workflows.forms import ChangeVisitOccurrenceStatusForm, \
     VisitOccurrenceAutosendFormSet
 from booking.booking_workflows.forms import ChangeVisitOccurrenceTeachersForm
@@ -180,3 +181,103 @@ class ChangeVisitOccurrenceAutosendView(AutologgerMixin, UpdateWithCancelView):
         context.update(kwargs)
         return super(ChangeVisitOccurrenceAutosendView, self).\
             get_context_data(**context)
+
+
+class BecomeSomethingView(AutologgerMixin, DetailView):
+    model = VisitOccurrence
+    errors = None
+    m2m_attribute = None
+
+    ERROR_NONE_NEEDED = _(
+        u"Det valgte arrangement har ikke behov for flere personer i den " +
+        u"givne rolle"
+    )
+    ERROR_WRONG_ROLE = _(
+        u"Du har ikke den rette rolle til at bruge denne funktion"
+    )
+    ERROR_ALREADY_REGISTERED = _(
+        u"Du er allerede blevet tildelt den givne rolle"
+    )
+
+    def needs_more(self):
+        raise NotImplementedError
+
+    def is_right_role(self):
+        raise NotImplementedError
+
+    def is_valid(self):
+        if self.errors is None:
+            self.errors = []
+            # Are we the right role?
+            if not self.is_right_role():
+                self.errors.append(self.ERROR_WRONG_ROLE)
+
+            # Do the event need more of the given role?
+            if not self.needs_more():
+                self.errors.append(self.ERROR_NONE_NEEDED)
+
+            # Is the current user already registered?
+            qs = getattr(self.object, self.m2m_attribute).filter(
+                pk=self.request.user.pk
+            )
+            if qs.exists():
+                self.errors.append(self.ERROR_ALREADY_REGISTERED)
+
+        return len(self.errors) == 0
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if request.POST.get("cancel"):
+            return redirect(self.get_success_url())
+        elif request.POST.get("confirm"):
+            if self.is_valid():
+                # Add user to the specified m2m relation
+                getattr(self.object, self.m2m_attribute).add(request.user)
+                self._log_changes()
+
+        return self.get(request, *args, **kwargs)
+
+    def render_with_error(self, error, request, *args, **kwargs):
+        self.errors.append(error)
+        return self.get(request, *args, **kwargs)
+
+    def get_success_url(self):
+        return reverse('visit-occ-view', args=[self.object.pk])
+
+
+class BecomeTeacherView(BecomeSomethingView):
+    m2m_attribute = "teachers"
+    template_name = "booking/workflow/become_teacher.html"
+
+    ERROR_NONE_NEEDED = _(u"Arrangementet har ikke brug for flere undervisere")
+    ERROR_WRONG_ROLE = _(
+        u"Du skal have rollen underviser for at kunne bruge denne funktion"
+    )
+    ERROR_ALREADY_REGISTERED = _(
+        u"Du er allerede underviser på arrangementet"
+    )
+
+    def needs_more(self):
+        return self.object.needs_teachers
+
+    def is_right_role(self):
+        return self.request.user.userprofile.is_teacher
+
+
+class BecomeHostView(BecomeSomethingView):
+    m2m_attribute = "hosts"
+    template_name = "booking/workflow/become_host.html"
+
+    ERROR_NONE_NEEDED = _(u"Arrangementet har ikke brug for flere værter")
+    ERROR_WRONG_ROLE = _(
+        u"Du skal have rollen vært for at kunne bruge denne funktion"
+    )
+    ERROR_ALREADY_REGISTERED = _(
+        u"Du er allerede vært på arrangementet"
+    )
+
+    def needs_more(self):
+        return self.object.needs_hosts
+
+    def is_right_role(self):
+        return self.request.user.userprofile.is_host
