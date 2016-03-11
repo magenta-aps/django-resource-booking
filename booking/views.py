@@ -1194,7 +1194,12 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
     forms = {
         Resource.STUDENT_FOR_A_DAY: StudentForADayForm,
         Resource.TEACHER_EVENT: TeacherVisitForm,
-        Resource.GROUP_VISIT: ClassVisitForm
+        Resource.GROUP_VISIT: ClassVisitForm,
+        Resource.STUDIEPRAKTIK: InternshipForm,
+        Resource.OPEN_HOUSE: OpenHouseForm,
+        Resource.STUDY_PROJECT: StudyProjectForm,
+        Resource.ASSIGNMENT_HELP: AssignmentHelpForm,
+        Resource.STUDY_MATERIAL: StudyMaterialForm
     }
 
     def get_forms(self):

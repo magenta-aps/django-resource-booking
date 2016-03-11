@@ -324,28 +324,28 @@ class StudentForADayForm(VisitForm):
         widgets = VisitForm.Meta.widgets
 
 
-class InternshipForm(OtherResourceForm):
+class InternshipForm(VisitForm):
     class Meta:
         model = Visit
         fields = ('type', 'title', 'teaser', 'description', 'state',
                   'institution_level', 'topics', 'audience',
                   'locality',
-                  'enabled', 'contact_persons', 'unit',
+                  'contact_persons', 'unit',
                   'preparation_time', 'comment',
                   )
-        widgets = OtherResourceForm.Meta.widgets
+        widgets = Visit.Meta.widgets
 
 
-class OpenHouseForm(OtherResourceForm):
+class OpenHouseForm(VisitForm):
     class Meta:
         model = Visit
         fields = ('type', 'title', 'teaser', 'description', 'state',
                   'institution_level', 'topics', 'audience',
                   'locality',
-                  'enabled', 'contact_persons', 'unit',
+                  'contact_persons', 'unit',
                   'preparation_time', 'comment',
                   )
-        widgets = OtherResourceForm.Meta.widgets
+        widgets = Visit.Meta.widgets
 
 
 class TeacherVisitForm(VisitForm):
@@ -378,20 +378,20 @@ class ClassVisitForm(VisitForm):
         widgets = VisitForm.Meta.widgets
 
 
-class StudyProjectForm(OtherResourceForm):
+class StudyProjectForm(VisitForm):
     class Meta:
         model = Visit
         fields = ('type', 'title', 'teaser', 'description', 'state',
                   'institution_level', 'topics', 'audience',
-                  'locality', 'rooms_assignment',
-                  'rooms_needed',
+                  'locality',
+                  # 'rooms_assignment', 'rooms_needed',
                   'contact_persons', 'unit',
                   'preparation_time', 'comment',
                   )
-        widgets = OtherResourceForm.Meta.widgets
+        widgets = Visit.Meta.widgets
 
 
-class AssignmentHelpForm(OtherResourceForm):
+class AssignmentHelpForm(VisitForm):
     class Meta:
         model = Visit
         fields = ('type', 'title', 'teaser', 'description', 'state',
@@ -399,18 +399,18 @@ class AssignmentHelpForm(OtherResourceForm):
                   'contact_persons', 'unit',
                   'comment',
                   )
-        widgets = OtherResourceForm.Meta.widgets
+        widgets = Visit.Meta.widgets
 
 
-class StudyMaterialForm(OtherResourceForm):
+class StudyMaterialForm(VisitForm):
     class Meta:
-        model = OtherResource
+        model = Visit
         fields = ('type', 'title', 'teaser', 'description', 'price', 'state',
                   'institution_level', 'topics', 'audience',
                   'contact_persons', 'unit',
                   'comment'
                   )
-        widgets = OtherResourceForm.Meta.widgets
+        widgets = Visit.Meta.widgets
 
 
 ResourceStudyMaterialFormBase = inlineformset_factory(Resource,
