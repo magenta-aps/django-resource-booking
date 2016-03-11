@@ -274,13 +274,14 @@ class VisitForm(forms.ModelForm):
 
         # Add classes to certain widgets
         for x in ('needed_hosts', 'needed_teachers'):
-            f = self.fields[x]
-            f.widget.attrs['class'] = " ".join([
-                x for x in (
-                    f.widget.attrs.get('class'),
-                    'form-control input-sm'
-                ) if x
-            ])
+            f = self.fields.get(x)
+            if f is not None:
+                f.widget.attrs['class'] = " ".join([
+                    x for x in (
+                        f.widget.attrs.get('class'),
+                        'form-control input-sm'
+                    ) if x
+                ])
 
     def clean_type(self):
         instance = getattr(self, 'instance', None)
@@ -333,7 +334,7 @@ class InternshipForm(VisitForm):
                   'contact_persons', 'unit',
                   'preparation_time', 'comment',
                   )
-        widgets = Visit.Meta.widgets
+        widgets = VisitForm.Meta.widgets
 
 
 class OpenHouseForm(VisitForm):
@@ -345,7 +346,7 @@ class OpenHouseForm(VisitForm):
                   'contact_persons', 'unit',
                   'preparation_time', 'comment',
                   )
-        widgets = Visit.Meta.widgets
+        widgets = VisitForm.Meta.widgets
 
 
 class TeacherVisitForm(VisitForm):
@@ -384,11 +385,11 @@ class StudyProjectForm(VisitForm):
         fields = ('type', 'title', 'teaser', 'description', 'state',
                   'institution_level', 'topics', 'audience',
                   'locality',
-                  # 'rooms_assignment', 'rooms_needed',
+                  'rooms_assignment', 'rooms_needed',
                   'contact_persons', 'unit',
                   'preparation_time', 'comment',
                   )
-        widgets = Visit.Meta.widgets
+        widgets = VisitForm.Meta.widgets
 
 
 class AssignmentHelpForm(VisitForm):
@@ -399,7 +400,7 @@ class AssignmentHelpForm(VisitForm):
                   'contact_persons', 'unit',
                   'comment',
                   )
-        widgets = Visit.Meta.widgets
+        widgets = VisitForm.Meta.widgets
 
 
 class StudyMaterialForm(VisitForm):
@@ -410,7 +411,7 @@ class StudyMaterialForm(VisitForm):
                   'contact_persons', 'unit',
                   'comment'
                   )
-        widgets = Visit.Meta.widgets
+        widgets = VisitForm.Meta.widgets
 
 
 ResourceStudyMaterialFormBase = inlineformset_factory(Resource,
@@ -426,7 +427,7 @@ class ResourceStudyMaterialForm(ResourceStudyMaterialFormBase):
         self.studymaterials = StudyMaterial.objects.filter(resource=instance)
 
 
-VisitAutosendFormSet = inlineformset_factory(
+VisitAutosendFormSetBase = inlineformset_factory(
     Visit,
     VisitAutosend,
     fields=('template_key', 'enabled', 'days'),
@@ -434,6 +435,12 @@ VisitAutosendFormSet = inlineformset_factory(
     min_num=1,
     extra=0
 )
+
+
+class VisitAutosendFormSet(VisitAutosendFormSetBase):
+
+    def is_valid(self):
+        return True
 
 
 class BookingForm(forms.ModelForm):

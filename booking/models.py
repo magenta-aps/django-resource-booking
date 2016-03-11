@@ -991,10 +991,6 @@ class GymnasieLevel(models.Model):
 class OtherResource(Resource):
     """A non-bookable, non-visit resource, basically material on the Web."""
 
-    class Meta:
-        verbose_name = _(u"tilbud uden booking")
-        verbose_name_plural = _(u"tilbud uden booking")
-
     objects = SearchManager(
         fields=(
             'title',
@@ -1054,7 +1050,9 @@ class OtherResource(Resource):
             values = [str(intermediate.subject.id)]
             for level in intermediate.level.all():
                 values.append(str(level.id))
-            clone = ResourceGymnasieFag.create_from_submitvalue(visit, ','.join(values))
+            clone = ResourceGymnasieFag.create_from_submitvalue(
+                visit, ','.join(values)
+            )
             save.append(clone)
         for intermediate in self.resourcegrundskolefag_set.all():
             clone = ResourceGrundskoleFag()
@@ -1082,8 +1080,8 @@ class Visit(Resource):
     """A bookable visit of any kind."""
 
     class Meta:
-        verbose_name = _("tilbud med booking")
-        verbose_name_plural = _("tilbud med booking")
+        verbose_name = _("tilbud")
+        verbose_name_plural = _("tilbud")
 
     objects = SearchManager(
         fields=(
