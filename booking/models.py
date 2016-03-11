@@ -1006,9 +1006,7 @@ class OtherResource(Resource):
         auto_update_search_field=True
     )
 
-    applicable_types = [Resource.OTHER_OFFERS, Resource.STUDY_MATERIAL,
-                        Resource.OPEN_HOUSE, Resource.ASSIGNMENT_HELP,
-                        Resource.STUDIEPRAKTIK, Resource.STUDY_PROJECT]
+    applicable_types = []
 
     @ClassProperty
     def type_choices(self):
@@ -1028,6 +1026,56 @@ class OtherResource(Resource):
 
     def get_absolute_url(self):
         return reverse('otherresource-view', args=[self.pk])
+
+    def clone_to_visit(self):
+        save = []
+        visit = Visit()
+        visit.enabled = self.enabled
+        visit.type = self.type
+        visit.state = self.state
+        visit.title = self.title
+        visit.teaser = self.teaser
+        visit.mouseover_description = self.mouseover_description
+        visit.unit = self.unit
+        visit.audience = self.audience
+        visit.institution_level = self.institution_level
+        visit.locality = self.locality
+        visit.recurrences = self.recurrences
+        visit.comment = self.comment
+        visit.extra_search_text = self.extra_search_text
+        visit.preparation_time = self.preparation_time
+        visit.price = self.price
+        visit.save()
+        for link in self.links.all():
+            visit.links.add(link)
+        for contact_person in self.contact_persons.all():
+            visit.contact_persons.add(contact_person)
+        for intermediate in self.resourcegymnasiefag_set.all():
+            values = [str(intermediate.subject.id)]
+            for level in intermediate.level.all():
+                values.append(str(level.id))
+            clone = ResourceGymnasieFag.create_from_submitvalue(visit, ','.join(values))
+            save.append(clone)
+        for intermediate in self.resourcegrundskolefag_set.all():
+            clone = ResourceGrundskoleFag()
+            clone.resource = visit
+            clone.subject = intermediate.subject
+            clone.class_level_max = intermediate.class_level_max
+            clone.class_level_min = intermediate.class_level_min
+            save.append(clone)
+        for tag in self.tags.all():
+            visit.tags.add(tag)
+        for topic in self.topics.all():
+            visit.topics.add(topic)
+        for item in save:
+            item.save()
+        print "OtherResource %d cloned into Visit %d" % (self.id, visit.id)
+
+    @staticmethod
+    def migrate_to_visits():
+        for otherresource in OtherResource.objects.all():
+            otherresource.clone_to_visit()
+            otherresource.delete()
 
 
 class Visit(Resource):
@@ -1050,7 +1098,10 @@ class Visit(Resource):
     )
 
     applicable_types = [Resource.STUDENT_FOR_A_DAY, Resource.GROUP_VISIT,
-                        Resource.TEACHER_EVENT]
+                        Resource.TEACHER_EVENT, Resource.OTHER_OFFERS,
+                        Resource.STUDY_MATERIAL, Resource.OPEN_HOUSE,
+                        Resource.ASSIGNMENT_HELP, Resource.STUDIEPRAKTIK,
+                        Resource.STUDY_PROJECT]
 
     @ClassProperty
     def type_choices(self):
