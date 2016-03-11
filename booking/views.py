@@ -1194,7 +1194,12 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
     forms = {
         Resource.STUDENT_FOR_A_DAY: StudentForADayForm,
         Resource.TEACHER_EVENT: TeacherVisitForm,
-        Resource.GROUP_VISIT: ClassVisitForm
+        Resource.GROUP_VISIT: ClassVisitForm,
+        Resource.STUDIEPRAKTIK: InternshipForm,
+        Resource.OPEN_HOUSE: OpenHouseForm,
+        Resource.STUDY_PROJECT: StudyProjectForm,
+        Resource.ASSIGNMENT_HELP: AssignmentHelpForm,
+        Resource.STUDY_MATERIAL: StudyMaterialForm
     }
 
     def get_forms(self):
@@ -1322,6 +1327,12 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         )
         context['unit'] = self.object.unit
 
+        context['hastime'] = self.object.type in [
+            Resource.STUDENT_FOR_A_DAY, Resource.STUDIEPRAKTIK,
+            Resource.OPEN_HOUSE, Resource.TEACHER_EVENT, Resource.GROUP_VISIT,
+            Resource.STUDY_PROJECT
+        ]
+
         context.update(kwargs)
 
         return super(EditVisitView, self).get_context_data(**context)
@@ -1333,10 +1344,11 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         if autosendformset.is_valid():
             # Update autosend
             for autosendform in autosendformset:
-                try:
-                    autosendform.save()
-                except:
-                    pass
+                if autosendform.is_valid():
+                    try:
+                        autosendform.save()
+                    except:
+                        pass
 
     def save_rooms(self):
         # Update rooms
@@ -1422,12 +1434,6 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         kwargs['user'] = self.request.user
         return kwargs
 
-    def get_template_names(self):
-        if self.object.type is not None:
-            if self.object.type == Resource.GROUP_VISIT:
-                return ["visit/classvisit.html"]
-            return ["visit/form.html"]
-
 
 class VisitDetailView(DetailView):
     """Display Visit details"""
@@ -1454,7 +1460,6 @@ class VisitDetailView(DetailView):
             context['can_edit'] = False
 
         if self.object.type in [Resource.STUDENT_FOR_A_DAY,
-                                Resource.STUDY_PROJECT,
                                 Resource.GROUP_VISIT,
                                 Resource.TEACHER_EVENT]:
             context['can_book'] = True
