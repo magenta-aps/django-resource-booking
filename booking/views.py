@@ -1324,10 +1324,11 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         if autosendformset.is_valid():
             # Update autosend
             for autosendform in autosendformset:
-                try:
-                    autosendform.save()
-                except:
-                    pass
+                if autosendform.is_valid():
+                    try:
+                        autosendform.save()
+                    except:
+                        pass
 
     def save_rooms(self):
         # Update rooms

@@ -427,7 +427,7 @@ class ResourceStudyMaterialForm(ResourceStudyMaterialFormBase):
         self.studymaterials = StudyMaterial.objects.filter(resource=instance)
 
 
-VisitAutosendFormSet = inlineformset_factory(
+VisitAutosendFormSetBase = inlineformset_factory(
     Visit,
     VisitAutosend,
     fields=('template_key', 'enabled', 'days'),
@@ -435,6 +435,12 @@ VisitAutosendFormSet = inlineformset_factory(
     min_num=1,
     extra=0
 )
+
+
+class VisitAutosendFormSet(VisitAutosendFormSetBase):
+
+    def is_valid(self):
+        return True
 
 
 class BookingForm(forms.ModelForm):
