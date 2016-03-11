@@ -48,8 +48,13 @@ from booking.models import log_action
 from booking.models import LOGACTION_CREATE, LOGACTION_CHANGE
 from booking.forms import ResourceInitialForm, OtherResourceForm, VisitForm, \
     GuestEmailComposeForm
+
+from booking.forms import StudentForADayForm, InternshipForm, OpenHouseForm, \
+    TeacherVisitForm, ClassVisitForm, StudyProjectForm, AssignmentHelpForm, \
+    StudyMaterialForm
+
 from booking.forms import ClassBookingForm, TeacherBookingForm
-from booking.forms import VisitStudyMaterialForm, BookingSubjectLevelForm
+from booking.forms import ResourceStudyMaterialForm, BookingSubjectLevelForm
 from booking.forms import BookerForm
 from booking.forms import EmailTemplateForm, EmailTemplatePreviewContextForm
 from booking.forms import EmailComposeForm
@@ -904,6 +909,34 @@ class EditResourceView(HasBackButtonMixin, UpdateView):
                 )
         return result
 
+    forms = {}
+
+    def get_form_class(self):
+        if self.object.type in self.forms:
+            return self.forms[self.object.type]
+        return self.form_class
+
+    def get_forms(self):
+        if self.request.method == 'GET':
+            return {
+                'form': self.get_form(),
+                'fileformset': ResourceStudyMaterialForm(None,
+                                                         instance=self.object)
+            }
+        if self.request.method == 'POST':
+            return {
+                'form': self.get_form(),
+                'fileformset': ResourceStudyMaterialForm(self.request.POST),
+            }
+
+    def get(self, request, *args, **kwargs):
+        pk = kwargs.get("pk")
+        self.set_object(pk, request)
+
+        return self.render_to_response(
+            self.get_context_data(**self.get_forms())
+        )
+
     def set_object(self, pk, request, is_cloning=False):
         if is_cloning or not hasattr(self, 'object') or self.object is None:
             if pk is None:
@@ -1001,23 +1034,37 @@ class EditResourceView(HasBackButtonMixin, UpdateView):
 
         return result
 
-    def save_subjects(self, obj):
+    def save_studymaterials(self):
+        fileformset = ResourceStudyMaterialForm(self.request.POST)
+        if fileformset.is_valid():
+            # Attach uploaded files
+            for fileform in fileformset:
+                try:
+                    instance = StudyMaterial(
+                        resource=self.object,
+                        file=self.request.FILES["%s-file" % fileform.prefix]
+                    )
+                    instance.save()
+                except:
+                    pass
+
+    def save_subjects(self):
         existing_gym_fag = {}
-        for x in obj.resourcegymnasiefag_set.all():
+        for x in self.object.resourcegymnasiefag_set.all():
             existing_gym_fag[x.as_submitvalue()] = x
 
         for gval in self.request.POST.getlist('gymnasiefag', []):
             if gval in existing_gym_fag:
                 del existing_gym_fag[gval]
             else:
-                ResourceGymnasieFag.create_from_submitvalue(obj, gval)
+                ResourceGymnasieFag.create_from_submitvalue(self.object, gval)
 
         # Delete any remaining values that were not submitted
         for x in existing_gym_fag.itervalues():
             x.delete()
 
         existing_gs_fag = {}
-        for x in obj.resourcegrundskolefag_set.all():
+        for x in self.object.resourcegrundskolefag_set.all():
             existing_gs_fag[x.as_submitvalue()] = x
 
         for gval in self.request.POST.getlist('grundskolefag', []):
@@ -1025,7 +1072,7 @@ class EditResourceView(HasBackButtonMixin, UpdateView):
                 del existing_gs_fag[gval]
             else:
                 ResourceGrundskoleFag.create_from_submitvalue(
-                    obj, gval
+                    self.object, gval
                 )
 
         # Delete any remaining values that were not submitted
@@ -1039,54 +1086,41 @@ class EditOtherResourceView(EditResourceView):
     form_class = OtherResourceForm
     model = OtherResource
 
+    forms = {
+        Resource.STUDIEPRAKTIK: InternshipForm,
+        Resource.OPEN_HOUSE: OpenHouseForm,
+        Resource.STUDY_PROJECT: StudyProjectForm,
+        Resource.ASSIGNMENT_HELP: AssignmentHelpForm,
+        Resource.STUDY_MATERIAL: StudyMaterialForm
+    }
+
     # Display a view with two form objects; one for the regular model,
     # and one for the file upload
 
     roles = EDIT_ROLES
 
-    def get(self, request, *args, **kwargs):
-        pk = kwargs.get("pk")
-        self.set_object(pk, request)
-        form = self.get_form()
-        return self.render_to_response(
-            self.get_context_data(form=form)
-        )
-
     def post(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
         is_cloning = kwargs.get("clone", False)
         self.set_object(pk, request, is_cloning)
-        form = self.get_form()
-        if form.is_valid():
-            obj = form.save()
+        forms = self.get_forms()
 
-            # Save subjects
-            self.save_subjects(obj)
+        if forms['form'].is_valid():
+            self.object = forms['form'].save()
 
-            return super(EditOtherResourceView, self).form_valid(form)
+            self.save_studymaterials()
+
+            self.save_subjects()
+
+            return super(EditOtherResourceView, self).form_valid(forms['form'])
         else:
-            return self.form_invalid(form)
+            return self.form_invalid(forms['form'])
 
     def get_success_url(self):
         try:
             return reverse('otherresource-view', args=[self.object.id])
         except:
             return '/'
-
-    def get_template_names(self):
-        if self.object.type is not None:
-            if self.object.type == Resource.STUDIEPRAKTIK:
-                return ["otherresource/studiepraktik.html"]
-            if self.object.type == Resource.OPEN_HOUSE:
-                return ["otherresource/open_house.html"]
-            if self.object.type == Resource.ASSIGNMENT_HELP:
-                return ["otherresource/assignment_help.html"]
-            if self.object.type == Resource.STUDY_MATERIAL:
-                return ["otherresource/study_material.html"]
-            if self.object.type == Resource.OTHER_OFFERS:
-                return ["otherresource/other.html"]
-        raise Exception("Couldn't find template for "
-                        "object type %d" % self.object.type)
 
     def get_context_data(self, **kwargs):
         context = {}
@@ -1157,17 +1191,23 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
 
     roles = EDIT_ROLES
 
-    def get(self, request, *args, **kwargs):
-        pk = kwargs.get("pk")
-        self.set_object(pk, request)
-        form = self.get_form()
-        fileformset = VisitStudyMaterialForm(None, instance=self.object)
-        autosendformset = VisitAutosendFormSet(None, instance=self.object)
+    forms = {
+        Resource.STUDENT_FOR_A_DAY: StudentForADayForm,
+        Resource.TEACHER_EVENT: TeacherVisitForm,
+        Resource.GROUP_VISIT: ClassVisitForm
+    }
 
-        return self.render_to_response(
-            self.get_context_data(form=form, fileformset=fileformset,
-                                  autosendformset=autosendformset)
-        )
+    def get_forms(self):
+        forms = super(EditVisitView, self).get_forms()
+        if self.request.method == 'GET':
+            forms['autosendformset'] = VisitAutosendFormSet(
+                None, instance=self.object
+            )
+        if self.request.method == 'POST':
+            forms['autosendformset'] = VisitAutosendFormSet(
+                self.request.POST, instance=self.object
+            )
+        return forms
 
     def _is_any_booking_outside_new_attendee_count_bounds(
             self,
@@ -1218,96 +1258,24 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
                 )
         is_cloning = kwargs.get("clone", False)
         self.set_object(pk, request, is_cloning)
-        form = self.get_form()
-        fileformset = VisitStudyMaterialForm(request.POST)
-        autosendformset = VisitAutosendFormSet(
-            request.POST, instance=self.object
-        )
+        forms = self.get_forms()
 
-        if form.is_valid():
-            visit = form.save()
+        if forms['form'].is_valid():
+            self.object = forms['form'].save()
 
-            if autosendformset.is_valid():
-                # Update autosend
-                for autosendform in autosendformset:
-                    try:
-                        autosendform.save()
-                    except:
-                        pass
+            self.save_autosend()
 
-            if fileformset.is_valid():
-                # Attach uploaded files
-                for fileform in fileformset:
-                    try:
-                        instance = StudyMaterial(
-                            visit=visit,
-                            file=request.FILES["%s-file" % fileform.prefix]
-                        )
-                        instance.save()
-                    except:
-                        pass
+            self.save_studymaterials()
 
-            # Update rooms
-            existing_rooms = set([x.name for x in visit.room_set.all()])
+            self.save_rooms()
 
-            new_rooms = request.POST.getlist("rooms")
-            for roomname in new_rooms:
-                if roomname in existing_rooms:
-                    existing_rooms.remove(roomname)
-                else:
-                    new_room = Room(visit=visit, name=roomname)
-                    new_room.save()
+            self.save_occurrences()
 
-            # Delete any rooms left in existing rooms
-            if len(existing_rooms) > 0:
-                visit.room_set.all().filter(
-                    name__in=existing_rooms
-                ).delete()
+            self.save_subjects()
 
-            # update occurrences
-            existing_visit_occurrences = \
-                set([x.start_datetime
-                     for x in visit.bookable_occurrences])
-
-            # convert date strings to datetimes
-            dates = request.POST.get(u'occurrences').split(',')
-
-            datetimes = []
-            if dates is not None:
-                for date in dates:
-                    dt = timezone.make_aware(
-                        parser.parse(date, dayfirst=True),
-                        timezone.pytz.timezone('Europe/Copenhagen')
-                    )
-                    datetimes.append(dt)
-            # remove existing to avoid duplicates,
-            # then save the rest...
-            for date_t in datetimes:
-                if date_t in existing_visit_occurrences:
-                    existing_visit_occurrences.remove(date_t)
-                else:
-                    instance = visit.make_occurrence(date_t, True)
-                    instance.save()
-            # If the set of existing occurrences still is not empty,
-            # it means that the user un-ticket one or more existing.
-            # So, we remove those to...
-            if len(existing_visit_occurrences) > 0:
-                visit.bookable_occurrences.filter(
-                    start_datetime__in=existing_visit_occurrences
-                ).delete()
-
-            # Save subjects
-            self.save_subjects(visit)
-
-            return super(EditVisitView, self).form_valid(form)
+            return super(EditVisitView, self).form_valid(forms['form'])
         else:
-            return self.form_invalid(
-                {
-                    'form': form,
-                    'fileformset': fileformset,
-                    'autosendformset': autosendformset
-                }
-            )
+            return self.form_invalid(forms)
 
     def get_context_data(self, **kwargs):
         context = {}
@@ -1358,6 +1326,69 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
 
         return super(EditVisitView, self).get_context_data(**context)
 
+    def save_autosend(self):
+        autosendformset = VisitAutosendFormSet(
+            self.request.POST, instance=self.object
+        )
+        if autosendformset.is_valid():
+            # Update autosend
+            for autosendform in autosendformset:
+                try:
+                    autosendform.save()
+                except:
+                    pass
+
+    def save_rooms(self):
+        # Update rooms
+        existing_rooms = set([x.name for x in self.object.room_set.all()])
+
+        new_rooms = self.request.POST.getlist("rooms")
+        for roomname in new_rooms:
+            if roomname in existing_rooms:
+                existing_rooms.remove(roomname)
+            else:
+                new_room = Room(visit=self.object, name=roomname)
+                new_room.save()
+
+        # Delete any rooms left in existing rooms
+        if len(existing_rooms) > 0:
+            self.object.room_set.all().filter(
+                name__in=existing_rooms
+            ).delete()
+
+    def save_occurrences(self):
+        # update occurrences
+        existing_visit_occurrences = \
+            set([x.start_datetime
+                 for x in self.object.bookable_occurrences])
+
+        # convert date strings to datetimes
+        dates = self.request.POST.get(u'occurrences').split(',')
+
+        datetimes = []
+        if dates is not None:
+            for date in dates:
+                dt = timezone.make_aware(
+                    parser.parse(date, dayfirst=True),
+                    timezone.pytz.timezone('Europe/Copenhagen')
+                )
+                datetimes.append(dt)
+        # remove existing to avoid duplicates,
+        # then save the rest...
+        for date_t in datetimes:
+            if date_t in existing_visit_occurrences:
+                existing_visit_occurrences.remove(date_t)
+            else:
+                instance = self.object.make_occurrence(date_t, True)
+                instance.save()
+        # If the set of existing occurrences still is not empty,
+        # it means that the user un-ticket one or more existing.
+        # So, we remove those to...
+        if len(existing_visit_occurrences) > 0:
+            self.object.bookable_occurrences.filter(
+                start_datetime__in=existing_visit_occurrences
+            ).delete()
+
     def get_success_url(self):
         try:
             return reverse('visit-view', args=[self.object.id])
@@ -1393,16 +1424,9 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
 
     def get_template_names(self):
         if self.object.type is not None:
-            if self.object.type == Resource.STUDENT_FOR_A_DAY:
-                return ["visit/studentforaday.html"]
-            if self.object.type == Resource.STUDY_PROJECT:
-                return ["visit/srp.html"]
             if self.object.type == Resource.GROUP_VISIT:
                 return ["visit/classvisit.html"]
-            if self.object.type == Resource.TEACHER_EVENT:
-                return ["visit/teachervisit.html"]
-        raise Exception("Couldn't find template for "
-                        "object type %d" % self.object.type)
+            return ["visit/form.html"]
 
 
 class VisitDetailView(DetailView):

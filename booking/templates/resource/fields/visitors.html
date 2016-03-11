@@ -1,3 +1,4 @@
+{% if form.minimum_number_of_visitors %}
 <div class="row form-group">
     <div>
         {{ form.minimum_number_of_visitors.errors }}
@@ -9,6 +10,8 @@
         {{ form.minimum_number_of_visitors }}
     </div>
 </div>
+{% endif %}
+{% if form.maximum_number_of_visitors %}
 <div class="row form-group">
     <div>
         {{ form.maximum_number_of_visitors.errors }}
@@ -20,3 +23,4 @@
         {{ form.maximum_number_of_visitors }}
     </div>
 </div>
+{% endif %}

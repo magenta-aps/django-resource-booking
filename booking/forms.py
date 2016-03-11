@@ -162,10 +162,13 @@ class OtherResourceForm(forms.ModelForm):
 
     class Meta:
         model = OtherResource
-        fields = ('title', 'teaser', 'description', 'state',
-                  'type', 'tags', 'comment',
+        fields = ('title', 'teaser', 'description', 'price', 'state',
+                  'type', 'tags',
                   'institution_level', 'topics', 'audience',
-                  'enabled', 'unit',)
+                  'locality',
+                  'enabled', 'contact_persons', 'unit',
+                  'preparation_time', 'comment'
+                  )
         widgets = {
             'title': TextInput(attrs={
                 'class': 'titlefield form-control input-sm'
@@ -203,13 +206,14 @@ class VisitForm(forms.ModelForm):
     class Meta:
         model = Visit
         fields = ('title', 'teaser', 'description', 'price', 'state',
-                  'type', 'tags', 'preparation_time', 'comment',
+                  'type', 'tags',
                   'institution_level', 'topics', 'audience',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'duration', 'locality', 'rooms_assignment',
                   'rooms_needed', 'tour_available',
                   'enabled', 'contact_persons', 'unit',
                   'needed_hosts', 'needed_teachers',
+                  'preparation_time', 'comment',
                   )
 
         widgets = {
@@ -307,16 +311,110 @@ class VisitForm(forms.ModelForm):
         return user.userprofile.get_unit_queryset()
 
 
-VisitStudyMaterialFormBase = inlineformset_factory(Visit,
-                                                   StudyMaterial,
-                                                   fields=('file',),
-                                                   can_delete=True, extra=1)
+class StudentForADayForm(VisitForm):
+    class Meta:
+        model = Visit
+        fields = ('type', 'title', 'teaser', 'description', 'state',
+                  'institution_level', 'topics', 'audience',
+                  'duration', 'locality',
+                  'enabled', 'contact_persons', 'unit',
+                  'needed_hosts', 'needed_teachers',
+                  'preparation_time', 'comment',
+                  )
 
 
-class VisitStudyMaterialForm(VisitStudyMaterialFormBase):
+class InternshipForm(OtherResourceForm):
+    class Meta:
+        model = Visit
+        fields = ('type', 'title', 'teaser', 'description', 'state',
+                  'institution_level', 'topics', 'audience',
+                  'locality',
+                  'enabled', 'contact_persons', 'unit',
+                  'preparation_time', 'comment',
+                  )
+
+
+class OpenHouseForm(OtherResourceForm):
+    class Meta:
+        model = Visit
+        fields = ('type', 'title', 'teaser', 'description', 'state',
+                  'institution_level', 'topics', 'audience',
+                  'locality',
+                  'enabled', 'contact_persons', 'unit',
+                  'preparation_time', 'comment',
+                  )
+
+
+class TeacherVisitForm(VisitForm):
+    class Meta:
+        model = Visit
+        fields = ('type', 'title', 'teaser', 'description', 'price', 'state',
+                  'institution_level', 'topics', 'audience',
+                  'minimum_number_of_visitors', 'maximum_number_of_visitors',
+                  'duration', 'locality', 'rooms_assignment',
+                  'rooms_needed',
+                  'enabled', 'contact_persons', 'unit',
+                  'needed_hosts', 'needed_teachers',
+                  'preparation_time', 'comment',
+                  )
+
+
+class ClassVisitForm(VisitForm):
+    class Meta:
+        model = Visit
+        fields = ('type', 'title', 'teaser', 'description', 'price', 'state',
+                  'institution_level', 'topics', 'audience',
+                  'minimum_number_of_visitors', 'maximum_number_of_visitors',
+                  'duration', 'locality', 'rooms_assignment',
+                  'rooms_needed', 'tour_available',
+                  'enabled', 'contact_persons', 'unit',
+                  'needed_hosts', 'needed_teachers',
+                  'preparation_time', 'comment',
+                  )
+
+
+class StudyProjectForm(OtherResourceForm):
+    class Meta:
+        model = Visit
+        fields = ('type', 'title', 'teaser', 'description', 'state',
+                  'institution_level', 'topics', 'audience',
+                  'locality', 'rooms_assignment',
+                  'rooms_needed',
+                  'contact_persons', 'unit',
+                  'preparation_time', 'comment',
+                  )
+
+
+class AssignmentHelpForm(OtherResourceForm):
+    class Meta:
+        model = Visit
+        fields = ('type', 'title', 'teaser', 'description', 'state',
+                  'institution_level', 'topics', 'audience',
+                  'contact_persons', 'unit',
+                  'comment',
+                  )
+
+
+class StudyMaterialForm(OtherResourceForm):
+    class Meta:
+        model = OtherResource
+        fields = ('type', 'title', 'teaser', 'description', 'price', 'state',
+                  'institution_level', 'topics', 'audience',
+                  'contact_persons', 'unit',
+                  'comment'
+                  )
+
+
+ResourceStudyMaterialFormBase = inlineformset_factory(Resource,
+                                                      StudyMaterial,
+                                                      fields=('file',),
+                                                      can_delete=True, extra=1)
+
+
+class ResourceStudyMaterialForm(ResourceStudyMaterialFormBase):
 
     def __init__(self, data, instance=None):
-        super(VisitStudyMaterialForm, self).__init__(data)
+        super(ResourceStudyMaterialForm, self).__init__(data)
         self.studymaterials = StudyMaterial.objects.filter(resource=instance)
 
 

@@ -1,4 +1,5 @@
 {% load i18n %}
+{% if fileformset %}
 <div class="row form-group">
     <div class="col-sm-2">
         <label>{% trans "Vedhæftede filer" %}:</label>
@@ -24,3 +25,4 @@
         <a id="attachAddFileField">{% trans "Tilføj ny fil" %}</a>
     </div>
 </div>
+{% endif %}
