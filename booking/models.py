@@ -16,7 +16,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.template.base import Template, VariableNode
 
 from recurrence.fields import RecurrenceField
-from booking.utils import ClassProperty, full_email
+from booking.utils import ClassProperty, full_email, CustomStorage
 from resource_booking import settings
 
 import datetime
@@ -314,7 +314,8 @@ class StudyMaterial(models.Model):
     )
     type = models.IntegerField(choices=study_material_choices, default=URL)
     url = models.URLField(null=True, blank=True)
-    file = models.FileField(upload_to='material', null=True, blank=True)
+    file = models.FileField(upload_to='material', null=True,
+                            blank=True, storage=CustomStorage())
     resource = models.ForeignKey('Resource', null=True,
                                  on_delete=models.CASCADE,
                                  )

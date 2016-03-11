@@ -1035,6 +1035,7 @@ class EditResourceView(HasBackButtonMixin, UpdateView):
         return result
 
     def save_studymaterials(self):
+
         fileformset = ResourceStudyMaterialForm(self.request.POST)
         if fileformset.is_valid():
             # Attach uploaded files

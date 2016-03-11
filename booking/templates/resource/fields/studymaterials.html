@@ -10,7 +10,7 @@
             <ul>
                 {% for material in fileformset.studymaterials %}
                     <li>
-                        <a href="{{ MEDIA_URL }}{{ material.file.url }}">{{ material.file.name | upload_name_strip_path }}</a>
+                        <a href="{{ MEDIA_URL }}{{ material.file.url }}">{{ material.file.name | upload_name_strip_path }} ({{ material.file.size | filesizeformat }})</a>
                     </li>
                 {% endfor %}
             </ul>
