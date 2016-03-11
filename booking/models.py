@@ -1006,7 +1006,7 @@ class OtherResource(Resource):
         auto_update_search_field=True
     )
 
-    applicable_types = []
+    applicable_types = [Resource.STUDIEPRAKTIK]
 
     @ClassProperty
     def type_choices(self):
@@ -1054,7 +1054,9 @@ class OtherResource(Resource):
             values = [str(intermediate.subject.id)]
             for level in intermediate.level.all():
                 values.append(str(level.id))
-            clone = ResourceGymnasieFag.create_from_submitvalue(visit, ','.join(values))
+            clone = ResourceGymnasieFag.create_from_submitvalue(
+                visit, ','.join(values)
+            )
             save.append(clone)
         for intermediate in self.resourcegrundskolefag_set.all():
             clone = ResourceGrundskoleFag()
@@ -1100,7 +1102,7 @@ class Visit(Resource):
     applicable_types = [Resource.STUDENT_FOR_A_DAY, Resource.GROUP_VISIT,
                         Resource.TEACHER_EVENT, Resource.OTHER_OFFERS,
                         Resource.STUDY_MATERIAL, Resource.OPEN_HOUSE,
-                        Resource.ASSIGNMENT_HELP, Resource.STUDIEPRAKTIK,
+                        Resource.ASSIGNMENT_HELP,
                         Resource.STUDY_PROJECT]
 
     @ClassProperty

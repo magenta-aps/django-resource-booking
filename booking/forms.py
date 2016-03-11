@@ -333,7 +333,7 @@ class InternshipForm(VisitForm):
                   'contact_persons', 'unit',
                   'preparation_time', 'comment',
                   )
-        widgets = Visit.Meta.widgets
+        widgets = VisitForm.Meta.widgets
 
 
 class OpenHouseForm(VisitForm):
@@ -345,7 +345,7 @@ class OpenHouseForm(VisitForm):
                   'contact_persons', 'unit',
                   'preparation_time', 'comment',
                   )
-        widgets = Visit.Meta.widgets
+        widgets = VisitForm.Meta.widgets
 
 
 class TeacherVisitForm(VisitForm):
@@ -388,7 +388,7 @@ class StudyProjectForm(VisitForm):
                   'contact_persons', 'unit',
                   'preparation_time', 'comment',
                   )
-        widgets = Visit.Meta.widgets
+        widgets = VisitForm.Meta.widgets
 
 
 class AssignmentHelpForm(VisitForm):
@@ -399,7 +399,7 @@ class AssignmentHelpForm(VisitForm):
                   'contact_persons', 'unit',
                   'comment',
                   )
-        widgets = Visit.Meta.widgets
+        widgets = VisitForm.Meta.widgets
 
 
 class StudyMaterialForm(VisitForm):
@@ -410,7 +410,7 @@ class StudyMaterialForm(VisitForm):
                   'contact_persons', 'unit',
                   'comment'
                   )
-        widgets = Visit.Meta.widgets
+        widgets = VisitForm.Meta.widgets
 
 
 ResourceStudyMaterialFormBase = inlineformset_factory(Resource,
