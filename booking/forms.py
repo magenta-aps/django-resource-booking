@@ -334,7 +334,6 @@ class InternshipForm(OtherResourceForm):
                   )
 
 
-
 class OpenHouseForm(OtherResourceForm):
     class Meta:
         model = Visit

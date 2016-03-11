@@ -920,7 +920,8 @@ class EditResourceView(HasBackButtonMixin, UpdateView):
         if self.request.method == 'GET':
             return {
                 'form': self.get_form(),
-                'fileformset': ResourceStudyMaterialForm(None, instance=self.object)
+                'fileformset': ResourceStudyMaterialForm(None,
+                                                         instance=self.object)
             }
         if self.request.method == 'POST':
             return {
