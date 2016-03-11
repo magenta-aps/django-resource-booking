@@ -321,6 +321,7 @@ class StudentForADayForm(VisitForm):
                   'needed_hosts', 'needed_teachers',
                   'preparation_time', 'comment',
                   )
+        widgets = VisitForm.Meta.widgets
 
 
 class InternshipForm(OtherResourceForm):
@@ -332,6 +333,7 @@ class InternshipForm(OtherResourceForm):
                   'enabled', 'contact_persons', 'unit',
                   'preparation_time', 'comment',
                   )
+        widgets = OtherResourceForm.Meta.widgets
 
 
 class OpenHouseForm(OtherResourceForm):
@@ -343,6 +345,7 @@ class OpenHouseForm(OtherResourceForm):
                   'enabled', 'contact_persons', 'unit',
                   'preparation_time', 'comment',
                   )
+        widgets = OtherResourceForm.Meta.widgets
 
 
 class TeacherVisitForm(VisitForm):
@@ -357,6 +360,7 @@ class TeacherVisitForm(VisitForm):
                   'needed_hosts', 'needed_teachers',
                   'preparation_time', 'comment',
                   )
+        widgets = VisitForm.Meta.widgets
 
 
 class ClassVisitForm(VisitForm):
@@ -371,6 +375,7 @@ class ClassVisitForm(VisitForm):
                   'needed_hosts', 'needed_teachers',
                   'preparation_time', 'comment',
                   )
+        widgets = VisitForm.Meta.widgets
 
 
 class StudyProjectForm(OtherResourceForm):
@@ -383,6 +388,7 @@ class StudyProjectForm(OtherResourceForm):
                   'contact_persons', 'unit',
                   'preparation_time', 'comment',
                   )
+        widgets = OtherResourceForm.Meta.widgets
 
 
 class AssignmentHelpForm(OtherResourceForm):
@@ -393,6 +399,7 @@ class AssignmentHelpForm(OtherResourceForm):
                   'contact_persons', 'unit',
                   'comment',
                   )
+        widgets = OtherResourceForm.Meta.widgets
 
 
 class StudyMaterialForm(OtherResourceForm):
@@ -403,6 +410,7 @@ class StudyMaterialForm(OtherResourceForm):
                   'contact_persons', 'unit',
                   'comment'
                   )
+        widgets = OtherResourceForm.Meta.widgets
 
 
 ResourceStudyMaterialFormBase = inlineformset_factory(Resource,
