@@ -991,10 +991,6 @@ class GymnasieLevel(models.Model):
 class OtherResource(Resource):
     """A non-bookable, non-visit resource, basically material on the Web."""
 
-    class Meta:
-        verbose_name = _(u"tilbud uden booking")
-        verbose_name_plural = _(u"tilbud uden booking")
-
     objects = SearchManager(
         fields=(
             'title',
@@ -1006,7 +1002,7 @@ class OtherResource(Resource):
         auto_update_search_field=True
     )
 
-    applicable_types = [Resource.STUDIEPRAKTIK]
+    applicable_types = []
 
     @ClassProperty
     def type_choices(self):
@@ -1084,8 +1080,8 @@ class Visit(Resource):
     """A bookable visit of any kind."""
 
     class Meta:
-        verbose_name = _("tilbud med booking")
-        verbose_name_plural = _("tilbud med booking")
+        verbose_name = _("tilbud")
+        verbose_name_plural = _("tilbud")
 
     objects = SearchManager(
         fields=(
@@ -1102,7 +1098,7 @@ class Visit(Resource):
     applicable_types = [Resource.STUDENT_FOR_A_DAY, Resource.GROUP_VISIT,
                         Resource.TEACHER_EVENT, Resource.OTHER_OFFERS,
                         Resource.STUDY_MATERIAL, Resource.OPEN_HOUSE,
-                        Resource.ASSIGNMENT_HELP,
+                        Resource.ASSIGNMENT_HELP, Resource.STUDIEPRAKTIK,
                         Resource.STUDY_PROJECT]
 
     @ClassProperty

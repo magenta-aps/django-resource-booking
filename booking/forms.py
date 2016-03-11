@@ -274,13 +274,14 @@ class VisitForm(forms.ModelForm):
 
         # Add classes to certain widgets
         for x in ('needed_hosts', 'needed_teachers'):
-            f = self.fields[x]
-            f.widget.attrs['class'] = " ".join([
-                x for x in (
-                    f.widget.attrs.get('class'),
-                    'form-control input-sm'
-                ) if x
-            ])
+            f = self.fields.get(x)
+            if f is not None:
+                f.widget.attrs['class'] = " ".join([
+                    x for x in (
+                        f.widget.attrs.get('class'),
+                        'form-control input-sm'
+                    ) if x
+                ])
 
     def clean_type(self):
         instance = getattr(self, 'instance', None)
@@ -384,7 +385,7 @@ class StudyProjectForm(VisitForm):
         fields = ('type', 'title', 'teaser', 'description', 'state',
                   'institution_level', 'topics', 'audience',
                   'locality',
-                  # 'rooms_assignment', 'rooms_needed',
+                  'rooms_assignment', 'rooms_needed',
                   'contact_persons', 'unit',
                   'preparation_time', 'comment',
                   )

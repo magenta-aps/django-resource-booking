@@ -1,6 +1,6 @@
 {% load i18n %}
 
-
+{% if hastime %}
 <div class="row form-group">
     <div class="col-sm-2">
         <label>{% trans 'Tidspunkter:' %}</label>
@@ -32,3 +32,4 @@
         
     </div>
 </div>
+{% endif %}
