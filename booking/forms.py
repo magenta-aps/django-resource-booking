@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from booking.models import StudyMaterial, VisitAutosend
+from booking.models import StudyMaterial, VisitAutosend, Booking
 from booking.models import UnitType
 from booking.models import Unit
 from booking.models import Resource, OtherResource, Visit
@@ -647,7 +647,23 @@ class ClassBookingForm(BookingForm):
 class TeacherBookingForm(BookingForm):
     class Meta:
         model = TeacherBooking
-        fields = ('subjects', )
+        fields = ('subjects', 'notes',)
+        widgets = {
+            'notes': Textarea(attrs={
+                'class': 'form-control'
+            })
+        }
+
+
+class StudentForADayBookingForm(BookingForm):
+    class Meta:
+        model = Booking
+        fields = ('notes',)
+        widgets = {
+            'notes': Textarea(attrs={
+                'class': 'form-control'
+            })
+        }
 
 
 BookingSubjectLevelForm = \

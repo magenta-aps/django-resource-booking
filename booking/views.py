@@ -47,7 +47,7 @@ from booking.models import EmailTemplate
 from booking.models import log_action
 from booking.models import LOGACTION_CREATE, LOGACTION_CHANGE
 from booking.forms import ResourceInitialForm, OtherResourceForm, VisitForm, \
-    GuestEmailComposeForm
+    GuestEmailComposeForm, StudentForADayBookingForm
 
 from booking.forms import StudentForADayForm, InternshipForm, OpenHouseForm, \
     TeacherVisitForm, ClassVisitForm, StudyProjectForm, AssignmentHelpForm, \
@@ -1891,13 +1891,17 @@ class BookingView(AutologgerMixin, UpdateView):
                 BookerForm(data, visit=self.visit,
                            language=self.request.LANGUAGE_CODE)
 
-            if self.visit.type == Resource.GROUP_VISIT:
+            type = self.visit.type
+            if type == Resource.GROUP_VISIT:
                 forms['bookingform'] = ClassBookingForm(data, visit=self.visit)
                 forms['subjectform'] = BookingSubjectLevelForm(data)
 
-            elif self.visit.audience == Resource.AUDIENCE_TEACHER:
+            elif type == Resource.TEACHER_EVENT:
                 forms['bookingform'] = TeacherBookingForm(data,
                                                           visit=self.visit)
+            elif type == Resource.STUDENT_FOR_A_DAY:
+                forms['bookingform'] = \
+                    StudentForADayBookingForm(data, visit=self.visit)
         return forms
 
     def get_template_names(self):
@@ -1905,8 +1909,6 @@ class BookingView(AutologgerMixin, UpdateView):
             return [""]
         if self.visit.type == Resource.STUDENT_FOR_A_DAY:
             return ["booking/studentforaday.html"]
-        if self.visit.type == Resource.STUDY_PROJECT:
-            return ["booking/srp.html"]
         if self.visit.type == Resource.GROUP_VISIT:
             return ["booking/classvisit.html"]
         if self.visit.type == Resource.TEACHER_EVENT:

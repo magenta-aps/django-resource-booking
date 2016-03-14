@@ -2167,7 +2167,6 @@ class Booking(models.Model):
     def get_recipients(self, template_key):
         recipients = self.visitoccurrence.get_recipients(template_key)
         if template_key in EmailTemplate.booker_keys:
-            print "We may add booker"
             recipients.add(self.booker)
         return recipients
 
