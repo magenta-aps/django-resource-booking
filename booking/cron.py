@@ -115,14 +115,14 @@ class IdleHostroleJob(CronJobBase):
                           unicode(first_booking.created_time.date())
 
                     alertday = first_booking.created_time.date() + \
-                               timedelta(autosend.days)
+                        timedelta(autosend.days)
                     print "    Autosend specifies to send %d days after " \
                           "first booking, on %s" % (autosend.days, alertday)
                     if alertday == today:
                         print "    That's today; send alert now"
                         try:
                             autosend.visitoccurrence.autosend(
-                               EmailTemplate.NOTIFY_HOST__HOSTROLE_IDLE
+                                EmailTemplate.NOTIFY_HOST__HOSTROLE_IDLE
                             )
                         except Exception as e:
                             print e
