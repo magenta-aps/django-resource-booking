@@ -360,6 +360,7 @@ class EmailTemplate(models.Model):
     NOTIFY_ALL__BOOKING_COMPLETE = 8  # ticket 13813
     NOTIFY_ALL__BOOKING_CANCELED = 9  # ticket 13814
     NOTITY_ALL__BOOKING_REMINDER = 10  # ticket 13815
+    NOTIFY_HOST__HOSTROLE_IDLE = 11  # ticlet 13805
 
     # Choice labels
     key_choices = [
@@ -374,6 +375,7 @@ class EmailTemplate(models.Model):
         (NOTIFY_ALL__BOOKING_COMPLETE, _(u'Alle: Booking færdigplanlagt')),
         (NOTIFY_ALL__BOOKING_CANCELED, _(u'Alle: Booking aflyst')),
         (NOTITY_ALL__BOOKING_REMINDER, _(u'Alle: Reminder om booking')),
+        (NOTIFY_HOST__HOSTROLE_IDLE, _(u'Vært: Ledig værtsrolle')),
     ]
 
     @staticmethod
@@ -407,7 +409,8 @@ class EmailTemplate(models.Model):
     contact_person_keys = [
         NOTIFY_HOST__BOOKING_CREATED,
         NOTIFY_ALL__BOOKING_CANCELED,
-        NOTITY_ALL__BOOKING_REMINDER
+        NOTITY_ALL__BOOKING_REMINDER,
+        NOTIFY_HOST__HOSTROLE_IDLE
     ]
     # Templates that will be autosent to booker
     booker_keys = [
@@ -439,6 +442,11 @@ class EmailTemplate(models.Model):
     # Template that will be autosent to hosts
     # when they are added to an occurrence
     occurrence_added_host_key = NOTIFY_HOST__ASSOCIATED
+    # Templates where the "days" field makes sense
+    enable_days = [
+        NOTITY_ALL__BOOKING_REMINDER,
+        NOTIFY_HOST__HOSTROLE_IDLE
+    ]
 
     key = models.IntegerField(
         verbose_name=u'Key',
@@ -1710,7 +1718,7 @@ class Autosend(models.Model):
     days = models.PositiveSmallIntegerField(
         null=True,
         blank=True,
-        verbose_name=_(u'Afsendes dage inden besøget'),
+        verbose_name=_(u'Dage'),
     )
     enabled = models.BooleanField(
         verbose_name=_(u'Aktiv'),
@@ -2102,6 +2110,11 @@ class Booking(models.Model):
     notes = models.TextField(
         blank=True,
         verbose_name=u'Bemærkninger'
+    )
+
+    created_time = models.DateTimeField(
+        blank=False,
+        auto_now_add=True,
     )
 
     def get_occurrence_attr(self, attrname):

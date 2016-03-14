@@ -178,6 +178,7 @@ class ChangeVisitOccurrenceAutosendView(AutologgerMixin, UpdateWithCancelView):
             for template in EmailTemplate.get_templates(self.object.visit.unit)
         ))
         context['unit'] = self.object.visit.unit
+        context['autosend_enable_days'] = EmailTemplate.enable_days
         context.update(kwargs)
         return super(ChangeVisitOccurrenceAutosendView, self).\
             get_context_data(**context)

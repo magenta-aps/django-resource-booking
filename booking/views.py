@@ -1327,6 +1327,7 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
             )
         )
         context['unit'] = self.object.unit
+        context['autosend_enable_days'] = EmailTemplate.enable_days
 
         context['hastime'] = self.object.type in [
             Resource.STUDENT_FOR_A_DAY, Resource.STUDIEPRAKTIK,
