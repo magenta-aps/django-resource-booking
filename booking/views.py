@@ -1205,14 +1205,15 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
 
     def get_forms(self):
         forms = super(EditVisitView, self).get_forms()
-        if self.request.method == 'GET':
-            forms['autosendformset'] = VisitAutosendFormSet(
-                None, instance=self.object
-            )
-        if self.request.method == 'POST':
-            forms['autosendformset'] = VisitAutosendFormSet(
-                self.request.POST, instance=self.object
-            )
+        if self.object.type in Visit.bookable_types:
+            if self.request.method == 'GET':
+                forms['autosendformset'] = VisitAutosendFormSet(
+                    None, instance=self.object
+                )
+            if self.request.method == 'POST':
+                forms['autosendformset'] = VisitAutosendFormSet(
+                    self.request.POST, instance=self.object
+                )
         return forms
 
     def _is_any_booking_outside_new_attendee_count_bounds(
@@ -1340,17 +1341,18 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         return super(EditVisitView, self).get_context_data(**context)
 
     def save_autosend(self):
-        autosendformset = VisitAutosendFormSet(
-            self.request.POST, instance=self.object
-        )
-        if autosendformset.is_valid():
-            # Update autosend
-            for autosendform in autosendformset:
-                if autosendform.is_valid():
-                    try:
-                        autosendform.save()
-                    except:
-                        pass
+        if self.object.type in Visit.bookable_types:
+            autosendformset = VisitAutosendFormSet(
+                self.request.POST, instance=self.object
+            )
+            if autosendformset.is_valid():
+                # Update autosend
+                for autosendform in autosendformset:
+                    if autosendform.is_valid():
+                        try:
+                            autosendform.save()
+                        except:
+                            pass
 
     def save_rooms(self):
         # Update rooms
