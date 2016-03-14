@@ -67,8 +67,7 @@ class IdleHostroleJob(CronJobBase):
     schedule = Schedule(run_at_times=RUN_AT_TIMES)
     code = 'kubooking.idlehost'
 
-    @staticmethod
-    def do():
+    def do(self):
         print "---------------------------------------------------------------"
         print "Beginning IdleHostroleJob (sends notification emails " \
               "regarding idle host roles)"
