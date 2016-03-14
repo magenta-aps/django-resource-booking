@@ -1104,11 +1104,17 @@ class Visit(Resource):
         auto_update_search_field=True
     )
 
-    applicable_types = [Resource.STUDENT_FOR_A_DAY, Resource.GROUP_VISIT,
-                        Resource.TEACHER_EVENT, Resource.OTHER_OFFERS,
-                        Resource.STUDY_MATERIAL, Resource.OPEN_HOUSE,
-                        Resource.ASSIGNMENT_HELP, Resource.STUDIEPRAKTIK,
-                        Resource.STUDY_PROJECT]
+    applicable_types = [
+        Resource.STUDENT_FOR_A_DAY, Resource.GROUP_VISIT,
+        Resource.TEACHER_EVENT, Resource.OTHER_OFFERS, Resource.STUDY_MATERIAL,
+        Resource.OPEN_HOUSE, Resource.ASSIGNMENT_HELP, Resource.STUDIEPRAKTIK,
+        Resource.STUDY_PROJECT
+    ]
+
+    bookable_types = [
+        Resource.STUDENT_FOR_A_DAY, Resource.GROUP_VISIT,
+        Resource.TEACHER_EVENT
+    ]
 
     @ClassProperty
     def type_choices(self):
@@ -1291,6 +1297,10 @@ class Visit(Resource):
                 EmailTemplate.contact_person_keys:
             recipients.extend(self.contact_persons.all())
         return recipients
+
+    @property
+    def is_type_bookable(self):
+        return self.type in self.bookable_types
 
 
 class VisitOccurrence(models.Model):
