@@ -204,5 +204,6 @@ if USE_SAML:
         AUTHENTICATION_BACKENDS.append('djangosaml2.backends.Saml2Backend')
 
 CRON_CLASSES = [
-    "booking.cron.ReminderJob"
+    "booking.cron.ReminderJob",
+    "booking.cron.IdleHostroleJob"
 ]
