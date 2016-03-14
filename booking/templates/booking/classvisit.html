@@ -19,16 +19,11 @@
         <form id="bookingform" class="form-horizontal clearfix" data-toggle="validator" role="form" novalidate="true" method="POST">
             {% csrf_token %}
 
-            <!--
-            {{ bookerform.errors }}
-            {{ bookingform.errors }}
-            -->
-
             <div id="part1" class="formpart" data-prevbutton="cancelbutton"  data-nextbutton="nextbutton" data-next="part2" {% if bookerform.errors or not bookingform.errors %} data-first="true"{% endif %}>
                 {{ bookerform.non_field_errors }}
-                {% include "booking/booker/basedata.html" %}
-                {% include "booking/booker/school.html" %}
-                {% include "booking/booker/location.html" %}
+                {% include "booking/fields/basedata.html" %}
+                {% include "booking/fields/school.html" %}
+                {% include "booking/fields/location.html" %}
             </div>
 
             <div id="part2" class="formpart" data-prevbutton="previousbutton" data-nextbutton="submitbutton" data-prev="part1"{% if bookingform.errors and not bookerform.errors %} data-first="true"{% endif %}>
@@ -88,6 +83,7 @@
                 </div>
                 {% endif %}
 
+                {% if bookingform.notes %}
                 <div class="form-group">
                     <label class="col-sm-2 control-label" for="{{ bookingform.notes.id_for_label }}">{% trans "Kommentarer" %}</label>
                     <div class="col-sm-6{% if bookingform.notes.errors %} has-error{% endif %}">
@@ -97,6 +93,7 @@
                         {{ bookingform.notes.errors }}
                     </div>
                 </div>
+                {% endif %}
             </div>
 
         </form>
@@ -110,8 +107,8 @@
 {% block extra_scripts %}
 
 
-    {% include 'booking/booker/location_script.html' %}
-    {% include 'booking/booker/school_script.html' %}
+    {% include 'booking/fields/location_script.html' %}
+    {% include 'booking/fields/school_script.html' %}
 
     <script type="text/javascript"><!--
     $(function(){
