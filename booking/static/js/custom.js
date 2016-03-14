@@ -1,6 +1,5 @@
 //Search-list.html start:
 $('input.datepicker').each(function() {
-    console.log(this);
     var options = {
         language: 'da',
         format: 'dd-mm-yyyy',
