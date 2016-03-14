@@ -1205,7 +1205,7 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
 
     def get_forms(self):
         forms = super(EditVisitView, self).get_forms()
-        if self.object.type in Visit.bookable_types:
+        if self.object.is_type_bookable:
             if self.request.method == 'GET':
                 forms['autosendformset'] = VisitAutosendFormSet(
                     None, instance=self.object
@@ -1341,7 +1341,7 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         return super(EditVisitView, self).get_context_data(**context)
 
     def save_autosend(self):
-        if self.object.type in Visit.bookable_types:
+        if self.object.is_type_bookable:
             autosendformset = VisitAutosendFormSet(
                 self.request.POST, instance=self.object
             )

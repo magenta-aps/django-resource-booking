@@ -1298,6 +1298,10 @@ class Visit(Resource):
             recipients.extend(self.contact_persons.all())
         return recipients
 
+    @property
+    def is_type_bookable(self):
+        return self.type in self.bookable_types
+
 
 class VisitOccurrence(models.Model):
 
