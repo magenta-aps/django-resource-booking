@@ -1,7 +1,7 @@
 from datetime import timedelta, date
 
 from booking.models import VisitOccurrenceAutosend, EmailTemplate, \
-    VisitOccurrence, Booking
+    VisitOccurrence
 from django_cron import CronJobBase, Schedule
 
 
