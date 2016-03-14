@@ -47,10 +47,11 @@ class ReminderJob(CronJobBase):
                         (autosend.id, autosend.visitoccurrence.id)
                     print "    VisitOccurrence starts on %s" % \
                         unicode(autosend.visitoccurrence.start_datetime.date())
-                    reminderday = autosend.visitoccurrence.start_datetime.date()\
-                        - timedelta(autosend.days)
-                    print "    Autosend specifies to send %d days prior, on %s" % \
-                        (autosend.days, reminderday)
+                    reminderday = autosend.visitoccurrence.\
+                        start_datetime.date() - \
+                        timedelta(autosend.days)
+                    print "    Autosend specifies to send %d " \
+                          "days prior, on %s" % (autosend.days, reminderday)
                     if reminderday == today:
                         print "    That's today; send reminder now"
                         autosend.visitoccurrence.autosend(
