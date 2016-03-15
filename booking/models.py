@@ -434,6 +434,10 @@ class EmailTemplate(models.Model):
     unit_teachers_keys = [
         NOTIFY_HOST__REQ_TEACHER_VOLUNTEER
     ]
+    # Templates that will be autosent to room admins in the resource
+    resource_roomadmin_keys = [
+        NOTIFY_HOST__REQ_ROOM
+    ]
     # Templates that will be autosent to hosts in the occurrence
     occurrence_hosts_keys = [
         NOTIFY_ALL__BOOKING_COMPLETE,
@@ -667,7 +671,15 @@ class Resource(models.Model):
     contact_persons = models.ManyToManyField(
         Person,
         blank=True,
-        verbose_name=_(u'Kontaktpersoner')
+        verbose_name=_(u'Kontaktpersoner'),
+        related_name='contact_visit'
+    )
+
+    room_responsible = models.ManyToManyField(
+        Person,
+        blank=True,
+        verbose_name=_(u'Lokaleansvarlige'),
+        related_name='roomadmin_visit'
     )
 
     preparation_time = models.IntegerField(
@@ -836,6 +848,16 @@ class Resource(models.Model):
             return 'primary'
         else:
             return 'default'
+
+    def get_recipients(self, template_key):
+        recipients = self.unit.get_recipients(template_key)
+        if template_key in \
+                EmailTemplate.contact_person_keys:
+            recipients.extend(self.contact_persons.all())
+        if template_key in \
+                EmailTemplate.resource_roomadmin_keys:
+            recipients.extend(self.room_responsible.all())
+        return recipients
 
 
 class ResourceGymnasieFag(models.Model):
@@ -1322,16 +1344,15 @@ class Visit(Resource):
     def autosend_enabled(self, template_key):
         return self.get_autosend(template_key) is not None
 
-    def get_recipients(self, template_key):
-        recipients = self.unit.get_recipients(template_key)
-        if template_key in \
-                EmailTemplate.contact_person_keys:
-            recipients.extend(self.contact_persons.all())
-        return recipients
-
     @property
     def is_type_bookable(self):
         return self.type in self.bookable_types
+
+    @property
+    def is_bookable(self):
+        return self.is_type_bookable and \
+            self.enabled and \
+            self.state == Resource.ACTIVE
 
 
 class VisitOccurrence(models.Model):

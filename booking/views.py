@@ -1417,11 +1417,12 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         datetimes = []
         if dates is not None:
             for date in dates:
-                dt = timezone.make_aware(
-                    parser.parse(date, dayfirst=True),
-                    timezone.pytz.timezone('Europe/Copenhagen')
-                )
-                datetimes.append(dt)
+                if date != '':
+                    dt = timezone.make_aware(
+                        parser.parse(date, dayfirst=True),
+                        timezone.pytz.timezone('Europe/Copenhagen')
+                    )
+                    datetimes.append(dt)
         # remove existing to avoid duplicates,
         # then save the rest...
         for date_t in datetimes:
@@ -1496,9 +1497,7 @@ class VisitDetailView(DetailView):
         else:
             context['can_edit'] = False
 
-        if self.object.type in [Resource.STUDENT_FOR_A_DAY,
-                                Resource.GROUP_VISIT,
-                                Resource.TEACHER_EVENT]:
+        if self.object.is_bookable:
             context['can_book'] = True
         else:
             context['can_book'] = False
@@ -1561,6 +1560,16 @@ class VisitOccurrenceNotifyView(EmailComposeView):
                                 person.id):
                     person.get_full_email()
                     for person in visit.contact_persons.all()
+                }
+            },
+            'roomadmins': {
+                'label': _(u'Lokaleansvarlige'),
+                'items': {
+                    "%s%s%d" % (self.RECIPIENT_PERSON,
+                                self.RECIPIENT_SEPARATOR,
+                                person.id):
+                                    person.get_full_email()
+                    for person in visit.room_responsible.all()
                 }
             },
             'assigned_hosts': {
@@ -1669,6 +1678,16 @@ class BookingNotifyView(EmailComposeView):
                                     person.get_full_email()
                     for person in self.object.visit.contact_persons.all()
                 }
+            },
+            'roomadmins': {
+                'label': _(u'Lokaleansvarlige'),
+                'items': {
+                    "%s%s%d" % (self.RECIPIENT_PERSON,
+                                self.RECIPIENT_SEPARATOR,
+                                person.id):
+                                    person.get_full_email()
+                    for person in self.object.visit.room_responsible.all()
+                    }
             },
             'hosts': {
                 'label': _(u'Værter'),
