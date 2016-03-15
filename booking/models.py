@@ -1327,8 +1327,8 @@ class Visit(Resource):
     @property
     def is_bookable(self):
         return self.is_type_bookable and \
-               self.enabled and \
-               self.state == Resource.ACTIVE
+            self.enabled and \
+            self.state == Resource.ACTIVE
 
 
 class VisitOccurrence(models.Model):
