@@ -158,7 +158,7 @@
                                 {% endif %}
                             {% endif %}
 
-                            {% if object.duration %}
+                            {% if object.duration != '00:00' %}
                                 <dt>{% trans 'Varighed' %}:</dt>
                                 <dd>{{ object.duration|timedelta }}</dd>
                             {% endif %}
