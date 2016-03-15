@@ -1,6 +1,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.5.0/js/bootstrap-datepicker.min.js"></script>
 <script src="/static/js/bootstrap-datepicker.da.min.js"></script>
 <script src="/static/js/picker.time.js"></script>
+<!-- <script src="/static/js/rrule.js"></script> -->
 
 <script type="text/javascript"><!--
     $(function(){
@@ -15,7 +16,7 @@
             calendarWeeks: true,
             todayHighlight: true,
             startDate: 'Date',
-            clearBtn: true,
+            clearBtn: false,
             autoclose: true
         });
         
@@ -62,5 +63,39 @@
         });
         
         
+        // Getting several dates using RRule.js
+        
+        var rule = RRule.fromText('hver dag indtil juni 2016')
+        
+        var rruleInput = $('#rrule-input');
+        var rruleOutput = $('#rrule-output');
+        
+        $('#rruleModal').on('show.bs.modal', function (e) {
+            rruleInput.val('hver dag indtil juni 2016');
+            UpdateRRuleOutput();
+        });
+        
+        rruleInput.on('change', function(e) {
+            rule = RRule.fromText($(this).val());
+            if (typeof rule.until != 'Date') {
+                rule.until = new Date().setFullYear(2017);
+            };
+            UpdateRRuleOutput();
+        });
+        
+        $('.btn-add-rrule-dates').on('click', function(e) {
+            console.log('pushing dates');
+        });
+        
+        function UpdateRRuleOutput() {
+            
+            rruleOutput.html('');
+            for (var r in rule.all()) {
+                rruleOutput.append('<li>' + rule.all()[r].toLocaleDateString() + '</li>');
+            };
+        };
+        
+        
     });
+    
 //--></script>

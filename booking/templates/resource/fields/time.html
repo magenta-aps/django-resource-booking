@@ -1,6 +1,5 @@
 {% load i18n %}
 
-
 <div class="row form-group">
     <div class="col-sm-2">
         <label>{% trans 'Tidspunkter:' %}</label>
@@ -22,9 +21,61 @@
         <input id="occurrences" name="occurrences" type="hidden">
         {% endif %}
         
-        <label class="btn btn-default">
+        <label class="btn btn-default btn-xs">
             <input id="id_datepick" type="text" name="datepick" class="datepicker">{% trans 'Tilføj ny dato' %}
         </label>
         
+        <!-- Button trigger modal -->
+        <button type="button" class="btn btn-default btn-xs" data-toggle="modal" data-target="#rruleModal">
+            {% trans 'Tilføj datoer fra regel' %}
+        </button>
+        
+    </div>
+</div>
+
+
+
+<!-- RRule modal -->
+<div class="modal fade" id="rruleModal" tabindex="-1" role="dialog" aria-labelledby="rruleModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="rruleModalLabel">RRule test (ikke funktionsdygtig)</h4>
+            </div>
+            <div class="modal-body">
+                
+                <div id="text-input">
+                    <p>
+                        <input id="rrule-input" class="form-control" value="Every 2 weeks on Friday for 6 times">
+                    </p>
+                </div>
+                
+                <div class="row">
+                    <div class="col-sm-6">
+                        <p>{% trans 'Eksempler' %}:</p>
+                        <ul class="examples list-unstyled">
+                            <li><code>Hver dag</code></li>
+                            <li><code>Hver 2 uger om tirsdag</code></li>
+                            <li><code>Hver uge om mandag, onsdag</code></li>
+                            <li><code>Hver måned på den 2. sidste fredag over 7 gange</code></li>
+                            <li><code>Hver 6 måneder</code></li>
+                        </ul>
+                    </div>
+                    <div class="col-sm-6">
+                        <div id="output">
+                            <p>{% trans 'Datoer' %}:</p>
+                            <ul id="rrule-output" class="list-unstyled">
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Luk</button>
+                <button type="button" class="btn btn-primary btn-add-rrule-dates">Brug disse datoer</button>
+            </div>
+        </div>
     </div>
 </div>
