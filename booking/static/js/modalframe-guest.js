@@ -26,7 +26,7 @@ window.modal = {
 
 
 $(function(){
-    modal.updateHeight();
+    setTimeout(modal.updateHeight.bind(modal), 0);
     $("*[data-dismiss='modal']").click(modal.close.bind(modal));
 });
 
