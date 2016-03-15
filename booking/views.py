@@ -1463,9 +1463,7 @@ class VisitDetailView(DetailView):
         else:
             context['can_edit'] = False
 
-        if self.object.type in [Resource.STUDENT_FOR_A_DAY,
-                                Resource.GROUP_VISIT,
-                                Resource.TEACHER_EVENT]:
+        if self.object.is_bookable:
             context['can_book'] = True
         else:
             context['can_book'] = False
