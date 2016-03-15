@@ -14,54 +14,53 @@
         </div>
         <div class="divider"></div>
     </div>
+
     <div class="row">
-        <div class="col-sm-12 col-md-10">
+        <div class="col-sm-12 col-md-10 panel panel-default">
 
-            <div class="panel panel-default">
-                <div class="panel-body">
-                    <div>
-                        {% url 'visit-view' object.visit.id as visiturl %}
-                        {% blocktrans with nr_bookers=object.nr_bookers visittitle=object.visit.title %}
-                            {{ nr_bookers }} har tilmeldt sig denne instans af <a href="{{ visiturl }}">{{ visittitle }}</a>
-                        {% endblocktrans %}
-                    </div>
-
-                    {% if not object.start_datetime %}
-                    <div class="divider"></div>
-                    <div>
-                        {% trans 'Der er endnu ikke et fastlagt et tidspunkt for dette arrangement.' %}
-                        {% if object.desired_time %}
-                            {% trans 'Gæsten har ønsket følgende tidspunkt:' %}
-                        <pre class="desired-time">{{ object.desired_time }}</pre>
-                        {% endif %}
-                    </div>
-                    {% endif %}
-
-                    {% if can_notify %}
-                        <div class="pull-right dropdown">
-                            <button class="btn btn-primary dropdown-toggle" type="button" id="sendNotification" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                {% trans 'Send besked' %}
-                                <span class="caret"/>
-                            </button>
-                            <ul class="dropdown-menu" aria-labelledby="sendNotification">
-                                <li><a data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'visit-occ-notify' object.pk %}">{% trans 'Ingen skabelon' %}</a></li>
-                                {% if emailtemplates %}
-                                    <li role="separator" class="divider"></li>
-                                    {% for id, label in emailtemplates %}
-                                        <li>
-                                            {% if modal %}
-                                                <a data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'visit-occ-notify' object.pk %}?template={{ id }}">{{ label }}</a>
-                                            {% else %}
-                                                <a href="{% url 'visit-occ-notify' object.pk %}?template={{ id }}&back={{ thisurl | urlencode }}">{{ label }}</a>
-                                            {% endif %}
-                                        </li>
-                                    {% endfor %}
-                                {% endif %}
-                            </ul>
-                        </div>
-                    {% endif %}
-
+            <div class="col-xs-9">
+                <div>
+                    {% url 'visit-view' object.visit.id as visiturl %}
+                    {% blocktrans with nr_bookers=object.nr_bookers visittitle=object.visit.title %}
+                        {{ nr_bookers }} har tilmeldt sig denne instans af <a href="{{ visiturl }}">{{ visittitle }}</a>
+                    {% endblocktrans %}
                 </div>
+
+                {% if not object.start_datetime %}
+                <div class="divider"></div>
+                <div>
+                    {% trans 'Der er endnu ikke et fastlagt et tidspunkt for dette arrangement.' %}
+                    {% if object.desired_time %}
+                        {% trans 'Gæsten har ønsket følgende tidspunkt:' %}
+                    <pre class="desired-time">{{ object.desired_time }}</pre>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+            <div class="col-xs-3">
+                {% if can_notify %}
+                    <div class="pull-right dropdown">
+                        <button class="btn btn-primary dropdown-toggle" type="button" id="sendNotification" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            {% trans 'Send besked' %}
+                            <span class="caret"/>
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="sendNotification">
+                            <li><a data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'visit-occ-notify' object.pk %}">{% trans 'Ingen skabelon' %}</a></li>
+                            {% if emailtemplates %}
+                                <li role="separator" class="divider"></li>
+                                {% for id, label in emailtemplates %}
+                                    <li>
+                                        {% if modal %}
+                                            <a data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'visit-occ-notify' object.pk %}?template={{ id }}">{{ label }}</a>
+                                        {% else %}
+                                            <a href="{% url 'visit-occ-notify' object.pk %}?template={{ id }}&back={{ thisurl | urlencode }}">{{ label }}</a>
+                                        {% endif %}
+                                    </li>
+                                {% endfor %}
+                            {% endif %}
+                        </ul>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -187,6 +186,34 @@
                     <div>
                         <a href="{% url 'visit-occ-add-logentry' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Tilføj ny log-post' %}</a>&nbsp;
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-12 col-md-10">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <h2>{% trans 'Tilmeldte' %}</h2>
+                    {% for booking in object.bookings.all %}
+                        <div>
+                            <dl class="dl-horizontal">
+                                <dt>{% trans 'Skole:' %}</dt>
+                                <dd>{{ booking.booker.school.name }}, {{ booking.booker.school.postcode }}</dd>
+                                <dt>{% trans 'Navn:' %}</dt>
+                                <dd>{{ booking.booker.get_name }}</dd>
+                                <dt>{% trans 'Email:' %}</dt>
+                                <dd>{{ booking.booker.email }}</dd>
+                                <dt>{% trans 'Antal:' %}</dt>
+                                <dd>{{ booking.booker.attendee_count }}</dd>
+                                {% if booking.notes %}
+                                    <dt>{% trans 'Noter:' %}</dt>
+                                    <dd>{{ booking.notes }}</dd>
+                                {% endif %}
+                            </dl>
+                        </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
