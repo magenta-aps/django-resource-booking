@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from booking.models import Unit
+from booking.models import Unit, Resource
 from django.db.models import Q
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
@@ -14,7 +14,7 @@ from django.views.generic.edit import UpdateView, FormView
 
 from booking.views import LoginRequiredMixin, AccessDenied, EditorRequriedMixin
 from django.views.generic.list import ListView
-from profile.forms import UserCreateForm
+from profile.forms import UserCreateForm, EditMyResourcesForm
 from profile.models import EmailLoginEntry
 from profile.models import UserProfile, UserRole, EDIT_ROLES
 from profile.models import FACULTY_EDITOR, COORDINATOR, user_role_choices
@@ -291,3 +291,32 @@ class EmailLoginView(DetailView):
             )
 
         return redirect(dest)
+
+
+class EditMyResourcesView(EditorRequriedMixin, UpdateView):
+    model = UserProfile
+    form_class = EditMyResourcesForm
+    template_name = 'profile/my_resources.html'
+
+    def get_form(self, form_class=None):
+        form = super(EditMyResourcesView, self).get_form(form_class=form_class)
+
+        userprofile = self.request.user.userprofile
+
+        form.fields['my_resources'].queryset = Resource.objects.filter(
+            unit=userprofile.get_unit_queryset()
+        ).order_by('title')
+
+        return form
+
+    def get_object(self, queryset=None):
+        return self.request.user.userprofile
+
+    def post(self, request, *args, **kwargs):
+        if request.POST.get("cancel"):
+            return redirect(self.get_success_url())
+
+        return super(EditMyResourcesView, self).post(request, *args, **kwargs)
+
+    def get_success_url(self):
+        return reverse('user_profile')

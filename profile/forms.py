@@ -1,9 +1,10 @@
 from booking.models import Unit
+from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from django.forms import ModelChoiceField, EmailField
 from django.utils.translation import ugettext_lazy as _
-from profile.models import UserRole
+from profile.models import UserRole, UserProfile
 from profile.models import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
 
 
@@ -55,3 +56,10 @@ class UserCreateForm(UserCreationForm):
         qs = UserRole.objects.all().exclude(role__in=roles_to_exclude)
 
         return qs
+
+
+class EditMyResourcesForm(forms.ModelForm):
+    class Meta:
+        model = UserProfile
+        fields = ('my_resources',)
+        widgets = {'my_resources': forms.CheckboxSelectMultiple()}

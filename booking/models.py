@@ -707,6 +707,13 @@ class Resource(models.Model):
     # Comment field for internal use in backend.
     comment = models.TextField(blank=True, verbose_name=_(u'Kommentar'))
 
+    created_by = models.ForeignKey(
+        User,
+        blank=True,
+        null=True,
+        verbose_name=_(u"Oprettet af")
+    )
+
     # ts_vector field for fulltext search
     search_index = VectorField()
 
@@ -812,6 +819,23 @@ class Resource(models.Model):
 
     def url(self):
         return self.get_url()
+
+    def get_occurrences(self):
+        if not hasattr(self, "visit") or not self.visit:
+            return VisitOccurrence.objects.none()
+        else:
+            return self.visit.visitoccurrence_set.all()
+
+    def first_occurence(self):
+        return self.get_occurrences().first()
+
+    def get_state_class(self):
+        if self.state == self.CREATED:
+            return 'info'
+        elif self.state == self.ACTIVE:
+            return 'primary'
+        else:
+            return 'default'
 
 
 class ResourceGymnasieFag(models.Model):
