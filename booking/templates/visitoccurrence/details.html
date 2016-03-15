@@ -14,172 +14,220 @@
         </div>
         <div class="divider"></div>
     </div>
+
+    <div class="row">
+        <div class="col-sm-12 col-md-10 panel panel-default">
+
+            <div class="col-xs-9">
+                <div>
+                    {% url 'visit-view' object.visit.id as visiturl %}
+                    {% blocktrans with nr_bookers=object.nr_bookers visittitle=object.visit.title %}
+                        {{ nr_bookers }} har tilmeldt sig denne instans af <a href="{{ visiturl }}">{{ visittitle }}</a>
+                    {% endblocktrans %}
+                </div>
+
+                {% if not object.start_datetime %}
+                <div class="divider"></div>
+                <div>
+                    {% trans 'Der er endnu ikke et fastlagt et tidspunkt for dette arrangement.' %}
+                    {% if object.desired_time %}
+                        {% trans 'Gæsten har ønsket følgende tidspunkt:' %}
+                    <pre class="desired-time">{{ object.desired_time }}</pre>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+            <div class="col-xs-3">
+                {% if can_notify %}
+                    <div class="pull-right dropdown">
+                        <button class="btn btn-primary dropdown-toggle" type="button" id="sendNotification" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            {% trans 'Send besked' %}
+                            <span class="caret"/>
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="sendNotification">
+                            <li><a data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'visit-occ-notify' object.pk %}">{% trans 'Ingen skabelon' %}</a></li>
+                            {% if emailtemplates %}
+                                <li role="separator" class="divider"></li>
+                                {% for id, label in emailtemplates %}
+                                    <li>
+                                        {% if modal %}
+                                            <a data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'visit-occ-notify' object.pk %}?template={{ id }}">{{ label }}</a>
+                                        {% else %}
+                                            <a href="{% url 'visit-occ-notify' object.pk %}?template={{ id }}&back={{ thisurl | urlencode }}">{{ label }}</a>
+                                        {% endif %}
+                                    </li>
+                                {% endfor %}
+                            {% endif %}
+                        </ul>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
     <div class="row">
         <div class="col-sm-12 col-md-10">
-
             <div class="panel panel-default">
                 <div class="panel-body">
-                    <div>
-                        {% url 'visit-view' object.visit.id as visiturl %}
-                        {% blocktrans with nr_bookers=object.nr_bookers visittitle=object.visit.title %}
-                            {{ nr_bookers }} har tilmeldt sig denne instans af <a href="{{ visiturl }}">{{ visittitle }}</a>
-                        {% endblocktrans %}
-                    </div>
 
-                    {% if not object.start_datetime %}
-                    <div class="divider"></div>
-                    <div>
-                        Der er endnu ikke et fastlagt et tidspunkt for dette arrangement.
-                        {% if object.desired_time %}
-                        Gæsten har ønsket følgende tidspunkt:
-                        <pre class="desired-time">{{ object.desired_time }}</pre>
-                        {% endif %}
-                    </div>
+                    <h2>{% trans 'Statusoverblik' %}</h2>
+
+                    {% if not object.can_assign_resources %}
+                        <p>
+                            Det er ikke længere muligt at tildele ressourcer til dette
+                            arrangement. Hvis du ønsker at rette i de tildelte ressourcer
+                            skal du ændre status til
+                            '{{object.BEING_PLANNED_STATUS_TEXT}}'.
+                        </p>
                     {% endif %}
 
-                    {% if can_notify %}
-                        <div class="pull-right dropdown">
-                            <button class="btn btn-primary dropdown-toggle" type="button" id="sendNotification" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                {% trans 'Send besked' %}
-                                <span class="caret"/>
-                            </button>
-                            <ul class="dropdown-menu" aria-labelledby="sendNotification">
-                                <li><a data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'visit-occ-notify' object.pk %}">{% trans 'Ingen skabelon' %}</a></li>
-                                {% if emailtemplates %}
-                                    <li role="separator" class="divider"></li>
-                                    {% for id, label in emailtemplates %}
-                                        <li>
-                                            {% if modal %}
-                                                <a data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'visit-occ-notify' object.pk %}?template={{ id }}">{{ label }}</a>
-                                            {% else %}
-                                                <a href="{% url 'visit-occ-notify' object.pk %}?template={{ id }}&back={{ thisurl | urlencode }}">{{ label }}</a>
-                                            {% endif %}
-                                        </li>
-                                    {% endfor %}
+                    <dl class="dl-horizontal status">
+                        <dt>{% trans 'Tidspunkt' %}</dt>
+                        <dd>
+                            {% if object.start_datetime %}
+                                {{ object.start_datetime }}
+                            {% else %}
+                                {% trans 'Ikke angivet' %}
+                            {% endif %}
+                            {% if can_edit and object.can_assign_resources %}
+                                <a href="{% url 'change-visit-occ-starttime' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
+                            {% endif %}
+                        </dd>
+                        <dt>{% trans 'Undervisere' %}</dt>
+                        <dd>
+                            {{ object.get_teacher_status_display }},
+                            {% blocktrans with found=object.teachers.all|length needed=object.visit.needed_teachers %}{{ found }}/{{ needed }} undervisere fundet{% endblocktrans %}
+                            {% if can_edit %}
+                                {%if object.can_assign_resources %}
+                                    <a href="{% url 'change-visit-occ-teachers' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
                                 {% endif %}
-                            </ul>
-                        </div>
-                    {% endif %}
+                            {% elif request.user.userprofile.is_teacher and object.needs_teachers %}
+                                {% if request.user in object.teachers.all %}
+                                    (allerede underviser for dette arrangement)
+                                {% else %}
+                                    <a href="{% url 'become-teacher' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Bliv underviser for dette arrangement' %}</a>
+                                {% endif %}
+                            {% endif %}
+                        </dd>
+                        <dt>{% trans 'Værter' %}</dt>
+                        <dd>
+                            {{ object.get_host_status_display }},
+                            {% blocktrans with found=object.hosts.all|length needed=object.visit.needed_hosts %}{{ found }}/{{ needed }} værter fundet{% endblocktrans %}
+                            {% if can_edit %}
+                                {% if object.can_assign_resources %}
+                                    <a href="{% url 'change-visit-occ-hosts' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
+                                {% endif %}
+                            {% elif request.user.userprofile.is_host and object.needs_hosts %}
+                                {% if request.user in object.hosts.all %}
+                                    {% trans '(allerede vært for dette arrangement)' %}
+                                {% else %}
+                                    <a href="{% url 'become-host' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Bliv vært for dette arrangement.' %}</a>
+                                {% endif %}
+                            {% endif %}
+                        </dd>
+                        <dt>{% trans 'Lokaler' %}</dt>
+                        <dd>
+                            {{ object.get_room_status_display }}
+                            {% if can_edit and object.can_assign_resources %}
+                                <a href="{% url 'change-visit-occ-rooms' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
+                            {% endif %}
+                        </dd>
+                        <dt>{% trans 'Automatisk email' %}</dt>
+                        <dd>
+                            {{ object.get_autosend_display }}
+                            {% if can_edit and object.can_assign_resources %}
+                                <a href="{% url 'change-visit-occ-autosend' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
+                            {% endif %}
+                        </dd>
+                        <dt>{% trans 'Afvikling' %}</dt>
+                        <dd>
+                            {{ object.get_workflow_status_display }}
+                            {% if can_edit %}
+                                <a href="{% url 'change-visit-occ-status' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Skift status' %}</a>
+                            {% endif %}
+                        </dd>
+                        <dt>{% trans 'Interne kommentarer' %}</dt>
+                        <dd>
+                            <pre>{{ object.comments }}</pre>
+                            {% if can_edit %}
+                                <a href="{% url 'change-visit-occ-comments' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
+                            {% endif %}
+                        </dd>
+                    </dl>
 
                 </div>
             </div>
+        </div>
+    </div>
 
+    <div class="row">
+        <div class="col-sm-12 col-md-10">
+            <div class="panel panel-default">
+                <div class="panel-body">
 
-            <div class="divider"></div>
+                    <h2>{% trans 'Aktivitetslog' %}</h2>
 
-            <h2>Statusoverblik</h2>
-
-            {% if not object.can_assign_resources %}
-            <p>
-                Det er ikke længere muligt at tildele ressourcer til dette
-                arrangement. Hvis du ønsker at rette i de tildelte ressourcer
-                skal du ændre statuses til
-                '{{object.BEING_PLANNED_STATUS_TEXT}}'.
-            </p>
-            {% endif %}
-
-            <dl class="dl-horizontal status">
-                <dt>Tidspunkt</dt>
-                <dd>
-                    {% if object.start_datetime %}
-                        {{ object.start_datetime }}
-                    {% else %}
-                        Ikke angivet
-                    {% endif %}
-                    {% if can_edit and object.can_assign_resources %}
-                    <a href="{% url 'change-visit-occ-starttime' object.pk %}" role="button" class="btn btn-primary btn-xs">Redigér</a>
-                    {% endif %}
-                </dd>
-                <dt>Undervisere</dt>
-                <dd>
-                    {{ object.get_teacher_status_display }},
-                    {{ object.teachers.all|length }}/{{ object.visit.needed_teachers }} undervisere fundet
-                    {% if can_edit %}
-                        {%if object.can_assign_resources %}
-                        <a href="{% url 'change-visit-occ-teachers' object.pk %}" role="button" class="btn btn-primary btn-xs">Redigér</a>
-                        {% endif %}
-                    {% elif request.user.userprofile.is_teacher and object.needs_teachers %}
-                        {% if request.user in object.teachers.all %}
-                        (allerede underviser for dette arrangement)
-                        {% else %}
-                        <a href="{% url 'become-teacher' object.pk %}" role="button" class="btn btn-primary btn-xs">Bliv underviser</a> for dette arrangement.
-                        {% endif %}
-                    {% endif %}
-                </dd>
-                <dt>Værter</dt>
-                <dd>
-                    {{ object.get_host_status_display }},
-                    {{ object.hosts.all|length }}/{{ object.visit.needed_hosts }} værter fundet
-                    {% if can_edit %}
-                        {% if object.can_assign_resources %}
-                        <a href="{% url 'change-visit-occ-hosts' object.pk %}" role="button" class="btn btn-primary btn-xs">Redigér</a>
-                        {% endif %}
-                    {% elif request.user.userprofile.is_host and object.needs_hosts %}
-                        {% if request.user in object.hosts.all %}
-                        (allerede vært for dette arrangement)
-                        {% else %}
-                        <a href="{% url 'become-host' object.pk %}" role="button" class="btn btn-primary btn-xs">Bliv vært</a> for dette arrangement.
-                        {% endif %}
-                    {% endif %}
-                </dd>
-                <dt>Lokaler</dt>
-                <dd>
-                    {{ object.get_room_status_display }}
-                    {% if can_edit and object.can_assign_resources %}
-                    <a href="{% url 'change-visit-occ-rooms' object.pk %}" role="button" class="btn btn-primary btn-xs">Redigér</a>
-                    {% endif %}
-                </dd>
-                <dt>Automatisk email</dt>
-                <dd>
-                    {{ object.get_autosend_display }}
-                    {% if can_edit and object.can_assign_resources %}
-                        <a href="{% url 'change-visit-occ-autosend' object.pk %}" role="button" class="btn btn-primary btn-xs">Redigér</a>
-                    {% endif %}
-                </dd>
-                <dt>Afvikling</dt>
-                <dd>
-                    {{ object.get_workflow_status_display }}
-                    {% if can_edit %}
-                    <a href="{% url 'change-visit-occ-status' object.pk %}" role="button" class="btn btn-primary btn-xs">Skift status</a>
-                    {% endif %}
-                </dd>
-                <dt>Interne kommentarer</dt>
-                <dd>
-                    <pre>{{ object.comments }}</pre>
-                    {% if can_edit %}
-                    <a href="{% url 'change-visit-occ-comments' object.pk %}" role="button" class="btn btn-primary btn-xs">Redigér</a>
-                    {% endif %}
-                </dd>
-            </dl>
-
-            <div class="divider"></div>
-
-            <h2>Aktivitetslog</h2>
-
-            <ul class="list-unstyled">
-                {% for entry in log_entries %}
-                <li>
-                    <dl class="dl-horizontal">
-                        <dt>Hvem:</dt>
-                        <dd>{% if entry.user.get_full_name %}{{ entry.user.get_full_name }}{% else %}{{ entry.user }}{% endif %}</dd>
-                        <dt>Hvad:</dt>
-                        <dd>{{ entry.action_flag|logaction_type_display }}</dd>
-                        <dt>Hvornår:</dt>
-                        <dd>{{ entry.action_time }}</dd>
-                        <dt>Besked:</dt>
-                        <dd><pre>{{ entry.change_message }}</pre></dd>
-                    </dl>
-                </li>
-                {% endfor %}
-            </ul>
-            <div>
-                <a href="{% url 'visit-occ-add-logentry' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">Tilføj ny log-post</a>&nbsp;
+                    <ul class="list-unstyled">
+                        {% for entry in log_entries %}
+                        <li>
+                            <dl class="dl-horizontal">
+                                <dt>{% trans 'Hvem:' %}</dt>
+                                <dd>{% if entry.user.get_full_name %}{{ entry.user.get_full_name }}{% else %}{{ entry.user }}{% endif %}</dd>
+                                <dt>{% trans 'Hvad:' %}</dt>
+                                <dd>{{ entry.action_flag|logaction_type_display }}</dd>
+                                <dt>{% trans 'Hvornår' %}:</dt>
+                                <dd>{{ entry.action_time }}</dd>
+                                <dt>{% trans 'Besked:' %}</dt>
+                                <dd><pre>{{ entry.change_message }}</pre></dd>
+                            </dl>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    <div>
+                        <a href="{% url 'visit-occ-add-logentry' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Tilføj ny log-post' %}</a>&nbsp;
+                    </div>
+                </div>
             </div>
-            <div class="divider"></div>
+        </div>
+    </div>
 
+    <div class="row">
+        <div class="col-sm-12 col-md-10">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <h2>{% trans 'Tilmeldte' %}</h2>
+                    {% for booking in object.bookings.all %}
+                        <div>
+                            <dl class="dl-horizontal">
+                                <dt>{% trans 'Skole:' %}</dt>
+                                <dd>{{ booking.booker.school.name }}, {{ booking.booker.school.postcode }}</dd>
+                                <dt>{% trans 'Navn:' %}</dt>
+                                <dd>{{ booking.booker.get_name }}</dd>
+                                <dt>{% trans 'Email:' %}</dt>
+                                <dd>{{ booking.booker.email }}</dd>
+                                <dt>{% trans 'Antal:' %}</dt>
+                                <dd>{{ booking.booker.attendee_count }}</dd>
+                                {% if booking.notes %}
+                                    <dt>{% trans 'Noter:' %}</dt>
+                                    <dd>{{ booking.notes }}</dd>
+                                {% endif %}
+                            </dl>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
 
-            <div class="go-back">
-                <a href="#" class="btn btn-default" onclick="history.go(-1); return false;"><span class="glyphicon glyphicon-chevron-left"></span> {% trans 'Tilbage til bookingliste' %}</a>
+    <div class="row">
+        <div class="col-sm-12 col-md-10">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                        <div class="go-back">
+                            <a href="#" class="btn btn-default" onclick="history.go(-1); return false;"><span class="glyphicon glyphicon-chevron-left"></span> {% trans 'Tilbage til bookingliste' %}</a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
