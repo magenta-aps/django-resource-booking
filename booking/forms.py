@@ -254,7 +254,8 @@ class VisitForm(forms.ModelForm):
             'unit': Select(attrs={'class': 'form-control input-sm'}),
             'audience': RadioSelect(),
             'tags': CheckboxSelectMultiple(),
-            'contact_persons': CheckboxSelectMultiple()
+            'contact_persons': CheckboxSelectMultiple(),
+            'room_responsible': CheckboxSelectMultiple()
         }
 
     def __init__(self, *args, **kwargs):
@@ -318,7 +319,7 @@ class StudentForADayForm(VisitForm):
         fields = ('type', 'title', 'teaser', 'description', 'state',
                   'institution_level', 'topics', 'audience',
                   'duration', 'locality',
-                  'enabled', 'contact_persons', 'unit',
+                  'enabled', 'contact_persons', 'room_responsible', 'unit',
                   'needed_hosts', 'needed_teachers',
                   'preparation_time', 'comment',
                   )
@@ -357,7 +358,7 @@ class TeacherVisitForm(VisitForm):
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'duration', 'locality', 'rooms_assignment',
                   'rooms_needed',
-                  'enabled', 'contact_persons', 'unit',
+                  'enabled', 'contact_persons', 'room_responsible', 'unit',
                   'needed_hosts', 'needed_teachers',
                   'preparation_time', 'comment',
                   )
@@ -372,7 +373,7 @@ class ClassVisitForm(VisitForm):
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'duration', 'locality', 'rooms_assignment',
                   'rooms_needed', 'tour_available',
-                  'enabled', 'contact_persons', 'unit',
+                  'enabled', 'contact_persons', 'room_responsible', 'unit',
                   'needed_hosts', 'needed_teachers',
                   'preparation_time', 'comment',
                   )

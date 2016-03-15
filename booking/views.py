@@ -1530,6 +1530,16 @@ class VisitOccurrenceNotifyView(EmailComposeView):
                     for person in visit.contact_persons.all()
                 }
             },
+            'roomadmins': {
+                'label': _(u'Lokaleansvarlige'),
+                'items': {
+                    "%s%s%d" % (self.RECIPIENT_PERSON,
+                                self.RECIPIENT_SEPARATOR,
+                                person.id):
+                        person.get_full_email()
+                    for person in visit.room_responsible.all()
+                }
+            },
             'assigned_hosts': {
                 'label': _(u'Tildelte værter'),
                 'items': {
@@ -1636,6 +1646,16 @@ class BookingNotifyView(EmailComposeView):
                                     person.get_full_email()
                     for person in self.object.visit.contact_persons.all()
                 }
+            },
+            'roomadmins': {
+                'label': _(u'Lokaleansvarlige'),
+                'items': {
+                    "%s%s%d" % (self.RECIPIENT_PERSON,
+                                self.RECIPIENT_SEPARATOR,
+                                person.id):
+                        person.get_full_email()
+                    for person in self.object.visit.room_responsible.all()
+                    }
             },
             'hosts': {
                 'label': _(u'Værter'),
