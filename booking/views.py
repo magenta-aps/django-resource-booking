@@ -1384,11 +1384,12 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         datetimes = []
         if dates is not None:
             for date in dates:
-                dt = timezone.make_aware(
-                    parser.parse(date, dayfirst=True),
-                    timezone.pytz.timezone('Europe/Copenhagen')
-                )
-                datetimes.append(dt)
+                if date != '':
+                    dt = timezone.make_aware(
+                        parser.parse(date, dayfirst=True),
+                        timezone.pytz.timezone('Europe/Copenhagen')
+                    )
+                    datetimes.append(dt)
         # remove existing to avoid duplicates,
         # then save the rest...
         for date_t in datetimes:
