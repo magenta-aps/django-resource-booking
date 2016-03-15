@@ -319,7 +319,7 @@ class StudentForADayForm(VisitForm):
         fields = ('type', 'title', 'teaser', 'description', 'state',
                   'institution_level', 'topics', 'audience',
                   'duration', 'locality',
-                  'enabled', 'contact_persons', 'room_responsible', 'unit',
+                  'enabled', 'contact_persons', 'unit',
                   'needed_hosts', 'needed_teachers',
                   'preparation_time', 'comment',
                   )
