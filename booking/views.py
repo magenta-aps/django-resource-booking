@@ -521,6 +521,7 @@ class SearchView(ListView):
 
             for filter_method in (
                 self.filter_by_audience,
+                self.filter_by_institution,
                 self.filter_by_type,
                 self.filter_by_gymnasiefag,
                 self.filter_by_grundskolefag
@@ -548,6 +549,12 @@ class SearchView(ListView):
         if a:
             a.append(Resource.AUDIENCE_ALL)
             self.filters["audience__in"] = a
+
+    def filter_by_institution(self):
+        i = [x for x in self.request.GET.getlist("i")]
+        if i:
+            i.append(Subject.SUBJECT_TYPE_BOTH)
+            self.filters["institution_level__in"] = i
 
     def filter_by_type(self):
         t = self.request.GET.getlist("t")
@@ -726,6 +733,13 @@ class SearchView(ListView):
             add_to_all=[Resource.AUDIENCE_ALL]
         )
 
+        context["institution_choices"] = self.make_facet(
+            "institution_level",
+            self.model.institution_choices,
+            self.request.GET.getlist("i"),
+            add_to_all=[Subject.SUBJECT_TYPE_BOTH]
+        )
+
         context["type_choices"] = self.make_facet(
             "type",
             self.model.resource_type_choices,
@@ -769,7 +783,7 @@ class SearchView(ListView):
         ]
 
         querylist = []
-        for key in ['q', 'page', 'pagesize', 't', 'a', 'f', 'g', 'from', 'to']:
+        for key in ['q', 'page', 'pagesize', 't', 'a', 'i' 'f', 'g', 'from', 'to']:
             values = self.request.GET.getlist(key)
             if values is not None and len(values) > 0:
                 for value in values:
