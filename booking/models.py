@@ -719,6 +719,13 @@ class Resource(models.Model):
     # Comment field for internal use in backend.
     comment = models.TextField(blank=True, verbose_name=_(u'Kommentar'))
 
+    created_by = models.ForeignKey(
+        User,
+        blank=True,
+        null=True,
+        verbose_name=_(u"Oprettet af")
+    )
+
     # ts_vector field for fulltext search
     search_index = VectorField()
 
@@ -824,6 +831,23 @@ class Resource(models.Model):
 
     def url(self):
         return self.get_url()
+
+    def get_occurrences(self):
+        if not hasattr(self, "visit") or not self.visit:
+            return VisitOccurrence.objects.none()
+        else:
+            return self.visit.visitoccurrence_set.all()
+
+    def first_occurence(self):
+        return self.get_occurrences().first()
+
+    def get_state_class(self):
+        if self.state == self.CREATED:
+            return 'info'
+        elif self.state == self.ACTIVE:
+            return 'primary'
+        else:
+            return 'default'
 
     def get_recipients(self, template_key):
         recipients = self.unit.get_recipients(template_key)
@@ -1459,6 +1483,18 @@ class VisitOccurrence(models.Model):
     BEING_PLANNED_STATUS_TEXT = u'Under planlægning'
     PLANNED_STATUS_TEXT = u'Planlagt (ressourcer tildelt)'
 
+    status_to_class_map = {
+        WORKFLOW_STATUS_BEING_PLANNED: 'danger',
+        WORKFLOW_STATUS_REJECTED: 'danger',
+        WORKFLOW_STATUS_PLANNED: 'success',
+        WORKFLOW_STATUS_CONFIRMED: 'success',
+        WORKFLOW_STATUS_REMINDED: 'success',
+        WORKFLOW_STATUS_EXECUTED: 'success',
+        WORKFLOW_STATUS_EVALUATED: 'success',
+        WORKFLOW_STATUS_CANCELLED: 'warning',
+        WORKFLOW_STATUS_NOSHOW: 'warning',
+    }
+
     workflow_status_choices = (
         (WORKFLOW_STATUS_BEING_PLANNED, _(BEING_PLANNED_STATUS_TEXT)),
         (WORKFLOW_STATUS_REJECTED, _(u'Afvist af undervisere eller værter')),
@@ -1622,6 +1658,9 @@ class VisitOccurrence(models.Model):
         )
         return res['attendees'] or 0
 
+    def get_workflow_status_class(self):
+        return self.status_to_class_map.get(self.workflow_status, 'default')
+
     def __unicode__(self):
         if self.start_datetime:
             return u'%s @ %s' % (self.visit.title, self.display_value)
@@ -1657,6 +1696,19 @@ class VisitOccurrence(models.Model):
                 result.append(booking.as_searchtext())
 
         return " ".join(result)
+
+    @classmethod
+    def being_planned_queryset(cls, **kwargs):
+        return cls.objects.filter(
+            workflow_status=cls.WORKFLOW_STATUS_BEING_PLANNED,
+            **kwargs
+        )
+
+    @classmethod
+    def planned_queryset(cls, **kwargs):
+        return cls.objects.exclude(
+            workflow_status=cls.WORKFLOW_STATUS_BEING_PLANNED,
+        ).filter(**kwargs)
 
     def save(self, *args, **kwargs):
 
