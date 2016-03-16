@@ -1810,7 +1810,7 @@ class BookingView(AutologgerMixin, UpdateView):
                 pass
 
     def dispatch(self, request, *args, **kwargs):
-        self.modal = True if request.GET.get('modal', '1') == '1' else False
+        self.modal = True if request.GET.get('modal', '0') == '1' else False
         return super(BookingView, self).dispatch(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
@@ -1820,7 +1820,8 @@ class BookingView(AutologgerMixin, UpdateView):
 
         data = {
             'visit': self.visit,
-            'level_map': Booker.level_map
+            'level_map': Booker.level_map,
+            'modal': self.modal
         }
 
         self.object = Booking()
@@ -1836,7 +1837,8 @@ class BookingView(AutologgerMixin, UpdateView):
 
         data = {
             'visit': self.visit,
-            'level_map': Booker.level_map
+            'level_map': Booker.level_map,
+            'modal': self.modal
         }
 
         self.object = Booking()
@@ -1899,8 +1901,10 @@ class BookingView(AutologgerMixin, UpdateView):
 
             self._log_changes()
 
-            return redirect("/visit/%d/book/success%s" %
-                            (self.visit.id, "" if self.modal else "?modal=0"))
+            return redirect(
+                reverse("visit-book-success", args=[self.visit.id]) +
+                "?modal=%d" % (1 if self.modal else 0)
+            )
         else:
             forms['subjectform'] = BookingSubjectLevelForm(request.POST)
 
