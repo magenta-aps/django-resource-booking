@@ -37,7 +37,11 @@
                 $("#bookingform").submit();
             });
             $("#cancelbutton").click(function(){
-                history.back();
+                {% if back %}
+                    document.location = "{{ back }}";
+                {% else %}
+                    history.back();
+                {% endif %}
             });
         });
     </script>
