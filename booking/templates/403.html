@@ -1,9 +1,10 @@
 {% extends 'index.html' %}
+{% load i18n %}
 
 {% block content %}
 
-Du er logget ind som {{ user.username }}, men du har ikke rettigheder til
-at se denne side. 
-
+    {% blocktrans with name=user.username %}
+        Du er logget ind som {{ name }}, men du har ikke rettigheder til at se denne side.
+    {% endblocktrans %}
 
 {% endblock %}
