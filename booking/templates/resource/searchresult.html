@@ -153,7 +153,7 @@
                     <div class="media-body">
                         <div class="small">{{ res.get_type_display }}</div>
                         <h3 class="media-heading">
-                            <a href="{% if res.visit %}{% url 'visit-view' res.visit.pk %}{% elif res.otherresource %}{% url 'otherresource-view' res.otherresource.pk %}{% endif %}{% if fullquery %}?search={{ fullquery | urlencode }}{% endif %}">{{ res.title }}</a>
+                            #{{ res.pk }} <a href="{{res.get_view_url}}{% if fullquery %}?search={{ fullquery | urlencode }}{% endif %}">{{ res.title }}</a>
                         </h3>
                         <p>{% if request.GET.q %}{{ res.teaser|highlight:request.GET.q }}{% else %}{{ res.teaser }}{% endif %} &hellip;</p>
                         <div class="media-info">
