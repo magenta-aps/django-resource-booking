@@ -1,4 +1,4 @@
-{% extends 'lightbox-index.html' %}
+{% extends 'index.html' %}
 {% load i18n %}
 {% load staticfiles %}
 {% load booking_tags %}
@@ -11,7 +11,6 @@
 
 {% block content %}
 
-    {% include 'booking/modal/header.html' %}
     <div class="modal-body">
         <p>{% trans "Udfyld formularen nedenfor, så vi kan matche dig med den rigtige studerende. Når du har udfyldt formularen, sender vi en email til dig, der bekræfter din henvendelse. Vi finder herefter en studerende, som kontakter dig, og sammen finder I en dag der passer." %}</p>
         <div class="divider"></div>
@@ -26,7 +25,7 @@
             {% include "booking/fields/notes.html" %}
         </form>
     </div>
-    {% include 'booking/modal/footer.html' %}
+    {% include 'booking/snippets/footer.html' %}
 
 {% endblock %}
 
@@ -39,6 +38,9 @@
         $(function(){
             $("#submitbutton").click(function(){
                 $("#bookingform").submit();
+            });
+            $("#cancelbutton").click(function(){
+                history.back();
             });
         });
     </script>
