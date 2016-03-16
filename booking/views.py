@@ -1951,6 +1951,7 @@ class BookingView(AutologgerMixin, UpdateView):
 
 class BookingSuccessView(TemplateView):
     template_name = "booking/success.html"
+    modal = True
 
     def get(self, request, *args, **kwargs):
         visit_id = kwargs.get("visit")
@@ -1976,7 +1977,6 @@ class BookingSuccessView(TemplateView):
             return ["booking/success_modal.html"]
         else:
             return ["booking/success.html"]
-
 
 
 class EmbedcodesView(TemplateView):
