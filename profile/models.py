@@ -7,7 +7,7 @@ from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
-from booking.models import Unit
+from booking.models import Unit, Resource
 import uuid
 
 # User roles
@@ -99,6 +99,12 @@ class UserProfile(models.Model):
     # possibly also for teachers and hosts.
     # Unit is not needed for administrators.
     unit = models.ForeignKey(Unit, null=True, blank=True)
+
+    my_resources = models.ManyToManyField(
+        Resource,
+        blank=True,
+        verbose_name=_(u"Mine tilbud")
+    )
 
     def __unicode__(self):
         return self.user.username
