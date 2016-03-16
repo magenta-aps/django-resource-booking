@@ -598,6 +598,11 @@ class ClassBookingForm(BookingForm):
         fields = ('tour_desired', 'visitoccurrence', 'notes')
         labels = {
             'visitoccurrence': _(u"Tidspunkt")
+        },
+        widgets = {
+            'notes': Textarea(attrs={
+                'class': 'form-control'
+            })
         }
 
     desired_time = forms.CharField(
