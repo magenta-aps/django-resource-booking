@@ -1833,6 +1833,7 @@ class SchoolView(View):
 
 class BookingView(AutologgerMixin, UpdateView):
     visit = None
+    modal = True
 
     def set_visit(self, visit_id):
         if visit_id is not None:
@@ -1841,6 +1842,10 @@ class BookingView(AutologgerMixin, UpdateView):
             except:
                 pass
 
+    def dispatch(self, request, *args, **kwargs):
+        self.modal = True if request.GET.get('modal', '0') == '1' else False
+        return super(BookingView, self).dispatch(request, *args, **kwargs)
+
     def get(self, request, *args, **kwargs):
         self.set_visit(kwargs.get("visit"))
         if self.visit is None:
@@ -1848,7 +1853,8 @@ class BookingView(AutologgerMixin, UpdateView):
 
         data = {
             'visit': self.visit,
-            'level_map': Booker.level_map
+            'level_map': Booker.level_map,
+            'modal': self.modal
         }
 
         self.object = Booking()
@@ -1864,7 +1870,8 @@ class BookingView(AutologgerMixin, UpdateView):
 
         data = {
             'visit': self.visit,
-            'level_map': Booker.level_map
+            'level_map': Booker.level_map,
+            'modal': self.modal
         }
 
         self.object = Booking()
@@ -1927,7 +1934,10 @@ class BookingView(AutologgerMixin, UpdateView):
 
             self._log_changes()
 
-            return redirect("/visit/%d/book/success" % self.visit.id)
+            return redirect(
+                reverse("visit-book-success", args=[self.visit.id]) +
+                "?modal=%d" % (1 if self.modal else 0)
+            )
         else:
             forms['subjectform'] = BookingSubjectLevelForm(request.POST)
 
@@ -1960,18 +1970,30 @@ class BookingView(AutologgerMixin, UpdateView):
         if self.visit is None:
             return [""]
         if self.visit.type == Resource.STUDENT_FOR_A_DAY:
-            return ["booking/studentforaday.html"]
+            if self.modal:
+                return ["booking/studentforaday_modal.html"]
+            else:
+                return ["booking/studentforaday.html"]
         if self.visit.type == Resource.GROUP_VISIT:
-            return ["booking/classvisit.html"]
+            if self.modal:
+                return ["booking/classvisit_modal.html"]
+            else:
+                return ["booking/classvisit.html"]
         if self.visit.type == Resource.TEACHER_EVENT:
-            return ["booking/teachervisit.html"]
+            if self.modal:
+                return ["booking/teachervisit_modal.html"]
+            else:
+                return ["booking/teachervisit.html"]
 
 
 class BookingSuccessView(TemplateView):
     template_name = "booking/success.html"
+    modal = True
 
     def get(self, request, *args, **kwargs):
         visit_id = kwargs.get("visit")
+        self.modal = True if request.GET.get('modal', '1') == '1' else False
+
         visit = None
         if visit_id is not None:
             try:
@@ -1986,6 +2008,12 @@ class BookingSuccessView(TemplateView):
         return self.render_to_response(
             self.get_context_data(**data)
         )
+
+    def get_template_names(self):
+        if self.modal:
+            return ["booking/success_modal.html"]
+        else:
+            return ["booking/success.html"]
 
 
 class EmbedcodesView(TemplateView):
