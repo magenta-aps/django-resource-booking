@@ -1138,6 +1138,11 @@ class OtherResource(Resource):
             otherresource.delete()
 
 
+# Have to do late import of this here or we will get problems
+# with cyclic dependencies
+from profile.models import TEACHER, HOST  # noqa
+
+
 class Visit(Resource):
     """A bookable visit of any kind."""
 
@@ -1275,6 +1280,26 @@ class Visit(Resource):
         choices=needed_number_choices
     )
 
+    default_hosts = models.ManyToManyField(
+        User,
+        blank=True,
+        limit_choices_to={
+            'userprofile__user_role__role': HOST
+        },
+        related_name="hosted_visits",
+        verbose_name=_(u'Faste værter')
+    )
+
+    default_teachers = models.ManyToManyField(
+        User,
+        blank=True,
+        limit_choices_to={
+            'userprofile__user_role__role': TEACHER
+        },
+        related_name="taught_visits",
+        verbose_name=_(u'Faste undervisere')
+    )
+
     def save(self, *args, **kwargs):
         # Save once to store relations
         super(Visit, self).save(*args, **kwargs)
@@ -1331,6 +1356,16 @@ class Visit(Resource):
             bookable=bookable,
             **kwargs
         )
+
+        if self.default_hosts.exists() or self.default_teachers.exists():
+            occ.save()
+
+            for x in self.default_hosts.all():
+                occ.hosts.add(x)
+
+            for x in self.default_teachers.all():
+                occ.teachers.add(x)
+
         return occ
 
     def get_autosend(self, template_key):
@@ -1405,10 +1440,6 @@ class VisitOccurrence(models.Model):
         blank=True,
         null=True
     )
-
-    # Have to do late import of this here or we will get problems
-    # with cyclic dependencies
-    from profile.models import TEACHER, HOST
 
     hosts = models.ManyToManyField(
         User,
