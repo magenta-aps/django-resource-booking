@@ -27,6 +27,7 @@ from django.utils.decorators import method_decorator
 from django.utils.http import urlquote
 from django.utils.translation import ugettext as _
 from django.views.generic import View, TemplateView, ListView, DetailView
+from django.views.generic import RedirectView
 from django.views.generic.base import ContextMixin
 from django.views.generic.edit import UpdateView, FormMixin, DeleteView
 from django.views.defaults import bad_request
@@ -869,6 +870,21 @@ class EditResourceInitialView(HasBackButtonMixin, TemplateView):
         )
 
 
+class CloneResourceView(RedirectView):
+    def get_redirect_url(self, *args, **kwargs):
+        try:
+            res = Resource.objects.get(pk=kwargs["pk"])
+        except Resource.DoesNotExist:
+            raise Http404()
+
+        if hasattr(res, "visit") and res.visit:
+            return reverse('visit-clone', args=[res.visit.pk])
+        elif hasattr(res, "otherresource") and res.otherresource:
+            return reverse('otherresource-clone', args=[res.otherresource.pk])
+        else:
+            raise Http404()
+
+
 class ResourceDetailView(View):
 
     def get(self, request, *args, **kwargs):
@@ -882,6 +898,7 @@ class ResourceDetailView(View):
 
 
 class EditResourceView(HasBackButtonMixin, UpdateView):
+    is_creating = True
 
     def __init__(self, *args, **kwargs):
         super(EditResourceView, self).__init__(*args, **kwargs)
@@ -955,6 +972,12 @@ class EditResourceView(HasBackButtonMixin, UpdateView):
                         self.object.id = None
                 except ObjectDoesNotExist:
                     raise Http404
+
+        if self.object.pk:
+            self.is_creating = False
+        else:
+            self.is_creating = True
+            self.object.created_by = self.request.user
 
     def get_context_data(self, **kwargs):
         context = {}
@@ -1080,6 +1103,12 @@ class EditResourceView(HasBackButtonMixin, UpdateView):
         for x in existing_gs_fag.itervalues():
             x.delete()
 
+    def add_to_my_resources(self):
+        # Newly created objects should be added to the users list of
+        # resources.
+        if self.is_creating:
+            self.request.user.userprofile.my_resources.add(self.object)
+
 
 class EditOtherResourceView(EditResourceView):
 
@@ -1112,6 +1141,8 @@ class EditOtherResourceView(EditResourceView):
             self.save_studymaterials()
 
             self.save_subjects()
+
+            self.add_to_my_resources()
 
             return super(EditOtherResourceView, self).form_valid(forms['form'])
         else:
@@ -1279,6 +1310,8 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
             self.save_occurrences()
 
             self.save_subjects()
+
+            self.add_to_my_resources()
 
             return super(EditVisitView, self).form_valid(forms['form'])
         else:

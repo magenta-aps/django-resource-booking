@@ -29,6 +29,7 @@ from booking.views import BecomeHostView
 from booking.views import VisitOccurrenceAddLogEntryView
 from booking.views import VisitOccurrenceDetailView
 from booking.views import ChangeVisitOccurrenceAutosendView
+from booking.views import CloneResourceView
 
 
 from django.views.generic import TemplateView
@@ -63,6 +64,9 @@ urlpatterns = patterns(
     url(r'^resource/(?P<pk>[0-9]+)/edit$',
         EditResourceInitialView.as_view(),
         name='resource-edit'),
+    url(r'^resource/(?P<pk>[0-9]+)/clone$',
+        CloneResourceView.as_view(),
+        name='resource-clone'),
 
     url(r'^otherresource/create$',
         EditOtherResourceView.as_view(success_url='create'),
