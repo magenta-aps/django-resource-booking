@@ -622,7 +622,6 @@ class Resource(models.Model):
 
     class_level_choices = [(i, unicode(i)) for i in range(0, 11)]
 
-    enabled = models.BooleanField(verbose_name=_(u'Aktiv'), default=True)
     type = models.IntegerField(choices=resource_type_choices,
                                default=STUDY_MATERIAL)
     state = models.IntegerField(choices=state_choices, default=CREATED,
@@ -799,6 +798,7 @@ class Resource(models.Model):
 
     def as_searchtext(self):
         return " ".join([unicode(x) for x in [
+            self.pk,
             self.title,
             self.teaser,
             self.description,
@@ -860,6 +860,13 @@ class Resource(models.Model):
                 EmailTemplate.resource_roomadmin_keys:
             recipients.extend(self.room_responsible.all())
         return recipients
+
+    def get_view_url(self):
+        if hasattr(self, 'visit') and self.visit:
+            return reverse('visit-view', args=[self.visit.pk])
+        if hasattr(self, 'otherresource') and self.otherresource:
+            return reverse('otherresource-view', args=[self.otherresource.pk])
+        return reverse('resource-view', args=[self.pk])
 
 
 class ResourceGymnasieFag(models.Model):
@@ -1090,7 +1097,6 @@ class OtherResource(Resource):
     def clone_to_visit(self):
         save = []
         visit = Visit()
-        visit.enabled = self.enabled
         visit.type = self.type
         visit.state = self.state
         visit.title = self.title
@@ -1387,9 +1393,7 @@ class Visit(Resource):
 
     @property
     def is_bookable(self):
-        return self.is_type_bookable and \
-            self.enabled and \
-            self.state == Resource.ACTIVE
+        return self.is_type_bookable and self.state == Resource.ACTIVE
 
 
 class VisitOccurrence(models.Model):

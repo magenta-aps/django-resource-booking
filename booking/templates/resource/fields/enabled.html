@@ -1,9 +1,0 @@
-{% load i18n %}
-{% if form.enabled %}
-<div class="row form-group">
-    <div>{{ form.enabled.errors }}</div>
-    <div class="col-sm-12">
-        <label class="radiolabel" for="{{ form.enabled.id_for_label }}">{{ form.enabled }} {% trans 'Kan bookes' %}</label>
-    </div>
-</div>
-{% endif %}
