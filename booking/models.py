@@ -2261,7 +2261,8 @@ class Booking(models.Model):
         VisitOccurrence,
         null=True,
         blank=True,
-        related_name='bookings'
+        related_name='bookings',
+        verbose_name=_(u'Tidspunkt')
     )
 
     notes = models.TextField(
