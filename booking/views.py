@@ -64,6 +64,7 @@ from booking.forms import AdminVisitSearchForm
 from booking.forms import VisitAutosendFormSet
 from booking.utils import full_email
 
+import re
 import urls
 
 
@@ -435,6 +436,29 @@ class SearchView(ListView):
         (0, _(u'Nej')),
     )
 
+    def dispatch(self, request, *args, **kwargs):
+        id_match_url = self.check_search_by_id()
+        if id_match_url:
+            return redirect(id_match_url)
+
+        return super(SearchView, self).dispatch(request, *args, **kwargs)
+
+    def check_search_by_id(self):
+        # Check if we're searching for a given id
+        if self.request.method.lower() != 'get':
+            return None
+
+        q = self.request.GET.get("q", "").strip()
+        if re.match('^#?\d+$', q):
+            if q[0] == "#":
+                q = q[1:]
+            try:
+                res = Resource.objects.get(pk=q)
+                return reverse('resource-view', args=[res.pk])
+            except Resource.DoesNotExist:
+                pass
+        return None
+
     def get_admin_form(self):
         if self.admin_form is None:
             if self.request.user.is_authenticated():
@@ -574,7 +598,6 @@ class SearchView(ListView):
     def filter_for_admin_view(self, form):
         for filter_method in (
             self.filter_by_state,
-            self.filter_by_enabled,
             self.filter_by_is_visit,
             self.filter_by_has_bookings,
             self.filter_by_unit,
@@ -588,11 +611,6 @@ class SearchView(ListView):
         s = form.cleaned_data.get("s", "")
         if s != "":
             self.filters["state"] = s
-
-    def filter_by_enabled(self, form):
-        e = form.cleaned_data.get("e", "")
-        if e != "":
-            self.filters["enabled"] = e
 
     def filter_by_is_visit(self, form):
         v = form.cleaned_data.get("v", "")
