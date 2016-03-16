@@ -783,7 +783,8 @@ class SearchView(ListView):
         ]
 
         querylist = []
-        for key in ['q', 'page', 'pagesize', 't', 'a', 'i' 'f', 'g', 'from', 'to']:
+        for key in ['q', 'page', 'pagesize', 't',
+                    'a', 'i' 'f', 'g', 'from', 'to']:
             values = self.request.GET.getlist(key)
             if values is not None and len(values) > 0:
                 for value in values:
