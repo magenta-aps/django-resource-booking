@@ -118,49 +118,46 @@
         <div class="col-sm-4">
             <div class="panel panel-bookings">
                 <div class="panel-heading alert-info">
-                    <h3 class="panel-title">{% trans 'Mine tilbud' %}</h3><span class="badge badge-primary pull-right">3</span>
+                    <h3 class="panel-title">
+                        <a href="{% url 'my-resources' %}">{% trans 'Mine tilbud' %}</a>
+                    </h3>
+                    <span class="badge badge-primary pull-right">{{ request.user.userprofile.my_resources.all|length }}</span>
                 </div>
                 <div class="panel-body">
                     <div class="list-group">
+                        {% for res in request.user.userprofile.my_resources.all %}
                         <div class="list-group-item clearfix">
-                            <a href="#" title="Se tilbuddets detaljer og evt. bookings">
-                                <h2 class="list-group-item-heading">Dansk - kan du sætte kommaer?</h2>
+                            <a href="{% url 'resource-view' res.pk %}" title="Se tilbuddets detaljer og evt. bookings">
+                                <h2 class="list-group-item-heading">{{ res.title }}</h2>
                                 <div class="list-group-item-text">
                                     <ul>
-                                        <li>#201574</li>
-                                        <li>Dato/tid: 23.03.2016 kl. 09:00</li>
-                                        <li>Antal tilmeldte: 30</li>
+                                        <li>#{{res.pk}}</li>
+                                        <li>Type: {{ res.get_type_display }}</li>
+                                        {% if res.get_occurrences|length %}
+                                        <li>
+                                            Dato/tid:
+                                            <span class="type-offer">
+                                                {% if res.get_occurrences|length == 1 %}
+                                                    {{ res.first_occurence.start_datetime|date:"d. m. Y" }} kl. {{ res.first_occurence.start_datetime|date:"H:i" }}
+                                                {% else %}
+                                                    {{ res.get_occurrences|length }} mulige tidspunkter, første gang {{ res.first_occurence.start_datetime|date:"d. m. Y" }} kl. {{ res.first_occurence.start_datetime|date:"H:i" }}
+                                                {% endif %}
+                                            </span>
+                                        </li>
+                                        {% endif %}
+                                        <li>Hvor: {{ res.display_locality }}</li>
                                     </ul>
                                 </div>
                             </a>
-                            <div class="tools"><span class="edit-tools pull-left"><a href="#">Rediger</a> | <a href="#">kopiér</a></span><span class="label label-default pull-right">Kladde</span></div>
+                            <div class="tools">
+                                <span class="edit-tools pull-left">
+                                    <a href="{% url 'resource-edit' res.pk %}">Rediger</a> |
+                                    <a href="{% url 'resource-clone' res.pk %}">kopiér</a>
+                                </span>
+                                <span class="label label-{{ res.get_state_class }} pull-right">{{ res.get_state_display }}</span></div>
                         </div>
-                        <div class="list-group-item clearfix">
-                            <a href="#" title="Se tilbuddets detaljer og evt. bookings">
-                                <h2 class="list-group-item-heading">Magnetisme og elektroner</h2>
-                                <div class="list-group-item-text">
-                                    <ul>
-                                        <li>#201574</li>
-                                        <li>Dato/tid: 23.03.2016 kl. 09:00</li>
-                                        <li>Antal tilmeldte: 30</li>
-                                    </ul>
-                                </div>
-                            </a>
-                            <div class="tools"><span class="edit-tools pull-left"><a href="#">Rediger</a> | <a href="#">kopiér</a></span><span class="label label-info pull-right">Ikke publiceret</span></div>
-                        </div>
-                        <div class="list-group-item clearfix">
-                            <a href="#" title="Se tilbuddets detaljer og evt. bookings">
-                                <h2 class="list-group-item-heading">Hvem var Niels Bohr?</h2>
-                                <div class="list-group-item-text">
-                                    <ul>
-                                        <li>#201574</li>
-                                        <li>Dato/tid: 23.03.2016 kl. 09:00</li>
-                                        <li>Antal tilmeldte: 30</li>
-                                    </ul>
-                                </div>
-                            </a>
-                            <div class="tools"><span class="edit-tools pull-left"><a href="#">Rediger</a> | <a href="#">kopiér</a></span><span class="label label-primary pull-right">Publliceret</span></div>
-                        </div>
+                        {% endfor %}
+                        <a href="{% url 'my-resources'%}"><span class="label label-primary pull-right">Redigér mine tilbud</span></a>
                     </div>
                 </div>
             </div>
@@ -168,122 +165,52 @@
         <div class="col-sm-4">
             <div class="panel panel-bookings">
                 <div class="panel-heading alert-danger">
-                    <h3 class="panel-title">{% trans 'Arrangementer der kræver handling' %}</h3><span class="badge badge-danger pull-right">3</span>
+                    <h3 class="panel-title">{{ col2_title }}</h3><span class="badge badge-danger pull-right">{{col2_queryset|length}}</span>
                 </div>
                 <div class="panel-body">
+                    {% for event in col2_queryset %}
                     <div class="list-group-item clearfix">
-                        <a href="#" title="Se tilbuddets detaljer og evt. arrangementer">
-                            <h2 class="list-group-item-heading">Biologi</h2>
+                        <a href="{% url 'visit-occ-view' event.pk %}" title="Se arrangementets detaljer">
+                            <h2 class="list-group-item-heading">{{ event.visit.title }}</h2>
                             <div class="list-group-item-text">
                                 <ul>
-                                    <li>#201574</li>
-                                    <li>Dato/tid: 23.03.2016 kl. 09:00</li>
-                                    <li>Antal tilmeldte: 30</li>
+                                    <li>#{{ event.pk }}</li>
+                                    <li>Dato/tid: {{ event.start_datetime|date:"d. m. Y" }} kl. {{ event.start_datetime|date:"H:i" }}</li>
+                                    <li>Antal tilmeldte: {{ event.nr_bookers }}</li>
                                 </ul>
                             </div>
                         </a>
-                        <div class="tools"><span class="edit-tools pull-left"><a href="#">Rediger</a> | <a href="#">kopiér</a></span><span class="label label-danger pull-right">Afventer</span></div>
+                        <div class="tools">
+                            <span class="label label-{{ event.get_workflow_status_class }} pull-right">{{ event.get_workflow_status_display }}</span>
+                        </div>
                     </div>
-                    <div class="list-group-item clearfix">
-                        <a href="#" title="Se tilbuddets detaljer og evt. arrangementer">
-                            <h2 class="list-group-item-heading">Atomer og molekyler</h2>
-                            <div class="list-group-item-text">
-                                <ul>
-                                    <li>#201574</li>
-                                    <li>Dato/tid: 23.03.2016 kl. 09:00</li>
-                                    <li>Antal tilmeldte: 30</li>
-                                </ul>
-                            </div>
-                        </a>
-                        <div class="tools"><span class="edit-tools pull-left"><a href="#">Rediger</a> | <a href="#">kopiér</a></span><span class="label label-danger pull-right">Afventer</span></div>
-                    </div>
-                    <div class="list-group-item clearfix">
-                        <a href="#" title="Se tilbuddets detaljer og evt. arrangementer">
-                            <h2 class="list-group-item-heading">Biologi</h2>
-                            <div class="list-group-item-text">
-                                <ul>
-                                    <li>#201574</li>
-                                    <li>Dato/tid: 23.03.2016 kl. 09:00</li>
-                                    <li>Antal tilmeldte: 30</li>
-                                </ul>
-                            </div>
-                        </a>
-                        <div class="tools"><span class="edit-tools pull-left"><a href="#">Rediger</a> | <a href="#">kopiér</a></span><span class="label label-danger pull-right">Afventer</span></div>
-                    </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
                     <div class="col-sm-4">
             <div class="panel panel-bookings">
                 <div class="panel-heading alert-success">
-                    <h3 class="panel-title">{% trans 'Bekræftede arrangementer' %}</h3><span class="badge badge-success pull-right">5</span>
+                    <h3 class="panel-title">{{ col3_title }}</h3><span class="badge badge-success pull-right">{{ col3_queryset|length }}</span>
                 </div>
                 <div class="panel-body">
+                    {% for event in col3_queryset %}
                     <div class="list-group-item clearfix">
-                        <a href="#" title="Se arrangements detaljer">
-                            <h2 class="list-group-item-heading">Hvad kan vi lære af stjerner og rumfart</h2>
+                        <a href="{% url 'visit-occ-view' event.pk %}" title="Se arrangements detaljer">
+                            <h2 class="list-group-item-heading">{{ event.visit.title }}</h2>
                             <div class="list-group-item-text">
                                 <ul>
-                                    <li>#201574</li>
-                                    <li>Dato/tid: 23.03.2016 kl. 09:00</li>
-                                    <li>Antal tilmeldte: 30</li>
+                                    <li>#{{ event.pk }}</li>
+                                    <li>Dato/tid: {{ event.start_datetime|date:"d. m. Y" }} kl. {{ event.start_datetime|date:"H:i" }}</li>
+                                    <li>Antal tilmeldte: {{ event.nr_bookers }}</li>
                                 </ul>
                             </div>
                         </a>
-                        <div class="tools"><span class="edit-tools pull-left"><a href="#">Rediger</a> | <a href="#">kopiér</a></span><span class="label label-success pull-right">Planlagt</span></div>
+                        <div class="tools">
+                            <span class="label label-{{ event.get_workflow_status_class }} pull-right">{{ event.get_workflow_status_display }}</span>
+                        </div>
                     </div>
-                    <div class="list-group-item clearfix">
-                        <a href="#" title="Se arrangements detaljer">
-                            <h2 class="list-group-item-heading">Hvad kan vi lære af stjerner og rumfart</h2>
-                            <div class="list-group-item-text">
-                                <ul>
-                                    <li>#201574</li>
-                                    <li>Dato/tid: 23.03.2016 kl. 09:00</li>
-                                    <li>Antal tilmeldte: 30</li>
-                                </ul>
-                            </div>
-                        </a>
-                        <div class="tools"><span class="edit-tools pull-left"><a href="#">Rediger</a> | <a href="#">kopiér</a></span><span class="label label-success pull-right">Planlagt</span></div>
-                    </div>
-                    <div class="list-group-item clearfix">
-                        <a href="#" title="Se arrangements detaljer">
-                            <h2 class="list-group-item-heading">Kina som sproglig og historisk stormagt</h2>
-                            <div class="list-group-item-text">
-                                <ul>
-                                    <li>#201574</li>
-                                    <li>Dato/tid: 23.03.2016 kl. 09:00</li>
-                                    <li>Antal tilmeldte: 30</li>
-                                </ul>
-                            </div>
-                        </a>
-                        <div class="tools"><span class="edit-tools pull-left"><a href="#">Rediger</a> | <a href="#">kopiér</a></span><span class="label label-success pull-right">Planlagt</span></div>
-                    </div>
-                    <div class="list-group-item clearfix">
-                        <a href="#" title="Se arrangements detaljer">
-                            <h2 class="list-group-item-heading">Hvad kan vi lære af stjerner og rumfart</h2>
-                            <div class="list-group-item-text">
-                                <ul>
-                                    <li>#201574</li>
-                                    <li>Dato/tid: 23.03.2015 kl. 09:00</li>
-                                    <li>Antal tilmeldte: 30</li>
-                                </ul>
-                            </div>
-                        </a>
-                        <div class="tools"><span class="edit-tools pull-left"><a href="#">Rediger</a> | <a href="#">kopiér</a></span><span class="label label-warning pull-right">Afviklet</span></div>
-                    </div>
-                    <div class="list-group-item clearfix">
-                        <a href="#" title="Se arrangements detaljer">
-                            <h2 class="list-group-item-heading">Hvad kan vi lære af stjerner og rumfart</h2>
-                            <div class="list-group-item-text">
-                                <ul>
-                                    <li>#201574</li>
-                                    <li>Dato/tid: 23.03.2015 kl. 09:00</li>
-                                    <li>Antal tilmeldte: 30</li>
-                                </ul>
-                            </div>
-                        </a>
-                        <div class="tools"><span class="edit-tools pull-left"><a href="#">Rediger</a> | <a href="#">kopiér</a></span><span class="label label-warning pull-right">Aflyst</span></div>
-                    </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
