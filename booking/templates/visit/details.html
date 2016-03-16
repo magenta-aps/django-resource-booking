@@ -65,8 +65,8 @@
                     <span class="glyphicon glyphicon-chevron-right"></span>
                 </a>
                 {% endif %}
-                {% if object.unit.contact %}
-                    <a href="{% url 'email' object.unit.contact.id %}?back={{ thisurl | urlencode }}" class="btn btn-default">
+                {% if object.contact_persons %}
+                    <a href="{% url 'visit-inquire' object.id %}?back={{ thisurl | urlencode }}" class="btn btn-default">
                         {% trans 'Spørg om tilbud' %}
                         <span class="glyphicon glyphicon-question-sign"></span>
                     </a>
