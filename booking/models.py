@@ -367,7 +367,8 @@ class EmailTemplate(models.Model):
     NOTIFY_ALL__BOOKING_COMPLETE = 8  # ticket 13813
     NOTIFY_ALL__BOOKING_CANCELED = 9  # ticket 13814
     NOTITY_ALL__BOOKING_REMINDER = 10  # ticket 13815
-    NOTIFY_HOST__HOSTROLE_IDLE = 11  # ticlet 13805
+    NOTIFY_HOST__HOSTROLE_IDLE = 11  # ticket 13805
+    SYSTEM__BASICMAIL_ENVELOPE = 12
 
     # Choice labels
     key_choices = [
@@ -383,6 +384,7 @@ class EmailTemplate(models.Model):
         (NOTIFY_ALL__BOOKING_CANCELED, _(u'Alle: Booking aflyst')),
         (NOTITY_ALL__BOOKING_REMINDER, _(u'Alle: Reminder om booking')),
         (NOTIFY_HOST__HOSTROLE_IDLE, _(u'Vært: Ledig værtsrolle')),
+        (SYSTEM__BASICMAIL_ENVELOPE, _(u'Forespørgsel fra bruger'))
     ]
 
     @staticmethod

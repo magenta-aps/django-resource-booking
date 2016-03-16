@@ -155,41 +155,6 @@ class HasBackButtonMixin(ContextMixin):
         return context
 
 
-class ContactComposeView(FormMixin, HasBackButtonMixin, TemplateView):
-    template_name = 'email/compose.html'
-    form_class = GuestEmailComposeForm
-
-    def get(self, request, *args, **kwargs):
-        form = self.get_form()
-        return self.render_to_response(
-            self.get_context_data(form=form)
-        )
-
-    def post(self, request, *args, **kwargs):
-        recipient_id = kwargs.get("recipient")
-        form = self.get_form()
-        if form.is_valid():
-            template = EmailTemplate.get_template(
-                EmailTemplate.SYSTEM__BASICMAIL_ENVELOPE,
-                None
-            )
-            if template is None:
-                raise Exception(_(u"There are no root templates with "
-                                  u"the SYSTEM__BASICMAIL_ENVELOPE key"))
-            context = {}
-            context.update(form.cleaned_data)
-            recipients = Person.objects.get(id=recipient_id)
-            KUEmailMessage.send_email(template, context, recipients)
-            return super(ContactComposeView, self).form_valid(form)
-
-        return self.render_to_response(
-            self.get_context_data(form=form)
-        )
-
-    def get_success_url(self):
-        return self.request.GET.get("back", "/")
-
-
 class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
     template_name = 'email/compose.html'
     form_class = EmailComposeForm
@@ -1517,6 +1482,44 @@ class VisitDetailView(DetailView):
         context.update(kwargs)
 
         return super(VisitDetailView, self).get_context_data(**context)
+
+
+class VisitInquireView(FormMixin, HasBackButtonMixin, TemplateView):
+    template_name = 'email/compose.html'
+    form_class = GuestEmailComposeForm
+
+    def dispatch(self, request, *args, **kwargs):
+        self.object = Visit.objects.get(id=kwargs['visit'])
+        return super(VisitInquireView, self).dispatch(request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        form = self.get_form()
+        return self.render_to_response(
+            self.get_context_data(form=form)
+        )
+
+    def post(self, request, *args, **kwargs):
+        form = self.get_form()
+        if form.is_valid():
+            template = EmailTemplate.get_template(
+                EmailTemplate.SYSTEM__BASICMAIL_ENVELOPE,
+                None
+            )
+            if template is None:
+                raise Exception(_(u"There are no root templates with "
+                                  u"the SYSTEM__BASICMAIL_ENVELOPE key"))
+            context = {}
+            context.update(form.cleaned_data)
+            recipients = self.object.contact_persons.all()
+            KUEmailMessage.send_email(template, context, recipients)
+            return super(VisitInquireView, self).form_valid(form)
+
+        return self.render_to_response(
+            self.get_context_data(form=form)
+        )
+
+    def get_success_url(self):
+        return self.request.GET.get("back", "/")
 
 
 class VisitOccurrenceNotifyView(EmailComposeView):
