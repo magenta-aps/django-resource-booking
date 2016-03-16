@@ -255,7 +255,9 @@ class VisitForm(forms.ModelForm):
             'audience': RadioSelect(),
             'tags': CheckboxSelectMultiple(),
             'contact_persons': CheckboxSelectMultiple(),
-            'room_responsible': CheckboxSelectMultiple()
+            'room_responsible': CheckboxSelectMultiple(),
+            'default_hosts': CheckboxSelectMultiple(),
+            'default_teachers': CheckboxSelectMultiple(),
         }
 
     def __init__(self, *args, **kwargs):
@@ -322,6 +324,7 @@ class StudentForADayForm(VisitForm):
                   'enabled', 'contact_persons', 'unit',
                   'needed_hosts', 'needed_teachers',
                   'preparation_time', 'comment',
+                  'default_hosts', 'default_teachers',
                   )
         widgets = VisitForm.Meta.widgets
 
@@ -361,6 +364,7 @@ class TeacherVisitForm(VisitForm):
                   'enabled', 'contact_persons', 'room_responsible', 'unit',
                   'needed_hosts', 'needed_teachers',
                   'preparation_time', 'comment',
+                  'default_hosts', 'default_teachers',
                   )
         widgets = VisitForm.Meta.widgets
 
@@ -376,6 +380,7 @@ class ClassVisitForm(VisitForm):
                   'enabled', 'contact_persons', 'room_responsible', 'unit',
                   'needed_hosts', 'needed_teachers',
                   'preparation_time', 'comment',
+                  'default_hosts', 'default_teachers',
                   )
         widgets = VisitForm.Meta.widgets
 
