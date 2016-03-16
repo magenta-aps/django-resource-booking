@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import json
+import urllib
 
 from datetime import datetime, timedelta
 
@@ -27,6 +28,7 @@ from django.utils.decorators import method_decorator
 from django.utils.http import urlquote
 from django.utils.translation import ugettext as _
 from django.views.generic import View, TemplateView, ListView, DetailView
+from django.views.generic import RedirectView
 from django.views.generic.base import ContextMixin
 from django.views.generic.edit import UpdateView, FormMixin, DeleteView
 from django.views.defaults import bad_request
@@ -869,6 +871,21 @@ class EditResourceInitialView(HasBackButtonMixin, TemplateView):
         )
 
 
+class CloneResourceView(RedirectView):
+    def get_redirect_url(self, *args, **kwargs):
+        try:
+            res = Resource.objects.get(pk=kwargs["pk"])
+        except Resource.DoesNotExist:
+            raise Http404()
+
+        if hasattr(res, "visit") and res.visit:
+            return reverse('visit-clone', args=[res.visit.pk])
+        elif hasattr(res, "otherresource") and res.otherresource:
+            return reverse('otherresource-clone', args=[res.otherresource.pk])
+        else:
+            raise Http404()
+
+
 class ResourceDetailView(View):
 
     def get(self, request, *args, **kwargs):
@@ -882,6 +899,7 @@ class ResourceDetailView(View):
 
 
 class EditResourceView(HasBackButtonMixin, UpdateView):
+    is_creating = True
 
     def __init__(self, *args, **kwargs):
         super(EditResourceView, self).__init__(*args, **kwargs)
@@ -955,6 +973,12 @@ class EditResourceView(HasBackButtonMixin, UpdateView):
                         self.object.id = None
                 except ObjectDoesNotExist:
                     raise Http404
+
+        if self.object.pk:
+            self.is_creating = False
+        else:
+            self.is_creating = True
+            self.object.created_by = self.request.user
 
     def get_context_data(self, **kwargs):
         context = {}
@@ -1080,6 +1104,12 @@ class EditResourceView(HasBackButtonMixin, UpdateView):
         for x in existing_gs_fag.itervalues():
             x.delete()
 
+    def add_to_my_resources(self):
+        # Newly created objects should be added to the users list of
+        # resources.
+        if self.is_creating:
+            self.request.user.userprofile.my_resources.add(self.object)
+
 
 class EditOtherResourceView(EditResourceView):
 
@@ -1112,6 +1142,8 @@ class EditOtherResourceView(EditResourceView):
             self.save_studymaterials()
 
             self.save_subjects()
+
+            self.add_to_my_resources()
 
             return super(EditOtherResourceView, self).form_valid(forms['form'])
         else:
@@ -1280,6 +1312,8 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
 
             self.save_subjects()
 
+            self.add_to_my_resources()
+
             return super(EditVisitView, self).form_valid(forms['form'])
         else:
             return self.form_invalid(forms)
@@ -1384,11 +1418,12 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         datetimes = []
         if dates is not None:
             for date in dates:
-                dt = timezone.make_aware(
-                    parser.parse(date, dayfirst=True),
-                    timezone.pytz.timezone('Europe/Copenhagen')
-                )
-                datetimes.append(dt)
+                if date != '':
+                    dt = timezone.make_aware(
+                        parser.parse(date, dayfirst=True),
+                        timezone.pytz.timezone('Europe/Copenhagen')
+                    )
+                    datetimes.append(dt)
         # remove existing to avoid duplicates,
         # then save the rest...
         for date_t in datetimes:
@@ -1463,9 +1498,7 @@ class VisitDetailView(DetailView):
         else:
             context['can_edit'] = False
 
-        if self.object.type in [Resource.STUDENT_FOR_A_DAY,
-                                Resource.GROUP_VISIT,
-                                Resource.TEACHER_EVENT]:
+        if self.object.is_bookable:
             context['can_book'] = True
         else:
             context['can_book'] = False
@@ -1528,6 +1561,16 @@ class VisitOccurrenceNotifyView(EmailComposeView):
                                 person.id):
                     person.get_full_email()
                     for person in visit.contact_persons.all()
+                }
+            },
+            'roomadmins': {
+                'label': _(u'Lokaleansvarlige'),
+                'items': {
+                    "%s%s%d" % (self.RECIPIENT_PERSON,
+                                self.RECIPIENT_SEPARATOR,
+                                person.id):
+                                    person.get_full_email()
+                    for person in visit.room_responsible.all()
                 }
             },
             'assigned_hosts': {
@@ -1636,6 +1679,16 @@ class BookingNotifyView(EmailComposeView):
                                     person.get_full_email()
                     for person in self.object.visit.contact_persons.all()
                 }
+            },
+            'roomadmins': {
+                'label': _(u'Lokaleansvarlige'),
+                'items': {
+                    "%s%s%d" % (self.RECIPIENT_PERSON,
+                                self.RECIPIENT_SEPARATOR,
+                                person.id):
+                                    person.get_full_email()
+                    for person in self.object.visit.room_responsible.all()
+                    }
             },
             'hosts': {
                 'label': _(u'Værter'),
@@ -1781,6 +1834,8 @@ class SchoolView(View):
 
 class BookingView(AutologgerMixin, UpdateView):
     visit = None
+    modal = True
+    back = None
 
     def set_visit(self, visit_id):
         if visit_id is not None:
@@ -1789,31 +1844,35 @@ class BookingView(AutologgerMixin, UpdateView):
             except:
                 pass
 
+    def get_context_data(self, **kwargs):
+        context = {
+            'visit': self.visit,
+            'level_map': Booker.level_map,
+            'modal': self.modal,
+            'back': self.back
+        }
+        context.update(kwargs)
+        return super(BookingView, self).get_context_data(**context)
+
+    def dispatch(self, request, *args, **kwargs):
+        self.modal = request.GET.get('modal', '0') == '1'
+        self.back = request.GET.get('back')
+        return super(BookingView, self).dispatch(request, *args, **kwargs)
+
     def get(self, request, *args, **kwargs):
         self.set_visit(kwargs.get("visit"))
         if self.visit is None:
             return bad_request(request)
 
-        data = {
-            'visit': self.visit,
-            'level_map': Booker.level_map
-        }
-
         self.object = Booking()
-        data.update(self.get_forms())
         return self.render_to_response(
-            self.get_context_data(**data)
+            self.get_context_data(**self.get_forms())
         )
 
     def post(self, request, *args, **kwargs):
         self.set_visit(kwargs.get("visit"))
         if self.visit is None:
             return bad_request(request)
-
-        data = {
-            'visit': self.visit,
-            'level_map': Booker.level_map
-        }
 
         self.object = Booking()
 
@@ -1875,13 +1934,21 @@ class BookingView(AutologgerMixin, UpdateView):
 
             self._log_changes()
 
-            return redirect("/visit/%d/book/success" % self.visit.id)
+            params = {
+                'modal': 1 if self.modal else 0,
+            }
+            if self.back:
+                params['back'] = self.back
+
+            return redirect(
+                reverse("visit-book-success", args=[self.visit.id]) +
+                "?" + urllib.urlencode(params)
+            )
         else:
             forms['subjectform'] = BookingSubjectLevelForm(request.POST)
 
-        data.update(forms)
         return self.render_to_response(
-            self.get_context_data(**data)
+            self.get_context_data(**forms)
         )
 
     def get_forms(self, data=None):
@@ -1908,18 +1975,31 @@ class BookingView(AutologgerMixin, UpdateView):
         if self.visit is None:
             return [""]
         if self.visit.type == Resource.STUDENT_FOR_A_DAY:
-            return ["booking/studentforaday.html"]
+            if self.modal:
+                return ["booking/studentforaday_modal.html"]
+            else:
+                return ["booking/studentforaday.html"]
         if self.visit.type == Resource.GROUP_VISIT:
-            return ["booking/classvisit.html"]
+            if self.modal:
+                return ["booking/classvisit_modal.html"]
+            else:
+                return ["booking/classvisit.html"]
         if self.visit.type == Resource.TEACHER_EVENT:
-            return ["booking/teachervisit.html"]
+            if self.modal:
+                return ["booking/teachervisit_modal.html"]
+            else:
+                return ["booking/teachervisit.html"]
 
 
 class BookingSuccessView(TemplateView):
     template_name = "booking/success.html"
+    modal = True
 
     def get(self, request, *args, **kwargs):
         visit_id = kwargs.get("visit")
+        self.modal = request.GET.get('modal', '1') == '1'
+        back = request.GET.get('back')
+
         visit = None
         if visit_id is not None:
             try:
@@ -1929,11 +2009,20 @@ class BookingSuccessView(TemplateView):
         if visit is None:
             return bad_request(request)
 
-        data = {'visit': visit}
+        data = {
+            'visit': visit,
+            'back': back
+        }
 
         return self.render_to_response(
             self.get_context_data(**data)
         )
+
+    def get_template_names(self):
+        if self.modal:
+            return ["booking/success_modal.html"]
+        else:
+            return ["booking/success.html"]
 
 
 class EmbedcodesView(TemplateView):
