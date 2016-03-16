@@ -1,4 +1,4 @@
-{% extends 'index.html' %}
+{% extends 'lightbox-index.html' %}
 {% load i18n %}
 {% load staticfiles %}
 {% load booking_tags %}
@@ -11,6 +11,7 @@
 
 {% block content %}
 
+    {% include 'booking/snippets/header.html' %}
     <div class="modal-body">
         <p>{% trans "Udfyld venligst nedenstående formular for at booke et tilbud. Felter markeret med * er obligatoriske." %}</p>
         <div class="divider"></div>
@@ -113,9 +114,6 @@
     $(function(){
         $("#submitbutton").click(function(){
             $("#bookingform").submit();
-        });
-        $("#cancelbutton").click(function(){
-            history.back();
         });
     });
     //--></script>

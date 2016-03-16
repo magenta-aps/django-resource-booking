@@ -1,4 +1,4 @@
-{% extends 'lightbox-index.html' %}
+{% extends 'index.html' %}
 {% load i18n %}
 {% load staticfiles %}
 {% load booking_tags %}
@@ -6,31 +6,16 @@
 {% block head %}
 {% endblock %}
 
-{% block header %}
-{% endblock %}
-
 {% block content %}
-    {% include 'booking/modal/header.html' %}
 
     <div class="modal-body">
         <p>{% trans "Tak for din booking! Du hører fra os snarest." %}</p>
-        <p><a id="rebook" href="{% url 'visit-book' visit.id %}">{% trans "Foretag ny booking" %}</a></p>
     </div>
 
     <div class="modal-footer">
         <p class="text-center">
             {% trans "Bemærk venligst at aftalen først er bindende, når du har modtaget en bekræftelse<br />fra den arrangør på Københavns Universitet, der er ansvarlig for besøget." %}
         </p>
-        <button type="button" class="btn btn-primary" data-dismiss="modal">{% trans "OK" %}</button>
     </div>
-
-{% endblock %}
-
-{% block extra_scripts %}
-    <script type="text/javascript">
-        <!--
-            $("#rebook").attr("href", "{% url 'visit-book' visit.id %}" + document.location.hash);
-        //-->
-    </script>
 
 {% endblock %}
