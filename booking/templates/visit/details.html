@@ -60,7 +60,7 @@
             {% endif %}
             <div class="well order-buttons hidden-print">
                 {% if can_book %}
-                <a class="btn btn-default" data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'visit-book' object.id %}">
+                <a class="btn btn-default" data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'visit-book' object.id %}?modal=1">
                     {% trans 'Tilmeld' %}
                     <span class="glyphicon glyphicon-chevron-right"></span>
                 </a>
