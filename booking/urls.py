@@ -4,7 +4,7 @@ from django.conf import settings
 
 from .views import MainPageView, VisitOccurrenceNotifyView
 
-from booking.views import PostcodeView, SchoolView
+from booking.views import PostcodeView, SchoolView, VisitInquireView
 from booking.views import RrulestrView
 from booking.views import EditResourceInitialView, ResourceDetailView
 from booking.views import BookingView, BookingSuccessView
@@ -14,21 +14,20 @@ from booking.views import EditVisitView, VisitDetailView
 from booking.views import EmailSuccessView
 from booking.views import SearchView, EmbedcodesView
 
-from booking.views import BookingNotifyView
+from booking.views import BookingNotifyView, BookingDetailView
 from booking.views import EmailTemplateListView, EmailTemplateEditView
 from booking.views import EmailTemplateDetailView, EmailTemplateDeleteView
-from booking.views import ContactComposeView
-from booking.views import BookingDetailView, ChangeVisitOccurrenceStatusView
+from booking.views import ChangeVisitOccurrenceStatusView
 from booking.views import ChangeVisitOccurrenceStartTimeView
 from booking.views import ChangeVisitOccurrenceTeachersView
 from booking.views import ChangeVisitOccurrenceHostsView
 from booking.views import ChangeVisitOccurrenceRoomsView
 from booking.views import ChangeVisitOccurrenceCommentsView
+from booking.views import ChangeVisitOccurrenceAutosendView
 from booking.views import BecomeTeacherView
 from booking.views import BecomeHostView
 from booking.views import VisitOccurrenceAddLogEntryView
 from booking.views import VisitOccurrenceDetailView
-from booking.views import ChangeVisitOccurrenceAutosendView
 from booking.views import CloneResourceView
 
 
@@ -99,6 +98,9 @@ urlpatterns = patterns(
     url(r'^visit/(?P<visit>[0-9]+)/book/success$',
         BookingSuccessView.as_view(),
         name='visit-book-success'),
+    url(r'^visit/(?P<visit>[0-9]+)/inquire$',
+        VisitInquireView.as_view(),
+        name='visit-inquire'),
 
     url(r'^visit/occurrence/(?P<pk>[0-9]+)/notify$',
         VisitOccurrenceNotifyView.as_view(),
@@ -190,10 +192,6 @@ urlpatterns = patterns(
     url(r'^emailtemplate/(?P<pk>[0-9]+)/delete$',
         EmailTemplateDeleteView.as_view(),
         name='emailtemplate-delete'),
-
-    url(r'^email/(?P<recipient>[0-9]+)/?$',
-        ContactComposeView.as_view(),
-        name='email')
 
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

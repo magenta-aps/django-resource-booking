@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import json
+import urllib
 
 from datetime import datetime, timedelta
 
@@ -152,41 +153,6 @@ class HasBackButtonMixin(ContextMixin):
         context = super(HasBackButtonMixin, self).get_context_data(**kwargs)
         context['oncancel'] = self.request.GET.get('back')
         return context
-
-
-class ContactComposeView(FormMixin, HasBackButtonMixin, TemplateView):
-    template_name = 'email/compose.html'
-    form_class = GuestEmailComposeForm
-
-    def get(self, request, *args, **kwargs):
-        form = self.get_form()
-        return self.render_to_response(
-            self.get_context_data(form=form)
-        )
-
-    def post(self, request, *args, **kwargs):
-        recipient_id = kwargs.get("recipient")
-        form = self.get_form()
-        if form.is_valid():
-            template = EmailTemplate.get_template(
-                EmailTemplate.SYSTEM__BASICMAIL_ENVELOPE,
-                None
-            )
-            if template is None:
-                raise Exception(_(u"There are no root templates with "
-                                  u"the SYSTEM__BASICMAIL_ENVELOPE key"))
-            context = {}
-            context.update(form.cleaned_data)
-            recipients = Person.objects.get(id=recipient_id)
-            KUEmailMessage.send_email(template, context, recipients)
-            return super(ContactComposeView, self).form_valid(form)
-
-        return self.render_to_response(
-            self.get_context_data(form=form)
-        )
-
-    def get_success_url(self):
-        return self.request.GET.get("back", "/")
 
 
 class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
@@ -1518,6 +1484,44 @@ class VisitDetailView(DetailView):
         return super(VisitDetailView, self).get_context_data(**context)
 
 
+class VisitInquireView(FormMixin, HasBackButtonMixin, TemplateView):
+    template_name = 'email/compose.html'
+    form_class = GuestEmailComposeForm
+
+    def dispatch(self, request, *args, **kwargs):
+        self.object = Visit.objects.get(id=kwargs['visit'])
+        return super(VisitInquireView, self).dispatch(request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        form = self.get_form()
+        return self.render_to_response(
+            self.get_context_data(form=form)
+        )
+
+    def post(self, request, *args, **kwargs):
+        form = self.get_form()
+        if form.is_valid():
+            template = EmailTemplate.get_template(
+                EmailTemplate.SYSTEM__BASICMAIL_ENVELOPE,
+                None
+            )
+            if template is None:
+                raise Exception(_(u"There are no root templates with "
+                                  u"the SYSTEM__BASICMAIL_ENVELOPE key"))
+            context = {}
+            context.update(form.cleaned_data)
+            recipients = self.object.contact_persons.all()
+            KUEmailMessage.send_email(template, context, recipients)
+            return super(VisitInquireView, self).form_valid(form)
+
+        return self.render_to_response(
+            self.get_context_data(form=form)
+        )
+
+    def get_success_url(self):
+        return self.request.GET.get("back", "/")
+
+
 class VisitOccurrenceNotifyView(EmailComposeView):
 
     def dispatch(self, request, *args, **kwargs):
@@ -1834,6 +1838,7 @@ class SchoolView(View):
 class BookingView(AutologgerMixin, UpdateView):
     visit = None
     modal = True
+    back = None
 
     def set_visit(self, visit_id):
         if visit_id is not None:
@@ -1842,8 +1847,19 @@ class BookingView(AutologgerMixin, UpdateView):
             except:
                 pass
 
+    def get_context_data(self, **kwargs):
+        context = {
+            'visit': self.visit,
+            'level_map': Booker.level_map,
+            'modal': self.modal,
+            'back': self.back
+        }
+        context.update(kwargs)
+        return super(BookingView, self).get_context_data(**context)
+
     def dispatch(self, request, *args, **kwargs):
-        self.modal = True if request.GET.get('modal', '0') == '1' else False
+        self.modal = request.GET.get('modal', '0') == '1'
+        self.back = request.GET.get('back')
         return super(BookingView, self).dispatch(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
@@ -1851,28 +1867,15 @@ class BookingView(AutologgerMixin, UpdateView):
         if self.visit is None:
             return bad_request(request)
 
-        data = {
-            'visit': self.visit,
-            'level_map': Booker.level_map,
-            'modal': self.modal
-        }
-
         self.object = Booking()
-        data.update(self.get_forms())
         return self.render_to_response(
-            self.get_context_data(**data)
+            self.get_context_data(**self.get_forms())
         )
 
     def post(self, request, *args, **kwargs):
         self.set_visit(kwargs.get("visit"))
         if self.visit is None:
             return bad_request(request)
-
-        data = {
-            'visit': self.visit,
-            'level_map': Booker.level_map,
-            'modal': self.modal
-        }
 
         self.object = Booking()
 
@@ -1934,16 +1937,21 @@ class BookingView(AutologgerMixin, UpdateView):
 
             self._log_changes()
 
+            params = {
+                'modal': 1 if self.modal else 0,
+            }
+            if self.back:
+                params['back'] = self.back
+
             return redirect(
                 reverse("visit-book-success", args=[self.visit.id]) +
-                "?modal=%d" % (1 if self.modal else 0)
+                "?" + urllib.urlencode(params)
             )
         else:
             forms['subjectform'] = BookingSubjectLevelForm(request.POST)
 
-        data.update(forms)
         return self.render_to_response(
-            self.get_context_data(**data)
+            self.get_context_data(**forms)
         )
 
     def get_forms(self, data=None):
@@ -1992,7 +2000,8 @@ class BookingSuccessView(TemplateView):
 
     def get(self, request, *args, **kwargs):
         visit_id = kwargs.get("visit")
-        self.modal = True if request.GET.get('modal', '1') == '1' else False
+        self.modal = request.GET.get('modal', '1') == '1'
+        back = request.GET.get('back')
 
         visit = None
         if visit_id is not None:
@@ -2003,7 +2012,10 @@ class BookingSuccessView(TemplateView):
         if visit is None:
             return bad_request(request)
 
-        data = {'visit': visit}
+        data = {
+            'visit': visit,
+            'back': back
+        }
 
         return self.render_to_response(
             self.get_context_data(**data)
