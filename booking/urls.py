@@ -24,6 +24,8 @@ from booking.views import ChangeVisitOccurrenceTeachersView
 from booking.views import ChangeVisitOccurrenceHostsView
 from booking.views import ChangeVisitOccurrenceRoomsView
 from booking.views import ChangeVisitOccurrenceCommentsView
+from booking.views import BecomeTeacherView
+from booking.views import BecomeHostView
 from booking.views import VisitOccurrenceAddLogEntryView
 from booking.views import VisitOccurrenceDetailView
 from booking.views import ChangeVisitOccurrenceAutosendView
@@ -129,6 +131,12 @@ urlpatterns = patterns(
     url(r'^visit/occurrence/(?P<pk>[0-9]+)/add_logentry/?$',
         VisitOccurrenceAddLogEntryView.as_view(),
         name='visit-occ-add-logentry'),
+    url(r'^visit/occurrence/(?P<pk>[0-9]+)/become_teacher/?$',
+        BecomeTeacherView.as_view(),
+        name='become-teacher'),
+    url(r'^visit/occurrence/(?P<pk>[0-9]+)/become_host/?$',
+        BecomeHostView.as_view(),
+        name='become-host'),
     url(r'^visit/occurrence/search$',
         VisitOccurrenceSearchView.as_view(),
         name='visit-occ-search'),

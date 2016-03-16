@@ -2,6 +2,7 @@
 {% load staticfiles %}
 {% load timedelta %}
 {% load i18n %}
+{% load booking_tags %}
 
 {% block content %}
 
@@ -48,6 +49,15 @@
                 </ul>
                 {% endif %}
             </div>
+            {% if object.studymaterial_set %}
+                <ul>
+                {% for material in object.studymaterial_set.all %}
+                    <li>
+                        <a href="{{ MEDIA_URL }}{{ material.file.url }}">{{ material.file.name | upload_name_strip_path }} ({{ material.file.size | filesizeformat }})</a>
+                    </li>
+                {% endfor %}
+                </ul>
+            {% endif %}
             <div class="well order-buttons hidden-print">
                 {% if can_book %}
                 <a class="btn btn-default" data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'visit-book' object.id %}">
@@ -171,34 +181,6 @@
     {% include 'common/modal_contact.html' %}
     
     {% include 'common/modal_framehost.html' %}
-
-{% endblock %}
-
-{% block footer %}
-    
-    <div class="container">
-        <div class="row">
-            <footer>
-                <div class="container">
-                    <div class="row footer-columns">
-                        <div class="col-sm-4 col-sm-offset-0">
-                            <ul class="footerlinks">
-                                <li><a href="http://kommunikation.ku.dk/">Kommunikation</a></li>
-                                <li><a href="http://www.ku.dk/">Københavns Universitet</a></li>
-                                <li>Nørregade 10, Postboks 2177</li>
-                                <li>1017 København K</li>
-                            </ul>
-                        </div>
-                        <div class="col-sm-4 col-sm-offset-4">
-                            <ul class="footerlinks">
-                                <li class="clearfix social-icons"><a target="_blank" class="footer-social" href="https://www.facebook.com/universitet"><span class="icon-circle"><i class="fa fa-facebook"></i></span></a><a target="_blank" class="footer-social" href="https://www.linkedin.com/edu/k%C3%B8benhavns-universitet-12012"><span class="icon-circle"><i class="fa fa-linkedin"></i></span></a><a target="_blank" class="footer-social" href="https://twitter.com/koebenhavns_uni"><span class="icon-circle"><i class="fa fa-twitter"></i></span></a></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </footer>
-        </div>
-    </div>
 
 {% endblock %}
 

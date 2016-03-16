@@ -1,3 +1,4 @@
+{% if form.description %}
 <div class="row form-group">
     <div>
         {{ form.description.errors }}
@@ -9,3 +10,4 @@
         {{ form.description }}
     </div>
 </div>
+{% endif %}

@@ -17,6 +17,7 @@ HOST = 1
 COORDINATOR = 2
 ADMINISTRATOR = 3
 FACULTY_EDITOR = 4
+NONE = 5
 
 EDIT_ROLES = set([
     ADMINISTRATOR,
@@ -29,8 +30,37 @@ user_role_choices = (
     (HOST, _(u"Vært")),
     (COORDINATOR, _(u"Koordinator")),
     (ADMINISTRATOR, _(u"Administrator")),
-    (FACULTY_EDITOR, _(u"Fakultetsredaktør"))
+    (FACULTY_EDITOR, _(u"Fakultetsredaktør")),
+    (NONE, _(u"Ingen"))
 )
+
+
+def get_none_role():
+    try:
+        userrole = UserRole.objects.get(role=NONE)
+    except UserRole.DoesNotExist:
+        userrole = UserRole(
+            role=NONE,
+            name=role_to_text(NONE)
+        )
+        userrole.save()
+
+    return userrole
+
+
+def get_public_web_user():
+    try:
+        user = User.objects.get(username="public_web_user")
+    except User.DoesNotExist:
+        user = User.objects.create_user("public_web_user")
+        profile = UserProfile(
+            user=user,
+            unit=None,
+            user_role=get_none_role()
+        )
+        profile.save()
+
+    return user
 
 
 def role_to_text(role):
@@ -86,6 +116,23 @@ class UserProfile(models.Model):
     def has_edit_role(self):
         return self.get_role() in EDIT_ROLES
 
+    @property
+    def is_host(self):
+        return self.get_role() == HOST
+
+    @property
+    def is_teacher(self):
+        return self.get_role() == TEACHER
+
+    @property
+    def is_coordinator(self):
+        return self.get_role() == COORDINATOR
+
+    @property
+    def is_faculty_editor(self):
+        return self.get_role() == FACULTY_EDITOR
+
+    @property
     def is_administrator(self):
         return self.get_role() == ADMINISTRATOR
 
@@ -127,7 +174,7 @@ class UserProfile(models.Model):
     def get_unit_queryset(self):
         role = self.get_role()
 
-        if not role:
+        if role is None:
             return Unit.objects.none()
 
         if role == ADMINISTRATOR:

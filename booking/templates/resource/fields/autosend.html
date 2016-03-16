@@ -1,8 +1,8 @@
 {% load i18n %}
+{% if autosendformset %}
 <div class="row form-group">
-    <div>{{ autosendform.autosend.errors }}</div>
     <div class="col-sm-2">
-        <label for="{{ autosendform.autosend.id_for_label }}">{% trans 'Automatiske emails' %}:</label>
+        <label for="{{ autosendformset.id_for_label }}">{% trans 'Automatiske emails' %}:</label>
     </div>
     <div class="col-sm-10">
         {{ autosendformset.management_form }}
@@ -16,3 +16,4 @@
         <a id="addAutosend">{% trans "Tilføj ny" %}</a>
     </div>
 </div>
+{% endif %}

@@ -1,5 +1,7 @@
 {% load staticfiles %}
 {% load i18n %}
+{% load booking_tags %}
+{% if autosendformset %}
 <script type="text/javascript" src="{% static 'js/formset-row.js' %}"></script>
 
 <script type="text/javascript">
@@ -60,10 +62,11 @@
             };
 
             // Enables/disables the days field depending on what's selected in the template_key
-            var toggleReminder = function(row) {
+            var toggleDays = function(row) {
                 var value = parseInt(row.find("[name$='-template_key']").val(), 10);
                 var daysInput = row.find("[name$='-days']");
-                toggleEnabled(daysInput, "reminder", value === 10);
+                var enabledKeys = {{ autosend_enable_days | jsonify }};
+                toggleEnabled(daysInput, "reminder", $.inArray(value, enabledKeys) != -1);
             };
 
             // Enables/disables the "enabled" field, and sets its value, depending on whether we inherit from a VisitAutosend
@@ -139,12 +142,12 @@
             var fixRow = function(row) {
                 var templateSelect = row.find("[name$='-template_key']");
                 templateSelect.change(function(){
-                    toggleReminder(row);
+                    toggleDays(row);
                     toggleInherit(row);
                     disableAlreadySelected();
                     checkTemplateExistence(row);
                 });
-                toggleReminder(row);
+                toggleDays(row);
 
                 var deleteField = row.find("[name$='-DELETE']");
                 deleteField.change(function(){
@@ -201,3 +204,4 @@
         });
     //-->
 </script>
+{% endif %}

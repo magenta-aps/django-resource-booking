@@ -1,7 +1,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.5.0/js/bootstrap-datepicker.min.js"></script>
 <script src="/static/js/bootstrap-datepicker.da.min.js"></script>
 <script src="/static/js/picker.time.js"></script>
-<!-- <script src="/static/js/rrule.js"></script> -->
+<script src="/static/js/rrule.js"></script>
 
 <script type="text/javascript"><!--
     $(function(){
@@ -29,6 +29,7 @@
         // Refresh avilable dates list
         
         function UpdateDateList() {
+            $('.add-time-all').show();
             var arr = $("#existing-recurrence-dates>li").map(function() {
                 if ($(this).find('.btn-add-time').val() != undefined) {
                     var date = $(this).data('date') + ' ' + $(this).find('.btn-add-time').val();
@@ -63,39 +64,212 @@
         });
         
         
-        // Getting several dates using RRule.js
+        // Setting time for all available dates
         
-        var rule = RRule.fromText('hver dag indtil juni 2016')
+        $('.btn-add-time-all').on('click', function(ev) {
+            ev.preventDefault();
+            var inputEl = $(this);
+            var timepick = $('.btn-add-time-all').pickatime({
+                format: 'H:i',
+                onClose: function() {
+                    $('#existing-recurrence-dates li input').each(function() {
+                        $(this).val( inputEl.val() );
+                    });
+                    inputEl.val('');
+                    UpdateDateList();
+                }
+            });
+        });
         
-        var rruleInput = $('#rrule-input');
-        var rruleOutput = $('#rrule-output');
+        
+        // Adding several dates using RRule.js
         
         $('#rruleModal').on('show.bs.modal', function (e) {
-            rruleInput.val('hver dag indtil juni 2016');
-            UpdateRRuleOutput();
-        });
-        
-        rruleInput.on('change', function(e) {
-            rule = RRule.fromText($(this).val());
-            if (typeof rule.until != 'Date') {
-                rule.until = new Date().setFullYear(2017);
-            };
-            UpdateRRuleOutput();
-        });
-        
-        $('.btn-add-rrule-dates').on('click', function(e) {
-            console.log('pushing dates');
-        });
-        
-        function UpdateRRuleOutput() {
+            var datesArr = [];
             
-            rruleOutput.html('');
-            for (var r in rule.all()) {
-                rruleOutput.append('<li>' + rule.all()[r].toLocaleDateString() + '</li>');
-            };
-        };
+            // =============================================================================
+            // UI script for picking dates using RRule.js
+            // =============================================================================
+            
+            (function() {
+              var getFormValues, getOptionsCode, makeRows;
+            
+              getFormValues = function($form) {
+                var paramObj;
+                paramObj = {};
+                $.each($form.serializeArray(), function(_, kv) {
+                  if (paramObj.hasOwnProperty(kv.name)) {
+                    paramObj[kv.name] = $.makeArray(paramObj[kv.name]);
+                    return paramObj[kv.name].push(kv.value);
+                  } else {
+                    return paramObj[kv.name] = kv.value;
+                  }
+                });
+                return paramObj;
+              };
+            
+              getOptionsCode = function(rroptions) {
+                var days, items, k, v;
+                days = ["RRule.MO", "RRule.TU", "RRule.WE", "RRule.TH", "RRule.FR", "RRule.SA", "RRule.SU"];
+                items = (function() {
+                  var results;
+                  results = [];
+                  for (k in rroptions) {
+                    v = rroptions[k];
+                    if (v === null) {
+                      v = 'null';
+                    } else if (k === 'freq') {
+                      v = 'RRule.' + RRule.FREQUENCIES[v];
+                    } else if (k === "dtstart" || k === "until") {
+                      v = "new Date(" + [v.getFullYear(), v.getMonth(), v.getDate(), v.getHours(), v.getMinutes(), v.getSeconds()].join(', ') + ")";
+                    } else if (k === "byweekday") {
+                      if (v instanceof Array) {
+                        v = v.map(function(wday) {
+                          var s;
+                          console.log('wday', wday);
+                          s = days[wday.weekday];
+                          if (wday.n) {
+                            s += '.nth(' + wday.n + ')';
+                          }
+                          return s;
+                        });
+                      } else {
+                        v = days[v.weekday];
+                      }
+                    } else if (k === "wkst") {
+                      if (v === RRule.MO) {
+                        continue;
+                      }
+                      v = days[v.weekday];
+                    }
+                    if (v instanceof Array) {
+                      v = '[' + v.join(', ') + ']';
+                    }
+                    console.log(k, ' =', v);
+                    results.push(k + ": " + v);
+                  }
+                  return results;
+                })();
+                return "{\n  " + (items.join(',\n  ')) + "\n}";
+              };
+            
+              makeRows = function(dates) {
+                var cells, cls, date, i, index, part, parts, prevParts, prevStates, rows, states;
+                prevParts = [];
+                prevStates = [];
+                index = 1;
+                rows = (function() {
+                  var j, len, results;
+                  results = [];
+                  for (j = 0, len = dates.length; j < len; j++) {
+                    date = dates[j];
+                    datesArr.push(date);
+                    states = [];
+                    parts = date.toDateString().split(' ');
+                    cells = (function() {
+                      var l, len1, results1;
+                      results1 = [];
+                      for (i = l = 0, len1 = parts.length; l < len1; i = ++l) {
+                        part = parts[i];
+                        if (part !== prevParts[i]) {
+                          states[i] = !prevStates[i];
+                        } else {
+                          states[i] = prevStates[i];
+                        }
+                        cls = states[i] ? 'a' : 'b';
+                        results1.push("<span class='" + cls + "'>" + part + "</span>");
+                      }
+                      return results1;
+                    })();
+                    prevParts = parts;
+                    prevStates = states;
+                    results.push("<div class='date-line'>" + date.toDateString() + "</div>");
+                  }
+                  return results;
+                })();
+                return rows.join('\n\n');
+              };
+            
+              $(function() {
+                $(".examples code").on("click", function() {
+                  var $code;
+                  $code = $(this);
+                  return $code.parents("section:first").find("input").val($code.text()).change();
+                });
+                $("input, select").on('keyup change', function() {
+                    var $in, $section, date, dates, days, e, getDay, html, init, inputMethod, key, makeRule, max, rroptions, rfc, rule, text, v, value, values;
+                    $in = $(this);
+                    $section = $in.parents("section:first");
+                    makeRule = function() {
+                      return RRule.fromText($in.val());
+                    };
+                    init = "";
+                    $("#init").html(init);
+                    $("#dates").html("");
+                    try {
+                      rule = makeRule();
+                    } catch (_error) {
+                      e = _error;
+                      $("#init").append($('<div class="alert alert-danger"/>').text('=> ' + String(e || null)));
+                      return;
+                    }
+                    rfc = rule.toString();
+                    text = rule.toText();
+                    $("#options-output").text(getOptionsCode(rule.origOptions));
+                    if (inputMethod === 'rroptions') {
+                      $("#options-output").parents('tr').hide();
+                    } else {
+                      $("#options-output").parents('tr').show();
+                    }
+                    max = 500;
+                    dates = rule.all(function(date, i) {
+                      if (!rule.options.count && i === max) {
+                        return false;
+                      }
+                      return true;
+                    });
+                    html = makeRows(dates);
+                    if (!rule.options.count) {
+                      html += "<p><em>Viser kun op til de første " + max + " datoer</em></p>";
+                    }
+                    return $("#dates").html(html);
+                });
+                processHash = function() {
+                  var arg, hash, match, method;
+                  hash = location.hash.substring(1);
+                  if (hash) {
+                    match = /^\/(rfc|text)\/(.+)$/.exec(hash);
+                    if (match) {
+                      method = match[1];
+                      arg = match[2];
+                      activateTab($("a[href=#" + method + "-input]"));
+                      return $("#" + method + "-input input:first").val(arg).change();
+                    }
+                  }
+                };
+                processHash();
+                return $(window).on('hashchange', processHash);
+              });
+              
+            }).call(this);
+
+            $('.btn-add-rrule-dates:first').on('click', function() {
+                function getFormattedPartTime(partTime){
+                    if (partTime<10)
+                       return "0"+partTime;
+                    return partTime;
+                };
+                for (var d in datesArr) {
+                    var dstr = getFormattedPartTime(datesArr[d].getDate()) + '-' + getFormattedPartTime(datesArr[d].getMonth()) + '-' + datesArr[d].getFullYear();
+                    $("#existing-recurrence-dates").append('<li data-date="' + dstr + '">' + dstr + ' <input class="btn-add-time timepick" type="text" name="timepick" placeholder="Tilføj tid"><button type="button" class="btn-rm-date">x</button></li>');
+                };
+                UpdateDateList();
+                $('#rruleModal').modal('hide');
+            });
+            
+        });
         
-        
+
     });
     
 //--></script>

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from booking.models import StudyMaterial, VisitAutosend
+from booking.models import StudyMaterial, VisitAutosend, Booking
 from booking.models import UnitType
 from booking.models import Unit
 from booking.models import Resource, OtherResource, Visit
@@ -162,10 +162,13 @@ class OtherResourceForm(forms.ModelForm):
 
     class Meta:
         model = OtherResource
-        fields = ('title', 'teaser', 'description', 'state',
-                  'type', 'tags', 'comment',
+        fields = ('title', 'teaser', 'description', 'price', 'state',
+                  'type', 'tags',
                   'institution_level', 'topics', 'audience',
-                  'enabled', 'unit',)
+                  'locality',
+                  'enabled', 'contact_persons', 'unit',
+                  'preparation_time', 'comment'
+                  )
         widgets = {
             'title': TextInput(attrs={
                 'class': 'titlefield form-control input-sm'
@@ -203,13 +206,14 @@ class VisitForm(forms.ModelForm):
     class Meta:
         model = Visit
         fields = ('title', 'teaser', 'description', 'price', 'state',
-                  'type', 'tags', 'preparation_time', 'comment',
+                  'type', 'tags',
                   'institution_level', 'topics', 'audience',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'duration', 'locality', 'rooms_assignment',
                   'rooms_needed', 'tour_available',
                   'enabled', 'contact_persons', 'unit',
                   'needed_hosts', 'needed_teachers',
+                  'preparation_time', 'comment',
                   )
 
         widgets = {
@@ -270,13 +274,14 @@ class VisitForm(forms.ModelForm):
 
         # Add classes to certain widgets
         for x in ('needed_hosts', 'needed_teachers'):
-            f = self.fields[x]
-            f.widget.attrs['class'] = " ".join([
-                x for x in (
-                    f.widget.attrs.get('class'),
-                    'form-control input-sm'
-                ) if x
-            ])
+            f = self.fields.get(x)
+            if f is not None:
+                f.widget.attrs['class'] = " ".join([
+                    x for x in (
+                        f.widget.attrs.get('class'),
+                        'form-control input-sm'
+                    ) if x
+                ])
 
     def clean_type(self):
         instance = getattr(self, 'instance', None)
@@ -307,20 +312,122 @@ class VisitForm(forms.ModelForm):
         return user.userprofile.get_unit_queryset()
 
 
-VisitStudyMaterialFormBase = inlineformset_factory(Visit,
-                                                   StudyMaterial,
-                                                   fields=('file',),
-                                                   can_delete=True, extra=1)
+class StudentForADayForm(VisitForm):
+    class Meta:
+        model = Visit
+        fields = ('type', 'title', 'teaser', 'description', 'state',
+                  'institution_level', 'topics', 'audience',
+                  'duration', 'locality',
+                  'enabled', 'contact_persons', 'unit',
+                  'needed_hosts', 'needed_teachers',
+                  'preparation_time', 'comment',
+                  )
+        widgets = VisitForm.Meta.widgets
 
 
-class VisitStudyMaterialForm(VisitStudyMaterialFormBase):
+class InternshipForm(VisitForm):
+    class Meta:
+        model = Visit
+        fields = ('type', 'title', 'teaser', 'description', 'state',
+                  'institution_level', 'topics', 'audience',
+                  'locality',
+                  'contact_persons', 'unit',
+                  'preparation_time', 'comment',
+                  )
+        widgets = VisitForm.Meta.widgets
+
+
+class OpenHouseForm(VisitForm):
+    class Meta:
+        model = Visit
+        fields = ('type', 'title', 'teaser', 'description', 'state',
+                  'institution_level', 'topics', 'audience',
+                  'locality',
+                  'contact_persons', 'unit',
+                  'preparation_time', 'comment',
+                  )
+        widgets = VisitForm.Meta.widgets
+
+
+class TeacherVisitForm(VisitForm):
+    class Meta:
+        model = Visit
+        fields = ('type', 'title', 'teaser', 'description', 'price', 'state',
+                  'institution_level', 'topics', 'audience',
+                  'minimum_number_of_visitors', 'maximum_number_of_visitors',
+                  'duration', 'locality', 'rooms_assignment',
+                  'rooms_needed',
+                  'enabled', 'contact_persons', 'unit',
+                  'needed_hosts', 'needed_teachers',
+                  'preparation_time', 'comment',
+                  )
+        widgets = VisitForm.Meta.widgets
+
+
+class ClassVisitForm(VisitForm):
+    class Meta:
+        model = Visit
+        fields = ('type', 'title', 'teaser', 'description', 'price', 'state',
+                  'institution_level', 'topics', 'audience',
+                  'minimum_number_of_visitors', 'maximum_number_of_visitors',
+                  'duration', 'locality', 'rooms_assignment',
+                  'rooms_needed', 'tour_available',
+                  'enabled', 'contact_persons', 'unit',
+                  'needed_hosts', 'needed_teachers',
+                  'preparation_time', 'comment',
+                  )
+        widgets = VisitForm.Meta.widgets
+
+
+class StudyProjectForm(VisitForm):
+    class Meta:
+        model = Visit
+        fields = ('type', 'title', 'teaser', 'description', 'state',
+                  'institution_level', 'topics', 'audience',
+                  'locality',
+                  'rooms_assignment', 'rooms_needed',
+                  'contact_persons', 'unit',
+                  'preparation_time', 'comment',
+                  )
+        widgets = VisitForm.Meta.widgets
+
+
+class AssignmentHelpForm(VisitForm):
+    class Meta:
+        model = Visit
+        fields = ('type', 'title', 'teaser', 'description', 'state',
+                  'institution_level', 'topics', 'audience',
+                  'contact_persons', 'unit',
+                  'comment',
+                  )
+        widgets = VisitForm.Meta.widgets
+
+
+class StudyMaterialForm(VisitForm):
+    class Meta:
+        model = Visit
+        fields = ('type', 'title', 'teaser', 'description', 'price', 'state',
+                  'institution_level', 'topics', 'audience',
+                  'contact_persons', 'unit',
+                  'comment'
+                  )
+        widgets = VisitForm.Meta.widgets
+
+
+ResourceStudyMaterialFormBase = inlineformset_factory(Resource,
+                                                      StudyMaterial,
+                                                      fields=('file',),
+                                                      can_delete=True, extra=1)
+
+
+class ResourceStudyMaterialForm(ResourceStudyMaterialFormBase):
 
     def __init__(self, data, instance=None):
-        super(VisitStudyMaterialForm, self).__init__(data)
+        super(ResourceStudyMaterialForm, self).__init__(data)
         self.studymaterials = StudyMaterial.objects.filter(resource=instance)
 
 
-VisitAutosendFormSet = inlineformset_factory(
+VisitAutosendFormSetBase = inlineformset_factory(
     Visit,
     VisitAutosend,
     fields=('template_key', 'enabled', 'days'),
@@ -328,6 +435,12 @@ VisitAutosendFormSet = inlineformset_factory(
     min_num=1,
     extra=0
 )
+
+
+class VisitAutosendFormSet(VisitAutosendFormSetBase):
+
+    def is_valid(self):
+        return True
 
 
 class BookingForm(forms.ModelForm):
@@ -534,7 +647,23 @@ class ClassBookingForm(BookingForm):
 class TeacherBookingForm(BookingForm):
     class Meta:
         model = TeacherBooking
-        fields = ('subjects', )
+        fields = ('subjects', 'notes',)
+        widgets = {
+            'notes': Textarea(attrs={
+                'class': 'form-control'
+            })
+        }
+
+
+class StudentForADayBookingForm(BookingForm):
+    class Meta:
+        model = Booking
+        fields = ('notes',)
+        widgets = {
+            'notes': Textarea(attrs={
+                'class': 'form-control'
+            })
+        }
 
 
 BookingSubjectLevelForm = \

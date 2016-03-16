@@ -16,7 +16,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.template.base import Template, VariableNode
 
 from recurrence.fields import RecurrenceField
-from booking.utils import ClassProperty, full_email
+from booking.utils import ClassProperty, full_email, CustomStorage
 from resource_booking import settings
 
 import datetime
@@ -39,7 +39,14 @@ LOGACTION_DISPLAY_MAP = {
 
 
 def log_action(user, obj, action_flag, change_message=''):
-    user_id = user.pk if user else None
+    if user and hasattr(user, "pk") and user.pk:
+        user_id = user.pk
+    else:
+        # Late import due to mutual import conflicts
+        from profile.models import get_public_web_user  # noqa
+        pw_user = get_public_web_user()
+        user_id = pw_user.pk
+
     content_type_id = None
     object_id = None
     object_repr = ""
@@ -314,7 +321,8 @@ class StudyMaterial(models.Model):
     )
     type = models.IntegerField(choices=study_material_choices, default=URL)
     url = models.URLField(null=True, blank=True)
-    file = models.FileField(upload_to='material', null=True, blank=True)
+    file = models.FileField(upload_to='material', null=True,
+                            blank=True, storage=CustomStorage())
     resource = models.ForeignKey('Resource', null=True,
                                  on_delete=models.CASCADE,
                                  )
@@ -359,6 +367,7 @@ class EmailTemplate(models.Model):
     NOTIFY_ALL__BOOKING_COMPLETE = 8  # ticket 13813
     NOTIFY_ALL__BOOKING_CANCELED = 9  # ticket 13814
     NOTITY_ALL__BOOKING_REMINDER = 10  # ticket 13815
+    NOTIFY_HOST__HOSTROLE_IDLE = 11  # ticlet 13805
 
     # Choice labels
     key_choices = [
@@ -373,6 +382,7 @@ class EmailTemplate(models.Model):
         (NOTIFY_ALL__BOOKING_COMPLETE, _(u'Alle: Booking færdigplanlagt')),
         (NOTIFY_ALL__BOOKING_CANCELED, _(u'Alle: Booking aflyst')),
         (NOTITY_ALL__BOOKING_REMINDER, _(u'Alle: Reminder om booking')),
+        (NOTIFY_HOST__HOSTROLE_IDLE, _(u'Vært: Ledig værtsrolle')),
     ]
 
     @staticmethod
@@ -406,7 +416,8 @@ class EmailTemplate(models.Model):
     contact_person_keys = [
         NOTIFY_HOST__BOOKING_CREATED,
         NOTIFY_ALL__BOOKING_CANCELED,
-        NOTITY_ALL__BOOKING_REMINDER
+        NOTITY_ALL__BOOKING_REMINDER,
+        NOTIFY_HOST__HOSTROLE_IDLE
     ]
     # Templates that will be autosent to booker
     booker_keys = [
@@ -438,6 +449,11 @@ class EmailTemplate(models.Model):
     # Template that will be autosent to hosts
     # when they are added to an occurrence
     occurrence_added_host_key = NOTIFY_HOST__ASSOCIATED
+    # Templates where the "days" field makes sense
+    enable_days = [
+        NOTITY_ALL__BOOKING_REMINDER,
+        NOTIFY_HOST__HOSTROLE_IDLE
+    ]
 
     key = models.IntegerField(
         verbose_name=u'Key',
@@ -991,10 +1007,6 @@ class GymnasieLevel(models.Model):
 class OtherResource(Resource):
     """A non-bookable, non-visit resource, basically material on the Web."""
 
-    class Meta:
-        verbose_name = _(u"tilbud uden booking")
-        verbose_name_plural = _(u"tilbud uden booking")
-
     objects = SearchManager(
         fields=(
             'title',
@@ -1006,9 +1018,7 @@ class OtherResource(Resource):
         auto_update_search_field=True
     )
 
-    applicable_types = [Resource.OTHER_OFFERS, Resource.STUDY_MATERIAL,
-                        Resource.OPEN_HOUSE, Resource.ASSIGNMENT_HELP,
-                        Resource.STUDIEPRAKTIK]
+    applicable_types = []
 
     @ClassProperty
     def type_choices(self):
@@ -1029,13 +1039,65 @@ class OtherResource(Resource):
     def get_absolute_url(self):
         return reverse('otherresource-view', args=[self.pk])
 
+    def clone_to_visit(self):
+        save = []
+        visit = Visit()
+        visit.enabled = self.enabled
+        visit.type = self.type
+        visit.state = self.state
+        visit.title = self.title
+        visit.teaser = self.teaser
+        visit.mouseover_description = self.mouseover_description
+        visit.unit = self.unit
+        visit.audience = self.audience
+        visit.institution_level = self.institution_level
+        visit.locality = self.locality
+        visit.recurrences = self.recurrences
+        visit.comment = self.comment
+        visit.extra_search_text = self.extra_search_text
+        visit.preparation_time = self.preparation_time
+        visit.price = self.price
+        visit.save()
+        for link in self.links.all():
+            visit.links.add(link)
+        for contact_person in self.contact_persons.all():
+            visit.contact_persons.add(contact_person)
+        for intermediate in self.resourcegymnasiefag_set.all():
+            values = [str(intermediate.subject.id)]
+            for level in intermediate.level.all():
+                values.append(str(level.id))
+            clone = ResourceGymnasieFag.create_from_submitvalue(
+                visit, ','.join(values)
+            )
+            save.append(clone)
+        for intermediate in self.resourcegrundskolefag_set.all():
+            clone = ResourceGrundskoleFag()
+            clone.resource = visit
+            clone.subject = intermediate.subject
+            clone.class_level_max = intermediate.class_level_max
+            clone.class_level_min = intermediate.class_level_min
+            save.append(clone)
+        for tag in self.tags.all():
+            visit.tags.add(tag)
+        for topic in self.topics.all():
+            visit.topics.add(topic)
+        for item in save:
+            item.save()
+        print "OtherResource %d cloned into Visit %d" % (self.id, visit.id)
+
+    @staticmethod
+    def migrate_to_visits():
+        for otherresource in OtherResource.objects.all():
+            otherresource.clone_to_visit()
+            otherresource.delete()
+
 
 class Visit(Resource):
     """A bookable visit of any kind."""
 
     class Meta:
-        verbose_name = _("tilbud med booking")
-        verbose_name_plural = _("tilbud med booking")
+        verbose_name = _("tilbud")
+        verbose_name_plural = _("tilbud")
 
     objects = SearchManager(
         fields=(
@@ -1049,8 +1111,17 @@ class Visit(Resource):
         auto_update_search_field=True
     )
 
-    applicable_types = [Resource.STUDENT_FOR_A_DAY, Resource.GROUP_VISIT,
-                        Resource.STUDY_PROJECT, Resource.TEACHER_EVENT]
+    applicable_types = [
+        Resource.STUDENT_FOR_A_DAY, Resource.GROUP_VISIT,
+        Resource.TEACHER_EVENT, Resource.OTHER_OFFERS, Resource.STUDY_MATERIAL,
+        Resource.OPEN_HOUSE, Resource.ASSIGNMENT_HELP, Resource.STUDIEPRAKTIK,
+        Resource.STUDY_PROJECT
+    ]
+
+    bookable_types = [
+        Resource.STUDENT_FOR_A_DAY, Resource.GROUP_VISIT,
+        Resource.TEACHER_EVENT
+    ]
 
     @ClassProperty
     def type_choices(self):
@@ -1233,6 +1304,10 @@ class Visit(Resource):
                 EmailTemplate.contact_person_keys:
             recipients.extend(self.contact_persons.all())
         return recipients
+
+    @property
+    def is_type_bookable(self):
+        return self.type in self.bookable_types
 
 
 class VisitOccurrence(models.Model):
@@ -1500,6 +1575,14 @@ class VisitOccurrence(models.Model):
             return "expired"
         return ""
 
+    @property
+    def needs_teachers(self):
+        return len(self.teachers.all()) < self.visit.needed_teachers
+
+    @property
+    def needs_hosts(self):
+        return len(self.hosts.all()) < self.visit.needed_hosts
+
     def is_booked(self):
         """Has this VisitOccurrence instance been booked yet?"""
         return len(self.bookings.all()) > 0
@@ -1652,7 +1735,7 @@ class Autosend(models.Model):
     days = models.PositiveSmallIntegerField(
         null=True,
         blank=True,
-        verbose_name=_(u'Afsendes dage inden besøget'),
+        verbose_name=_(u'Dage'),
     )
     enabled = models.BooleanField(
         verbose_name=_(u'Aktiv'),
@@ -2046,6 +2129,11 @@ class Booking(models.Model):
         verbose_name=u'Bemærkninger'
     )
 
+    created_time = models.DateTimeField(
+        blank=False,
+        auto_now_add=True,
+    )
+
     def get_occurrence_attr(self, attrname):
         if not self.visitoccurrence:
             return None
@@ -2086,7 +2174,6 @@ class Booking(models.Model):
     def get_recipients(self, template_key):
         recipients = self.visitoccurrence.get_recipients(template_key)
         if template_key in EmailTemplate.booker_keys:
-            print "We may add booker"
             recipients.add(self.booker)
         return recipients
 

@@ -2275,7 +2275,7 @@
     }
     return getnlp._nlp
   }
-}))
+}));
 
 
 /*!
@@ -2299,7 +2299,7 @@
  */
 /* global module, define */
 
-;(function (root, factory) {
+(function (root, factory) {
   if (typeof module === 'object' && module.exports) {
     module.exports = factory()
   } else if (typeof define === 'function' && define.amd) {
@@ -2805,7 +2805,7 @@
 
         ttr.expect('every')
         if ((n = ttr.accept('number'))) options.interval = parseInt(n[0], 10)
-        if (ttr.isDone()) throw new Error('Unexpected end')
+        if (ttr.isDone()) throw new Error('Der mangler noget')
 
         switch (ttr.symbol) {
           case 'day(s)':
@@ -3103,7 +3103,7 @@
         if (ttr.symbol === 'until') {
           var date = Date.parse(ttr.text)
 
-          if (!date) throw new Error('Cannot parse until date:' + ttr.text)
+          if (!date) throw new Error('Kan ikke forstå "indtil" dato:' + ttr.text)
           options.until = new Date(date)
         } else if (ttr.accept('for')) {
           options.count = ttr.value[0]
@@ -3294,7 +3294,7 @@
         'february': /^feb(ruar)?/i,
         'march': /^mar(ts)?/i,
         'april': /^apr(il)?/i,
-        'may': /^maj/i,
+        'may': /^maj?/i,
         'june': /^jun(i)?/i,
         'july': /^jul(i)?/i,
         'august': /^aug(ust)?/i,
@@ -3320,4 +3320,4 @@
       }
     }
   }
-}))
+}));

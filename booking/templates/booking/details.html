@@ -17,7 +17,7 @@
 
             <div class="panel panel-default">
                 <div class="panel-body">
-                    {% url 'visit-view' object.visit.id as visiturl %}
+                    {% url 'visit-view' object.visitoccurrence.visit.id as visiturl %}
                     {% blocktrans with firstname=object.booker.firstname lastname=object.booker.lastname visittitle=object.visit.title %}
                         <strong>{{ firstname }} {{ lastname }}</strong> har booket <a href="{{ visiturl }}">{{ visittitle }}</a>
                     {% endblocktrans %}
@@ -91,7 +91,7 @@
                 <dd>{{ object.booker.attendee_count }}</dd>
 
                 <dt>{% trans 'Noter:' %}</dt>
-                <dd>{{ object.booker.notes }}</dd>
+                <dd>{{ object.notes }}</dd>
 
                 {% if object.classbooking %}
                     {% if object.classbooking.time %}
@@ -124,11 +124,11 @@
                         <dl class="dl-horizontal">
                             
                             <dt>{% trans 'Link til tilbud:' %}</dt>
-                            <dd><a href="{% url 'visit-view' object.visit.id %}">{{ object.visit.title }}</a></dd>
+                            <dd><a href="{% url 'visit-view' object.visitoccurrence.visit.id %}">{{ object.visit.title }}</a></dd>
 
                             {% if object.visit.title %}
                                 <dt>{% trans 'Titel:' %}</dt>
-                                <dd><a href="{% url 'visit-view' object.visit.id %}">{{ object.visit.title }}</a></dd>
+                                <dd><a href="{% url 'visit-view' object.visitoccurrence.visit.id %}">{{ object.visit.title }}</a></dd>
                             {% endif %}
 
                             {% if object.visit.get_audience_display %}
