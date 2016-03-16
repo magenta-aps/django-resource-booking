@@ -493,39 +493,49 @@ class SearchView(ListView):
                 num_bookings=Count('visit__visitoccurrence__bookings')
             )
 
-            date_cond = None
+            date_cond = Q()
 
-            # Filter on from-time if one is specified or from current time
-            # if not
             t_from = self.get_date_from_request("from")
-            if t_from is None:
-                t_from = timezone.now()
-            self.from_datetime = t_from
-
-            # Search for either resources without dates specified or
-            # resources that have times available in the future
-            date_cond = (
-                Q(visit__visitoccurrence__bookable=True) &
-                Q(visit__visitoccurrence__start_datetime__gt=t_from)
-            )
-
-            # To time will match latest end time if it exists and else
-            # match the first endtime
             t_to = self.get_date_from_request("to")
+
+            if not self.request.user.is_authenticated():
+                # Force searching by start date if none is specified
+                if t_from is None:
+                    t_from = timezone.now()
+
+                # Public users only want to search within bookable dates
+                ok_states = VisitOccurrence.BOOKABLE_STATES
+                date_cond = (
+                    Q(visit__visitoccurrence__bookable=True) &
+                    Q(visit__visitoccurrence__workflow_status__in=ok_states)
+                )
+
+            if t_from:
+                date_cond = (
+                    date_cond &
+                    Q(visit__visitoccurrence__start_datetime__gt=t_from)
+                )
+
             if t_to:
                 date_cond = date_cond & Q(
                     Q(visit__visitoccurrence__start_datetime__lte=t_from)
                 )
-            self.to_datetime = t_to
 
-            qs = qs.filter(
-                # Stuff that is not bookable
-                Q(visit__isnull=True) |
-                # Anything without any specific booking times
-                Q(visit__visitoccurrence__isnull=True) |
-                # Bookable occurences that matches the date conditions
-                date_cond
-            )
+            self.from_datetime = t_from or ""
+            self.to_datetime = t_to or ""
+
+            if len(date_cond):
+                # Since not all resources have dates we have to find those
+                # as well as the ones matching the date limit. We do this
+                # with the following OR condition:
+                qs = qs.filter(
+                    # Stuff that is not bookable
+                    Q(visit__isnull=True) |
+                    # Anything without any specific booking times
+                    Q(visit__visitoccurrence__isnull=True) |
+                    # The actual date conditions
+                    date_cond
+                )
 
             qs = qs.distinct()
 
@@ -535,7 +545,7 @@ class SearchView(ListView):
 
     def annotate(self, qs):
         return qs.annotate(
-            num_occurences=Count('visit__visitoccurrence__pk'),
+            num_occurences=Count('visit__visitoccurrence__pk', distinct=True),
             first_occurence=Min('visit__visitoccurrence__start_datetime')
         )
 
