@@ -1483,6 +1483,18 @@ class VisitOccurrence(models.Model):
     BEING_PLANNED_STATUS_TEXT = u'Under planlægning'
     PLANNED_STATUS_TEXT = u'Planlagt (ressourcer tildelt)'
 
+    status_to_class_map = {
+        WORKFLOW_STATUS_BEING_PLANNED: 'danger',
+        WORKFLOW_STATUS_REJECTED: 'danger',
+        WORKFLOW_STATUS_PLANNED: 'success',
+        WORKFLOW_STATUS_CONFIRMED: 'success',
+        WORKFLOW_STATUS_REMINDED: 'success',
+        WORKFLOW_STATUS_EXECUTED: 'success',
+        WORKFLOW_STATUS_EVALUATED: 'success',
+        WORKFLOW_STATUS_CANCELLED: 'warning',
+        WORKFLOW_STATUS_NOSHOW: 'warning',
+    }
+
     workflow_status_choices = (
         (WORKFLOW_STATUS_BEING_PLANNED, _(BEING_PLANNED_STATUS_TEXT)),
         (WORKFLOW_STATUS_REJECTED, _(u'Afvist af undervisere eller værter')),
@@ -1646,6 +1658,9 @@ class VisitOccurrence(models.Model):
         )
         return res['attendees'] or 0
 
+    def get_workflow_status_class(self):
+        return self.status_to_class_map.get(self.workflow_status, 'default')
+
     def __unicode__(self):
         if self.start_datetime:
             return u'%s @ %s' % (self.visit.title, self.display_value)
@@ -1681,6 +1696,19 @@ class VisitOccurrence(models.Model):
                 result.append(booking.as_searchtext())
 
         return " ".join(result)
+
+    @classmethod
+    def being_planned_queryset(cls, **kwargs):
+        return cls.objects.filter(
+            workflow_status=cls.WORKFLOW_STATUS_BEING_PLANNED,
+            **kwargs
+        )
+
+    @classmethod
+    def planned_queryset(cls, **kwargs):
+        return cls.objects.exclude(
+            workflow_status=cls.WORKFLOW_STATUS_BEING_PLANNED,
+        ).filter(**kwargs)
 
     def save(self, *args, **kwargs):
 
