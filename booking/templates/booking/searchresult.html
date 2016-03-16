@@ -1,4 +1,4 @@
-{%extends "index.html" %}
+{% extends "index.html" %}
 {% load staticfiles %}
 {% load booking_tags %}
 {% load i18n %}
@@ -11,7 +11,7 @@
 
             {% include 'common/breadcrumbrow.html' %}
 
-            <h1>Søgeresultat</h1>
+            <h1>{% trans 'Søgeresultat' %}</h1>
             <div class="divider"></div>
 
             <form class="clearfix" role="søg" action={% url 'visit-occ-search' %}>
@@ -32,13 +32,13 @@
 
             <div class="divider"></div>
             <h2>
-                Søgningen er begrænset til:
+                {% trans 'Søgningen er begrænset til:' %}
             </h2>
             <ul>
                 <li>{{ unit_limit_text }}</li>
             </ul>
             {% if not results %}
-            <p>Din søgning gav ikke noget resultat.</p>
+            <p>{% trans 'Din søgning gav ikke noget resultat.' %}</p>
             {% else %}
             <h2 class="bold">
                 {{ paginator.count }} resultater matcher din søgning
@@ -53,9 +53,9 @@
                     <div class="media-body">
                         <strong><a href="{% url 'visit-occ-view' res.pk %}">{% trans 'Arrangement' %} {{ res.pk }}</a></strong>
                         <dl class="dl-horizontal">
-                            <dt>Tilbud:</dt>
+                            <dt>{% trans 'Tilbud:' %}</dt>
                             <dd><a href="{% url 'visit-view' res.visit.pk %}">{{ res.visit.title }}</a></dd>
-                            <dt>Booket af:</dt>
+                            <dt>{% trans 'Booket af:' %}</dt>
                             <dd>{{ res.nr_bookers }} personer</dd>
                         </dl>
                     </div>
