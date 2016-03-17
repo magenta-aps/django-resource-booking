@@ -2792,7 +2792,7 @@
 
     var parseText = function (text, language) {
       var options = {}
-      var ttr = new Parser((language || DANISH).tokens)
+      var ttr = new Parser((language || ENGLISH).tokens)
 
       if (!ttr.start(text)) return null
 
@@ -3248,61 +3248,6 @@
         'november': /^nov(ember)?/i,
         'december': /^dec(ember)?/i,
         'comma': /^(,\s*|(and|or)\s*)+/i
-      }
-    }
-    
-    var DANISH = {
-      dayNames: [
-        'søndag', 'mandag', 'tirsdag', 'onsdag',
-        'torsdag', 'fredag', 'lørdag'
-      ],
-      monthNames: [
-        'januar', 'februar', 'marts', 'april', 'maj',
-        'juni', 'juli', 'august', 'september', 'oktober',
-        'november', 'december'
-      ],
-      tokens: {
-        'SKIP': /^[ \r\n\t]+|^\.$/,
-        'number': /^[1-9][0-9]*/,
-        'numberAsText': /^(en|to|tre)/i,
-        'every': /^hver/i,
-        'day(s)': /^dage?/i,
-        'weekday(s)': /^ugedage?/i,
-        'week(s)': /^uger?/i,
-        'hour(s)': /^timer?/i,
-        'month(s)': /^måneder?/i,
-        'year(s)': /^år?/i,
-        'on': /^(på|om)/i,
-        'at': /^(at)/i,
-        'the': /^den/i,
-        'first': /^første/i,
-        'second': /^anden/i,
-        'third': /^tredje/i,
-        'nth': /^([1-9][0-9]*)(\.|th|nd|rd|st)/i,
-        'last': /^sidste/i,
-        'for': /^over/i,
-        'time(s)': /^gange?/i,
-        'until': /^(ind)?til/i,
-        'monday': /^ma(n(dag)?)?/i,
-        'tuesday': /^ti(r(s(dag)?)?)?/i,
-        'wednesday': /^on(s(dag)?)?/i,
-        'thursday': /^to(r(sdag)?)?/i,
-        'friday': /^fr(e(dag)?)?/i,
-        'saturday': /^lø(r(dag)?)?/i,
-        'sunday': /^sø(n(dag)?)?/i,
-        'january': /^jan(uar)?/i,
-        'february': /^feb(ruar)?/i,
-        'march': /^mar(ts)?/i,
-        'april': /^apr(il)?/i,
-        'may': /^maj?/i,
-        'june': /^jun(i)?/i,
-        'july': /^jul(i)?/i,
-        'august': /^aug(ust)?/i,
-        'september': /^sep(t(ember)?)?/i,
-        'october': /^okt(ober)?/i,
-        'november': /^nov(ember)?/i,
-        'december': /^dec(ember)?/i,
-        'comma': /^(,\s*|(og|eller)\s*)+/i
       }
     }
     
