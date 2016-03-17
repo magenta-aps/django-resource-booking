@@ -193,6 +193,30 @@ class UserProfile(models.Model):
         # Everyone else just get access to their own group
         return Unit.objects.filter(pk=unit.pk)
 
+    def get_faculty(self):
+        unit = self.unit
+
+        while unit and unit.type.name != "Fakultet":
+            unit = unit.parent
+
+        return unit
+
+    def get_admins(self):
+        return User.objects.filter(
+            userprofile__user_role__role=ADMINISTRATOR
+        )
+
+    def get_faculty_admins(self):
+        faculty = self.get_faculty()
+
+        if faculty:
+            return User.objects.filter(
+                userprofile__user_role__role=FACULTY_EDITOR,
+                userprofile__unit=faculty
+            )
+        else:
+            return User.objects.none()
+
 
 class EmailLoginEntry(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4)
