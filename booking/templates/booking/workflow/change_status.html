@@ -2,30 +2,32 @@
 {% load staticfiles %}
 {% load i18n %}
 
+{% block htmltitle %} - {% blocktrans with object=object %}Skift status for {{ object }}{% endblocktrans %}{% endblock %}
+
 {% block content %}
     {% include 'common/breadcrumbrow.html' %}
 
     <div class="row titlebar hidden-print">
-        <div class="col-sm-12 col-md-9"><h2>Skift status for {{ object }}</h2></div>
+        <div class="col-sm-12 col-md-9">
+            <h2>{% blocktrans with object=object %}Skift status for {{ object }}{% endblocktrans %}</h2>
+        </div>
         <div class="divider"></div>
     </div>
     <div class="row">
         <div class="col-sm-12 col-md-8">
             {% if object.planned_status_is_blocked %}
             <p>
-                Bemærk at det ikke er skifte til status
-                '{{ object.PLANNED_STATUS_TEXT }}' med mindre der er blevet tildelt
-                både starttidspunkt, undervisere, værter og lokaler.
-                <a href="{% url 'visit-occ-view' object.pk %}">Klik her for at vende
-                tilbage og rette i tildelingerne</a>.
+                {% blocktrans with text=object.PLANNED_STATUS_TEXT %}
+                Bemærk at det ikke er muligt at skifte til status '{{ text }}' med mindre der er blevet tildelt både starttidspunkt, undervisere, værter og lokaler.
+                {% endblocktrans %}
+                <a href="{% url 'visit-occ-view' object.pk %}">{% trans 'Klik her for at vende tilbage og rette i tildelingerne' %}</a>.
             </p>
             {% endif %}
-            <form name="changebookinstatusform" id="changebookinstatusform"
-                action="{% url 'change-visit-occ-status' object.pk %}" method="post">
+            <form name="changebookinstatusform" id="changebookinstatusform" action="{% url 'change-visit-occ-status' object.pk %}" method="post">
                 {% csrf_token %}
                 {{ form }}
-                <input class="btn btn-success btn-sm" type="submit" value="Skift status" name="confirm" />
-                <input class="btn btn-danger btn-sm" type="submit" value="Annullér" name="cancel" />
+                <input class="btn btn-success btn-sm" type="submit" value="{% trans 'Skift status' %}" name="confirm" />
+                <input class="btn btn-danger btn-sm" type="submit" value="{% trans 'Annullér' %}" name="cancel" />
             </form>
         </div>
     </div>
