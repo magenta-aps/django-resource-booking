@@ -190,7 +190,7 @@ class BecomeSomethingView(AutologgerMixin, DetailView):
     m2m_attribute = None
 
     ERROR_NONE_NEEDED = _(
-        u"Det valgte arrangement har ikke behov for flere personer i den " +
+        u"Det valgte besøg har ikke behov for flere personer i den " +
         u"givne rolle"
     )
     ERROR_WRONG_ROLE = _(
@@ -250,12 +250,12 @@ class BecomeTeacherView(BecomeSomethingView):
     m2m_attribute = "teachers"
     template_name = "booking/workflow/become_teacher.html"
 
-    ERROR_NONE_NEEDED = _(u"Arrangementet har ikke brug for flere undervisere")
+    ERROR_NONE_NEEDED = _(u"Besøget har ikke brug for flere undervisere")
     ERROR_WRONG_ROLE = _(
         u"Du skal have rollen underviser for at kunne bruge denne funktion"
     )
     ERROR_ALREADY_REGISTERED = _(
-        u"Du er allerede underviser på arrangementet"
+        u"Du er allerede underviser på besøget"
     )
 
     def needs_more(self):
@@ -269,12 +269,12 @@ class BecomeHostView(BecomeSomethingView):
     m2m_attribute = "hosts"
     template_name = "booking/workflow/become_host.html"
 
-    ERROR_NONE_NEEDED = _(u"Arrangementet har ikke brug for flere værter")
+    ERROR_NONE_NEEDED = _(u"Besøget har ikke brug for flere værter")
     ERROR_WRONG_ROLE = _(
         u"Du skal have rollen vært for at kunne bruge denne funktion"
     )
     ERROR_ALREADY_REGISTERED = _(
-        u"Du er allerede vært på arrangementet"
+        u"Du er allerede vært på besøget"
     )
 
     def needs_more(self):
