@@ -1509,6 +1509,10 @@ class VisitDetailView(DetailView):
         ]
 
         context['thisurl'] = reverse('visit-view', args=[self.object.id])
+        context['searchurl'] = self.request.GET.get(
+            "search",
+            reverse('search')
+        )
 
         context['EmailTemplate'] = EmailTemplate
 
