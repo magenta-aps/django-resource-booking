@@ -19,13 +19,12 @@
     </div>
     <div class="row">
         <div class="col-sm-12 col-md-8">
-            <form name="changebookinroomsform" id="changebookinroomsform"
-                action="{% url 'change-visit-occ-starttime' object.pk %}" method="post">
+            <form name="changebookinroomsform" id="changebookinroomsform" action="{% url 'change-visit-occ-starttime' object.pk %}" method="post">
                 {% csrf_token %}
                 {{ form }}
                 <div>
-                <input class="btn btn-success btn-sm" type="submit" value="Opdater" name="confirm" />
-                <input class="btn btn-danger btn-sm" type="submit" value="Annullér" name="cancel" />
+                <input class="btn btn-success btn-sm" type="submit" value="{% trans 'Opdater' %}" name="confirm" />
+                <input class="btn btn-danger btn-sm" type="submit" value="{% trans 'Annullér' %}" name="cancel" />
                 </div>
             </form>
         </div>

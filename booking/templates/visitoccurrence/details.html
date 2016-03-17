@@ -34,7 +34,7 @@
                     {% trans 'Der er endnu ikke et fastlagt et tidspunkt for dette arrangement.' %}
                     {% if object.desired_time %}
                         {% trans 'Gæsten har ønsket følgende tidspunkt:' %}
-                    <pre class="desired-time">{{ object.desired_time }}</pre>
+                        <pre class="desired-time">{{ object.desired_time }}</pre>
                     {% endif %}
                 </div>
                 {% endif %}
@@ -76,10 +76,9 @@
 
                     {% if not object.can_assign_resources %}
                         <p>
-                            Det er ikke længere muligt at tildele ressourcer til dette
-                            arrangement. Hvis du ønsker at rette i de tildelte ressourcer
-                            skal du ændre status til
-                            '{{object.BEING_PLANNED_STATUS_TEXT}}'.
+                            {% blocktrans with text=object.BEING_PLANNED_STATUS_TEXT %}
+                            Det er ikke længere muligt at tildele ressourcer til dette arrangement. Hvis du ønsker at rette i de tildelte ressourcer skal du ændre status til '{{ text }}'.
+                            {% endblocktrans %}
                         </p>
                     {% endif %}
 

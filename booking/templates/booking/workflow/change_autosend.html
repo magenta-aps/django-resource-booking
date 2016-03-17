@@ -16,8 +16,7 @@
     </div>
     <div class="row">
         <div class="col-sm-12">
-            <form name="changebookingautosendform" id="changebookingautosendform"
-                action="{% url 'change-visit-occ-autosend' object.pk %}" method="post">
+            <form name="changebookingautosendform" id="changebookingautosendform" action="{% url 'change-visit-occ-autosend' object.pk %}" method="post">
                 {% csrf_token %}
                 {% with autosendformset=form %}
                     {{ autosendformset.management_form }}
@@ -29,8 +28,8 @@
                         {% endfor %}
                     </div>
                     <a id="addAutosend">{% trans "Tilføj ny" %}</a>
-                    <input class="btn btn-success btn-sm" type="submit" value="Opdater" name="confirm" />
-                    <input class="btn btn-danger btn-sm" type="submit" value="Annullér" name="cancel" />
+                    <input class="btn btn-success btn-sm" type="submit" value="{% trans 'Opdater' %}" name="confirm" />
+                    <input class="btn btn-danger btn-sm" type="submit" value="{% trans 'Annullér' %}" name="cancel" />
                 {% endwith %}
             </form>
         </div>

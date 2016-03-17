@@ -15,19 +15,19 @@
     </div>
     <div class="row">
         <div class="col-sm-12 col-md-8">
-            Antal nødvendige undervisere angivet på "{{ object.visit.title }}":
-            {{ object.visit.get_needed_teachers_display }}
+            {% blocktrans with title=object.visit.title needed=object.visit.get_needed_teachers_display %}
+            Antal nødvendige undervisere angivet på "{{ title }}": {{ needed }}
+            {% endblocktrans %}
         </div>
     </div>
     <div class="divider"></div>
     <div class="row">
         <div class="col-sm-12 col-md-8">
-            <form name="changebookinteachersform" id="changebookinteachersform"
-                action="{% url 'change-visit-occ-teachers' object.pk %}" method="post">
+            <form name="changebookinteachersform" id="changebookinteachersform" action="{% url 'change-visit-occ-teachers' object.pk %}" method="post">
                 {% csrf_token %}
                 {{ form.as_p }}
-                <input class="btn btn-success btn-sm" type="submit" value="Opdater" name="confirm" />
-                <input class="btn btn-danger btn-sm" type="submit" value="Annullér" name="cancel" />
+                <input class="btn btn-success btn-sm" type="submit" value="{% trans 'Opdater' %}" name="confirm" />
+                <input class="btn btn-danger btn-sm" type="submit" value="{% trans 'Annullér' %}" name="cancel" />
             </form>
         </div>
     </div>

@@ -17,25 +17,23 @@
         <div class="col-sm-12 col-md-8">
             {% if view.is_valid %}
                 {% if request.method == "GET" %}
-                    <form name="becomehostform" id="becomehostform"
-                        action="{% url 'become-host' object.pk %}" method="post">
+                    <form name="becomehostform" id="becomehostform" action="{% url 'become-host' object.pk %}" method="post">
                         {% csrf_token %}
-                        <p>Ønsker du at blive vært for arrangementet {{ object }}?</p>
-                        <input class="btn btn-success btn-sm" type="submit" value="Ja" name="confirm" />
-                        <input class="btn btn-danger btn-sm" type="submit" value="Nej" name="cancel" />
+                        <p>{% blocktrans with object=object %}Ønsker du at blive vært for arrangementet {{ object }}?{% endblocktrans %}</p>
+                        <input class="btn btn-success btn-sm" type="submit" value="{% trans 'Ja' %}" name="confirm" />
+                        <input class="btn btn-danger btn-sm" type="submit" value="{% trans 'Nej' %}" name="cancel" />
                     </form>
                 {% else %}
-                <p>
-                    Du er nu blevet sat som vært for arrangementet {{ object }}.
-                </p>
-                <p>
-                    <a href="{% url 'visit-occ-view' object.pk %}">Klik her for at vende tilbage til arrangementet</a>
-                </p>
+                    <p>
+                        {% blocktrans with object=object %}Du er nu blevet sat som vært for arrangementet {{ object }}.{% endblocktrans %}
+                    </p>
+                    <p>
+                        <a href="{% url 'visit-occ-view' object.pk %}">{% trans 'Klik her for at vende tilbage til arrangementet' %}</a>
+                    </p>
                 {% endif %}
             {% else %}
             <p>
-                Det er ikke muligt at blive vært for arrangementet på
-                grund af følgende:
+                {% trans 'Det er ikke muligt at blive vært for arrangementet på grund af følgende:' %}
                 <ul>
                 {% for error in view.errors %}
                     <li>{{ error }}</li>
@@ -43,7 +41,7 @@
                 </ul>
             </p>
             <p>
-                <a href="{% url 'visit-occ-view' object.pk %}">Klik her for at vende tilbage til arrangementet</a>
+                <a href="{% url 'visit-occ-view' object.pk %}">{% trans 'Klik her for at vende tilbage til arrangementet' %}</a>
             </p>
             {% endif %}
         </div>
