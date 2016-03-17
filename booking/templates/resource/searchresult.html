@@ -29,7 +29,7 @@
                             <div class="input-group">
                                 {% for c in institution_choices %}
                                     <div class="checkbox">
-                                        <label class="control-label" for="audience-choice-{{c.value}}">
+                                        <label class="control-label" for="institution-choice-{{c.value}}">
                                             <input name="i" id="institution-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}>{{c.label}}
                                             {% if c.hits %}
                                                 <span title="{{ c.hits }} resultater" class="type-hits">({{ c.hits }})</span>
