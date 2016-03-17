@@ -1299,7 +1299,7 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
                 messages.add_message(
                     request,
                     messages.INFO,
-                    _(u'Der findes arrangementer for tilbudet med '
+                    _(u'Der findes besøg for tilbudet med '
                       u'deltagerantal udenfor de angivne min-/max-grænser for '
                       u'deltagere!')
                 )
@@ -2170,7 +2170,7 @@ class VisitOccurrenceSearchView(LoginRequiredMixin, ListView):
         context['breadcrumbs'] = [
             {
                 'url': reverse('visit-occ-search'),
-                'text': _(u'Arrangementer')
+                'text': _(u'Besøg')
             },
             {'text': _(u'Søgeresultatliste')},
         ]
@@ -2234,9 +2234,9 @@ class VisitOccurrenceDetailView(LoggedViewMixin, DetailView):
         context['breadcrumbs'] = [
             {
                 'url': reverse('visit-occ-search'),
-                'text': _(u'Søg i arrangementer')
+                'text': _(u'Søg i besøg')
             },
-            {'text': _(u'Arrangement #%s') % self.object.pk},
+            {'text': _(u'Besøg #%s') % self.object.pk},
         ]
 
         context['thisurl'] = reverse('visit-occ-view', args=[self.object.id])

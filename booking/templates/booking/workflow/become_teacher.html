@@ -19,21 +19,21 @@
                 {% if request.method == "GET" %}
                     <form name="becometeacherform" id="becometeacherform" action="{% url 'become-teacher' object.pk %}" method="post">
                         {% csrf_token %}
-                        <p>{% blocktrans with object=object %}Ønsker du at blive underviser for arrangementet {{ object }}?{% endblocktrans %}</p>
+                        <p>{% blocktrans with object=object %}Ønsker du at blive underviser for besøget {{ object }}?{% endblocktrans %}</p>
                         <input class="btn btn-success btn-sm" type="submit" value="{% trans 'Ja' %}" name="confirm" />
                         <input class="btn btn-danger btn-sm" type="submit" value="{% trans 'Nej' %}" name="cancel" />
                     </form>
                 {% else %}
                     <p>
-                        {% blocktrans with object=object %}Du er nu blevet sat som underviser for arrangementet {{ object }}.{% endblocktrans %}
+                        {% blocktrans with object=object %}Du er nu blevet sat som underviser for besøget {{ object }}.{% endblocktrans %}
                     </p>
                     <p>
-                        <a href="{% url 'visit-occ-view' object.pk %}">{% trans 'Klik her for at vende tilbage til arrangementet' %}</a>
+                        <a href="{% url 'visit-occ-view' object.pk %}">{% trans 'Klik her for at vende tilbage til besøget' %}</a>
                     </p>
                 {% endif %}
             {% else %}
             <p>
-                {% trans 'Det er ikke muligt at blive underviser for arrangementet på grund af følgende:' %}
+                {% trans 'Det er ikke muligt at blive underviser for besøget på grund af følgende:' %}
                 <ul>
                 {% for error in view.errors %}
                     <li>{{ error }}</li>
@@ -41,7 +41,7 @@
                 </ul>
             </p>
             <p>
-                <a href="{% url 'visit-occ-view' object.pk %}">{% trans 'Klik her for at vende tilbage til arrangementet' %}</a>
+                <a href="{% url 'visit-occ-view' object.pk %}">{% trans 'Klik her for at vende tilbage til besøget' %}</a>
             </p>
             {% endif %}
         </div>
