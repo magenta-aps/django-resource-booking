@@ -1545,8 +1545,8 @@ class VisitOccurrence(models.Model):
         WORKFLOW_STATUS_REMINDED: 'success',
         WORKFLOW_STATUS_EXECUTED: 'success',
         WORKFLOW_STATUS_EVALUATED: 'success',
-        WORKFLOW_STATUS_CANCELLED: 'warning',
-        WORKFLOW_STATUS_NOSHOW: 'warning',
+        WORKFLOW_STATUS_CANCELLED: 'success',
+        WORKFLOW_STATUS_NOSHOW: 'success',
         WORKFLOW_STATUS_PLANNED_NO_BOOKING: 'success',
     }
 
