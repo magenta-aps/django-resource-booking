@@ -4,6 +4,8 @@
 {% load i18n %}
 {% load booking_tags %}
 
+{% block htmltitle %} - {{ object.visitoccurrence.visit.title }} - {{ object.visitoccurrence.date_display }} - {% blocktrans with id=object.id %}Booking #{{ id }}{% endblocktrans %}{% endblock %}
+
 {% block content %}
 
     {% include 'common/breadcrumbrow.html' %}

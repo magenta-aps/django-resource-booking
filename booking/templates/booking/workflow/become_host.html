@@ -2,11 +2,15 @@
 {% load staticfiles %}
 {% load i18n %}
 
+{% block htmltitle %} - {% blocktrans with object=object %}Bliv vært for {{ object }}{% endblocktrans %}{% endblock %}
+
 {% block content %}
     {% include 'common/breadcrumbrow.html' %}
 
     <div class="row titlebar hidden-print">
-        <div class="col-sm-12 col-md-9"><h2>Bliv vært for {{ object }}</h2></div>
+        <div class="col-sm-12 col-md-9">
+            <h2>{% blocktrans with object=object %}Bliv vært for {{ object }}{% endblocktrans %}</h2>
+        </div>
         <div class="divider"></div>
     </div>
     <div class="row">
