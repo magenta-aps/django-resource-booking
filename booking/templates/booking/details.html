@@ -4,12 +4,16 @@
 {% load i18n %}
 {% load booking_tags %}
 
+{% block htmltitle %} - {{ object.visitoccurrence.visit.title }} - {{ object.visitoccurrence.date_display }} - {% blocktrans with id=object.id %}Booking #{{ id }}{% endblocktrans %}{% endblock %}
+
 {% block content %}
 
     {% include 'common/breadcrumbrow.html' %}
 
     <div class="row titlebar hidden-print">
-        <div class="col-sm-12 col-md-9"><h1>{% blocktrans with id=object.id %}Booking #{{ id }}{% endblocktrans %}</h1></div>
+        <div class="col-sm-12 col-md-9">
+            <h1>{% blocktrans with id=object.id %}Booking #{{ id }}{% endblocktrans %}</h1>
+        </div>
         <div class="divider"></div>
     </div>
     <div class="row">
@@ -56,7 +60,6 @@
 
                 <dt>{% trans 'Navn:' %}</dt>
                 <dd>{{ object.booker.firstname }} {{ object.booker.lastname }}</dd>
-
 
                 <dt>{% trans 'Email:' %}</dt>
                 <dd>{{ object.booker.email }}</dd>

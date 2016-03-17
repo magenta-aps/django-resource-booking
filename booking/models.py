@@ -1320,7 +1320,10 @@ class Visit(Resource):
 
     @property
     def bookable_occurrences(self):
-        return self.visitoccurrence_set.filter(bookable=True)
+        return self.visitoccurrence_set.filter(
+            bookable=True,
+            workflow_status__in=VisitOccurrence.BOOKABLE_STATES
+        )
 
     @property
     def future_events(self):
@@ -1392,8 +1395,20 @@ class Visit(Resource):
         return self.type in self.bookable_types
 
     @property
+    def has_bookable_occurrences(self):
+        # If there are no bookable occurrences the booker is allowed to
+        # suggest their own.
+        if len(self.visitoccurrence_set.filter(bookable=True)) == 0:
+            return True
+
+        # Only bookable if there is a valid event in the future:
+        return self.future_events.exists()
+
+    @property
     def is_bookable(self):
-        return self.is_type_bookable and self.state == Resource.ACTIVE
+        return self.is_type_bookable and \
+            self.state == Resource.ACTIVE and \
+            self.has_bookable_occurrences
 
 
 class VisitOccurrence(models.Model):
@@ -1516,9 +1531,11 @@ class VisitOccurrence(models.Model):
     WORKFLOW_STATUS_EVALUATED = 6
     WORKFLOW_STATUS_CANCELLED = 7
     WORKFLOW_STATUS_NOSHOW = 8
+    WORKFLOW_STATUS_PLANNED_NO_BOOKING = 9
 
     BEING_PLANNED_STATUS_TEXT = u'Under planlægning'
     PLANNED_STATUS_TEXT = u'Planlagt (ressourcer tildelt)'
+    PLANNED_NOBOOKING_TEXT = u'Planlagt og lukket for booking'
 
     status_to_class_map = {
         WORKFLOW_STATUS_BEING_PLANNED: 'danger',
@@ -1528,14 +1545,21 @@ class VisitOccurrence(models.Model):
         WORKFLOW_STATUS_REMINDED: 'success',
         WORKFLOW_STATUS_EXECUTED: 'success',
         WORKFLOW_STATUS_EVALUATED: 'success',
-        WORKFLOW_STATUS_CANCELLED: 'warning',
-        WORKFLOW_STATUS_NOSHOW: 'warning',
+        WORKFLOW_STATUS_CANCELLED: 'success',
+        WORKFLOW_STATUS_NOSHOW: 'success',
+        WORKFLOW_STATUS_PLANNED_NO_BOOKING: 'success',
     }
+
+    BOOKABLE_STATES = set([
+        WORKFLOW_STATUS_BEING_PLANNED,
+        WORKFLOW_STATUS_PLANNED,
+    ])
 
     workflow_status_choices = (
         (WORKFLOW_STATUS_BEING_PLANNED, _(BEING_PLANNED_STATUS_TEXT)),
         (WORKFLOW_STATUS_REJECTED, _(u'Afvist af undervisere eller værter')),
         (WORKFLOW_STATUS_PLANNED, _(PLANNED_STATUS_TEXT)),
+        (WORKFLOW_STATUS_PLANNED_NO_BOOKING, _(PLANNED_NOBOOKING_TEXT)),
         (WORKFLOW_STATUS_CONFIRMED, _(u'Bekræftet af booker')),
         (WORKFLOW_STATUS_REMINDED, _(u'Påmindelse afsendt')),
         (WORKFLOW_STATUS_EXECUTED, _(u'Afviklet')),
@@ -1577,6 +1601,12 @@ class VisitOccurrence(models.Model):
             WORKFLOW_STATUS_CANCELLED,
         ],
         WORKFLOW_STATUS_PLANNED: [
+            WORKFLOW_STATUS_PLANNED_NO_BOOKING,
+            WORKFLOW_STATUS_CONFIRMED,
+            WORKFLOW_STATUS_CANCELLED,
+        ],
+        WORKFLOW_STATUS_PLANNED_NO_BOOKING: [
+            WORKFLOW_STATUS_PLANNED,
             WORKFLOW_STATUS_CONFIRMED,
             WORKFLOW_STATUS_CANCELLED,
         ],

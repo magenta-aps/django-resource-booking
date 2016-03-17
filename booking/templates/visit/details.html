@@ -4,6 +4,8 @@
 {% load i18n %}
 {% load booking_tags %}
 
+{% block htmltitle %} - {{ object.title }}{% endblock %}
+
 {% block content %}
 
     {% include 'common/breadcrumbrow.html' %}
@@ -136,18 +138,18 @@
                             
                             {% if request.user.userprofile.can_create %}
                                 {% if object.visitoccurrence_set.all %}
-                                <dt>Hvornår:</dt>
+                                <dt>{% trans 'Hvornår:' %}</dt>
                                 <dd>
                                     <ul class="list-unstyled" id="dato">
                                     {% for event in object.visitoccurrence_set.all %}
-                                        <li><a href="{% url 'visit-occ-view' event.pk %}">{{ event.start_datetime|date:'d-m-Y H:i' }}{% if event.expired %} (udløbet){% endif %}</a></li>
+                                        <li><a href="{% url 'visit-occ-view' event.pk %}">{{ event.start_datetime|date:'d-m-Y H:i' }}{% if event.expired %} {% trans '(udløbet)' %}{% endif %}</a></li>
                                     {% endfor %}
                                     </ul>
                                 </dd>
                                 {% endif %}
                             {% else %}
                                 {% if object.future_events %}
-                                <dt>Hvornår:</dt>
+                                <dt>{% trans 'Hvornår:' %}</dt>
                                 <dd>
                                     <ul class="list-unstyled" id="dato">
                                     {% for event in object.future_events %}
