@@ -1,6 +1,8 @@
 {% extends 'index.html' %}
 {% load i18n %}
 
+{% block htmltitle %} - {% trans 'adgang nægtet' %}{% endblock %}
+
 {% block content %}
 
     {% blocktrans with name=user.username %}
