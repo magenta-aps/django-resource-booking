@@ -16,7 +16,7 @@ from booking.views import LoginRequiredMixin, AccessDenied, EditorRequriedMixin
 from django.views.generic.list import ListView
 from profile.forms import UserCreateForm, EditMyResourcesForm
 from profile.models import EmailLoginEntry
-from profile.models import UserProfile, UserRole, EDIT_ROLES
+from profile.models import UserProfile, UserRole, EDIT_ROLES, NONE
 from profile.models import FACULTY_EDITOR, COORDINATOR, user_role_choices
 
 import warnings
@@ -25,6 +25,13 @@ import profile.models as profile_models
 
 class ProfileView(LoginRequiredMixin, TemplateView):
     """Display the user's profile."""
+    def get_template_names(self):
+        profile = self.request.user.userprofile
+        if not profile or profile.get_role() == NONE:
+            return ['profile/profile_new_user.html']
+        else:
+            return super(ProfileView, self).get_template_names()
+
     def get_context_data(self, **kwargs):
         context = self.context_by_role()
         context['thisurl'] = reverse('user_profile')
