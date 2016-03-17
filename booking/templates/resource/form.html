@@ -3,6 +3,8 @@
 {% load staticfiles %}
 {% load booking_tags %}
 
+{% block htmltitle %} - {% if object %}{% trans "rediger tilbud" %}{% else %}{% trans "opret tilbud" %}{% endif %}{% endblock %}
+
 {% block head %}
 {% endblock %}
 
@@ -10,7 +12,7 @@
     <div class="divider"></div>
     <div class="row form-group">
         <div class="col-sm-8">
-            <h1>{% if object %}{% trans "Rediger tilbud" %}{% else %}{% trans "Nyt tilbud" %}{% endif %}</h1>
+            <h1></h1>
         </div>
         <div class="col-sm-4 text-right">
             <a href="#" class="btn btn-default btn-sm openall">{% trans "Udvid alle felter" %}</a> <a href="#" class="btn btn-default btn-sm closeall">{% trans "Luk alle felter" %}</a>

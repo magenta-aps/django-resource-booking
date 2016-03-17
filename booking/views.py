@@ -2111,7 +2111,7 @@ class EmbedcodesView(TemplateView):
 
 class VisitOccurrenceSearchView(LoginRequiredMixin, ListView):
     model = VisitOccurrence
-    template_name = "booking/searchresult.html"
+    template_name = "visitoccurrence/searchresult.html"
     context_object_name = "results"
     paginate_by = 10
 
