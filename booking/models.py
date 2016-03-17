@@ -750,6 +750,15 @@ class Resource(models.Model):
         auto_update_search_field=True
     )
 
+    created_time = models.DateTimeField(
+        blank=False,
+        auto_now_add=True,
+    )
+    updated_time = models.DateTimeField(
+        blank=False,
+        auto_now=True
+    )
+
     def __unicode__(self):
         return self.title + "(%s)" % str(self.id)
 
@@ -2273,6 +2282,10 @@ class Booking(models.Model):
     created_time = models.DateTimeField(
         blank=False,
         auto_now_add=True,
+    )
+    updated_time = models.DateTimeField(
+        blank=False,
+        auto_now=True
     )
 
     def get_occurrence_attr(self, attrname):
