@@ -78,7 +78,7 @@
                 <div class="disclaimer">{% trans 'Bemærk at din bestilling først er bindende, når du har modtaget en bekræftelse fra den ansvarlige arrangør fra Københavns Universitet.' %}</div>
             {% endif %}
             <div class="go-back">
-                <a href="#" class="btn btn-default" onclick="history.go(-1); return false;"><span class="glyphicon glyphicon-chevron-left"></span> {% trans 'Tilbage til søgeresultat' %}</a>
+                <a href="{{ searchurl }}" class="btn btn-default"><span class="glyphicon glyphicon-chevron-left"></span> {% trans 'Tilbage til søgeresultat' %}</a>
             </div>
         </div>
         <div class="col-sm-6 col-md-4">
