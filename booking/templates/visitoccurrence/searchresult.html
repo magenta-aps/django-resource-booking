@@ -1,9 +1,9 @@
-{%extends "index.html" %}
+{% extends "index.html" %}
 {% load staticfiles %}
 {% load booking_tags %}
 {% load i18n %}
 
-{% block htmltitle %} - {% trans 'søg i arrangementer' %}{% endblock %}
+{% block htmltitle %} - {% trans 'søg i besøg' %}{% endblock %}
 
 {% block content %}
     <div class="row">
@@ -11,13 +11,13 @@
 
             {% include 'common/breadcrumbrow.html' %}
 
-            <h1>Søgeresultat</h1>
+            <h1>{% trans 'Søgeresultat' %}</h1>
             <div class="divider"></div>
 
             <form class="clearfix" role="søg" action={% url 'visit-occ-search' %}>
                 <div class="input-group">
-                    <label class="sr-only" for="searchBox">{% trans 'Søg efter arrangementer' %}</label>
-                    <input type="text" class="form-control" id="searchBox" placeholder="{% trans 'Søg efter arrangementer - indtast et eller flere søgeord...' %}" name="q" value="{{ request.GET.q }}"/>
+                    <label class="sr-only" for="searchBox">{% trans 'Søg efter besøg' %}</label>
+                    <input type="text" class="form-control" id="searchBox" placeholder="{% trans 'Søg efter besøg - indtast et eller flere søgeord...' %}" name="q" value="{{ request.GET.q }}"/>
                     <span class="input-group-btn">
                         <a id="reset-btn" class="btn btn-default" aria-label="{% trans 'Ryd søgning' %}">
                             <span class="glyphicon glyphicon-remove"></span>
@@ -32,13 +32,13 @@
 
             <div class="divider"></div>
             <h2>
-                Søgningen er begrænset til:
+                {% trans 'Søgningen er begrænset til:' %}
             </h2>
             <ul>
                 <li>{{ unit_limit_text }}</li>
             </ul>
             {% if not results %}
-            <p>Din søgning gav ikke noget resultat.</p>
+            <p>{% trans 'Din søgning gav ikke noget resultat.' %}</p>
             {% else %}
             <h2 class="bold">
                 {{ paginator.count }} resultater matcher din søgning
@@ -51,11 +51,11 @@
             {% for res in results %}
                 <li class="media">
                     <div class="media-body">
-                        <strong><a href="{% url 'visit-occ-view' res.pk %}">{% trans 'Arrangement' %} {{ res.pk }}</a></strong>
+                        <strong><a href="{% url 'visit-occ-view' res.pk %}">{% trans 'Besøg' %} #{{ res.pk }}</a></strong>
                         <dl class="dl-horizontal">
-                            <dt>Tilbud:</dt>
-                            <dd><a href="{% url 'visit-view' res.visit.pk %}">{{ res.visit.title }}</a></dd>
-                            <dt>Booket af:</dt>
+                            <dt>{% trans 'Tilbud:' %}</dt>
+                            <dd><a href="{% url 'visit-view' res.visit.pk %}">#{{ res.visit.pk }} {{ res.visit.title }}</a></dd>
+                            <dt>{% trans 'Booket af:' %}</dt>
                             <dd>{{ res.nr_bookers }} personer</dd>
                         </dl>
                     </div>

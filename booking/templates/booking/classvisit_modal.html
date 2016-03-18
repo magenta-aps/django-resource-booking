@@ -3,6 +3,8 @@
 {% load staticfiles %}
 {% load booking_tags %}
 
+{% block htmltitle %} - {% trans 'tilmeld klassebesøg' %}{% endblock %}
+
 {% block head %}
 {% endblock %}
 
@@ -101,11 +103,9 @@
     </div>
     {% include 'booking/snippets/footer.html' %}
 
-
 {% endblock %}
 
 {% block extra_scripts %}
-
 
     {% include 'booking/fields/location_script.html' %}
     {% include 'booking/fields/school_script.html' %}

@@ -6,8 +6,11 @@
 {% block head %}
 {% endblock %}
 
+{% block htmltitle %} - {% trans 'tilmeld lærerarrangement' %}{% endblock %}
+
 {% block content %}
 
+    {% include 'booking/snippets/header.html' %}
     <div class="modal-body">
         <p>{% trans "Udfyld venligst nedenstående formular for at booke et tilbud. Felter markeret med * er obligatoriske." %}</p>
         <div class="divider"></div>

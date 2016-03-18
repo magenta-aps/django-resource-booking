@@ -1,43 +1,44 @@
 {% extends 'index.html' %}
+{% load i18n %}
 
-{% block htmltitle %} - indlejring af side{% endblock %}
+{% block htmltitle %} - {% trans 'indlejring af side' %}{% endblock %}
 
 {% block content %}
 
 {% include 'common/breadcrumbrow.html' %}
 
 {% if can_embed %}
-<h1>Indlejring af siden {{ embed_url }}</h1>
+<h1>{% blocktrans with url=embed_url %}Indlejring af siden {{ url }}{% endblocktrans %}</h1>
 
-<h2>Indlejring via Proxy-dokument i Obvius CMS</h2>
+<h2>{% trans 'Indlejring via Proxy-dokument i Obvius CMS' %}</h2>
 <p>
-    Opret et proxy-dokument der bruger følgende url:<br />
+    {% trans 'Opret et proxy-dokument der bruger følgende url:' %}<br />
     <a href="{{ full_url }}">{{ full_url }}</a>
 </p>
 
-<h2>Indlejring via Iframe</h2>
+<h2>{% trans 'Indlejring via Iframe' %}</h2>
 <form name="embediframeform" id="embediframeform">
     <dl>
-        <dt><label for="iframewidth">Bredde:</label></dt>
+        <dt><label for="iframewidth">{% trans 'Bredde:' %}</label></dt>
         <dd><input type="text" value="100%" name="iframewidth" id="iframewidth"/></dd>
     </dl>
     <dl>
-        <dt><label for="iframeheight">Højde:</label></dt>
+        <dt><label for="iframeheight">{% trans 'Højde:' %}</label></dt>
         <dd><input type="text" value="480" name="iframeheight" id="iframeheight"/></dd>
     </dl>
     <dl>
-        <dt><label for="iframecode">Indlejringskode:</label></dt>
+        <dt><label for="iframecode">{% trans 'Indlejringskode:' %}</label></dt>
         <dd>
             <textarea name="iframecode" id="iframecode" style="width: 100%">&lt;iframe width="##width##" height="##height##" src="##url##" frameborder="0" allowfullscreen="allowfullscreen"&gt;&lt;/iframe&gt;</textarea>
         </dd>
     </dl>
 </form>
 
-<h2>Preview af indlejret side</h2>
+<h2>{% trans 'Preview af indlejret side' %}</h2>
 <iframe width="100%" height="640" src="{{ full_url }}" frameborder="0" allowfullscreen="allowfullscreen"></iframe>
 {% else %}
 <p>
-    Den valgte URL, '{{ embed_url }}', kan ikke indlejres.
+    {% blocktrans with url=embed_url %}Den valgte URL, '{{ url }}', kan ikke indlejres.{% endblocktrans %}
 </p>
 {% endif %}
 {% endblock %}

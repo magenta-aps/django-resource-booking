@@ -3,6 +3,8 @@
 {% load staticfiles %}
 {% load booking_tags %}
 
+{% block htmltitle %} - {% if object.pk %}{% trans "rediger tilbud" %}{% else %}{% trans "opret tilbud" %}{% endif %}{% endblock %}
+
 {% block head %}
     <link rel="stylesheet" href="{% static 'thirdparty/bootstrap-datetime-picker/css/bootstrap-datetimepicker.min.css' %}"/>
 {% endblock %}
@@ -121,7 +123,7 @@
             </div>
             {% endif %}
 
-            {% if form.needed_hosts or form.needed_teachers %}
+            {% if form.needed_hosts or form.needed_teachers or form.default_hosts or form.default_teachers %}
             <div class="panel panel-default">
                 <div id="headingTeachersAndHosts" class="panel-heading" role="tab">
                     <h4 class="panel-title">
@@ -129,15 +131,25 @@
                     </h4>
                 </div>
                 <div id="collapseTeachersAndHosts" class="panel-collapse collapse
-                {% if not object.pk or form.needed_hosts.errors or form.needed_hosts_text.errors or form.needed_teachers.errors or form.needed_teachers_text.errors %}in{% endif %}
+                {% if not object.pk or form.needed_hosts.errors or form.needed_teachers.errors or form.default_hosts.errors or form.default_teachers.error %}in{% endif %}
                 " aria-labelledby="headingContact" role="tabpanel" aria-expanded="false" style="">
+                    <div class="panel-body">
                     {% include 'common/snippets/edit-needed-number.html' with field=form.needed_hosts %}
                     {% include 'common/snippets/edit-needed-number.html' with field=form.needed_teachers %}
+                    {% if form.default_hosts or form.default_teachers %}
+                    <p>
+                        Du kan her vælge faste værter og undervisere der automatisk kopieres til alle
+                        besøg der efterfølgende oprettes for dette tilbud.
+                    </p>
+                    {% endif %}
+                    {% include 'resource/fields/generic_field.html' with field=form.default_hosts %}
+                    {% include 'resource/fields/generic_field.html' with field=form.default_teachers %}
+                    </div>
                 </div>
             </div>
             {% endif %}
 
-            {% if form.unit or form.enabled or form.contact_persons %}
+            {% if form.unit or form.contact_persons %}
             <div class="panel panel-default">
                 <div id="headingContact" class="panel-heading" role="tab">
                     <h4 class="panel-title">
@@ -145,11 +157,10 @@
                     </h4>
                 </div>
                 <div id="collapseContact" class="panel-collapse collapse
-                {% if not object.pk or form.unit.errors or form.enabled.errors or form.contact_persons.errors %}in{% endif %}
+                {% if not object.pk or form.unit.errors or form.contact_persons.errors %}in{% endif %}
                 " aria-labelledby="headingContact" role="tabpanel" aria-expanded="false" style="">
                     <div class="panel-body">
                         {% include 'resource/fields/unit.html' %}
-                        {% include 'resource/fields/enabled.html' %}
                         {% include 'resource/fields/contact.html' %}
                         {% include 'resource/fields/roomadmin.html' %}
                     </div>

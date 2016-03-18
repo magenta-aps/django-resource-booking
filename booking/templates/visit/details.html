@@ -4,6 +4,8 @@
 {% load i18n %}
 {% load booking_tags %}
 
+{% block htmltitle %} - {{ object.title }}{% endblock %}
+
 {% block content %}
 
     {% include 'common/breadcrumbrow.html' %}
@@ -65,8 +67,8 @@
                     <span class="glyphicon glyphicon-chevron-right"></span>
                 </a>
                 {% endif %}
-                {% if object.unit.contact %}
-                    <a href="{% url 'email' object.unit.contact.id %}?back={{ thisurl | urlencode }}" class="btn btn-default">
+                {% if object.contact_persons %}
+                    <a href="{% url 'visit-inquire' object.id %}?back={{ thisurl | urlencode }}" class="btn btn-default">
                         {% trans 'Spørg om tilbud' %}
                         <span class="glyphicon glyphicon-question-sign"></span>
                     </a>
@@ -76,7 +78,7 @@
                 <div class="disclaimer">{% trans 'Bemærk at din bestilling først er bindende, når du har modtaget en bekræftelse fra den ansvarlige arrangør fra Københavns Universitet.' %}</div>
             {% endif %}
             <div class="go-back">
-                <a href="#" class="btn btn-default" onclick="history.go(-1); return false;"><span class="glyphicon glyphicon-chevron-left"></span> {% trans 'Tilbage til søgeresultat' %}</a>
+                <a href="{{ searchurl }}" class="btn btn-default"><span class="glyphicon glyphicon-chevron-left"></span> {% trans 'Tilbage til søgeresultat' %}</a>
             </div>
         </div>
         <div class="col-sm-6 col-md-4">
@@ -136,18 +138,18 @@
                             
                             {% if request.user.userprofile.can_create %}
                                 {% if object.visitoccurrence_set.all %}
-                                <dt>Hvornår:</dt>
+                                <dt>{% trans 'Hvornår:' %}</dt>
                                 <dd>
                                     <ul class="list-unstyled" id="dato">
                                     {% for event in object.visitoccurrence_set.all %}
-                                        <li><a href="{% url 'visit-occ-view' event.pk %}">{{ event.start_datetime|date:'d-m-Y H:i' }}{% if event.expired %} (udløbet){% endif %}</a></li>
+                                        <li><a href="{% url 'visit-occ-view' event.pk %}">{{ event.start_datetime|date:'d-m-Y H:i' }}{% if event.expired %} {% trans '(udløbet)' %}{% endif %}</a></li>
                                     {% endfor %}
                                     </ul>
                                 </dd>
                                 {% endif %}
                             {% else %}
                                 {% if object.future_events %}
-                                <dt>Hvornår:</dt>
+                                <dt>{% trans 'Hvornår:' %}</dt>
                                 <dd>
                                     <ul class="list-unstyled" id="dato">
                                     {% for event in object.future_events %}

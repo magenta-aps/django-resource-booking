@@ -367,7 +367,8 @@ class EmailTemplate(models.Model):
     NOTIFY_ALL__BOOKING_COMPLETE = 8  # ticket 13813
     NOTIFY_ALL__BOOKING_CANCELED = 9  # ticket 13814
     NOTITY_ALL__BOOKING_REMINDER = 10  # ticket 13815
-    NOTIFY_HOST__HOSTROLE_IDLE = 11  # ticlet 13805
+    NOTIFY_HOST__HOSTROLE_IDLE = 11  # ticket 13805
+    SYSTEM__BASICMAIL_ENVELOPE = 12
 
     # Choice labels
     key_choices = [
@@ -383,6 +384,7 @@ class EmailTemplate(models.Model):
         (NOTIFY_ALL__BOOKING_CANCELED, _(u'Alle: Booking aflyst')),
         (NOTITY_ALL__BOOKING_REMINDER, _(u'Alle: Reminder om booking')),
         (NOTIFY_HOST__HOSTROLE_IDLE, _(u'Vært: Ledig værtsrolle')),
+        (SYSTEM__BASICMAIL_ENVELOPE, _(u'Forespørgsel fra bruger'))
     ]
 
     @staticmethod
@@ -620,7 +622,6 @@ class Resource(models.Model):
 
     class_level_choices = [(i, unicode(i)) for i in range(0, 11)]
 
-    enabled = models.BooleanField(verbose_name=_(u'Aktiv'), default=True)
     type = models.IntegerField(choices=resource_type_choices,
                                default=STUDY_MATERIAL)
     state = models.IntegerField(choices=state_choices, default=CREATED,
@@ -797,6 +798,7 @@ class Resource(models.Model):
 
     def as_searchtext(self):
         return " ".join([unicode(x) for x in [
+            self.pk,
             self.title,
             self.teaser,
             self.description,
@@ -858,6 +860,13 @@ class Resource(models.Model):
                 EmailTemplate.resource_roomadmin_keys:
             recipients.extend(self.room_responsible.all())
         return recipients
+
+    def get_view_url(self):
+        if hasattr(self, 'visit') and self.visit:
+            return reverse('visit-view', args=[self.visit.pk])
+        if hasattr(self, 'otherresource') and self.otherresource:
+            return reverse('otherresource-view', args=[self.otherresource.pk])
+        return reverse('resource-view', args=[self.pk])
 
 
 class ResourceGymnasieFag(models.Model):
@@ -1088,7 +1097,6 @@ class OtherResource(Resource):
     def clone_to_visit(self):
         save = []
         visit = Visit()
-        visit.enabled = self.enabled
         visit.type = self.type
         visit.state = self.state
         visit.title = self.title
@@ -1136,6 +1144,11 @@ class OtherResource(Resource):
         for otherresource in OtherResource.objects.all():
             otherresource.clone_to_visit()
             otherresource.delete()
+
+
+# Have to do late import of this here or we will get problems
+# with cyclic dependencies
+from profile.models import TEACHER, HOST  # noqa
 
 
 class Visit(Resource):
@@ -1275,6 +1288,26 @@ class Visit(Resource):
         choices=needed_number_choices
     )
 
+    default_hosts = models.ManyToManyField(
+        User,
+        blank=True,
+        limit_choices_to={
+            'userprofile__user_role__role': HOST
+        },
+        related_name="hosted_visits",
+        verbose_name=_(u'Faste værter')
+    )
+
+    default_teachers = models.ManyToManyField(
+        User,
+        blank=True,
+        limit_choices_to={
+            'userprofile__user_role__role': TEACHER
+        },
+        related_name="taught_visits",
+        verbose_name=_(u'Faste undervisere')
+    )
+
     def save(self, *args, **kwargs):
         # Save once to store relations
         super(Visit, self).save(*args, **kwargs)
@@ -1287,7 +1320,10 @@ class Visit(Resource):
 
     @property
     def bookable_occurrences(self):
-        return self.visitoccurrence_set.filter(bookable=True)
+        return self.visitoccurrence_set.filter(
+            bookable=True,
+            workflow_status__in=VisitOccurrence.BOOKABLE_STATES
+        )
 
     @property
     def future_events(self):
@@ -1331,6 +1367,16 @@ class Visit(Resource):
             bookable=bookable,
             **kwargs
         )
+
+        if self.default_hosts.exists() or self.default_teachers.exists():
+            occ.save()
+
+            for x in self.default_hosts.all():
+                occ.hosts.add(x)
+
+            for x in self.default_teachers.all():
+                occ.teachers.add(x)
+
         return occ
 
     def get_autosend(self, template_key):
@@ -1349,17 +1395,27 @@ class Visit(Resource):
         return self.type in self.bookable_types
 
     @property
+    def has_bookable_occurrences(self):
+        # If there are no bookable occurrences the booker is allowed to
+        # suggest their own.
+        if len(self.visitoccurrence_set.filter(bookable=True)) == 0:
+            return True
+
+        # Only bookable if there is a valid event in the future:
+        return self.future_events.exists()
+
+    @property
     def is_bookable(self):
         return self.is_type_bookable and \
-            self.enabled and \
-            self.state == Resource.ACTIVE
+            self.state == Resource.ACTIVE and \
+            self.has_bookable_occurrences
 
 
 class VisitOccurrence(models.Model):
 
     class Meta:
-        verbose_name = _(u"arrangement")
-        verbose_name_plural = _(u"arrangementer")
+        verbose_name = _(u"besøg")
+        verbose_name_plural = _(u"besøg")
         ordering = ['start_datetime']
 
     objects = SearchManager(
@@ -1405,10 +1461,6 @@ class VisitOccurrence(models.Model):
         blank=True,
         null=True
     )
-
-    # Have to do late import of this here or we will get problems
-    # with cyclic dependencies
-    from profile.models import TEACHER, HOST
 
     hosts = models.ManyToManyField(
         User,
@@ -1479,9 +1531,11 @@ class VisitOccurrence(models.Model):
     WORKFLOW_STATUS_EVALUATED = 6
     WORKFLOW_STATUS_CANCELLED = 7
     WORKFLOW_STATUS_NOSHOW = 8
+    WORKFLOW_STATUS_PLANNED_NO_BOOKING = 9
 
     BEING_PLANNED_STATUS_TEXT = u'Under planlægning'
     PLANNED_STATUS_TEXT = u'Planlagt (ressourcer tildelt)'
+    PLANNED_NOBOOKING_TEXT = u'Planlagt og lukket for booking'
 
     status_to_class_map = {
         WORKFLOW_STATUS_BEING_PLANNED: 'danger',
@@ -1491,14 +1545,21 @@ class VisitOccurrence(models.Model):
         WORKFLOW_STATUS_REMINDED: 'success',
         WORKFLOW_STATUS_EXECUTED: 'success',
         WORKFLOW_STATUS_EVALUATED: 'success',
-        WORKFLOW_STATUS_CANCELLED: 'warning',
-        WORKFLOW_STATUS_NOSHOW: 'warning',
+        WORKFLOW_STATUS_CANCELLED: 'success',
+        WORKFLOW_STATUS_NOSHOW: 'success',
+        WORKFLOW_STATUS_PLANNED_NO_BOOKING: 'success',
     }
+
+    BOOKABLE_STATES = set([
+        WORKFLOW_STATUS_BEING_PLANNED,
+        WORKFLOW_STATUS_PLANNED,
+    ])
 
     workflow_status_choices = (
         (WORKFLOW_STATUS_BEING_PLANNED, _(BEING_PLANNED_STATUS_TEXT)),
         (WORKFLOW_STATUS_REJECTED, _(u'Afvist af undervisere eller værter')),
         (WORKFLOW_STATUS_PLANNED, _(PLANNED_STATUS_TEXT)),
+        (WORKFLOW_STATUS_PLANNED_NO_BOOKING, _(PLANNED_NOBOOKING_TEXT)),
         (WORKFLOW_STATUS_CONFIRMED, _(u'Bekræftet af booker')),
         (WORKFLOW_STATUS_REMINDED, _(u'Påmindelse afsendt')),
         (WORKFLOW_STATUS_EXECUTED, _(u'Afviklet')),
@@ -1540,6 +1601,12 @@ class VisitOccurrence(models.Model):
             WORKFLOW_STATUS_CANCELLED,
         ],
         WORKFLOW_STATUS_PLANNED: [
+            WORKFLOW_STATUS_PLANNED_NO_BOOKING,
+            WORKFLOW_STATUS_CONFIRMED,
+            WORKFLOW_STATUS_CANCELLED,
+        ],
+        WORKFLOW_STATUS_PLANNED_NO_BOOKING: [
+            WORKFLOW_STATUS_PLANNED,
             WORKFLOW_STATUS_CONFIRMED,
             WORKFLOW_STATUS_CANCELLED,
         ],
@@ -1882,8 +1949,8 @@ class Room(models.Model):
 class BookedRoom(models.Model):
 
     class Meta:
-        verbose_name = _(u'lokale for arrangement')
-        verbose_name_plural = _(u'lokaler for arrangement')
+        verbose_name = _(u'lokale for besøg')
+        verbose_name_plural = _(u'lokaler for besøg')
 
     name = models.CharField(max_length=60, verbose_name=_(u'Navn'))
 
@@ -2194,7 +2261,8 @@ class Booking(models.Model):
         VisitOccurrence,
         null=True,
         blank=True,
-        related_name='bookings'
+        related_name='bookings',
+        verbose_name=_(u'Tidspunkt')
     )
 
     notes = models.TextField(

@@ -64,6 +64,7 @@ from booking.forms import AdminVisitSearchForm
 from booking.forms import VisitAutosendFormSet
 from booking.utils import full_email
 
+import re
 import urls
 
 
@@ -153,41 +154,6 @@ class HasBackButtonMixin(ContextMixin):
         context = super(HasBackButtonMixin, self).get_context_data(**kwargs)
         context['oncancel'] = self.request.GET.get('back')
         return context
-
-
-class ContactComposeView(FormMixin, HasBackButtonMixin, TemplateView):
-    template_name = 'email/compose.html'
-    form_class = GuestEmailComposeForm
-
-    def get(self, request, *args, **kwargs):
-        form = self.get_form()
-        return self.render_to_response(
-            self.get_context_data(form=form)
-        )
-
-    def post(self, request, *args, **kwargs):
-        recipient_id = kwargs.get("recipient")
-        form = self.get_form()
-        if form.is_valid():
-            template = EmailTemplate.get_template(
-                EmailTemplate.SYSTEM__BASICMAIL_ENVELOPE,
-                None
-            )
-            if template is None:
-                raise Exception(_(u"There are no root templates with "
-                                  u"the SYSTEM__BASICMAIL_ENVELOPE key"))
-            context = {}
-            context.update(form.cleaned_data)
-            recipients = Person.objects.get(id=recipient_id)
-            KUEmailMessage.send_email(template, context, recipients)
-            return super(ContactComposeView, self).form_valid(form)
-
-        return self.render_to_response(
-            self.get_context_data(form=form)
-        )
-
-    def get_success_url(self):
-        return self.request.GET.get("back", "/")
 
 
 class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
@@ -470,6 +436,29 @@ class SearchView(ListView):
         (0, _(u'Nej')),
     )
 
+    def dispatch(self, request, *args, **kwargs):
+        id_match_url = self.check_search_by_id()
+        if id_match_url:
+            return redirect(id_match_url)
+
+        return super(SearchView, self).dispatch(request, *args, **kwargs)
+
+    def check_search_by_id(self):
+        # Check if we're searching for a given id
+        if self.request.method.lower() != 'get':
+            return None
+
+        q = self.request.GET.get("q", "").strip()
+        if re.match('^#?\d+$', q):
+            if q[0] == "#":
+                q = q[1:]
+            try:
+                res = Resource.objects.get(pk=q)
+                return reverse('resource-view', args=[res.pk])
+            except Resource.DoesNotExist:
+                pass
+        return None
+
     def get_admin_form(self):
         if self.admin_form is None:
             if self.request.user.is_authenticated():
@@ -504,39 +493,49 @@ class SearchView(ListView):
                 num_bookings=Count('visit__visitoccurrence__bookings')
             )
 
-            date_cond = None
+            date_cond = Q()
 
-            # Filter on from-time if one is specified or from current time
-            # if not
             t_from = self.get_date_from_request("from")
-            if t_from is None:
-                t_from = timezone.now()
-            self.from_datetime = t_from
-
-            # Search for either resources without dates specified or
-            # resources that have times available in the future
-            date_cond = (
-                Q(visit__visitoccurrence__bookable=True) &
-                Q(visit__visitoccurrence__start_datetime__gt=t_from)
-            )
-
-            # To time will match latest end time if it exists and else
-            # match the first endtime
             t_to = self.get_date_from_request("to")
+
+            if not self.request.user.is_authenticated():
+                # Force searching by start date if none is specified
+                if t_from is None:
+                    t_from = timezone.now()
+
+                # Public users only want to search within bookable dates
+                ok_states = VisitOccurrence.BOOKABLE_STATES
+                date_cond = (
+                    Q(visit__visitoccurrence__bookable=True) &
+                    Q(visit__visitoccurrence__workflow_status__in=ok_states)
+                )
+
+            if t_from:
+                date_cond = (
+                    date_cond &
+                    Q(visit__visitoccurrence__start_datetime__gt=t_from)
+                )
+
             if t_to:
                 date_cond = date_cond & Q(
                     Q(visit__visitoccurrence__start_datetime__lte=t_from)
                 )
-            self.to_datetime = t_to
 
-            qs = qs.filter(
-                # Stuff that is not bookable
-                Q(visit__isnull=True) |
-                # Anything without any specific booking times
-                Q(visit__visitoccurrence__isnull=True) |
-                # Bookable occurences that matches the date conditions
-                date_cond
-            )
+            self.from_datetime = t_from or ""
+            self.to_datetime = t_to or ""
+
+            if len(date_cond):
+                # Since not all resources have dates we have to find those
+                # as well as the ones matching the date limit. We do this
+                # with the following OR condition:
+                qs = qs.filter(
+                    # Stuff that is not bookable
+                    Q(visit__isnull=True) |
+                    # Anything without any specific booking times
+                    Q(visit__visitoccurrence__isnull=True) |
+                    # The actual date conditions
+                    date_cond
+                )
 
             qs = qs.distinct()
 
@@ -546,7 +545,7 @@ class SearchView(ListView):
 
     def annotate(self, qs):
         return qs.annotate(
-            num_occurences=Count('visit__visitoccurrence__pk'),
+            num_occurences=Count('visit__visitoccurrence__pk', distinct=True),
             first_occurence=Min('visit__visitoccurrence__start_datetime')
         )
 
@@ -556,6 +555,7 @@ class SearchView(ListView):
 
             for filter_method in (
                 self.filter_by_audience,
+                self.filter_by_institution,
                 self.filter_by_type,
                 self.filter_by_gymnasiefag,
                 self.filter_by_grundskolefag
@@ -584,6 +584,12 @@ class SearchView(ListView):
             a.append(Resource.AUDIENCE_ALL)
             self.filters["audience__in"] = a
 
+    def filter_by_institution(self):
+        i = [x for x in self.request.GET.getlist("i")]
+        if i:
+            i.append(Subject.SUBJECT_TYPE_BOTH)
+            self.filters["institution_level__in"] = i
+
     def filter_by_type(self):
         t = self.request.GET.getlist("t")
         if t:
@@ -602,7 +608,6 @@ class SearchView(ListView):
     def filter_for_admin_view(self, form):
         for filter_method in (
             self.filter_by_state,
-            self.filter_by_enabled,
             self.filter_by_is_visit,
             self.filter_by_has_bookings,
             self.filter_by_unit,
@@ -616,11 +621,6 @@ class SearchView(ListView):
         s = form.cleaned_data.get("s", "")
         if s != "":
             self.filters["state"] = s
-
-    def filter_by_enabled(self, form):
-        e = form.cleaned_data.get("e", "")
-        if e != "":
-            self.filters["enabled"] = e
 
     def filter_by_is_visit(self, form):
         v = form.cleaned_data.get("v", "")
@@ -761,6 +761,13 @@ class SearchView(ListView):
             add_to_all=[Resource.AUDIENCE_ALL]
         )
 
+        context["institution_choices"] = self.make_facet(
+            "institution_level",
+            self.model.institution_choices,
+            self.request.GET.getlist("i"),
+            add_to_all=[Subject.SUBJECT_TYPE_BOTH]
+        )
+
         context["type_choices"] = self.make_facet(
             "type",
             self.model.resource_type_choices,
@@ -804,7 +811,8 @@ class SearchView(ListView):
         ]
 
         querylist = []
-        for key in ['q', 'page', 'pagesize', 't', 'a', 'f', 'g', 'from', 'to']:
+        for key in ['q', 'page', 'pagesize', 't',
+                    'a', 'i' 'f', 'g', 'from', 'to']:
             values = self.request.GET.getlist(key)
             if values is not None and len(values) > 0:
                 for value in values:
@@ -1291,7 +1299,7 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
                 messages.add_message(
                     request,
                     messages.INFO,
-                    _(u'Der findes arrangementer for tilbudet med '
+                    _(u'Der findes besøg for tilbudet med '
                       u'deltagerantal udenfor de angivne min-/max-grænser for '
                       u'deltagere!')
                 )
@@ -1511,12 +1519,54 @@ class VisitDetailView(DetailView):
         ]
 
         context['thisurl'] = reverse('visit-view', args=[self.object.id])
+        context['searchurl'] = self.request.GET.get(
+            "search",
+            reverse('search')
+        )
 
         context['EmailTemplate'] = EmailTemplate
 
         context.update(kwargs)
 
         return super(VisitDetailView, self).get_context_data(**context)
+
+
+class VisitInquireView(FormMixin, HasBackButtonMixin, TemplateView):
+    template_name = 'email/compose.html'
+    form_class = GuestEmailComposeForm
+
+    def dispatch(self, request, *args, **kwargs):
+        self.object = Visit.objects.get(id=kwargs['visit'])
+        return super(VisitInquireView, self).dispatch(request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        form = self.get_form()
+        return self.render_to_response(
+            self.get_context_data(form=form)
+        )
+
+    def post(self, request, *args, **kwargs):
+        form = self.get_form()
+        if form.is_valid():
+            template = EmailTemplate.get_template(
+                EmailTemplate.SYSTEM__BASICMAIL_ENVELOPE,
+                None
+            )
+            if template is None:
+                raise Exception(_(u"There are no root templates with "
+                                  u"the SYSTEM__BASICMAIL_ENVELOPE key"))
+            context = {}
+            context.update(form.cleaned_data)
+            recipients = self.object.contact_persons.all()
+            KUEmailMessage.send_email(template, context, recipients)
+            return super(VisitInquireView, self).form_valid(form)
+
+        return self.render_to_response(
+            self.get_context_data(form=form)
+        )
+
+    def get_success_url(self):
+        return self.request.GET.get("back", "/")
 
 
 class VisitOccurrenceNotifyView(EmailComposeView):
@@ -2065,7 +2115,7 @@ class EmbedcodesView(TemplateView):
 
 class VisitOccurrenceSearchView(LoginRequiredMixin, ListView):
     model = VisitOccurrence
-    template_name = "booking/searchresult.html"
+    template_name = "visitoccurrence/searchresult.html"
     context_object_name = "results"
     paginate_by = 10
 
@@ -2120,7 +2170,7 @@ class VisitOccurrenceSearchView(LoginRequiredMixin, ListView):
         context['breadcrumbs'] = [
             {
                 'url': reverse('visit-occ-search'),
-                'text': _(u'Arrangementer')
+                'text': _(u'Besøg')
             },
             {'text': _(u'Søgeresultatliste')},
         ]
@@ -2184,9 +2234,9 @@ class VisitOccurrenceDetailView(LoggedViewMixin, DetailView):
         context['breadcrumbs'] = [
             {
                 'url': reverse('visit-occ-search'),
-                'text': _(u'Søg i arrangementer')
+                'text': _(u'Søg i besøg')
             },
-            {'text': _(u'Arrangement #%s') % self.object.pk},
+            {'text': _(u'Besøg #%s') % self.object.pk},
         ]
 
         context['thisurl'] = reverse('visit-occ-view', args=[self.object.id])

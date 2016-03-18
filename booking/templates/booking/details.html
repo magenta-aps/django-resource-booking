@@ -4,12 +4,16 @@
 {% load i18n %}
 {% load booking_tags %}
 
+{% block htmltitle %} - {{ object.visitoccurrence.visit.title }} - {{ object.visitoccurrence.date_display }} - {% blocktrans with id=object.id %}Booking #{{ id }}{% endblocktrans %}{% endblock %}
+
 {% block content %}
 
     {% include 'common/breadcrumbrow.html' %}
 
     <div class="row titlebar hidden-print">
-        <div class="col-sm-12 col-md-9"><h1>{% blocktrans with id=object.id %}Booking #{{ id }}{% endblocktrans %}</h1></div>
+        <div class="col-sm-12 col-md-9">
+            <h1>{% blocktrans with id=object.id %}Booking #{{ id }}{% endblocktrans %}</h1>
+        </div>
         <div class="divider"></div>
     </div>
     <div class="row">
@@ -18,8 +22,9 @@
             <div class="panel panel-default">
                 <div class="panel-body">
                     {% url 'visit-view' object.visitoccurrence.visit.id as visiturl %}
-                    {% blocktrans with firstname=object.booker.firstname lastname=object.booker.lastname visittitle=object.visit.title %}
-                        <strong>{{ firstname }} {{ lastname }}</strong> har booket <a href="{{ visiturl }}">{{ visittitle }}</a>
+                    {% url 'visit-occ-view' object.visitoccurrence.id as occurrenceurl %}
+                    {% blocktrans with firstname=object.booker.firstname lastname=object.booker.lastname visittitle=object.visit.title occurrencetime=object.visitoccurrence.start_datetime %}
+                        <strong>{{ firstname }} {{ lastname }}</strong> har booket <a href="{{ visiturl }}">{{ visittitle }}</a> med afvikling <a href="{{ occurrenceurl }}">{{ occurrencetime }}</a>
                     {% endblocktrans %}
                 </div>
             </div>
@@ -49,13 +54,12 @@
             {% endif %}
 
 
-            <h2>Information om bookingen</h2>
+            <h2>{% trans 'Information om bookingen' %}</h2>
 
             <dl class="dl-horizontal">
 
                 <dt>{% trans 'Navn:' %}</dt>
                 <dd>{{ object.booker.firstname }} {{ object.booker.lastname }}</dd>
-
 
                 <dt>{% trans 'Email:' %}</dt>
                 <dd>{{ object.booker.email }}</dd>
@@ -122,13 +126,15 @@
                     </div>
                     <div class="panel-body">
                         <dl class="dl-horizontal">
-                            
-                            <dt>{% trans 'Link til tilbud:' %}</dt>
-                            <dd><a href="{% url 'visit-view' object.visitoccurrence.visit.id %}">{{ object.visit.title }}</a></dd>
 
                             {% if object.visit.title %}
                                 <dt>{% trans 'Titel:' %}</dt>
                                 <dd><a href="{% url 'visit-view' object.visitoccurrence.visit.id %}">{{ object.visit.title }}</a></dd>
+                            {% endif %}
+
+                            {% if object.visitoccurrence.start_datetime %}
+                                <dt>{% trans 'Tidspunkt:' %}</dt>
+                                <dd><a href="{% url 'visit-occ-view' object.visitoccurrence.id %}">{{ object.visitoccurrence.start_datetime }}</a></dd>
                             {% endif %}
 
                             {% if object.visit.get_audience_display %}
@@ -177,7 +183,7 @@
                                 {% endif %}
                             </dd>
 
-                            <dt>{% trans 'Hvornår:' %}</dt>
+                            <dt>{% trans 'Udbudte tider:' %}</dt>
                             <dd>
                                 {% for description in object.visit.recurrences_description %}
                                     {{ description }}

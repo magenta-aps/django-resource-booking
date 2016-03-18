@@ -16,7 +16,7 @@ from booking.views import LoginRequiredMixin, AccessDenied, EditorRequriedMixin
 from django.views.generic.list import ListView
 from profile.forms import UserCreateForm, EditMyResourcesForm
 from profile.models import EmailLoginEntry
-from profile.models import UserProfile, UserRole, EDIT_ROLES
+from profile.models import UserProfile, UserRole, EDIT_ROLES, NONE
 from profile.models import FACULTY_EDITOR, COORDINATOR, user_role_choices
 
 import warnings
@@ -25,6 +25,13 @@ import profile.models as profile_models
 
 class ProfileView(LoginRequiredMixin, TemplateView):
     """Display the user's profile."""
+    def get_template_names(self):
+        profile = self.request.user.userprofile
+        if not profile or profile.get_role() == NONE:
+            return ['profile/profile_new_user.html']
+        else:
+            return super(ProfileView, self).get_template_names()
+
     def get_context_data(self, **kwargs):
         context = self.context_by_role()
         context['thisurl'] = reverse('user_profile')
@@ -45,12 +52,12 @@ class ProfileView(LoginRequiredMixin, TemplateView):
     def context_for_editors(self):
         ctx = {}
 
-        ctx['col2_title'] = _(u"Arrangementer der kræver handling")
+        ctx['col2_title'] = _(u"Besøg der kræver handling")
         ctx['col2_queryset'] = VisitOccurrence.being_planned_queryset(
             visit__unit=self.request.user.userprofile.get_unit_queryset()
         )
 
-        ctx['col3_title'] = _(u"Planlagte arrangementer")
+        ctx['col3_title'] = _(u"Planlagte besøg")
         ctx['col3_queryset'] = VisitOccurrence.planned_queryset(
             visit__unit=self.request.user.userprofile.get_unit_queryset()
         )
@@ -60,7 +67,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
     def context_for_teachers(self):
         ctx = {}
 
-        ctx['col2_title'] = _(u"Arrangementer der mangler undervisere")
+        ctx['col2_title'] = _(u"Besøg der mangler undervisere")
         ctx['col2_queryset'] = VisitOccurrence.objects.filter(
             visit__unit=self.request.user.userprofile.get_unit_queryset(),
             teacher_status=VisitOccurrence.STATUS_NOT_ASSIGNED
@@ -68,7 +75,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             teachers=self.request.user
         )
 
-        ctx['col3_title'] = _(u"Arrangementer hvor jeg er underviser")
+        ctx['col3_title'] = _(u"Besøg hvor jeg er underviser")
         ctx['col3_queryset'] = VisitOccurrence.objects.filter(
             teachers=self.request.user
         )
@@ -78,7 +85,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
     def context_for_hosts(self):
         ctx = {}
 
-        ctx['col2_title'] = _(u"Arrangementer der mangler værter")
+        ctx['col2_title'] = _(u"Besøg der mangler værter")
         ctx['col2_queryset'] = VisitOccurrence.objects.filter(
             visit__unit=self.request.user.userprofile.get_unit_queryset(),
             host_status=VisitOccurrence.STATUS_NOT_ASSIGNED
@@ -86,7 +93,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             hosts=self.request.user
         )
 
-        ctx['col3_title'] = _(u"Arrangementer hvor jeg er vært")
+        ctx['col3_title'] = _(u"Besøg hvor jeg er vært")
         ctx['col3_queryset'] = VisitOccurrence.objects.filter(
             hosts=self.request.user
         )

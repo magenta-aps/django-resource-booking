@@ -1,19 +1,15 @@
-<form name="adminvisitsearch" id="adminvisitsearch" method="get"
-      action="{% url 'search' %}">
+{% load i18n %}
+<form name="adminvisitsearch" id="adminvisitsearch" method="get" action="{% url 'search' %}">
     {% for name, value in form.hiddenfields %}
-    <input class="hiddenfield" type="hidden"
-           name="{{ name }}" value="{{ value }}" />
+        <input class="hiddenfield" type="hidden" name="{{ name }}" value="{{ value }}" />
     {% endfor %}
-    <h2>Filtrér søgning</h2>
+    <h2>{% trans 'Filtrér søgning' %}</h2>
     <dl class="dl-horizontal">
         <dt><label for="{{ form.q.id_for_label }}">{{ form.q.label }}</label></dt>
         <dd>{{ form.q }}</dd>
 
         <dt>{{ form.s.label }}</dt>
         <dd>{{ form.s }}</dd>
-
-        <dt>{{ form.e.label }}</dt>
-        <dd>{{ form.e }}</dd>
 
         <dt>{{ form.v.label }}</dt>
         <dd>{{ form.v }}</dd>
@@ -31,7 +27,7 @@
         <dd>{{ form.to_date }}</dd>
 
         <dt></dt>
-        <dd><input class="btn btn-primary" type="submit" value="Opdater" /></dd>
+        <dd><input class="btn btn-primary" type="submit" value="{% trans 'Opdater' %}" /></dd>
     </dl>
     
 </form>

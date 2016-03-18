@@ -166,7 +166,7 @@ class OtherResourceForm(forms.ModelForm):
                   'type', 'tags',
                   'institution_level', 'topics', 'audience',
                   'locality',
-                  'enabled', 'contact_persons', 'unit',
+                  'contact_persons', 'unit',
                   'preparation_time', 'comment'
                   )
         widgets = {
@@ -211,7 +211,7 @@ class VisitForm(forms.ModelForm):
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'duration', 'locality', 'rooms_assignment',
                   'rooms_needed', 'tour_available',
-                  'enabled', 'contact_persons', 'unit',
+                  'contact_persons', 'unit',
                   'needed_hosts', 'needed_teachers',
                   'preparation_time', 'comment',
                   )
@@ -255,7 +255,9 @@ class VisitForm(forms.ModelForm):
             'audience': RadioSelect(),
             'tags': CheckboxSelectMultiple(),
             'contact_persons': CheckboxSelectMultiple(),
-            'room_responsible': CheckboxSelectMultiple()
+            'room_responsible': CheckboxSelectMultiple(),
+            'default_hosts': CheckboxSelectMultiple(),
+            'default_teachers': CheckboxSelectMultiple(),
         }
 
     def __init__(self, *args, **kwargs):
@@ -319,9 +321,10 @@ class StudentForADayForm(VisitForm):
         fields = ('type', 'title', 'teaser', 'description', 'state',
                   'institution_level', 'topics', 'audience',
                   'duration', 'locality',
-                  'enabled', 'contact_persons', 'unit',
+                  'contact_persons', 'unit',
                   'needed_hosts', 'needed_teachers',
                   'preparation_time', 'comment',
+                  'default_hosts', 'default_teachers',
                   )
         widgets = VisitForm.Meta.widgets
 
@@ -358,9 +361,10 @@ class TeacherVisitForm(VisitForm):
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'duration', 'locality', 'rooms_assignment',
                   'rooms_needed',
-                  'enabled', 'contact_persons', 'room_responsible', 'unit',
+                  'contact_persons', 'room_responsible', 'unit',
                   'needed_hosts', 'needed_teachers',
                   'preparation_time', 'comment',
+                  'default_hosts', 'default_teachers',
                   )
         widgets = VisitForm.Meta.widgets
 
@@ -373,9 +377,10 @@ class ClassVisitForm(VisitForm):
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'duration', 'locality', 'rooms_assignment',
                   'rooms_needed', 'tour_available',
-                  'enabled', 'contact_persons', 'room_responsible', 'unit',
+                  'contact_persons', 'room_responsible', 'unit',
                   'needed_hosts', 'needed_teachers',
                   'preparation_time', 'comment',
+                  'default_hosts', 'default_teachers',
                   )
         widgets = VisitForm.Meta.widgets
 
