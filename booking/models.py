@@ -1965,19 +1965,19 @@ class VisitOccurrence(models.Model):
                 self.visit.duration_as_timedelta
 
     @staticmethod
-    def get_latest_created(count=1):
+    def get_latest_created():
         return VisitOccurrence.objects.\
-            order_by('-statistics__created_time')[0:count]
+            order_by('-statistics__created_time')
 
     @staticmethod
-    def get_latest_updated(count=1):
+    def get_latest_updated():
         return VisitOccurrence.objects.\
-            order_by('-statistics__updated_time')[0:count]
+            order_by('-statistics__updated_time')
 
     @staticmethod
-    def get_latest_displayed(count=1):
+    def get_latest_displayed():
         return VisitOccurrence.objects.\
-            order_by('-statistics__visited_time')[0:count]
+            order_by('-statistics__visited_time')
 
     # @staticmethod
     # def get_latest_booked():
@@ -1995,7 +1995,7 @@ class VisitOccurrence(models.Model):
             start_datetime__year=date.year,
             start_datetime__month=date.month,
             start_datetime__day=date.day
-        ).order_by('start_datetime').all()
+        ).order_by('start_datetime')
 
     @staticmethod
     def get_occurring_at_time(time):
