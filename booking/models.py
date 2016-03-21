@@ -4,10 +4,6 @@ from django.core.mail.message import EmailMessage
 from django.db import models
 from django.db.models import Sum
 from django.db.models import Q
-from django.db.models.aggregates import Count
-from django.db.models.expressions import F, ExpressionWrapper, Func, \
-    DurationExpression
-from django.db.models.functions import Substr
 from django.template.context import make_context
 from django.utils import timezone
 from djorm_pgfulltext.models import SearchManager
@@ -1471,7 +1467,7 @@ class Visit(Resource):
     @property
     def duration_as_timedelta(self):
         if self.duration is not None:
-            (hours,minutes) = self.duration.split(":")
+            (hours, minutes) = self.duration.split(":")
             return timedelta(
                 hours=int(hours),
                 minutes=int(minutes)
@@ -1494,8 +1490,6 @@ class Visit(Resource):
         latestoccurrence = VisitOccurrence.get_latest_booked()
         if latestoccurrence is not None:
             return latestoccurrence.visit
-
-
 
     # @staticmethod
     # def get_most_booked():
@@ -1968,7 +1962,7 @@ class VisitOccurrence(models.Model):
     def update_endtime(self):
         if self.start_datetime is not None and self.visit.duration is not None:
             self.end_datetime = self.start_datetime + \
-                                self.visit.duration_as_timedelta
+                self.visit.duration_as_timedelta
 
     @staticmethod
     def get_latest_created(count=1):
@@ -1985,8 +1979,8 @@ class VisitOccurrence(models.Model):
         return VisitOccurrence.objects.\
             order_by('-statistics__visited_time')[0:count]
 
-    #@staticmethod
-    #def get_latest_booked():
+    # @staticmethod
+    # def get_latest_booked():
     #    latestbooking = Booking.get_latest_created()
     #    if latestbooking is not None:
     #        return latestbooking.visitoccurrence

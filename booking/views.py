@@ -36,7 +36,7 @@ from django.views.defaults import bad_request
 from profile.models import EDIT_ROLES
 from profile.models import role_to_text
 from booking.models import Visit, VisitOccurrence, StudyMaterial, \
-    KUEmailMessage, ObjectStatistics
+    KUEmailMessage
 from booking.models import Resource, Subject
 from booking.models import Unit
 from booking.models import OtherResource
@@ -2540,6 +2540,7 @@ import_views(booking_workflows.views)
 
 class KUStatsView(TemplateView):
     template_name = 'kustats.html'
+
     def get_context_data(self, **kwargs):
         context = super(KUStatsView, self).get_context_data(**kwargs)
         context['latest_updated_resource'] = Resource.get_latest_updated()

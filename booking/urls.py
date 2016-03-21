@@ -4,8 +4,8 @@ from django.conf import settings
 
 from .views import MainPageView, VisitOccurrenceNotifyView
 
-from booking.views import PostcodeView, SchoolView, VisitInquireView, \
-        KUStatsView
+from booking.views import PostcodeView, SchoolView, VisitInquireView
+from booking.views import KUStatsView
 from booking.views import RrulestrView
 from booking.views import EditResourceInitialView, ResourceDetailView
 from booking.views import BookingView, BookingSuccessView
