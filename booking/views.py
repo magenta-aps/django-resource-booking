@@ -2542,6 +2542,7 @@ class KUStatsView(TemplateView):
     template_name = 'kustats.html'
     def get_context_data(self, **kwargs):
         context = super(KUStatsView, self).get_context_data(**kwargs)
-        context['latest_updated_resource'] = Resource.get_latest_updated(10)
-        context['latest_booked_visit'] = Visit.get_latest_booked(10)
+        context['latest_updated_resource'] = Resource.get_latest_updated()
+        context['latest_booked_visit'] = Visit.get_latest_booked()
+        context['visits_today'] = VisitOccurrence.get_todays_occurrences()
         return context

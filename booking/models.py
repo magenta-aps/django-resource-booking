@@ -5,7 +5,9 @@ from django.db import models
 from django.db.models import Sum
 from django.db.models import Q
 from django.db.models.aggregates import Count
-from django.db.models.expressions import F, ExpressionWrapper
+from django.db.models.expressions import F, ExpressionWrapper, Func, \
+    DurationExpression
+from django.db.models.functions import Substr
 from django.template.context import make_context
 from django.utils import timezone
 from djorm_pgfulltext.models import SearchManager
@@ -906,16 +908,16 @@ class Resource(models.Model):
         return reverse('resource-view', args=[self.pk])
 
     @staticmethod
-    def get_latest_created(count=1):
-        return Resource.objects.order_by('-statistics__created_time')[0:count]
+    def get_latest_created():
+        return Resource.objects.order_by('-statistics__created_time')
 
     @staticmethod
-    def get_latest_updated(count=1):
-        return Resource.objects.order_by('-statistics__updated_time')[0:count]
+    def get_latest_updated():
+        return Resource.objects.order_by('-statistics__updated_time')
 
     @staticmethod
-    def get_latest_displayed(count=1):
-        return Resource.objects.order_by('-statistics__visited_time')[0:count]
+    def get_latest_displayed():
+        return Resource.objects.order_by('-statistics__visited_time')
 
     def ensure_statistics(self):
         if self.statistics is None:
@@ -1466,17 +1468,26 @@ class Visit(Resource):
             self.state == Resource.ACTIVE and \
             self.has_bookable_occurrences
 
-    @staticmethod
-    def get_latest_created(count=1):
-        return Visit.objects.order_by('-statistics__created_time')[0:count]
+    @property
+    def duration_as_timedelta(self):
+        if self.duration is not None:
+            (hours,minutes) = self.duration.split(":")
+            return timedelta(
+                hours=int(hours),
+                minutes=int(minutes)
+            )
 
     @staticmethod
-    def get_latest_updated(count=1):
-        return Visit.objects.order_by('-statistics__updated_time')[0:count]
+    def get_latest_created():
+        return Visit.objects.order_by('-statistics__created_time')
 
     @staticmethod
-    def get_latest_displayed(count=1):
-        return Visit.objects.order_by('-statistics__visited_time')[0:count]
+    def get_latest_updated():
+        return Visit.objects.order_by('-statistics__updated_time')
+
+    @staticmethod
+    def get_latest_displayed():
+        return Visit.objects.order_by('-statistics__visited_time')
 
     @staticmethod
     def get_latest_booked():
@@ -1515,6 +1526,11 @@ class VisitOccurrence(models.Model):
         verbose_name=_(u'Starttidspunkt'),
         null=True,
         blank=True
+    )
+
+    end_datetime = models.DateTimeField(
+        null=True,
+        blank=True,
     )
 
     # Whether the occurrence is publicly bookable
@@ -1866,6 +1882,8 @@ class VisitOccurrence(models.Model):
 
     def save(self, *args, **kwargs):
 
+        self.update_endtime()
+
         # Save once to store relations
         super(VisitOccurrence, self).save(*args, **kwargs)
 
@@ -1947,6 +1965,11 @@ class VisitOccurrence(models.Model):
         autosends = self.visitoccurrenceautosend_set.filter(enabled=True)
         return ', '.join([autosend.get_name() for autosend in autosends])
 
+    def update_endtime(self):
+        if self.start_datetime is not None and self.visit.duration is not None:
+            self.end_datetime = self.start_datetime + \
+                                self.visit.duration_as_timedelta
+
     @staticmethod
     def get_latest_created(count=1):
         return VisitOccurrence.objects.\
@@ -1970,7 +1993,7 @@ class VisitOccurrence(models.Model):
 
     @staticmethod
     def get_todays_occurrences():
-        return VisitOccurrence.get_starting_on_date(datetime.today().date())
+        return VisitOccurrence.get_occurring_on_date(datetime.today().date())
 
     @staticmethod
     def get_starting_on_date(date):
@@ -1980,12 +2003,41 @@ class VisitOccurrence(models.Model):
             start_datetime__day=date.day
         ).order_by('start_datetime').all()
 
+    @staticmethod
+    def get_occurring_at_time(time):
+        # Return the occurrences that take place exactly at this time
+        # Meaning they begin before the queried time and end after the time
+        return VisitOccurrence.objects.filter(
+            start_datetime__lte=time,
+            end_datetime__gte=time
+        )
+
+    @staticmethod
+    def get_occurring_on_date(date):
+        # An occurrence happens on a date if it starts before the
+        # end of the day and ends after the beginning of the day
+        return VisitOccurrence.objects.filter(
+            start_datetime__lte=date + timedelta(days=1),
+            end_datetime__gte=date
+        )
+
+    @staticmethod
+    def get_recently_held(time):
+        return VisitOccurrence.objects.filter(
+            end_datetime__lte=time
+        ).order_by('-end_datetime')
+
     def ensure_statistics(self):
         if self.statistics is None:
             statistics = ObjectStatistics()
             statistics.save()
             self.statistics = statistics
             self.save()
+
+    @staticmethod
+    def set_endtime():
+        for occurrence in VisitOccurrence.objects.all():
+            occurrence.save()
 
 
 VisitOccurrence.add_override_property('duration')
@@ -2480,16 +2532,16 @@ class Booking(models.Model):
         ] if x])
 
     @staticmethod
-    def get_latest_created(count=1):
-        return Booking.objects.order_by('-statistics__created_time')[0:count]
+    def get_latest_created():
+        return Booking.objects.order_by('-statistics__created_time')
 
     @staticmethod
-    def get_latest_updated(count=1):
-        return Booking.objects.order_by('-statistics__updated_time')[0:count]
+    def get_latest_updated():
+        return Booking.objects.order_by('-statistics__updated_time')
 
     @staticmethod
-    def get_latest_displayed(count=1):
-        return Booking.objects.order_by('-statistics__visited_time')[0:count]
+    def get_latest_displayed():
+        return Booking.objects.order_by('-statistics__visited_time')
 
     def ensure_statistics(self):
         if self.statistics is None:
