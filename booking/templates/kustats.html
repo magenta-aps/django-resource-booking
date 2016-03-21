@@ -1,0 +1,13 @@
+{% load i18n %}
+<dl>
+    <dt>
+        {% trans 'Senest opdaterede tilbud:' %}
+    </dt>
+    <dd>
+        {% if latest_updated_resource %}
+            <a href="{% url 'resource-view' latest_updated_resource.id %}">{{ latest_updated_resource }}</a>
+        {% else %}
+            {% trans 'Ingen tilbud fundet' %}
+        {% endif %}
+    </dd>
+</dl>
