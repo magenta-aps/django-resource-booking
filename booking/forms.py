@@ -451,8 +451,26 @@ class VisitAutosendFormSet(VisitAutosendFormSetBase):
 
 class BookingForm(forms.ModelForm):
 
+    scheduled = False
+
     def __init__(self, data=None, visit=None, *args, **kwargs):
         super(BookingForm, self).__init__(data, *args, **kwargs)
+
+        self.visit = visit
+        # self.scheduled = visit is not None and \
+        #    visit.type == Resource.FIXED_SCHEDULE_GROUP_VISIT
+        self.scheduled = (
+            visit is not None and
+            len(visit.bookable_occurrences) > 0
+        )
+
+        if self.scheduled:
+            self.fields['visitoccurrence'].choices = (
+                (x.pk, formats.date_format(
+                    x.start_datetime, "DATETIME_FORMAT"
+                )) for x in visit.bookable_occurrences
+            )
+            self.fields['visitoccurrence'].required = True
 
 
 class BookerForm(BookingForm):
@@ -615,32 +633,13 @@ class ClassBookingForm(BookingForm):
         required=False
     )
 
-    scheduled = False
-    visit = None
-
     def __init__(self, data=None, visit=None, *args, **kwargs):
         super(ClassBookingForm, self).__init__(data, *args, **kwargs)
 
-        self.visit = visit
-
-        # self.scheduled = visit is not None and \
-        #    visit.type == Resource.FIXED_SCHEDULE_GROUP_VISIT
-        self.scheduled = (
-            visit is not None and
-            len(visit.bookable_occurrences) > 0
-        )
-
-        if self.scheduled:
-            self.fields['visitoccurrence'].choices = (
-                (x.pk, formats.date_format(
-                    x.start_datetime, "DATETIME_FORMAT"
-                )) for x in visit.bookable_occurrences
-            )
-            self.fields['visitoccurrence'].required = True
-        else:
+        if not self.scheduled:
             self.fields['desired_time'].required = True
 
-        if visit is not None and not visit.tour_available:
+        if self.visit is not None and not self.visit.tour_available:
             del self.fields['tour_desired']
 
     def save(self, commit=True, *args, **kwargs):
