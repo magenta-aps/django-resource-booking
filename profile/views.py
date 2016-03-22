@@ -79,7 +79,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                 'type': 'VisitOccurrence',
                 'title': _(u"Arrangementer der kræver handling"),
                 'queryset': VisitOccurrence.being_planned_queryset(
-                    visit__unit=self.request.user.userprofile.\
+                    visit__unit=self.request.user.userprofile.
                         get_unit_queryset()
                 )
             },
@@ -87,7 +87,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                 'type': 'VisitOccurrence',
                 'title': _(u"Planlagte arrangementer"),
                 'queryset': VisitOccurrence.planned_queryset(
-                    visit__unit=self.request.user.userprofile.\
+                    visit__unit=self.request.user.userprofile.
                         get_unit_queryset()
                 )
             }
@@ -99,7 +99,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                 'type': 'VisitOccurrence',
                 'title': _(u"Arrangementer der mangler undervisere"),
                 'queryset': VisitOccurrence.objects.filter(
-                    visit__unit=self.request.user.userprofile.\
+                    visit__unit=self.request.user.userprofile.
                         get_unit_queryset(),
                     teacher_status=VisitOccurrence.STATUS_NOT_ASSIGNED
                 ).exclude(
@@ -121,7 +121,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                 'type': 'VisitOccurrence',
                 'title': _(u"Arrangementer der mangler værter"),
                 'queryset': VisitOccurrence.objects.filter(
-                    visit__unit=self.request.user.userprofile.\
+                    visit__unit=self.request.user.userprofile.
                         get_unit_queryset(),
                     host_status=VisitOccurrence.STATUS_NOT_ASSIGNED
                 ).exclude(
