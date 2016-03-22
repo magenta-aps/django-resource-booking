@@ -1,4 +1,5 @@
 {% load staticfiles %}
+{% load i18n %}
 <!DOCTYPE html>
 <html lang="da">
     <head>
@@ -7,12 +8,13 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
-        <title>foKUs{% block htmltitle %} - søg i tilbud{% endblock %}</title>
+        <title>foKUs{% block htmltitle %} - {% trans 'søg i tilbud' %}{% endblock %}</title>
     
-        <!-- Bootstrap -->
+        <!-- 3rd party stylesheets -->
         <link href="{% static 'thirdparty/bootstrap/dist/css/bootstrap.min.css' %}" rel="stylesheet">
         <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.5.0/css/bootstrap-datepicker.min.css" rel="stylesheet">
         <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet">
+        <link href="{% static 'css/picker.time.default.css' %}" rel="stylesheet">
 
         <!-- Our own stylesheet -->
         <link href="{% static 'css/main.css' %}" rel="stylesheet">
@@ -43,50 +45,50 @@
                 <div id="navbar" class="navbar-collapse collapse">
                     <ul class="nav navbar-nav navbar-right">
                         {% if user.is_authenticated %}
-                        <li class="login"><a href="/profile/logout">Log ud</a></li>
+                        <li class="login"><a href="/profile/logout">{% trans 'Log ud' %}</a></li>
                         {% else %}
-                        <li class="login"><a href="/profile/login">Log ind</a></li>
+                        <li class="login"><a href="/profile/login">{% trans 'Log ind' %}</a></li>
                         {% endif %}
-                        <li><a href="http://kalender.ku.dk">Kalender</a></li>
-                        <li><a href="http://findvej.ku.dk">Find vej</a></li>
-                        <li><a href="http://www.ku.dk/vejviser/">Telefonbog</a></li>
-                        <li><a href="http://jobportal.ku.dk/">Job</a></li>
-                        <li><a href="http://velkommen.ku.dk/indeks/">A-Å-indeks</a></li>
-                        <li><a href="https://intranet.ku.dk/">KUnet</a></li>
+                        <li><a href="http://kalender.ku.dk">{% trans 'Kalender' %}</a></li>
+                        <li><a href="http://findvej.ku.dk">{% trans 'Find vej' %}</a></li>
+                        <li><a href="http://www.ku.dk/vejviser/">{% trans 'Telefonbog' %}</a></li>
+                        <li><a href="http://jobportal.ku.dk/">{% trans 'Job' %}</a></li>
+                        <li><a href="http://velkommen.ku.dk/indeks/">{% trans 'A-Å-indeks' %}</a></li>
+                        <li><a href="https://intranet.ku.dk/">{% trans 'KUnet' %}</a></li>
                         <li class="global-sprog"><a href="http://research.ku.dk/" class="english">English</a></li>
                     </ul>
                 </div>
             </div>
         </nav>
-        
+
         {% if user.is_authenticated %}
         <div class="container">
             <ul class="list-inline">
-                <li><a href="/profile">Min side</a></li>
-                <li><a href="{% url 'search' %}">Tilbud</a></li>
-                <li>Bookings</li>
-                <li><a href="{% url 'admin:index' %}">Administration</a></li>
+                <li><a href="/profile">{% trans 'Min side' %}</a></li>
+                <li><a href="{% url 'search' %}">{% trans 'Tilbud' %}</a></li>
+                <li><a href="{% url 'visit-occ-search' %}">{% trans 'Besøg' %}</a></li>
+                <li><a href="{% url 'admin:index' %}">{% trans 'Administration' %}</a></li>
                 {% if view.kwargs.can_be_embedded %}
-                <li><a href="{% url 'embedcodes' view.request.get_full_path|slice:"1:" %}">Indlejr side</a></li>
+                <li><a href="{% url 'embedcodes' view.request.get_full_path|slice:"1:" %}">{% trans 'Indlejr side' %}</a></li>
                 {% endif %}
-                <li class="pull-right"><a href="/profile/logout">Log ud</a></li>
+                <li class="pull-right"><a href="/profile/logout">{% trans 'Log ud' %}</a></li>
             </ul>
         </div>
         {% endif %}
-        
+
         <div class="container-fluid grey-line hidden-xs"></div>
         <div class="container grey-sides">
             <div class="row">
                 <div id="branding-images" class="clearfix">
                     <div id="logo">
-                        <a href="http://www.ku.dk" title="Københavns Universitet">
-                            <img src="{% static 'img/faelles.gif' %}" height="87" width="65" alt="Københavns Universitet">
+                        <a href="http://www.ku.dk" title="{% trans 'Københavns Universitet' %}">
+                            <img src="{% static 'img/faelles.gif' %}" height="87" width="65" alt="{% trans 'Københavns Universitet' %}">
                         </a>
                     </div>
                     <div id="branding-title">
-                        <a href="{% url 'index' %}" title="Velkommen til Københavns Universitet">
-                            <h2>foKUs</h2>
-                            <p>Portal for skole- og gymnasieområdet</p>
+                        <a href="{% url 'index' %}" title="{% trans 'Velkommen til Københavns Universitet' %}">
+                            <h2>{% trans 'foKUs' %}</h2>
+                            <p>{% trans 'Portal for skole- og gymnasieområdet' %}</p>
                         </a>
                     </div>
                 </div>
@@ -101,14 +103,32 @@
     <div class="row">
         <div class="col-sm-12 col-md-6">
         <div class="divider"></div>
-        <h1>Søg i tilbud</h1>
+        <h1>{% trans 'Søg efter tilbud' %}</h1>
         <div class="divider"></div>
             <form action="{% url 'search' %}">
+            <h2 class="control-label">{% trans 'Tilbud rettet mod:' %}</h2>
                 <div class="input-group">
-                    <label class="sr-only" for="searchBox">Søg efter tilbud</label>
-                    <input type="text" class="form-control" id="searchBox" placeholder="Indtast et eller flere søgeord..." name="q">
+                    <label class="checkbox-inline control-label" for="audience-choice-1">
+                        <input
+                            name="i" id="institution-choice-1"
+                            type="checkbox" value="1"
+                            {% for k, v in request.GET.lists %}{% if k == "i" and "1" in v %}checked="checked"{% endif %}{% endfor %}
+                        >Gymnasie
+                    </label>
+                    <label class="checkbox-inline control-label" for="audience-choice-2">
+                        <input
+                            name="i" id="institution-choice-2"
+                            type="checkbox" value="2"
+                            {% for k, v in request.GET.lists %}{% if k == "i" and "2" in v %}checked="checked"{% endif %}{% endfor %}
+                        >Grundskole
+                    </label>
+                </div>
+                <div class="divider"></div>
+                <div class="input-group">
+                    <label class="sr-only" for="searchBox">{% trans 'Søg efter tilbud' %}</label>
+                    <input type="text" class="form-control" id="searchBox" placeholder="{% trans 'Indtast et eller flere søgeord...' %}" name="q">
                     <span class="input-group-btn">
-                        <button class="btn btn-default" type="submit">Søg  <span class="glyphicon glyphicon-search" aria-hidden="true"></span></button>
+                        <button class="btn btn-default" type="submit">{% trans 'Søg' %}  <span class="glyphicon glyphicon-search" aria-hidden="true"></span></button>
                     </span>
                 </div>
             </form>
@@ -128,8 +148,8 @@
                     <div class="row footer-columns">
                         <div class="col-sm-4 col-sm-offset-0">
                             <ul class="footerlinks">
-                                <li><a href="http://kommunikation.ku.dk/">Kommunikation</a></li>
-                                <li><a href="http://www.ku.dk/">Københavns Universitet</a></li>
+                                <li><a href="http://kommunikation.ku.dk/">{% trans 'Kommunikation' %}</a></li>
+                                <li><a href="http://www.ku.dk/">{% trans 'Københavns Universitet' %}</a></li>
                                 <li>Nørregade 10, Postboks 2177</li>
                                 <li>1017 København K</li>
                             </ul>

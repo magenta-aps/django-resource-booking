@@ -1,0 +1,62 @@
+{% load staticfiles %}
+{% if bookerform.school %}
+<script src="{% static 'thirdparty/bootstrap-3-typeahead/bootstrap3-typeahead.min.js' %}"></script>
+<script type="text/javascript">
+    <!--
+    $(function() {
+
+        var levelMap = {{ level_map }};
+
+        var postcode = $("#id_postcode");
+        var schoolField = $("#id_school");
+        var levelSelect = $("#{{ bookerform.level.id_for_label }}");
+
+        schoolField.typeahead({
+            source: function (query, process) {
+                $.ajax({
+                    url: "{% url 'school' %}",
+                    data: {
+                        q: query,
+                        t: schoolField.attr("data-institution-level")
+                    },
+                    dataType: "json",
+                    complete: function (response) {
+                        if (response && response.status === 200) {
+                            process(response.responseJSON.schools);
+                        }
+                    }.bind(this)
+                });
+            },
+            updater: function (selected) {
+                if (selected.postcode && postcode.length) {
+                    // Update the postcode field
+                    postcode.val(selected.postcode);
+                    postcode.change();
+                }
+
+                if (selected.type) {
+                    // Show/hide the dependents
+                    $(".institution_level_dependent").each(function(){
+                        var $this = $(this);
+                        $this.toggle(!!($this.attr("data-display-value") & selected.type));
+                    });
+
+                    // Update the level selector options
+                    var showOptions = $(levelSelect.find("option[value='']"));
+                    var showValues = levelMap[selected.type];
+                    for (var i=0; i<showValues.length; i++) {
+                        showOptions = showOptions.add(levelSelect.find("option[value="+showValues[i]+"]"));
+                    }
+                    var hideOptions = levelSelect.find("option").not(showOptions);
+                    showOptions.show();
+                    hideOptions.hide();
+                    hideOptions.filter(":selected").removeAttr("selected");
+                }
+                return selected.name;
+            }
+        });
+    });
+
+    //-->
+</script>
+{% endif %}

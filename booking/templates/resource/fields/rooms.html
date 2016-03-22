@@ -1,5 +1,6 @@
 {% load i18n %}
 
+{% if form.rooms_needed %}
 <div class="row form-group">
     <div>{{ form.rooms_needed.errors }}</div>
     <div class="col-sm-12">
@@ -7,7 +8,9 @@
         <label class="{{ form.rooms_needed.css_classes }}" for="{{ form.rooms_needed.id_for_label }}">{{ form.rooms_needed.label }}</label>
     </div>
 </div>
+{% endif %}
 
+{% if form.rooms_assignment %}
 <div id="rooms_needed_fields">
     <div class="row form-group">
         <div>{{ form.rooms_assignment.errors }}</div>
@@ -60,3 +63,4 @@
         </ul>
     </div>
 </div>
+{% endif %}

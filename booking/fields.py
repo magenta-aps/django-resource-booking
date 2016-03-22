@@ -1,9 +1,9 @@
 from django.db import models
 from django.utils import six
 from collections import defaultdict
+from django.forms.fields import MultipleChoiceField
 
 from .widgets import DurationWidget
-
 
 COLUMN_TYPES = defaultdict(lambda: "char(20)")
 COLUMN_TYPES["django.db.backends.postgresql_psycopg2"] = "interval"
@@ -42,3 +42,13 @@ class DurationField(six.with_metaclass(models.SubfieldBase, models.Field)):
 
     def get_db_prep_value(self, value, connection=None, prepared=None):
         return self.get_prep_value(value)
+
+
+class ExtensibleMultipleChoiceField(MultipleChoiceField):
+    """
+    Like a MultipleChoiceField, but does not raise a validation error on
+    values that were not part of the original choice list.
+    Handy for dynamically adding choices with JavaScript
+    """
+    def valid_value(self, value):
+        return True

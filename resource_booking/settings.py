@@ -9,6 +9,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.8/ref/settings/
 """
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+
 import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -26,15 +27,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'localhost'
-# EMAIL_PORT = 25
-# EMAIL_HOST_USER = ''
-# EMAIL_HOST_PASSWORD = ''
-# EMAIL_USE_TLS = True
-# EMAIL_USE_SSL = True
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 DEFAULT_FROM_EMAIL = 'noreply@adm.ku.dk'
+EMAIL_HOST = 'localhost'
 
 # Application definition
 
@@ -50,11 +45,13 @@ INSTALLED_APPS = (
     'recurrence',
     'timedelta',
     'tinymce',
-    'djangosaml2'
+    'djangosaml2',
+    'django_cron',
 )
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -69,7 +66,7 @@ ROOT_URLCONF = 'resource_booking.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'override_templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -106,7 +103,8 @@ NPM_FILE_PATTERNS = {
     'bootstrap-datetime-picker': ['js/bootstrap-datetimepicker.min.js',
                                   'js/locales/bootstrap-datetimepicker.da.js',
                                   'css/bootstrap-datetimepicker.min.css'],
-    'bootstrap-3-typeahead': ['bootstrap3-typeahead.min.js']
+    'bootstrap-3-typeahead': ['bootstrap3-typeahead.min.js'],
+    'jquery-table-sort': ['jquery.table_sort.min.js']
 }
 
 # Django-tinymce config
@@ -205,3 +203,8 @@ if USE_SAML:
         AUTHENTICATION_BACKENDS.insert(1, 'djangosaml2.backends.Saml2Backend')
     else:
         AUTHENTICATION_BACKENDS.append('djangosaml2.backends.Saml2Backend')
+
+CRON_CLASSES = [
+    "booking.cron.ReminderJob",
+    "booking.cron.IdleHostroleJob"
+]

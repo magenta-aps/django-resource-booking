@@ -1,3 +1,4 @@
+{% if form.unit %}
 <div class="row form-group">
     <div>{{ form.unit.errors }}</div>
     <div class="col-sm-2">
@@ -7,3 +8,4 @@
         {{ form.unit }}
     </div>
 </div>
+{% endif %}

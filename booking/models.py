@@ -1,9 +1,11 @@
 # encoding: utf-8
-from django.core.mail.message import EmailMessage
-from django.db import models
-from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.mail import EmailMultiAlternatives
+from django.db import models
+from django.db.models import Sum
+from django.db.models import Q
 from django.template.context import make_context
+from django.utils import timezone
 from djorm_pgfulltext.models import SearchManager
 from djorm_pgfulltext.fields import VectorField
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -12,12 +14,13 @@ from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext_lazy as _
-from django.template.base import Template
+from django.template.base import Template, VariableNode
 
 from recurrence.fields import RecurrenceField
-from booking.utils import ClassProperty, full_email
+from booking.utils import ClassProperty, full_email, CustomStorage, html2text
 from resource_booking import settings
 
+import datetime
 
 LOGACTION_CREATE = ADDITION
 LOGACTION_CHANGE = CHANGE
@@ -38,7 +41,14 @@ LOGACTION_DISPLAY_MAP = {
 
 
 def log_action(user, obj, action_flag, change_message=''):
-    user_id = user.pk if user else None
+    if user and hasattr(user, "pk") and user.pk:
+        user_id = user.pk
+    else:
+        # Late import due to mutual import conflicts
+        from profile.models import get_public_web_user  # noqa
+        pw_user = get_public_web_user()
+        user_id = pw_user.pk
+
     content_type_id = None
     object_id = None
     object_repr = ""
@@ -67,10 +77,18 @@ def log_action(user, obj, action_flag, change_message=''):
 class Person(models.Model):
     """A dude or chick"""
 
+    class Meta:
+        verbose_name = _(u'kontaktperson')
+        verbose_name_plural = _(u'kontaktpersoner')
+
     # Eventually this could just be a pointer to AD
     name = models.CharField(max_length=50)
     email = models.EmailField(max_length=64, null=True, blank=True)
     phone = models.CharField(max_length=14, null=True, blank=True)
+
+    unit = models.ForeignKey("Unit", blank=True, null=True)
+
+    allow_null_unit_editing = True
 
     def __unicode__(self):
         return self.name
@@ -88,6 +106,11 @@ class Person(models.Model):
 # Units (faculties, institutes etc)
 class UnitType(models.Model):
     """A type of organization, e.g. 'faculty' """
+
+    class Meta:
+        verbose_name = _(u"enhedstype")
+        verbose_name_plural = _(u"Enhedstyper")
+
     name = models.CharField(max_length=25)
 
     def __unicode__(self):
@@ -96,10 +119,25 @@ class UnitType(models.Model):
 
 class Unit(models.Model):
     """A generic organizational unit, such as a faculty or an institute"""
+
+    class Meta:
+        verbose_name = _(u"enhed")
+        verbose_name_plural = _(u"enheder")
+        ordering = ['name']
+
     name = models.CharField(max_length=100)
     type = models.ForeignKey(UnitType)
     parent = models.ForeignKey('self', null=True, blank=True)
-    contact = models.ForeignKey(Person, null=True, blank=True)
+    contact = models.ForeignKey(
+        Person, null=True, blank=True,
+        verbose_name=_(u'Kontaktperson'),
+        related_name="contactperson_for_units"
+    )
+    url = models.URLField(
+        verbose_name=u'Hjemmeside',
+        null=True,
+        blank=True
+    )
 
     def belongs_to(self, unit):
         if self == unit:
@@ -117,13 +155,55 @@ class Unit(models.Model):
             all_children = all_children | u.get_descendants()
         return all_children | Unit.objects.filter(pk=self.pk)
 
+    def get_faculty_queryset(self):
+        u = self
+
+        # Go through parent relations until we hit a "fakultet"
+        while u and u.type and u.type.name != "Fakultet":
+            u = u.parent
+
+        if u:
+            return Unit.objects.filter(Q(pk=u.pk) | Q(parent=u))
+        else:
+            return Unit.objects.none()
+
     def __unicode__(self):
         return "%s (%s)" % (self.name, self.type.name)
+
+    def get_users(self, role=None):
+        if role is not None:
+            profiles = self.userprofile_set.filter(user_role__role=role).all()
+        else:
+            profiles = self.userprofile_set.all()
+        return [profile.user for profile in profiles]
+
+    def get_hosts(self):
+        from profile.models import HOST
+        return self.get_users(HOST)
+
+    def get_teachers(self):
+        from profile.models import TEACHER
+        return self.get_users(TEACHER)
+
+    def get_recipients(self, template_key):
+        recipients = []
+        if template_key in EmailTemplate.unit_hosts_keys:
+            recipients.extend(self.get_hosts())
+
+        if template_key in \
+                EmailTemplate.unit_teachers_keys:
+            recipients.extend(self.get_teachers())
+        return recipients
 
 
 # Master data related to bookable resources start here
 class Subject(models.Model):
     """A relevant subject from primary or secondary education."""
+
+    class Meta:
+        verbose_name = _(u"fag")
+        verbose_name_plural = _(u"fag")
+
     SUBJECT_TYPE_GYMNASIE = 2**0
     SUBJECT_TYPE_GRUNDSKOLE = 2**1
     # NEXT_VALUE = 2**2
@@ -188,6 +268,11 @@ class Tag(models.Model):
 
 class Topic(models.Model):
     """Tag class, just name and description fields."""
+
+    class Meta:
+        verbose_name = _(u"emne")
+        verbose_name_plural = _(u"emner")
+
     name = models.CharField(max_length=256)
     description = models.TextField(blank=True)
 
@@ -197,6 +282,11 @@ class Topic(models.Model):
 
 class AdditionalService(models.Model):
     """Additional services, i.e. tour of the place, food and drink, etc."""
+
+    class Meta:
+        verbose_name = _(u'ekstra ydelse')
+        verbose_name_plural = _(u'ekstra ydelser')
+
     name = models.CharField(max_length=256)
     description = models.TextField(blank=True)
 
@@ -206,6 +296,11 @@ class AdditionalService(models.Model):
 
 class SpecialRequirement(models.Model):
     """Special requirements for visit - e.g., driver's license."""
+
+    class Meta:
+        verbose_name = _(u'særligt krav')
+        verbose_name_plural = _(u'særlige ydelser')
+
     name = models.CharField(max_length=256)
     description = models.TextField(blank=True)
 
@@ -215,6 +310,11 @@ class SpecialRequirement(models.Model):
 
 class StudyMaterial(models.Model):
     """Material for the students to study before visiting."""
+
+    class Meta:
+        verbose_name = _(u'undervisningsmateriale')
+        verbose_name_plural = _(u'undervisningsmaterialer')
+
     URL = 0
     ATTACHMENT = 1
     study_material_choices = (
@@ -223,8 +323,11 @@ class StudyMaterial(models.Model):
     )
     type = models.IntegerField(choices=study_material_choices, default=URL)
     url = models.URLField(null=True, blank=True)
-    file = models.FileField(upload_to='material', null=True, blank=True)
-    visit = models.ForeignKey('Visit', on_delete=models.CASCADE)
+    file = models.FileField(upload_to='material', null=True,
+                            blank=True, storage=CustomStorage())
+    resource = models.ForeignKey('Resource', null=True,
+                                 on_delete=models.CASCADE,
+                                 )
 
     def __unicode__(self):
         s = u"{0}: {1}".format(
@@ -236,6 +339,11 @@ class StudyMaterial(models.Model):
 
 class Locality(models.Model):
     """A locality where a visit may take place."""
+
+    class Meta:
+        verbose_name = _(u'lokalitet')
+        verbose_name_plural = _(u'lokaliteter')
+
     name = models.CharField(max_length=256, verbose_name=_(u'Navn'))
     description = models.TextField(blank=True, verbose_name=_(u'Beskrivelse'))
     address_line = models.CharField(max_length=256, verbose_name=_(u'Adresse'))
@@ -247,6 +355,206 @@ class Locality(models.Model):
 
     def __unicode__(self):
         return self.name
+
+
+class EmailTemplate(models.Model):
+
+    NOTIFY_GUEST__BOOKING_CREATED = 1  # ticket 13806
+    NOTIFY_HOST__BOOKING_CREATED = 2  # ticket 13807
+    NOTIFY_HOST__REQ_TEACHER_VOLUNTEER = 3  # ticket 13808
+    NOTIFY_HOST__REQ_HOST_VOLUNTEER = 4  # ticket 13809
+    NOTIFY_HOST__ASSOCIATED = 5  # ticket 13810
+    NOTIFY_HOST__REQ_ROOM = 6  # ticket 13811
+    NOTIFY_GUEST__GENERAL_MSG = 7  # ticket 13812
+    NOTIFY_ALL__BOOKING_COMPLETE = 8  # ticket 13813
+    NOTIFY_ALL__BOOKING_CANCELED = 9  # ticket 13814
+    NOTITY_ALL__BOOKING_REMINDER = 10  # ticket 13815
+    NOTIFY_HOST__HOSTROLE_IDLE = 11  # ticket 13805
+    SYSTEM__BASICMAIL_ENVELOPE = 12
+
+    # Choice labels
+    key_choices = [
+        (NOTIFY_GUEST__BOOKING_CREATED, _(u'Gæst: Booking oprettet')),
+        (NOTIFY_GUEST__GENERAL_MSG, _(u'Gæst: Generel besked')),
+        (NOTIFY_HOST__BOOKING_CREATED, _(u'Vært: Booking oprettet')),
+        (NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
+         _(u'Vært: Frivillige undervisere')),
+        (NOTIFY_HOST__REQ_HOST_VOLUNTEER, _(u'Vært: Frivillige værter')),
+        (NOTIFY_HOST__ASSOCIATED, _(u'Vært: Tilknyttet besøg')),
+        (NOTIFY_HOST__REQ_ROOM, _(u'Vært: Forespørg lokale')),
+        (NOTIFY_ALL__BOOKING_COMPLETE, _(u'Alle: Booking færdigplanlagt')),
+        (NOTIFY_ALL__BOOKING_CANCELED, _(u'Alle: Booking aflyst')),
+        (NOTITY_ALL__BOOKING_REMINDER, _(u'Alle: Reminder om booking')),
+        (NOTIFY_HOST__HOSTROLE_IDLE, _(u'Vært: Ledig værtsrolle')),
+        (SYSTEM__BASICMAIL_ENVELOPE, _(u'Forespørgsel fra bruger'))
+    ]
+
+    @staticmethod
+    def get_name(template_key):
+        for key, label in EmailTemplate.key_choices:
+            if key == template_key:
+                return label
+
+    # Templates available for manual sending from visit occurrences
+    visitoccurrence_manual_keys = [
+        NOTIFY_GUEST__GENERAL_MSG,
+        NOTIFY_HOST__ASSOCIATED,
+        NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
+        NOTIFY_HOST__REQ_HOST_VOLUNTEER,
+        NOTIFY_HOST__REQ_ROOM,
+        NOTIFY_ALL__BOOKING_COMPLETE,
+        NOTIFY_ALL__BOOKING_CANCELED,
+        NOTITY_ALL__BOOKING_REMINDER
+    ]
+
+    # Templates available for manual sending from bookings
+    booking_manual_keys = [
+        NOTIFY_GUEST__BOOKING_CREATED,
+        NOTIFY_GUEST__GENERAL_MSG,
+        NOTIFY_ALL__BOOKING_COMPLETE,
+        NOTIFY_ALL__BOOKING_CANCELED,
+        NOTITY_ALL__BOOKING_REMINDER
+    ]
+
+    # Templates that will be autosent to visit.contact_persons
+    contact_person_keys = [
+        NOTIFY_HOST__BOOKING_CREATED,
+        NOTIFY_ALL__BOOKING_CANCELED,
+        NOTITY_ALL__BOOKING_REMINDER,
+        NOTIFY_HOST__HOSTROLE_IDLE
+    ]
+    # Templates that will be autosent to booker
+    booker_keys = [
+        NOTIFY_GUEST__BOOKING_CREATED,
+        NOTIFY_ALL__BOOKING_COMPLETE,
+        NOTIFY_ALL__BOOKING_CANCELED,
+        NOTITY_ALL__BOOKING_REMINDER
+    ]
+    # Templates that will be autosent to hosts in the unit
+    unit_hosts_keys = [
+        NOTIFY_HOST__REQ_HOST_VOLUNTEER
+    ]
+    # Templates that will be autosent to teachers in the unit
+    unit_teachers_keys = [
+        NOTIFY_HOST__REQ_TEACHER_VOLUNTEER
+    ]
+    # Templates that will be autosent to room admins in the resource
+    resource_roomadmin_keys = [
+        NOTIFY_HOST__REQ_ROOM
+    ]
+    # Templates that will be autosent to hosts in the occurrence
+    occurrence_hosts_keys = [
+        NOTIFY_ALL__BOOKING_COMPLETE,
+        NOTIFY_ALL__BOOKING_CANCELED,
+        NOTITY_ALL__BOOKING_REMINDER
+    ]
+    # Templates that will be autosent to teachers in the occurrence
+    occurrence_teachers_keys = [
+        NOTIFY_ALL__BOOKING_COMPLETE,
+        NOTIFY_ALL__BOOKING_CANCELED,
+        NOTITY_ALL__BOOKING_REMINDER
+    ]
+    # Template that will be autosent to hosts
+    # when they are added to an occurrence
+    occurrence_added_host_key = NOTIFY_HOST__ASSOCIATED
+    # Templates where the "days" field makes sense
+    enable_days = [
+        NOTITY_ALL__BOOKING_REMINDER,
+        NOTIFY_HOST__HOSTROLE_IDLE
+    ]
+
+    key = models.IntegerField(
+        verbose_name=u'Key',
+        choices=key_choices,
+        default=1
+    )
+
+    subject = models.CharField(
+        max_length=77,
+        verbose_name=u'Emne'
+    )
+
+    body = models.CharField(
+        max_length=65584,
+        verbose_name=u'Tekst'
+    )
+
+    unit = models.ForeignKey(
+        Unit,
+        verbose_name=u'Enhed',
+        null=True,
+        blank=True
+    )
+
+    def expand_subject(self, context, keep_placeholders=False):
+        return self._expand(self.subject, context, keep_placeholders)
+
+    def expand_body(self, context, keep_placeholders=False, encapsulate=False):
+        body = self._expand(self.body, context, keep_placeholders)
+        if encapsulate \
+                and not body.startswith(("<html", "<HTML", "<!DOCTYPE")):
+            body = "<!DOCTYPE html><html><head></head>" \
+                   "<body>%s</body>" \
+                   "</html>" % body
+        return body
+
+    @staticmethod
+    def _expand(text, context, keep_placeholders=False):
+        template = Template(unicode(text))
+        if keep_placeholders:
+            template.engine.string_if_invalid = "{{ %s }}"
+        if isinstance(context, dict):
+            context = make_context(context)
+        return template.render(context)
+
+    @staticmethod
+    def get_template(template_key, unit, include_overridden=False):
+        templates = []
+        while unit is not None and (include_overridden or len(templates) == 0):
+            try:
+                templates.append(EmailTemplate.objects.filter(
+                    key=template_key,
+                    unit=unit
+                ).all()[0])
+            except:
+                pass
+            unit = unit.parent
+        if include_overridden or len(templates) == 0:
+            try:
+                templates.append(
+                    EmailTemplate.objects.filter(key=template_key,
+                                                 unit__isnull=True)[0]
+                )
+            except:
+                pass
+        if include_overridden:
+            return templates
+        else:
+            return templates[0] if len(templates) > 0 else None
+
+    @staticmethod
+    def get_templates(unit, include_inherited=True):
+        if unit is None:
+            templates = EmailTemplate.objects.filter(
+                unit__isnull=True
+            ).all()
+        else:
+            templates = list(EmailTemplate.objects.filter(
+                unit=unit
+            ).all())
+        if include_inherited and unit is not None and unit.parent != unit:
+            templates.extend(EmailTemplate.get_templates(unit.parent, True))
+        return templates
+
+    def get_template_variables(self):
+        variables = []
+        for item in [self.subject, self.body]:
+            text = item.replace("%20", " ")
+            template = Template(unicode(text))
+            for node in template:
+                if isinstance(node, VariableNode):
+                    variables.append(unicode(node.filter_expression))
+        return variables
 
 
 # Bookable resources
@@ -272,7 +580,7 @@ class Resource(models.Model):
         (TEACHER_EVENT, _(u"Lærerarrangement")),
         (GROUP_VISIT, _(u"Besøg med klassen")),
         (STUDY_PROJECT, _(u"Studieretningsprojekt")),
-        (ASSIGNMENT_HELP, _(u"Opgavehjælp")),
+        (ASSIGNMENT_HELP, _(u"Lektiehjælp")),
         (OTHER_OFFERS,  _(u"Andre tilbud")),
         (STUDY_MATERIAL, _(u"Undervisningsmateriale"))
     )
@@ -294,6 +602,15 @@ class Resource(models.Model):
 
     institution_choices = Subject.type_choices
 
+    # Level choices - A, B or C
+    A = 0
+    B = 1
+    C = 2
+
+    level_choices = (
+        (A, u'A'), (B, u'B'), (C, u'C')
+    )
+
     # Resource state - created, active and discontinued.
     CREATED = 0
     ACTIVE = 1
@@ -305,7 +622,8 @@ class Resource(models.Model):
         (DISCONTINUED, _(u"Ophørt"))
     )
 
-    enabled = models.BooleanField(verbose_name=_(u'Aktiv'), default=True)
+    class_level_choices = [(i, unicode(i)) for i in range(0, 11)]
+
     type = models.IntegerField(choices=resource_type_choices,
                                default=STUDY_MATERIAL)
     state = models.IntegerField(choices=state_choices, default=CREATED,
@@ -340,6 +658,48 @@ class Resource(models.Model):
                                             default=SECONDARY,
                                             blank=False)
 
+    locality = models.ForeignKey(
+        Locality,
+        verbose_name=_(u'Lokalitet'),
+        blank=True,
+        null=True
+    )
+
+    recurrences = RecurrenceField(
+        null=True,
+        blank=True,
+        verbose_name=_(u'Gentagelser')
+    )
+
+    contact_persons = models.ManyToManyField(
+        Person,
+        blank=True,
+        verbose_name=_(u'Kontaktpersoner'),
+        related_name='contact_visit'
+    )
+
+    room_responsible = models.ManyToManyField(
+        Person,
+        blank=True,
+        verbose_name=_(u'Lokaleansvarlige'),
+        related_name='roomadmin_visit'
+    )
+
+    preparation_time = models.IntegerField(
+        default=0,
+        null=True,
+        verbose_name=_(u'Forberedelsestid (i timer)')
+    )
+
+    price = models.DecimalField(
+        default=0,
+        null=True,
+        blank=True,
+        max_digits=10,
+        decimal_places=2,
+        verbose_name=_(u'Pris')
+    )
+
     gymnasiefag = models.ManyToManyField(
         Subject, blank=True,
         verbose_name=_(u'Gymnasiefag'),
@@ -362,6 +722,13 @@ class Resource(models.Model):
     # Comment field for internal use in backend.
     comment = models.TextField(blank=True, verbose_name=_(u'Kommentar'))
 
+    created_by = models.ForeignKey(
+        User,
+        blank=True,
+        null=True,
+        verbose_name=_(u"Oprettet af")
+    )
+
     # ts_vector field for fulltext search
     search_index = VectorField()
 
@@ -369,12 +736,14 @@ class Resource(models.Model):
     extra_search_text = models.TextField(
         blank=True,
         default='',
-        verbose_name=_(u'Tekst-værdier til fritekstsøgning')
+        verbose_name=_(u'Tekst-værdier til fritekstsøgning'),
+        editable=False
     )
 
     objects = SearchManager(
         fields=(
             'title',
+            'teaser',
             'description',
             'mouseover_description',
             'extra_search_text'
@@ -431,7 +800,9 @@ class Resource(models.Model):
 
     def as_searchtext(self):
         return " ".join([unicode(x) for x in [
+            self.pk,
             self.title,
+            self.teaser,
             self.description,
             self.mouseover_description,
             self.extra_search_text
@@ -454,14 +825,56 @@ class Resource(models.Model):
             return self.visit.locality
         except Visit.DoesNotExist:
             pass
-
         return "-"
+
+    def get_absolute_url(self):
+        return reverse('resource-view', args=[self.pk])
+
+    def get_url(self):
+        return settings.PUBLIC_URL + self.get_absolute_url()
+
+    def url(self):
+        return self.get_url()
+
+    def get_occurrences(self):
+        if not hasattr(self, "visit") or not self.visit:
+            return VisitOccurrence.objects.none()
+        else:
+            return self.visit.visitoccurrence_set.all()
+
+    def first_occurence(self):
+        return self.get_occurrences().first()
+
+    def get_state_class(self):
+        if self.state == self.CREATED:
+            return 'info'
+        elif self.state == self.ACTIVE:
+            return 'primary'
+        else:
+            return 'default'
+
+    def get_recipients(self, template_key):
+        recipients = self.unit.get_recipients(template_key)
+        if template_key in \
+                EmailTemplate.contact_person_keys:
+            recipients.extend(self.contact_persons.all())
+        if template_key in \
+                EmailTemplate.resource_roomadmin_keys:
+            recipients.extend(self.room_responsible.all())
+        return recipients
+
+    def get_view_url(self):
+        if hasattr(self, 'visit') and self.visit:
+            return reverse('visit-view', args=[self.visit.pk])
+        if hasattr(self, 'otherresource') and self.otherresource:
+            return reverse('otherresource-view', args=[self.otherresource.pk])
+        return reverse('resource-view', args=[self.pk])
 
 
 class ResourceGymnasieFag(models.Model):
     class Meta:
-        verbose_name = _(u"Gymnasiefagtilknytning")
-        verbose_name_plural = _(u"Gymnasiefagtilknytninger")
+        verbose_name = _(u"gymnasiefagtilknytning")
+        verbose_name_plural = _(u"gymnasiefagtilknytninger")
 
     class_level_choices = [(i, unicode(i)) for i in range(0, 11)]
 
@@ -539,8 +952,8 @@ class ResourceGymnasieFag(models.Model):
 
 class ResourceGrundskoleFag(models.Model):
     class Meta:
-        verbose_name = _(u"Grundskolefagtilknytning")
-        verbose_name_plural = _(u"Grundskolefagtilknytninger")
+        verbose_name = _(u"grundskolefagtilknytning")
+        verbose_name_plural = _(u"grundskolefagtilknytninger")
 
     class_level_choices = [(i, unicode(i)) for i in range(0, 11)]
 
@@ -615,6 +1028,12 @@ class ResourceGrundskoleFag(models.Model):
 
 
 class GymnasieLevel(models.Model):
+
+    class Meta:
+        verbose_name = _(u'Gymnasieniveau')
+        verbose_name_plural = _(u'Gymnasieniveauer')
+        ordering = ['level']
+
     # Level choices - A, B or C
     A = 0
     B = 1
@@ -644,6 +1063,7 @@ class GymnasieLevel(models.Model):
 
 class OtherResource(Resource):
     """A non-bookable, non-visit resource, basically material on the Web."""
+
     objects = SearchManager(
         fields=(
             'title',
@@ -655,22 +1075,13 @@ class OtherResource(Resource):
         auto_update_search_field=True
     )
 
-    applicable_types = [Resource.OTHER_OFFERS, Resource.STUDY_MATERIAL,
-                        Resource.OPEN_HOUSE, Resource.ASSIGNMENT_HELP,
-                        Resource.STUDIEPRAKTIK]
+    applicable_types = []
 
     @ClassProperty
     def type_choices(self):
         return (type for type in
                 Resource.resource_type_choices
                 if type[0] in OtherResource.applicable_types)
-
-    link = models.URLField(
-        verbose_name=u'Link',
-        max_length=256,
-        blank=True,
-        null=True
-    )
 
     def save(self, *args, **kwargs):
         # Save once to store relations
@@ -682,12 +1093,77 @@ class OtherResource(Resource):
         # Do the final save
         return super(OtherResource, self).save(*args, **kwargs)
 
+    def get_absolute_url(self):
+        return reverse('otherresource-view', args=[self.pk])
+
+    def clone_to_visit(self):
+        save = []
+        visit = Visit()
+        visit.type = self.type
+        visit.state = self.state
+        visit.title = self.title
+        visit.teaser = self.teaser
+        visit.mouseover_description = self.mouseover_description
+        visit.unit = self.unit
+        visit.audience = self.audience
+        visit.institution_level = self.institution_level
+        visit.locality = self.locality
+        visit.recurrences = self.recurrences
+        visit.comment = self.comment
+        visit.extra_search_text = self.extra_search_text
+        visit.preparation_time = self.preparation_time
+        visit.price = self.price
+        visit.save()
+        for link in self.links.all():
+            visit.links.add(link)
+        for contact_person in self.contact_persons.all():
+            visit.contact_persons.add(contact_person)
+        for intermediate in self.resourcegymnasiefag_set.all():
+            values = [str(intermediate.subject.id)]
+            for level in intermediate.level.all():
+                values.append(str(level.id))
+            clone = ResourceGymnasieFag.create_from_submitvalue(
+                visit, ','.join(values)
+            )
+            save.append(clone)
+        for intermediate in self.resourcegrundskolefag_set.all():
+            clone = ResourceGrundskoleFag()
+            clone.resource = visit
+            clone.subject = intermediate.subject
+            clone.class_level_max = intermediate.class_level_max
+            clone.class_level_min = intermediate.class_level_min
+            save.append(clone)
+        for tag in self.tags.all():
+            visit.tags.add(tag)
+        for topic in self.topics.all():
+            visit.topics.add(topic)
+        for item in save:
+            item.save()
+        print "OtherResource %d cloned into Visit %d" % (self.id, visit.id)
+
+    @staticmethod
+    def migrate_to_visits():
+        for otherresource in OtherResource.objects.all():
+            otherresource.clone_to_visit()
+            otherresource.delete()
+
+
+# Have to do late import of this here or we will get problems
+# with cyclic dependencies
+from profile.models import TEACHER, HOST  # noqa
+
 
 class Visit(Resource):
     """A bookable visit of any kind."""
+
+    class Meta:
+        verbose_name = _("tilbud")
+        verbose_name_plural = _("tilbud")
+
     objects = SearchManager(
         fields=(
             'title',
+            'teaser',
             'description',
             'mouseover_description',
             'extra_search_text'
@@ -696,8 +1172,17 @@ class Visit(Resource):
         auto_update_search_field=True
     )
 
-    applicable_types = [Resource.STUDENT_FOR_A_DAY, Resource.GROUP_VISIT,
-                        Resource.STUDY_PROJECT, Resource.TEACHER_EVENT]
+    applicable_types = [
+        Resource.STUDENT_FOR_A_DAY, Resource.GROUP_VISIT,
+        Resource.TEACHER_EVENT, Resource.OTHER_OFFERS, Resource.STUDY_MATERIAL,
+        Resource.OPEN_HOUSE, Resource.ASSIGNMENT_HELP, Resource.STUDIEPRAKTIK,
+        Resource.STUDY_PROJECT
+    ]
+
+    bookable_types = [
+        Resource.STUDENT_FOR_A_DAY, Resource.GROUP_VISIT,
+        Resource.TEACHER_EVENT
+    ]
 
     @ClassProperty
     def type_choices(self):
@@ -726,35 +1211,25 @@ class Visit(Resource):
         null=True
     )
 
-    locality = models.ForeignKey(
-        Locality,
-        verbose_name=_(u'Lokalitet'),
-        blank=True,
-        null=True
-    )
+    duration_choices = []
+    for hour in range(0, 12, 1):
+        for minute in range(0, 60, 15):
+            value = "%.2d:%.2d" % (hour, minute)
+            duration_choices.append((value, value),)
+
     duration = models.CharField(
         max_length=8,
         verbose_name=_(u'Varighed'),
         blank=True,
         null=True,
+        choices=duration_choices
     )
-    contact_persons = models.ManyToManyField(
-        Person,
-        blank=True,
-        verbose_name=_(u'Kontaktpersoner')
-    )
+
     do_send_evaluation = models.BooleanField(
         verbose_name=_(u"Udsend evaluering"),
         default=False
     )
-    price = models.DecimalField(
-        default=0,
-        null=True,
-        blank=True,
-        max_digits=10,
-        decimal_places=2,
-        verbose_name=_(u'Pris')
-    )
+
     additional_services = models.ManyToManyField(
         AdditionalService,
         verbose_name=_(u'Ekstra ydelser'),
@@ -787,20 +1262,52 @@ class Visit(Resource):
         default=False,
         verbose_name=_(u'Vis nedtælling')
     )
-    preparation_time = models.IntegerField(
-        default=0,
-        null=True,
-        verbose_name=_(u'Forberedelsestid (i timer)')
-    )
-    recurrences = RecurrenceField(
-        null=True,
-        blank=True,
-        verbose_name=_(u'Gentagelser')
-    )
+
     tour_available = models.BooleanField(
         default=False,
         blank=True,
         verbose_name=_(u'Mulighed for rundvisning')
+    )
+
+    NEEDED_NUMBER_NONE = 0
+    NEEDED_NUMBER_MORE_THAN_TEN = -10
+
+    needed_number_choices = (
+        ((NEEDED_NUMBER_NONE, _(u'Ingen')),) +
+        tuple((x, unicode(x)) for x in range(1, 11)) +
+        ((NEEDED_NUMBER_MORE_THAN_TEN, _(u'Mere end 10')),)
+    )
+
+    needed_hosts = models.IntegerField(
+        default=0,
+        verbose_name=_(u'Nødvendigt antal værter'),
+        choices=needed_number_choices
+    )
+
+    needed_teachers = models.IntegerField(
+        default=0,
+        verbose_name=_(u'Nødvendigt antal undervisere'),
+        choices=needed_number_choices
+    )
+
+    default_hosts = models.ManyToManyField(
+        User,
+        blank=True,
+        limit_choices_to={
+            'userprofile__user_role__role': HOST
+        },
+        related_name="hosted_visits",
+        verbose_name=_(u'Faste værter')
+    )
+
+    default_teachers = models.ManyToManyField(
+        User,
+        blank=True,
+        limit_choices_to={
+            'userprofile__user_role__role': TEACHER
+        },
+        related_name="taught_visits",
+        verbose_name=_(u'Faste undervisere')
     )
 
     def save(self, *args, **kwargs):
@@ -812,6 +1319,19 @@ class Visit(Resource):
 
         # Do the final save
         return super(Visit, self).save(*args, **kwargs)
+
+    @property
+    def bookable_occurrences(self):
+        return self.visitoccurrence_set.filter(
+            bookable=True,
+            workflow_status__in=VisitOccurrence.BOOKABLE_STATES
+        )
+
+    @property
+    def future_events(self):
+        return self.bookable_occurrences.filter(
+            start_datetime__gte=timezone.now()
+        )
 
     @property
     def recurrences_description(self):
@@ -837,47 +1357,601 @@ class Visit(Resource):
             )
         elif self.maximum_number_of_visitors:
             return self.maximum_number_of_visitors
-
         return None
+
+    def get_absolute_url(self):
+        return reverse('visit-view', args=[self.pk])
+
+    def make_occurrence(self, starttime=None, bookable=False, **kwargs):
+        occ = VisitOccurrence(
+            visit=self,
+            start_datetime=starttime,
+            bookable=bookable,
+            **kwargs
+        )
+        occ.save()
+        occ.create_inheriting_autosends()
+
+        if self.default_hosts.exists() or self.default_teachers.exists():
+
+            for x in self.default_hosts.all():
+                occ.hosts.add(x)
+
+            for x in self.default_teachers.all():
+                occ.teachers.add(x)
+
+        return occ
+
+    def get_autosend(self, template_key):
+        try:
+            item = self.visitautosend_set.filter(
+                template_key=template_key, enabled=True)[0]
+            return item
+        except:
+            return None
+
+    def autosend_enabled(self, template_key):
+        return self.get_autosend(template_key) is not None
+
+    @property
+    def is_type_bookable(self):
+        return self.type in self.bookable_types
+
+    @property
+    def has_bookable_occurrences(self):
+        # If there are no bookable occurrences the booker is allowed to
+        # suggest their own.
+        if len(self.visitoccurrence_set.filter(bookable=True)) == 0:
+            return True
+
+        # Only bookable if there is a valid event in the future:
+        return self.future_events.exists()
+
+    @property
+    def is_bookable(self):
+        return self.is_type_bookable and \
+            self.state == Resource.ACTIVE and \
+            self.has_bookable_occurrences
 
 
 class VisitOccurrence(models.Model):
-    start_datetime = models.DateTimeField(
-        verbose_name=_(u'Starttidspunkt')
+
+    class Meta:
+        verbose_name = _(u"besøg")
+        verbose_name_plural = _(u"besøg")
+        ordering = ['start_datetime']
+
+    objects = SearchManager(
+        fields=('extra_search_text'),
+        config='pg_catalog.danish',
+        auto_update_search_field=True
     )
-    end_datetime1 = models.DateTimeField(
-        verbose_name=_(u'Sluttidspunkt')
-    )
-    end_datetime2 = models.DateTimeField(
-        verbose_name=_(u'Alternativt sluttidspunkt'),
-        blank=True,
-        null=True
-    )
+
     visit = models.ForeignKey(
         Visit,
         on_delete=models.CASCADE
     )
 
+    start_datetime = models.DateTimeField(
+        verbose_name=_(u'Starttidspunkt'),
+        null=True,
+        blank=True
+    )
+
+    # Whether the occurrence is publicly bookable
+    bookable = models.BooleanField(
+        default=False,
+        verbose_name=_(u'Kan bookes')
+    )
+
+    desired_time = models.CharField(
+        null=True,
+        blank=True,
+        max_length=2000,
+        verbose_name=u'Ønsket tidspunkt'
+    )
+
+    override_duration = models.CharField(
+        max_length=8,
+        verbose_name=_(u'Varighed'),
+        blank=True,
+        null=True,
+    )
+
+    override_locality = models.ForeignKey(
+        Locality,
+        verbose_name=_(u'Lokalitet'),
+        blank=True,
+        null=True
+    )
+
+    hosts = models.ManyToManyField(
+        User,
+        blank=True,
+        limit_choices_to={
+            'userprofile__user_role__role': HOST
+        },
+        related_name="hosted_bookings",
+        verbose_name=_(u'Værter')
+    )
+
+    teachers = models.ManyToManyField(
+        User,
+        blank=True,
+        limit_choices_to={
+            'userprofile__user_role__role': TEACHER
+        },
+        related_name="taught_bookings",
+        verbose_name=_(u'Undervisere')
+    )
+
+    STATUS_NOT_NEEDED = 0
+    STATUS_OK = 1
+    STATUS_NOT_ASSIGNED = 2
+
+    host_status_choices = (
+        (STATUS_NOT_NEEDED, _(u'Tildeling af værter ikke påkrævet')),
+        (STATUS_NOT_ASSIGNED, _(u'Afventer tildeling')),
+        (STATUS_OK, _(u'Tildelt'))
+    )
+
+    host_status = models.IntegerField(
+        choices=host_status_choices,
+        default=STATUS_NOT_ASSIGNED,
+        verbose_name=_(u'Status for tildeling af værter')
+    )
+
+    teacher_status_choices = (
+        (STATUS_NOT_NEEDED, _(u'Tildeling af undervisere ikke påkrævet')),
+        (STATUS_NOT_ASSIGNED, _(u'Afventer tildeling')),
+        (STATUS_OK, _(u'Tildelt'))
+    )
+
+    teacher_status = models.IntegerField(
+        choices=teacher_status_choices,
+        default=STATUS_NOT_ASSIGNED,
+        verbose_name=_(u'Status for tildeling af undervisere')
+    )
+
+    room_status_choices = (
+        (STATUS_NOT_NEEDED, _(u'Tildeling af lokaler ikke påkrævet')),
+        (STATUS_NOT_ASSIGNED, _(u'Afventer tildeling')),
+        (STATUS_OK, _(u'Tildelt'))
+    )
+
+    room_status = models.IntegerField(
+        choices=room_status_choices,
+        default=STATUS_NOT_ASSIGNED,
+        verbose_name=_(u'Status for tildeling af lokaler')
+    )
+
+    WORKFLOW_STATUS_BEING_PLANNED = 0
+    WORKFLOW_STATUS_REJECTED = 1
+    WORKFLOW_STATUS_PLANNED = 2
+    WORKFLOW_STATUS_CONFIRMED = 3
+    WORKFLOW_STATUS_REMINDED = 4
+    WORKFLOW_STATUS_EXECUTED = 5
+    WORKFLOW_STATUS_EVALUATED = 6
+    WORKFLOW_STATUS_CANCELLED = 7
+    WORKFLOW_STATUS_NOSHOW = 8
+    WORKFLOW_STATUS_PLANNED_NO_BOOKING = 9
+
+    BEING_PLANNED_STATUS_TEXT = u'Under planlægning'
+    PLANNED_STATUS_TEXT = u'Planlagt (ressourcer tildelt)'
+    PLANNED_NOBOOKING_TEXT = u'Planlagt og lukket for booking'
+
+    status_to_class_map = {
+        WORKFLOW_STATUS_BEING_PLANNED: 'danger',
+        WORKFLOW_STATUS_REJECTED: 'danger',
+        WORKFLOW_STATUS_PLANNED: 'success',
+        WORKFLOW_STATUS_CONFIRMED: 'success',
+        WORKFLOW_STATUS_REMINDED: 'success',
+        WORKFLOW_STATUS_EXECUTED: 'success',
+        WORKFLOW_STATUS_EVALUATED: 'success',
+        WORKFLOW_STATUS_CANCELLED: 'success',
+        WORKFLOW_STATUS_NOSHOW: 'success',
+        WORKFLOW_STATUS_PLANNED_NO_BOOKING: 'success',
+    }
+
+    BOOKABLE_STATES = set([
+        WORKFLOW_STATUS_BEING_PLANNED,
+        WORKFLOW_STATUS_PLANNED,
+    ])
+
+    workflow_status_choices = (
+        (WORKFLOW_STATUS_BEING_PLANNED, _(BEING_PLANNED_STATUS_TEXT)),
+        (WORKFLOW_STATUS_REJECTED, _(u'Afvist af undervisere eller værter')),
+        (WORKFLOW_STATUS_PLANNED, _(PLANNED_STATUS_TEXT)),
+        (WORKFLOW_STATUS_PLANNED_NO_BOOKING, _(PLANNED_NOBOOKING_TEXT)),
+        (WORKFLOW_STATUS_CONFIRMED, _(u'Bekræftet af booker')),
+        (WORKFLOW_STATUS_REMINDED, _(u'Påmindelse afsendt')),
+        (WORKFLOW_STATUS_EXECUTED, _(u'Afviklet')),
+        (WORKFLOW_STATUS_EVALUATED, _(u'Evalueret')),
+        (WORKFLOW_STATUS_CANCELLED, _(u'Aflyst')),
+        (WORKFLOW_STATUS_NOSHOW, _(u'Udeblevet')),
+    )
+
+    workflow_status = models.IntegerField(
+        choices=workflow_status_choices,
+        default=WORKFLOW_STATUS_BEING_PLANNED
+    )
+
+    comments = models.TextField(
+        blank=True,
+        default='',
+        verbose_name=_(u'Interne kommentarer')
+    )
+
+    # ts_vector field for fulltext search
+    search_index = VectorField()
+
+    # Field for concatenating search data from relations
+    extra_search_text = models.TextField(
+        blank=True,
+        default='',
+        verbose_name=_(u'Tekst-værdier til fritekstsøgning'),
+        editable=False
+    )
+
+    valid_status_changes = {
+        WORKFLOW_STATUS_BEING_PLANNED: [
+            WORKFLOW_STATUS_REJECTED,
+            WORKFLOW_STATUS_PLANNED,
+            WORKFLOW_STATUS_CANCELLED,
+        ],
+        WORKFLOW_STATUS_REJECTED: [
+            WORKFLOW_STATUS_BEING_PLANNED,
+            WORKFLOW_STATUS_CANCELLED,
+        ],
+        WORKFLOW_STATUS_PLANNED: [
+            WORKFLOW_STATUS_PLANNED_NO_BOOKING,
+            WORKFLOW_STATUS_CONFIRMED,
+            WORKFLOW_STATUS_CANCELLED,
+        ],
+        WORKFLOW_STATUS_PLANNED_NO_BOOKING: [
+            WORKFLOW_STATUS_PLANNED,
+            WORKFLOW_STATUS_CONFIRMED,
+            WORKFLOW_STATUS_CANCELLED,
+        ],
+        WORKFLOW_STATUS_CONFIRMED: [
+            WORKFLOW_STATUS_REMINDED,
+            WORKFLOW_STATUS_EXECUTED,
+            WORKFLOW_STATUS_CANCELLED,
+            WORKFLOW_STATUS_NOSHOW,
+        ],
+        WORKFLOW_STATUS_REMINDED: [
+            WORKFLOW_STATUS_EXECUTED,
+            WORKFLOW_STATUS_CANCELLED,
+            WORKFLOW_STATUS_NOSHOW,
+        ],
+        WORKFLOW_STATUS_EXECUTED: [
+            WORKFLOW_STATUS_EVALUATED,
+            WORKFLOW_STATUS_CANCELLED
+        ],
+        WORKFLOW_STATUS_EVALUATED: [
+            WORKFLOW_STATUS_BEING_PLANNED,
+        ],
+        WORKFLOW_STATUS_CANCELLED: [
+            WORKFLOW_STATUS_BEING_PLANNED,
+        ],
+        WORKFLOW_STATUS_NOSHOW: [
+            WORKFLOW_STATUS_BEING_PLANNED,
+        ],
+    }
+
+    def can_assign_resources(self):
+        being_planned = VisitOccurrence.WORKFLOW_STATUS_BEING_PLANNED
+        return self.workflow_status == being_planned
+
+    def planned_status_is_blocked(self):
+        # We have to have a chosen starttime before we are planned
+        if not self.start_datetime:
+            return True
+
+        # It's not blocked if we can't choose it
+        ws_planned = VisitOccurrence.WORKFLOW_STATUS_PLANNED
+        if ws_planned not in (x[0] for x in self.possible_status_choices()):
+            return False
+
+        statuses = (self.host_status, self.teacher_status, self.room_status)
+
+        if VisitOccurrence.STATUS_NOT_ASSIGNED in statuses:
+            return True
+
+        return False
+
+    def possible_status_choices(self):
+        result = []
+
+        allowed = self.valid_status_changes[self.workflow_status]
+
+        for x in self.workflow_status_choices:
+            if x[0] in allowed:
+                result.append(x)
+
+        return result
+
+    def get_subjects(self):
+        if hasattr(self, 'teacherbooking'):
+            return self.teacherbooking.subjects.all()
+        else:
+            return None
+
     @property
     def display_value(self):
-        if not self.start_datetime or not self.end_datetime1:
+        if not self.start_datetime:
             return None
 
         result = self.start_datetime.strftime('%d. %m %Y %H:%M')
 
-        endtime = self.end_datetime2 or self.end_datetime1
-        if endtime:
-            result += endtime.strftime(' %H:%M')
+        if self.duration:
+            try:
+                (hours, mins) = self.duration.split(":", 2)
+                endtime = self.start_datetime + datetime.timedelta(
+                    hours=int(hours), minutes=int(mins)
+                )
+                result += endtime.strftime('-%H:%M')
+            except Exception as e:
+                print e
 
         return result
 
+    @property
+    def expired(self):
+        if self.start_datetime and self.start_datetime <= timezone.now():
+            return "expired"
+        return ""
+
+    @property
+    def needs_teachers(self):
+        return len(self.teachers.all()) < self.visit.needed_teachers
+
+    @property
+    def needs_hosts(self):
+        return len(self.hosts.all()) < self.visit.needed_hosts
+
     def is_booked(self):
         """Has this VisitOccurrence instance been booked yet?"""
-        class_booking = ClassBooking.objects.get(time_id=self.id)
-        return class_booking is not None
+        return len(self.bookings.all()) > 0
+
+    def date_display(self):
+        return self.start_datetime or _(u'på ikke-fastlagt tidspunkt')
+
+    def nr_bookers(self):
+        nr = len(Booker.objects.filter(booking__visitoccurrence=self))
+        nr += self.nr_additional_participants()
+        return nr
+
+    def nr_additional_participants(self):
+        res = VisitOccurrence.objects.filter(pk=self.pk).aggregate(
+            attendees=Sum('bookings__booker__attendee_count')
+        )
+        return res['attendees'] or 0
+
+    def get_workflow_status_class(self):
+        return self.status_to_class_map.get(self.workflow_status, 'default')
+
+    def __unicode__(self):
+        if self.start_datetime:
+            return u'%s @ %s' % (self.visit.title, self.display_value)
+        else:
+            return u'%s (uden fastlagt tidspunkt)' % (self.visit.title)
+
+    def get_override_attr(self, attrname):
+        result = getattr(self, 'override_' + attrname, None)
+
+        if result is None and self.visit:
+            result = getattr(self.visit, attrname)
+
+        return result
+
+    def set_override_attr(self, attrname, val):
+        setattr(self, 'override_' + attrname, val)
+
+    @classmethod
+    def add_override_property(cls, attrname):
+        setattr(cls, attrname, property(
+            lambda self: self.get_override_attr(attrname),
+            lambda self, val: self.set_override_attr(attrname, val)
+        ))
+
+    def as_searchtext(self):
+        result = []
+
+        if self.visit:
+            result.append(self.visit.as_searchtext())
+
+        if self.bookings:
+            for booking in self.bookings.all():
+                result.append(booking.as_searchtext())
+
+        return " ".join(result)
+
+    @classmethod
+    def being_planned_queryset(cls, **kwargs):
+        return cls.objects.filter(
+            workflow_status=cls.WORKFLOW_STATUS_BEING_PLANNED,
+            **kwargs
+        )
+
+    @classmethod
+    def planned_queryset(cls, **kwargs):
+        return cls.objects.exclude(
+            workflow_status=cls.WORKFLOW_STATUS_BEING_PLANNED,
+        ).filter(**kwargs)
+
+    def save(self, *args, **kwargs):
+
+        # Save once to store relations
+        super(VisitOccurrence, self).save(*args, **kwargs)
+
+        # Update search_text
+        self.extra_search_text = self.as_searchtext()
+
+        # Do the final save
+        super(VisitOccurrence, self).save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        return reverse('visit-occ-view', args=[self.pk])
+
+    def get_recipients(self, template_key):
+        recipients = []
+        if template_key in EmailTemplate.occurrence_hosts_keys:
+            recipients.extend(self.hosts.all())
+        if template_key in \
+                EmailTemplate.occurrence_teachers_keys:
+            recipients.extend(self.teachers.all())
+        return recipients
+
+    def create_inheriting_autosends(self):
+        for visitautosend in self.visit.visitautosend_set.all():
+            if not self.get_autosend(visitautosend.template_key, False, False):
+                occurrenceautosend = VisitOccurrenceAutosend(
+                    visitoccurrence=self,
+                    inherit=True,
+                    template_key=visitautosend.template_key,
+                    days=visitautosend.days,
+                    enabled=visitautosend.enabled
+                )
+                occurrenceautosend.save()
+
+    def autosend_inherits(self, template_key):
+        s = self.visitoccurrenceautosend_set.\
+            filter(template_key=template_key, inherit=True).\
+            count() > 0
+        return s
+
+    def get_autosend(self, template_key, follow_inherit=True,
+                     include_disabled=False):
+        if follow_inherit and self.autosend_inherits(template_key):
+            return self.visit.get_autosend(template_key)
+        else:
+            try:
+                query = self.visitoccurrenceautosend_set.filter(
+                    template_key=template_key)
+                if not include_disabled:
+                    query = query.filter(enabled=True)
+                return query[0]
+            except:
+                return None
+
+    def autosend_enabled(self, template_key):
+        return self.get_autosend(template_key, True) is not None
+
+    # Sends a message to defined recipients pertaining to the VisitOccurrence
+    def autosend(self, template_key, recipients=None,
+                 only_these_recipients=False):
+        if self.autosend_enabled(template_key):
+            visit = self.visit
+            unit = visit.unit
+            if recipients is None:
+                recipients = set()
+            else:
+                recipients = set(recipients)
+            if not only_these_recipients:
+                recipients.update(self.get_recipients(template_key))
+
+            KUEmailMessage.send_email(
+                template_key,
+                {'occurrence': self, 'visit': visit},
+                list(recipients),
+                unit
+            )
+
+            if not only_these_recipients and \
+                    template_key in \
+                    EmailTemplate.booker_keys:
+                for booking in self.bookings.all():
+                    KUEmailMessage.send_email(
+                        template_key,
+                        {
+                            'occurrence': self,
+                            'visit': visit,
+                            'booking': booking,
+                            'booker': booking.booker
+                        },
+                        booking.booker,
+                        unit
+                    )
+
+    def get_autosend_display(self):
+        autosends = self.visitoccurrenceautosend_set.filter(enabled=True)
+        return ', '.join([autosend.get_name() for autosend in autosends])
+
+
+VisitOccurrence.add_override_property('duration')
+VisitOccurrence.add_override_property('locality')
+
+
+class Autosend(models.Model):
+    template_key = models.IntegerField(
+        choices=EmailTemplate.key_choices,
+        verbose_name=_(u'Skabelon'),
+        blank=False,
+        null=False
+    )
+    days = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        verbose_name=_(u'Dage'),
+    )
+    enabled = models.BooleanField(
+        verbose_name=_(u'Aktiv'),
+        default=True
+    )
+
+    def get_name(self):
+        return str(EmailTemplate.get_name(self.template_key))
+
+    def __unicode__(self):
+        return "[%d] %s (%s)" % (
+            self.id,
+            self.get_name(),
+            "enabled" if self.enabled else "disabled"
+        )
+
+
+class VisitAutosend(Autosend):
+    visit = models.ForeignKey(
+        Visit,
+        verbose_name=_(u'Besøg'),
+        blank=False
+    )
+
+    def __unicode__(self):
+        return "%s on %s" % (
+            super(VisitAutosend, self).__unicode__(),
+            self.visit.__unicode__()
+        )
+
+
+class VisitOccurrenceAutosend(Autosend):
+    visitoccurrence = models.ForeignKey(
+        VisitOccurrence,
+        verbose_name=_(u'BesøgForekomst'),
+        blank=False
+    )
+    inherit = models.BooleanField(
+        verbose_name=_(u'Nedarv fra tilbud')
+    )
+
+    def get_inherited(self):
+        if self.inherit:
+            return self.visitoccurrence.visit.get_autosend(self.template_key)
+
+    def __unicode__(self):
+        return "%s on %s" % (
+            super(VisitOccurrenceAutosend, self).__unicode__(),
+            self.visitoccurrence.__unicode__()
+        )
 
 
 class Room(models.Model):
+
+    class Meta:
+        verbose_name = _(u"lokale for tilbud")
+        verbose_name_plural = _(u"lokaler for tilbud")
+
     visit = models.ForeignKey(
         Visit, verbose_name=_(u'Besøg'), blank=False
     )
@@ -891,6 +1965,11 @@ class Room(models.Model):
 
 # Represents a room as saved on a booking.
 class BookedRoom(models.Model):
+
+    class Meta:
+        verbose_name = _(u'lokale for besøg')
+        verbose_name_plural = _(u'lokaler for besøg')
+
     name = models.CharField(max_length=60, verbose_name=_(u'Navn'))
 
     booking = models.ForeignKey(
@@ -901,15 +1980,42 @@ class BookedRoom(models.Model):
 
 
 class Region(models.Model):
+
+    class Meta:
+        verbose_name = _(u'region')
+        verbose_name_plural = _(u'regioner')
+
     name = models.CharField(
-        max_length=16
+        max_length=16,
+        verbose_name=_(u'Navn')
+    )
+
+    # Not pretty, but it gets the job done for now
+    name_en = models.CharField(
+        max_length=16,
+        null=True,
+        verbose_name=_(u'Engelsk navn')
     )
 
     def __unicode__(self):
         return self.name
 
+    @staticmethod
+    def create_defaults():
+        from booking.data import regions
+        for name in regions.regions:
+            try:
+                Region.objects.get(name=name)
+            except ObjectDoesNotExist:
+                Region(name=name).save()
+
 
 class PostCode(models.Model):
+
+    class Meta:
+        verbose_name = _(u'postnummer')
+        verbose_name_plural = _(u'postnumre')
+
     number = models.IntegerField(
         primary_key=True
     )
@@ -930,8 +2036,45 @@ class PostCode(models.Model):
         except PostCode.DoesNotExist:
             return None
 
+    @staticmethod
+    def create_defaults():
+        Region.create_defaults()
+        from booking.data import postcodes
+        regions = {}
+        for postcode_def in postcodes.postcodes:
+            postcode_number = postcode_def['number']
+            city_name = postcode_def['city']
+            region_name = postcode_def['region']
+            region = regions.get(region_name)
+            if region is None:
+                try:
+                    region = Region.objects.get(name=region_name)
+                    regions[region_name] = region
+                except Region.DoesNotExist:
+                    print "Unknown region '%s'. May be a typo, please fix in " \
+                          "booking/data/postcodes.py" % region_name
+                    return
+            try:
+                postcode = PostCode.objects.get(number=postcode_number)
+            except PostCode.DoesNotExist:
+                postcode = PostCode(number=postcode_number,
+                                    city=city_name, region=region)
+                postcode.save()
+            else:
+                if postcode.city != city_name:
+                    postcode.city = city_name
+                    postcode.save()
+                if postcode.region != region:
+                    postcode.region = region
+                    postcode.save()
+
 
 class School(models.Model):
+
+    class Meta:
+        verbose_name = _(u'uddannelsesinstitution')
+        verbose_name_plural = _(u'uddannelsesinstitutioner')
+
     name = models.CharField(
         max_length=128,
     )
@@ -971,6 +2114,7 @@ class School(models.Model):
 
     @staticmethod
     def create_defaults():
+        PostCode.create_defaults()
         from booking.data import schools
         for data, type in [
                 (schools.elementary_schools, School.ELEMENTARY_SCHOOL),
@@ -982,16 +2126,21 @@ class School(models.Model):
                     if school.type != type:
                         school.type = type
                         school.save()
-                except ObjectDoesNotExist:
+                except School.DoesNotExist:
                     try:
                         postcode = PostCode.get(postnr)
                         School(name=name, postcode=postcode, type=type).save()
-                    except ObjectDoesNotExist:
+                    except PostCode.DoesNotExist:
                         print "Warning: Postcode %d not found in database. " \
                               "Not adding school %s" % (postcode, name)
 
 
 class Booker(models.Model):
+
+    class Meta:
+        verbose_name = _(u'besøgende')
+        verbose_name_plural = _(u'besøgende')
+
     # A person booking a visit
     firstname = models.CharField(
         max_length=64,
@@ -1092,10 +2241,6 @@ class Booker(models.Model):
         null=True,
         verbose_name=u'Antal deltagere'
     )
-    notes = models.TextField(
-        blank=True,
-        verbose_name=u'Bemærkninger'
-    )
 
     def as_searchtext(self):
         return " ".join([unicode(x) for x in [
@@ -1123,194 +2268,51 @@ class Booker(models.Model):
 
 
 class Booking(models.Model):
-    objects = SearchManager(
-        fields=('extra_search_text'),
-        config='pg_catalog.danish',
-        auto_update_search_field=True
-    )
 
-    visit = models.ForeignKey(Visit, null=True)
+    class Meta:
+        verbose_name = _(u'booking')
+        verbose_name_plural = _(u'bookinger')
+
     booker = models.ForeignKey(Booker)
 
-    # Have to do late import of this here or we will get problems
-    # with cyclic dependencies
-    from profile.models import TEACHER, HOST
-
-    hosts = models.ManyToManyField(
-        User,
+    visitoccurrence = models.ForeignKey(
+        VisitOccurrence,
+        null=True,
         blank=True,
-        limit_choices_to={
-            'userprofile__user_role__role': HOST
-        },
-        related_name="hosted_bookings",
-        verbose_name=_(u'Værter')
+        related_name='bookings',
+        verbose_name=_(u'Tidspunkt')
     )
 
-    teachers = models.ManyToManyField(
-        User,
+    notes = models.TextField(
         blank=True,
-        limit_choices_to={
-            'userprofile__user_role__role': TEACHER
-        },
-        related_name="taught_bookings",
-        verbose_name=_(u'Undervisere')
+        verbose_name=u'Bemærkninger'
     )
 
-    # ts_vector field for fulltext search
-    search_index = VectorField()
-
-    # Field for concatenating search data from relations
-    extra_search_text = models.TextField(
-        blank=True,
-        default='',
-        verbose_name=_(u'Tekst-værdier til fritekstsøgning'),
-        editable=False
+    created_time = models.DateTimeField(
+        blank=False,
+        auto_now_add=True,
     )
 
-    STATUS_NOT_NEEDED = 0
-    STATUS_OK = 1
-    STATUS_NOT_ASSIGNED = 2
+    def get_occurrence_attr(self, attrname):
+        if not self.visitoccurrence:
+            return None
+        return getattr(self.visitoccurrence, attrname, None)
 
-    host_status_choices = (
-        (STATUS_NOT_NEEDED, _(u'Tildeling af værter ikke påkrævet')),
-        (STATUS_NOT_ASSIGNED, _(u'Afventer tildeling')),
-        (STATUS_OK, _(u'Tildelt'))
-    )
+    def raise_readonly_attr_error(self, attrname):
+        raise Exception(
+            _("Attribute %s on Booking is readonly.") % attrname +
+            _("Set it on the VisitOccurance instead.")
+        )
 
-    host_status = models.IntegerField(
-        choices=host_status_choices,
-        default=STATUS_NOT_ASSIGNED,
-        verbose_name=_(u'Status for tildeling af værter')
-    )
-
-    teacher_status_choices = (
-        (STATUS_NOT_NEEDED, _(u'Tildeling af undervisere ikke påkrævet')),
-        (STATUS_NOT_ASSIGNED, _(u'Afventer tildeling')),
-        (STATUS_OK, _(u'Tildelt'))
-    )
-
-    teacher_status = models.IntegerField(
-        choices=teacher_status_choices,
-        default=STATUS_NOT_ASSIGNED,
-        verbose_name=_(u'Status for tildeling af undervisere')
-    )
-
-    room_status_choices = (
-        (STATUS_NOT_NEEDED, _(u'Tildeling af lokaler ikke påkrævet')),
-        (STATUS_NOT_ASSIGNED, _(u'Afventer tildeling')),
-        (STATUS_OK, _(u'Tildelt'))
-    )
-
-    room_status = models.IntegerField(
-        choices=room_status_choices,
-        default=STATUS_NOT_ASSIGNED,
-        verbose_name=_(u'Status for tildeling af lokaler')
-    )
-
-    WORKFLOW_STATUS_BEING_PLANNED = 0
-    WORKFLOW_STATUS_REJECTED = 1
-    WORKFLOW_STATUS_PLANNED = 2
-    WORKFLOW_STATUS_CONFIRMED = 3
-    WORKFLOW_STATUS_REMINDED = 4
-    WORKFLOW_STATUS_EXECUTED = 5
-    WORKFLOW_STATUS_EVALUATED = 6
-    WORKFLOW_STATUS_CANCELLED = 7
-    WORKFLOW_STATUS_NOSHOW = 8
-
-    BEING_PLANNED_STATUS_TEXT = u'Under planlægning'
-    PLANNED_STATUS_TEXT = u'Planlagt (ressourcer tildelt)'
-
-    workflow_status_choices = (
-        (WORKFLOW_STATUS_BEING_PLANNED, _(BEING_PLANNED_STATUS_TEXT)),
-        (WORKFLOW_STATUS_REJECTED, _(u'Afvist af undervisere eller værter')),
-        (WORKFLOW_STATUS_PLANNED, _(PLANNED_STATUS_TEXT)),
-        (WORKFLOW_STATUS_CONFIRMED, _(u'Bekræftet af booker')),
-        (WORKFLOW_STATUS_REMINDED, _(u'Påmindelse afsendt')),
-        (WORKFLOW_STATUS_EXECUTED, _(u'Afviklet')),
-        (WORKFLOW_STATUS_EVALUATED, _(u'Evalueret')),
-        (WORKFLOW_STATUS_CANCELLED, _(u'Aflyst')),
-        (WORKFLOW_STATUS_NOSHOW, _(u'Udeblevet')),
-    )
-
-    workflow_status = models.IntegerField(
-        choices=workflow_status_choices,
-        default=WORKFLOW_STATUS_BEING_PLANNED
-    )
-
-    comments = models.TextField(
-        blank=True,
-        default='',
-        verbose_name=_(u'Interne kommentarer')
-    )
-
-    valid_status_changes = {
-        WORKFLOW_STATUS_BEING_PLANNED: [
-            WORKFLOW_STATUS_REJECTED,
-            WORKFLOW_STATUS_PLANNED,
-            WORKFLOW_STATUS_CANCELLED,
-        ],
-        WORKFLOW_STATUS_REJECTED: [
-            WORKFLOW_STATUS_BEING_PLANNED,
-            WORKFLOW_STATUS_CANCELLED,
-        ],
-        WORKFLOW_STATUS_PLANNED: [
-            WORKFLOW_STATUS_CONFIRMED,
-            WORKFLOW_STATUS_CANCELLED,
-        ],
-        WORKFLOW_STATUS_CONFIRMED: [
-            WORKFLOW_STATUS_REMINDED,
-            WORKFLOW_STATUS_EXECUTED,
-            WORKFLOW_STATUS_CANCELLED,
-            WORKFLOW_STATUS_NOSHOW,
-        ],
-        WORKFLOW_STATUS_REMINDED: [
-            WORKFLOW_STATUS_EXECUTED,
-            WORKFLOW_STATUS_CANCELLED,
-            WORKFLOW_STATUS_NOSHOW,
-        ],
-        WORKFLOW_STATUS_EXECUTED: [
-            WORKFLOW_STATUS_EVALUATED,
-            WORKFLOW_STATUS_CANCELLED
-        ],
-        WORKFLOW_STATUS_EVALUATED: [
-            WORKFLOW_STATUS_BEING_PLANNED,
-        ],
-        WORKFLOW_STATUS_CANCELLED: [
-            WORKFLOW_STATUS_BEING_PLANNED,
-        ],
-        WORKFLOW_STATUS_NOSHOW: [
-            WORKFLOW_STATUS_BEING_PLANNED,
-        ],
-    }
-
-    def can_assign_resources(self):
-        return self.workflow_status == Booking.WORKFLOW_STATUS_BEING_PLANNED
-
-    def planned_status_is_blocked(self):
-        # It's not blocked if we can't choose it
-        ws_planned = Booking.WORKFLOW_STATUS_PLANNED
-        if ws_planned not in (x[0] for x in self.possible_status_choices()):
-            return False
-
-        statuses = (self.host_status, self.teacher_status, self.room_status)
-
-        if Booking.STATUS_NOT_ASSIGNED in statuses:
-            return True
-
-        return False
-
-    # TODO: Huske at logge status-skift via log_action
-
-    def possible_status_choices(self):
-        result = []
-
-        allowed = self.valid_status_changes[self.workflow_status]
-
-        for x in self.workflow_status_choices:
-            if x[0] in allowed:
-                result.append(x)
-
-        return result
+    @classmethod
+    # Adds property to this class that will fetch the same attribute on
+    # the associated visitoccorrence, if available. The property will raise
+    # an exception on assignment.
+    def add_occurrence_attr(cls, attrname):
+        setattr(cls, attrname, property(
+            lambda self: self.get_occurrence_attr(attrname),
+            lambda self, val: self.raise_readonly_attr_error(attrname)
+        ))
 
     @classmethod
     def queryset_for_user(cls, user, qs=None):
@@ -1322,58 +2324,78 @@ class Booking(models.Model):
 
         return qs.filter(visit__unit=user.userprofile.get_unit_queryset())
 
-    def as_searchtext(self):
-        result = []
-
-        if self.visit:
-            result.append(self.visit.as_searchtext())
-
-        if self.booker:
-            result.append(self.booker.as_searchtext())
-
-        return " ".join(result)
-
-    def get_subjects(self):
-        if hasattr(self, 'teacherbooking'):
-            return self.teacherbooking.subjects.all()
-        else:
-            return None
-
-    def save(self, *args, **kwargs):
-
-        # Save once to store relations
-        super(Booking, self).save(*args, **kwargs)
-
-        # Update search_text
-        self.extra_search_text = self.as_searchtext()
-
-        # Do the final save
-        super(Booking, self).save(*args, **kwargs)
-
     def get_absolute_url(self):
         return reverse('booking-view', args=[self.pk])
+
+    def get_url(self):
+        return settings.PUBLIC_URL + self.get_absolute_url()
+
+    def get_recipients(self, template_key):
+        recipients = self.visitoccurrence.get_recipients(template_key)
+        if template_key in EmailTemplate.booker_keys:
+            recipients.add(self.booker)
+        return recipients
+
+    def autosend(self, template_key, recipients=None,
+                 only_these_recipients=False):
+        print "VisitOccurrence.autosend(%d)" % template_key
+        if self.visitoccurrence.autosend_enabled(template_key):
+            print "autosend is enabled for this template"
+            visit = self.visitoccurrence.visit
+            unit = visit.unit
+            if recipients is None:
+                recipients = set()
+            else:
+                recipients = set(recipients)
+            if not only_these_recipients:
+                recipients.update(self.get_recipients(template_key))
+
+            print "Recipients: %s" % unicode(recipients)
+            KUEmailMessage.send_email(
+                template_key,
+                {
+                    'booking': self,
+                    'visit': visit,
+                    'booker': self.booker
+                },
+                list(recipients),
+                unit
+            )
+        else:
+            print "autosend is disabled for this template"
+
+    def as_searchtext(self):
+        return " ".join([unicode(x) for x in [
+            self.booker.as_searchtext(),
+            self.notes
+        ] if x])
+
+Booking.add_occurrence_attr('visit')
+Booking.add_occurrence_attr('hosts')
+Booking.add_occurrence_attr('teachers')
+Booking.add_occurrence_attr('host_status')
+Booking.add_occurrence_attr('teacher_status')
+Booking.add_occurrence_attr('room_status')
+Booking.add_occurrence_attr('workflow_status')
+Booking.add_occurrence_attr('comments')
 
 
 class ClassBooking(Booking):
 
-    time = models.ForeignKey(
-        VisitOccurrence,
-        null=True,
-        blank=True,
-        verbose_name=u'Tidspunkt'
-    )
-    desired_time = models.CharField(
-        null=True,
-        blank=True,
-        max_length=2000,
-        verbose_name=u'Ønsket tidspunkt'
-    )
+    class Meta:
+        verbose_name = _(u'booking for klassebesøg')
+        verbose_name_plural = _(u'bookinger for klassebesøg')
+
     tour_desired = models.BooleanField(
         verbose_name=u'Rundvisning ønsket'
     )
 
 
 class TeacherBooking(Booking):
+
+    class Meta:
+        verbose_name = _(u'booking for lærerarrangement')
+        verbose_name_plural = _(u'bookinger for lærerarrangementer')
 
     subjects = models.ManyToManyField(Subject)
 
@@ -1387,6 +2409,10 @@ class TeacherBooking(Booking):
 
 
 class BookingSubjectLevel(models.Model):
+
+    class Meta:
+        verbose_name = _('fagniveau for booking')
+        verbose_name_plural = _('fagniveauer for bookinger')
 
     booking = models.ForeignKey(Booking, blank=False, null=False)
     subject = models.ForeignKey(
@@ -1463,20 +2489,32 @@ class KUEmailMessage(models.Model):
         emails = {}
         if type(recipients) is not list:
             recipients = [recipients]
+
         for recipient in recipients:
-            try:
-                address = recipient.get_email()
-                if address not in emails:
-                    email = {'address': address}
-                    try:
-                        name = recipient.get_name()
-                        email['name'] = name
-                        email['full'] = u"\"%s\" <%s>" % (name, address)
-                    except:
-                        email['full'] = address
-                    emails[address] = email
-            except:
-                pass
+            name = None
+            address = None
+            if isinstance(recipient, basestring):
+                address = recipient
+            elif isinstance(recipient, User):
+                name = recipient.get_full_name()
+                address = recipient.email
+            else:
+                try:
+                    name = recipient.get_name()
+                except:
+                    pass
+                try:
+                    address = recipient.get_email()
+                except:
+                    pass
+            if address is not None and address not in emails:
+                email = {'address': address}
+                if name is not None:
+                    email['name'] = name
+                    email['full'] = u"\"%s\" <%s>" % (name, address)
+                else:
+                    email['full'] = address
+                emails[address] = email
 
         for email in emails.values():
             ctx = {
@@ -1486,117 +2524,23 @@ class KUEmailMessage(models.Model):
             }
             ctx.update(context)
             subject = template.expand_subject(ctx)
-            body = template.expand_body(ctx, encapsulate=True)
 
-            message = EmailMessage(
+            body = template.expand_body(ctx, encapsulate=True).strip()
+            if body.startswith("<!DOCTYPE"):
+                htmlbody = body
+                textbody = html2text(htmlbody)
+            else:
+                htmlbody = None
+                textbody = body
+
+            message = EmailMultiAlternatives(
                 subject=subject,
-                body=body,
+                body=textbody,
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 to=[email['full']]
             )
+            if htmlbody is not None:
+                message.attach_alternative(htmlbody, 'text/html')
             message.send()
-            KUEmailMessage.save_email(message, ctx['booking'])
-            log_action(
-                ctx['user'],
-                ctx['booking'],
-                ctx['action_flag'],
-                u'Email sendt - Aktionbesked: %s' % ctx['message']
-            )
 
-
-class EmailTemplate(models.Model):
-
-    NOTIFY_GUEST__BOOKING_CREATED = 0  # ticket 13806
-    NOTIFY_HOST__BOOKING_CREATED = 1  # ticket 13807
-    NOTIFY_HOST__REQ_TEACHER_VOLUNTEER = 2  # ticket 13808
-    NOTIFY_HOST__REQ_HOST_VOLUNTEER = 3  # ticket 13809
-    NOTIFY_HOST__ASSOCIATED = 4  # ticket 13810
-    NOTIFY_HOST__REQ_ROOM = 5  # ticket 13811
-    NOTIFY_GUEST__GENERAL_MSG = 6  # ticket 13812
-    NOTIFY_HOST__BOOKING_COMPLETE = 7  # ticket 13813
-    NOTIFY_ALL__BOOKING_CANCELED = 8  # ticket 13814
-    NOTITY_ALL__BOOKING_REMINDER = 9  # ticket 13815
-    NOTIFY_ALL_STAFF__BOOKING_CREATED = 10
-
-    key_choices = [
-        (NOTIFY_GUEST__BOOKING_CREATED, _(u'Gæst: Booking oprettet')),
-        (NOTIFY_HOST__BOOKING_CREATED, _(u'Vært: Booking oprettet')),
-        (NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
-         _(u'Vært: Frivillige undervisere')),
-        (NOTIFY_HOST__REQ_HOST_VOLUNTEER, _(u'Vært: Frivillige værter')),
-        (NOTIFY_HOST__ASSOCIATED, _(u'Vært: Tilknyttet besøg')),
-        (NOTIFY_HOST__REQ_ROOM, _(u'Vært: Forespørg lokale')),
-        (NOTIFY_GUEST__GENERAL_MSG, _(u'Gæst: Generel besked')),
-        (NOTIFY_HOST__BOOKING_COMPLETE, _(u'Vært: Booking færdigplanlagt')),
-        (NOTIFY_ALL__BOOKING_CANCELED, _(u'Alle: Booking aflyst')),
-        (NOTITY_ALL__BOOKING_REMINDER, _(u'Alle: Reminder om booking')),
-        (NOTIFY_ALL_STAFF__BOOKING_CREATED, _(u'Alle: Booking oprettet')),
-    ]
-    key = models.IntegerField(
-        verbose_name=u'Key',
-        choices=key_choices,
-        default=1
-    )
-
-    subject = models.CharField(
-        max_length=77,
-        verbose_name=u'Emne'
-    )
-
-    body = models.CharField(
-        max_length=65584,
-        verbose_name=u'Tekst'
-    )
-
-    unit = models.ForeignKey(
-        Unit,
-        verbose_name=u'Enhed',
-        null=True,
-        blank=True
-    )
-
-    def expand_subject(self, context, keep_placeholders=False):
-        return self._expand(self.subject, context, keep_placeholders)
-
-    def expand_body(self, context, keep_placeholders=False, encapsulate=False):
-        body = self._expand(self.body, context, keep_placeholders)
-        if encapsulate \
-                and not body.startswith(("<html", "<HTML", "<!DOCTYPE")):
-            body = "<!DOCTYPE html><html><head></head>" \
-                   "<body>%s</body>" \
-                   "</html>" % body
-        return body
-
-    @staticmethod
-    def _expand(text, context, keep_placeholders=False):
-        template = Template(unicode(text))
-        if keep_placeholders:
-            template.engine.string_if_invalid = "{{ %s }}"
-        if isinstance(context, dict):
-            context = make_context(context)
-        return template.render(context)
-
-    @staticmethod
-    def get_template(template_key, unit, include_overridden=False):
-        templates = []
-        while unit is not None and (include_overridden or len(templates) == 0):
-            try:
-                templates.extend(EmailTemplate.objects.filter(
-                    key=template_key,
-                    unit=unit
-                ).all())
-            except:
-                pass
-            unit = unit.parent
-        if include_overridden or len(templates) == 0:
-            try:
-                templates.extend(
-                    EmailTemplate.objects.filter(key=template_key,
-                                                 unit__isnull=True)
-                )
-            except:
-                pass
-        if include_overridden:
-            return templates
-        else:
-            return templates[0] if len(templates) > 0 else None
+            KUEmailMessage.save_email(message)

@@ -10,9 +10,9 @@ window.modal = {
         this.parent.setHeight(this.id, height);
     },
     updateHeight: function() {
-        var height = 0;
+        var height = 1;
         $(document.body).children().not("script").each(function(){
-            height += $(this).outerHeight();
+            height += $(this).outerHeight(true);
         });
         this.setHeight(height);
     }
@@ -26,7 +26,7 @@ window.modal = {
 
 
 $(function(){
-    modal.updateHeight();
+    setTimeout(modal.updateHeight.bind(modal), 0);
     $("*[data-dismiss='modal']").click(modal.close.bind(modal));
 });
 

@@ -3,6 +3,7 @@
     "jquery": "latest",
     "bootstrap": "3.3.5",
     "bootstrap-datetime-picker": "latest",
-    "bootstrap-3-typeahead": "latest"
+    "bootstrap-3-typeahead": "latest",
+    "jquery-table-sort": "latest"
   }
 }

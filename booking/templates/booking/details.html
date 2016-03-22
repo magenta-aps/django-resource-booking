@@ -1,80 +1,65 @@
 {% extends 'index.html' %}
 {% load staticfiles %}
-{% load timedelta %}
+{% load booking_tags %}
 {% load i18n %}
 {% load booking_tags %}
+
+{% block htmltitle %} - {{ object.visitoccurrence.visit.title }} - {{ object.visitoccurrence.date_display }} - {% blocktrans with id=object.id %}Booking #{{ id }}{% endblocktrans %}{% endblock %}
 
 {% block content %}
 
     {% include 'common/breadcrumbrow.html' %}
 
     <div class="row titlebar hidden-print">
-        <div class="col-sm-12 col-md-9"><h1>{% blocktrans with id=object.id %}Booking #{{ id }}{% endblocktrans %}</h1></div>
+        <div class="col-sm-12 col-md-9">
+            <h1>{% blocktrans with id=object.id %}Booking #{{ id }}{% endblocktrans %}</h1>
+        </div>
         <div class="divider"></div>
     </div>
     <div class="row">
         <div class="col-sm-12 col-md-8">
-
-            {% include 'common/searchform.html' %}
-
-            <div class="divider"></div>
-
-            <h2>Statusoverblik</h2>
-
-            {% if not object.can_assign_resources %}
-            <p>
-                Det er ikke længere muligt at tildele ressourcer til denne
-                booking. Hvis du ønsker at rette i de tildelte ressourcer skal
-                du ændre statuses til '{{object.BEING_PLANNED_STATUS_TEXT}}'.
-            </p>
-            {% endif %}
-
-            <dl class="dl-horizontal">
-                <dt>Undervisere</dt>
-                <dd>
-                    {{ object.get_teacher_status_display }}
-                    {% if object.can_assign_resources %}
-                    <a href="{% url 'change-booking-teachers' object.pk %}" role="button" class="btn btn-primary btn-xs">Redigér</a>
-                    {% endif %}
-                </dd>
-                <dt>Værter</dt>
-                <dd>
-                    {{ object.get_host_status_display }}
-                    {% if object.can_assign_resources %}
-                    <a href="{% url 'change-booking-hosts' object.pk %}" role="button" class="btn btn-primary btn-xs">Redigér</a>
-                    {% endif %}
-                </dd>
-                <dt>Lokalerer</dt>
-                <dd>
-                    {{ object.get_room_status_display }}
-                    {% if object.can_assign_resources %}
-                    <a href="{% url 'change-booking-rooms' object.pk %}" role="button" class="btn btn-primary btn-xs">Redigér</a>
-                    {% endif %}
-                </dd>
-                <dt>Afvikling</dt>
-                <dd>
-                    {{ object.get_workflow_status_display }}
-                    <a href="{% url 'change-booking-status' object.pk %}" role="button" class="btn btn-primary btn-xs">Skift status</a>
-                </dd>
-            </dl>
-            
-            <div class="divider"></div>
+        
             <div class="panel panel-default">
                 <div class="panel-body">
-                    {% url 'visit-view' object.visit.id as visiturl %}
-                    {% blocktrans with firstname=object.booker.firstname lastname=object.booker.lastname visittitle=object.visit.title %}
-                        <strong>{{ firstname }} {{ lastname }}</strong> har booket <a href="{{ visiturl }}">{{ visittitle }}</a>
+                    {% url 'visit-view' object.visitoccurrence.visit.id as visiturl %}
+                    {% url 'visit-occ-view' object.visitoccurrence.id as occurrenceurl %}
+                    {% blocktrans with firstname=object.booker.firstname lastname=object.booker.lastname visittitle=object.visit.title occurrencetime=object.visitoccurrence.start_datetime %}
+                        <strong>{{ firstname }} {{ lastname }}</strong> har booket <a href="{{ visiturl }}">{{ visittitle }}</a> med afvikling <a href="{{ occurrenceurl }}">{{ occurrencetime }}</a>
                     {% endblocktrans %}
                 </div>
             </div>
 
-            <h2>Information om bookingen</h2>
+            {% if can_notify %}
+                <div class="pull-right dropdown">
+                    <button class="btn btn-primary dropdown-toggle" type="button" id="sendNotification" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        {% trans 'Send besked' %}
+                        <span class="caret"/>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="sendNotification">
+                        <li><a data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'booking-notify' object.pk %}">{% trans 'Ingen skabelon' %}</a></li>
+                        {% if emailtemplates %}
+                            <li role="separator" class="divider"></li>
+                            {% for id, label in emailtemplates %}
+                                <li>
+                                    {% if modal %}
+                                        <a data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'booking-notify' object.pk %}?template={{ id }}">{{ label }}</a>
+                                    {% else %}
+                                        <a href="{% url 'booking-notify' object.pk %}?template={{ id }}&back={{ thisurl | urlencode }}">{{ label }}</a>
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                        {% endif %}
+                    </ul>
+                </div>
+            {% endif %}
+
+
+            <h2>{% trans 'Information om bookingen' %}</h2>
 
             <dl class="dl-horizontal">
 
                 <dt>{% trans 'Navn:' %}</dt>
                 <dd>{{ object.booker.firstname }} {{ object.booker.lastname }}</dd>
-
 
                 <dt>{% trans 'Email:' %}</dt>
                 <dd>{{ object.booker.email }}</dd>
@@ -110,7 +95,7 @@
                 <dd>{{ object.booker.attendee_count }}</dd>
 
                 <dt>{% trans 'Noter:' %}</dt>
-                <dd>{{ object.booker.notes }}</dd>
+                <dd>{{ object.notes }}</dd>
 
                 {% if object.classbooking %}
                     {% if object.classbooking.time %}
@@ -129,76 +114,6 @@
 
             <div class="divider"></div>
 
-            <h2>Statusoverblik</h2>
-
-            {% if not object.can_assign_resources %}
-            <p>
-                Det er ikke længere muligt at tildele ressourcer til denne
-                booking. Hvis du ønsker at rette i de tildelte ressourcer skal
-                du ændre statuses til '{{object.BEING_PLANNED_STATUS_TEXT}}'.
-            </p>
-            {% endif %}
-
-            <dl class="dl-horizontal">
-                <dt>Undervisere</dt>
-                <dd>
-                    {{ object.get_teacher_status_display }}
-                    {% if object.can_assign_resources %}
-                    <a href="{% url 'change-booking-teachers' object.pk %}" role="button" class="btn btn-primary btn-xs">Redigér</a>
-                    {% endif %}
-                </dd>
-                <dt>Værter</dt>
-                <dd>
-                    {{ object.get_host_status_display }}
-                    {% if object.can_assign_resources %}
-                    <a href="{% url 'change-booking-hosts' object.pk %}" role="button" class="btn btn-primary btn-xs">Redigér</a>
-                    {% endif %}
-                </dd>
-                <dt>Lokaler</dt>
-                <dd>
-                    {{ object.get_room_status_display }}
-                    {% if object.can_assign_resources %}
-                    <a href="{% url 'change-booking-rooms' object.pk %}" role="button" class="btn btn-primary btn-xs">Redigér</a>
-                    {% endif %}
-                </dd>
-                <dt>Afvikling</dt>
-                <dd>
-                    {{ object.get_workflow_status_display }}
-                    <a href="{% url 'change-booking-status' object.pk %}" role="button" class="btn btn-primary btn-xs">Skift status</a>
-                </dd>
-                <dt>Interne kommentarer</dt>
-                <dd>
-                    <pre>{{ object.comments }}</pre>
-                    <a href="{% url 'change-booking-comments' object.pk %}" role="button" class="btn btn-primary btn-xs">Redigér</a>
-                </dd>
-            </dl>
-            
-            <div class="divider"></div>
-
-            <h2>Aktivitetslog</h2>
-
-            <ul class="list-unstyled">
-                {% for entry in log_entries %}
-                <li>
-                    <dl class="dl-horizontal">
-                        <dt>Hvem:</dt>
-                        <dd>{% if entry.user.get_full_name %}{{ entry.user.get_full_name }}{% else %}{{ entry.user }}{% endif %}</dd>
-                        <dt>Hvad:</dt>
-                        <dd>{{ entry.action_flag|logaction_type_display }}</dd>
-                        <dt>Hvornår:</dt>
-                        <dd>{{ entry.action_time }}</dd>
-                        <dt>Besked:</dt>
-                        <dd><pre>{{ entry.change_message }}</pre></dd>
-                    </dl>
-                </li>
-                {% endfor %}
-            </ul>
-            <div>
-                <a href="{% url 'booking-add-logentry' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">Tilføj ny log-post</a>&nbsp;
-            </div>
-            <div class="divider"></div>
-
-
             <div class="go-back">
                 <a href="#" class="btn btn-default" onclick="history.go(-1); return false;"><span class="glyphicon glyphicon-chevron-left"></span> {% trans 'Tilbage til bookingliste' %}</a>
             </div>
@@ -211,13 +126,15 @@
                     </div>
                     <div class="panel-body">
                         <dl class="dl-horizontal">
-                            
-                            <dt>{% trans 'Link til tilbud:' %}</dt>
-                            <dd><a href="{% url 'visit-view' object.visit.id %}">{{ object.visit.title }}</a></dd>
 
                             {% if object.visit.title %}
                                 <dt>{% trans 'Titel:' %}</dt>
-                                <dd><a href="{% url 'visit-view' object.visit.id %}">{{ object.visit.title }}</a></dd>
+                                <dd><a href="{% url 'visit-view' object.visitoccurrence.visit.id %}">{{ object.visit.title }}</a></dd>
+                            {% endif %}
+
+                            {% if object.visitoccurrence.start_datetime %}
+                                <dt>{% trans 'Tidspunkt:' %}</dt>
+                                <dd><a href="{% url 'visit-occ-view' object.visitoccurrence.id %}">{{ object.visitoccurrence.start_datetime }}</a></dd>
                             {% endif %}
 
                             {% if object.visit.get_audience_display %}
@@ -248,13 +165,25 @@
 
                             {% if object.visit.locality %}
                                 <dt>{% trans 'Hvor:' %}</dt>
-                                <dd><strong>{{ object.visit.unit.name }}</strong><br> {{ object.visit.locality.name }}, {{ object.visit.locality.address_line }}, {{ object.visit.locality.zip_city }}</dd>
+                                <dd>
+                                    {{ object.visit.locality.name }},<br/>
+                                    {{ object.visit.locality.address_line }},<br/>
+                                    {{ object.visit.locality.zip_city }}
+                                </dd>
                             {% endif %}
 
                             <dt>{% trans 'Arrangør:' %}</dt>
-                            <dd><a href="#" data-toggle="modal" data-target="#kontaktformular">{% trans 'Kontakt arrangøren' %}</a> <span class="glyphicon glyphicon-new-window"></span></dd>
+                            <dd>
+                                {% if object.visit.unit.url %}
+                                    <a href="{{ object.visit.unit.url }}" target="_blank">
+                                {% endif %}
+                                <strong>{{ object.visit.unit.name }}</strong>
+                                {% if object.visit.unit.url %}
+                                    </a> <span class="glyphicon glyphicon-new-window"></span>
+                                {% endif %}
+                            </dd>
 
-                            <dt>{% trans 'Hvornår:' %}</dt>
+                            <dt>{% trans 'Udbudte tider:' %}</dt>
                             <dd>
                                 {% for description in object.visit.recurrences_description %}
                                     {{ description }}
@@ -266,9 +195,9 @@
                                 </ul>
                             </dd>
 
-                            {% if object.visit.duration %}
+                            {% if object.visit.duration and object.visit.duration != '00:00' %}
                                 <dt>{% trans 'Varighed:' %}</dt>
-                                <dd>{{ object.visit.duration|timedelta }}</dd>
+                                <dd>{{ object.visit.duration|timedelta_i18n }}</dd>
                             {% endif %}
 
                             {% if object.visit.price %}
@@ -286,9 +215,11 @@
     </div>
 
     {% include 'common/modal_contact.html' %}
+    {% include 'common/modal_framehost.html' %}
 
 {% endblock %}
 
 {% block extra_scripts %}
     <script src="/static/js/custom.js"></script>
+    <script src="{% static "js/modalframe-host.js" %}"></script>
 {% endblock %}

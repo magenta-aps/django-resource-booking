@@ -1,0 +1,49 @@
+{% extends 'index.html' %}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block htmltitle %} - {% blocktrans with object=object %}Bliv vært for {{ object }}{% endblocktrans %}{% endblock %}
+
+{% block content %}
+    {% include 'common/breadcrumbrow.html' %}
+
+    <div class="row titlebar hidden-print">
+        <div class="col-sm-12 col-md-9">
+            <h2>{% blocktrans with object=object %}Bliv vært for {{ object }}{% endblocktrans %}</h2>
+        </div>
+        <div class="divider"></div>
+    </div>
+    <div class="row">
+        <div class="col-sm-12 col-md-8">
+            {% if view.is_valid %}
+                {% if request.method == "GET" %}
+                    <form name="becomehostform" id="becomehostform" action="{% url 'become-host' object.pk %}" method="post">
+                        {% csrf_token %}
+                        <p>{% blocktrans with object=object %}Ønsker du at blive vært for besøget {{ object }}?{% endblocktrans %}</p>
+                        <input class="btn btn-success btn-sm" type="submit" value="{% trans 'Ja' %}" name="confirm" />
+                        <input class="btn btn-danger btn-sm" type="submit" value="{% trans 'Nej' %}" name="cancel" />
+                    </form>
+                {% else %}
+                    <p>
+                        {% blocktrans with object=object %}Du er nu blevet sat som vært for besøget {{ object }}.{% endblocktrans %}
+                    </p>
+                    <p>
+                        <a href="{% url 'visit-occ-view' object.pk %}">{% trans 'Klik her for at vende tilbage til besøget' %}</a>
+                    </p>
+                {% endif %}
+            {% else %}
+            <p>
+                {% trans 'Det er ikke muligt at blive vært for besøget på grund af følgende:' %}
+                <ul>
+                {% for error in view.errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+                </ul>
+            </p>
+            <p>
+                <a href="{% url 'visit-occ-view' object.pk %}">{% trans 'Klik her for at vende tilbage til besøget' %}</a>
+            </p>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

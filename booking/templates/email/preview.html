@@ -17,9 +17,9 @@
             <h1>{% trans "Preview Emailskabelon" %}</h1>
         </div>
         <div class="col-sm-4 text-right">
-            <a href="{% url 'emailtemplate-edit' template.id %}" class="btn btn-primary">{% trans "Rediger skabelon" %}</a>
-            <a href="{% url 'emailtemplate-clone' template.id %}" class="btn btn-primary">{% trans "Kopier skabelon" %}</a>
-            <a href="{% url 'emailtemplate-delete' template.id %}" class="btn btn-primary">{% trans "Slet skabelon" %}</a>
+            <a href="{% url 'emailtemplate-edit' template.id %}?back={{ thisurl | urlencode }}" class="btn btn-primary">{% trans "Rediger skabelon" %}</a>
+            <a href="{% url 'emailtemplate-clone' template.id %}?back={{ thisurl | urlencode }}" class="btn btn-primary">{% trans "Kopier skabelon" %}</a>
+            <a href="{% url 'emailtemplate-delete' template.id %}?back={{ thisurl | urlencode }}" class="btn btn-primary">{% trans "Slet skabelon" %}</a>
         </div>
         </div>
     <div class="row">
@@ -181,12 +181,13 @@
                 return newWidget;
             };
 
-            var typeChanged = function(row){
+            var typeChanged = function(row, setValue){
                 // When a type field is changed
                 var type = row.find('.emailtemplate-type').val();
                 var valueField = row.find('.emailtemplate-value');
                 if (!valueField.hasClass(typeClassMap[type])) {
-                    var newWidget;
+                    var oldValue = valueField.val(),
+                        newWidget;
                     if (type == 'string') {
                         newWidget = replaceWidget(valueField, "input");
                     } else if (type in objects) {
@@ -201,19 +202,24 @@
                     }
                     if (newWidget) {
                         newWidget.addClass("emailtemplate-value " + typeClassMap[type]);
+                        if (setValue === true) {
+                            newWidget.val(oldValue);
+                        }
                     }
                 }
             };
 
-            var rowAdded = function(event, row){
+            var rowAdded = function(event, row, setValue){
                 // When a new context row is added
                 row = $(row);
-                typeChanged(row);
+                typeChanged(row, setValue);
                 row.find('.emailtemplate-type').change(typeChanged.bind(this, row));
             };
 
 
-            rowAdded(null, $("#rowcontainer").find(".row"));
+            $("#rowcontainer").find(".row").each(function(){
+                rowAdded(null, $(this), true);
+            });
             $("#rowcontainer").on("addrow", rowAdded);
         });
         {% endautoescape %}

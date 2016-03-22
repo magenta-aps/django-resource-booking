@@ -5,6 +5,7 @@ dist
 /.idea/
 install.log
 *.komodoproject
+/local-*
 /locale/**/*.mo
 /media/
 /profile/migrations/*_auto_*

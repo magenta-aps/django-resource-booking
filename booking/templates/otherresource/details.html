@@ -22,10 +22,10 @@
             <h2>{{ object.get_type_display }}</h2>
             
             {% if can_edit %}
-                <a class="pull-right btn btn-primary edit-btn" href="{% url 'otherresource-edit' object.pk %}">{% trans '+ Redigér' %}</a>
+                <a class="pull-right btn btn-primary edit-btn" href="{% url 'otherresource-edit' object.pk %}?back={{ thisurl | urlencode }}">{% trans '+ Redigér' %}</a>
             {% endif %}
             {% if user.userprofile.can_create %}
-                <a class="pull-right btn btn-primary" href="{% url 'otherresource-clone' object.pk %}">{% trans 'Opret kopi' %}</a>
+                <a class="pull-right btn btn-primary" href="{% url 'otherresource-clone' object.pk %}?back={{ thisurl | urlencode }}">{% trans 'Opret kopi' %}</a>
             {% endif %}
             
             <h1>{{ object.title }}</h1>
@@ -69,6 +69,7 @@
                                 <dt>{% trans 'Henvendt til:' %}</dt>
                                 <dd>{{ object.get_audience_display }}</dd>
                             {% endif %}
+
                             {% if object.resource_ptr.all_subjects  %}
                                 <dt>{% trans 'Fag/niveau:' %}</dt>
                                 <dd>
@@ -79,13 +80,22 @@
                                     </ul>
                                 </dd>
                             {% endif %}
+
                             {% if object.get_type_display %}
                                 <dt>{% trans 'Hvad:' %}</dt>
                                 <dd>{{ object.get_type_display }}</dd>
                             {% endif %}
-                            
+
                             <dt>{% trans 'Arrangør:' %}</dt>
-                            <dd><a href="#" data-toggle="modal" data-target="#kontaktformular">{% trans 'Kontakt arrangøren' %}</a> <span class="glyphicon glyphicon-new-window"></span></dd>
+                            <dd>
+                                {% if object.unit.url %}
+                                    <a href="{{ object.unit.url }}" target="_blank">
+                                {% endif %}
+                                <strong>{{ object.unit.name }}</strong>
+                                {% if object.unit.url %}
+                                    </a> <span class="glyphicon glyphicon-new-window"></span>
+                                {% endif %}
+                            </dd>
 
                         </dl>
                     </div>

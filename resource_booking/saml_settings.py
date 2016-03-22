@@ -26,6 +26,17 @@ SAML_REMOTE_METADATA_URL = "".join([
 SAML_REMOTE_SSO_URL = "".join([SAML_REMOTE, '/adfs/ls/'])
 SAML_REMOTE_LOGOUT_URL = "".join([SAML_REMOTE, '/adfs/ls/?wa=wsignout1.0'])
 
+SAML_USE_NAME_ID_AS_USERNAME = True
+
+SAML_ATTRIBUTE_MAPPING = {
+    'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress':
+        ('email', ),
+    'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname':
+        ('first_name', ),
+    'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname':
+        ('last_name', ),
+}
+
 local_saml_settings_file = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
     'local_saml_settings.py'
@@ -34,6 +45,8 @@ if os.path.exists(local_saml_settings_file):
     from local_saml_settings import *  # noqa
 
 SAML_CONFIG = {
+    'allow_unknown_attributes': True,
+
     # full path to the xmlsec1 binary programm
     'xmlsec_binary': '/usr/bin/xmlsec1',
 
@@ -48,7 +61,7 @@ SAML_CONFIG = {
         # we are just a lonely SP
         'sp': {
             'name': SAML_SP_NAME,
-            'name_id_format': saml2.saml.NAMEID_FORMAT_PERSISTENT,
+            'name_id_format': saml2.saml.NAMEID_FORMAT_EMAILADDRESS,
             'endpoints': {
                 # url and binding to the assetion consumer service view
                 # do not change the binding or service name

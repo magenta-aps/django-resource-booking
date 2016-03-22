@@ -67,6 +67,10 @@ h5 {
     font-size: 14px;
 }
 
+a {
+    cursor: pointer;
+}
+
 a:not(.btn),
 a:not(.btn):hover,
 a:not(.btn):active {
@@ -86,7 +90,7 @@ strong,
     filter: progid: DXImageTransform.Microsoft.gradient( startColorstr='#fafafa', endColorstr='#e6e6e6', GradientType=0);
 }
 .label {
-    font-size: 86%;
+    font-size: 90%;
 }
 .label-default {
     letter-spacing: 0.7px;
@@ -95,11 +99,18 @@ strong,
     border: 1px solid #999;
     margin-right: 5px;
 }
+
 .inline-block {
     display: inline-block;
 }
 .margin-right-10 {
     margin-right: 10px;
+}
+.margin-bottom-10 {
+    margin-bottom: 10px;
+}
+.margin-bottom-5 {
+    margin-bottom: 5px;
 }
 .divider {
     height: 20px;
@@ -414,7 +425,6 @@ hr {
 .disclaimer {
     margin: 20px 0;
 }
-
 .items-pr-side {
     width: 150px;
     float: right;
@@ -478,7 +488,9 @@ a>.caret:active {
 .datepicker-switch {
     text-transform: capitalize;
 }
-
+#dato {
+    margin-bottom: 2px;
+}
 .row.no-gutter > [class*="col-"] {
     padding-right: 0;
     padding-left: 0;
@@ -500,7 +512,9 @@ ul.footerlinks {
     list-style: none;
     padding-left: 0;
 }
-
+.footer-columns [class*="col-"]:last-child > ul.footerlinks {
+    float: right;
+}
 ul.footerlinks li {
     padding-right: 10px;
     margin-top: 2px;
@@ -560,6 +574,9 @@ ul.footerlinks .footerlist-header {
 .padleft0 {
     padding-left: 0;
 }
+.padleft5 {
+    padding-left: 5px;
+}
 #startbooking .form-group.has-error .help-block.with-errors {
     background-color: #f2dede;
     border: 1px solid #a94442;
@@ -607,62 +624,45 @@ ul.footerlinks .footerlist-header {
     width: 100%;
 }
 
-.stepwizard-step p {
-    margin-top: 10px;
-}
-
-.stepwizard-row {
-    display: table-row;
-}
-
-.stepwizard {
-    display: table;
+#admin-input input[type="text"],
+#admin-input input[type="email"],
+#admin-input input[type="password"],
+#admin-input select,
+#id_type,
+select,
+#embediframeform [type="text"] {
+    display: block;
     width: 100%;
-    position: relative;
-}
-
-.stepwizard-step button[disabled] {
-    opacity: 1 !important;
-    filter: alpha(opacity=100) !important;
-}
-
-.stepwizard-step.active .btn-circle {
-    cursor: default;
-}
-
-.stepwizard-row:before {
-    top: 14px;
-    bottom: 0;
-    position: absolute;
-    content: " ";
-    width: 100%;
-    height: 1px;
-    background-color: #ccc;
-    z-index: 0;
-}
-
-.stepwizard-step {
-    display: table-cell;
-    text-align: center;
-    position: relative;
-}
-
-.btn-circle {
-    width: 30px;
     height: 30px;
-    text-align: center;
-    padding: 6px 0;
+    padding: 5px 10px;
     font-size: 12px;
-    line-height: 1.428571429;
-    border-radius: 15px;
+    line-height: 1.5;
+    border-radius: 3px;
+    color: #555;
+    background-color: #fff;
+    background-image: none;
+    border: 1px solid #ccc;
+    -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
+    box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
+    -webkit-transition: border-color ease-in-out .15s,-webkit-box-shadow ease-in-out .15s;
+    -o-transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
+    transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
+}
+#id_type, #embediframeform [type="text"] {
+    width: auto;
 }
 .input-sm, textarea {
     font-size: 11px!important;
 }
 
+
 /*Backend specific styles start */
+
 .edit-btn {
     margin-bottom: 10px;
+}
+label[for="gymnasiefag-fag"] {
+    font-weight: bold!important;
 }
 .lengthcounter {
     margin-left: 7px;
@@ -682,9 +682,11 @@ ul.footerlinks .footerlist-header {
 a#attachAddFileField {
     margin-top: 10px;
     display: inline-block;
+    font-weight: bold;
     cursor: pointer;
 }
-#chosenrooms .glyphicon-remove {
+#chosenrooms .glyphicon-remove,
+#gymnasiefag-list .glyphicon-remove {
     cursor: pointer;
     font-size: 14px;
     color: #a94442;
@@ -698,8 +700,19 @@ div ul.errorlist {
     list-style-position: inside;
     max-width: 70%;
 }
+div ul.warninglist {
+    color: #8a6d3b;
+    background-color: #fcf8e3;
+    border: 1px solid #8a6d3b;
+    padding: 10px;
+    display: inline-block;
+    list-style-position: inside;
+    max-width: 70%;
+}
+
 
 /* gymnasiefag-edit & grundskolefag-edit */
+
 #gymnasiefag-fag,
 #gymnasiefag-levels,
 #grundskolefag-fag,
@@ -731,15 +744,235 @@ a.template-overridden:visited {
     color: #999;
 }
 
+
+/* Datepicker */
+
+#recipient-groups input {
+    width: auto;
+    display: inline;
+}
+
+#id_datepick {
+    border: none;
+    height: 0;
+    width: 0;
+    padding: 0;
+    margin: 0;
+    line-height: 0;
+}
+
+
+/* Date and time picker field styles */
+
+.modify-datetime {
+    display: none;
+}
+
+.modify-datetime-show {
+    display: block;
+    padding: 0.5em 0;
+}
+
+.btn-add-time-all,
+.btn-rm-date-all {
+    display: inline-block;
+}
+
+.btn-add-time-all {
+    position: relative;
+}
+
+.add-time-all {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border: none;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+}
+
+.add-time-all:hover,
+.add-time-all:active,
+.add-time-all:focus {
+    background: transparent;
+}
+
+
+/* RRule date picker modal */
+
+#tabs {
+    border-bottom: 1px solid #111;
+    text-align: center;
+}
+
+#tabs a {
+    background: #111;
+    border: 1px solid #111;
+    padding: .4em 1em;
+    margin: 0 .5em -1px;
+    color: #eee;
+    display: inline-block;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 1.1em;
+    border-top-left-radius: .2em;
+    border-top-right-radius: .2em;
+}
+
+#tabs a.active {
+    color: #111;
+    background: #fafafa;
+    border-bottom-color: #fafafa;
+}
+
+#input {
+    float: left;
+    width: 40%
+}
+#input th {
+    width: 7em !important;
+}
+#input section {
+    padding: 1em;
+}
+.examples li {
+    margin-bottom: .7em;
+}
+.examples code {
+    cursor: pointer;
+}
+#rfc-input input {
+    font-family: monospace;
+}
+
+#options-input input, #options-input select {
+    font-size: 1em;
+}
+.option-name  {
+    position: relative;
+    cursor: help;
+}
+.option-name .help {
+    border-radius: .3em;
+    font-weight: normal;
+    display: none;
+    position: absolute;
+    padding: 1em;
+    background: #333;
+    color: #fafafa;
+    border: 1px solid #000;
+    left: 110%;
+    right: -100%;
+    width: 350px;
+    text-align: left;
+    top: -1em;
+    box-shadow: 3px 3px 3px #888;
+    line-height: 1.6;
+    font-size: .9em;
+}
+.option-name .help code {
+    color: #fff;
+    background: #000;
+}
+.option-name:hover code:first-child{
+    background: #222;
+    color: #fafafa;
+}
+.option-name:hover .help {
+    display: block;
+}
+
+#output {
+    float: right;
+    width: 58%
+}
+#output pre {
+    white-space: pre-wrap;
+}
+#output td {
+    background: #fff;
+}
+#output td, #output th {
+    vertical-align: top;
+}
+#output li {
+    font-family: monospace;
+}
+#output li:nth-child(even) {
+    background: #f1f1f1;
+}
+#dates {
+    font-size: .9em;
+}
+#dates td:first-child {
+    color: #ccc;
+}
+#dates td:first-child {
+    text-align: right;
+}
+#dates td.b {
+    background: #eaeaea;
+}
+#dates td.b {
+    background: #f0f0f0;
+}
+
+#output a {
+    color: inherit
+}
+
+
+/* Autosend form */
+
+.autosend-row {
+    width: 100%;
+    border: 1px solid #eee;
+    margin: 1px 0;
+    padding: 1px;
+}
+
+.autosend-row label.deletion {
+    opacity: 0.5;
+}
+
+#recipient-groups input {
+    width: auto;
+    display: inline;
+}
+
+/* > Admin-visit-search start */
+
+#adminvisitsearch .dl-horizontal dt {
+    white-space: normal;
+}
+
+/* > Admin-visit-search end */
+
+
 /*Backend specific styles end */
 
+
 /* Embedded pages styles */
+
 .embedded > .container {
     width: 100%;
     padding: 0;
     margin: 0;
     border: none;
     max-width: 100%;
+}
+
+table.sortable th.sort {
+    cursor: pointer
+}
+
+body.lightbox {
+    margin-left: 10px;
+    overflow: hidden;
 }
 
 @media screen and (max-width:768px) {
@@ -820,7 +1053,7 @@ a.template-overridden:visited {
         border-right: 1px solid #ccc;
     }
     .grey-line {
-        height: 25px;
+        height: 2px;
         border-bottom: 1px solid #ccc;
     }
     #branding-images {
@@ -837,6 +1070,9 @@ a.template-overridden:visited {
     }
     #logo a {
         color: #666;
+    }
+    .navbar {
+        margin-bottom:10px;
     }
     .navbar-default .navbar-nav>li>a {
         color: #eee;
@@ -887,6 +1123,12 @@ a.template-overridden:visited {
     .dl-horizontal dd {
         margin-left: 110px;
         padding-top: 7px;
+    }
+    .dl-horizontal.status dt {
+        width: 145px;
+    }
+    .dl-horizontal.status dd {
+        margin-left: 150px;
     }
     #startbookingform .form-group [class*="col-"] + [class*="col-"] {
         padding-left: 0;

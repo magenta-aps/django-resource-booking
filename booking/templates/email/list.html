@@ -21,13 +21,13 @@
         <p class="text-warning">Warning: Two or more templates share the same Key and Unit - only one of these will ever be chosen</p>
     {% endif %}
 
-    <table class="table table-striped">
+    <table class="table table-striped sortable" data-sort-columns="0 1">
         <thead>
             <tr>
-                <th class="col-sm-3">
+                <th class="col-sm-3 sort">
                     {% trans 'Key' %}
                 </th>
-                <th class="col-sm-4">
+                <th class="col-sm-4 sort">
                     {% trans 'Unit' %}
                 </th>
                 <th class="col-sm-5">
@@ -50,8 +50,9 @@
                     </td>
                     <td class="col-sm-5">
                         <a href="{% url 'emailtemplate-view' object.id %}">{% trans 'Preview' %}</a>
-                        <a href="{% url 'emailtemplate-edit' object.id %}">{% trans 'Redigér' %}</a>
-                        <a href="{% url 'emailtemplate-delete' object.id %}">{% trans 'Slet' %}</a>
+                        <a href="{% url 'emailtemplate-edit' object.id %}?back={{ thisurl | urlencode }}">{% trans 'Redigér' %}</a>
+                        <a href="{% url 'emailtemplate-clone' object.id %}?back={{ thisurl | urlencode }}">{% trans 'Kopiér' %}</a>
+                        <a href="{% url 'emailtemplate-delete' object.id %}?back={{ thisurl | urlencode }}">{% trans 'Slet' %}</a>
                     </td>
                 </tr>
             {% endfor %}
@@ -59,8 +60,8 @@
 
     </table>
 
-
-
-
 {% endblock %}
-
+{% block extra_scripts %}
+    <script type="text/javascript" src="{% static 'thirdparty/jquery-table-sort/jquery.table_sort.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/sort-table.js' %}"></script>
+{% endblock %}

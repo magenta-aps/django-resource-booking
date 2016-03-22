@@ -1,37 +1,59 @@
-{%extends "index.html" %}
+{% extends "index.html" %}
 {% load staticfiles %}
 {% load booking_tags %}
+{% load i18n %}
+
+{% block htmltitle %} - {% trans 'søg i tilbud' %}{% endblock %}
 
 {% block content %}
-    
-    <div class="row">
+        <div class="row">
         <div id="leftside" class="col-sm-6 col-md-3">
-            <button type="button" class="visible-xs btn btn-default" data-toggle="collapse" data-target="#filters" id="filter-btn">Filtrer søgeresultat <span class="glyphicon glyphicon-chevron-down hidden-print"></span></button>
+            <button type="button" class="visible-xs btn btn-default" data-toggle="collapse" data-target="#filters" id="filter-btn">{% trans 'Filtrer søgeresultat' %} <span class="glyphicon glyphicon-chevron-down hidden-print"></span></button>
             <div class="hidden-xs" id="filters">
                 <form class="" action="{% url 'search' %}" method="get" name="filter-search-results" id="filter-search-results">
-                <input type="hidden" name="q" value="{{ request.GET.q }}" />
+                {% if adminform %}
+                    {% for field in adminform %}
+                        {{ field.as_hidden }}
+                    {% endfor %}
+                {% else %}
+                    <input type="hidden" name="q" value="{{ request.GET.q }}" />
+                {% endif %}
                 <input type="hidden" name="pagesize" value="{{ paginator.per_page }}" />
                     <div class="panel panel-sidebar">
                         <div class="panel-heading">
-                            <h3 class="panel-title">Afgræns din søgning</h3>
+                            <h3 class="panel-title">{% trans 'Afgræns din søgning' %}</h3>
                         </div>
                         <div class="panel-body">
-                            <h3 class="panel-title">Hvem er du?</h3>
-                            <hr>
+                            <h3 class="panel-title">{% trans 'Hvor er du fra?' %}</h3>
+                            <hr/>
                             <div class="input-group">
-                                {% for c in audience_choices %}
-                                <div class="checkbox">
-                                    <label class="control-label" for="audience-choice-{{c.value}}">
-                                        <input name="a" id="audience-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}>{{c.label}}
-                                        {% if c.hits %}
-                                            <span title="{{ c.hits }} resultater" class="type-hits">({{ c.hits }})</span>
-                                        {% endif %}
-                                    </label>
-                                </div>
+                                {% for c in institution_choices %}
+                                    <div class="checkbox">
+                                        <label class="control-label" for="institution-choice-{{c.value}}">
+                                            <input name="i" id="institution-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}>{{c.label}}
+                                            {% if c.hits %}
+                                                <span title="{{ c.hits }} resultater" class="type-hits">({{ c.hits }})</span>
+                                            {% endif %}
+                                        </label>
+                                    </div>
                                 {% endfor %}
                             </div>
-                            <h3 class="panel-title">Hvad søger du?</h3>
-                            <hr>
+                            <h3 class="panel-title">{% trans 'Hvem er du?' %}</h3>
+                            <hr/>
+                            <div class="input-group">
+                                {% for c in audience_choices %}
+                                    <div class="checkbox">
+                                        <label class="control-label" for="audience-choice-{{c.value}}">
+                                            <input name="a" id="audience-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}>{{c.label}}
+                                            {% if c.hits %}
+                                                <span title="{{ c.hits }} resultater" class="type-hits">({{ c.hits }})</span>
+                                            {% endif %}
+                                        </label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <h3 class="panel-title">{% trans 'Hvad søger du?' %}</h3>
+                            <hr/>
                             <div class="input-group">
                                 {% for c in type_choices %}
                                 <div class="checkbox">
@@ -46,9 +68,10 @@
                             </div>
                             <div id="accordion" role="tablist" aria-multiselectable="true">
                                 <a role="button" title="Klik for at vælge gymnasiefag" data-toggle="collapse" data-parent="#accordion" href="#gymnasiefag" aria-expanded="false" aria-controls="gymnasiefag">
-                                    <h3 class="panel-title inline-block">Gymnasiefag </h3><span class="caret"></span>
+                                    <h3 class="panel-title inline-block">{% trans 'Gymnasiefag' %}</h3>
+                                    <span class="caret"></span>
                                 </a>
-                                <hr>
+                                <hr/>
                                 <div id="gymnasiefag" class="panel-collapse {% if not gymnasie_selected %}collapse{% endif %}" role="tabpanel" aria-labelledby="headingOne">
                                     <div class="input-group">
                                     {% for c in gymnasie_choices %}
@@ -64,8 +87,10 @@
                                 </div>
                                 </div>
                                 <a role="button" title="Klik for at vælge grundskolefag" class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#grundskolefag" aria-expanded="false" aria-controls="grundskolefag">
-                                    <h3 class="panel-title inline-block">Grundskolefag </h3><span class="caret"></span></a>
-                                <hr>
+                                    <h3 class="panel-title inline-block">{% trans 'Grundskolefag' %}</h3>
+                                    <span class="caret"></span>
+                                </a>
+                                <hr/>
                                 <div id="grundskolefag" class="panel-collapse {% if not grundskole_selected %}collapse{% endif %}" role="tabpanel" aria-labelledby="headingThree">
                                     <div class="input-group">
                                     {% for c in grundskole_choices %}
@@ -80,70 +105,106 @@
                                     {% endfor %}
                                 </div>
                                 </div>
-                                <h3 class="panel-title inline-block">Vælg periode </h3>
-                                <hr>
+                                {% if not adminform %}
+                                <h3 class="panel-title inline-block">{% trans 'Vælg periode' %}</h3>
+                                <hr/>
                                 <div class="row input-daterange">
                                     <div class="form-group clearfix">
-                                        <label class="col-sm-2 control-label">Fra:</label>
+                                        <label class="col-sm-2 control-label">{% trans 'Fra:' %}</label>
                                         <div class="col-sm-10">
-                                            <input type="text" name="from" class="form-control input-sm datepicker" placeholder="Klik og vælg dato" value="{{ from_datetime|date:"d-m-Y" }}">
+                                            <input type="text" name="from" class="form-control input-sm datepicker" placeholder="{% trans 'Klik og vælg dato' %}" value="{{ from_datetime|date:"d-m-Y" }}">
                                         </div>
                                     </div>
                                     <div class="form-group clearfix">
-                                        <label class="col-sm-2 control-label">til:</label>
+                                        <label class="col-sm-2 control-label">{% trans 'Til:' %}</label>
                                         <div class="col-sm-10">
-                                            <input type="text" name="to" class="form-control input-sm datepicker" placeholder="Klik og vælg dato" value="{{ to_datetime|date:"d-m-Y" }}">
+                                            <input type="text" name="to" class="form-control input-sm datepicker" placeholder="{% trans 'Klik og vælg dato' %}" value="{{ to_datetime|date:"d-m-Y" }}">
                                         </div>
                                     </div>
                                 </div>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
                 </form>
             </div>
         </div>
+
         <div id="main" class="col-sm-12 col-md-9">
 
             {% include 'common/breadcrumbrow.html' %}
-            
+
             {% if user.userprofile.can_create %}
-                <a class="pull-right btn btn-primary" href="{% url 'resource-create' %}">+ Opret tilbud</a>
+                <a class="pull-right btn btn-primary" href="{% url 'resource-create' %}?back={{ thisurl | urlencode }}">{% trans '+ Opret tilbud' %}</a>
             {% endif %}
-            
-            <h1>Søgeresultat</h1>
-            <div class="divider"></div>
 
-            {% include 'common/searchform.html' %}
+            <h1>{% trans 'Søgeresultat' %}</h1>
 
             <div class="divider"></div>
-            {% if not results %}
-            <p>Din søgning gav ikke noget resultat.</p>
+
+            {% if request.user.is_authenticated %}
+            {% include 'resource/searchresult-adminform.html' with form=adminform %}
             {% else %}
-            <h2 class="bold">{{ paginator.count }} resultater matcher din søgning på "{{request.GET.q}}"</h2>
+            {% include 'common/searchform.html' %}
+            {% endif %}
+
             <div class="divider"></div>
+
+            {% if not results %}
+                <p>{% trans 'Din søgning gav ikke noget resultat.' %}</p>
+            {% else %}
+            <h2 class="bold">{% blocktrans with count=paginator.count query=request.GET.q %}{{ count }} resultater matcher din søgning på "{{ query }}"{% endblocktrans %}</h2>
+
+            <div class="divider"></div>
+
             <ul class="media-list">
                 {% for res in results %}
                 <li class="media">
                     <div class="media-body">
                         <div class="small">{{ res.get_type_display }}</div>
                         <h3 class="media-heading">
-                            <a href="{% if res.visit  %}{% url 'visit-view' res.visit.pk %}{% else %}{% url 'otherresource-view' res.otherresource.pk %}{% endif %}{% if fullquery %}?search={{ fullquery | urlencode }}{% endif %}">{{ res.title }}</a>
+                            #{{ res.pk }} <a href="{{res.get_view_url}}{% if fullquery %}?search={{ fullquery | urlencode }}{% endif %}">{{ res.title }}</a>
                         </h3>
-                        <p>{% if request.GET.q %}{{ res.teaser|highlight:request.GET.q }}{% else %}{{ res.teaser }}{% endif %} &hellip;</p>
+                        <p>
+                            {% if request.GET.q %}
+                                {{ res.teaser|highlight:request.GET.q }}
+                            {% else %}
+                                {{ res.teaser }}
+                            {% endif %}
+                            &hellip;
+                        </p>
                         <div class="media-info">
                             <ul class="info-list list-inline">
                                 {% if res.all_subjects %}
                                 <li>
-                                    <strong>Fag/niveau: </strong>
+                                    <strong>{% trans 'Fag/niveau:' %}</strong>
                                     <ul class="type-offer list-inline">
                                         {% for x in res.all_subjects %}
-                                        <li>{{ x.display_value }}</li>
+                                            <li>{{ x.display_value }}</li>
                                         {% endfor %}
                                     </ul>
                                 </li>
                                 {% endif %}
-                                <li><strong>Hvornår: </strong><span class="type-offer">{% if res.occ_starttime %}{{ res.occ_starttime|date:"d. m. Y" }}  kl. {{ res.occ_starttime|date:"H:i" }}{% else %}-{% endif %}</span></li>
-                                <li><strong>Hvor: </strong><span class="type-offer">{{ res.display_locality }}</span></li>
+                                {% if res.num_occurences %}
+                                <li>
+                                    <strong>{% trans 'Hvornår:' %}</strong>
+                                    <span class="type-offer">
+                                        {% if res.num_occurences == 1 %}
+                                            {% blocktrans with date=res.first_occurence|date:"d. m. Y" time=res.first_occurence|date:"H:i" %}
+                                            {{ date }} kl. {{ time }}
+                                            {% endblocktrans %}
+                                        {% else %}
+                                            {% blocktrans with count=res.num_occurences date=res.first_occurence|date:"d. m. Y" time=res.first_occurence|date:"H:i" %}
+                                            {{ count }} mulige tidspunkter, første gang {{ date }} kl. {{ time }}
+                                            {% endblocktrans %}
+                                        {% endif %}
+                                    </span>
+                                </li>
+                                {% endif %}
+                                <li>
+                                    <strong>{% trans 'Hvor:' %}</strong>
+                                    <span class="type-offer">{{ res.display_locality }}</span>
+                                </li>
                             </ul>
                         </div>
                     </div>
@@ -153,56 +214,57 @@
             {% endif %}
         </div>
     </div>
+
     <div class="row">
         <div class="col-sm-6 col-md-5 col-sm-offset-1 col-md-offset-3">
             {% if paginator %}
             <nav>
                 <ul class="pagination">
-                
-                {% if page_obj.has_previous %}
-                <li>
-                    <a href="?{{ qstring }}&page={{ page_obj.previous_page_number }}&pagesize={{paginator.per_page}}">
-                    <span>
-                        <span class="glyphicon glyphicon-chevron-left small" aria-hidden="true"></span>
-                        Forrige
-                    </span>
-                    </a>
-                </li>
-                {% else %}
-                <li class="disabled">
-                    <span>
-                        <span class="glyphicon glyphicon-chevron-left small" aria-hidden="true"></span>
-                        Forrige
-                    </span>
-                </li>
-                {% endif %}
-                {% for pnr in paginator.page_range %}
-                    {% if page_obj.number == pnr %}
-                        <li class="active">
-                            <span>{{ pnr }} <span class="sr-only">(aktiv side)</span></span>
-                        </li>
+
+                    {% if page_obj.has_previous %}
+                    <li>
+                        <a href="?{{ qstring }}&page={{ page_obj.previous_page_number }}&pagesize={{paginator.per_page}}">
+                        <span>
+                            <span class="glyphicon glyphicon-chevron-left small" aria-hidden="true"></span>
+                            {% trans 'Forrige' %}
+                        </span>
+                        </a>
+                    </li>
                     {% else %}
-                        <li><a href="?{{ qstring }}&page={{pnr}}&pagesize={{paginator.per_page}}">{{pnr}}</a></li>
+                    <li class="disabled">
+                        <span>
+                            <span class="glyphicon glyphicon-chevron-left small" aria-hidden="true"></span>
+                            {% trans 'Forrige' %}
+                        </span>
+                    </li>
                     {% endif %}
-                {% endfor %}
-                {% if page_obj.has_next %}
-                <li>
-                    <a href="?{{ qstring }}&page={{ page_obj.next_page_number }}&pagesize={{paginator.per_page}}" aria-label="Næste">
-                    <span>
-                        Næste
-                        <span class="glyphicon glyphicon-chevron-right small" aria-hidden="true"></span>
-                    </span>
-                    </a>
-                </li>
-                {% else %}
-                <li class="disabled">
-                    <span>
-                        Næste
-                        <span class="glyphicon glyphicon-chevron-right small" aria-hidden="true"></span>
-                    </span>
-                </li>
-                {% endif %}
-            </ul>
+                    {% for pnr in paginator.page_range %}
+                        {% if page_obj.number == pnr %}
+                            <li class="active">
+                                <span>{{ pnr }} <span class="sr-only">(aktiv side)</span></span>
+                            </li>
+                        {% else %}
+                            <li><a href="?{{ qstring }}&page={{pnr}}&pagesize={{paginator.per_page}}">{{pnr}}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                    {% if page_obj.has_next %}
+                    <li>
+                        <a href="?{{ qstring }}&page={{ page_obj.next_page_number }}&pagesize={{paginator.per_page}}" aria-label="Næste">
+                        <span>
+                            {% trans 'Næste' %}
+                            <span class="glyphicon glyphicon-chevron-right small" aria-hidden="true"></span>
+                        </span>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="disabled">
+                        <span>
+                            {% trans 'Næste' %}
+                            <span class="glyphicon glyphicon-chevron-right small" aria-hidden="true"></span>
+                        </span>
+                    </li>
+                    {% endif %}
+                </ul>
             </nav>
             {% endif %}
         </div>
@@ -212,20 +274,24 @@
                 <div class="input-group-btn">
                     <button type="button" class="btn btn-default">
                         {% if request.GET.pagesize == "all" %}
-                            Vis alle
+                            {% trans 'Vis alle' %}
                         {% else %}
                             {{ paginator.per_page }}
                         {% endif %}
                     </button>
                     <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> <span class="caret"></span> <span class="sr-only">Vis anrtal resultater pr. side</span> </button>
                     <ul class="dropdown-menu">
-                        <li{% if request.GET.pagesize == "all" %} class="selected"{% endif %}><a href="?{{ qstring }}&pagesize=all">Vis alle</a></li>
+                        <li{% if request.GET.pagesize == "all" %} class="selected"{% endif %}>
+                            <a href="?{{ qstring }}&pagesize=all">{% trans 'Vis alle' %}</a>
+                        </li>
                         {% for size in pagesizes %}
-                        <li{% if size == paginator.per_page %} class="selected"{% endif %}><a href="?{{ qstring }}&pagesize={{size}}">{{size}}</a></li>
+                        <li{% if size == paginator.per_page %} class="selected"{% endif %}>
+                            <a href="?{{ qstring }}&pagesize={{size}}">{{size}}</a>
+                        </li>
                         {% endfor %}
                     </ul>
                 </div>
-                <span class="input-group-addon"> pr. side</span>
+                <span class="input-group-addon"> {% trans 'pr. side' %}</span>
             </div>
         </div>
     </div>

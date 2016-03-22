@@ -4,6 +4,7 @@ from django.conf.urls import patterns, url
 from profile.views import ProfileView, CreateUserView, UnitListView
 from profile.views import UserListView
 from profile.views import EmailLoginView
+from profile.views import EditMyResourcesView
 
 urlpatterns = patterns(
 
@@ -35,4 +36,7 @@ urlpatterns = patterns(
         template_name='profile/unit_list.html'
     ), name='unit_list'),
 
+    url(r'^my_resources/?$',
+        EditMyResourcesView.as_view(),
+        name='my-resources'),
 )

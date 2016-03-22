@@ -1,4 +1,5 @@
 {% extends "index.html" %}
+{% load i18n %}
 
 {% block head %}
 <link rel="stylesheet" href="/static/css/personlig-side.css">
@@ -7,175 +8,232 @@
 {% block content %}
 
 <div class="divider"></div>
-    <h1>Velkommen {{user.username}}</h1>
+    <h1>{% trans 'Velkommen' %} {{user.username}}</h1>
     
     <div class="divider"></div>
     
     <div class="row">
         <div class="col-sm-12">
-            <h1>Personlig side</h1>
-            <p><a class="btn btn-primary pull-right" href="/resource/create">+ Opret tilbud</a></p>
-            <p>Du er logget ind som {{user.userprofile.user_role.name}}.</p>
-            <p>Her kan du se en oversigt over dine tilbud, hvilke der er bookede, og hvilke der kræver handling.</p>    
+            <h2>{% trans 'Personlig side' %}</h2>
+            <p>{% trans 'Du er logget ind som' %} {{user.userprofile.user_role.name}}. {% trans 'På denne side kan du se en oversigt over dine tilbud, hvilke der er bookede, og hvilke der kræver handling.' %}</p>
+            <div class="divider"></div>
+        </div>
+        <div class="col-sm-6">
+            <div class="list-group admin-links">
+                {% if request.user.userprofile.can_create %}
+                    <a class="list-group-item" href="{% url 'visit-occ-search' %}"><h4 class="list-group-item-heading">{% trans 'Søg i besøg' %}</h4><p class="list-group-item-text">{% trans 'Søg i besøg der ligger i systemet.' %}</p></a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-sm-6">
+            <div class="text-right">
+                <a href="{% url 'resource-create' %}?back={{ thisurl | urlencode }}" class="btn btn-primary margin-bottom-5">{% trans '+ Opret tilbud' %}</a>                
+                <a href="#adminblock" class="btn btn-primary margin-bottom-5" role="button" data-toggle="collapse" aria-expanded="false" aria-controls="adminblock">{% trans 'Administration' %} <span class="glyphicon glyphicon-cog"></span> </a>
+            </div>
+            <div class="collapse list-group admin-links" id="adminblock">
+                {% if request.user.userprofile.can_create %}
+                    <a class="list-group-item" href="{% url 'user_list' %}">
+                        <h4 class="list-group-item-heading">{% trans 'Administrér brugere' %}</h4>
+                        <p class="list-group-item-text">Opret og redigér brugere af bookingsystemet.</p>
+                    </a>
+                    <a class="list-group-item" href="{% url 'emailtemplate-list' %}">
+                        <h4 class="list-group-item-heading">{% trans 'Administrér emailskabeloner' %}</h4>
+                        <p class="list-group-item-text">Opret og redigér overordnede e-mails.</p>
+                    </a>
+                    <a class="list-group-item" href="{% url 'admin:booking_locality_changelist' %}">
+                        <h4 class="list-group-item-heading">Administrér adresser</h4>
+                        <p class="list-group-item-text">Opret og redigér lokaler, køretøjer og andre ressourcer.</p>
+                    </a>
+                    <a class="list-group-item" href="{% url 'admin:booking_person_changelist' %}">
+                        <h4 class="list-group-item-heading">Administrér kontaktpersoner</h4>
+                        <p class="list-group-item-text">Opret og redigér personer, der kan modtage forespørgsler på tilbud.</p>
+                    </a>
+                    {% if request.user.userprofile.can_edit_units %}
+                    <a class="list-group-item" href="{% url 'admin:booking_unit_changelist' %}">
+                        <h4 class="list-group-item-heading">{% trans 'Administrér enheder' %}</h4>
+                        <p class="list-group-item-text">{% trans 'Tilpas information på fakultet, institut, mv.' %}</p>
+                    </a>
+                    {% endif %}
+                    {% if not "disabled by: not yet implemented" %}
+                    <a class="list-group-item" href="{% url 'user_list' %}">
+                        <h4 class="list-group-item-heading">{% trans 'Statistik' %}</h4>
+                        <p class="list-group-item-text">Her har du adgang til at trække statistik på tilbud og bookings.</p>
+                    </a>
+                    {% endif %}
+                {% endif %}
+            </div>
         </div>
     </div>
-    {% if request.user.userprofile.can_create %}
+
+    {% if not "slået fra indtil videre, genindføres måske i en senere fase" %}
     <div class="divider"></div>
-    <ul>
-        <li><a href="{% url 'booking-search' %}">Søg i bookinger</a></li>
-        <li><a href="{% url 'user_list' %}">Administrér brugere</a></li>
-    </ul>
-    {% endif %}
-    <div class="divider"></div>
-    <div id="personalPage" class="row eq-height">
-            <div class="col-sm-4">
-                <div class="panel panel-bookings">
-                    <div class="panel-heading alert-info">
-                        <h3 class="panel-title">Mine tilbud</h3><span class="badge badge-primary pull-right">3</span>
-                    </div>
+    <h2>{% trans 'Søg i tilbud og bookings' %}</h2>
+    <div class="row">
+        <div class="col-sm-12">
+            <div id="filter-panel" class="filter-panel">
+                <div class="panel panel-default search-offers">
                     <div class="panel-body">
-                        <div class="list-group">
-                            <a href="#" class="list-group-item">
-                                <h2 class="list-group-item-heading">Dansk - kan du sætte kommaer?</h2>
-                                <p class="list-group-item-text">
-                                    <ul>
-                                        <li>Arrangør: Peter Jensen</li>
-                                        <li>Type: Besøg med klassen</li>
-                                    </ul>
-                                </p>
-                            </a>
-                            <a href="#" class="list-group-item">
-                                <h2 class="list-group-item-heading">Magnetisme og elektroner</h2>
-                                <p class="list-group-item-text">
-                                    <ul>
-                                        <li>Arrangør: Ole Jensen</li>
-                                        <li>Type: Besøg med klassen</li>
-                                    </ul>
-                                </p>
-                            </a>
-                            <a href="#" class="list-group-item">
-                                <h2 class="list-group-item-heading">Hvem var Niels Bohr?</h2>
-                                <p class="list-group-item-text">
-                                    <ul>
-                                        <li>Arrangør: Ole Jensen</li>
-                                        <li>Opgavehjælp</li>
-                                    </ul>
-                                </p>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-4">
-                <div class="panel panel-bookings">
-                    <div class="panel-heading alert-danger">
-                        <h3 class="panel-title">Nye/opdaterede bookings som kræver din handling</h3><span class="badge badge-danger pull-right">3</span>
-                    </div>
-                    <div class="panel-body">
-                        <a href="#" class="list-group-item">
-                            <h2 class="list-group-item-heading">Magnetisme og elektroner</h2>
-                            <p class="list-group-item-text">
-                                <ul>
-                                    <li>Arrangør: Ole Jensen</li>
-                                    <li>Type: Besøg med klassen</li>
-                                </ul>
-                            </p>
-                        </a>
-                        <a href="#" class="list-group-item">
-                            <h2 class="list-group-item-heading">Biologi</h2>
-                            <p class="list-group-item-text">
-                                <ul>
-                                    <li>Arrangør: Ole Jensen</li>
-                                    <li>Type: Studerende for en dag</li>
-                                </ul>
-                            </p>
-                        </a>
-                        <a href="#" class="list-group-item">
-                            <h2 class="list-group-item-heading">Atomer og molekyler</h2>
-                            <p class="list-group-item-text">
-                                <ul>
-                                    <li>Arrangør: John Jensen</li>
-                                    <li>Type: Besøg med klassen</li>
-                                </ul>
-                            </p>
-                        </a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-4">
-                <div class="panel panel-bookings">
-                    <div class="panel-heading alert-success">
-                        <h3 class="panel-title">Bekræftede bookings</h3><span class="badge badge-success pull-right">5</span>
-                    </div>
-                    <div class="panel-body">
-                        <a href="#" class="list-group-item">
-                            <h2 class="list-group-item-heading">Hvad kan vi lære af stjerner og rumfart?</h2>
-                            <p class="list-group-item-text">
-                                <ul>
-                                    <li>Arrangør: Ole Jensen</li>
-                                    <li>Type: Åbent hus</li>
-                                </ul>
-                            </p>
-                        </a>
-                        <a href="#" class="list-group-item">
-                            <h2 class="list-group-item-heading">Magnetisme og elektroner</h2>
-                            <p class="list-group-item-text">
-                                <ul>
-                                    <li>Arrangør: Ole Jensen</li>
-                                    <li>Type: Åbent hus</li>
-                                </ul>
-                            </p>
-                        </a>
-                        <a href="#" class="list-group-item">
-                            <h2 class="list-group-item-heading">Kina som sproglig og historisk stormagt</h2>
-                            <p class="list-group-item-text">
-                                <ul>
-                                    <li>Arrangør: Ole Jensen</li>
-                                    <li>Type: Foredrag</li>
-                                </ul>
-                            </p>
-                        </a>
-                        <a data-toggle="modal" data-target=".deleteBooking" href="#" class="list-group-item outdated-item">
-                        <div title="Klik for at fjerne denne booking" class="outdated">Udløbet <span class="glyphicon glyphicon-trash"></div>
-                            <h2 class="list-group-item-heading">Magnetisme og elektroner</h2>
-                            <p class="list-group-item-text">
-                                <ul>
-                                    <li>Arrangør: Ole Jensen</li>
-                                    <li>Type: Besøg med klassen</li>
-                                </ul>
-                            </p>
-                        </a>
-                        <a data-toggle="modal" data-target=".deleteBooking" href="#" class="list-group-item outdated-item">
-                            <div title="Klik for at fjerne denne booking" class="outdated">Udløbet <span class="glyphicon glyphicon-trash"></span></div>
-                            <h2 class="list-group-item-heading">Magnetisme og elektroner</h2>
-                            <p class="list-group-item-text">
-                                <ul>
-                                    <li>Arrangør: Ole Jensen</li>
-                                    <li>Type: Besøg med klassen</li>
-                                </ul>
-                            </p>
-                        </a>
+                        <form class="form-inline" role="form">
+                            <div class="input-group">
+                                <label class="control-label" for="pref-search">Fritekstsøgning fx. ID-nummer, skole, navn:</label>
+                                <input type="text" class="form-control input-sm" id="pref-search" placeholder="Indtast søgeord eller ID-nummer...">
+                                <span class="input-group-btn">
+                                    <button class="btn btn-default btn-sm" type="button">Søg</button>
+                                </span>
+                            </div>
+                            <div class="input-group">
+                                <label class="control-label" for="pref-filters">Vælg søgefilter:</label>
+                                <select id="pref-filters" class="form-control input-sm">
+                                    <option value="2">------------</option>
+                                    <option value="2">Dagens tilbud</option>
+                                    <option value="2">7 dage frem</option>
+                                    <option value="2">Mine tilbud</option>
+                                    <option value="2">Mine 10 senest oprettede tilbud</option>
+                                    <option value="2">Enhedens tilbud</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label class="control-label" for="pref-orderby">Filtrér på status:</label>
+                                <select id="pref-orderby" class="form-control input-sm">
+                                    <option value="">------------</option>
+                                    <option value="2">Publicerede</option>
+                                    <option value="2">Ikke publicerede</option>
+                                    <option value="2">Kladder</option>
+                                    <option value="2">Afventer</option>
+                                    <option value="2">Planlagte</option>
+                                    <option value="2">Afviklede</option>
+                                    <option value="2">Aflyst</option>
+                                </select>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
+    {% endif %}
+
+    <div class="divider"></div>
+    <div id="personalPage" class="row eq-height">
+        <div class="col-sm-4">
+            <div class="panel panel-bookings">
+                <div class="panel-heading alert-info">
+                    <h3 class="panel-title">
+                        <a href="{% url 'my-resources' %}">{% trans 'Mine tilbud' %}</a>
+                    </h3>
+                    <span class="badge badge-primary pull-right">{{ request.user.userprofile.my_resources.all|length }}</span>
+                </div>
+                <div class="panel-body">
+                    <div class="list-group">
+                        {% for res in request.user.userprofile.my_resources.all %}
+                        <div class="list-group-item clearfix">
+                            <a href="{% url 'resource-view' res.pk %}" title="Se tilbuddets detaljer og evt. bookings">
+                                <h2 class="list-group-item-heading">{{ res.title }}</h2>
+                                <div class="list-group-item-text">
+                                    <ul>
+                                        <li>#{{res.pk}}</li>
+                                        <li>Type: {{ res.get_type_display }}</li>
+                                        {% if res.get_occurrences|length %}
+                                        <li>
+                                            Dato/tid:
+                                            <span class="type-offer">
+                                                {% if res.get_occurrences|length == 1 %}
+                                                    {{ res.first_occurence.start_datetime|date:"d. m. Y" }} kl. {{ res.first_occurence.start_datetime|date:"H:i" }}
+                                                {% else %}
+                                                    {{ res.get_occurrences|length }} mulige tidspunkter, første gang {{ res.first_occurence.start_datetime|date:"d. m. Y" }} kl. {{ res.first_occurence.start_datetime|date:"H:i" }}
+                                                {% endif %}
+                                            </span>
+                                        </li>
+                                        {% endif %}
+                                        <li>Hvor: {{ res.display_locality }}</li>
+                                    </ul>
+                                </div>
+                            </a>
+                            <div class="tools">
+                                <span class="edit-tools pull-left">
+                                    <a href="{% url 'resource-edit' res.pk %}">Rediger</a> |
+                                    <a href="{% url 'resource-clone' res.pk %}">kopiér</a>
+                                </span>
+                                <span class="label label-{{ res.get_state_class }} pull-right">{{ res.get_state_display }}</span></div>
+                        </div>
+                        {% endfor %}
+                        <a href="{% url 'my-resources'%}"><span class="label label-primary pull-right">Redigér mine tilbud</span></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-4">
+            <div class="panel panel-bookings">
+                <div class="panel-heading alert-danger">
+                    <h3 class="panel-title">{{ col2_title }}</h3><span class="badge badge-danger pull-right">{{col2_queryset|length}}</span>
+                </div>
+                <div class="panel-body">
+                    {% for event in col2_queryset %}
+                    <div class="list-group-item clearfix">
+                        <a href="{% url 'visit-occ-view' event.pk %}" title="Se besøgets detaljer">
+                            <h2 class="list-group-item-heading">{{ event.visit.title }}</h2>
+                            <div class="list-group-item-text">
+                                <ul>
+                                    <li>#{{ event.pk }}</li>
+                                    <li>Dato/tid: {{ event.start_datetime|date:"d. m. Y" }} kl. {{ event.start_datetime|date:"H:i" }}</li>
+                                    <li>Antal tilmeldte: {{ event.nr_bookers }}</li>
+                                </ul>
+                            </div>
+                        </a>
+                        <div class="tools">
+                            <span class="label label-{{ event.get_workflow_status_class }} pull-right">{{ event.get_workflow_status_display }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+                    <div class="col-sm-4">
+            <div class="panel panel-bookings">
+                <div class="panel-heading alert-success">
+                    <h3 class="panel-title">{{ col3_title }}</h3><span class="badge badge-success pull-right">{{ col3_queryset|length }}</span>
+                </div>
+                <div class="panel-body">
+                    {% for event in col3_queryset %}
+                    <div class="list-group-item clearfix">
+                        <a href="{% url 'visit-occ-view' event.pk %}" title="Se besøgets detaljer">
+                            <h2 class="list-group-item-heading">{{ event.visit.title }}</h2>
+                            <div class="list-group-item-text">
+                                <ul>
+                                    <li>#{{ event.pk }}</li>
+                                    <li>Dato/tid: {{ event.start_datetime|date:"d. m. Y" }} kl. {{ event.start_datetime|date:"H:i" }}</li>
+                                    <li>Antal tilmeldte: {{ event.nr_bookers }}</li>
+                                </ul>
+                            </div>
+                        </a>
+                        <div class="tools">
+                            <span class="label label-{{ event.get_workflow_status_class }} pull-right">{{ event.get_workflow_status_display }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Modal delete booking -->
     <div class="modal fade deleteBooking" tabindex="-1" role="dialog" aria-labelledby="SletBooking">
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-            <h4 class="modal-title" id="SletBooking">Er du sikker?</h4>
+            <h4 class="modal-title" id="SletBooking">{% trans 'Er du sikker?' %}</h4>
           </div>
           <div class="modal-body">
-           <p>Du er ved at slette bookingen "Magnetisme og elektroner". Hvis du vil fortsætte og slette denne booking, klik på knappen "Slet denne booking".</p>
+           <p>{% trans 'Du er ved at slette bookingen "Magnetisme og elektroner". Hvis du vil fortsætte og slette denne booking, klik på knappen "Slet denne booking".' %}</p>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-default" data-dismiss="modal">Anullér</button>
-            <button type="button" class="btn btn-primary">Slet denne booking</button>
+            <button type="button" class="btn btn-primary">{% trans 'Slet denne booking' %}</button>
           </div>
         </div>
       </div>
     </div>
     <!-- Modal delete booking end -->
+    
 {% endblock %}
