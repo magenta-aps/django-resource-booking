@@ -453,6 +453,18 @@ class BookingForm(forms.ModelForm):
 
     scheduled = False
 
+    class Meta:
+        model = Booking
+        fields = ()
+        labels = {
+            'visitoccurrence': _(u"Tidspunkt")
+        },
+        widgets = {
+            'notes': Textarea(attrs={
+                'class': 'form-control'
+            })
+        }
+
     def __init__(self, data=None, visit=None, *args, **kwargs):
         super(BookingForm, self).__init__(data, *args, **kwargs)
 
@@ -463,6 +475,8 @@ class BookingForm(forms.ModelForm):
             visit is not None and
             len(visit.bookable_occurrences) > 0
         )
+        print visit
+        print len(visit.bookable_occurrences)
 
         if self.scheduled:
             self.fields['visitoccurrence'].choices = (
@@ -473,7 +487,7 @@ class BookingForm(forms.ModelForm):
             self.fields['visitoccurrence'].required = True
 
 
-class BookerForm(BookingForm):
+class BookerForm(forms.ModelForm):
 
     class Meta:
         model = Booker
@@ -619,14 +633,8 @@ class ClassBookingForm(BookingForm):
     class Meta:
         model = ClassBooking
         fields = ('tour_desired', 'visitoccurrence', 'notes')
-        labels = {
-            'visitoccurrence': _(u"Tidspunkt")
-        },
-        widgets = {
-            'notes': Textarea(attrs={
-                'class': 'form-control'
-            })
-        }
+        labels = BookingForm.Meta.labels
+        widgets = BookingForm.Meta.widgets
 
     desired_time = forms.CharField(
         widget=Textarea(attrs={'class': 'form-control input-sm'}),
@@ -634,7 +642,7 @@ class ClassBookingForm(BookingForm):
     )
 
     def __init__(self, data=None, visit=None, *args, **kwargs):
-        super(ClassBookingForm, self).__init__(data, *args, **kwargs)
+        super(ClassBookingForm, self).__init__(data, visit, *args, **kwargs)
 
         if not self.scheduled:
             self.fields['desired_time'].required = True
@@ -658,28 +666,16 @@ class TeacherBookingForm(BookingForm):
     class Meta:
         model = TeacherBooking
         fields = ('subjects', 'notes', 'visitoccurrence')
-        widgets = {
-            'notes': Textarea(attrs={
-                'class': 'form-control'
-            })
-        }
-        labels = {
-            'visitoccurrence': _(u"Tidspunkt")
-        }
+        labels = BookingForm.Meta.labels
+        widgets = BookingForm.Meta.widgets
 
 
 class StudentForADayBookingForm(BookingForm):
     class Meta:
         model = Booking
         fields = ('notes', 'visitoccurrence')
-        widgets = {
-            'notes': Textarea(attrs={
-                'class': 'form-control'
-            })
-        }
-        labels = {
-            'visitoccurrence': _(u"Tidspunkt")
-        }
+        labels = BookingForm.Meta.labels
+        widgets = BookingForm.Meta.widgets
 
 
 BookingSubjectLevelForm = \
