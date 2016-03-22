@@ -1,6 +1,6 @@
 # encoding: utf-8
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.mail.message import EmailMessage
+from django.core.mail import EmailMultiAlternatives
 from django.db import models
 from django.db.models import Sum
 from django.db.models import Q
@@ -16,7 +16,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.template.base import Template, VariableNode
 
 from recurrence.fields import RecurrenceField
-from booking.utils import ClassProperty, full_email, CustomStorage
+from booking.utils import ClassProperty, full_email, CustomStorage, html2text
 from resource_booking import settings
 
 import datetime
@@ -1367,9 +1367,10 @@ class Visit(Resource):
             bookable=bookable,
             **kwargs
         )
+        occ.save()
+        occ.create_inheriting_autosends()
 
         if self.default_hosts.exists() or self.default_teachers.exists():
-            occ.save()
 
             for x in self.default_hosts.all():
                 occ.hosts.add(x)
@@ -1800,20 +1801,35 @@ class VisitOccurrence(models.Model):
             recipients.extend(self.teachers.all())
         return recipients
 
+    def create_inheriting_autosends(self):
+        for visitautosend in self.visit.visitautosend_set.all():
+            if not self.get_autosend(visitautosend.template_key, False, False):
+                occurrenceautosend = VisitOccurrenceAutosend(
+                    visitoccurrence=self,
+                    inherit=True,
+                    template_key=visitautosend.template_key,
+                    days=visitautosend.days,
+                    enabled=visitautosend.enabled
+                )
+                occurrenceautosend.save()
+
     def autosend_inherits(self, template_key):
         s = self.visitoccurrenceautosend_set.\
             filter(template_key=template_key, inherit=True).\
             count() > 0
         return s
 
-    def get_autosend(self, template_key, follow_inherit=True):
+    def get_autosend(self, template_key, follow_inherit=True,
+                     include_disabled=False):
         if follow_inherit and self.autosend_inherits(template_key):
             return self.visit.get_autosend(template_key)
         else:
             try:
-                item = self.visitoccurrenceautosend_set.filter(
-                    template_key=template_key, enabled=True)[0]
-                return item
+                query = self.visitoccurrenceautosend_set.filter(
+                    template_key=template_key)
+                if not include_disabled:
+                    query = query.filter(enabled=True)
+                return query[0]
             except:
                 return None
 
@@ -2492,13 +2508,22 @@ class KUEmailMessage(models.Model):
             }
             ctx.update(context)
             subject = template.expand_subject(ctx)
-            body = template.expand_body(ctx, encapsulate=True)
 
-            message = EmailMessage(
+            body = template.expand_body(ctx, encapsulate=True).strip()
+            if body.startswith("<!DOCTYPE"):
+                htmlbody = body
+                textbody = html2text(htmlbody)
+            else:
+                htmlbody = None
+                textbody = body
+
+            message = EmailMultiAlternatives(
                 subject=subject,
-                body=body,
+                body=textbody,
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 to=[email['full']]
             )
+            if htmlbody is not None:
+                message.attach_alternative(htmlbody, 'text/html')
             message.send()
             KUEmailMessage.save_email(message)
