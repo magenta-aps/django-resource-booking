@@ -9,6 +9,22 @@
         var currentDatesEl = $("#existing-recurrence-dates");
         var currentDates = [];
         
+        // Push exsisting dates written out in html into currentDates for processing
+        currentDatesEl.find('li').each(function() {
+            var dateparts = $(this).attr('data-date').split(/[^0-9]/i);
+            var d = new Date();
+            d.setDate(dateparts[0]);
+            d.setMonth(dateparts[1] - 1);
+            d.setFullYear(dateparts[2]);
+            d.setHours(dateparts[3]);
+            d.setMinutes(dateparts[4]);
+            currentDates.push({
+                date: d,
+                istimeset: true
+            });
+        });
+        
+        
         function getFormattedPartTime(partTime){
             if ( partTime < 10 )
                return "0" + partTime;

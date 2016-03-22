@@ -116,6 +116,7 @@ urlpatterns = patterns(
     url(r'^booking/(?P<pk>[0-9]+)/?$',
         BookingDetailView.as_view(),
         name='booking-view'),
+
     url(r'^visit/occurrence/(?P<pk>[0-9]+)/change_status/?$',
         ChangeVisitOccurrenceStatusView.as_view(),
         name='change-visit-occ-status'),

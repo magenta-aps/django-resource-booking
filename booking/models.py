@@ -8,6 +8,7 @@ from django.template.context import make_context
 from django.utils import timezone
 from djorm_pgfulltext.models import SearchManager
 from djorm_pgfulltext.fields import VectorField
+from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
 from django.contrib.auth.models import User
@@ -26,7 +27,7 @@ LOGACTION_CHANGE = CHANGE
 LOGACTION_DELETE = DELETION
 # If we need to add additional values make sure they do not conflict with
 # system defined ones by adding 128 to the value.
-LOGACTION_CUSTOM1 = 128 + 1
+LOGACTION_MAIL_SENT = 128 + 1
 LOGACTION_CUSTOM2 = 128 + 2
 LOGACTION_MANUAL_ENTRY = 128 + 64 + 1
 
@@ -34,6 +35,7 @@ LOGACTION_DISPLAY_MAP = {
     LOGACTION_CREATE: _(u'Oprettet'),
     LOGACTION_CHANGE: _(u'Ændret'),
     LOGACTION_DELETE: _(u'Slettet'),
+    LOGACTION_MAIL_SENT: _(u'Mail sendt'),
     LOGACTION_MANUAL_ENTRY: _(u'Log-post tilføjet manuelt')
 }
 
@@ -2331,7 +2333,7 @@ class Booking(models.Model):
     def get_recipients(self, template_key):
         recipients = self.visitoccurrence.get_recipients(template_key)
         if template_key in EmailTemplate.booker_keys:
-            recipients.add(self.booker)
+            recipients.append(self.booker)
         return recipients
 
     def autosend(self, template_key, recipients=None,
@@ -2445,19 +2447,33 @@ class KUEmailMessage(models.Model):
         blank=False,
         null=False
     )
+    content_type = models.ForeignKey(ContentType, null=True, default=None)
+    object_id = models.PositiveIntegerField(null=True, default=None)
+    content_object = GenericForeignKey('content_type', 'object_id')
 
     @staticmethod
-    def save_email(email_message):
+    def save_email(email_message, instance):
+        """
+        :param email_message: An instance of
+        django.core.mail.message.EmailMessage
+        :param instance: The object that the message concerns i.e. Booking,
+        Visit etc.
+        :return: None
+        """
+        ctype = ContentType.objects.get_for_model(instance)
         ku_email_message = KUEmailMessage(
             subject=email_message.subject,
             body=email_message.body,
             from_email=email_message.from_email,
-            recipients=', '.join(email_message.recipients())
+            recipients=', '.join(email_message.recipients()),
+            content_type=ctype,
+            object_id=instance.id
         )
         ku_email_message.save()
 
     @staticmethod
-    def send_email(template, context, recipients, unit=None, **kwargs):
+    def send_email(template, context, recipients, unit=None,
+                   **kwargs):
         if isinstance(template, int):
             template_key = template
             template = EmailTemplate.get_template(template_key, unit)
@@ -2526,4 +2542,5 @@ class KUEmailMessage(models.Model):
             if htmlbody is not None:
                 message.attach_alternative(htmlbody, 'text/html')
             message.send()
+
             KUEmailMessage.save_email(message)

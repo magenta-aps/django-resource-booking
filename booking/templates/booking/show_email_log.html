@@ -1,0 +1,22 @@
+{% extends "index.html" %}
+{% load staticfiles %}
+{% load booking_tags %}
+{% load i18n %}
+
+{% block htmltitle %} - vis email log{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div id="main" class="col-sm-12 col-md-12">
+
+            {% include 'common/breadcrumbrow.html' %}
+
+            <h1>Emails vedrørende denne booking:</h1>
+            <ul>
+                {% for item in queryset %}
+                    <li>{{ item.action_time|date:'d-m-Y H:i:s'}}: {{ item.change_message }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+{% endblock %}
