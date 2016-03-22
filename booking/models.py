@@ -1367,9 +1367,10 @@ class Visit(Resource):
             bookable=bookable,
             **kwargs
         )
+        occ.save()
+        occ.create_inheriting_autosends()
 
         if self.default_hosts.exists() or self.default_teachers.exists():
-            occ.save()
 
             for x in self.default_hosts.all():
                 occ.hosts.add(x)
@@ -1800,20 +1801,36 @@ class VisitOccurrence(models.Model):
             recipients.extend(self.teachers.all())
         return recipients
 
+    def create_inheriting_autosends(self):
+        for visitautosend in self.visit.visitautosend_set.all():
+            if not self.get_autosend(visitautosend.template_key, False, False):
+                occurrenceautosend = VisitOccurrenceAutosend(
+                    visitoccurrence=self,
+                    inherit=True,
+                    template_key=visitautosend.template_key,
+                    days=visitautosend.days,
+                    enabled=visitautosend.enabled
+                )
+                occurrenceautosend.save()
+
+
     def autosend_inherits(self, template_key):
         s = self.visitoccurrenceautosend_set.\
             filter(template_key=template_key, inherit=True).\
             count() > 0
         return s
 
-    def get_autosend(self, template_key, follow_inherit=True):
+    def get_autosend(self, template_key, follow_inherit=True,
+                     include_disabled=False):
         if follow_inherit and self.autosend_inherits(template_key):
             return self.visit.get_autosend(template_key)
         else:
             try:
-                item = self.visitoccurrenceautosend_set.filter(
-                    template_key=template_key, enabled=True)[0]
-                return item
+                query = self.visitoccurrenceautosend_set.filter(
+                    template_key=template_key)
+                if not include_disabled:
+                    query = query.filter(enabled=True)
+                return query[0]
             except:
                 return None
 
