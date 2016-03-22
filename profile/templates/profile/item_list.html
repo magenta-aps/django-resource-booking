@@ -1,0 +1,85 @@
+{% load i18n %}
+<div class="col-sm-4">
+    <div class="panel panel-bookings">
+        <div class="panel-heading {{ list.color }}">
+            <h3 class="panel-title">
+                {% if list.title.link %}
+                    <a href="{{ list.title.link }}">{{ list.title.text }}</a>
+                {% else %}
+                    {{ list.title }}
+                {% endif %}
+            </h3>
+            <span class="badge badge-danger pull-right">{{ list.queryset|length }}</span>
+        </div>
+        <div class="panel-body">
+
+            {% if list.type == 'VisitOccurrence' %}
+                {% for occurrence in list.queryset %}
+                    <div class="list-group-item clearfix">
+                        <a href="{% url 'visit-occ-view' occurrence.pk %}" title="{% trans 'Se arrangementets detaljer' %}">
+                            <h2 class="list-group-item-heading">{{ occurrence.visit.title }}</h2>
+                            <div class="list-group-item-text">
+                                <ul>
+                                    <li>#{{ occurrence.pk }}</li>
+                                    <li>
+                                        {% blocktrans with date=occurrence.start_datetime|date:"d. m. Y" time=occurrence.start_datetime|date:"H:i" %}Dato/tid: {{ date }} kl. {{ time }}{% endblocktrans %}
+                                    </li>
+                                    <li>{% trans 'Antal tilmeldte:' %} {{ occurrence.nr_bookers }}</li>
+                                </ul>
+                            </div>
+                        </a>
+                        <div class="tools">
+                            <span class="label label-{{ occurrence.get_workflow_status_class }} pull-right">{{ occurrence.get_workflow_status_display }}</span>
+                        </div>
+                    </div>
+                {% endfor %}
+
+            {% elif list.type == 'Resource' %}
+                {% for res in list.queryset %}
+                    <div class="list-group-item clearfix">
+                        <a href="{% url 'resource-view' res.pk %}" title="{% trans 'Se tilbuddets detaljer og evt. bookings' %}">
+                            <h2 class="list-group-item-heading">{{ res.title }}</h2>
+                            <div class="list-group-item-text">
+                                <ul>
+                                    <li>#{{res.pk}}</li>
+                                    <li>{% trans 'Type:' %} {{ res.get_type_display }}</li>
+                                    {% if res.get_occurrences|length %}
+                                        <li>
+                                            {% trans 'Dato/tid:' %}
+                                            <span class="type-offer">
+                                                {% if res.get_occurrences|length == 1 %}
+                                                    {{ res.first_occurence.start_datetime|date:"d. m. Y" }}
+                                                    {% blocktrans with time=res.first_occurence.start_datetime|date:"H:i" %}kl. {{ time }}{% endblocktrans %}
+                                                {% else %}
+                                                    {% blocktrans with count=res.get_occurrences|length date=res.first_occurence.start_datetime|date:"d. m. Y" time=res.first_occurence.start_datetime|date:"H:i" %}
+                                                        {{ count }} mulige tidspunkter, første gang {{ date }} kl. {{ time }}
+                                                    {% endblocktrans %}
+                                                {% endif %}
+                                            </span>
+                                        </li>
+                                    {% endif %}
+                                    <li>{% trans 'Hvor:' %} {{ res.display_locality }}</li>
+                                    <li>{% trans 'Oprettet: ' %} {{ res.statistics.created_time }}</li>
+                                    <li>{% trans 'Opdateret: ' %} {{ res.statistics.updated_time }}</li>
+                                </ul>
+                            </div>
+                        </a>
+                        <div class="tools">
+                                <span class="edit-tools pull-left">
+                                    <a href="{% url 'resource-edit' res.pk %}">{% trans 'Rediger' %}</a> |
+                                    <a href="{% url 'resource-clone' res.pk %}">{% trans 'Kopiér' %}</a>
+                                </span>
+                            <span class="label label-{{ res.get_state_class }} pull-right">{{ res.get_state_display }}</span>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            {% if list.button %}
+                <a href="{{ list.button.link }}">
+                    <span class="label label-primary pull-right">{{ list.button.text }}</span>
+                </a>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
