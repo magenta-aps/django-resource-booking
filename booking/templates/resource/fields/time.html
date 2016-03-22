@@ -57,6 +57,36 @@
                 </div>
                 <div class="modal-body">
                     
+                    <div id="rruleInput">
+                        <div class="form-group">
+                            <h5>Gentages ugentligt</h5>
+                        </div>
+                        <div class="form-group">
+                            <div class="checkbox" id="input-weekdays">
+                                <strong>Gentag på:</strong>
+                                <label><input id="input-weekdays-mon" type="checkbox" name="RRule.MO"> Mandage</label>
+                                <label><input id="input-weekdays-tue" type="checkbox" name="RRule.TU"> Tirsdage</label>
+                                <label><input id="input-weekdays-wed" type="checkbox" name="RRule.WE"> Onsdage</label>
+                                <label><input id="input-weekdays-thu" type="checkbox" name="RRule.TH"> Torsdage</label>
+                                <label><input id="input-weekdays-fri" type="checkbox" name="RRule.FR"> Fredage</label>
+                                <label><input id="input-weekdays-sat" type="checkbox" name="RRule.SA"> Lørdage</label>
+                                <label><input id="input-weekdays-sun" type="checkbox" name="RRule.SU"> Søndage</label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <strong>Slutter:</strong>
+                            <label for="input-until">På dato</label>
+                            <input id="input-until" name="until" type="text" class="form-control">
+                            <label for="input-count">Efter <input id="input-count" name="count" type="text" class="form-control"> forekomster</label>
+                        </div>
+                    </div>
+                    <div id="rruleOutput">
+                        <p id="rrule-text"></p>
+                        <ul class="rrule-datelist list-unstyled">
+                        </ul>
+                    </div>
+                    
+                    <!--
                         <div id="input">
                             <h2>Input</h2>
                             <div id="tabs"></div>
@@ -387,6 +417,7 @@
                             <h5>Datoer</h5>
                             <div id="dates"></div>
                         </section>
+                    -->
                     
                 </div>
                 <div class="modal-footer">
