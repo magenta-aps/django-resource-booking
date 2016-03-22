@@ -1472,7 +1472,7 @@ class Visit(Resource):
 
     @property
     def duration_as_timedelta(self):
-        if self.duration is not None:
+        if self.duration is not None and ':' in self.duration:
             (hours, minutes) = self.duration.split(":")
             return timedelta(
                 hours=int(hours),
@@ -1501,7 +1501,9 @@ class Visit(Resource):
         ).select_related('visitoccurrence__visit')
         visits = set()
         for booking in bookings:
-            visits.add(booking.visitoccurrence.visit)
+            if booking.visitoccurrence is not None and \
+                    booking.visitoccurrence.visit is not None:
+                visits.add(booking.visitoccurrence.visit)
         return list(visits)
 
 
