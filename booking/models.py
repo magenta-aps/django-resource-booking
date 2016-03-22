@@ -1495,18 +1495,6 @@ class Visit(Resource):
             visits.add(booking.visitoccurrence.visit)
         return list(visits)
 
-        #return Visit.objects.filter(
-        #    visitoccurrence__booking__isnull=False
-        #).order_by(
-        #    '-bookings__statistics__created_time'
-        #)
-
-    # @staticmethod
-    # def get_most_booked():
-    #     return Visit.objects.annotate(
-    #         num_bookings=Count('visitoccurrence__bookings')
-    #     ).order_by('-num_bookings').first()
-
 
 class VisitOccurrence(models.Model):
 
