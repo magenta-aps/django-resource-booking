@@ -1487,9 +1487,11 @@ class Visit(Resource):
 
     @staticmethod
     def get_latest_booked():
-        latestoccurrence = VisitOccurrence.get_latest_booked()
-        if latestoccurrence is not None:
-            return latestoccurrence.visit
+        return Visit.objects.filter(
+            visitoccurrence_set__bookings__isnull=False
+        ).order_by(
+            '-bookings__statistics__created_time'
+        )
 
     # @staticmethod
     # def get_most_booked():
@@ -1979,11 +1981,13 @@ class VisitOccurrence(models.Model):
         return VisitOccurrence.objects.\
             order_by('-statistics__visited_time')
 
-    # @staticmethod
-    # def get_latest_booked():
-    #    latestbooking = Booking.get_latest_created()
-    #    if latestbooking is not None:
-    #        return latestbooking.visitoccurrence
+    @staticmethod
+    def get_latest_booked():
+        return VisitOccurrence.objects.filter(
+            bookings__isnull=False
+        ).order_by(
+            '-bookings__statistics__created_time'
+        )
 
     @staticmethod
     def get_todays_occurrences():
