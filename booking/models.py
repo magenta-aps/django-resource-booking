@@ -2492,8 +2492,14 @@ class KUEmailMessage(models.Model):
             }
             ctx.update(context)
             subject = template.expand_subject(ctx)
-            htmlbody = template.expand_body(ctx, encapsulate=True)
-            textbody = html2text(htmlbody)
+
+            body = template.expand_body(ctx, encapsulate=True).trim()
+            if body.startswith("<!DOCTYPE"):
+                htmlbody = body
+                textbody = html2text(htmlbody)
+            else:
+                htmlbody = None
+                textbody = body
 
             message = EmailMultiAlternatives(
                 subject=subject,
@@ -2501,6 +2507,7 @@ class KUEmailMessage(models.Model):
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 to=[email['full']]
             )
-            message.attach_alternative(htmlbody, 'text/html')
+            if htmlbody is not None:
+                message.attach_alternative(htmlbody, 'text/html')
             message.send()
             KUEmailMessage.save_email(message)
