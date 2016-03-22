@@ -2493,7 +2493,7 @@ class KUEmailMessage(models.Model):
             ctx.update(context)
             subject = template.expand_subject(ctx)
 
-            body = template.expand_body(ctx, encapsulate=True).trim()
+            body = template.expand_body(ctx, encapsulate=True).strip()
             if body.startswith("<!DOCTYPE"):
                 htmlbody = body
                 textbody = html2text(htmlbody)
