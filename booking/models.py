@@ -1984,9 +1984,10 @@ class VisitOccurrence(models.Model):
         return ', '.join([autosend.get_name() for autosend in autosends])
 
     def update_endtime(self):
-        if self.start_datetime is not None and self.visit.duration is not None:
-            self.end_datetime = self.start_datetime + \
-                self.visit.duration_as_timedelta
+        if self.start_datetime is not None:
+            duration = self.visit.duration_as_timedelta
+            if duration is not None:
+                self.end_datetime = self.start_datetime + duration
 
     @staticmethod
     def get_latest_created():
