@@ -2333,7 +2333,7 @@ class Booking(models.Model):
     def get_recipients(self, template_key):
         recipients = self.visitoccurrence.get_recipients(template_key)
         if template_key in EmailTemplate.booker_keys:
-            recipients.add(self.booker)
+            recipients.append(self.booker)
         return recipients
 
     def autosend(self, template_key, recipients=None,
