@@ -658,22 +658,28 @@ class ClassBookingForm(BookingForm):
 class TeacherBookingForm(BookingForm):
     class Meta:
         model = TeacherBooking
-        fields = ('subjects', 'notes',)
+        fields = ('subjects', 'notes', 'visitoccurrence')
         widgets = {
             'notes': Textarea(attrs={
                 'class': 'form-control'
             })
+        }
+        labels = {
+            'visitoccurrence': _(u"Tidspunkt")
         }
 
 
 class StudentForADayBookingForm(BookingForm):
     class Meta:
         model = Booking
-        fields = ('notes',)
+        fields = ('notes', 'visitoccurrence')
         widgets = {
             'notes': Textarea(attrs={
                 'class': 'form-control'
             })
+        }
+        labels = {
+            'visitoccurrence': _(u"Tidspunkt")
         }
 
 
