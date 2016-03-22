@@ -1,7 +1,6 @@
 # encoding: utf-8
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMultiAlternatives
-from django.core.mail.message import EmailMessage
 from django.db import models
 from django.db.models import Sum
 from django.db.models import Q
@@ -2495,7 +2494,6 @@ class KUEmailMessage(models.Model):
             subject = template.expand_subject(ctx)
             htmlbody = template.expand_body(ctx, encapsulate=True)
             textbody = html2text(htmlbody)
-
 
             message = EmailMultiAlternatives(
                 subject=subject,
