@@ -2472,7 +2472,7 @@ class KUEmailMessage(models.Model):
         ku_email_message.save()
 
     @staticmethod
-    def send_email(template, context, recipients, unit=None,
+    def send_email(template, context, recipients, instance, unit=None,
                    **kwargs):
         if isinstance(template, int):
             template_key = template
@@ -2543,4 +2543,4 @@ class KUEmailMessage(models.Model):
                 message.attach_alternative(htmlbody, 'text/html')
             message.send()
 
-            KUEmailMessage.save_email(message)
+            KUEmailMessage.save_email(message, instance)

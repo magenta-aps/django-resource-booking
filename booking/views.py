@@ -196,7 +196,8 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
             context = self.template_context
             recipients = self.lookup_recipients(
                 form.cleaned_data['recipients'])
-            KUEmailMessage.send_email(template, context, recipients)
+            KUEmailMessage.send_email(template, context, recipients,
+                                      self.object)
             return super(EmailComposeView, self).form_valid(form)
 
         return self.render_to_response(
@@ -1558,7 +1559,8 @@ class VisitInquireView(FormMixin, HasBackButtonMixin, TemplateView):
             context = {}
             context.update(form.cleaned_data)
             recipients = self.object.contact_persons.all()
-            KUEmailMessage.send_email(template, context, recipients)
+            KUEmailMessage.send_email(template, context, recipients,
+                                      self.object)
             return super(VisitInquireView, self).form_valid(form)
 
         return self.render_to_response(
