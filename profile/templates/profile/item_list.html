@@ -59,6 +59,8 @@
                                         </li>
                                     {% endif %}
                                     <li>{% trans 'Hvor:' %} {{ res.display_locality }}</li>
+                                    <li>{% trans 'Oprettet: ' %} {{ res.statistics.created_time }}</li>
+                                    <li>{% trans 'Opdateret: ' %} {{ res.statistics.updated_time }}</li>
                                 </ul>
                             </div>
                         </a>

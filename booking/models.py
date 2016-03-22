@@ -905,15 +905,18 @@ class Resource(models.Model):
 
     @staticmethod
     def get_latest_created():
-        return Resource.objects.order_by('-statistics__created_time')
+        return Resource.objects.filter(statistics__isnull=False).\
+            order_by('-statistics__created_time')
 
     @staticmethod
     def get_latest_updated():
-        return Resource.objects.order_by('-statistics__updated_time')
+        return Resource.objects.filter(statistics__isnull=False).\
+            order_by('-statistics__updated_time')
 
     @staticmethod
     def get_latest_displayed():
-        return Resource.objects.order_by('-statistics__visited_time')
+        return Resource.objects.filter(statistics__isnull=False).\
+            order_by('-statistics__visited_time')
 
     def ensure_statistics(self):
         if self.statistics is None:
@@ -1475,15 +1478,18 @@ class Visit(Resource):
 
     @staticmethod
     def get_latest_created():
-        return Visit.objects.order_by('-statistics__created_time')
+        return Visit.objects.filter(statistics__isnull=False).\
+            order_by('-statistics__created_time')
 
     @staticmethod
     def get_latest_updated():
-        return Visit.objects.order_by('-statistics__updated_time')
+        return Visit.objects.filter(statistics__isnull=False).\
+            order_by('-statistics__updated_time')
 
     @staticmethod
     def get_latest_displayed():
-        return Visit.objects.order_by('-statistics__visited_time')
+        return Visit.objects.filter(statistics__isnull=False).\
+            order_by('-statistics__visited_time')
 
     @staticmethod
     def get_latest_booked():

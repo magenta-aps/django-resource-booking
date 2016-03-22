@@ -4,6 +4,8 @@
 
 .listcontainer.eq-height [class*="col-"] .panel .panel-body {
     padding: 5px;
+    max-height: 300px;
+    overflow-y: auto;
 }
 
 .listcontainer .list-group {
