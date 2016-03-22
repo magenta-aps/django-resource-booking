@@ -1,7 +1,7 @@
 {% load i18n %}
 <div class="col-sm-4">
     <div class="panel panel-bookings">
-        <div class="panel-heading alert-danger">
+        <div class="panel-heading {{ list.color }}">
             <h3 class="panel-title">
                 {% if list.titlelink %}
                     <a href="{{ list.titlelink }}">{{ list.title }}</a>

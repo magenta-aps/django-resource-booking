@@ -24,6 +24,12 @@ import profile.models as profile_models
 
 
 class ProfileView(LoginRequiredMixin, TemplateView):
+
+    HEADING_RED = 'alert-danger'
+    HEADING_GREEN = 'alert-success'
+    HEADING_BLUE = 'alert-info'
+    HEADING_YELLOW = 'alert-warning'
+
     """Display the user's profile."""
     def get_template_names(self):
         profile = self.request.user.userprofile
@@ -36,6 +42,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         context = {'lists': []}
 
         context['lists'].append({
+            'color': self.HEADING_BLUE,
             'type': 'Resource',
             'title': _(u'Mine tilbud'),
             'titlelink': reverse('my-resources'),
@@ -46,14 +53,17 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         context['thisurl'] = reverse('user_profile')
 
         context['lists'].extend([{
+            'color': self.HEADING_YELLOW,
             'type': 'Resource',
             'title': _(u'Seneste opdaterede tilbud'),
             'queryset': Resource.get_latest_updated()
         }, {
+            'color': self.HEADING_GREEN,
             'type': 'Resource',
             'title': _(u'Seneste bookede tilbud'),
             'queryset': Visit.get_latest_booked()
         }, {
+            'color': self.HEADING_BLUE,
             'type': 'VisitOccurrence',
             'title': _(u'Dagens arrangementer'),
             'queryset': VisitOccurrence.get_todays_occurrences()
@@ -76,6 +86,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
     def lists_for_editors(self):
         return [
             {
+                'color': self.HEADING_RED,
                 'type': 'VisitOccurrence',
                 'title': _(u"Arrangementer der kræver handling"),
                 'queryset': VisitOccurrence.being_planned_queryset(
@@ -84,6 +95,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                 )
             },
             {
+                'color': self.HEADING_GREEN,
                 'type': 'VisitOccurrence',
                 'title': _(u"Planlagte arrangementer"),
                 'queryset': VisitOccurrence.planned_queryset(
@@ -96,6 +108,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
     def lists_for_teachers(self):
         return [
             {
+                'color': self.HEADING_RED,
                 'type': 'VisitOccurrence',
                 'title': _(u"Arrangementer der mangler undervisere"),
                 'queryset': VisitOccurrence.objects.filter(
@@ -107,6 +120,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                 )
             },
             {
+                'color': self.HEADING_GREEN,
                 'type': 'VisitOccurrence',
                 'title': _(u"Arrangementer hvor jeg er underviser"),
                 'queryset': VisitOccurrence.objects.filter(
@@ -118,6 +132,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
     def lists_for_hosts(self):
         return [
             {
+                'color': self.HEADING_RED,
                 'type': 'VisitOccurrence',
                 'title': _(u"Arrangementer der mangler værter"),
                 'queryset': VisitOccurrence.objects.filter(
@@ -129,6 +144,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                 )
             },
             {
+                'color': self.HEADING_GREEN,
                 'type': 'VisitOccurrence',
                 'title': _(u"Arrangementer hvor jeg er vært"),
                 'queryset': VisitOccurrence.objects.filter(
