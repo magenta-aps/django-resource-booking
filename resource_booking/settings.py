@@ -27,8 +27,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 DEFAULT_FROM_EMAIL = 'noreply@adm.ku.dk'
+EMAIL_HOST = 'localhost'
 
 # Application definition
 

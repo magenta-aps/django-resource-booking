@@ -1,6 +1,6 @@
 # encoding: utf-8
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.mail.message import EmailMessage
+from django.core.mail import EmailMultiAlternatives
 from django.db import models
 from django.db.models import Sum
 from django.db.models import Q
@@ -16,7 +16,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.template.base import Template, VariableNode
 
 from recurrence.fields import RecurrenceField
-from booking.utils import ClassProperty, full_email, CustomStorage
+from booking.utils import ClassProperty, full_email, CustomStorage, html2text
 from resource_booking import settings
 
 import datetime
@@ -2492,13 +2492,22 @@ class KUEmailMessage(models.Model):
             }
             ctx.update(context)
             subject = template.expand_subject(ctx)
-            body = template.expand_body(ctx, encapsulate=True)
 
-            message = EmailMessage(
+            body = template.expand_body(ctx, encapsulate=True).trim()
+            if body.startswith("<!DOCTYPE"):
+                htmlbody = body
+                textbody = html2text(htmlbody)
+            else:
+                htmlbody = None
+                textbody = body
+
+            message = EmailMultiAlternatives(
                 subject=subject,
-                body=body,
+                body=textbody,
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 to=[email['full']]
             )
+            if htmlbody is not None:
+                message.attach_alternative(htmlbody, 'text/html')
             message.send()
             KUEmailMessage.save_email(message)
