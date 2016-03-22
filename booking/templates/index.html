@@ -10,10 +10,11 @@
         <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
         <title>foKUs{% block htmltitle %} - {% trans 'søg i tilbud' %}{% endblock %}</title>
     
-        <!-- Bootstrap -->
+        <!-- 3rd party stylesheets -->
         <link href="{% static 'thirdparty/bootstrap/dist/css/bootstrap.min.css' %}" rel="stylesheet">
         <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.5.0/css/bootstrap-datepicker.min.css" rel="stylesheet">
         <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet">
+        <link href="{% static 'css/picker.time.default.css' %}" rel="stylesheet">
 
         <!-- Our own stylesheet -->
         <link href="{% static 'css/main.css' %}" rel="stylesheet">
@@ -59,13 +60,13 @@
                 </div>
             </div>
         </nav>
-        
+
         {% if user.is_authenticated %}
         <div class="container">
             <ul class="list-inline">
                 <li><a href="/profile">{% trans 'Min side' %}</a></li>
                 <li><a href="{% url 'search' %}">{% trans 'Tilbud' %}</a></li>
-                <li><a href="{% url 'visit-occ-search' %}">{% trans 'Arrangementer' %}</a></li>
+                <li><a href="{% url 'visit-occ-search' %}">{% trans 'Besøg' %}</a></li>
                 <li><a href="{% url 'admin:index' %}">{% trans 'Administration' %}</a></li>
                 {% if view.kwargs.can_be_embedded %}
                 <li><a href="{% url 'embedcodes' view.request.get_full_path|slice:"1:" %}">{% trans 'Indlejr side' %}</a></li>
@@ -74,7 +75,7 @@
             </ul>
         </div>
         {% endif %}
-        
+
         <div class="container-fluid grey-line hidden-xs"></div>
         <div class="container grey-sides">
             <div class="row">
@@ -107,8 +108,20 @@
             <form action="{% url 'search' %}">
             <h2 class="control-label">{% trans 'Tilbud rettet mod:' %}</h2>
                 <div class="input-group">
-                    <label class="checkbox-inline control-label"><input type="checkbox" value="">{% trans 'Elev' %}</label>
-                    <label class="checkbox-inline control-label"><input type="checkbox" value="">{% trans 'Lærer' %}</label>
+                    <label class="checkbox-inline control-label" for="audience-choice-1">
+                        <input
+                            name="i" id="institution-choice-1"
+                            type="checkbox" value="1"
+                            {% for k, v in request.GET.lists %}{% if k == "i" and "1" in v %}checked="checked"{% endif %}{% endfor %}
+                        >Gymnasie
+                    </label>
+                    <label class="checkbox-inline control-label" for="audience-choice-2">
+                        <input
+                            name="i" id="institution-choice-2"
+                            type="checkbox" value="2"
+                            {% for k, v in request.GET.lists %}{% if k == "i" and "2" in v %}checked="checked"{% endif %}{% endfor %}
+                        >Grundskole
+                    </label>
                 </div>
                 <div class="divider"></div>
                 <div class="input-group">

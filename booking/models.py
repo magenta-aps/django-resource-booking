@@ -1414,8 +1414,8 @@ class Visit(Resource):
 class VisitOccurrence(models.Model):
 
     class Meta:
-        verbose_name = _(u"arrangement")
-        verbose_name_plural = _(u"arrangementer")
+        verbose_name = _(u"besøg")
+        verbose_name_plural = _(u"besøg")
         ordering = ['start_datetime']
 
     objects = SearchManager(
@@ -1949,8 +1949,8 @@ class Room(models.Model):
 class BookedRoom(models.Model):
 
     class Meta:
-        verbose_name = _(u'lokale for arrangement')
-        verbose_name_plural = _(u'lokaler for arrangement')
+        verbose_name = _(u'lokale for besøg')
+        verbose_name_plural = _(u'lokaler for besøg')
 
     name = models.CharField(max_length=60, verbose_name=_(u'Navn'))
 

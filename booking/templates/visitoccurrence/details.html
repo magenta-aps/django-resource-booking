@@ -31,7 +31,7 @@
                 {% if not object.start_datetime %}
                 <div class="divider"></div>
                 <div>
-                    {% trans 'Der er endnu ikke et fastlagt et tidspunkt for dette arrangement.' %}
+                    {% trans 'Der er endnu ikke et fastlagt et tidspunkt for dette besøg.' %}
                     {% if object.desired_time %}
                         {% trans 'Gæsten har ønsket følgende tidspunkt:' %}
                         <pre class="desired-time">{{ object.desired_time }}</pre>
@@ -77,7 +77,7 @@
                     {% if not object.can_assign_resources %}
                         <p>
                             {% blocktrans with text=object.BEING_PLANNED_STATUS_TEXT %}
-                            Det er ikke længere muligt at tildele ressourcer til dette arrangement. Hvis du ønsker at rette i de tildelte ressourcer skal du ændre status til '{{ text }}'.
+                            Det er ikke længere muligt at tildele ressourcer til dette besøg. Hvis du ønsker at rette i de tildelte ressourcer skal du ændre status til '{{ text }}'.
                             {% endblocktrans %}
                         </p>
                     {% endif %}
@@ -104,9 +104,9 @@
                                 {% endif %}
                             {% elif request.user.userprofile.is_teacher and object.needs_teachers %}
                                 {% if request.user in object.teachers.all %}
-                                    (allerede underviser for dette arrangement)
+                                    (allerede underviser for dette besøg)
                                 {% else %}
-                                    <a href="{% url 'become-teacher' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Bliv underviser for dette arrangement' %}</a>
+                                    <a href="{% url 'become-teacher' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Bliv underviser for dette besøg' %}</a>
                                 {% endif %}
                             {% endif %}
                         </dd>
@@ -120,9 +120,9 @@
                                 {% endif %}
                             {% elif request.user.userprofile.is_host and object.needs_hosts %}
                                 {% if request.user in object.hosts.all %}
-                                    {% trans '(allerede vært for dette arrangement)' %}
+                                    {% trans '(allerede vært for dette besøg)' %}
                                 {% else %}
-                                    <a href="{% url 'become-host' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Bliv vært for dette arrangement.' %}</a>
+                                    <a href="{% url 'become-host' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Bliv vært for dette besøg.' %}</a>
                                 {% endif %}
                             {% endif %}
                         </dd>
