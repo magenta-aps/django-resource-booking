@@ -35,8 +35,7 @@ from django.views.defaults import bad_request
 
 from profile.models import EDIT_ROLES
 from profile.models import role_to_text
-from booking.models import Visit, VisitOccurrence, StudyMaterial, \
-    LOGACTION_MAIL_SENT
+from booking.models import Visit, VisitOccurrence, StudyMaterial
 from booking.models import KUEmailMessage
 from booking.models import Resource, Subject
 from booking.models import Unit
