@@ -1813,7 +1813,6 @@ class VisitOccurrence(models.Model):
                 )
                 occurrenceautosend.save()
 
-
     def autosend_inherits(self, template_key):
         s = self.visitoccurrenceautosend_set.\
             filter(template_key=template_key, inherit=True).\
