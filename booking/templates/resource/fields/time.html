@@ -8,34 +8,15 @@
         <div class="col-sm-10 pre-scrollable">
             <ul id="id_time" class="list-unstyled"></ul>
             
-                
             {% if object and object.visitoccurrence_set %}
                 <ul id="existing-recurrence-dates" class="list-unstyled" data-visit-id="{{ object.id }}">
-                    <script>
-                        var datestr = "";
-                        var dateparts = [];
-                        var d = {};
-                    </script>
                     {% for occurrence in object.visitoccurrence_set.all %}
-                        <script>
-                            datestr = "{{ occurrence.start_datetime|date:'d-m-Y H:i' }}";
-                            dateparts = datestr.split(/[^0-9]/);
-                            d.date = new Date().setDate(dateparts[0]).setMonth(dateparts[1]).setFullYear(dateparts[2]).setHours(dateparts[3]).setMinutes(dateparts[4]);
-                            d.istimeset = true;
-                            d.isbooked = true;
-                        </script>
-                        <li data-date="{{ occurrence.start_datetime|date:'d-m-Y H:i' }}">{{ occurrence.start_datetime|date:'d-m-Y H:i' }}
+                        <li data-date="{{ occurrence.start_datetime|date:'d-m-Y H:i' }}">{{ occurrence.start_datetime|date:'d-m-Y' }}
                             {% if not occurrence.is_booked %}
-                                <script>
-                                    d.isbooked = false;
-                                </script>
-                                <input class="btn-add-time timepick" type="text" name="timepick" placeholder="{% trans 'Tilføj starttid' %}">
+                                <input class="btn-add-time timepick" type="text" name="timepick" placeholder="{% trans 'Tilføj starttid' %}" value="{{ occurrence.start_datetime|date:'H:i' }}">
                                 <button type="button" class="btn-rm-date">x</button>
                             {% endif %}
                         </li>
-                        <script>
-                            currentDates.push(d);
-                        </script>
                     {% endfor %}
                 </ul>
                 <input id="occurrences" name="occurrences" type="hidden">
