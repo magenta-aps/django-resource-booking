@@ -1487,11 +1487,19 @@ class Visit(Resource):
 
     @staticmethod
     def get_latest_booked():
-        return Visit.objects.filter(
-            visitoccurrence_set__bookings__isnull=False
-        ).order_by(
-            '-bookings__statistics__created_time'
-        )
+        bookings = Booking.objects.order_by(
+            '-statistics__created_time'
+        ).select_related('visitoccurrence__visit')
+        visits = set()
+        for booking in bookings:
+            visits.add(booking.visitoccurrence.visit)
+        return list(visits)
+
+        #return Visit.objects.filter(
+        #    visitoccurrence__booking__isnull=False
+        #).order_by(
+        #    '-bookings__statistics__created_time'
+        #)
 
     # @staticmethod
     # def get_most_booked():
