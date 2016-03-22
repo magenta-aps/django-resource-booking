@@ -3,8 +3,8 @@
     <div class="panel panel-bookings">
         <div class="panel-heading {{ list.color }}">
             <h3 class="panel-title">
-                {% if list.titlelink %}
-                    <a href="{{ list.titlelink }}">{{ list.title }}</a>
+                {% if list.title.link %}
+                    <a href="{{ list.title.link }}">{{ list.title.text }}</a>
                 {% else %}
                     {{ list.title }}
                 {% endif %}
@@ -71,6 +71,11 @@
                         </div>
                     </div>
                 {% endfor %}
+            {% endif %}
+            {% if list.button %}
+                <a href="{{ list.button.link }}">
+                    <span class="label label-primary pull-right">{{ list.button.text }}</span>
+                </a>
             {% endif %}
 
         </div>

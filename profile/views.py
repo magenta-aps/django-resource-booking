@@ -44,9 +44,15 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         context['lists'].append({
             'color': self.HEADING_BLUE,
             'type': 'Resource',
-            'title': _(u'Mine tilbud'),
-            'titlelink': reverse('my-resources'),
-            'queryset': self.request.user.userprofile.my_resources.all
+            'title': {
+                'text': _(u'Mine tilbud'),
+                'link': reverse('my-resources')
+            },
+            'queryset': self.request.user.userprofile.my_resources.all,
+            'button': {
+                'text': _(u'Redigér mine tilbud'),
+                'link': reverse('my-resources')
+            }
         })
 
         context['lists'].extend(self.lists_by_role())
