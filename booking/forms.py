@@ -475,9 +475,6 @@ class BookingForm(forms.ModelForm):
             visit is not None and
             len(visit.bookable_occurrences) > 0
         )
-        print visit
-        print len(visit.bookable_occurrences)
-
         if self.scheduled:
             self.fields['visitoccurrence'].choices = (
                 (x.pk, formats.date_format(
