@@ -1,0 +1,26 @@
+{% load i18n %}
+{% if bookingform.scheduled %}
+    {% if bookingform.visitoccurrence %}
+        <div class="form-group">
+            <label class="col-sm-2 control-label" for="{{ bookingform.visitoccurrence.id_for_label }}">{{ bookingform.visitoccurrence.label }}</label>
+            <div class="col-sm-6{% if bookingform.visitoccurrence.errors %} has-error{% endif %}">
+                {{ bookingform.visitoccurrence }}
+            </div>
+            <div class="col-sm-3 help-block with-errors">
+                {{ bookingform.visitoccurrence.errors }}
+            </div>
+        </div>
+    {% endif %}
+{% else %}
+    {% if bookingform.desired_time %}
+        <div class="form-group">
+            <label class="col-sm-2 control-label" for="{{ bookingform.desired_time.id_for_label }}">{% trans "Ønsket tidspunkt*" %}</label>
+            <div class="col-sm-6{% if bookingform.desired_time.errors %} has-error{% endif %}">
+                {{ bookingform.desired_time }}
+            </div>
+            <div class="col-sm-3 help-block with-errors">
+                {{ bookingform.desired_time.errors }}
+            </div>
+        </div>
+    {% endif %}
+{% endif %}

@@ -1,74 +1,76 @@
-#personalPage.eq-height [class*="col-"] .panel {
+.listcontainer.eq-height [class*="col-"] .panel {
     border-color: #ccc;
 }
 
-#personalPage.eq-height [class*="col-"] .panel .panel-body {
+.listcontainer.eq-height [class*="col-"] .panel .panel-body {
     padding: 5px;
+    max-height: 300px;
+    overflow-y: auto;
 }
 
-#personalPage .list-group {
+.listcontainer .list-group {
     margin-bottom: 0;
 }
 
-#personalPage .list-group-item {
+.listcontainer .list-group-item {
     margin-bottom: 10px;
     position: relative;
 }
 
-#personalPage .list-group-item:hover {
+.listcontainer .list-group-item:hover {
     border: 1px solid #bbb;
 }
 
-#personalPage .list-group-item:first-child {
+.listcontainer .list-group-item:first-child {
     margin-top: 5px;
     border-radius: 0;
 }
 
-#personalPage .list-group-item:last-child {
+.listcontainer .list-group-item:last-child {
     margin-bottom: 0!important;
     border-radius: 0;
 }
 
-#personalPage .list-group-item:nth-child(odd) {
+.listcontainer .list-group-item:nth-child(odd) {
     background-color: #f8f8f8;
     margin-bottom: 10px;
 }
 
-#personalPage a.list-group-item .list-group-item-heading {
+.listcontainer a.list-group-item .list-group-item-heading {
     line-height: 16px;
 }
 
-#personalPage .list-group-item ul {
+.listcontainer .list-group-item ul {
     padding-left: 0;
     color: #4A4949;
     list-style-type: none;
 }
 
-#personalPage .panel.panel-bookings .panel-heading .panel-title {
+.listcontainer .panel.panel-bookings .panel-heading .panel-title {
     font-size: 13px;
     display: inline-block;
     max-width: 85%;
     color: #333;
 }
 
-#personalPage .badge-primary {
+.listcontainer .badge-primary {
     background-color: #337ab7;
 }
 
-#personalPage .badge-danger {
+.listcontainer .badge-danger {
     background-color: #901a1e;
 }
 
-#personalPage .badge-success {
+.listcontainer .badge-success {
     background-color: #5cb85c;
 }
 
-#personalPage [class*="alert-"] {
+.listcontainer [class*="alert-"] {
     border-width: 1px;
     border-style: solid;
 }
 
-#personalPage .list-group-item .outdated:hover {
+.listcontainer .list-group-item .outdated:hover {
     background-color: #f2dede;
     border: 1px solid #9C5154;
     opacity: 1;
@@ -79,7 +81,7 @@
     font-weight: bold;
 }
 
-#personalPage .list-group-item > a:hover {
+.listcontainer .list-group-item > a:hover {
     text-decoration: none;
 }
 #filter-panel .search-offers {

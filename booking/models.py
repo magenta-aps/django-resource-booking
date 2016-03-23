@@ -8,6 +8,7 @@ from django.template.context import make_context
 from django.utils import timezone
 from djorm_pgfulltext.models import SearchManager
 from djorm_pgfulltext.fields import VectorField
+from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
 from django.contrib.auth.models import User
@@ -19,14 +20,14 @@ from recurrence.fields import RecurrenceField
 from booking.utils import ClassProperty, full_email, CustomStorage, html2text
 from resource_booking import settings
 
-import datetime
+from datetime import datetime, timedelta
 
 LOGACTION_CREATE = ADDITION
 LOGACTION_CHANGE = CHANGE
 LOGACTION_DELETE = DELETION
 # If we need to add additional values make sure they do not conflict with
 # system defined ones by adding 128 to the value.
-LOGACTION_CUSTOM1 = 128 + 1
+LOGACTION_MAIL_SENT = 128 + 1
 LOGACTION_CUSTOM2 = 128 + 2
 LOGACTION_MANUAL_ENTRY = 128 + 64 + 1
 
@@ -34,6 +35,7 @@ LOGACTION_DISPLAY_MAP = {
     LOGACTION_CREATE: _(u'Oprettet'),
     LOGACTION_CHANGE: _(u'Ændret'),
     LOGACTION_DELETE: _(u'Slettet'),
+    LOGACTION_MAIL_SENT: _(u'Mail sendt'),
     LOGACTION_MANUAL_ENTRY: _(u'Log-post tilføjet manuelt')
 }
 
@@ -555,6 +557,36 @@ class EmailTemplate(models.Model):
         return variables
 
 
+class ObjectStatistics(models.Model):
+
+    created_time = models.DateTimeField(
+        blank=False,
+        auto_now_add=True,
+    )
+    updated_time = models.DateTimeField(
+        blank=False,
+        default=datetime.now()
+        # auto_now=True  # This would update the field on every save,
+        # including when we just want to update the display counter
+    )
+    visited_time = models.DateTimeField(
+        blank=True,
+        null=True,
+    )
+    display_counter = models.IntegerField(
+        default=0
+    )
+
+    def on_display(self):
+        self.display_counter += 1
+        self.visited_time = datetime.now()
+        self.save()
+
+    def on_update(self):
+        self.updated_time = datetime.now()
+        self.save()
+
+
 # Bookable resources
 class Resource(models.Model):
     """Abstract superclass for a bookable resource of any kind."""
@@ -750,6 +782,11 @@ class Resource(models.Model):
         auto_update_search_field=True
     )
 
+    statistics = models.ForeignKey(
+        ObjectStatistics,
+        null=True
+    )
+
     def __unicode__(self):
         return self.title + "(%s)" % str(self.id)
 
@@ -867,6 +904,28 @@ class Resource(models.Model):
         if hasattr(self, 'otherresource') and self.otherresource:
             return reverse('otherresource-view', args=[self.otherresource.pk])
         return reverse('resource-view', args=[self.pk])
+
+    @staticmethod
+    def get_latest_created():
+        return Resource.objects.filter(statistics__isnull=False).\
+            order_by('-statistics__created_time')
+
+    @staticmethod
+    def get_latest_updated():
+        return Resource.objects.filter(statistics__isnull=False).\
+            order_by('-statistics__updated_time')
+
+    @staticmethod
+    def get_latest_displayed():
+        return Resource.objects.filter(statistics__isnull=False).\
+            order_by('-statistics__visited_time')
+
+    def ensure_statistics(self):
+        if self.statistics is None:
+            statistics = ObjectStatistics()
+            statistics.save()
+            self.statistics = statistics
+            self.save()
 
 
 class ResourceGymnasieFag(models.Model):
@@ -1411,6 +1470,42 @@ class Visit(Resource):
             self.state == Resource.ACTIVE and \
             self.has_bookable_occurrences
 
+    @property
+    def duration_as_timedelta(self):
+        if self.duration is not None and ':' in self.duration:
+            (hours, minutes) = self.duration.split(":")
+            return timedelta(
+                hours=int(hours),
+                minutes=int(minutes)
+            )
+
+    @staticmethod
+    def get_latest_created():
+        return Visit.objects.filter(statistics__isnull=False).\
+            order_by('-statistics__created_time')
+
+    @staticmethod
+    def get_latest_updated():
+        return Visit.objects.filter(statistics__isnull=False).\
+            order_by('-statistics__updated_time')
+
+    @staticmethod
+    def get_latest_displayed():
+        return Visit.objects.filter(statistics__isnull=False).\
+            order_by('-statistics__visited_time')
+
+    @staticmethod
+    def get_latest_booked():
+        bookings = Booking.objects.order_by(
+            '-statistics__created_time'
+        ).select_related('visitoccurrence__visit')
+        visits = set()
+        for booking in bookings:
+            if booking.visitoccurrence is not None and \
+                    booking.visitoccurrence.visit is not None:
+                visits.add(booking.visitoccurrence.visit)
+        return list(visits)
+
 
 class VisitOccurrence(models.Model):
 
@@ -1434,6 +1529,11 @@ class VisitOccurrence(models.Model):
         verbose_name=_(u'Starttidspunkt'),
         null=True,
         blank=True
+    )
+
+    end_datetime = models.DateTimeField(
+        null=True,
+        blank=True,
     )
 
     # Whether the occurrence is publicly bookable
@@ -1521,6 +1621,11 @@ class VisitOccurrence(models.Model):
         choices=room_status_choices,
         default=STATUS_NOT_ASSIGNED,
         verbose_name=_(u'Status for tildeling af lokaler')
+    )
+
+    statistics = models.ForeignKey(
+        ObjectStatistics,
+        null=True
     )
 
     WORKFLOW_STATUS_BEING_PLANNED = 0
@@ -1685,7 +1790,7 @@ class VisitOccurrence(models.Model):
         if self.duration:
             try:
                 (hours, mins) = self.duration.split(":", 2)
-                endtime = self.start_datetime + datetime.timedelta(
+                endtime = self.start_datetime + timedelta(
                     hours=int(hours), minutes=int(mins)
                 )
                 result += endtime.strftime('-%H:%M')
@@ -1779,6 +1884,8 @@ class VisitOccurrence(models.Model):
         ).filter(**kwargs)
 
     def save(self, *args, **kwargs):
+
+        self.update_endtime()
 
         # Save once to store relations
         super(VisitOccurrence, self).save(*args, **kwargs)
@@ -1875,6 +1982,83 @@ class VisitOccurrence(models.Model):
     def get_autosend_display(self):
         autosends = self.visitoccurrenceautosend_set.filter(enabled=True)
         return ', '.join([autosend.get_name() for autosend in autosends])
+
+    def update_endtime(self):
+        if self.start_datetime is not None:
+            duration = self.visit.duration_as_timedelta
+            if duration is not None:
+                self.end_datetime = self.start_datetime + duration
+
+    @staticmethod
+    def get_latest_created():
+        return VisitOccurrence.objects.\
+            order_by('-statistics__created_time')
+
+    @staticmethod
+    def get_latest_updated():
+        return VisitOccurrence.objects.\
+            order_by('-statistics__updated_time')
+
+    @staticmethod
+    def get_latest_displayed():
+        return VisitOccurrence.objects.\
+            order_by('-statistics__visited_time')
+
+    @staticmethod
+    def get_latest_booked():
+        return VisitOccurrence.objects.filter(
+            bookings__isnull=False
+        ).order_by(
+            '-bookings__statistics__created_time'
+        )
+
+    @staticmethod
+    def get_todays_occurrences():
+        return VisitOccurrence.get_occurring_on_date(datetime.today().date())
+
+    @staticmethod
+    def get_starting_on_date(date):
+        return VisitOccurrence.objects.filter(
+            start_datetime__year=date.year,
+            start_datetime__month=date.month,
+            start_datetime__day=date.day
+        ).order_by('start_datetime')
+
+    @staticmethod
+    def get_occurring_at_time(time):
+        # Return the occurrences that take place exactly at this time
+        # Meaning they begin before the queried time and end after the time
+        return VisitOccurrence.objects.filter(
+            start_datetime__lte=time,
+            end_datetime__gte=time
+        )
+
+    @staticmethod
+    def get_occurring_on_date(date):
+        # An occurrence happens on a date if it starts before the
+        # end of the day and ends after the beginning of the day
+        return VisitOccurrence.objects.filter(
+            start_datetime__lte=date + timedelta(days=1),
+            end_datetime__gte=date
+        )
+
+    @staticmethod
+    def get_recently_held(time):
+        return VisitOccurrence.objects.filter(
+            end_datetime__lte=time
+        ).order_by('-end_datetime')
+
+    def ensure_statistics(self):
+        if self.statistics is None:
+            statistics = ObjectStatistics()
+            statistics.save()
+            self.statistics = statistics
+            self.save()
+
+    @staticmethod
+    def set_endtime():
+        for occurrence in VisitOccurrence.objects.all():
+            occurrence.save()
 
 
 VisitOccurrence.add_override_property('duration')
@@ -2286,9 +2470,9 @@ class Booking(models.Model):
         verbose_name=u'Bemærkninger'
     )
 
-    created_time = models.DateTimeField(
-        blank=False,
-        auto_now_add=True,
+    statistics = models.ForeignKey(
+        ObjectStatistics,
+        null=True
     )
 
     def get_occurrence_attr(self, attrname):
@@ -2331,7 +2515,7 @@ class Booking(models.Model):
     def get_recipients(self, template_key):
         recipients = self.visitoccurrence.get_recipients(template_key)
         if template_key in EmailTemplate.booker_keys:
-            recipients.add(self.booker)
+            recipients.append(self.booker)
         return recipients
 
     def autosend(self, template_key, recipients=None,
@@ -2367,6 +2551,26 @@ class Booking(models.Model):
             self.booker.as_searchtext(),
             self.notes
         ] if x])
+
+    @staticmethod
+    def get_latest_created():
+        return Booking.objects.order_by('-statistics__created_time')
+
+    @staticmethod
+    def get_latest_updated():
+        return Booking.objects.order_by('-statistics__updated_time')
+
+    @staticmethod
+    def get_latest_displayed():
+        return Booking.objects.order_by('-statistics__visited_time')
+
+    def ensure_statistics(self):
+        if self.statistics is None:
+            statistics = ObjectStatistics()
+            statistics.save()
+            self.statistics = statistics
+            self.save()
+
 
 Booking.add_occurrence_attr('visit')
 Booking.add_occurrence_attr('hosts')
@@ -2445,19 +2649,33 @@ class KUEmailMessage(models.Model):
         blank=False,
         null=False
     )
+    content_type = models.ForeignKey(ContentType, null=True, default=None)
+    object_id = models.PositiveIntegerField(null=True, default=None)
+    content_object = GenericForeignKey('content_type', 'object_id')
 
     @staticmethod
-    def save_email(email_message):
+    def save_email(email_message, instance):
+        """
+        :param email_message: An instance of
+        django.core.mail.message.EmailMessage
+        :param instance: The object that the message concerns i.e. Booking,
+        Visit etc.
+        :return: None
+        """
+        ctype = ContentType.objects.get_for_model(instance)
         ku_email_message = KUEmailMessage(
             subject=email_message.subject,
             body=email_message.body,
             from_email=email_message.from_email,
-            recipients=', '.join(email_message.recipients())
+            recipients=', '.join(email_message.recipients()),
+            content_type=ctype,
+            object_id=instance.id
         )
         ku_email_message.save()
 
     @staticmethod
-    def send_email(template, context, recipients, unit=None, **kwargs):
+    def send_email(template, context, recipients, instance, unit=None,
+                   **kwargs):
         if isinstance(template, int):
             template_key = template
             template = EmailTemplate.get_template(template_key, unit)
@@ -2526,4 +2744,5 @@ class KUEmailMessage(models.Model):
             if htmlbody is not None:
                 message.attach_alternative(htmlbody, 'text/html')
             message.send()
-            KUEmailMessage.save_email(message)
+
+            KUEmailMessage.save_email(message, instance)
