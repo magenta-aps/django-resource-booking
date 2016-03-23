@@ -21,7 +21,8 @@
             currentDates.push({
                 date: d,
                 istimeset: true,
-                isbooked: false
+                isbooked: false,
+                isupdated: false
             });
             UpdateDateList();
         });
@@ -56,7 +57,8 @@
             currentDates.push({
                 date: d,
                 istimeset: false,
-                isbooked: false
+                isbooked: false,
+                isupdated: true
             });
             UpdateDateList();
         });
@@ -79,10 +81,15 @@
                 var t = currentDates[d];
                 var datedate = getFormattedPartTime(t.date.getDate()) + '-' + getFormattedPartTime(t.date.getMonth() + 1) + '-' + t.date.getFullYear();
                 var datetime = '';
+                var upd = '';
                 if (t.istimeset) {
                     datetime = ' value="' + getFormattedPartTime(t.date.getHours()) + ':' + getFormattedPartTime(t.date.getMinutes()) + '"';
                 };
-                currentDatesEl.append('<li id="' + d + '" data-date="' + datedate + '">' + datedate + ' <input class="btn-add-time timepick" type="text" name="timepick" placeholder="Tilføj tid"' + datetime + '><button type="button" class="btn-rm-date">x</button></li>');
+                if (t.isupdated) {
+                    upd = ' date-new';
+                    t.isupdated = false;
+                };
+                currentDatesEl.append('<li class="date' + upd + '" id="' + d + '" data-date="' + datedate + '"><div><span class="glyphicon glyphicon-calendar"></span> ' + datedate + '</div><div><span class="glyphicon glyphicon-time"></span> <input class="btn-add-time timepick" type="text" name="timepick" placeholder="Tilføj tid"' + datetime + '></div><button type="button" class="btn-rm-date"><span class="glyphicon glyphicon-remove"></span></button></li>');
             };
             
             
@@ -134,6 +141,7 @@
                                     currentDates[elID].date.setHours(tparts[0]);
                                     currentDates[elID].date.setMinutes(tparts[1]);
                                     currentDates[elID].istimeset = true;
+                                    currentDates[elID].isupdated = true;
                                 } else {
                                     currentDates[elID].istimeset = false;
                                 };
@@ -166,6 +174,7 @@
                             currentDates[i].date.setHours(tparts[0]);
                             currentDates[i].date.setMinutes(tparts[1]);
                             currentDates[i].istimeset = true;
+                            currentDates[i].isupdated = true;
                         };
                     } else {
                         for (var i in currentDates) {
@@ -202,7 +211,7 @@
             count: 10
         });
         
-        var datepick = $('input[name="until"]:first').datepicker({
+        var rrdatepick = $('#input-until').datepicker({
             language: 'da',
             format: 'dd-mm-yyyy',
             weekStart: 1,
@@ -231,16 +240,20 @@
         
         // RRule input methods
         
-        datepick.datepicker().on('hide', function(ev) {
-            var dparts = $(this).val().split('-');
-            var d = new Date();
-            d.setDate(dparts[0]);
-            d.setMonth(parseInt(dparts[1]) - 1);
-            d.setFullYear(dparts[2]);
-            rule.options.until = d;
-            $('#input-count').val('');
-            rule.options.count = undefined;
-            updateRRDates();
+        rrdatepick.datepicker().on('hide', function(ev) {
+            if ($(this).val() != '') {
+                var dparts = $(this).val().split('-');
+                var d = new Date();
+                d.setDate(dparts[0]);
+                d.setMonth(parseInt(dparts[1]) - 1);
+                d.setFullYear(dparts[2]);
+                rule.options.until = d;
+                $('#input-count').val('');
+                rule.options.count = undefined;
+                updateRRDates();
+            } else {
+                return false;  
+            };
         });
         
         $('#input-weekdays input').on('change', function(ev) {
@@ -289,7 +302,8 @@
                 currentDates.push({
                     date: rule.all()[i],
                     istimeset: false,
-                    isbooked: false
+                    isbooked: false,
+                    isupdated: true
                 });
             };
             UpdateDateList();
