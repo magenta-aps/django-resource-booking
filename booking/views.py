@@ -35,8 +35,8 @@ from django.views.defaults import bad_request
 
 from profile.models import EDIT_ROLES
 from profile.models import role_to_text
-from booking.models import Visit, VisitOccurrence, StudyMaterial, \
-    KUEmailMessage
+from booking.models import Visit, VisitOccurrence, StudyMaterial
+from booking.models import KUEmailMessage
 from booking.models import Resource, Subject
 from booking.models import Unit
 from booking.models import OtherResource
@@ -156,6 +156,36 @@ class HasBackButtonMixin(ContextMixin):
         return context
 
 
+class ResourceBookingDetailView(DetailView):
+
+    def on_display(self):
+        try:
+            self.object.ensure_statistics()
+        except:
+            return
+        self.object.statistics.on_display()
+
+    def get(self, request, *args, **kwargs):
+        response = super(ResourceBookingDetailView, self).\
+            get(request, *args, **kwargs)
+        self.on_display()
+        return response
+
+
+class ResourceBookingUpdateView(UpdateView):
+
+    def on_update(self):
+        try:
+            self.object.ensure_statistics()
+        except:
+            return
+        self.object.statistics.on_update()
+
+    def form_valid(self, form):
+        self.on_update()
+        return super(ResourceBookingUpdateView, self).form_valid(form)
+
+
 class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
     template_name = 'email/compose.html'
     form_class = EmailComposeForm
@@ -196,7 +226,8 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
             context = self.template_context
             recipients = self.lookup_recipients(
                 form.cleaned_data['recipients'])
-            KUEmailMessage.send_email(template, context, recipients)
+            KUEmailMessage.send_email(template, context, recipients,
+                                      self.object)
             return super(EmailComposeView, self).form_valid(form)
 
         return self.render_to_response(
@@ -906,7 +937,7 @@ class ResourceDetailView(View):
         raise Http404
 
 
-class EditResourceView(HasBackButtonMixin, UpdateView):
+class EditResourceView(HasBackButtonMixin, ResourceBookingUpdateView):
     is_creating = True
 
     def __init__(self, *args, **kwargs):
@@ -1147,6 +1178,8 @@ class EditOtherResourceView(EditResourceView):
         if forms['form'].is_valid():
             self.object = forms['form'].save()
 
+            self.object.ensure_statistics()
+
             self.save_studymaterials()
 
             self.save_subjects()
@@ -1174,7 +1207,7 @@ class EditOtherResourceView(EditResourceView):
         return super(EditOtherResourceView, self).get_context_data(**context)
 
 
-class OtherResourceDetailView(DetailView):
+class OtherResourceDetailView(ResourceBookingDetailView):
     """Display Visit details"""
     model = OtherResource
     template_name = 'otherresource/details.html'
@@ -1309,6 +1342,8 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
 
         if forms['form'].is_valid():
             self.object = forms['form'].save()
+
+            self.object.ensure_statistics()
 
             self.save_autosend()
 
@@ -1482,10 +1517,13 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
         return kwargs
 
 
-class VisitDetailView(DetailView):
+class VisitDetailView(ResourceBookingDetailView):
     """Display Visit details"""
     model = Visit
     template_name = 'visit/details.html'
+
+    def get(self, request, *args, **kwargs):
+        return super(VisitDetailView, self).get(request, *args, **kwargs)
 
     def get_queryset(self):
         """Get queryset, only include active visits."""
@@ -1558,7 +1596,8 @@ class VisitInquireView(FormMixin, HasBackButtonMixin, TemplateView):
             context = {}
             context.update(form.cleaned_data)
             recipients = self.object.contact_persons.all()
-            KUEmailMessage.send_email(template, context, recipients)
+            KUEmailMessage.send_email(template, context, recipients,
+                                      self.object)
             return super(VisitInquireView, self).form_valid(form)
 
         return self.render_to_response(
@@ -1882,7 +1921,7 @@ class SchoolView(View):
         return JsonResponse(json)
 
 
-class BookingView(AutologgerMixin, UpdateView):
+class BookingView(AutologgerMixin, ResourceBookingUpdateView):
     visit = None
     modal = True
     back = None
@@ -1960,6 +1999,9 @@ class BookingView(AutologgerMixin, UpdateView):
                 booking.booker = forms['bookerform'].save()
 
             booking.save()
+
+            booking.ensure_statistics()
+
             # Trigger updating of search index
             booking.visitoccurrence.save()
 
@@ -2190,7 +2232,7 @@ class VisitOccurrenceSearchView(LoginRequiredMixin, ListView):
         return size
 
 
-class BookingDetailView(LoggedViewMixin, DetailView):
+class BookingDetailView(LoggedViewMixin, ResourceBookingDetailView):
     """Display Booking details"""
     model = Booking
     template_name = 'booking/details.html'
@@ -2223,7 +2265,7 @@ class BookingDetailView(LoggedViewMixin, DetailView):
         return super(BookingDetailView, self).get_context_data(**context)
 
 
-class VisitOccurrenceDetailView(LoggedViewMixin, DetailView):
+class VisitOccurrenceDetailView(LoggedViewMixin, ResourceBookingDetailView):
     """Display Booking details"""
     model = VisitOccurrence
     template_name = 'visitoccurrence/details.html'
@@ -2496,3 +2538,14 @@ class EmailTemplateDeleteView(HasBackButtonMixin, DeleteView):
 
 import booking_workflows.views  # noqa
 import_views(booking_workflows.views)
+
+
+class KUStatsView(TemplateView):
+    template_name = 'kustats.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(KUStatsView, self).get_context_data(**kwargs)
+        context['latest_updated_resource'] = Resource.get_latest_updated()
+        context['latest_booked_visit'] = Visit.get_latest_booked()
+        context['visits_today'] = VisitOccurrence.get_todays_occurrences()
+        return context
