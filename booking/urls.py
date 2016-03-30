@@ -5,7 +5,6 @@ from django.conf import settings
 from .views import MainPageView, VisitOccurrenceNotifyView
 
 from booking.views import PostcodeView, SchoolView, VisitInquireView
-from booking.views import KUStatsView
 from booking.views import RrulestrView
 from booking.views import EditResourceInitialView, ResourceDetailView
 from booking.views import BookingView, BookingSuccessView
@@ -29,6 +28,7 @@ from booking.views import BecomeTeacherView
 from booking.views import BecomeHostView
 from booking.views import VisitOccurrenceAddLogEntryView
 from booking.views import VisitOccurrenceDetailView
+from booking.views import VisitOccurrenceCustomListView
 from booking.views import CloneResourceView
 
 
@@ -151,6 +151,9 @@ urlpatterns = patterns(
     url(r'^visit/occurrence/(?P<pk>[0-9]+)/change_autosend/?$',
         ChangeVisitOccurrenceAutosendView.as_view(),
         name='change-visit-occ-autosend'),
+    url(r'^visit/occurrence/customlist/?$',
+        VisitOccurrenceCustomListView.as_view(),
+        name='visit-occ-customlist'),
 
     url(r'^booking/(?P<pk>[0-9]+)/notify$',
         BookingNotifyView.as_view(),
@@ -194,8 +197,6 @@ urlpatterns = patterns(
     url(r'^emailtemplate/(?P<pk>[0-9]+)/delete$',
         EmailTemplateDeleteView.as_view(),
         name='emailtemplate-delete'),
-    url(r'^kustats$',
-        KUStatsView.as_view())
 
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

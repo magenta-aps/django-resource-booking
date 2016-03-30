@@ -3,7 +3,7 @@
 {% if hastime %}
     <div class="row form-group">
         <div class="col-sm-2">
-            <label>{% trans 'Tidspunkter:' %}</label>
+            <label>{% trans 'Vælg datoer og tider' %}:</label>
         </div>
         <div class="col-sm-10 pre-scrollable">
             <ul id="id_time" class="list-unstyled"></ul>
@@ -11,10 +11,11 @@
             {% if object and object.visitoccurrence_set %}
                 <ul id="existing-recurrence-dates" class="list-unstyled" data-visit-id="{{ object.id }}">
                     {% for occurrence in object.visitoccurrence_set.all %}
-                        <li data-date="{{ occurrence.start_datetime|date:'d-m-Y H:i' }}">{{ occurrence.start_datetime|date:'d-m-Y' }}
+                        <li data-date="{{ occurrence.start_datetime|date:'d-m-Y H:i' }}">
+                            <div><span class="glyphicon glyphicon-calendar"></span> {{ occurrence.start_datetime|date:'d-m-Y' }}</div>
                             {% if not occurrence.is_booked %}
-                                <input class="btn-add-time timepick" type="text" name="timepick" placeholder="{% trans 'Tilføj starttid' %}" value="{{ occurrence.start_datetime|date:'H:i' }}">
-                                <button type="button" class="btn-rm-date">x</button>
+                                <div><span class="glyphicon glyphicon-time"></span> <input class="btn-add-time timepick" type="text" name="timepick" placeholder="{% trans 'Tilføj starttid' %}" value="{{ occurrence.start_datetime|date:'H:i' }}"></div>
+                                <button type="button" class="btn-rm-date"><span class="glyphicon glyphicon-remove"></span></button>
                             {% endif %}
                         </li>
                     {% endfor %}
@@ -23,12 +24,12 @@
             {% endif %}
             
             <label class="btn btn-primary btn-sm">
-                <input id="id_datepick" type="text" name="datepick" class="datepicker">{% trans 'Tilføj ny dato' %}
+                <input id="id_datepick" type="text" name="datepick" class="datepicker">{% trans 'Tilføj dato' %}
             </label>
             
             <!-- Button trigger modal -->
             <button type="button" class="btn btn-default btn-sm" data-toggle="modal" data-target="#rruleModal">
-                {% trans 'Tilføj datoer fra regel' %}
+                {% trans 'Tilføj gentagne datoer' %}
             </button>
             
             <div class="modify-datetime">
@@ -53,10 +54,37 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title" id="rruleModalLabel">Tilføj datoer fra regel</h4>
+                    <h4 class="modal-title" id="rruleModalLabel">{% trans 'Tilføj gentagne datoer' %}</h4>
                 </div>
                 <div class="modal-body">
                     
+                    <div id="rruleInput" class="form">
+                        <div class="form-group">
+                            <div class="checkbox" id="input-weekdays">
+                                <p><strong>{% trans 'Gentages ugentligt på' %}:</strong></p>
+                                <label><input id="input-weekdays-mon" type="checkbox" name="RRule.MO"> Mandage</label>
+                                <label><input id="input-weekdays-tue" type="checkbox" name="RRule.TU"> Tirsdage</label>
+                                <label><input id="input-weekdays-wed" type="checkbox" name="RRule.WE"> Onsdage</label>
+                                <label><input id="input-weekdays-thu" type="checkbox" name="RRule.TH"> Torsdage</label>
+                                <label><input id="input-weekdays-fri" type="checkbox" name="RRule.FR"> Fredage</label>
+                                <label><input id="input-weekdays-sat" type="checkbox" name="RRule.SA"> Lørdage</label>
+                                <label><input id="input-weekdays-sun" type="checkbox" name="RRule.SU"> Søndage</label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <p><strong>{% trans 'Slutter' %}:</strong></p>
+                            <label class="label-unstyled" for="input-until">På dato</label>
+                            <input id="input-until" name="until" type="text" class="form-control" placeholder="Dato">
+                            <label class="label-unstyled" for="input-count">eller efter <input id="input-count" name="count" type="text" class="form-control" placeholder="0"> forekomster</label>
+                        </div>
+                    </div>
+                    <div id="rruleOutput">
+                        <ul class="rrule-datelist list-unstyled">
+                        </ul>
+                        <p id="rrule-text"></p>
+                    </div>
+                    
+                    <!--
                         <div id="input">
                             <h2>Input</h2>
                             <div id="tabs"></div>
@@ -387,6 +415,7 @@
                             <h5>Datoer</h5>
                             <div id="dates"></div>
                         </section>
+                    -->
                     
                 </div>
                 <div class="modal-footer">

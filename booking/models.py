@@ -2043,8 +2043,13 @@ class VisitOccurrence(models.Model):
         )
 
     @staticmethod
-    def get_recently_held(time):
+    def get_recently_held(time=datetime.now()):
+        print time
         return VisitOccurrence.objects.filter(
+            workflow_status__in=[
+                VisitOccurrence.WORKFLOW_STATUS_EXECUTED,
+                VisitOccurrence.WORKFLOW_STATUS_EVALUATED],
+            start_datetime__isnull=False,
             end_datetime__lte=time
         ).order_by('-end_datetime')
 
