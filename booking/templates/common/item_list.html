@@ -12,10 +12,11 @@
             </h3>
             <span class="badge badge-danger pull-right">{{ list.queryset|length }}</span>
         </div>
-        <div class="panel-body paginated-list" data-list-item=".list-group-item">
+        <div class="panel-body">
 
             {% if list.type == 'VisitOccurrence' %}
                 {% for occurrence in list.queryset %}
+                    {% if not list.limit or forloop.counter0 < list.limit %}
                     <div class="list-group-item clearfix">
                         <a href="{% url 'visit-occ-view' occurrence.pk %}" title="{% trans 'Se arrangementets detaljer' %}">
                             <h2 class="list-group-item-heading">{{ occurrence.visit.title }}</h2>
@@ -33,6 +34,7 @@
                             <span class="label label-{{ occurrence.get_workflow_status_class }} pull-right">{{ occurrence.get_workflow_status_display }}</span>
                         </div>
                     </div>
+                    {% endif %}
                 {% endfor %}
 
             {% elif list.type == 'Resource' %}
@@ -74,35 +76,6 @@
                         </div>
                     </div>
                 {% endfor %}
-            {% endif %}
-
-            {% if list.queryset|length > 10 %}
-                <nav>
-                    <ul class="pagination">
-
-                        <li class="prevbutton">
-                            <a href="#" aria-label="{% trans 'Forrige' %}">
-                                <span>
-                                    <span class="glyphicon glyphicon-chevron-left small" aria-hidden="true"></span>
-                                    {% trans 'Forrige' %}
-                                </span>
-                            </a>
-                        </li>
-
-                        <li class="pagebutton">
-                            <a href="#"></a>
-                        </li>
-
-                        <li class="nextbutton">
-                            <a href="#" aria-label="{% trans 'Næste' %}">
-                                <span>
-                                    {% trans 'Næste' %}
-                                    <span class="glyphicon glyphicon-chevron-right small" aria-hidden="true"></span>
-                                </span>
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
             {% endif %}
 
             {% if list.button %}

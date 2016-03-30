@@ -16,14 +16,14 @@
                                 name="i" id="institution-choice-1"
                                 type="checkbox" value="1"
                                 {% for k, v in request.GET.lists %}{% if k == "i" and "1" in v %}checked="checked"{% endif %}{% endfor %}
-                        >Gymnasie
+                        >{% trans 'Gymnasie' %}
                     </label>
                     <label class="checkbox-inline control-label" for="audience-choice-2">
                         <input
                                 name="i" id="institution-choice-2"
                                 type="checkbox" value="2"
                                 {% for k, v in request.GET.lists %}{% if k == "i" and "2" in v %}checked="checked"{% endif %}{% endfor %}
-                        >Grundskole
+                        >{% trans 'Grundskole' %}
                     </label>
                 </div>
                 <div class="divider"></div>
@@ -53,8 +53,4 @@
         {% endif %}
         {% endfor %}
     </div>
-{% endblock %}
-
-{% block extra_scripts %}
-    <script src="{% static 'js/pager.js' %}"></script>
 {% endblock %}

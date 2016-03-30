@@ -29,6 +29,7 @@ from booking.views import BecomeTeacherView
 from booking.views import BecomeHostView
 from booking.views import VisitOccurrenceAddLogEntryView
 from booking.views import VisitOccurrenceDetailView
+from booking.views import VisitOccurrenceCustomListView
 from booking.views import CloneResourceView
 
 
@@ -151,6 +152,9 @@ urlpatterns = patterns(
     url(r'^visit/occurrence/(?P<pk>[0-9]+)/change_autosend/?$',
         ChangeVisitOccurrenceAutosendView.as_view(),
         name='change-visit-occ-autosend'),
+    url(r'^visit/occurrence/customlist/?$',
+        VisitOccurrenceCustomListView.as_view(),
+        name='visit-occ-customlist'),
 
     url(r'^booking/(?P<pk>[0-9]+)/notify$',
         BookingNotifyView.as_view(),

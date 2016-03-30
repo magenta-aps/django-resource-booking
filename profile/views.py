@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from booking.models import Unit, Resource, VisitOccurrence, Visit
+from booking.models import Unit, Resource, VisitOccurrence
 from django.db.models import Q
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
@@ -12,7 +12,8 @@ from django.utils.translation import ugettext as _
 from django.views.generic import TemplateView, DetailView
 from django.views.generic.edit import UpdateView, FormView
 
-from booking.views import LoginRequiredMixin, AccessDenied, EditorRequriedMixin
+from booking.views import LoginRequiredMixin, AccessDenied, EditorRequriedMixin, \
+    VisitOccurrenceCustomListView
 from django.views.generic.list import ListView
 from profile.forms import UserCreateForm, EditMyResourcesForm
 from profile.models import EmailLoginEntry
@@ -62,12 +63,24 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             'color': self.HEADING_GREEN,
             'type': 'VisitOccurrence',
             'title': _(u'Seneste gennemførte tilbud'),
-            'queryset': VisitOccurrence.get_recently_held()
+            'queryset': VisitOccurrence.get_recently_held(),
+            'limit': 10,
+            'button': {
+                'text': _(u'Vis alle'),
+                'link': reverse('visit-occ-customlist') + "?type=%s" %
+                VisitOccurrenceCustomListView.TYPE_LATEST_COMPLETED
+            }
         }, {
             'color': self.HEADING_BLUE,
             'type': 'VisitOccurrence',
             'title': _(u'Dagens arrangementer'),
-            'queryset': VisitOccurrence.get_todays_occurrences()
+            'queryset': VisitOccurrence.get_todays_occurrences(),
+            'limit': 10,
+            'button': {
+                'text': _(u'Vis alle'),
+                'link': reverse('visit-occ-customlist') + "?type=%s" %
+                VisitOccurrenceCustomListView.TYPE_TODAY
+            }
         }])
 
         context.update(**kwargs)
