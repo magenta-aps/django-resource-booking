@@ -205,21 +205,21 @@ msgstr "Text"
 
 #: booking/forms.py:763
 msgid "Modtagere"
-msgstr ""
+msgstr "Recipients"
 
 #: booking/forms.py:769
 msgid "Emne"
-msgstr ""
+msgstr "Subject"
 
 #: booking/forms.py:780 booking/models.py:347 booking/models.py:2160
 #: booking/models.py:2177 booking/templates/common/modal_contact.html:12
 #: build/lib.linux-x86_64-2.7/booking/models.py:178
 msgid "Navn"
-msgstr ""
+msgstr "Name"
 
 #: booking/forms.py:784
 msgid "Dit navn"
-msgstr ""
+msgstr "Your name"
 
 #: booking/forms.py:794
 msgid "Din email-adresse"
@@ -1001,7 +1001,7 @@ msgstr ""
 #: booking/templates/booking/classvisit.html:30
 #: booking/templates/booking/classvisit_modal.html:38
 msgid "Fag/Niveau"
-msgstr ""
+msgstr "Subject/Level"
 
 #: booking/templates/booking/classvisit.html:38
 #: booking/templates/booking/classvisit_modal.html:46
@@ -1080,19 +1080,19 @@ msgstr "School:"
 
 #: booking/templates/booking/details.html:73
 msgid "Retning:"
-msgstr ""
+msgstr "Line:"
 
 #: booking/templates/booking/details.html:79
 msgid "Fag:"
-msgstr ""
+msgstr "Subject:"
 
 #: booking/templates/booking/details.html:89
 msgid "Niveau:"
-msgstr ""
+msgstr "Level:"
 
 #: booking/templates/booking/details.html:94
 msgid "Antal deltagere:"
-msgstr ""
+msgstr "Number of participants:"
 
 #: booking/templates/booking/details.html:97
 #: booking/templates/visitoccurrence/details.html:212
@@ -1102,15 +1102,15 @@ msgstr ""
 #: booking/templates/booking/details.html:102
 #: booking/templates/booking/details.html:136
 msgid "Tidspunkt:"
-msgstr ""
+msgstr "Time:"
 
 #: booking/templates/booking/details.html:105
 msgid "Ønsket tidspunkt:"
-msgstr ""
+msgstr "Desired time:"
 
 #: booking/templates/booking/details.html:109
 msgid "Rundvisning:"
-msgstr ""
+msgstr "Tour:"
 
 #: booking/templates/booking/details.html:118
 #: booking/templates/visitoccurrence/details.html:228
@@ -1123,7 +1123,7 @@ msgstr ""
 
 #: booking/templates/booking/details.html:131
 msgid "Titel:"
-msgstr ""
+msgstr "Title:"
 
 #: booking/templates/booking/details.html:141
 #: booking/templates/otherresource/details.html:69
@@ -1134,7 +1134,7 @@ msgstr ""
 #: booking/templates/otherresource/details.html:74
 #: booking/templates/resource/searchresult.html:180
 msgid "Fag/niveau:"
-msgstr ""
+msgstr "Subject/level"
 
 #: booking/templates/booking/details.html:157
 msgid "Max antal:"
