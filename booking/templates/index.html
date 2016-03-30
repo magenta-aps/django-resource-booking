@@ -99,41 +99,6 @@
     <div class="container grey-sides content-container">
         
     {% block content %}
-    <div class="row">
-        <div class="col-sm-12 col-md-6">
-        <div class="divider"></div>
-        <h1>{% trans 'Søg efter tilbud' %}</h1>
-        <div class="divider"></div>
-            <form action="{% url 'search' %}">
-            <h2 class="control-label">{% trans 'Tilbud rettet mod:' %}</h2>
-                <div class="input-group">
-                    <label class="checkbox-inline control-label"><input type="checkbox" value="">{% trans 'Elev' %}</label>
-                    <label class="checkbox-inline control-label"><input type="checkbox" value="">{% trans 'Lærer' %}</label>
-                </div>
-                <div class="divider"></div>
-                <div class="input-group">
-                    <label class="sr-only" for="searchBox">{% trans 'Søg efter tilbud' %}</label>
-                    <input type="text" class="form-control" id="searchBox" placeholder="{% trans 'Indtast et eller flere søgeord...' %}" name="q">
-                    <span class="input-group-btn">
-                        <button class="btn btn-default" type="submit">{% trans 'Søg' %}  <span class="glyphicon glyphicon-search" aria-hidden="true"></span></button>
-                    </span>
-                </div>
-            </form>
-        </div>
-        </div>
-        <hr>
-
-        {% for list in lists %}
-            {% cycle True False False as beginRow silent %}
-            {% cycle False False True as endRow silent %}
-            {% if beginRow or forloop.first %}
-                <div class="row eq-height listcontainer">
-            {% endif %}
-        {% include 'profile/item_list.html' with list=list %}
-        {% if endRow or forloop.last %}
-            </div>
-        {% endif %}
-        {% endfor %}
     {% endblock %}
     
     </div>

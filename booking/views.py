@@ -102,7 +102,7 @@ class MainPageView(TemplateView):
     HEADING_BLUE = 'alert-info'
     HEADING_YELLOW = 'alert-warning'
 
-    template_name = 'index.html'
+    template_name = 'frontpage.html'
 
     def get_context_data(self, **kwargs):
         context = {
