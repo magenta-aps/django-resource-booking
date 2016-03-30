@@ -1652,6 +1652,7 @@ class VisitOccurrenceNotifyView(EmailComposeView):
         self.object = VisitOccurrence.objects.get(id=pk)
 
         self.template_context['visit'] = self.object.visit
+        self.template_context['visitoccurrence'] = self.object
         return super(VisitOccurrenceNotifyView, self).\
             dispatch(request, *args, **kwargs)
 
@@ -1773,6 +1774,8 @@ class BookingNotifyView(EmailComposeView):
         self.object = Booking.objects.get(id=pk)
 
         self.template_context['visit'] = self.object.visitoccurrence.visit
+        self.template_context['visitoccurrence'] = self.object.visitoccurrence
+        self.template_context['booking'] = self.object
         return super(BookingNotifyView, self).dispatch(
             request, *args, **kwargs
         )
