@@ -1009,12 +1009,12 @@ msgstr "Subject/Level"
 #: booking/templates/email/preview.html:71
 #: booking/templates/resource/fields/autosend.html:16
 msgid "Tilføj ny"
-msgstr ""
+msgstr "Add new"
 
 #: booking/templates/booking/classvisit.html:50
 #: booking/templates/booking/classvisit_modal.html:58
 msgid "Rundvisning"
-msgstr ""
+msgstr "Tour"
 
 #: booking/templates/booking/classvisit.html:62
 #: booking/templates/booking/classvisit_modal.html:70
@@ -1026,7 +1026,7 @@ msgstr "Comments"
 #: booking/templates/booking/classvisit_modal.html:113
 #: booking/templates/email/preview.html:138
 msgid "Fjern"
-msgstr ""
+msgstr "Remove"
 
 #: booking/templates/booking/details.html:7
 #: booking/templates/booking/details.html:15
@@ -1048,12 +1048,12 @@ msgstr ""
 #: booking/templates/common/modal_contact.html:32
 #: booking/templates/visitoccurrence/details.html:46
 msgid "Send besked"
-msgstr ""
+msgstr "Send message"
 
 #: booking/templates/booking/details.html:39
 #: booking/templates/visitoccurrence/details.html:50
 msgid "Ingen skabelon"
-msgstr ""
+msgstr "No template"
 
 #: booking/templates/booking/details.html:57
 msgid "Information om bookingen"
@@ -1062,16 +1062,16 @@ msgstr ""
 #: booking/templates/booking/details.html:61
 #: booking/templates/visitoccurrence/details.html:205
 msgid "Navn:"
-msgstr ""
+msgstr "Name:"
 
 #: booking/templates/booking/details.html:64
 #: booking/templates/visitoccurrence/details.html:207
 msgid "Email:"
-msgstr ""
+msgstr "Email:"
 
 #: booking/templates/booking/details.html:67
 msgid "Telefon:"
-msgstr ""
+msgstr "Phone:"
 
 #: booking/templates/booking/details.html:70
 #: booking/templates/visitoccurrence/details.html:203
@@ -1097,7 +1097,7 @@ msgstr "Number of participants:"
 #: booking/templates/booking/details.html:97
 #: booking/templates/visitoccurrence/details.html:212
 msgid "Noter:"
-msgstr ""
+msgstr "Notes:"
 
 #: booking/templates/booking/details.html:102
 #: booking/templates/booking/details.html:136
@@ -1115,7 +1115,7 @@ msgstr "Tour:"
 #: booking/templates/booking/details.html:118
 #: booking/templates/visitoccurrence/details.html:228
 msgid "Tilbage til bookingliste"
-msgstr ""
+msgstr "Back to booking list"
 
 #: booking/templates/booking/details.html:125
 msgid "Detaljer om tilbuddet"
@@ -1138,20 +1138,20 @@ msgstr "Subject/level"
 
 #: booking/templates/booking/details.html:157
 msgid "Max antal:"
-msgstr ""
+msgstr "Max number:"
 
 #: booking/templates/booking/details.html:162
 #: booking/templates/otherresource/details.html:85
 #: booking/templates/visitoccurrence/details.html:177
 msgid "Hvad:"
-msgstr ""
+msgstr "What:"
 
 #: booking/templates/booking/details.html:167
 #: booking/templates/common/item_list.html:64
 #: booking/templates/resource/searchresult.html:205
 #: profile/templates/profile/item_list.html:61
 msgid "Hvor:"
-msgstr ""
+msgstr "Where:"
 
 #: booking/templates/booking/details.html:175
 #: booking/templates/otherresource/details.html:89
@@ -1164,15 +1164,15 @@ msgstr ""
 
 #: booking/templates/booking/details.html:199
 msgid "Varighed:"
-msgstr ""
+msgstr "Duration:"
 
 #: booking/templates/booking/details.html:204
 msgid "Pris:"
-msgstr ""
+msgstr "Price:"
 
 #: booking/templates/booking/fields/attendees.html:4
 msgid "Antal Deltagere*"
-msgstr ""
+msgstr "Number of participants*"
 
 #: booking/templates/booking/fields/basedata.html:4
 msgid "For- og efternavn*"
@@ -1180,7 +1180,7 @@ msgstr "First and last name*"
 
 #: booking/templates/booking/fields/basedata.html:20
 msgid "Email*"
-msgstr ""
+msgstr "Email*"
 
 #: booking/templates/booking/fields/basedata.html:36
 msgid "Telefonnummer*"
@@ -1217,11 +1217,11 @@ msgstr "Grade"
 #: booking/templates/booking/fields/subjects.html:4
 #: build/lib.linux-x86_64-2.7/booking/models.py:273
 msgid "Fag"
-msgstr ""
+msgstr "Subject"
 
 #: booking/templates/booking/fields/time.html:17
 msgid "Ønsket tidspunkt*"
-msgstr ""
+msgstr "Desired time*"
 
 #: booking/templates/booking/snippets/footer.html:5
 #: booking/templates/booking/snippets/footer.html:17
@@ -1350,7 +1350,7 @@ msgstr ""
 #: booking/templates/email/preview.html:80
 #: booking/templates/resource/searchresult-adminform.html:30
 msgid "Opdater"
-msgstr ""
+msgstr "Update"
 
 #: booking/templates/booking/workflow/become_host.html:5
 #: booking/templates/booking/workflow/become_host.html:12
@@ -1524,13 +1524,13 @@ msgstr ""
 #: booking/templates/common/item_list.html:51
 #: profile/templates/profile/item_list.html:48
 msgid "Dato/tid:"
-msgstr ""
+msgstr "Date/time:"
 
 #: booking/templates/common/item_list.html:55
 #: profile/templates/profile/item_list.html:52
 #, python-format
 msgid "kl. %(time)s"
-msgstr ""
+msgstr "at %(time)s"
 
 #: booking/templates/common/item_list.html:57
 #: profile/templates/profile/item_list.html:54
@@ -1545,23 +1545,23 @@ msgstr ""
 #: booking/templates/common/item_list.html:65
 #: profile/templates/profile/item_list.html:62
 msgid "Oprettet: "
-msgstr ""
+msgstr "Created: "
 
 #: booking/templates/common/item_list.html:66
 #: profile/templates/profile/item_list.html:63
 msgid "Opdateret: "
-msgstr ""
+msgstr "Updated: "
 
 #: booking/templates/common/item_list.html:72
 #: profile/templates/profile/item_list.html:69
 msgid "Rediger"
-msgstr ""
+msgstr "Edit"
 
 #: booking/templates/common/item_list.html:73
 #: booking/templates/email/list.html:54
 #: profile/templates/profile/item_list.html:70
 msgid "Kopiér"
-msgstr ""
+msgstr "Copy"
 
 #: booking/templates/common/map.html:4
 msgid "Kort"
@@ -1573,15 +1573,15 @@ msgstr ""
 
 #: booking/templates/common/modal_contact.html:16
 msgid "E-Mail"
-msgstr ""
+msgstr "E-Mail"
 
 #: booking/templates/common/modal_contact.html:24
 msgid "Besked"
-msgstr ""
+msgstr "Message"
 
 #: booking/templates/common/save_cancel.html:3
 msgid "Gem"
-msgstr ""
+msgstr "Save"
 
 #: booking/templates/common/searchform.html:4
 #: booking/templates/frontpage.html:9 booking/templates/frontpage.html:31
@@ -1603,7 +1603,7 @@ msgstr ""
 #: booking/templates/lightbox-index.html:49
 #: booking/templates/visitoccurrence/searchresult.html:26
 msgid "Søg"
-msgstr ""
+msgstr "Search"
 
 #: booking/templates/common/send_cancel.html:3
 msgid "Send"
@@ -1611,7 +1611,7 @@ msgstr ""
 
 #: booking/templates/email/compose.html:6
 msgid "besked"
-msgstr ""
+msgstr "message"
 
 #: booking/templates/email/compose.html:18
 #: booking/templates/email/compose_modal.html:15
@@ -1621,38 +1621,38 @@ msgstr ""
 #: booking/templates/email/compose.html:83
 #: booking/templates/email/compose_modal.html:79
 msgid "Tilføj:"
-msgstr ""
+msgstr "Add:"
 
 #: booking/templates/email/compose.html:120
 #: booking/templates/email/compose_modal.html:116
 msgid "Skabeloner:"
-msgstr ""
+msgstr "Templates:"
 
 #: booking/templates/email/compose.html:127
 #: booking/templates/email/compose_modal.html:123
 msgid "Rodskabelon"
-msgstr ""
+msgstr "Root template"
 
 #: booking/templates/email/compose.html:131
 #: booking/templates/email/compose_modal.html:127
 msgid "Ingen skabeloner fundet"
-msgstr ""
+msgstr "No templates found"
 
 #: booking/templates/email/compose.html:132
 #: booking/templates/email/compose_modal.html:128
 #: booking/templates/email/list.html:15
 msgid "Opret skabelon"
-msgstr ""
+msgstr "Create template"
 
 #: booking/templates/email/compose.html:200
 #: booking/templates/email/compose_modal.html:196
 msgid "Indtast email-adresse"
-msgstr ""
+msgstr "Enter email-address"
 
 #: booking/templates/email/compose.html:225
 #: booking/templates/email/compose_modal.html:226
 msgid "Ryd"
-msgstr ""
+msgstr "Clear"
 
 #: booking/templates/email/delete.html:11
 msgid "Are you sure you want to delete this template?"
