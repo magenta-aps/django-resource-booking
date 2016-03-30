@@ -952,6 +952,89 @@ a.template-overridden:visited {
 
 /* > Admin-visit-search end */
 
+/* frontpage lists */
+
+.listcontainer.eq-height [class*="col-"] .panel {
+    border-color: #ccc;
+}
+
+.listcontainer.eq-height [class*="col-"] .panel .panel-body {
+    padding: 5px;
+}
+
+.listcontainer .list-group {
+    margin-bottom: 0;
+}
+
+.listcontainer .list-group-item {
+    margin-bottom: 10px;
+    position: relative;
+}
+
+.listcontainer .list-group-item:hover {
+    border: 1px solid #bbb;
+}
+
+.listcontainer .list-group-item:first-child {
+    margin-top: 5px;
+    border-radius: 0;
+}
+
+.listcontainer .list-group-item:last-child {
+    margin-bottom: 0!important;
+    border-radius: 0;
+}
+
+.listcontainer .list-group-item:nth-child(odd) {
+    background-color: #f8f8f8;
+    margin-bottom: 10px;
+}
+
+.listcontainer a.list-group-item .list-group-item-heading {
+    line-height: 16px;
+}
+
+.listcontainer .list-group-item ul {
+    padding-left: 0;
+    color: #4A4949;
+    list-style-type: none;
+}
+
+.listcontainer .panel.panel-bookings .panel-heading .panel-title {
+    font-size: 13px;
+    display: inline-block;
+    max-width: 85%;
+    color: #333;
+}
+
+.listcontainer .badge-primary {
+    background-color: #337ab7;
+}
+
+.listcontainer .badge-danger {
+    background-color: #901a1e;
+}
+
+.listcontainer .badge-success {
+    background-color: #5cb85c;
+}
+
+.listcontainer [class*="alert-"] {
+    border-width: 1px;
+    border-style: solid;
+}
+
+.listcontainer .list-group-item .outdated:hover {
+    background-color: #f2dede;
+    border: 1px solid #9C5154;
+    opacity: 1;
+}
+
+.listcontainer .list-group-item > a:hover {
+    text-decoration: none;
+}
+
+/* frontpage lists end */
 
 /*Backend specific styles end */
 
