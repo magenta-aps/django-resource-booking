@@ -11,7 +11,7 @@
             </h3>
             <span class="badge badge-danger pull-right">{{ list.queryset|length }}</span>
         </div>
-        <div class="panel-body">
+        <div class="panel-body pager" data-list-item=".list-group-item">
 
             {% if list.type == 'VisitOccurrence' %}
                 {% for occurrence in list.queryset %}
