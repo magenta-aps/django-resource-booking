@@ -3,6 +3,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
 from django.core.exceptions import SuspiciousFileOperation
 from django.core.files.storage import FileSystemStorage
+from subprocess import Popen, PIPE
 import os
 
 
@@ -96,3 +97,17 @@ class CustomStorage(FileSystemStorage):
                                     (file_root, counter, file_ext))
             counter += 1
         return name
+
+
+def html2text(value):
+    """
+    Pipes given HTML string into the text browser W3M, which renders it.
+    Rendered text is grabbed from STDOUT and returned.
+    """
+    try:
+        cmd = "w3m -dump -T text/html -O ascii"
+        proc = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE)
+        return proc.communicate(str(value))[0]
+    except OSError:
+        # something bad happened, so just return the input
+        return value

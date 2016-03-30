@@ -35,8 +35,8 @@ from django.views.defaults import bad_request
 
 from profile.models import EDIT_ROLES
 from profile.models import role_to_text
-from booking.models import Visit, VisitOccurrence, StudyMaterial, \
-    KUEmailMessage
+from booking.models import Visit, VisitOccurrence, StudyMaterial
+from booking.models import KUEmailMessage
 from booking.models import Resource, Subject
 from booking.models import Unit
 from booking.models import OtherResource
@@ -250,7 +250,8 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
             context = self.template_context
             recipients = self.lookup_recipients(
                 form.cleaned_data['recipients'])
-            KUEmailMessage.send_email(template, context, recipients)
+            KUEmailMessage.send_email(template, context, recipients,
+                                      self.object)
             return super(EmailComposeView, self).form_valid(form)
 
         return self.render_to_response(
@@ -1355,7 +1356,7 @@ class EditVisitView(RoleRequiredMixin, EditResourceView):
                 messages.add_message(
                     request,
                     messages.INFO,
-                    _(u'Der findes arrangementer for tilbudet med '
+                    _(u'Der findes besøg for tilbudet med '
                       u'deltagerantal udenfor de angivne min-/max-grænser for '
                       u'deltagere!')
                 )
@@ -1619,7 +1620,8 @@ class VisitInquireView(FormMixin, HasBackButtonMixin, TemplateView):
             context = {}
             context.update(form.cleaned_data)
             recipients = self.object.contact_persons.all()
-            KUEmailMessage.send_email(template, context, recipients)
+            KUEmailMessage.send_email(template, context, recipients,
+                                      self.object)
             return super(VisitInquireView, self).form_valid(form)
 
         return self.render_to_response(
@@ -2234,7 +2236,7 @@ class VisitOccurrenceSearchView(LoginRequiredMixin, ListView):
         context['breadcrumbs'] = [
             {
                 'url': reverse('visit-occ-search'),
-                'text': _(u'Arrangementer')
+                'text': _(u'Besøg')
             },
             {'text': _(u'Søgeresultatliste')},
         ]
@@ -2298,9 +2300,9 @@ class VisitOccurrenceDetailView(LoggedViewMixin, ResourceBookingDetailView):
         context['breadcrumbs'] = [
             {
                 'url': reverse('visit-occ-search'),
-                'text': _(u'Søg i arrangementer')
+                'text': _(u'Søg i besøg')
             },
-            {'text': _(u'Arrangement #%s') % self.object.pk},
+            {'text': _(u'Besøg #%s') % self.object.pk},
         ]
 
         context['thisurl'] = reverse('visit-occ-view', args=[self.object.id])

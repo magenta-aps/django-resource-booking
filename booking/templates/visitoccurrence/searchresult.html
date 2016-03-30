@@ -3,7 +3,7 @@
 {% load booking_tags %}
 {% load i18n %}
 
-{% block htmltitle %} - {% trans 'søg i arrangementer' %}{% endblock %}
+{% block htmltitle %} - {% trans 'søg i besøg' %}{% endblock %}
 
 {% block content %}
     <div class="row">
@@ -16,8 +16,8 @@
 
             <form class="clearfix" role="søg" action={% url 'visit-occ-search' %}>
                 <div class="input-group">
-                    <label class="sr-only" for="searchBox">{% trans 'Søg efter arrangementer' %}</label>
-                    <input type="text" class="form-control" id="searchBox" placeholder="{% trans 'Søg efter arrangementer - indtast et eller flere søgeord...' %}" name="q" value="{{ request.GET.q }}"/>
+                    <label class="sr-only" for="searchBox">{% trans 'Søg efter besøg' %}</label>
+                    <input type="text" class="form-control" id="searchBox" placeholder="{% trans 'Søg efter besøg - indtast et eller flere søgeord...' %}" name="q" value="{{ request.GET.q }}"/>
                     <span class="input-group-btn">
                         <a id="reset-btn" class="btn btn-default" aria-label="{% trans 'Ryd søgning' %}">
                             <span class="glyphicon glyphicon-remove"></span>
@@ -51,10 +51,10 @@
             {% for res in results %}
                 <li class="media">
                     <div class="media-body">
-                        <strong><a href="{% url 'visit-occ-view' res.pk %}">{% trans 'Arrangement' %} {{ res.pk }}</a></strong>
+                        <strong><a href="{% url 'visit-occ-view' res.pk %}">{% trans 'Besøg' %} #{{ res.pk }}</a></strong>
                         <dl class="dl-horizontal">
                             <dt>{% trans 'Tilbud:' %}</dt>
-                            <dd><a href="{% url 'visit-view' res.visit.pk %}">{{ res.visit.title }}</a></dd>
+                            <dd><a href="{% url 'visit-view' res.visit.pk %}">#{{ res.visit.pk }} {{ res.visit.title }}</a></dd>
                             <dt>{% trans 'Booket af:' %}</dt>
                             <dd>{{ res.nr_bookers }} personer</dd>
                         </dl>

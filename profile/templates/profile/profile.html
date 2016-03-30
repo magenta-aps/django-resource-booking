@@ -22,7 +22,7 @@
         <div class="col-sm-6">
             <div class="list-group admin-links">
                 {% if request.user.userprofile.can_create %}
-                    <a class="list-group-item" href="{% url 'visit-occ-search' %}"><h4 class="list-group-item-heading">{% trans 'Søg i arrangementer' %}</h4><p class="list-group-item-text">{% trans 'Søg i arrangementer der ligger i systemet.' %}</p></a>
+                    <a class="list-group-item" href="{% url 'visit-occ-search' %}"><h4 class="list-group-item-heading">{% trans 'Søg i besøg' %}</h4><p class="list-group-item-text">{% trans 'Søg i besøg der ligger i systemet.' %}</p></a>
                 {% endif %}
             </div>
         </div>

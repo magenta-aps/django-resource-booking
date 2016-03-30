@@ -1,6 +1,6 @@
 # encoding: utf-8
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.mail.message import EmailMessage
+from django.core.mail import EmailMultiAlternatives
 from django.db import models
 from django.db.models import Sum
 from django.db.models import Q
@@ -8,6 +8,7 @@ from django.template.context import make_context
 from django.utils import timezone
 from djorm_pgfulltext.models import SearchManager
 from djorm_pgfulltext.fields import VectorField
+from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
 from django.contrib.auth.models import User
@@ -16,7 +17,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.template.base import Template, VariableNode
 
 from recurrence.fields import RecurrenceField
-from booking.utils import ClassProperty, full_email, CustomStorage
+from booking.utils import ClassProperty, full_email, CustomStorage, html2text
 from resource_booking import settings
 
 from datetime import datetime, timedelta
@@ -26,7 +27,7 @@ LOGACTION_CHANGE = CHANGE
 LOGACTION_DELETE = DELETION
 # If we need to add additional values make sure they do not conflict with
 # system defined ones by adding 128 to the value.
-LOGACTION_CUSTOM1 = 128 + 1
+LOGACTION_MAIL_SENT = 128 + 1
 LOGACTION_CUSTOM2 = 128 + 2
 LOGACTION_MANUAL_ENTRY = 128 + 64 + 1
 
@@ -34,6 +35,7 @@ LOGACTION_DISPLAY_MAP = {
     LOGACTION_CREATE: _(u'Oprettet'),
     LOGACTION_CHANGE: _(u'Ændret'),
     LOGACTION_DELETE: _(u'Slettet'),
+    LOGACTION_MAIL_SENT: _(u'Mail sendt'),
     LOGACTION_MANUAL_ENTRY: _(u'Log-post tilføjet manuelt')
 }
 
@@ -1424,9 +1426,10 @@ class Visit(Resource):
             bookable=bookable,
             **kwargs
         )
+        occ.save()
+        occ.create_inheriting_autosends()
 
         if self.default_hosts.exists() or self.default_teachers.exists():
-            occ.save()
 
             for x in self.default_hosts.all():
                 occ.hosts.add(x)
@@ -1507,8 +1510,8 @@ class Visit(Resource):
 class VisitOccurrence(models.Model):
 
     class Meta:
-        verbose_name = _(u"arrangement")
-        verbose_name_plural = _(u"arrangementer")
+        verbose_name = _(u"besøg")
+        verbose_name_plural = _(u"besøg")
         ordering = ['start_datetime']
 
     objects = SearchManager(
@@ -1905,20 +1908,35 @@ class VisitOccurrence(models.Model):
             recipients.extend(self.teachers.all())
         return recipients
 
+    def create_inheriting_autosends(self):
+        for visitautosend in self.visit.visitautosend_set.all():
+            if not self.get_autosend(visitautosend.template_key, False, False):
+                occurrenceautosend = VisitOccurrenceAutosend(
+                    visitoccurrence=self,
+                    inherit=True,
+                    template_key=visitautosend.template_key,
+                    days=visitautosend.days,
+                    enabled=visitautosend.enabled
+                )
+                occurrenceautosend.save()
+
     def autosend_inherits(self, template_key):
         s = self.visitoccurrenceautosend_set.\
             filter(template_key=template_key, inherit=True).\
             count() > 0
         return s
 
-    def get_autosend(self, template_key, follow_inherit=True):
+    def get_autosend(self, template_key, follow_inherit=True,
+                     include_disabled=False):
         if follow_inherit and self.autosend_inherits(template_key):
             return self.visit.get_autosend(template_key)
         else:
             try:
-                item = self.visitoccurrenceautosend_set.filter(
-                    template_key=template_key, enabled=True)[0]
-                return item
+                query = self.visitoccurrenceautosend_set.filter(
+                    template_key=template_key)
+                if not include_disabled:
+                    query = query.filter(enabled=True)
+                return query[0]
             except:
                 return None
 
@@ -2136,8 +2154,8 @@ class Room(models.Model):
 class BookedRoom(models.Model):
 
     class Meta:
-        verbose_name = _(u'lokale for arrangement')
-        verbose_name_plural = _(u'lokaler for arrangement')
+        verbose_name = _(u'lokale for besøg')
+        verbose_name_plural = _(u'lokaler for besøg')
 
     name = models.CharField(max_length=60, verbose_name=_(u'Navn'))
 
@@ -2502,7 +2520,7 @@ class Booking(models.Model):
     def get_recipients(self, template_key):
         recipients = self.visitoccurrence.get_recipients(template_key)
         if template_key in EmailTemplate.booker_keys:
-            recipients.add(self.booker)
+            recipients.append(self.booker)
         return recipients
 
     def autosend(self, template_key, recipients=None,
@@ -2636,19 +2654,33 @@ class KUEmailMessage(models.Model):
         blank=False,
         null=False
     )
+    content_type = models.ForeignKey(ContentType, null=True, default=None)
+    object_id = models.PositiveIntegerField(null=True, default=None)
+    content_object = GenericForeignKey('content_type', 'object_id')
 
     @staticmethod
-    def save_email(email_message):
+    def save_email(email_message, instance):
+        """
+        :param email_message: An instance of
+        django.core.mail.message.EmailMessage
+        :param instance: The object that the message concerns i.e. Booking,
+        Visit etc.
+        :return: None
+        """
+        ctype = ContentType.objects.get_for_model(instance)
         ku_email_message = KUEmailMessage(
             subject=email_message.subject,
             body=email_message.body,
             from_email=email_message.from_email,
-            recipients=', '.join(email_message.recipients())
+            recipients=', '.join(email_message.recipients()),
+            content_type=ctype,
+            object_id=instance.id
         )
         ku_email_message.save()
 
     @staticmethod
-    def send_email(template, context, recipients, unit=None, **kwargs):
+    def send_email(template, context, recipients, instance, unit=None,
+                   **kwargs):
         if isinstance(template, int):
             template_key = template
             template = EmailTemplate.get_template(template_key, unit)
@@ -2699,13 +2731,23 @@ class KUEmailMessage(models.Model):
             }
             ctx.update(context)
             subject = template.expand_subject(ctx)
-            body = template.expand_body(ctx, encapsulate=True)
 
-            message = EmailMessage(
+            body = template.expand_body(ctx, encapsulate=True).strip()
+            if body.startswith("<!DOCTYPE"):
+                htmlbody = body
+                textbody = html2text(htmlbody)
+            else:
+                htmlbody = None
+                textbody = body
+
+            message = EmailMultiAlternatives(
                 subject=subject,
-                body=body,
+                body=textbody,
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 to=[email['full']]
             )
+            if htmlbody is not None:
+                message.attach_alternative(htmlbody, 'text/html')
             message.send()
-            KUEmailMessage.save_email(message)
+
+            KUEmailMessage.save_email(message, instance)
