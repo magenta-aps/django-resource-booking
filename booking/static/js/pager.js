@@ -1,9 +1,12 @@
 $(function(){
-    $(".pager").each(function(){
+
+    $(".paginated-list").each(function(){
         var $this = $(this);
         var items = $this.find($this.attr("data-list-item"));
         var pageSize = $this.attr("data-list-size") || 10;
         if (items.length >= pageSize) {
+            var paginator = $this.find("ul.pagination");
+
             var page = 0;
             var lastPage = Math.ceil(items.length / pageSize) - 1;
 
@@ -16,44 +19,57 @@ $(function(){
                 updateButtons();
             };
 
-            var firstButton = $("<button>").text("<<");
-            firstButton.click(function () {
-                if (page > 0) {
-                    showPage(0);
-                }
-            });
-
-            var prevButton = $("<button>").text("<");
-            prevButton.click(function () {
+            var prevButton = paginator.find(".prevbutton");
+            prevButton.click(function(event) {
                 if (page > 0) {
                     showPage(page - 1);
                 }
+                event.preventDefault();
+                return false;
             });
 
-            var nextButton = $("<button>").text(">");
-            nextButton.click(function () {
+            var nextButton = paginator.find(".nextbutton");
+            nextButton.click(function (event) {
                 if (page < lastPage) {
                     showPage(page + 1);
                 }
+                event.preventDefault();
+                return false;
             });
 
-            var lastButton = $("<button>").text(">>");
-            lastButton.click(function () {
-                if (page < lastPage) {
-                    showPage(lastPage);
+            var pageButtonPrototype = paginator.find("li.pagebutton");
+            var pageButtons = [];
+            for (i=0; i<=lastPage; i++) {
+                var pageButton = pageButtonPrototype.clone().text(i+1);
+                pageButtons.push(pageButton);
+            }
+            pageButtonPrototype.after(pageButtons);
+            pageButtonPrototype.remove();
+
+            var updateButton = function(button, enabled) {
+                button.toggleClass("disabled", !enabled);
+            };
+
+            var updateButtons = function() {
+                updateButton(prevButton, page > 0);
+                updateButton(nextButton, page < lastPage);
+                for (var i=0; i<pageButtons.length; i++) {
+                    var pageButton = pageButtons[i];
+                    pageButton.empty();
+                    var content;
+                    if (page == i) {
+                        pageButton.addClass("active");
+                        content = $("<span>").html((i+1)+' <span class="sr-only">(aktiv side)</span>');
+                    } else {
+                        pageButton.removeClass("active");
+                        content = $("<a>").text(i+1).click(function(p){
+                            if (page !== p) {
+                                showPage(p);
+                            }
+                        }.bind(null, i));
+                    }
+                    pageButton.append(content);
                 }
-            });
-
-            var buttons = $().add(firstButton).add(prevButton).add(nextButton).add(lastButton);
-            buttons.attr({type: "button"}).addClass("pagerbutton");
-
-            $this.append(firstButton, prevButton, nextButton, lastButton);
-
-            var updateButtons = function () {
-                var start = $().add(firstButton).add(prevButton);
-                var end = $().add(nextButton).add(lastButton);
-                start.toggleClass("disabled", page == 0);
-                end.toggleClass("disabled", page == lastPage);
             };
 
             showPage(0);

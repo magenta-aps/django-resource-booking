@@ -110,12 +110,12 @@ class MainPageView(TemplateView):
                 {
                     'color': self.HEADING_GREEN,
                     'type': 'VisitOccurrence',
-                    'title': _(u'Senest opdaterede tilbud'),
+                    'title': _(u'Senest opdaterede besøg'),
                     'queryset': VisitOccurrence.get_latest_updated()
                 }, {
                     'color': self.HEADING_BLUE,
                     'type': 'VisitOccurrence',
-                    'title': _(u'Senest bookede tilbud'),
+                    'title': _(u'Senest bookede besøg'),
                     'queryset': VisitOccurrence.get_latest_booked()
                 }
             ]

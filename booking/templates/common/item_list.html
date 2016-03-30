@@ -1,4 +1,5 @@
 {% load i18n %}
+{% load booking_tags %}
 <div class="col-sm-4">
     <div class="panel panel-bookings">
         <div class="panel-heading {{ list.color }}">
@@ -11,7 +12,7 @@
             </h3>
             <span class="badge badge-danger pull-right">{{ list.queryset|length }}</span>
         </div>
-        <div class="panel-body pager" data-list-item=".list-group-item">
+        <div class="panel-body paginated-list" data-list-item=".list-group-item">
 
             {% if list.type == 'VisitOccurrence' %}
                 {% for occurrence in list.queryset %}
@@ -74,6 +75,36 @@
                     </div>
                 {% endfor %}
             {% endif %}
+
+            {% if list.queryset|length > 10 %}
+                <nav>
+                    <ul class="pagination">
+
+                        <li class="prevbutton">
+                            <a href="#" aria-label="{% trans 'Forrige' %}">
+                                <span>
+                                    <span class="glyphicon glyphicon-chevron-left small" aria-hidden="true"></span>
+                                    {% trans 'Forrige' %}
+                                </span>
+                            </a>
+                        </li>
+
+                        <li class="pagebutton">
+                            <a href="#"></a>
+                        </li>
+
+                        <li class="nextbutton">
+                            <a href="#" aria-label="{% trans 'Næste' %}">
+                                <span>
+                                    {% trans 'Næste' %}
+                                    <span class="glyphicon glyphicon-chevron-right small" aria-hidden="true"></span>
+                                </span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            {% endif %}
+
             {% if list.button %}
                 <a href="{{ list.button.link }}">
                     <span class="label label-primary pull-right">{{ list.button.text }}</span>
