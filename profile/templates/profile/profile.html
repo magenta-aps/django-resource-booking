@@ -121,7 +121,7 @@
         {% if beginRow or forloop.first %}
             <div class="row eq-height listcontainer">
         {% endif %}
-            {% include 'profile/item_list.html' with list=list %}
+        {% include 'profile/item_list.html' with list=list %}
         {% if endRow or forloop.last %}
             </div>
         {% endif %}

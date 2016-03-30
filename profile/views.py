@@ -59,15 +59,10 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         context['thisurl'] = reverse('user_profile')
 
         context['lists'].extend([{
-            'color': self.HEADING_YELLOW,
-            'type': 'Resource',
-            'title': _(u'Seneste opdaterede tilbud'),
-            'queryset': Resource.get_latest_updated()
-        }, {
             'color': self.HEADING_GREEN,
-            'type': 'Resource',
-            'title': _(u'Seneste bookede tilbud'),
-            'queryset': Visit.get_latest_booked()
+            'type': 'VisitOccurrence',
+            'title': _(u'Seneste gennemførte tilbud'),
+            'queryset': VisitOccurrence.get_recently_held()
         }, {
             'color': self.HEADING_BLUE,
             'type': 'VisitOccurrence',

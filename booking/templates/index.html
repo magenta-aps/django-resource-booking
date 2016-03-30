@@ -122,6 +122,18 @@
         </div>
         </div>
         <hr>
+
+        {% for list in lists %}
+            {% cycle True False False as beginRow silent %}
+            {% cycle False False True as endRow silent %}
+            {% if beginRow or forloop.first %}
+                <div class="row eq-height listcontainer">
+            {% endif %}
+        {% include 'profile/item_list.html' with list=list %}
+        {% if endRow or forloop.last %}
+            </div>
+        {% endif %}
+        {% endfor %}
     {% endblock %}
     
     </div>

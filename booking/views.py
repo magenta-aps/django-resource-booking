@@ -96,7 +96,31 @@ def import_views(from_module):
 
 class MainPageView(TemplateView):
     """Display the main page."""
+
+    HEADING_RED = 'alert-danger'
+    HEADING_GREEN = 'alert-success'
+    HEADING_BLUE = 'alert-info'
+    HEADING_YELLOW = 'alert-warning'
+
     template_name = 'index.html'
+
+    def get_context_data(self, **kwargs):
+        context = {
+            'lists': [
+                {
+                    'color': self.HEADING_GREEN,
+                    'type': 'VisitOccurrence',
+                    'title': _(u'Senest opdaterede tilbud'),
+                    'queryset': VisitOccurrence.get_latest_updated()
+                }, {
+                    'color': self.HEADING_BLUE,
+                    'type': 'VisitOccurrence',
+                    'title': _(u'Senest bookede tilbud'),
+                    'queryset': VisitOccurrence.get_latest_booked()
+                }
+            ]
+        }
+        return context
 
 
 class LoginRequiredMixin(object):
