@@ -17,7 +17,9 @@ from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse, reverse_lazy
 from django.db.models import Count
 from django.db.models import Min
+from django.db.models import Sum
 from django.db.models import Q
+from django.db.models.functions import Coalesce
 from django.forms.models import model_to_dict
 from django.http import Http404
 from django.http import HttpResponse
@@ -62,6 +64,7 @@ from booking.forms import EmailTemplateForm, EmailTemplatePreviewContextForm
 from booking.forms import EmailComposeForm
 from booking.forms import AdminVisitSearchForm
 from booking.forms import VisitAutosendFormSet
+from booking.forms import VisitOccurrenceSearchForm
 from booking.utils import full_email
 
 import re
@@ -2265,41 +2268,156 @@ class VisitOccurrenceCustomListView(VisitOccurrenceListView):
 class VisitOccurrenceSearchView(VisitOccurrenceListView):
     template_name = "visitoccurrence/searchresult.html"
 
-    def get_date_from_request(self, queryparam):
-        val = self.request.GET.get(queryparam)
-        if not val:
-            return None
-        try:
-            val = datetime.strptime(val, '%d-%m-%Y')
-            val = timezone.make_aware(val)
-        except Exception:
-            val = None
-        return val
+    form = None
+
+    def get_form(self):
+        if not self.form:
+            # Make new form object
+            self.form = VisitOccurrenceSearchForm(
+                self.request.GET,
+                user=self.request.user
+            )
+            # Process the form
+            self.form.is_valid()
+        return self.form
 
     def get_queryset(self):
-        searchexpression = self.request.GET.get("q", "")
+        form = self.get_form()
 
-        # Filter by searchexpression
-        qs = self.model.objects.search(searchexpression)
+        q = self.get_form().cleaned_data.get("q", "").strip()
 
-        # Filter by user access
-        qs = Booking.queryset_for_user(self.request.user, qs)
+        # Filtering by freetext has to be the first thing we do
+        qs = self.model.objects.search(q)
+
+        for filter_method in (
+            self.filter_by_resource_id,
+            self.filter_by_unit,
+            self.filter_by_date,
+            self.filter_by_workflow,
+            self.filter_by_participants,
+        ):
+            try:
+                qs = filter_method(qs)
+            except Exception as e:
+                print "Error while filtering VO search: %s" % e
 
         qs = qs.order_by("-pk")
+
+        return qs
+
+    def filter_by_resource_id(self, qs):
+        form = self.get_form()
+        t = form.cleaned_data.get("t", "").strip()
+
+        if re.match('^#?\d+$', t):
+            if t[0] == "#":
+                t = q[1:]
+            qs = qs.filter(visit__pk=t)
+        elif t:
+            qs = self.model.objects.none()
+
+        return qs
+
+    def filter_by_unit(self, qs):
+        form = self.get_form()
+        u = form.cleaned_data.get("u", form.MY_UNITS)
+
+        if u == "":
+            return qs
+
+        u = int(u)
+        profile = self.request.user.userprofile
+
+        if u == form.MY_UNIT:
+            return qs.filter(visit__unit=profile.unit)
+        elif u == form.MY_FACULTY:
+            return qs.filter(visit__unit=profile.unit.get_faculty_queryset())
+        elif u == form.MY_UNITS:
+            return qs.filter(visit__unit=profile.get_unit_queryset())
+        else:
+            return qs.filter(visit__unit__pk=u)
+
+        return qs
+
+    def filter_by_date(self, qs):
+        form = self.get_form()
+
+        from_date = form.cleaned_data.get("from_date", None)
+        if from_date is not None:
+            from_date = timezone.datetime(
+                year=from_date.year,
+                month=from_date.month,
+                day=from_date.day,
+                tzinfo=timezone.get_default_timezone()
+            )
+            qs = qs.filter(start_datetime__gte=from_date)
+
+        to_date = form.cleaned_data.get("to_date", None)
+        if to_date is not None:
+            to_date = timezone.datetime(
+                year=to_date.year,
+                month=to_date.month,
+                day=to_date.day,
+                hour=23,
+                minute=59,
+                tzinfo=timezone.get_default_timezone()
+            )
+            qs = qs.filter(start_datetime__lte=to_date)
+
+        return qs
+
+    def filter_by_workflow(self, qs):
+        form = self.get_form()
+        w = form.cleaned_data.get("w", "")
+
+        if w == "":
+            return qs
+
+        w = int(w)
+
+        planned_status = VisitOccurrence.WORKFLOW_STATUS_BEING_PLANNED
+        if w == form.WORKFLOW_STATUS_PENDING:
+            return qs.filter(workflow_status=planned_status)
+        elif w == form.WORKFLOW_STATUS_READY:
+            return qs.exclude(workflow_status=planned_status)
+        else:
+            return qs.filter(workflow_status=w)
+
+    def filter_by_participants(self, qs):
+        # Number of individual bookers plus attendee count
+        qs = qs.annotate(num_participants=(
+            Coalesce(Count("bookings__booker__pk"), 0) +
+            Coalesce(Sum("bookings__booker__attendee_count"), 0)
+        ))
+
+        form = self.get_form()
+
+        p_min = ""
+
+        try:
+            p_min = form.cleaned_data.get("p_min", "")
+        except:
+            pass
+
+        if p_min != "":
+            qs = qs.filter(num_participants__gte=p_min)
+
+        p_max = ""
+
+        try:
+            p_max = form.cleaned_data.get("p_max", "")
+        except:
+            pass
+
+        if p_max != "":
+            qs = qs.filter(num_participants__lte=p_max)
 
         return qs
 
     def get_context_data(self, **kwargs):
         context = {}
 
-        if self.request.user.userprofile.is_administrator:
-            context['unit_limit_text'] = \
-                u'Alle enheder (administrator-søgning)'
-        else:
-            context['unit_limit_text'] = \
-                u'Bookinger relateret til enheden %s' % (
-                    self.request.user.userprofile.unit
-                )
+        context['form'] = self.get_form()
 
         context['breadcrumbs'] = [
             {

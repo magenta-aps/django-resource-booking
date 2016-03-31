@@ -912,6 +912,14 @@ a.template-overridden:visited {
 
 /* > Admin-visit-search end */
 
+/* > Visitoccurrence-search start */
+
+#visitoccsearch .dl-horizontal dt {
+    white-space: normal;
+}
+
+/* > Visitoccurrence-search end */
+
 /* frontpage lists */
 
 .listcontainer.eq-height [class*="col-"] .panel {
