@@ -790,6 +790,21 @@ class Resource(models.Model):
     def __unicode__(self):
         return self.title + "(%s)" % str(self.id)
 
+    # This is used from booking.signals.update_search_indexes
+    def update_searchindex(self):
+        if not self.pk:
+            return False
+
+        old_value = self.extra_search_text or ""
+        new_value = self.generate_extra_search_text() or ""
+
+        if old_value != new_value:
+            self.extra_search_text = new_value
+            self.save()
+            return True
+        else:
+            return False
+
     def generate_extra_search_text(self):
         texts = []
 
@@ -1367,16 +1382,6 @@ class Visit(Resource):
         verbose_name=_(u'Faste undervisere')
     )
 
-    def save(self, *args, **kwargs):
-        # Save once to store relations
-        super(Visit, self).save(*args, **kwargs)
-
-        # Update search_text
-        self.extra_search_text = self.generate_extra_search_text()
-
-        # Do the final save
-        return super(Visit, self).save(*args, **kwargs)
-
     @property
     def bookable_occurrences(self):
         return self.visitoccurrence_set.filter(
@@ -1883,17 +1888,26 @@ class VisitOccurrence(models.Model):
             workflow_status=cls.WORKFLOW_STATUS_BEING_PLANNED,
         ).filter(**kwargs)
 
+    # This is used from booking.signals.update_search_indexes
+    def update_searchindex(self):
+        if not self.pk:
+            return False
+
+        old_value = self.extra_search_text or ""
+        new_value = self.as_searchtext() or ""
+
+        if old_value != new_value:
+            self.extra_search_text = new_value
+            self.save()
+            return True
+        else:
+            return False
+
     def save(self, *args, **kwargs):
 
         self.update_endtime()
 
         # Save once to store relations
-        super(VisitOccurrence, self).save(*args, **kwargs)
-
-        # Update search_text
-        self.extra_search_text = self.as_searchtext()
-
-        # Do the final save
         super(VisitOccurrence, self).save(*args, **kwargs)
 
     def get_absolute_url(self):
@@ -2487,8 +2501,8 @@ class Booking(models.Model):
 
     def raise_readonly_attr_error(self, attrname):
         raise Exception(
-            _("Attribute %s on Booking is readonly.") % attrname +
-            _("Set it on the VisitOccurance instead.")
+            _(u"Attribute %s on Booking is readonly.") % attrname +
+            _(u"Set it on the VisitOccurance instead.")
         )
 
     @classmethod
