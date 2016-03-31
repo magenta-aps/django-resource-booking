@@ -6,37 +6,51 @@
 {% block htmltitle %} - {% trans 'søg i besøg' %}{% endblock %}
 
 {% block content %}
-    <div class="row">
+    <div id="visitoccsearch" class="row">
         <div id="main" class="col-sm-12 col-md-12">
 
             {% include 'common/breadcrumbrow.html' %}
 
-            <h1>{% trans 'Søgeresultat' %}</h1>
             <div class="divider"></div>
-
             <form class="clearfix" role="søg" action={% url 'visit-occ-search' %}>
-                <div class="input-group">
-                    <label class="sr-only" for="searchBox">{% trans 'Søg efter besøg' %}</label>
-                    <input type="text" class="form-control" id="searchBox" placeholder="{% trans 'Søg efter besøg - indtast et eller flere søgeord...' %}" name="q" value="{{ request.GET.q }}"/>
-                    <span class="input-group-btn">
-                        <a id="reset-btn" class="btn btn-default" aria-label="{% trans 'Ryd søgning' %}">
-                            <span class="glyphicon glyphicon-remove"></span>
-                        </a>
-                        <button class="btn btn-default" id="search" type="submit">
-                            <span class="hidden-xs">{% trans 'Søg' %}</span>
-                            <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
-                        </button>
-                    </span>
-                </div>
-            </form>
+                <h2>{% trans 'Filtrér søgning' %}</h2>
+                <dl class="dl-horizontal">
+                    <dt><label for="{{ form.q.id_for_label }}">{{ form.q.label }}</label></dt>
+                    <dd>{{ form.q }}</dd>
 
+                    <dt>{{ form.s.label }}</dt>
+                    <dd>{{ form.s }}</dd>
+
+                    <dt>{{ form.t.label }}</dt>
+                    <dd>{{ form.t }}</dd>
+
+                    <dt>{{ form.u.label }}</dt>
+                    <dd>{{ form.u }}</dd>
+
+                    <dt>{{ form.w.label }}</dt>
+                    <dd>{{ form.w }}</dd>
+
+                    <dt>{{ form.p_min.label }}</dt>
+                    <dd>{{ form.p_min }}</dd>
+
+                    <dt>{{ form.p_max.label }}</dt>
+                    <dd>{{ form.p_max }}</dd>
+
+                    <dt>{{ form.from_date.label }}</dt>
+                    <dd>{{ form.from_date }}</dd>
+
+                    <dt>{{ form.to_date.label }}</dt>
+                    <dd>{{ form.to_date }}</dd>
+
+                    <dt></dt>
+                    <dd><input class="btn btn-primary" type="submit" value="{% trans 'Opdater' %}" name="go" /></dd>
+                </dl>
+            </form>
+            <div>
+                {{form.errors}}
+            </div>
             <div class="divider"></div>
-            <h2>
-                {% trans 'Søgningen er begrænset til:' %}
-            </h2>
-            <ul>
-                <li>{{ unit_limit_text }}</li>
-            </ul>
+            <h1>{% trans 'Søgeresultat' %}</h1>
             {% if not results %}
             <p>{% trans 'Din søgning gav ikke noget resultat.' %}</p>
             {% else %}
