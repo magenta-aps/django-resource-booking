@@ -1,5 +1,4 @@
 from django.db.models.signals import post_save
-from django.dispatch import receiver
 from booking.models import Booker
 from booking.models import Booking, ClassBooking, TeacherBooking
 from booking.models import Resource, Visit, OtherResource

@@ -2284,7 +2284,7 @@ class VisitOccurrenceSearchView(VisitOccurrenceListView):
     def get_queryset(self):
         form = self.get_form()
 
-        q = self.get_form().cleaned_data.get("q", "").strip()
+        q = form.cleaned_data.get("q", "").strip()
 
         # Filtering by freetext has to be the first thing we do
         qs = self.model.objects.search(q)
@@ -2311,7 +2311,7 @@ class VisitOccurrenceSearchView(VisitOccurrenceListView):
 
         if re.match('^#?\d+$', t):
             if t[0] == "#":
-                t = q[1:]
+                t = t[1:]
             qs = qs.filter(visit__pk=t)
         elif t:
             qs = self.model.objects.none()
