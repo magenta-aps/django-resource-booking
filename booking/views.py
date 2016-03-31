@@ -99,7 +99,43 @@ def import_views(from_module):
 
 class MainPageView(TemplateView):
     """Display the main page."""
-    template_name = 'index.html'
+
+    HEADING_RED = 'alert-danger'
+    HEADING_GREEN = 'alert-success'
+    HEADING_BLUE = 'alert-info'
+    HEADING_YELLOW = 'alert-warning'
+
+    template_name = 'frontpage.html'
+
+    def get_context_data(self, **kwargs):
+        context = {
+            'lists': [
+                {
+                    'color': self.HEADING_GREEN,
+                    'type': 'VisitOccurrence',
+                    'title': _(u'Senest opdaterede besøg'),
+                    'queryset': VisitOccurrence.get_latest_updated(),
+                    'limit': 10,
+                    'button': {
+                        'text': _(u'Vis alle'),
+                        'link': reverse('visit-occ-customlist') + "?type=%s" %
+                        VisitOccurrenceCustomListView.TYPE_LATEST_UPDATED
+                    }
+                }, {
+                    'color': self.HEADING_BLUE,
+                    'type': 'VisitOccurrence',
+                    'title': _(u'Senest bookede besøg'),
+                    'queryset': VisitOccurrence.get_latest_booked(),
+                    'limit': 10,
+                    'button': {
+                        'text': _(u'Vis alle'),
+                        'link': reverse('visit-occ-customlist') + "?type=%s" %
+                        VisitOccurrenceCustomListView.TYPE_LATEST_BOOKED
+                    }
+                }
+            ]
+        }
+        return context
 
 
 class LoginRequiredMixin(object):
@@ -1619,6 +1655,7 @@ class VisitOccurrenceNotifyView(EmailComposeView):
         self.object = VisitOccurrence.objects.get(id=pk)
 
         self.template_context['visit'] = self.object.visit
+        self.template_context['visitoccurrence'] = self.object
         return super(VisitOccurrenceNotifyView, self).\
             dispatch(request, *args, **kwargs)
 
@@ -1740,6 +1777,8 @@ class BookingNotifyView(EmailComposeView):
         self.object = Booking.objects.get(id=pk)
 
         self.template_context['visit'] = self.object.visitoccurrence.visit
+        self.template_context['visitoccurrence'] = self.object.visitoccurrence
+        self.template_context['booking'] = self.object
         return super(BookingNotifyView, self).dispatch(
             request, *args, **kwargs
         )
@@ -2158,11 +2197,77 @@ class EmbedcodesView(TemplateView):
         return super(EmbedcodesView, self).get_context_data(**context)
 
 
-class VisitOccurrenceSearchView(LoginRequiredMixin, ListView):
+class VisitOccurrenceListView(LoginRequiredMixin, ListView):
     model = VisitOccurrence
-    template_name = "visitoccurrence/searchresult.html"
+    template_name = "visitoccurrence/list.html"
     context_object_name = "results"
     paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = {}
+
+        # Store the querystring without the page and pagesize arguments
+        qdict = self.request.GET.copy()
+
+        if "page" in qdict:
+            qdict.pop("page")
+        if "pagesize" in qdict:
+            qdict.pop("pagesize")
+
+        context["qstring"] = qdict.urlencode()
+
+        context['pagesizes'] = [5, 10, 15, 20]
+
+        context['breadcrumbs'] = [
+            {
+                'url': reverse('visit-occ-search'),
+                'text': _(u'Besøg')
+            },
+            {'text': _(u'Besøgsliste')},
+        ]
+
+        context.update(kwargs)
+
+        return super(VisitOccurrenceListView, self).get_context_data(
+            **context
+        )
+
+    def get_paginate_by(self, queryset):
+        size = self.request.GET.get("pagesize", 10)
+
+        if size == "all":
+            return None
+
+        return size
+
+
+class VisitOccurrenceCustomListView(VisitOccurrenceListView):
+
+    TYPE_LATEST_COMPLETED = "latest_completed"
+    TYPE_LATEST_BOOKED = "latest_booked"
+    TYPE_LATEST_UPDATED = "latest_updated"
+    TYPE_TODAY = "today"
+
+    def get_queryset(self):
+        try:
+            listtype = self.request.GET.get("type", "")
+
+            if listtype == self.TYPE_LATEST_COMPLETED:
+                return VisitOccurrence.get_recently_held()
+            elif listtype == self.TYPE_LATEST_BOOKED:
+                return VisitOccurrence.get_latest_booked()
+            elif listtype == self.TYPE_LATEST_UPDATED:
+                return VisitOccurrence.get_latest_updated()
+            elif listtype == self.TYPE_TODAY:
+                return VisitOccurrence.get_todays_occurrences()
+        except:
+            pass
+        raise Http404
+
+
+class VisitOccurrenceSearchView(VisitOccurrenceListView):
+    template_name = "visitoccurrence/searchresult.html"
+
     form = None
 
     def get_form(self):
@@ -2312,19 +2417,7 @@ class VisitOccurrenceSearchView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = {}
 
-        # Store the querystring without the page and pagesize arguments
-        qdict = self.request.GET.copy()
-
         context['form'] = self.get_form()
-
-        if "page" in qdict:
-            qdict.pop("page")
-        if "pagesize" in qdict:
-            qdict.pop("pagesize")
-
-        context["qstring"] = qdict.urlencode()
-
-        context['pagesizes'] = [5, 10, 15, 20]
 
         context['breadcrumbs'] = [
             {
@@ -2339,14 +2432,6 @@ class VisitOccurrenceSearchView(LoginRequiredMixin, ListView):
         return super(VisitOccurrenceSearchView, self).get_context_data(
             **context
         )
-
-    def get_paginate_by(self, queryset):
-        size = self.request.GET.get("pagesize", 10)
-
-        if size == "all":
-            return None
-
-        return size
 
 
 class BookingDetailView(LoggedViewMixin, ResourceBookingDetailView):
@@ -2655,14 +2740,3 @@ class EmailTemplateDeleteView(HasBackButtonMixin, DeleteView):
 
 import booking_workflows.views  # noqa
 import_views(booking_workflows.views)
-
-
-class KUStatsView(TemplateView):
-    template_name = 'kustats.html'
-
-    def get_context_data(self, **kwargs):
-        context = super(KUStatsView, self).get_context_data(**kwargs)
-        context['latest_updated_resource'] = Resource.get_latest_updated()
-        context['latest_booked_visit'] = Visit.get_latest_booked()
-        context['visits_today'] = VisitOccurrence.get_todays_occurrences()
-        return context

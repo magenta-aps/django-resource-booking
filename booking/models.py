@@ -2057,8 +2057,13 @@ class VisitOccurrence(models.Model):
         )
 
     @staticmethod
-    def get_recently_held(time):
+    def get_recently_held(time=datetime.now()):
+        print time
         return VisitOccurrence.objects.filter(
+            workflow_status__in=[
+                VisitOccurrence.WORKFLOW_STATUS_EXECUTED,
+                VisitOccurrence.WORKFLOW_STATUS_EVALUATED],
+            start_datetime__isnull=False,
             end_datetime__lte=time
         ).order_by('-end_datetime')
 
@@ -2534,9 +2539,7 @@ class Booking(models.Model):
 
     def autosend(self, template_key, recipients=None,
                  only_these_recipients=False):
-        print "VisitOccurrence.autosend(%d)" % template_key
         if self.visitoccurrence.autosend_enabled(template_key):
-            print "autosend is enabled for this template"
             visit = self.visitoccurrence.visit
             unit = visit.unit
             if recipients is None:
@@ -2546,7 +2549,6 @@ class Booking(models.Model):
             if not only_these_recipients:
                 recipients.update(self.get_recipients(template_key))
 
-            print "Recipients: %s" % unicode(recipients)
             KUEmailMessage.send_email(
                 template_key,
                 {
@@ -2557,8 +2559,6 @@ class Booking(models.Model):
                 list(recipients),
                 unit
             )
-        else:
-            print "autosend is disabled for this template"
 
     def as_searchtext(self):
         return " ".join([unicode(x) for x in [

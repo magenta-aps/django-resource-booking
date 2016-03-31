@@ -70,7 +70,7 @@
                             <dt>{% trans 'Tilbud:' %}</dt>
                             <dd><a href="{% url 'visit-view' res.visit.pk %}">#{{ res.visit.pk }} {{ res.visit.title }}</a></dd>
                             <dt>{% trans 'Booket af:' %}</dt>
-                            <dd>{{ res.nr_bookers }} personer</dd>
+                            <dd>{% blocktrans with count=res.nr_bookers %}{{ count }} personer{% endblocktrans %}</dd>
                         </dl>
                     </div>
                 </li>
