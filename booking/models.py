@@ -374,7 +374,7 @@ class EmailTemplate(models.Model):
     key_choices = [
         (NOTIFY_GUEST__BOOKING_CREATED, _(u'Gæst: Booking oprettet')),
         (NOTIFY_GUEST__GENERAL_MSG, _(u'Gæst: Generel besked')),
-        (NOTIFY_HOST__BOOKING_CREATED, _(u'Vært: Booking oprettet')),
+        (NOTIFY_HOST__BOOKING_CREATED, _(u'Kontaktperson: Booking oprettet')),
         (NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
          _(u'Vært: Frivillige undervisere')),
         (NOTIFY_HOST__REQ_HOST_VOLUNTEER, _(u'Vært: Frivillige værter')),
