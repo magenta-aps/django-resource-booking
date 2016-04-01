@@ -40,17 +40,17 @@
 
     <hr/>
 
-    <div class="row">
+    <div>
         {% for list in lists %}
             {% cycle True False False as beginRow silent %}
             {% cycle False False True as endRow silent %}
             {% if beginRow or forloop.first %}
                 <div class="row eq-height listcontainer">
             {% endif %}
-        {% include 'common/item_list.html' with list=list %}
-        {% if endRow or forloop.last %}
-            </div>
-        {% endif %}
+            {% include 'common/item_list.html' with list=list %}
+            {% if endRow or forloop.last %}
+                </div>
+            {% endif %}
         {% endfor %}
     </div>
 {% endblock %}
