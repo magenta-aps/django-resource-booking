@@ -7,6 +7,7 @@ from booking.models import Resource, OtherResource, Visit
 from booking.models import Booker, Region, PostCode, School
 from booking.models import ClassBooking, TeacherBooking, BookingSubjectLevel
 from booking.models import EmailTemplate
+from booking.models import VisitOccurrence
 from django import forms
 from django.forms import CheckboxSelectMultiple, RadioSelect, EmailInput
 from django.forms import formset_factory, inlineformset_factory
@@ -137,6 +138,123 @@ class AdminVisitSearchForm(forms.Form):
             field_name = field_name[:-5]
 
         return super(AdminVisitSearchForm, self).add_prefix(field_name)
+
+
+class VisitOccurrenceSearchForm(forms.Form):
+    q = forms.CharField(
+        label=_(u'Fritekst'),
+        max_length=60,
+        required=False
+    )
+
+    t = forms.CharField(
+        label=_(u'Tilbuds-ID'),
+        max_length=10,
+        required=False,
+        widget=forms.widgets.NumberInput
+    )
+
+    MY_UNIT = -1
+    MY_FACULTY = -2
+    MY_UNITS = -3
+
+    u = forms.ChoiceField(
+        label=_(u'Enhed'),
+        required=False
+    )
+
+    WORKFLOW_STATUS_PENDING = -1
+    WORKFLOW_STATUS_READY = -2
+
+    w = forms.ChoiceField(
+        label=_(u'Workflow status'),
+        choices=(
+            ('', _(u'Alle')),
+            (WORKFLOW_STATUS_PENDING, _(u'Alle der kræver handling')),
+            (WORKFLOW_STATUS_READY, _(u'Alle planlagte')),
+            ('', u'====='),
+        ) + VisitOccurrence.workflow_status_choices,
+        required=False
+    )
+
+    participant_choices = (
+        ('', _(u'[Vælg]')),
+        (1, 1),
+        (5, 5),
+    ) + tuple((x, x) for x in range(10, 60, 10))
+
+    p_min = forms.ChoiceField(
+        label=_(u'Minimum antal deltagere'),
+        choices=participant_choices,
+        required=False
+    )
+
+    p_max = forms.ChoiceField(
+        label=_(u'Maksimum antal deltagere'),
+        choices=participant_choices,
+        required=False
+    )
+
+    from_date = forms.DateField(
+        label=_(u'Dato fra'),
+        input_formats=['%d-%m-%Y'],
+        required=False
+    )
+
+    to_date = forms.DateField(
+        label=_(u'Dato til'),
+        input_formats=['%d-%m-%Y'],
+        required=False
+    )
+
+    def __init__(self, qdict, *args, **kwargs):
+        self.user = kwargs.pop("user")
+
+        qdict = qdict.copy()
+
+        # Set some defaults if form was not submitted
+        if not qdict.get("go", False):
+            if qdict.get("u", "") == "":
+                qdict["u"] = self.MY_UNITS
+
+            if qdict.get("s", "") == "":
+                qdict["s"] = Resource.ACTIVE
+
+        super(VisitOccurrenceSearchForm, self).__init__(qdict, *args, **kwargs)
+
+        self.fields['u'].choices = self.get_unit_choices()
+
+        extra_classes = {
+            'from_date': 'datepicker datepicker-admin',
+            'to_date': 'datepicker datepicker-admin'
+        }
+
+        # Add classnames to all fields
+        for fname, f in self.fields.iteritems():
+            f.widget.attrs['class'] = " ".join([
+                x for x in (
+                    f.widget.attrs.get('class'),
+                    'form-control input-sm',
+                    extra_classes.get(fname)
+                ) if x
+            ])
+
+    def get_unit_choices(self):
+        choices = [
+            (None, _(u'[Vælg]')),
+            (self.MY_UNIT, _(u'Tilbud under min enhed')),
+            (self.MY_FACULTY, _(u'Tilbud under mit fakultet')),
+            (
+                self.MY_UNITS,
+                _(u'Tilbud under alle enheder jeg kan administrere')
+            ),
+            (None, '======'),
+        ]
+
+        for x in self.user.userprofile.get_unit_queryset():
+            choices.append((x.pk, unicode(x)))
+
+        return choices
 
 
 class UnitTypeForm(forms.ModelForm):
