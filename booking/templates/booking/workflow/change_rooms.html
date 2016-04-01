@@ -2,21 +2,24 @@
 {% load staticfiles %}
 {% load i18n %}
 
+{% block htmltitle %} - {% blocktrans with object=object %}Redigér lokaler for {{ object }}{% endblocktrans %}{% endblock %}
+
 {% block content %}
     {% include 'common/breadcrumbrow.html' %}
 
     <div class="row titlebar hidden-print">
-        <div class="col-sm-12 col-md-9"><h2>Redigér lokaler for {{ object }}</h2></div>
+        <div class="col-sm-12 col-md-9">
+            <h2>{% blocktrans with object=object %}Redigér lokaler for {{ object }}{% endblocktrans %}</h2>
+        </div>
         <div class="divider"></div>
     </div>
     <div class="row">
         <div class="col-sm-12 col-md-8">
-            <form name="changebookinroomsform" id="changebookinroomsform"
-                action="{% url 'change-visit-occ-rooms' object.pk %}" method="post">
+            <form name="changebookinroomsform" id="changebookinroomsform" action="{% url 'change-visit-occ-rooms' object.pk %}" method="post">
                 {% csrf_token %}
                 {{ form }}
-                <input class="btn btn-success btn-sm" type="submit" value="Opdater" name="confirm" />
-                <input class="btn btn-danger btn-sm" type="submit" value="Annullér" name="cancel" />
+                <input class="btn btn-success btn-sm" type="submit" value="{% trans 'Opdater' %}" name="confirm" />
+                <input class="btn btn-danger btn-sm" type="submit" value="{% trans 'Annullér' %}" name="cancel" />
             </form>
         </div>
     </div>

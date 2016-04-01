@@ -1,0 +1,56 @@
+{% extends "index.html" %}
+{% load i18n %}
+
+{% block head %}
+<link rel="stylesheet" href="/static/css/personlig-side.css">
+{% endblock %}
+
+{% block content %}
+
+<div class="divider"></div>
+    <h1>{% trans 'Velkommen' %} {{user.username}}</h1>
+
+    <div class="divider"></div>
+
+    <div class="row">
+        <div class="col-sm-12">
+            <h2>{% trans 'Personlig side' %}</h2>
+            <p>{% trans 'Du er logget ind som' %} {{ user }}.</p>
+            <p>{% blocktrans %}
+                Din bruger har endnu ikke fået tildelt nogen rolle i foKUs-systemet.
+                Du kan kontakte en af nedenstående personer for at få en rolle i systemet.
+            {% endblocktrans %}</p>
+            {% if request.user.userprofile.get_faculty_admins %}
+            <h2>{% trans 'Fakultetsredaktører' %}
+            <ul>
+                {% for fa in request.user.userprofile.get_faculty_admins %}
+                <li>
+                    {{ fa.get_full_name|default:fa }}
+                    {% if fa.email %}
+                    &lt;<a href="mailto:{{fa.email}}">{{fa.email}}</a>&gt;
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+            <h2>{% trans 'Administratorer' %}
+            <ul>
+                {% for fa in request.user.userprofile.get_admins %}
+                <li>
+                    {{ fa.get_full_name|default:fa }}
+                    {% if fa.email %}
+                    &lt;<a href="mailto:{{fa.email}}">{{fa.email}}</a>&gt;
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+            <div class="divider"></div>
+        </div>
+    </div>
+
+
+    <div class="divider"></div>
+    <div id="personalPage" class="row eq-height">
+    </div>
+
+{% endblock %}

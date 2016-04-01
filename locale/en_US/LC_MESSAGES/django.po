@@ -3,20 +3,3039 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: 1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-11-17 13:41+0100\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"POT-Creation-Date: 2016-03-30 15:09+0200\n"
+"PO-Revision-Date: 2016-03-02 14:19+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"Language: da_DK\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.5.4\n"
 
-#: booking/views.py:5
+#: booking/booking_workflows/forms.py:25
+msgid "Ny status"
+msgstr "New status"
+
+#: booking/booking_workflows/forms.py:63
+msgid "Ny log-post"
+msgstr "New log entry"
+
+#: booking/booking_workflows/views.py:193
+msgid "Det valgte besøg har ikke behov for flere personer i den givne rolle"
+msgstr ""
+
+#: booking/booking_workflows/views.py:197
+msgid "Du har ikke den rette rolle til at bruge denne funktion"
+msgstr ""
+
+#: booking/booking_workflows/views.py:200
+msgid "Du er allerede blevet tildelt den givne rolle"
+msgstr ""
+
+#: booking/booking_workflows/views.py:253
+msgid "Besøget har ikke brug for flere undervisere"
+msgstr ""
+
+#: booking/booking_workflows/views.py:255
+msgid "Du skal have rollen underviser for at kunne bruge denne funktion"
+msgstr ""
+
+#: booking/booking_workflows/views.py:258
+msgid "Du er allerede underviser på besøget"
+msgstr ""
+
+#: booking/booking_workflows/views.py:272
+msgid "Besøget har ikke brug for flere værter"
+msgstr ""
+
+#: booking/booking_workflows/views.py:274
+msgid "Du skal have rollen vært for at kunne bruge denne funktion"
+msgstr ""
+
+#: booking/booking_workflows/views.py:277
+msgid "Du er allerede vært på besøget"
+msgstr ""
+
+#: booking/forms.py:24
+#, fuzzy
+#| msgid "Tekst"
+msgid "Fritekst"
+msgstr "Text"
+
+#: booking/forms.py:30
+msgid "Status"
+msgstr ""
+
+#: booking/forms.py:31
+msgid "[Vælg status]"
+msgstr ""
+
+#: booking/forms.py:36
+msgid "Tilbud er aktivt"
+msgstr ""
+
+#: booking/forms.py:38 booking/forms.py:51 booking/forms.py:64
+#: booking/forms.py:119
+msgid "[Vælg]"
+msgstr "[Select]"
+
+#: booking/forms.py:39 booking/templates/booking/workflow/become_host.html:23
+#: booking/templates/booking/workflow/become_teacher.html:23
+#: booking/views.py:502
+msgid "Ja"
+msgstr "Yes"
+
+#: booking/forms.py:40 booking/templates/booking/workflow/become_host.html:24
+#: booking/templates/booking/workflow/become_teacher.html:24
+#: booking/views.py:503
+msgid "Nej"
+msgstr "No"
+
+#: booking/forms.py:49
+msgid "Besøg / ikke besøg"
+msgstr ""
+
+#: booking/forms.py:52
+msgid "Tilbud med besøg"
+msgstr ""
+
+#: booking/forms.py:53
+msgid "Tilbud uden besøg"
+msgstr ""
+
+#: booking/forms.py:62
+msgid "Bookinger"
+msgstr "Bookings"
+
+#: booking/forms.py:65
+msgid "Tilbud der har bookinger"
+msgstr ""
+
+#: booking/forms.py:66
+msgid "Tilbud der ikke har bookinger"
+msgstr ""
+
+#: booking/forms.py:76 booking/models.py:353 booking/models.py:679
+#: build/lib.linux-x86_64-2.7/booking/models.py:184
+#: build/lib.linux-x86_64-2.7/booking/models.py:264 profile/forms.py:21
+msgid "Enhed"
+msgstr "Unit"
+
+#: booking/forms.py:81
+msgid "Dato til"
+msgstr "Date to"
+
+#: booking/forms.py:86
+msgid "Dato fra"
+msgstr "Date from"
+
+#: booking/forms.py:120
+msgid "Tilbud under min enhed"
+msgstr ""
+
+#: booking/forms.py:121
+msgid "Tilbud under mit fakultet"
+msgstr ""
+
+#: booking/forms.py:124
+msgid "Tilbud under alle enheder jeg kan administrere"
+msgstr ""
+
+#: booking/forms.py:302 build/lib.linux-x86_64-2.7/booking/forms.py:55
+msgid ""
+"The minimum numbers of visitors must not be larger than the maximum number "
+"of visitors"
+msgstr ""
+
+#: booking/forms.py:305 build/lib.linux-x86_64-2.7/booking/forms.py:58
+msgid ""
+"The maximum numbers of visitors must not be smaller than the minimum number "
+"of visitors"
+msgstr ""
+
+#: booking/forms.py:460 booking/models.py:2470
+#: booking/templates/visitoccurrence/details.html:86
+msgid "Tidspunkt"
+msgstr "Time"
+
+#: booking/forms.py:496
+msgid "Fornavn"
+msgstr "First name"
+
+#: booking/forms.py:500
+msgid "Efternavn"
+msgstr "Last name"
+
+#: booking/forms.py:504 booking/forms.py:790
+msgid "Email"
+msgstr "Email"
+
+#: booking/forms.py:508
+msgid "Telefonnummer"
+msgstr "Phone number"
+
+#: booking/forms.py:525
+msgid "Gentag email"
+msgstr "Repeat email"
+
+#: booking/forms.py:537
+msgid "Postnummer"
+msgstr "Postal code"
+
+#: booking/forms.py:545
+msgid "By"
+msgstr "City"
+
+#: booking/forms.py:597
+msgid "Ukendt postnummer"
+msgstr "Unknown postal code"
+
+#: booking/forms.py:608
+msgid "Indtast den samme email-adresse i begge felter"
+msgstr "Enter the same email address in both fields"
+
+#: booking/forms.py:756
+msgid "Tekst"
+msgstr "Text"
+
+#: booking/forms.py:763
+msgid "Modtagere"
+msgstr "Recipients"
+
+#: booking/forms.py:769
+msgid "Emne"
+msgstr "Subject"
+
+#: booking/forms.py:780 booking/models.py:347 booking/models.py:2160
+#: booking/models.py:2177 booking/templates/common/modal_contact.html:12
+#: build/lib.linux-x86_64-2.7/booking/models.py:178
+msgid "Navn"
+msgstr "Name"
+
+#: booking/forms.py:784
+msgid "Dit navn"
+msgstr "Your name"
+
+#: booking/forms.py:794
+msgid "Din email-adresse"
+msgstr "Your email address"
+
+#: booking/forms.py:800 booking/templates/common/modal_contact.html:20
+msgid "Telefon"
+msgstr "Phone"
+
+#: booking/forms.py:804
+msgid "Dit telefonnummer"
+msgstr "Your phone number"
+
+#: booking/models.py:35 booking/models.py:650
+#: build/lib.linux-x86_64-2.7/booking/models.py:245
+msgid "Oprettet"
+msgstr ""
+
+#: booking/models.py:36
+msgid "Ændret"
+msgstr ""
+
+#: booking/models.py:37
+msgid "Slettet"
+msgstr ""
+
+#: booking/models.py:38
+msgid "Mail sendt"
+msgstr ""
+
+#: booking/models.py:39
+msgid "Log-post tilføjet manuelt"
+msgstr ""
+
+#: booking/models.py:81
+msgid "kontaktperson"
+msgstr ""
+
+#: booking/models.py:82
+msgid "kontaktpersoner"
+msgstr ""
+
+#: booking/models.py:111
+msgid "enhedstype"
+msgstr ""
+
+#: booking/models.py:112
+msgid "Enhedstyper"
+msgstr ""
+
+#: booking/models.py:124
+msgid "enhed"
+msgstr ""
+
+#: booking/models.py:125
+msgid "enheder"
+msgstr ""
+
+#: booking/models.py:133
+msgid "Kontaktperson"
+msgstr ""
+
+#: booking/models.py:204 booking/models.py:205
+msgid "fag"
+msgstr ""
+
+#: booking/models.py:214 booking/templates/frontpage.html:19
+msgid "Gymnasie"
+msgstr ""
+
+#: booking/models.py:215 booking/templates/frontpage.html:26
+#: build/lib.linux-x86_64-2.7/booking/models.py:226
+msgid "Grundskole"
+msgstr ""
+
+#: booking/models.py:216
+msgid "Begge"
+msgstr ""
+
+#: booking/models.py:273
+msgid "emne"
+msgstr ""
+
+#: booking/models.py:274
+msgid "emner"
+msgstr ""
+
+#: booking/models.py:287
+msgid "ekstra ydelse"
+msgstr ""
+
+#: booking/models.py:288
+msgid "ekstra ydelser"
+msgstr ""
+
+#: booking/models.py:301
+msgid "særligt krav"
+msgstr ""
+
+#: booking/models.py:302
+msgid "særlige ydelser"
+msgstr ""
+
+#: booking/models.py:315
+msgid "undervisningsmateriale"
+msgstr ""
+
+#: booking/models.py:316
+msgid "undervisningsmaterialer"
+msgstr ""
+
+#: booking/models.py:321 build/lib.linux-x86_64-2.7/booking/models.py:160
+msgid "URL"
+msgstr ""
+
+#: booking/models.py:322 booking/models.py:334
+#: build/lib.linux-x86_64-2.7/booking/models.py:161
+#: build/lib.linux-x86_64-2.7/booking/models.py:170
+msgid "Vedhæftet fil"
+msgstr ""
+
+#: booking/models.py:344
+msgid "lokalitet"
+msgstr ""
+
+#: booking/models.py:345
+msgid "lokaliteter"
+msgstr ""
+
+#: booking/models.py:348 booking/models.py:673
+#: booking/templates/otherresource/form.html:50
+#: booking/templates/visit/form.html:53
+#: build/lib.linux-x86_64-2.7/booking/models.py:179
+#: build/lib.linux-x86_64-2.7/booking/models.py:259
+msgid "Beskrivelse"
+msgstr ""
+
+#: booking/models.py:349 build/lib.linux-x86_64-2.7/booking/models.py:180
+msgid "Adresse"
+msgstr ""
+
+#: booking/models.py:351 build/lib.linux-x86_64-2.7/booking/models.py:182
+msgid "Postnummer og by"
+msgstr ""
+
+#: booking/models.py:377
+msgid "Gæst: Booking oprettet"
+msgstr ""
+
+#: booking/models.py:378
+msgid "Gæst: Generel besked"
+msgstr ""
+
+#: booking/models.py:379
+msgid "Vært: Booking oprettet"
+msgstr ""
+
+#: booking/models.py:381
+msgid "Vært: Frivillige undervisere"
+msgstr ""
+
+#: booking/models.py:382
+msgid "Vært: Frivillige værter"
+msgstr ""
+
+#: booking/models.py:383
+msgid "Vært: Tilknyttet besøg"
+msgstr ""
+
+#: booking/models.py:384
+msgid "Vært: Forespørg lokale"
+msgstr ""
+
+#: booking/models.py:385
+msgid "Alle: Booking færdigplanlagt"
+msgstr ""
+
+#: booking/models.py:386
+msgid "Alle: Booking aflyst"
+msgstr ""
+
+#: booking/models.py:387
+msgid "Alle: Reminder om booking"
+msgstr ""
+
+#: booking/models.py:388
+msgid "Vært: Ledig værtsrolle"
+msgstr ""
+
+#: booking/models.py:389
+msgid "Forespørgsel fra bruger"
+msgstr ""
+
+#: booking/models.py:607 build/lib.linux-x86_64-2.7/booking/models.py:204
+msgid "Studerende for en dag"
+msgstr ""
+
+#: booking/models.py:608
+msgid "Studiepraktik"
+msgstr ""
+
+#: booking/models.py:609
+msgid "Åbent hus"
+msgstr ""
+
+#: booking/models.py:610
+msgid "Lærerarrangement"
+msgstr ""
+
+#: booking/models.py:611
+msgid "Besøg med klassen"
+msgstr ""
+
+#: booking/models.py:612
+msgid "Studieretningsprojekt"
+msgstr ""
+
+#: booking/models.py:613
+msgid "Lektiehjælp"
+msgstr ""
+
+#: booking/models.py:614 build/lib.linux-x86_64-2.7/booking/models.py:209
+msgid "Andre tilbud"
+msgstr ""
+
+#: booking/models.py:615
+msgid "Undervisningsmateriale"
+msgstr ""
+
+#: booking/models.py:624 build/lib.linux-x86_64-2.7/booking/models.py:217
+msgid "Lærer"
+msgstr ""
+
+#: booking/models.py:625 build/lib.linux-x86_64-2.7/booking/models.py:218
+msgid "Elev"
+msgstr ""
+
+#: booking/models.py:626
+msgid "Alle"
+msgstr ""
+
+#: booking/models.py:651 build/lib.linux-x86_64-2.7/booking/models.py:246
+msgid "Aktivt"
+msgstr ""
+
+#: booking/models.py:652 build/lib.linux-x86_64-2.7/booking/models.py:247
+msgid "Ophørt"
+msgstr ""
+
+#: booking/models.py:660 build/lib.linux-x86_64-2.7/booking/models.py:256
+msgid "Tilstand"
+msgstr ""
+
+#: booking/models.py:664 booking/templates/otherresource/form.html:33
+#: booking/templates/visit/form.html:36
+#: build/lib.linux-x86_64-2.7/booking/models.py:257
+msgid "Titel"
+msgstr ""
+
+#: booking/models.py:669 build/lib.linux-x86_64-2.7/booking/models.py:258
+msgid "Teaser"
+msgstr ""
+
+#: booking/models.py:676 build/lib.linux-x86_64-2.7/booking/models.py:261
+msgid "Mouseover-tekst"
+msgstr ""
+
+#: booking/models.py:680 build/lib.linux-x86_64-2.7/booking/models.py:265
+msgid "Links"
+msgstr ""
+
+#: booking/models.py:682 booking/templates/otherresource/form.html:71
+#: booking/templates/visit/form.html:74
+#: build/lib.linux-x86_64-2.7/booking/models.py:267
+msgid "Målgruppe"
+msgstr ""
+
+#: booking/models.py:687 build/lib.linux-x86_64-2.7/booking/models.py:270
+msgid "Institution"
+msgstr ""
+
+#: booking/models.py:693 booking/models.py:1561
+#: build/lib.linux-x86_64-2.7/booking/models.py:402
+msgid "Lokalitet"
+msgstr ""
+
+#: booking/models.py:701
+msgid "Gentagelser"
+msgstr ""
+
+#: booking/models.py:707 booking/views.py:1683 booking/views.py:1803
+#: build/lib.linux-x86_64-2.7/booking/models.py:420
+msgid "Kontaktpersoner"
+msgstr ""
+
+#: booking/models.py:714 booking/views.py:1693 booking/views.py:1812
+msgid "Lokaleansvarlige"
+msgstr ""
+
+#: booking/models.py:721 build/lib.linux-x86_64-2.7/booking/models.py:459
+msgid "Forberedelsestid (i timer)"
+msgstr ""
+
+#: booking/models.py:730 booking/templates/visit/details.html:169
+#: build/lib.linux-x86_64-2.7/booking/models.py:426
+msgid "Pris"
+msgstr ""
+
+#: booking/models.py:735 booking/templates/resource/searchresult.html:71
+msgid "Gymnasiefag"
+msgstr ""
+
+#: booking/models.py:742 booking/templates/resource/searchresult.html:90
+msgid "Grundskolefag"
+msgstr ""
+
+#: booking/models.py:747 build/lib.linux-x86_64-2.7/booking/models.py:285
+msgid "Tags"
+msgstr ""
+
+#: booking/models.py:749 build/lib.linux-x86_64-2.7/booking/models.py:287
+msgid "Emner"
+msgstr ""
+
+#: booking/models.py:753 build/lib.linux-x86_64-2.7/booking/models.py:291
+msgid "Kommentar"
+msgstr ""
+
+#: booking/models.py:759
+msgid "Oprettet af"
+msgstr ""
+
+#: booking/models.py:769 booking/models.py:1695
+#: build/lib.linux-x86_64-2.7/booking/models.py:300
+msgid "Tekst-værdier til fritekstsøgning"
+msgstr ""
+
+#: booking/models.py:933
+msgid "gymnasiefagtilknytning"
+msgstr ""
+
+#: booking/models.py:934
+msgid "gymnasiefagtilknytninger"
+msgstr ""
+
+#: booking/models.py:1012
+msgid "grundskolefagtilknytning"
+msgstr ""
+
+#: booking/models.py:1013
+msgid "grundskolefagtilknytninger"
+msgstr ""
+
+#: booking/models.py:1031 build/lib.linux-x86_64-2.7/booking/models.py:281
+msgid "Klassetrin fra"
+msgstr ""
+
+#: booking/models.py:1034 build/lib.linux-x86_64-2.7/booking/models.py:284
+msgid "Klassetrin til"
+msgstr ""
+
+#: booking/models.py:1090 booking/models.py:1104
+msgid "Gymnasieniveau"
+msgstr ""
+
+#: booking/models.py:1091
+msgid "Gymnasieniveauer"
+msgstr ""
+
+#: booking/models.py:1217 booking/models.py:1218
+msgid "tilbud"
+msgstr ""
+
+#: booking/models.py:1252
+msgid "Tilbuddet kræver brug af et eller flere lokaler"
+msgstr ""
+
+#: booking/models.py:1259
+msgid "Lokaler tildeles på forhånd"
+msgstr ""
+
+#: booking/models.py:1260
+msgid "Lokaler tildeles ved booking"
+msgstr ""
+
+#: booking/models.py:1266
+msgid "Tildeling af lokale(r)"
+msgstr ""
+
+#: booking/models.py:1279 booking/models.py:1554
+#: booking/templates/visit/details.html:164
+#: build/lib.linux-x86_64-2.7/booking/models.py:411
+msgid "Varighed"
+msgstr ""
+
+#: booking/models.py:1286 build/lib.linux-x86_64-2.7/booking/models.py:423
+msgid "Udsend evaluering"
+msgstr ""
+
+#: booking/models.py:1292 build/lib.linux-x86_64-2.7/booking/models.py:429
+msgid "Ekstra ydelser"
+msgstr ""
+
+#: booking/models.py:1297 build/lib.linux-x86_64-2.7/booking/models.py:434
+msgid "Særlige krav"
+msgstr ""
+
+#: booking/models.py:1302 build/lib.linux-x86_64-2.7/booking/models.py:438
+msgid "Gruppebesøg"
+msgstr ""
+
+#: booking/models.py:1308 build/lib.linux-x86_64-2.7/booking/models.py:443
+msgid "Mindste antal deltagere"
+msgstr ""
+
+#: booking/models.py:1313 build/lib.linux-x86_64-2.7/booking/models.py:448
+msgid "Højeste antal deltagere"
+msgstr ""
+
+#: booking/models.py:1316 build/lib.linux-x86_64-2.7/booking/models.py:451
+msgid "Opret venteliste"
+msgstr ""
+
+#: booking/models.py:1320 build/lib.linux-x86_64-2.7/booking/models.py:455
+msgid "Vis nedtælling"
+msgstr ""
+
+#: booking/models.py:1326
+msgid "Mulighed for rundvisning"
+msgstr ""
+
+#: booking/models.py:1333 booking/templates/email/list.html:48
+#: booking/templates/resource/fields/duration.html:12 profile/models.py:34
+msgid "Ingen"
+msgstr ""
+
+#: booking/models.py:1335
+msgid "Mere end 10"
+msgstr ""
+
+#: booking/models.py:1340
+msgid "Nødvendigt antal værter"
+msgstr ""
+
+#: booking/models.py:1346
+msgid "Nødvendigt antal undervisere"
+msgstr ""
+
+#: booking/models.py:1357
+msgid "Faste værter"
+msgstr ""
+
+#: booking/models.py:1367
+msgid "Faste undervisere"
+msgstr ""
+
+#: booking/models.py:1513 booking/models.py:1514
+msgid "besøg"
+msgstr ""
+
+#: booking/models.py:1529
+msgid "Starttidspunkt"
+msgstr ""
+
+#: booking/models.py:1542
+msgid "Kan bookes"
+msgstr ""
+
+#: booking/models.py:1573 booking/templates/visitoccurrence/details.html:113
+#: booking/views.py:1822
+msgid "Værter"
+msgstr ""
+
+#: booking/models.py:1583 booking/templates/visitoccurrence/details.html:97
+#: booking/views.py:1833
+msgid "Undervisere"
+msgstr ""
+
+#: booking/models.py:1591
+msgid "Tildeling af værter ikke påkrævet"
+msgstr ""
+
+#: booking/models.py:1592 booking/models.py:1604 booking/models.py:1616
+msgid "Afventer tildeling"
+msgstr ""
+
+#: booking/models.py:1593 booking/models.py:1605 booking/models.py:1617
+msgid "Tildelt"
+msgstr ""
+
+#: booking/models.py:1599
+msgid "Status for tildeling af værter"
+msgstr ""
+
+#: booking/models.py:1603
+msgid "Tildeling af undervisere ikke påkrævet"
+msgstr ""
+
+#: booking/models.py:1611
+msgid "Status for tildeling af undervisere"
+msgstr ""
+
+#: booking/models.py:1615
+msgid "Tildeling af lokaler ikke påkrævet"
+msgstr ""
+
+#: booking/models.py:1623
+msgid "Status for tildeling af lokaler"
+msgstr ""
+
+#: booking/models.py:1666
+msgid "Afvist af undervisere eller værter"
+msgstr ""
+
+#: booking/models.py:1669
+msgid "Bekræftet af booker"
+msgstr ""
+
+#: booking/models.py:1670
+msgid "Påmindelse afsendt"
+msgstr ""
+
+#: booking/models.py:1671
+msgid "Afviklet"
+msgstr ""
+
+#: booking/models.py:1672
+msgid "Evalueret"
+msgstr ""
+
+#: booking/models.py:1673
+msgid "Aflyst"
+msgstr ""
+
+#: booking/models.py:1674
+msgid "Udeblevet"
+msgstr ""
+
+#: booking/models.py:1685 booking/templates/visitoccurrence/details.html:150
+msgid "Interne kommentarer"
+msgstr ""
+
+#: booking/models.py:1821
+msgid "på ikke-fastlagt tidspunkt"
+msgstr ""
+
+#: booking/models.py:2076
+msgid "Skabelon"
+msgstr "Template"
+
+#: booking/models.py:2083
+msgid "Dage"
+msgstr "Days"
+
+#: booking/models.py:2086 build/lib.linux-x86_64-2.7/booking/models.py:252
+msgid "Aktiv"
+msgstr "Active"
+
+#: booking/models.py:2104 booking/models.py:2143
+#: booking/templates/index.html:69
+#: booking/templates/visitoccurrence/list.html:27
+#: booking/templates/visitoccurrence/searchresult.html:54
+#: booking/views.py:2221 booking/views.py:2307
+msgid "Besøg"
+msgstr "Visit"
+
+#: booking/models.py:2118
+msgid "BesøgForekomst"
+msgstr "VisitOccurrence"
+
+#: booking/models.py:2122
+msgid "Nedarv fra tilbud"
+msgstr ""
+
+#: booking/models.py:2139
+msgid "lokale for tilbud"
+msgstr ""
+
+#: booking/models.py:2140
+msgid "lokaler for tilbud"
+msgstr ""
+
+#: booking/models.py:2146
+msgid "Navn på lokale"
+msgstr ""
+
+#: booking/models.py:2157
+msgid "lokale for besøg"
+msgstr ""
+
+#: booking/models.py:2158
+msgid "lokaler for besøg"
+msgstr ""
+
+#: booking/models.py:2172
+msgid "region"
+msgstr ""
+
+#: booking/models.py:2173
+msgid "regioner"
+msgstr "regions"
+
+#: booking/models.py:2184
+msgid "Engelsk navn"
+msgstr "English name"
+
+#: booking/models.py:2203
+msgid "postnummer"
+msgstr "postcode"
+
+#: booking/models.py:2204
+msgid "postnumre"
+msgstr "postcodes"
+
+#: booking/models.py:2262
+msgid "uddannelsesinstitution"
+msgstr ""
+
+#: booking/models.py:2263
+msgid "uddannelsesinstitutioner"
+msgstr ""
+
+#: booking/models.py:2283
+msgid "Uddannelsestype"
+msgstr ""
+
+#: booking/models.py:2328 booking/models.py:2329
+msgid "besøgende"
+msgstr ""
+
+#: booking/models.py:2360 build/lib.linux-x86_64-2.7/booking/models.py:91
+msgid "stx"
+msgstr ""
+
+#: booking/models.py:2361 build/lib.linux-x86_64-2.7/booking/models.py:92
+msgid "hf"
+msgstr ""
+
+#: booking/models.py:2362 build/lib.linux-x86_64-2.7/booking/models.py:93
+msgid "htx"
+msgstr ""
+
+#: booking/models.py:2363 build/lib.linux-x86_64-2.7/booking/models.py:94
+msgid "eux"
+msgstr ""
+
+#: booking/models.py:2364
+msgid "hhx"
+msgstr ""
+
+#: booking/models.py:2398
+msgid "1. klasse"
+msgstr ""
+
+#: booking/models.py:2399
+msgid "2. klasse"
+msgstr ""
+
+#: booking/models.py:2400
+msgid "3. klasse"
+msgstr ""
+
+#: booking/models.py:2401
+msgid "4. klasse"
+msgstr ""
+
+#: booking/models.py:2402
+msgid "5. klasse"
+msgstr ""
+
+#: booking/models.py:2403
+msgid "6. klasse"
+msgstr ""
+
+#: booking/models.py:2404
+msgid "7. klasse"
+msgstr ""
+
+#: booking/models.py:2405
+msgid "8. klasse"
+msgstr ""
+
+#: booking/models.py:2406
+msgid "9. klasse"
+msgstr ""
+
+#: booking/models.py:2407
+msgid "10. klasse"
+msgstr ""
+
+#: booking/models.py:2408
+msgid "1.g"
+msgstr ""
+
+#: booking/models.py:2409
+msgid "2.g"
+msgstr ""
+
+#: booking/models.py:2410
+msgid "3.g"
+msgstr ""
+
+#: booking/models.py:2411
+msgid "Student"
+msgstr "Student"
+
+#: booking/models.py:2412
+msgid "Andet"
+msgstr "Other"
+
+#: booking/models.py:2460
+msgid "booking"
+msgstr ""
+
+#: booking/models.py:2461
+msgid "bookinger"
+msgstr "bookings"
+
+#: booking/models.py:2490
+#, python-format
+msgid "Attribute %s on Booking is readonly."
+msgstr ""
+
+#: booking/models.py:2491
+msgid "Set it on the VisitOccurance instead."
+msgstr ""
+
+#: booking/models.py:2588
+msgid "booking for klassebesøg"
+msgstr ""
+
+#: booking/models.py:2589
+msgid "bookinger for klassebesøg"
+msgstr ""
+
+#: booking/models.py:2599
+msgid "booking for lærerarrangement"
+msgstr ""
+
+#: booking/models.py:2600
+msgid "bookinger for lærerarrangementer"
+msgstr ""
+
+#: booking/models.py:2616
+msgid "fagniveau for booking"
+msgstr ""
+
+#: booking/models.py:2617
+msgid "fagniveauer for bookinger"
+msgstr ""
+
+#: booking/templates/403.html:4
+msgid "adgang nægtet"
+msgstr "access denied"
+
+#: booking/templates/403.html:8
+#, python-format
+msgid ""
+"\n"
+"        Du er logget ind som %(name)s, men du har ikke rettigheder til at se "
+"denne side.\n"
+"    "
+msgstr ""
+
+#: booking/templates/booking/classvisit.html:6
+#: booking/templates/booking/classvisit_modal.html:6
+msgid "tilmeld klassebesøg"
+msgstr ""
+
+#: booking/templates/booking/classvisit.html:15
+#: booking/templates/booking/classvisit_modal.html:18
+#: booking/templates/booking/teachervisit.html:15
+#: booking/templates/booking/teachervisit_modal.html:16
+msgid ""
+"Udfyld venligst nedenstående formular for at booke et tilbud. Felter "
+"markeret med * er obligatoriske."
+msgstr ""
+
+#: booking/templates/booking/classvisit.html:30
+#: booking/templates/booking/classvisit_modal.html:38
+msgid "Fag/Niveau"
+msgstr "Subject/Level"
+
+#: booking/templates/booking/classvisit.html:38
+#: booking/templates/booking/classvisit_modal.html:46
+#: booking/templates/booking/workflow/change_autosend.html:30
+#: booking/templates/email/preview.html:71
+#: booking/templates/resource/fields/autosend.html:16
+msgid "Tilføj ny"
+msgstr "Add new"
+
+#: booking/templates/booking/classvisit.html:50
+#: booking/templates/booking/classvisit_modal.html:58
+msgid "Rundvisning"
+msgstr "Tour"
+
+#: booking/templates/booking/classvisit.html:62
+#: booking/templates/booking/classvisit_modal.html:70
+#: booking/templates/booking/fields/notes.html:4
+msgid "Kommentarer"
+msgstr "Comments"
+
+#: booking/templates/booking/classvisit.html:112
+#: booking/templates/booking/classvisit_modal.html:113
+#: booking/templates/email/preview.html:138
+msgid "Fjern"
+msgstr "Remove"
+
+#: booking/templates/booking/details.html:7
+#: booking/templates/booking/details.html:15
+#, python-format
+msgid "Booking #%(id)s"
+msgstr ""
+
+#: booking/templates/booking/details.html:26
+#, python-format
+msgid ""
+"\n"
+"                        <strong>%(firstname)s %(lastname)s</strong> har "
+"booket <a href=\"%(visiturl)s\">%(visittitle)s</a> med afvikling <a href="
+"\"%(occurrenceurl)s\">%(occurrencetime)s</a>\n"
+"                    "
+msgstr ""
+
+#: booking/templates/booking/details.html:35
+#: booking/templates/common/modal_contact.html:32
+#: booking/templates/visitoccurrence/details.html:46
+msgid "Send besked"
+msgstr "Send message"
+
+#: booking/templates/booking/details.html:39
+#: booking/templates/visitoccurrence/details.html:50
+msgid "Ingen skabelon"
+msgstr "No template"
+
+#: booking/templates/booking/details.html:57
+msgid "Information om bookingen"
+msgstr ""
+
+#: booking/templates/booking/details.html:61
+#: booking/templates/visitoccurrence/details.html:205
+msgid "Navn:"
+msgstr "Name:"
+
+#: booking/templates/booking/details.html:64
+#: booking/templates/visitoccurrence/details.html:207
+msgid "Email:"
+msgstr "Email:"
+
+#: booking/templates/booking/details.html:67
+msgid "Telefon:"
+msgstr "Phone:"
+
+#: booking/templates/booking/details.html:70
+#: booking/templates/visitoccurrence/details.html:203
+msgid "Skole:"
+msgstr "School:"
+
+#: booking/templates/booking/details.html:73
+msgid "Retning:"
+msgstr "Line:"
+
+#: booking/templates/booking/details.html:79
+msgid "Fag:"
+msgstr "Subject:"
+
+#: booking/templates/booking/details.html:89
+msgid "Niveau:"
+msgstr "Level:"
+
+#: booking/templates/booking/details.html:94
+msgid "Antal deltagere:"
+msgstr "Number of participants:"
+
+#: booking/templates/booking/details.html:97
+#: booking/templates/visitoccurrence/details.html:212
+msgid "Noter:"
+msgstr "Notes:"
+
+#: booking/templates/booking/details.html:102
+#: booking/templates/booking/details.html:136
+msgid "Tidspunkt:"
+msgstr "Time:"
+
+#: booking/templates/booking/details.html:105
+msgid "Ønsket tidspunkt:"
+msgstr "Desired time:"
+
+#: booking/templates/booking/details.html:109
+msgid "Rundvisning:"
+msgstr "Tour:"
+
+#: booking/templates/booking/details.html:118
+#: booking/templates/visitoccurrence/details.html:228
+msgid "Tilbage til bookingliste"
+msgstr "Back to booking list"
+
+#: booking/templates/booking/details.html:125
+msgid "Detaljer om tilbuddet"
+msgstr ""
+
+#: booking/templates/booking/details.html:131
+msgid "Titel:"
+msgstr "Title:"
+
+#: booking/templates/booking/details.html:141
+#: booking/templates/otherresource/details.html:69
+msgid "Henvendt til:"
+msgstr ""
+
+#: booking/templates/booking/details.html:146
+#: booking/templates/otherresource/details.html:74
+#: booking/templates/resource/searchresult.html:180
+msgid "Fag/niveau:"
+msgstr "Subject/level"
+
+#: booking/templates/booking/details.html:157
+msgid "Max antal:"
+msgstr "Max number:"
+
+#: booking/templates/booking/details.html:162
+#: booking/templates/otherresource/details.html:85
+#: booking/templates/visitoccurrence/details.html:177
+msgid "Hvad:"
+msgstr "What:"
+
+#: booking/templates/booking/details.html:167
+#: booking/templates/common/item_list.html:64
+#: booking/templates/resource/searchresult.html:205
+#: profile/templates/profile/item_list.html:61
+msgid "Hvor:"
+msgstr "Where:"
+
+#: booking/templates/booking/details.html:175
+#: booking/templates/otherresource/details.html:89
+msgid "Arrangør:"
+msgstr ""
+
+#: booking/templates/booking/details.html:186
+msgid "Udbudte tider:"
+msgstr ""
+
+#: booking/templates/booking/details.html:199
+msgid "Varighed:"
+msgstr "Duration:"
+
+#: booking/templates/booking/details.html:204
+msgid "Pris:"
+msgstr "Price:"
+
+#: booking/templates/booking/fields/attendees.html:4
+msgid "Antal Deltagere*"
+msgstr "Number of participants*"
+
+#: booking/templates/booking/fields/basedata.html:4
+msgid "For- og efternavn*"
+msgstr "First and last name*"
+
+#: booking/templates/booking/fields/basedata.html:20
+msgid "Email*"
+msgstr "Email*"
+
+#: booking/templates/booking/fields/basedata.html:36
+msgid "Telefonnummer*"
+msgstr "Phone number*"
+
+#: booking/templates/booking/fields/location.html:4
+msgid "Postnr. og by*"
+msgstr "Postal code and city*"
+
+#: booking/templates/booking/fields/location.html:20
+msgid "Region*"
+msgstr ""
+
+#: booking/templates/booking/fields/school.html:7
+msgid "Gymnasium*"
+msgstr "High school*"
+
+#: booking/templates/booking/fields/school.html:9
+msgid "Folkeskole*"
+msgstr "Elementary school*"
+
+#: booking/templates/booking/fields/school.html:11
+msgid "Skole*"
+msgstr "School*"
+
+#: booking/templates/booking/fields/school.html:25
+msgid "Gymnasieretning"
+msgstr "Type"
+
+#: booking/templates/booking/fields/school.html:37
+msgid "Klasse"
+msgstr "Grade"
+
+#: booking/templates/booking/fields/subjects.html:4
+#: build/lib.linux-x86_64-2.7/booking/models.py:273
+msgid "Fag"
+msgstr "Subject"
+
+#: booking/templates/booking/fields/time.html:17
+msgid "Ønsket tidspunkt*"
+msgstr "Desired time*"
+
+#: booking/templates/booking/snippets/footer.html:5
+#: booking/templates/booking/snippets/footer.html:17
+#: booking/templates/booking/success.html:19
+#: booking/templates/booking/success_modal.html:22
+msgid ""
+"Bemærk venligst at aftalen først er bindende, når du har modtaget en "
+"bekræftelse<br />fra den arrangør på Københavns Universitet, der er "
+"ansvarlig for besøget."
+msgstr ""
+"Please note that your request is only binding once you have received a "
+"confirmation<br/> from the person at the University of Copenhagen in charge "
+"of your visit."
+
+#: booking/templates/booking/snippets/footer.html:8
+#: booking/templates/booking/snippets/footer.html:20
+#: booking/templates/booking/workflow/add_logentry.html:22
+#: booking/templates/booking/workflow/change_autosend.html:32
+#: booking/templates/booking/workflow/change_comments.html:22
+#: booking/templates/booking/workflow/change_hosts.html:30
+#: booking/templates/booking/workflow/change_rooms.html:22
+#: booking/templates/booking/workflow/change_starttime.html:27
+#: booking/templates/booking/workflow/change_status.html:30
+#: booking/templates/booking/workflow/change_teachers.html:30
+#: booking/templates/common/continue_cancel.html:4
+#: booking/templates/common/modal_contact.html:31
+#: booking/templates/common/save_cancel.html:4
+#: booking/templates/common/send_cancel.html:4
+msgid "Annullér"
+msgstr "Cancel"
+
+#: booking/templates/booking/snippets/footer.html:9
+#: booking/templates/booking/snippets/footer.html:21
+#: booking/templates/resource/searchresult.html:229
+#: booking/templates/resource/searchresult.html:237
+#: booking/templates/visitoccurrence/list.html:49
+#: booking/templates/visitoccurrence/list.html:52
+#: booking/templates/visitoccurrence/list.html:60
+msgid "Forrige"
+msgstr "Previous"
+
+#: booking/templates/booking/snippets/footer.html:10
+#: booking/templates/booking/snippets/footer.html:22
+#: booking/templates/resource/searchresult.html:254
+#: booking/templates/resource/searchresult.html:262
+#: booking/templates/visitoccurrence/list.html:75
+#: booking/templates/visitoccurrence/list.html:85
+msgid "Næste"
+msgstr "Next"
+
+#: booking/templates/booking/snippets/footer.html:11
+#: booking/templates/booking/snippets/footer.html:23
+msgid "Book!"
+msgstr ""
+
+#: booking/templates/booking/snippets/header.html:4
+msgid "Close"
+msgstr ""
+
+#: booking/templates/booking/snippets/header.html:5
+#: booking/templates/booking/snippets/header.html:8
+#, python-format
+msgid "Book tilbuddet \"%(title)s\""
+msgstr "Book the offer \"%(title)s\""
+
+#: booking/templates/booking/studentforaday.html:6
+msgid "tilmeld \"studerende for en dag\"-arrangement"
+msgstr ""
+
+#: booking/templates/booking/studentforaday.html:15
+#: booking/templates/booking/studentforaday_modal.html:18
+msgid ""
+"Udfyld formularen nedenfor, så vi kan matche dig med den rigtige studerende. "
+"Når du har udfyldt formularen, sender vi en email til dig, der bekræfter din "
+"henvendelse. Vi finder herefter en studerende, som kontakter dig, og sammen "
+"finder I en dag der passer."
+msgstr ""
+"Please fill out the form below and we will match you with a student. When "
+"you have filled out the form we will confirm your request and a student will "
+"get in touch with you in order to find a suitable day for your visit."
+
+#: booking/templates/booking/studentforaday_modal.html:6
+msgid "tilmeld \"studerende for en dag\""
+msgstr ""
+
+#: booking/templates/booking/success.html:6
+msgid "tilmelding oprettet"
+msgstr ""
+
+#: booking/templates/booking/success.html:14
+#: booking/templates/booking/success_modal.html:16
+msgid "Tak for din booking! Du hører fra os snarest."
+msgstr "Thank you for your request! You will hear from us shortly."
+
+#: booking/templates/booking/success.html:22
+#: booking/templates/booking/success_modal.html:24
+#: booking/templates/email/success.html:19
+msgid "OK"
+msgstr ""
+
+#: booking/templates/booking/success_modal.html:17
+msgid "Foretag ny booking"
+msgstr "Make a new booking."
+
+#: booking/templates/booking/teachervisit.html:9
+msgid "tilmeld lærerarrangement"
+msgstr ""
+
+#: booking/templates/booking/workflow/add_logentry.html:5
+#, python-format
+msgid "tilføj log-post til %(object)s"
+msgstr ""
+
+#: booking/templates/booking/workflow/add_logentry.html:12
+#, python-format
+msgid "Tilføj log-post til %(object)s"
+msgstr ""
+
+#: booking/templates/booking/workflow/add_logentry.html:21
+#: booking/templates/booking/workflow/change_autosend.html:31
+#: booking/templates/booking/workflow/change_comments.html:21
+#: booking/templates/booking/workflow/change_hosts.html:29
+#: booking/templates/booking/workflow/change_rooms.html:21
+#: booking/templates/booking/workflow/change_starttime.html:26
+#: booking/templates/booking/workflow/change_teachers.html:29
+#: booking/templates/email/preview.html:80
+#: booking/templates/resource/searchresult-adminform.html:30
+msgid "Opdater"
+msgstr "Update"
+
+#: booking/templates/booking/workflow/become_host.html:5
+#: booking/templates/booking/workflow/become_host.html:12
+#, python-format
+msgid "Bliv vært for %(object)s"
+msgstr ""
+
+#: booking/templates/booking/workflow/become_host.html:22
+#, python-format
+msgid "Ønsker du at blive vært for besøget %(object)s?"
+msgstr ""
+
+#: booking/templates/booking/workflow/become_host.html:28
+#, python-format
+msgid "Du er nu blevet sat som vært for besøget %(object)s."
+msgstr ""
+
+#: booking/templates/booking/workflow/become_host.html:31
+#: booking/templates/booking/workflow/become_host.html:44
+#: booking/templates/booking/workflow/become_teacher.html:31
+#: booking/templates/booking/workflow/become_teacher.html:44
+msgid "Klik her for at vende tilbage til besøget"
+msgstr ""
+
+#: booking/templates/booking/workflow/become_host.html:36
+msgid "Det er ikke muligt at blive vært for besøget på grund af følgende:"
+msgstr ""
+
+#: booking/templates/booking/workflow/become_teacher.html:5
+#: booking/templates/booking/workflow/become_teacher.html:12
+#, python-format
+msgid "Bliv underviser for %(object)s"
+msgstr ""
+
+#: booking/templates/booking/workflow/become_teacher.html:22
+#, python-format
+msgid "Ønsker du at blive underviser for besøget %(object)s?"
+msgstr ""
+
+#: booking/templates/booking/workflow/become_teacher.html:28
+#, python-format
+msgid "Du er nu blevet sat som underviser for besøget %(object)s."
+msgstr ""
+
+#: booking/templates/booking/workflow/become_teacher.html:36
+msgid ""
+"Det er ikke muligt at blive underviser for besøget på grund af følgende:"
+msgstr ""
+
+#: booking/templates/booking/workflow/change_autosend.html:6
+#: booking/templates/booking/workflow/change_autosend.html:13
+#, python-format
+msgid "Redigér autosend for %(object)s"
+msgstr ""
+
+#: booking/templates/booking/workflow/change_comments.html:5
+#: booking/templates/booking/workflow/change_comments.html:12
+#, python-format
+msgid "Redigér kommentarer for %(object)s"
+msgstr ""
+
+#: booking/templates/booking/workflow/change_hosts.html:5
+#: booking/templates/booking/workflow/change_hosts.html:12
+#, python-format
+msgid "Redigér værter for %(object)s"
+msgstr ""
+
+#: booking/templates/booking/workflow/change_hosts.html:18
+#, python-format
+msgid ""
+"\n"
+"            Antal nødvendige værter angivet på \"%(title)s\": %(needed)s\n"
+"            "
+msgstr ""
+
+#: booking/templates/booking/workflow/change_rooms.html:5
+#: booking/templates/booking/workflow/change_rooms.html:12
+#, python-format
+msgid "Redigér lokaler for %(object)s"
+msgstr ""
+
+#: booking/templates/booking/workflow/change_starttime.html:5
+#: booking/templates/booking/workflow/change_starttime.html:16
+#, python-format
+msgid "Redigér tidspunkt for %(object)s"
+msgstr ""
+
+#: booking/templates/booking/workflow/change_status.html:5
+#: booking/templates/booking/workflow/change_status.html:12
+#, python-format
+msgid "Skift status for %(object)s"
+msgstr ""
+
+#: booking/templates/booking/workflow/change_status.html:20
+#, python-format
+msgid ""
+"\n"
+"                Bemærk at det ikke er muligt at skifte til status '%(text)s' "
+"med mindre der er blevet tildelt både starttidspunkt, undervisere, værter og "
+"lokaler.\n"
+"                "
+msgstr ""
+
+#: booking/templates/booking/workflow/change_status.html:23
+msgid "Klik her for at vende tilbage og rette i tildelingerne"
+msgstr ""
+
+#: booking/templates/booking/workflow/change_status.html:29
+#: booking/templates/visitoccurrence/details.html:147
+msgid "Skift status"
+msgstr ""
+
+#: booking/templates/booking/workflow/change_teachers.html:5
+#: booking/templates/booking/workflow/change_teachers.html:12
+#, python-format
+msgid "Redigér undervisere for %(object)s"
+msgstr ""
+
+#: booking/templates/booking/workflow/change_teachers.html:18
+#, python-format
+msgid ""
+"\n"
+"            Antal nødvendige undervisere angivet på \"%(title)s\": "
+"%(needed)s\n"
+"            "
+msgstr ""
+
+#: booking/templates/common/breadcrumbrow.html:6
+msgid "Du er her:"
+msgstr ""
+
+#: booking/templates/common/breadcrumbrow.html:18
+msgid "Send via e-mail"
+msgstr ""
+
+#: booking/templates/common/breadcrumbrow.html:21
+msgid "Print"
+msgstr ""
+
+#: booking/templates/common/continue.html:3
+#: booking/templates/common/continue_cancel.html:3
+msgid "Fortsæt"
+msgstr ""
+
+#: booking/templates/common/item_list.html:21
+#: profile/templates/profile/item_list.html:19
+msgid "Se arrangementets detaljer"
+msgstr ""
+
+#: booking/templates/common/item_list.html:27
+#: profile/templates/profile/item_list.html:25
+#, python-format
+msgid "Dato/tid: %(date)s kl. %(time)s"
+msgstr ""
+
+#: booking/templates/common/item_list.html:29
+#: profile/templates/profile/item_list.html:27
+msgid "Antal tilmeldte:"
+msgstr ""
+
+#: booking/templates/common/item_list.html:43
+#: profile/templates/profile/item_list.html:40
+msgid "Se tilbuddets detaljer og evt. bookings"
+msgstr ""
+
+#: booking/templates/common/item_list.html:48
+#: profile/templates/profile/item_list.html:45
+msgid "Type:"
+msgstr ""
+
+#: booking/templates/common/item_list.html:51
+#: profile/templates/profile/item_list.html:48
+msgid "Dato/tid:"
+msgstr "Date/time:"
+
+#: booking/templates/common/item_list.html:55
+#: profile/templates/profile/item_list.html:52
+#, python-format
+msgid "kl. %(time)s"
+msgstr "at %(time)s"
+
+#: booking/templates/common/item_list.html:57
+#: profile/templates/profile/item_list.html:54
+#, python-format
+msgid ""
+"\n"
+"                                                        %(count)s mulige "
+"tidspunkter, første gang %(date)s kl. %(time)s\n"
+"                                                    "
+msgstr ""
+
+#: booking/templates/common/item_list.html:65
+#: profile/templates/profile/item_list.html:62
+msgid "Oprettet: "
+msgstr "Created: "
+
+#: booking/templates/common/item_list.html:66
+#: profile/templates/profile/item_list.html:63
+msgid "Opdateret: "
+msgstr "Updated: "
+
+#: booking/templates/common/item_list.html:72
+#: profile/templates/profile/item_list.html:69
+msgid "Rediger"
+msgstr "Edit"
+
+#: booking/templates/common/item_list.html:73
+#: booking/templates/email/list.html:54
+#: profile/templates/profile/item_list.html:70
+msgid "Kopiér"
+msgstr "Copy"
+
+#: booking/templates/common/map.html:4
+msgid "Kort"
+msgstr ""
+
+#: booking/templates/common/modal_contact.html:7
+msgid "Kontakt arrangøren"
+msgstr ""
+
+#: booking/templates/common/modal_contact.html:16
+msgid "E-Mail"
+msgstr "E-Mail"
+
+#: booking/templates/common/modal_contact.html:24
+msgid "Besked"
+msgstr "Message"
+
+#: booking/templates/common/save_cancel.html:3
+msgid "Gem"
+msgstr "Save"
+
+#: booking/templates/common/searchform.html:4
+#: booking/templates/frontpage.html:9 booking/templates/frontpage.html:31
+#: booking/templates/lightbox-index.html:46
+msgid "Søg efter tilbud"
+msgstr ""
+
+#: booking/templates/common/searchform.html:5
+msgid "Søg efter tilbud - indtast et eller flere søgeord..."
+msgstr ""
+
+#: booking/templates/common/searchform.html:7
+#: booking/templates/visitoccurrence/searchresult.html:22
+msgid "Ryd søgning"
+msgstr ""
+
+#: booking/templates/common/searchform.html:11
+#: booking/templates/frontpage.html:34 booking/templates/iframe-index.html:41
+#: booking/templates/lightbox-index.html:49
+#: booking/templates/visitoccurrence/searchresult.html:26
+msgid "Søg"
+msgstr "Search"
+
+#: booking/templates/common/send_cancel.html:3
+msgid "Send"
+msgstr ""
+
+#: booking/templates/email/compose.html:6
+msgid "besked"
+msgstr "message"
+
+#: booking/templates/email/compose.html:18
+#: booking/templates/email/compose_modal.html:15
+msgid "Send email"
+msgstr ""
+
+#: booking/templates/email/compose.html:83
+#: booking/templates/email/compose_modal.html:79
+msgid "Tilføj:"
+msgstr "Add:"
+
+#: booking/templates/email/compose.html:120
+#: booking/templates/email/compose_modal.html:116
+msgid "Skabeloner:"
+msgstr "Templates:"
+
+#: booking/templates/email/compose.html:127
+#: booking/templates/email/compose_modal.html:123
+msgid "Rodskabelon"
+msgstr "Root template"
+
+#: booking/templates/email/compose.html:131
+#: booking/templates/email/compose_modal.html:127
+msgid "Ingen skabeloner fundet"
+msgstr "No templates found"
+
+#: booking/templates/email/compose.html:132
+#: booking/templates/email/compose_modal.html:128
+#: booking/templates/email/list.html:15
+msgid "Opret skabelon"
+msgstr "Create template"
+
+#: booking/templates/email/compose.html:200
+#: booking/templates/email/compose_modal.html:196
+msgid "Indtast email-adresse"
+msgstr "Enter email-address"
+
+#: booking/templates/email/compose.html:225
+#: booking/templates/email/compose_modal.html:226
+msgid "Ryd"
+msgstr "Clear"
+
+#: booking/templates/email/delete.html:11
+msgid "Are you sure you want to delete this template?"
+msgstr ""
+
+#: booking/templates/email/delete.html:13
+msgid "Key:"
+msgstr ""
+
+#: booking/templates/email/delete.html:15
+msgid "Unit:"
+msgstr ""
+
+#: booking/templates/email/delete.html:17
+msgid "Subject:"
+msgstr ""
+
+#: booking/templates/email/delete.html:19
+msgid "Body:"
+msgstr ""
+
+#: booking/templates/email/delete.html:22
+msgid "Yes"
+msgstr ""
+
+#: booking/templates/email/delete.html:23
+msgid "No"
+msgstr ""
+
+#: booking/templates/email/form.html:17
+msgid "Rediger emailskabelon"
+msgstr ""
+
+#: booking/templates/email/form.html:17
+msgid "Ny emailskabelon"
+msgstr ""
+
+#: booking/templates/email/form.html:21
+msgid "Preview skabelon"
+msgstr ""
+
+#: booking/templates/email/form.html:22
+#: booking/templates/email/preview.html:22
+msgid "Slet skabelon"
+msgstr ""
+
+#: booking/templates/email/form.html:65
+msgid ""
+"\n"
+"                                    Når en emailskabelon skal findes til et "
+"givet formål (f.eks. når en booking foretages), søges efter en skabelon med "
+"den rette nøgle. Først søges efter skabeloner associeret med det relevante "
+"institut, derefter skabeloner associeret med det relevante fakultet, og "
+"sidst efter skabeloner uden enhed tilknyttet. Den først fundne af disse "
+"skabeloner vil blive anvendt til udsendelse af email.\n"
+"                                "
+msgstr ""
+
+#: booking/templates/email/list.html:12
+msgid "Emailskabeloner"
+msgstr ""
+
+#: booking/templates/email/list.html:28
+#: booking/templates/email/preview.html:47
+msgid "Key"
+msgstr ""
+
+#: booking/templates/email/list.html:31
+msgid "Unit"
+msgstr ""
+
+#: booking/templates/email/list.html:34
+msgid "Options"
+msgstr ""
+
+#: booking/templates/email/list.html:52
+#: booking/templates/email/preview.html:89
+msgid "Preview"
+msgstr ""
+
+#: booking/templates/email/list.html:53
+#: booking/templates/visitoccurrence/details.html:94
+#: booking/templates/visitoccurrence/details.html:103
+#: booking/templates/visitoccurrence/details.html:119
+#: booking/templates/visitoccurrence/details.html:133
+#: booking/templates/visitoccurrence/details.html:140
+#: booking/templates/visitoccurrence/details.html:154 booking/views.py:2476
+msgid "Redigér"
+msgstr ""
+
+#: booking/templates/email/list.html:55 booking/views.py:2618
+msgid "Slet"
+msgstr ""
+
+#: booking/templates/email/preview.html:17
+msgid "Preview Emailskabelon"
+msgstr ""
+
+#: booking/templates/email/preview.html:20
+msgid "Rediger skabelon"
+msgstr ""
+
+#: booking/templates/email/preview.html:21
+msgid "Kopier skabelon"
+msgstr ""
+
+#: booking/templates/email/preview.html:27
+msgid ""
+"På denne side kan du afprøve skabelonens felter ved at definere en kontekst. "
+"Ved tryk på \"preview\" bliver skabelonen udfyldt med den angivne kontekst."
+msgstr ""
+
+#: booking/templates/email/preview.html:39
+msgid "Context"
+msgstr ""
+
+#: booking/templates/email/preview.html:50
+msgid "Type"
+msgstr ""
+
+#: booking/templates/email/preview.html:53
+msgid "Value"
+msgstr ""
+
+#: booking/templates/email/preview.html:96
+msgid "Subject"
+msgstr ""
+
+#: booking/templates/email/preview.html:101
+msgid "Body"
+msgstr ""
+
+#: booking/templates/email/success.html:15
+msgid "Beskeden er afsendt."
+msgstr ""
+
+#: booking/templates/embedcodes.html:4
+msgid "indlejring af side"
+msgstr ""
+
+#: booking/templates/embedcodes.html:11
+#, python-format
+msgid "Indlejring af siden %(url)s"
+msgstr ""
+
+#: booking/templates/embedcodes.html:13
+msgid "Indlejring via Proxy-dokument i Obvius CMS"
+msgstr ""
+
+#: booking/templates/embedcodes.html:15
+msgid "Opret et proxy-dokument der bruger følgende url:"
+msgstr ""
+
+#: booking/templates/embedcodes.html:19
+msgid "Indlejring via Iframe"
+msgstr ""
+
+#: booking/templates/embedcodes.html:22
+msgid "Bredde:"
+msgstr ""
+
+#: booking/templates/embedcodes.html:26
+msgid "Højde:"
+msgstr ""
+
+#: booking/templates/embedcodes.html:30
+msgid "Indlejringskode:"
+msgstr ""
+
+#: booking/templates/embedcodes.html:37
+msgid "Preview af indlejret side"
+msgstr ""
+
+#: booking/templates/embedcodes.html:41
+#, python-format
+msgid "Den valgte URL, '%(url)s', kan ikke indlejres."
+msgstr ""
+
+#: booking/templates/frontpage.html:12
+msgid "Tilbud rettet mod:"
+msgstr ""
+
+#: booking/templates/frontpage.html:32 booking/templates/iframe-index.html:38
+#: booking/templates/lightbox-index.html:47
+msgid "Indtast et eller flere søgeord..."
+msgstr ""
+
+#: booking/templates/iframe-index.html:11 booking/templates/index.html:11
+#: booking/templates/lightbox-index.html:11
+#: booking/templates/resource/searchresult.html:6
+msgid "søg i tilbud"
+msgstr ""
+
+#: booking/templates/index.html:48 booking/templates/index.html.py:74
+msgid "Log ud"
+msgstr ""
+
+#: booking/templates/index.html:50
+msgid "Log ind"
+msgstr ""
+
+#: booking/templates/index.html:52
+msgid "Kalender"
+msgstr ""
+
+#: booking/templates/index.html:53
+msgid "Find vej"
+msgstr ""
+
+#: booking/templates/index.html:54
+#, fuzzy
+#| msgid "Telefon"
+msgid "Telefonbog"
+msgstr "Phone"
+
+#: booking/templates/index.html:55
+msgid "Job"
+msgstr ""
+
+#: booking/templates/index.html:56
+msgid "A-Å-indeks"
+msgstr ""
+
+#: booking/templates/index.html:57
+msgid "KUnet"
+msgstr ""
+
+#: booking/templates/index.html:67 override_templates/admin/base.html:36
+#: profile/views.py:278 profile/views.py:366
+msgid "Min side"
+msgstr ""
+
+#: booking/templates/index.html:68
+msgid "Tilbud"
+msgstr ""
+
+#: booking/templates/index.html:70 profile/templates/profile/profile.html:32
+msgid "Administration"
+msgstr ""
+
+#: booking/templates/index.html:72
+msgid "Indlejr side"
+msgstr ""
+
+#: booking/templates/index.html:84 booking/templates/index.html.py:85
+#: booking/templates/index.html:117
+msgid "Københavns Universitet"
+msgstr ""
+
+#: booking/templates/index.html:89
+msgid "Velkommen til Københavns Universitet"
+msgstr ""
+
+#: booking/templates/index.html:90
+msgid "foKUs"
+msgstr ""
+
+#: booking/templates/index.html:91
+msgid "Portal for skole- og gymnasieområdet"
+msgstr ""
+
+#: booking/templates/index.html:116
+msgid "Kommunikation"
+msgstr ""
+
+#: booking/templates/lightbox-index.html:42
+msgid "Søg i tilbud"
+msgstr ""
+
+#: booking/templates/otherresource/details.html:12
+#: booking/templates/visit/details.html:14 booking/views.py:1282
+#: booking/views.py:1592 booking/views.py:1668
+msgid "Om tilbuddet"
+msgstr ""
+
+#: booking/templates/otherresource/details.html:25
+#: booking/templates/visit/details.html:26
+msgid "+ Redigér"
+msgstr ""
+
+#: booking/templates/otherresource/details.html:28
+#: booking/templates/visit/details.html:29
+msgid "Opret kopi"
+msgstr ""
+
+#: booking/templates/otherresource/details.html:47
+msgid "Book dette tilbud"
+msgstr ""
+
+#: booking/templates/otherresource/details.html:54
+msgid ""
+"Bemærk at din bestilling først er bindende, når du har modtaget en "
+"bekræftelse fra den ansvarlige arrangør fra Københavns Universitet"
+msgstr ""
+
+#: booking/templates/otherresource/details.html:57
+#: booking/templates/visit/details.html:81
+msgid "Tilbage til søgeresultat"
+msgstr ""
+
+#: booking/templates/otherresource/details.html:64
+#: booking/templates/visit/details.html:88
+msgid "Hvem, hvor og hvornår"
+msgstr ""
+
+#: booking/templates/otherresource/form.html:13
+#: booking/templates/visit/form.html:16
+msgid "Rediger tilbud"
+msgstr ""
+
+#: booking/templates/otherresource/form.html:13
+#: booking/templates/visit/form.html:16
+msgid "Nyt tilbud"
+msgstr ""
+
+#: booking/templates/otherresource/form.html:16
+#: booking/templates/resource/form.html:18
+#: booking/templates/visit/form.html:19
+msgid "Udvid alle felter"
+msgstr ""
+
+#: booking/templates/otherresource/form.html:16
+#: booking/templates/resource/form.html:18
+#: booking/templates/visit/form.html:19
+msgid "Luk alle felter"
+msgstr ""
+
+#: booking/templates/otherresource/form.html:90
+#: booking/templates/visit/form.html:94
+msgid "Tidspunkt og varighed"
+msgstr ""
+
+#: booking/templates/otherresource/form.html:108
+#: booking/templates/visit/form.html:112
+msgid "Lokalitet og lokaler"
+msgstr ""
+
+#: booking/templates/otherresource/form.html:126
+#: booking/templates/visit/form.html:156
+msgid "Kontaktinformation"
+msgstr ""
+
+#: booking/templates/otherresource/form.html:144
+#: booking/templates/visit/form.html:175
+msgid "Interne oplysninger"
+msgstr ""
+
+#: booking/templates/resource/fields/autosend.html:5
+msgid "Automatiske emails"
+msgstr ""
+
+#: booking/templates/resource/fields/autosend_script.html:135
+msgid "Der er ingen skabelon til denne hændelse!"
+msgstr ""
+
+#: booking/templates/resource/fields/autosend_script.html:135
+#: booking/views.py:2479
+msgid "Opret"
+msgstr ""
+
+#: booking/templates/resource/fields/contact.html:9
+msgid ""
+"Vælg modtagere af henvendelser indsendt via formularen \"Spørg om tilbud\""
+msgstr ""
+
+#: booking/templates/resource/fields/duration.html:13
+msgid "15 minutter"
+msgstr ""
+
+#: booking/templates/resource/fields/duration.html:14
+msgid "30 minutter"
+msgstr ""
+
+#: booking/templates/resource/fields/duration.html:15
+msgid "45 minutter"
+msgstr ""
+
+#: booking/templates/resource/fields/duration.html:16
+msgid "1 time"
+msgstr ""
+
+#: booking/templates/resource/fields/duration.html:17
+msgid "1 time, 15 minutter"
+msgstr ""
+
+#: booking/templates/resource/fields/duration.html:18
+msgid "1 time, 30 minutter"
+msgstr ""
+
+#: booking/templates/resource/fields/duration.html:19
+msgid "1 time, 45 minutter"
+msgstr ""
+
+#: booking/templates/resource/fields/duration.html:20
+msgid "2 timer"
+msgstr ""
+
+#: booking/templates/resource/fields/duration.html:21
+msgid "2 timer, 30 minutter"
+msgstr ""
+
+#: booking/templates/resource/fields/duration.html:22
+msgid "3 timer"
+msgstr ""
+
+#: booking/templates/resource/fields/duration.html:23
+msgid "3 timer, 30 minutter"
+msgstr ""
+
+#: booking/templates/resource/fields/duration.html:24
+msgid "4 timer"
+msgstr ""
+
+#: booking/templates/resource/fields/duration.html:25
+msgid "4 timer, 30 minutter"
+msgstr ""
+
+#: booking/templates/resource/fields/duration.html:26
+msgid "5 timer"
+msgstr ""
+
+#: booking/templates/resource/fields/duration.html:27
+msgid "5 timer, 30 minutter"
+msgstr ""
+
+#: booking/templates/resource/fields/duration.html:28
+msgid "6 timer"
+msgstr ""
+
+#: booking/templates/resource/fields/duration.html:29
+msgid "6 timer, 30 minutter"
+msgstr ""
+
+#: booking/templates/resource/fields/duration.html:30
+msgid "7 timer"
+msgstr ""
+
+#: booking/templates/resource/fields/duration.html:31
+msgid "7 timer, 30 minutter"
+msgstr ""
+
+#: booking/templates/resource/fields/duration.html:32
+msgid "8 timer"
+msgstr ""
+
+#: booking/templates/resource/fields/duration.html:33
+msgid "8 timer, 30 minutter"
+msgstr ""
+
+#: booking/templates/resource/fields/duration.html:34
+msgid "9 timer"
+msgstr ""
+
+#: booking/templates/resource/fields/duration.html:35
+msgid "9 timer, 30 minutter"
+msgstr ""
+
+#: booking/templates/resource/fields/duration.html:36
+msgid "10 timer"
+msgstr ""
+
+#: booking/templates/resource/fields/duration.html:37
+msgid "11 timer"
+msgstr ""
+
+#: booking/templates/resource/fields/duration.html:38
+msgid "12 timer"
+msgstr ""
+
+#: booking/templates/resource/fields/duration.html:39
+msgid "13 timer"
+msgstr ""
+
+#: booking/templates/resource/fields/duration.html:40
+msgid "14 timer"
+msgstr ""
+
+#: booking/templates/resource/fields/duration.html:41
+msgid "15 timer"
+msgstr ""
+
+#: booking/templates/resource/fields/duration.html:42
+msgid "20 timer"
+msgstr ""
+
+#: booking/templates/resource/fields/duration.html:43
+msgid "24 timer"
+msgstr ""
+
+#: booking/templates/resource/fields/duration.html:44
+msgid "36 timer"
+msgstr ""
+
+#: booking/templates/resource/fields/duration.html:45
+msgid "48 timer"
+msgstr ""
+
+#: booking/templates/resource/fields/rooms.html:27
+msgid "Tilføj eksisterende lokale"
+msgstr ""
+
+#: booking/templates/resource/fields/rooms.html:31
+msgid "Vælg lokale..."
+msgstr ""
+
+#: booking/templates/resource/fields/rooms.html:40
+msgid "Tilføj nyt lokale"
+msgstr ""
+
+#: booking/templates/resource/fields/rooms.html:45
+msgid "Tilføj"
+msgstr ""
+
+#: booking/templates/resource/fields/rooms.html:49
+msgid "Valgte lokaler"
+msgstr ""
+
+#: booking/templates/resource/fields/studymaterials.html:6
+msgid "Vedhæftede filer"
+msgstr ""
+
+#: booking/templates/resource/fields/studymaterials.html:26
+msgid "Tilføj ny fil"
+msgstr ""
+
+#: booking/templates/resource/fields/time.html:6
+msgid "Vælg datoer og tider"
+msgstr ""
+
+#: booking/templates/resource/fields/time.html:17
+msgid "Tilføj starttid"
+msgstr ""
+
+#: booking/templates/resource/fields/time.html:27
+msgid "Tilføj dato"
+msgstr ""
+
+#: booking/templates/resource/fields/time.html:32
+#: booking/templates/resource/fields/time.html:57
+msgid "Tilføj gentagne datoer"
+msgstr ""
+
+#: booking/templates/resource/fields/time.html:38
+msgid "Sæt starttid for alle datoer"
+msgstr ""
+
+#: booking/templates/resource/fields/time.html:43
+msgid "Fjern alle datoer"
+msgstr ""
+
+#: booking/templates/resource/fields/time.html:64
+msgid "Gentages ugentligt på"
+msgstr ""
+
+#: booking/templates/resource/fields/time.html:75
+msgid "Slutter"
+msgstr ""
+
+#: booking/templates/resource/fields/time.html:96
+msgid "Frekvens"
+msgstr ""
+
+#: booking/templates/resource/fields/type.html:6
+#: booking/templates/resource/form.html:31
+msgid "Kategorisering"
+msgstr ""
+
+#: booking/templates/resource/form.html:6 booking/templates/visit/form.html:6
+msgid "rediger tilbud"
+msgstr ""
+
+#: booking/templates/resource/form.html:6 booking/templates/visit/form.html:6
+msgid "opret tilbud"
+msgstr ""
+
+#: booking/templates/resource/searchresult-adminform.html:6
+msgid "Filtrér søgning"
+msgstr ""
+
+#: booking/templates/resource/searchresult.html:11
+msgid "Filtrer søgeresultat"
+msgstr ""
+
+#: booking/templates/resource/searchresult.html:24
+msgid "Afgræns din søgning"
+msgstr ""
+
+#: booking/templates/resource/searchresult.html:27
+msgid "Hvor er du fra?"
+msgstr ""
+
+#: booking/templates/resource/searchresult.html:41
+msgid "Hvem er du?"
+msgstr ""
+
+#: booking/templates/resource/searchresult.html:55
+msgid "Hvad søger du?"
+msgstr ""
+
+#: booking/templates/resource/searchresult.html:109
+msgid "Vælg periode"
+msgstr ""
+
+#: booking/templates/resource/searchresult.html:113
+msgid "Fra:"
+msgstr ""
+
+#: booking/templates/resource/searchresult.html:115
+#: booking/templates/resource/searchresult.html:121
+msgid "Klik og vælg dato"
+msgstr ""
+
+#: booking/templates/resource/searchresult.html:119
+msgid "Til:"
+msgstr ""
+
+#: booking/templates/resource/searchresult.html:138
+#: profile/templates/profile/profile.html:31
+msgid "+ Opret tilbud"
+msgstr ""
+
+#: booking/templates/resource/searchresult.html:141
+#: booking/templates/visitoccurrence/searchresult.html:14 booking/views.py:877
+#: booking/views.py:1281 booking/views.py:1591 booking/views.py:1666
+#: booking/views.py:1787
+msgid "Søgeresultat"
+msgstr ""
+
+#: booking/templates/resource/searchresult.html:154
+#: booking/templates/visitoccurrence/searchresult.html:41
+msgid "Din søgning gav ikke noget resultat."
+msgstr ""
+
+#: booking/templates/resource/searchresult.html:156
+#, python-format
+msgid "%(count)s resultater matcher din søgning på \"%(query)s\""
+msgstr ""
+
+#: booking/templates/resource/searchresult.html:190
+#: booking/templates/visit/details.html:141
+#: booking/templates/visit/details.html:152
+msgid "Hvornår:"
+msgstr ""
+
+#: booking/templates/resource/searchresult.html:193
+#, python-format
+msgid ""
+"\n"
+"                                            %(date)s kl. %(time)s\n"
+"                                            "
+msgstr ""
+
+#: booking/templates/resource/searchresult.html:197
+#, python-format
+msgid ""
+"\n"
+"                                            %(count)s mulige tidspunkter, "
+"første gang %(date)s kl. %(time)s\n"
+"                                            "
+msgstr ""
+
+#: booking/templates/resource/searchresult.html:277
+#: booking/templates/resource/searchresult.html:285 booking/views.py:117
+#: booking/views.py:128 profile/views.py:69 profile/views.py:80
+msgid "Vis alle"
+msgstr ""
+
+#: booking/templates/resource/searchresult.html:294
+msgid "pr. side"
+msgstr ""
+
+#: booking/templates/visit/details.html:66
+msgid "Tilmeld"
+msgstr ""
+
+#: booking/templates/visit/details.html:72
+msgid "Spørg om tilbud"
+msgstr ""
+
+#: booking/templates/visit/details.html:78
+msgid ""
+"Bemærk at din bestilling først er bindende, når du har modtaget en "
+"bekræftelse fra den ansvarlige arrangør fra Københavns Universitet."
+msgstr ""
+
+#: booking/templates/visit/details.html:94
+msgid "Henvendt til"
+msgstr ""
+
+#: booking/templates/visit/details.html:99
+msgid "Fag/niveau"
+msgstr ""
+
+#: booking/templates/visit/details.html:110
+msgid "Antal"
+msgstr ""
+
+#: booking/templates/visit/details.html:115
+msgid "Hvad"
+msgstr ""
+
+#: booking/templates/visit/details.html:120
+msgid "Hvor"
+msgstr ""
+
+#: booking/templates/visit/details.html:128
+msgid "Arrangør"
+msgstr ""
+
+#: booking/templates/visit/details.html:145
+msgid "(udløbet)"
+msgstr ""
+
+#: booking/templates/visit/form.html:130
+msgid "Værter og undervisere"
+msgstr ""
+
+#: booking/templates/visitoccurrence/details.html:15
+#, python-format
+msgid "Planlægning af '%(visittitle)s' %(on_date)s"
+msgstr ""
+
+#: booking/templates/visitoccurrence/details.html:26
+#, python-format
+msgid ""
+"\n"
+"                        %(nr_bookers)s har tilmeldt sig denne instans af <a "
+"href=\"%(visiturl)s\">%(visittitle)s</a>\n"
+"                    "
+msgstr ""
+
+#: booking/templates/visitoccurrence/details.html:34
+msgid "Der er endnu ikke et fastlagt et tidspunkt for dette besøg."
+msgstr ""
+
+#: booking/templates/visitoccurrence/details.html:36
+msgid "Gæsten har ønsket følgende tidspunkt:"
+msgstr ""
+
+#: booking/templates/visitoccurrence/details.html:75
+msgid "Statusoverblik"
+msgstr ""
+
+#: booking/templates/visitoccurrence/details.html:79
+#, python-format
+msgid ""
+"\n"
+"                            Det er ikke længere muligt at tildele ressourcer "
+"til dette besøg. Hvis du ønsker at rette i de tildelte ressourcer skal du "
+"ændre status til '%(text)s'.\n"
+"                            "
+msgstr ""
+
+#: booking/templates/visitoccurrence/details.html:91
+msgid "Ikke angivet"
+msgstr ""
+
+#: booking/templates/visitoccurrence/details.html:100
+#, python-format
+msgid "%(found)s/%(needed)s undervisere fundet"
+msgstr ""
+
+#: booking/templates/visitoccurrence/details.html:109
+msgid "Bliv underviser for dette besøg"
+msgstr ""
+
+#: booking/templates/visitoccurrence/details.html:116
+#, python-format
+msgid "%(found)s/%(needed)s værter fundet"
+msgstr ""
+
+#: booking/templates/visitoccurrence/details.html:123
+msgid "(allerede vært for dette besøg)"
+msgstr ""
+
+#: booking/templates/visitoccurrence/details.html:125
+msgid "Bliv vært for dette besøg."
+msgstr ""
+
+#: booking/templates/visitoccurrence/details.html:129
+msgid "Lokaler"
+msgstr ""
+
+#: booking/templates/visitoccurrence/details.html:136
+msgid "Automatisk email"
+msgstr ""
+
+#: booking/templates/visitoccurrence/details.html:143
+msgid "Afvikling"
+msgstr ""
+
+#: booking/templates/visitoccurrence/details.html:169
+msgid "Aktivitetslog"
+msgstr ""
+
+#: booking/templates/visitoccurrence/details.html:175
+msgid "Hvem:"
+msgstr ""
+
+#: booking/templates/visitoccurrence/details.html:179
+msgid "Hvornår"
+msgstr ""
+
+#: booking/templates/visitoccurrence/details.html:181
+msgid "Besked:"
+msgstr ""
+
+#: booking/templates/visitoccurrence/details.html:188
+msgid "Tilføj ny log-post"
+msgstr ""
+
+#: booking/templates/visitoccurrence/details.html:199
+msgid "Tilmeldte"
+msgstr ""
+
+#: booking/templates/visitoccurrence/details.html:209
+msgid "Antal:"
+msgstr ""
+
+#: booking/templates/visitoccurrence/list.html:6
+msgid "liste af besøg"
+msgstr ""
+
+#: booking/templates/visitoccurrence/list.html:17
+msgid "Ingen besøg fundet."
+msgstr "No visits found"
+
+#: booking/templates/visitoccurrence/list.html:20
+#, python-format
+msgid "%(count)s besøg fundet"
+msgstr ""
+
+#: booking/templates/visitoccurrence/list.html:29
+#: booking/templates/visitoccurrence/searchresult.html:56
+msgid "Tilbud:"
+msgstr ""
+
+#: booking/templates/visitoccurrence/list.html:31
+#: booking/templates/visitoccurrence/searchresult.html:58
+msgid "Booket af:"
+msgstr "Booked by:"
+
+#: booking/templates/visitoccurrence/list.html:32
+#: booking/templates/visitoccurrence/searchresult.html:59
+#, python-format
+msgid "%(count)s personer"
+msgstr ""
+
+#: booking/templates/visitoccurrence/searchresult.html:6
+msgid "søg i besøg"
+msgstr ""
+
+#: booking/templates/visitoccurrence/searchresult.html:19
+msgid "Søg efter besøg"
+msgstr ""
+
+#: booking/templates/visitoccurrence/searchresult.html:20
+msgid "Søg efter besøg - indtast et eller flere søgeord..."
+msgstr ""
+
+#: booking/templates/visitoccurrence/searchresult.html:35
+msgid "Søgningen er begrænset til:"
+msgstr ""
+
+#. Translators: Single-letter singular time notation
+#. (e.g. 1d, meaning 1 day)
+#: booking/templatetags/booking_tags.py:54
+msgid "1w"
+msgstr ""
+
+#: booking/templatetags/booking_tags.py:54
+msgid "1d"
+msgstr ""
+
+#: booking/templatetags/booking_tags.py:54
+msgid "1h"
+msgstr ""
+
+#: booking/templatetags/booking_tags.py:54
+msgid "1m"
+msgstr ""
+
+#: booking/templatetags/booking_tags.py:54
+msgid "1s"
+msgstr ""
+
+#. Translators: Single-letter plural time notation
+#. (%id for e.g. 6d, meaning 6 days)
+#: booking/templatetags/booking_tags.py:57
+#, python-format
+msgid "%iw"
+msgstr ""
+
+#: booking/templatetags/booking_tags.py:57
+#, python-format
+msgid "%id"
+msgstr ""
+
+#: booking/templatetags/booking_tags.py:57
+#, python-format
+msgid "%ih"
+msgstr ""
+
+#: booking/templatetags/booking_tags.py:57
+#, python-format
+msgid "%im"
+msgstr ""
+
+#: booking/templatetags/booking_tags.py:57
+#, python-format
+msgid "%is"
+msgstr ""
+
+#. Translators: Short singular time notation
+#. (e.g. 1 hr, meaning 1 hour)
+#: booking/templatetags/booking_tags.py:61
+msgid "1 wk"
+msgstr ""
+
+#: booking/templatetags/booking_tags.py:61
+msgid "1 dy"
+msgstr ""
+
+#: booking/templatetags/booking_tags.py:62
+msgid "1 hr"
+msgstr ""
+
+#: booking/templatetags/booking_tags.py:62
+msgid "1 min"
+msgstr ""
+
+#: booking/templatetags/booking_tags.py:62
+msgid "1 sec"
+msgstr ""
+
+#. Translators: Short plural time notation
+#. (%i hrs for e.g. 6 hrs, meaning 6 hours)
+#: booking/templatetags/booking_tags.py:65
+#, python-format
+msgid "%i wks"
+msgstr ""
+
+#: booking/templatetags/booking_tags.py:65
+#, python-format
+msgid "%i dys"
+msgstr ""
+
+#: booking/templatetags/booking_tags.py:66
+#, python-format
+msgid "%i hrs"
+msgstr ""
+
+#: booking/templatetags/booking_tags.py:66
+#, python-format
+msgid "%i min"
+msgstr ""
+
+#: booking/templatetags/booking_tags.py:66
+#, python-format
+msgid "%i sec"
+msgstr ""
+
+#. Translators: Long singular time notation
+#. (e.g. 1 hour)
+#: booking/templatetags/booking_tags.py:70
+msgid "1 week"
+msgstr ""
+
+#: booking/templatetags/booking_tags.py:70
+msgid "1 day"
+msgstr ""
+
+#: booking/templatetags/booking_tags.py:71
+msgid "1 hour"
+msgstr ""
+
+#: booking/templatetags/booking_tags.py:71
+msgid "1 minute"
+msgstr ""
+
+#: booking/templatetags/booking_tags.py:71
+msgid "1 second"
+msgstr ""
+
+#. Translators: Long plural time notation
+#. (%i hours for e.g. 6 hours)
+#: booking/templatetags/booking_tags.py:74
+#, python-format
+msgid "%i weeks"
+msgstr ""
+
+#: booking/templatetags/booking_tags.py:74
+#, python-format
+msgid "%i days"
+msgstr ""
+
+#: booking/templatetags/booking_tags.py:75
+#, python-format
+msgid "%i hours"
+msgstr ""
+
+#: booking/templatetags/booking_tags.py:75
+#, python-format
+msgid "%i minutes"
+msgstr ""
+
+#: booking/templatetags/booking_tags.py:75
+#, python-format
+msgid "%i seconds"
+msgstr ""
+
+#: booking/views.py:71 build/lib.linux-x86_64-2.7/booking/views.py:19
 msgid "Dette tester oversættelses-systemet"
 msgstr ""
+
+#: booking/views.py:113
+msgid "Senest opdaterede besøg"
+msgstr ""
+
+#: booking/views.py:124
+msgid "Senest bookede besøg"
+msgstr ""
+
+#: booking/views.py:341 booking/views.py:349
+msgid "You cannot edit an object for a unit that you don't belong to"
+msgstr ""
+
+#: booking/views.py:429
+#, python-format
+msgid ""
+"Ændrede felter:\n"
+"%s"
+msgstr ""
+
+#: booking/views.py:432
+#, python-format
+msgid ""
+"Oprettet med felter:\n"
+"%s"
+msgstr ""
+
+#: booking/views.py:876 booking/views.py:1279 booking/views.py:1589
+#: booking/views.py:1665 booking/views.py:1786 booking/views.py:2328
+msgid "Søgning"
+msgstr ""
+
+#: booking/views.py:1000
+msgid "Du kan kun redigere enheder,som du selv er koordinator for."
+msgstr ""
+
+#: booking/views.py:1371
+msgid ""
+"Der findes besøg for tilbudet med deltagerantal udenfor de angivne min-/max-"
+"grænser for deltagere!"
+msgstr ""
+
+#: booking/views.py:1545 profile/views.py:210
+msgid "Du kan kun redigere enheder, som du selv er koordinator for."
+msgstr ""
+
+#: booking/views.py:1630
+msgid "There are no root templates with the SYSTEM__BASICMAIL_ENVELOPE key"
+msgstr ""
+
+#: booking/views.py:1669 booking/views.py:1790
+msgid "Send notifikation"
+msgstr "Send notification"
+
+#: booking/views.py:1673 booking/views.py:1794
+msgid "Gæster"
+msgstr "Guests"
+
+#: booking/views.py:1703
+msgid "Tildelte værter"
+msgstr "Assigned hosts"
+
+#: booking/views.py:1716
+msgid "Tildelte undervisere"
+msgstr "Assigned teachers"
+
+#: booking/views.py:1729
+msgid "Potentielle værter"
+msgstr "Potential hosts"
+
+#: booking/views.py:1742
+msgid "Potentielle undervisere"
+msgstr "Potential teachers"
+
+#: booking/views.py:1789 booking/views.py:2330
+msgid "Detaljevisning"
+msgstr "Detail view"
+
+#: booking/views.py:2223
+msgid "Besøgsliste"
+msgstr ""
+
+#: booking/views.py:2309 booking/views.py:2329
+msgid "Søgeresultatliste"
+msgstr ""
+
+#: booking/views.py:2363 profile/templates/profile/profile.html:25
+msgid "Søg i besøg"
+msgstr ""
+
+#: booking/views.py:2365
+#, python-format
+msgid "Besøg #%s"
+msgstr ""
+
+#: booking/views.py:2409 booking/views.py:2471 booking/views.py:2597
+#: booking/views.py:2615
+msgid "Emailskabelonliste"
+msgstr ""
+
+#: booking/views.py:2475 booking/views.py:2598 booking/views.py:2617
+msgid "Emailskabelon"
+msgstr ""
+
+#: build/lib.linux-x86_64-2.7/booking/models.py:95
+msgid "valgfag"
+msgstr ""
+
+#: build/lib.linux-x86_64-2.7/booking/models.py:205
+msgid "Gruppebesøg med faste tider"
+msgstr ""
+
+#: build/lib.linux-x86_64-2.7/booking/models.py:206
+msgid "Gruppebesøg uden faste tider"
+msgstr ""
+
+#: build/lib.linux-x86_64-2.7/booking/models.py:207
+msgid "Studieretningsprojekt - SRP"
+msgstr ""
+
+#: build/lib.linux-x86_64-2.7/booking/models.py:208
+msgid "Enkeltstående event"
+msgstr ""
+
+#: build/lib.linux-x86_64-2.7/booking/models.py:227
+msgid "Gymnasium"
+msgstr "Gymnasium"
+
+#: build/lib.linux-x86_64-2.7/booking/models.py:275
+msgid "Niveau"
+msgstr "Level"
+
+#: build/lib.linux-x86_64-2.7/booking/models.py:405
+msgid "Lokale"
+msgstr "Room"
+
+#: build/lib.linux-x86_64-2.7/booking/models.py:408
+msgid "Tid"
+msgstr "Time"
+
+#: build/lib.linux-x86_64-2.7/booking/models.py:414
+msgid "Dage:"
+msgstr "Days:"
+
+#: build/lib.linux-x86_64-2.7/booking/models.py:414
+msgid "Timer:"
+msgstr "Hours:"
+
+#: build/lib.linux-x86_64-2.7/booking/models.py:415
+msgid "Minutter:"
+msgstr "Minutes:"
+
+#: build/lib.linux-x86_64-2.7/profile/admin.py:12 profile/admin.py:12
+msgid "brugerprofil"
+msgstr ""
+
+#: build/lib.linux-x86_64-2.7/profile/models.py:17 profile/models.py:29
+msgid "Underviser"
+msgstr "Teacher"
+
+#: build/lib.linux-x86_64-2.7/profile/models.py:18 profile/models.py:30
+msgid "Vært"
+msgstr "Host"
+
+#: build/lib.linux-x86_64-2.7/profile/models.py:19 profile/models.py:31
+msgid "Koordinator"
+msgstr "Coordinator"
+
+#: build/lib.linux-x86_64-2.7/profile/models.py:20 profile/models.py:32
+msgid "Administrator"
+msgstr ""
+
+#: override_templates/admin/base.html:32
+msgid "Welcome,"
+msgstr ""
+
+#: override_templates/admin/base.html:40
+msgid "Documentation"
+msgstr ""
+
+#: override_templates/admin/base.html:44
+msgid "Change password"
+msgstr ""
+
+#: override_templates/admin/base.html:46
+msgid "Log out"
+msgstr ""
+
+#: override_templates/admin/base.html:56
+msgid "Home"
+msgstr ""
+
+#: profile/forms.py:16
+msgid "Rolle"
+msgstr "Role"
+
+#: profile/models.py:33
+msgid "Fakultetsredaktør"
+msgstr ""
+
+#: profile/models.py:78
+msgid "brugerrolle"
+msgstr ""
+
+#: profile/models.py:79
+msgid "brugerroller"
+msgstr ""
+
+#: profile/models.py:106 profile/views.py:49
+msgid "Mine tilbud"
+msgstr ""
+
+#: profile/templates/profile/email_login.html:14
+msgid ""
+"\n"
+"                Det link du har klikket på er udløbet og kan ikke længere\n"
+"                bruges til at logge ind i systemet.\n"
+"                "
+msgstr ""
+
+#: profile/templates/profile/email_login.html:22
+msgid ""
+"\n"
+"                Der opstod en fejl under login med det angivne link.\n"
+"                "
+msgstr ""
+
+#: profile/templates/profile/my_resources.html:7
+msgid "Ret i 'Mine tilbud'"
+msgstr ""
+
+#: profile/templates/profile/profile.html:12
+#: profile/templates/profile/profile_new_user.html:11
+msgid "Velkommen"
+msgstr "Welcome"
+
+#: profile/templates/profile/profile.html:18
+#: profile/templates/profile/profile_new_user.html:17
+msgid "Personlig side"
+msgstr ""
+
+#: profile/templates/profile/profile.html:19
+#: profile/templates/profile/profile_new_user.html:18
+msgid "Du er logget ind som"
+msgstr ""
+
+#: profile/templates/profile/profile.html:19
+msgid ""
+"På denne side kan du se en oversigt over dine tilbud, hvilke der er bookede, "
+"og hvilke der kræver handling."
+msgstr ""
+
+#: profile/templates/profile/profile.html:25
+msgid "Søg i besøg der ligger i systemet."
+msgstr ""
+
+#: profile/templates/profile/profile.html:37 profile/views.py:279
+#: profile/views.py:367
+msgid "Administrér brugere"
+msgstr ""
+
+#: profile/templates/profile/profile.html:41
+msgid "Administrér emailskabeloner"
+msgstr ""
+
+#: profile/templates/profile/profile.html:54
+msgid "Administrér enheder"
+msgstr ""
+
+#: profile/templates/profile/profile.html:55
+msgid "Tilpas information på fakultet, institut, mv."
+msgstr ""
+
+#: profile/templates/profile/profile.html:60
+msgid "Statistik"
+msgstr "Statistics"
+
+#: profile/templates/profile/profile.html:71
+msgid "Søg i tilbud og bookings"
+msgstr ""
+
+#: profile/templates/profile/profile.html:137
+msgid "Er du sikker?"
+msgstr "Are you sure?"
+
+#: profile/templates/profile/profile.html:140
+msgid ""
+"Du er ved at slette bookingen \"Magnetisme og elektroner\". Hvis du vil "
+"fortsætte og slette denne booking, klik på knappen \"Slet denne booking\"."
+msgstr ""
+
+#: profile/templates/profile/profile.html:144
+msgid "Slet denne booking"
+msgstr ""
+
+#: profile/templates/profile/profile_new_user.html:19
+msgid ""
+"\n"
+"                Din bruger har endnu ikke fået tildelt nogen rolle i foKUs-"
+"systemet.\n"
+"                Du kan kontakte en af nedenstående personer for at få en "
+"rolle i systemet.\n"
+"            "
+msgstr ""
+
+#: profile/templates/profile/profile_new_user.html:24
+msgid "Fakultetsredaktører"
+msgstr "Faculty editors"
+
+#: profile/templates/profile/profile_new_user.html:36
+msgid "Administratorer"
+msgstr "Administrators"
+
+#: profile/views.py:54
+msgid "Redigér mine tilbud"
+msgstr ""
+
+#: profile/views.py:65
+msgid "Seneste gennemførte tilbud"
+msgstr ""
+
+#: profile/views.py:76
+msgid "Dagens arrangementer"
+msgstr ""
+
+#: profile/views.py:105
+msgid "Arrangementer der kræver handling"
+msgstr ""
+
+#: profile/views.py:114
+msgid "Planlagte arrangementer"
+msgstr ""
+
+#: profile/views.py:127
+msgid "Arrangementer der mangler undervisere"
+msgstr ""
+
+#: profile/views.py:139
+msgid "Arrangementer hvor jeg er underviser"
+msgstr ""
+
+#: profile/views.py:151
+msgid "Arrangementer der mangler værter"
+msgstr ""
+
+#: profile/views.py:163
+msgid "Arrangementer hvor jeg er vært"
+msgstr ""
+
+#: profile/views.py:191
+msgid "Du har rollen 'Fakultetsredaktør', men er ikke tilknyttet nogen enhed."
+msgstr ""
+
+#: profile/views.py:197
+msgid "Du kan kun redigere enheder, som ligger under dit fakultet."
+msgstr ""
+
+#: profile/views.py:204
+msgid "Du har rollen 'Koordinator', men er ikke tilknyttet nogen enhed."
+msgstr ""
+
+#: profile/views.py:284
+#, python-format
+msgid "Redigér bruger '%s'"
+msgstr "Edit user '%s'"
+
+#: profile/views.py:289
+msgid "Opret ny bruger"
+msgstr "Create new user"
+
+#~ msgid "Gymnasie-uddannelse"
+#~ msgstr "Type"

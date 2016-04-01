@@ -7,7 +7,7 @@ from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
-from booking.models import Unit
+from booking.models import Unit, Resource
 import uuid
 
 # User roles
@@ -17,6 +17,7 @@ HOST = 1
 COORDINATOR = 2
 ADMINISTRATOR = 3
 FACULTY_EDITOR = 4
+NONE = 5
 
 EDIT_ROLES = set([
     ADMINISTRATOR,
@@ -29,8 +30,37 @@ user_role_choices = (
     (HOST, _(u"Vært")),
     (COORDINATOR, _(u"Koordinator")),
     (ADMINISTRATOR, _(u"Administrator")),
-    (FACULTY_EDITOR, _(u"Fakultetsredaktør"))
+    (FACULTY_EDITOR, _(u"Fakultetsredaktør")),
+    (NONE, _(u"Ingen"))
 )
+
+
+def get_none_role():
+    try:
+        userrole = UserRole.objects.get(role=NONE)
+    except UserRole.DoesNotExist:
+        userrole = UserRole(
+            role=NONE,
+            name=role_to_text(NONE)
+        )
+        userrole.save()
+
+    return userrole
+
+
+def get_public_web_user():
+    try:
+        user = User.objects.get(username="public_web_user")
+    except User.DoesNotExist:
+        user = User.objects.create_user("public_web_user")
+        profile = UserProfile(
+            user=user,
+            unit=None,
+            user_role=get_none_role()
+        )
+        profile.save()
+
+    return user
 
 
 def role_to_text(role):
@@ -70,6 +100,12 @@ class UserProfile(models.Model):
     # Unit is not needed for administrators.
     unit = models.ForeignKey(Unit, null=True, blank=True)
 
+    my_resources = models.ManyToManyField(
+        Resource,
+        blank=True,
+        verbose_name=_(u"Mine tilbud")
+    )
+
     def __unicode__(self):
         return self.user.username
 
@@ -81,8 +117,28 @@ class UserProfile(models.Model):
         return self.user_role.name
 
     def can_create(self):
+        return self.has_edit_role()
+
+    def has_edit_role(self):
         return self.get_role() in EDIT_ROLES
 
+    @property
+    def is_host(self):
+        return self.get_role() == HOST
+
+    @property
+    def is_teacher(self):
+        return self.get_role() == TEACHER
+
+    @property
+    def is_coordinator(self):
+        return self.get_role() == COORDINATOR
+
+    @property
+    def is_faculty_editor(self):
+        return self.get_role() == FACULTY_EDITOR
+
+    @property
     def is_administrator(self):
         return self.get_role() == ADMINISTRATOR
 
@@ -124,7 +180,7 @@ class UserProfile(models.Model):
     def get_unit_queryset(self):
         role = self.get_role()
 
-        if not role:
+        if role is None:
             return Unit.objects.none()
 
         if role == ADMINISTRATOR:
@@ -142,6 +198,30 @@ class UserProfile(models.Model):
 
         # Everyone else just get access to their own group
         return Unit.objects.filter(pk=unit.pk)
+
+    def get_faculty(self):
+        unit = self.unit
+
+        while unit and unit.type.name != "Fakultet":
+            unit = unit.parent
+
+        return unit
+
+    def get_admins(self):
+        return User.objects.filter(
+            userprofile__user_role__role=ADMINISTRATOR
+        )
+
+    def get_faculty_admins(self):
+        faculty = self.get_faculty()
+
+        if faculty:
+            return User.objects.filter(
+                userprofile__user_role__role=FACULTY_EDITOR,
+                userprofile__unit=faculty
+            )
+        else:
+            return User.objects.none()
 
 
 class EmailLoginEntry(models.Model):

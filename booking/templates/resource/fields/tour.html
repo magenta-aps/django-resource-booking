@@ -1,6 +1,8 @@
+{% if form.tour_available %}
 <div class="row form-group">
     <div>{{ form.tour_available.errors }}</div>
     <div class="col-sm-12">
         <label class="radiolabel" for="{{ form.tour_available.id_for_label }}">{{ form.tour_available }} {{ form.tour_available.label }}</label>
     </div>
 </div>
+{% endif %}

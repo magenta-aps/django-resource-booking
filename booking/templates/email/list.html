@@ -51,6 +51,7 @@
                     <td class="col-sm-5">
                         <a href="{% url 'emailtemplate-view' object.id %}">{% trans 'Preview' %}</a>
                         <a href="{% url 'emailtemplate-edit' object.id %}?back={{ thisurl | urlencode }}">{% trans 'Redigér' %}</a>
+                        <a href="{% url 'emailtemplate-clone' object.id %}?back={{ thisurl | urlencode }}">{% trans 'Kopiér' %}</a>
                         <a href="{% url 'emailtemplate-delete' object.id %}?back={{ thisurl | urlencode }}">{% trans 'Slet' %}</a>
                     </td>
                 </tr>

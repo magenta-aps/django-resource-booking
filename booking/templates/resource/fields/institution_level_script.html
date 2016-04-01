@@ -1,3 +1,4 @@
+{% if form.institution_level %}
 <script type="text/javascript">
     <!--
         $(function(){
@@ -6,7 +7,6 @@
                 var value = select.val();
                 $(".institution_level_dependent").each(function() {
                     var attr = $(this).attr("data-display-value") || 0xFFFFFF;
-                    console.log(attr, value, parseInt(value), parseInt(attr))
                     if (parseInt(value) & parseInt(attr)) {
                         $(this).show()
                     } else {
@@ -52,3 +52,4 @@
         });
     //-->
 </script>
+{% endif %}

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from booking.models import Unit
+from booking.models import Unit, Resource, VisitOccurrence
 from django.db.models import Q
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
@@ -12,23 +12,160 @@ from django.utils.translation import ugettext as _
 from django.views.generic import TemplateView, DetailView
 from django.views.generic.edit import UpdateView, FormView
 
-from booking.views import LoginRequiredMixin, AccessDenied, EditorRequriedMixin
+from booking.views import LoginRequiredMixin, AccessDenied, EditorRequriedMixin, \
+    VisitOccurrenceCustomListView
 from django.views.generic.list import ListView
-from profile.forms import UserCreateForm
+from profile.forms import UserCreateForm, EditMyResourcesForm
 from profile.models import EmailLoginEntry
-from profile.models import UserProfile, UserRole, EDIT_ROLES
+from profile.models import UserProfile, UserRole, EDIT_ROLES, NONE
 from profile.models import FACULTY_EDITOR, COORDINATOR, user_role_choices
 
 import warnings
+import profile.models as profile_models
 
 
 class ProfileView(LoginRequiredMixin, TemplateView):
+
+    HEADING_RED = 'alert-danger'
+    HEADING_GREEN = 'alert-success'
+    HEADING_BLUE = 'alert-info'
+    HEADING_YELLOW = 'alert-warning'
+
     """Display the user's profile."""
+    def get_template_names(self):
+        profile = self.request.user.userprofile
+        if not profile or profile.get_role() == NONE:
+            return ['profile/profile_new_user.html']
+        else:
+            return super(ProfileView, self).get_template_names()
+
     def get_context_data(self, **kwargs):
-        context = {}
+        context = {'lists': []}
+
+        context['lists'].append({
+            'color': self.HEADING_BLUE,
+            'type': 'Resource',
+            'title': {
+                'text': _(u'Mine tilbud'),
+                'link': reverse('my-resources')
+            },
+            'queryset': self.request.user.userprofile.my_resources.all,
+            'button': {
+                'text': _(u'Redigér mine tilbud'),
+                'link': reverse('my-resources')
+            }
+        })
+
+        context['lists'].extend(self.lists_by_role())
         context['thisurl'] = reverse('user_profile')
+
+        context['lists'].extend([{
+            'color': self.HEADING_GREEN,
+            'type': 'VisitOccurrence',
+            'title': _(u'Seneste gennemførte tilbud'),
+            'queryset': VisitOccurrence.get_recently_held(),
+            'limit': 10,
+            'button': {
+                'text': _(u'Vis alle'),
+                'link': reverse('visit-occ-customlist') + "?type=%s" %
+                VisitOccurrenceCustomListView.TYPE_LATEST_COMPLETED
+            }
+        }, {
+            'color': self.HEADING_BLUE,
+            'type': 'VisitOccurrence',
+            'title': _(u'Dagens arrangementer'),
+            'queryset': VisitOccurrence.get_todays_occurrences(),
+            'limit': 10,
+            'button': {
+                'text': _(u'Vis alle'),
+                'link': reverse('visit-occ-customlist') + "?type=%s" %
+                VisitOccurrenceCustomListView.TYPE_TODAY
+            }
+        }])
+
         context.update(**kwargs)
         return super(ProfileView, self).get_context_data(**context)
+
+    def lists_by_role(self):
+        role = self.request.user.userprofile.get_role()
+        if role in profile_models.EDIT_ROLES:
+            return self.lists_for_editors()
+        elif role == profile_models.TEACHER:
+            return self.lists_for_teachers()
+        elif role == profile_models.HOST:
+            return self.lists_for_hosts()
+        else:
+            return []
+
+    def lists_for_editors(self):
+        return [
+            {
+                'color': self.HEADING_RED,
+                'type': 'VisitOccurrence',
+                'title': _(u"Arrangementer der kræver handling"),
+                'queryset': VisitOccurrence.being_planned_queryset(
+                    visit__unit=self.request.user.userprofile.
+                        get_unit_queryset()
+                )
+            },
+            {
+                'color': self.HEADING_GREEN,
+                'type': 'VisitOccurrence',
+                'title': _(u"Planlagte arrangementer"),
+                'queryset': VisitOccurrence.planned_queryset(
+                    visit__unit=self.request.user.userprofile.
+                        get_unit_queryset()
+                )
+            }
+        ]
+
+    def lists_for_teachers(self):
+        return [
+            {
+                'color': self.HEADING_RED,
+                'type': 'VisitOccurrence',
+                'title': _(u"Arrangementer der mangler undervisere"),
+                'queryset': VisitOccurrence.objects.filter(
+                    visit__unit=self.request.user.userprofile.
+                        get_unit_queryset(),
+                    teacher_status=VisitOccurrence.STATUS_NOT_ASSIGNED
+                ).exclude(
+                    teachers=self.request.user
+                )
+            },
+            {
+                'color': self.HEADING_GREEN,
+                'type': 'VisitOccurrence',
+                'title': _(u"Arrangementer hvor jeg er underviser"),
+                'queryset': VisitOccurrence.objects.filter(
+                    teachers=self.request.user
+                )
+            }
+        ]
+
+    def lists_for_hosts(self):
+        return [
+            {
+                'color': self.HEADING_RED,
+                'type': 'VisitOccurrence',
+                'title': _(u"Arrangementer der mangler værter"),
+                'queryset': VisitOccurrence.objects.filter(
+                    visit__unit=self.request.user.userprofile.
+                        get_unit_queryset(),
+                    host_status=VisitOccurrence.STATUS_NOT_ASSIGNED
+                ).exclude(
+                    hosts=self.request.user
+                )
+            },
+            {
+                'color': self.HEADING_GREEN,
+                'type': 'VisitOccurrence',
+                'title': _(u"Arrangementer hvor jeg er vært"),
+                'queryset': VisitOccurrence.objects.filter(
+                    hosts=self.request.user
+                )
+            }
+        ]
 
 
 class CreateUserView(FormView, UpdateView):
@@ -291,3 +428,32 @@ class EmailLoginView(DetailView):
             )
 
         return redirect(dest)
+
+
+class EditMyResourcesView(EditorRequriedMixin, UpdateView):
+    model = UserProfile
+    form_class = EditMyResourcesForm
+    template_name = 'profile/my_resources.html'
+
+    def get_form(self, form_class=None):
+        form = super(EditMyResourcesView, self).get_form(form_class=form_class)
+
+        userprofile = self.request.user.userprofile
+
+        form.fields['my_resources'].queryset = Resource.objects.filter(
+            unit=userprofile.get_unit_queryset()
+        ).order_by('title')
+
+        return form
+
+    def get_object(self, queryset=None):
+        return self.request.user.userprofile
+
+    def post(self, request, *args, **kwargs):
+        if request.POST.get("cancel"):
+            return redirect(self.get_success_url())
+
+        return super(EditMyResourcesView, self).post(request, *args, **kwargs)
+
+    def get_success_url(self):
+        return reverse('user_profile')

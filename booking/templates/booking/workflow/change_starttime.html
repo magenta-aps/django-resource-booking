@@ -2,6 +2,8 @@
 {% load staticfiles %}
 {% load i18n %}
 
+{% block htmltitle %} - {% blocktrans with object=object %}Redigér tidspunkt for {{ object }}{% endblocktrans %}{% endblock %}
+
 {% block head %}
     <link rel="stylesheet" href="{% static 'thirdparty/bootstrap-datetime-picker/css/bootstrap-datetimepicker.min.css' %}"/>
 {% endblock %}
@@ -10,18 +12,19 @@
     {% include 'common/breadcrumbrow.html' %}
 
     <div class="row titlebar hidden-print">
-        <div class="col-sm-12 col-md-9"><h2>Redigér tidspunkt for {{ object }}</h2></div>
+        <div class="col-sm-12 col-md-9">
+            <h2>{% blocktrans with object=object %}Redigér tidspunkt for {{ object }}{% endblocktrans %}</h2>
+        </div>
         <div class="divider"></div>
     </div>
     <div class="row">
         <div class="col-sm-12 col-md-8">
-            <form name="changebookinroomsform" id="changebookinroomsform"
-                action="{% url 'change-visit-occ-starttime' object.pk %}" method="post">
+            <form name="changebookinroomsform" id="changebookinroomsform" action="{% url 'change-visit-occ-starttime' object.pk %}" method="post">
                 {% csrf_token %}
                 {{ form }}
                 <div>
-                <input class="btn btn-success btn-sm" type="submit" value="Opdater" name="confirm" />
-                <input class="btn btn-danger btn-sm" type="submit" value="Annullér" name="cancel" />
+                <input class="btn btn-success btn-sm" type="submit" value="{% trans 'Opdater' %}" name="confirm" />
+                <input class="btn btn-danger btn-sm" type="submit" value="{% trans 'Annullér' %}" name="cancel" />
                 </div>
             </form>
         </div>
@@ -34,7 +37,7 @@
         $(function(){
             var dp = $("#id_start_datetime").datetimepicker({
                 language: 'da',
-                format: 'yyyy-mm-dd hh:ii',
+                format: 'dd.mm.yyyy hh:ii:ss',
                 weekStart: 1,
                 todayHighlight: true,
                 startDate: 'Date',

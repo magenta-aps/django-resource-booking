@@ -2,30 +2,34 @@ from django.conf.urls import patterns, url, include
 from django.conf.urls.static import static
 from django.conf import settings
 
-from .views import MainPageView
+from .views import MainPageView, VisitOccurrenceNotifyView
 
-from booking.views import PostcodeView, SchoolView
+from booking.views import PostcodeView, SchoolView, VisitInquireView
 from booking.views import RrulestrView
 from booking.views import EditResourceInitialView, ResourceDetailView
 from booking.views import BookingView, BookingSuccessView
 from booking.views import VisitOccurrenceSearchView
 from booking.views import EditOtherResourceView, OtherResourceDetailView
 from booking.views import EditVisitView, VisitDetailView
-from booking.views import VisitNotifyView, VisitNotifySuccessView
+from booking.views import EmailSuccessView
 from booking.views import SearchView, EmbedcodesView
 
+from booking.views import BookingNotifyView, BookingDetailView
 from booking.views import EmailTemplateListView, EmailTemplateEditView
 from booking.views import EmailTemplateDetailView, EmailTemplateDeleteView
-from booking.views import BookingNotifyView
-from booking.views import BookingNotifySuccessView
-from booking.views import BookingDetailView, ChangeVisitOccurrenceStatusView
+from booking.views import ChangeVisitOccurrenceStatusView
 from booking.views import ChangeVisitOccurrenceStartTimeView
 from booking.views import ChangeVisitOccurrenceTeachersView
 from booking.views import ChangeVisitOccurrenceHostsView
 from booking.views import ChangeVisitOccurrenceRoomsView
 from booking.views import ChangeVisitOccurrenceCommentsView
+from booking.views import ChangeVisitOccurrenceAutosendView
+from booking.views import BecomeTeacherView
+from booking.views import BecomeHostView
 from booking.views import VisitOccurrenceAddLogEntryView
 from booking.views import VisitOccurrenceDetailView
+from booking.views import VisitOccurrenceCustomListView
+from booking.views import CloneResourceView
 
 
 from django.views.generic import TemplateView
@@ -60,6 +64,9 @@ urlpatterns = patterns(
     url(r'^resource/(?P<pk>[0-9]+)/edit$',
         EditResourceInitialView.as_view(),
         name='resource-edit'),
+    url(r'^resource/(?P<pk>[0-9]+)/clone$',
+        CloneResourceView.as_view(),
+        name='resource-clone'),
 
     url(r'^otherresource/create$',
         EditOtherResourceView.as_view(success_url='create'),
@@ -92,12 +99,16 @@ urlpatterns = patterns(
     url(r'^visit/(?P<visit>[0-9]+)/book/success$',
         BookingSuccessView.as_view(),
         name='visit-book-success'),
-    url(r'^visit/(?P<visit>[0-9]+)/notify$',
-        VisitNotifyView.as_view(),
-        name='visit-notify'),
-    url(r'^visit/(?P<visit>[0-9]+)/notify/success$',
-        VisitNotifySuccessView.as_view(),
-        name='visit-notify-success'),
+    url(r'^visit/(?P<visit>[0-9]+)/inquire$',
+        VisitInquireView.as_view(),
+        name='visit-inquire'),
+
+    url(r'^visit/occurrence/(?P<pk>[0-9]+)/notify$',
+        VisitOccurrenceNotifyView.as_view(),
+        name='visit-occ-notify'),
+    url(r'^visit/occurrence/(?P<pk>[0-9]+)/notify/success$',
+        EmailSuccessView.as_view(),
+        name='visit-occ-notify-success'),
 
     url(r'^visit/occurrence/(?P<pk>[0-9]+)$',
         VisitOccurrenceDetailView.as_view(),
@@ -106,6 +117,7 @@ urlpatterns = patterns(
     url(r'^booking/(?P<pk>[0-9]+)/?$',
         BookingDetailView.as_view(),
         name='booking-view'),
+
     url(r'^visit/occurrence/(?P<pk>[0-9]+)/change_status/?$',
         ChangeVisitOccurrenceStatusView.as_view(),
         name='change-visit-occ-status'),
@@ -127,15 +139,27 @@ urlpatterns = patterns(
     url(r'^visit/occurrence/(?P<pk>[0-9]+)/add_logentry/?$',
         VisitOccurrenceAddLogEntryView.as_view(),
         name='visit-occ-add-logentry'),
+    url(r'^visit/occurrence/(?P<pk>[0-9]+)/become_teacher/?$',
+        BecomeTeacherView.as_view(),
+        name='become-teacher'),
+    url(r'^visit/occurrence/(?P<pk>[0-9]+)/become_host/?$',
+        BecomeHostView.as_view(),
+        name='become-host'),
     url(r'^visit/occurrence/search$',
         VisitOccurrenceSearchView.as_view(),
         name='visit-occ-search'),
+    url(r'^visit/occurrence/(?P<pk>[0-9]+)/change_autosend/?$',
+        ChangeVisitOccurrenceAutosendView.as_view(),
+        name='change-visit-occ-autosend'),
+    url(r'^visit/occurrence/customlist/?$',
+        VisitOccurrenceCustomListView.as_view(),
+        name='visit-occ-customlist'),
 
     url(r'^booking/(?P<pk>[0-9]+)/notify$',
         BookingNotifyView.as_view(),
         name='booking-notify'),
     url(r'^booking/(?P<visit>[0-9]+)/notify/success$',
-        BookingNotifySuccessView.as_view(),
+        EmailSuccessView.as_view(),
         name='booking-notify-success'),
 
     # Ajax api
@@ -172,7 +196,7 @@ urlpatterns = patterns(
         name='emailtemplate-view'),
     url(r'^emailtemplate/(?P<pk>[0-9]+)/delete$',
         EmailTemplateDeleteView.as_view(),
-        name='emailtemplate-delete')
+        name='emailtemplate-delete'),
 
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

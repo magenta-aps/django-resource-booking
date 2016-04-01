@@ -1,0 +1,12 @@
+{% load i18n %}
+{% if field %}
+    <div class="row form-group">
+        <div>{{ field.errors }}</div>
+        <div class="col-sm-2">
+            <label for="{{ field.id_for_label }}">{{ field.label }}:</label>
+        </div>
+        <div class="col-sm-10">
+            {{ field }}
+        </div>
+    </div>                        
+{% endif %}

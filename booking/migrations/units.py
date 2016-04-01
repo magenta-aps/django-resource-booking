@@ -7,7 +7,6 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     def populate_units(apps, schema_editor):
-
         from booking.models import Unit as unit, UnitType as unittype
         # unit = apps.get_model("booking", "Unit")
         # unittype = apps.get_model("booking", "UnitType")

@@ -1,4 +1,4 @@
-{% extends 'lightbox-index.html' %}
+{% extends 'index.html' %}
 {% load i18n %}
 {% load staticfiles %}
 {% load booking_tags %}
@@ -6,12 +6,11 @@
 {% block head %}
 {% endblock %}
 
-{% block header %}
-{% endblock %}
+{% block htmltitle %} - {% trans 'tilmeld lærerarrangement' %}{% endblock %}
 
 {% block content %}
 
-    {% include 'booking/modal/header.html' %}
+    {% include 'booking/snippets/header.html' %}
     <div class="modal-body">
         <p>{% trans "Udfyld venligst nedenstående formular for at booke et tilbud. Felter markeret med * er obligatoriske." %}</p>
         <div class="divider"></div>
@@ -19,39 +18,34 @@
         <form id="bookingform" class="form-horizontal clearfix" data-toggle="validator" role="form" novalidate="true" method="POST">
             {% csrf_token %}
 
-            <!--
-            {{ bookerform.errors }}
-            {{ bookingform.errors }}
-            -->
-
             {{ bookerform.non_field_errors }}
-            {% include "booking/booker/basedata.html" %}
-            <div class="form-group">
-                <label class="col-sm-2 control-label" for="{{ bookingform.subjects.id_for_label }}">{% trans "Fag" %}</label>
-                <div class="col-sm-6{% if bookingform.subjects.errors %} has-error{% endif %}">
-                    {{ bookingform.subjects }}
-                </div>
-                <div class="col-sm-3 help-block with-errors">
-                    {{ bookingform.subjects.errors }}
-                </div>
-            </div>
-            {% include "booking/booker/school.html" %}
-            {% include "booking/booker/attendees.html" %}
-            {% include "booking/booker/notes.html" %}
+            {% include "booking/fields/basedata.html" %}
+            {% include "booking/fields/subjects.html" %}
+            {% include "booking/fields/school.html" %}
+            {% include "booking/fields/attendees.html" %}
+            {% include "booking/fields/time.html" %}
+            {% include "booking/fields/notes.html" %}
         </form>
     </div>
-    {% include 'booking/modal/footer.html' %}
+    {% include 'booking/snippets/footer.html' %}
 
 {% endblock %}
 
 {% block extra_scripts %}
 
-    {% include 'booking/booker/school_script.html' %}
+    {% include 'booking/fields/school_script.html' %}
 
     <script type="text/javascript">
         $(function(){
             $("#submitbutton").click(function(){
                 $("#bookingform").submit();
+            });
+            $("#cancelbutton").click(function(){
+                {% if back %}
+                    document.location = "{{ back }}";
+                {% else %}
+                    history.back();
+                {% endif %}
             });
         });
     </script>
