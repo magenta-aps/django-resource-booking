@@ -65,7 +65,7 @@ from booking.forms import EmailComposeForm
 from booking.forms import AdminVisitSearchForm
 from booking.forms import VisitAutosendFormSet
 from booking.forms import VisitOccurrenceSearchForm
-from booking.utils import full_email
+from booking.utils import full_email, get_model_field_map
 
 import re
 import urls
@@ -2602,6 +2602,13 @@ class EmailTemplateEditView(UpdateView, UnitAccessRequiredMixin,
         else:
             context['thisurl'] = reverse('emailtemplate-create')
 
+        context['modelmap'] = modelmap = {}
+
+        for model in [Booking, VisitOccurrence, Visit]:
+            model_name = model.__name__
+            modelmap[(model_name.lower(), model._meta.verbose_name)] = \
+                get_model_field_map(model)
+
         context.update(kwargs)
         return super(EmailTemplateEditView, self).get_context_data(**context)
 
@@ -2617,7 +2624,7 @@ class EmailTemplateDetailView(View):
     classes = {'Unit': Unit,
                # 'OtherResource': OtherResource,
                'Visit': Visit,
-               # 'VisitOccurrence': VisitOccurrence,
+               'VisitOccurrence': VisitOccurrence,
                # 'StudyMaterial': StudyMaterial,
                # 'Resource': Resource,
                # 'Subject': Subject,
@@ -2653,8 +2660,13 @@ class EmailTemplateDetailView(View):
             for variable in variables:
                 base_variable = variable.split(".")[0]
                 if base_variable not in context:
-                    type = base_variable.title()
-                    if type in self.classes.keys():
+                    variable = base_variable.lower()
+                    lookup = {
+                        key.lower(): key
+                        for key in self.classes.keys()
+                    }
+                    if variable in lookup:
+                        type = lookup[variable]
                         clazz = self.classes[type]
                         try:
                             value = clazz.objects.all()[0]

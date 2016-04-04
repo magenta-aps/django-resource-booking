@@ -838,7 +838,7 @@ class EmailTemplatePreviewContextEntryForm(forms.Form):
             ('Unit', 'Unit'),
             # ('OtherResource': OtherResource),
             ('Visit', 'Visit'),
-            # ('VisitOccurrence', VisitOccurrence),
+            ('VisitOccurrence', 'VisitOccurrence'),
             # ('StudyMaterial', StudyMaterial),
             # ('Resource',Resource),
             # ('Subject', Subject),

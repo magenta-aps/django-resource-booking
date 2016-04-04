@@ -106,3 +106,18 @@ def jsonify(object):
     if isinstance(object, QuerySet):
         return serialize('json', object)
     return json.dumps(object)
+
+
+@register.filter(name='dotjoin')
+def dotjoin(value, arg):
+    if value is not None and value != "":
+        return "%s.%s" % (value, arg)
+    return arg
+
+
+@register.filter(name='replace')
+def replace(value, arg):
+    if value is not None and value != "":
+        search, replace = arg.split(",")
+        return value.replace(search, replace)
+    return arg
