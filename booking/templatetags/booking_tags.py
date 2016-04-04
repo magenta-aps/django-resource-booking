@@ -116,7 +116,7 @@ def dotjoin(value, arg):
 
 
 @register.filter(name='replace')
-def dotjoin(value, arg):
+def replace(value, arg):
     if value is not None and value != "":
         search, replace = arg.split(",")
         return value.replace(search, replace)
