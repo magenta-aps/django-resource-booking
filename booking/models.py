@@ -189,9 +189,7 @@ class Unit(models.Model):
         recipients = []
         if template_key in EmailTemplate.unit_hosts_keys:
             recipients.extend(self.get_hosts())
-
-        if template_key in \
-                EmailTemplate.unit_teachers_keys:
+        if template_key in EmailTemplate.unit_teachers_keys:
             recipients.extend(self.get_teachers())
         return recipients
 
@@ -376,7 +374,7 @@ class EmailTemplate(models.Model):
     key_choices = [
         (NOTIFY_GUEST__BOOKING_CREATED, _(u'Gæst: Booking oprettet')),
         (NOTIFY_GUEST__GENERAL_MSG, _(u'Gæst: Generel besked')),
-        (NOTIFY_HOST__BOOKING_CREATED, _(u'Vært: Booking oprettet')),
+        (NOTIFY_HOST__BOOKING_CREATED, _(u'Kontaktperson: Booking oprettet')),
         (NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
          _(u'Vært: Frivillige undervisere')),
         (NOTIFY_HOST__REQ_HOST_VOLUNTEER, _(u'Vært: Frivillige værter')),
@@ -905,11 +903,9 @@ class Resource(models.Model):
 
     def get_recipients(self, template_key):
         recipients = self.unit.get_recipients(template_key)
-        if template_key in \
-                EmailTemplate.contact_person_keys:
+        if template_key in EmailTemplate.contact_person_keys:
             recipients.extend(self.contact_persons.all())
-        if template_key in \
-                EmailTemplate.resource_roomadmin_keys:
+        if template_key in EmailTemplate.resource_roomadmin_keys:
             recipients.extend(self.room_responsible.all())
         return recipients
 
@@ -1914,11 +1910,10 @@ class VisitOccurrence(models.Model):
         return reverse('visit-occ-view', args=[self.pk])
 
     def get_recipients(self, template_key):
-        recipients = []
+        recipients = self.visit.get_recipients(template_key)
         if template_key in EmailTemplate.occurrence_hosts_keys:
             recipients.extend(self.hosts.all())
-        if template_key in \
-                EmailTemplate.occurrence_teachers_keys:
+        if template_key in EmailTemplate.occurrence_teachers_keys:
             recipients.extend(self.teachers.all())
         return recipients
 
