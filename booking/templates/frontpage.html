@@ -11,19 +11,36 @@
             <form action="{% url 'search' %}">
                 <h2 class="control-label">{% trans 'Tilbud rettet mod:' %}</h2>
                 <div class="input-group">
-                    <label class="checkbox-inline control-label" for="audience-choice-1">
+                    <label class="checkbox-inline control-label" for="institution-choice-1">
                         <input
                                 name="i" id="institution-choice-1"
                                 type="checkbox" value="1"
                                 {% for k, v in request.GET.lists %}{% if k == "i" and "1" in v %}checked="checked"{% endif %}{% endfor %}
                         >{% trans 'Gymnasie' %}
                     </label>
-                    <label class="checkbox-inline control-label" for="audience-choice-2">
+                    <label class="checkbox-inline control-label" for="institution-choice-2">
                         <input
                                 name="i" id="institution-choice-2"
                                 type="checkbox" value="2"
                                 {% for k, v in request.GET.lists %}{% if k == "i" and "2" in v %}checked="checked"{% endif %}{% endfor %}
                         >{% trans 'Grundskole' %}
+                    </label>
+
+                    &nbsp;
+
+                    <label class="checkbox-inline control-label" for="audience-choice-1">
+                        <input
+                              name="a" id="audience-choice-1" type="checkbox"
+                              value="1"
+                              {% for k, v in request.GET.lists %}{% if k == "a" and "1" in v %}checked="checked"{% endif %}{% endfor %}
+                        >{% trans 'Lærer' %}
+                    </label>
+                    <label class="checkbox-inline control-label" for="audience-choice-2">
+                        <input
+                              name="a" id="audience-choice-2" type="checkbox"
+                              value="2"
+                              {% for k, v in request.GET.lists %}{% if k == "a" and "2" in v %}checked="checked"{% endif %}{% endfor %}
+                        >{% trans 'Elev' %}
                     </label>
                 </div>
                 <div class="divider"></div>
@@ -40,17 +57,17 @@
 
     <hr/>
 
-    <div class="row">
+    <div>
         {% for list in lists %}
             {% cycle True False False as beginRow silent %}
             {% cycle False False True as endRow silent %}
             {% if beginRow or forloop.first %}
                 <div class="row eq-height listcontainer">
             {% endif %}
-        {% include 'common/item_list.html' with list=list %}
-        {% if endRow or forloop.last %}
-            </div>
-        {% endif %}
+            {% include 'common/item_list.html' with list=list %}
+            {% if endRow or forloop.last %}
+                </div>
+            {% endif %}
         {% endfor %}
     </div>
 {% endblock %}
