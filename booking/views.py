@@ -1266,11 +1266,8 @@ class OtherResourceDetailView(ResourceBookingDetailView):
 
         user = self.request.user
 
-        if (hasattr(user, 'userprofile') and
-                user.userprofile.can_edit(self.object)):
-            context['can_edit'] = True
-        else:
-            context['can_edit'] = False
+        if hasattr(user, 'userprofile'):
+            context['can_edit'] = user.userprofile.can_edit(self.object)
 
         # if self.object.type in [Resource.STUDENT_FOR_A_DAY,
         #                        Resource.STUDY_PROJECT,
@@ -2493,15 +2490,11 @@ class VisitOccurrenceDetailView(LoggedViewMixin, ResourceBookingDetailView):
             for (key, label) in EmailTemplate.key_choices
             if key in EmailTemplate.visitoccurrence_manual_keys
         ]
-
-        context['can_edit'] = self.request.user.userprofile.can_edit(
-            self.object
-        )
-
         user = self.request.user
-        if hasattr(user, 'userprofile') and \
-                user.userprofile.can_notify(self.object):
-            context['can_notify'] = True
+
+        if hasattr(user, 'userprofile'):
+            context['can_edit'] = user.userprofile.can_edit(self.object)
+            context['can_notify'] = user.userprofile.can_notify(self.object)
 
         context.update(kwargs)
 
