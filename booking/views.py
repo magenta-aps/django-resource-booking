@@ -65,7 +65,7 @@ from booking.forms import EmailComposeForm
 from booking.forms import AdminVisitSearchForm
 from booking.forms import VisitAutosendFormSet
 from booking.forms import VisitOccurrenceSearchForm
-from booking.utils import full_email
+from booking.utils import full_email, get_model_field_map
 
 import re
 import urls
@@ -2601,6 +2601,12 @@ class EmailTemplateEditView(UpdateView, UnitAccessRequiredMixin,
                                          args=[self.object.id])
         else:
             context['thisurl'] = reverse('emailtemplate-create')
+
+        context['modelmap'] = modelmap = {}
+
+        for model in [Booking, VisitOccurrence, Visit]:
+            model_name = model.__name__
+            modelmap[model_name.lower()] = get_model_field_map(model)
 
         context.update(kwargs)
         return super(EmailTemplateEditView, self).get_context_data(**context)

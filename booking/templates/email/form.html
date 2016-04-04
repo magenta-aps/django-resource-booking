@@ -3,9 +3,7 @@
 {% load staticfiles %}
 {% load booking_tags %}
 
-{% block head %}
-
-{% endblock %}
+{% block head %}{% endblock %}
 
 {% block content %}
 
@@ -69,6 +67,20 @@
                         </div>
 
                         <div class="row form-group">
+                            <div class="col-sm-2"></div>
+                            <div class="col-sm-10">
+                                <div id="fieldinsert" class="dropdown">
+                                    <a role="button" data-toggle="dropdown" class="btn btn-primary disabled" data-target="#" href="#">
+                                        {% trans 'Indsæt felt' %} <span class="caret"></span>
+                                    </a>
+                                    <ul class="dropdown-menu multi-level" role="menu" aria-labelledby="dropdownMenu">
+                                        {% include 'email/modelfieldselect.html' with map=modelmap path="" function="insertField" only %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row form-group">
                             <div>
                                 {{ form.subject.errors }}
                             </div>
@@ -106,4 +118,110 @@
 
 {% block extra_scripts %}
     {{ form.media }}
+    <script type="text/javascript">
+
+        function getSelectionStart(o) {
+            if (o.createTextRange) {
+                var r = document.selection.createRange().duplicate();
+                r.moveEnd('character', o.value.length);
+                if (r.text == '') return o.value.length;
+                return o.value.lastIndexOf(r.text);
+            } else {
+                return o.selectionStart;
+            }
+        }
+
+        function getSelectionEnd(o) {
+            if (o.createTextRange) {
+                var r = document.selection.createRange().duplicate();
+                r.moveStart('character', -o.value.length);
+                return r.text.length;
+            } else {
+                return o.selectionEnd;
+            }
+        }
+
+
+        $(function(){
+
+            var menuContainer = $("<div>").css({position:"absolute",top:0,left:0});
+            $("body").append(menuContainer);
+
+            menuContainer.append($(".dropdown-menu li ul"));
+
+            var openMenu = function(event) {
+                var $this = $(this);
+                $this.addClass("open");
+                closeMenu.call($this.parent().children("li").not($this));
+                var menu = $("#"+$this.attr("data-target"));
+                var pageOffset = $this.offsetParent().offset();
+                menu.css({
+                    position: "absolute",
+                    top: $this.position().top + pageOffset.top,
+                    left: $this.position().left + pageOffset.left + $this.width()
+                });
+                menu.show();
+            };
+
+            var closeMenu = function(event) {
+                var $this = $(this);
+                $this.removeClass("open");
+                for (var i=0; i<$this.length; i++) {
+                    var menu = $("#" + $($this.get(i)).attr("data-target") + ":visible");
+                    if (menu && menu.length) {
+                        menu.hide();
+                        menu.find("li").each(closeMenu);
+                    }
+                }
+            };
+
+            $(".dropdown-menu li").on('mouseover', openMenu);
+            $('.dropdown').on('hide.bs.dropdown', function () {
+                $(this).find(".dropdown-submenu").removeClass("open");
+                closeMenu.call($(this).find(".dropdown-submenu"));
+            });
+
+            var subjectField = $("#{{ form.subject.id_for_label }}");
+            var bodyField = $("#{{ form.body.id_for_label }}");
+            var dropdownbutton = $("#fieldinsert > [role=button]");
+            var currentFocus;
+
+            var focus = function(target) {
+                dropdownbutton.removeClass("disabled")
+                if (target) {
+                    currentFocus = target;
+                }
+            };
+            var blur = function() {
+                dropdownbutton.addClass("disabled")
+            };
+
+            subjectField.on("focus", focus.bind(null, subjectField));
+            subjectField.on("blur", blur);
+
+            setTimeout(function(){
+                var editor = tinymce.getInstanceById("{{ form.body.id_for_label }}");
+                var body = $(editor.contentDocument).find("body");
+                body.on("focus", focus.bind(null, bodyField));
+                body.on("blur", blur);
+            },0);
+
+            dropdownbutton.on("focus", function() {
+                focus();
+            });
+
+            window.insertField = function(field) {
+                var insertion = "\{\{ "+field+" \}\}";
+                if (currentFocus == subjectField) {
+                    var input = subjectField.get(0);
+                    var start = getSelectionStart(input);
+                    var end = getSelectionEnd(input);
+                    subjectField.val(input.value.substring(0, start) + insertion + input.value.substring(end));
+                } else if (currentFocus == bodyField) {
+                    tinymce.get(bodyField.attr("id")).execCommand('mceInsertContent',false, insertion);
+                }
+            }
+        });
+
+    </script>
 {% endblock %}

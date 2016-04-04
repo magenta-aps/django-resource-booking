@@ -111,3 +111,52 @@ def html2text(value):
     except OSError:
         # something bad happened, so just return the input
         return value
+
+
+def get_model_field_map(model, visited_models=None):
+    print "Get fields in %s" % model.__name__
+    if visited_models is None:
+        visited_models = set()
+    for m in visited_models:
+        print m.__name__
+
+    visited_models.add(model)
+    map = {}
+
+    for field in model._meta.get_fields():
+        if field.is_relation:
+
+            # For backwards compatibility GenericForeignKey should not be
+            # included in the results.
+            if field.many_to_one and field.related_model is None:
+                continue
+
+            # Relations to child proxy models should not be included.
+            # if field.model != model and field.model._meta.concrete_model == model.concrete_model:
+            #    continue
+
+            if field.one_to_many:
+                print "ignoring field %s.%s because it is one-to-many" % (model.__name__, field.name)
+                continue
+
+            if field.many_to_many:
+                print "ignoring field %s.%s because it is many-to-many" % (model.__name__, field.name)
+                continue
+
+            if field.related_model == model:
+                print "ignoring field %s.%s because it points to the same model" % (model.__name__, field.name)
+                continue
+
+            if field.related_model in visited_models:
+                print "Already seen %s.%s (%s)" % (model.__name__, field.name, field.related_model.__name__)
+                continue
+
+            if issubclass(field.related_model, model):
+                print "%s is subclass of %s" % (field.related_model.__name__, model.__name__)
+                continue
+
+            print "%s.%s looks interesting" % (model.__name__, field.name)
+            map[field.name] = get_model_field_map(field.related_model, visited_models)
+        else:
+            map[field.name] = True
+    return map

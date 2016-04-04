@@ -17,21 +17,36 @@
     </div>
     <hr/>
 
+    <p>
+        {% blocktrans %}
+            Når der skal afsendes en email fra systemet, enten manuelt eller automatisk, tages der udgangspunkt i den skabelon som er relevant i den enkelte situation.
+            Tilbud er tilknyttet enheder, og gennem tilbuddet er besøg og bookinger også associeret med en enhed.
+            Emailen tager således udgangspunkt i skabelonen for den relevante situation og den associerede enhed.
+            Hvis der ikke findes en skabelon for enheden, ledes der i den overordnede enhed (f.eks. instituttets fakultet). Hvis der heller ikke findes en skabelon dér, anvendes Rod-skabelonen.
+        {% endblocktrans %}
+    </p>
+
+    <p>
+        {% blocktrans %}
+            På denne måde kan der oprettes en Rod-skabelon for alle nøgler, og de enkelte fakulteter og institutter kan angive deres egne skabeloner hvis en anden tekst end Rod-skabelonen ønskes.
+        {% endblocktrans %}
+    </p>
+
     {% if duplicates %}
-        <p class="text-warning">Warning: Two or more templates share the same Key and Unit - only one of these will ever be chosen</p>
+        <p class="text-warning">{% trans 'Advarsel: der er flere templates med samme Nøgle og Enhed. Kun én af disse vil komme i betragtning' %}</p>
     {% endif %}
 
     <table class="table table-striped sortable" data-sort-columns="0 1">
         <thead>
             <tr>
                 <th class="col-sm-3 sort">
-                    {% trans 'Key' %}
+                    {% trans 'Nøgle' %}
                 </th>
                 <th class="col-sm-4 sort">
-                    {% trans 'Unit' %}
+                    {% trans 'Enhed' %}
                 </th>
                 <th class="col-sm-5">
-                    {% trans 'Options' %}
+                    {% trans 'Handlinger' %}
                 </th>
             </tr>
         </thead>
@@ -45,7 +60,7 @@
                         {% if object.unit %}
                             {{ object.unit.name }}
                         {% else %}
-                            {% trans 'Ingen' %}
+                            {% trans 'Rod' %}
                         {% endif %}
                     </td>
                     <td class="col-sm-5">
