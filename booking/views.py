@@ -2510,7 +2510,7 @@ class VisitOccurrenceDetailView(LoggedViewMixin, ResourceBookingDetailView):
         )
 
 
-class EmailTemplateListView(ListView):
+class EmailTemplateListView(LoginRequiredMixin, ListView):
     template_name = 'email/list.html'
     model = EmailTemplate
 
@@ -2540,8 +2540,8 @@ class EmailTemplateListView(ListView):
         return qs
 
 
-class EmailTemplateEditView(UpdateView, UnitAccessRequiredMixin,
-                            HasBackButtonMixin):
+class EmailTemplateEditView(LoginRequiredMixin, UnitAccessRequiredMixin,
+                            UpdateView, HasBackButtonMixin):
     template_name = 'email/form.html'
     form_class = EmailTemplateForm
     model = EmailTemplate
@@ -2620,7 +2620,7 @@ class EmailTemplateEditView(UpdateView, UnitAccessRequiredMixin,
         return args
 
 
-class EmailTemplateDetailView(View):
+class EmailTemplateDetailView(LoginRequiredMixin, View):
     template_name = 'email/preview.html'
 
     classes = {'Unit': Unit,
@@ -2734,7 +2734,8 @@ class EmailTemplateDetailView(View):
         return context
 
 
-class EmailTemplateDeleteView(HasBackButtonMixin, DeleteView):
+class EmailTemplateDeleteView(HasBackButtonMixin, LoginRequiredMixin,
+                              DeleteView):
     template_name = 'email/delete.html'
     model = EmailTemplate
     success_url = reverse_lazy('emailtemplate-list')
