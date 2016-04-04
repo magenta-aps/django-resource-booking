@@ -913,7 +913,8 @@ class SearchView(ListView):
         return size
 
 
-class EditResourceInitialView(HasBackButtonMixin, TemplateView):
+class EditResourceInitialView(LoginRequiredMixin, HasBackButtonMixin,
+                              TemplateView):
 
     template_name = 'resource/form.html'
 
@@ -978,7 +979,8 @@ class ResourceDetailView(View):
         raise Http404
 
 
-class EditResourceView(HasBackButtonMixin, ResourceBookingUpdateView):
+class EditResourceView(LoginRequiredMixin, RoleRequiredMixin,
+                       HasBackButtonMixin, ResourceBookingUpdateView):
     is_creating = True
 
     def __init__(self, *args, **kwargs):
@@ -1292,7 +1294,7 @@ class OtherResourceDetailView(ResourceBookingDetailView):
         return super(OtherResourceDetailView, self).get_context_data(**context)
 
 
-class EditVisitView(RoleRequiredMixin, EditResourceView):
+class EditVisitView(EditResourceView):
 
     template_name = 'visit/form.html'
     form_class = VisitForm
@@ -1646,7 +1648,7 @@ class VisitInquireView(FormMixin, HasBackButtonMixin, TemplateView):
         return self.request.GET.get("back", "/")
 
 
-class VisitOccurrenceNotifyView(EmailComposeView):
+class VisitOccurrenceNotifyView(LoginRequiredMixin, EmailComposeView):
 
     def dispatch(self, request, *args, **kwargs):
         self.recipients = []
@@ -1768,7 +1770,7 @@ class VisitOccurrenceNotifyView(EmailComposeView):
             return reverse('visit-occ-view', args=[self.object.id])
 
 
-class BookingNotifyView(EmailComposeView):
+class BookingNotifyView(LoginRequiredMixin, EmailComposeView):
 
     def dispatch(self, request, *args, **kwargs):
         self.recipients = []
@@ -2433,7 +2435,8 @@ class VisitOccurrenceSearchView(VisitOccurrenceListView):
         )
 
 
-class BookingDetailView(LoggedViewMixin, ResourceBookingDetailView):
+class BookingDetailView(LoginRequiredMixin, LoggedViewMixin,
+                        ResourceBookingDetailView):
     """Display Booking details"""
     model = Booking
     template_name = 'booking/details.html'
@@ -2466,7 +2469,8 @@ class BookingDetailView(LoggedViewMixin, ResourceBookingDetailView):
         return super(BookingDetailView, self).get_context_data(**context)
 
 
-class VisitOccurrenceDetailView(LoggedViewMixin, ResourceBookingDetailView):
+class VisitOccurrenceDetailView(LoginRequiredMixin, LoggedViewMixin,
+                                ResourceBookingDetailView):
     """Display Booking details"""
     model = VisitOccurrence
     template_name = 'visitoccurrence/details.html'
