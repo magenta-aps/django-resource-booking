@@ -2624,7 +2624,7 @@ class EmailTemplateDetailView(View):
     classes = {'Unit': Unit,
                # 'OtherResource': OtherResource,
                'Visit': Visit,
-               # 'VisitOccurrence': VisitOccurrence,
+               'VisitOccurrence': VisitOccurrence,
                # 'StudyMaterial': StudyMaterial,
                # 'Resource': Resource,
                # 'Subject': Subject,
@@ -2660,8 +2660,13 @@ class EmailTemplateDetailView(View):
             for variable in variables:
                 base_variable = variable.split(".")[0]
                 if base_variable not in context:
-                    type = base_variable.title()
-                    if type in self.classes.keys():
+                    variable = base_variable.lower()
+                    lookup = {
+                        key.lower(): key
+                        for key in self.classes.keys()
+                    }
+                    if variable in lookup:
+                        type = lookup[variable]
                         clazz = self.classes[type]
                         try:
                             value = clazz.objects.all()[0]
