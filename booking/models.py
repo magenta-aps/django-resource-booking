@@ -20,7 +20,7 @@ from recurrence.fields import RecurrenceField
 from booking.utils import ClassProperty, full_email, CustomStorage, html2text
 from resource_booking import settings
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 LOGACTION_CREATE = ADDITION
 LOGACTION_CHANGE = CHANGE
@@ -563,7 +563,7 @@ class ObjectStatistics(models.Model):
     )
     updated_time = models.DateTimeField(
         blank=False,
-        default=datetime.now()
+        default=timezone.now
         # auto_now=True  # This would update the field on every save,
         # including when we just want to update the display counter
     )
@@ -577,11 +577,11 @@ class ObjectStatistics(models.Model):
 
     def on_display(self):
         self.display_counter += 1
-        self.visited_time = datetime.now()
+        self.visited_time = timezone.now()
         self.save()
 
     def on_update(self):
-        self.updated_time = datetime.now()
+        self.updated_time = timezone.now()
         self.save()
 
 
@@ -1570,7 +1570,7 @@ class VisitOccurrence(models.Model):
         limit_choices_to={
             'userprofile__user_role__role': HOST
         },
-        related_name="hosted_bookings",
+        related_name="hosted_visitoccurrences",
         verbose_name=_(u'Værter')
     )
 
@@ -1580,7 +1580,7 @@ class VisitOccurrence(models.Model):
         limit_choices_to={
             'userprofile__user_role__role': TEACHER
         },
-        related_name="taught_bookings",
+        related_name="taught_visitoccurrences",
         verbose_name=_(u'Undervisere')
     )
 
@@ -2023,10 +2023,11 @@ class VisitOccurrence(models.Model):
 
     @staticmethod
     def get_todays_occurrences():
-        return VisitOccurrence.get_occurring_on_date(datetime.today().date())
+        return VisitOccurrence.get_occurring_on_date(timezone.now().date())
 
     @staticmethod
     def get_starting_on_date(date):
+        return VisitOccurrence.objects.none()
         return VisitOccurrence.objects.filter(
             start_datetime__year=date.year,
             start_datetime__month=date.month,
@@ -2044,6 +2045,14 @@ class VisitOccurrence(models.Model):
 
     @staticmethod
     def get_occurring_on_date(date):
+        # Convert date object to date-only for current timezone
+        date = timezone.datetime(
+            year=date.year,
+            month=date.month,
+            day=date.day,
+            tzinfo=timezone.get_current_timezone()
+        )
+
         # An occurrence happens on a date if it starts before the
         # end of the day and ends after the beginning of the day
         return VisitOccurrence.objects.filter(
@@ -2052,7 +2061,7 @@ class VisitOccurrence(models.Model):
         )
 
     @staticmethod
-    def get_recently_held(time=datetime.now()):
+    def get_recently_held(time=timezone.now()):
         print time
         return VisitOccurrence.objects.filter(
             workflow_status__in=[

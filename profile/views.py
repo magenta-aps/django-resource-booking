@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from booking.models import Unit, Resource, VisitOccurrence
+from django.db.models import F
 from django.db.models import Q
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
@@ -7,6 +8,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
 from django.shortcuts import redirect
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext as _
 from django.views.generic import TemplateView, DetailView
@@ -16,6 +18,7 @@ from booking.views import LoginRequiredMixin, AccessDenied, EditorRequriedMixin,
     VisitOccurrenceCustomListView
 from django.views.generic.list import ListView
 from profile.forms import UserCreateForm, EditMyResourcesForm
+from profile.models import AbsDateDist
 from profile.models import EmailLoginEntry
 from profile.models import UserProfile, UserRole, EDIT_ROLES, NONE
 from profile.models import FACULTY_EDITOR, COORDINATOR, user_role_choices
@@ -41,20 +44,6 @@ class ProfileView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = {'lists': []}
-
-        context['lists'].append({
-            'color': self.HEADING_BLUE,
-            'type': 'Resource',
-            'title': {
-                'text': _(u'Mine tilbud'),
-                'link': reverse('my-resources')
-            },
-            'queryset': self.request.user.userprofile.my_resources.all,
-            'button': {
-                'text': _(u'Redigér mine tilbud'),
-                'link': reverse('my-resources')
-            }
-        })
 
         context['lists'].extend(self.lists_by_role())
         context['thisurl'] = reverse('user_profile')
@@ -83,8 +72,17 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             }
         }])
 
+        context['is_editor'] = self.request.user.userprofile.has_edit_role()
+
         context.update(**kwargs)
         return super(ProfileView, self).get_context_data(**context)
+
+    def sort_vo_queryset(self, qs):
+        return qs.annotate(
+            datediff=AbsDateDist(
+                F('start_datetime') - timezone.now()
+            )
+        ).order_by('datediff')
 
     def lists_by_role(self):
         role = self.request.user.userprofile.get_role()
@@ -98,53 +96,115 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             return []
 
     def lists_for_editors(self):
-        return [
-            {
-                'color': self.HEADING_RED,
-                'type': 'VisitOccurrence',
-                'title': _(u"Arrangementer der kræver handling"),
-                'queryset': VisitOccurrence.being_planned_queryset(
-                    visit__unit=self.request.user.userprofile.
-                        get_unit_queryset()
-                )
+        visitlist = {
+            'color': self.HEADING_BLUE,
+            'type': 'Resource',
+            'title': {
+                'text': _(u'Mine tilbud'),
+                'link': reverse('search') + '?u=-3'
             },
-            {
-                'color': self.HEADING_GREEN,
-                'type': 'VisitOccurrence',
-                'title': _(u"Planlagte arrangementer"),
-                'queryset': VisitOccurrence.planned_queryset(
-                    visit__unit=self.request.user.userprofile.
-                        get_unit_queryset()
-                )
+            'queryset': Resource.objects.filter(
+                unit=self.request.user.userprofile.get_unit_queryset()
+            ).order_by("title"),
+        }
+
+        if len(visitlist['queryset']) > 10:
+            visitlist['limited_qs'] = visitlist['queryset'][:10]
+            visitlist['button'] = {
+                'text': _(u'Vis alle'),
+                'link': reverse('search') + '?u=-3'
             }
-        ]
+
+        unit_qs = self.request.user.userprofile.get_unit_queryset()
+
+        planned = {
+            'color': self.HEADING_RED,
+            'type': 'VisitOccurrence',
+            'title': _(u"Arrangementer der kræver handling"),
+            'queryset': self.sort_vo_queryset(
+                VisitOccurrence.being_planned_queryset(visit__unit=unit_qs)
+            )
+        }
+        if len(planned['queryset']) > 10:
+            planned['limited_qs'] = planned['queryset'][:10]
+            planned['button'] = {
+                'text': _(u'Vis alle'),
+                'link': reverse('visit-occ-search') + '?u=-3&w=-1&go=1'
+            }
+
+        unplanned = {
+            'color': self.HEADING_GREEN,
+            'type': 'VisitOccurrence',
+            'title': _(u"Planlagte arrangementer"),
+            'queryset': self.sort_vo_queryset(
+                VisitOccurrence.planned_queryset(visit__unit=unit_qs)
+            )
+        }
+        if len(unplanned['queryset']) > 10:
+            unplanned['limited_qs'] = unplanned['queryset'][:10]
+            unplanned['button'] = {
+                'text': _(u'Vis alle'),
+                'link': reverse('visit-occ-search') + '?u=-3&w=-2&go=1'
+            }
+
+        return [visitlist, planned, unplanned]
 
     def lists_for_teachers(self):
+        user = self.request.user
+        taught_vos = user.taught_visitoccurrences.all()
+        unit_qs = self.request.user.userprofile.get_unit_queryset()
+
         return [
+            {
+                'color': self.HEADING_BLUE,
+                'type': 'Resource',
+                'title': {
+                    'text': _(u'Mine tilbud'),
+                    'link': reverse('search') + '?u=-3'
+                },
+                'queryset': Resource.objects.filter(
+                    Q(visit__visitoccurrence=taught_vos) |
+                    Q(visit__default_teachers=self.request.user)
+                ).order_by("title"),
+            },
             {
                 'color': self.HEADING_RED,
                 'type': 'VisitOccurrence',
                 'title': _(u"Arrangementer der mangler undervisere"),
-                'queryset': VisitOccurrence.objects.filter(
-                    visit__unit=self.request.user.userprofile.
-                        get_unit_queryset(),
-                    teacher_status=VisitOccurrence.STATUS_NOT_ASSIGNED
-                ).exclude(
-                    teachers=self.request.user
+                'queryset': self.sort_vo_queryset(
+                    VisitOccurrence.objects.filter(
+                        visit__unit=unit_qs,
+                        teacher_status=VisitOccurrence.STATUS_NOT_ASSIGNED
+                    ).exclude(
+                        teachers=self.request.user
+                    )
                 )
             },
             {
                 'color': self.HEADING_GREEN,
                 'type': 'VisitOccurrence',
                 'title': _(u"Arrangementer hvor jeg er underviser"),
-                'queryset': VisitOccurrence.objects.filter(
-                    teachers=self.request.user
-                )
+                'queryset': self.sort_vo_queryset(taught_vos)
             }
         ]
 
     def lists_for_hosts(self):
+        user = self.request.user
+        hosted_vos = user.hosted_visitoccurrences.all()
+
         return [
+            {
+                'color': self.HEADING_BLUE,
+                'type': 'Resource',
+                'title': {
+                    'text': _(u'Mine tilbud'),
+                    'link': reverse('search') + '?u=-3'
+                },
+                'queryset': Resource.objects.filter(
+                    Q(visit__visitoccurrence=hosted_vos) |
+                    Q(visit__default_hosts=user)
+                ).order_by("title"),
+            },
             {
                 'color': self.HEADING_RED,
                 'type': 'VisitOccurrence',
@@ -161,9 +221,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                 'color': self.HEADING_GREEN,
                 'type': 'VisitOccurrence',
                 'title': _(u"Arrangementer hvor jeg er vært"),
-                'queryset': VisitOccurrence.objects.filter(
-                    hosts=self.request.user
-                )
+                'queryset': hosted_vos
             }
         ]
 

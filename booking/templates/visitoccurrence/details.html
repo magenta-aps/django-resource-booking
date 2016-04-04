@@ -198,22 +198,20 @@
                 <div class="panel-body">
                     <h2>{% trans 'Tilmeldte' %}</h2>
                     {% for booking in object.bookings.all %}
-                        <div>
-                            <dl class="dl-horizontal">
-                                <dt>{% trans 'Skole:' %}</dt>
-                                <dd>{{ booking.booker.school.name }}, {{ booking.booker.school.postcode }}</dd>
-                                <dt>{% trans 'Navn:' %}</dt>
-                                <dd>{{ booking.booker.get_name }}</dd>
-                                <dt>{% trans 'Email:' %}</dt>
-                                <dd>{{ booking.booker.email }}</dd>
-                                <dt>{% trans 'Antal:' %}</dt>
-                                <dd>{{ booking.booker.attendee_count }}</dd>
-                                {% if booking.notes %}
-                                    <dt>{% trans 'Noter:' %}</dt>
-                                    <dd>{{ booking.notes }}</dd>
-                                {% endif %}
-                            </dl>
-                        </div>
+                        <dl class="dl-panel">
+                            <dt class="text-muted">{% trans 'Skole:' %}</dt>
+                            <dd><strong>{{ booking.booker.school.name }}, {{ booking.booker.school.postcode }}</strong></dd>
+                            <dt class="text-muted">{% trans 'Navn:' %}</dt>
+                            <dd>{{ booking.booker.get_name }}</dd>
+                            <dt class="text-muted">{% trans 'Email:' %}</dt>
+                            <dd>{{ booking.booker.email }}</dd>
+                            <dt class="text-muted">{% trans 'Antal:' %}</dt>
+                            <dd>{{ booking.booker.attendee_count }}</dd>
+                            {% if booking.notes %}
+                                <dt class="text-muted">{% trans 'Noter:' %}</dt>
+                                <dd>{{ booking.notes }}</dd>
+                            {% endif %}
+                        </dl>
                     {% endfor %}
                 </div>
             </div>
