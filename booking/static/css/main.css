@@ -710,6 +710,23 @@ div ul.warninglist {
     max-width: 70%;
 }
 
+.dl-panel {
+    background-color: #eee;
+    display: block;
+    padding: 1em 1em 0;
+}
+
+.dl-panel dt {
+    float: left;
+    clear: left;
+    padding-right: 0.5em;
+}
+
+.dl-panel dd {
+    padding: 0 0 1em;
+    display: block;
+}
+
 
 /* gymnasiefag-edit & grundskolefag-edit */
 
