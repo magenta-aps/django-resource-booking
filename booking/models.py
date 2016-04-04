@@ -20,7 +20,7 @@ from recurrence.fields import RecurrenceField
 from booking.utils import ClassProperty, full_email, CustomStorage, html2text
 from resource_booking import settings
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 LOGACTION_CREATE = ADDITION
 LOGACTION_CHANGE = CHANGE
