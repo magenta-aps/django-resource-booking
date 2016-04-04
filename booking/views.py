@@ -950,6 +950,8 @@ class EditResourceInitialView(HasBackButtonMixin, TemplateView):
 
 
 class CloneResourceView(RedirectView):
+    permanent = False
+
     def get_redirect_url(self, *args, **kwargs):
         try:
             res = Resource.objects.get(pk=kwargs["pk"])

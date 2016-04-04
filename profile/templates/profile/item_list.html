@@ -14,8 +14,9 @@
         <div class="panel-body pager" data-list-item=".list-group-item">
 
             {% if list.type == 'VisitOccurrence' %}
-                {% for occurrence in list.queryset %}
+                {% for occurrence in list.limited_qs|default:list.queryset %}
                     <div class="list-group-item clearfix">
+                        {{ occurrence.dateduff }}
                         <a href="{% url 'visit-occ-view' occurrence.pk %}" title="{% trans 'Se arrangementets detaljer' %}">
                             <h2 class="list-group-item-heading">{{ occurrence.visit.title }}</h2>
                             <div class="list-group-item-text">
@@ -35,7 +36,7 @@
                 {% endfor %}
 
             {% elif list.type == 'Resource' %}
-                {% for res in list.queryset %}
+                {% for res in list.limited_qs|default:list.queryset %}
                     <div class="list-group-item clearfix">
                         <a href="{% url 'resource-view' res.pk %}" title="{% trans 'Se tilbuddets detaljer og evt. bookings' %}">
                             <h2 class="list-group-item-heading">{{ res.title }}</h2>
@@ -65,10 +66,12 @@
                             </div>
                         </a>
                         <div class="tools">
+                            {% if is_editor %}
                                 <span class="edit-tools pull-left">
                                     <a href="{% url 'resource-edit' res.pk %}">{% trans 'Rediger' %}</a> |
                                     <a href="{% url 'resource-clone' res.pk %}">{% trans 'Kopiér' %}</a>
                                 </span>
+                            {% endif %}
                             <span class="label label-{{ res.get_state_class }} pull-right">{{ res.get_state_display }}</span>
                         </div>
                     </div>

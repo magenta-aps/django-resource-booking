@@ -4,6 +4,7 @@ from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
+from django.db.models import Aggregate
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
@@ -69,6 +70,17 @@ def role_to_text(role):
         if r == role:
             return unicode(t)
     return ""
+
+
+class AbsDateDist(Aggregate):
+    template = 'ABS(EXTRACT(EPOCH FROM (%(expressions)s)))'
+
+    def __init__(self, expression, **extra):
+
+        super(AbsDateDist, self).__init__(
+            expression,
+            output_field=models.IntegerField(),
+            **extra)
 
 
 class UserRole(models.Model):
