@@ -1006,8 +1006,8 @@ a.template-overridden:visited {
 
 /* nested menu dropdown */
 
-.dropdown-submenu {
-    position: relative;
+.dropdown-submenu a {
+    font-weight: bold !important;
 }
 
 .dropdown-submenu>.dropdown-menu {

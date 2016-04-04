@@ -2606,7 +2606,8 @@ class EmailTemplateEditView(UpdateView, UnitAccessRequiredMixin,
 
         for model in [Booking, VisitOccurrence, Visit]:
             model_name = model.__name__
-            modelmap[model_name.lower()] = get_model_field_map(model)
+            modelmap[(model_name.lower(), model._meta.verbose_name)] = \
+                get_model_field_map(model)
 
         context.update(kwargs)
         return super(EmailTemplateEditView, self).get_context_data(**context)
