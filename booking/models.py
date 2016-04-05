@@ -462,7 +462,7 @@ class EmailTemplate(models.Model):
     ]
 
     key = models.IntegerField(
-        verbose_name=u'Key',
+        verbose_name=u'Nøgle',
         choices=key_choices,
         default=1
     )
