@@ -18,12 +18,16 @@
             d.setFullYear(dateparts[2]);
             d.setHours(dateparts[3]);
             d.setMinutes(dateparts[4]);
-            currentDates.push({
+            var dobject = {
                 date: d,
                 istimeset: true,
                 isbooked: false,
                 isupdated: false
-            });
+            };
+            if (dateparts[5] === '1') {
+                dobject.isbooked = true;
+            };
+            currentDates.push(dobject);
             UpdateDateList();
         });
         
@@ -83,13 +87,22 @@
                 var datetime = '';
                 var upd = '';
                 if (t.istimeset) {
-                    datetime = ' value="' + getFormattedPartTime(t.date.getHours()) + ':' + getFormattedPartTime(t.date.getMinutes()) + '"';
+                    if (t.isbooked) {
+                        datetime = getFormattedPartTime(t.date.getHours()) + ':' + getFormattedPartTime(t.date.getMinutes());
+                    } else {
+                        datetime = ' value="' + getFormattedPartTime(t.date.getHours()) + ':' + getFormattedPartTime(t.date.getMinutes()) + '"';
+                    };
                 };
                 if (t.isupdated) {
                     upd = ' date-new';
                     t.isupdated = false;
                 };
-                currentDatesEl.append('<li class="date' + upd + '" id="' + d + '" data-date="' + datedate + '"><div><span class="glyphicon glyphicon-calendar"></span> ' + datedate + '</div><div><span class="glyphicon glyphicon-time"></span> <input class="btn-add-time timepick" type="text" name="timepick" placeholder="Tilføj tid"' + datetime + '></div><button type="button" class="btn-rm-date"><span class="glyphicon glyphicon-remove"></span></button></li>');
+                if (t.isbooked) {
+                    currentDatesEl.append('<li class="date' + upd + '" id="' + d + '" data-date="' + datedate + '"><div><span class="glyphicon glyphicon-calendar"></span> ' + datedate + '</div><div><span class="glyphicon glyphicon-time"></span> ' + datetime + '</div></li>');
+                } else {
+                    currentDatesEl.append('<li class="date' + upd + '" id="' + d + '" data-date="' + datedate + '"><div><span class="glyphicon glyphicon-calendar"></span> ' + datedate + '</div><div><span class="glyphicon glyphicon-time"></span> <input class="btn-add-time timepick" type="text" name="timepick" placeholder="Tilføj tid"' + datetime + '></div><button type="button" class="btn-rm-date"><span class="glyphicon glyphicon-remove"></span></button></li>');
+                };
+                
             };
             
             
@@ -168,21 +181,37 @@
                 format: 'H:i',
                 clear: 'Nulstil',
                 onClose: function() {
+                    
+                    function checkIfDateBooked(currentDate, func) {
+                        if (currentDate.isbooked === true) {
+                            return true;
+                        } else {
+                            func();
+                            return false;
+                        };
+                    };
+                    
                     if (inputEl.val() != '') {
                         var tparts = inputEl.val().split(':');
                         for (var i in currentDates) {
-                            currentDates[i].date.setHours(tparts[0]);
-                            currentDates[i].date.setMinutes(tparts[1]);
-                            currentDates[i].istimeset = true;
-                            currentDates[i].isupdated = true;
+                            checkIfDateBooked(currentDates[i], function() {
+                                currentDates[i].date.setHours(tparts[0]);
+                                currentDates[i].date.setMinutes(tparts[1]);
+                                currentDates[i].istimeset = true;
+                                currentDates[i].isupdated = true;
+                            });
                         };
                     } else {
                         for (var i in currentDates) {
-                            currentDates[i].istimeset = false;
+                            checkIfDateBooked(currentDates[i], function() {
+                                currentDates[i].istimeset = false;
+                            });
                         };
                     };
+                    
                     inputEl.val('');
                     UpdateDateList();
+                    
                 }
             });
         });
@@ -192,7 +221,10 @@
         
         $('.btn-rm-date-all').on('click', function(ev) {
             ev.preventDefault();
-            currentDates = [];
+            function checkIsBooked(currentDate) {
+                return currentDate.isbooked;
+            };
+            currentDates = currentDates.filter(checkIsBooked);
             currentDatesEl.html('');
             UpdateDateList();
         });
