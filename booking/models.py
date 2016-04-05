@@ -436,10 +436,6 @@ class EmailTemplate(models.Model):
     unit_teachers_keys = [
         NOTIFY_HOST__REQ_TEACHER_VOLUNTEER
     ]
-    # Templates that will be autosent to room admins in the resource
-    resource_roomadmin_keys = [
-        NOTIFY_HOST__REQ_ROOM
-    ]
     # Templates that will be autosent to hosts in the occurrence
     occurrence_hosts_keys = [
         NOTIFY_ALL__BOOKING_COMPLETE,
@@ -459,6 +455,17 @@ class EmailTemplate(models.Model):
     enable_days = [
         NOTITY_ALL__BOOKING_REMINDER,
         NOTIFY_HOST__HOSTROLE_IDLE
+    ]
+    # Templates where the {{ booking }} variable makes sense
+    enable_booking = [
+        NOTIFY_GUEST__BOOKING_CREATED,
+        NOTIFY_HOST__BOOKING_CREATED,
+        NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
+        NOTIFY_HOST__REQ_HOST_VOLUNTEER,
+        NOTIFY_GUEST__GENERAL_MSG,
+        NOTIFY_ALL__BOOKING_COMPLETE,
+        NOTIFY_ALL__BOOKING_CANCELED,
+        NOTITY_ALL__BOOKING_REMINDER
     ]
 
     key = models.IntegerField(
@@ -905,8 +912,6 @@ class Resource(models.Model):
         recipients = self.unit.get_recipients(template_key)
         if template_key in EmailTemplate.contact_person_keys:
             recipients.extend(self.contact_persons.all())
-        if template_key in EmailTemplate.resource_roomadmin_keys:
-            recipients.extend(self.room_responsible.all())
         return recipients
 
     def get_view_url(self):
