@@ -1,0 +1,112 @@
+{% extends "index.html" %}
+{% load staticfiles %}
+{% load booking_tags %}
+{% load i18n %}
+
+{% block htmltitle %} - {% trans 'liste af tilbud' %}{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div id="main" class="col-sm-12 col-md-12">
+
+            {% include 'common/breadcrumbrow.html' %}
+
+            <div class="divider"></div>
+
+            {% if not results %}
+                <p>{% trans 'Ingen tilbud fundet.' %}</p>
+            {% else %}
+                <h2 class="bold">
+                    {% blocktrans with count=paginator.count %}{{ count }} tilbud fundet{% endblocktrans %}
+                </h2>
+                <div class="divider"></div>
+                <ul class="media-list">
+                    {% for res in results %}
+                        {% include 'resource/listitem.html' with item=res %}
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-6 col-md-5 col-sm-offset-1 col-md-offset-3">
+            {% if paginator %}
+                <nav>
+                    <ul class="pagination">
+
+                        {% if page_obj.has_previous %}
+                            <li>
+                                <a href="?{{ qstring }}&page={{ page_obj.previous_page_number }}&pagesize={{paginator.per_page}}" aria-label="{% trans 'Forrige' %}">
+                                <span>
+                                    <span class="glyphicon glyphicon-chevron-left small" aria-hidden="true"></span>
+                                    {% trans 'Forrige' %}
+                                </span>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="disabled">
+                            <span>
+                                <span class="glyphicon glyphicon-chevron-left small" aria-hidden="true"></span>
+                                {% trans 'Forrige' %}
+                            </span>
+                            </li>
+                        {% endif %}
+                        {% for pnr in paginator.page_range %}
+                            {% if page_obj.number == pnr %}
+                                <li class="active">
+                                    <span>{{ pnr }} <span class="sr-only">(aktiv side)</span></span>
+                                </li>
+                            {% else %}
+                                <li><a href="?{{ qstring }}&page={{pnr}}&pagesize={{paginator.per_page}}">{{pnr}}</a></li>
+                            {% endif %}
+                        {% endfor %}
+                        {% if page_obj.has_next %}
+                            <li>
+                                <a href="?{{ qstring }}&page={{ page_obj.next_page_number }}&pagesize={{paginator.per_page}}" aria-label="{% trans 'Næste' %}">
+                                <span>
+                                    Næste
+                                    <span class="glyphicon glyphicon-chevron-right small" aria-hidden="true"></span>
+                                </span>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="disabled">
+                            <span>
+                                {% trans 'Næste' %}
+                                <span class="glyphicon glyphicon-chevron-right small" aria-hidden="true"></span>
+                            </span>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        </div>
+        <div class="col-sm-4 col-md-3">
+            <div class="input-group input-group-sm search-list items-pr-side">
+                <span class="input-group-addon">Vis</span>
+                <div class="input-group-btn">
+                    <button type="button" class="btn btn-default">
+                        {% if request.GET.pagesize == "all" %}
+                            Vis alle
+                        {% else %}
+                            {{ paginator.per_page }}
+                        {% endif %}
+                    </button>
+                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> <span class="caret"></span> <span class="sr-only">Vis anrtal resultater pr. side</span> </button>
+                    <ul class="dropdown-menu">
+                        <li{% if request.GET.pagesize == "all" %} class="selected"{% endif %}><a href="?{{ qstring }}&pagesize=all">Vis alle</a></li>
+                        {% for size in pagesizes %}
+                            <li{% if size == paginator.per_page %} class="selected"{% endif %}><a href="?{{ qstring }}&pagesize={{size}}">{{size}}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <span class="input-group-addon"> pr. side</span>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+    <script src="{% static 'js/custom.js' %}"></script>
+{% endblock %}
