@@ -49,6 +49,8 @@
                                 </li>
                             {% endfor %}
                         {% endif %}
+                        <li role="separator" class="divider"></li>
+                        <li><a href="{% url 'emailtemplate-list' %}" target="_blank">{% trans 'Redigér skabeloner' %}</a></li>
                     </ul>
                 </div>
             {% endif %}
