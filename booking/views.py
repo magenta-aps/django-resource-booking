@@ -112,25 +112,25 @@ class MainPageView(TemplateView):
             'lists': [
                 {
                     'color': self.HEADING_GREEN,
-                    'type': 'VisitOccurrence',
-                    'title': _(u'Senest opdaterede besøg'),
-                    'queryset': VisitOccurrence.get_latest_updated(),
+                    'type': 'Resource',
+                    'title': _(u'Senest opdaterede tilbud'),
+                    'queryset': Visit.get_latest_updated(),
                     'limit': 10,
                     'button': {
                         'text': _(u'Vis alle'),
-                        'link': reverse('visit-occ-customlist') + "?type=%s" %
-                        VisitOccurrenceCustomListView.TYPE_LATEST_UPDATED
+                        'link': reverse('resource-customlist') + "?type=%s" %
+                        ResourceCustomListView.TYPE_LATEST_UPDATED
                     }
                 }, {
                     'color': self.HEADING_BLUE,
-                    'type': 'VisitOccurrence',
-                    'title': _(u'Senest bookede besøg'),
-                    'queryset': VisitOccurrence.get_latest_booked(),
+                    'type': 'Resource',
+                    'title': _(u'Senest bookede tilbud'),
+                    'queryset': Visit.get_latest_booked(),
                     'limit': 10,
                     'button': {
                         'text': _(u'Vis alle'),
-                        'link': reverse('visit-occ-customlist') + "?type=%s" %
-                        VisitOccurrenceCustomListView.TYPE_LATEST_BOOKED
+                        'link': reverse('resource-customlist') + "?type=%s" %
+                        ResourceCustomListView.TYPE_LATEST_BOOKED
                     }
                 }
             ]
@@ -913,7 +913,67 @@ class SearchView(ListView):
         return size
 
 
-class EditResourceInitialView(HasBackButtonMixin, TemplateView):
+class ResourceListView(LoginRequiredMixin, ListView):
+    template_name = "resource/list.html"
+    model = Resource
+    context_object_name = "results"
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = {}
+
+        # Store the querystring without the page and pagesize arguments
+        qdict = self.request.GET.copy()
+
+        if "page" in qdict:
+            qdict.pop("page")
+        if "pagesize" in qdict:
+            qdict.pop("pagesize")
+
+        context["qstring"] = qdict.urlencode()
+
+        context['pagesizes'] = [5, 10, 15, 20]
+
+        context['breadcrumbs'] = [
+            {'text': _(u'Tilbudsliste')},
+        ]
+
+        context.update(kwargs)
+
+        return super(ResourceListView, self).get_context_data(
+            **context
+        )
+
+    def get_paginate_by(self, queryset):
+        size = self.request.GET.get("pagesize", 10)
+
+        if size == "all":
+            return None
+
+        return size
+
+
+class ResourceCustomListView(ResourceListView):
+
+    TYPE_LATEST_BOOKED = "latest_booked"
+    TYPE_LATEST_UPDATED = "latest_updated"
+
+    def get_queryset(self):
+        try:
+            listtype = self.request.GET.get("type", "")
+
+            if listtype == self.TYPE_LATEST_BOOKED:
+                return Visit.get_latest_booked()
+            elif listtype == self.TYPE_LATEST_UPDATED:
+                return Resource.get_latest_updated()
+
+        except:
+            pass
+        raise Http404
+
+
+class EditResourceInitialView(LoginRequiredMixin, HasBackButtonMixin,
+                              TemplateView):
 
     template_name = 'resource/form.html'
 
@@ -978,7 +1038,8 @@ class ResourceDetailView(View):
         raise Http404
 
 
-class EditResourceView(HasBackButtonMixin, ResourceBookingUpdateView):
+class EditResourceView(LoginRequiredMixin, RoleRequiredMixin,
+                       HasBackButtonMixin, ResourceBookingUpdateView):
     is_creating = True
 
     def __init__(self, *args, **kwargs):
@@ -1266,11 +1327,8 @@ class OtherResourceDetailView(ResourceBookingDetailView):
 
         user = self.request.user
 
-        if (hasattr(user, 'userprofile') and
-                user.userprofile.can_edit(self.object)):
-            context['can_edit'] = True
-        else:
-            context['can_edit'] = False
+        if hasattr(user, 'userprofile'):
+            context['can_edit'] = user.userprofile.can_edit(self.object)
 
         # if self.object.type in [Resource.STUDENT_FOR_A_DAY,
         #                        Resource.STUDY_PROJECT,
@@ -1295,7 +1353,7 @@ class OtherResourceDetailView(ResourceBookingDetailView):
         return super(OtherResourceDetailView, self).get_context_data(**context)
 
 
-class EditVisitView(RoleRequiredMixin, EditResourceView):
+class EditVisitView(EditResourceView):
 
     template_name = 'visit/form.html'
     form_class = VisitForm
@@ -1649,7 +1707,7 @@ class VisitInquireView(FormMixin, HasBackButtonMixin, TemplateView):
         return self.request.GET.get("back", "/")
 
 
-class VisitOccurrenceNotifyView(EmailComposeView):
+class VisitOccurrenceNotifyView(LoginRequiredMixin, EmailComposeView):
 
     def dispatch(self, request, *args, **kwargs):
         self.recipients = []
@@ -1771,7 +1829,7 @@ class VisitOccurrenceNotifyView(EmailComposeView):
             return reverse('visit-occ-view', args=[self.object.id])
 
 
-class BookingNotifyView(EmailComposeView):
+class BookingNotifyView(LoginRequiredMixin, EmailComposeView):
 
     def dispatch(self, request, *args, **kwargs):
         self.recipients = []
@@ -2436,7 +2494,8 @@ class VisitOccurrenceSearchView(VisitOccurrenceListView):
         )
 
 
-class BookingDetailView(LoggedViewMixin, ResourceBookingDetailView):
+class BookingDetailView(LoginRequiredMixin, LoggedViewMixin,
+                        ResourceBookingDetailView):
     """Display Booking details"""
     model = Booking
     template_name = 'booking/details.html'
@@ -2469,7 +2528,8 @@ class BookingDetailView(LoggedViewMixin, ResourceBookingDetailView):
         return super(BookingDetailView, self).get_context_data(**context)
 
 
-class VisitOccurrenceDetailView(LoggedViewMixin, ResourceBookingDetailView):
+class VisitOccurrenceDetailView(LoginRequiredMixin, LoggedViewMixin,
+                                ResourceBookingDetailView):
     """Display Booking details"""
     model = VisitOccurrence
     template_name = 'visitoccurrence/details.html'
@@ -2493,15 +2553,11 @@ class VisitOccurrenceDetailView(LoggedViewMixin, ResourceBookingDetailView):
             for (key, label) in EmailTemplate.key_choices
             if key in EmailTemplate.visitoccurrence_manual_keys
         ]
-
-        context['can_edit'] = self.request.user.userprofile.can_edit(
-            self.object
-        )
-
         user = self.request.user
-        if hasattr(user, 'userprofile') and \
-                user.userprofile.can_notify(self.object):
-            context['can_notify'] = True
+
+        if hasattr(user, 'userprofile'):
+            context['can_edit'] = user.userprofile.can_edit(self.object)
+            context['can_notify'] = user.userprofile.can_notify(self.object)
 
         context.update(kwargs)
 
@@ -2510,7 +2566,7 @@ class VisitOccurrenceDetailView(LoggedViewMixin, ResourceBookingDetailView):
         )
 
 
-class EmailTemplateListView(ListView):
+class EmailTemplateListView(LoginRequiredMixin, ListView):
     template_name = 'email/list.html'
     model = EmailTemplate
 
@@ -2540,8 +2596,8 @@ class EmailTemplateListView(ListView):
         return qs
 
 
-class EmailTemplateEditView(UpdateView, UnitAccessRequiredMixin,
-                            HasBackButtonMixin):
+class EmailTemplateEditView(LoginRequiredMixin, UnitAccessRequiredMixin,
+                            UpdateView, HasBackButtonMixin):
     template_name = 'email/form.html'
     form_class = EmailTemplateForm
     model = EmailTemplate
@@ -2620,7 +2676,7 @@ class EmailTemplateEditView(UpdateView, UnitAccessRequiredMixin,
         return args
 
 
-class EmailTemplateDetailView(View):
+class EmailTemplateDetailView(LoginRequiredMixin, View):
     template_name = 'email/preview.html'
 
     classes = {'Unit': Unit,
@@ -2734,7 +2790,8 @@ class EmailTemplateDetailView(View):
         return context
 
 
-class EmailTemplateDeleteView(HasBackButtonMixin, DeleteView):
+class EmailTemplateDeleteView(HasBackButtonMixin, LoginRequiredMixin,
+                              DeleteView):
     template_name = 'email/delete.html'
     model = EmailTemplate
     success_url = reverse_lazy('emailtemplate-list')

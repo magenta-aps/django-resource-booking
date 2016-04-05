@@ -33,6 +33,16 @@
 
                 <div class="" aria-labelledby="headingCategory" role="tabpanel" aria-expanded="true" style="">
                     <div class="panel-body">
+
+                        <div class="row form-group">
+                            <div class="col-sm-2"></div>
+                            <div class="col-sm-10">
+                                {% blocktrans %}
+                                    Når en emailskabelon skal findes til et givet formål (f.eks. når en booking foretages), søges efter en skabelon med den rette nøgle. Først søges efter skabeloner associeret med det relevante institut, derefter skabeloner associeret med det relevante fakultet, og sidst efter skabeloner uden enhed tilknyttet. Den først fundne af disse skabeloner vil blive anvendt til udsendelse af email.
+                                {% endblocktrans %}
+                            </div>
+                        </div>
+
                         <div class="row form-group">
                             <div>
                                 {{ form.key.errors }}
@@ -42,6 +52,15 @@
                             </div>
                             <div class="col-sm-10">
                                 {{ form.key }}
+                            </div>
+                        </div>
+
+                        <div class="row form-group">
+                            <div class="col-sm-2"></div>
+                            <div id="key_info" class="col-sm-10" style="display: none">
+                                <span id="key_dosend">{% trans 'Automatisk udsendelse til:' %}</span>
+                                <span id="key_dontsend">{% trans 'Ingen automatisk udsendelse' %}</span>
+                                <ul></ul>
                             </div>
                         </div>
 
@@ -61,7 +80,7 @@
                             <div class="col-sm-2"></div>
                             <div class="col-sm-10">
                                 {% blocktrans %}
-                                    Når en emailskabelon skal findes til et givet formål (f.eks. når en booking foretages), søges efter en skabelon med den rette nøgle. Først søges efter skabeloner associeret med det relevante institut, derefter skabeloner associeret med det relevante fakultet, og sidst efter skabeloner uden enhed tilknyttet. Den først fundne af disse skabeloner vil blive anvendt til udsendelse af email.
+                                    Skabelon-systemet anvender <a href="https://docs.djangoproject.com/en/1.9/ref/templates/language/" target="_blank">Djangos skabelonmodel</a>. Det betyder, at der udover almindelig tekst og HTML-kode kan indsættes felter, som udfyldes med værdier fra Bookinger, Besøg og Tilbud ud fra den sammenhæng beskeden skal udsendes i.
                                 {% endblocktrans %}
                             </div>
                         </div>
@@ -129,7 +148,7 @@
             } else {
                 return o.selectionStart;
             }
-        }
+        };
 
         function getSelectionEnd(o) {
             if (o.createTextRange) {
@@ -139,8 +158,7 @@
             } else {
                 return o.selectionEnd;
             }
-        }
-
+        };
 
         $(function(){
 
@@ -151,16 +169,18 @@
 
             var openMenu = function(event) {
                 var $this = $(this);
-                $this.addClass("open");
                 closeMenu.call($this.parent().children("li").not($this));
-                var menu = $("#"+$this.attr("data-target"));
-                var pageOffset = $this.offsetParent().offset();
-                menu.css({
-                    position: "absolute",
-                    top: $this.position().top + pageOffset.top,
-                    left: $this.position().left + pageOffset.left + $this.width()
-                });
-                menu.show();
+                if (!$this.hasClass("disabled")) {
+                    $this.addClass("open");
+                    var menu = $("#" + $this.attr("data-target"));
+                    var pageOffset = $this.offsetParent().offset();
+                    menu.css({
+                        position: "absolute",
+                        top: $this.position().top + pageOffset.top,
+                        left: $this.position().left + pageOffset.left + $this.width()
+                    });
+                    menu.show();
+                }
             };
 
             var closeMenu = function(event) {
@@ -221,6 +241,74 @@
                     tinymce.get(bodyField.attr("id")).execCommand('mceInsertContent',false, insertion);
                 }
             }
+        });
+
+        $(function(){
+            {% autoescape off %}
+            var map = [
+                {
+                    'keys': {{ object.contact_person_keys | jsonify }},
+                    'label': "{% trans 'Kontaktpersoner på tilbuddet' %}"
+                },
+                {
+                    'keys': {{ object.booker_keys | jsonify }},
+                    'label': "{% trans 'Booker af et besøg' %}"
+                },
+                {
+                    'keys': {{ object.unit_hosts_keys | jsonify }},
+                    'label': "{% trans 'Potentielle værter i enheden' %}"
+                },
+                {
+                    'keys': {{ object.unit_teachers_keys | jsonify }},
+                    'label': "{% trans 'Potentielle undervisere i enheden' %}"
+                },
+                {
+                    'keys': {{ object.occurrence_hosts_keys | jsonify }},
+                    'label': "{% trans 'Tildelte værter for besøget' %}"
+                },
+                {
+                    'keys': {{ object.occurrence_teachers_keys | jsonify }},
+                    'label': "{% trans 'Tildelte undervisere for besøget' %}"
+                },
+                {
+                    'keys': [{{ object.occurrence_added_host_key | jsonify }}],
+                    'label': "{% trans 'Værter som tildeles et besøg (når de tildeles)' %}"
+                }
+            ];
+            {% endautoescape %}
+            var keyselect = $("#{{ form.key.id_for_label }}"),
+                info = $("#key_info"),
+                info_list = info.find("ul");
+            var updateInfo = function(){
+                var value = parseInt(keyselect.val(), 10);
+                if (value) {
+                    info_list.empty();
+                    var found;
+                    for (var i=0; i<map.length; i++) {
+                        if ($.inArray(value, map[i].keys) != -1) {
+                            info_list.append("<li>" + map[i].label + "</li>");
+                            found = true;
+                        }
+                    }
+                    $("#key_dosend").toggle(!!found);
+                    $("#key_dontsend").toggle(!found);
+                    info.show();
+                }
+            };
+            {% autoescape off %}
+            var enable_booking = {{ object.enable_booking | jsonify }};
+            {% endautoescape %}
+            var updateFields = function() {
+                var value = parseInt(keyselect.val(), 10),
+                    bookingField = $("[data-target='menu_booking']"),
+                    enabled = ($.inArray(value, enable_booking) != -1);
+                bookingField.toggleClass("disabled", !enabled);
+            };
+
+            keyselect.change(updateInfo);
+            updateInfo();
+            keyselect.change(updateFields);
+            updateFields();
         });
 
     </script>

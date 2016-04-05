@@ -1,6 +1,6 @@
 {% load i18n %}
 {% load booking_tags %}
-<div class="col-sm-4">
+<div class="col-sm-6">
     <div class="panel panel-bookings">
         <div class="panel-heading {{ list.color }}">
             <h3 class="panel-title">
@@ -39,6 +39,7 @@
 
             {% elif list.type == 'Resource' %}
                 {% for res in list.queryset %}
+                    {% if not list.limit or forloop.counter0 < list.limit %}
                     <div class="list-group-item clearfix">
                         <a href="{% url 'resource-view' res.pk %}" title="{% trans 'Se tilbuddets detaljer og evt. bookings' %}">
                             <h2 class="list-group-item-heading">{{ res.title }}</h2>
@@ -75,6 +76,7 @@
                             <span class="label label-{{ res.get_state_class }} pull-right">{{ res.get_state_display }}</span>
                         </div>
                     </div>
+                    {% endif %}
                 {% endfor %}
             {% endif %}
 
