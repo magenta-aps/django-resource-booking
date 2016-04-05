@@ -62,7 +62,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         }, {
             'color': self.HEADING_BLUE,
             'type': 'VisitOccurrence',
-            'title': _(u'Dagens arrangementer'),
+            'title': _(u'Dagens besøg'),
             'queryset': VisitOccurrence.get_todays_occurrences(),
             'limit': 10,
             'button': {
@@ -120,7 +120,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         planned = {
             'color': self.HEADING_RED,
             'type': 'VisitOccurrence',
-            'title': _(u"Arrangementer der kræver handling"),
+            'title': _(u"Besøg der kræver handling"),
             'queryset': self.sort_vo_queryset(
                 VisitOccurrence.being_planned_queryset(visit__unit=unit_qs)
             )
@@ -135,7 +135,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         unplanned = {
             'color': self.HEADING_GREEN,
             'type': 'VisitOccurrence',
-            'title': _(u"Planlagte arrangementer"),
+            'title': _(u"Planlagte besøg"),
             'queryset': self.sort_vo_queryset(
                 VisitOccurrence.planned_queryset(visit__unit=unit_qs)
             )
@@ -170,7 +170,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             {
                 'color': self.HEADING_RED,
                 'type': 'VisitOccurrence',
-                'title': _(u"Arrangementer der mangler undervisere"),
+                'title': _(u"Besøg der mangler undervisere"),
                 'queryset': self.sort_vo_queryset(
                     VisitOccurrence.objects.filter(
                         visit__unit=unit_qs,
@@ -183,7 +183,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             {
                 'color': self.HEADING_GREEN,
                 'type': 'VisitOccurrence',
-                'title': _(u"Arrangementer hvor jeg er underviser"),
+                'title': _(u"Besøg hvor jeg er underviser"),
                 'queryset': self.sort_vo_queryset(taught_vos)
             }
         ]
@@ -208,7 +208,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             {
                 'color': self.HEADING_RED,
                 'type': 'VisitOccurrence',
-                'title': _(u"Arrangementer der mangler værter"),
+                'title': _(u"Besøg der mangler værter"),
                 'queryset': VisitOccurrence.objects.filter(
                     visit__unit=self.request.user.userprofile.
                         get_unit_queryset(),
@@ -220,7 +220,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             {
                 'color': self.HEADING_GREEN,
                 'type': 'VisitOccurrence',
-                'title': _(u"Arrangementer hvor jeg er vært"),
+                'title': _(u"Besøg hvor jeg er vært"),
                 'queryset': hosted_vos
             }
         ]
