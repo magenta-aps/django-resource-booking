@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-04-05 15:27+0200\n"
+"POT-Creation-Date: 2016-04-05 15:35+0200\n"
 "PO-Revision-Date: 2016-03-02 14:19+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1338,12 +1338,6 @@ msgstr ""
 
 #: booking/templates/booking/studentforaday.html:15
 #: booking/templates/booking/studentforaday_modal.html:18
-#, fuzzy
-#| msgid ""
-#| "Udfyld formularen nedenfor, så vi kan matche dig med den rigtige "
-#| "studerende. Når du har udfyldt formularen, sender vi en email til dig, "
-#| "der bekræfter din henvendelse. Vi finder herefter en studerende, som "
-#| "kontakter dig, og sammen finder I en dag der passer."
 msgid ""
 "Når du har udfyldt formularen, sender vi en email til dig, der bekræfter din "
 "henvendelse. Vi finder herefter en studerende, som kontakter dig, og sammen "
@@ -2382,8 +2376,8 @@ msgstr ""
 msgid "Slutter"
 msgstr ""
 
-#: booking/templates/resource/fields/time.html:101
-msgid "Frekvens"
+#: booking/templates/resource/fields/time.html:87
+msgid "Dine udvalgte datoer"
 msgstr ""
 
 #: booking/templates/resource/fields/type.html:6
