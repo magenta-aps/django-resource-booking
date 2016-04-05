@@ -169,16 +169,18 @@
 
             var openMenu = function(event) {
                 var $this = $(this);
-                $this.addClass("open");
                 closeMenu.call($this.parent().children("li").not($this));
-                var menu = $("#"+$this.attr("data-target"));
-                var pageOffset = $this.offsetParent().offset();
-                menu.css({
-                    position: "absolute",
-                    top: $this.position().top + pageOffset.top,
-                    left: $this.position().left + pageOffset.left + $this.width()
-                });
-                menu.show();
+                if (!$this.hasClass("disabled")) {
+                    $this.addClass("open");
+                    var menu = $("#" + $this.attr("data-target"));
+                    var pageOffset = $this.offsetParent().offset();
+                    menu.css({
+                        position: "absolute",
+                        top: $this.position().top + pageOffset.top,
+                        left: $this.position().left + pageOffset.left + $this.width()
+                    });
+                    menu.show();
+                }
             };
 
             var closeMenu = function(event) {
@@ -261,10 +263,6 @@
                     'label': "{% trans 'Potentielle undervisere i enheden' %}"
                 },
                 {
-                    'keys': {{ object.resource_roomadmin_keys | jsonify }},
-                    'label': "{% trans 'Lokaleansvarlige for tilbuddet' %}"
-                },
-                {
                     'keys': {{ object.occurrence_hosts_keys | jsonify }},
                     'label': "{% trans 'Tildelte værter for besøget' %}"
                 },
@@ -297,8 +295,20 @@
                     info.show();
                 }
             };
+            {% autoescape off %}
+            var enable_booking = {{ object.enable_booking | jsonify }};
+            {% endautoescape %}
+            var updateFields = function() {
+                var value = parseInt(keyselect.val(), 10),
+                    bookingField = $("[data-target='menu_booking']"),
+                    enabled = ($.inArray(value, enable_booking) != -1);
+                bookingField.toggleClass("disabled", !enabled);
+            };
+
             keyselect.change(updateInfo);
             updateInfo();
+            keyselect.change(updateFields);
+            updateFields();
         });
 
     </script>
