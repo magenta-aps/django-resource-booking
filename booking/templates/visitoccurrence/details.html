@@ -136,7 +136,7 @@
                         <dt>{% trans 'Automatisk email' %}</dt>
                         <dd>
                             {{ object.get_autosend_display }}
-                            {% if can_edit and object.can_assign_resources %}
+                            {% if can_edit %}
                                 <a href="{% url 'change-visit-occ-autosend' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
                             {% endif %}
                         </dd>

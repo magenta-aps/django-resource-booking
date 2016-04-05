@@ -2051,7 +2051,7 @@ class BookingView(AutologgerMixin, ResourceBookingUpdateView):
 
             booking.autosend(EmailTemplate.NOTIFY_GUEST__BOOKING_CREATED)
 
-            booking.autosend(EmailTemplate.NOTIFY_HOST__BOOKING_CREATED)
+            booking.autosend(EmailTemplate.NOTIFY_EDITORS__BOOKING_CREATED)
 
             booking.autosend(EmailTemplate.NOTIFY_HOST__REQ_TEACHER_VOLUNTEER)
 

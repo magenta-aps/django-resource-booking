@@ -1,0 +1,27 @@
+{% load booking_tags %}
+<p>Kære {{ booker.get_full_name }}.</p>
+
+<p>Tak for tilmelding til tilbuddet "{{ visit.title }}".</p>
+
+{% if besoeg.start_datetime %}
+<p>
+    Arrangementet starter {{ besoeg.start_datetime }}{% if besoeg.end_datetime %}
+        og forventes at slutte {{ besoeg.end_datetime }}{% endif %}.
+</p>
+{% else %}
+<p>
+    Dine ønsker til besøgstidspunkt vil blive taget i betragtning og du vil
+    blive kontaktet omkring fastlæggelse af et endeligt besøgstidspunkt.
+</p>
+{% endif %}
+
+<p>
+    Du kan læse mere om tilbuddet på adressen
+    <a href="{% full_url 'visit-view' visit.pk %}">{% full_url 'visit-view' visit.pk %}</a>
+</p>
+
+<p>
+    Hvis du har kommentarer eller feedback kan du bruge kontakt-formularen på
+    følgende link:<br />
+    <a href="{% full_url 'visit-inquire' visit.pk %}">{% full_url 'visit-inquire' visit.pk %}</a>
+</p>

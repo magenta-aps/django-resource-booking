@@ -5,8 +5,10 @@ import datetime
 from timedelta.helpers import parse, nice_repr
 from django.utils.translation import ugettext_lazy as _
 from booking.models import LOGACTION_DISPLAY_MAP
+from django.conf import settings
 from django.core.serializers import serialize
 from django.db.models.query import QuerySet
+from django.template import defaulttags
 import json
 
 
@@ -121,3 +123,26 @@ def replace(value, arg):
         search, replace = arg.split(",")
         return value.replace(search, replace)
     return arg
+
+
+class FullURLNode(defaulttags.Node):
+    def __init__(self, url_node):
+        self.url_node = url_node
+
+    def url_prefix(self):
+        return settings.PUBLIC_URL
+
+    def render(self, context):
+        result = self.url_node.render(context)
+        if self.url_node.asvar:
+            result = context[self.url_node.asvar]
+            context[self.url_node.asvar] = self.url_prefix() + result
+            return ''
+        else:
+            return self.url_prefix() + result
+
+
+@register.tag
+def full_url(parser, token):
+    url_node = defaulttags.url(parser, token)
+    return FullURLNode(url_node)
