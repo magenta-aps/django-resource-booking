@@ -159,56 +159,7 @@
 
             <ul class="media-list">
                 {% for res in results %}
-                <li class="media">
-                    <div class="media-body">
-                        <div class="small">{{ res.get_type_display }}</div>
-                        <h3 class="media-heading">
-                            #{{ res.pk }} <a href="{{res.get_view_url}}{% if fullquery %}?search={{ fullquery | urlencode }}{% endif %}">{{ res.title }}</a>
-                        </h3>
-                        <p>
-                            {% if request.GET.q %}
-                                {{ res.teaser|highlight:request.GET.q }}
-                            {% else %}
-                                {{ res.teaser }}
-                            {% endif %}
-                            &hellip;
-                        </p>
-                        <div class="media-info">
-                            <ul class="info-list list-inline">
-                                {% if res.all_subjects %}
-                                <li>
-                                    <strong>{% trans 'Fag/niveau:' %}</strong>
-                                    <ul class="type-offer list-inline">
-                                        {% for x in res.all_subjects %}
-                                            <li>{{ x.display_value }}</li>
-                                        {% endfor %}
-                                    </ul>
-                                </li>
-                                {% endif %}
-                                {% if res.num_occurences %}
-                                <li>
-                                    <strong>{% trans 'Hvornår:' %}</strong>
-                                    <span class="type-offer">
-                                        {% if res.num_occurences == 1 %}
-                                            {% blocktrans with date=res.first_occurence|date:"d. m. Y" time=res.first_occurence|date:"H:i" %}
-                                            {{ date }} kl. {{ time }}
-                                            {% endblocktrans %}
-                                        {% else %}
-                                            {% blocktrans with count=res.num_occurences date=res.first_occurence|date:"d. m. Y" time=res.first_occurence|date:"H:i" %}
-                                            {{ count }} mulige tidspunkter, første gang {{ date }} kl. {{ time }}
-                                            {% endblocktrans %}
-                                        {% endif %}
-                                    </span>
-                                </li>
-                                {% endif %}
-                                <li>
-                                    <strong>{% trans 'Hvor:' %}</strong>
-                                    <span class="type-offer">{{ res.display_locality }}</span>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </li>
+                    {% include 'resource/listitem.html' with item=res fullquery=fullquery %}
                {% endfor %}
             </ul>
             {% endif %}
