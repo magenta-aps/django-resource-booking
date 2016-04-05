@@ -6,6 +6,7 @@ from .views import MainPageView, VisitOccurrenceNotifyView
 
 from booking.views import PostcodeView, SchoolView, VisitInquireView
 from booking.views import RrulestrView
+from booking.views import ResourceListView, ResourceCustomListView
 from booking.views import EditResourceInitialView, ResourceDetailView
 from booking.views import BookingView, BookingSuccessView
 from booking.views import VisitOccurrenceSearchView
@@ -61,6 +62,13 @@ urlpatterns = patterns(
     url(r'^resource/(?P<pk>[0-9]+)/$',
         ResourceDetailView.as_view(),
         name='resource-view'),
+    url(r'^resource/?$',
+        ResourceListView.as_view(),
+        name='resource-list'),
+
+    url(r'^resource/customlist/?$',
+        ResourceCustomListView.as_view(),
+        name='resource-customlist'),
     url(r'^resource/(?P<pk>[0-9]+)/edit$',
         EditResourceInitialView.as_view(),
         name='resource-edit'),
