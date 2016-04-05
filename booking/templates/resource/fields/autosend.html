@@ -5,6 +5,12 @@
         <label for="{{ autosendformset.id_for_label }}">{% trans 'Automatiske emails' %}:</label>
     </div>
     <div class="col-sm-10">
+        {% url 'emailtemplate-list' as template_list_url %}
+        <p>
+            {% blocktrans %}
+                Indstil for hvilke situationer der skal afsendes email automatisk. Skabeloner til email-afsendelse kan redigeres på <a href="{{ template_list_url }}" target="_blank">Skabelon-listen</a>.
+            {% endblocktrans %}
+        </p>
         {{ autosendformset.management_form }}
         <div id="autosend-list">
             {% for autosendform in autosendformset %}

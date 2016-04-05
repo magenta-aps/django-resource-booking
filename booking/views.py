@@ -112,25 +112,25 @@ class MainPageView(TemplateView):
             'lists': [
                 {
                     'color': self.HEADING_GREEN,
-                    'type': 'VisitOccurrence',
-                    'title': _(u'Senest opdaterede besøg'),
-                    'queryset': VisitOccurrence.get_latest_updated(),
+                    'type': 'Resource',
+                    'title': _(u'Senest opdaterede tilbud'),
+                    'queryset': Visit.get_latest_updated(),
                     'limit': 10,
                     'button': {
                         'text': _(u'Vis alle'),
-                        'link': reverse('visit-occ-customlist') + "?type=%s" %
-                        VisitOccurrenceCustomListView.TYPE_LATEST_UPDATED
+                        'link': reverse('resource-customlist') + "?type=%s" %
+                        ResourceCustomListView.TYPE_LATEST_UPDATED
                     }
                 }, {
                     'color': self.HEADING_BLUE,
-                    'type': 'VisitOccurrence',
-                    'title': _(u'Senest bookede besøg'),
-                    'queryset': VisitOccurrence.get_latest_booked(),
+                    'type': 'Resource',
+                    'title': _(u'Senest bookede tilbud'),
+                    'queryset': Visit.get_latest_booked(),
                     'limit': 10,
                     'button': {
                         'text': _(u'Vis alle'),
-                        'link': reverse('visit-occ-customlist') + "?type=%s" %
-                        VisitOccurrenceCustomListView.TYPE_LATEST_BOOKED
+                        'link': reverse('resource-customlist') + "?type=%s" %
+                        ResourceCustomListView.TYPE_LATEST_BOOKED
                     }
                 }
             ]
@@ -911,6 +911,65 @@ class SearchView(ListView):
             return None
 
         return size
+
+
+class ResourceListView(LoginRequiredMixin, ListView):
+    template_name = "resource/list.html"
+    model = Resource
+    context_object_name = "results"
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = {}
+
+        # Store the querystring without the page and pagesize arguments
+        qdict = self.request.GET.copy()
+
+        if "page" in qdict:
+            qdict.pop("page")
+        if "pagesize" in qdict:
+            qdict.pop("pagesize")
+
+        context["qstring"] = qdict.urlencode()
+
+        context['pagesizes'] = [5, 10, 15, 20]
+
+        context['breadcrumbs'] = [
+            {'text': _(u'Tilbudsliste')},
+        ]
+
+        context.update(kwargs)
+
+        return super(ResourceListView, self).get_context_data(
+            **context
+        )
+
+    def get_paginate_by(self, queryset):
+        size = self.request.GET.get("pagesize", 10)
+
+        if size == "all":
+            return None
+
+        return size
+
+
+class ResourceCustomListView(ResourceListView):
+
+    TYPE_LATEST_BOOKED = "latest_booked"
+    TYPE_LATEST_UPDATED = "latest_updated"
+
+    def get_queryset(self):
+        try:
+            listtype = self.request.GET.get("type", "")
+
+            if listtype == self.TYPE_LATEST_BOOKED:
+                return Visit.get_latest_booked()
+            elif listtype == self.TYPE_LATEST_UPDATED:
+                return Resource.get_latest_updated()
+
+        except:
+            pass
+        raise Http404
 
 
 class EditResourceInitialView(LoginRequiredMixin, HasBackButtonMixin,
