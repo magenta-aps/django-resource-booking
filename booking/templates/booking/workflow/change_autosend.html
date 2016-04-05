@@ -16,6 +16,12 @@
     </div>
     <div class="row">
         <div class="col-sm-12">
+            {% url 'emailtemplate-list' as template_list_url %}
+            <p>
+                {% blocktrans %}
+                    Indstil for hvilke situationer der skal afsendes email automatisk. Skabeloner til email-afsendelse kan redigeres på <a href="{{ template_list_url }}" target="_blank">Skabelon-listen</a>.
+                {% endblocktrans %}
+            </p>
             <form name="changebookingautosendform" id="changebookingautosendform" action="{% url 'change-visit-occ-autosend' object.pk %}" method="post">
                 {% csrf_token %}
                 {% with autosendformset=form %}
