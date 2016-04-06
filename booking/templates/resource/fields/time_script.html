@@ -240,7 +240,8 @@
         var rule = new RRule({
             freq: RRule.WEEKLY,
             interval: 1,
-            count: 10
+            count: 10,
+            wkst: RRule.MO
         });
         
         var rrdatepick = $('#input-until').datepicker({
@@ -259,7 +260,6 @@
         
         var updateRRDates = function() {
             rule = new RRule(rule.options);
-            $('#rrule-text').html( rule.toText() );
             var outputEl = $('.rrule-datelist');
             outputEl.html('');
             for (var d in rule.all()) {
@@ -321,11 +321,13 @@
             updateRRDates();
         });
         
-        $('#input-count').on('blur', function(ev) {
-            rule.options.count = $(this).val();
-            $('#input-until').val('');
-            rule.options.until = undefined;
-            updateRRDates();
+        $('#input-count').on('keyup', function(ev) {
+            if ( /^[^0]/.test($(this).val()) ) {
+                rule.options.count = $(this).val();
+                $('#input-until').val('');
+                rule.options.until = undefined;
+                updateRRDates();
+            };
         });
     
         $('#btn-add-rrule-dates').on('click', function(ev) {

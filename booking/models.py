@@ -2194,7 +2194,7 @@ class VisitOccurrenceAutosend(Autosend):
         blank=False
     )
     inherit = models.BooleanField(
-        verbose_name=_(u'Nedarv fra tilbud')
+        verbose_name=_(u'Genbrug indstilling fra tilbud')
     )
 
     def get_inherited(self):

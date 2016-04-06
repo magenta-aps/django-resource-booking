@@ -878,6 +878,10 @@ a.template-overridden:visited {
     font-weight: normal;
 }
 
+#input-weekdays label {
+    margin-right: 1em;
+}
+
 #input-until {
     width: 10em;
     display: inline-block;
