@@ -1,10 +1,7 @@
 {% load staticfiles %}
 {% load i18n %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.5.0/js/bootstrap-datepicker.min.js"></script>
-<script src="{% static 'js/bootstrap-datepicker.da.min.js' %}"></script>
-<script src="{% static 'thirdparty/pickadate/lib/compressed/picker.js' %}"></script>
-<script src="{% static 'thirdparty/pickadate/lib/compressed/picker.date.js' %}"></script>
-<script src="{% static 'thirdparty/pickadate/lib/compressed/picker.time.js' %}"></script>
+{% include 'common/resources/datepicker_script.html' %}
+{% include 'common/resources/timepicker_script.html' %}
 
 <script src="{% static 'js/rrule.js' %}"></script>{% comment %} TODO: Get this lib from NPM {% endcomment %}
 <!--script src="{% static 'thirdparty/rrule/lib/rrule.js' %}"></script-->

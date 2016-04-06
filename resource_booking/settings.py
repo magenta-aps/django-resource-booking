@@ -100,6 +100,9 @@ NPM_FILE_PATTERNS = {
     'jquery': ['dist/jquery.min.js'],
     'bootstrap': ['dist/css/bootstrap.min.css',
                   'dist/fonts/*', 'dist/js/bootstrap.min.js'],
+    'bootstrap-datepicker': ['dist/js/bootstrap-datepicker.min.js',
+                                  'dist/locales/bootstrap-datepicker.da.min.js',
+                                  'dist/css/bootstrap-datepicker.min.css'],
     'bootstrap-datetime-picker': ['js/bootstrap-datetimepicker.min.js',
                                   'js/locales/bootstrap-datetimepicker.da.js',
                                   'css/bootstrap-datetimepicker.min.css'],
@@ -108,9 +111,9 @@ NPM_FILE_PATTERNS = {
     'pickadate': ['lib/compressed/picker.js',
                   'lib/compressed/picker.date.js',
                   'lib/compressed/picker.time.js',
-                  'lib/picker.js',
-                  'lib/picker.date.js',
-                  'lib/picker.time.js'],
+                  'lib/compressed/themes/default.css',
+                  'lib/compressed/themes/default.time.css'
+                  ],
     'rrule': ['lib/rrule.js']
 }
 

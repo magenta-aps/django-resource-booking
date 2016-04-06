@@ -1,19 +1,4 @@
 //Search-list.html start:
-$('input.datepicker').each(function() {
-    var options = {
-        language: 'da',
-        format: 'dd-mm-yyyy',
-        weekStart: 1,
-        calendarWeeks: true,
-        todayHighlight: true,
-        clearBtn: true,
-        autoclose: true
-    };
-    if (!$(this).hasClass('datepicker-admin')) {
-        options['startDate'] = 'Date';
-    }
-    $(this).datepicker(options);
-});
 $('.collapse').on('show.bs.collapse', function() {
     $(this).parent().find(".caret").addClass("caret-up");
 });

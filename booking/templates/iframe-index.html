@@ -12,8 +12,8 @@
     
         <!-- Bootstrap -->
         <link href="{% static 'thirdparty/bootstrap/dist/css/bootstrap.min.css' %}" rel="stylesheet">
-        <link href="{% static 'css/main.css' %}" rel="stylesheet">    
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.5.0/css/bootstrap-datepicker.min.css" rel="stylesheet">
+        <link href="{% static 'css/main.css' %}" rel="stylesheet">
+        {% include 'common/resources/datepicker_style.html' %}
         <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet">
             
         <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
@@ -48,7 +48,7 @@
         </div>
 
         <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+        <script src="{% static 'thirdparty/jquery/dist/jquery.min.js' %}"></script>
         <!-- Include all compiled plugins (below), or include individual files as needed -->
         <script src="{% static 'thirdparty/bootstrap/dist/js/bootstrap.min.js' %}"></script>
         {% block extra_scripts %}{% endblock %}
