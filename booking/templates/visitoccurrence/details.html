@@ -216,6 +216,22 @@
                                             <dt class="text-muted">{% trans 'Noter:' %}</dt>
                                             <dd>{{ booking.notes }}</dd>
                                         {% endif %}
+                                        {% if booking.classbooking %}
+                                            <dt class="text-muted">{% trans 'Rundvisning:' %}</dt>
+                                            <dd>{{ booking.classbooking.tour_desired | yesno }}</dd>
+                                        {% endif %}
+                                        {% if booking.teacherbooking %}
+                                            {% if booking.teacherbooking.subjects %}
+                                                <dt class="text-muted">{% trans 'Fag:' %}</dt>
+                                                <dd>
+                                                    <ul>
+                                                    {% for subject in booking.teacherbooking.subjects.all %}
+                                                        <li>{{ subject }}</li>
+                                                    {% endfor %}
+                                                    </ul>
+                                                </dd>
+                                            {% endif %}
+                                        {% endif %}
                                     </dl>
                                 </a>
                             </div>
