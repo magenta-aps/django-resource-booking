@@ -194,52 +194,42 @@
         
         
         // Setting time for all available dates
-        
-        $('.btn-add-time-all').on('click', function(ev) {
-            ev.preventDefault();
-            var inputEl = $('.add-time-all');
-            // Picker will automatically open if the element already has browser focus (but now the button has focus, so we must manually open it)
-            setTimeout(function(){
-                var timepick = inputEl.pickatime({
-                    format: 'H:i',
-                    clear: "{% trans 'Nulstil' %}",
-                    container: ".modify-datetime",
-                    onClose: function() {
 
-                        var checkIfDateBooked = function(date) {
-                            return (date.isbooked === true);
-                        };
-
-                        var currentDate, i;
-                        if (inputEl.val() != '') {
-                            var tparts = inputEl.val().split(':');
-                            for (i in currentDates) {
-                                if (currentDates.hasOwnProperty(i)) {
-                                    currentDate = currentDates[i];
-                                    if (!checkIfDateBooked(currentDate)) {
-                                        currentDate.date.setHours(tparts[0]);
-                                        currentDate.date.setMinutes(tparts[1]);
-                                        currentDate.istimeset = true;
-                                        currentDate.isupdated = true;
-                                    }
-                                }
-                            }
-                        } else {
-                            for (i in currentDates) {
-                                if (currentDates.hasOwnProperty(i)) {
-                                    currentDate = currentDates[i];
-                                    if (!checkIfDateBooked(currentDate)) {
-                                        currentDate.istimeset = false;
-                                    }
-                                }
+        var timepickEl = $('.add-time-all');
+        var timepickall = timepickEl.pickatime({
+            format: 'H:i',
+            clear: "{% trans 'Nulstil' %}",
+            onClose: function() {
+                function checkIfDateBooked(date) {
+                    return (date.isbooked === true);
+                }
+                var id, currentDate;
+                if (timepickEl.val() != '') {
+                    var tparts = timepickEl.val().split(':');
+                    for (id in currentDates) {
+                        if (currentDates.hasOwnProperty(id)) {
+                            currentDate = currentDates[id];
+                            if (!checkIfDateBooked(currentDate)) {
+                                currentDate.date.setHours(tparts[0]);
+                                currentDate.date.setMinutes(tparts[1]);
+                                currentDate.istimeset = true;
+                                currentDate.isupdated = true;
                             }
                         }
-                        inputEl.val('');
-                        UpdateDateList();
                     }
-                }).pickatime("picker");
-                timepick.open();
-            },0);
+                } else {
+                    for (id in currentDates) {
+                        if (currentDates.hasOwnProperty(id)) {
+                            currentDate = currentDates[id];
+                            if (!checkIfDateBooked(currentDate)) {
+                                currentDate.istimeset = false;
+                            }
+                        }
+                    }
+                }
+                timepickEl.val('');
+                UpdateDateList();
+            }
         });
         
         
