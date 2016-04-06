@@ -2836,3 +2836,17 @@ class KUEmailMessage(models.Model):
             message.send()
 
             KUEmailMessage.save_email(message, instance)
+
+        # Log the sending
+        if emails and instance:
+            log_action(
+                context.get("web_user", None),
+                instance,
+                LOGACTION_MAIL_SENT,
+                "\n".join([unicode(x) for x in [
+                    _(u"Template: ") + template.get_key_display(),
+                    _(u"Modtagere: ") + ", ".join(
+                        [x['full'] for x in emails.values()]
+                    )
+                ]])
+            )
