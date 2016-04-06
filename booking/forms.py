@@ -595,9 +595,11 @@ class BookingForm(forms.ModelForm):
         )
         if self.scheduled:
             self.fields['visitoccurrence'].choices = (
-                (x.pk, formats.date_format(
-                    x.start_datetime, "DATETIME_FORMAT"
-                )) for x in visit.bookable_occurrences
+                (
+                    x.pk,
+                    formats.date_format(x.start_datetime, "DATETIME_FORMAT")
+                )
+                for x in visit.bookable_occurrences.order_by('start_datetime')
             )
             self.fields['visitoccurrence'].required = True
 
@@ -817,7 +819,8 @@ class EmailTemplateForm(forms.ModelForm):
         fields = ('key', 'subject', 'body', 'unit')
         widgets = {
             'subject': TextInput(attrs={'class': 'form-control'}),
-            'body': TinyMCE(attrs={'rows': 10, 'cols': 90}),
+            'body': Textarea(attrs={'rows': 10, 'cols': 90}),
+            # 'body': TinyMCE(attrs={'rows': 10, 'cols': 90}),
         }
 
     def __init__(self, user, *args, **kwargs):
@@ -870,7 +873,8 @@ class BaseEmailComposeForm(forms.Form):
 
     body = forms.CharField(
         max_length=65584,
-        widget=TinyMCE(attrs={'rows': 10, 'cols': 90}),
+        # widget=TinyMCE(attrs={'rows': 10, 'cols': 90}),
+        widget=Textarea(attrs={'rows': 10, 'cols': 90}),
         label=_(u'Tekst')
     )
 

@@ -1,0 +1,13 @@
+<p>Kære {{ recipient.get_full_name }}.</p>
+
+<p>
+    Du anmodes om at være underviser for besøget
+    "{{ visit.title }}" på følgende dato: {{ besoeg.start_datetime }}.
+</p>
+<p>
+    Hvis du ønsker at være underviser for dette besøg kan du klikke på
+    nedenstående link og melde dig selv til som underviser:
+</p>
+<p>
+    <a href="{% full_url 'visit-occ-view' besoeg.pk %}">{% full_url 'visit-occ-view' besoeg.pk %}</a>
+</p>
