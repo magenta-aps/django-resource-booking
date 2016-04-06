@@ -12,7 +12,7 @@ from booking.views import BookingView, BookingSuccessView
 from booking.views import VisitOccurrenceSearchView
 from booking.views import EditOtherResourceView, OtherResourceDetailView
 from booking.views import EditVisitView, VisitDetailView
-from booking.views import EmailSuccessView
+from booking.views import EmailSuccessView, VisitInquireSuccessView
 from booking.views import SearchView, EmbedcodesView
 
 from booking.views import BookingNotifyView, BookingDetailView
@@ -110,6 +110,9 @@ urlpatterns = patterns(
     url(r'^visit/(?P<visit>[0-9]+)/inquire$',
         VisitInquireView.as_view(),
         name='visit-inquire'),
+    url(r'^visit/(?P<visit>[0-9]+)/inquire/success$',
+        VisitInquireSuccessView.as_view(),
+        name='visit-inquire-success'),
 
     url(r'^visit/occurrence/(?P<pk>[0-9]+)/notify$',
         VisitOccurrenceNotifyView.as_view(),

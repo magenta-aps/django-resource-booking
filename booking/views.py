@@ -1670,8 +1670,9 @@ class VisitDetailView(ResourceBookingDetailView):
 
 
 class VisitInquireView(FormMixin, HasBackButtonMixin, TemplateView):
-    template_name = 'email/compose.html'
+    template_name = 'email/compose_modal.html'
     form_class = GuestEmailComposeForm
+    modal = True
 
     def dispatch(self, request, *args, **kwargs):
         self.object = Visit.objects.get(id=kwargs['visit'])
@@ -1700,7 +1701,6 @@ class VisitInquireView(FormMixin, HasBackButtonMixin, TemplateView):
             recipients = []
             recipients.extend(self.object.contact_persons.all())
             recipients.extend(self.object.unit.get_editors())
-            print recipients
             KUEmailMessage.send_email(template, context, recipients,
                                       self.object)
             return super(VisitInquireView, self).form_valid(form)
@@ -1709,8 +1709,21 @@ class VisitInquireView(FormMixin, HasBackButtonMixin, TemplateView):
             self.get_context_data(form=form)
         )
 
+    def get_context_data(self, **kwargs):
+        context = {}
+        context['modal'] = self.modal
+        context.update(kwargs)
+        return super(VisitInquireView, self).get_context_data(**context)
+
     def get_success_url(self):
-        return self.request.GET.get("back", "/")
+        if self.modal:
+            return reverse('visit-inquire-success', args=[self.object.id])
+        else:
+            return reverse('visit-view', args=[self.object.id])
+
+
+class VisitInquireSuccessView(TemplateView):
+    template_name = "email/inquire-success.html"
 
 
 class VisitOccurrenceNotifyView(LoginRequiredMixin, EmailComposeView):
