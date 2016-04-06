@@ -195,9 +195,12 @@ class Unit(models.Model):
             return res
 
         # If no coordinators was found use faculty editors
-        res = self.get_users(FACULTY_EDITOR)
+        res = User.objects.filter(
+            userprofile__unit=self.get_faculty_queryset(),
+            userprofile__user_role__role=FACULTY_EDITOR
+        )
         if len(res) > 0:
-            return res
+            return [x for x in res]
 
         # Fall back to all administrators (globally)
         res = User.objects.filter(
