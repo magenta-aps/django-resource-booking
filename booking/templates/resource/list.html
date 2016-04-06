@@ -32,15 +32,13 @@
         <div class="col-sm-6 col-md-5 col-sm-offset-1 col-md-offset-3">
             {% if paginator %}
                 <nav>
-                    <ul class="pagination">
+                    <ul class="pager">
 
                         {% if page_obj.has_previous %}
                             <li>
                                 <a href="?{{ qstring }}&page={{ page_obj.previous_page_number }}&pagesize={{paginator.per_page}}" aria-label="{% trans 'Forrige' %}">
-                                <span>
                                     <span class="glyphicon glyphicon-chevron-left small" aria-hidden="true"></span>
                                     {% trans 'Forrige' %}
-                                </span>
                                 </a>
                             </li>
                         {% else %}
@@ -51,30 +49,20 @@
                             </span>
                             </li>
                         {% endif %}
-                        {% for pnr in paginator.page_range %}
-                            {% if page_obj.number == pnr %}
-                                <li class="active">
-                                    <span>{{ pnr }} <span class="sr-only">(aktiv side)</span></span>
-                                </li>
-                            {% else %}
-                                <li><a href="?{{ qstring }}&page={{pnr}}&pagesize={{paginator.per_page}}">{{pnr}}</a></li>
-                            {% endif %}
-                        {% endfor %}
+                        
                         {% if page_obj.has_next %}
                             <li>
                                 <a href="?{{ qstring }}&page={{ page_obj.next_page_number }}&pagesize={{paginator.per_page}}" aria-label="{% trans 'Næste' %}">
                                 <span>
-                                    Næste
+                                    {% trans 'Næste' %}
                                     <span class="glyphicon glyphicon-chevron-right small" aria-hidden="true"></span>
                                 </span>
                                 </a>
                             </li>
                         {% else %}
                             <li class="disabled">
-                            <span>
                                 {% trans 'Næste' %}
                                 <span class="glyphicon glyphicon-chevron-right small" aria-hidden="true"></span>
-                            </span>
                             </li>
                         {% endif %}
                     </ul>

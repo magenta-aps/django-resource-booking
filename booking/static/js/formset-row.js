@@ -17,7 +17,11 @@ $(function() {
                 newRow.find("input,select").each(function(){
                     this.id = formset._replaceCounter(this.id, totalRows);
                     this.name = formset._replaceCounter(this.name, totalRows);
-                    this.value = "";
+                    if (this.type == "checkbox") {
+                        this.checked = null;
+                    } else {
+                        this.value = "";
+                    }
                 });
                 newRow.find("label").each(function(){
                     this.htmlFor = formset._replaceCounter(this.htmlFor, totalRows);
