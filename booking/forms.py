@@ -595,9 +595,11 @@ class BookingForm(forms.ModelForm):
         )
         if self.scheduled:
             self.fields['visitoccurrence'].choices = (
-                (x.pk, formats.date_format(
-                    x.start_datetime, "DATETIME_FORMAT"
-                )) for x in visit.bookable_occurrences
+                (
+                    x.pk,
+                    formats.date_format(x.start_datetime, "DATETIME_FORMAT")
+                )
+                for x in visit.bookable_occurrences.order_by('start_datetime')
             )
             self.fields['visitoccurrence'].required = True
 
