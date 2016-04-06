@@ -1,0 +1,11 @@
+{% load booking_tags %}
+<p>Kære {{ recipient.get_full_name }}.</p>
+
+<p>
+    Dette er en påmindelse om at besøget "{{ visit.title }}" vil blive
+    afholdt d. {{ besoeg.start_datetime }}.
+</p>
+<p>
+    Du kan læse yderligere om besøget på adressen
+    <a href="{% full_url 'visit-view' visit.pk %}">{% full_url 'visit-view' visit.pk %}</a>
+</p>

@@ -1,0 +1,1 @@
+Aflysning af besøg "{{ visit.title }}" d. {{ besoeg.start_datetime }}

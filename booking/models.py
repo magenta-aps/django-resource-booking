@@ -185,12 +185,37 @@ class Unit(models.Model):
         from profile.models import TEACHER
         return self.get_users(TEACHER)
 
+    def get_editors(self):
+        from profile.models import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
+
+        # Try using all available coordinators
+        res = self.get_users(COORDINATOR)
+        if len(res) > 0:
+            return res
+
+        # If no coordinators was found use faculty editors
+        res = self.get_users(FACULTY_EDITOR)
+        if len(res) > 0:
+            return res
+
+        # Fall back to all administrators (globally)
+        res = User.objects.filter(
+            userprofile__user_role__role=ADMINISTRATOR
+        )
+        return [x for x in res]
+
     def get_recipients(self, template_key):
         recipients = []
+
         if template_key in EmailTemplate.unit_hosts_keys:
             recipients.extend(self.get_hosts())
+
         if template_key in EmailTemplate.unit_teachers_keys:
             recipients.extend(self.get_teachers())
+
+        if template_key in EmailTemplate.editor_keys:
+            recipients.extend(self.get_editors())
+
         return recipients
 
 
@@ -389,7 +414,7 @@ class EmailTemplate(models.Model):
         (NOTIFY_ALL__BOOKING_COMPLETE,
          _(u'Besked om færdigplanlagt besøg til alle involverede')),
         (NOTIFY_ALL__BOOKING_CANCELED,
-         _(u'Besked om aflyst booking til alle involverede')),
+         _(u'Besked om aflyst besøg til alle involverede')),
         (NOTITY_ALL__BOOKING_REMINDER,
          _(u'Reminder om besøg til alle involverede')),
         (NOTIFY_HOST__HOSTROLE_IDLE,
@@ -425,9 +450,13 @@ class EmailTemplate(models.Model):
         NOTITY_ALL__BOOKING_REMINDER
     ]
 
+    # Templates that will be autosent to editors for the given unit
+    editor_keys = [
+        NOTIFY_EDITORS__BOOKING_CREATED,
+    ]
+
     # Templates that will be autosent to visit.contact_persons
     contact_person_keys = [
-        NOTIFY_EDITORS__BOOKING_CREATED,
         NOTIFY_ALL__BOOKING_CANCELED,
         NOTITY_ALL__BOOKING_REMINDER,
         NOTIFY_HOST__HOSTROLE_IDLE
@@ -471,7 +500,7 @@ class EmailTemplate(models.Model):
     # Templates where the {{ booking }} variable makes sense
     enable_booking = [
         NOTIFY_GUEST__BOOKING_CREATED,
-        NOTIFY_HOST__BOOKING_CREATED,
+        NOTIFY_EDITORS__BOOKING_CREATED,
         NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
         NOTIFY_HOST__REQ_HOST_VOLUNTEER,
         NOTIFY_GUEST__GENERAL_MSG,
@@ -2766,6 +2795,9 @@ class KUEmailMessage(models.Model):
                     email['full'] = u"\"%s\" <%s>" % (name, address)
                 else:
                     email['full'] = address
+
+                email['get_full_name'] = email['name']
+
                 emails[address] = email
 
         for email in emails.values():

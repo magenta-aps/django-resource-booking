@@ -1716,6 +1716,7 @@ class VisitOccurrenceNotifyView(LoginRequiredMixin, EmailComposeView):
 
         self.template_context['visit'] = self.object.visit
         self.template_context['visitoccurrence'] = self.object
+        self.template_context['besoeg'] = self.object
         return super(VisitOccurrenceNotifyView, self).\
             dispatch(request, *args, **kwargs)
 
