@@ -100,22 +100,14 @@
                 <dd>{{ object.notes }}</dd>
 
                 {% if object.classbooking %}
-                    {% if object.classbooking.time %}
-                        <dt>{% trans 'Tidspunkt:' %}</dt>
-                        <dd>{{ object.classbooking.time }}</dd>
-                    {% elif object.classbooking.desired_time %}
-                        <dt>{% trans 'Ønsket tidspunkt:' %}</dt>
-                        <dd>{{ object.classbooking.desired_time }}</dd>
-                    {% endif %}
-
                     <dt>{% trans 'Rundvisning:' %}</dt>
                     <dd>{{ object.classbooking.tour_desired | yesno }}</dd>
                 {% endif %}
 
-                {% if booking.teacherbooking %}
-                    {% if booking.teacherbooking.subjects %}
+                {% if object.teacherbooking %}
+                    {% if object.teacherbooking.subjects %}
                         <dt>{% trans 'Fag:' %}</dt>
-                        {% for subject in booking.teacherbooking.subjects.all %}
+                        {% for subject in object.teacherbooking.subjects.all %}
                             <dd>
                                 {{ subject }}
                             </dd>
