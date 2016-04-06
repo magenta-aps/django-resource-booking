@@ -2101,6 +2101,8 @@ class BookingView(AutologgerMixin, ResourceBookingUpdateView):
             if 'bookerform' in forms:
                 booking.booker = forms['bookerform'].save()
 
+            booking = forms['bookingform'].save()
+
             booking.save()
 
             booking.ensure_statistics()
