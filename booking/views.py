@@ -1693,9 +1693,14 @@ class VisitInquireView(FormMixin, HasBackButtonMixin, TemplateView):
             if template is None:
                 raise Exception(_(u"There are no root templates with "
                                   u"the SYSTEM__BASICMAIL_ENVELOPE key"))
-            context = {}
+            context = {
+                'visit': self.object
+            }
             context.update(form.cleaned_data)
-            recipients = self.object.contact_persons.all()
+            recipients = []
+            recipients.extend(self.object.contact_persons.all())
+            recipients.extend(self.object.unit.get_editors())
+            print recipients
             KUEmailMessage.send_email(template, context, recipients,
                                       self.object)
             return super(VisitInquireView, self).form_valid(form)
@@ -1718,6 +1723,7 @@ class VisitOccurrenceNotifyView(LoginRequiredMixin, EmailComposeView):
         self.template_context['visit'] = self.object.visit
         self.template_context['visitoccurrence'] = self.object
         self.template_context['besoeg'] = self.object
+        self.template_context['web_user'] = self.request.user
         return super(VisitOccurrenceNotifyView, self).\
             dispatch(request, *args, **kwargs)
 
