@@ -185,12 +185,37 @@ class Unit(models.Model):
         from profile.models import TEACHER
         return self.get_users(TEACHER)
 
+    def get_editors(self):
+        from profile.models import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
+
+        # Try using all available coordinators
+        res = self.get_users(COORDINATOR)
+        if len(res) > 0:
+            return res
+
+        # If no coordinators was found use faculty editors
+        res = self.get_users(FACULTY_EDITOR)
+        if len(res) > 0:
+            return res
+
+        # Fall back to all administrators (globally)
+        res = User.objects.filter(
+            userprofile__user_role__role=ADMINISTRATOR
+        )
+        return [x for x in res]
+
     def get_recipients(self, template_key):
         recipients = []
+
         if template_key in EmailTemplate.unit_hosts_keys:
             recipients.extend(self.get_hosts())
+
         if template_key in EmailTemplate.unit_teachers_keys:
             recipients.extend(self.get_teachers())
+
+        if template_key in EmailTemplate.editor_keys:
+            recipients.extend(self.get_editors())
+
         return recipients
 
 
@@ -358,7 +383,7 @@ class Locality(models.Model):
 class EmailTemplate(models.Model):
 
     NOTIFY_GUEST__BOOKING_CREATED = 1  # ticket 13806
-    NOTIFY_HOST__BOOKING_CREATED = 2  # ticket 13807
+    NOTIFY_EDITORS__BOOKING_CREATED = 2  # ticket 13807
     NOTIFY_HOST__REQ_TEACHER_VOLUNTEER = 3  # ticket 13808
     NOTIFY_HOST__REQ_HOST_VOLUNTEER = 4  # ticket 13809
     NOTIFY_HOST__ASSOCIATED = 5  # ticket 13810
@@ -372,19 +397,30 @@ class EmailTemplate(models.Model):
 
     # Choice labels
     key_choices = [
-        (NOTIFY_GUEST__BOOKING_CREATED, _(u'Gæst: Booking oprettet')),
-        (NOTIFY_GUEST__GENERAL_MSG, _(u'Gæst: Generel besked')),
-        (NOTIFY_HOST__BOOKING_CREATED, _(u'Kontaktperson: Booking oprettet')),
+        (NOTIFY_GUEST__BOOKING_CREATED,
+         _(u'Besked til gæst ved booking af besøg')),
+        (NOTIFY_GUEST__GENERAL_MSG,
+         _(u'Generel besked til gæst(er)')),
+        (NOTIFY_EDITORS__BOOKING_CREATED,
+         _(u'Besked til koordinatorer ved booking af besøg')),
         (NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
-         _(u'Vært: Frivillige undervisere')),
-        (NOTIFY_HOST__REQ_HOST_VOLUNTEER, _(u'Vært: Frivillige værter')),
-        (NOTIFY_HOST__ASSOCIATED, _(u'Vært: Tilknyttet besøg')),
-        (NOTIFY_HOST__REQ_ROOM, _(u'Vært: Forespørg lokale')),
-        (NOTIFY_ALL__BOOKING_COMPLETE, _(u'Alle: Booking færdigplanlagt')),
-        (NOTIFY_ALL__BOOKING_CANCELED, _(u'Alle: Booking aflyst')),
-        (NOTITY_ALL__BOOKING_REMINDER, _(u'Alle: Reminder om booking')),
-        (NOTIFY_HOST__HOSTROLE_IDLE, _(u'Vært: Ledig værtsrolle')),
-        (SYSTEM__BASICMAIL_ENVELOPE, _(u'Forespørgsel fra bruger'))
+         _(u'Anmodning om deltagelse i besøg til undervisere')),
+        (NOTIFY_HOST__REQ_HOST_VOLUNTEER,
+         _(u'Anmodning om deltagelse i besøg til værter')),
+        (NOTIFY_HOST__ASSOCIATED,
+         _(u'Notifikation til vært om tilknytning til besøg')),
+        (NOTIFY_HOST__REQ_ROOM,
+         _(u'Anmodning til lokaleansvarlig om lokale')),
+        (NOTIFY_ALL__BOOKING_COMPLETE,
+         _(u'Besked om færdigplanlagt besøg til alle involverede')),
+        (NOTIFY_ALL__BOOKING_CANCELED,
+         _(u'Besked om aflyst besøg til alle involverede')),
+        (NOTITY_ALL__BOOKING_REMINDER,
+         _(u'Reminder om besøg til alle involverede')),
+        (NOTIFY_HOST__HOSTROLE_IDLE,
+         _(u'Notfikation til værter om ledig værtsrolle på besøg')),
+        (SYSTEM__BASICMAIL_ENVELOPE,
+         _(u'Forespørgsel fra bruger via kontaktformular'))
     ]
 
     @staticmethod
@@ -414,9 +450,13 @@ class EmailTemplate(models.Model):
         NOTITY_ALL__BOOKING_REMINDER
     ]
 
+    # Templates that will be autosent to editors for the given unit
+    editor_keys = [
+        NOTIFY_EDITORS__BOOKING_CREATED,
+    ]
+
     # Templates that will be autosent to visit.contact_persons
     contact_person_keys = [
-        NOTIFY_HOST__BOOKING_CREATED,
         NOTIFY_ALL__BOOKING_CANCELED,
         NOTITY_ALL__BOOKING_REMINDER,
         NOTIFY_HOST__HOSTROLE_IDLE
@@ -451,6 +491,7 @@ class EmailTemplate(models.Model):
     # Template that will be autosent to hosts
     # when they are added to an occurrence
     occurrence_added_host_key = NOTIFY_HOST__ASSOCIATED
+
     # Templates where the "days" field makes sense
     enable_days = [
         NOTITY_ALL__BOOKING_REMINDER,
@@ -459,7 +500,7 @@ class EmailTemplate(models.Model):
     # Templates where the {{ booking }} variable makes sense
     enable_booking = [
         NOTIFY_GUEST__BOOKING_CREATED,
-        NOTIFY_HOST__BOOKING_CREATED,
+        NOTIFY_EDITORS__BOOKING_CREATED,
         NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
         NOTIFY_HOST__REQ_HOST_VOLUNTEER,
         NOTIFY_GUEST__GENERAL_MSG,
@@ -506,11 +547,22 @@ class EmailTemplate(models.Model):
     @staticmethod
     def _expand(text, context, keep_placeholders=False):
         template = Template(unicode(text))
+
+        # This setting will affect the global template engine, so we have to
+        # reset it below.
         if keep_placeholders:
             template.engine.string_if_invalid = "{{ %s }}"
+
         if isinstance(context, dict):
             context = make_context(context)
-        return template.render(context)
+
+        rendered = template.render(context)
+
+        # Reset string_if_invalid
+        if keep_placeholders:
+            template.engine.string_if_invalid = ''
+
+        return rendered
 
     @staticmethod
     def get_template(template_key, unit, include_overridden=False):
@@ -2473,6 +2525,9 @@ class Booker(models.Model):
     def get_name(self):
         return "%s %s" % (self.firstname, self.lastname)
 
+    def get_full_name(self):
+        return self.get_name()
+
     def get_full_email(self):
         return full_email(self.email, self.get_name())
 
@@ -2563,7 +2618,8 @@ class Booking(models.Model):
                 {
                     'booking': self,
                     'visit': visit,
-                    'booker': self.booker
+                    'booker': self.booker,
+                    'besoeg': self.visitoccurrence,
                 },
                 list(recipients),
                 unit
@@ -2739,6 +2795,9 @@ class KUEmailMessage(models.Model):
                     email['full'] = u"\"%s\" <%s>" % (name, address)
                 else:
                     email['full'] = address
+
+                email['get_full_name'] = email['name']
+
                 emails[address] = email
 
         for email in emails.values():

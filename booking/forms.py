@@ -817,7 +817,8 @@ class EmailTemplateForm(forms.ModelForm):
         fields = ('key', 'subject', 'body', 'unit')
         widgets = {
             'subject': TextInput(attrs={'class': 'form-control'}),
-            'body': TinyMCE(attrs={'rows': 10, 'cols': 90}),
+            'body': Textarea(attrs={'rows': 10, 'cols': 90}),
+            # 'body': TinyMCE(attrs={'rows': 10, 'cols': 90}),
         }
 
     def __init__(self, user, *args, **kwargs):
@@ -870,7 +871,8 @@ class BaseEmailComposeForm(forms.Form):
 
     body = forms.CharField(
         max_length=65584,
-        widget=TinyMCE(attrs={'rows': 10, 'cols': 90}),
+        # widget=TinyMCE(attrs={'rows': 10, 'cols': 90}),
+        widget=Textarea(attrs={'rows': 10, 'cols': 90}),
         label=_(u'Tekst')
     )
 

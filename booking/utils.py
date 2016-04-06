@@ -107,7 +107,8 @@ def html2text(value):
     try:
         cmd = "w3m -dump -T text/html -O ascii"
         proc = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE)
-        return proc.communicate(str(value))[0]
+        enc_str = unicode(value).encode('ascii', 'xmlcharrefreplace')
+        return proc.communicate(enc_str)[0]
     except OSError:
         # something bad happened, so just return the input
         return value
