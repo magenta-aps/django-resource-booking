@@ -185,18 +185,6 @@
                                 {% endif %}
                             </dd>
 
-                            <dt>{% trans 'Udbudte tider:' %}</dt>
-                            <dd>
-                                {% for description in object.visit.recurrences_description %}
-                                    {{ description }}
-                                {% endfor %}
-                                <ul class="list-unstyled">
-                                    {% for occurrence in object.visit.visitoccurrence_set.all %}
-                                        <li>{{ occurrence.start_datetime|date:'d-m-Y H:i' }}</li>
-                                    {% endfor %}
-                                </ul>
-                            </dd>
-
                             {% if object.visit.duration and object.visit.duration != '00:00' %}
                                 <dt>{% trans 'Varighed:' %}</dt>
                                 <dd>{{ object.visit.duration|timedelta_i18n }}</dd>
