@@ -1555,7 +1555,8 @@ class EditVisitView(EditResourceView):
                  for x in self.object.bookable_occurrences])
 
         # convert date strings to datetimes
-        dates = self.request.POST.get(u'occurrences').split(',')
+        date_string = self.request.POST.get(u'occurrences')
+        dates = date_string.split(',') if date_string is not None else None
 
         datetimes = []
         if dates is not None:
@@ -1716,6 +1717,7 @@ class VisitOccurrenceNotifyView(LoginRequiredMixin, EmailComposeView):
 
         self.template_context['visit'] = self.object.visit
         self.template_context['visitoccurrence'] = self.object
+        self.template_context['besoeg'] = self.object
         return super(VisitOccurrenceNotifyView, self).\
             dispatch(request, *args, **kwargs)
 
@@ -2100,6 +2102,8 @@ class BookingView(AutologgerMixin, ResourceBookingUpdateView):
             if 'bookerform' in forms:
                 booking.booker = forms['bookerform'].save()
 
+            booking = forms['bookingform'].save()
+
             booking.save()
 
             booking.ensure_statistics()
@@ -2109,7 +2113,7 @@ class BookingView(AutologgerMixin, ResourceBookingUpdateView):
 
             booking.autosend(EmailTemplate.NOTIFY_GUEST__BOOKING_CREATED)
 
-            booking.autosend(EmailTemplate.NOTIFY_HOST__BOOKING_CREATED)
+            booking.autosend(EmailTemplate.NOTIFY_EDITORS__BOOKING_CREATED)
 
             booking.autosend(EmailTemplate.NOTIFY_HOST__REQ_TEACHER_VOLUNTEER)
 

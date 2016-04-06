@@ -138,7 +138,7 @@
                         <dt>{% trans 'Automatisk email' %}</dt>
                         <dd>
                             {{ object.get_autosend_display }}
-                            {% if can_edit and object.can_assign_resources %}
+                            {% if can_edit %}
                                 <a href="{% url 'change-visit-occ-autosend' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
                             {% endif %}
                         </dd>
@@ -199,22 +199,28 @@
             <div class="panel panel-default">
                 <div class="panel-body">
                     <h2>{% trans 'Tilmeldte' %}</h2>
-                    {% for booking in object.bookings.all %}
-                        <dl class="dl-panel">
-                            <dt class="text-muted">{% trans 'Skole:' %}</dt>
-                            <dd><strong>{{ booking.booker.school.name }}, {{ booking.booker.school.postcode }}</strong></dd>
-                            <dt class="text-muted">{% trans 'Navn:' %}</dt>
-                            <dd>{{ booking.booker.get_name }}</dd>
-                            <dt class="text-muted">{% trans 'Email:' %}</dt>
-                            <dd>{{ booking.booker.email }}</dd>
-                            <dt class="text-muted">{% trans 'Antal:' %}</dt>
-                            <dd>{{ booking.booker.attendee_count }}</dd>
-                            {% if booking.notes %}
-                                <dt class="text-muted">{% trans 'Noter:' %}</dt>
-                                <dd>{{ booking.notes }}</dd>
-                            {% endif %}
-                        </dl>
-                    {% endfor %}
+                    <div class="listcontainer">
+                        {% for booking in object.bookings.all %}
+                            <div class="list-group-item clearfix">
+                                <a href="{% url 'booking-view' booking.id %}">
+                                    <dl class="dl-horizontal">
+                                        <dt class="text-muted">{% trans 'Skole:' %}</dt>
+                                        <dd><strong>{{ booking.booker.school.name }}, {{ booking.booker.school.postcode }}</strong></dd>
+                                        <dt class="text-muted">{% trans 'Navn:' %}</dt>
+                                        <dd>{{ booking.booker.get_name }}</dd>
+                                        <dt class="text-muted">{% trans 'Email:' %}</dt>
+                                        <dd>{{ booking.booker.email }}</dd>
+                                        <dt class="text-muted">{% trans 'Antal:' %}</dt>
+                                        <dd>{{ booking.booker.attendee_count }}</dd>
+                                        {% if booking.notes %}
+                                            <dt class="text-muted">{% trans 'Noter:' %}</dt>
+                                            <dd>{{ booking.notes }}</dd>
+                                        {% endif %}
+                                    </dl>
+                                </a>
+                            </div>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
         </div>
