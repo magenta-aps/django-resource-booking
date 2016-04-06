@@ -27,9 +27,10 @@
                 <input id="occurrences" name="occurrences" type="hidden">
             {% endif %}
             
-            <label class="btn btn-primary btn-sm">
-                <input id="id_datepick" type="text" name="datepick" class="datepicker">{% trans 'Tilføj dato' %}
+            <label class="btn btn-primary btn-sm" for="id_datepick">
+                <input id="id_datepick" type="text" name="datepick" class="datepicker">  {% trans 'Tilføj dato' %}
             </label>
+            
             
             <!-- Button trigger modal -->
             <button type="button" class="btn btn-default btn-sm" data-toggle="modal" data-target="#rruleModal">
@@ -40,7 +41,7 @@
                 <label for="add-time-all" id="add-time-all-label">
                     <span class="glyphicon glyphicon-time"></span> {% trans 'Sæt starttid for alle datoer' %}
                 </label>
-                <input id="add-time-all" class="add-time-all timepick" type="hidden">
+                <input id="add-time-all" class="add-time-all timepick" type="text">
                 
                 <button class="btn-rm-date-all btn btn-link btn-xs">
                     <span class="glyphicon glyphicon-remove"></span>

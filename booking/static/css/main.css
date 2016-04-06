@@ -771,11 +771,12 @@ a.template-overridden:visited {
 
 #id_datepick {
     border: none;
-    height: 0;
-    width: 0;
+    height: 1px;
+    width: 1px;
     padding: 0;
     margin: 0;
     line-height: 0;
+    background: transparent;
 }
 
 
