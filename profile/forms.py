@@ -57,6 +57,14 @@ class UserCreateForm(UserCreationForm):
 
         return qs
 
+    def save(self, commit=True):
+        user = super(UserCreateForm, self).save(commit=False)
+        user.is_staff = True
+
+        if commit:
+            user.save()
+        return user
+
 
 class EditMyResourcesForm(forms.ModelForm):
     class Meta:

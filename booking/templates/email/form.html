@@ -247,6 +247,10 @@
             {% autoescape off %}
             var map = [
                 {
+                    'keys': {{ object.editor_keys | jsonify }},
+                    'label': "{% trans 'Redaktører på tilbuddet' %}"
+                },
+                {
                     'keys': {{ object.contact_person_keys | jsonify }},
                     'label': "{% trans 'Kontaktpersoner på tilbuddet' %}"
                 },
