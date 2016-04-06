@@ -800,22 +800,25 @@ a.template-overridden:visited {
 }
 
 .add-time-all {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
     border: none;
     background: transparent;
     padding: 0;
     margin: 0;
-    width: 100%;
+    width: 1px;
+    height: 1px;
 }
 
-.add-time-all:hover,
-.add-time-all:active,
-.add-time-all:focus {
-    background: transparent;
+#add-time-all-label {
+    font-weight: 400;
+    color: #337ab7;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+#add-time-all-label:hover,
+#add-time-all-label:active {
+    color: #23527c;
+    text-decoration: underline;
 }
 
 .date {

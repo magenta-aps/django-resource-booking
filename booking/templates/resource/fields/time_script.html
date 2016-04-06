@@ -174,47 +174,42 @@
         
         // Setting time for all available dates
         
-        $('.btn-add-time-all').on('click', function(ev) {
-            ev.preventDefault();
-            var inputEl = $('.add-time-all');
-            var timepick = inputEl.pickatime({
-                format: 'H:i',
-                clear: 'Nulstil',
-                onClose: function() {
-                    
-                    function checkIfDateBooked(currentDate, func) {
-                        if (currentDate.isbooked === true) {
-                            return true;
-                        } else {
-                            func();
-                            return false;
-                        };
-                    };
-                    
-                    if (inputEl.val() != '') {
-                        var tparts = inputEl.val().split(':');
-                        for (var i in currentDates) {
-                            checkIfDateBooked(currentDates[i], function() {
-                                currentDates[i].date.setHours(tparts[0]);
-                                currentDates[i].date.setMinutes(tparts[1]);
-                                currentDates[i].istimeset = true;
-                                currentDates[i].isupdated = true;
-                            });
-                        };
+        var timepickEl = $('.add-time-all');
+        var timepickall = timepickEl.pickatime({
+            format: 'H:i',
+            clear: 'Nulstil',
+            onClose: function() {
+                function checkIfDateBooked(currentDate, func) {
+                    if (currentDate.isbooked === true) {
+                        return true;
                     } else {
-                        for (var i in currentDates) {
-                            checkIfDateBooked(currentDates[i], function() {
-                                currentDates[i].istimeset = false;
-                            });
-                        };
+                        func();
+                        return false;
                     };
-                    
-                    inputEl.val('');
-                    UpdateDateList();
-                    
-                }
-            });
+                };
+                if (timepickEl.val() != '') {
+                    var tparts = timepickEl.val().split(':');
+                    for (var i in currentDates) {
+                        checkIfDateBooked(currentDates[i], function() {
+                            currentDates[i].date.setHours(tparts[0]);
+                            currentDates[i].date.setMinutes(tparts[1]);
+                            currentDates[i].istimeset = true;
+                            currentDates[i].isupdated = true;
+                        });
+                    };
+                } else {
+                    for (var i in currentDates) {
+                        checkIfDateBooked(currentDates[i], function() {
+                            currentDates[i].istimeset = false;
+                        });
+                    };
+                };
+                timepickEl.val('');
+                UpdateDateList();
+            }
         });
+        
+        
         
         
         // Remove all available dates

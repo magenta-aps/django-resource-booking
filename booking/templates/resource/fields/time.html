@@ -37,11 +37,11 @@
             </button>
             
             <div class="modify-datetime">
-                <button class="btn-add-time-all btn btn-link btn-xs">
-                    <span class="glyphicon glyphicon-time"></span>
-                    {% trans 'Sæt starttid for alle datoer' %}
-                    <input class="add-time-all btn btn-default btn-xs timepick" type="text" name="timepick">
-                </button>
+                <label for="add-time-all" id="add-time-all-label">
+                    <span class="glyphicon glyphicon-time"></span> {% trans 'Sæt starttid for alle datoer' %}
+                </label>
+                <input id="add-time-all" class="add-time-all timepick" type="hidden">
+                
                 <button class="btn-rm-date-all btn btn-link btn-xs">
                     <span class="glyphicon glyphicon-remove"></span>
                     {% trans 'Fjern alle datoer' %}
