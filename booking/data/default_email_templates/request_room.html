@@ -1,0 +1,15 @@
+{% load booking_tags %}
+<p>Kære {{ recipient.get_full_name }}.</p>
+
+<p>
+    {{ web_user.get_full_name }} ønsker at du tildeler et lokalte til besøget
+    "{{ visit.title }}" der afholdes d. {{ besoeg.start_datetime }}.
+</p>
+<p>
+    Du kan læse yderligere om besøget på adressen
+    <a href="{% full_url 'visit-view' visit.pk %}">{% full_url 'visit-view' visit.pk %}</a>
+</p>
+<p>
+    Du kan kontakte {{ web_user.get_full_name }} via email på
+    <a href="mailto:{{ web_user.email }}">{{ web_user.email }}</a>
+</p>

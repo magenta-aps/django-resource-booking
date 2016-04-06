@@ -1,0 +1,21 @@
+{% load booking_tags %}
+<p>Kære {{ recipient.get_full_name }}.</p>
+
+<p>
+    Her kan skrives en besked.
+
+    {% comment %}
+
+    Ting inden i comment-blokken kommer ikke med ud i den sendte mail.
+
+    Her er nogen tags du kan bruge:
+    * web_user.get_full_name:                    Dit navn
+    * web_user.email:                            Din email
+    * visit.title:                               Navn på besøg
+    * besoeg.start_datetime:                     Starttidspunkt for besøg
+    * {% full_url 'visit-view' visit.pk %}:      Link til tilbud
+    * {% full_url 'visit-occ-view' besoeg.pk %}: Link til besøg
+
+    {% endcomment %}
+</p>
+

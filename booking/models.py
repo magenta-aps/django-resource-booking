@@ -80,6 +80,7 @@ class Person(models.Model):
     class Meta:
         verbose_name = _(u'kontaktperson')
         verbose_name_plural = _(u'kontaktpersoner')
+        ordering = ["-name"]
 
     # Eventually this could just be a pointer to AD
     name = models.CharField(max_length=50)
@@ -194,9 +195,12 @@ class Unit(models.Model):
             return res
 
         # If no coordinators was found use faculty editors
-        res = self.get_users(FACULTY_EDITOR)
+        res = User.objects.filter(
+            userprofile__unit=self.get_faculty_queryset(),
+            userprofile__user_role__role=FACULTY_EDITOR
+        )
         if len(res) > 0:
-            return res
+            return [x for x in res]
 
         # Fall back to all administrators (globally)
         res = User.objects.filter(
@@ -418,7 +422,7 @@ class EmailTemplate(models.Model):
         (NOTITY_ALL__BOOKING_REMINDER,
          _(u'Reminder om besøg til alle involverede')),
         (NOTIFY_HOST__HOSTROLE_IDLE,
-         _(u'Notfikation til værter om ledig værtsrolle på besøg')),
+         _(u'Notfikation til koordinatorer om ledig værtsrolle på besøg')),
         (SYSTEM__BASICMAIL_ENVELOPE,
          _(u'Forespørgsel fra bruger via kontaktformular'))
     ]
@@ -453,13 +457,13 @@ class EmailTemplate(models.Model):
     # Templates that will be autosent to editors for the given unit
     editor_keys = [
         NOTIFY_EDITORS__BOOKING_CREATED,
+        NOTIFY_HOST__HOSTROLE_IDLE,
     ]
 
     # Templates that will be autosent to visit.contact_persons
     contact_person_keys = [
         NOTIFY_ALL__BOOKING_CANCELED,
         NOTITY_ALL__BOOKING_REMINDER,
-        NOTIFY_HOST__HOSTROLE_IDLE
     ]
     # Templates that will be autosent to booker
     booker_keys = [
@@ -2767,6 +2771,10 @@ class KUEmailMessage(models.Model):
                 u"Invalid template object '%s'" % str(template)
             )
 
+        # Alias any occurrence to "besoeg" for easier use by danes
+        if 'besoeg' not in context and 'occurrence' in context:
+            context['besoeg'] = context['occurrence']
+
         emails = {}
         if type(recipients) is not list:
             recipients = [recipients]
@@ -2828,3 +2836,17 @@ class KUEmailMessage(models.Model):
             message.send()
 
             KUEmailMessage.save_email(message, instance)
+
+        # Log the sending
+        if emails and instance:
+            log_action(
+                context.get("web_user", None),
+                instance,
+                LOGACTION_MAIL_SENT,
+                "\n".join([unicode(x) for x in [
+                    _(u"Template: ") + template.get_key_display(),
+                    _(u"Modtagere: ") + ", ".join(
+                        [x['full'] for x in emails.values()]
+                    )
+                ]])
+            )
