@@ -1,0 +1,11 @@
+<p>
+    <strong>Navn</strong>:{{ name }}<br/>
+    <strong>Email</strong>: <a href="mailto:{{ email }}">{{ email }}</a><br/>
+    <strong>Telefon</strong>: {{ phone }}<br/>
+    <strong>Besked</strong>:<br/>
+    {{ body }}
+</p>
+<p>
+    Tilbudet kan tilgås via adressen:<br />
+    <a href="{% full_url 'visit-view' visit.pk %}">{% full_url 'visit-view' visit.pk %}</a>
+</p>

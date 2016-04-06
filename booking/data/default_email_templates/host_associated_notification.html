@@ -1,0 +1,11 @@
+{% load booking_tags %}
+<p>Kære {{ recipient.get_full_name }}.</p>
+
+<p>
+    Du er blevet tildelt som vært til besøget "{{ visit.title }}"
+    d. {{ besoeg.start_datetime }}.
+</p>
+<p>
+    Du kan læse yderligere om besøget på adressen
+    <a href="{% full_url 'visit-occ-view' besoeg.pk %}">{% full_url 'visit-occ-view' besoeg.pk %}</a>
+</p>
