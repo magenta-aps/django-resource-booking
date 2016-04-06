@@ -110,11 +110,11 @@ class IdleHostroleJob(CronJobBase):
                     print "Autosend %d for VisitOccurrence %d:" % \
                           (autosend.id, autosend.visitoccurrence.id)
                     first_booking = autosend.visitoccurrence.\
-                        bookings.earliest('created_time')
+                        bookings.earliest('statistics__created_time')
                     print "    VisitOccurrence has its first booking on %s" % \
-                          unicode(first_booking.created_time.date())
+                          unicode(first_booking.statistics.created_time.date())
 
-                    alertday = first_booking.created_time.date() + \
+                    alertday = first_booking.statistics.created_time.date() + \
                         timedelta(autosend.days)
                     print "    Autosend specifies to send %d days after " \
                           "first booking, on %s" % (autosend.days, alertday)

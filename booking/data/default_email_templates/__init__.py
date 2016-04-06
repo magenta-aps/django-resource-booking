@@ -12,11 +12,16 @@ IMPORT_MAP = {
     EmailTemplate.NOTIFY_EDITORS__BOOKING_CREATED: 'on_booking_to_editors',
     EmailTemplate.NOTIFY_HOST__REQ_TEACHER_VOLUNTEER: 'request_teacher',
     EmailTemplate.NOTIFY_HOST__REQ_HOST_VOLUNTEER: 'request_host',
-
+    EmailTemplate.NOTIFY_HOST__ASSOCIATED: 'host_associated_notification',
+    EmailTemplate.NOTIFY_HOST__REQ_ROOM: 'request_room',
+    EmailTemplate.NOTIFY_GUEST__GENERAL_MSG: 'general_message',
     EmailTemplate.NOTIFY_ALL__BOOKING_COMPLETE: 'booking_planned',
     EmailTemplate.NOTIFY_ALL__BOOKING_CANCELED: 'booking_cancelled',
     EmailTemplate.NOTITY_ALL__BOOKING_REMINDER: 'reminder',
+    EmailTemplate.NOTIFY_HOST__HOSTROLE_IDLE: 'no_hosts_notification',
+    EmailTemplate.SYSTEM__BASICMAIL_ENVELOPE: 'contact_mail',
 }
+
 
 
 def import_all():

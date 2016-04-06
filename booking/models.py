@@ -80,6 +80,7 @@ class Person(models.Model):
     class Meta:
         verbose_name = _(u'kontaktperson')
         verbose_name_plural = _(u'kontaktpersoner')
+        ordering = ["-name"]
 
     # Eventually this could just be a pointer to AD
     name = models.CharField(max_length=50)
@@ -418,7 +419,7 @@ class EmailTemplate(models.Model):
         (NOTITY_ALL__BOOKING_REMINDER,
          _(u'Reminder om besøg til alle involverede')),
         (NOTIFY_HOST__HOSTROLE_IDLE,
-         _(u'Notfikation til værter om ledig værtsrolle på besøg')),
+         _(u'Notfikation til koordinatorer om ledig værtsrolle på besøg')),
         (SYSTEM__BASICMAIL_ENVELOPE,
          _(u'Forespørgsel fra bruger via kontaktformular'))
     ]
@@ -453,13 +454,13 @@ class EmailTemplate(models.Model):
     # Templates that will be autosent to editors for the given unit
     editor_keys = [
         NOTIFY_EDITORS__BOOKING_CREATED,
+        NOTIFY_HOST__HOSTROLE_IDLE,
     ]
 
     # Templates that will be autosent to visit.contact_persons
     contact_person_keys = [
         NOTIFY_ALL__BOOKING_CANCELED,
         NOTITY_ALL__BOOKING_REMINDER,
-        NOTIFY_HOST__HOSTROLE_IDLE
     ]
     # Templates that will be autosent to booker
     booker_keys = [
@@ -2766,6 +2767,10 @@ class KUEmailMessage(models.Model):
             raise Exception(
                 u"Invalid template object '%s'" % str(template)
             )
+
+        # Alias any occurrence to "besoeg" for easier use by danes
+        if 'besoeg' not in context and 'occurrence' in context:
+            context['besoeg'] = context['occurrence']
 
         emails = {}
         if type(recipients) is not list:
