@@ -112,12 +112,23 @@
                     <dd>{{ object.classbooking.tour_desired | yesno }}</dd>
                 {% endif %}
 
+                {% if booking.teacherbooking %}
+                    {% if booking.teacherbooking.subjects %}
+                        <dt>{% trans 'Fag:' %}</dt>
+                        {% for subject in booking.teacherbooking.subjects.all %}
+                            <dd>
+                                {{ subject }}
+                            </dd>
+                        {% endfor %}
+                    {% endif %}
+                {% endif %}
+
             </dl>
 
             <div class="divider"></div>
 
             <div class="go-back">
-                <a href="/visit/occurrence/search" class="btn btn-default"><span class="glyphicon glyphicon-chevron-left"></span> {% trans 'Søg i besøg' %}</a>
+                <a href="{% url 'visit-occ-search' %}" class="btn btn-default"><span class="glyphicon glyphicon-chevron-left"></span> {% trans 'Søg i besøg' %}</a>
             </div>
         </div>
         <div class="col-sm-6 col-md-4">
