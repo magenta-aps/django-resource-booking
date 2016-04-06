@@ -1555,7 +1555,8 @@ class EditVisitView(EditResourceView):
                  for x in self.object.bookable_occurrences])
 
         # convert date strings to datetimes
-        dates = self.request.POST.get(u'occurrences').split(',')
+        date_string = self.request.POST.get(u'occurrences')
+        dates = date_string.split(',') if date_string is not None else None
 
         datetimes = []
         if dates is not None:
