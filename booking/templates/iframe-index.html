@@ -12,6 +12,8 @@
     
         <!-- Bootstrap -->
         <link href="{% static 'thirdparty/bootstrap/dist/css/bootstrap.min.css' %}" rel="stylesheet">
+
+        <!-- Our own stylesheet -->
         <link href="{% static 'css/main.css' %}" rel="stylesheet">
         <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet">
             
@@ -28,7 +30,10 @@
             
     </head>
     <body>
-        
+
+        {% block header %}{% endblock %}
+
+        {% block content %}
         <div class="container-fluid container-iframe">
             <h1>Søg i tilbud</h1>
             <form action="{% url 'search' %}">
@@ -43,13 +48,21 @@
                     </span>
                 </div>
             </form>
-            <hr>
+            <hr/>
         </div>
+        {% endblock %}
+
+        {% block footer %}
+        {% endblock %}
 
         <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
         <script src="{% static 'thirdparty/jquery/dist/jquery.min.js' %}"></script>
+
         <!-- Include all compiled plugins (below), or include individual files as needed -->
         <script src="{% static 'thirdparty/bootstrap/dist/js/bootstrap.min.js' %}"></script>
+        <script src="{% static 'js/validator.js' %}"></script>
+        <script src="{% static 'js/modalframe-guest.js' %}"></script>
         {% block extra_scripts %}{% endblock %}
+
     </body>
 </html>
