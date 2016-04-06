@@ -43,12 +43,12 @@ $(function() {
     });
 });
 // Show/hide multiple dates
-if ($("#dato li").length > 1) {
-    $("#dato").find("li:gt(0)").hide();
+if ($("#dato li").data('expired', 'true').length > 1) {
+    $("#dato").find('[data-expired="true"]').hide();
     $("#dato").after("<a href=\"#\" class=\"showhide\">Vis flere datoer</a>");
     $(".showhide").click(function(e) {
         e.preventDefault();
-        $("#dato").find("li:gt(0)").toggle(400);
+        $("#dato").find('[data-expired="true"]').toggle(400);
         ($(this).text() === "Vis flere datoer") ? $(this).text("Vis færre datoer"): $(this).text("Vis flere datoer");
     });
 }
