@@ -218,13 +218,15 @@
 
             subjectField.on("focus", focus.bind(null, subjectField));
             subjectField.on("blur", blur);
+            bodyField.on("focus", focus.bind(null, bodyField));
+            bodyField.on("blur", blur);
 
-            setTimeout(function(){
+            /*setTimeout(function(){
                 var editor = tinymce.getInstanceById("{{ form.body.id_for_label }}");
                 var body = $(editor.contentDocument).find("body");
                 body.on("focus", focus.bind(null, bodyField));
                 body.on("blur", blur);
-            },0);
+            },0);*/
 
             dropdownbutton.on("focus", function() {
                 focus();
@@ -238,7 +240,11 @@
                     var end = getSelectionEnd(input);
                     subjectField.val(input.value.substring(0, start) + insertion + input.value.substring(end));
                 } else if (currentFocus == bodyField) {
-                    tinymce.get(bodyField.attr("id")).execCommand('mceInsertContent',false, insertion);
+                    //tinymce.get(bodyField.attr("id")).execCommand('mceInsertContent',false, insertion);
+                    var input = bodyField.get(0);
+                    var start = getSelectionStart(input);
+                    var end = getSelectionEnd(input);
+                    bodyField.val(input.value.substring(0, start) + insertion + input.value.substring(end));
                 }
             }
         });

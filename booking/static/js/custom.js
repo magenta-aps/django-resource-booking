@@ -1,19 +1,4 @@
 //Search-list.html start:
-$('input.datepicker').each(function() {
-    var options = {
-        language: 'da',
-        format: 'dd-mm-yyyy',
-        weekStart: 1,
-        calendarWeeks: true,
-        todayHighlight: true,
-        clearBtn: true,
-        autoclose: true
-    };
-    if (!$(this).hasClass('datepicker-admin')) {
-        options['startDate'] = 'Date';
-    }
-    $(this).datepicker(options);
-});
 $('.collapse').on('show.bs.collapse', function() {
     $(this).parent().find(".caret").addClass("caret-up");
 });
@@ -43,12 +28,12 @@ $(function() {
     });
 });
 // Show/hide multiple dates
-if ($("#dato li").length > 1) {
-    $("#dato").find("li:gt(0)").hide();
+if ($("#dato li").data('expired', 'true').length > 1) {
+    $("#dato").find('[data-expired="true"]').hide();
     $("#dato").after("<a href=\"#\" class=\"showhide\">Vis flere datoer</a>");
     $(".showhide").click(function(e) {
         e.preventDefault();
-        $("#dato").find("li:gt(0)").toggle(400);
+        $("#dato").find('[data-expired="true"]').toggle(400);
         ($(this).text() === "Vis flere datoer") ? $(this).text("Vis færre datoer"): $(this).text("Vis flere datoer");
     });
 }

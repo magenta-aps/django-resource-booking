@@ -62,13 +62,13 @@
             {% endif %}
             <div class="well order-buttons hidden-print">
                 {% if can_book %}
-                <a class="btn btn-default" data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'visit-book' object.id %}?modal=1">
-                    {% trans 'Tilmeld' %}
-                    <span class="glyphicon glyphicon-chevron-right"></span>
-                </a>
+                    <a class="btn btn-default" data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'visit-book' object.id %}?modal=1">
+                        {% trans 'Tilmeld' %}
+                        <span class="glyphicon glyphicon-chevron-right"></span>
+                    </a>
                 {% endif %}
                 {% if object.contact_persons %}
-                    <a href="{% url 'visit-inquire' object.id %}?back={{ thisurl | urlencode }}" class="btn btn-default">
+                    <a class="btn btn-default" data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'visit-inquire' object.id %}?modal=1" >
                         {% trans 'Spørg om tilbud' %}
                         <span class="glyphicon glyphicon-question-sign"></span>
                     </a>
@@ -146,7 +146,15 @@
                                 <dd>
                                     <ul class="list-unstyled" id="dato">
                                     {% for event in object.visitoccurrence_set.all %}
-                                        <li><a href="{% url 'visit-occ-view' event.pk %}">{{ event.start_datetime|date:'d-m-Y H:i' }}{% if event.expired %} {% trans '(udløbet)' %}{% endif %}</a></li>
+                                        {% if event.expired %}
+                                            <li data-expired="true">
+                                                <a href="{% url 'visit-occ-view' event.pk %}">{{ event.start_datetime|date:'d-m-Y H:i' }}{% trans '(udløbet)' %}</a>
+                                            </li>
+                                        {% else %}
+                                            <li data-expired="false">
+                                                <a href="{% url 'visit-occ-view' event.pk %}">{{ event.start_datetime|date:'d-m-Y H:i' }}</a>
+                                            </li>
+                                        {% endif %}
                                     {% endfor %}
                                     </ul>
                                 </dd>
@@ -192,7 +200,7 @@
 
 {% block extra_scripts %}
 
-    <script src="/static/js/custom.js"></script>
+    <script src="{% static 'js/custom.js' %}"></script>
     <script src="{% static "js/modalframe-host.js" %}"></script>
 
 {% endblock %}
