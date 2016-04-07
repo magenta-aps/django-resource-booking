@@ -468,6 +468,7 @@ class EmailTemplate(models.Model):
 
     # Templates that will be autosent to visit.contact_persons
     contact_person_keys = [
+        NOTIFY_EDITORS__BOOKING_CREATED,
         NOTIFY_ALL__BOOKING_CANCELED,
         NOTITY_ALL__BOOKING_REMINDER,
     ]
