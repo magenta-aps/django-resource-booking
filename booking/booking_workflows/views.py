@@ -11,6 +11,7 @@ from booking.booking_workflows.forms import ChangeVisitOccurrenceTeachersForm
 from booking.booking_workflows.forms import ChangeVisitOccurrenceHostsForm
 from booking.booking_workflows.forms import ChangeVisitOccurrenceRoomsForm
 from booking.booking_workflows.forms import ChangeVisitOccurrenceCommentsForm
+from booking.booking_workflows.forms import ChangeVisitOccurrenceEvalForm
 from booking.booking_workflows.forms import VisitOccurrenceAddLogEntryForm
 from booking.booking_workflows.forms import ChangeVisitOccurrenceStartTimeForm
 from booking.models import VisitOccurrence
@@ -105,6 +106,12 @@ class ChangeVisitOccurrenceCommentsView(AutologgerMixin, UpdateWithCancelView):
     model = VisitOccurrence
     form_class = ChangeVisitOccurrenceCommentsForm
     template_name = "booking/workflow/change_comments.html"
+
+
+class ChangeVisitOccurrenceEvalView(AutologgerMixin, UpdateWithCancelView):
+    model = VisitOccurrence
+    form_class = ChangeVisitOccurrenceEvalForm
+    template_name = "booking/workflow/change_eval_link.html"
 
 
 class VisitOccurrenceAddLogEntryView(FormView):

@@ -468,6 +468,7 @@ class EmailTemplate(models.Model):
 
     # Templates that will be autosent to visit.contact_persons
     contact_person_keys = [
+        NOTIFY_EDITORS__BOOKING_CREATED,
         NOTIFY_ALL__BOOKING_CANCELED,
         NOTITY_ALL__BOOKING_REMINDER,
     ]
@@ -1752,6 +1753,13 @@ class VisitOccurrence(models.Model):
         blank=True,
         default='',
         verbose_name=_(u'Interne kommentarer')
+    )
+
+    evaluation_link = models.CharField(
+        max_length=1024,
+        verbose_name=_(u'Link til evaluering'),
+        blank=True,
+        default='',
     )
 
     # ts_vector field for fulltext search
