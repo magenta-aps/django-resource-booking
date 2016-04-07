@@ -591,7 +591,7 @@ class BookingForm(forms.ModelForm):
         #    visit.type == Resource.FIXED_SCHEDULE_GROUP_VISIT
         self.scheduled = (
             visit is not None and
-            len(visit.bookable_occurrences) > 0
+            len(visit.future_events) > 0
         )
         if self.scheduled:
             self.fields['visitoccurrence'].choices = (
@@ -599,7 +599,7 @@ class BookingForm(forms.ModelForm):
                     x.pk,
                     formats.date_format(x.start_datetime, "DATETIME_FORMAT")
                 )
-                for x in visit.bookable_occurrences.order_by('start_datetime')
+                for x in visit.future_events.order_by('start_datetime')
             )
             self.fields['visitoccurrence'].required = True
 

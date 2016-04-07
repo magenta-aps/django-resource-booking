@@ -57,6 +57,12 @@ class ChangeVisitOccurrenceCommentsForm(forms.ModelForm):
         fields = ['comments']
 
 
+class ChangeVisitOccurrenceEvalForm(forms.ModelForm):
+    class Meta:
+        model = VisitOccurrence
+        fields = ['evaluation_link']
+
+
 class VisitOccurrenceAddLogEntryForm(forms.Form):
     new_comment = forms.CharField(
         widget=forms.Textarea,

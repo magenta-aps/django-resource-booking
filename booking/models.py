@@ -1496,6 +1496,7 @@ class Visit(Resource):
         )
         occ.save()
         occ.create_inheriting_autosends()
+        occ.ensure_statistics()
 
         if self.default_hosts.exists() or self.default_teachers.exists():
 
@@ -1751,6 +1752,13 @@ class VisitOccurrence(models.Model):
         blank=True,
         default='',
         verbose_name=_(u'Interne kommentarer')
+    )
+
+    evaluation_link = models.CharField(
+        max_length=1024,
+        verbose_name=_(u'Link til evaluering'),
+        blank=True,
+        default='',
     )
 
     # ts_vector field for fulltext search
