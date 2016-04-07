@@ -22,6 +22,8 @@ from resource_booking import settings
 
 from datetime import timedelta
 
+import uuid
+
 LOGACTION_CREATE = ADDITION
 LOGACTION_CHANGE = CHANGE
 LOGACTION_DELETE = DELETION
@@ -398,6 +400,7 @@ class EmailTemplate(models.Model):
     NOTITY_ALL__BOOKING_REMINDER = 10  # ticket 13815
     NOTIFY_HOST__HOSTROLE_IDLE = 11  # ticket 13805
     SYSTEM__BASICMAIL_ENVELOPE = 12
+    SYSTEM__EMAIL_REPLY = 13
 
     # Choice labels
     key_choices = [
@@ -424,7 +427,9 @@ class EmailTemplate(models.Model):
         (NOTIFY_HOST__HOSTROLE_IDLE,
          _(u'Notfikation til koordinatorer om ledig værtsrolle på besøg')),
         (SYSTEM__BASICMAIL_ENVELOPE,
-         _(u'Forespørgsel fra bruger via kontaktformular'))
+         _(u'Forespørgsel fra bruger via kontaktformular')),
+        (SYSTEM__EMAIL_REPLY,
+         _(u'Svar på e-mail fra systemet')),
     ]
 
     @staticmethod
@@ -458,6 +463,7 @@ class EmailTemplate(models.Model):
     editor_keys = [
         NOTIFY_EDITORS__BOOKING_CREATED,
         NOTIFY_HOST__HOSTROLE_IDLE,
+        SYSTEM__EMAIL_REPLY,
     ]
 
     # Templates that will be autosent to visit.contact_persons
@@ -2626,7 +2632,8 @@ class Booking(models.Model):
                     'besoeg': self.visitoccurrence,
                 },
                 list(recipients),
-                unit
+                self.visitoccurrence,
+                unit=unit
             )
 
     def as_searchtext(self):
@@ -2735,9 +2742,15 @@ class KUEmailMessage(models.Model):
     content_type = models.ForeignKey(ContentType, null=True, default=None)
     object_id = models.PositiveIntegerField(null=True, default=None)
     content_object = GenericForeignKey('content_type', 'object_id')
+    reply_nonce = models.UUIDField(
+        blank=True,
+        null=True,
+        default=None
+    )
 
     @staticmethod
-    def save_email(email_message, instance):
+    def save_email(email_message, instance,
+                   reply_nonce=None, htmlbody=None):
         """
         :param email_message: An instance of
         django.core.mail.message.EmailMessage
@@ -2752,7 +2765,8 @@ class KUEmailMessage(models.Model):
             from_email=email_message.from_email,
             recipients=', '.join(email_message.recipients()),
             content_type=ctype,
-            object_id=instance.id
+            object_id=instance.id,
+            reply_nonce=reply_nonce
         )
         ku_email_message.save()
 
@@ -2809,10 +2823,12 @@ class KUEmailMessage(models.Model):
                 emails[address] = email
 
         for email in emails.values():
+            nonce = uuid.uuid4()
             ctx = {
                 'unit': unit,
                 'recipient': email,
-                'sender': settings.DEFAULT_FROM_EMAIL
+                'sender': settings.DEFAULT_FROM_EMAIL,
+                'reply_nonce': nonce
             }
             ctx.update(context)
             subject = template.expand_subject(ctx)
@@ -2835,7 +2851,7 @@ class KUEmailMessage(models.Model):
                 message.attach_alternative(htmlbody, 'text/html')
             message.send()
 
-            KUEmailMessage.save_email(message, instance)
+            KUEmailMessage.save_email(message, instance, reply_nonce=nonce)
 
         # Log the sending
         if emails and instance:
@@ -2847,6 +2863,13 @@ class KUEmailMessage(models.Model):
                     _(u"Template: ") + template.get_key_display(),
                     _(u"Modtagere: ") + ", ".join(
                         [x['full'] for x in emails.values()]
-                    )
-                ]])
+                    ),
+                    context.get('log_message', None)
+                ] if x])
             )
+
+    def get_reply_url(self, full=False):
+        url = reverse('reply-to-email', args=[self.reply_nonce])
+        if full:
+            url = settings.PUBLIC_URL + url
+        return url

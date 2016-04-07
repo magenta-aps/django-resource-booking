@@ -929,3 +929,11 @@ class GuestEmailComposeForm(BaseEmailComposeForm):
         ),
         required=False
     )
+
+
+class EmailReplyForm(forms.Form):
+    reply = forms.CharField(
+        label=_(u'Mit svar'),
+        widget=Textarea(attrs={'class': 'form-control input-sm'}),
+        required=True
+    )

@@ -62,6 +62,7 @@ from booking.forms import ResourceStudyMaterialForm, BookingSubjectLevelForm
 from booking.forms import BookerForm
 from booking.forms import EmailTemplateForm, EmailTemplatePreviewContextForm
 from booking.forms import EmailComposeForm
+from booking.forms import EmailReplyForm
 from booking.forms import AdminVisitSearchForm
 from booking.forms import VisitAutosendFormSet
 from booking.forms import VisitOccurrenceSearchForm
@@ -2831,6 +2832,76 @@ class EmailTemplateDeleteView(HasBackButtonMixin, LoginRequiredMixin,
         ]
         return context
 
+
+class EmailReplyView(DetailView):
+    model = KUEmailMessage
+    template_name = "email/reply.html"
+    slug_field = 'reply_nonce'
+    slug_url_kwarg = 'reply_nonce'
+    form = None
+
+    def get_form(self):
+        if self.form is None:
+            if self.request.method == "GET":
+                org_lines = re.split(r'\r?\n', self.object.body.strip() + "\n")
+                self.form = EmailReplyForm({
+                    'reply': "\n\n" + "\n".join(["> " + x for x in org_lines])
+                })
+            else:
+                self.form = EmailReplyForm(self.request.POST)
+        return self.form
+
+    def get_occurrence(self):
+        occ = None
+        try:
+            ct = ContentType.objects.get(pk=self.object.content_type_id)
+            if ct.model_class() == VisitOccurrence:
+                occ = ct.get_object_for_this_type(pk=self.object.object_id)
+        except Exception as e:
+            print "Error when getting email-reply object: %s" % e
+        
+        return occ
+
+    def get_context_data(self, **kwargs):
+        context = super(EmailReplyView, self).get_context_data(**kwargs)
+
+        context['form'] = self.get_form()
+
+        context['breadcrumbs'] = [
+            {'text': _(u'Svar på e-mail')},
+        ]
+
+        context['occurrence'] = self.get_occurrence()
+
+        return context
+
+    def post(self, request, *args, **kwargs):
+        form = self.get_form()
+        if form.is_valid():
+            self.object = self.get_object()
+            orig_message = self.object
+            reply = form.cleaned_data.get('reply', "").strip()
+            occurrence = self.get_occurrence()
+            recipients = occurrence.visit.unit.get_editors()
+            KUEmailMessage.send_email(
+                EmailTemplate.SYSTEM__EMAIL_REPLY,
+                {
+                    'occurrence': occurrence,
+                    'visit': occurrence.visit,
+                    'orig_message': orig_message,
+                    'reply': reply,
+                    'log_message': _(u"Svar:") + "\n" + reply
+                },
+                recipients,
+                occurrence,
+                unit=occurrence.visit.unit
+            )
+            result_url = reverse(
+                'reply-to-email', args=[self.object.reply_nonce]
+            )
+            return redirect(result_url + '?thanks=1')
+        else:
+            return self.get(request, *args, **kwargs)
 
 import booking_workflows.views  # noqa
 import_views(booking_workflows.views)

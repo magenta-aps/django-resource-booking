@@ -1,0 +1,18 @@
+{% load booking_tags %}
+<p>Kære {{ recipient.get_full_name }}.</p>
+
+<p>
+    Følgende er et svar på e-mailen "{{ orig_message.subject }}" sendt til
+    {{ orig_message.recipients }}.
+</p>
+<p>
+    <pre style="margin-left: 2em; padding: 1em; border: 1px solid black;">{{ reply }}</pre>
+</p>
+<p>
+    Indhold af den oprindelige e-mail:<br />
+    <pre style="margin-left: 2em; padding: 1em; border: 1px solid black;">{{ orig_message.body }}</pre>
+</p>
+<p>
+    Beskeden er relateret til følgende besøg:<br />
+    <a href="{% full_url 'visit-occ-view' besoeg.pk %}">{% full_url 'visit-occ-view' besoeg.pk %}</a>
+</p>

@@ -20,6 +20,7 @@ IMPORT_MAP = {
     EmailTemplate.NOTITY_ALL__BOOKING_REMINDER: 'reminder',
     EmailTemplate.NOTIFY_HOST__HOSTROLE_IDLE: 'no_hosts_notification',
     EmailTemplate.SYSTEM__BASICMAIL_ENVELOPE: 'contact_mail',
+    EmailTemplate.SYSTEM__EMAIL_REPLY: 'email_reply',
 }
 
 

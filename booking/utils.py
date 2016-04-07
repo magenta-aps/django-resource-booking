@@ -105,7 +105,7 @@ def html2text(value):
     Rendered text is grabbed from STDOUT and returned.
     """
     try:
-        cmd = "w3m -dump -T text/html -O ascii"
+        cmd = "w3m -dump -T text/html -O utf-8"
         proc = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE)
         enc_str = unicode(value).encode('ascii', 'xmlcharrefreplace')
         return proc.communicate(enc_str)[0]
