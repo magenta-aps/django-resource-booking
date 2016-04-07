@@ -27,6 +27,7 @@ from booking.views import ChangeVisitOccurrenceCommentsView
 from booking.views import ChangeVisitOccurrenceAutosendView
 from booking.views import BecomeTeacherView
 from booking.views import BecomeHostView
+from booking.views import EmailReplyView
 from booking.views import VisitOccurrenceAddLogEntryView
 from booking.views import VisitOccurrenceDetailView
 from booking.views import VisitOccurrenceCustomListView
@@ -205,6 +206,10 @@ urlpatterns = patterns(
     url(r'^emailtemplate/(?P<pk>[0-9]+)/delete$',
         EmailTemplateDeleteView.as_view(),
         name='emailtemplate-delete'),
+
+    url(r'^reply-to-email/(?P<reply_nonce>[0-9a-f-]{36})',
+        EmailReplyView.as_view(),
+        name='reply-to-email')
 
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

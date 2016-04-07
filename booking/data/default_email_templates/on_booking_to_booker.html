@@ -19,9 +19,7 @@
     Du kan læse mere om tilbuddet på adressen
     <a href="{% full_url 'visit-view' visit.pk %}">{% full_url 'visit-view' visit.pk %}</a>
 </p>
-
 <p>
-    Hvis du har kommentarer eller feedback kan du bruge kontakt-formularen på
-    følgende link:<br />
-    <a href="{% full_url 'visit-inquire' visit.pk %}">{% full_url 'visit-inquire' visit.pk %}</a>
+    Du kan svare på denne besked via følgende URL:<br />
+    <a href="{% full_url 'reply-to-email' reply_nonce %}">{% full_url 'reply-to-email' reply_nonce %}</a>
 </p>

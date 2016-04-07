@@ -1,0 +1,54 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load staticfiles %}
+
+{% block htmltitle %} - {% trans 'Svar på email' %} {{ object.subject }}{% endblock %}
+
+{% block content %}
+
+    {% include 'common/breadcrumbrow.html' %}
+
+    <div class="divider"></div>
+    <div class="row form-group">
+        <div class="col-sm-8">
+            <h1>{% trans "Svar på email" %}</h1>
+        </div>
+    </div>
+    <hr/>
+    <div class="row form-group">
+        <div class="col-sm-8">
+            {% if request.GET.thanks %}
+            <p>
+                Tak for din henvendelse.
+            </p>
+            {% elif occurrence %}
+            <form name="reply-to-email-form" id="reply-to-email-form"
+                  action="{% url 'reply-to-email' object.reply_nonce %}"
+                  method="post">
+                {% csrf_token %}
+            <dl class="dl-horizontal">
+                <dt>{% trans "Emne" %}</dt>
+                <dd>{{ object.subject }}</dd>
+                <dt>{% trans "Indhold" %}</dt>
+                <dd><pre>{{ object.body.strip }}</pre></dd>
+                <dt><label for="{{ form.reply.id_for_label }}">{{ form.reply.label }}</label></dt>
+                <dd>
+                    {{ form.reply.errors }}
+                    {{ form.reply}}
+                </dd>
+                <dt></dt>
+                <dd><input class="btn btn-primary" type="submit" value="{% trans 'Send svar' %}" /></dd>
+            </dl>
+            </form>
+            {% else %}
+            <p>
+                {% trans 'Det er desværre ikke muligt at svare på den angivne e-mail' %}
+            </p>
+            {% endif %}
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+{% endblock %}

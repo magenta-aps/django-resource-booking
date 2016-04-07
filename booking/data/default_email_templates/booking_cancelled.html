@@ -5,6 +5,6 @@
     Besøget "{{ visit.title }}" d. {{ besoeg.start_datetime }} er blevet aflyst.
 </p>
 <p>
-    Har du spørgsmål eller kommentarer er du velkommen til at tage kontakt
-    via http://fokusku.dk/.
+    Du kan svare på denne besked via følgende URL:<br />
+    <a href="{% full_url 'reply-to-email' reply_nonce %}">{% full_url 'reply-to-email' reply_nonce %}</a>
 </p>
