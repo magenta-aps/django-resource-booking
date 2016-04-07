@@ -1496,6 +1496,7 @@ class Visit(Resource):
         )
         occ.save()
         occ.create_inheriting_autosends()
+        occ.ensure_statistics()
 
         if self.default_hosts.exists() or self.default_teachers.exists():
 
