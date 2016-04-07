@@ -149,6 +149,17 @@
                                 <a href="{% url 'change-visit-occ-status' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Skift status' %}</a>
                             {% endif %}
                         </dd>
+                        <dt>{% trans 'Link til evaluering' %}</dt>
+                        <dd>
+                            {% if object.evaluation_link %}
+                            <a href="{{ object.evaluation_link }}">{{ object.evaluation_link }}</a>
+                            {% else %}
+                            {% trans 'Ikke angivet' %}
+                            {% endif %}
+                            {% if can_edit %}
+                                <a href="{% url 'change-visit-occ-eval' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
+                            {% endif %}
+                        </dd>
                         <dt>{% trans 'Interne kommentarer' %}</dt>
                         <dd>
                             <pre>{{ object.comments }}</pre>

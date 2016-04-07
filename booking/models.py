@@ -1753,6 +1753,13 @@ class VisitOccurrence(models.Model):
         verbose_name=_(u'Interne kommentarer')
     )
 
+    evaluation_link = models.CharField(
+        max_length=1024,
+        verbose_name=_(u'Link til evaluering'),
+        blank=True,
+        default='',
+    )
+
     # ts_vector field for fulltext search
     search_index = VectorField()
 

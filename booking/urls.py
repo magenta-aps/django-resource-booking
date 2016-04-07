@@ -18,6 +18,7 @@ from booking.views import SearchView, EmbedcodesView
 from booking.views import BookingNotifyView, BookingDetailView
 from booking.views import EmailTemplateListView, EmailTemplateEditView
 from booking.views import EmailTemplateDetailView, EmailTemplateDeleteView
+from booking.views import ChangeVisitOccurrenceEvalView
 from booking.views import ChangeVisitOccurrenceStatusView
 from booking.views import ChangeVisitOccurrenceStartTimeView
 from booking.views import ChangeVisitOccurrenceTeachersView
@@ -148,6 +149,9 @@ urlpatterns = patterns(
     url(r'^visit/occurrence/(?P<pk>[0-9]+)/change_comments/?$',
         ChangeVisitOccurrenceCommentsView.as_view(),
         name='change-visit-occ-comments'),
+    url(r'^visit/occurrence/(?P<pk>[0-9]+)/change_evaluation_link/?$',
+        ChangeVisitOccurrenceEvalView.as_view(),
+        name='change-visit-occ-eval'),
     url(r'^visit/occurrence/(?P<pk>[0-9]+)/add_logentry/?$',
         VisitOccurrenceAddLogEntryView.as_view(),
         name='visit-occ-add-logentry'),
