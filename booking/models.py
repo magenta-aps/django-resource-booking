@@ -2005,10 +2005,17 @@ class VisitOccurrence(models.Model):
                 occurrenceautosend.save()
 
     def autosend_inherits(self, template_key):
-        s = self.visitoccurrenceautosend_set.\
-            filter(template_key=template_key, inherit=True).\
-            count() > 0
-        return s
+        s = self.visitoccurrenceautosend_set.filter(
+            template_key=template_key
+        )
+
+        # If no rule specified, always inherit
+        if s.count() == 0:
+            return True
+
+        # Return true if there is a rule specifying that inheritance is
+        # wanted
+        return s.filter(inherit=True).count() > 0
 
     def get_autosend(self, template_key, follow_inherit=True,
                      include_disabled=False):
