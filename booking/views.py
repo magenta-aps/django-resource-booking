@@ -37,7 +37,7 @@ from django.views.defaults import bad_request
 
 from profile.models import EDIT_ROLES
 from profile.models import role_to_text
-from booking.models import Visit, VisitOccurrence, StudyMaterial
+from booking.models import Visit, VisitOccurrence, StudyMaterial, VisitAutosend
 from booking.models import KUEmailMessage
 from booking.models import Resource, Subject
 from booking.models import Unit
@@ -1526,10 +1526,17 @@ class EditVisitView(EditResourceView):
                 # Update autosend
                 for autosendform in autosendformset:
                     if autosendform.is_valid():
-                        try:
-                            autosendform.save()
-                        except:
-                            pass
+                        data = autosendform.cleaned_data
+                        if data.get('DELETE'):
+                            VisitAutosend.objects.filter(
+                                visit=data['visit'],
+                                template_key=data['template_key']
+                            ).delete()
+                        else:
+                            try:
+                                autosendform.save()
+                            except:
+                                pass
 
     def save_rooms(self):
         # Update rooms
