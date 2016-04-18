@@ -213,7 +213,7 @@ class ModalMixin(object):
         return "id=" + self.modalid if self.modalid is not None else ""
 
     def modalurl(self, url):
-        url += "&" if "#" in url else "#"
+        url += ";" if "#" in url else "#"
         url += self.get_hash()
         return url
 
