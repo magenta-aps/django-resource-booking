@@ -8,7 +8,9 @@
     <!--
 
     {% autoescape off %}
+        {% if inherited %}
         var inherited = {{ inherited | jsonify }};
+        {% endif %}
         var template_keys = {{ template_keys | jsonify }};
     {% endautoescape %}
 
