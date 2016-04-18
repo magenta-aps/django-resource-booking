@@ -196,6 +196,28 @@ class HasBackButtonMixin(ContextMixin):
         return context
 
 
+class ModalMixin(object):
+    modalid = None
+
+    def dispatch(self, request, *args, **kwargs):
+        try:
+            self.modalid = request.GET["modalid"]
+        except:
+            try:
+                self.modalid = request.POST["modalid"]
+            except:
+                pass
+        return super(ModalMixin, self).dispatch(request, *args, **kwargs)
+
+    def get_hash(self):
+        return "id=" + self.modalid if self.modalid is not None else ""
+
+    def modalurl(self, url):
+        url += "&" if "#" in url else "#"
+        url += self.get_hash()
+        return url
+
+
 class ResourceBookingDetailView(DetailView):
 
     def on_display(self):
@@ -1677,7 +1699,8 @@ class VisitDetailView(ResourceBookingDetailView):
         return super(VisitDetailView, self).get_context_data(**context)
 
 
-class VisitInquireView(FormMixin, HasBackButtonMixin, TemplateView):
+class VisitInquireView(FormMixin, HasBackButtonMixin, ModalMixin,
+                       TemplateView):
     template_name = 'email/compose_modal.html'
     form_class = GuestEmailComposeForm
     modal = True
@@ -1725,7 +1748,9 @@ class VisitInquireView(FormMixin, HasBackButtonMixin, TemplateView):
 
     def get_success_url(self):
         if self.modal:
-            return reverse('visit-inquire-success', args=[self.object.id])
+            return self.modalurl(
+                reverse('visit-inquire-success', args=[self.object.id])
+            )
         else:
             return reverse('visit-view', args=[self.object.id])
 
@@ -1734,7 +1759,7 @@ class VisitInquireSuccessView(TemplateView):
     template_name = "email/inquire-success.html"
 
 
-class VisitOccurrenceNotifyView(LoginRequiredMixin, EmailComposeView):
+class VisitOccurrenceNotifyView(LoginRequiredMixin, ModalMixin, EmailComposeView):
 
     def dispatch(self, request, *args, **kwargs):
         self.recipients = []
@@ -1853,12 +1878,14 @@ class VisitOccurrenceNotifyView(LoginRequiredMixin, EmailComposeView):
 
     def get_success_url(self):
         if self.modal:
-            return reverse('visit-occ-notify-success', args=[self.object.id])
+            return self.modalurl(
+                reverse('visit-occ-notify-success', args=[self.object.id])
+            )
         else:
             return reverse('visit-occ-view', args=[self.object.id])
 
 
-class BookingNotifyView(LoginRequiredMixin, EmailComposeView):
+class BookingNotifyView(LoginRequiredMixin, ModalMixin, EmailComposeView):
 
     def dispatch(self, request, *args, **kwargs):
         self.recipients = []
@@ -1942,7 +1969,9 @@ class BookingNotifyView(LoginRequiredMixin, EmailComposeView):
 
     def get_success_url(self):
         if self.modal:
-            return reverse('booking-notify-success', args=[self.object.id])
+            return self.modalurl(
+                reverse('booking-notify-success', args=[self.object.id])
+            )
         else:
             return reverse('booking-view', args=[self.object.id])
 
@@ -2052,7 +2081,7 @@ class SchoolView(View):
         return JsonResponse(json)
 
 
-class BookingView(AutologgerMixin, ResourceBookingUpdateView):
+class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
     visit = None
     modal = True
     back = None
@@ -2166,8 +2195,10 @@ class BookingView(AutologgerMixin, ResourceBookingUpdateView):
                 params['back'] = self.back
 
             return redirect(
-                reverse("visit-book-success", args=[self.visit.id]) +
-                "?" + urllib.urlencode(params)
+                self.modalurl(
+                    reverse("visit-book-success", args=[self.visit.id]) +
+                    "?" + urllib.urlencode(params)
+                )
             )
         else:
             forms['subjectform'] = BookingSubjectLevelForm(request.POST)

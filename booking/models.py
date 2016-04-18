@@ -2834,7 +2834,7 @@ class KUEmailMessage(models.Model):
                 else:
                     email['full'] = address
 
-                email['get_full_name'] = email['name']
+                email['get_full_name'] = email.get('name', '')
 
                 emails[address] = email
 
