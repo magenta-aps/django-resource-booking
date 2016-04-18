@@ -1759,7 +1759,8 @@ class VisitInquireSuccessView(TemplateView):
     template_name = "email/inquire-success.html"
 
 
-class VisitOccurrenceNotifyView(LoginRequiredMixin, ModalMixin, EmailComposeView):
+class VisitOccurrenceNotifyView(LoginRequiredMixin, ModalMixin,
+                                EmailComposeView):
 
     def dispatch(self, request, *args, **kwargs):
         self.recipients = []
