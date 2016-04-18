@@ -425,7 +425,7 @@ class EmailTemplate(models.Model):
         (NOTITY_ALL__BOOKING_REMINDER,
          _(u'Reminder om besøg til alle involverede')),
         (NOTIFY_HOST__HOSTROLE_IDLE,
-         _(u'Notfikation til koordinatorer om ledig værtsrolle på besøg')),
+         _(u'Notifikation til koordinatorer om ledig værtsrolle på besøg')),
         (SYSTEM__BASICMAIL_ENVELOPE,
          _(u'Forespørgsel fra bruger via kontaktformular')),
         (SYSTEM__EMAIL_REPLY,
@@ -2834,7 +2834,7 @@ class KUEmailMessage(models.Model):
                 else:
                     email['full'] = address
 
-                email['get_full_name'] = email['name']
+                email['get_full_name'] = email.get('name', '')
 
                 emails[address] = email
 

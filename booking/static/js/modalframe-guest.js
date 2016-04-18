@@ -2,6 +2,7 @@ window.modal = {
     parent: window.parent.modal,
     setId: function(id) {
         this.id = id;
+        $("form").append("<input type='hidden' name='modalid' value='"+id+"'/>");
     },
     close: function() {
         this.parent.close(this.id);
@@ -20,7 +21,7 @@ window.modal = {
 (function(){
     var m = /[#;]id=([^;]+)/.exec(document.location.hash);
     if (m) {
-        modal.id = m[1];
+        modal.setId(m[1]);
     }
 })();
 
