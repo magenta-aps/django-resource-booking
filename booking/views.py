@@ -51,7 +51,7 @@ from booking.models import EmailTemplate
 from booking.models import log_action
 from booking.models import LOGACTION_CREATE, LOGACTION_CHANGE
 from booking.forms import ResourceInitialForm, OtherResourceForm, VisitForm, \
-    GuestEmailComposeForm, StudentForADayBookingForm
+    GuestEmailComposeForm, StudentForADayBookingForm, OtherVisitForm
 
 from booking.forms import StudentForADayForm, InternshipForm, OpenHouseForm, \
     TeacherVisitForm, ClassVisitForm, StudyProjectForm, AssignmentHelpForm, \
@@ -1395,7 +1395,8 @@ class EditVisitView(EditResourceView):
         Resource.OPEN_HOUSE: OpenHouseForm,
         Resource.STUDY_PROJECT: StudyProjectForm,
         Resource.ASSIGNMENT_HELP: AssignmentHelpForm,
-        Resource.STUDY_MATERIAL: StudyMaterialForm
+        Resource.STUDY_MATERIAL: StudyMaterialForm,
+        Resource.OTHER_OFFERS: OtherVisitForm
     }
 
     def get_forms(self):
@@ -1532,7 +1533,7 @@ class EditVisitView(EditResourceView):
         context['hastime'] = self.object.type in [
             Resource.STUDENT_FOR_A_DAY, Resource.STUDIEPRAKTIK,
             Resource.OPEN_HOUSE, Resource.TEACHER_EVENT, Resource.GROUP_VISIT,
-            Resource.STUDY_PROJECT
+            Resource.STUDY_PROJECT, Resource.OTHER_OFFERS
         ]
 
         context.update(kwargs)

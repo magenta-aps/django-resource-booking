@@ -222,6 +222,9 @@
 		    $('.openall').click(function(){
 		        $('.panel-collapse:not(".in")').collapse('show');
 		    });
+
+            // Select duration
+		    $('#id_duration option[value="' + $('#id_duration').data('selected') + '"]').attr('selected', true);
 		});
 
     //--></script>
