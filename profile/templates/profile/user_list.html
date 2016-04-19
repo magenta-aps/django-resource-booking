@@ -58,6 +58,8 @@
                             {{ user }}
                             <a href="{% url 'user_edit' user.pk %}">Redigér</a>
                         </dd>
+                        <dt>Email:</dt>
+                        <dd>{{ user.email }}</dd>
                         <dt>Enhed:</dt>
                         <dd>{{ user.userprofile.unit.name }}</dd>
                         <dt>Rolle:</dt>
