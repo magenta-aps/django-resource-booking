@@ -1325,7 +1325,7 @@ class Visit(Resource):
 
     bookable_types = [
         Resource.STUDENT_FOR_A_DAY, Resource.GROUP_VISIT,
-        Resource.TEACHER_EVENT
+        Resource.TEACHER_EVENT, Resource.STUDY_PROJECT
     ]
 
     @ClassProperty
