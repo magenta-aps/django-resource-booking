@@ -87,13 +87,31 @@
             </div>
             </div>
         </fieldset>
-        <div class="col-sm-2 col-sm-offset-2 padleft5">
-            <input class="btn btn-primary" type="submit", value="Gem" name="submit" />
+        <div class="row">
+            <div class="col-sm-2 col-sm-offset-2">
+                <input class="btn btn-primary" type="submit", value="Gem" name="submit" />
+            </div>
+            {% if messages %}
+            <div class="col-sm-4 alert alert-success" role="alert">
+                <ul>
+                    {% for message in messages %}
+                    <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
         </div>
-
     </div>
 </form>
 </div>
 </div>
 <div class="divider"></div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script type="text/javascript"><!--
+$(function() {
+    $('.alert').hide(3000);
+});
+//--></script>
 {% endblock %}
