@@ -55,7 +55,7 @@
                 <ul>
                 {% for material in object.studymaterial_set.all %}
                     <li>
-                        <a href="{{ MEDIA_URL }}{{ material.file.url }}">{{ material.file.name | upload_name_strip_path }} ({{ material.file.size | filesizeformat }})</a>
+                        <a target="_blank" href="{{ MEDIA_URL }}{{ material.file.url }}">{{ material.file.name | upload_name_strip_path }} ({{ material.file.size | filesizeformat }})</a>
                     </li>
                 {% endfor %}
                 </ul>
