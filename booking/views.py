@@ -1403,9 +1403,20 @@ class EditVisitView(EditResourceView):
         forms = super(EditVisitView, self).get_forms()
         if self.object.is_type_bookable:
             if self.request.method == 'GET':
+                initial = []
+                if not self.object or not self.object.pk:
+                    initial = [
+                        {
+                            'template_key': item,
+                            'active': True,
+                        }
+                        for item in EmailTemplate.default
+                    ]
+
                 forms['autosendformset'] = VisitAutosendFormSet(
-                    None, instance=self.object
+                    None, instance=self.object, initial=initial
                 )
+
             if self.request.method == 'POST':
                 forms['autosendformset'] = VisitAutosendFormSet(
                     self.request.POST, instance=self.object

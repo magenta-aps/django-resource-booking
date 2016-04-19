@@ -203,6 +203,17 @@
                 }
                 return false;
             });
+
+            // Delete extraneous rows
+            var empty = $();
+            $(".autosend-row").each(function(){
+                var select = $(this).find("select");
+                if (!select.val()) {
+                    empty = empty.add($(this));
+                }
+            });
+            formset.removeRow($("#{{ autosendformset.management_form.TOTAL_FORMS.id_for_label }}"), empty.not(empty.first()));
+
         });
     //-->
 </script>

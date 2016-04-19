@@ -520,6 +520,14 @@ class EmailTemplate(models.Model):
         NOTITY_ALL__BOOKING_REMINDER
     ]
 
+    default = [
+        NOTIFY_GUEST__BOOKING_CREATED,
+        NOTIFY_EDITORS__BOOKING_CREATED,
+        NOTITY_ALL__BOOKING_REMINDER,
+        NOTIFY_ALL__BOOKING_COMPLETE,
+        SYSTEM__EMAIL_REPLY
+    ]
+
     key = models.IntegerField(
         verbose_name=u'Nøgle',
         choices=key_choices,

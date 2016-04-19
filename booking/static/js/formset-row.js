@@ -32,9 +32,10 @@ $(function() {
             }
         },
         removeRow: function(totalRowsEl, row) {
+            row = $(row);
             totalRowsEl = $(totalRowsEl);
-            $(row).remove();
-            totalRowsEl.val(parseInt(totalRowsEl.val(), 10) - 1);
+            row.remove();
+            totalRowsEl.val(parseInt(totalRowsEl.val(), 10) - row.length);
         }
     };
 
