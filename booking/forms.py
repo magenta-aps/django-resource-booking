@@ -538,6 +538,13 @@ class StudyMaterialForm(VisitForm):
         widgets = VisitForm.Meta.widgets
 
 
+class OtherVisitForm(VisitForm):
+    class Meta:
+        model = Visit
+        fields = VisitForm.Meta.fields
+        widgets = VisitForm.Meta.widgets
+
+
 ResourceStudyMaterialFormBase = inlineformset_factory(Resource,
                                                       StudyMaterial,
                                                       fields=('file',),
