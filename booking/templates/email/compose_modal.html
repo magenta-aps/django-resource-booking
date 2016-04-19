@@ -8,7 +8,6 @@
 {% endblock %}
 
 {% block content %}
-
     <div class="divider"></div>
     <div class="row form-group">
         <div class="col-sm-8">
@@ -215,12 +214,6 @@
                 }
             });
 
-            $(".cancelbutton").click(function(event){
-                modal.close();
-                event.preventDefault();
-                return false;
-            });
-
             var clear = $("<button>");
             clear.attr({type:"button"});
             clear.text("{% trans 'Ryd' %}");
@@ -233,4 +226,14 @@
         {% endautoescape %}
     </script>
     {% endif %}
+
+    <script type="text/javascript">
+        <!--
+        $(".cancelbutton").click(function(event){
+            modal.close();
+            event.preventDefault();
+            return false;
+        });
+        -->
+    </script>
 {% endblock %}
