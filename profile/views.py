@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from booking.models import Unit, Resource, VisitOccurrence
+from django.contrib import messages
 from django.db.models import F
 from django.db.models import Q
 from django.contrib.auth import login, logout, authenticate
@@ -324,6 +325,11 @@ class CreateUserView(FormView, UpdateView):
                 user_profile.user_role = user_role
                 user_profile.unit = unit
             user_profile.save()
+            messages.add_message(
+                request,
+                messages.INFO,
+                _(u'Brugeren %s blev gemt' % user.username)
+            )
 
             return super(CreateUserView, self).form_valid(form)
         else:
