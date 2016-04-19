@@ -10,6 +10,16 @@
 </div>
 {% endif %}
 
+{% if form.tour_available %}
+<div class="row form-group">
+    <div>{{ form.tour_available.errors }}</div>
+    <div class="col-sm-12">
+        {{ form.tour_available }}
+        <label class="{{ form.tour_available.css_classes }}" for="{{ form.tour_available.id_for_label }}">{{ form.tour_available.label }}</label>
+    </div>
+</div>
+{% endif %}
+
 {% if form.rooms_assignment %}
 <div id="rooms_needed_fields">
     <div class="row form-group">
