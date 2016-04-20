@@ -1515,7 +1515,8 @@ class EditVisitView(EditResourceView):
                 visit__unit=search_unit
             ).order_by("name").distinct("name")
         else:
-            context['existinrooms'] = []
+            context['existingrooms'] = Room.objects.all().\
+                order_by("name").distinct("name")
 
         context['gymnasiefag_choices'] = Subject.gymnasiefag_qs()
         context['grundskolefag_choices'] = Subject.grundskolefag_qs()
