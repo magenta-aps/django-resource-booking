@@ -802,6 +802,14 @@ class StudentForADayBookingForm(BookingForm):
         widgets = BookingForm.Meta.widgets
 
 
+class StudyProjectBookingForm(BookingForm):
+    class Meta:
+        model = Booking
+        fields = ('notes', 'visitoccurrence')
+        labels = BookingForm.Meta.labels
+        widgets = BookingForm.Meta.widgets
+
+
 BookingSubjectLevelForm = \
     inlineformset_factory(ClassBooking,
                           BookingSubjectLevel,
