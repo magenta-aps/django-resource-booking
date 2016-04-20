@@ -51,7 +51,8 @@ from booking.models import EmailTemplate
 from booking.models import log_action
 from booking.models import LOGACTION_CREATE, LOGACTION_CHANGE
 from booking.forms import ResourceInitialForm, OtherResourceForm, VisitForm, \
-    GuestEmailComposeForm, StudentForADayBookingForm, OtherVisitForm
+    GuestEmailComposeForm, StudentForADayBookingForm, OtherVisitForm, \
+    StudyProjectBookingForm
 
 from booking.forms import StudentForADayForm, InternshipForm, OpenHouseForm, \
     TeacherVisitForm, ClassVisitForm, StudyProjectForm, AssignmentHelpForm, \
@@ -2239,6 +2240,9 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
             elif type == Resource.STUDENT_FOR_A_DAY:
                 forms['bookingform'] = \
                     StudentForADayBookingForm(data, visit=self.visit)
+            elif type == Resource.STUDY_PROJECT:
+                forms['bookingform'] = \
+                    StudyProjectBookingForm(data, visit=self.visit)
         return forms
 
     def get_template_names(self):
@@ -2259,6 +2263,11 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
                 return ["booking/teachervisit_modal.html"]
             else:
                 return ["booking/teachervisit.html"]
+        if self.visit.type == Resource.STUDY_PROJECT:
+            if self.modal:
+                return ["booking/studyproject_modal.html"]
+            else:
+                return ["booking/studyproject.html"]
 
 
 class BookingSuccessView(TemplateView):
