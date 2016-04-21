@@ -15,6 +15,7 @@
     {% endautoescape %}
 
         $(function(){
+            var totalFormsField = $("#{{ autosendformset.management_form.TOTAL_FORMS.id_for_label }}")
 
             // Enables/disables input elements and labels
             var toggleEnabled = function(element, key, enable) {
@@ -154,6 +155,9 @@
                 var deleteField = row.find("[name$='-DELETE']");
                 deleteField.change(function(){
                     toggleEnabled(row.find("input,select").not($(this)), "delete", !$(this).prop("checked"));
+                    if ($(this).prop("checked") && !row.find("[name$='-autosend_ptr']").val()) {
+                        formset.removeRow(totalFormsField, row);
+                    }
                 });
                 deleteField.prop("checked", false);
                 toggleEnabled(row.find("input,select").not(deleteField), "delete", !deleteField.prop("checked"));
@@ -190,9 +194,10 @@
                 disableAlreadySelected();
             });
 
+
             $("#addAutosend").click(function(){
                 var row = formset.addRow(
-                        $("#{{ autosendformset.management_form.TOTAL_FORMS.id_for_label }}"),
+                        totalFormsField,
                         $("#{{ autosendformset.management_form.MAX_NUM_FORMS.id_for_label }}"),
                         $(".autosend-row").first(),
                         $("#autosend-list")
@@ -212,7 +217,7 @@
                     empty = empty.add($(this));
                 }
             });
-            formset.removeRow($("#{{ autosendformset.management_form.TOTAL_FORMS.id_for_label }}"), empty.not(empty.first()));
+            formset.removeRow(totalFormsField, empty.not(empty.first()));
 
         });
     //-->
