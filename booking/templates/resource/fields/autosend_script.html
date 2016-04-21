@@ -195,11 +195,15 @@
             });
 
 
+            var rowPrototype = $(".autosend-row").first().clone();
+            var container = $("<div style='display:none'></div>").appendTo($("body"));
+            container.append(rowPrototype);
+
             $("#addAutosend").click(function(){
                 var row = formset.addRow(
                         totalFormsField,
                         $("#{{ autosendformset.management_form.MAX_NUM_FORMS.id_for_label }}"),
-                        $(".autosend-row").first(),
+                        rowPrototype,
                         $("#autosend-list")
                 );
                 if (row) {
