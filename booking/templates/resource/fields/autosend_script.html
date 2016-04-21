@@ -57,7 +57,7 @@
                                 keeper.val(element.val());
                                 element.parent().append(keeper);
                             }
-                            $("label[for='" + id + "']").toggleClass("deletion", !doEnable);
+                            element.parents(".autosend-row").find("label[for='" + id + "']").toggleClass("deletion", !doEnable);
                         }
                         element.data("disable", d);
                     }
