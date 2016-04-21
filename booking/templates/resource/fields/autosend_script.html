@@ -143,6 +143,7 @@
 
             // Updates existing rows (on load) and new rows (on add)
             var fixRow = function(row) {
+                row.removeClass("rowPrototype");
                 var templateSelect = row.find("[name$='-template_key']");
                 templateSelect.change(function(){
                     toggleDays(row);
@@ -157,6 +158,7 @@
                     toggleEnabled(row.find("input,select").not($(this)), "delete", !$(this).prop("checked"));
                     if ($(this).prop("checked") && !row.find("[name$='-autosend_ptr']").val()) {
                         formset.removeRow(totalFormsField, row);
+                        disableAlreadySelected();
                     }
                 });
                 deleteField.prop("checked", false);
@@ -172,7 +174,7 @@
 
             // Disables template options that are selected in another row (so each template key can only be selected in one row)
             var disableAlreadySelected = function() {
-                var selects = $("[name$='-template_key']"),
+                var selects = $("[name$='-template_key']").not(".rowPrototype *"),
                     selected = {};
                 selects.each(function() {
                     var value = $(this).val();
@@ -189,14 +191,8 @@
                 });
             };
 
-            $(".autosend-row").each(function() {
-                fixRow($(this));
-                disableAlreadySelected();
-            });
-
-
-            var rowPrototype = $(".autosend-row").first().clone();
             var container = $("<div style='display:none'></div>").appendTo($("body"));
+            var rowPrototype = $(".autosend-row").first().clone().addClass("rowPrototype");
             container.append(rowPrototype);
 
             $("#addAutosend").click(function(){
@@ -223,6 +219,10 @@
             });
             formset.removeRow(totalFormsField, empty.not(empty.first()));
 
+            $(".autosend-row").not(".rowPrototype").each(function() {
+                fixRow($(this));
+            });
+            disableAlreadySelected();
         });
     //-->
 </script>
