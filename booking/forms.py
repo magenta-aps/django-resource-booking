@@ -573,6 +573,13 @@ class VisitAutosendFormSet(VisitAutosendFormSetBase):
     def is_valid(self):
         return True
 
+    def clean(self):
+        cleaned_forms = []
+        for form in self.forms:
+            if form.is_valid():
+                cleaned_forms.append(form)
+        self.forms = cleaned_forms
+
 
 class BookingForm(forms.ModelForm):
 
