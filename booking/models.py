@@ -401,6 +401,7 @@ class EmailTemplate(models.Model):
     NOTIFY_HOST__HOSTROLE_IDLE = 11  # ticket 13805
     SYSTEM__BASICMAIL_ENVELOPE = 12
     SYSTEM__EMAIL_REPLY = 13
+    SYSTEM__USER_CREATED = 14
 
     # Choice labels
     key_choices = [
@@ -430,6 +431,8 @@ class EmailTemplate(models.Model):
          _(u'Forespørgsel fra bruger via kontaktformular')),
         (SYSTEM__EMAIL_REPLY,
          _(u'Svar på e-mail fra systemet')),
+        (SYSTEM__USER_CREATED,
+         _(u'Besked til bruger ved brugeroprettelse')),
     ]
 
     @staticmethod
