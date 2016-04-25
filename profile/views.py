@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 from booking.models import Unit, Resource, VisitOccurrence
+from booking.models import EmailTemplate
+from booking.models import KUEmailMessage
 from django.contrib import messages
 from django.db.models import F
 from django.db.models import Q
@@ -325,6 +327,19 @@ class CreateUserView(FormView, UpdateView):
                 user_profile.user_role = user_role
                 user_profile.unit = unit
             user_profile.save()
+
+            # Send email to newly created users
+            if not pk:
+                KUEmailMessage.send_email(
+                    EmailTemplate.SYSTEM__USER_CREATED,
+                    {
+                        'user': user,
+                        'password': form.cleaned_data['password1'],
+                    },
+                    [user],
+                    user
+                )
+
             messages.add_message(
                 request,
                 messages.INFO,
