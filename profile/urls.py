@@ -13,7 +13,8 @@ urlpatterns = patterns(
         template_name='profile/profile.html'),
         name='user_profile'),
     url(r'^login/', auth_views.login,
-        {'template_name': 'profile/login.html'}),
+        {'template_name': 'profile/login.html'},
+        name='standard_login'),
     url(r'^email-login/(?P<slug>[a-f0-9-]+)(?P<dest_url>.*)',
         EmailLoginView.as_view(),
         name='email-login'
