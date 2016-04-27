@@ -726,9 +726,9 @@ class Resource(models.Model):
     DISCONTINUED = 2
 
     state_choices = (
-        (CREATED, _(u"Oprettet")),
-        (ACTIVE, _(u"Aktivt")),
-        (DISCONTINUED, _(u"Ophørt"))
+        (CREATED, _(u"Kladde")),
+        (ACTIVE, _(u"Udgiv")),
+        (DISCONTINUED, _(u"Ikke udgivet"))
     )
 
     class_level_choices = [(i, unicode(i)) for i in range(0, 11)]
