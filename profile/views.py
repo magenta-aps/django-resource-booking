@@ -15,11 +15,11 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext as _
 from django.views.generic import TemplateView, DetailView
-from django.views.generic.edit import UpdateView, FormView
-
-from booking.views import LoginRequiredMixin, AccessDenied, EditorRequriedMixin, \
-    VisitOccurrenceCustomListView
+from django.views.generic.edit import UpdateView, FormView, DeleteView
 from django.views.generic.list import ListView
+
+from booking.views import LoginRequiredMixin, AccessDenied
+from booking.views import EditorRequriedMixin, VisitOccurrenceCustomListView
 from profile.forms import UserCreateForm, EditMyResourcesForm
 from profile.models import AbsDateDist
 from profile.models import EmailLoginEntry
@@ -388,6 +388,15 @@ class CreateUserView(FormView, UpdateView):
             return "/profile/user/%d" % self.object.id
         except:
             return '/'
+
+
+class DeleteUserView(DeleteView):
+
+    model = User
+    template_name = 'profile/user_confirm_delete.html'
+
+    def get_success_url(self):
+        return "/profile/users"
 
 
 class UserListView(EditorRequriedMixin, ListView):
