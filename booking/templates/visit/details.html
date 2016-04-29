@@ -23,7 +23,7 @@
                 <a class="pull-right btn btn-primary margin-bottom-10" href="{% url 'visit-edit' object.pk %}">{% trans '+ Redigér' %}</a>
             {% endif %}
             {% if user.userprofile.can_create %}
-                <a class="pull-right btn btn-primary margin-bottom-10 margin-right-10" href="{% url 'visit-clone' object.pk %}">{% trans 'Opret kopi' %}</a>
+                <a class="pull-right btn btn-primary margin-bottom-10 margin-right-10" href="{% url 'visit-clone' object.pk %}">{% trans 'Kopier tilbud' %}</a>
             {% endif %}
             
             <h1>{{ object.title }}</h1>
@@ -169,9 +169,9 @@
                                 {% endif %}
                             {% endif %}
 
-                            {% if object.duration != '00:00' %}
+                            {% if object.duration and object.duration != '00:00' %}
                                 <dt>{% trans 'Varighed' %}:</dt>
-                                <dd>{{ object.duration|timedelta }}</dd>
+                                <dd>{{ object.duration|timedelta_i18n }}</dd>
                             {% endif %}
                             
                             {% if object.price %}
@@ -182,9 +182,9 @@
                         </dl>
                     </div>
                 </div>
-
-                {% include 'common/map.html' with locality=object.locality %}
-
+                {% if object.locality %}
+                    {% include 'common/map.html' with locality=object.locality %}
+                {% endif %}
             </form>
         </div>
     </div>
