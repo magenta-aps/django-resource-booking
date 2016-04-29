@@ -2,7 +2,7 @@
 <p>Kære {{ recipient.get_full_name }}.</p>
 
 <p>
-    Gæsten {{ booker.get_full_email }} har booket tilbudet
+    Gæsten {{ booker.get_full_email }} har tilmeldt sig tilbudet
     {{ visit.title }} (#{{ visit.pk }}){% if besoeg.start_datetime %}
       på tidspunktet: {{ besoeg.start_datetime }}
     {% endif %}.
@@ -10,13 +10,13 @@
 
 {% if not besoeg.start_datetime %}
 <p>
-    Gæsten har ikke booket et fast tidspunkt så der skal findes et passende
+    Gæsten har ikke tilmeldt sig et fast tidspunkt så der skal findes et passende
     tidspunkt for besøget:<br />
     <a href="{% full_url 'visit-occ-view' besoeg.pk %}">{% full_url 'visit-occ-view' besoeg.pk %}</a>
 </p>
 {% endif %}
 
-<h2>Detaljer for gæst og booking</h2>
+<h2>Detaljer for gæst og tilmelding</h2>
 <p>
     <strong>Navn</strong>:
     {{ booker.get_full_name }}

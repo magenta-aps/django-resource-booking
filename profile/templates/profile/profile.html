@@ -20,7 +20,7 @@
             {% if user.userprofile.get_faculty %}
                 <p>{% trans 'Din enhed' %}: {{ user.userprofile.get_faculty }}</p>
             {% endif %}
-            <p>{% trans 'På denne side kan du se en oversigt over dine tilbud, hvilke der er bookede, og hvilke der kræver handling.' %}</p>
+            <p>{% trans 'På denne side kan du se en oversigt over dine tilbud, hvilke der har tilmeldinger, og hvilke der kræver handling.' %}</p>
             <div class="divider"></div>
         </div>
         <div class="col-sm-6">
@@ -62,7 +62,7 @@
                     {% if not "disabled by: not yet implemented" %}
                     <a class="list-group-item" href="{% url 'user_list' %}">
                         <h4 class="list-group-item-heading">{% trans 'Statistik' %}</h4>
-                        <p class="list-group-item-text">{% trans 'Her har du adgang til at trække statistik på tilbud og bookings.' %}</p>
+                        <p class="list-group-item-text">{% trans 'Her har du adgang til at trække statistik på tilbud og tilmeldinger.' %}</p>
                     </a>
                     {% endif %}
                 {% endif %}
@@ -72,7 +72,7 @@
 
     {% if not "slået fra indtil videre, genindføres måske i en senere fase" %}
     <div class="divider"></div>
-    <h2>{% trans 'Søg i tilbud og bookings' %}</h2>
+    <h2>{% trans 'Søg i tilbud og tilmeldinger' %}</h2>
     <div class="row">
         <div class="col-sm-12">
             <div id="filter-panel" class="filter-panel">
@@ -141,11 +141,11 @@
             <h4 class="modal-title" id="SletBooking">{% trans 'Er du sikker?' %}</h4>
           </div>
           <div class="modal-body">
-           <p>{% trans 'Du er ved at slette bookingen "Magnetisme og elektroner". Hvis du vil fortsætte og slette denne booking, klik på knappen "Slet denne booking".' %}</p>
+           <p>{% trans 'Du er ved at slette tilmeldingen "Magnetisme og elektroner". Hvis du vil fortsætte og slette denne tilmelding, klik på knappen "Slet denne tilmelding".' %}</p>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-default" data-dismiss="modal">{% trans 'Annullér' %}</button>
-            <button type="button" class="btn btn-primary">{% trans 'Slet denne booking' %}</button>
+            <button type="button" class="btn btn-primary">{% trans 'Slet denne tilmelding' %}</button>
           </div>
         </div>
       </div>
