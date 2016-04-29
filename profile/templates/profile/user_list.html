@@ -57,6 +57,7 @@
                         <dd>
                             {{ user }}
                             <a href="{% url 'user_edit' user.pk %}">Redigér</a>
+                            <a href="{% url 'user_delete' user.pk %}">Slet</a>
                         </dd>
                         <dt>Email:</dt>
                         <dd>{{ user.email }}</dd>
