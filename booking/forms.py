@@ -464,7 +464,7 @@ class OpenHouseForm(VisitForm):
         model = Visit
         fields = ('type', 'title', 'teaser', 'description', 'state',
                   'institution_level', 'topics', 'audience',
-                  'locality',
+                  'locality', 'rooms_assignment', 'rooms_needed',
                   'contact_persons', 'unit',
                   'preparation_time', 'comment',
                   )
