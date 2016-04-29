@@ -24,7 +24,7 @@
                     {% url 'visit-view' object.visitoccurrence.visit.id as visiturl %}
                     {% url 'visit-occ-view' object.visitoccurrence.id as occurrenceurl %}
                     {% blocktrans with firstname=object.booker.firstname lastname=object.booker.lastname visittitle=object.visit.title occurrencetime=object.visitoccurrence.start_datetime %}
-                        <strong>{{ firstname }} {{ lastname }}</strong> har booket <a href="{{ visiturl }}">{{ visittitle }}</a> med afvikling <a href="{{ occurrenceurl }}">{{ occurrencetime }}</a>
+                        <strong>{{ firstname }} {{ lastname }}</strong> har tilmeldt sig <a href="{{ visiturl }}">{{ visittitle }}</a> med afvikling <a href="{{ occurrenceurl }}">{{ occurrencetime }}</a>
                     {% endblocktrans %}
                 </div>
             </div>
@@ -56,7 +56,7 @@
             {% endif %}
 
 
-            <h2>{% trans 'Information om bookingen' %}</h2>
+            <h2>{% trans 'Information om tilmeldingen' %}</h2>
 
             <dl class="dl-horizontal">
 

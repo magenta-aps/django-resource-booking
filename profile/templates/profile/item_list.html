@@ -38,7 +38,7 @@
             {% elif list.type == 'Resource' %}
                 {% for res in list.limited_qs|default:list.queryset %}
                     <div class="list-group-item clearfix">
-                        <a href="{% url 'resource-view' res.pk %}" title="{% trans 'Se tilbuddets detaljer og evt. bookings' %}">
+                        <a href="{% url 'resource-view' res.pk %}" title="{% trans 'Se tilbuddets detaljer og evt. tilmeldinger' %}">
                             <h2 class="list-group-item-heading">{{ res.title }}</h2>
                             <div class="list-group-item-text">
                                 <ul>

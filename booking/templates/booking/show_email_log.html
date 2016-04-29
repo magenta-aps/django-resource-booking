@@ -11,7 +11,7 @@
 
             {% include 'common/breadcrumbrow.html' %}
 
-            <h1>Emails vedrørende denne booking:</h1>
+            <h1>Emails vedrørende denne tilmelding:</h1>
             <ul>
                 {% for item in queryset %}
                     <li>{{ item.action_time|date:'d-m-Y H:i:s'}}: {{ item.change_message }}</li>
