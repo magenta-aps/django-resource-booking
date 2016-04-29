@@ -16,7 +16,11 @@
     <div class="row">
         <div class="col-sm-12">
             <h2>{% trans 'Personlig side' %}</h2>
-            <p>{% trans 'Du er logget ind som' %} {{user.userprofile.user_role.name}}. {% trans 'På denne side kan du se en oversigt over dine tilbud, hvilke der er bookede, og hvilke der kræver handling.' %}</p>
+            <p>{% trans 'Du er logget ind som' %} {{user.userprofile.user_role.name}}.</p>
+            {% if user.userprofile.get_faculty %}
+                <p>{% trans 'Din enhed' %}: {{ user.userprofile.get_faculty }}</p>
+            {% endif %}
+            <p>{% trans 'På denne side kan du se en oversigt over dine tilbud, hvilke der er bookede, og hvilke der kræver handling.' %}</p>
             <div class="divider"></div>
         </div>
         <div class="col-sm-6">

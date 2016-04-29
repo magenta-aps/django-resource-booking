@@ -103,7 +103,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             'color': self.HEADING_BLUE,
             'type': 'Resource',
             'title': {
-                'text': _(u'Mine tilbud'),
+                'text': _(u'Tilbud i min enhed'),
                 'link': reverse('search') + '?u=-3'
             },
             'queryset': Resource.objects.filter(
@@ -114,7 +114,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         if len(visitlist['queryset']) > 10:
             visitlist['limited_qs'] = visitlist['queryset'][:10]
             visitlist['button'] = {
-                'text': _(u'Vis alle'),
+                'text': _(u'Søg i alle'),
                 'link': reverse('search') + '?u=-3'
             }
 
