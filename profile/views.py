@@ -16,6 +16,9 @@ from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext as _
 from django.views.generic import TemplateView, DetailView
 from django.views.generic.edit import UpdateView, FormView, DeleteView
+
+from booking.views import LoginRequiredMixin, AccessDenied
+from booking.views import EditorRequriedMixin, VisitOccurrenceCustomListView
 from django.views.generic.list import ListView
 
 from booking.views import LoginRequiredMixin, AccessDenied
@@ -407,6 +410,7 @@ class UserListView(EditorRequriedMixin, ListView):
     selected_role = None
 
     def get_queryset(self):
+
         user = self.request.user
         unit_qs = user.userprofile.get_unit_queryset()
 
@@ -423,7 +427,7 @@ class UserListView(EditorRequriedMixin, ListView):
             self.selected_role = int(self.request.GET.get("role", None))
         except:
             pass
-        if self.selected_role:
+        if self.selected_role is not None:
             qs = qs.filter(userprofile__user_role__role=self.selected_role)
 
         q = self.request.GET.get("q", None)
