@@ -21,8 +21,6 @@ from booking.views import LoginRequiredMixin, AccessDenied
 from booking.views import EditorRequriedMixin, VisitOccurrenceCustomListView
 from django.views.generic.list import ListView
 
-from booking.views import LoginRequiredMixin, AccessDenied
-from booking.views import EditorRequriedMixin, VisitOccurrenceCustomListView
 from profile.forms import UserCreateForm, EditMyResourcesForm
 from profile.models import AbsDateDist
 from profile.models import EmailLoginEntry
