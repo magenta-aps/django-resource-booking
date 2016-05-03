@@ -395,26 +395,30 @@ class VisitForm(forms.ModelForm):
         self.fields['unit'].queryset = self.get_unit_query_set()
         self.fields['type'].widget = HiddenInput()
 
-        if kwargs['instance'] and kwargs['instance'].unit_id:
-            self.fields['default_hosts'].queryset = User.objects.filter(
-                userprofile__user_role__role=HOST,
-                userprofile__unit_id=kwargs['instance'].unit_id
-            )
-            self.fields['default_teachers'].queryset = \
-                User.objects.filter(
-                    userprofile__user_role__role=TEACHER,
+        # Not all resources have hosts and teachers!
+        if 'default_hosts' in self.fields \
+                and 'default_teachers' in self.fields:
+            # The operation is 'update'
+            if kwargs['instance'] and kwargs['instance'].unit_id:
+                self.fields['default_hosts'].queryset = User.objects.filter(
+                    userprofile__user_role__role=HOST,
                     userprofile__unit_id=kwargs['instance'].unit_id
                 )
-        else:
-            self.fields['default_hosts'].queryset = User.objects.filter(
-                userprofile__user_role__role=HOST,
-                userprofile__unit__in=self.get_unit_query_set()
-            )
-            self.fields['default_teachers'].queryset = \
-                User.objects.filter(
-                    userprofile__user_role__role=TEACHER,
+                self.fields['default_teachers'].queryset = \
+                    User.objects.filter(
+                        userprofile__user_role__role=TEACHER,
+                        userprofile__unit_id=kwargs['instance'].unit_id
+                    )
+            else:  # The operation is 'create'
+                self.fields['default_hosts'].queryset = User.objects.filter(
+                    userprofile__user_role__role=HOST,
                     userprofile__unit__in=self.get_unit_query_set()
                 )
+                self.fields['default_teachers'].queryset = \
+                    User.objects.filter(
+                        userprofile__user_role__role=TEACHER,
+                        userprofile__unit__in=self.get_unit_query_set()
+                    )
         # Add classes to certain widgets
         for x in ('needed_hosts', 'needed_teachers'):
             f = self.fields.get(x)
