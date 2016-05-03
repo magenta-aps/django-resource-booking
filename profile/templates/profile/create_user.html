@@ -1,125 +1,127 @@
 {% extends "index.html" %}
+{% load i18n %}
 
 {% block content %}
 {% include 'common/breadcrumbrow.html' %}
 
 {% if object.pk %}
-<h1>Rediger bruger '{{ object.username }}'</h1>
+<h1>{% blocktrans with username=object.username %}Rediger bruger '{{ username }}'{% endblocktrans %}</h1>
 {% else %}
-<h1>Opret ny bruger</h1>
+<h1>{% trans 'Opret ny bruger' %}</h1>
 {% endif %}
 
 <div class="divider"></div>
+
 <div class="row">
-<div class="col-sm-12">
-<form method="POST" class="form-horizontal">
-    {% csrf_token %}
-    <div class="row" id="admin-input">
-        <fieldset>
-            <div class="form-group">
-                <label class="col-sm-2 control-label" for="{{ form.username.id_for_username}}">{{ form.username.label }}:</label>
-                <div class="col-sm-5">
-                    {{ form.username }}
-                </div>
-                <div class="col-sm-5">
-                    {{ form.username.errors }}
+    <div class="col-sm-12">
+        <form method="POST" class="form-horizontal">
+            {% csrf_token %}
+            <div class="row" id="admin-input">
+                <fieldset>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="{{ form.username.id_for_username}}">{{ form.username.label }}:</label>
+                        <div class="col-sm-5">
+                            {{ form.username }}
+                        </div>
+                        <div class="col-sm-5">
+                            {{ form.username.errors }}
+                        </div>
+                    </div>
+                </fieldset>
+                <fieldset>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="{{ form.email.id_for_email}}">{{ form.email.label }}:</label>
+                        <div class="col-sm-5">
+                            {{ form.email }}
+                        </div>
+                        <div class="col-sm-5">
+                            {{ form.email.errors }}
+                        </div>
+                    </div>
+                </fieldset>
+                <fieldset>
+                <div class="form-group">
+                        <label class="col-sm-2 control-label" for="{{ form.first_name.id_for_first_name}}">{{ form.first_name.label }}:</label>
+                        <div class="col-sm-5">
+                            {{ form.first_name }}
+                        </div>
+                    <div class="col-sm-5">
+                        {{ form.first_name.errors }}
+                    </div>
+                    </div>
+                </fieldset>
+                <fieldset>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="{{ form.last_name.id_for_last_name}}">{{ form.last_name.label }}:</label>
+                        <div class="col-sm-5">
+                            {{ form.last_name }}
+                        </div>
+                        <div class="col-sm-5">
+                            {{ form.last_name.errors }}
+                        </div>
+                    </div>
+                </fieldset>
+                <fieldset>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="{{ form.password1.id_for_password1}}">{{ form.password1.label }}:</label>
+                        <div class="col-sm-5">
+                            {{ form.password1 }}
+                        </div>
+                        <div class="col-sm-5">
+                            {{ form.password1.errors }}
+                        </div>
+                    </div>
+                </fieldset>
+                <fieldset>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="{{ form.password2.id_for_password2}}">{{ form.password2.label }}:</label>
+                        <div class="col-sm-5">
+                            {{ form.password2 }}
+                        </div>
+                        <div class="col-sm-5">
+                            {{ form.password2.errors }}
+                        </div>
+                    </div>
+                </fieldset>
+                <fieldset>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="{{ form.role.id_for_role}}">{{ form.role.label }}:</label>
+                        <div class="col-sm-5">
+                            {{ form.role }}
+                        </div>
+                        <div class="col-sm-5">
+                            {{ form.role.errors }}
+                        </div>
+                    </div>
+                </fieldset>
+                <fieldset>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="{{ form.unit.id_for_unit}}">{{ form.unit.label }}:</label>
+                        <div class="col-sm-5">
+                            {{ form.unit }}
+                        </div>
+                        <div class="col-sm-5">
+                            {{ form.unit.errors }}
+                        </div>
+                    </div>
+                </fieldset>
+                <div class="row">
+                    <div class="col-sm-2 col-sm-offset-2">
+                        <input class="btn btn-primary" type="submit" value="Gem" name="submit" />
+                    </div>
+                    {% if messages %}
+                        <div class="col-sm-4 alert alert-success" role="alert">
+                            <ul>
+                                {% for message in messages %}
+                                <li {% if message.tags %}class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
-        </fieldset>
-        <fieldset>
-            <div class="form-group">
-                <label class="col-sm-2 control-label" for="{{ form.email.id_for_email}}">{{ form.email.label }}:</label>
-                <div class="col-sm-5">
-                    {{ form.email }}
-                </div>
-                <div class="col-sm-5">
-                    {{ form.email.errors }}
-                </div>
-            </div>
-        </fieldset>
-        <fieldset>
-        <div class="form-group">
-                <label class="col-sm-2 control-label" for="{{ form.first_name.id_for_first_name}}">{{ form.first_name.label }}:</label>
-                <div class="col-sm-5">
-                    {{ form.first_name }}
-                </div>
-            <div class="col-sm-5">
-                {{ form.first_name.errors }}
-            </div>
-            </div>
-        </fieldset>
-        <fieldset>
-            <div class="form-group">
-                <label class="col-sm-2 control-label" for="{{ form.last_name.id_for_last_name}}">{{ form.last_name.label }}:</label>
-                <div class="col-sm-5">
-                    {{ form.last_name }}
-                </div>
-                <div class="col-sm-5">
-                    {{ form.last_name.errors }}
-                </div>
-            </div>
-        </fieldset>
-        <fieldset>
-            <div class="form-group">
-                <label class="col-sm-2 control-label" for="{{ form.password1.id_for_password1}}">{{ form.password1.label }}:</label>
-                <div class="col-sm-5">
-                    {{ form.password1 }}
-                </div>
-                <div class="col-sm-5">
-                    {{ form.password1.errors }}
-                </div>
-            </div>
-        </fieldset>
-        <fieldset>
-            <div class="form-group">
-                <label class="col-sm-2 control-label" for="{{ form.password2.id_for_password2}}">{{ form.password2.label }}:</label>
-                <div class="col-sm-5">
-                    {{ form.password2 }}
-                </div>
-                <div class="col-sm-5">
-                    {{ form.password2.errors }}
-                </div>
-            </div>
-        </fieldset>
-        <fieldset>
-            <div class="form-group">
-                <label class="col-sm-2 control-label" for="{{ form.role.id_for_role}}">{{ form.role.label }}:</label>
-                <div class="col-sm-5">
-                    {{ form.role }}
-                </div>
-                <div class="col-sm-5">
-                    {{ form.role.errors }}
-                </div>
-            </div>
-        </fieldset>
-        <fieldset>
-            <div class="form-group">
-                <label class="col-sm-2 control-label" for="{{ form.unit.id_for_unit}}">{{ form.unit.label }}:</label>
-                <div class="col-sm-5">
-                    {{ form.unit }}
-                </div>
-                <div class="col-sm-5">
-                    {{ form.unit.errors }}
-                </div>
-            </div>
-        </fieldset>
-        <div class="row">
-            <div class="col-sm-2 col-sm-offset-2">
-                <input class="btn btn-primary" type="submit", value="Gem" name="submit" />
-            </div>
-            {% if messages %}
-                <div class="col-sm-4 alert alert-success" role="alert">
-                    <ul>
-                        {% for message in messages %}
-                        <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            {% endif %}
-        </div>
+        </form>
     </div>
-</form>
-</div>
 </div>
 <div class="divider"></div>
 {% endblock %}
