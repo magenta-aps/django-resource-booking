@@ -746,7 +746,7 @@ class Resource(models.Model):
     type = models.IntegerField(choices=resource_type_choices,
                                default=STUDY_MATERIAL)
     state = models.IntegerField(choices=state_choices, default=CREATED,
-                                verbose_name=_(u"Tilstand"))
+                                verbose_name=_(u"Tilstand"), blank=False)
     title = models.CharField(
         max_length=60,
         blank=False,
