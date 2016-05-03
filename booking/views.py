@@ -137,7 +137,8 @@ class MainPageView(TemplateView):
                 }
             ]
         }
-        return context
+        context.update(kwargs)
+        return super(MainPageView, self).get_context_data(**context)
 
 
 class LoginRequiredMixin(object):
