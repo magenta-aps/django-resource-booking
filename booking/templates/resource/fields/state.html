@@ -4,7 +4,7 @@
         {{ form.state.errors }}
     </div>
     <div class="col-sm-2">
-        <label for="{{ form.state.id_for_label }}">{{ form.state.label }}:</label>
+        <label class="{{ form.state.css_classes }}" for="{{ form.state.id_for_label }}">{{ form.state.label }}:</label>
     </div>
     <div class="col-sm-10">
         {{ form.state }}
