@@ -142,7 +142,7 @@
                                 <a href="{% url 'change-visit-occ-autosend' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
                             {% endif %}
                         </dd>
-                        <dt>{% trans 'Afvikling' %}</dt>
+                        <dt>{% trans 'Status' %}</dt>
                         <dd>
                             {{ object.get_workflow_status_display }}
                             {% if can_edit %}
