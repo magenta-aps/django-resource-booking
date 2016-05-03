@@ -29,11 +29,14 @@ $(function() {
 });
 // Show/hide multiple dates
 if ($("#dato li").data('expired', 'true').length > 1) {
-    $("#dato").find('[data-expired="true"]').hide();
-    $("#dato").after("<a href=\"#\" class=\"showhide\">Vis flere datoer</a>");
+    var dato = $("#dato"),
+        showmore = "Vis flere datoer",
+        showless = "Vis færre datoer";
+    dato.find('[data-expired="true"]').hide();
+    dato.after("<a href=\"#\" class=\"showhide\">"+showmore+"</a>");
     $(".showhide").click(function(e) {
         e.preventDefault();
         $("#dato").find('[data-expired="true"]').toggle(400);
-        ($(this).text() === "Vis flere datoer") ? $(this).text("Vis færre datoer"): $(this).text("Vis flere datoer");
+        ($(this).text() === showmore) ? $(this).text(showless): $(this).text(showmore);
     });
 }

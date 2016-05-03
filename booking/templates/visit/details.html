@@ -145,7 +145,7 @@
                                     {% for event in object.visitoccurrence_set.all %}
                                         {% if event.expired %}
                                             <li data-expired="true">
-                                                <a href="{% url 'visit-occ-view' event.pk %}">{{ event.start_datetime|date:'d-m-Y H:i' }}{% trans '(udløbet)' %}</a>
+                                                <a href="{% url 'visit-occ-view' event.pk %}">{{ event.start_datetime|date:'d-m-Y H:i' }} {% trans '(udløbet)' %}</a>
                                             </li>
                                         {% else %}
                                             <li data-expired="false">
