@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 from booking.models import VisitOccurrence, VisitOccurrenceAutosend
 from django import forms
-from django.contrib.auth.models import User
 from django.forms import inlineformset_factory
 from django.utils.translation import ugettext_lazy as _
-from profile.models import HOST, TEACHER
 
 
 class ChangeVisitOccurrenceStatusForm(forms.ModelForm):
@@ -39,32 +37,12 @@ class ChangeVisitOccurrenceTeachersForm(forms.ModelForm):
         fields = ['teacher_status', 'teachers']
         widgets = {'teachers': forms.CheckboxSelectMultiple()}
 
-    def __init__(self, *args, **kwargs):
-        super(ChangeVisitOccurrenceTeachersForm, self)\
-            .__init__(*args, **kwargs)
-
-        self.base_fields['teachers'].queryset = User.objects.filter(
-            userprofile__user_role__role=TEACHER,
-            userprofile__unit_id=kwargs['instance'].visit.unit_id
-        )
-
 
 class ChangeVisitOccurrenceHostsForm(forms.ModelForm):
     class Meta:
         model = VisitOccurrence
         fields = ['host_status', 'hosts']
         widgets = {'hosts': forms.CheckboxSelectMultiple()}
-
-    def __init__(self, *args, **kwargs):
-        super(ChangeVisitOccurrenceHostsForm, self).__init__(
-            *args,
-            **kwargs
-        )
-
-        self.base_fields['hosts'].queryset = User.objects.filter(
-            userprofile__user_role__role=HOST,
-            userprofile__unit_id=kwargs['instance'].visit.unit_id
-        )
 
 
 class ChangeVisitOccurrenceRoomsForm(forms.ModelForm):
