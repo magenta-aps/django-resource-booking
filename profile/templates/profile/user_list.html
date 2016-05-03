@@ -8,7 +8,8 @@
     <div class="divider"></div>
     <div class="row">
         <div class="col-sm-12" id="admin-input">
-            <a href="{% url 'user_create' %}" class="btn btn-primary btn-tiny pull-right">Opret ny bruger</a>
+            <a href="{% url 'user_create' %}" class="btn btn-primary btn-tiny">Opret ny bruger</a>
+            <div class="divider"></div>
             <h2>Filtrér brugerliste</h2>
             
             <form class="form-horizontal" name="filteruserlist" id="filteruserlist">
@@ -41,7 +42,7 @@
                     </div>
                 </div>
                 <div class="col-sm-2 col-sm-offset-2 padleft5">
-                    <input class="btn btn-primary" type="submit" value="Opdater" />
+                    <input class="btn btn-primary" type="submit" value="Søg" />
                 </div>
             </form>
         </div>
