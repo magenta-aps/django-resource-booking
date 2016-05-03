@@ -8,7 +8,7 @@
             <div class="divider"></div>
             <h1>{% trans 'Søg efter tilbud' %}</h1>
             <div class="divider"></div>
-            <form action="{% if view.kwargs.embed %}/embed{% endif %}{% url 'search' %}">
+            <form action="{% if view.kwargs.embed %}{% url 'search-embed' embed=view.kwargs.embed %}{% else %}{% url 'search' %}{% endif %}">
                 <h2 class="control-label">{% trans 'Tilbud rettet mod:' %}</h2>
                 <div class="input-group">
                     <label class="checkbox-inline control-label" for="institution-choice-1">
