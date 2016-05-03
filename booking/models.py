@@ -533,7 +533,6 @@ class EmailTemplate(models.Model):
         NOTIFY_HOST__REQ_TEACHER_VOLUNTEER
     ]
 
-
     default = [
         NOTIFY_GUEST__BOOKING_CREATED,
         NOTIFY_EDITORS__BOOKING_CREATED,
