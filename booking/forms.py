@@ -9,12 +9,14 @@ from booking.models import ClassBooking, TeacherBooking, BookingSubjectLevel
 from booking.models import EmailTemplate
 from booking.models import VisitOccurrence
 from django import forms
+from django.contrib.auth.models import User
 from django.forms import CheckboxSelectMultiple, RadioSelect, EmailInput
 from django.forms import formset_factory, inlineformset_factory
 from django.forms import TextInput, NumberInput, Textarea, Select
 from django.forms import HiddenInput
 from django.utils import formats
 from django.utils.translation import ugettext_lazy as _
+from profile.models import HOST, TEACHER
 from tinymce.widgets import TinyMCE
 from .fields import ExtensibleMultipleChoiceField
 
@@ -393,6 +395,26 @@ class VisitForm(forms.ModelForm):
         self.fields['unit'].queryset = self.get_unit_query_set()
         self.fields['type'].widget = HiddenInput()
 
+        if kwargs['instance'] and kwargs['instance'].unit_id:
+            self.fields['default_hosts'].queryset = User.objects.filter(
+                userprofile__user_role__role=HOST,
+                userprofile__unit_id=kwargs['instance'].unit_id
+            )
+            self.fields['default_teachers'].queryset = \
+                User.objects.filter(
+                    userprofile__user_role__role=TEACHER,
+                    userprofile__unit_id=kwargs['instance'].unit_id
+                )
+        else:
+            self.fields['default_hosts'].queryset = User.objects.filter(
+                userprofile__user_role__role=HOST,
+                userprofile__unit__in=self.get_unit_query_set()
+            )
+            self.fields['default_teachers'].queryset = \
+                User.objects.filter(
+                    userprofile__user_role__role=TEACHER,
+                    userprofile__unit__in=self.get_unit_query_set()
+                )
         # Add classes to certain widgets
         for x in ('needed_hosts', 'needed_teachers'):
             f = self.fields.get(x)
