@@ -388,6 +388,10 @@ class Locality(models.Model):
 
 class EmailTemplate(models.Model):
 
+    # TODO: In a later phase we should refactor this into a set of
+    # statically defined instances with values determining the belongings
+    # of each template
+
     NOTIFY_GUEST__BOOKING_CREATED = 1  # ticket 13806
     NOTIFY_EDITORS__BOOKING_CREATED = 2  # ticket 13807
     NOTIFY_HOST__REQ_TEACHER_VOLUNTEER = 3  # ticket 13808
@@ -521,6 +525,12 @@ class EmailTemplate(models.Model):
         NOTIFY_ALL__BOOKING_COMPLETE,
         NOTIFY_ALL__BOOKING_CANCELED,
         NOTITY_ALL__BOOKING_REMINDER
+    ]
+
+    # Templates where already assigned people will not receive mails
+    avoid_already_assigned = [
+        NOTIFY_HOST__REQ_HOST_VOLUNTEER,
+        NOTIFY_HOST__REQ_TEACHER_VOLUNTEER
     ]
 
     default = [
@@ -2002,6 +2012,13 @@ class VisitOccurrence(models.Model):
             recipients.extend(self.hosts.all())
         if template_key in EmailTemplate.occurrence_teachers_keys:
             recipients.extend(self.teachers.all())
+        if template_key in EmailTemplate.avoid_already_assigned:
+            for item in self.hosts.all():
+                if item in recipients:
+                    recipients.remove(item)
+            for item in self.teachers.all():
+                if item in recipients:
+                    recipients.remove(item)
         return recipients
 
     def create_inheriting_autosends(self):
