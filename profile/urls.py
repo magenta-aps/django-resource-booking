@@ -19,8 +19,11 @@ urlpatterns = patterns(
         EmailLoginView.as_view(),
         name='email-login'
         ),
-    url(r'^logout/', auth_views.logout,
-        {'template_name': 'profile/logout.html'}),
+    url(r'^logout/',
+        auth_views.logout,
+        {'template_name': 'profile/logout.html'},
+        name='logout'
+        ),
     url(r'^user/create$',
         CreateUserView.as_view(
             template_name='profile/create_user.html',

@@ -38,14 +38,14 @@
         <nav class="navbar navbar-default">
             <div class="container">
                 <div class="navbar-header">
-                    <a class="navbar-brand" href="http://www.ku.dk/" title="Københavns Universitet"><img src="http://cms.ku.dk/grafik/globalmenu/navnetraek_DK_neg.svg" alt="Københavns Universitet"></a>
+                    <a class="navbar-brand" href="http://www.ku.dk/" title="{% trans 'Københavns Universitet' %}"><img src="http://cms.ku.dk/grafik/globalmenu/navnetraek_DK_neg.svg" alt="Københavns Universitet"></a>
                 </div>
                 <div id="navbar" class="navbar-collapse collapse">
                     <ul class="nav navbar-nav navbar-right">
                         {% if user.is_authenticated %}
-                        <li class="login"><a href="/profile/logout">{% trans 'Log ud' %}</a></li>
+                        <li class="login"><a href="{% url 'logout' %}">{% trans 'Log ud' %}</a></li>
                         {% else %}
-                        <li class="login"><a href="/profile/login">{% trans 'Log ind' %}</a></li>
+                        <li class="login"><a href="{% url 'standard_login' %}">{% trans 'Log ind' %}</a></li>
                         {% endif %}
                         <li><a href="http://kalender.ku.dk">{% trans 'Kalender' %}</a></li>
                         <li><a href="http://findvej.ku.dk">{% trans 'Find vej' %}</a></li>
@@ -69,7 +69,7 @@
                 {% if view.kwargs.can_be_embedded %}
                 <li><a href="{% url 'embedcodes' view.request.get_full_path|slice:"1:" %}">{% trans 'Indlejr side' %}</a></li>
                 {% endif %}
-                <li class="pull-right"><a href="/profile/logout">{% trans 'Log ud' %}</a></li>
+                <li class="pull-right"><a href="{% url 'logout' %}">{% trans 'Log ud' %}</a></li>
             </ul>
         </div>
         {% endif %}

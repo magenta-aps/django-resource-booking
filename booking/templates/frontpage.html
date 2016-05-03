@@ -55,8 +55,8 @@
         </div>
     </div>
 
+    {% if not view.kwargs.embed %}
     <hr/>
-
     <div>
         {% for list in lists %}
             {% cycle True False False as beginRow silent %}
@@ -70,4 +70,6 @@
             {% endif %}
         {% endfor %}
     </div>
+    {% endif %}
+
 {% endblock %}
