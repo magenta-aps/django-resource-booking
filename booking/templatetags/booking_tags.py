@@ -154,9 +154,9 @@ class FullURLNode(defaulttags.Node):
                 return "{%% full_url %s %%}" % arg
             else:
                 return ''
-            #if '%s' in string_if_invalid:
+            # if '%s' in string_if_invalid:
             #    return string_if_invalid % args
-            #else:
+            # else:
             #    return string_if_invalid
 
 
