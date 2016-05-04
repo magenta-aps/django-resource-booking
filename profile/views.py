@@ -386,7 +386,7 @@ class CreateUserView(FormView, UpdateView):
 
     def get_success_url(self):
         try:
-            return "/profile/user/%d" % self.object.id
+            return "/profile/users"
         except:
             return '/'
 
