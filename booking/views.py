@@ -1493,6 +1493,12 @@ class EditVisitView(EditResourceView):
 
             self.add_to_my_resources()
 
+            messages.add_message(
+                request,
+                messages.INFO,
+                _(u'Tilbuddet blev gemt.')
+            )
+
             return super(EditVisitView, self).form_valid(forms['form'])
         else:
             return self.form_invalid(forms)
