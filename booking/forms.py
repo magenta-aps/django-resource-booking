@@ -882,11 +882,11 @@ class EmailTemplatePreviewContextEntryForm(forms.Form):
     )
     type = forms.ChoiceField(
         choices=(
-            ('string', 'String'),
-            ('Unit', 'Unit'),
+            ('string', _(u'Tekst')),
+            ('Unit', _(u'Enhed')),
             # ('OtherResource': OtherResource),
-            ('Visit', 'Visit'),
-            ('VisitOccurrence', 'VisitOccurrence'),
+            ('Visit', _(u'Tilbud')),
+            ('VisitOccurrence', _(u'Besøg')),
             # ('StudyMaterial', StudyMaterial),
             # ('Resource',Resource),
             # ('Subject', Subject),
@@ -894,7 +894,7 @@ class EmailTemplatePreviewContextEntryForm(forms.Form):
             # ('Room', Room),
             # ('PostCode', PostCode),
             # ('School', School),
-            ('Booking', 'Booking'),
+            ('Booking', _(u'Tilmelding')),
         ),
         widget=Select(attrs={'class': 'form-control emailtemplate-type'})
     )

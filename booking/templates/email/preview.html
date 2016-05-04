@@ -13,10 +13,10 @@
 
     <div class="divider"></div>
     <div class="row form-group">
-        <div class="col-sm-8">
+        <div class="col-sm-6">
             <h1>{% trans "Preview Emailskabelon" %}</h1>
         </div>
-        <div class="col-sm-4 text-right">
+        <div class="col-sm-6 text-right">
             <a href="{% url 'emailtemplate-edit' template.id %}?back={{ thisurl | urlencode }}" class="btn btn-primary">{% trans "Rediger skabelon" %}</a>
             <a href="{% url 'emailtemplate-clone' template.id %}?back={{ thisurl | urlencode }}" class="btn btn-primary">{% trans "Kopier skabelon" %}</a>
             <a href="{% url 'emailtemplate-delete' template.id %}?back={{ thisurl | urlencode }}" class="btn btn-primary">{% trans "Slet skabelon" %}</a>
@@ -24,7 +24,7 @@
         </div>
     <div class="row">
         <div class="col-sm-12">
-            {% trans 'På denne side kan du afprøve skabelonens felter ved at definere en kontekst. Ved tryk på "preview" bliver skabelonen udfyldt med den angivne kontekst.' %}
+            {% trans 'På denne side kan du afprøve skabelonens felter ved at definere en kontekst. Ved tryk på "opdater" bliver skabelonen udfyldt med den angivne kontekst.' %}
         </div>
     </div>
     <hr/>
@@ -36,7 +36,7 @@
             <div class="panel panel-default">
                 <div id="headingCategory" class="panel-heading" role="tab">
                     <h4 class="panel-title">
-                        {% trans "Context" %}
+                        {% trans "Kontekst" %}
                     </h4>
                 </div>
                 <div id="collapseTitel" class="panel-collapse collapse in" aria-labelledby="headingCategory" role="tabpanel" aria-expanded="true" style="">
@@ -44,13 +44,13 @@
 
                         <div class="row form-group">
                             <div class="col-sm-3">
-                                {% trans 'Key' %}
+                                {% trans 'Nøgle' %}
                             </div>
                             <div class="col-sm-3">
                                 {% trans 'Type' %}
                             </div>
                             <div class="col-sm-3">
-                                {% trans 'Value' %}
+                                {% trans 'Værdi' %}
                             </div>
                         </div>
 
@@ -93,12 +93,12 @@
                     <div class="panel-body">
 
                             {% if subject %}
-                                <h3>{% trans 'Subject' %}</h3>
+                                <h3>{% trans 'Beskedens emne' %}</h3>
                                 <blockquote>{{ subject }}</blockquote>
                             {% endif %}
 
                             {% if body %}
-                                <h3>{% trans 'Body' %}</h3>
+                                <h3>{% trans 'Beskedens tekst' %}</h3>
                                 <blockquote>
                                     {% autoescape off %}
                                     {{ body }}
