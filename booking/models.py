@@ -2755,7 +2755,10 @@ class TeacherBooking(Booking):
         verbose_name = _(u'booking for lærerarrangement')
         verbose_name_plural = _(u'bookinger for lærerarrangementer')
 
-    subjects = models.ManyToManyField(Subject)
+    subjects = models.ManyToManyField(
+        Subject,
+        blank=False
+    )
 
     def as_searchtext(self):
         result = [super(TeacherBooking, self).as_searchtext()]
