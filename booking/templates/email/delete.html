@@ -9,7 +9,7 @@
     <form action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <p>{% trans 'Er du sikker på at du vil slette denne skabelon?' %}</p>
-        <dl class="dl-horizontal">
+        <dl class="dl-horizontal wide">
             <dt>{% trans 'Emne:' %}</dt>
             <dd>{{ object.get_key_display }}</dd>
             <dt>{% trans 'Enhed:' %}</dt>
