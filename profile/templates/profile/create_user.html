@@ -1,14 +1,24 @@
 {% extends "index.html" %}
 {% load i18n %}
 
+{% block htmltitle %} -
+    {% if object.pk %}
+        {% blocktrans with username=object.username %}rediger bruger '{{ username }}'{% endblocktrans %}
+    {% else %}
+        {% trans 'opret ny bruger' %}
+    {% endif %}
+{% endblock %}
+
 {% block content %}
 {% include 'common/breadcrumbrow.html' %}
 
+<h1>
 {% if object.pk %}
-<h1>{% blocktrans with username=object.username %}Rediger bruger '{{ username }}'{% endblocktrans %}</h1>
+    {% blocktrans with username=object.username %}Rediger bruger '{{ username }}'{% endblocktrans %}
 {% else %}
-<h1>{% trans 'Opret ny bruger' %}</h1>
+    {% trans 'Opret ny bruger' %}
 {% endif %}
+</h1>
 
 <div class="divider"></div>
 
