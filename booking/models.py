@@ -406,6 +406,7 @@ class EmailTemplate(models.Model):
     SYSTEM__BASICMAIL_ENVELOPE = 12
     SYSTEM__EMAIL_REPLY = 13
     SYSTEM__USER_CREATED = 14
+    NOTIFY_GUEST_REMINDER = 15  # Ticket 15510
 
     # Choice labels
     key_choices = [
@@ -413,6 +414,8 @@ class EmailTemplate(models.Model):
          _(u'Besked til gæst ved booking af besøg')),
         (NOTIFY_GUEST__GENERAL_MSG,
          _(u'Generel besked til gæst(er)')),
+        (NOTIFY_GUEST_REMINDER,
+         _(u'Reminder til gæst')),
         (NOTIFY_EDITORS__BOOKING_CREATED,
          _(u'Besked til koordinatorer ved booking af besøg')),
         (NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
@@ -454,7 +457,8 @@ class EmailTemplate(models.Model):
         NOTIFY_HOST__REQ_ROOM,
         NOTIFY_ALL__BOOKING_COMPLETE,
         NOTIFY_ALL__BOOKING_CANCELED,
-        NOTITY_ALL__BOOKING_REMINDER
+        NOTITY_ALL__BOOKING_REMINDER,
+        NOTIFY_GUEST_REMINDER
     ]
 
     # Templates available for manual sending from bookings
@@ -463,7 +467,8 @@ class EmailTemplate(models.Model):
         NOTIFY_GUEST__GENERAL_MSG,
         NOTIFY_ALL__BOOKING_COMPLETE,
         NOTIFY_ALL__BOOKING_CANCELED,
-        NOTITY_ALL__BOOKING_REMINDER
+        NOTITY_ALL__BOOKING_REMINDER,
+        NOTIFY_GUEST_REMINDER
     ]
 
     # Templates that will be autosent to editors for the given unit
