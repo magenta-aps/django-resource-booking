@@ -151,7 +151,7 @@ class FullURLNode(defaulttags.Node):
                 arg = args[0] if len(args) > 0 else ''
                 arg = re.sub(r"^\{+", '', arg)
                 arg = re.sub(r"\}+$", '', arg)
-                return "{%% full_url %s %%}" % arg
+                return "{%% full_url %s %s %%}" % (self.url_node.view_name, arg)
             else:
                 return ''
             # if '%s' in string_if_invalid:
