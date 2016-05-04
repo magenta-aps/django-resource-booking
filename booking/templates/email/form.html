@@ -3,6 +3,16 @@
 {% load staticfiles %}
 {% load booking_tags %}
 
+{% block htmltitle %} -
+    {% if object.pk %}
+        {% blocktrans with templatename=object.name %}
+            Rediger emailskabelon '{{ templatename }}'
+        {% endblocktrans %}
+    {% else %}
+        {% trans "Ny emailskabelon" %}
+    {% endif %}
+{% endblock %}
+
 {% block head %}{% endblock %}
 
 {% block content %}
@@ -12,7 +22,15 @@
     <div class="divider"></div>
     <div class="row form-group">
         <div class="col-sm-8">
-            <h1>{% if object.pk %}{% trans "Rediger emailskabelon" %}{% else %}{% trans "Ny emailskabelon" %}{% endif %}</h1>
+            <h1>
+                {% if object.pk %}
+                    {% blocktrans with templatename=object.name %}
+                        Rediger emailskabelon '{{ templatename }}'
+                    {% endblocktrans %}
+                {% else %}
+                    {% trans "Ny emailskabelon" %}
+                {% endif %}
+            </h1>
         </div>
         {% if object.pk %}
             <div class="col-sm-4 text-right">
