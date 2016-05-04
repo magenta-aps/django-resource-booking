@@ -19,18 +19,10 @@ from booking.models import EmailTemplate
 from booking.models import LOGACTION_MANUAL_ENTRY
 from booking.models import log_action
 from booking.views import AutologgerMixin
+from django.views.generic.base import ContextMixin
 
 
-class UpdateWithCancelView(UpdateView):
-    def post(self, request, *args, **kwargs):
-        if "cancel" in request.POST:
-            self.object = self.get_object()
-            return redirect(self.get_success_url())
-        else:
-            return super(UpdateWithCancelView, self).post(
-                request, *args, **kwargs
-            )
-
+class VisitOccurrenceBreadcrumbMixin(ContextMixin):
     view_title = _(u'opdater')
 
     def get_context_data(self, **kwargs):
@@ -47,7 +39,19 @@ class UpdateWithCancelView(UpdateView):
             {'text': self.view_title},
         ]
         context.update(kwargs)
-        return super(UpdateWithCancelView, self).get_context_data(**context)
+        return super(VisitOccurrenceBreadcrumbMixin, self).\
+            get_context_data(**context)
+
+
+class UpdateWithCancelView(VisitOccurrenceBreadcrumbMixin, UpdateView):
+    def post(self, request, *args, **kwargs):
+        if "cancel" in request.POST:
+            self.object = self.get_object()
+            return redirect(self.get_success_url())
+        else:
+            return super(UpdateWithCancelView, self).post(
+                request, *args, **kwargs
+            )
 
 
 class ChangeVisitOccurrenceStartTimeView(AutologgerMixin,
@@ -218,10 +222,12 @@ class ChangeVisitOccurrenceAutosendView(AutologgerMixin, UpdateWithCancelView):
             get_context_data(**context)
 
 
-class BecomeSomethingView(AutologgerMixin, DetailView):
+class BecomeSomethingView(AutologgerMixin, VisitOccurrenceBreadcrumbMixin,
+                          DetailView):
     model = VisitOccurrence
     errors = None
     m2m_attribute = None
+    view_title = _(u'Tilmeld rolle')
 
     ERROR_NONE_NEEDED = _(
         u"Det valgte besøg har ikke behov for flere personer i den " +
@@ -283,6 +289,7 @@ class BecomeSomethingView(AutologgerMixin, DetailView):
 class BecomeTeacherView(BecomeSomethingView):
     m2m_attribute = "teachers"
     template_name = "booking/workflow/become_teacher.html"
+    view_title = _(u'Tilmeld som underviser')
 
     ERROR_NONE_NEEDED = _(u"Besøget har ikke brug for flere undervisere")
     ERROR_WRONG_ROLE = _(
@@ -302,6 +309,7 @@ class BecomeTeacherView(BecomeSomethingView):
 class BecomeHostView(BecomeSomethingView):
     m2m_attribute = "hosts"
     template_name = "booking/workflow/become_host.html"
+    view_title = _(u'Tilmeld som vært')
 
     ERROR_NONE_NEEDED = _(u"Besøget har ikke brug for flere værter")
     ERROR_WRONG_ROLE = _(
