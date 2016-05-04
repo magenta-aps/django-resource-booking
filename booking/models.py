@@ -569,6 +569,10 @@ class EmailTemplate(models.Model):
         blank=True
     )
 
+    @property
+    def name(self):
+        return EmailTemplate.get_name(self.key)
+
     def expand_subject(self, context, keep_placeholders=False):
         return self._expand(self.subject, context, keep_placeholders)
 
