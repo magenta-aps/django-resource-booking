@@ -5,8 +5,8 @@ from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import redirect
 from django.utils.translation import ugettext as _
 from django.views.generic import UpdateView, FormView, DetailView
-from booking.booking_workflows.forms import ChangeVisitOccurrenceStatusForm, \
-    VisitOccurrenceAutosendFormSet
+from booking.booking_workflows.forms import ChangeVisitOccurrenceStatusForm
+from booking.booking_workflows.forms import VisitOccurrenceAutosendFormSet
 from booking.booking_workflows.forms import ChangeVisitOccurrenceTeachersForm
 from booking.booking_workflows.forms import ChangeVisitOccurrenceHostsForm
 from booking.booking_workflows.forms import ChangeVisitOccurrenceRoomsForm
@@ -31,18 +31,38 @@ class UpdateWithCancelView(UpdateView):
                 request, *args, **kwargs
             )
 
+    view_title = _(u'opdater')
+
+    def get_context_data(self, **kwargs):
+        context = {}
+        context['breadcrumbs'] = [
+            {
+                'url': reverse('visit-occ-search'),
+                'text': _(u'Søg i besøg')
+            },
+            {
+                'url': reverse('visit-occ-view', args=[self.object.pk]),
+                'text': _(u'Besøg #%s') % self.object.pk
+            },
+            {'text': self.view_title},
+        ]
+        context.update(kwargs)
+        return super(UpdateWithCancelView, self).get_context_data(**context)
+
 
 class ChangeVisitOccurrenceStartTimeView(AutologgerMixin,
                                          UpdateWithCancelView):
     model = VisitOccurrence
     form_class = ChangeVisitOccurrenceStartTimeForm
     template_name = "booking/workflow/change_starttime.html"
+    view_title = _(u'Redigér tidspunkt')
 
 
 class ChangeVisitOccurrenceStatusView(AutologgerMixin, UpdateWithCancelView):
     model = VisitOccurrence
     form_class = ChangeVisitOccurrenceStatusForm
     template_name = "booking/workflow/change_status.html"
+    view_title = _(u'Redigér status')
 
     def form_valid(self, form):
         response = super(ChangeVisitOccurrenceStatusView, self).form_valid(
@@ -62,12 +82,14 @@ class ChangeVisitOccurrenceTeachersView(AutologgerMixin, UpdateWithCancelView):
     model = VisitOccurrence
     form_class = ChangeVisitOccurrenceTeachersForm
     template_name = "booking/workflow/change_teachers.html"
+    view_title = _(u'Redigér undervisere')
 
 
 class ChangeVisitOccurrenceHostsView(AutologgerMixin, UpdateWithCancelView):
     model = VisitOccurrence
     form_class = ChangeVisitOccurrenceHostsForm
     template_name = "booking/workflow/change_hosts.html"
+    view_title = _(u'Redigér værter')
 
     # When the status or host list changes, autosend emails
     def form_valid(self, form):
@@ -100,18 +122,21 @@ class ChangeVisitOccurrenceRoomsView(AutologgerMixin, UpdateWithCancelView):
     model = VisitOccurrence
     form_class = ChangeVisitOccurrenceRoomsForm
     template_name = "booking/workflow/change_rooms.html"
+    view_title = _(u'Redigér lokaler')
 
 
 class ChangeVisitOccurrenceCommentsView(AutologgerMixin, UpdateWithCancelView):
     model = VisitOccurrence
     form_class = ChangeVisitOccurrenceCommentsForm
     template_name = "booking/workflow/change_comments.html"
+    view_title = _(u'Redigér kommentarer')
 
 
 class ChangeVisitOccurrenceEvalView(AutologgerMixin, UpdateWithCancelView):
     model = VisitOccurrence
     form_class = ChangeVisitOccurrenceEvalForm
     template_name = "booking/workflow/change_eval_link.html"
+    view_title = _(u'Redigér evalueringslink')
 
 
 class VisitOccurrenceAddLogEntryView(FormView):
@@ -119,6 +144,7 @@ class VisitOccurrenceAddLogEntryView(FormView):
     form_class = VisitOccurrenceAddLogEntryForm
     template_name = "booking/workflow/add_logentry.html"
     object = None
+    view_title = _(u'Tilføj log-post')
 
     def dispatch(self, request, *args, **kwargs):
         try:
@@ -161,6 +187,7 @@ class ChangeVisitOccurrenceAutosendView(AutologgerMixin, UpdateWithCancelView):
     model = VisitOccurrence
     form_class = VisitOccurrenceAutosendFormSet
     template_name = "booking/workflow/change_autosend.html"
+    view_title = _(u'Redigér automatiske emails')
 
     def form_valid(self, form):
         form.save()
