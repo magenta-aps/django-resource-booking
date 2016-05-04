@@ -133,13 +133,31 @@ class FullURLNode(defaulttags.Node):
         return settings.PUBLIC_URL
 
     def render(self, context):
-        result = self.url_node.render(context)
-        if self.url_node.asvar:
-            result = context[self.url_node.asvar]
-            context[self.url_node.asvar] = self.url_prefix() + result
-            return ''
-        else:
-            return self.url_prefix() + result
+        try:
+            result = self.url_node.render(context)
+            if self.url_node.asvar:
+                result = context[self.url_node.asvar]
+                context[self.url_node.asvar] = self.url_prefix() + result
+                return ''
+            else:
+                return self.url_prefix() + result
+        except:
+            # return _(u'&lt;Forkert url&gt;')
+            args = [arg.resolve(context) for arg in self.url_node.args]
+            string_if_invalid = context.template.engine.string_if_invalid
+            if not string_if_invalid:
+                string_if_invalid = ''
+            if string_if_invalid != '':
+                arg = args[0] if len(args) > 0 else ''
+                arg = re.sub(r"^\{+", '', arg)
+                arg = re.sub(r"\}+$", '', arg)
+                return "{%% full_url %s %%}" % arg
+            else:
+                return ''
+            #if '%s' in string_if_invalid:
+            #    return string_if_invalid % args
+            #else:
+            #    return string_if_invalid
 
 
 @register.tag
