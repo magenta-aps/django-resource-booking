@@ -2901,6 +2901,7 @@ class KUEmailMessage(models.Model):
             }
             ctx.update(context)
             subject = template.expand_subject(ctx)
+            subject = subject.replace('\n', '')
 
             body = template.expand_body(ctx, encapsulate=True).strip()
             if body.startswith("<!DOCTYPE"):

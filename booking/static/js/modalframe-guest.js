@@ -3,6 +3,7 @@ window.modal = {
     setId: function(id) {
         this.id = id;
         $("form").append("<input type='hidden' name='modalid' value='"+id+"'/>");
+        $("form").attr("action", ($("form").attr("action") || '') + "#id=" + id);
     },
     close: function() {
         this.parent.close(this.id);
