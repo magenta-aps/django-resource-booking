@@ -719,9 +719,6 @@ class BookerForm(forms.ModelForm):
         attendeecount_widget = self.fields['attendee_count'].widget
         attendeecount_widget.attrs['min'] = 1
         if visit is not None:
-            if visit.minimum_number_of_visitors is not None:
-                attendeecount_widget.attrs['min'] = \
-                    visit.minimum_number_of_visitors
             if visit.maximum_number_of_visitors is not None:
                 attendeecount_widget.attrs['max'] = \
                     visit.maximum_number_of_visitors
