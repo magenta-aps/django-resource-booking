@@ -581,9 +581,21 @@ class EmailTemplate(models.Model):
                    "</html>" % body
         return body
 
+    default_includes = [
+        "{% load booking_tags %}",
+        "{% load i18n %}"
+    ]
+
+    @staticmethod
+    def get_template_object(template_text):
+        return Template(
+            "\n".join(EmailTemplate.default_includes) +
+            unicode(template_text)
+        )
+
     @staticmethod
     def _expand(text, context, keep_placeholders=False):
-        template = Template(unicode(text))
+        template = EmailTemplate.get_template_object(text)
 
         if isinstance(context, dict):
             context = make_context(context)
@@ -645,7 +657,7 @@ class EmailTemplate(models.Model):
         variables = []
         for item in [self.subject, self.body]:
             text = item.replace("%20", " ")
-            template = Template(unicode(text))
+            template = EmailTemplate.get_template_object(text)
             for node in template:
                 if isinstance(node, VariableNode):
                     variables.append(unicode(node.filter_expression))
