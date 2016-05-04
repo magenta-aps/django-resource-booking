@@ -585,19 +585,20 @@ class EmailTemplate(models.Model):
     def _expand(text, context, keep_placeholders=False):
         template = Template(unicode(text))
 
+        if isinstance(context, dict):
+            context = make_context(context)
+
         # This setting will affect the global template engine, so we have to
         # reset it below.
         if keep_placeholders:
             template.engine.string_if_invalid = "{{ %s }}"
 
-        if isinstance(context, dict):
-            context = make_context(context)
-
-        rendered = template.render(context)
-
-        # Reset string_if_invalid
-        if keep_placeholders:
-            template.engine.string_if_invalid = ''
+        try:
+            rendered = template.render(context)
+        finally:
+            # Reset string_if_invalid
+            if keep_placeholders:
+                template.engine.string_if_invalid = ''
 
         return rendered
 
