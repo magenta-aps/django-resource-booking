@@ -10,6 +10,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
+from django.db.models.aggregates import Count, Sum
+from django.db.models.functions import Coalesce
 from django.shortcuts import redirect
 from django.utils import timezone
 from django.utils.decorators import method_decorator
@@ -121,22 +123,28 @@ class ProfileView(LoginRequiredMixin, TemplateView):
 
         unit_qs = self.request.user.userprofile.get_unit_queryset()
 
-        planned = {
+        unplanned = {
             'color': self.HEADING_RED,
             'type': 'VisitOccurrence',
             'title': _(u"Besøg der kræver handling"),
             'queryset': self.sort_vo_queryset(
-                VisitOccurrence.being_planned_queryset(visit__unit=unit_qs)
+                VisitOccurrence.being_planned_queryset(visit__unit=unit_qs).
+                    annotate(num_participants=(
+                        Coalesce(Count("bookings__booker__pk"), 0) +
+                        Coalesce(Sum("bookings__booker__attendee_count"), 0)
+                    )
+                ).filter(num_participants__gte=1)
+                # See also VisitOccurrenceSearchView.filter_by_participants
             )
         }
-        if len(planned['queryset']) > 10:
-            planned['limited_qs'] = planned['queryset'][:10]
-            planned['button'] = {
+        if len(unplanned['queryset']) > 10:
+            unplanned['limited_qs'] = unplanned['queryset'][:10]
+            unplanned['button'] = {
                 'text': _(u'Vis alle'),
-                'link': reverse('visit-occ-search') + '?u=-3&w=-1&go=1'
+                'link': reverse('visit-occ-search') + '?u=-3&w=-1&go=1&p_min=1'
             }
 
-        unplanned = {
+        planned = {
             'color': self.HEADING_GREEN,
             'type': 'VisitOccurrence',
             'title': _(u"Planlagte besøg"),
@@ -144,14 +152,14 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                 VisitOccurrence.planned_queryset(visit__unit=unit_qs)
             )
         }
-        if len(unplanned['queryset']) > 10:
-            unplanned['limited_qs'] = unplanned['queryset'][:10]
-            unplanned['button'] = {
+        if len(planned['queryset']) > 10:
+            planned['limited_qs'] = planned['queryset'][:10]
+            planned['button'] = {
                 'text': _(u'Vis alle'),
                 'link': reverse('visit-occ-search') + '?u=-3&w=-2&go=1'
             }
 
-        return [visitlist, planned, unplanned]
+        return [visitlist, unplanned, planned]
 
     def lists_for_teachers(self):
         user = self.request.user
