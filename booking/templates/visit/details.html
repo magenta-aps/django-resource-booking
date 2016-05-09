@@ -143,20 +143,18 @@
                                 <dd>
                                     <ul class="list-unstyled" id="dato">
                                     {% for event in object.visitoccurrence_set.all %}
-                                        <li data-expired="{% if event.expired %}true{% else %}false{% endif %}">
-                                            <a href="{% url 'visit-occ-view' event.pk %}">
-                                                {% if event.start_datetime %}
+                                        {% if event.start_datetime %}
+                                            <li data-expired="{% if event.expired %}true{% else %}false{% endif %}">
+                                                <a href="{% url 'visit-occ-view' event.pk %}">
                                                     {{ event.start_datetime|date:'d-m-Y H:i' }}
-                                                {% else %}
-                                                    {% trans '[uden tidspunkt]' %}
-                                                {% endif %}
-                                                {% if event.expired %}
-                                                    {% trans '(udløbet)' %}
-                                                {% elif event.available_seats != None %}
-                                                    {% blocktrans with seats=event.available_seats %}({{ seats }} pladser tilbage){% endblocktrans %}
-                                                {% endif %}
-                                            </a>
-                                        </li>
+                                                    {% if event.expired %}
+                                                        <br/>{% trans '(udløbet)' %}
+                                                    {% elif event.available_seats != None %}
+                                                        <br/>{% blocktrans with seats=event.available_seats %}({{ seats }} pladser tilbage){% endblocktrans %}
+                                                    {% endif %}
+                                                </a>
+                                            </li>
+                                        {% endif %}
                                     {% endfor %}
                                     </ul>
                                 </dd>
