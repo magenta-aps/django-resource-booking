@@ -1559,8 +1559,8 @@ class Visit(Resource):
     def has_bookable_occurrences(self):
         # If there are no bookable occurrences the booker is allowed to
         # suggest their own.
-        # if len(self.visitoccurrence_set.filter(bookable=True)) == 0:
-        #    return True
+        if len(self.visitoccurrence_set.filter(bookable=True)) == 0:
+            return True
 
         # Only bookable if there is a valid event in the future:
         for occurrence in self.future_events:
