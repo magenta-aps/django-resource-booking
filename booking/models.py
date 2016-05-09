@@ -1865,6 +1865,16 @@ class VisitOccurrence(models.Model):
         ],
     }
 
+    # 15556: For these statuses, when the occurrence's starttime is passed,
+    # add WORKFLOW_STATUS_NOSHOW to the list of status choices
+    noshow_available_after_starttime = [
+        WORKFLOW_STATUS_BEING_PLANNED,
+        WORKFLOW_STATUS_PLANNED,
+        WORKFLOW_STATUS_PLANNED_NO_BOOKING,
+        WORKFLOW_STATUS_CONFIRMED,
+        WORKFLOW_STATUS_REMINDED
+    ]
+
     def can_assign_resources(self):
         being_planned = VisitOccurrence.WORKFLOW_STATUS_BEING_PLANNED
         return self.workflow_status == being_planned
@@ -1890,6 +1900,11 @@ class VisitOccurrence(models.Model):
         result = []
 
         allowed = self.valid_status_changes[self.workflow_status]
+
+        if self.workflow_status in \
+                VisitOccurrence.noshow_available_after_starttime and \
+                timezone.now() > self.start_datetime:
+            allowed.append(VisitOccurrence.WORKFLOW_STATUS_NOSHOW)
 
         for x in self.workflow_status_choices:
             if x[0] in allowed:
