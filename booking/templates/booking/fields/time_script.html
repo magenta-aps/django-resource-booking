@@ -1,0 +1,28 @@
+{% load booking_tags %}
+
+{% if bookerform.attendee_count and bookingform.visitoccurrence %}
+<script type="text/javascript">
+    <!--
+    (function(){
+        {% autoescape off %}
+        var occurrenceAvailable = {{ occurrence_available | jsonify }},
+        {% endautoescape %}
+            occurrenceSelect = $("#{{ bookingform.visitoccurrence.id_for_label }}"),
+            attendeeField = $("#{{ bookerform.attendee_count.id_for_label }}"),
+            existingMax = attendeeField.attr("max");
+
+        if (occurrenceSelect.length && attendeeField.length) {
+            var update = function() {
+                var available = occurrenceAvailable[occurrenceSelect.val()];
+                if (available !== null) {
+                    attendeeField.attr("max", Math.min(available, existingMax));
+                    attendeeField.trigger('change');
+                }
+            };
+            occurrenceSelect.change(update);
+            update();
+        }
+    })();
+    //-->
+</script>
+{% endif %}
