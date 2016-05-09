@@ -1177,7 +1177,7 @@ class ResourceGrundskoleFag(models.Model):
     @classmethod
     def display(cls, subject, clevel_min, clevel_max):
         class_range = []
-        if clevel_min:
+        if clevel_min is not None:
             class_range.append(clevel_min)
             if clevel_max != clevel_min:
                 class_range.append(clevel_max)
@@ -2548,6 +2548,7 @@ class Booker(models.Model):
     g3 = 3
     student = 4
     other = 5
+    f0 = 17
     f1 = 7
     f2 = 8
     f3 = 9
@@ -2560,14 +2561,15 @@ class Booker(models.Model):
     f10 = 16
 
     level_map = {
-        Subject.SUBJECT_TYPE_GRUNDSKOLE: [f1, f2, f3, f4, f5, f6, f7,
+        Subject.SUBJECT_TYPE_GRUNDSKOLE: [f0, f1, f2, f3, f4, f5, f6, f7,
                                           f8, f9, f10, other],
         Subject.SUBJECT_TYPE_GYMNASIE: [g1, g2, g3, student, other],
-        Subject.SUBJECT_TYPE_BOTH: [f1, f2, f3, f4, f5, f6, f7, f8, f9, f10,
-                                    g1, g2, g3, student, other]
+        Subject.SUBJECT_TYPE_BOTH: [f0, f1, f2, f3, f4, f5, f6, f7, f8, f9,
+                                    f10, g1, g2, g3, student, other]
     }
 
     level_choices = (
+        (f0, _(u'0. klasse')),
         (f1, _(u'1. klasse')),
         (f2, _(u'2. klasse')),
         (f3, _(u'3. klasse')),

@@ -1157,7 +1157,7 @@ class EditResourceView(LoginRequiredMixin, RoleRequiredMixin,
         context['gymnasiefag_selected'] = self.gymnasiefag_selected()
         context['grundskolefag_selected'] = self.grundskolefag_selected()
 
-        context['klassetrin_range'] = range(1, 10)
+        context['klassetrin_range'] = range(0, 10)
 
         if self.object and self.object.id:
             context['thisurl'] = reverse('resource-edit',
@@ -1534,7 +1534,7 @@ class EditVisitView(EditResourceView):
         context['gymnasiefag_selected'] = self.gymnasiefag_selected()
         context['grundskolefag_selected'] = self.grundskolefag_selected()
 
-        context['klassetrin_range'] = range(1, 10)
+        context['klassetrin_range'] = range(0, 10)
 
         if self.object is not None and self.object.id:
             context['thisurl'] = reverse('visit-edit', args=[self.object.id])
