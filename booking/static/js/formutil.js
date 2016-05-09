@@ -225,7 +225,7 @@ $(function() {
         from = parseInt(from) || 0;
         to = parseInt(to) || 0;
             
-        if (from > 0) {
+        if (from >= 0) {
             trin.push(from)
         }
 
