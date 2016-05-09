@@ -642,9 +642,10 @@ class BookingForm(forms.ModelForm):
                     choices.append((x.pk, date))
                 elif available_seats > 0:
                     choices.append(
-                        (x.pk,
-                         date + " " +
-                         _("(%d pladser tilbage)") % available_seats
+                        (
+                            x.pk,
+                            date + " " +
+                            _("(%d pladser tilbage)") % available_seats
                         )
                     )
 
