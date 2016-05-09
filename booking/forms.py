@@ -637,9 +637,11 @@ class BookingForm(forms.ModelForm):
             self.fields['visitoccurrence'].choices = (
                 (
                     x.pk,
-                    formats.date_format(x.start_datetime, "DATETIME_FORMAT")
+                    formats.date_format(x.start_datetime, "DATETIME_FORMAT") +
+                    " " + _("(%d pladser)") % x.available_seats()
                 )
                 for x in visit.future_events.order_by('start_datetime')
+                if x.available_seats() > 0
             )
             self.fields['visitoccurrence'].required = True
 

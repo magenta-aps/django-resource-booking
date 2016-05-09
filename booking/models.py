@@ -1939,6 +1939,11 @@ class VisitOccurrence(models.Model):
         )
         return res['attendees'] or 0
 
+    def available_seats(self):
+        total = self.visit.maximum_number_of_visitors
+        if total is not None:
+            return max(total - self.nr_bookers(), 0)
+
     def get_workflow_status_class(self):
         return self.status_to_class_map.get(self.workflow_status, 'default')
 
