@@ -2769,6 +2769,9 @@ class Booking(models.Model):
             self.statistics = statistics
             self.save()
 
+    def __unicode__(self):
+        return _("Tilmelding #%d") % self.id
+
 
 Booking.add_occurrence_attr('visit')
 Booking.add_occurrence_attr('hosts')
