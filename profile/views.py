@@ -78,8 +78,6 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             }
         }])
 
-        context['is_editor'] = self.request.user.userprofile.has_edit_role()
-
         context.update(**kwargs)
         return super(ProfileView, self).get_context_data(**context)
 

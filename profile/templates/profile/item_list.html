@@ -66,7 +66,7 @@
                             </div>
                         </a>
                         <div class="tools">
-                            {% if is_editor %}
+                            {% if user.userprofile.has_edit_role %}
                                 <span class="edit-tools pull-left">
                                     <a href="{% url 'resource-edit' res.pk %}">{% trans 'Rediger' %}</a> |
                                     <a href="{% url 'resource-clone' res.pk %}">{% trans 'Kopiér' %}</a>
