@@ -14,6 +14,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  url(r'^blog/', include(blog_urls))
 """
 from django.conf.urls import include, url
+from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
 
 
@@ -23,3 +24,5 @@ urlpatterns = [
     url(r'^', include('booking.urls')),
     url(r'^profile/', include('profile.urls')),
 ]
+# Allow setting language explicitly in url
+urlpatterns += i18n_patterns(*urlpatterns)
