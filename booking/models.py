@@ -2921,7 +2921,7 @@ class KUEmailMessage(models.Model):
                     address = recipient.get_email()
                 except:
                     pass
-            if address is not None and address not in emails:
+            if address is not None and address != '' and address not in emails:
                 email = {'address': address}
                 if name is not None:
                     email['name'] = name
