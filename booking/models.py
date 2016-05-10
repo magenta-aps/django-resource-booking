@@ -1017,7 +1017,10 @@ class Resource(models.Model):
     def get_recipients(self, template_key):
         recipients = self.unit.get_recipients(template_key)
         if template_key in EmailTemplate.contact_person_keys:
-            recipients.extend(self.contact_persons.all())
+            contacts = self.contact_persons.all()
+            if len(contacts) == 0:
+                contacts = [self.created_by]
+            recipients.extend(contacts)
         return recipients
 
     def get_view_url(self):

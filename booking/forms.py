@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from booking.models import StudyMaterial, VisitAutosend, Booking
+from booking.models import StudyMaterial, VisitAutosend, Booking, Person
 from booking.models import UnitType
 from booking.models import Unit
 from booking.models import Resource, OtherResource, Visit
@@ -10,7 +10,8 @@ from booking.models import EmailTemplate
 from booking.models import VisitOccurrence
 from django import forms
 from django.contrib.auth.models import User
-from django.forms import CheckboxSelectMultiple, RadioSelect, EmailInput
+from django.forms import SelectMultiple, CheckboxSelectMultiple
+from django.forms import RadioSelect, EmailInput
 from django.forms import formset_factory, inlineformset_factory
 from django.forms import TextInput, NumberInput, Textarea, Select
 from django.forms import HiddenInput
@@ -374,7 +375,7 @@ class VisitForm(forms.ModelForm):
             'unit': Select(attrs={'class': 'form-control input-sm'}),
             'audience': RadioSelect(),
             'tags': CheckboxSelectMultiple(),
-            'contact_persons': CheckboxSelectMultiple(),
+            'contact_persons': SelectMultiple(),
             'room_responsible': CheckboxSelectMultiple(),
             'default_hosts': CheckboxSelectMultiple(),
             'default_teachers': CheckboxSelectMultiple(),
@@ -429,6 +430,13 @@ class VisitForm(forms.ModelForm):
                         'form-control input-sm'
                     ) if x
                 ])
+        # Limit choices for non-admins to those in the same unit
+        self.fields['contact_persons'].choices = [
+            (person.id, unicode(person))
+            for person in Person.objects.all()
+            if self.user.userprofile.is_administrator or
+            person.unit == self.user.userprofile.unit
+        ]
 
     def clean_type(self):
         instance = getattr(self, 'instance', None)
