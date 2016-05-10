@@ -10,7 +10,8 @@ from booking.models import EmailTemplate
 from booking.models import VisitOccurrence
 from django import forms
 from django.contrib.auth.models import User
-from django.forms import CheckboxSelectMultiple, RadioSelect, EmailInput
+from django.forms import SelectMultiple, CheckboxSelectMultiple
+from django.forms import RadioSelect, EmailInput
 from django.forms import formset_factory, inlineformset_factory
 from django.forms import TextInput, NumberInput, Textarea, Select
 from django.forms import HiddenInput
@@ -374,7 +375,7 @@ class VisitForm(forms.ModelForm):
             'unit': Select(attrs={'class': 'form-control input-sm'}),
             'audience': RadioSelect(),
             'tags': CheckboxSelectMultiple(),
-            'contact_persons': CheckboxSelectMultiple(),
+            'contact_persons': SelectMultiple(),
             'room_responsible': CheckboxSelectMultiple(),
             'default_hosts': CheckboxSelectMultiple(),
             'default_teachers': CheckboxSelectMultiple(),
