@@ -62,7 +62,7 @@
         {% if user.is_authenticated %}
         <div class="container">
             <ul class="list-inline">
-                <li><a href="/profile">{% trans 'Min side' %}</a></li>
+                <li><a href="{% url 'user_profile' %}">{% trans 'Min side' %}</a></li>
                 <li><a href="{% url 'search' %}">{% trans 'Tilbud' %}</a></li>
                 <li><a href="{% url 'visit-occ-search' %}">{% trans 'Besøg' %}</a></li>
                 <li><a href="{% url 'admin:index' %}">{% trans 'Avanceret' %}</a></li>
