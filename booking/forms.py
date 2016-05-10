@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from booking.models import StudyMaterial, VisitAutosend, Booking
+from booking.models import StudyMaterial, VisitAutosend, Booking, Person
 from booking.models import UnitType
 from booking.models import Unit
 from booking.models import Resource, OtherResource, Visit
@@ -429,6 +429,13 @@ class VisitForm(forms.ModelForm):
                         'form-control input-sm'
                     ) if x
                 ])
+        # Limit choices for non-admins to those in the same unit
+        self.fields['contact_persons'].choices = [
+            (person.id, unicode(person))
+            for person in Person.objects.all()
+            if self.user.userprofile.is_administrator or
+            person.unit == self.user.userprofile.unit
+        ]
 
     def clean_type(self):
         instance = getattr(self, 'instance', None)
