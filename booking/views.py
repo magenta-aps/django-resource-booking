@@ -938,7 +938,7 @@ class SearchView(ListView):
         return size
 
 
-class ResourceListView(LoginRequiredMixin, ListView):
+class ResourceListView(ListView):
     template_name = "resource/list.html"
     model = Resource
     context_object_name = "results"
