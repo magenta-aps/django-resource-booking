@@ -19,7 +19,9 @@ from booking.models import EmailTemplate
 from booking.models import LOGACTION_MANUAL_ENTRY
 from booking.models import log_action
 from booking.views import AutologgerMixin
+from booking.views import RoleRequiredMixin, EditorRequriedMixin
 from django.views.generic.base import ContextMixin
+from profile.models import TEACHER, HOST, EDIT_ROLES
 
 
 class VisitOccurrenceBreadcrumbMixin(ContextMixin):
@@ -43,7 +45,8 @@ class VisitOccurrenceBreadcrumbMixin(ContextMixin):
             get_context_data(**context)
 
 
-class UpdateWithCancelView(VisitOccurrenceBreadcrumbMixin, UpdateView):
+class UpdateWithCancelView(VisitOccurrenceBreadcrumbMixin, EditorRequriedMixin,
+                           UpdateView):
     def post(self, request, *args, **kwargs):
         if "cancel" in request.POST:
             self.object = self.get_object()
@@ -223,11 +226,12 @@ class ChangeVisitOccurrenceAutosendView(AutologgerMixin, UpdateWithCancelView):
 
 
 class BecomeSomethingView(AutologgerMixin, VisitOccurrenceBreadcrumbMixin,
-                          DetailView):
+                          RoleRequiredMixin, DetailView):
     model = VisitOccurrence
     errors = None
     m2m_attribute = None
     view_title = _(u'Tilmeld rolle')
+    roles = [HOST, TEACHER] + list(EDIT_ROLES)
 
     ERROR_NONE_NEEDED = _(
         u"Det valgte besøg har ikke behov for flere personer i den " +
