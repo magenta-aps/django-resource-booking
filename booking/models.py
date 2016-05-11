@@ -2858,11 +2858,13 @@ class KUEmailMessage(models.Model):
         for recipient in recipients:
             name = None
             address = None
+            user = None
             if isinstance(recipient, basestring):
                 address = recipient
             elif isinstance(recipient, User):
                 name = recipient.get_full_name()
                 address = recipient.email
+                user = recipient
             else:
                 try:
                     name = recipient.get_name()
@@ -2881,6 +2883,7 @@ class KUEmailMessage(models.Model):
                     email['full'] = address
 
                 email['get_full_name'] = email['full']
+                email['user'] = user
 
                 emails[address] = email
 
