@@ -3,9 +3,8 @@ from django.contrib.auth.models import User
 from django.core.serializers import serialize
 from django.db.models.query import QuerySet
 from django.template import defaulttags
-from django.template.base import Token, TOKEN_BLOCK, FilterExpression
+from django.template.base import FilterExpression
 from django.template.defaultfilters import register
-from django.template.defaulttags import URLNode
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
