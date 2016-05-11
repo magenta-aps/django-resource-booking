@@ -131,9 +131,9 @@ def replace(value, arg):
 
 class FullURLNode(defaulttags.Node):
 
-    TOKEN_KEY = 'token_for'
+    TOKEN_USER_KEY = 'token_user'
 
-    our_kwarg_keys = [TOKEN_KEY]
+    our_kwarg_keys = [TOKEN_USER_KEY]
     kwargs = {}
 
     def __init__(self, url_node):
@@ -148,8 +148,9 @@ class FullURLNode(defaulttags.Node):
 
     def tokenize(self, url, context):
         # If a valid token_for arg is supplied, put a token on the url
-        if url is not None and url != '' and self.TOKEN_KEY in self.kwargs:
-            user = self.kwargs[self.TOKEN_KEY]
+        if url is not None and url != '' and \
+                self.TOKEN_USER_KEY in self.kwargs:
+            user = self.kwargs[self.TOKEN_USER_KEY]
             if isinstance(user, User):
                 pass
             elif isinstance(user, UserProfile):
