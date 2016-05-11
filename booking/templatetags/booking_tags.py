@@ -173,5 +173,5 @@ def tokenurl(value, arg):
     return EmailLoginEntry.create_from_url(
         arg,
         value,
-        expires_in=datetime.timedelta(hours=24)
+        expires_in=datetime.timedelta(hours=72)
     )
