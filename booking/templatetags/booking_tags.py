@@ -3,7 +3,9 @@ from django.contrib.auth.models import User
 from django.core.serializers import serialize
 from django.db.models.query import QuerySet
 from django.template import defaulttags
+from django.template.base import Token, TOKEN_BLOCK, FilterExpression
 from django.template.defaultfilters import register
+from django.template.defaulttags import URLNode
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
@@ -129,40 +131,83 @@ def replace(value, arg):
 
 
 class FullURLNode(defaulttags.Node):
+
+    TOKEN_KEY = 'token_for'
+
+    our_kwarg_keys = [TOKEN_KEY]
+    kwargs = {}
+
     def __init__(self, url_node):
+        # Grab any kwargs that we lay claim to
+        for key in self.our_kwarg_keys:
+            if key in url_node.kwargs:
+                self.kwargs[key] = url_node.kwargs.pop(key)
         self.url_node = url_node
 
     def url_prefix(self):
         return settings.PUBLIC_URL
 
+    def tokenize(self, url, context):
+        # If a valid token_for arg is supplied, put a token on the url
+        if url is not None and url != '' and self.TOKEN_KEY in self.kwargs:
+            user = self.kwargs[self.TOKEN_KEY]
+            if isinstance(user, User):
+                pass
+            elif isinstance(user, UserProfile):
+                user = user.user
+            elif isinstance(user, FilterExpression):
+                user = user.resolve(context)
+            elif isinstance(user, basestring):
+                user = context.get(user)
+            else:
+                user = None
+
+            if isinstance(user, User):
+                entry = EmailLoginEntry.create_from_url(
+                    user,
+                    url,
+                    expires_in=datetime.timedelta(hours=72)
+                )
+                return entry.as_url()
+        return url
+
+    def prefix(self, url):
+        return self.url_prefix() + url
+
     def render(self, context):
-        result = self.url_node.render(context)
-        if self.url_node.asvar:
-            result = context[self.url_node.asvar]
-            context[self.url_node.asvar] = self.url_prefix() + result
-            return ''
-        else:
-            return self.url_prefix() + result
+        try:
+            result = self.url_node.render(context)
+            if self.url_node.asvar:
+                # If asvar was set, we got an empty string in the result,
+                # and must fetch from the context
+                result = context[self.url_node.asvar]
+                context[self.url_node.asvar] = self.prefix(
+                    self.tokenize(result, context)
+                )
+                return ''
+            else:
+                return self.prefix(self.tokenize(result, context))
+        except:
+            # return _(u'&lt;Forkert url&gt;')
+            args = [arg.resolve(context) for arg in self.url_node.args]
+            string_if_invalid = context.template.engine.string_if_invalid
+            if not string_if_invalid:
+                string_if_invalid = ''
+            if string_if_invalid != '':
+                arg = args[0] if len(args) > 0 else ''
+                arg = re.sub(r"^\{+", '', arg)
+                arg = re.sub(r"\}+$", '', arg)
+                return "{%% full_url %s %s %%}" % \
+                       (self.url_node.view_name, arg)
+            else:
+                return ''
+            # if '%s' in string_if_invalid:
+            #    return string_if_invalid % args
+            # else:
+            #    return string_if_invalid
 
 
 @register.tag
 def full_url(parser, token):
     url_node = defaulttags.url(parser, token)
     return FullURLNode(url_node)
-
-
-@register.filter(name='token')
-def tokenurl(url, arg):
-    user = None
-    if isinstance(arg, User):
-        user = arg
-    elif isinstance(arg, UserProfile):
-        user = arg.user
-    if user is not None:
-        return EmailLoginEntry.create_from_url(
-            user,
-            url,
-            expires_in=datetime.timedelta(hours=72)
-        )
-    else:
-        return url
