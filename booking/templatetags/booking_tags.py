@@ -1,13 +1,15 @@
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.core.serializers import serialize
 from django.db.models.query import QuerySet
 from django.template import defaulttags
 from django.template.defaultfilters import register
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
+
 from timedelta.helpers import parse, nice_repr
 from booking.models import LOGACTION_DISPLAY_MAP
-from profile.models import EmailLoginEntry
+from profile.models import EmailLoginEntry, UserProfile
 import datetime
 import re
 import json
@@ -169,9 +171,17 @@ def full_url(parser, token):
 
 
 @register.filter(name='token')
-def tokenurl(value, arg):
-    return EmailLoginEntry.create_from_url(
-        arg,
-        value,
-        expires_in=datetime.timedelta(hours=72)
-    )
+def tokenurl(url, arg):
+    user = None
+    if isinstance(arg, User):
+        user = arg
+    elif isinstance(arg, UserProfile):
+        user = arg.user
+    if user is not None:
+        return EmailLoginEntry.create_from_url(
+            user,
+            url,
+            expires_in=datetime.timedelta(hours=72)
+        )
+    else:
+        return url
