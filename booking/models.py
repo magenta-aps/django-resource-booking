@@ -2122,6 +2122,21 @@ class VisitOccurrence(models.Model):
             except:
                 return None
 
+    def get_autosends(self, follow_inherit=True,
+                      include_disabled=False, yield_inherited=True):
+        result = set()
+        for autosend in self.visitoccurrenceautosend_set.all():
+            if autosend.enabled or include_disabled:
+                result.add(autosend)
+            elif autosend.inherit and follow_inherit:
+                inherited = autosend.get_inherited()
+                if inherited.enabled or include_disabled:
+                    if yield_inherited:
+                        result.add(inherited)
+                    else:
+                        result.add(autosend)
+        return result
+
     def autosend_enabled(self, template_key):
         return self.get_autosend(template_key, True) is not None
 
@@ -2162,7 +2177,7 @@ class VisitOccurrence(models.Model):
                     )
 
     def get_autosend_display(self):
-        autosends = self.visitoccurrenceautosend_set.filter(enabled=True)
+        autosends = self.get_autosends(True, False, False)
         return ', '.join([autosend.get_name() for autosend in autosends])
 
     def update_endtime(self):
