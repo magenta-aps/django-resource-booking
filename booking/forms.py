@@ -638,8 +638,8 @@ class BookingForm(forms.ModelForm):
                 (
                     x.pk,
                     formats.date_format(
-                        timezone.localtime(x.start_datetime)
-                        , "DATETIME_FORMAT")
+                        timezone.localtime(x.start_datetime),
+                    "DATETIME_FORMAT")
                 )
                 for x in visit.future_events.order_by('start_datetime')
             )
