@@ -1943,6 +1943,16 @@ class VisitOccurrence(models.Model):
         )
         return res['attendees'] or 0
 
+    @property
+    def nr_attendees(self):
+        # Return the total number of participants for this occurrence
+        return self.nr_additional_participants()
+
+    def available_seats(self):
+        limit = self.visit.maximum_number_of_visitors
+        if limit is not None:
+            return max(limit - self.nr_attendees, 0)
+
     def get_workflow_status_class(self):
         return self.status_to_class_map.get(self.workflow_status, 'default')
 
