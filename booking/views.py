@@ -2198,9 +2198,12 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
 
             booking.autosend(EmailTemplate.NOTIFY_EDITORS__BOOKING_CREATED)
 
-            booking.autosend(EmailTemplate.NOTIFY_HOST__REQ_TEACHER_VOLUNTEER)
+            if booking.visitoccurrence.needs_teachers:
+                booking.autosend(EmailTemplate.
+                                 NOTIFY_HOST__REQ_TEACHER_VOLUNTEER)
 
-            booking.autosend(EmailTemplate.NOTIFY_HOST__REQ_HOST_VOLUNTEER)
+            if booking.visitoccurrence.needs_hosts:
+                booking.autosend(EmailTemplate.NOTIFY_HOST__REQ_HOST_VOLUNTEER)
 
             # We can't fetch this form before we have
             # a saved booking object to feed it, or we'll get an error
