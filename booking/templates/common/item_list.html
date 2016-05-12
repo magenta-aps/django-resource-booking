@@ -26,7 +26,7 @@
                                     <li>
                                         {% blocktrans with date=occurrence.start_datetime|date:"d. m. Y" time=occurrence.start_datetime|date:"H:i" %}Dato/tid: {{ date }} kl. {{ time }}{% endblocktrans %}
                                     </li>
-                                    <li>{% trans 'Antal tilmeldte:' %} {{ occurrence.nr_bookers }}</li>
+                                    <li>{% trans 'Antal tilmeldte:' %} {{ occurrence.nr_attendees }}</li>
                                 </ul>
                             </div>
                         </a>
