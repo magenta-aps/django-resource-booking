@@ -2078,7 +2078,8 @@ class VisitOccurrence(models.Model):
                 result.add(autosend)
             elif autosend.inherit and follow_inherit:
                 inherited = autosend.get_inherited()
-                if inherited.enabled or include_disabled:
+                if inherited is not None and \
+                        (inherited.enabled or include_disabled):
                     if yield_inherited:
                         result.add(inherited)
                     else:
