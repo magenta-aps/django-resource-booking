@@ -15,7 +15,7 @@ from django.forms import RadioSelect, EmailInput
 from django.forms import formset_factory, inlineformset_factory
 from django.forms import TextInput, NumberInput, Textarea, Select
 from django.forms import HiddenInput
-from django.utils import formats
+from django.utils import formats, timezone
 from django.utils.translation import ugettext_lazy as _
 from profile.models import HOST, TEACHER
 from tinymce.widgets import TinyMCE
@@ -645,7 +645,10 @@ class BookingForm(forms.ModelForm):
             choices = []
             for x in visit.future_events.order_by('start_datetime'):
                 available_seats = x.available_seats()
-                date = formats.date_format(x.start_datetime, "DATETIME_FORMAT")
+                date = formats.date_format(
+                    timezone.localtime(x.start_datetime),
+                    "DATETIME_FORMAT"
+                )
                 if available_seats is None:
                     choices.append((x.pk, date))
                 elif available_seats > 0:
