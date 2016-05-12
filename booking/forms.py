@@ -749,6 +749,10 @@ class BookerForm(forms.ModelForm):
                 for (value, title) in Booker.level_choices
                 if value in available_level_choices
             ]
+            # Visit types where attendee count is mandatory
+            if visit.type in [Resource.GROUP_VISIT,
+                              Resource.TEACHER_EVENT, Resource.STUDY_PROJECT]:
+                self.fields['attendee_count'].required = True
 
         # Eventually we may want a prettier solution,
         # but for now this will have to do
