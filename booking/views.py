@@ -1570,16 +1570,17 @@ class EditVisitView(EditResourceView):
                 for autosendform in autosendformset:
                     if autosendform.is_valid():
                         data = autosendform.cleaned_data
-                        if data.get('DELETE'):
-                            VisitAutosend.objects.filter(
-                                visit=data['visit'],
-                                template_key=data['template_key']
-                            ).delete()
-                        else:
-                            try:
-                                autosendform.save()
-                            except:
-                                pass
+                        if len(data) > 0:
+                            if data.get('DELETE'):
+                                VisitAutosend.objects.filter(
+                                    visit=data['visit'],
+                                    template_key=data['template_key']
+                                ).delete()
+                            else:
+                                try:
+                                    autosendform.save()
+                                except:
+                                    pass
 
     def save_rooms(self):
         # Update rooms
