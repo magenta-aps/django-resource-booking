@@ -1804,6 +1804,10 @@ class VisitOccurrence(models.Model):
         editable=False
     )
 
+    @property
+    def unit(self):
+        return self.visit.unit
+
     valid_status_changes = {
         WORKFLOW_STATUS_BEING_PLANNED: [
             WORKFLOW_STATUS_REJECTED,
@@ -2199,7 +2203,6 @@ class VisitOccurrence(models.Model):
 
     @staticmethod
     def get_recently_held(time=timezone.now()):
-        print time
         return VisitOccurrence.objects.filter(
             workflow_status__in=[
                 VisitOccurrence.WORKFLOW_STATUS_EXECUTED,
