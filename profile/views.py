@@ -54,7 +54,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         context['lists'].extend([{
             'color': self.HEADING_GREEN,
             'type': 'VisitOccurrence',
-            'title': _(u'Seneste gennemførte tilbud'),
+            'title': _(u'Seneste afviklede besøg'),
             'queryset': VisitOccurrence.get_recently_held(),
             'limit': 10,
             'button': {
