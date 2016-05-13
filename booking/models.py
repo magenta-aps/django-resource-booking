@@ -232,6 +232,7 @@ class Subject(models.Model):
     class Meta:
         verbose_name = _(u"fag")
         verbose_name_plural = _(u"fag")
+        ordering = ["name"]
 
     SUBJECT_TYPE_GYMNASIE = 2**0
     SUBJECT_TYPE_GRUNDSKOLE = 2**1
@@ -1057,6 +1058,7 @@ class ResourceGymnasieFag(models.Model):
     class Meta:
         verbose_name = _(u"gymnasiefagtilknytning")
         verbose_name_plural = _(u"gymnasiefagtilknytninger")
+        ordering = ["subject__name"]
 
     class_level_choices = [(i, unicode(i)) for i in range(0, 11)]
 
@@ -1136,6 +1138,7 @@ class ResourceGrundskoleFag(models.Model):
     class Meta:
         verbose_name = _(u"grundskolefagtilknytning")
         verbose_name_plural = _(u"grundskolefagtilknytninger")
+        ordering = ["subject__name"]
 
     class_level_choices = [(i, unicode(i)) for i in range(0, 11)]
 
