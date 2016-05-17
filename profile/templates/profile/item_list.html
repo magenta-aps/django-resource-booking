@@ -9,7 +9,9 @@
                     {{ list.title }}
                 {% endif %}
             </h3>
-            <span class="badge badge-danger pull-right">{{ list.queryset|length }}</span>
+            {% if list.button %}
+                <a href="{{ list.button.link }}" class="column-show-all">{{ list.button.text }}</a>
+            {% endif %}
         </div>
         <div class="panel-body pager" data-list-item=".list-group-item">
 
@@ -77,12 +79,6 @@
                     </div>
                 {% endfor %}
             {% endif %}
-            {% if list.button %}
-                <a href="{{ list.button.link }}">
-                    <span class="label label-primary pull-right">{{ list.button.text }}</span>
-                </a>
-            {% endif %}
-
         </div>
     </div>
 </div>

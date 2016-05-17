@@ -13,7 +13,8 @@ from django.core.urlresolvers import reverse
 from django.shortcuts import redirect
 from django.utils import timezone
 from django.utils.decorators import method_decorator
-from django.utils.translation import ugettext as _
+from django.utils.functional import Promise
+from django.utils.translation import ugettext as _, ungettext, ungettext_lazy
 from django.views.generic import TemplateView, DetailView
 from django.views.generic.edit import UpdateView, FormView
 
@@ -54,7 +55,11 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         context['lists'].extend([{
             'color': self.HEADING_GREEN,
             'type': 'VisitOccurrence',
-            'title': _(u'Seneste afviklede besøg'),
+            'title': ungettext_lazy(
+                u'%(count)d senest afviklet besøg',
+                u'%(count)d seneste afviklede besøg',
+                'count'
+            ) % {'count': VisitOccurrence.get_recently_held().count()},
             'queryset': VisitOccurrence.get_recently_held(),
             'limit': 10,
             'button': {
@@ -65,7 +70,11 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         }, {
             'color': self.HEADING_BLUE,
             'type': 'VisitOccurrence',
-            'title': _(u'Dagens besøg'),
+            'title': ungettext_lazy(
+                u'%(count)d dagens besøg',
+                u'%(count)d dagens besøg',
+                'count'
+            ),
             'queryset': VisitOccurrence.get_todays_occurrences(),
             'limit': 10,
             'button': {
@@ -76,6 +85,17 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         }])
 
         context['is_editor'] = self.request.user.userprofile.has_edit_role()
+
+        for list in context['lists']:
+            if 'title' in list:
+                if type(list['title']) == dict:
+                    if isinstance(list['title']['text'], Promise):
+                        list['title']['text'] = \
+                            list['title']['text'] % \
+                            {'count': list['queryset'].count()}
+                elif isinstance(list['title'], Promise):
+                    list['title'] = list['title'] % \
+                                    {'count': list['queryset'].count()}
 
         context.update(**kwargs)
         return super(ProfileView, self).get_context_data(**context)
@@ -103,7 +123,11 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             'color': self.HEADING_BLUE,
             'type': 'Resource',
             'title': {
-                'text': _(u'Tilbud i min enhed'),
+                'text': ungettext_lazy(
+                    u'%(count)d tilbud i min enhed',
+                    u'%(count)d tilbud i min enhed',
+                    'count'
+                ),
                 'link': reverse('search') + '?u=-3'
             },
             'queryset': Resource.objects.filter(
@@ -123,7 +147,11 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         planned = {
             'color': self.HEADING_RED,
             'type': 'VisitOccurrence',
-            'title': _(u"Besøg under planlægning"),
+            'title': ungettext_lazy(
+                u"%(count)d besøg under planlægning",
+                u"%(count)d besøg under planlægning",
+                'count'
+            ),
             'queryset': self.sort_vo_queryset(
                 VisitOccurrence.being_planned_queryset(visit__unit=unit_qs)
             )
@@ -138,7 +166,11 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         unplanned = {
             'color': self.HEADING_GREEN,
             'type': 'VisitOccurrence',
-            'title': _(u"Planlagte besøg"),
+            'title': ungettext_lazy(
+                u"%(count)d planlagt besøg",
+                u"%(count)d planlagte besøg",
+                'count'
+            ),
             'queryset': self.sort_vo_queryset(
                 VisitOccurrence.planned_queryset(visit__unit=unit_qs)
             )
@@ -173,7 +205,8 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             {
                 'color': self.HEADING_RED,
                 'type': 'VisitOccurrence',
-                'title': _(u"Besøg der mangler undervisere"),
+                'title': ungettext(u"%(count)d besøg der mangler undervisere",
+                                   u"%(count)d besøg der mangler undervisere"),
                 'queryset': self.sort_vo_queryset(
                     VisitOccurrence.objects.filter(
                         visit__unit=unit_qs,
@@ -186,7 +219,11 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             {
                 'color': self.HEADING_GREEN,
                 'type': 'VisitOccurrence',
-                'title': _(u"Besøg hvor jeg er underviser"),
+                'title': ungettext_lazy(
+                    u"%(count)d besøg hvor jeg er underviser",
+                    u"%(count)d besøg hvor jeg er underviser",
+                    'count'
+                ),
                 'queryset': self.sort_vo_queryset(taught_vos)
             }
         ]
@@ -211,7 +248,11 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             {
                 'color': self.HEADING_RED,
                 'type': 'VisitOccurrence',
-                'title': _(u"Besøg der mangler værter"),
+                'title': ungettext_lazy(
+                    u"%(count)d besøg der mangler værter",
+                    u"%(count)d besøg der mangler værter",
+                    'count',
+                ),
                 'queryset': VisitOccurrence.objects.filter(
                     visit__unit=self.request.user.userprofile.
                         get_unit_queryset(),
@@ -223,7 +264,11 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             {
                 'color': self.HEADING_GREEN,
                 'type': 'VisitOccurrence',
-                'title': _(u"Besøg hvor jeg er vært"),
+                'title': ungettext_lazy(
+                    u"%(count)d besøg hvor jeg er vært",
+                    u"%(count)d besøg hvor jeg er vært",
+                    'count'
+                ),
                 'queryset': hosted_vos
             }
         ]
