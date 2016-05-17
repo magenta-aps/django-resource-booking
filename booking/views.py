@@ -503,7 +503,7 @@ class LoggedViewMixin(object):
         qs = LogEntry.objects.filter(
             object_id=self.object.pk,
             content_type__in=types
-        ).order_by('action_time')
+        ).order_by('-action_time')
 
         return qs
 
