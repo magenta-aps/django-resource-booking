@@ -1454,6 +1454,31 @@ class Visit(Resource):
         verbose_name=_(u'Mulighed for rundvisning')
     )
 
+    catering_available = models.BooleanField(
+        default=False,
+        blank=True,
+        verbose_name=_(u'Mulighed for forplejning')
+    )
+
+    presentation_available = models.BooleanField(
+        default=False,
+        blank=True,
+        verbose_name=_(u'Mulighed for oplæg om uddannelse')
+    )
+
+    custom_available = models.BooleanField(
+        default=False,
+        blank=True,
+        verbose_name=_(u'Tilpasset mulighed')
+    )
+
+    custom_name = models.CharField(
+        blank=True,
+        null=True,
+        verbose_name=_(u'Navn for tilpasset mulighed'),
+        max_length=50
+    )
+
     NEEDED_NUMBER_NONE = 0
     NEEDED_NUMBER_MORE_THAN_TEN = -10
 
@@ -2817,7 +2842,20 @@ class ClassBooking(Booking):
         verbose_name_plural = _(u'bookinger for klassebesøg')
 
     tour_desired = models.BooleanField(
-        verbose_name=u'Rundvisning ønsket'
+        verbose_name=_(u'Rundvisning ønsket'),
+        default=False
+    )
+    catering_desired = models.BooleanField(
+        verbose_name=_(u'Forplejning ønsket'),
+        default=False
+    )
+    presentation_desired = models.BooleanField(
+        verbose_name=_(u'Oplæg om uddannelse ønsket'),
+        default=False
+    )
+    custom_desired = models.BooleanField(
+        verbose_name=_(u'Specialtilbud ønsket'),
+        default=False
     )
 
 
