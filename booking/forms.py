@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from booking.models import StudyMaterial, VisitAutosend, Booking, Locality
+from booking.models import StudyMaterial, VisitAutosend, Booking
 from booking.models import UnitType
 from booking.models import Unit
 from booking.models import Resource, OtherResource, Visit
@@ -8,7 +8,6 @@ from booking.models import Booker, Region, PostCode, School
 from booking.models import ClassBooking, TeacherBooking, BookingSubjectLevel
 from booking.models import EmailTemplate
 from booking.models import VisitOccurrence
-from booking.utils import MultiQuerySet
 from django import forms
 from django.contrib.auth.models import User
 from django.forms import CheckboxSelectMultiple, RadioSelect, EmailInput
@@ -431,11 +430,14 @@ class VisitForm(forms.ModelForm):
                         userprofile__unit__in=self.get_unit_query_set()
                     )
 
+        """
         if unit is not None:
             self.fields['locality'].queryset = MultiQuerySet(
+                Locality,
                 Locality.objects.filter(unit=unit),
                 Locality.objects.exclude(unit=unit)
             )
+        """
 
         # Add classes to certain widgets
         for x in ('needed_hosts', 'needed_teachers'):
