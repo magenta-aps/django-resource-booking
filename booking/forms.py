@@ -393,7 +393,13 @@ class VisitForm(forms.ModelForm):
 
         self.user = kwargs.pop('user')
         self.instance = kwargs.get('instance')
-        self.unit = self.instance.unit if self.instance is not None else None
+
+        unit = None
+        if self.instance is not None:
+            unit = self.instance.unit
+        if unit is None and \
+                self.user is not None and self.user.userprofile is not None:
+            unit = self.user.userprofile.unit
 
         # self.unit = kwargs.get('instance').unit_id
         super(VisitForm, self).__init__(*args, **kwargs)
@@ -425,10 +431,10 @@ class VisitForm(forms.ModelForm):
                         userprofile__unit__in=self.get_unit_query_set()
                     )
 
-        if self.unit is not None:
+        if unit is not None:
             self.fields['locality'].queryset = MultiQuerySet(
-                Locality.objects.filter(unit=self.unit),
-                Locality.objects.exclude(unit=self.unit)
+                Locality.objects.filter(unit=unit),
+                Locality.objects.exclude(unit=unit)
             )
 
         # Add classes to certain widgets
