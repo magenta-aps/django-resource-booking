@@ -108,7 +108,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             },
             'queryset': Resource.objects.filter(
                 unit=self.request.user.userprofile.get_unit_queryset()
-            ).order_by("title"),
+            ).order_by("-statistics__created_time"),
         }
 
         if len(visitlist['queryset']) > 10:
