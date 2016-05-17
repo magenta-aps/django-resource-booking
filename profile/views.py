@@ -95,7 +95,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                             {'count': list['queryset'].count()}
                 elif isinstance(list['title'], Promise):
                     list['title'] = list['title'] % \
-                                    {'count': list['queryset'].count()}
+                        {'count': list['queryset'].count()}
 
         context.update(**kwargs)
         return super(ProfileView, self).get_context_data(**context)
@@ -254,8 +254,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     'count',
                 ),
                 'queryset': VisitOccurrence.objects.filter(
-                    visit__unit=self.request.user.userprofile.
-                        get_unit_queryset(),
+                    visit__unit=user.userprofile.get_unit_queryset(),
                     host_status=VisitOccurrence.STATUS_NOT_ASSIGNED
                 ).exclude(
                     hosts=self.request.user
