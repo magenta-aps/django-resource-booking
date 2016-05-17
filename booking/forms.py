@@ -330,7 +330,8 @@ class VisitForm(forms.ModelForm):
                   'institution_level', 'topics', 'audience',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'duration', 'locality', 'rooms_assignment',
-                  'rooms_needed', 'tour_available',
+                  'rooms_needed', 'tour_available', 'catering_available',
+                  'presentation_available', 'custom_available', 'custom_name',
                   'contact_persons', 'unit',
                   'needed_hosts', 'needed_teachers',
                   'preparation_time', 'comment',
@@ -350,6 +351,10 @@ class VisitForm(forms.ModelForm):
                 }
             ),
             'description': TinyMCE(attrs={'rows': 10, 'cols': 90}),
+            'custom_name': TextInput(attrs={
+                'class': 'titlefield form-control input-sm',
+                'rows': 1, 'size': 62
+            }),
 
             'price': NumberInput(attrs={'class': 'form-control input-sm'}),
             'type': Select(attrs={'class': 'form-control input-sm'}),
@@ -377,7 +382,10 @@ class VisitForm(forms.ModelForm):
             'contact_persons': CheckboxSelectMultiple(),
             'room_responsible': CheckboxSelectMultiple(),
             'default_hosts': CheckboxSelectMultiple(),
-            'default_teachers': CheckboxSelectMultiple(),
+            'default_teachers': CheckboxSelectMultiple()
+        }
+        labels = {
+            'custom_name': _('Navn')
         }
 
     def __init__(self, *args, **kwargs):
@@ -520,13 +528,15 @@ class ClassVisitForm(VisitForm):
                   'institution_level', 'topics', 'audience',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'duration', 'locality', 'rooms_assignment',
-                  'rooms_needed', 'tour_available',
+                  'rooms_needed', 'tour_available', 'catering_available',
+                  'presentation_available', 'custom_available', 'custom_name',
                   'contact_persons', 'room_responsible', 'unit',
                   'needed_hosts', 'needed_teachers',
                   'preparation_time', 'comment',
                   'default_hosts', 'default_teachers',
                   )
         widgets = VisitForm.Meta.widgets
+        labels = VisitForm.Meta.labels
 
 
 class StudyProjectForm(VisitForm):
@@ -789,7 +799,8 @@ class ClassBookingForm(BookingForm):
 
     class Meta:
         model = ClassBooking
-        fields = ('tour_desired', 'visitoccurrence', 'notes')
+        fields = ('tour_desired', 'catering_desired', 'presentation_desired',
+                  'custom_desired', 'visitoccurrence', 'notes')
         labels = BookingForm.Meta.labels
         widgets = BookingForm.Meta.widgets
 
@@ -804,16 +815,20 @@ class ClassBookingForm(BookingForm):
         if not self.scheduled:
             self.fields['desired_time'].required = True
 
-        if self.visit is not None and not self.visit.tour_available:
-            del self.fields['tour_desired']
+        if self.visit is not None:
+            for service in ['tour', 'catering', 'presentation', 'custom']:
+                if not getattr(self.visit, service + '_available'):
+                    del self.fields[service + '_desired']
 
     def save(self, commit=True, *args, **kwargs):
         booking = super(ClassBookingForm, self).save(commit=False)
         data = self.cleaned_data
 
-        if 'tour_desired' not in data:
-            data['tour_desired'] = False
-            booking.tour_desired = False
+        for service in ['tour_desired', 'catering_desired',
+                        'presentation_desired', 'custom_desired']:
+            if service not in data:
+                data[service] = False
+                setattr(booking, service, False)
         if commit:
             booking.save(*args, **kwargs)
         return booking

@@ -104,6 +104,21 @@
                     <dd>{{ object.classbooking.tour_desired | yesno }}</dd>
                 {% endif %}
 
+                {% if object.classbooking %}
+                    <dt>{% trans 'Forplejning:' %}</dt>
+                    <dd>{{ object.classbooking.catering_desired | yesno }}</dd>
+                {% endif %}
+
+                {% if object.classbooking %}
+                    <dt>{% trans 'Oplæg om uddannelse:' %}</dt>
+                    <dd>{{ object.classbooking.presentation_desired | yesno }}</dd>
+                {% endif %}
+
+                {% if object.classbooking %}
+                    <dt>{{ object.visit.custom_name }}</dt>
+                    <dd>{{ object.classbooking.custom_desired | yesno }}</dd>
+                {% endif %}
+
                 {% if object.teacherbooking %}
                     {% if object.teacherbooking.subjects %}
                         <dt>{% trans 'Fag:' %}</dt>
