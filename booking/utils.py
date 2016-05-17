@@ -177,9 +177,10 @@ def get_model_field_map(model, visited_models=None):
 class MultiQuerySet(object):
     # A container class to allow chaining querysets
     # https://djangosnippets.org/snippets/1103/
-    def __init__(self, *args, **kwargs):
+    def __init__(self, model, *args, **kwargs):
         self.querysets = args
         self._count = None
+        self.model = model
 
     def count(self):
         if not self._count:
