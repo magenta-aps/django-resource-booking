@@ -1819,6 +1819,7 @@ class VisitOccurrence(models.Model):
             WORKFLOW_STATUS_CANCELLED,
         ],
         WORKFLOW_STATUS_PLANNED: [
+            WORKFLOW_STATUS_BEING_PLANNED,
             WORKFLOW_STATUS_PLANNED_NO_BOOKING,
             WORKFLOW_STATUS_CONFIRMED,
             WORKFLOW_STATUS_CANCELLED,
