@@ -172,3 +172,39 @@ def get_model_field_map(model, visited_models=None):
             value = True
         map[(field.name, label)] = value
     return map
+
+
+class MultiQuerySet(object):
+    # A container class to allow chaining querysets
+    # https://djangosnippets.org/snippets/1103/
+    def __init__(self, *args, **kwargs):
+        self.querysets = args
+        self._count = None
+
+    def count(self):
+        if not self._count:
+            self._count = sum(len(qs) for qs in self.querysets)
+        return self._count
+
+    def __len__(self):
+        return self.count()
+
+    def __getitem__(self, item):
+        (offset, stop, step) = item.indices(self.count())
+        items = []
+        total_len = stop - offset
+        for qs in self.querysets:
+            if len(qs) < offset:
+                offset -= len(qs)
+            else:
+                items += list(qs[offset:stop])
+                if len(items) >= total_len:
+                    return items
+                else:
+                    offset = 0
+                    stop = total_len - len(items)
+                    continue
+
+    def iterator(self):
+        for item in self[:]:
+            yield item

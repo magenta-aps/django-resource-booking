@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 
 from booking.models import StudyMaterial, VisitAutosend, Booking, Person
-from booking.models import UnitType
+from booking.models import UnitType, Locality
 from booking.models import Unit
 from booking.models import Resource, OtherResource, Visit
 from booking.models import Booker, Region, PostCode, School
 from booking.models import ClassBooking, TeacherBooking, BookingSubjectLevel
 from booking.models import EmailTemplate
 from booking.models import VisitOccurrence
+from booking.utils import MultiQuerySet
 from django import forms
 from django.contrib.auth.models import User
 from django.forms import SelectMultiple, CheckboxSelectMultiple
@@ -400,6 +401,10 @@ class VisitForm(forms.ModelForm):
             )
 
         self.user = kwargs.pop('user')
+        self.instance = kwargs.get('instance')
+        self.unit = self.instance.unit if self.instance is not None else None
+
+        # self.unit = kwargs.get('instance').unit_id
         super(VisitForm, self).__init__(*args, **kwargs)
         self.fields['unit'].queryset = self.get_unit_query_set()
         self.fields['type'].widget = HiddenInput()
@@ -428,6 +433,13 @@ class VisitForm(forms.ModelForm):
                         userprofile__user_role__role=TEACHER,
                         userprofile__unit__in=self.get_unit_query_set()
                     )
+
+        if self.unit is not None:
+            self.fields['locality'].queryset = MultiQuerySet(
+                Locality.objects.filter(unit=self.unit),
+                Locality.objects.exclude(unit=self.unit)
+            )
+
         # Add classes to certain widgets
         for x in ('needed_hosts', 'needed_teachers'):
             f = self.fields.get(x)
