@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from booking.models import StudyMaterial, VisitAutosend, Booking
-from booking.models import UnitType
-from booking.models import Unit
+from booking.models import Locality, UnitType, Unit
 from booking.models import Resource, OtherResource, Visit
 from booking.models import Booker, Region, PostCode, School
 from booking.models import ClassBooking, TeacherBooking, BookingSubjectLevel
@@ -430,14 +429,12 @@ class VisitForm(forms.ModelForm):
                         userprofile__unit__in=self.get_unit_query_set()
                     )
 
-        """
         if unit is not None:
-            self.fields['locality'].queryset = MultiQuerySet(
-                Locality,
-                Locality.objects.filter(unit=unit),
-                Locality.objects.exclude(unit=unit)
-            )
-        """
+            self.fields['locality'].choices = [(None, "---------")] + \
+                [(x.id, unicode(x))
+                 for x in Locality.objects.filter(unit=unit)] + \
+                [(x.id, unicode(x))
+                 for x in Locality.objects.exclude(unit=unit)]
 
         # Add classes to certain widgets
         for x in ('needed_hosts', 'needed_teachers'):
