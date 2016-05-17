@@ -1813,7 +1813,7 @@ class VisitOccurrence(models.Model):
         (WORKFLOW_STATUS_REJECTED, _(u'Afvist af undervisere eller værter')),
         (WORKFLOW_STATUS_PLANNED, _(PLANNED_STATUS_TEXT)),
         (WORKFLOW_STATUS_PLANNED_NO_BOOKING, _(PLANNED_NOBOOKING_TEXT)),
-        (WORKFLOW_STATUS_CONFIRMED, _(u'Bekræftet af booker')),
+        (WORKFLOW_STATUS_CONFIRMED, _(u'Bekræftet af gæst')),
         (WORKFLOW_STATUS_REMINDED, _(u'Påmindelse afsendt')),
         (WORKFLOW_STATUS_EXECUTED, _(u'Afviklet')),
         (WORKFLOW_STATUS_EVALUATED, _(u'Evalueret')),
