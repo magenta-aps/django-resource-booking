@@ -746,9 +746,9 @@ class Resource(models.Model):
     DISCONTINUED = 2
 
     state_choices = (
-        (CREATED, _(u"Kladde")),
-        (ACTIVE, _(u"Udgiv")),
-        (DISCONTINUED, _(u"Ikke udgivet"))
+        (CREATED, _(u"Under udarbejdelse")),
+        (ACTIVE, _(u"Offentlig")),
+        (DISCONTINUED, _(u"Skjult"))
     )
 
     class_level_choices = [(i, unicode(i)) for i in range(0, 11)]
@@ -756,7 +756,7 @@ class Resource(models.Model):
     type = models.IntegerField(choices=resource_type_choices,
                                default=STUDY_MATERIAL)
     state = models.IntegerField(choices=state_choices, default=CREATED,
-                                verbose_name=_(u"Tilstand"), blank=False)
+                                verbose_name=_(u"Status"), blank=False)
     title = models.CharField(
         max_length=60,
         blank=False,
