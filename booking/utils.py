@@ -190,7 +190,7 @@ class MultiQuerySet(object):
         return self.count()
 
     def __getitem__(self, item):
-        indices = (offset, stop, step) = item.indices(self.count())
+        (offset, stop, step) = item.indices(self.count())
         items = []
         total_len = stop - offset
         for qs in self.querysets:

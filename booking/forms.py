@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import itertools
 
 from booking.models import StudyMaterial, VisitAutosend, Booking, Locality
 from booking.models import UnitType
