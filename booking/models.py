@@ -1980,12 +1980,24 @@ class VisitOccurrence(models.Model):
         return ""
 
     @property
+    def needed_teachers(self):
+        return self.visit.needed_teachers - self.teachers.count()
+
+    @property
     def needs_teachers(self):
-        return len(self.teachers.all()) < self.visit.needed_teachers
+        return self.needed_teachers > 0
+
+    @property
+    def needed_hosts(self):
+        return self.visit.needed_hosts - self.hosts.count()
 
     @property
     def needs_hosts(self):
-        return len(self.hosts.all()) < self.visit.needed_hosts
+        return self.needed_hosts > 0
+
+    @property
+    def needs_room(self):
+        return self.room_status == self.STATUS_NOT_ASSIGNED
 
     @property
     def is_booked(self):
