@@ -287,6 +287,10 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
                 subject=data['subject'],
                 body=data['body']
             )
+            try:
+                template.key = int(request.POST.get("template", None))
+            except (ValueError, TypeError):
+                pass
             context = self.template_context
             recipients = self.lookup_recipients(
                 form.cleaned_data['recipients'])
