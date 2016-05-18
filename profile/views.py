@@ -325,15 +325,18 @@ class CreateUserView(FormView, UpdateView):
 
             # Send email to newly created users
             if not pk:
-                KUEmailMessage.send_email(
-                    EmailTemplate.SYSTEM__USER_CREATED,
-                    {
-                        'user': user,
-                        'password': form.cleaned_data['password1'],
-                    },
-                    [user],
-                    user
-                )
+                try:
+                    KUEmailMessage.send_email(
+                        EmailTemplate.SYSTEM__USER_CREATED,
+                        {
+                            'user': user,
+                            'password': form.cleaned_data['password1'],
+                        },
+                        [user],
+                        user
+                    )
+                except:
+                    pass
 
             messages.add_message(
                 request,
