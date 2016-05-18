@@ -2,7 +2,7 @@ from booking.models import Unit
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
-from django.forms import ModelChoiceField, EmailField, PasswordInput
+from django.forms import ModelChoiceField, EmailField
 from django.utils.translation import ugettext_lazy as _
 from profile.models import UserRole, UserProfile
 from profile.models import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
@@ -47,7 +47,6 @@ class UserCreateForm(UserCreationForm):
             self.fields['password2'].required = False
         self.fields['password1'].widget.attrs = {'autocomplete': 'off'}
         self.fields['password2'].widget.attrs = {'autocomplete': 'off'}
-
 
     def get_unit_query_set(self):
         """"Get units for which user can create events."""
