@@ -233,6 +233,7 @@ class CreateUserView(FormView, UpdateView):
     model = User
     form_class = UserCreateForm
     template_name = 'profile/create_user.html'
+    object = None
 
     @method_decorator(login_required)
     def dispatch(self, *args, **kwargs):
@@ -275,36 +276,30 @@ class CreateUserView(FormView, UpdateView):
         else:
             raise PermissionDenied
 
+    def get_initial(self):
+        initial = super(CreateUserView, self).get_initial()
+        if self.object and self.object.userprofile:
+            initial.update({
+                'role': self.object.userprofile.user_role,
+                'unit': self.object.userprofile.unit
+            })
+        return initial
+
     def get(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
-        # The user making the request
-        user = request.user
-        self.object = User() if pk is None else User.objects.get(id=pk)
 
-        if pk and self.object and self.object.userprofile:
-            user = self.object
-            form = UserCreateForm(
-                user=user,
-                initial={
-                    'username': user.username,
-                    'email': user.email,
-                    'first_name': user.first_name,
-                    'last_name': user.last_name,
-                    'role': self.object.userprofile.user_role,
-                    'unit': self.object.userprofile.unit
-                }
-            )
-        else:
-            form = UserCreateForm(user=user)
+        # The user being edited
+        self.object = User.objects.get(id=pk) if pk is not None else None
 
         return self.render_to_response(
-            self.get_context_data(form=form)
+            self.get_context_data(form=self.get_form())
         )
 
     def post(self, request, *args, **kwargs):
         pk = kwargs.get('pk')
-        if not hasattr(self, 'object') or self.object is None:
-            self.object = None if pk is None else User.objects.get(id=pk)
+        if self.object is None:
+            self.object = User.objects.get(id=pk) if pk is not None else None
+
         form = self.get_form()
         if form.is_valid():
             user_role_id = int(self.request.POST[u'role'])
@@ -374,7 +369,7 @@ class CreateUserView(FormView, UpdateView):
 
     def get_form_kwargs(self):
         kwargs = super(CreateUserView, self).get_form_kwargs()
-        # kwargs['user'] = self.request.user
+        kwargs['user'] = self.request.user
 
         return kwargs
 
