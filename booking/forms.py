@@ -14,7 +14,7 @@ from django.forms import CheckboxSelectMultiple, RadioSelect, EmailInput
 from django.forms import formset_factory, inlineformset_factory
 from django.forms import TextInput, NumberInput, Textarea, Select
 from django.forms import HiddenInput
-from django.utils import formats
+from django.utils import formats, timezone
 from django.utils.translation import ugettext_lazy as _
 from profile.models import HOST, TEACHER
 from tinymce.widgets import TinyMCE
@@ -634,13 +634,25 @@ class BookingForm(forms.ModelForm):
             len(visit.future_events) > 0
         )
         if self.scheduled:
-            self.fields['visitoccurrence'].choices = (
-                (
-                    x.pk,
-                    formats.date_format(x.start_datetime, "DATETIME_FORMAT")
+            choices = []
+            for x in visit.future_events.order_by('start_datetime'):
+                available_seats = x.available_seats()
+                date = formats.date_format(
+                    timezone.localtime(x.start_datetime),
+                    "DATETIME_FORMAT"
                 )
-                for x in visit.future_events.order_by('start_datetime')
-            )
+                if available_seats is None:
+                    choices.append((x.pk, date))
+                elif available_seats > 0:
+                    choices.append(
+                        (
+                            x.pk,
+                            date + " " +
+                            _("(%d pladser tilbage)") % available_seats
+                        )
+                    )
+
+            self.fields['visitoccurrence'].choices = choices
             self.fields['visitoccurrence'].required = True
 
 
@@ -719,9 +731,6 @@ class BookerForm(forms.ModelForm):
         attendeecount_widget = self.fields['attendee_count'].widget
         attendeecount_widget.attrs['min'] = 1
         if visit is not None:
-            if visit.minimum_number_of_visitors is not None:
-                attendeecount_widget.attrs['min'] = \
-                    visit.minimum_number_of_visitors
             if visit.maximum_number_of_visitors is not None:
                 attendeecount_widget.attrs['max'] = \
                     visit.maximum_number_of_visitors
@@ -735,6 +744,10 @@ class BookerForm(forms.ModelForm):
                 for (value, title) in Booker.level_choices
                 if value in available_level_choices
             ]
+            # Visit types where attendee count is mandatory
+            if visit.type in [Resource.GROUP_VISIT,
+                              Resource.TEACHER_EVENT, Resource.STUDY_PROJECT]:
+                self.fields['attendee_count'].required = True
 
         # Eventually we may want a prettier solution,
         # but for now this will have to do

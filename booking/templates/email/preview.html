@@ -3,9 +3,19 @@
 {% load staticfiles %}
 {% load booking_tags %}
 
-{% block head %}
-
+{% block htmltitle %} -
+    {% if template.unit %}
+        {% blocktrans with templatename=template.name unitname=template.unit.name %}
+            Preview emailskabelon '{{ templatename }}' for {{ unitname }}
+        {% endblocktrans %}
+    {% else %}
+        {% blocktrans with templatename=template.name %}
+            Preview emailskabelon '{{ templatename }}'
+        {% endblocktrans %}
+    {% endif %}
 {% endblock %}
+
+{% block head %}{% endblock %}
 
 {% block content %}
 
@@ -14,7 +24,16 @@
     <div class="divider"></div>
     <div class="row form-group">
         <div class="col-sm-6">
-            <h1>{% trans "Preview Emailskabelon" %}</h1>
+            <h1>
+                {% blocktrans with templatename=template.name %}
+                    Preview emailskabelon '{{ templatename }}'
+                {% endblocktrans %}
+            </h1>
+            {% if template.unit %}
+                <dl class="dl-horizontal"><dt>{% trans 'Enhed:'%}</dt><dd>{{ template.unit.name }}</dd>
+            {% else %}
+                {% trans 'Grundskabelon'%}
+            {% endif %}
         </div>
         <div class="col-sm-6 text-right">
             <a href="{% url 'emailtemplate-edit' template.id %}?back={{ thisurl | urlencode }}" class="btn btn-primary">{% trans "Rediger skabelon" %}</a>

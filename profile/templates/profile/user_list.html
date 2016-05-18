@@ -1,23 +1,28 @@
 {% extends "index.html" %}
+{% load i18n %}
+
+{% block htmltitle %} -
+    {% trans 'administrér brugere' %}
+{% endblock %}
 
 {% block content %}
     {% include 'common/breadcrumbrow.html' %}
 
-    <h1>Administrér brugere</h1>
+    <h1>{% trans 'Administrér brugere' %}</h1>
 
     <div class="divider"></div>
     <div class="row">
         <div class="col-sm-12" id="admin-input">
-            <a href="{% url 'user_create' %}" class="btn btn-primary btn-tiny">Opret ny bruger</a>
+            <a href="{% url 'user_create' %}" class="btn btn-primary btn-tiny">{% trans 'Opret ny bruger' %}</a>
             <div class="divider"></div>
-            <h2>Filtrér brugerliste</h2>
+            <h2>{% trans 'Filtrér brugerliste' %}</h2>
             
             <form class="form-horizontal" name="filteruserlist" id="filteruserlist">
                 <div class="form-group">
-                    <label class="col-sm-2 control-label">Enhed:</label>
+                    <label class="col-sm-2 control-label">{% trans 'Enhed:' %}</label>
                     <div class="col-sm-5">
                         <select name="unit">
-                            <option value="">-- Vælg enhed --</option>
+                            <option value="">-- {% trans 'Vælg enhed' %} --</option>
                             {% for val, name in possible_units %}
                             <option value="{{ val }}"{% if selected_unit == val %}selected=" selected"{% endif %}>{{ name }}</option>
                             {% endfor %}
@@ -25,10 +30,10 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-2 control-label">Rolle:</label>
+                    <label class="col-sm-2 control-label">{% trans 'Rolle:' %}</label>
                     <div class="col-sm-5">
                         <select name="role">
-                            <option value="">-- Vælg rolle --</option>
+                            <option value="">-- {% trans 'Vælg rolle' %} --</option>
                             {% for val, name in possible_roles %}
                             <option value="{{ val }}"{% if selected_role == val %}selected=" selected"{% endif %}>{{ name }}</option>
                             {% endfor %}
@@ -36,7 +41,7 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-2 control-label">Søg i navn:</label>
+                    <label class="col-sm-2 control-label">{% trans 'Søg i navn:' %}</label>
                     <div class="col-sm-5">
                         <input type="text" name="q" value="{{ request.GET.q }}" />
                     </div>
@@ -54,16 +59,16 @@
                 {% for user in users %}
                 <li class="media">
                     <dl class="dl-horizontal">
-                        <dt>Navn:</dt>
+                        <dt>{% trans 'Navn:' %}</dt>
                         <dd>
                             {{ user }}
-                            <a href="{% url 'user_edit' user.pk %}">Redigér</a>
+                            <a href="{% url 'user_edit' user.pk %}">{% trans 'Redigér' %}</a>
                         </dd>
-                        <dt>Email:</dt>
+                        <dt>{% trans 'Email:' %}</dt>
                         <dd>{{ user.email }}</dd>
-                        <dt>Enhed:</dt>
+                        <dt>{% trans 'Enhed:' %}</dt>
                         <dd>{{ user.userprofile.unit.name }}</dd>
-                        <dt>Rolle:</dt>
+                        <dt>{% trans 'Rolle:' %}</dt>
                         <dd>{{ user.userprofile.get_role_name }}</dd>
                     </dl>
                 </li>

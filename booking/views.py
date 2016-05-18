@@ -503,7 +503,7 @@ class LoggedViewMixin(object):
         qs = LogEntry.objects.filter(
             object_id=self.object.pk,
             content_type__in=types
-        ).order_by('action_time')
+        ).order_by('-action_time')
 
         return qs
 
@@ -1157,7 +1157,7 @@ class EditResourceView(LoginRequiredMixin, RoleRequiredMixin,
         context['gymnasiefag_selected'] = self.gymnasiefag_selected()
         context['grundskolefag_selected'] = self.grundskolefag_selected()
 
-        context['klassetrin_range'] = range(1, 10)
+        context['klassetrin_range'] = range(0, 10)
 
         if self.object and self.object.id:
             context['thisurl'] = reverse('resource-edit',
@@ -1534,7 +1534,7 @@ class EditVisitView(EditResourceView):
         context['gymnasiefag_selected'] = self.gymnasiefag_selected()
         context['grundskolefag_selected'] = self.grundskolefag_selected()
 
-        context['klassetrin_range'] = range(1, 10)
+        context['klassetrin_range'] = range(0, 10)
 
         if self.object is not None and self.object.id:
             context['thisurl'] = reverse('visit-edit', args=[self.object.id])
@@ -1570,16 +1570,17 @@ class EditVisitView(EditResourceView):
                 for autosendform in autosendformset:
                     if autosendform.is_valid():
                         data = autosendform.cleaned_data
-                        if data.get('DELETE'):
-                            VisitAutosend.objects.filter(
-                                visit=data['visit'],
-                                template_key=data['template_key']
-                            ).delete()
-                        else:
-                            try:
-                                autosendform.save()
-                            except:
-                                pass
+                        if len(data) > 0:
+                            if data.get('DELETE'):
+                                VisitAutosend.objects.filter(
+                                    visit=data['visit'],
+                                    template_key=data['template_key']
+                                ).delete()
+                            else:
+                                try:
+                                    autosendform.save()
+                                except:
+                                    pass
 
     def save_rooms(self):
         # Update rooms
@@ -2120,7 +2121,11 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
             'visit': self.visit,
             'level_map': Booker.level_map,
             'modal': self.modal,
-            'back': self.back
+            'back': self.back,
+            'occurrence_available': {
+                str(visitoccurrence.pk): visitoccurrence.available_seats()
+                for visitoccurrence in self.visit.visitoccurrence_set.all()
+            }
         }
         context.update(kwargs)
         return super(BookingView, self).get_context_data(**context)

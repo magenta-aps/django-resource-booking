@@ -569,6 +569,10 @@ class EmailTemplate(models.Model):
         blank=True
     )
 
+    @property
+    def name(self):
+        return EmailTemplate.get_name(self.key)
+
     def expand_subject(self, context, keep_placeholders=False):
         return self._expand(self.subject, context, keep_placeholders)
 
@@ -754,9 +758,9 @@ class Resource(models.Model):
     DISCONTINUED = 2
 
     state_choices = (
-        (CREATED, _(u"Kladde")),
-        (ACTIVE, _(u"Udgiv")),
-        (DISCONTINUED, _(u"Ikke udgivet"))
+        (CREATED, _(u"Under udarbejdelse")),
+        (ACTIVE, _(u"Offentlig")),
+        (DISCONTINUED, _(u"Skjult"))
     )
 
     class_level_choices = [(i, unicode(i)) for i in range(0, 11)]
@@ -764,7 +768,7 @@ class Resource(models.Model):
     type = models.IntegerField(choices=resource_type_choices,
                                default=STUDY_MATERIAL)
     state = models.IntegerField(choices=state_choices, default=CREATED,
-                                verbose_name=_(u"Tilstand"), blank=False)
+                                verbose_name=_(u"Status"), blank=False)
     title = models.CharField(
         max_length=60,
         blank=False,
@@ -1173,7 +1177,7 @@ class ResourceGrundskoleFag(models.Model):
     @classmethod
     def display(cls, subject, clevel_min, clevel_max):
         class_range = []
-        if clevel_min:
+        if clevel_min is not None:
             class_range.append(clevel_min)
             if clevel_max != clevel_min:
                 class_range.append(clevel_max)
@@ -1571,7 +1575,10 @@ class Visit(Resource):
             return True
 
         # Only bookable if there is a valid event in the future:
-        return self.future_events.exists()
+        for occurrence in self.future_events:
+            if occurrence.is_bookable:
+                return True
+        return False
 
     @property
     def is_bookable(self):
@@ -1775,7 +1782,7 @@ class VisitOccurrence(models.Model):
         (WORKFLOW_STATUS_REJECTED, _(u'Afvist af undervisere eller værter')),
         (WORKFLOW_STATUS_PLANNED, _(PLANNED_STATUS_TEXT)),
         (WORKFLOW_STATUS_PLANNED_NO_BOOKING, _(PLANNED_NOBOOKING_TEXT)),
-        (WORKFLOW_STATUS_CONFIRMED, _(u'Bekræftet af booker')),
+        (WORKFLOW_STATUS_CONFIRMED, _(u'Bekræftet af gæst')),
         (WORKFLOW_STATUS_REMINDED, _(u'Påmindelse afsendt')),
         (WORKFLOW_STATUS_EXECUTED, _(u'Afviklet')),
         (WORKFLOW_STATUS_EVALUATED, _(u'Evalueret')),
@@ -1812,6 +1819,10 @@ class VisitOccurrence(models.Model):
         editable=False
     )
 
+    @property
+    def unit(self):
+        return self.visit.unit
+
     valid_status_changes = {
         WORKFLOW_STATUS_BEING_PLANNED: [
             WORKFLOW_STATUS_REJECTED,
@@ -1823,6 +1834,7 @@ class VisitOccurrence(models.Model):
             WORKFLOW_STATUS_CANCELLED,
         ],
         WORKFLOW_STATUS_PLANNED: [
+            WORKFLOW_STATUS_BEING_PLANNED,
             WORKFLOW_STATUS_PLANNED_NO_BOOKING,
             WORKFLOW_STATUS_CONFIRMED,
             WORKFLOW_STATUS_CANCELLED,
@@ -1929,9 +1941,23 @@ class VisitOccurrence(models.Model):
     def needs_hosts(self):
         return len(self.hosts.all()) < self.visit.needed_hosts
 
+    @property
     def is_booked(self):
         """Has this VisitOccurrence instance been booked yet?"""
         return len(self.bookings.all()) > 0
+
+    @property
+    def is_bookable(self):
+        # Can this occurrence be booked?
+        if not self.bookable:
+            return False
+        if self.workflow_status not in self.BOOKABLE_STATES:
+            return False
+        if self.expired:
+            return False
+        if self.available_seats() == 0:
+            return False
+        return True
 
     def date_display(self):
         return self.start_datetime or _(u'på ikke-fastlagt tidspunkt')
@@ -1946,6 +1972,16 @@ class VisitOccurrence(models.Model):
             attendees=Sum('bookings__booker__attendee_count')
         )
         return res['attendees'] or 0
+
+    @property
+    def nr_attendees(self):
+        # Return the total number of participants for this occurrence
+        return self.nr_additional_participants()
+
+    def available_seats(self):
+        limit = self.visit.maximum_number_of_visitors
+        if limit is not None:
+            return max(limit - self.nr_attendees, 0)
 
     def get_workflow_status_class(self):
         return self.status_to_class_map.get(self.workflow_status, 'default')
@@ -2078,6 +2114,22 @@ class VisitOccurrence(models.Model):
             except:
                 return None
 
+    def get_autosends(self, follow_inherit=True,
+                      include_disabled=False, yield_inherited=True):
+        result = set()
+        for autosend in self.visitoccurrenceautosend_set.all():
+            if autosend.enabled or include_disabled:
+                result.add(autosend)
+            elif autosend.inherit and follow_inherit:
+                inherited = autosend.get_inherited()
+                if inherited is not None and \
+                        (inherited.enabled or include_disabled):
+                    if yield_inherited:
+                        result.add(inherited)
+                    else:
+                        result.add(autosend)
+        return result
+
     def autosend_enabled(self, template_key):
         return self.get_autosend(template_key, True) is not None
 
@@ -2118,7 +2170,7 @@ class VisitOccurrence(models.Model):
                     )
 
     def get_autosend_display(self):
-        autosends = self.visitoccurrenceautosend_set.filter(enabled=True)
+        autosends = self.get_autosends(True, False, False)
         return ', '.join([autosend.get_name() for autosend in autosends])
 
     def update_endtime(self):
@@ -2191,7 +2243,6 @@ class VisitOccurrence(models.Model):
 
     @staticmethod
     def get_recently_held(time=timezone.now()):
-        print time
         return VisitOccurrence.objects.filter(
             workflow_status__in=[
                 VisitOccurrence.WORKFLOW_STATUS_EXECUTED,
@@ -2522,6 +2573,7 @@ class Booker(models.Model):
     g3 = 3
     student = 4
     other = 5
+    f0 = 17
     f1 = 7
     f2 = 8
     f3 = 9
@@ -2534,14 +2586,15 @@ class Booker(models.Model):
     f10 = 16
 
     level_map = {
-        Subject.SUBJECT_TYPE_GRUNDSKOLE: [f1, f2, f3, f4, f5, f6, f7,
+        Subject.SUBJECT_TYPE_GRUNDSKOLE: [f0, f1, f2, f3, f4, f5, f6, f7,
                                           f8, f9, f10, other],
         Subject.SUBJECT_TYPE_GYMNASIE: [g1, g2, g3, student, other],
-        Subject.SUBJECT_TYPE_BOTH: [f1, f2, f3, f4, f5, f6, f7, f8, f9, f10,
-                                    g1, g2, g3, student, other]
+        Subject.SUBJECT_TYPE_BOTH: [f0, f1, f2, f3, f4, f5, f6, f7, f8, f9,
+                                    f10, g1, g2, g3, student, other]
     }
 
     level_choices = (
+        (f0, _(u'0. klasse')),
         (f1, _(u'1. klasse')),
         (f2, _(u'2. klasse')),
         (f3, _(u'3. klasse')),
@@ -2723,6 +2776,9 @@ class Booking(models.Model):
             self.statistics = statistics
             self.save()
 
+    def __unicode__(self):
+        return _("Tilmelding #%d") % self.id
+
 
 Booking.add_occurrence_attr('visit')
 Booking.add_occurrence_attr('hosts')
@@ -2751,7 +2807,10 @@ class TeacherBooking(Booking):
         verbose_name = _(u'booking for lærerarrangement')
         verbose_name_plural = _(u'bookinger for lærerarrangementer')
 
-    subjects = models.ManyToManyField(Subject)
+    subjects = models.ManyToManyField(
+        Subject,
+        blank=False
+    )
 
     def as_searchtext(self):
         result = [super(TeacherBooking, self).as_searchtext()]
@@ -2858,11 +2917,13 @@ class KUEmailMessage(models.Model):
         for recipient in recipients:
             name = None
             address = None
+            user = None
             if isinstance(recipient, basestring):
                 address = recipient
             elif isinstance(recipient, User):
                 name = recipient.get_full_name()
                 address = recipient.email
+                user = recipient
             else:
                 try:
                     name = recipient.get_name()
@@ -2872,7 +2933,7 @@ class KUEmailMessage(models.Model):
                     address = recipient.get_email()
                 except:
                     pass
-            if address is not None and address not in emails:
+            if address is not None and address != '' and address not in emails:
                 email = {'address': address}
                 if name is not None:
                     email['name'] = name
@@ -2881,6 +2942,7 @@ class KUEmailMessage(models.Model):
                     email['full'] = address
 
                 email['get_full_name'] = email['full']
+                email['user'] = user
 
                 emails[address] = email
 
@@ -2894,6 +2956,7 @@ class KUEmailMessage(models.Model):
             }
             ctx.update(context)
             subject = template.expand_subject(ctx)
+            subject = subject.replace('\n', '')
 
             body = template.expand_body(ctx, encapsulate=True).strip()
             if body.startswith("<!DOCTYPE"):

@@ -143,13 +143,16 @@
                                 <dd>
                                     <ul class="list-unstyled" id="dato">
                                     {% for event in object.visitoccurrence_set.all %}
-                                        {% if event.expired %}
-                                            <li data-expired="true">
-                                                <a href="{% url 'visit-occ-view' event.pk %}">{{ event.start_datetime|date:'d-m-Y H:i' }} {% trans '(udløbet)' %}</a>
-                                            </li>
-                                        {% else %}
-                                            <li data-expired="false">
-                                                <a href="{% url 'visit-occ-view' event.pk %}">{{ event.start_datetime|date:'d-m-Y H:i' }}</a>
+                                        {% if event.start_datetime %}
+                                            <li data-expired="{% if event.expired %}true{% else %}false{% endif %}">
+                                                <a href="{% url 'visit-occ-view' event.pk %}">
+                                                    {{ event.start_datetime|date:'d-m-Y H:i' }}
+                                                    {% if event.expired %}
+                                                        <br/>{% trans '(udløbet)' %}
+                                                    {% elif event.available_seats != None %}
+                                                        <br/>{% blocktrans with seats=event.available_seats %}({{ seats }} pladser tilbage){% endblocktrans %}
+                                                    {% endif %}
+                                                </a>
                                             </li>
                                         {% endif %}
                                     {% endfor %}
