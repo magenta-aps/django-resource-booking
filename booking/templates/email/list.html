@@ -35,14 +35,14 @@
     </p>
 
     {% if duplicates %}
-        <p class="text-warning">{% trans 'Advarsel: der er flere templates med samme Nøgle og Enhed. Kun én af disse vil komme i betragtning' %}</p>
+        <p class="text-warning">{% trans 'Advarsel: der er flere skabeloner med samme Type og Enhed. Kun én af disse vil komme i betragtning' %}</p>
     {% endif %}
 
     <table class="table table-striped sortable" data-sort-columns="0 1">
         <thead>
             <tr>
                 <th class="col-sm-3 sort">
-                    {% trans 'Emne' %}
+                    {% trans 'Type' %}
                 </th>
                 <th class="col-sm-4 sort">
                     {% trans 'Enhed' %}

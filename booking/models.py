@@ -548,7 +548,7 @@ class EmailTemplate(models.Model):
     ]
 
     key = models.IntegerField(
-        verbose_name=u'Nøgle',
+        verbose_name=u'Type',
         choices=key_choices,
         default=1
     )
