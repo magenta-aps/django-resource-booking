@@ -43,8 +43,7 @@ class UserCreateForm(UserCreationForm):
         return self.user.userprofile.get_unit_queryset()
 
     def get_role_query_set(self):
-        user = self.user
-        user_role = user.userprofile.get_role()
+        user_role = self.user.userprofile.get_role()
         roles_to_exclude = []
 
         if user_role == FACULTY_EDITOR:
@@ -52,6 +51,13 @@ class UserCreateForm(UserCreationForm):
         if user_role == COORDINATOR:
             roles_to_exclude.append(ADMINISTRATOR)
             roles_to_exclude.append(FACULTY_EDITOR)
+
+        # If we are not editing our own user
+        # (ie. we are creating a new user or editing another user)
+        # Disallow our own role unless we are admin
+        if not self.instance == self.user:
+            if not self.user.userprofile.is_administrator:
+                roles_to_exclude.append(self.user.userprofile.get_role())
 
         qs = UserRole.objects.all().exclude(role__in=roles_to_exclude)
 
