@@ -5,7 +5,6 @@ from django.contrib.auth.forms import UserCreationForm
 from django.forms import ModelChoiceField, EmailField
 from django.utils.translation import ugettext_lazy as _
 from profile.models import UserRole, UserProfile
-from profile.models import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
 
 
 class UserCreateForm(UserCreationForm):
@@ -59,24 +58,10 @@ class UserCreateForm(UserCreationForm):
         return self.user.userprofile.get_unit_queryset()
 
     def get_role_query_set(self):
-        user_role = self.user.userprofile.get_role()
-        roles_to_exclude = []
-
-        if user_role == FACULTY_EDITOR:
-            roles_to_exclude.append(ADMINISTRATOR)
-        if user_role == COORDINATOR:
-            roles_to_exclude.append(ADMINISTRATOR)
-            roles_to_exclude.append(FACULTY_EDITOR)
-
-        # If we are not editing our own user
-        # (ie. we are creating a new user or editing another user)
-        # Disallow our own role unless we are admin
-        if not self.instance == self.user:
-            if not self.user.userprofile.is_administrator:
-                roles_to_exclude.append(self.user.userprofile.get_role())
-
-        qs = UserRole.objects.all().exclude(role__in=roles_to_exclude)
-
+        roles = self.user.userprofile.available_roles
+        if self.instance == self.user:
+            roles.append(self.user.userprofile.get_role())
+        qs = UserRole.objects.filter(role__in=roles)
         return qs
 
     def clean_password2(self):
