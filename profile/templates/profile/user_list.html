@@ -11,12 +11,29 @@
     <h1>{% trans 'Administrér brugere' %}</h1>
 
     <div class="divider"></div>
-    <div class="row">
-        <div class="col-sm-12" id="admin-input">
-            <a href="{% url 'user_create' %}" class="btn btn-primary btn-tiny">{% trans 'Opret ny bruger' %}</a>
-            <div class="divider"></div>
-            <h2>{% trans 'Filtrér brugerliste' %}</h2>
-            
+
+    <div id="admin-input">
+        <div class="row">
+
+            <div class="col-sm-4">
+                <a href="{% url 'user_create' %}" class="btn btn-primary btn-tiny">{% trans 'Opret ny bruger' %}</a>
+            </div>
+            {% if messages %}
+                <div class="col-sm-4 alert alert-success" role="alert">
+                    <ul>
+                        {% for message in messages %}
+                            <li {% if message.tags %}class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="divider"></div>
+        <h2>{% trans 'Filtrér brugerliste' %}</h2>
+
+        <div class="row">
+
             <form class="form-horizontal" name="filteruserlist" id="filteruserlist">
                 <div class="form-group">
                     <label class="col-sm-2 control-label">{% trans 'Enhed:' %}</label>
@@ -76,7 +93,7 @@
                 {% endfor %}
             </ul>
         </div>
+        <div class="divider"></div>
     </div>
-    <div class="divider"></div>
 
 {% endblock %}
