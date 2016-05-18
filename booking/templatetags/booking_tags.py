@@ -151,14 +151,14 @@ class FullURLNode(defaulttags.Node):
         if url is not None and url != '' and \
                 self.TOKEN_USER_KEY in self.kwargs:
             user = self.kwargs[self.TOKEN_USER_KEY]
+            if isinstance(user, FilterExpression):
+                user = user.resolve(context)
+            elif isinstance(user, basestring):
+                user = context.get(user)
             if isinstance(user, User):
                 pass
             elif isinstance(user, UserProfile):
                 user = user.user
-            elif isinstance(user, FilterExpression):
-                user = user.resolve(context)
-            elif isinstance(user, basestring):
-                user = context.get(user)
             else:
                 user = None
 
