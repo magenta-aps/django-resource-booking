@@ -48,13 +48,18 @@ class UserCreateForm(UserCreationForm):
         self.fields['password1'].widget.attrs = {'autocomplete': 'off'}
         self.fields['password2'].widget.attrs = {'autocomplete': 'off'}
 
+        if hasattr(self.instance, 'userprofile'):
+            self.initial.update({
+                'role': self.instance.userprofile.user_role,
+                'unit': self.instance.userprofile.unit
+            })
+
     def get_unit_query_set(self):
         """"Get units for which user can create events."""
         return self.user.userprofile.get_unit_queryset()
 
     def get_role_query_set(self):
-        user = self.user
-        user_role = user.userprofile.get_role()
+        user_role = self.user.userprofile.get_role()
         roles_to_exclude = []
 
         if user_role == FACULTY_EDITOR:
@@ -62,6 +67,13 @@ class UserCreateForm(UserCreationForm):
         if user_role == COORDINATOR:
             roles_to_exclude.append(ADMINISTRATOR)
             roles_to_exclude.append(FACULTY_EDITOR)
+
+        # If we are not editing our own user
+        # (ie. we are creating a new user or editing another user)
+        # Disallow our own role unless we are admin
+        if not self.instance == self.user:
+            if not self.user.userprofile.is_administrator:
+                roles_to_exclude.append(self.user.userprofile.get_role())
 
         qs = UserRole.objects.all().exclude(role__in=roles_to_exclude)
 
