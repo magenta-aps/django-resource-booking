@@ -156,11 +156,14 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                 'count'
             ),
             'queryset': self.sort_vo_queryset(
-                VisitOccurrence.being_planned_queryset(visit__unit=unit_qs).
-                    annotate(num_participants=(
-                        Coalesce(Count("bookings__booker__pk"), 0) +
-                        Coalesce(Sum("bookings__booker__attendee_count"), 0)
-                    )
+                VisitOccurrence.being_planned_queryset(visit__unit=unit_qs)
+                            .annotate(num_participants=(
+                                Coalesce(Count("bookings__booker__pk"), 0) +
+                                Coalesce(
+                                    Sum("bookings__booker__attendee_count"),
+                                    0
+                                )
+                            )
                 ).filter(num_participants__gte=1)
                 # See also VisitOccurrenceSearchView.filter_by_participants
             )
