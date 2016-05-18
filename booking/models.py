@@ -746,9 +746,9 @@ class Resource(models.Model):
     DISCONTINUED = 2
 
     state_choices = (
-        (CREATED, _(u"Kladde")),
-        (ACTIVE, _(u"Udgiv")),
-        (DISCONTINUED, _(u"Ikke udgivet"))
+        (CREATED, _(u"Under udarbejdelse")),
+        (ACTIVE, _(u"Offentlig")),
+        (DISCONTINUED, _(u"Skjult"))
     )
 
     class_level_choices = [(i, unicode(i)) for i in range(0, 11)]
@@ -756,7 +756,7 @@ class Resource(models.Model):
     type = models.IntegerField(choices=resource_type_choices,
                                default=STUDY_MATERIAL)
     state = models.IntegerField(choices=state_choices, default=CREATED,
-                                verbose_name=_(u"Tilstand"), blank=False)
+                                verbose_name=_(u"Status"), blank=False)
     title = models.CharField(
         max_length=60,
         blank=False,
@@ -1563,7 +1563,10 @@ class Visit(Resource):
             return True
 
         # Only bookable if there is a valid event in the future:
-        return self.future_events.exists()
+        for occurrence in self.future_events:
+            if occurrence.is_bookable:
+                return True
+        return False
 
     @property
     def is_bookable(self):
@@ -1767,7 +1770,7 @@ class VisitOccurrence(models.Model):
         (WORKFLOW_STATUS_REJECTED, _(u'Afvist af undervisere eller værter')),
         (WORKFLOW_STATUS_PLANNED, _(PLANNED_STATUS_TEXT)),
         (WORKFLOW_STATUS_PLANNED_NO_BOOKING, _(PLANNED_NOBOOKING_TEXT)),
-        (WORKFLOW_STATUS_CONFIRMED, _(u'Bekræftet af booker')),
+        (WORKFLOW_STATUS_CONFIRMED, _(u'Bekræftet af gæst')),
         (WORKFLOW_STATUS_REMINDED, _(u'Påmindelse afsendt')),
         (WORKFLOW_STATUS_EXECUTED, _(u'Afviklet')),
         (WORKFLOW_STATUS_EVALUATED, _(u'Evalueret')),
@@ -1819,6 +1822,7 @@ class VisitOccurrence(models.Model):
             WORKFLOW_STATUS_CANCELLED,
         ],
         WORKFLOW_STATUS_PLANNED: [
+            WORKFLOW_STATUS_BEING_PLANNED,
             WORKFLOW_STATUS_PLANNED_NO_BOOKING,
             WORKFLOW_STATUS_CONFIRMED,
             WORKFLOW_STATUS_CANCELLED,
@@ -1925,9 +1929,23 @@ class VisitOccurrence(models.Model):
     def needs_hosts(self):
         return len(self.hosts.all()) < self.visit.needed_hosts
 
+    @property
     def is_booked(self):
         """Has this VisitOccurrence instance been booked yet?"""
         return len(self.bookings.all()) > 0
+
+    @property
+    def is_bookable(self):
+        # Can this occurrence be booked?
+        if not self.bookable:
+            return False
+        if self.workflow_status not in self.BOOKABLE_STATES:
+            return False
+        if self.expired:
+            return False
+        if self.available_seats() == 0:
+            return False
+        return True
 
     def date_display(self):
         return self.start_datetime or _(u'på ikke-fastlagt tidspunkt')
@@ -1942,6 +1960,16 @@ class VisitOccurrence(models.Model):
             attendees=Sum('bookings__booker__attendee_count')
         )
         return res['attendees'] or 0
+
+    @property
+    def nr_attendees(self):
+        # Return the total number of participants for this occurrence
+        return self.nr_additional_participants()
+
+    def available_seats(self):
+        limit = self.visit.maximum_number_of_visitors
+        if limit is not None:
+            return max(limit - self.nr_attendees, 0)
 
     def get_workflow_status_class(self):
         return self.status_to_class_map.get(self.workflow_status, 'default')
@@ -2877,11 +2905,13 @@ class KUEmailMessage(models.Model):
         for recipient in recipients:
             name = None
             address = None
+            user = None
             if isinstance(recipient, basestring):
                 address = recipient
             elif isinstance(recipient, User):
                 name = recipient.get_full_name()
                 address = recipient.email
+                user = recipient
             else:
                 try:
                     name = recipient.get_name()
@@ -2900,6 +2930,7 @@ class KUEmailMessage(models.Model):
                     email['full'] = address
 
                 email['get_full_name'] = email['full']
+                email['user'] = user
 
                 emails[address] = email
 

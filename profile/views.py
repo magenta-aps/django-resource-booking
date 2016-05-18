@@ -123,7 +123,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         planned = {
             'color': self.HEADING_RED,
             'type': 'VisitOccurrence',
-            'title': _(u"Besøg der kræver handling"),
+            'title': _(u"Besøg under planlægning"),
             'queryset': self.sort_vo_queryset(
                 VisitOccurrence.being_planned_queryset(visit__unit=unit_qs)
             )

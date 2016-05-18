@@ -23,7 +23,7 @@
             <div class="col-xs-9">
                 <div>
                     {% url 'visit-view' object.visit.id as visiturl %}
-                    {% blocktrans with nr_bookers=object.nr_bookers visittitle=object.visit.title %}
+                    {% blocktrans with nr_bookers=object.nr_attendees visittitle=object.visit.title %}
                         {{ nr_bookers }} har tilmeldt sig denne instans af <a href="{{ visiturl }}">{{ visittitle }}</a>
                     {% endblocktrans %}
                 </div>

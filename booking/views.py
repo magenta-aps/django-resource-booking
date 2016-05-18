@@ -503,7 +503,7 @@ class LoggedViewMixin(object):
         qs = LogEntry.objects.filter(
             object_id=self.object.pk,
             content_type__in=types
-        ).order_by('action_time')
+        ).order_by('-action_time')
 
         return qs
 
@@ -2121,7 +2121,11 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
             'visit': self.visit,
             'level_map': Booker.level_map,
             'modal': self.modal,
-            'back': self.back
+            'back': self.back,
+            'occurrence_available': {
+                str(visitoccurrence.pk): visitoccurrence.available_seats()
+                for visitoccurrence in self.visit.visitoccurrence_set.all()
+            }
         }
         context.update(kwargs)
         return super(BookingView, self).get_context_data(**context)
