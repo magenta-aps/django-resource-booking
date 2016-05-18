@@ -38,6 +38,12 @@ class UserCreateForm(UserCreationForm):
             self.fields['role'].queryset = self.get_role_query_set()
             self.fields['unit'].queryset = self.get_unit_query_set()
 
+        if hasattr(self.instance, 'userprofile'):
+            self.initial.update({
+                'role': self.instance.userprofile.user_role,
+                'unit': self.instance.userprofile.unit
+            })
+
     def get_unit_query_set(self):
         """"Get units for which user can create events."""
         return self.user.userprofile.get_unit_queryset()

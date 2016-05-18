@@ -276,15 +276,6 @@ class CreateUserView(FormView, UpdateView):
         else:
             raise PermissionDenied
 
-    def get_initial(self):
-        initial = super(CreateUserView, self).get_initial()
-        if self.object and self.object.userprofile:
-            initial.update({
-                'role': self.object.userprofile.user_role,
-                'unit': self.object.userprofile.unit
-            })
-        return initial
-
     def get(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
 
