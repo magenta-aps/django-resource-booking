@@ -997,6 +997,10 @@ a.template-overridden:visited {
     list-style-type: none;
 }
 
+.listcontainer .list-group-item .label {
+    clear: both;
+}
+
 .listcontainer .panel.panel-bookings .panel-heading .panel-title {
     font-size: 13px;
     display: inline-block;

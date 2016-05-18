@@ -13,7 +13,7 @@
                 <a href="{{ list.button.link }}" class="column-show-all">{{ list.button.text }}</a>
             {% endif %}
         </div>
-        <div class="panel-body pager" data-list-item=".list-group-item">
+        <div class="panel-body" data-list-item=".list-group-item">
 
             {% if list.type == 'VisitOccurrence' %}
                 {% for occurrence in list.limited_qs|default:list.queryset %}
@@ -32,6 +32,26 @@
                             </div>
                         </a>
                         <div class="tools">
+                            <a class="new-signups pull-left" title="{% trans 'Antal nye tilmeldinger' %}" href="{% url 'visit-occ-view' occurrence.pk %}">
+                                {% trans 'Nye tilmeldinger' %}
+                                <span class="no-of-new-signups">({{ occurrence.bookings.count }})</span>
+                            </a>
+                            <div class="pull-right">
+                                <ul class="list-unstyled">
+                                    {% if occurrence.needs_teachers %}
+                                        <li>{% blocktrans count needed=occurrence.needed_teachers %}Mangler {{ needed }} underviser{% plural %}Mangler {{ needed }} undervisere{% endblocktrans %}</li>
+                                    {% endif %}
+                                    {% if occurrence.needs_hosts %}
+                                        <li>{% blocktrans count needed=occurrence.needed_hosts %}Mangler {{ needed }} vært{% plural %}Mangler {{ needed }} værter{% endblocktrans %}</li>
+                                    {% endif %}
+                                    {% if occurrence.needs_room %}
+                                        <li>{% blocktrans with count=1 %}Mangler lokale{% endblocktrans %}</li>
+                                    {% endif %}
+                                    {% if occurrence.comments %}
+                                        <li>{% trans 'Kommentar:' %} {{ occurrence.comments }}</li>
+                                    {% endif %}
+                                </ul>
+                            </div>
                             <span class="label label-{{ occurrence.get_workflow_status_class }} pull-right">{{ occurrence.get_workflow_status_display }}</span>
                         </div>
                     </div>
