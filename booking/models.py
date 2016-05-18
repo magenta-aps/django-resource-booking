@@ -1563,7 +1563,10 @@ class Visit(Resource):
             return True
 
         # Only bookable if there is a valid event in the future:
-        return self.future_events.exists()
+        for occurrence in self.future_events:
+            if occurrence.is_bookable:
+                return True
+        return False
 
     @property
     def is_bookable(self):
@@ -1926,9 +1929,23 @@ class VisitOccurrence(models.Model):
     def needs_hosts(self):
         return len(self.hosts.all()) < self.visit.needed_hosts
 
+    @property
     def is_booked(self):
         """Has this VisitOccurrence instance been booked yet?"""
         return len(self.bookings.all()) > 0
+
+    @property
+    def is_bookable(self):
+        # Can this occurrence be booked?
+        if not self.bookable:
+            return False
+        if self.workflow_status not in self.BOOKABLE_STATES:
+            return False
+        if self.expired:
+            return False
+        if self.available_seats() == 0:
+            return False
+        return True
 
     def date_display(self):
         return self.start_datetime or _(u'på ikke-fastlagt tidspunkt')
@@ -1943,6 +1960,11 @@ class VisitOccurrence(models.Model):
             attendees=Sum('bookings__booker__attendee_count')
         )
         return res['attendees'] or 0
+
+    def available_seats(self):
+        limit = self.visit.maximum_number_of_visitors
+        if limit is not None:
+            return max(limit - self.nr_bookers(), 0)
 
     def get_workflow_status_class(self):
         return self.status_to_class_map.get(self.workflow_status, 'default')

@@ -1095,6 +1095,11 @@ body.lightbox {
     overflow: hidden;
 }
 
+#bookingform .help-block,
+#bookingform .help-block ul {
+    margin: 0;
+}
+
 @media screen and (max-width:768px) {
     html,
     body {

@@ -634,16 +634,21 @@ class BookingForm(forms.ModelForm):
             len(visit.future_events) > 0
         )
         if self.scheduled:
-            self.fields['visitoccurrence'].choices = (
-                (
-                    x.pk,
-                    formats.date_format(
-                        timezone.localtime(x.start_datetime),
-                        "DATETIME_FORMAT"
+            choices = []
+            for x in visit.future_events.order_by('start_datetime'):
+                available_seats = x.available_seats()
+                date = formats.date_format(x.start_datetime, "DATETIME_FORMAT")
+                if available_seats is None:
+                    choices.append((x.pk, date))
+                elif available_seats > 0:
+                    choices.append(
+                        (
+                            x.pk,
+                            date + " " +
+                            _("(%d pladser tilbage)") % available_seats
+                        )
                     )
-                )
-                for x in visit.future_events.order_by('start_datetime')
-            )
+            self.fields['visitoccurrence'].choices = choices
             self.fields['visitoccurrence'].required = True
 
 
