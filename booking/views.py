@@ -37,7 +37,8 @@ from django.views.defaults import bad_request
 
 from profile.models import EDIT_ROLES
 from profile.models import role_to_text
-from booking.models import Visit, VisitOccurrence, StudyMaterial, VisitAutosend
+from booking.models import Visit, VisitOccurrence, StudyMaterial, VisitAutosend, \
+    UserPerson
 from booking.models import KUEmailMessage
 from booking.models import Resource, Subject
 from booking.models import Unit
@@ -1403,8 +1404,8 @@ class EditVisitView(EditResourceView):
 
     def get_forms(self):
         forms = super(EditVisitView, self).get_forms()
-        if self.object.is_type_bookable:
-            if self.request.method == 'GET':
+        if self.request.method == 'GET':
+            if self.object.is_type_bookable:
                 initial = []
                 if not self.object or not self.object.pk:
                     initial = [
@@ -1419,10 +1420,15 @@ class EditVisitView(EditResourceView):
                     None, instance=self.object, initial=initial
                 )
 
-            if self.request.method == 'POST':
-                forms['autosendformset'] = VisitAutosendFormSet(
-                    self.request.POST, instance=self.object
-                )
+            if not self.object or not self.object.pk:
+                forms['form'].initial['room_contact'] = [
+                    UserPerson.find(self.request.user)
+                ]
+
+        if self.request.method == 'POST':
+            forms['autosendformset'] = VisitAutosendFormSet(
+                self.request.POST, instance=self.object
+            )
         return forms
 
     def _is_any_booking_outside_new_attendee_count_bounds(
@@ -1836,7 +1842,7 @@ class VisitOccurrenceNotifyView(LoginRequiredMixin, ModalMixin,
                                 self.RECIPIENT_SEPARATOR,
                                 person.id):
                                     person.get_full_email()
-                    for person in visit.room_responsible_new.all()
+                    for person in visit.room_contact.all()
                 }
             },
             'assigned_hosts': {
@@ -1957,7 +1963,7 @@ class BookingNotifyView(LoginRequiredMixin, ModalMixin, EmailComposeView):
                                 self.RECIPIENT_SEPARATOR,
                                 person.id):
                                     person.get_full_email()
-                    for person in self.object.visit.room_responsible_new.all()
+                    for person in self.object.visit.room_contact.all()
                     }
             },
             'hosts': {

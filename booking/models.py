@@ -157,8 +157,7 @@ class UserPerson(models.Model):
     ###
 
     @staticmethod
-    def create(item):
-
+    def find(item):
         # See if we can find an existing UserPerson
         if isinstance(item, Person):
             qs = UserPerson.objects.filter(person=item)
@@ -168,6 +167,13 @@ class UserPerson(models.Model):
             qs = UserPerson.objects.filter(user=item)
             if qs.count() > 0:
                 return qs.first()
+
+    @staticmethod
+    def create(item):
+
+        userperson = UserPerson.find(item)
+        if userperson:
+            return userperson
 
         # No? Create one then
         userperson = UserPerson()
@@ -195,7 +201,7 @@ class UserPerson(models.Model):
 
         for resource in Resource.objects.all():
             for person in resource.room_responsible.all():
-                resource.room_responsible_new.add(
+                resource.room_contact.add(
                     UserPerson.create(person)
                 )
 
@@ -920,7 +926,7 @@ class Resource(models.Model):
         related_name='roomadmin_visit'
     )
 
-    room_responsible_new = models.ManyToManyField(
+    room_contact = models.ManyToManyField(
         UserPerson,
         blank=True,
         verbose_name=_(u'Lokaleansvarlige'),

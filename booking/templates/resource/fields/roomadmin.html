@@ -1,11 +1,11 @@
-{% if form.room_responsible_new %}
+{% if form.room_contact %}
 <div class="row form-group">
-    <div>{{ form.room_responsible_new.errors }}</div>
+    <div>{{ form.room_contact.errors }}</div>
     <div class="col-sm-2">
-        <label for="{{ form.room_responsible_new.id_for_label }}">{{ form.room_responsible_new.label }}:</label>
+        <label for="{{ form.room_contact.id_for_label }}">{{ form.room_contact.label }}:</label>
     </div>
     <div class="col-sm-10">
-        {{ form.room_responsible_new }}
+        {{ form.room_contact }}
     </div>
 </div>
 {% endif %}
