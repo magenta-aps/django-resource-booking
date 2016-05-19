@@ -1836,7 +1836,7 @@ class VisitOccurrenceNotifyView(LoginRequiredMixin, ModalMixin,
                                 self.RECIPIENT_SEPARATOR,
                                 person.id):
                                     person.get_full_email()
-                    for person in visit.room_responsible.all()
+                    for person in visit.room_responsible_new.all()
                 }
             },
             'assigned_hosts': {
@@ -1957,7 +1957,7 @@ class BookingNotifyView(LoginRequiredMixin, ModalMixin, EmailComposeView):
                                 self.RECIPIENT_SEPARATOR,
                                 person.id):
                                     person.get_full_email()
-                    for person in self.object.visit.room_responsible.all()
+                    for person in self.object.visit.room_responsible_new.all()
                     }
             },
             'hosts': {
