@@ -45,7 +45,7 @@ INSTALLED_APPS = (
     'recurrence',
     'timedelta',
     'tinymce',
-    'djangosaml2',
+    # 'djangosaml2',
     'django_cron',
 )
 
@@ -207,12 +207,14 @@ PUBLIC_URL = "".join([
 ])
 
 # Include SAML setup if the local settings specify it:
-if USE_SAML:
-    from saml_settings import *  # noqa
-    if MAKE_SAML_LOGIN_DEFAULT:
-        AUTHENTICATION_BACKENDS.insert(1, 'djangosaml2.backends.Saml2Backend')
-    else:
-        AUTHENTICATION_BACKENDS.append('djangosaml2.backends.Saml2Backend')
+# if USE_SAML:
+#     from saml_settings import *  # noqa
+#     if MAKE_SAML_LOGIN_DEFAULT:
+#         AUTHENTICATION_BACKENDS.insert(
+#           1, 'djangosaml2.backends.Saml2Backend'
+#         )
+#     else:
+#         AUTHENTICATION_BACKENDS.append('djangosaml2.backends.Saml2Backend')
 
 CRON_CLASSES = [
     "booking.cron.ReminderJob",
