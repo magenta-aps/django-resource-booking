@@ -16,7 +16,7 @@ from django.shortcuts import redirect
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.functional import Promise
-from django.utils.translation import ugettext as _, ungettext, ungettext_lazy
+from django.utils.translation import ugettext as _, ungettext_lazy
 from django.views.generic import TemplateView, DetailView
 from django.views.generic.edit import UpdateView, FormView, DeleteView
 
@@ -217,8 +217,11 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             {
                 'color': self.HEADING_RED,
                 'type': 'VisitOccurrence',
-                'title': ungettext(u"%(count)d besøg der mangler undervisere",
-                                   u"%(count)d besøg der mangler undervisere"),
+                'title': ungettext_lazy(
+                    u"%(count)d besøg der mangler undervisere",
+                    u"%(count)d besøg der mangler undervisere",
+                    'count'
+                ),
                 'queryset': self.sort_vo_queryset(
                     VisitOccurrence.objects.filter(
                         visit__unit=unit_qs,
