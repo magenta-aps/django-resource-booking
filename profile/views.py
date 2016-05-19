@@ -14,7 +14,7 @@ from django.shortcuts import redirect
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.functional import Promise
-from django.utils.translation import ugettext as _, ungettext, ungettext_lazy
+from django.utils.translation import ugettext as _, ungettext_lazy
 from django.views.generic import TemplateView, DetailView
 from django.views.generic.edit import UpdateView, FormView
 
