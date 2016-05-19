@@ -30,7 +30,7 @@
 
             {{ form.type }}
 
-            {% if form.title or form.unit or form.state %}
+            {% if form.unit %}
             <div class="panel panel-default">
                 <div id="headingCategory" class="panel-heading" role="tab">
                     <h4 class="panel-title">
@@ -38,10 +38,9 @@
                     </h4>
                 </div>
                 <div id="collapseTitel" class="panel-collapse collapse
-                {% if not object.pk or not form.errors or form.title.errors or form.title.errors or form.unit.errors %}in{% endif %}
+                {% if not object.pk or not form.errors or form.unit.errors %}in{% endif %}
                 " aria-labelledby="headingCategory" role="tabpanel" aria-expanded="true" style="">
                     <div class="panel-body">
-                        {% include 'resource/fields/title.html' %}
                         {% include 'resource/fields/unit.html' %}
                     </div>
                 </div>
@@ -49,7 +48,7 @@
 
             {% endif %}
 
-            {% if form.teaser or form.description or form.price or fileformset %}
+            {% if form.title or form.teaser or form.description or form.price or fileformset %}
             <div class="panel panel-default">
                 <div id="headingDescription" class="panel-heading" role="tab">
                     <h4 class="panel-title">
@@ -57,9 +56,10 @@
                     </h4>
                 </div>
                 <div id="collapseDescription" class="panel-collapse collapse
-                {% if not object.pk or form.teaser.errors or form.description.errors or form.price.errors or fileformset.errors %}in{% endif %}
+                {% if not object.pk or form.title.errors or form.teaser.errors or form.description.errors or form.price.errors or fileformset.errors %}in{% endif %}
                 " aria-labelledby="headingDescription" role="tabpanel">
                     <div class="panel-body">
+                        {% include 'resource/fields/title.html' %}
                         {% include 'resource/fields/teaser.html' %}
                         {% include 'resource/fields/description.html' %}
                         {% include 'resource/fields/price.html' %}
@@ -169,7 +169,7 @@
             </div>
             {% endif %}
 
-            {% if form.preparation_time or form.comment or autosendform %}
+            {% if form.preparation_time or form.comment or form.state or autosendform %}
             <div class="panel panel-default">
                 <div id="headingInternal" class="panel-heading" role="tab">
                     <h4 class="panel-title">
