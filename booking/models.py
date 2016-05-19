@@ -119,7 +119,7 @@ class UserPerson(models.Model):
         if self.person:
             return self.person.name
         elif self.user:
-            return self.user.get_full_name()
+            return self.user.get_full_name() or self.user.username
 
     @property
     def email(self):
@@ -145,7 +145,6 @@ class UserPerson(models.Model):
     def __unicode__(self):
         return self.name
 
-    # Remove when all are migrated
     def get_name(self):
         return self.name
 
@@ -154,7 +153,6 @@ class UserPerson(models.Model):
 
     def get_full_email(self):
         return self.full_email
-    ###
 
     @staticmethod
     def find(item):
