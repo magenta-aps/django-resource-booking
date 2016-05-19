@@ -106,6 +106,106 @@ class Person(models.Model):
         return full_email(self.email, self.name)
 
 
+class UserPerson(models.Model):
+    class Meta:
+        verbose_name = _(u'Lokaleanvarlig')
+        verbose_name_plural = _(u'Lokaleanvarlige')
+
+    person = models.ForeignKey(Person, blank=True, null=True)
+    user = models.ForeignKey(User, blank=True, null=True)
+
+    @property
+    def name(self):
+        if self.person:
+            return self.person.name
+        elif self.user:
+            return self.user.get_full_name()
+
+    @property
+    def email(self):
+        if self.person:
+            return self.person.get_email()
+        elif self.user:
+            return self.user.email
+
+    @property
+    def full_email(self):
+        if self.person:
+            return self.person.get_full_email()
+        elif self.user:
+            return full_email(self.user.email, self.user.get_full_name())
+
+    @property
+    def unit(self):
+        if self.person:
+            return self.person.unit
+        elif self.user and hasattr(self.user, 'userprofile'):
+            return self.user.userprofile.unit
+
+    def __unicode__(self):
+        return self.name
+
+    # Remove when all are migrated
+    def get_name(self):
+        return self.name
+
+    def get_email(self):
+        return self.email
+
+    def get_full_email(self):
+        return self.full_email
+    ###
+
+    @staticmethod
+    def find(item):
+        # See if we can find an existing UserPerson
+        if isinstance(item, Person):
+            qs = UserPerson.objects.filter(person=item)
+            if qs.count() > 0:
+                return qs.first()
+        elif isinstance(item, User):
+            qs = UserPerson.objects.filter(user=item)
+            if qs.count() > 0:
+                return qs.first()
+
+    @staticmethod
+    def create(item):
+
+        userperson = UserPerson.find(item)
+        if userperson:
+            return userperson
+
+        # No? Create one then
+        userperson = UserPerson()
+        if isinstance(item, Person):
+            userperson.person = item
+        elif isinstance(item, User):
+            userperson.user = item
+        else:
+            pass
+            raise Exception(
+                "UserPerson must be called with "
+                "either a User or a Person as argument. "
+                "%s is not an acceptable input" % unicode(item)
+            )
+        userperson.save()
+        return userperson
+
+    @staticmethod
+    def migrate():
+        for person in Person.objects.all():
+            UserPerson.create(person)
+
+        for user in User.objects.all():
+            UserPerson.create(user)
+
+        for resource in Resource.objects.all():
+            for person in resource.room_responsible.all():
+                resource.room_contact.add(
+                    UserPerson.create(person)
+                )
+
+
 # Units (faculties, institutes etc)
 class UnitType(models.Model):
     """A type of organization, e.g. 'faculty' """
@@ -825,6 +925,13 @@ class Resource(models.Model):
         blank=True,
         verbose_name=_(u'Lokaleansvarlige'),
         related_name='roomadmin_visit'
+    )
+
+    room_contact = models.ManyToManyField(
+        UserPerson,
+        blank=True,
+        verbose_name=_(u'Lokaleansvarlige'),
+        related_name='roomadmin_visit_new'
     )
 
     preparation_time = models.IntegerField(

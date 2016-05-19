@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from booking.models import Unit, Resource, VisitOccurrence
+from booking.models import Unit, Resource, VisitOccurrence, UserPerson
 from booking.models import EmailTemplate
 from booking.models import KUEmailMessage
 from django.contrib import messages
@@ -380,7 +380,11 @@ class CreateUserView(FormView, UpdateView):
                 user_profile.user = user
                 user_profile.user_role = user_role
                 user_profile.unit = unit
+
             user_profile.save()
+
+            # Create a UserPerson object if one doesn't exist
+            UserPerson.create(user)
 
             # Send email to newly created users
             if not pk:

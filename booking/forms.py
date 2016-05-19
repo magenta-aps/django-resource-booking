@@ -380,7 +380,7 @@ class VisitForm(forms.ModelForm):
             'audience': RadioSelect(),
             'tags': CheckboxSelectMultiple(),
             'contact_persons': SelectMultiple(),
-            'room_responsible': CheckboxSelectMultiple(),
+            'room_contact': CheckboxSelectMultiple(),
             'default_hosts': CheckboxSelectMultiple(),
             'default_teachers': CheckboxSelectMultiple()
         }
@@ -538,7 +538,7 @@ class TeacherVisitForm(VisitForm):
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'duration', 'locality', 'rooms_assignment',
                   'rooms_needed',
-                  'contact_persons', 'room_responsible', 'unit',
+                  'contact_persons', 'room_contact', 'unit',
                   'needed_hosts', 'needed_teachers',
                   'preparation_time', 'comment',
                   'default_hosts', 'default_teachers',
@@ -555,7 +555,7 @@ class ClassVisitForm(VisitForm):
                   'duration', 'locality', 'rooms_assignment',
                   'rooms_needed', 'tour_available', 'catering_available',
                   'presentation_available', 'custom_available', 'custom_name',
-                  'contact_persons', 'room_responsible', 'unit',
+                  'contact_persons', 'room_contact', 'unit',
                   'needed_hosts', 'needed_teachers',
                   'preparation_time', 'comment',
                   'default_hosts', 'default_teachers',
