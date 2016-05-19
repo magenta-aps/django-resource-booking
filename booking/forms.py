@@ -172,7 +172,7 @@ class VisitOccurrenceSearchForm(forms.Form):
         label=_(u'Workflow status'),
         choices=(
             ('', _(u'Alle')),
-            (WORKFLOW_STATUS_PENDING, _(u'Alle der kræver handling')),
+            (WORKFLOW_STATUS_PENDING, _(u'Alle ikke-planlagte')),
             (WORKFLOW_STATUS_READY, _(u'Alle planlagte')),
             ('', u'====='),
         ) + VisitOccurrence.workflow_status_choices,
