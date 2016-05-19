@@ -205,8 +205,11 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             {
                 'color': self.HEADING_RED,
                 'type': 'VisitOccurrence',
-                'title': ungettext(u"%(count)d besøg der mangler undervisere",
-                                   u"%(count)d besøg der mangler undervisere"),
+                'title': ungettext_lazy(
+                    u"%(count)d besøg der mangler undervisere",
+                    u"%(count)d besøg der mangler undervisere",
+                    'count'
+                ),
                 'queryset': self.sort_vo_queryset(
                     VisitOccurrence.objects.filter(
                         visit__unit=unit_qs,
