@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from booking.models import StudyMaterial, VisitAutosend, Booking
-from booking.models import UnitType
-from booking.models import Unit
+from booking.models import UnitType, Unit, UserPerson
 from booking.models import Resource, OtherResource, Visit
 from booking.models import Booker, Region, PostCode, School
 from booking.models import ClassBooking, TeacherBooking, BookingSubjectLevel
@@ -286,7 +285,7 @@ class OtherResourceForm(forms.ModelForm):
                   'type', 'tags',
                   'institution_level', 'topics', 'audience',
                   'locality',
-                  'contact_persons', 'unit',
+                  'contacts', 'unit',
                   'preparation_time', 'comment'
                   )
         widgets = {
@@ -331,7 +330,7 @@ class VisitForm(forms.ModelForm):
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'duration', 'locality', 'rooms_assignment',
                   'rooms_needed', 'tour_available',
-                  'contact_persons', 'unit',
+                  'contacts', 'unit',
                   'needed_hosts', 'needed_teachers',
                   'preparation_time', 'comment',
                   )
@@ -429,6 +428,14 @@ class VisitForm(forms.ModelForm):
                         'form-control input-sm'
                     ) if x
                 ])
+
+        # Limit choices for non-admins to those in the same unit
+        self.fields['contacts'].choices = [
+            (person.id, unicode(person))
+            for person in UserPerson.objects.all()
+            if self.user.userprofile.is_administrator or
+            person.unit == self.user.userprofile.unit
+        ]
 
     def clean_type(self):
         instance = getattr(self, 'instance', None)
