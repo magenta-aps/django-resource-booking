@@ -1,4 +1,5 @@
 {% load i18n %}
+{% load booking_tags %}
 
 {% if form.rooms_needed %}
 <div class="row form-group">
@@ -37,11 +38,9 @@
                 <label class="{{ form.existingrooms.css_classes }}" for="existingrooms">{% trans "Tilføj eksisterende lokale" %}:</label>
             </div>
             <div class="col-sm-6">
+                <textarea id="all_room_data" style="display: none;">{{ allrooms|jsonify }}</textarea>
                 <select name="existingrooms" class="form-control input-sm" id="existingrooms">
                     <option>{% trans "Vælg lokale..." %}</option>
-                    {% for room in existingrooms %}
-                        <option value="{{room.name}}">{{room.name}}</option>
-                    {% endfor %}
                 </select>
             </div>
         </div>
@@ -52,22 +51,34 @@
             <div class="col-sm-6">
                 <div class="input-group">
                     <input type="text" name="newroom" id="newroom" value="" class="form-control input-sm" /><span class="input-group-btn">
-                                    <button type="button" id="addnewroom" value="{% trans "Tilføj" %}" class="btn btn-default">{% trans "Tilføj" %}</button></span>
+                    <button
+                        type="button"
+                        id="addnewroom"
+                        value="{% trans "Tilføj" %}"
+                        class="btn btn-default"
+                        data-no-locality-message="{% trans 'Du skal vælge en lokalitet før du kan tilføje lokaler' %}"
+                    >{% trans "Tilføj" %}</button></span>
                 </div>
             </div>
         </div>
         <div><strong>{% trans "Valgte lokaler" %}:</strong></div>
+        {% comment %}
+            Remember to correct both the template and the printed-out items
+            below.
+        {% endcomment %}
+        <ul id="room-item-template" style="display: none">
+            <li>
+                <span class="roomname">##NAME##</span>
+                <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                <input type="hidden" name="rooms" value="##VALUE##" disabled="disabled" />
+            </li>
+        </ul>
         <ul id="chosenrooms">
-            {% comment %}
-                When making changes here, also change the addRoom method
-                in booking/static/js/formutil.js which generates the
-                same HTML dynamically.
-            {% endcomment %}
             {% for room in rooms %}
                 <li>
-                    <span class="roomname">{{ room.name }}</span>
+                    <span class="roomname">{{ room.name_with_locality }}</span>
                     <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
-                    <input type="hidden" name="rooms" value="{{ room.name }}" />
+                    <input type="hidden" name="rooms" value="id:{{ room.id }}" />
                 </li>
             {% endfor %}
         </ul>

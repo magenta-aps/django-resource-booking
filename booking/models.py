@@ -919,6 +919,12 @@ class Resource(models.Model):
         null=True
     )
 
+    rooms = models.ManyToManyField(
+        'Room',
+        verbose_name=_(u'Lokaler'),
+        blank=True
+    )
+
     recurrences = RecurrenceField(
         null=True,
         blank=True,
@@ -1156,6 +1162,21 @@ class Resource(models.Model):
         if hasattr(self, 'otherresource') and self.otherresource:
             return reverse('otherresource-view', args=[self.otherresource.pk])
         return reverse('resource-view', args=[self.pk])
+
+    def add_room_by_name(self, name):
+        room = Room.objects.filter(
+            name=name,
+            locality=self.locality
+        ).first()
+
+        if room is None:
+            room = Room(
+                name=name,
+                locality=self.locality
+            )
+            room.save()
+
+        self.rooms.add(room)
 
     @staticmethod
     def get_latest_created():
@@ -1834,6 +1855,12 @@ class VisitOccurrence(models.Model):
         verbose_name=_(u'Lokalitet'),
         blank=True,
         null=True
+    )
+
+    rooms = models.ManyToManyField(
+        'Room',
+        verbose_name=_(u'Lokaler'),
+        blank=True
     )
 
     hosts = models.ManyToManyField(
@@ -2518,34 +2545,56 @@ class VisitOccurrenceAutosend(Autosend):
 class Room(models.Model):
 
     class Meta:
-        verbose_name = _(u"lokale for tilbud")
-        verbose_name_plural = _(u"lokaler for tilbud")
+        verbose_name = _(u"lokale")
+        verbose_name_plural = _(u"lokaler")
 
+    # Old field, to be removed later
     visit = models.ForeignKey(
-        Visit, verbose_name=_(u'Besøg'), blank=False
+        Visit, verbose_name=_(u'Besøg'),
+        blank=True,
+        null=True,
+        editable=False
     )
+
+    locality = models.ForeignKey(
+        Locality,
+        verbose_name=_(u'Lokalitet'),
+        blank=True,
+        null=True
+    )
+
     name = models.CharField(
         max_length=64, verbose_name=_(u'Navn på lokale'), blank=False
     )
 
     def __unicode__(self):
-        return self.name
+        return unicode(self.name)
 
+    @property
+    def name_with_locality(self):
+        if self.locality:
+            return '%s, %s' % (
+                unicode(self.name),
+                self.locality.name_and_address
+            )
+        else:
+            return '%s, %s' % (
+                unicode(self.name),
+                _(u'<uden lokalitet>')
+            )
 
-# Represents a room as saved on a booking.
-class BookedRoom(models.Model):
+    @classmethod
+    def migrate(cls):
+        for x in cls.objects.filter(locality__isnull=True):
+            if x.visit and x.visit.locality:
+                x.visit.add_room_by_name(x.name)
+            x.delete()
 
-    class Meta:
-        verbose_name = _(u'lokale for besøg')
-        verbose_name_plural = _(u'lokaler for besøg')
-
-    name = models.CharField(max_length=60, verbose_name=_(u'Navn'))
-
-    booking = models.ForeignKey(
-        'Booking',
-        null=False,
-        related_name='assigned_rooms'
-    )
+        # Copy any rooms from visits each visit's VOs.
+        for x in Visit.objects.filter(rooms__isnull=False).distinct():
+            for y in x.visitoccurrence_set.all():
+                for r in x.rooms.all():
+                    y.rooms.add(r)
 
 
 class Region(models.Model):

@@ -1523,24 +1523,18 @@ class EditVisitView(EditResourceView):
         context = {}
 
         if self.object and self.object.pk:
-            context['rooms'] = self.object.room_set.all()
+            context['rooms'] = self.rooms.all()
         else:
             context['rooms'] = []
 
-        search_unit = None
-        if self.object and self.object.unit:
-            search_unit = self.object.unit
-        else:
-            if self.request.user and self.request.user.userprofile:
-                search_unit = self.request.user.userprofile.unit
-
-        if search_unit is not None:
-            context['existingrooms'] = Room.objects.filter(
-                visit__unit=search_unit
-            ).order_by("name").distinct("name")
-        else:
-            context['existingrooms'] = Room.objects.all().\
-                order_by("name").distinct("name")
+        context['allrooms'] = [
+            {
+                'id': x.pk,
+                'locality_id': x.locality.pk if x.locality else None,
+                'name': x.name_with_locality
+            }
+            for x in Room.objects.all()
+        ]
 
         context['gymnasiefag_choices'] = Subject.gymnasiefag_qs()
         context['grundskolefag_choices'] = Subject.grundskolefag_qs()

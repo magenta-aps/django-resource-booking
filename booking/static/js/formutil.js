@@ -17,6 +17,20 @@ KU.TEMPLATES.expand = function(content, context) {
         }
     );
 }
+KU.TEMPLATES.htmlescape = function(html) {
+    map = {
+        '<': '&lt;',
+        '>': '&gt;',
+        '&': '&amp;',
+        '"': '&quot;',
+        "'": '&apos;'
+    };
+
+    return html.replace(/([<>&'"])/g, function(fullmatch, chr) {
+        return map[chr] || fullmatch
+    });
+}
+
 
 $(function(){
     var labelColonRegex = /^(.*):\s*$/;
@@ -47,6 +61,9 @@ $(function(){
 });
 // Controls for adding and removing rooms
 $(function() {
+    var room_item_template = $('#room-item-template').html(),
+        roomdata = eval($('#all_room_data').val());
+
     // Toggle display of room edit controls according to choice in
     // room assingment dropdown
     $('#id_rooms_assignment').on("change", function() {
@@ -61,42 +78,50 @@ $(function() {
     var removeElem = function() {
         $(this).parents("li").first().remove();
     };
-    
-    var addRoom = function(value) {
-        var elem = $('<li/>'),
-            textElem = $('<span class="roomname">'),
-            icon = $(
-                '<span class="glyphicon glyphicon-remove" aria-hidden="true"/>'
-            ),
-            input = $('<input type="hidden" name="rooms"/>');
 
-        textElem.text(value);
-        input.val(value);
-        icon.on("click", removeElem);
-        elem.append(textElem);
-        elem.append(" ");
-        elem.append(icon);
-        elem.append(input);
+    var addRoom = function(text, value) {
+        var esc = KU.TEMPLATES.htmlescape,
+            html = KU.TEMPLATES.expand(
+                room_item_template,
+                {
+                    'value': esc(value),
+                    'name': esc(text)
+                }
+            ),
+            elem = $(html);
+        elem.find("input").removeAttr("disabled");
+        elem.find(".glyphicon-remove").on("click", removeElem);
+
         $('#chosenrooms').append(elem);
     };
 
     // Add room when selected in existing room dropdown
     $('#existingrooms').on("change", function() {
-        var val = $(this).val();
-        if (val) {
-            addRoom(val)
+        var id = $(this).val();
+        if (id) {
+            addRoom(
+                $(this).children("option").filter(":selected").text(),
+                "id:" + id
+            );
             this.selectedIndex = 0;
         }
     });
 
     $('#addnewroom').on("click", function() {
-        var val = $('#newroom').val();
+        var $loc = $('#id_locality'),
+            val = $('#newroom').val();
+
         if (val) {
-            addRoom(val);
+            if (!$loc.val()) {
+                alert($(this).attr("data-no-locality-message"));
+                return false;
+            }
+            addRoom(
+                val + ", " + $loc.children("option").filter(":selected").text(),
+                "new:" + val
+            );
             $('#newroom').val("");
         }
-    });
-    $('#newroom').on("keydown", function(e) {
     });
 
     $('#id_rooms_needed').on("change", function() {
@@ -104,6 +129,25 @@ $(function() {
             $('#rooms_needed_fields').show()
         } else {
             $('#rooms_needed_fields').hide()
+        }
+    }).trigger("change");
+
+    $('#id_locality').on("change", function() {
+        var val = $(this).val(),
+            dropdown = $('#existingrooms')[0];
+
+        while (dropdown.options[1]) {
+            dropdown.options[1] = null;
+        }
+
+        if (val) {
+            $.each(roomdata, function() {
+                if (this.locality_id == val) {
+                    dropdown.options[dropdown.options.length] = new Option(
+                        this.name, this.id
+                    )
+                }
+            });
         }
     }).trigger("change");
 
@@ -115,7 +159,7 @@ $(function() {
         $fag_select = $('#gymnasiefag-fag');
 
     $fag_select.attr('data-reset-value', $fag_select.val())
-    
+
     function check_list_display() {
         if($('#gymnasiefag-list li').length > 0) {
             $('#gymnasiefag-list').show()
