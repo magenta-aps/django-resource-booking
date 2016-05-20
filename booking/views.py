@@ -2228,7 +2228,8 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
                 )
             )
         else:
-            forms['subjectform'] = BookingSubjectLevelForm(request.POST)
+            if hadSubjectForm:
+                forms['subjectform'] = BookingSubjectLevelForm(request.POST)
 
         return self.render_to_response(
             self.get_context_data(**forms)
@@ -2244,7 +2245,8 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
             type = self.visit.type
             if type == Resource.GROUP_VISIT:
                 forms['bookingform'] = ClassBookingForm(data, visit=self.visit)
-                forms['subjectform'] = BookingSubjectLevelForm(data)
+                if self.visit.resourcegymnasiefag_set.count() > 0:
+                    forms['subjectform'] = BookingSubjectLevelForm(data)
 
             elif type == Resource.TEACHER_EVENT:
                 forms['bookingform'] = TeacherBookingForm(data,
