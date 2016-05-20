@@ -947,6 +947,10 @@ a.template-overridden:visited {
 
 /* frontpage lists */
 
+.column-show-all {
+    float: right;
+}
+
 .listcontainer.eq-height [class*="col-"] .panel {
     border-color: #ccc;
 }
@@ -991,6 +995,10 @@ a.template-overridden:visited {
     padding-left: 0;
     color: #4A4949;
     list-style-type: none;
+}
+
+.listcontainer .list-group-item .label {
+    clear: both;
 }
 
 .listcontainer .panel.panel-bookings .panel-heading .panel-title {
