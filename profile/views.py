@@ -488,13 +488,17 @@ class EmailLoginView(DetailView):
             return self.redirect_to_destination(request, *args, **kwargs)
         else:
             self.expired = True
+            return redirect(
+                reverse('standard_login') +
+                "?next=" + self.get_dest(request, *args, **kwargs)
+            )
 
         return super(EmailLoginView, self).dispatch(request, *args, **kwargs)
 
     def redirect_to_self(self, request, *args, **kwargs):
         return redirect(self.object.as_url())
 
-    def redirect_to_destination(self, request, *args, **kwargs):
+    def get_dest(self, request, *args, **kwargs):
         dest = self.object.success_url
 
         if 'dest_url' in kwargs and kwargs['dest_url'] != dest:
@@ -505,8 +509,10 @@ class EmailLoginView(DetailView):
                     dest
                 )
             )
+        return dest
 
-        return redirect(dest)
+    def redirect_to_destination(self, request, *args, **kwargs):
+        return redirect(self.get_dest(request, *args, **kwargs))
 
 
 class EditMyResourcesView(EditorRequriedMixin, UpdateView):
