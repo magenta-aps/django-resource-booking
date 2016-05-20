@@ -655,6 +655,27 @@ select,
     font-size: 11px!important;
 }
 
+.scroll-200 {
+    max-height: 200px;
+    overflow-y: scroll;
+}
+.scroll-300 {
+    max-height: 300px;
+    overflow-y: scroll;
+}
+.scroll-400 {
+    max-height: 400px;
+    overflow-y: scroll;
+}
+.scroll-500 {
+    max-height: 500px;
+    overflow-y: scroll;
+}
+.scroll-600 {
+    max-height: 600px;
+    overflow-y: scroll;
+}
+
 
 /*Backend specific styles start */
 

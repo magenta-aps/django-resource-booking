@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 
 from booking.models import StudyMaterial, VisitAutosend, Booking
-from booking.models import UnitType
-from booking.models import Unit
+from booking.models import Locality, UnitType, Unit
 from booking.models import Resource, OtherResource, Visit
 from booking.models import Booker, Region, PostCode, School
 from booking.models import ClassBooking, TeacherBooking, BookingSubjectLevel
 from booking.models import EmailTemplate
 from booking.models import VisitOccurrence
 from django import forms
+from django.db.models import Q
+from django.db.models.expressions import OrderBy
 from django.contrib.auth.models import User
 from django.forms import CheckboxSelectMultiple, RadioSelect, EmailInput
 from django.forms import formset_factory, inlineformset_factory
@@ -391,6 +392,16 @@ class VisitForm(forms.ModelForm):
             )
 
         self.user = kwargs.pop('user')
+        self.instance = kwargs.get('instance')
+
+        unit = None
+        if self.instance is not None:
+            unit = self.instance.unit
+        if unit is None and \
+                self.user is not None and self.user.userprofile is not None:
+            unit = self.user.userprofile.unit
+
+        # self.unit = kwargs.get('instance').unit_id
         super(VisitForm, self).__init__(*args, **kwargs)
         self.fields['unit'].queryset = self.get_unit_query_set()
         self.fields['type'].widget = HiddenInput()
@@ -419,6 +430,21 @@ class VisitForm(forms.ModelForm):
                         userprofile__user_role__role=TEACHER,
                         userprofile__unit__in=self.get_unit_query_set()
                     )
+
+        if unit is not None:
+            self.fields['locality'].choices = [(None, "---------")] + \
+                [
+                    (x.id, unicode(x))
+                    for x in Locality.objects.order_by(
+                        # Sort stuff where unit is null last
+                        OrderBy(Q(unit__isnull=False), descending=True),
+                        # Sort localities belong to current unit first
+                        OrderBy(Q(unit=unit), descending=True),
+                        # Lastly, sort by name
+                        "name"
+                    )
+                ]
+
         # Add classes to certain widgets
         for x in ('needed_hosts', 'needed_teachers'):
             f = self.fields.get(x)
