@@ -27,15 +27,15 @@ $(function() {
                     this.htmlFor = formset._replaceCounter(this.htmlFor, totalRows);
                 });
                 $(container).append(newRow);
-                totalRowsEl.val(totalRows + 1);
+                totalRowsEl.val($(container).find(".autosend-row").length);
                 return newRow;
             }
         },
-        removeRow: function(totalRowsEl, row) {
+        removeRow: function(totalRowsEl, row, container) {
             row = $(row);
             totalRowsEl = $(totalRowsEl);
             row.remove();
-            totalRowsEl.val(parseInt(totalRowsEl.val(), 10) - row.length);
+            totalRowsEl.val($(container).find(".autosend-row").length);
         }
     };
 

@@ -547,7 +547,7 @@ class EmailTemplate(models.Model):
     ]
 
     key = models.IntegerField(
-        verbose_name=u'Nøgle',
+        verbose_name=u'Type',
         choices=key_choices,
         default=1
     )
@@ -585,9 +585,21 @@ class EmailTemplate(models.Model):
                    "</html>" % body
         return body
 
+    default_includes = [
+        "{% load booking_tags %}",
+        "{% load i18n %}"
+    ]
+
+    @staticmethod
+    def get_template_object(template_text):
+        return Template(
+            "\n".join(EmailTemplate.default_includes) +
+            unicode(template_text)
+        )
+
     @staticmethod
     def _expand(text, context, keep_placeholders=False):
-        template = Template(unicode(text))
+        template = EmailTemplate.get_template_object(text)
 
         if isinstance(context, dict):
             context = make_context(context)
@@ -649,7 +661,7 @@ class EmailTemplate(models.Model):
         variables = []
         for item in [self.subject, self.body]:
             text = item.replace("%20", " ")
-            template = Template(unicode(text))
+            template = EmailTemplate.get_template_object(text)
             for node in template:
                 if isinstance(node, VariableNode):
                     variables.append(unicode(node.filter_expression))
@@ -746,9 +758,9 @@ class Resource(models.Model):
     DISCONTINUED = 2
 
     state_choices = (
-        (CREATED, _(u"Kladde")),
-        (ACTIVE, _(u"Udgiv")),
-        (DISCONTINUED, _(u"Ikke udgivet"))
+        (CREATED, _(u"Under udarbejdelse")),
+        (ACTIVE, _(u"Offentlig")),
+        (DISCONTINUED, _(u"Skjult"))
     )
 
     class_level_choices = [(i, unicode(i)) for i in range(0, 11)]
@@ -756,7 +768,7 @@ class Resource(models.Model):
     type = models.IntegerField(choices=resource_type_choices,
                                default=STUDY_MATERIAL)
     state = models.IntegerField(choices=state_choices, default=CREATED,
-                                verbose_name=_(u"Tilstand"), blank=False)
+                                verbose_name=_(u"Status"), blank=False)
     title = models.CharField(
         max_length=60,
         blank=False,
@@ -1563,7 +1575,10 @@ class Visit(Resource):
             return True
 
         # Only bookable if there is a valid event in the future:
-        return self.future_events.exists()
+        for occurrence in self.future_events:
+            if occurrence.is_bookable:
+                return True
+        return False
 
     @property
     def is_bookable(self):
@@ -1926,9 +1941,23 @@ class VisitOccurrence(models.Model):
     def needs_hosts(self):
         return len(self.hosts.all()) < self.visit.needed_hosts
 
+    @property
     def is_booked(self):
         """Has this VisitOccurrence instance been booked yet?"""
         return len(self.bookings.all()) > 0
+
+    @property
+    def is_bookable(self):
+        # Can this occurrence be booked?
+        if not self.bookable:
+            return False
+        if self.workflow_status not in self.BOOKABLE_STATES:
+            return False
+        if self.expired:
+            return False
+        if self.available_seats() == 0:
+            return False
+        return True
 
     def date_display(self):
         return self.start_datetime or _(u'på ikke-fastlagt tidspunkt')
@@ -1943,6 +1972,16 @@ class VisitOccurrence(models.Model):
             attendees=Sum('bookings__booker__attendee_count')
         )
         return res['attendees'] or 0
+
+    @property
+    def nr_attendees(self):
+        # Return the total number of participants for this occurrence
+        return self.nr_additional_participants()
+
+    def available_seats(self):
+        limit = self.visit.maximum_number_of_visitors
+        if limit is not None:
+            return max(limit - self.nr_attendees, 0)
 
     def get_workflow_status_class(self):
         return self.status_to_class_map.get(self.workflow_status, 'default')
@@ -2878,11 +2917,13 @@ class KUEmailMessage(models.Model):
         for recipient in recipients:
             name = None
             address = None
+            user = None
             if isinstance(recipient, basestring):
                 address = recipient
             elif isinstance(recipient, User):
                 name = recipient.get_full_name()
                 address = recipient.email
+                user = recipient
             else:
                 try:
                     name = recipient.get_name()
@@ -2901,6 +2942,7 @@ class KUEmailMessage(models.Model):
                     email['full'] = address
 
                 email['get_full_name'] = email['full']
+                email['user'] = user
 
                 emails[address] = email
 
