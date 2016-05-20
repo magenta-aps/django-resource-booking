@@ -386,6 +386,15 @@ class Locality(models.Model):
     def __unicode__(self):
         return self.name
 
+    @property
+    def name_and_address(self):
+        return "%s (%s)" % (
+            unicode(self.name),
+            ", ".join([
+                unicode(x) for x in [self.address_line, self.zip_city] if x
+            ])
+        )
+
 
 class EmailTemplate(models.Model):
 

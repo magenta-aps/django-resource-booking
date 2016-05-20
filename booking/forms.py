@@ -434,7 +434,7 @@ class VisitForm(forms.ModelForm):
         if unit is not None:
             self.fields['locality'].choices = [(None, "---------")] + \
                 [
-                    (x.id, unicode(x))
+                    (x.id, x.name_and_address)
                     for x in Locality.objects.order_by(
                         # Sort stuff where unit is null last
                         OrderBy(Q(unit__isnull=False), descending=True),
