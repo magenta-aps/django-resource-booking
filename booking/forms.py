@@ -8,6 +8,8 @@ from booking.models import ClassBooking, TeacherBooking, BookingSubjectLevel
 from booking.models import EmailTemplate
 from booking.models import VisitOccurrence
 from django import forms
+from django.db.models import Q
+from django.db.models.expressions import OrderBy
 from django.contrib.auth.models import User
 from django.forms import SelectMultiple, CheckboxSelectMultiple
 from django.forms import RadioSelect, EmailInput
@@ -440,10 +442,17 @@ class VisitForm(forms.ModelForm):
 
         if unit is not None:
             self.fields['locality'].choices = [(None, "---------")] + \
-                [(x.id, unicode(x))
-                 for x in Locality.objects.filter(unit=unit)] + \
-                [(x.id, unicode(x))
-                 for x in Locality.objects.exclude(unit=unit)]
+                [
+                    (x.id, unicode(x))
+                    for x in Locality.objects.order_by(
+                        # Sort stuff where unit is null last
+                        OrderBy(Q(unit__isnull=False), descending=True),
+                        # Sort localities belong to current unit first
+                        OrderBy(Q(unit=unit), descending=True),
+                        # Lastly, sort by name
+                        "name"
+                    )
+                ]
 
         # Add classes to certain widgets
         for x in ('needed_hosts', 'needed_teachers'):

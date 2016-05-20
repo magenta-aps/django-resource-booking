@@ -471,6 +471,7 @@ class Locality(models.Model):
     class Meta:
         verbose_name = _(u'lokalitet')
         verbose_name_plural = _(u'lokaliteter')
+        ordering = ["name"]
 
     name = models.CharField(max_length=256, verbose_name=_(u'Navn'))
     description = models.TextField(blank=True, verbose_name=_(u'Beskrivelse'))
