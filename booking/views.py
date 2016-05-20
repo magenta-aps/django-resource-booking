@@ -1834,17 +1834,17 @@ class VisitOccurrenceNotifyView(LoginRequiredMixin, ModalMixin,
             'contacts': {
                 'label': _(u'Kontaktpersoner'),
                 'items': {
-                    "%s%s%d" % (self.RECIPIENT_PERSON,
+                    "%s%s%d" % (self.RECIPIENT_USERPERSON,
                                 self.RECIPIENT_SEPARATOR,
                                 person.id):
-                    person.get_full_email()
-                    for person in visit.contact_persons.all()
+                                    person.get_full_email()
+                    for person in visit.contacts.all()
                 }
             },
             'roomadmins': {
                 'label': _(u'Lokaleansvarlige'),
                 'items': {
-                    "%s%s%d" % (self.RECIPIENT_PERSON,
+                    "%s%s%d" % (self.RECIPIENT_USERPERSON,
                                 self.RECIPIENT_SEPARATOR,
                                 person.id):
                                     person.get_full_email()
