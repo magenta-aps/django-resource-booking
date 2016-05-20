@@ -429,6 +429,7 @@ class VisitForm(forms.ModelForm):
                     ) if x
                 ])
 
+        # Limit choices for non-admins to those in the same unit
         userperson_choices = [
             (person.id, unicode(person))
             for person in UserPerson.objects.all()
