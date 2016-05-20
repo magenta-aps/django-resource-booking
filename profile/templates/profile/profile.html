@@ -49,7 +49,7 @@
                     </a>
                     <a class="list-group-item" href="{% url 'admin:booking_locality_changelist' %}">
                         <h4 class="list-group-item-heading">{% trans 'Administrér lokaliteter' %}</h4>
-                        <p class="list-group-item-text">{% trans 'Opret og redigér overordnede lokaliteter.' %}</p>
+                        <p class="list-group-item-text">{% trans 'En lokalitet er en fysisk adresse, fx det sted hvor et besøg skal afholdes, her kan du redigere lokaliteter.' %}</p>
                     </a>
                     <a class="list-group-item" href="{% url 'admin:booking_person_changelist' %}">
                         <h4 class="list-group-item-heading">{% trans 'Administrér kontaktpersoner' %}</h4>
@@ -58,7 +58,7 @@
                     {% if request.user.userprofile.can_edit_units %}
                     <a class="list-group-item" href="{% url 'admin:booking_unit_changelist' %}">
                         <h4 class="list-group-item-heading">{% trans 'Administrér enheder' %}</h4>
-                        <p class="list-group-item-text">{% trans 'Tilpas information på fakultet, institut, mv.' %}</p>
+                        <p class="list-group-item-text">{% trans 'En enhed er et administrativt område fx et fakultet eller institut, her kan du redigere enheder.' %}</p>
                     </a>
                     {% endif %}
                     {% if not "disabled by: not yet implemented" %}
