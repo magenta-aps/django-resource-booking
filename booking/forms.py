@@ -428,6 +428,13 @@ class VisitForm(forms.ModelForm):
                         'form-control input-sm'
                     ) if x
                 ])
+        # Limit choices for non-admins to those in the same unit
+        self.fields['contacts'].choices = [
+            (person.id, unicode(person))
+            for person in UserPerson.objects.all()
+            if self.user.userprofile.is_administrator or
+            person.unit == self.user.userprofile.unit
+        ]
 
         # Limit choices for non-admins to those in the same unit
         self.fields['contacts'].choices = [
