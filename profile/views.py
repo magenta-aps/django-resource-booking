@@ -10,6 +10,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
+from django.db.models.aggregates import Count, Sum
+from django.db.models.functions import Coalesce
 from django.shortcuts import redirect
 from django.utils import timezone
 from django.utils.decorators import method_decorator
@@ -120,22 +122,28 @@ class ProfileView(LoginRequiredMixin, TemplateView):
 
         unit_qs = self.request.user.userprofile.get_unit_queryset()
 
-        planned = {
+        unplanned = {
             'color': self.HEADING_RED,
             'type': 'VisitOccurrence',
-            'title': _(u"Besøg der kræver handling"),
+            'title': _(u"Besøg under planlægning"),
             'queryset': self.sort_vo_queryset(
-                VisitOccurrence.being_planned_queryset(visit__unit=unit_qs)
+                VisitOccurrence.being_planned_queryset(visit__unit=unit_qs).
+                    annotate(num_participants=(
+                        Coalesce(Count("bookings__booker__pk"), 0) +
+                        Coalesce(Sum("bookings__booker__attendee_count"), 0)
+                    )
+                ).filter(num_participants__gte=1)
+                # See also VisitOccurrenceSearchView.filter_by_participants
             )
         }
-        if len(planned['queryset']) > 10:
-            planned['limited_qs'] = planned['queryset'][:10]
-            planned['button'] = {
+        if len(unplanned['queryset']) > 10:
+            unplanned['limited_qs'] = unplanned['queryset'][:10]
+            unplanned['button'] = {
                 'text': _(u'Vis alle'),
-                'link': reverse('visit-occ-search') + '?u=-3&w=-1&go=1'
+                'link': reverse('visit-occ-search') + '?u=-3&w=-1&go=1&p_min=1'
             }
 
-        unplanned = {
+        planned = {
             'color': self.HEADING_GREEN,
             'type': 'VisitOccurrence',
             'title': _(u"Planlagte besøg"),
@@ -143,14 +151,14 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                 VisitOccurrence.planned_queryset(visit__unit=unit_qs)
             )
         }
-        if len(unplanned['queryset']) > 10:
-            unplanned['limited_qs'] = unplanned['queryset'][:10]
-            unplanned['button'] = {
+        if len(planned['queryset']) > 10:
+            planned['limited_qs'] = planned['queryset'][:10]
+            planned['button'] = {
                 'text': _(u'Vis alle'),
                 'link': reverse('visit-occ-search') + '?u=-3&w=-2&go=1'
             }
 
-        return [visitlist, planned, unplanned]
+        return [visitlist, unplanned, planned]
 
     def lists_for_teachers(self):
         user = self.request.user
@@ -233,6 +241,12 @@ class CreateUserView(FormView, UpdateView):
     model = User
     form_class = UserCreateForm
     template_name = 'profile/create_user.html'
+    object = None
+
+    def get_object(self):
+        if self.object is None:
+            pk = self.kwargs.get('pk')
+            self.object = User.objects.get(id=pk) if pk is not None else None
 
     @method_decorator(login_required)
     def dispatch(self, *args, **kwargs):
@@ -240,71 +254,63 @@ class CreateUserView(FormView, UpdateView):
         result = super(CreateUserView, self).dispatch(*args, **kwargs)
         # Now, check that the user belongs to the correct unit.
         current_user = self.request.user
-        role = current_user.userprofile.get_role()
-        users_unit = current_user.userprofile.unit
+        current_profile = current_user.userprofile
+        current_role = current_profile.get_role()
+        current_unit = current_profile.unit
 
-        if role in EDIT_ROLES:
+        self.get_object()
+
+        if current_role in EDIT_ROLES:
             if self.request.method == 'POST':
-                if role == FACULTY_EDITOR:
+                if current_role == FACULTY_EDITOR:
                     # This should not be possible!
-                    if current_user.userprofile.unit is None:
+                    if current_profile.unit is None:
                         raise AccessDenied(
                             _(u"Du har rollen 'Fakultetsredaktør', men " +
                               "er ikke tilknyttet nogen enhed.")
                         )
                     unit = Unit.objects.get(pk=self.request.POST[u'unit'])
-                    if unit and not unit.belongs_to(users_unit):
+                    if unit and not unit.belongs_to(current_unit):
                         raise AccessDenied(
                             _(u"Du kan kun redigere enheder, som " +
                               "ligger under dit fakultet.")
                         )
-                elif role == COORDINATOR:
+                elif current_role == COORDINATOR:
                     # This should not be possible!
-                    if current_user.userprofile.unit is None:
+                    if current_profile.unit is None:
                         raise AccessDenied(
                             _(u"Du har rollen 'Koordinator', men er ikke " +
                               "tilknyttet nogen enhed.")
                         )
                     unit = Unit.objects.get(pk=self.request.POST[u'unit'])
-                    if unit and not unit == users_unit:
+                    if unit and not unit == current_unit:
                         raise AccessDenied(
                             _(u"Du kan kun redigere enheder, som du selv er" +
                               " koordinator for.")
                         )
+            if hasattr(self.object, 'userprofile'):
+                object_role = self.object.userprofile.get_role()
+                if self.object != current_user and \
+                        object_role not in current_profile.available_roles:
+                    raise AccessDenied(
+                        _(u"Du har ikke rettigheder til at redigere brugere "
+                          u"med rollen \"%s\""
+                          % profile_models.role_to_text(object_role))
+                    )
             return result
         else:
             raise PermissionDenied
 
     def get(self, request, *args, **kwargs):
-        pk = kwargs.get("pk")
-        # The user making the request
-        user = request.user
-        self.object = User() if pk is None else User.objects.get(id=pk)
-
-        if pk and self.object and self.object.userprofile:
-            user = self.object
-            form = UserCreateForm(
-                user=user,
-                initial={
-                    'username': user.username,
-                    'email': user.email,
-                    'first_name': user.first_name,
-                    'last_name': user.last_name,
-                    'role': self.object.userprofile.user_role,
-                    'unit': self.object.userprofile.unit
-                }
-            )
-        else:
-            form = UserCreateForm(user=user)
-
+        self.get_object()
         return self.render_to_response(
-            self.get_context_data(form=form)
+            self.get_context_data(form=self.get_form())
         )
 
     def post(self, request, *args, **kwargs):
         pk = kwargs.get('pk')
-        if not hasattr(self, 'object') or self.object is None:
-            self.object = None if pk is None else User.objects.get(id=pk)
+        self.get_object()
+
         form = self.get_form()
         if form.is_valid():
             user_role_id = int(self.request.POST[u'role'])
@@ -330,15 +336,18 @@ class CreateUserView(FormView, UpdateView):
 
             # Send email to newly created users
             if not pk:
-                KUEmailMessage.send_email(
-                    EmailTemplate.SYSTEM__USER_CREATED,
-                    {
-                        'user': user,
-                        'password': form.cleaned_data['password1'],
-                    },
-                    [user],
-                    user
-                )
+                try:
+                    KUEmailMessage.send_email(
+                        EmailTemplate.SYSTEM__USER_CREATED,
+                        {
+                            'user': user,
+                            'password': form.cleaned_data['password1'],
+                        },
+                        [user],
+                        user
+                    )
+                except:
+                    pass
 
             messages.add_message(
                 request,
@@ -374,7 +383,7 @@ class CreateUserView(FormView, UpdateView):
 
     def get_form_kwargs(self):
         kwargs = super(CreateUserView, self).get_form_kwargs()
-        # kwargs['user'] = self.request.user
+        kwargs['user'] = self.request.user
 
         return kwargs
 

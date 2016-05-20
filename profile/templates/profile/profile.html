@@ -22,23 +22,26 @@
             {% if user.userprofile.get_faculty %}
                 <p>{% trans 'Din enhed' %}: {{ user.userprofile.get_faculty }}</p>
             {% endif %}
-            <p>{% trans 'På denne side kan du se en oversigt over dine tilbud, hvilke der har tilmeldinger, og hvilke der kræver handling.' %}</p>
+            <p>{% trans 'På denne side kan du se en oversigt over dine tilbud, hvilke der har tilmeldinger, og hvilke der er under planlægning.' %}</p>
             <div class="divider"></div>
         </div>
         <div class="col-sm-6">
             <div class="list-group admin-links">
                 {% if request.user.userprofile.can_create %}
-                    <a class="list-group-item" href="{% url 'visit-occ-search' %}"><h4 class="list-group-item-heading">{% trans 'Søg i besøg' %}</h4><p class="list-group-item-text">{% trans 'Søg i besøg der ligger i systemet.' %}</p></a>
+                    <a class="list-group-item" href="{% url 'visit-occ-search' %}">
+                        <h4 class="list-group-item-heading">{% trans 'Søg i besøg' %}</h4>
+                        <p class="list-group-item-text">{% trans 'Søg i besøg der ligger i systemet.' %}</p>
+                    </a>
                 {% endif %}
             </div>
         </div>
         <div class="col-sm-6">
-            <div class="text-right">
-                <a href="{% url 'resource-create' %}?back={{ thisurl | urlencode }}" class="btn btn-primary margin-bottom-5">{% trans '+ Opret tilbud' %}</a>                
-                <a href="#adminblock" class="btn btn-primary margin-bottom-5" role="button" data-toggle="collapse" aria-expanded="false" aria-controls="adminblock">{% trans 'Administration' %} <span class="glyphicon glyphicon-cog"></span> </a>
-            </div>
-            <div class="collapse list-group admin-links" id="adminblock">
-                {% if request.user.userprofile.can_create %}
+            {% if request.user.userprofile.can_create %}
+                <div class="text-right">
+                    <a href="{% url 'resource-create' %}?back={{ thisurl | urlencode }}" class="btn btn-primary margin-bottom-5">{% trans '+ Opret tilbud' %}</a>
+                    <a href="#adminblock" class="btn btn-primary margin-bottom-5" role="button" data-toggle="collapse" aria-expanded="false" aria-controls="adminblock">{% trans 'Administration' %} <span class="glyphicon glyphicon-cog"></span> </a>
+                </div>
+                <div class="collapse list-group admin-links" id="adminblock">
                     <a class="list-group-item" href="{% url 'user_list' %}">
                         <h4 class="list-group-item-heading">{% trans 'Administrér brugere' %}</h4>
                         <p class="list-group-item-text">{% trans 'Opret og redigér brugere af bookingsystemet.' %}</p>
@@ -56,19 +59,19 @@
                         <p class="list-group-item-text">{% trans 'Opret og redigér personer, der kan modtage forespørgsler på tilbud.' %}</p>
                     </a>
                     {% if request.user.userprofile.can_edit_units %}
-                    <a class="list-group-item" href="{% url 'admin:booking_unit_changelist' %}">
-                        <h4 class="list-group-item-heading">{% trans 'Administrér enheder' %}</h4>
-                        <p class="list-group-item-text">{% trans 'Tilpas information på fakultet, institut, mv.' %}</p>
-                    </a>
+                        <a class="list-group-item" href="{% url 'admin:booking_unit_changelist' %}">
+                            <h4 class="list-group-item-heading">{% trans 'Administrér enheder' %}</h4>
+                            <p class="list-group-item-text">{% trans 'Tilpas information på fakultet, institut, mv.' %}</p>
+                        </a>
                     {% endif %}
                     {% if not "disabled by: not yet implemented" %}
-                    <a class="list-group-item" href="{% url 'user_list' %}">
-                        <h4 class="list-group-item-heading">{% trans 'Statistik' %}</h4>
-                        <p class="list-group-item-text">{% trans 'Her har du adgang til at trække statistik på tilbud og tilmeldinger.' %}</p>
-                    </a>
+                        <a class="list-group-item" href="{% url 'user_list' %}">
+                            <h4 class="list-group-item-heading">{% trans 'Statistik' %}</h4>
+                            <p class="list-group-item-text">{% trans 'Her har du adgang til at trække statistik på tilbud og tilmeldinger.' %}</p>
+                        </a>
                     {% endif %}
-                {% endif %}
-            </div>
+                </div>
+            {% endif %}
         </div>
     </div>
 

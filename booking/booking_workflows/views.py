@@ -169,9 +169,22 @@ class VisitOccurrenceAddLogEntryView(FormView):
             )
 
     def get_context_data(self, **kwargs):
+        context = {}
+        context['breadcrumbs'] = [
+            {
+                'url': reverse('visit-occ-search'),
+                'text': _(u'Søg i besøg')
+            },
+            {
+                'url': reverse('visit-occ-view', args=[self.object.pk]),
+                'text': _(u'Besøg #%s') % self.object.pk
+            },
+            {'text': self.view_title},
+        ]
+        context.update(kwargs)
         return super(VisitOccurrenceAddLogEntryView, self).get_context_data(
             object=self.object,
-            **kwargs
+            **context
         )
 
     def form_valid(self, form):

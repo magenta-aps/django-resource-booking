@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 
 from booking.models import StudyMaterial, VisitAutosend, Booking
-from booking.models import UnitType
-from booking.models import Unit
+from booking.models import Locality, UnitType, Unit
 from booking.models import Resource, OtherResource, Visit
 from booking.models import Booker, Region, PostCode, School
 from booking.models import ClassBooking, TeacherBooking, BookingSubjectLevel
 from booking.models import EmailTemplate
 from booking.models import VisitOccurrence
 from django import forms
+from django.db.models import Q
+from django.db.models.expressions import OrderBy
 from django.contrib.auth.models import User
 from django.forms import CheckboxSelectMultiple, RadioSelect, EmailInput
 from django.forms import formset_factory, inlineformset_factory
@@ -172,7 +173,7 @@ class VisitOccurrenceSearchForm(forms.Form):
         label=_(u'Workflow status'),
         choices=(
             ('', _(u'Alle')),
-            (WORKFLOW_STATUS_PENDING, _(u'Alle der kræver handling')),
+            (WORKFLOW_STATUS_PENDING, _(u'Alle ikke-planlagte')),
             (WORKFLOW_STATUS_READY, _(u'Alle planlagte')),
             ('', u'====='),
         ) + VisitOccurrence.workflow_status_choices,
@@ -399,6 +400,16 @@ class VisitForm(forms.ModelForm):
             )
 
         self.user = kwargs.pop('user')
+        self.instance = kwargs.get('instance')
+
+        unit = None
+        if self.instance is not None:
+            unit = self.instance.unit
+        if unit is None and \
+                self.user is not None and self.user.userprofile is not None:
+            unit = self.user.userprofile.unit
+
+        # self.unit = kwargs.get('instance').unit_id
         super(VisitForm, self).__init__(*args, **kwargs)
         self.fields['unit'].queryset = self.get_unit_query_set()
         self.fields['type'].widget = HiddenInput()
@@ -427,6 +438,21 @@ class VisitForm(forms.ModelForm):
                         userprofile__user_role__role=TEACHER,
                         userprofile__unit__in=self.get_unit_query_set()
                     )
+
+        if unit is not None:
+            self.fields['locality'].choices = [(None, "---------")] + \
+                [
+                    (x.id, unicode(x))
+                    for x in Locality.objects.order_by(
+                        # Sort stuff where unit is null last
+                        OrderBy(Q(unit__isnull=False), descending=True),
+                        # Sort localities belong to current unit first
+                        OrderBy(Q(unit=unit), descending=True),
+                        # Lastly, sort by name
+                        "name"
+                    )
+                ]
+
         # Add classes to certain widgets
         for x in ('needed_hosts', 'needed_teachers'):
             f = self.fields.get(x)
@@ -644,16 +670,25 @@ class BookingForm(forms.ModelForm):
             len(visit.future_events) > 0
         )
         if self.scheduled:
-            self.fields['visitoccurrence'].choices = (
-                (
-                    x.pk,
-                    formats.date_format(
-                        timezone.localtime(x.start_datetime),
-                        "DATETIME_FORMAT"
-                    )
+            choices = []
+            for x in visit.future_events.order_by('start_datetime'):
+                available_seats = x.available_seats()
+                date = formats.date_format(
+                    timezone.localtime(x.start_datetime),
+                    "DATETIME_FORMAT"
                 )
-                for x in visit.future_events.order_by('start_datetime')
-            )
+                if available_seats is None:
+                    choices.append((x.pk, date))
+                elif available_seats > 0:
+                    choices.append(
+                        (
+                            x.pk,
+                            date + " " +
+                            _("(%d pladser tilbage)") % available_seats
+                        )
+                    )
+
+            self.fields['visitoccurrence'].choices = choices
             self.fields['visitoccurrence'].required = True
 
 
@@ -745,6 +780,10 @@ class BookerForm(forms.ModelForm):
                 for (value, title) in Booker.level_choices
                 if value in available_level_choices
             ]
+            # Visit types where attendee count is mandatory
+            if visit.type in [Resource.GROUP_VISIT,
+                              Resource.TEACHER_EVENT, Resource.STUDY_PROJECT]:
+                self.fields['attendee_count'].required = True
 
         # Eventually we may want a prettier solution,
         # but for now this will have to do
