@@ -262,6 +262,7 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
     RECIPIENT_BOOKER = 'booker'
     RECIPIENT_PERSON = 'person'
     RECIPIENT_USER = 'user'
+    RECIPIENT_USERPERSON = 'userperson'
     RECIPIENT_CUSTOM = 'custom'
     RECIPIENT_SEPARATOR = ':'
 
@@ -290,7 +291,8 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
             )
             context = self.template_context
             recipients = self.lookup_recipients(
-                form.cleaned_data['recipients'])
+                form.cleaned_data['recipients']
+            )
             KUEmailMessage.send_email(template, context, recipients,
                                       self.object)
             return super(EmailComposeView, self).form_valid(form)
@@ -326,6 +328,7 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
         booker_ids = []
         person_ids = []
         user_ids = []
+        userperson_ids = []
         customs = []
         for value in recipient_ids:
             (type, id) = value.split(self.RECIPIENT_SEPARATOR, 1)
@@ -335,11 +338,14 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
                 person_ids.append(id)
             elif type == self.RECIPIENT_USER:
                 user_ids.append(id)
+            elif type == self.RECIPIENT_USERPERSON:
+                userperson_ids.append(id)
             elif type == self.RECIPIENT_CUSTOM:
                 customs.append(id)
         return list(Booker.objects.filter(id__in=booker_ids)) + \
             list(Person.objects.filter(id__in=person_ids)) + \
             list(User.objects.filter(username__in=user_ids)) + \
+            list(UserPerson.objects.filter(id__in=userperson_ids)) + \
             customs
 
     def get_unit(self):

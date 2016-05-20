@@ -3029,6 +3029,11 @@ class KUEmailMessage(models.Model):
                 name = recipient.get_full_name()
                 address = recipient.email
                 user = recipient
+            elif isinstance(recipient, UserPerson):
+                name = recipient.name
+                address = recipient.email
+                if recipient.user:
+                    user = recipient.user
             else:
                 try:
                     name = recipient.get_name()
@@ -3038,7 +3043,10 @@ class KUEmailMessage(models.Model):
                     address = recipient.get_email()
                 except:
                     pass
-            if address is not None and address != '' and address not in emails:
+            if address is not None and address != '' and \
+                    (address not in emails or
+                        (user and not emails[address]['user'])
+                     ):
                 email = {'address': address}
                 if name is not None:
                     email['name'] = name
