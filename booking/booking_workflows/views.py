@@ -190,7 +190,6 @@ class VisitOccurrenceAddLogEntryView(FormView):
             **context
         )
 
-
     def form_valid(self, form):
         log_action(
             self.request.user,
