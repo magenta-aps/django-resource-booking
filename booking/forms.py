@@ -472,13 +472,20 @@ class VisitForm(forms.ModelForm):
             person.unit == self.user.userprofile.unit
         ]
 
-        # Limit choices for non-admins to those in the same unit
-        self.fields['contacts'].choices = [
+        userperson_choices = [
             (person.id, unicode(person))
             for person in UserPerson.objects.all()
             if self.user.userprofile.is_administrator or
             person.unit == self.user.userprofile.unit
         ]
+
+        userperson_choices.sort(key=lambda choice: choice[1].lower())
+
+        # Limit choices for non-admins to those in the same unit
+        if 'contacts' in self.fields:
+            self.fields['contacts'].choices = userperson_choices
+        if 'room_contact' in self.fields:
+            self.fields['room_contact'].choices = userperson_choices
 
     def clean_type(self):
         instance = getattr(self, 'instance', None)
