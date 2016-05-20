@@ -233,6 +233,12 @@ class CreateUserView(FormView, UpdateView):
     model = User
     form_class = UserCreateForm
     template_name = 'profile/create_user.html'
+    object = None
+
+    def get_object(self):
+        if self.object is None:
+            pk = self.kwargs.get('pk')
+            self.object = User.objects.get(id=pk) if pk is not None else None
 
     @method_decorator(login_required)
     def dispatch(self, *args, **kwargs):
@@ -240,71 +246,63 @@ class CreateUserView(FormView, UpdateView):
         result = super(CreateUserView, self).dispatch(*args, **kwargs)
         # Now, check that the user belongs to the correct unit.
         current_user = self.request.user
-        role = current_user.userprofile.get_role()
-        users_unit = current_user.userprofile.unit
+        current_profile = current_user.userprofile
+        current_role = current_profile.get_role()
+        current_unit = current_profile.unit
 
-        if role in EDIT_ROLES:
+        self.get_object()
+
+        if current_role in EDIT_ROLES:
             if self.request.method == 'POST':
-                if role == FACULTY_EDITOR:
+                if current_role == FACULTY_EDITOR:
                     # This should not be possible!
-                    if current_user.userprofile.unit is None:
+                    if current_profile.unit is None:
                         raise AccessDenied(
                             _(u"Du har rollen 'Fakultetsredaktør', men " +
                               "er ikke tilknyttet nogen enhed.")
                         )
                     unit = Unit.objects.get(pk=self.request.POST[u'unit'])
-                    if unit and not unit.belongs_to(users_unit):
+                    if unit and not unit.belongs_to(current_unit):
                         raise AccessDenied(
                             _(u"Du kan kun redigere enheder, som " +
                               "ligger under dit fakultet.")
                         )
-                elif role == COORDINATOR:
+                elif current_role == COORDINATOR:
                     # This should not be possible!
-                    if current_user.userprofile.unit is None:
+                    if current_profile.unit is None:
                         raise AccessDenied(
                             _(u"Du har rollen 'Koordinator', men er ikke " +
                               "tilknyttet nogen enhed.")
                         )
                     unit = Unit.objects.get(pk=self.request.POST[u'unit'])
-                    if unit and not unit == users_unit:
+                    if unit and not unit == current_unit:
                         raise AccessDenied(
                             _(u"Du kan kun redigere enheder, som du selv er" +
                               " koordinator for.")
                         )
+            if hasattr(self.object, 'userprofile'):
+                object_role = self.object.userprofile.get_role()
+                if self.object != current_user and \
+                        object_role not in current_profile.available_roles:
+                    raise AccessDenied(
+                        _(u"Du har ikke rettigheder til at redigere brugere "
+                          u"med rollen \"%s\""
+                          % profile_models.role_to_text(object_role))
+                    )
             return result
         else:
             raise PermissionDenied
 
     def get(self, request, *args, **kwargs):
-        pk = kwargs.get("pk")
-        # The user making the request
-        user = request.user
-        self.object = User() if pk is None else User.objects.get(id=pk)
-
-        if pk and self.object and self.object.userprofile:
-            user = self.object
-            form = UserCreateForm(
-                user=user,
-                initial={
-                    'username': user.username,
-                    'email': user.email,
-                    'first_name': user.first_name,
-                    'last_name': user.last_name,
-                    'role': self.object.userprofile.user_role,
-                    'unit': self.object.userprofile.unit
-                }
-            )
-        else:
-            form = UserCreateForm(user=user)
-
+        self.get_object()
         return self.render_to_response(
-            self.get_context_data(form=form)
+            self.get_context_data(form=self.get_form())
         )
 
     def post(self, request, *args, **kwargs):
         pk = kwargs.get('pk')
-        if not hasattr(self, 'object') or self.object is None:
-            self.object = None if pk is None else User.objects.get(id=pk)
+        self.get_object()
+
         form = self.get_form()
         if form.is_valid():
             user_role_id = int(self.request.POST[u'role'])
@@ -330,15 +328,18 @@ class CreateUserView(FormView, UpdateView):
 
             # Send email to newly created users
             if not pk:
-                KUEmailMessage.send_email(
-                    EmailTemplate.SYSTEM__USER_CREATED,
-                    {
-                        'user': user,
-                        'password': form.cleaned_data['password1'],
-                    },
-                    [user],
-                    user
-                )
+                try:
+                    KUEmailMessage.send_email(
+                        EmailTemplate.SYSTEM__USER_CREATED,
+                        {
+                            'user': user,
+                            'password': form.cleaned_data['password1'],
+                        },
+                        [user],
+                        user
+                    )
+                except:
+                    pass
 
             messages.add_message(
                 request,
@@ -374,7 +375,7 @@ class CreateUserView(FormView, UpdateView):
 
     def get_form_kwargs(self):
         kwargs = super(CreateUserView, self).get_form_kwargs()
-        # kwargs['user'] = self.request.user
+        kwargs['user'] = self.request.user
 
         return kwargs
 
