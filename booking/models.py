@@ -198,6 +198,10 @@ class UserPerson(models.Model):
             UserPerson.create(user)
 
         for resource in Resource.objects.all():
+            for person in resource.contact_persons.all():
+                resource.contacts.add(
+                    UserPerson.create(person)
+                )
             for person in resource.room_responsible.all():
                 resource.room_contact.add(
                     UserPerson.create(person)
@@ -913,6 +917,13 @@ class Resource(models.Model):
 
     contact_persons = models.ManyToManyField(
         Person,
+        blank=True,
+        verbose_name=_(u'Kontaktpersoner'),
+        related_name='contact_visit'
+    )
+
+    contacts = models.ManyToManyField(
+        UserPerson,
         blank=True,
         verbose_name=_(u'Kontaktpersoner'),
         related_name='contact_visit'
