@@ -82,7 +82,7 @@ class Person(models.Model):
     class Meta:
         verbose_name = _(u'kontaktperson')
         verbose_name_plural = _(u'kontaktpersoner')
-        ordering = ["-name"]
+        ordering = ["name"]
 
     # Eventually this could just be a pointer to AD
     name = models.CharField(max_length=50)
