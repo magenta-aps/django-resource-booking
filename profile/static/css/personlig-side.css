@@ -116,3 +116,7 @@
         width: 100%!important;
     }
 }
+
+#adminblock .tooltip {
+    width: 250px;
+}
