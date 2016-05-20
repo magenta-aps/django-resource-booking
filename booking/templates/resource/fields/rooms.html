@@ -3,19 +3,11 @@
 {% if form.rooms_needed %}
 <div class="row form-group">
     <div>{{ form.rooms_needed.errors }}</div>
-    <div class="col-sm-12">
-        {{ form.rooms_needed }}
-        <label class="{{ form.rooms_needed.css_classes }}" for="{{ form.rooms_needed.id_for_label }}">{{ form.rooms_needed.label }}</label>
+    <div class="col-sm-2">
+        <label class="{{ form.rooms_needed.css_classes }}" for="{{ form.rooms_needed.id_for_label }}">{{ form.rooms_needed.label }}:</label>
     </div>
-</div>
-{% endif %}
-
-{% if form.tour_available %}
-<div class="row form-group">
-    <div>{{ form.tour_available.errors }}</div>
-    <div class="col-sm-12">
-        {{ form.tour_available }}
-        <label class="{{ form.tour_available.css_classes }}" for="{{ form.tour_available.id_for_label }}">{{ form.tour_available.label }}</label>
+    <div class="col-sm-10">
+        {{ form.rooms_needed }}
     </div>
 </div>
 {% endif %}
