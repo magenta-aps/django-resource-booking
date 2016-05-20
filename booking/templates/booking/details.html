@@ -114,7 +114,7 @@
                     <dd>{{ object.classbooking.presentation_desired | yesno }}</dd>
                 {% endif %}
 
-                {% if object.classbooking %}
+                {% if object.classbooking and object.visit.custom_available and object.visit.custom_name %}
                     <dt>{{ object.visit.custom_name }}</dt>
                     <dd>{{ object.classbooking.custom_desired | yesno }}</dd>
                 {% endif %}
