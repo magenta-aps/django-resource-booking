@@ -171,7 +171,7 @@ class VisitOccurrenceSearchForm(forms.Form):
         label=_(u'Workflow status'),
         choices=(
             ('', _(u'Alle')),
-            (WORKFLOW_STATUS_PENDING, _(u'Alle der kræver handling')),
+            (WORKFLOW_STATUS_PENDING, _(u'Alle ikke-planlagte')),
             (WORKFLOW_STATUS_READY, _(u'Alle planlagte')),
             ('', u'====='),
         ) + VisitOccurrence.workflow_status_choices,
@@ -651,16 +651,25 @@ class BookingForm(forms.ModelForm):
             len(visit.future_events) > 0
         )
         if self.scheduled:
-            self.fields['visitoccurrence'].choices = (
-                (
-                    x.pk,
-                    formats.date_format(
-                        timezone.localtime(x.start_datetime),
-                        "DATETIME_FORMAT"
-                    )
+            choices = []
+            for x in visit.future_events.order_by('start_datetime'):
+                available_seats = x.available_seats()
+                date = formats.date_format(
+                    timezone.localtime(x.start_datetime),
+                    "DATETIME_FORMAT"
                 )
-                for x in visit.future_events.order_by('start_datetime')
-            )
+                if available_seats is None:
+                    choices.append((x.pk, date))
+                elif available_seats > 0:
+                    choices.append(
+                        (
+                            x.pk,
+                            date + " " +
+                            _("(%d pladser tilbage)") % available_seats
+                        )
+                    )
+
+            self.fields['visitoccurrence'].choices = choices
             self.fields['visitoccurrence'].required = True
 
 
@@ -752,6 +761,10 @@ class BookerForm(forms.ModelForm):
                 for (value, title) in Booker.level_choices
                 if value in available_level_choices
             ]
+            # Visit types where attendee count is mandatory
+            if visit.type in [Resource.GROUP_VISIT,
+                              Resource.TEACHER_EVENT, Resource.STUDY_PROJECT]:
+                self.fields['attendee_count'].required = True
 
         # Eventually we may want a prettier solution,
         # but for now this will have to do

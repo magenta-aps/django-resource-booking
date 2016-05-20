@@ -15,7 +15,8 @@
     {% endautoescape %}
 
         $(function(){
-            var totalFormsField = $("#{{ autosendformset.management_form.TOTAL_FORMS.id_for_label }}")
+            var totalFormsField = $("#{{ autosendformset.management_form.TOTAL_FORMS.id_for_label }}");
+            var rowList = $("#autosend-list");
 
             // Enables/disables input elements and labels
             var toggleEnabled = function(element, key, enable) {
@@ -157,7 +158,7 @@
                 deleteField.change(function(){
                     toggleEnabled(row.find("input,select").not($(this)), "delete", !$(this).prop("checked"));
                     if ($(this).prop("checked") && !row.find("[name$='-autosend_ptr']").val()) {
-                        formset.removeRow(totalFormsField, row);
+                        formset.removeRow(totalFormsField, row, rowList);
                         disableAlreadySelected();
                     }
                 });
@@ -200,7 +201,7 @@
                         totalFormsField,
                         $("#{{ autosendformset.management_form.MAX_NUM_FORMS.id_for_label }}"),
                         rowPrototype,
-                        $("#autosend-list")
+                        rowList
                 );
                 if (row) {
                     fixRow(row);
@@ -217,12 +218,13 @@
                     empty = empty.add($(this));
                 }
             });
-            formset.removeRow(totalFormsField, empty.not(empty.first()));
+            formset.removeRow(totalFormsField, empty.not(empty.first()), rowList);
 
             $(".autosend-row").not(".rowPrototype").each(function() {
                 fixRow($(this));
             });
             disableAlreadySelected();
+            totalFormsField.val(rowList.find(".autosend-row").length);
         });
     //-->
 </script>

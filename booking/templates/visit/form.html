@@ -30,24 +30,25 @@
 
             {{ form.type }}
 
-            {% if form.title %}
+            {% if form.unit %}
             <div class="panel panel-default">
                 <div id="headingCategory" class="panel-heading" role="tab">
                     <h4 class="panel-title">
-                        <a class="" aria-controls="collapseTitel" aria-expanded="false" href="#collapseTitel" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Titel" %}</a><span class="caret"></span>
+                        <a class="" aria-controls="collapseTitel" aria-expanded="false" href="#collapseTitel" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Grunddata" %}</a><span class="caret"></span>
                     </h4>
                 </div>
                 <div id="collapseTitel" class="panel-collapse collapse
-                {% if not object.pk or not form.errors or form.title.errors or form.title.errors %}in{% endif %}
+                {% if not object.pk or not form.errors or form.unit.errors %}in{% endif %}
                 " aria-labelledby="headingCategory" role="tabpanel" aria-expanded="true" style="">
                     <div class="panel-body">
-                        {% include 'resource/fields/title.html' %}
+                        {% include 'resource/fields/unit.html' %}
                     </div>
                 </div>
             </div>
+
             {% endif %}
 
-            {% if form.state or form.teaser or form.description or form.price or fileformset %}
+            {% if form.title or form.teaser or form.description or form.price or fileformset %}
             <div class="panel panel-default">
                 <div id="headingDescription" class="panel-heading" role="tab">
                     <h4 class="panel-title">
@@ -55,10 +56,10 @@
                     </h4>
                 </div>
                 <div id="collapseDescription" class="panel-collapse collapse
-                {% if not object.pk or form.state.errors or form.teaser.errors or form.description.errors or form.price.errors or fileformset.errors %}in{% endif %}
+                {% if not object.pk or form.title.errors or form.teaser.errors or form.description.errors or form.price.errors or fileformset.errors %}in{% endif %}
                 " aria-labelledby="headingDescription" role="tabpanel">
                     <div class="panel-body">
-                        {% include 'resource/fields/state.html' %}
+                        {% include 'resource/fields/title.html' %}
                         {% include 'resource/fields/teaser.html' %}
                         {% include 'resource/fields/description.html' %}
                         {% include 'resource/fields/price.html' %}
@@ -150,7 +151,7 @@
             </div>
             {% endif %}
 
-            {% if form.unit or form.contact_persons %}
+            {% if form.contact_persons %}
             <div class="panel panel-default">
                 <div id="headingContact" class="panel-heading" role="tab">
                     <h4 class="panel-title">
@@ -158,10 +159,9 @@
                     </h4>
                 </div>
                 <div id="collapseContact" class="panel-collapse collapse
-                {% if not object.pk or form.unit.errors or form.contact_persons.errors %}in{% endif %}
+                {% if not object.pk or form.contact_persons.errors %}in{% endif %}
                 " aria-labelledby="headingContact" role="tabpanel" aria-expanded="false" style="">
                     <div class="panel-body">
-                        {% include 'resource/fields/unit.html' %}
                         {% include 'resource/fields/contact.html' %}
                         {% include 'resource/fields/roomadmin.html' %}
                     </div>
@@ -169,7 +169,7 @@
             </div>
             {% endif %}
 
-            {% if form.preparation_time or form.comment or autosendform %}
+            {% if form.preparation_time or form.comment or form.state or autosendform %}
             <div class="panel panel-default">
                 <div id="headingInternal" class="panel-heading" role="tab">
                     <h4 class="panel-title">
@@ -177,9 +177,10 @@
                     </h4>
                 </div>
                 <div id="collapseInternal" class="panel-collapse collapse
-                {% if not object.pk or form.preparation_time.errors or form.comment.errors or autosendform.errors %}in{% endif %}
+                {% if not object.pk or form.preparation_time.errors or form.comment.errors or autosendform.errors or form.state.errors %}in{% endif %}
                 " aria-labelledby="headingInternal" role="tabpanel" aria-expanded="true" style="">
                     <div class="panel-body">
+                        {% include 'resource/fields/state.html' %}
                         {% include 'resource/fields/preparation.html' %}
                         {% include 'resource/fields/comment.html' %}
                         {% include 'resource/fields/autosend.html' %}

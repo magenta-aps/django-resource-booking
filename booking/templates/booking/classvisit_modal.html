@@ -49,9 +49,9 @@
                 {% endfor %}
                 </div>
 
-                {% include "booking/fields/attendees.html" %}
-
                 {% include "booking/fields/time.html" %}
+
+                {% include "booking/fields/attendees.html" %}
 
                 {% if bookingform.tour_desired %}
                 <div class="form-group">
@@ -89,6 +89,7 @@
 
     {% include 'booking/fields/location_script.html' %}
     {% include 'booking/fields/school_script.html' %}
+    {% include "booking/fields/time_script.html" %}
 
     <script type="text/javascript"><!--
     $(function(){
