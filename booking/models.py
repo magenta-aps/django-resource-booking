@@ -581,7 +581,7 @@ class EmailTemplate(models.Model):
         SYSTEM__EMAIL_REPLY,
     ]
 
-    # Templates that will be autosent to visit.contact_persons
+    # Templates that will be autosent to visit.contacts
     contact_person_keys = [
         NOTIFY_EDITORS__BOOKING_CREATED,
         NOTIFY_ALL__BOOKING_CANCELED,
@@ -1134,7 +1134,7 @@ class Resource(models.Model):
     def get_recipients(self, template_key):
         recipients = self.unit.get_recipients(template_key)
         if template_key in EmailTemplate.contact_person_keys:
-            contacts = self.contact_persons.all()
+            contacts = self.contacts.all()
             if len(contacts) == 0:
                 contacts = [self.created_by]
             recipients.extend(contacts)
@@ -1417,8 +1417,8 @@ class OtherResource(Resource):
         visit.save()
         for link in self.links.all():
             visit.links.add(link)
-        for contact_person in self.contact_persons.all():
-            visit.contact_persons.add(contact_person)
+        for contact in self.contacts.all():
+            visit.contacts.add(contact)
         for intermediate in self.resourcegymnasiefag_set.all():
             values = [str(intermediate.subject.id)]
             for level in intermediate.level.all():

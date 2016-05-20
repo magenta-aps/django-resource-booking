@@ -1768,7 +1768,7 @@ class VisitInquireView(FormMixin, HasBackButtonMixin, ModalMixin,
             }
             context.update(form.cleaned_data)
             recipients = []
-            recipients.extend(self.object.contact_persons.all())
+            recipients.extend(self.object.contacts.all())
             recipients.extend(self.object.unit.get_editors())
             KUEmailMessage.send_email(template, context, recipients,
                                       self.object)
@@ -1960,16 +1960,16 @@ class BookingNotifyView(LoginRequiredMixin, ModalMixin, EmailComposeView):
             'contacts': {
                 'label': _(u'Kontaktpersoner'),
                 'items': {
-                    "%s%s%d" % (self.RECIPIENT_PERSON,
+                    "%s%s%d" % (self.RECIPIENT_USERPERSON,
                                 self.RECIPIENT_SEPARATOR, person.id):
                                     person.get_full_email()
-                    for person in self.object.visit.contact_persons.all()
+                    for person in self.object.visit.contacts.all()
                 }
             },
             'roomadmins': {
                 'label': _(u'Lokaleansvarlige'),
                 'items': {
-                    "%s%s%d" % (self.RECIPIENT_PERSON,
+                    "%s%s%d" % (self.RECIPIENT_USERPERSON,
                                 self.RECIPIENT_SEPARATOR,
                                 person.id):
                                     person.get_full_email()
