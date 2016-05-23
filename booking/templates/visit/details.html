@@ -205,7 +205,7 @@
     <script type="text/javascript">
         <!--
         // Show/hide multiple dates
-        if ($("#dato li").data('expired', 'true').length > 1) {
+        if ($("#dato li[data-expired='true']").length > 1) {
             var dato = $("#dato"),
                 showmore = "{% trans 'Vis udløbne datoer' %}",
                 showless = "{% trans 'Skjul udløbne datoer' %}";
