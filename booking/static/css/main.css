@@ -124,6 +124,13 @@ strong,
     padding: 0;
 }
 
+.tooltip-inner {
+    background-color: #fff;
+    color: #000;
+    border: 1px solid #000;
+    text-align: left;
+}
+
 .navbar-brand {
     height: 28px;
     width: 250px;
