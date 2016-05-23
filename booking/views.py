@@ -2146,7 +2146,9 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
             'occurrence_available': {
                 str(visitoccurrence.pk): visitoccurrence.available_seats()
                 for visitoccurrence in self.visit.visitoccurrence_set.all()
-            }
+            },
+            'gymnasiefag_selected': self.gymnasiefag_selected(),
+            'grundskolefag_selected': self.grundskolefag_selected()
         }
         context.update(kwargs)
         return super(BookingView, self).get_context_data(**context)
@@ -2306,6 +2308,32 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
                 return ["booking/studyproject_modal.html"]
             else:
                 return ["booking/studyproject.html"]
+
+    def gymnasiefag_selected(self):
+        result = []
+        obj = self.visit
+        if self.request.method == 'GET':
+            if obj and obj.pk:
+                for x in obj.resourcegymnasiefag_set.all():
+                    result.append({
+                        'submitvalue': x.as_submitvalue(),
+                        'description': x.display_value()
+                    })
+
+        return result
+
+    def grundskolefag_selected(self):
+        result = []
+        obj = self.visit
+        if self.request.method == 'GET':
+            if obj and obj.pk:
+                for x in obj.resourcegrundskolefag_set.all():
+                    result.append({
+                        'submitvalue': x.as_submitvalue(),
+                        'description': x.display_value()
+                    })
+
+        return result
 
 
 class BookingSuccessView(TemplateView):
