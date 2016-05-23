@@ -59,10 +59,10 @@
                 {% if not object.pk or form.title.errors or form.teaser.errors or form.description.errors or form.price.errors or fileformset.errors %}in{% endif %}
                 " aria-labelledby="headingDescription" role="tabpanel">
                     <div class="panel-body">
-                        {% include 'resource/fields/title.html' %}
-                        {% include 'resource/fields/teaser.html' %}
-                        {% include 'resource/fields/description.html' %}
-                        {% include 'resource/fields/price.html' %}
+                        {% include 'resource/fields/generic_field.html' with field=form.title %}
+                        {% include 'resource/fields/generic_field.html' with field=form.teaser %}
+                        {% include 'resource/fields/generic_field.html' with field=form.description %}
+                        {% include 'resource/fields/generic_field.html' with field=form.price %}
                         {% include 'resource/fields/studymaterials.html' %}
                     </div>
                 </div>
@@ -80,10 +80,11 @@
                     {% if not object.pk or form.audience.errors or form.institution_level.errors or form.level.errors or form.class_level_min.errors or form.class_level_max.errors or form.minimum_number_of_visitors.errors or form.maximum_number_of_visitors.errors or form.subjects.errors %}in{% endif %}
                     " aria-labelledby="headingAudience" role="tabpanel" aria-expanded="true" style="">
                     <div class="panel-body">
-                        {% include 'resource/fields/audience.html' %}
-                        {% include 'resource/fields/institution_level.html' %}
+                        {% include 'resource/fields/generic_field.html' with field=form.audience %}
+                        {% include 'resource/fields/generic_field.html' with field=form.institution_level %}
                         {% include 'resource/fields/subjects.html' %}
-                        {% include 'resource/fields/visitors.html' %}
+                        {% include 'resource/fields/generic_field.html' with field=form.minimum_number_of_visitors %}
+                        {% include 'resource/fields/generic_field.html' with field=form.maximum_number_of_visitors %}
                     </div>
                 </div>
             </div>
@@ -118,7 +119,7 @@
                 {% if not object.pk or form.rooms_needed.errors or form.rooms_assignment.errors or form.locality.errors %}in{% endif %}
                 " aria-labelledby="headingContact" role="tabpanel" aria-expanded="false" style="">
                     <div class="panel-body">
-                        {% include 'resource/fields/locality.html' %}
+                        {% include 'resource/fields/generic_field.html' with field=form.locality %}
                         {% include 'resource/fields/rooms.html' %}
                     </div>
                 </div>
@@ -163,7 +164,7 @@
                 " aria-labelledby="headingContact" role="tabpanel" aria-expanded="false" style="">
                     <div class="panel-body">
                         {% include 'resource/fields/contact.html' %}
-                        {% include 'resource/fields/roomadmin.html' %}
+                        {% include 'resource/fields/generic_field.html' with field=form.room_responsible %}
                     </div>
                 </div>
             </div>
@@ -180,9 +181,9 @@
                 {% if not object.pk or form.preparation_time.errors or form.comment.errors or autosendform.errors or form.state.errors %}in{% endif %}
                 " aria-labelledby="headingInternal" role="tabpanel" aria-expanded="true" style="">
                     <div class="panel-body">
-                        {% include 'resource/fields/state.html' %}
-                        {% include 'resource/fields/preparation.html' %}
-                        {% include 'resource/fields/comment.html' %}
+                        {% include 'resource/fields/generic_field.html' with field=form.state %}
+                        {% include 'resource/fields/generic_field.html' with field=form.preparation %}
+                        {% include 'resource/fields/generic_field.html' with field=form.comment %}
                         {% include 'resource/fields/autosend.html' %}
                     </div>
                 </div>
