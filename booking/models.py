@@ -501,12 +501,14 @@ class Locality(models.Model):
 
     @property
     def route_url(self):
-        return "http://www.findvej.dk/?daddress=%s&dzip=%s" % \
+        # return "http://www.findvej.dk/?daddress=%s&dzip=%s" % \
+        return "https://maps.google.dk/maps/dir//%s,%s" % \
                (self.address_line, self.zip_city)
 
     @property
     def location_url(self):
-        return "http://www.findvej.dk/%s,%s" % \
+        # return "http://www.findvej.dk/%s,%s" % \
+        return "https://maps.google.dk/maps/place/%s,%s" % \
                (self.address_line, self.zip_city)
 
 
