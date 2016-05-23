@@ -1,8 +1,53 @@
 {% if form.tour_available %}
 <div class="row form-group">
     <div>{{ form.tour_available.errors }}</div>
-    <div class="col-sm-12">
-        <label class="radiolabel" for="{{ form.tour_available.id_for_label }}">{{ form.tour_available }} {{ form.tour_available.label }}</label>
+    <div class="col-sm-2">
+        <label class="{{ form.tour_available.css_classes }}" for="{{ form.tour_available.id_for_label }}">{{ form.tour_available.label }}:</label>
+    </div>
+    <div class="col-sm-10">
+        {{ form.tour_available }}
     </div>
 </div>
+{% endif %}
+
+{% if form.catering_available %}
+    <div class="row form-group">
+        <div>{{ form.catering_available.errors }}</div>
+        <div class="col-sm-2">
+            <label class="{{ form.catering_available.css_classes }}" for="{{ form.catering_available.id_for_label }}">{{ form.catering_available.label }}:</label>
+        </div>
+        <div class="col-sm-10">
+            {{ form.catering_available }}
+        </div>
+    </div>
+{% endif %}
+
+{% if form.presentation_available %}
+    <div class="row form-group">
+        <div>{{ form.presentation_available.errors }}</div>
+        <div class="col-sm-2">
+            <label class="{{ form.presentation_available.css_classes }}" for="{{ form.presentation_available.id_for_label }}">{{ form.presentation_available.label }}:</label>
+        </div>
+        <div class="col-sm-10">
+            {{ form.presentation_available }}
+        </div>
+    </div>
+{% endif %}
+
+{% if form.custom_available and form.custom_name %}
+    <div class="row form-group">
+        <div>{{ form.presentation_available.errors }}</div>
+        <div class="col-sm-2">
+            <label class="{{ form.custom_available.css_classes }}" for="{{ form.custom_available.id_for_label }}">{{ form.custom_available.label }}:</label>
+        </div>
+        <div class="col-sm-1">
+            {{ form.custom_available }}
+        </div>
+        <div class="col-sm-2">
+            <label class="{{ form.custom_name.css_classes }}" for="{{ form.custom_name.id_for_label }}">{{ form.custom_name.label }}:</label>
+        </div>
+        <div class="col-sm-7">
+            {{ form.custom_name }}
+        </div>
+    </div>
 {% endif %}
