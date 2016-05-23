@@ -932,6 +932,12 @@ class Resource(models.Model):
         null=True
     )
 
+    rooms = models.ManyToManyField(
+        'Room',
+        verbose_name=_(u'Lokaler'),
+        blank=True
+    )
+
     recurrences = RecurrenceField(
         null=True,
         blank=True,
@@ -1169,6 +1175,23 @@ class Resource(models.Model):
         if hasattr(self, 'otherresource') and self.otherresource:
             return reverse('otherresource-view', args=[self.otherresource.pk])
         return reverse('resource-view', args=[self.pk])
+
+    def add_room_by_name(self, name):
+        room = Room.objects.filter(
+            name=name,
+            locality=self.locality
+        ).first()
+
+        if room is None:
+            room = Room(
+                name=name,
+                locality=self.locality
+            )
+            room.save()
+
+        self.rooms.add(room)
+
+        return room
 
     @staticmethod
     def get_latest_created():
@@ -1519,22 +1542,6 @@ class Visit(Resource):
         verbose_name=_(u"Tilbuddet kræver brug af et eller flere lokaler")
     )
 
-    ROOMS_ASSIGNED_ON_VISIT = 0
-    ROOMS_ASSIGNED_WHEN_BOOKING = 1
-
-    rooms_assignment_choices = (
-        (ROOMS_ASSIGNED_ON_VISIT, _(u"Lokaler tildeles på forhånd")),
-        (ROOMS_ASSIGNED_WHEN_BOOKING, _(u"Lokaler tildeles ved booking")),
-    )
-
-    rooms_assignment = models.IntegerField(
-        choices=rooms_assignment_choices,
-        default=ROOMS_ASSIGNED_ON_VISIT,
-        verbose_name=_(u"Tildeling af lokale(r)"),
-        blank=True,
-        null=True
-    )
-
     duration_choices = []
     for hour in range(0, 12, 1):
         for minute in range(0, 60, 15):
@@ -1720,6 +1727,11 @@ class Visit(Resource):
             for x in self.default_teachers.all():
                 occ.teachers.add(x)
 
+        # Copy rooms
+        if self.rooms.exists():
+            for x in self.rooms.all():
+                occ.rooms.add(x)
+
         return occ
 
     def get_autosend(self, template_key):
@@ -1849,6 +1861,12 @@ class VisitOccurrence(models.Model):
         null=True
     )
 
+    rooms = models.ManyToManyField(
+        'Room',
+        verbose_name=_(u'Lokaler'),
+        blank=True
+    )
+
     hosts = models.ManyToManyField(
         User,
         blank=True,
@@ -1870,13 +1888,13 @@ class VisitOccurrence(models.Model):
     )
 
     STATUS_NOT_NEEDED = 0
-    STATUS_OK = 1
+    STATUS_ASSIGNED = 1
     STATUS_NOT_ASSIGNED = 2
 
     host_status_choices = (
         (STATUS_NOT_NEEDED, _(u'Tildeling af værter ikke påkrævet')),
         (STATUS_NOT_ASSIGNED, _(u'Afventer tildeling')),
-        (STATUS_OK, _(u'Tildelt'))
+        (STATUS_ASSIGNED, _(u'Tildelt'))
     )
 
     host_status = models.IntegerField(
@@ -1888,7 +1906,7 @@ class VisitOccurrence(models.Model):
     teacher_status_choices = (
         (STATUS_NOT_NEEDED, _(u'Tildeling af undervisere ikke påkrævet')),
         (STATUS_NOT_ASSIGNED, _(u'Afventer tildeling')),
-        (STATUS_OK, _(u'Tildelt'))
+        (STATUS_ASSIGNED, _(u'Tildelt'))
     )
 
     teacher_status = models.IntegerField(
@@ -1899,8 +1917,8 @@ class VisitOccurrence(models.Model):
 
     room_status_choices = (
         (STATUS_NOT_NEEDED, _(u'Tildeling af lokaler ikke påkrævet')),
-        (STATUS_NOT_ASSIGNED, _(u'Afventer tildeling')),
-        (STATUS_OK, _(u'Tildelt'))
+        (STATUS_NOT_ASSIGNED, _(u'Afventer tildeling/bekræftelse')),
+        (STATUS_ASSIGNED, _(u'Tildelt/bekræftet'))
     )
 
     room_status = models.IntegerField(
@@ -2376,6 +2394,27 @@ class VisitOccurrence(models.Model):
             if duration is not None:
                 self.end_datetime = self.start_datetime + duration
 
+    def add_room_by_name(self, name):
+        locality = None
+        if self.visit and self.visit.locality:
+            locality = self.visit.locality
+
+        room = Room.objects.filter(
+            name=name,
+            locality=locality
+        ).first()
+
+        if room is None:
+            room = Room(
+                name=name,
+                locality=self.locality
+            )
+            room.save()
+
+        self.rooms.add(room)
+
+        return room
+
     @staticmethod
     def get_latest_created():
         return VisitOccurrence.objects.\
@@ -2531,34 +2570,56 @@ class VisitOccurrenceAutosend(Autosend):
 class Room(models.Model):
 
     class Meta:
-        verbose_name = _(u"lokale for tilbud")
-        verbose_name_plural = _(u"lokaler for tilbud")
+        verbose_name = _(u"lokale")
+        verbose_name_plural = _(u"lokaler")
 
+    # Old field, to be removed later
     visit = models.ForeignKey(
-        Visit, verbose_name=_(u'Besøg'), blank=False
+        Visit, verbose_name=_(u'Besøg'),
+        blank=True,
+        null=True,
+        editable=False
     )
+
+    locality = models.ForeignKey(
+        Locality,
+        verbose_name=_(u'Lokalitet'),
+        blank=True,
+        null=True
+    )
+
     name = models.CharField(
         max_length=64, verbose_name=_(u'Navn på lokale'), blank=False
     )
 
     def __unicode__(self):
-        return self.name
+        return unicode(self.name)
 
+    @property
+    def name_with_locality(self):
+        if self.locality:
+            return '%s, %s' % (
+                unicode(self.name),
+                self.locality.name_and_address
+            )
+        else:
+            return '%s, %s' % (
+                unicode(self.name),
+                _(u'<uden lokalitet>')
+            )
 
-# Represents a room as saved on a booking.
-class BookedRoom(models.Model):
+    @classmethod
+    def migrate(cls):
+        for x in cls.objects.filter(locality__isnull=True):
+            if x.visit and x.visit.locality:
+                x.visit.add_room_by_name(x.name)
+            x.delete()
 
-    class Meta:
-        verbose_name = _(u'lokale for besøg')
-        verbose_name_plural = _(u'lokaler for besøg')
-
-    name = models.CharField(max_length=60, verbose_name=_(u'Navn'))
-
-    booking = models.ForeignKey(
-        'Booking',
-        null=False,
-        related_name='assigned_rooms'
-    )
+        # Copy any rooms from visits each visit's VOs.
+        for x in Visit.objects.filter(rooms__isnull=False).distinct():
+            for y in x.visitoccurrence_set.all():
+                for r in x.rooms.all():
+                    y.rooms.add(r)
 
 
 class Region(models.Model):

@@ -1,0 +1,62 @@
+{% load i18n %}
+{% load booking_tags %}
+
+<div id="roomsedit">
+    <div class="row form-group">
+        <div class="col-sm-2">
+            <label class="{{ form.existingrooms.css_classes }}" for="existingrooms">{% trans "Tilføj eksisterende lokale" %}:</label>
+        </div>
+        <div class="col-sm-{{ editcontrol_width|default:'6' }}">
+            <textarea id="all_room_data" style="display: none;">{{ allrooms|jsonify }}</textarea>
+            <select name="existingrooms" class="form-control input-sm" id="existingrooms">
+                <option>{% trans "Vælg lokale..." %}</option>
+            </select>
+        </div>
+    </div>
+    <div class="row form-group">
+        <div class="col-sm-2">
+            <label class="{{ form.newroom.css_classes }}" for="newroom">{% trans "Tilføj nyt lokale" %}:</label>
+        </div>
+        <div class="col-sm-{{ editcontrol_width|default:'6' }}">
+            <div class="input-group">
+                <input type="text" name="newroom" id="newroom" value="" class="form-control input-sm" /><span class="input-group-btn">
+                <button
+                    type="button"
+                    id="addnewroom"
+                    value="{% trans "Tilføj" %}"
+                    class="btn btn-default"
+                    data-no-locality-message="{% trans 'Du skal vælge en lokalitet før du kan tilføje lokaler' %}"
+                >{% trans "Tilføj" %}</button>
+            </div>
+        </div>
+    </div>
+    <div class="row form-group">
+        <div class="col-sm-2">
+            <label>{% trans "Valgte lokaler" %}:</label>
+        </div>
+
+        <div class="col-sm-col-sm-{{ editcontrol_width|default:'6' }}">
+            {% comment %}
+                Remember to correct both the template and the printed-out items
+                below.
+            {% endcomment %}
+            <ul id="room-item-template" style="display: none">
+                <li>
+                    <span class="roomname">##NAME##</span>
+                    <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                    <input type="hidden" name="rooms" value="##VALUE##" disabled="disabled" />
+                </li>
+            </ul>
+            <div id="chosenrooms-empty">{% trans 'Ingen lokaler valgt' %}</div>
+            <ul id="chosenrooms">
+                {% for room in rooms %}
+                    <li>
+                        <span class="roomname">{{ room.name_with_locality }}</span>
+                        <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                        <input type="hidden" name="rooms" value="id:{{ room.id }}" />
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>

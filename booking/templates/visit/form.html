@@ -108,7 +108,7 @@
             </div>
             {% endif %}
 
-            {% if form.rooms_needed or form.rooms_assignment or form.locality %}
+            {% if form.rooms_needed or form.locality %}
             <div class="panel panel-default">
                 <div id="headingRooms" class="panel-heading" role="tab">
                     <h4 class="panel-title">
@@ -116,7 +116,7 @@
                     </h4>
                 </div>
                 <div id="collapseRooms" class="panel-collapse collapse
-                {% if not object.pk or form.rooms_needed.errors or form.rooms_assignment.errors or form.locality.errors %}in{% endif %}
+                {% if not object.pk or form.rooms_needed.errors or form.locality.errors %}in{% endif %}
                 " aria-labelledby="headingContact" role="tabpanel" aria-expanded="false" style="">
                     <div class="panel-body">
                         {% include 'resource/fields/locality.html' %}

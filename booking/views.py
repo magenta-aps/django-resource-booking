@@ -1523,24 +1523,18 @@ class EditVisitView(EditResourceView):
         context = {}
 
         if self.object and self.object.pk:
-            context['rooms'] = self.object.room_set.all()
+            context['rooms'] = self.object.rooms.all()
         else:
             context['rooms'] = []
 
-        search_unit = None
-        if self.object and self.object.unit:
-            search_unit = self.object.unit
-        else:
-            if self.request.user and self.request.user.userprofile:
-                search_unit = self.request.user.userprofile.unit
-
-        if search_unit is not None:
-            context['existingrooms'] = Room.objects.filter(
-                visit__unit=search_unit
-            ).order_by("name").distinct("name")
-        else:
-            context['existingrooms'] = Room.objects.all().\
-                order_by("name").distinct("name")
+        context['allrooms'] = [
+            {
+                'id': x.pk,
+                'locality_id': x.locality.pk if x.locality else None,
+                'name': x.name_with_locality
+            }
+            for x in Room.objects.all()
+        ]
 
         context['gymnasiefag_choices'] = Subject.gymnasiefag_qs()
         context['grundskolefag_choices'] = Subject.grundskolefag_qs()
@@ -1599,22 +1593,33 @@ class EditVisitView(EditResourceView):
                                     pass
 
     def save_rooms(self):
-        # Update rooms
-        existing_rooms = set([x.name for x in self.object.room_set.all()])
+        # This code is more or less the same as
+        # ChangeVisitOccurrenceRoomsView.save_rooms()
+        # If you update this you might have to update there as well.
+        existing_rooms = set([x.pk for x in self.object.rooms.all()])
 
         new_rooms = self.request.POST.getlist("rooms")
-        for roomname in new_rooms:
-            if roomname in existing_rooms:
-                existing_rooms.remove(roomname)
-            else:
-                new_room = Room(visit=self.object, name=roomname)
-                new_room.save()
+
+        for roomdata in new_rooms:
+            if roomdata.startswith("id:"):
+                # Existing rooms are identified by "id:<pk>"
+                try:
+                    room_pk = int(roomdata[3:])
+                    if room_pk in existing_rooms:
+                        existing_rooms.remove(room_pk)
+                    else:
+                        self.object.rooms.add(room_pk)
+                except Exception as e:
+                    print 'Problem adding room: %s' % e
+            elif roomdata.startswith("new:"):
+                # New rooms are identified by "new:<name-of-room>"
+                room = self.object.add_room_by_name(roomdata[4:])
+                if room.pk in existing_rooms:
+                    existing_rooms.remove(room.pk)
 
         # Delete any rooms left in existing rooms
-        if len(existing_rooms) > 0:
-            self.object.room_set.all().filter(
-                name__in=existing_rooms
-            ).delete()
+        for x in existing_rooms:
+            self.object.rooms.remove(x)
 
     def save_occurrences(self):
         # update occurrences
