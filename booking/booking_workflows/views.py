@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from django.db.models.expressions import OrderBy
+from django.db.models import Q
 from django.core.urlresolvers import reverse
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import redirect
@@ -16,8 +18,10 @@ from booking.booking_workflows.forms import VisitOccurrenceAddLogEntryForm
 from booking.booking_workflows.forms import ChangeVisitOccurrenceStartTimeForm
 from booking.models import VisitOccurrence
 from booking.models import EmailTemplate
+from booking.models import Locality
 from booking.models import LOGACTION_MANUAL_ENTRY
 from booking.models import log_action
+from booking.models import Room
 from booking.views import AutologgerMixin
 from booking.views import RoleRequiredMixin, EditorRequriedMixin
 from django.views.generic.base import ContextMixin
@@ -102,9 +106,9 @@ class ChangeVisitOccurrenceHostsView(AutologgerMixin, UpdateWithCancelView):
     def form_valid(self, form):
         old = self.get_object()
         response = super(ChangeVisitOccurrenceHostsView, self).form_valid(form)
-        if form.cleaned_data['host_status'] == VisitOccurrence.STATUS_OK:
+        if form.cleaned_data['host_status'] == VisitOccurrence.STATUS_ASSIGNED:
             new_hosts = self.object.hosts.all()
-            if old.host_status != VisitOccurrence.STATUS_OK:
+            if old.host_status != VisitOccurrence.STATUS_ASSIGNED:
                 # Status changed from not-ok to ok, notify all hosts
                 recipients = new_hosts
             else:
@@ -130,6 +134,76 @@ class ChangeVisitOccurrenceRoomsView(AutologgerMixin, UpdateWithCancelView):
     form_class = ChangeVisitOccurrenceRoomsForm
     template_name = "booking/workflow/change_rooms.html"
     view_title = _(u'Redigér lokaler')
+
+    def get_context_data(self, **kwargs):
+        context = {}
+        context.update(kwargs)
+
+        context['allrooms'] = [
+            {
+                'id': x.pk,
+                'locality_id': x.locality.pk if x.locality else None,
+                'name': x.name_with_locality
+            }
+            for x in Room.objects.all()
+        ]
+
+        context['rooms'] = self.object.rooms.all()
+
+        locality = self.object.visit.locality
+        unit = self.object.visit.unit
+
+        context['locality_choices'] = [(None, "---------")] + \
+            [
+                (x.id, x.name_and_address, x.id == locality.id)
+                for x in Locality.objects.order_by(
+                    # Sort stuff where unit is null last
+                    OrderBy(Q(unit__isnull=False), descending=True),
+                    # Sort localities belong to current unit first
+                    OrderBy(Q(unit=unit), descending=True),
+                    # Lastly, sort by name
+                    "name"
+                )
+            ]
+
+        return super(
+            ChangeVisitOccurrenceRoomsView, self
+        ).get_context_data(**context)
+
+    def form_valid(self, form):
+        self.object = form.save()
+
+        self.save_rooms()
+
+        return HttpResponseRedirect(self.get_success_url())
+
+    def save_rooms(self):
+        # This code is more or less the same as EditVisitView.save_rooms()
+        # If you update this you might have to update there as well.
+        existing_rooms = set([x.pk for x in self.object.rooms.all()])
+
+        new_rooms = self.request.POST.getlist("rooms")
+
+        for roomdata in new_rooms:
+            if roomdata.startswith("id:"):
+                # Existing rooms are identified by "id:<pk>"
+                try:
+                    room_pk = int(roomdata[3:])
+                    if room_pk in existing_rooms:
+                        existing_rooms.remove(room_pk)
+                    else:
+                        self.object.rooms.add(room_pk)
+                except Exception as e:
+                    print 'Problem adding room: %s' % e
+            elif roomdata.startswith("new:"):
+                # New rooms are identified by "new:<name-of-room>"
+                room = self.object.add_room_by_name(roomdata[4:])
+                if room.pk in existing_rooms:
+                    existing_rooms.remove(room.pk)
+
+        # Delete any rooms left in existing rooms
+        for x in existing_rooms:
+            self.object.rooms.remove(x)
 
 
 class ChangeVisitOccurrenceCommentsView(AutologgerMixin, UpdateWithCancelView):
