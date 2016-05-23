@@ -774,6 +774,9 @@ class BookerForm(forms.ModelForm):
             if visit.type in [Resource.GROUP_VISIT,
                               Resource.TEACHER_EVENT, Resource.STUDY_PROJECT]:
                 self.fields['attendee_count'].required = True
+            # Class level is not mandatory for teacher events.
+            if visit.type == Resource.TEACHER_EVENT:
+                self.fields['level'].required = False
 
         # Eventually we may want a prettier solution,
         # but for now this will have to do
@@ -800,6 +803,10 @@ class BookerForm(forms.ModelForm):
         cleaned_data = super(BookerForm, self).clean()
         email = cleaned_data.get("email")
         repeatemail = cleaned_data.get("repeatemail")
+        level = cleaned_data.get("level")
+
+        if level == '':
+            cleaned_data['level'] = Booker.other
 
         if email is not None and repeatemail is not None \
                 and email != repeatemail:
