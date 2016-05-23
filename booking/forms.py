@@ -464,6 +464,7 @@ class VisitForm(forms.ModelForm):
                         'form-control input-sm'
                     ) if x
                 ])
+
         # Limit choices for non-admins to those in the same unit
         userperson_choices = [
             (person.id, unicode(person))
@@ -479,6 +480,36 @@ class VisitForm(forms.ModelForm):
             self.fields['contacts'].choices = userperson_choices
         if 'room_contact' in self.fields:
             self.fields['room_contact'].choices = userperson_choices
+
+        if 'duration' in self.fields:
+            self.fields['duration'].choices = [
+                ('00:00', _(u'Ingen')), ('00:15', _(u'15 minutter')),
+                ('00:30', _(u'30 minutter')), ('00:45', _(u'45 minutter')),
+                ('01:00', _(u'1 time')), ('01:15', _(u'1 time, 15 minutter')),
+                ('01:30', _(u'1 time, 30 minutter')),
+                ('01:45', _(u'1 time, 45 minutter')),
+                ('02:00', _(u'2 timer')),
+                ('02:30', _(u'2 timer, 30 minutter')),
+                ('03:00', _(u'3 timer')),
+                ('03:30', _(u'3 timer, 30 minutter')),
+                ('04:00', _(u'4 timer')),
+                ('04:30', _(u'4 timer, 30 minutter')),
+                ('05:00', _(u'5 timer')),
+                ('05:30', _(u'5 timer, 30 minutter')),
+                ('06:00', _(u'6 timer')),
+                ('06:30', _(u'6 timer, 30 minutter')),
+                ('07:00', _(u'7 timer')),
+                ('07:30', _(u'7 timer, 30 minutter')),
+                ('08:00', _(u'8 timer')),
+                ('08:30', _(u'8 timer, 30 minutter')),
+                ('09:00', _(u'9 timer')),
+                ('09:30', _(u'9 timer, 30 minutter')),
+                ('10:00', _(u'10 timer')), ('11:00', _(u'11 timer')),
+                ('12:00', _(u'12 timer')), ('13:00', _(u'13 timer')),
+                ('14:00', _(u'14 timer')), ('15:00', _(u'15 timer')),
+                ('20:00', _(u'20 timer')), ('24:00', _(u'24 timer')),
+                ('36:00', _(u'36 timer')), ('48:00', _(u'48 timer'))
+            ]
 
     def clean_type(self):
         instance = getattr(self, 'instance', None)
