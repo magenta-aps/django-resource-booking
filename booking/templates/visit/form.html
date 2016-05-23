@@ -102,7 +102,7 @@
                 " aria-labelledby="headingTimeDuration" role="tabpanel" aria-expanded="false" style="">
                     <div class="panel-body">
                         {% include 'resource/fields/time.html' %}
-                        {% include 'resource/fields/duration.html' %}
+                        {% include 'resource/fields/generic_field.html' with field=form.duration %}
                     </div>
                 </div>
             </div>
