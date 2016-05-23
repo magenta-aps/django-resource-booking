@@ -1,6 +1,6 @@
 {% load i18n %}
 <div class="col-sm-2">
-    <label for="grundskolefag-edit">Grundskolefag:</label>
+    <label for="grundskolefag-edit">{% trans 'Grundskolefag:' %}</label>
 </div>
 
 <div class="col-sm-10">
@@ -27,7 +27,7 @@
         <div class="fagedit-group">
             <label for="grundskolefag-fag">{% trans 'Tilføj fag:' %}</label>
             <select name="grundskolefag-fag" id="grundskolefag-fag">
-                <option value="">-- Vælg grundskolefag --</option>
+                <option value="">-- {% trans 'Vælg grundskolefag' %} --</option>
                 {% for fag in grundskolefag_choices %}
                 <option value="{{fag.pk}}">{{fag.name}}</option>
                 {% endfor %}
@@ -36,7 +36,7 @@
         <div class="fagedit-group">
             <label for="grundskolefag-minclass">{% trans 'Fra klassetrin:' %}</label>
             <select name="grundskolefag-minclass" id="grundskolefag-minclass">
-                <option value="" selected="selected">-- Vælg klassetrin --</option>
+                <option value="" selected="selected">-- {% trans 'Vælg klassetrin' %} --</option>
                 {% for trin in klassetrin_range %}
                 <option value="{{trin}}">{{trin}}</option>
                 {% endfor %}
@@ -46,7 +46,7 @@
         <div class="fagedit-group">
             <label for="grundskolefag-maxclass">{% trans 'Til klassetrin:' %}</label>
             <select name="grundskolefag-maxclass" id="grundskolefag-maxclass">
-                <option value="">-- Vælg klassetrin --</option>
+                <option value="">-- {% trans 'Vælg klassetrin' %} --</option>
                 {% for trin in klassetrin_range %}
                 <option value="{{trin}}">{{trin}}</option>
                 {% endfor %}

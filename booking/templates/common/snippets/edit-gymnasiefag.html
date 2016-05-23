@@ -28,7 +28,7 @@
         <div class="fagedit-group">
             <label for="gymnasiefag-fag">{% trans 'Tilføj fag:' %}</label>
             <select name="gymnasiefag-fag" id="gymnasiefag-fag">
-                <option value="">-- Vælg gymnasiefag --</option>
+                <option value="">-- {% trans 'Vælg gymnasiefag' %} --</option>
                 {% for fag in gymnasiefag_choices %}
                 <option value="{{fag.pk}}">{{fag.name}}</option>
                 {% endfor %}
