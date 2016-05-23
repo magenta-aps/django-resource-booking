@@ -216,7 +216,7 @@ class UserProfile(models.Model):
         if not unit:
             return Unit.objects.none()
 
-        # Faculty editos gets everything that has their unit as a parent
+        # Faculty editors gets everything that has their unit as a parent
         # as well as the unit itself
         if role == FACULTY_EDITOR:
             return Unit.objects.filter(Q(parent=unit) | Q(pk=unit.pk))

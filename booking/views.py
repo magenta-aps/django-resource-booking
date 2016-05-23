@@ -37,7 +37,8 @@ from django.views.defaults import bad_request
 
 from profile.models import EDIT_ROLES
 from profile.models import role_to_text
-from booking.models import Visit, VisitOccurrence, StudyMaterial, VisitAutosend
+from booking.models import Visit, VisitOccurrence, StudyMaterial, VisitAutosend, \
+    UserPerson
 from booking.models import KUEmailMessage
 from booking.models import Resource, Subject
 from booking.models import Unit
@@ -261,6 +262,7 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
     RECIPIENT_BOOKER = 'booker'
     RECIPIENT_PERSON = 'person'
     RECIPIENT_USER = 'user'
+    RECIPIENT_USERPERSON = 'userperson'
     RECIPIENT_CUSTOM = 'custom'
     RECIPIENT_SEPARATOR = ':'
 
@@ -287,9 +289,14 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
                 subject=data['subject'],
                 body=data['body']
             )
+            try:
+                template.key = int(request.POST.get("template", None))
+            except (ValueError, TypeError):
+                pass
             context = self.template_context
             recipients = self.lookup_recipients(
-                form.cleaned_data['recipients'])
+                form.cleaned_data['recipients']
+            )
             KUEmailMessage.send_email(template, context, recipients,
                                       self.object)
             return super(EmailComposeView, self).form_valid(form)
@@ -325,6 +332,7 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
         booker_ids = []
         person_ids = []
         user_ids = []
+        userperson_ids = []
         customs = []
         for value in recipient_ids:
             (type, id) = value.split(self.RECIPIENT_SEPARATOR, 1)
@@ -334,11 +342,14 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
                 person_ids.append(id)
             elif type == self.RECIPIENT_USER:
                 user_ids.append(id)
+            elif type == self.RECIPIENT_USERPERSON:
+                userperson_ids.append(id)
             elif type == self.RECIPIENT_CUSTOM:
                 customs.append(id)
         return list(Booker.objects.filter(id__in=booker_ids)) + \
             list(Person.objects.filter(id__in=person_ids)) + \
             list(User.objects.filter(username__in=user_ids)) + \
+            list(UserPerson.objects.filter(id__in=userperson_ids)) + \
             customs
 
     def get_unit(self):
@@ -938,7 +949,7 @@ class SearchView(ListView):
         return size
 
 
-class ResourceListView(LoginRequiredMixin, ListView):
+class ResourceListView(ListView):
     template_name = "resource/list.html"
     model = Resource
     context_object_name = "results"
@@ -1403,8 +1414,8 @@ class EditVisitView(EditResourceView):
 
     def get_forms(self):
         forms = super(EditVisitView, self).get_forms()
-        if self.object.is_type_bookable:
-            if self.request.method == 'GET':
+        if self.request.method == 'GET':
+            if self.object.is_type_bookable:
                 initial = []
                 if not self.object or not self.object.pk:
                     initial = [
@@ -1419,10 +1430,15 @@ class EditVisitView(EditResourceView):
                     None, instance=self.object, initial=initial
                 )
 
-            if self.request.method == 'POST':
-                forms['autosendformset'] = VisitAutosendFormSet(
-                    self.request.POST, instance=self.object
-                )
+            if not self.object or not self.object.pk:
+                forms['form'].initial['room_contact'] = [
+                    UserPerson.find(self.request.user)
+                ]
+
+        if self.request.method == 'POST':
+            forms['autosendformset'] = VisitAutosendFormSet(
+                self.request.POST, instance=self.object
+            )
         return forms
 
     def _is_any_booking_outside_new_attendee_count_bounds(
@@ -1507,24 +1523,18 @@ class EditVisitView(EditResourceView):
         context = {}
 
         if self.object and self.object.pk:
-            context['rooms'] = self.object.room_set.all()
+            context['rooms'] = self.object.rooms.all()
         else:
             context['rooms'] = []
 
-        search_unit = None
-        if self.object and self.object.unit:
-            search_unit = self.object.unit
-        else:
-            if self.request.user and self.request.user.userprofile:
-                search_unit = self.request.user.userprofile.unit
-
-        if search_unit is not None:
-            context['existingrooms'] = Room.objects.filter(
-                visit__unit=search_unit
-            ).order_by("name").distinct("name")
-        else:
-            context['existingrooms'] = Room.objects.all().\
-                order_by("name").distinct("name")
+        context['allrooms'] = [
+            {
+                'id': x.pk,
+                'locality_id': x.locality.pk if x.locality else None,
+                'name': x.name_with_locality
+            }
+            for x in Room.objects.all()
+        ]
 
         context['gymnasiefag_choices'] = Subject.gymnasiefag_qs()
         context['grundskolefag_choices'] = Subject.grundskolefag_qs()
@@ -1583,22 +1593,33 @@ class EditVisitView(EditResourceView):
                                     pass
 
     def save_rooms(self):
-        # Update rooms
-        existing_rooms = set([x.name for x in self.object.room_set.all()])
+        # This code is more or less the same as
+        # ChangeVisitOccurrenceRoomsView.save_rooms()
+        # If you update this you might have to update there as well.
+        existing_rooms = set([x.pk for x in self.object.rooms.all()])
 
         new_rooms = self.request.POST.getlist("rooms")
-        for roomname in new_rooms:
-            if roomname in existing_rooms:
-                existing_rooms.remove(roomname)
-            else:
-                new_room = Room(visit=self.object, name=roomname)
-                new_room.save()
+
+        for roomdata in new_rooms:
+            if roomdata.startswith("id:"):
+                # Existing rooms are identified by "id:<pk>"
+                try:
+                    room_pk = int(roomdata[3:])
+                    if room_pk in existing_rooms:
+                        existing_rooms.remove(room_pk)
+                    else:
+                        self.object.rooms.add(room_pk)
+                except Exception as e:
+                    print 'Problem adding room: %s' % e
+            elif roomdata.startswith("new:"):
+                # New rooms are identified by "new:<name-of-room>"
+                room = self.object.add_room_by_name(roomdata[4:])
+                if room.pk in existing_rooms:
+                    existing_rooms.remove(room.pk)
 
         # Delete any rooms left in existing rooms
-        if len(existing_rooms) > 0:
-            self.object.room_set.all().filter(
-                name__in=existing_rooms
-            ).delete()
+        for x in existing_rooms:
+            self.object.rooms.remove(x)
 
     def save_occurrences(self):
         # update occurrences
@@ -1752,7 +1773,7 @@ class VisitInquireView(FormMixin, HasBackButtonMixin, ModalMixin,
             }
             context.update(form.cleaned_data)
             recipients = []
-            recipients.extend(self.object.contact_persons.all())
+            recipients.extend(self.object.contacts.all())
             recipients.extend(self.object.unit.get_editors())
             KUEmailMessage.send_email(template, context, recipients,
                                       self.object)
@@ -1822,21 +1843,21 @@ class VisitOccurrenceNotifyView(LoginRequiredMixin, ModalMixin,
             'contacts': {
                 'label': _(u'Kontaktpersoner'),
                 'items': {
-                    "%s%s%d" % (self.RECIPIENT_PERSON,
+                    "%s%s%d" % (self.RECIPIENT_USERPERSON,
                                 self.RECIPIENT_SEPARATOR,
                                 person.id):
-                    person.get_full_email()
-                    for person in visit.contact_persons.all()
+                                    person.get_full_email()
+                    for person in visit.contacts.all()
                 }
             },
             'roomadmins': {
                 'label': _(u'Lokaleansvarlige'),
                 'items': {
-                    "%s%s%d" % (self.RECIPIENT_PERSON,
+                    "%s%s%d" % (self.RECIPIENT_USERPERSON,
                                 self.RECIPIENT_SEPARATOR,
                                 person.id):
                                     person.get_full_email()
-                    for person in visit.room_responsible.all()
+                    for person in visit.room_contact.all()
                 }
             },
             'assigned_hosts': {
@@ -1944,20 +1965,20 @@ class BookingNotifyView(LoginRequiredMixin, ModalMixin, EmailComposeView):
             'contacts': {
                 'label': _(u'Kontaktpersoner'),
                 'items': {
-                    "%s%s%d" % (self.RECIPIENT_PERSON,
+                    "%s%s%d" % (self.RECIPIENT_USERPERSON,
                                 self.RECIPIENT_SEPARATOR, person.id):
                                     person.get_full_email()
-                    for person in self.object.visit.contact_persons.all()
+                    for person in self.object.visit.contacts.all()
                 }
             },
             'roomadmins': {
                 'label': _(u'Lokaleansvarlige'),
                 'items': {
-                    "%s%s%d" % (self.RECIPIENT_PERSON,
+                    "%s%s%d" % (self.RECIPIENT_USERPERSON,
                                 self.RECIPIENT_SEPARATOR,
                                 person.id):
                                     person.get_full_email()
-                    for person in self.object.visit.room_responsible.all()
+                    for person in self.object.visit.room_contact.all()
                     }
             },
             'hosts': {
@@ -2198,9 +2219,12 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
 
             booking.autosend(EmailTemplate.NOTIFY_EDITORS__BOOKING_CREATED)
 
-            booking.autosend(EmailTemplate.NOTIFY_HOST__REQ_TEACHER_VOLUNTEER)
+            if booking.visitoccurrence.needs_teachers:
+                booking.autosend(EmailTemplate.
+                                 NOTIFY_HOST__REQ_TEACHER_VOLUNTEER)
 
-            booking.autosend(EmailTemplate.NOTIFY_HOST__REQ_HOST_VOLUNTEER)
+            if booking.visitoccurrence.needs_hosts:
+                booking.autosend(EmailTemplate.NOTIFY_HOST__REQ_HOST_VOLUNTEER)
 
             # We can't fetch this form before we have
             # a saved booking object to feed it, or we'll get an error

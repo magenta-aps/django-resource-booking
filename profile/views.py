@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from booking.models import Unit, Resource, VisitOccurrence
+from booking.models import Unit, Resource, VisitOccurrence, UserPerson
 from booking.models import EmailTemplate
 from booking.models import KUEmailMessage
 from django.contrib import messages
@@ -15,13 +15,15 @@ from django.db.models.functions import Coalesce
 from django.shortcuts import redirect
 from django.utils import timezone
 from django.utils.decorators import method_decorator
-from django.utils.translation import ugettext as _
+from django.utils.functional import Promise
+from django.utils.translation import ugettext as _, ungettext_lazy
 from django.views.generic import TemplateView, DetailView
-from django.views.generic.edit import UpdateView, FormView
+from django.views.generic.edit import UpdateView, FormView, DeleteView
 
-from booking.views import LoginRequiredMixin, AccessDenied, EditorRequriedMixin, \
-    VisitOccurrenceCustomListView
+from booking.views import LoginRequiredMixin, AccessDenied
+from booking.views import EditorRequriedMixin, VisitOccurrenceCustomListView
 from django.views.generic.list import ListView
+
 from profile.forms import UserCreateForm, EditMyResourcesForm
 from profile.models import AbsDateDist
 from profile.models import EmailLoginEntry
@@ -56,7 +58,11 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         context['lists'].extend([{
             'color': self.HEADING_GREEN,
             'type': 'VisitOccurrence',
-            'title': _(u'Seneste afviklede besøg'),
+            'title': ungettext_lazy(
+                u'%(count)d senest afviklet besøg',
+                u'%(count)d seneste afviklede besøg',
+                'count'
+            ) % {'count': VisitOccurrence.get_recently_held().count()},
             'queryset': VisitOccurrence.get_recently_held(),
             'limit': 10,
             'button': {
@@ -67,7 +73,11 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         }, {
             'color': self.HEADING_BLUE,
             'type': 'VisitOccurrence',
-            'title': _(u'Dagens besøg'),
+            'title': ungettext_lazy(
+                u'%(count)d dagens besøg',
+                u'%(count)d dagens besøg',
+                'count'
+            ),
             'queryset': VisitOccurrence.get_todays_occurrences(),
             'limit': 10,
             'button': {
@@ -78,6 +88,17 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         }])
 
         context['is_editor'] = self.request.user.userprofile.has_edit_role()
+
+        for list in context['lists']:
+            if 'title' in list:
+                if type(list['title']) == dict:
+                    if isinstance(list['title']['text'], Promise):
+                        list['title']['text'] = \
+                            list['title']['text'] % \
+                            {'count': list['queryset'].count()}
+                elif isinstance(list['title'], Promise):
+                    list['title'] = list['title'] % \
+                        {'count': list['queryset'].count()}
 
         context.update(**kwargs)
         return super(ProfileView, self).get_context_data(**context)
@@ -105,7 +126,11 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             'color': self.HEADING_BLUE,
             'type': 'Resource',
             'title': {
-                'text': _(u'Tilbud i min enhed'),
+                'text': ungettext_lazy(
+                    u'%(count)d tilbud i min enhed',
+                    u'%(count)d tilbud i min enhed',
+                    'count'
+                ),
                 'link': reverse('search') + '?u=-3'
             },
             'queryset': Resource.objects.filter(
@@ -125,13 +150,20 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         unplanned = {
             'color': self.HEADING_RED,
             'type': 'VisitOccurrence',
-            'title': _(u"Besøg under planlægning"),
+            'title': ungettext_lazy(
+                u"%(count)d besøg under planlægning",
+                u"%(count)d besøg under planlægning",
+                'count'
+            ),
             'queryset': self.sort_vo_queryset(
-                VisitOccurrence.being_planned_queryset(visit__unit=unit_qs).
-                    annotate(num_participants=(
-                        Coalesce(Count("bookings__booker__pk"), 0) +
-                        Coalesce(Sum("bookings__booker__attendee_count"), 0)
-                    )
+                VisitOccurrence.being_planned_queryset(visit__unit=unit_qs)
+                            .annotate(num_participants=(
+                                Coalesce(Count("bookings__booker__pk"), 0) +
+                                Coalesce(
+                                    Sum("bookings__booker__attendee_count"),
+                                    0
+                                )
+                            )
                 ).filter(num_participants__gte=1)
                 # See also VisitOccurrenceSearchView.filter_by_participants
             )
@@ -146,7 +178,11 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         planned = {
             'color': self.HEADING_GREEN,
             'type': 'VisitOccurrence',
-            'title': _(u"Planlagte besøg"),
+            'title': ungettext_lazy(
+                u"%(count)d planlagt besøg",
+                u"%(count)d planlagte besøg",
+                'count'
+            ),
             'queryset': self.sort_vo_queryset(
                 VisitOccurrence.planned_queryset(visit__unit=unit_qs)
             )
@@ -181,7 +217,11 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             {
                 'color': self.HEADING_RED,
                 'type': 'VisitOccurrence',
-                'title': _(u"Besøg der mangler undervisere"),
+                'title': ungettext_lazy(
+                    u"%(count)d besøg der mangler undervisere",
+                    u"%(count)d besøg der mangler undervisere",
+                    'count'
+                ),
                 'queryset': self.sort_vo_queryset(
                     VisitOccurrence.objects.filter(
                         visit__unit=unit_qs,
@@ -194,7 +234,11 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             {
                 'color': self.HEADING_GREEN,
                 'type': 'VisitOccurrence',
-                'title': _(u"Besøg hvor jeg er underviser"),
+                'title': ungettext_lazy(
+                    u"%(count)d besøg hvor jeg er underviser",
+                    u"%(count)d besøg hvor jeg er underviser",
+                    'count'
+                ),
                 'queryset': self.sort_vo_queryset(taught_vos)
             }
         ]
@@ -219,10 +263,13 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             {
                 'color': self.HEADING_RED,
                 'type': 'VisitOccurrence',
-                'title': _(u"Besøg der mangler værter"),
+                'title': ungettext_lazy(
+                    u"%(count)d besøg der mangler værter",
+                    u"%(count)d besøg der mangler værter",
+                    'count',
+                ),
                 'queryset': VisitOccurrence.objects.filter(
-                    visit__unit=self.request.user.userprofile.
-                        get_unit_queryset(),
+                    visit__unit=user.userprofile.get_unit_queryset(),
                     host_status=VisitOccurrence.STATUS_NOT_ASSIGNED
                 ).exclude(
                     hosts=self.request.user
@@ -231,7 +278,11 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             {
                 'color': self.HEADING_GREEN,
                 'type': 'VisitOccurrence',
-                'title': _(u"Besøg hvor jeg er vært"),
+                'title': ungettext_lazy(
+                    u"%(count)d besøg hvor jeg er vært",
+                    u"%(count)d besøg hvor jeg er vært",
+                    'count'
+                ),
                 'queryset': hosted_vos
             }
         ]
@@ -332,7 +383,11 @@ class CreateUserView(FormView, UpdateView):
                 user_profile.user = user
                 user_profile.user_role = user_role
                 user_profile.unit = unit
+
             user_profile.save()
+
+            # Create a UserPerson object if one doesn't exist
+            UserPerson.create(user)
 
             # Send email to newly created users
             if not pk:
@@ -394,9 +449,18 @@ class CreateUserView(FormView, UpdateView):
 
     def get_success_url(self):
         try:
-            return "/profile/user/%d" % self.object.id
+            return reverse("user_list")
         except:
             return '/'
+
+
+class DeleteUserView(DeleteView):
+
+    model = User
+    template_name = 'profile/user_confirm_delete.html'
+
+    def get_success_url(self):
+        return "/profile/users"
 
 
 class UserListView(EditorRequriedMixin, ListView):
@@ -407,6 +471,7 @@ class UserListView(EditorRequriedMixin, ListView):
     selected_role = None
 
     def get_queryset(self):
+
         user = self.request.user
         unit_qs = user.userprofile.get_unit_queryset()
 
@@ -423,7 +488,7 @@ class UserListView(EditorRequriedMixin, ListView):
             self.selected_role = int(self.request.GET.get("role", None))
         except:
             pass
-        if self.selected_role:
+        if self.selected_role is not None:
             qs = qs.filter(userprofile__user_role__role=self.selected_role)
 
         q = self.request.GET.get("q", None)
@@ -497,13 +562,17 @@ class EmailLoginView(DetailView):
             return self.redirect_to_destination(request, *args, **kwargs)
         else:
             self.expired = True
+            return redirect(
+                reverse('standard_login') +
+                "?next=" + self.get_dest(request, *args, **kwargs)
+            )
 
         return super(EmailLoginView, self).dispatch(request, *args, **kwargs)
 
     def redirect_to_self(self, request, *args, **kwargs):
         return redirect(self.object.as_url())
 
-    def redirect_to_destination(self, request, *args, **kwargs):
+    def get_dest(self, request, *args, **kwargs):
         dest = self.object.success_url
 
         if 'dest_url' in kwargs and kwargs['dest_url'] != dest:
@@ -514,8 +583,10 @@ class EmailLoginView(DetailView):
                     dest
                 )
             )
+        return dest
 
-        return redirect(dest)
+    def redirect_to_destination(self, request, *args, **kwargs):
+        return redirect(self.get_dest(request, *args, **kwargs))
 
 
 class EditMyResourcesView(EditorRequriedMixin, UpdateView):

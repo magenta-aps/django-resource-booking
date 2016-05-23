@@ -106,6 +106,108 @@ class Person(models.Model):
         return full_email(self.email, self.name)
 
 
+class UserPerson(models.Model):
+    class Meta:
+        verbose_name = _(u'Lokaleanvarlig')
+        verbose_name_plural = _(u'Lokaleanvarlige')
+
+    person = models.ForeignKey(Person, blank=True, null=True)
+    user = models.ForeignKey(User, blank=True, null=True)
+
+    @property
+    def name(self):
+        if self.person:
+            return self.person.name
+        elif self.user:
+            return self.user.get_full_name() or self.user.username
+
+    @property
+    def email(self):
+        if self.person:
+            return self.person.get_email()
+        elif self.user:
+            return self.user.email
+
+    @property
+    def full_email(self):
+        if self.person:
+            return self.person.get_full_email()
+        elif self.user:
+            return full_email(self.user.email, self.user.get_full_name())
+
+    @property
+    def unit(self):
+        if self.person:
+            return self.person.unit
+        elif self.user and hasattr(self.user, 'userprofile'):
+            return self.user.userprofile.unit
+
+    def __unicode__(self):
+        return self.name
+
+    def get_name(self):
+        return self.name
+
+    def get_email(self):
+        return self.email
+
+    def get_full_email(self):
+        return self.full_email
+
+    @staticmethod
+    def find(item):
+        # See if we can find an existing UserPerson
+        if isinstance(item, Person):
+            qs = UserPerson.objects.filter(person=item)
+            if qs.count() > 0:
+                return qs.first()
+        elif isinstance(item, User):
+            qs = UserPerson.objects.filter(user=item)
+            if qs.count() > 0:
+                return qs.first()
+
+    @staticmethod
+    def create(item):
+
+        userperson = UserPerson.find(item)
+        if userperson:
+            return userperson
+
+        # No? Create one then
+        userperson = UserPerson()
+        if isinstance(item, Person):
+            userperson.person = item
+        elif isinstance(item, User):
+            userperson.user = item
+        else:
+            pass
+            raise Exception(
+                "UserPerson must be called with "
+                "either a User or a Person as argument. "
+                "%s is not an acceptable input" % unicode(item)
+            )
+        userperson.save()
+        return userperson
+
+    @staticmethod
+    def migrate():
+        for person in Person.objects.all():
+            UserPerson.create(person)
+
+        for user in User.objects.all():
+            UserPerson.create(user)
+
+        for resource in Resource.objects.all():
+            for person in resource.contact_persons.all():
+                resource.contacts.add(
+                    UserPerson.create(person)
+                )
+            for person in resource.room_responsible.all():
+                resource.room_contact.add(
+                    UserPerson.create(person)
+                )
+
+
 # Units (faculties, institutes etc)
 class UnitType(models.Model):
     """A type of organization, e.g. 'faculty' """
@@ -232,6 +334,7 @@ class Subject(models.Model):
     class Meta:
         verbose_name = _(u"fag")
         verbose_name_plural = _(u"fag")
+        ordering = ["name"]
 
     SUBJECT_TYPE_GYMNASIE = 2**0
     SUBJECT_TYPE_GRUNDSKOLE = 2**1
@@ -386,6 +489,15 @@ class Locality(models.Model):
     def __unicode__(self):
         return self.name
 
+    @property
+    def name_and_address(self):
+        return "%s (%s)" % (
+            unicode(self.name),
+            ", ".join([
+                unicode(x) for x in [self.address_line, self.zip_city] if x
+            ])
+        )
+
 
 class EmailTemplate(models.Model):
 
@@ -479,7 +591,7 @@ class EmailTemplate(models.Model):
         SYSTEM__EMAIL_REPLY,
     ]
 
-    # Templates that will be autosent to visit.contact_persons
+    # Templates that will be autosent to visit.contacts
     contact_person_keys = [
         NOTIFY_EDITORS__BOOKING_CREATED,
         NOTIFY_ALL__BOOKING_CANCELED,
@@ -807,6 +919,12 @@ class Resource(models.Model):
         null=True
     )
 
+    rooms = models.ManyToManyField(
+        'Room',
+        verbose_name=_(u'Lokaler'),
+        blank=True
+    )
+
     recurrences = RecurrenceField(
         null=True,
         blank=True,
@@ -820,11 +938,25 @@ class Resource(models.Model):
         related_name='contact_visit'
     )
 
+    contacts = models.ManyToManyField(
+        UserPerson,
+        blank=True,
+        verbose_name=_(u'Kontaktpersoner'),
+        related_name='contact_visit'
+    )
+
     room_responsible = models.ManyToManyField(
         Person,
         blank=True,
         verbose_name=_(u'Lokaleansvarlige'),
         related_name='roomadmin_visit'
+    )
+
+    room_contact = models.ManyToManyField(
+        UserPerson,
+        blank=True,
+        verbose_name=_(u'Lokaleansvarlige'),
+        related_name='roomadmin_visit_new'
     )
 
     preparation_time = models.IntegerField(
@@ -1018,7 +1150,10 @@ class Resource(models.Model):
     def get_recipients(self, template_key):
         recipients = self.unit.get_recipients(template_key)
         if template_key in EmailTemplate.contact_person_keys:
-            recipients.extend(self.contact_persons.all())
+            contacts = self.contacts.all()
+            if len(contacts) == 0:
+                contacts = [self.created_by]
+            recipients.extend(contacts)
         return recipients
 
     def get_view_url(self):
@@ -1027,6 +1162,23 @@ class Resource(models.Model):
         if hasattr(self, 'otherresource') and self.otherresource:
             return reverse('otherresource-view', args=[self.otherresource.pk])
         return reverse('resource-view', args=[self.pk])
+
+    def add_room_by_name(self, name):
+        room = Room.objects.filter(
+            name=name,
+            locality=self.locality
+        ).first()
+
+        if room is None:
+            room = Room(
+                name=name,
+                locality=self.locality
+            )
+            room.save()
+
+        self.rooms.add(room)
+
+        return room
 
     @staticmethod
     def get_latest_created():
@@ -1055,6 +1207,7 @@ class ResourceGymnasieFag(models.Model):
     class Meta:
         verbose_name = _(u"gymnasiefagtilknytning")
         verbose_name_plural = _(u"gymnasiefagtilknytninger")
+        ordering = ["subject__name"]
 
     class_level_choices = [(i, unicode(i)) for i in range(0, 11)]
 
@@ -1134,6 +1287,7 @@ class ResourceGrundskoleFag(models.Model):
     class Meta:
         verbose_name = _(u"grundskolefagtilknytning")
         verbose_name_plural = _(u"grundskolefagtilknytninger")
+        ordering = ["subject__name"]
 
     class_level_choices = [(i, unicode(i)) for i in range(0, 11)]
 
@@ -1296,8 +1450,8 @@ class OtherResource(Resource):
         visit.save()
         for link in self.links.all():
             visit.links.add(link)
-        for contact_person in self.contact_persons.all():
-            visit.contact_persons.add(contact_person)
+        for contact in self.contacts.all():
+            visit.contacts.add(contact)
         for intermediate in self.resourcegymnasiefag_set.all():
             values = [str(intermediate.subject.id)]
             for level in intermediate.level.all():
@@ -1373,22 +1527,6 @@ class Visit(Resource):
     rooms_needed = models.BooleanField(
         default=True,
         verbose_name=_(u"Tilbuddet kræver brug af et eller flere lokaler")
-    )
-
-    ROOMS_ASSIGNED_ON_VISIT = 0
-    ROOMS_ASSIGNED_WHEN_BOOKING = 1
-
-    rooms_assignment_choices = (
-        (ROOMS_ASSIGNED_ON_VISIT, _(u"Lokaler tildeles på forhånd")),
-        (ROOMS_ASSIGNED_WHEN_BOOKING, _(u"Lokaler tildeles ved booking")),
-    )
-
-    rooms_assignment = models.IntegerField(
-        choices=rooms_assignment_choices,
-        default=ROOMS_ASSIGNED_ON_VISIT,
-        verbose_name=_(u"Tildeling af lokale(r)"),
-        blank=True,
-        null=True
     )
 
     duration_choices = []
@@ -1576,6 +1714,11 @@ class Visit(Resource):
             for x in self.default_teachers.all():
                 occ.teachers.add(x)
 
+        # Copy rooms
+        if self.rooms.exists():
+            for x in self.rooms.all():
+                occ.rooms.add(x)
+
         return occ
 
     def get_autosend(self, template_key):
@@ -1705,6 +1848,12 @@ class VisitOccurrence(models.Model):
         null=True
     )
 
+    rooms = models.ManyToManyField(
+        'Room',
+        verbose_name=_(u'Lokaler'),
+        blank=True
+    )
+
     hosts = models.ManyToManyField(
         User,
         blank=True,
@@ -1726,13 +1875,13 @@ class VisitOccurrence(models.Model):
     )
 
     STATUS_NOT_NEEDED = 0
-    STATUS_OK = 1
+    STATUS_ASSIGNED = 1
     STATUS_NOT_ASSIGNED = 2
 
     host_status_choices = (
         (STATUS_NOT_NEEDED, _(u'Tildeling af værter ikke påkrævet')),
         (STATUS_NOT_ASSIGNED, _(u'Afventer tildeling')),
-        (STATUS_OK, _(u'Tildelt'))
+        (STATUS_ASSIGNED, _(u'Tildelt'))
     )
 
     host_status = models.IntegerField(
@@ -1744,7 +1893,7 @@ class VisitOccurrence(models.Model):
     teacher_status_choices = (
         (STATUS_NOT_NEEDED, _(u'Tildeling af undervisere ikke påkrævet')),
         (STATUS_NOT_ASSIGNED, _(u'Afventer tildeling')),
-        (STATUS_OK, _(u'Tildelt'))
+        (STATUS_ASSIGNED, _(u'Tildelt'))
     )
 
     teacher_status = models.IntegerField(
@@ -1755,8 +1904,8 @@ class VisitOccurrence(models.Model):
 
     room_status_choices = (
         (STATUS_NOT_NEEDED, _(u'Tildeling af lokaler ikke påkrævet')),
-        (STATUS_NOT_ASSIGNED, _(u'Afventer tildeling')),
-        (STATUS_OK, _(u'Tildelt'))
+        (STATUS_NOT_ASSIGNED, _(u'Afventer tildeling/bekræftelse')),
+        (STATUS_ASSIGNED, _(u'Tildelt/bekræftet'))
     )
 
     room_status = models.IntegerField(
@@ -1896,6 +2045,16 @@ class VisitOccurrence(models.Model):
         ],
     }
 
+    # 15556: For these statuses, when the occurrence's starttime is passed,
+    # add WORKFLOW_STATUS_NOSHOW to the list of status choices
+    noshow_available_after_starttime = [
+        WORKFLOW_STATUS_BEING_PLANNED,
+        WORKFLOW_STATUS_PLANNED,
+        WORKFLOW_STATUS_PLANNED_NO_BOOKING,
+        WORKFLOW_STATUS_CONFIRMED,
+        WORKFLOW_STATUS_REMINDED
+    ]
+
     def can_assign_resources(self):
         being_planned = VisitOccurrence.WORKFLOW_STATUS_BEING_PLANNED
         return self.workflow_status == being_planned
@@ -1921,6 +2080,11 @@ class VisitOccurrence(models.Model):
         result = []
 
         allowed = self.valid_status_changes[self.workflow_status]
+
+        if self.workflow_status in \
+                VisitOccurrence.noshow_available_after_starttime and \
+                timezone.now() > self.start_datetime:
+            allowed.append(VisitOccurrence.WORKFLOW_STATUS_NOSHOW)
 
         for x in self.workflow_status_choices:
             if x[0] in allowed:
@@ -1960,12 +2124,24 @@ class VisitOccurrence(models.Model):
         return ""
 
     @property
+    def needed_teachers(self):
+        return self.visit.needed_teachers - self.teachers.count()
+
+    @property
     def needs_teachers(self):
-        return len(self.teachers.all()) < self.visit.needed_teachers
+        return self.needed_teachers > 0
+
+    @property
+    def needed_hosts(self):
+        return self.visit.needed_hosts - self.hosts.count()
 
     @property
     def needs_hosts(self):
-        return len(self.hosts.all()) < self.visit.needed_hosts
+        return self.needed_hosts > 0
+
+    @property
+    def needs_room(self):
+        return self.room_status == self.STATUS_NOT_ASSIGNED
 
     @property
     def is_booked(self):
@@ -2205,6 +2381,27 @@ class VisitOccurrence(models.Model):
             if duration is not None:
                 self.end_datetime = self.start_datetime + duration
 
+    def add_room_by_name(self, name):
+        locality = None
+        if self.visit and self.visit.locality:
+            locality = self.visit.locality
+
+        room = Room.objects.filter(
+            name=name,
+            locality=locality
+        ).first()
+
+        if room is None:
+            room = Room(
+                name=name,
+                locality=self.locality
+            )
+            room.save()
+
+        self.rooms.add(room)
+
+        return room
+
     @staticmethod
     def get_latest_created():
         return VisitOccurrence.objects.\
@@ -2360,34 +2557,56 @@ class VisitOccurrenceAutosend(Autosend):
 class Room(models.Model):
 
     class Meta:
-        verbose_name = _(u"lokale for tilbud")
-        verbose_name_plural = _(u"lokaler for tilbud")
+        verbose_name = _(u"lokale")
+        verbose_name_plural = _(u"lokaler")
 
+    # Old field, to be removed later
     visit = models.ForeignKey(
-        Visit, verbose_name=_(u'Besøg'), blank=False
+        Visit, verbose_name=_(u'Besøg'),
+        blank=True,
+        null=True,
+        editable=False
     )
+
+    locality = models.ForeignKey(
+        Locality,
+        verbose_name=_(u'Lokalitet'),
+        blank=True,
+        null=True
+    )
+
     name = models.CharField(
         max_length=64, verbose_name=_(u'Navn på lokale'), blank=False
     )
 
     def __unicode__(self):
-        return self.name
+        return unicode(self.name)
 
+    @property
+    def name_with_locality(self):
+        if self.locality:
+            return '%s, %s' % (
+                unicode(self.name),
+                self.locality.name_and_address
+            )
+        else:
+            return '%s, %s' % (
+                unicode(self.name),
+                _(u'<uden lokalitet>')
+            )
 
-# Represents a room as saved on a booking.
-class BookedRoom(models.Model):
+    @classmethod
+    def migrate(cls):
+        for x in cls.objects.filter(locality__isnull=True):
+            if x.visit and x.visit.locality:
+                x.visit.add_room_by_name(x.name)
+            x.delete()
 
-    class Meta:
-        verbose_name = _(u'lokale for besøg')
-        verbose_name_plural = _(u'lokaler for besøg')
-
-    name = models.CharField(max_length=60, verbose_name=_(u'Navn'))
-
-    booking = models.ForeignKey(
-        'Booking',
-        null=False,
-        related_name='assigned_rooms'
-    )
+        # Copy any rooms from visits each visit's VOs.
+        for x in Visit.objects.filter(rooms__isnull=False).distinct():
+            for y in x.visitoccurrence_set.all():
+                for r in x.rooms.all():
+                    y.rooms.add(r)
 
 
 class Region(models.Model):
@@ -2963,6 +3182,11 @@ class KUEmailMessage(models.Model):
                 name = recipient.get_full_name()
                 address = recipient.email
                 user = recipient
+            elif isinstance(recipient, UserPerson):
+                name = recipient.name
+                address = recipient.email
+                if recipient.user:
+                    user = recipient.user
             else:
                 try:
                     name = recipient.get_name()
@@ -2972,7 +3196,10 @@ class KUEmailMessage(models.Model):
                     address = recipient.get_email()
                 except:
                     pass
-            if address is not None and address != '' and address not in emails:
+            if address is not None and address != '' and \
+                    (address not in emails or
+                        (user and not emails[address]['user'])
+                     ):
                 email = {'address': address}
                 if name is not None:
                     email['name'] = name

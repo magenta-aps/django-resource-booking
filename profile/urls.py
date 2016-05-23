@@ -2,7 +2,7 @@ import django.contrib.auth.views as auth_views
 
 from django.conf.urls import patterns, url
 from profile.views import ProfileView, CreateUserView, UnitListView
-from profile.views import UserListView
+from profile.views import DeleteUserView, UserListView
 from profile.views import EmailLoginView
 from profile.views import EditMyResourcesView
 
@@ -36,6 +36,9 @@ urlpatterns = patterns(
     url(r'^user/(?P<pk>[0-9]+)/?$',
         CreateUserView.as_view(),
         name='user_edit'),
+    url(r'^user/(?P<pk>[0-9]+)/delete/?$',
+        DeleteUserView.as_view(),
+        name='user_delete'),
     url(r'^units/$', UnitListView.as_view(
         template_name='profile/unit_list.html'
     ), name='unit_list'),

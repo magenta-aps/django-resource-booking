@@ -92,7 +92,7 @@
                             {% else %}
                                 {% trans 'Ikke angivet' %}
                             {% endif %}
-                            {% if can_edit and object.can_assign_resources %}
+                            {% if can_edit %}
                                 <a href="{% url 'change-visit-occ-starttime' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
                             {% endif %}
                         </dd>
@@ -101,9 +101,7 @@
                             {{ object.get_teacher_status_display }},
                             {% blocktrans with found=object.teachers.all|length needed=object.visit.needed_teachers %}{{ found }}/{{ needed }} undervisere fundet{% endblocktrans %}
                             {% if can_edit %}
-                                {%if object.can_assign_resources %}
-                                    <a href="{% url 'change-visit-occ-teachers' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
-                                {% endif %}
+                                <a href="{% url 'change-visit-occ-teachers' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
                             {% elif request.user.userprofile.is_teacher and object.needs_teachers %}
                                 {% if request.user in object.teachers.all %}
                                     (allerede underviser for dette besøg)
@@ -117,9 +115,7 @@
                             {{ object.get_host_status_display }},
                             {% blocktrans with found=object.hosts.all|length needed=object.visit.needed_hosts %}{{ found }}/{{ needed }} værter fundet{% endblocktrans %}
                             {% if can_edit %}
-                                {% if object.can_assign_resources %}
-                                    <a href="{% url 'change-visit-occ-hosts' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
-                                {% endif %}
+                                <a href="{% url 'change-visit-occ-hosts' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
                             {% elif request.user.userprofile.is_host and object.needs_hosts %}
                                 {% if request.user in object.hosts.all %}
                                     {% trans '(allerede vært for dette besøg)' %}
@@ -131,7 +127,14 @@
                         <dt>{% trans 'Lokaler' %}</dt>
                         <dd>
                             {{ object.get_room_status_display }}
-                            {% if can_edit and object.can_assign_resources %}
+                            {% if object.rooms.all %}
+                            <ul>
+                            {% for room in object.rooms.all %}
+                                <li>{{ room.name_with_locality }}</li>
+                            {% endfor %}
+                            </ul>
+                            {% endif %}
+                            {% if can_edit %}
                                 <a href="{% url 'change-visit-occ-rooms' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
                             {% endif %}
                         </dd>

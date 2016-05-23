@@ -19,8 +19,8 @@
         <div class="col-sm-12">
             <h2>{% trans 'Personlig side' %}</h2>
             <p>{% trans 'Du er logget ind som' %} {{user.userprofile.user_role.name}}.</p>
-            {% if user.userprofile.get_faculty %}
-                <p>{% trans 'Din enhed' %}: {{ user.userprofile.get_faculty }}</p>
+            {% if user.userprofile.unit.name %}
+                <p>{% trans 'Din enhed' %}: {{ user.userprofile.unit.name }}</p>
             {% endif %}
             <p>{% trans 'På denne side kan du se en oversigt over dine tilbud, hvilke der har tilmeldinger, og hvilke der er under planlægning.' %}</p>
             <div class="divider"></div>
@@ -44,19 +44,19 @@
                 <div class="collapse list-group admin-links" id="adminblock">
                     <a class="list-group-item" href="{% url 'user_list' %}">
                         <h4 class="list-group-item-heading">{% trans 'Administrér brugere' %}</h4>
-                        <p class="list-group-item-text">{% trans 'Opret og redigér brugere af bookingsystemet.' %}</p>
+                        <p class="list-group-item-text">{% trans 'Brugere er personer der har en adgang til backend i dette bookingmodul. Her kan du oprette, slette og redigere brugere.' %}</p>
                     </a>
                     <a class="list-group-item" href="{% url 'emailtemplate-list' %}">
                         <h4 class="list-group-item-heading">{% trans 'Administrér emailskabeloner' %}</h4>
                         <p class="list-group-item-text">{% trans 'Opret og redigér overordnede e-mails.' %}</p>
                     </a>
                     <a class="list-group-item" href="{% url 'admin:booking_locality_changelist' %}">
-                        <h4 class="list-group-item-heading">{% trans 'Administrér adresser' %}</h4>
-                        <p class="list-group-item-text">{% trans 'Opret og redigér overordnede adresser.' %}</p>
+                        <h4 class="list-group-item-heading">{% trans 'Administrér lokaliteter' %}</h4>
+                        <p class="list-group-item-text">{% trans 'Opret og redigér overordnede lokaliteter.' %}</p>
                     </a>
                     <a class="list-group-item" href="{% url 'admin:booking_person_changelist' %}">
                         <h4 class="list-group-item-heading">{% trans 'Administrér kontaktpersoner' %}</h4>
-                        <p class="list-group-item-text">{% trans 'Opret og redigér personer, der kan modtage forespørgsler på tilbud.' %}</p>
+                        <p class="list-group-item-text">{% trans 'Kontaktpersoner er personer, der har ikke adgang til backend i dette bookingmodul. De kan udelukkende svare på henvendelser via e-mail fx fra en gæst, når de er blevet oprettet som kontaktpersoner ved oprettelsen af et tilbud.' %}</p>
                     </a>
                     {% if request.user.userprofile.can_edit_units %}
                         <a class="list-group-item" href="{% url 'admin:booking_unit_changelist' %}">
