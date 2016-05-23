@@ -1178,6 +1178,8 @@ class Resource(models.Model):
 
         self.rooms.add(room)
 
+        return room
+
     @staticmethod
     def get_latest_created():
         return Resource.objects.filter(statistics__isnull=False).\
@@ -1527,22 +1529,6 @@ class Visit(Resource):
         verbose_name=_(u"Tilbuddet kræver brug af et eller flere lokaler")
     )
 
-    ROOMS_ASSIGNED_ON_VISIT = 0
-    ROOMS_ASSIGNED_WHEN_BOOKING = 1
-
-    rooms_assignment_choices = (
-        (ROOMS_ASSIGNED_ON_VISIT, _(u"Lokaler tildeles på forhånd")),
-        (ROOMS_ASSIGNED_WHEN_BOOKING, _(u"Lokaler tildeles ved booking")),
-    )
-
-    rooms_assignment = models.IntegerField(
-        choices=rooms_assignment_choices,
-        default=ROOMS_ASSIGNED_ON_VISIT,
-        verbose_name=_(u"Tildeling af lokale(r)"),
-        blank=True,
-        null=True
-    )
-
     duration_choices = []
     for hour in range(0, 12, 1):
         for minute in range(0, 60, 15):
@@ -1728,6 +1714,11 @@ class Visit(Resource):
             for x in self.default_teachers.all():
                 occ.teachers.add(x)
 
+        # Copy rooms
+        if self.rooms.exists():
+            for x in self.rooms.all():
+                occ.rooms.add(x)
+
         return occ
 
     def get_autosend(self, template_key):
@@ -1884,13 +1875,13 @@ class VisitOccurrence(models.Model):
     )
 
     STATUS_NOT_NEEDED = 0
-    STATUS_OK = 1
+    STATUS_ASSIGNED = 1
     STATUS_NOT_ASSIGNED = 2
 
     host_status_choices = (
         (STATUS_NOT_NEEDED, _(u'Tildeling af værter ikke påkrævet')),
         (STATUS_NOT_ASSIGNED, _(u'Afventer tildeling')),
-        (STATUS_OK, _(u'Tildelt'))
+        (STATUS_ASSIGNED, _(u'Tildelt'))
     )
 
     host_status = models.IntegerField(
@@ -1902,7 +1893,7 @@ class VisitOccurrence(models.Model):
     teacher_status_choices = (
         (STATUS_NOT_NEEDED, _(u'Tildeling af undervisere ikke påkrævet')),
         (STATUS_NOT_ASSIGNED, _(u'Afventer tildeling')),
-        (STATUS_OK, _(u'Tildelt'))
+        (STATUS_ASSIGNED, _(u'Tildelt'))
     )
 
     teacher_status = models.IntegerField(
@@ -1913,8 +1904,8 @@ class VisitOccurrence(models.Model):
 
     room_status_choices = (
         (STATUS_NOT_NEEDED, _(u'Tildeling af lokaler ikke påkrævet')),
-        (STATUS_NOT_ASSIGNED, _(u'Afventer tildeling')),
-        (STATUS_OK, _(u'Tildelt'))
+        (STATUS_NOT_ASSIGNED, _(u'Afventer tildeling/bekræftelse')),
+        (STATUS_ASSIGNED, _(u'Tildelt/bekræftet'))
     )
 
     room_status = models.IntegerField(
@@ -2389,6 +2380,27 @@ class VisitOccurrence(models.Model):
             duration = self.visit.duration_as_timedelta
             if duration is not None:
                 self.end_datetime = self.start_datetime + duration
+
+    def add_room_by_name(self, name):
+        locality = None
+        if self.visit and self.visit.locality:
+            locality = self.visit.locality
+
+        room = Room.objects.filter(
+            name=name,
+            locality=locality
+        ).first()
+
+        if room is None:
+            room = Room(
+                name=name,
+                locality=self.locality
+            )
+            room.save()
+
+        self.rooms.add(room)
+
+        return room
 
     @staticmethod
     def get_latest_created():

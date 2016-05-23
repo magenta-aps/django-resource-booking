@@ -331,7 +331,7 @@ class VisitForm(forms.ModelForm):
                   'type', 'tags',
                   'institution_level', 'topics', 'audience',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
-                  'duration', 'locality', 'rooms_assignment',
+                  'duration', 'locality',
                   'rooms_needed', 'tour_available', 'catering_available',
                   'presentation_available', 'custom_available', 'custom_name',
                   'contacts', 'unit',
@@ -375,9 +375,6 @@ class VisitForm(forms.ModelForm):
             ),
             'duration': Select(attrs={'class': 'form-control input-sm'}),
             'locality': Select(attrs={'class': 'form-control input-sm'}),
-            'rooms_assignment': Select(
-                attrs={'class': 'form-control input-sm'}
-            ),
             'unit': Select(attrs={'class': 'form-control input-sm'}),
             'audience': RadioSelect(),
             'tags': CheckboxSelectMultiple(),
@@ -540,7 +537,7 @@ class OpenHouseForm(VisitForm):
         model = Visit
         fields = ('type', 'title', 'teaser', 'description', 'state',
                   'institution_level', 'topics', 'audience',
-                  'locality', 'rooms_assignment', 'rooms_needed',
+                  'locality', 'rooms_needed',
                   'contacts', 'unit',
                   'preparation_time', 'comment',
                   )
@@ -553,7 +550,7 @@ class TeacherVisitForm(VisitForm):
         fields = ('type', 'title', 'teaser', 'description', 'price', 'state',
                   'institution_level', 'topics', 'audience',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
-                  'duration', 'locality', 'rooms_assignment',
+                  'duration', 'locality',
                   'rooms_needed',
                   'contacts', 'room_contact', 'unit',
                   'needed_hosts', 'needed_teachers',
@@ -569,7 +566,7 @@ class ClassVisitForm(VisitForm):
         fields = ('type', 'title', 'teaser', 'description', 'price', 'state',
                   'institution_level', 'topics', 'audience',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
-                  'duration', 'locality', 'rooms_assignment',
+                  'duration', 'locality',
                   'rooms_needed', 'tour_available', 'catering_available',
                   'presentation_available', 'custom_available', 'custom_name',
                   'contacts', 'room_contact', 'unit',
@@ -586,8 +583,7 @@ class StudyProjectForm(VisitForm):
         model = Visit
         fields = ('type', 'title', 'teaser', 'description', 'state',
                   'institution_level', 'topics', 'audience',
-                  'locality',
-                  'rooms_assignment', 'rooms_needed',
+                  'locality', 'rooms_needed',
                   'contacts', 'unit',
                   'preparation_time', 'comment',
                   )

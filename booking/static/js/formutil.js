@@ -64,19 +64,11 @@ $(function() {
     var room_item_template = $('#room-item-template').html(),
         roomdata = eval($('#all_room_data').val());
 
-    // Toggle display of room edit controls according to choice in
-    // room assingment dropdown
-    $('#id_rooms_assignment').on("change", function() {
-        if ($(this).val() == "1") {
-            $('#roomsedit').hide()
-        } else {
-            $('#roomsedit').show()
-        }
-    });
-    $('#id_rooms_assignment').trigger("change");
-
     var removeElem = function() {
         $(this).parents("li").first().remove();
+        if($('#chosenrooms li').length == 0) {
+            $('#chosenrooms-empty').show();
+        }
     };
 
     var addRoom = function(text, value) {
@@ -92,6 +84,7 @@ $(function() {
         elem.find("input").removeAttr("disabled");
         elem.find(".glyphicon-remove").on("click", removeElem);
 
+        $('#chosenrooms-empty').hide();
         $('#chosenrooms').append(elem);
     };
 
@@ -152,6 +145,10 @@ $(function() {
     }).trigger("change");
 
     $('#chosenrooms .glyphicon-remove').on("click", removeElem);
+    if($('#chosenrooms li').length > 0) {
+        $('#chosenrooms-empty').hide();
+    }
+
 });
 
 (function($) {
