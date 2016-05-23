@@ -15,5 +15,33 @@
 
 <h2>Statistik</h2>
 
+<form action="{% url 'statistics' %}" method="get">
+    {{ form }}
+    <div class="divider"></div>
+    <input type="submit" value="{% trans 'Hent data' %}" class="btn btn-primary formpartbutton"/>
+</form>
 
+<div class="divider"></div>
+
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>{% trans 'Tilbud' %}</th>
+                <th>{% trans 'Skole' %}</th>
+                <th>{% trans 'Type' %}</th>
+                <th>{% trans '' %}</th>
+
+            </tr>
+        </thead>
+        <tbody>
+        {% for booking in bookings %}
+            <tr>
+                <td><a href="{% url 'resource-view' booking.visitoccurrence.visit.resource_ptr.id %}">{{ booking.visitoccurrence.visit.resource_ptr.title }}</a></td>
+                <td>{{ booking.booker.school.name }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
 {% endblock %}

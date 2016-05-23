@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from booking.models import Unit, Resource, VisitOccurrence
+from booking.models import Unit, Resource, VisitOccurrence, Booking
 from booking.models import EmailTemplate
 from booking.models import KUEmailMessage
 from django.contrib import messages
@@ -20,7 +20,7 @@ from django.views.generic.edit import UpdateView, FormView
 from booking.views import LoginRequiredMixin, AccessDenied, EditorRequriedMixin, \
     VisitOccurrenceCustomListView
 from django.views.generic.list import ListView
-from profile.forms import UserCreateForm, EditMyResourcesForm
+from profile.forms import UserCreateForm, EditMyResourcesForm, StatisticsForm
 from profile.models import AbsDateDist
 from profile.models import EmailLoginEntry
 from profile.models import UserProfile, UserRole, EDIT_ROLES, NONE
@@ -460,6 +460,42 @@ class UnitListView(EditorRequriedMixin, ListView):
     def get_queryset(self):
         user = self.request.user
         return user.userprofile.get_unit_queryset()
+
+
+class StatisticsView(EditorRequriedMixin, TemplateView):
+    template_name = "profile/statistics.html"
+    form_class = StatisticsForm
+    unit = None
+
+    def get_context_data(self, **kwargs):
+        context = {}
+        context['user'] = self.request.user
+        if self.unit:
+            context['unit'] = self.unit
+            context['bookings'] = Booking.objects\
+                .select_related('visitoccurrence__visit__resource_ptr__unit') \
+                .select_related('booker__school')\
+                .prefetch_related('visitoccurrence__visit__resource_ptr__resourcegymnasiefag_set__subject')\
+                .prefetch_related('visitoccurrence__visit__resource_ptr__resourcegrundskolefag_set__subject') \
+                .filter(visitoccurrence__visit__resource_ptr__unit_id=self.unit.id)
+        context.update(kwargs)
+
+        return super(StatisticsView, self).get_context_data(**context)
+
+    def get(self, request, *args, **kwargs):
+        user = self.request.user
+        form = self.form_class()
+        form.fields['unit'].queryset = user.userprofile.get_unit_queryset()
+        if user.userprofile.unit:
+            form.fields['unit'].initial = user.userprofile.unit.pk
+            form.fields['unit'].empty_label = None
+        if self.request.GET.get('unit', None):
+            unit_id = int(self.request.GET.get('unit', None))
+            self.unit = Unit.objects.get(pk=unit_id)
+            form.fields['unit'].initial = self.unit
+        return self.render_to_response(
+            self.get_context_data(form=form)
+        )
 
 
 class EmailLoginView(DetailView):
