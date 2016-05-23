@@ -181,6 +181,22 @@
                                 <dt>{% trans 'Pris' %}:</dt>
                                 <dd>{{ object.price }}</dd>
                             {% endif %}
+
+                            {% if object.tour_available or object.catering_available or object.presentation_available or object.custom_available %}
+                                <dt>{% trans 'Mulighed for' %}:</dt>
+                                {% if object.tour_available %}
+                                    <dd>{% trans 'Rundvisning' %}</dd>
+                                {% endif %}
+                                {% if object.catering_available %}
+                                    <dd>{% trans 'Forplejning' %}</dd>
+                                {% endif %}
+                                {% if object.presentation_available %}
+                                    <dd>{% trans 'Oplæg om uddannelse' %}</dd>
+                                {% endif %}
+                                {% if object.custom_available %}
+                                    <dd>{{ object.custom_name }}</dd>
+                                {% endif %}
+                            {% endif %}
                             
                         </dl>
                     </div>
