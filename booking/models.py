@@ -499,6 +499,16 @@ class Locality(models.Model):
             ])
         )
 
+    @property
+    def route_url(self):
+        return "http://www.findvej.dk/?daddress=%s&dzip=%s" % \
+               (self.address_line, self.zip_city)
+
+    @property
+    def location_url(self):
+        return "http://www.findvej.dk/%s,%s" % \
+               (self.address_line, self.zip_city)
+
 
 class EmailTemplate(models.Model):
 
