@@ -2396,6 +2396,21 @@ class Region(models.Model):
                 Region(name=name).save()
 
 
+class Municipality(models.Model):
+
+    class Meta:
+        verbose_name = _(u'kommune')
+        verbose_name_plural = _(u'kommuner')
+
+    name = models.CharField(
+        max_length=24,
+        verbose_name=_(u'Navn')
+    )
+
+    def __unicode__(self):
+        return self.name
+
+
 class PostCode(models.Model):
 
     class Meta:
@@ -2466,6 +2481,10 @@ class School(models.Model):
     )
     postcode = models.ForeignKey(
         PostCode,
+        null=True
+    )
+    municipality = models.ForeignKey(
+        Municipality,
         null=True
     )
 
