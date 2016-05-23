@@ -14,7 +14,7 @@
         <div class="divider"></div>
     </div>
     <div class="row">
-        <div class="col-sm-12 col-md-8">
+        <div class="col-sm-12">
             <form name="changebookinroomsform" id="changebookinroomsform" action="{% url 'change-visit-occ-rooms' object.pk %}" method="post">
                 {% csrf_token %}
                 {% include 'resource/fields/generic_field.html' with field=form.room_status %}
@@ -30,7 +30,7 @@
                         </select>
                     </div>
                 </div>
-                {% include 'resource/fields/rooms-control.html' with editcontrol_width='10' %}
+                {% include 'resource/fields/rooms-control.html' %}
                 <input class="btn btn-success btn-sm" type="submit" value="{% trans 'Opdater' %}" name="confirm" />
                 <input class="btn btn-danger btn-sm" type="submit" value="{% trans 'Annullér' %}" name="cancel" />
             </form>
