@@ -120,9 +120,11 @@
                             {% if object.locality %}
                                 <dt>{% trans 'Hvor' %}:</dt>
                                 <dd>
+                                <a href="{{ object.locality.location_url }}" target="_blank">
                                     {{ object.locality.name }}<br>
                                     {{ object.locality.address_line }}<br>
                                     {{ object.locality.zip_city }}
+                                </a>
                                 </dd>
                             {% endif %}
                             
