@@ -1109,6 +1109,13 @@ a.template-overridden:visited {
 
 /* nested menu dropdown end */
 
+.comments ul li {
+    border: 1px solid #ccc;
+    margin-bottom: 4px;
+    border-radius: 4px;
+    padding: 4px;
+}
+
 /*Backend specific styles end */
 
 

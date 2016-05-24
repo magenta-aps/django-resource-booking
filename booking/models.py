@@ -2492,6 +2492,39 @@ VisitOccurrence.add_override_property('duration')
 VisitOccurrence.add_override_property('locality')
 
 
+class VisitOccurrenceComment(models.Model):
+    visitoccurrence = models.ForeignKey(
+        VisitOccurrence,
+        verbose_name=_(u'Besøg'),
+        null=False,
+        blank=False
+    )
+    author = models.ForeignKey(
+        User,
+        null=True # Users can be deleted, but we want to keep their comments
+    )
+    deleted_user_name = models.CharField(
+        max_length=30
+    )
+    text = models.CharField(
+        max_length=500,
+        verbose_name=_(u'Kommentartekst')
+    )
+    time = models.DateTimeField(
+        verbose_name=_(u'Tidsstempel')
+    )
+
+    def on_delete_author(self):
+        self.deleted_user_name = self.author.username
+        self.author = None
+        self.save()
+
+    @staticmethod
+    def on_delete_user(user):
+        for comment in VisitOccurrenceComment.objects.filter(author=user):
+            comment.on_delete_author()
+
+
 class Autosend(models.Model):
     template_key = models.IntegerField(
         choices=EmailTemplate.key_choices,
