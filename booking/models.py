@@ -2545,15 +2545,10 @@ class School(models.Model):
         for data, type in [
                 (schools.elementary_schools, School.ELEMENTARY_SCHOOL),
                 (schools.high_schools, School.GYMNASIE)]:
-            for name, postnr, municipality_name in data:
-                municipality = Municipality.objects.get(name=municipality_name)
-
+            for name, postnr in data:
                 try:
                     school = School.objects.get(name=name,
                                                 postcode__number=postnr)
-                    if school.municipality != municipality:
-                        school.municipality = municipality
-                        school.save()
                     if school.type != type:
                         school.type = type
                         school.save()
