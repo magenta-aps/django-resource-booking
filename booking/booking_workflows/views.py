@@ -285,14 +285,13 @@ class VisitOccurrenceAddCommentView(VisitOccurrenceAddLogEntryView):
     template_name = "booking/workflow/add_comment.html"
     object = None
     view_title = _(u'Tilføj kommentar')
-    def form_valid(self, form):
 
+    def form_valid(self, form):
         VisitOccurrenceComment(
             visitoccurrence=self.object,
             author=self.request.user,
             text=form.cleaned_data['new_comment']
         ).save()
-
         return super(VisitOccurrenceAddLogEntryView, self).form_valid(form)
 
 

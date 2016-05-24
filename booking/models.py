@@ -2501,7 +2501,7 @@ class VisitOccurrenceComment(models.Model):
     )
     author = models.ForeignKey(
         User,
-        null=True # Users can be deleted, but we want to keep their comments
+        null=True  # Users can be deleted, but we want to keep their comments
     )
     deleted_user_name = models.CharField(
         max_length=30
