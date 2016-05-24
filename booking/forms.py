@@ -360,7 +360,7 @@ class VisitForm(forms.ModelForm):
 
             'price': NumberInput(attrs={'class': 'form-control input-sm'}),
             'type': Select(attrs={'class': 'form-control input-sm'}),
-            'preparation_time': NumberInput(
+            'preparation_time': Textarea(
                 attrs={'class': 'form-control input-sm'}
             ),
             'comment': Textarea(attrs={'class': 'form-control input-sm'}),
