@@ -2403,7 +2403,7 @@ class Municipality(models.Model):
         verbose_name_plural = _(u'kommuner')
 
     name = models.CharField(
-        max_length=24,
+        max_length=30,
         verbose_name=_(u'Navn'),
         unique=True
     )
