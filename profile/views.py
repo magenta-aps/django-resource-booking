@@ -66,7 +66,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             'queryset': VisitOccurrence.get_recently_held(),
             'limit': 10,
             'button': {
-                'text': _(u'Vis alle'),
+                'text': _(u'Søg i alle'),
                 'link': reverse('visit-occ-customlist') + "?type=%s" %
                 VisitOccurrenceCustomListView.TYPE_LATEST_COMPLETED
             }
@@ -81,7 +81,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             'queryset': VisitOccurrence.get_todays_occurrences(),
             'limit': 10,
             'button': {
-                'text': _(u'Vis alle'),
+                'text': _(u'Søg i alle'),
                 'link': reverse('visit-occ-customlist') + "?type=%s" %
                 VisitOccurrenceCustomListView.TYPE_TODAY
             }
@@ -171,7 +171,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         if len(unplanned['queryset']) > 10:
             unplanned['limited_qs'] = unplanned['queryset'][:10]
             unplanned['button'] = {
-                'text': _(u'Vis alle'),
+                'text': _(u'Søg i alle'),
                 'link': reverse('visit-occ-search') + '?u=-3&w=-1&go=1&p_min=1'
             }
 
@@ -190,7 +190,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         if len(planned['queryset']) > 10:
             planned['limited_qs'] = planned['queryset'][:10]
             planned['button'] = {
-                'text': _(u'Vis alle'),
+                'text': _(u'Søg i alle'),
                 'link': reverse('visit-occ-search') + '?u=-3&w=-2&go=1'
             }
 
