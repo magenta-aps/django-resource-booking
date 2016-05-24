@@ -73,7 +73,7 @@ class ChangeVisitOccurrenceStatusView(AutologgerMixin, UpdateWithCancelView):
     model = VisitOccurrence
     form_class = ChangeVisitOccurrenceStatusForm
     template_name = "booking/workflow/change_status.html"
-    view_title = _(u'Redigér status')
+    view_title = _(u'Skift status')
 
     def form_valid(self, form):
         response = super(ChangeVisitOccurrenceStatusView, self).form_valid(
