@@ -366,6 +366,10 @@ class BecomeSomethingView(AutologgerMixin, VisitOccurrenceBreadcrumbMixin,
             if self.is_valid():
                 # Add user to the specified m2m relation
                 getattr(self.object, self.m2m_attribute).add(request.user)
+                if not self.needs_more():
+                    setattr(self.object, self.status_attribute,
+                            VisitOccurrence.STATUS_ASSIGNED)
+                    self.object.save()
                 self._log_changes()
 
         return self.get(request, *args, **kwargs)
@@ -380,6 +384,7 @@ class BecomeSomethingView(AutologgerMixin, VisitOccurrenceBreadcrumbMixin,
 
 class BecomeTeacherView(BecomeSomethingView):
     m2m_attribute = "teachers"
+    status_attribute = "teacher_status"
     template_name = "booking/workflow/become_teacher.html"
     view_title = _(u'Tilmeld som underviser')
 
@@ -400,6 +405,7 @@ class BecomeTeacherView(BecomeSomethingView):
 
 class BecomeHostView(BecomeSomethingView):
     m2m_attribute = "hosts"
+    status_attribute = "host_status"
     template_name = "booking/workflow/become_host.html"
     view_title = _(u'Tilmeld som vært')
 
