@@ -155,7 +155,8 @@ class ChangeVisitOccurrenceRoomsView(AutologgerMixin, UpdateWithCancelView):
 
         context['locality_choices'] = [(None, "---------")] + \
             [
-                (x.id, x.name_and_address, x.id == locality.id)
+                (x.id, x.name_and_address,
+                 locality is not None and x.id == locality.id)
                 for x in Locality.objects.order_by(
                     # Sort stuff where unit is null last
                     OrderBy(Q(unit__isnull=False), descending=True),
