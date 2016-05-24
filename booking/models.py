@@ -2365,12 +2365,12 @@ class VisitOccurrence(models.Model):
                 template_key,
                 {'occurrence': self, 'visit': visit},
                 list(recipients),
+                self,
                 unit
             )
 
             if not only_these_recipients and \
-                    template_key in \
-                    EmailTemplate.booker_keys:
+                    template_key in EmailTemplate.booker_keys:
                 for booking in self.bookings.all():
                     KUEmailMessage.send_email(
                         template_key,
@@ -2381,6 +2381,7 @@ class VisitOccurrence(models.Model):
                             'booker': booking.booker
                         },
                         booking.booker,
+                        self,
                         unit
                     )
 
