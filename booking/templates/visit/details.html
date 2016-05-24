@@ -15,7 +15,7 @@
         <div class="divider"></div>
     </div>
     {% if messages %}
-    <div class="col-sm-4 alert alert-success" role="alert">
+    <div class="col-sm-4 alert alert-info" role="alert">
         <ul>
             {% for message in messages %}
             <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
