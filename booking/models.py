@@ -2660,7 +2660,7 @@ class Municipality(models.Model):
         verbose_name_plural = _(u'kommuner')
 
     name = models.CharField(
-        max_length=24,
+        max_length=30,
         verbose_name=_(u'Navn'),
         unique=True
     )
@@ -2802,15 +2802,10 @@ class School(models.Model):
         for data, type in [
                 (schools.elementary_schools, School.ELEMENTARY_SCHOOL),
                 (schools.high_schools, School.GYMNASIE)]:
-            for name, postnr, municipality_name in data:
-                municipality = Municipality.objects.get(name=municipality_name)
-
+            for name, postnr in data:
                 try:
                     school = School.objects.get(name=name,
                                                 postcode__number=postnr)
-                    if school.municipality != municipality:
-                        school.municipality = municipality
-                        school.save()
                     if school.type != type:
                         school.type = type
                         school.save()
@@ -2819,7 +2814,7 @@ class School(models.Model):
                         postcode = PostCode.get(postnr)
                         School(
                             name=name, postcode=postcode,
-                            type=type, municipality=municipality
+                            type=type
                         ).save()
                     except PostCode.DoesNotExist:
                         print "Warning: Postcode %d not found in database. " \
