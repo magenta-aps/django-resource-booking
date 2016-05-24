@@ -93,6 +93,7 @@ def import_views(from_module):
         if not value.__module__ == module_prefix:
             continue
 
+        print name
         import_dict[name] = value
 
 

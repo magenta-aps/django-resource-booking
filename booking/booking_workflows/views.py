@@ -15,8 +15,9 @@ from booking.booking_workflows.forms import ChangeVisitOccurrenceRoomsForm
 from booking.booking_workflows.forms import ChangeVisitOccurrenceCommentsForm
 from booking.booking_workflows.forms import ChangeVisitOccurrenceEvalForm
 from booking.booking_workflows.forms import VisitOccurrenceAddLogEntryForm
+from booking.booking_workflows.forms import VisitOccurrenceAddCommentForm
 from booking.booking_workflows.forms import ChangeVisitOccurrenceStartTimeForm
-from booking.models import VisitOccurrence
+from booking.models import VisitOccurrence, VisitOccurrenceComment
 from booking.models import EmailTemplate
 from booking.models import Locality
 from booking.models import LOGACTION_MANUAL_ENTRY
@@ -276,6 +277,23 @@ class VisitOccurrenceAddLogEntryView(FormView):
 
     def get_success_url(self):
         return reverse('visit-occ-view', args=[self.object.pk])
+
+
+class VisitOccurrenceAddCommentView(VisitOccurrenceAddLogEntryView):
+    model = VisitOccurrence
+    form_class = VisitOccurrenceAddCommentForm
+    template_name = "booking/workflow/add_comment.html"
+    object = None
+    view_title = _(u'Tilføj kommentar')
+    def form_valid(self, form):
+
+        VisitOccurrenceComment(
+            visitoccurrence=self.object,
+            author=self.request.user,
+            text=form.cleaned_data['new_comment']
+        ).save()
+
+        return super(VisitOccurrenceAddLogEntryView, self).form_valid(form)
 
 
 class ChangeVisitOccurrenceAutosendView(AutologgerMixin, UpdateWithCancelView):

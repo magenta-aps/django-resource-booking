@@ -91,6 +91,12 @@ class VisitOccurrenceAddLogEntryForm(forms.Form):
         label=_(u'Ny log-post')
     )
 
+class VisitOccurrenceAddCommentForm(forms.Form):
+    new_comment = forms.CharField(
+        widget=forms.Textarea,
+        label=_(u'Ny kommentar')
+    )
+
 VisitOccurrenceAutosendFormSet = inlineformset_factory(
     VisitOccurrence,
     VisitOccurrenceAutosend,
