@@ -2653,6 +2653,41 @@ class Region(models.Model):
                 Region(name=name).save()
 
 
+class Municipality(models.Model):
+
+    class Meta:
+        verbose_name = _(u'kommune')
+        verbose_name_plural = _(u'kommuner')
+
+    name = models.CharField(
+        max_length=24,
+        verbose_name=_(u'Navn'),
+        unique=True
+    )
+
+    region = models.ForeignKey(
+        Region,
+        verbose_name=_(u'Region')
+    )
+
+    def __unicode__(self):
+        return self.name
+
+    @staticmethod
+    def create_defaults():
+        from booking.data import municipalities
+        for item in municipalities.municipalities:
+            municipality = Municipality.objects.filter(name=item['name']).\
+                first()
+            region = Region.objects.get(name=item['region'])
+            if municipality is None:
+                municipality = Municipality(name=item['name'], region=region)
+                municipality.save()
+            elif municipality.region != region:
+                municipality.region = region
+                municipality.save()
+
+
 class PostCode(models.Model):
 
     class Meta:
@@ -2725,6 +2760,10 @@ class School(models.Model):
         PostCode,
         null=True
     )
+    municipality = models.ForeignKey(
+        Municipality,
+        null=True
+    )
 
     ELEMENTARY_SCHOOL = Subject.SUBJECT_TYPE_GRUNDSKOLE
     GYMNASIE = Subject.SUBJECT_TYPE_GYMNASIE
@@ -2758,21 +2797,30 @@ class School(models.Model):
     @staticmethod
     def create_defaults():
         PostCode.create_defaults()
+        Municipality.create_defaults()
         from booking.data import schools
         for data, type in [
                 (schools.elementary_schools, School.ELEMENTARY_SCHOOL),
                 (schools.high_schools, School.GYMNASIE)]:
-            for name, postnr in data:
+            for name, postnr, municipality_name in data:
+                municipality = Municipality.objects.get(name=municipality_name)
+
                 try:
                     school = School.objects.get(name=name,
                                                 postcode__number=postnr)
+                    if school.municipality != municipality:
+                        school.municipality = municipality
+                        school.save()
                     if school.type != type:
                         school.type = type
                         school.save()
                 except School.DoesNotExist:
                     try:
                         postcode = PostCode.get(postnr)
-                        School(name=name, postcode=postcode, type=type).save()
+                        School(
+                            name=name, postcode=postcode,
+                            type=type, municipality=municipality
+                        ).save()
                     except PostCode.DoesNotExist:
                         print "Warning: Postcode %d not found in database. " \
                               "Not adding school %s" % (postcode, name)
