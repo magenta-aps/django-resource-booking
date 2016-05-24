@@ -2511,7 +2511,8 @@ class VisitOccurrenceComment(models.Model):
         verbose_name=_(u'Kommentartekst')
     )
     time = models.DateTimeField(
-        verbose_name=_(u'Tidsstempel')
+        verbose_name=_(u'Tidsstempel'),
+        auto_now=True
     )
 
     def on_delete_author(self):
