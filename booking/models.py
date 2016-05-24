@@ -2557,7 +2557,7 @@ class School(models.Model):
                         postcode = PostCode.get(postnr)
                         School(
                             name=name, postcode=postcode,
-                            type=type, municipality=municipality
+                            type=type
                         ).save()
                     except PostCode.DoesNotExist:
                         print "Warning: Postcode %d not found in database. " \
