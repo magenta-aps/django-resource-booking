@@ -6,7 +6,7 @@ from django.core.urlresolvers import reverse
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import redirect
 from django.utils.translation import ugettext as _
-from django.views.generic import UpdateView, FormView, DetailView
+from django.views.generic import UpdateView, FormView
 from booking.booking_workflows.forms import ChangeVisitOccurrenceStatusForm, \
     BecomeSomethingForm
 from booking.booking_workflows.forms import VisitOccurrenceAutosendFormSet
@@ -18,7 +18,7 @@ from booking.booking_workflows.forms import ChangeVisitOccurrenceEvalForm
 from booking.booking_workflows.forms import VisitOccurrenceAddLogEntryForm
 from booking.booking_workflows.forms import VisitOccurrenceAddCommentForm
 from booking.booking_workflows.forms import ChangeVisitOccurrenceStartTimeForm
-from booking.models import VisitOccurrence, VisitOccurrenceComment
+from booking.models import VisitOccurrence
 from booking.models import EmailTemplate
 from booking.models import Locality
 from booking.models import LOGACTION_MANUAL_ENTRY
@@ -27,7 +27,6 @@ from booking.models import Room
 from booking.views import AutologgerMixin
 from booking.views import RoleRequiredMixin, EditorRequriedMixin
 from django.views.generic.base import ContextMixin
-from django.views.generic.edit import FormMixin
 from profile.models import TEACHER, HOST, EDIT_ROLES
 
 

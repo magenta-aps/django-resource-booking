@@ -2502,7 +2502,7 @@ VisitOccurrence.add_override_property('locality')
 class VisitOccurrenceComment(models.Model):
 
     class Meta:
-        ordering=["-time"]
+        ordering = ["-time"]
 
     visitoccurrence = models.ForeignKey(
         VisitOccurrence,
