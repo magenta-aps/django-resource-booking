@@ -91,6 +91,13 @@ class VisitOccurrenceAddLogEntryForm(forms.Form):
         label=_(u'Ny log-post')
     )
 
+
+class ResetVisitOccurrenceChangesForm(forms.ModelForm):
+    class Meta:
+        model = VisitOccurrence
+        fields = []
+
+
 VisitOccurrenceAutosendFormSet = inlineformset_factory(
     VisitOccurrence,
     VisitOccurrenceAutosend,
