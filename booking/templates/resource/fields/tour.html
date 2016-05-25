@@ -6,13 +6,13 @@
 {% if form.custom_available and form.custom_name %}
     <div class="row form-group">
         <div class="col-sm-2">
-            <label class="{{ form.custom_available.css_classes }}" for="{{ form.custom_available.id_for_label }}">{{ form.custom_available.label }}:</label>
+            <label class="{{ form.custom_available.css_classes }} control-label" for="{{ form.custom_available.id_for_label }}">{{ form.custom_available.label }}:</label>
         </div>
         <div class="col-sm-1">
             {{ form.custom_available }}
         </div>
         <div class="col-sm-2">
-            <label class="{{ form.custom_name.css_classes }}" for="{{ form.custom_name.id_for_label }}">{{ form.custom_name.label }}:</label>
+            <label class="{{ form.custom_name.css_classes }} control-label" for="{{ form.custom_name.id_for_label }}">{{ form.custom_name.label }}:</label>
         </div>
         <div class="col-sm-4">
             {{ form.custom_name }}
