@@ -5,6 +5,7 @@ from django.db.models import Q
 from django.core.urlresolvers import reverse
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import redirect
+from django.utils import formats, timezone
 from django.utils.translation import ugettext as _
 from django.views.generic import UpdateView, FormView
 from booking.booking_workflows.forms import ChangeVisitOccurrenceStatusForm, \
@@ -97,12 +98,51 @@ class ChangeVisitOccurrenceTeachersView(AutologgerMixin, UpdateWithCancelView):
     template_name = "booking/workflow/change_teachers.html"
     view_title = _(u'Redigér undervisere')
 
+    def get_context_data(self, **kwargs):
+        context = {}
+        context['comments'] = {
+            user.id: [
+                {
+                    'text': comment.text,
+                    'time': formats.date_format(
+                        timezone.localtime(comment.time),
+                        "DATETIME_FORMAT"
+                    )
+                }
+                for comment in self.object.get_comments(user).all()
+            ]
+            for user in self.get_form().base_fields['teachers'].queryset.all()
+        }
+        context.update(kwargs)
+        return super(ChangeVisitOccurrenceTeachersView, self).\
+            get_context_data(**context)
+
+
 
 class ChangeVisitOccurrenceHostsView(AutologgerMixin, UpdateWithCancelView):
     model = VisitOccurrence
     form_class = ChangeVisitOccurrenceHostsForm
     template_name = "booking/workflow/change_hosts.html"
     view_title = _(u'Redigér værter')
+
+    def get_context_data(self, **kwargs):
+        context = {}
+        context['comments'] = {
+            user.id: [
+                {
+                    'text': comment.text,
+                    'time': formats.date_format(
+                        timezone.localtime(comment.time),
+                        "DATETIME_FORMAT"
+                    )
+                }
+                for comment in self.object.get_comments(user).all()
+                ]
+            for user in self.get_form().base_fields['hosts'].queryset.all()
+            }
+        context.update(kwargs)
+        return super(ChangeVisitOccurrenceHostsView, self).\
+            get_context_data(**context)
 
     # When the status or host list changes, autosend emails
     def form_valid(self, form):

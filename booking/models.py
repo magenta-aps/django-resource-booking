@@ -2494,6 +2494,15 @@ class VisitOccurrence(models.Model):
             text=text
         ).save()
 
+    def get_comments(self, user=None):
+        if user is None:
+            return VisitOccurrenceComment.objects.filter(visitoccurrence=self)
+        else:
+            return VisitOccurrenceComment.objects.filter(
+                visitoccurrence=self,
+                author=user
+            )
+
 
 VisitOccurrence.add_override_property('duration')
 VisitOccurrence.add_override_property('locality')

@@ -1116,6 +1116,23 @@ a.template-overridden:visited {
     padding: 4px;
 }
 
+.changebookingform .comments {
+    display: inline-block;
+    margin-left: 30px;
+    margin-top: 5px;
+    vertical-align: top;
+}
+
+.changebookingform .comments ul {
+    list-style-position: inside;
+    padding-left: 0;
+}
+
+.changebookingform .comments ul li {
+    border: 0 none;
+    list-style-type: none;
+}
+
 /*Backend specific styles end */
 
 
