@@ -2125,9 +2125,9 @@ class VisitOccurrence(models.Model):
             ).values("workflow_status").first()
             if item:
                 last_workflow_status = item['workflow_status']
-        
+
         if last_workflow_status is None or \
-            last_workflow_status != self.workflow_status:
+                last_workflow_status != self.workflow_status:
             self.last_workflow_update = timezone.now()
 
     @property
@@ -2208,12 +2208,12 @@ class VisitOccurrence(models.Model):
         # the object itself is saved we have to be a bit fuzzy in our
         # comparison.
         fuzzy_adjustment = timezone.timedelta(seconds=1)
-        
+
         return LogEntry.objects.filter(
             object_id=self.pk,
             content_type__in=types,
             action_time__gt=self.last_workflow_update + fuzzy_adjustment
-        )        
+        )
 
     def date_display(self):
         return self.start_datetime or _(u'på ikke-fastlagt tidspunkt')

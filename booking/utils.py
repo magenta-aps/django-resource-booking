@@ -45,6 +45,7 @@ def log_action(user, obj, action_flag, change_message=''):
 
 _releated_content_types_cache = {}
 
+
 def get_related_content_types(model):
     if model not in _releated_content_types_cache:
 
@@ -66,6 +67,7 @@ def get_related_content_types(model):
         _releated_content_types_cache[model] = types
 
     return _releated_content_types_cache[model]
+
 
 # Decorator for @property on class variables
 class ClassProperty(object):
