@@ -3,7 +3,7 @@
 {% if hastime %}
     <div class="row form-group">
         <div class="col-sm-2">
-            <label>{% trans 'Vælg datoer og tider' %}:</label>
+            <label class="control-label">{% trans 'Vælg datoer og tider' %}:</label>
         </div>
         <div class="col-sm-10 pre-scrollable">
             <ul id="id_time" class="list-unstyled"></ul>
@@ -12,11 +12,11 @@
                 <ul id="existing-recurrence-dates" class="list-unstyled" data-visit-id="{{ object.id }}">
                     {% for occurrence in object.visitoccurrence_set.all %}
                         {% if occurrence.is_booked %}
-                            <li data-date="{{ occurrence.start_datetime|date:'d-m-Y H:i' }} 1">
+                            <li class="date" data-date="{{ occurrence.start_datetime|date:'d-m-Y H:i' }} 1">
                                 <div><span class="glyphicon glyphicon-calendar"></span> {{ occurrence.start_datetime|date:'d-m-Y' }}</div>h
                             </li>
                         {% else %}
-                            <li data-date="{{ occurrence.start_datetime|date:'d-m-Y H:i' }}">
+                            <li class="date" data-date="{{ occurrence.start_datetime|date:'d-m-Y H:i' }}">
                                 <div><span class="glyphicon glyphicon-calendar"></span> {{ occurrence.start_datetime|date:'d-m-Y' }}</div>
                                 <div><span class="glyphicon glyphicon-time"></span> <input class="btn-add-time timepick" type="text" name="timepick" placeholder="{% trans 'Tilføj starttid' %}" value="{{ occurrence.start_datetime|date:'H:i' }}"></div>
                                 <button type="button" class="btn-rm-date"><span class="glyphicon glyphicon-remove"></span></button>
