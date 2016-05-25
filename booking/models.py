@@ -18,6 +18,8 @@ from django.template.base import Template, VariableNode
 
 from recurrence.fields import RecurrenceField
 from booking.utils import ClassProperty, full_email, CustomStorage, html2text
+from booking.utils import get_related_content_types
+
 from resource_booking import settings
 
 from datetime import timedelta
@@ -1984,6 +1986,8 @@ class VisitOccurrence(models.Model):
         default=WORKFLOW_STATUS_BEING_PLANNED
     )
 
+    last_workflow_update = models.DateTimeField(default=timezone.now)
+
     comments = models.TextField(
         blank=True,
         default='',
@@ -2097,6 +2101,7 @@ class VisitOccurrence(models.Model):
 
         if self.workflow_status in \
                 VisitOccurrence.noshow_available_after_starttime and \
+                self.start_datetime and \
                 timezone.now() > self.start_datetime:
             allowed.append(VisitOccurrence.WORKFLOW_STATUS_NOSHOW)
 
@@ -2111,6 +2116,20 @@ class VisitOccurrence(models.Model):
             return self.teacherbooking.subjects.all()
         else:
             return None
+
+    def update_last_workflow_change(self):
+        last_workflow_status = None
+        if self.pk:
+            # Fetch old value
+            item = VisitOccurrence.objects.filter(
+                pk=self.pk
+            ).values("workflow_status").first()
+            if item:
+                last_workflow_status = item['workflow_status']
+        
+        if last_workflow_status is None or \
+            last_workflow_status != self.workflow_status:
+            self.last_workflow_update = timezone.now()
 
     @property
     def display_value(self):
@@ -2174,6 +2193,28 @@ class VisitOccurrence(models.Model):
         if self.available_seats() == 0:
             return False
         return True
+
+    @property
+    def has_changes_after_planned(self):
+        # This is only valid for statuses that are considered planned
+        if self.workflow_status == self.WORKFLOW_STATUS_BEING_PLANNED:
+            return False
+
+        return self.changes_after_last_status_change().exists()
+
+    def changes_after_last_status_change(self):
+        types = get_related_content_types(VisitOccurrence)
+
+        # Since log entry for workflow status change is logged after
+        # the object itself is saved we have to be a bit fuzzy in our
+        # comparison.
+        fuzzy_adjustment = timezone.timedelta(seconds=1)
+        
+        return LogEntry.objects.filter(
+            object_id=self.pk,
+            content_type__in=types,
+            action_time__gt=self.last_workflow_update + fuzzy_adjustment
+        )        
 
     def date_display(self):
         return self.start_datetime or _(u'på ikke-fastlagt tidspunkt')
@@ -2269,6 +2310,7 @@ class VisitOccurrence(models.Model):
     def save(self, *args, **kwargs):
 
         self.update_endtime()
+        self.update_last_workflow_change()
 
         # Save once to store relations
         super(VisitOccurrence, self).save(*args, **kwargs)

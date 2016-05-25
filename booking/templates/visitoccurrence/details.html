@@ -170,6 +170,14 @@
                                 <a href="{% url 'change-visit-occ-comments' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
                             {% endif %}
                         </dd>
+                        {% if can_edit and object.has_changes_after_planned %}
+                        <dt>{% trans 'Nylige ændringer' %}</dt>
+                        <dd>
+                            <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                            {% trans 'Dette besøg er markeret som havende nylige ændringer' %}.<br />
+                            <a href="{% url 'visit-occ-reset-changes-marker' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Klik her for at fjerne markeringen' %}</a>
+                        </dd>
+                        {% endif %}
                     </dl>
 
                 </div>

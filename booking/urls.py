@@ -26,6 +26,7 @@ from booking.views import ChangeVisitOccurrenceHostsView
 from booking.views import ChangeVisitOccurrenceRoomsView
 from booking.views import ChangeVisitOccurrenceCommentsView
 from booking.views import ChangeVisitOccurrenceAutosendView
+from booking.views import ResetVisitOccurrenceChangesView
 from booking.views import BecomeTeacherView
 from booking.views import BecomeHostView
 from booking.views import EmailReplyView
@@ -161,6 +162,9 @@ urlpatterns = patterns(
     url(r'^visit/occurrence/(?P<pk>[0-9]+)/become_host/?$',
         BecomeHostView.as_view(),
         name='become-host'),
+    url(r'^visit/occurrence/(?P<pk>[0-9]+)/reset_changes_marker/?$',
+        ResetVisitOccurrenceChangesView.as_view(),
+        name='visit-occ-reset-changes-marker'),
     url(r'^visit/occurrence/search$',
         VisitOccurrenceSearchView.as_view(),
         name='visit-occ-search'),

@@ -43,6 +43,29 @@ def log_action(user, obj, action_flag, change_message=''):
         change_message
     )
 
+_releated_content_types_cache = {}
+
+def get_related_content_types(model):
+    if model not in _releated_content_types_cache:
+
+        types = [ContentType.objects.get_for_model(model)]
+
+        for rel in model._meta.get_all_related_objects():
+            if not rel.one_to_one:
+                continue
+
+            rel_model = rel.related_model
+
+            if model not in rel_model._meta.get_parent_list():
+                continue
+
+            types.append(
+                ContentType.objects.get_for_model(rel_model)
+            )
+
+        _releated_content_types_cache[model] = types
+
+    return _releated_content_types_cache[model]
 
 # Decorator for @property on class variables
 class ClassProperty(object):

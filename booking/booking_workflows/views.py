@@ -5,6 +5,7 @@ from django.db.models import Q
 from django.core.urlresolvers import reverse
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import redirect
+from django.utils import timezone
 from django.utils.translation import ugettext as _
 from django.views.generic import UpdateView, FormView, DetailView
 from booking.booking_workflows.forms import ChangeVisitOccurrenceStatusForm
@@ -16,6 +17,7 @@ from booking.booking_workflows.forms import ChangeVisitOccurrenceCommentsForm
 from booking.booking_workflows.forms import ChangeVisitOccurrenceEvalForm
 from booking.booking_workflows.forms import VisitOccurrenceAddLogEntryForm
 from booking.booking_workflows.forms import ChangeVisitOccurrenceStartTimeForm
+from booking.booking_workflows.forms import ResetVisitOccurrenceChangesForm
 from booking.models import VisitOccurrence
 from booking.models import EmailTemplate
 from booking.models import Locality
@@ -422,3 +424,16 @@ class BecomeHostView(BecomeSomethingView):
 
     def is_right_role(self):
         return self.request.user.userprofile.is_host
+
+
+class ResetVisitOccurrenceChangesView(UpdateWithCancelView):
+    model = VisitOccurrence
+    form_class = ResetVisitOccurrenceChangesForm
+    template_name = "booking/workflow/change_changes_marker.html"
+    view_title = _(u'Nulstil markør for nylige ændringer')
+
+    def form_valid(self, form):
+        self.object = form.save()
+        self.object.last_workflow_update = timezone.now()
+        self.object.save()
+        return HttpResponseRedirect(self.get_success_url())
