@@ -823,6 +823,19 @@ class ObjectStatistics(models.Model):
         self.save()
 
 
+class WaitingList(models.Model):
+
+    enabled = models.BooleanField()
+    closing_time = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+    guests = models.ManyToManyField(
+        "Booking",
+        verbose_name=_(u'Tilmeldinger')
+    )
+
+
 # Bookable resources
 class Resource(models.Model):
     """Abstract superclass for a bookable resource of any kind."""
