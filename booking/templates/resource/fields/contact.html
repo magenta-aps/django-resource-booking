@@ -2,7 +2,7 @@
 {% if form.contacts %}
 <div class="row form-group">
     <div class="col-sm-2">
-        <label for="{{ form.contacts.id_for_label }}">{{ form.contacts.label }}:</label>
+        <label for="{{ form.contacts.id_for_label }}" class="control-label">{{ form.contacts.label }}:</label>
     </div>
     <div class="col-sm-7">
         {% trans 'Vælg modtagere af henvendelser indsendt via formularen "Spørg om tilbud"' %}

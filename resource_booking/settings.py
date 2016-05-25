@@ -126,9 +126,10 @@ TINYMCE_DEFAULT_CONFIG = {
     'custom_undo_redo_levels': 100,
     'theme_advanced_buttons1':
         'bold,italic,underline,|,justifyleft,justifycenter,justifyright,'
-        'justifyfull,|,formatselect,|,bullist,numlist,outdent,indent,|,undo,'
-        'redo,|,link,unlink,anchor,image,cleanup,help,code,|,hr,removeformat,'
-        'visualaid,charmap'
+        'justifyfull,|,formatselect,|,bullist,numlist,outdent,indent,|,'
+        'link,unlink,anchor,image,hr,removeformat',
+    'theme_advanced_buttons2':
+        'undo,redo,|,code,cleanup,visualaid,charmap,help'
 
 }
 TINYMCE_COMPRESSOR = True

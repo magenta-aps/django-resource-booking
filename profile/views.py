@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from booking.models import Unit, Resource, VisitOccurrence, UserPerson
-from booking.models import EmailTemplate
-from booking.models import KUEmailMessage
+from booking.models import EmailTemplate, KUEmailMessage
+from booking.models import VisitOccurrenceComment
 from django.contrib import messages
 from django.db.models import F
 from django.db.models import Q
@@ -461,6 +461,10 @@ class DeleteUserView(DeleteView):
 
     def get_success_url(self):
         return "/profile/users"
+
+    def delete(self, request, *args, **kwargs):
+        VisitOccurrenceComment.on_delete_user(self.get_object())
+        return super(DeleteUserView, self).delete(request, *args, **kwargs)
 
 
 class UserListView(EditorRequriedMixin, ListView):
