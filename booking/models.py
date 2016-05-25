@@ -825,7 +825,6 @@ class ObjectStatistics(models.Model):
 
 class WaitingList(models.Model):
 
-    enabled = models.BooleanField()
     closing_time = models.DateTimeField(
         null=True,
         blank=True
@@ -1599,9 +1598,28 @@ class Visit(Resource):
         blank=True,
         verbose_name=_(u'Højeste antal deltagere')
     )
+
+    # Waiting lists
     do_create_waiting_list = models.BooleanField(
-        default=False, verbose_name=_(u'Opret venteliste')
+        default=False,
+        verbose_name=_(u'Ventelister')
     )
+    waiting_list_length = models.IntegerField(
+        null=True,
+        blank=True,
+        verbose_name=_(u'Antal pladser')
+    )
+    waiting_list_deadline_days = models.IntegerField(
+        null=True,
+        blank=True,
+        verbose_name=_(u'Lukning af venteliste (dage inden besøg)')
+    )
+    waiting_list_deadline_hours = models.IntegerField(
+        null=True,
+        blank=True,
+        verbose_name=_(u'Lukning af venteliste (timer inden besøg)')
+    )
+
     do_show_countdown = models.BooleanField(
         default=False,
         verbose_name=_(u'Vis nedtælling')
