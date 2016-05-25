@@ -118,7 +118,6 @@ class ChangeVisitOccurrenceTeachersView(AutologgerMixin, UpdateWithCancelView):
             get_context_data(**context)
 
 
-
 class ChangeVisitOccurrenceHostsView(AutologgerMixin, UpdateWithCancelView):
     model = VisitOccurrence
     form_class = ChangeVisitOccurrenceHostsForm
