@@ -959,10 +959,11 @@ class Resource(models.Model):
         related_name='roomadmin_visit_new'
     )
 
-    preparation_time = models.IntegerField(
-        default=0,
+    preparation_time = models.CharField(
+        max_length=200,
         null=True,
-        verbose_name=_(u'Forberedelsestid (i timer)')
+        blank=True,
+        verbose_name=_(u'Forberedelsestid')
     )
 
     price = models.DecimalField(

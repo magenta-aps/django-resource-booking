@@ -2851,7 +2851,7 @@ class EmailTemplateDetailView(LoginRequiredMixin, View):
         return json.dumps({
             key: [
                 {'text': unicode(object), 'value': object.id}
-                for object in type.objects.all()
+                for object in type.objects.order_by('id')
             ]
             for key, type in EmailTemplateDetailView.classes.items()
         })
