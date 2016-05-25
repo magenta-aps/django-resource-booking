@@ -21,7 +21,7 @@
         </div>
     </div>
     <hr/>
-    <form action="" class="form-horizontal clearfix visitform" method="post" enctype="multipart/form-data" autocomplete="off">
+    <form id="visitform" action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data" autocomplete="off">
         {% csrf_token %}
 
         {{ form.non_field_errors }}
