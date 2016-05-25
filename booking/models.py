@@ -2487,12 +2487,23 @@ class VisitOccurrence(models.Model):
         for occurrence in VisitOccurrence.objects.all():
             occurrence.save()
 
+    def add_comment(self, user, text):
+        VisitOccurrenceComment(
+            visitoccurrence=self,
+            author=user,
+            text=text
+        ).save()
+
 
 VisitOccurrence.add_override_property('duration')
 VisitOccurrence.add_override_property('locality')
 
 
 class VisitOccurrenceComment(models.Model):
+
+    class Meta:
+        ordering=["-time"]
+
     visitoccurrence = models.ForeignKey(
         VisitOccurrence,
         verbose_name=_(u'Besøg'),
