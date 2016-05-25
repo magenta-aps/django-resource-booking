@@ -352,7 +352,7 @@ class VisitForm(forms.ModelForm):
                     'maxlength': 210
                 }
             ),
-            'description': TinyMCE(attrs={'rows': 10, 'cols': 90}),
+            'description': TinyMCE(),
             'custom_name': TextInput(attrs={
                 'class': 'titlefield form-control input-sm',
                 'rows': 1, 'size': 62

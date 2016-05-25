@@ -1326,6 +1326,7 @@ body.lightbox {
     }
     .form-horizontal .control-label {
         padding-top: 3px;
+        width: 100%;
     }
     footer {
         border-left: 1px solid #ccc;
