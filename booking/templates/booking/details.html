@@ -24,7 +24,7 @@
                     {% url 'visit-view' object.visitoccurrence.visit.id as visiturl %}
                     {% url 'visit-occ-view' object.visitoccurrence.id as occurrenceurl %}
                     {% blocktrans with firstname=object.booker.firstname lastname=object.booker.lastname visittitle=object.visit.title occurrencetime=object.visitoccurrence.start_datetime %}
-                        <strong>{{ firstname }} {{ lastname }}</strong> har booket <a href="{{ visiturl }}">{{ visittitle }}</a> med afvikling <a href="{{ occurrenceurl }}">{{ occurrencetime }}</a>
+                        <strong>{{ firstname }} {{ lastname }}</strong> har tilmeldt sig <a href="{{ visiturl }}">{{ visittitle }}</a> med afvikling <a href="{{ occurrenceurl }}">{{ occurrencetime }}</a>
                     {% endblocktrans %}
                 </div>
             </div>
@@ -56,9 +56,9 @@
             {% endif %}
 
 
-            <h2>{% trans 'Information om bookingen' %}</h2>
+            <h2>{% trans 'Information om tilmeldingen' %}</h2>
 
-            <dl class="dl-horizontal">
+            <dl class="dl-horizontal wide">
 
                 <dt>{% trans 'Navn:' %}</dt>
                 <dd>{{ object.booker.firstname }} {{ object.booker.lastname }}</dd>
@@ -96,12 +96,27 @@
                 <dt>{% trans 'Antal deltagere:' %}</dt>
                 <dd>{{ object.booker.attendee_count }}</dd>
 
-                <dt>{% trans 'Noter:' %}</dt>
+                <dt>{% trans 'Kommentar:' %}</dt>
                 <dd>{{ object.notes }}</dd>
 
                 {% if object.classbooking %}
                     <dt>{% trans 'Rundvisning:' %}</dt>
                     <dd>{{ object.classbooking.tour_desired | yesno }}</dd>
+                {% endif %}
+
+                {% if object.classbooking %}
+                    <dt>{% trans 'Forplejning:' %}</dt>
+                    <dd>{{ object.classbooking.catering_desired | yesno }}</dd>
+                {% endif %}
+
+                {% if object.classbooking %}
+                    <dt>{% trans 'Oplæg om uddannelse:' %}</dt>
+                    <dd>{{ object.classbooking.presentation_desired | yesno }}</dd>
+                {% endif %}
+
+                {% if object.classbooking and object.visit.custom_available and object.visit.custom_name %}
+                    <dt>{{ object.visit.custom_name }}</dt>
+                    <dd>{{ object.classbooking.custom_desired | yesno }}</dd>
                 {% endif %}
 
                 {% if object.teacherbooking %}

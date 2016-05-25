@@ -8,7 +8,7 @@
             <div class="divider"></div>
             <h1>{% trans 'Søg efter tilbud' %}</h1>
             <div class="divider"></div>
-            <form action="{% url 'search' %}">
+            <form action="{% url 'search' %}" {% if view.kwargs.embed %}target="_blank"{% endif %}>
                 <h2 class="control-label">{% trans 'Tilbud rettet mod:' %}</h2>
                 <div class="input-group">
                     <label class="checkbox-inline control-label" for="institution-choice-1">
@@ -55,8 +55,8 @@
         </div>
     </div>
 
+    {% if not view.kwargs.embed %}
     <hr/>
-
     <div>
         {% for list in lists %}
             {% cycle True False False as beginRow silent %}
@@ -70,4 +70,6 @@
             {% endif %}
         {% endfor %}
     </div>
+    {% endif %}
+
 {% endblock %}

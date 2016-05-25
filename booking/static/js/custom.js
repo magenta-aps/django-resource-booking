@@ -27,13 +27,3 @@ $(function() {
         $(this.form).trigger("submit")
     });
 });
-// Show/hide multiple dates
-if ($("#dato li").data('expired', 'true').length > 1) {
-    $("#dato").find('[data-expired="true"]').hide();
-    $("#dato").after("<a href=\"#\" class=\"showhide\">Vis flere datoer</a>");
-    $(".showhide").click(function(e) {
-        e.preventDefault();
-        $("#dato").find('[data-expired="true"]').toggle(400);
-        ($(this).text() === "Vis flere datoer") ? $(this).text("Vis færre datoer"): $(this).text("Vis flere datoer");
-    });
-}

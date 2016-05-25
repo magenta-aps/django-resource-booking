@@ -21,7 +21,8 @@
         <div class="col-sm-12 col-md-8">
             <form name="changebookinroomsform" id="changebookinroomsform" action="{% url 'change-visit-occ-starttime' object.pk %}" method="post">
                 {% csrf_token %}
-                {{ form }}
+                <label class="{{ form.start_datetime.css_classes }}" for="{{ form.start_datetime.id_for_label }}">{{ form.start_datetime.label }}:</label>
+                {{ form.start_datetime }}
                 <div>
                 <input class="btn btn-success btn-sm" type="submit" value="{% trans 'Opdater' %}" name="confirm" />
                 <input class="btn btn-danger btn-sm" type="submit" value="{% trans 'Annullér' %}" name="cancel" />
@@ -33,10 +34,11 @@
 
 {% block extra_scripts %}
     {% include 'common/resources/datetime-picker_script.html' %}
+    {% get_current_language as language %}
     <script type="text/javascript"><!--
         $(function(){
-            var dp = $("#id_start_datetime").datetimepicker({
-                language: 'da',
+            var dp = $("#{{ form.start_datetime.id_for_label }}").datetimepicker({
+                language: '{{ language }}',
                 format: 'dd.mm.yyyy hh:ii:ss',
                 weekStart: 1,
                 todayHighlight: true,

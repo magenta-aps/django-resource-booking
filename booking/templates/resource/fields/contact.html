@@ -1,13 +1,15 @@
 {% load i18n %}
-{% if form.contact_persons %}
+{% if form.contacts %}
 <div class="row form-group">
-    <div>{{ form.contact_persons.errors }}</div>
     <div class="col-sm-2">
-        <label for="{{ form.contact_persons.id_for_label }}">{{ form.contact_persons.label }}:</label>
+        <label for="{{ form.contacts.id_for_label }}">{{ form.contacts.label }}:</label>
     </div>
-    <div class="col-sm-10">
+    <div class="col-sm-7">
         {% trans 'Vælg modtagere af henvendelser indsendt via formularen "Spørg om tilbud"' %}
-        {{ form.contact_persons }}
+        {{ form.contacts }}
+    </div>
+    <div class="col-sm-3 with-errors">
+        {{ form.contact_persons.errors }}
     </div>
 </div>
 {% endif %}

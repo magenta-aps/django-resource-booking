@@ -6,7 +6,7 @@
         {% if visit.institution_level == 1 %}
             {% trans "Gymnasium*" %}
         {% elif visit.institution_level == 2 %}
-            {% trans "Folkeskole*" %}
+            {% trans "Grundskole*" %}
         {% else %}
             {% trans "Skole*" %}
         {% endif %}
@@ -34,7 +34,13 @@
 
 {% if bookerform.level %}
 <div class="form-group">
-    <label class="col-sm-2 control-label {{ bookerform.level.css_classes }}" for="{{ bookerform.level.id_for_label }}">{% trans "Klasse" %}</label>
+    <label class="col-sm-2 control-label {{ bookerform.level.css_classes }}" for="{{ bookerform.level.id_for_label }}">
+        {% if not bookerform.fields.level.required %}
+            {% trans "Klasse" %}
+        {% else %}
+            {% trans "Klasse*" %}
+        {% endif %}
+    </label>
     <div class="col-sm-6{% if bookerform.level.errors %} has-error{% endif %}">
         {{ bookerform.level }}
     </div>

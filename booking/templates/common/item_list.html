@@ -26,7 +26,7 @@
                                     <li>
                                         {% blocktrans with date=occurrence.start_datetime|date:"d. m. Y" time=occurrence.start_datetime|date:"H:i" %}Dato/tid: {{ date }} kl. {{ time }}{% endblocktrans %}
                                     </li>
-                                    <li>{% trans 'Antal tilmeldte:' %} {{ occurrence.nr_bookers }}</li>
+                                    <li>{% trans 'Antal tilmeldte:' %} {{ occurrence.nr_attendees }}</li>
                                 </ul>
                             </div>
                         </a>
@@ -41,7 +41,7 @@
                 {% for res in list.queryset %}
                     {% if not list.limit or forloop.counter0 < list.limit %}
                     <div class="list-group-item clearfix">
-                        <a href="{% url 'resource-view' res.pk %}" title="{% trans 'Se tilbuddets detaljer og evt. bookings' %}">
+                        <a href="{% url 'resource-view' res.pk %}" title="{% trans 'Se tilbuddets detaljer og evt. tilmeldinger' %}">
                             <h2 class="list-group-item-heading">{{ res.title }}</h2>
                             <div class="list-group-item-text">
                                 <ul>
@@ -69,10 +69,12 @@
                             </div>
                         </a>
                         <div class="tools">
+                            {% if user.userprofile.has_edit_role %}
                                 <span class="edit-tools pull-left">
                                     <a href="{% url 'resource-edit' res.pk %}">{% trans 'Rediger' %}</a> |
                                     <a href="{% url 'resource-clone' res.pk %}">{% trans 'Kopiér' %}</a>
                                 </span>
+                            {% endif %}
                             <span class="label label-{{ res.get_state_class }} pull-right">{{ res.get_state_display }}</span>
                         </div>
                     </div>
