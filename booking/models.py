@@ -500,6 +500,18 @@ class Locality(models.Model):
             ])
         )
 
+    @property
+    def route_url(self):
+        # return "http://www.findvej.dk/?daddress=%s&dzip=%s" % \
+        return "https://maps.google.dk/maps/dir//%s,%s" % \
+               (self.address_line, self.zip_city)
+
+    @property
+    def location_url(self):
+        # return "http://www.findvej.dk/%s,%s" % \
+        return "https://maps.google.dk/maps/place/%s,%s" % \
+               (self.address_line, self.zip_city)
+
 
 class EmailTemplate(models.Model):
 
@@ -2395,12 +2407,12 @@ class VisitOccurrence(models.Model):
                 template_key,
                 {'occurrence': self, 'visit': visit},
                 list(recipients),
+                self,
                 unit
             )
 
             if not only_these_recipients and \
-                    template_key in \
-                    EmailTemplate.booker_keys:
+                    template_key in EmailTemplate.booker_keys:
                 for booking in self.bookings.all():
                     KUEmailMessage.send_email(
                         template_key,
@@ -2411,6 +2423,7 @@ class VisitOccurrence(models.Model):
                             'booker': booking.booker
                         },
                         booking.booker,
+                        self,
                         unit
                     )
 
