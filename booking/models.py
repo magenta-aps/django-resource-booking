@@ -2501,12 +2501,32 @@ class VisitOccurrence(models.Model):
         for occurrence in VisitOccurrence.objects.all():
             occurrence.save()
 
+    def add_comment(self, user, text):
+        VisitOccurrenceComment(
+            visitoccurrence=self,
+            author=user,
+            text=text
+        ).save()
+
+    def get_comments(self, user=None):
+        if user is None:
+            return VisitOccurrenceComment.objects.filter(visitoccurrence=self)
+        else:
+            return VisitOccurrenceComment.objects.filter(
+                visitoccurrence=self,
+                author=user
+            )
+
 
 VisitOccurrence.add_override_property('duration')
 VisitOccurrence.add_override_property('locality')
 
 
 class VisitOccurrenceComment(models.Model):
+
+    class Meta:
+        ordering = ["-time"]
+
     visitoccurrence = models.ForeignKey(
         VisitOccurrence,
         verbose_name=_(u'Besøg'),
@@ -2515,7 +2535,7 @@ class VisitOccurrenceComment(models.Model):
     )
     author = models.ForeignKey(
         User,
-        null=True # Users can be deleted, but we want to keep their comments
+        null=True  # Users can be deleted, but we want to keep their comments
     )
     deleted_user_name = models.CharField(
         max_length=30
@@ -2525,7 +2545,8 @@ class VisitOccurrenceComment(models.Model):
         verbose_name=_(u'Kommentartekst')
     )
     time = models.DateTimeField(
-        verbose_name=_(u'Tidsstempel')
+        verbose_name=_(u'Tidsstempel'),
+        auto_now=True
     )
 
     def on_delete_author(self):
