@@ -1,4 +1,5 @@
 *~
+/booking/migrations/0*.py
 /booking/migrations/*_auto_*
 dist
 *.egg-info
@@ -8,6 +9,7 @@ install.log
 /local-*
 /locale/**/*.mo
 /media/
+/profile/migrations/0*.py
 /profile/migrations/*_auto_*
 *.pyc
 python-env

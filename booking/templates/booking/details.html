@@ -58,7 +58,7 @@
 
             <h2>{% trans 'Information om tilmeldingen' %}</h2>
 
-            <dl class="dl-horizontal">
+            <dl class="dl-horizontal wide">
 
                 <dt>{% trans 'Navn:' %}</dt>
                 <dd>{{ object.booker.firstname }} {{ object.booker.lastname }}</dd>
@@ -102,6 +102,21 @@
                 {% if object.classbooking %}
                     <dt>{% trans 'Rundvisning:' %}</dt>
                     <dd>{{ object.classbooking.tour_desired | yesno }}</dd>
+                {% endif %}
+
+                {% if object.classbooking %}
+                    <dt>{% trans 'Forplejning:' %}</dt>
+                    <dd>{{ object.classbooking.catering_desired | yesno }}</dd>
+                {% endif %}
+
+                {% if object.classbooking %}
+                    <dt>{% trans 'Oplæg om uddannelse:' %}</dt>
+                    <dd>{{ object.classbooking.presentation_desired | yesno }}</dd>
+                {% endif %}
+
+                {% if object.classbooking and object.visit.custom_available and object.visit.custom_name %}
+                    <dt>{{ object.visit.custom_name }}</dt>
+                    <dd>{{ object.classbooking.custom_desired | yesno }}</dd>
                 {% endif %}
 
                 {% if object.teacherbooking %}

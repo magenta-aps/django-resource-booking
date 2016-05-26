@@ -15,7 +15,7 @@
         <div class="divider"></div>
     </div>
     {% if messages %}
-    <div class="col-sm-4 alert alert-success" role="alert">
+    <div class="col-sm-4 alert alert-info" role="alert">
         <ul>
             {% for message in messages %}
             <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
@@ -64,7 +64,7 @@
                         <span class="glyphicon glyphicon-chevron-right"></span>
                     </a>
                 {% endif %}
-                {% if object.contact_persons %}
+                {% if object.contacts %}
                     <a class="btn btn-default" data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'visit-inquire' object.id %}?modal=1" >
                         {% trans 'Spørg om tilbud' %}
                         <span class="glyphicon glyphicon-question-sign"></span>
@@ -120,9 +120,11 @@
                             {% if object.locality %}
                                 <dt>{% trans 'Hvor' %}:</dt>
                                 <dd>
+                                <a href="{{ object.locality.location_url }}" target="_blank">
                                     {{ object.locality.name }}<br>
                                     {{ object.locality.address_line }}<br>
                                     {{ object.locality.zip_city }}
+                                </a>
                                 </dd>
                             {% endif %}
                             
@@ -136,20 +138,23 @@
                                     </a> <span class="glyphicon glyphicon-new-window"></span>
                                 {% endif %}
                             </dd>
-                            
+
                             {% if request.user.userprofile.can_create %}
                                 {% if object.visitoccurrence_set.all %}
                                 <dt>{% trans 'Hvornår:' %}</dt>
                                 <dd>
                                     <ul class="list-unstyled" id="dato">
                                     {% for event in object.visitoccurrence_set.all %}
-                                        {% if event.expired %}
-                                            <li data-expired="true">
-                                                <a href="{% url 'visit-occ-view' event.pk %}">{{ event.start_datetime|date:'d-m-Y H:i' }} {% trans '(udløbet)' %}</a>
-                                            </li>
-                                        {% else %}
-                                            <li data-expired="false">
-                                                <a href="{% url 'visit-occ-view' event.pk %}">{{ event.start_datetime|date:'d-m-Y H:i' }}</a>
+                                        {% if event.start_datetime %}
+                                            <li data-expired="{% if event.expired %}true{% else %}false{% endif %}">
+                                                <a href="{% url 'visit-occ-view' event.pk %}">
+                                                    {{ event.start_datetime|date:'d-m-Y H:i' }}
+                                                    {% if event.expired %}
+                                                        <br/>{% trans '(udløbet)' %}
+                                                    {% elif event.available_seats != None %}
+                                                        <br/>{% blocktrans with seats=event.available_seats %}({{ seats }} pladser tilbage){% endblocktrans %}
+                                                    {% endif %}
+                                                </a>
                                             </li>
                                         {% endif %}
                                     {% endfor %}
@@ -178,6 +183,22 @@
                                 <dt>{% trans 'Pris' %}:</dt>
                                 <dd>{{ object.price }}</dd>
                             {% endif %}
+
+                            {% if object.tour_available or object.catering_available or object.presentation_available or object.custom_available %}
+                                <dt>{% trans 'Mulighed for' %}:</dt>
+                                {% if object.tour_available %}
+                                    <dd>{% trans 'Rundvisning' %}</dd>
+                                {% endif %}
+                                {% if object.catering_available %}
+                                    <dd>{% trans 'Forplejning' %}</dd>
+                                {% endif %}
+                                {% if object.presentation_available %}
+                                    <dd>{% trans 'Oplæg om uddannelse' %}</dd>
+                                {% endif %}
+                                {% if object.custom_available %}
+                                    <dd>{{ object.custom_name }}</dd>
+                                {% endif %}
+                            {% endif %}
                             
                         </dl>
                     </div>
@@ -199,5 +220,22 @@
 
     <script src="{% static 'js/custom.js' %}"></script>
     <script src="{% static "js/modalframe-host.js" %}"></script>
+    <script type="text/javascript">
+        <!--
+        // Show/hide multiple dates
+        if ($("#dato li[data-expired='true']").length > 1) {
+            var dato = $("#dato"),
+                showmore = "{% trans 'Vis udløbne datoer' %}",
+                showless = "{% trans 'Skjul udløbne datoer' %}";
+            dato.find('[data-expired="true"]').hide();
+            dato.after("<a href=\"#\" class=\"showhide\">"+showmore+"</a>");
+            $(".showhide").click(function(e) {
+                e.preventDefault();
+                $("#dato").find('[data-expired="true"]').toggle(400);
+                ($(this).text() === showmore) ? $(this).text(showless): $(this).text(showmore);
+            });
+        }
+        //-->
+    </script>
 
 {% endblock %}

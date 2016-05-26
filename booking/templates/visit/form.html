@@ -29,25 +29,27 @@
         <div id="accordion" class="panel-group" aria-multiselectable="true" role="tablist">
 
             {{ form.type }}
+        {{ form.errors }}
 
-            {% if form.title %}
+            {% if form.unit %}
             <div class="panel panel-default">
                 <div id="headingCategory" class="panel-heading" role="tab">
                     <h4 class="panel-title">
-                        <a class="" aria-controls="collapseTitel" aria-expanded="false" href="#collapseTitel" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Titel" %}</a><span class="caret"></span>
+                        <a class="" aria-controls="collapseTitel" aria-expanded="false" href="#collapseTitel" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Grunddata" %}</a><span class="caret"></span>
                     </h4>
                 </div>
                 <div id="collapseTitel" class="panel-collapse collapse
-                {% if not object.pk or not form.errors or form.title.errors or form.title.errors %}in{% endif %}
+                {% if not object.pk or not form.errors or form.unit.errors %}in{% endif %}
                 " aria-labelledby="headingCategory" role="tabpanel" aria-expanded="true" style="">
                     <div class="panel-body">
-                        {% include 'resource/fields/title.html' %}
+                        {% include 'resource/fields/generic_field.html' with field=form.unit %}
                     </div>
                 </div>
             </div>
+
             {% endif %}
 
-            {% if form.state or form.teaser or form.description or form.price or fileformset %}
+            {% if form.title or form.teaser or form.description or form.price or fileformset %}
             <div class="panel panel-default">
                 <div id="headingDescription" class="panel-heading" role="tab">
                     <h4 class="panel-title">
@@ -55,13 +57,14 @@
                     </h4>
                 </div>
                 <div id="collapseDescription" class="panel-collapse collapse
-                {% if not object.pk or form.state.errors or form.teaser.errors or form.description.errors or form.price.errors or fileformset.errors %}in{% endif %}
+                {% if not object.pk or form.title.errors or form.teaser.errors or form.description.errors or form.price.errors %}in{% endif %}
                 " aria-labelledby="headingDescription" role="tabpanel">
                     <div class="panel-body">
-                        {% include 'resource/fields/state.html' %}
-                        {% include 'resource/fields/teaser.html' %}
-                        {% include 'resource/fields/description.html' %}
-                        {% include 'resource/fields/price.html' %}
+                        {% include 'resource/fields/generic_field.html' with field=form.title %}
+                        {% include 'resource/fields/generic_field.html' with field=form.teaser %}
+                        {% include 'resource/fields/generic_field.html' with field=form.description %}
+                        {% include 'resource/fields/tour.html' %}
+                        {% include 'resource/fields/generic_field.html' with field=form.price %}
                         {% include 'resource/fields/studymaterials.html' %}
                     </div>
                 </div>
@@ -79,10 +82,11 @@
                     {% if not object.pk or form.audience.errors or form.institution_level.errors or form.level.errors or form.class_level_min.errors or form.class_level_max.errors or form.minimum_number_of_visitors.errors or form.maximum_number_of_visitors.errors or form.subjects.errors %}in{% endif %}
                     " aria-labelledby="headingAudience" role="tabpanel" aria-expanded="true" style="">
                     <div class="panel-body">
-                        {% include 'resource/fields/audience.html' %}
-                        {% include 'resource/fields/institution_level.html' %}
+                        {% include 'resource/fields/generic_field.html' with field=form.audience %}
+                        {% include 'resource/fields/generic_field.html' with field=form.institution_level %}
                         {% include 'resource/fields/subjects.html' %}
-                        {% include 'resource/fields/visitors.html' %}
+                        {% include 'resource/fields/generic_field.html' with field=form.minimum_number_of_visitors %}
+                        {% include 'resource/fields/generic_field.html' with field=form.maximum_number_of_visitors %}
                     </div>
                 </div>
             </div>
@@ -100,13 +104,13 @@
                 " aria-labelledby="headingTimeDuration" role="tabpanel" aria-expanded="false" style="">
                     <div class="panel-body">
                         {% include 'resource/fields/time.html' %}
-                        {% include 'resource/fields/duration.html' %}
+                        {% include 'resource/fields/generic_field.html' with field=form.duration %}
                     </div>
                 </div>
             </div>
             {% endif %}
 
-            {% if form.rooms_needed or form.rooms_assignment or form.locality %}
+            {% if form.rooms_needed or form.locality %}
             <div class="panel panel-default">
                 <div id="headingRooms" class="panel-heading" role="tab">
                     <h4 class="panel-title">
@@ -114,10 +118,10 @@
                     </h4>
                 </div>
                 <div id="collapseRooms" class="panel-collapse collapse
-                {% if not object.pk or form.rooms_needed.errors or form.rooms_assignment.errors or form.locality.errors %}in{% endif %}
+                {% if not object.pk or form.rooms_needed.errors or form.locality.errors %}in{% endif %}
                 " aria-labelledby="headingContact" role="tabpanel" aria-expanded="false" style="">
                     <div class="panel-body">
-                        {% include 'resource/fields/locality.html' %}
+                        {% include 'resource/fields/generic_field.html' with field=form.locality %}
                         {% include 'resource/fields/rooms.html' %}
                     </div>
                 </div>
@@ -135,12 +139,11 @@
                 {% if not object.pk or form.needed_hosts.errors or form.needed_teachers.errors or form.default_hosts.errors or form.default_teachers.error %}in{% endif %}
                 " aria-labelledby="headingContact" role="tabpanel" aria-expanded="false" style="">
                     <div class="panel-body">
-                    {% include 'common/snippets/edit-needed-number.html' with field=form.needed_hosts %}
-                    {% include 'common/snippets/edit-needed-number.html' with field=form.needed_teachers %}
+                    {% include 'resource/fields/generic_field.html' with field=form.needed_hosts %}
+                    {% include 'resource/fields/generic_field.html' with field=form.needed_teachers %}
                     {% if form.default_hosts or form.default_teachers %}
                     <p>
-                        Du kan her vælge faste værter og undervisere der automatisk kopieres til alle
-                        besøg der efterfølgende oprettes for dette tilbud.
+                        {% trans 'Du kan her vælge faste værter og undervisere der automatisk kopieres til alle besøg der efterfølgende oprettes for dette tilbud.' %}
                     </p>
                     {% endif %}
                     {% include 'resource/fields/generic_field.html' with field=form.default_hosts %}
@@ -150,7 +153,7 @@
             </div>
             {% endif %}
 
-            {% if form.unit or form.contact_persons %}
+            {% if form.contacts %}
             <div class="panel panel-default">
                 <div id="headingContact" class="panel-heading" role="tab">
                     <h4 class="panel-title">
@@ -158,18 +161,17 @@
                     </h4>
                 </div>
                 <div id="collapseContact" class="panel-collapse collapse
-                {% if not object.pk or form.unit.errors or form.contact_persons.errors %}in{% endif %}
+                {% if not object.pk or form.contacts.errors %}in{% endif %}
                 " aria-labelledby="headingContact" role="tabpanel" aria-expanded="false" style="">
                     <div class="panel-body">
-                        {% include 'resource/fields/unit.html' %}
                         {% include 'resource/fields/contact.html' %}
-                        {% include 'resource/fields/roomadmin.html' %}
+                        {% include 'resource/fields/generic_field.html' with field=form.room_responsible %}
                     </div>
                 </div>
             </div>
             {% endif %}
 
-            {% if form.preparation_time or form.comment or autosendform %}
+            {% if form.preparation_time or form.comment or form.state or autosendform %}
             <div class="panel panel-default">
                 <div id="headingInternal" class="panel-heading" role="tab">
                     <h4 class="panel-title">
@@ -177,11 +179,12 @@
                     </h4>
                 </div>
                 <div id="collapseInternal" class="panel-collapse collapse
-                {% if not object.pk or form.preparation_time.errors or form.comment.errors or autosendform.errors %}in{% endif %}
+                {% if not object.pk or form.preparation_time.errors or form.comment.errors or autosendform.errors or form.state.errors %}in{% endif %}
                 " aria-labelledby="headingInternal" role="tabpanel" aria-expanded="true" style="">
                     <div class="panel-body">
-                        {% include 'resource/fields/preparation.html' %}
-                        {% include 'resource/fields/comment.html' %}
+                        {% include 'resource/fields/generic_field.html' with field=form.state %}
+                        {% include 'resource/fields/generic_field.html' with field=form.preparation_time %}
+                        {% include 'resource/fields/generic_field.html' with field=form.comment %}
                         {% include 'resource/fields/autosend.html' %}
                     </div>
                 </div>

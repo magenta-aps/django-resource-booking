@@ -35,6 +35,19 @@ user_role_choices = (
     (NONE, _(u"Ingen"))
 )
 
+# Which roles are available for editing?
+# E.g. a faculty editor can create, edit and delete coordinators but not admins
+available_roles = {
+    NONE: [],
+    TEACHER: [],
+    HOST: [],
+    COORDINATOR: [NONE, TEACHER, HOST],
+    FACULTY_EDITOR: [NONE, TEACHER, HOST, COORDINATOR],
+    ADMINISTRATOR: [
+        NONE, TEACHER, HOST, COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
+    ]
+}
+
 
 def get_none_role():
     try:
@@ -203,7 +216,7 @@ class UserProfile(models.Model):
         if not unit:
             return Unit.objects.none()
 
-        # Faculty editos gets everything that has their unit as a parent
+        # Faculty editors gets everything that has their unit as a parent
         # as well as the unit itself
         if role == FACULTY_EDITOR:
             return Unit.objects.filter(Q(parent=unit) | Q(pk=unit.pk))
@@ -234,6 +247,10 @@ class UserProfile(models.Model):
             )
         else:
             return User.objects.none()
+
+    @property
+    def available_roles(self):
+        return available_roles[self.get_role()]
 
 
 class EmailLoginEntry(models.Model):

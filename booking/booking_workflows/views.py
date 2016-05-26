@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 
+from django.db.models.expressions import OrderBy
+from django.db.models import Q
 from django.core.urlresolvers import reverse
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import redirect
+from django.utils import timezone
 from django.utils.translation import ugettext as _
 from django.views.generic import UpdateView, FormView, DetailView
 from booking.booking_workflows.forms import ChangeVisitOccurrenceStatusForm
@@ -14,12 +17,17 @@ from booking.booking_workflows.forms import ChangeVisitOccurrenceCommentsForm
 from booking.booking_workflows.forms import ChangeVisitOccurrenceEvalForm
 from booking.booking_workflows.forms import VisitOccurrenceAddLogEntryForm
 from booking.booking_workflows.forms import ChangeVisitOccurrenceStartTimeForm
+from booking.booking_workflows.forms import ResetVisitOccurrenceChangesForm
 from booking.models import VisitOccurrence
 from booking.models import EmailTemplate
+from booking.models import Locality
 from booking.models import LOGACTION_MANUAL_ENTRY
 from booking.models import log_action
+from booking.models import Room
 from booking.views import AutologgerMixin
+from booking.views import RoleRequiredMixin, EditorRequriedMixin
 from django.views.generic.base import ContextMixin
+from profile.models import TEACHER, HOST, EDIT_ROLES
 
 
 class VisitOccurrenceBreadcrumbMixin(ContextMixin):
@@ -43,7 +51,8 @@ class VisitOccurrenceBreadcrumbMixin(ContextMixin):
             get_context_data(**context)
 
 
-class UpdateWithCancelView(VisitOccurrenceBreadcrumbMixin, UpdateView):
+class UpdateWithCancelView(VisitOccurrenceBreadcrumbMixin, EditorRequriedMixin,
+                           UpdateView):
     def post(self, request, *args, **kwargs):
         if "cancel" in request.POST:
             self.object = self.get_object()
@@ -66,7 +75,7 @@ class ChangeVisitOccurrenceStatusView(AutologgerMixin, UpdateWithCancelView):
     model = VisitOccurrence
     form_class = ChangeVisitOccurrenceStatusForm
     template_name = "booking/workflow/change_status.html"
-    view_title = _(u'Redigér status')
+    view_title = _(u'Skift status')
 
     def form_valid(self, form):
         response = super(ChangeVisitOccurrenceStatusView, self).form_valid(
@@ -99,9 +108,9 @@ class ChangeVisitOccurrenceHostsView(AutologgerMixin, UpdateWithCancelView):
     def form_valid(self, form):
         old = self.get_object()
         response = super(ChangeVisitOccurrenceHostsView, self).form_valid(form)
-        if form.cleaned_data['host_status'] == VisitOccurrence.STATUS_OK:
+        if form.cleaned_data['host_status'] == VisitOccurrence.STATUS_ASSIGNED:
             new_hosts = self.object.hosts.all()
-            if old.host_status != VisitOccurrence.STATUS_OK:
+            if old.host_status != VisitOccurrence.STATUS_ASSIGNED:
                 # Status changed from not-ok to ok, notify all hosts
                 recipients = new_hosts
             else:
@@ -127,6 +136,77 @@ class ChangeVisitOccurrenceRoomsView(AutologgerMixin, UpdateWithCancelView):
     form_class = ChangeVisitOccurrenceRoomsForm
     template_name = "booking/workflow/change_rooms.html"
     view_title = _(u'Redigér lokaler')
+
+    def get_context_data(self, **kwargs):
+        context = {}
+        context.update(kwargs)
+
+        context['allrooms'] = [
+            {
+                'id': x.pk,
+                'locality_id': x.locality.pk if x.locality else None,
+                'name': x.name_with_locality
+            }
+            for x in Room.objects.all()
+        ]
+
+        context['rooms'] = self.object.rooms.all()
+
+        locality = self.object.visit.locality
+        unit = self.object.visit.unit
+
+        context['locality_choices'] = [(None, "---------")] + \
+            [
+                (x.id, x.name_and_address,
+                 locality is not None and x.id == locality.id)
+                for x in Locality.objects.order_by(
+                    # Sort stuff where unit is null last
+                    OrderBy(Q(unit__isnull=False), descending=True),
+                    # Sort localities belong to current unit first
+                    OrderBy(Q(unit=unit), descending=True),
+                    # Lastly, sort by name
+                    "name"
+                )
+            ]
+
+        return super(
+            ChangeVisitOccurrenceRoomsView, self
+        ).get_context_data(**context)
+
+    def form_valid(self, form):
+        self.object = form.save()
+
+        self.save_rooms()
+
+        return HttpResponseRedirect(self.get_success_url())
+
+    def save_rooms(self):
+        # This code is more or less the same as EditVisitView.save_rooms()
+        # If you update this you might have to update there as well.
+        existing_rooms = set([x.pk for x in self.object.rooms.all()])
+
+        new_rooms = self.request.POST.getlist("rooms")
+
+        for roomdata in new_rooms:
+            if roomdata.startswith("id:"):
+                # Existing rooms are identified by "id:<pk>"
+                try:
+                    room_pk = int(roomdata[3:])
+                    if room_pk in existing_rooms:
+                        existing_rooms.remove(room_pk)
+                    else:
+                        self.object.rooms.add(room_pk)
+                except Exception as e:
+                    print 'Problem adding room: %s' % e
+            elif roomdata.startswith("new:"):
+                # New rooms are identified by "new:<name-of-room>"
+                room = self.object.add_room_by_name(roomdata[4:])
+                if room.pk in existing_rooms:
+                    existing_rooms.remove(room.pk)
+
+        # Delete any rooms left in existing rooms
+        for x in existing_rooms:
+            self.object.rooms.remove(x)
 
 
 class ChangeVisitOccurrenceCommentsView(AutologgerMixin, UpdateWithCancelView):
@@ -169,9 +249,22 @@ class VisitOccurrenceAddLogEntryView(FormView):
             )
 
     def get_context_data(self, **kwargs):
+        context = {}
+        context['breadcrumbs'] = [
+            {
+                'url': reverse('visit-occ-search'),
+                'text': _(u'Søg i besøg')
+            },
+            {
+                'url': reverse('visit-occ-view', args=[self.object.pk]),
+                'text': _(u'Besøg #%s') % self.object.pk
+            },
+            {'text': self.view_title},
+        ]
+        context.update(kwargs)
         return super(VisitOccurrenceAddLogEntryView, self).get_context_data(
             object=self.object,
-            **kwargs
+            **context
         )
 
     def form_valid(self, form):
@@ -223,11 +316,12 @@ class ChangeVisitOccurrenceAutosendView(AutologgerMixin, UpdateWithCancelView):
 
 
 class BecomeSomethingView(AutologgerMixin, VisitOccurrenceBreadcrumbMixin,
-                          DetailView):
+                          RoleRequiredMixin, DetailView):
     model = VisitOccurrence
     errors = None
     m2m_attribute = None
     view_title = _(u'Tilmeld rolle')
+    roles = [HOST, TEACHER] + list(EDIT_ROLES)
 
     ERROR_NONE_NEEDED = _(
         u"Det valgte besøg har ikke behov for flere personer i den " +
@@ -324,3 +418,16 @@ class BecomeHostView(BecomeSomethingView):
 
     def is_right_role(self):
         return self.request.user.userprofile.is_host
+
+
+class ResetVisitOccurrenceChangesView(UpdateWithCancelView):
+    model = VisitOccurrence
+    form_class = ResetVisitOccurrenceChangesForm
+    template_name = "booking/workflow/change_changes_marker.html"
+    view_title = _(u'Nulstil markør for nylige ændringer')
+
+    def form_valid(self, form):
+        self.object = form.save()
+        self.object.last_workflow_update = timezone.now()
+        self.object.save()
+        return HttpResponseRedirect(self.get_success_url())
