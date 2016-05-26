@@ -254,7 +254,10 @@
         <div class="col-sm-12 col-md-10">
             <div class="panel panel-default">
                 <div class="panel-body">
-                    <h2>{% trans 'Tilmeldte' %}</h2>
+                    <h2>
+                        {% trans 'Tilmeldte' %}
+                        ({{ object.nr_attendees }}{% if object.visit.maximum_number_of_visitors %}/{{ object.visit.maximum_number_of_visitors }}{% endif %})
+                    </h2>
                     {% include "booking/snippets/list.html" with list=object.booking_list %}
                 </div>
             </div>
@@ -266,7 +269,10 @@
             <div class="panel panel-default">
                 <div class="panel-body">
                     <a name="waitinglist"></a>
-                    <h2>{% trans 'Venteliste' %}</h2>
+                    <h2>
+                        {% trans 'Venteliste' %}
+                        ({{ object.nr_waiting }}{% if object.visit.waiting_list_length %}/{{ object.visit.waiting_list_length }}{% endif %})
+                    </h2>
                     {% include "booking/snippets/list.html" with list=object.waiting_list %}
                 </div>
             </div>
@@ -278,7 +284,10 @@
             <div class="panel panel-default">
                 <div class="panel-body">
                         <div class="go-back">
-                            <a href="/visit/occurrence/search" class="btn btn-default"><span class="glyphicon glyphicon-chevron-left"></span> {% trans 'Søg i besøg' %}</a>
+                            <a href="{% url 'visit-occ-search' %}" class="btn btn-default">
+                                <span class="glyphicon glyphicon-chevron-left"></span>
+                                {% trans 'Søg i besøg' %}
+                            </a>
                         </div>
                     </div>
                 </div>
