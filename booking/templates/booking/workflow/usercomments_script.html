@@ -1,0 +1,26 @@
+{% load i18n %}
+{% load booking_tags %}
+<script type="text/javascript">
+    <!--
+    {% autoescape off %}
+        var comments = {{ comments | jsonify }};
+    {% endautoescape %}
+    for (var userid in comments) {
+        var usercomments = comments[userid];
+        if (usercomments.length) {
+            var option = $("input[name='{{ fieldname }}'][value='"+userid+"']"),
+                container = option.parents("li"),
+                id = "comments_"+userid,
+                commentDisplay = $("<span>").addClass("comments").appendTo(container),
+                commentLink = $("<a>")
+                        .attr({"data-toggle":"collapse", "href": "#"+id, "aria-expanded":"false", "aria-controls":id})
+                        .text("{% trans 'Kommentarer ({count})' %}".replace("{count}", usercomments.length))
+                        .appendTo(commentDisplay),
+                commentList = $("<ul>").addClass("collapse").attr({"id":id}).appendTo(commentDisplay);
+            for (var i=0; i<usercomments.length; i++) {
+                var comment = $("<li>").html("<dl class='dl-horizontal wide'><dt>"+usercomments[i].time+"</dt><dd>" + usercomments[i].text+"</dd></dl>").appendTo(commentList);
+            }
+        }
+    }
+    //-->
+</script>

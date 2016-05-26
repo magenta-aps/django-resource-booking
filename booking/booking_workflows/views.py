@@ -5,10 +5,11 @@ from django.db.models import Q
 from django.core.urlresolvers import reverse
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import redirect
-from django.utils import timezone
+from django.utils import formats, timezone
 from django.utils.translation import ugettext as _
-from django.views.generic import UpdateView, FormView, DetailView
-from booking.booking_workflows.forms import ChangeVisitOccurrenceStatusForm
+from django.views.generic import UpdateView, FormView
+from booking.booking_workflows.forms import ChangeVisitOccurrenceStatusForm, \
+    BecomeSomethingForm
 from booking.booking_workflows.forms import VisitOccurrenceAutosendFormSet
 from booking.booking_workflows.forms import ChangeVisitOccurrenceTeachersForm
 from booking.booking_workflows.forms import ChangeVisitOccurrenceHostsForm
@@ -16,6 +17,7 @@ from booking.booking_workflows.forms import ChangeVisitOccurrenceRoomsForm
 from booking.booking_workflows.forms import ChangeVisitOccurrenceCommentsForm
 from booking.booking_workflows.forms import ChangeVisitOccurrenceEvalForm
 from booking.booking_workflows.forms import VisitOccurrenceAddLogEntryForm
+from booking.booking_workflows.forms import VisitOccurrenceAddCommentForm
 from booking.booking_workflows.forms import ChangeVisitOccurrenceStartTimeForm
 from booking.booking_workflows.forms import ResetVisitOccurrenceChangesForm
 from booking.models import VisitOccurrence
@@ -97,12 +99,50 @@ class ChangeVisitOccurrenceTeachersView(AutologgerMixin, UpdateWithCancelView):
     template_name = "booking/workflow/change_teachers.html"
     view_title = _(u'Redigér undervisere')
 
+    def get_context_data(self, **kwargs):
+        context = {}
+        context['comments'] = {
+            user.id: [
+                {
+                    'text': comment.text,
+                    'time': formats.date_format(
+                        timezone.localtime(comment.time),
+                        "DATETIME_FORMAT"
+                    )
+                }
+                for comment in self.object.get_comments(user).all()
+            ]
+            for user in self.get_form().base_fields['teachers'].queryset.all()
+        }
+        context.update(kwargs)
+        return super(ChangeVisitOccurrenceTeachersView, self).\
+            get_context_data(**context)
+
 
 class ChangeVisitOccurrenceHostsView(AutologgerMixin, UpdateWithCancelView):
     model = VisitOccurrence
     form_class = ChangeVisitOccurrenceHostsForm
     template_name = "booking/workflow/change_hosts.html"
     view_title = _(u'Redigér værter')
+
+    def get_context_data(self, **kwargs):
+        context = {}
+        context['comments'] = {
+            user.id: [
+                {
+                    'text': comment.text,
+                    'time': formats.date_format(
+                        timezone.localtime(comment.time),
+                        "DATETIME_FORMAT"
+                    )
+                }
+                for comment in self.object.get_comments(user).all()
+                ]
+            for user in self.get_form().base_fields['hosts'].queryset.all()
+            }
+        context.update(kwargs)
+        return super(ChangeVisitOccurrenceHostsView, self).\
+            get_context_data(**context)
 
     # When the status or host list changes, autosend emails
     def form_valid(self, form):
@@ -280,6 +320,21 @@ class VisitOccurrenceAddLogEntryView(FormView):
         return reverse('visit-occ-view', args=[self.object.pk])
 
 
+class VisitOccurrenceAddCommentView(VisitOccurrenceAddLogEntryView):
+    model = VisitOccurrence
+    form_class = VisitOccurrenceAddCommentForm
+    template_name = "booking/workflow/add_comment.html"
+    object = None
+    view_title = _(u'Tilføj kommentar')
+
+    def form_valid(self, form):
+        self.object.add_comment(
+            self.request.user,
+            form.cleaned_data['new_comment']
+        )
+        return super(VisitOccurrenceAddLogEntryView, self).form_valid(form)
+
+
 class ChangeVisitOccurrenceAutosendView(AutologgerMixin, UpdateWithCancelView):
     model = VisitOccurrence
     form_class = VisitOccurrenceAutosendFormSet
@@ -316,12 +371,13 @@ class ChangeVisitOccurrenceAutosendView(AutologgerMixin, UpdateWithCancelView):
 
 
 class BecomeSomethingView(AutologgerMixin, VisitOccurrenceBreadcrumbMixin,
-                          RoleRequiredMixin, DetailView):
+                          RoleRequiredMixin, FormView):
     model = VisitOccurrence
     errors = None
     m2m_attribute = None
     view_title = _(u'Tilmeld rolle')
     roles = [HOST, TEACHER] + list(EDIT_ROLES)
+    form_class = BecomeSomethingForm
 
     ERROR_NONE_NEEDED = _(
         u"Det valgte besøg har ikke behov for flere personer i den " +
@@ -339,6 +395,16 @@ class BecomeSomethingView(AutologgerMixin, VisitOccurrenceBreadcrumbMixin,
 
     def is_right_role(self):
         raise NotImplementedError
+
+    def get_object(self, queryset=None):
+        return self.model.objects.get(pk=self.kwargs.get("pk"))
+
+    def get_context_data(self, **kwargs):
+        self.object = self.get_object()
+        context = {}
+        context['object'] = self.object
+        context.update(kwargs)
+        return super(BecomeSomethingView, self).get_context_data(**context)
 
     def is_valid(self):
         if self.errors is None:
@@ -365,11 +431,18 @@ class BecomeSomethingView(AutologgerMixin, VisitOccurrenceBreadcrumbMixin,
         if request.POST.get("cancel"):
             return redirect(self.get_success_url())
         elif request.POST.get("confirm"):
-            if self.is_valid():
+            form = self.get_form()
+            if form.is_valid() and self.is_valid():
+                if 'comment' in form.cleaned_data:
+                    comment = form.cleaned_data['comment']
+                    if comment:
+                        self.object.add_comment(
+                            request.user,
+                            comment
+                        )
                 # Add user to the specified m2m relation
                 getattr(self.object, self.m2m_attribute).add(request.user)
                 self._log_changes()
-
         return self.get(request, *args, **kwargs)
 
     def render_with_error(self, error, request, *args, **kwargs):
