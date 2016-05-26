@@ -50,6 +50,9 @@
                                     {% if occurrence.comments %}
                                         <li>{% trans 'Kommentar:' %} {{ occurrence.comments }}</li>
                                     {% endif %}
+                                    {% if occurrence.nr_waiting > 0 %}
+                                        <li>{% trans 'Antal på venteliste:' %} {{ occurrence.nr_waiting }}</li>
+                                    {% endif %}
                                 </ul>
                             </div>
                             <span class="label label-{{ occurrence.get_workflow_status_class }} pull-right">{{ occurrence.get_workflow_status_display }}</span>

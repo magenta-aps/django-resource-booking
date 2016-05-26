@@ -152,6 +152,11 @@
                                 <a href="{% url 'change-visit-occ-status' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Skift status' %}</a>
                             {% endif %}
                         </dd>
+                        <dt>{% trans 'Antal på venteliste' %}</dt>
+                        <dd>
+                            {{ object.nr_waiting }}
+                            <a href="#waitinglist" role="button" class="btn btn-primary btn-xs">{% trans 'Se liste' %}</a>
+                        </dd>
                         <dt>{% trans 'Link til evaluering' %}</dt>
                         <dd>
                             {% if object.evaluation_link %}
@@ -250,44 +255,19 @@
             <div class="panel panel-default">
                 <div class="panel-body">
                     <h2>{% trans 'Tilmeldte' %}</h2>
-                    <div class="listcontainer">
-                        {% for booking in object.bookings.all %}
-                            <div class="list-group-item clearfix">
-                                <a href="{% url 'booking-view' booking.id %}">
-                                    <dl class="dl-horizontal">
-                                        <dt class="text-muted">{% trans 'Skole:' %}</dt>
-                                        <dd><strong>{{ booking.booker.school.name }}, {{ booking.booker.school.postcode }}</strong></dd>
-                                        <dt class="text-muted">{% trans 'Navn:' %}</dt>
-                                        <dd>{{ booking.booker.get_name }}</dd>
-                                        <dt class="text-muted">{% trans 'Email:' %}</dt>
-                                        <dd>{{ booking.booker.email }}</dd>
-                                        <dt class="text-muted">{% trans 'Antal:' %}</dt>
-                                        <dd>{{ booking.booker.attendee_count }}</dd>
-                                        {% if booking.notes %}
-                                            <dt class="text-muted">{% trans 'Noter:' %}</dt>
-                                            <dd>{{ booking.notes }}</dd>
-                                        {% endif %}
-                                        {% if booking.classbooking %}
-                                            <dt class="text-muted">{% trans 'Rundvisning:' %}</dt>
-                                            <dd>{{ booking.classbooking.tour_desired | yesno }}</dd>
-                                        {% endif %}
-                                        {% if booking.teacherbooking %}
-                                            {% if booking.teacherbooking.subjects %}
-                                                <dt class="text-muted">{% trans 'Fag:' %}</dt>
-                                                <dd>
-                                                    <ul>
-                                                    {% for subject in booking.teacherbooking.subjects.all %}
-                                                        <li>{{ subject }}</li>
-                                                    {% endfor %}
-                                                    </ul>
-                                                </dd>
-                                            {% endif %}
-                                        {% endif %}
-                                    </dl>
-                                </a>
-                            </div>
-                        {% endfor %}
-                    </div>
+                    {% include "booking/snippets/list.html" with list=object.booking_list %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row waiting">
+        <div class="col-sm-12 col-md-10">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <a name="waitinglist"></a>
+                    <h2>{% trans 'Venteliste' %}</h2>
+                    {% include "booking/snippets/list.html" with list=object.waiting_list %}
                 </div>
             </div>
         </div>

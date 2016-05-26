@@ -1,4 +1,5 @@
 {% load booking_tags %}
+{% load i18n %}
 
 {% if bookerform.attendee_count and bookingform.visitoccurrence %}
     <script type="text/javascript">
@@ -10,21 +11,34 @@
             {% endautoescape %}
             occurrenceSelect = $("#{{ bookingform.visitoccurrence.id_for_label }}"),
             attendeeField = $("#{{ bookerform.attendee_count.id_for_label }}"),
-            existingMax = attendeeField.attr("max");
+            existingMax = attendeeField.attr("max"),
+            submitbutton = $("#submitbutton");
 
             if (occurrenceSelect.length && attendeeField.length) {
-                var update = function() {
+                var updateOccurrence = function() {
                     var occurrence = occurrenceAvailable[occurrenceSelect.val()];
                     if (occurrence !== null) {
-                        attendeeField.attr("max", Math.min(occurrence.available, existingMax));
+                        attendeeField.attr("max", Math.min(occurrence.available + occurrence.waitinglist, existingMax));
                         attendeeField.trigger('change');
                         if (occurrence.available < existingMax) {
                             attendeeField.attr("min", 1);
                         }
                     }
                 };
-                occurrenceSelect.change(update);
-                update();
+
+                var updateAttendees = function() {
+                    var occurrence = occurrenceAvailable[occurrenceSelect.val()];
+                    if (occurrence !== null) {
+                        var doWaitingList = attendeeField.val() > occurrence.available;
+                        submitbutton.text(doWaitingList ? "{% trans 'Tilmeld til venteliste!' %}" : "{% trans 'Tilmeld!' %}");
+                        $("#waitinglist_warning").toggle(doWaitingList);
+                    }
+                };
+
+                occurrenceSelect.change(updateOccurrence);
+                attendeeField.change(updateAttendees);
+                attendeeField.keyup(updateAttendees);
+                updateOccurrence();
             }
         })();
         //-->
