@@ -1395,6 +1395,57 @@ class GymnasieLevel(models.Model):
         return self.get_level_display()
 
 
+class GrundskoleLevel(models.Model):
+
+    class Meta:
+        verbose_name = _(u'Grundskoleniveau')
+        verbose_name_plural = _(u'Grundskoleniveauer')
+        ordering = ['level']
+
+    f0 = 0
+    f1 = 1
+    f2 = 2
+    f3 = 3
+    f4 = 4
+    f5 = 5
+    f6 = 6
+    f7 = 7
+    f8 = 8
+    f9 = 9
+    f10 = 10
+
+    level_choices = (
+        (f0, _(u'0. klasse')),
+        (f1, _(u'1. klasse')),
+        (f2, _(u'2. klasse')),
+        (f3, _(u'3. klasse')),
+        (f4, _(u'4. klasse')),
+        (f5, _(u'5. klasse')),
+        (f6, _(u'6. klasse')),
+        (f7, _(u'7. klasse')),
+        (f8, _(u'8. klasse')),
+        (f9, _(u'9. klasse')),
+        (f10, _(u'10. klasse')),
+    )
+
+    level = models.IntegerField(choices=level_choices,
+                                verbose_name=_(u"Grundskoleniveau"),
+                                blank=True,
+                                null=True)
+
+    @classmethod
+    def create_defaults(cls):
+        for val, desc in GrundskoleLevel.level_choices:
+            try:
+                GrundskoleLevel.objects.filter(level=val)[0]
+            except IndexError:
+                o = GrundskoleLevel(level=val)
+                o.save()
+
+    def __unicode__(self):
+        return self.get_level_display()
+
+
 class OtherResource(Resource):
     """A non-bookable, non-visit resource, basically material on the Web."""
 
@@ -3079,11 +3130,11 @@ class TeacherBooking(Booking):
         return " ".join(result)
 
 
-class BookingSubjectLevel(models.Model):
+class BookingGymnasieSubjectLevel(models.Model):
 
     class Meta:
-        verbose_name = _('fagniveau for booking')
-        verbose_name_plural = _('fagniveauer for bookinger')
+        verbose_name = _('fagniveau for booking (gymnasium)')
+        verbose_name_plural = _('fagniveauer for bookinger (gymnasium)')
 
     booking = models.ForeignKey(Booking, blank=False, null=False)
     subject = models.ForeignKey(
@@ -3091,11 +3142,34 @@ class BookingSubjectLevel(models.Model):
         limit_choices_to={
             'subject_type__in': [
                 Subject.SUBJECT_TYPE_GYMNASIE,
-                Subject.SUBJECT_TYPE_BOTH
             ]
         }
     )
     level = models.ForeignKey(GymnasieLevel, blank=False, null=False)
+
+    def __unicode__(self):
+        return u"%s (for booking %s)" % (self.display_value(), self.booking.pk)
+
+    def display_value(self):
+        return u'%s på %s niveau' % (self.subject.name, self.level)
+
+
+class BookingGrundskoleSubjectLevel(models.Model):
+
+    class Meta:
+        verbose_name = _('klasseniveau for booking (grundskole)')
+        verbose_name_plural = _('klasseniveauer for bookinger(grundskole)')
+
+    booking = models.ForeignKey(Booking, blank=False, null=False)
+    subject = models.ForeignKey(
+        Subject, blank=False, null=False,
+        limit_choices_to={
+            'subject_type__in': [
+                Subject.SUBJECT_TYPE_GRUNDSKOLE,
+            ]
+        }
+    )
+    level = models.ForeignKey(GrundskoleLevel, blank=False, null=False)
 
     def __unicode__(self):
         return u"%s (for booking %s)" % (self.display_value(), self.booking.pk)
