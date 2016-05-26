@@ -2596,6 +2596,22 @@ class VisitOccurrence(models.Model):
         for occurrence in VisitOccurrence.objects.all():
             occurrence.save()
 
+    def add_comment(self, user, text):
+        VisitOccurrenceComment(
+            visitoccurrence=self,
+            author=user,
+            text=text
+        ).save()
+
+    def get_comments(self, user=None):
+        if user is None:
+            return VisitOccurrenceComment.objects.filter(visitoccurrence=self)
+        else:
+            return VisitOccurrenceComment.objects.filter(
+                visitoccurrence=self,
+                author=user
+            )
+
     @property
     def waiting_list_capacity(self):
         if not self.visit.do_create_waiting_list:
