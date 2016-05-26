@@ -25,12 +25,22 @@
             <p>{% trans 'På denne side kan du se en oversigt over dine tilbud, hvilke der har tilmeldinger, og hvilke der er under planlægning.' %}</p>
             <div class="divider"></div>
         </div>
-        <div class="col-sm-6">
+        <div class="col-sm-3">
             <div class="list-group admin-links">
                 {% if request.user.userprofile.can_create %}
-                    <a class="list-group-item" href="{% url 'visit-occ-search' %}">
+                    <a class="list-group-item" href="{% url 'visit-occ-search' %}" style="float: left">
                         <h4 class="list-group-item-heading">{% trans 'Søg i besøg' %}</h4>
                         <p class="list-group-item-text">{% trans 'Søg i besøg der ligger i systemet.' %}</p>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-sm-3">
+            <div class="list-group admin-links">
+                {% if request.user.userprofile.can_create %}
+                    <a class="list-group-item" href="{% url 'search' %}" style="float: left">
+                        <h4 class="list-group-item-heading">{% trans 'Søg i tilbud' %}</h4>
+                        <p class="list-group-item-text">{% trans 'Søg i tilbud der ligger i systemet.' %}</p>
                     </a>
                 {% endif %}
             </div>

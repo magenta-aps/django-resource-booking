@@ -92,6 +92,12 @@ class VisitOccurrenceAddLogEntryForm(forms.Form):
     )
 
 
+class ResetVisitOccurrenceChangesForm(forms.ModelForm):
+    class Meta:
+        model = VisitOccurrence
+        fields = []
+
+
 class VisitOccurrenceAddCommentForm(forms.Form):
     new_comment = forms.CharField(
         widget=forms.Textarea,

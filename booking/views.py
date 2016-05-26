@@ -69,6 +69,7 @@ from booking.forms import AdminVisitSearchForm
 from booking.forms import VisitAutosendFormSet
 from booking.forms import VisitOccurrenceSearchForm
 from booking.utils import full_email, get_model_field_map
+from booking.utils import get_related_content_types
 
 import re
 import urls
@@ -497,20 +498,7 @@ class AutologgerMixin(object):
 
 class LoggedViewMixin(object):
     def get_log_queryset(self):
-        types = [ContentType.objects.get_for_model(self.model)]
-
-        for rel in self.model._meta.get_all_related_objects():
-            if not rel.one_to_one:
-                continue
-
-            rel_model = rel.related_model
-
-            if self.model not in rel_model._meta.get_parent_list():
-                continue
-
-            types.append(
-                ContentType.objects.get_for_model(rel_model)
-            )
+        types = get_related_content_types(self.model)
 
         qs = LogEntry.objects.filter(
             object_id=self.object.pk,

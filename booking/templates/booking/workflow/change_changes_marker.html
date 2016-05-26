@@ -1,0 +1,27 @@
+{% extends 'index.html' %}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block htmltitle %} - {% blocktrans with object=object %}Nulstil ændringsmarkør for {{ object }}{% endblocktrans %}{% endblock %}
+
+{% block content %}
+    {% include 'common/breadcrumbrow.html' %}
+
+    <div class="row titlebar hidden-print">
+        <div class="col-sm-12 col-md-9">
+            <h2>{% blocktrans with object=object %}Nulstil ændringsmarkør for {{ object }}{% endblocktrans %}</h2>
+        </div>
+        <div class="divider"></div>
+    </div>
+    <div class="row">
+        <div class="col-sm-12 col-md-8">
+            <form name="changebookinroomsform" id="changebookinroomsform" action="{% url 'visit-occ-reset-changes-marker' object.pk %}" method="post">
+                {% csrf_token %}
+                {{ form }}
+                <p>{% trans 'Ønsker du at nulstille ændringsmarkøren for dette besøg?' %}</p>
+                <input class="btn btn-success btn-sm" type="submit" value="{% trans 'Nulstil' %}" name="confirm" />
+                <input class="btn btn-danger btn-sm" type="submit" value="{% trans 'Annullér' %}" name="cancel" />
+            </form>
+        </div>
+    </div>
+{% endblock %}
