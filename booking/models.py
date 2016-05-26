@@ -17,7 +17,8 @@ from django.utils.translation import ugettext_lazy as _
 from django.template.base import Template, VariableNode
 
 from recurrence.fields import RecurrenceField
-from booking.utils import ClassProperty, full_email, CustomStorage, html2text
+from booking.utils import ClassProperty, full_email, CustomStorage, html2text, \
+    INFINITY
 from resource_booking import settings
 
 from datetime import timedelta
@@ -2201,7 +2202,7 @@ class VisitOccurrence(models.Model):
             return False
         if self.expired:
             return False
-        if self.available_seats() == 0:
+        if self.available_seats == 0:
             return False
         return True
 
@@ -2224,6 +2225,7 @@ class VisitOccurrence(models.Model):
         # Return the total number of participants for this occurrence
         return self.nr_additional_participants()
 
+    @property
     def available_seats(self):
         limit = self.visit.maximum_number_of_visitors
         if limit is not None:
@@ -2530,6 +2532,18 @@ class VisitOccurrence(models.Model):
     def set_endtime():
         for occurrence in VisitOccurrence.objects.all():
             occurrence.save()
+
+    def get_waiting_list(self):
+        return self.bookings.filter(waitinglist_spot__gt=0).\
+            order_by("waitinglist_spot")
+
+    @property
+    def waiting_list_capacity(self):
+        if self.visit.waiting_list_length is None:
+            return INFINITY
+        elif self.waiting_list_length <= 0:
+            return 0
+        return self.visit.waiting_list_length - self.get_waiting_list().count()
 
 
 VisitOccurrence.add_override_property('duration')
@@ -2961,6 +2975,11 @@ class Booking(models.Model):
         blank=True,
         related_name='bookings',
         verbose_name=_(u'Tidspunkt')
+    )
+
+    waitinglist_spot = models.IntegerField(
+        default=0,
+        verbose_name=_(u'Ventelisteposition')
     )
 
     notes = models.TextField(

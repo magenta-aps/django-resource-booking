@@ -737,7 +737,7 @@ class BookingForm(forms.ModelForm):
         if self.scheduled:
             choices = []
             for x in visit.future_events.order_by('start_datetime'):
-                available_seats = x.available_seats()
+                available_seats = x.available_seats
                 date = formats.date_format(
                     timezone.localtime(x.start_datetime),
                     "DATETIME_FORMAT"
