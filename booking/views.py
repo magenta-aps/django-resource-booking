@@ -2213,8 +2213,10 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
 
             booking = forms['bookingform'].save()
 
-            if booking.booker.attendee_count > booking.visitoccurrence.waiting_list_capacity:
-                booking.waitinglist_spot = booking.visitoccurrence.next_waiting_list_spot
+            if booking.booker.attendee_count > \
+                    booking.visitoccurrence.waiting_list_capacity:
+                booking.waitinglist_spot = \
+                    booking.visitoccurrence.next_waiting_list_spot
 
             booking.save()
 

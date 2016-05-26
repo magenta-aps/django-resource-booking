@@ -2554,8 +2554,7 @@ class VisitOccurrence(models.Model):
             return INFINITY
         elif self.visit.waiting_list_length <= 0:
             return 0
-        idlespots = self.visit.waiting_list_length - \
-                    self.nr_waiting
+        idlespots = self.visit.waiting_list_length - self.nr_waiting
         return max(idlespots, 0)
 
     @property
