@@ -17,7 +17,8 @@ from django.utils.translation import ugettext_lazy as _
 from django.template.base import Template, VariableNode
 
 from recurrence.fields import RecurrenceField
-from booking.utils import ClassProperty, full_email, CustomStorage, html2text
+from booking.utils import ClassProperty, full_email, CustomStorage, html2text, \
+    INFINITY
 from resource_booking import settings
 
 from datetime import timedelta
@@ -824,6 +825,18 @@ class ObjectStatistics(models.Model):
         self.save()
 
 
+class WaitingList(models.Model):
+
+    closing_time = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+    guests = models.ManyToManyField(
+        "Booking",
+        verbose_name=_(u'Tilmeldinger')
+    )
+
+
 # Bookable resources
 class Resource(models.Model):
     """Abstract superclass for a bookable resource of any kind."""
@@ -1587,9 +1600,28 @@ class Visit(Resource):
         blank=True,
         verbose_name=_(u'Højeste antal deltagere')
     )
+
+    # Waiting lists
     do_create_waiting_list = models.BooleanField(
-        default=False, verbose_name=_(u'Opret venteliste')
+        default=False,
+        verbose_name=_(u'Ventelister')
     )
+    waiting_list_length = models.IntegerField(
+        null=True,
+        blank=True,
+        verbose_name=_(u'Antal pladser')
+    )
+    waiting_list_deadline_days = models.IntegerField(
+        null=True,
+        blank=True,
+        verbose_name=_(u'Lukning af venteliste (dage inden besøg)')
+    )
+    waiting_list_deadline_hours = models.IntegerField(
+        null=True,
+        blank=True,
+        verbose_name=_(u'Lukning af venteliste (timer inden besøg)')
+    )
+
     do_show_countdown = models.BooleanField(
         default=False,
         verbose_name=_(u'Vis nedtælling')
@@ -2171,7 +2203,7 @@ class VisitOccurrence(models.Model):
             return False
         if self.expired:
             return False
-        if self.available_seats() == 0:
+        if self.available_seats == 0:
             return False
         return True
 
@@ -2194,6 +2226,7 @@ class VisitOccurrence(models.Model):
         # Return the total number of participants for this occurrence
         return self.nr_additional_participants()
 
+    @property
     def available_seats(self):
         limit = self.visit.maximum_number_of_visitors
         if limit is not None:
@@ -2516,6 +2549,18 @@ class VisitOccurrence(models.Model):
                 visitoccurrence=self,
                 author=user
             )
+
+    def get_waiting_list(self):
+        return self.bookings.filter(waitinglist_spot__gt=0).\
+            order_by("waitinglist_spot")
+
+    @property
+    def waiting_list_capacity(self):
+        if self.visit.waiting_list_length is None:
+            return INFINITY
+        elif self.waiting_list_length <= 0:
+            return 0
+        return self.visit.waiting_list_length - self.get_waiting_list().count()
 
 
 VisitOccurrence.add_override_property('duration')
@@ -3028,6 +3073,11 @@ class Booking(models.Model):
         blank=True,
         related_name='bookings',
         verbose_name=_(u'Tidspunkt')
+    )
+
+    waitinglist_spot = models.IntegerField(
+        default=0,
+        verbose_name=_(u'Ventelisteposition')
     )
 
     notes = models.TextField(

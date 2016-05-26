@@ -2145,7 +2145,10 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
             'modal': self.modal,
             'back': self.back,
             'occurrence_available': {
-                str(visitoccurrence.pk): visitoccurrence.available_seats()
+                str(visitoccurrence.pk): {
+                    'available': visitoccurrence.available_seats,
+                    'waitinglist': visitoccurrence.waiting_list_capacity
+                }
                 for visitoccurrence in self.visit.visitoccurrence_set.all()
             },
             'gymnasiefag_selected': self.gymnasiefag_selected(),

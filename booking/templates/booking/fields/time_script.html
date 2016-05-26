@@ -1,31 +1,32 @@
 {% load booking_tags %}
 
 {% if bookerform.attendee_count and bookingform.visitoccurrence %}
-<script type="text/javascript">
-    <!--
-    (function(){
-        {% autoescape off %}
-        var occurrenceAvailable = {{ occurrence_available | jsonify }},
-        {% endautoescape %}
+    <script type="text/javascript">
+        <!--
+        (function(){
+            {% autoescape off %}
+                // How many idle spots are available on each occurrence
+                var occurrenceAvailable = {{ occurrence_available | jsonify }},
+            {% endautoescape %}
             occurrenceSelect = $("#{{ bookingform.visitoccurrence.id_for_label }}"),
             attendeeField = $("#{{ bookerform.attendee_count.id_for_label }}"),
             existingMax = attendeeField.attr("max");
 
-        if (occurrenceSelect.length && attendeeField.length) {
-            var update = function() {
-                var available = occurrenceAvailable[occurrenceSelect.val()];
-                if (available !== null) {
-                    attendeeField.attr("max", Math.min(available, existingMax));
-                    attendeeField.trigger('change');
-                    if (available < existingMax) {
-                        attendeeField.attr("min", 1);
+            if (occurrenceSelect.length && attendeeField.length) {
+                var update = function() {
+                    var occurrence = occurrenceAvailable[occurrenceSelect.val()];
+                    if (occurrence !== null) {
+                        attendeeField.attr("max", Math.min(occurrence.available, existingMax));
+                        attendeeField.trigger('change');
+                        if (occurrence.available < existingMax) {
+                            attendeeField.attr("min", 1);
+                        }
                     }
-                }
-            };
-            occurrenceSelect.change(update);
-            update();
-        }
-    })();
-    //-->
-</script>
+                };
+                occurrenceSelect.change(update);
+                update();
+            }
+        })();
+        //-->
+    </script>
 {% endif %}

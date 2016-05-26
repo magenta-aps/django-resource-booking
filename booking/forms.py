@@ -11,7 +11,7 @@ from django import forms
 from django.db.models import Q
 from django.db.models.expressions import OrderBy
 from django.contrib.auth.models import User
-from django.forms import SelectMultiple, CheckboxSelectMultiple
+from django.forms import SelectMultiple, CheckboxSelectMultiple, CheckboxInput
 from django.forms import RadioSelect, EmailInput
 from django.forms import formset_factory, inlineformset_factory
 from django.forms import TextInput, NumberInput, Textarea, Select
@@ -331,6 +331,8 @@ class VisitForm(forms.ModelForm):
                   'type', 'tags',
                   'institution_level', 'topics', 'audience',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
+                  'do_create_waiting_list', 'waiting_list_length',
+                  'waiting_list_deadline_days', 'waiting_list_deadline_hours',
                   'duration', 'locality',
                   'rooms_needed', 'tour_available', 'catering_available',
                   'presentation_available', 'custom_available', 'custom_name',
@@ -372,6 +374,32 @@ class VisitForm(forms.ModelForm):
             ),
             'maximum_number_of_visitors': NumberInput(
                 attrs={'class': 'form-control input-sm', 'min': 1}
+            ),
+            'do_create_waiting_list': CheckboxInput(
+                attrs={
+                    'class': 'form-control input-sm',
+                    'data-toggle': 'hide',
+                    'data-target': '!.waitinglist-dependent'
+                }
+            ),
+            'waiting_list_length': NumberInput(
+                attrs={
+                    'class': 'form-control input-sm waitinglist-dependent',
+                    'min': 1
+                }
+            ),
+            'waiting_list_deadline_days': NumberInput(
+                attrs={
+                    'class': 'form-control input-sm waitinglist-dependent',
+                    'min': 0
+                }
+            ),
+            'waiting_list_deadline_hours': NumberInput(
+                attrs={
+                    'class': 'form-control input-sm waitinglist-dependent',
+                    'min': 0,
+                    'max': 23
+                }
             ),
             'duration': Select(attrs={'class': 'form-control input-sm'}),
             'locality': Select(attrs={'class': 'form-control input-sm'}),
@@ -597,6 +625,8 @@ class ClassVisitForm(VisitForm):
         fields = ('type', 'title', 'teaser', 'description', 'price', 'state',
                   'institution_level', 'topics', 'audience',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
+                  'do_create_waiting_list', 'waiting_list_length',
+                  'waiting_list_deadline_days', 'waiting_list_deadline_hours',
                   'duration', 'locality',
                   'rooms_needed', 'tour_available', 'catering_available',
                   'presentation_available', 'custom_available', 'custom_name',
@@ -715,7 +745,7 @@ class BookingForm(forms.ModelForm):
         if self.scheduled:
             choices = []
             for x in visit.future_events.order_by('start_datetime'):
-                available_seats = x.available_seats()
+                available_seats = x.available_seats
                 date = formats.date_format(
                     timezone.localtime(x.start_datetime),
                     "DATETIME_FORMAT"

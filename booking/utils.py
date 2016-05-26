@@ -172,3 +172,6 @@ def get_model_field_map(model, visited_models=None):
             value = True
         map[(field.name, label)] = value
     return map
+
+
+INFINITY = float("inf")
