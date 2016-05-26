@@ -2209,21 +2209,34 @@ class VisitOccurrence(models.Model):
     def date_display(self):
         return self.start_datetime or _(u'på ikke-fastlagt tidspunkt')
 
-    def nr_bookers(self):
-        nr = len(Booker.objects.filter(booking__visitoccurrence=self))
-        nr += self.nr_additional_participants()
-        return nr
+    def get_bookings(self, include_waitinglist=False, include_regular=True):
+        if include_regular:  # Include non-waitinglist bookings
+            if include_waitinglist:
+                return self.bookings.all()
+            else:
+                return self.bookings.filter(waitinglist_spot=0)
+        else:
+            if include_waitinglist:
+                return self.bookings.filter(waitinglist_spot__gt=0). \
+                    order_by("waitinglist_spot")
+            else:
+                return self.bookings.none()
 
-    def nr_additional_participants(self):
-        res = VisitOccurrence.objects.filter(pk=self.pk).aggregate(
-            attendees=Sum('bookings__booker__attendee_count')
-        )
-        return res['attendees'] or 0
+    def get_attendee_count(self,
+                           include_waitinglist=False, include_regular=True):
+        return self.get_bookings(
+            include_waitinglist, include_regular
+        ).aggregate(
+            Sum('booker__attendee_count')
+        )['booker__attendee_count__sum'] or 0
 
     @property
     def nr_attendees(self):
-        # Return the total number of participants for this occurrence
-        return self.nr_additional_participants()
+        return self.get_attendee_count(False, True)
+
+    @property
+    def nr_waiting(self):
+        return self.get_attendee_count(True, False)
 
     @property
     def available_seats(self):
@@ -2533,17 +2546,29 @@ class VisitOccurrence(models.Model):
         for occurrence in VisitOccurrence.objects.all():
             occurrence.save()
 
-    def get_waiting_list(self):
-        return self.bookings.filter(waitinglist_spot__gt=0).\
-            order_by("waitinglist_spot")
-
     @property
     def waiting_list_capacity(self):
+        if not self.visit.do_create_waiting_list:
+            return 0
         if self.visit.waiting_list_length is None:
             return INFINITY
-        elif self.waiting_list_length <= 0:
+        elif self.visit.waiting_list_length <= 0:
             return 0
-        return self.visit.waiting_list_length - self.get_waiting_list().count()
+        idlespots = self.visit.waiting_list_length - \
+                    self.nr_waiting
+        return max(idlespots, 0)
+
+    @property
+    def last_waiting_list_spot(self):
+        list = self.get_bookings(True, False)
+        if list.count() == 0:
+            return 0
+        else:
+            return list.last().waitinglist_spot
+
+    @property
+    def next_waiting_list_spot(self):
+        return self.last_waiting_list_spot + 1
 
 
 VisitOccurrence.add_override_property('duration')
