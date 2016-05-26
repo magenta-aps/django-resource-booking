@@ -2222,6 +2222,14 @@ class VisitOccurrence(models.Model):
             else:
                 return self.bookings.none()
 
+    @property
+    def booking_list(self):
+        return self.get_bookings(False, True)
+
+    @property
+    def waiting_list(self):
+        return self.get_bookings(True, False)
+
     def get_attendee_count(self,
                            include_waitinglist=False, include_regular=True):
         return self.get_bookings(
