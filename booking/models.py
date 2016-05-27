@@ -13,6 +13,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
+from django.utils import formats
 from django.utils.translation import ugettext_lazy as _
 from django.template.base import Template, VariableNode
 
@@ -2135,15 +2136,19 @@ class VisitOccurrence(models.Model):
         if not self.start_datetime:
             return None
 
-        result = self.start_datetime.strftime('%d. %m %Y %H:%M')
+        start = timezone.localtime(self.start_datetime)
+        result = formats.date_format(start, "DATETIME_FORMAT")
 
         if self.duration:
             try:
                 (hours, mins) = self.duration.split(":", 2)
-                endtime = self.start_datetime + timedelta(
-                    hours=int(hours), minutes=int(mins)
-                )
-                result += endtime.strftime('-%H:%M')
+                if int(hours) > 0 or int(mins) > 0:
+                    endtime = start + timedelta(
+                        hours=int(hours), minutes=int(mins)
+                    )
+                    result += " - " + formats.date_format(
+                        endtime, "TIME_FORMAT"
+                    )
             except Exception as e:
                 print e
 
@@ -2244,7 +2249,7 @@ class VisitOccurrence(models.Model):
 
     def __unicode__(self):
         if self.start_datetime:
-            return u'%s @ %s' % (self.visit.title, self.display_value)
+            return u'%s | %s' % (self.visit.title, self.display_value)
         else:
             return u'%s (uden fastlagt tidspunkt)' % (self.visit.title)
 
@@ -3182,10 +3187,17 @@ class KUEmailMessage(models.Model):
         null=True,
         default=None
     )
+    template_key = models.IntegerField(
+        verbose_name=u'Template key',
+        choices=EmailTemplate.key_choices,
+        default=None,
+        null=True,
+        blank=True
+    )
 
     @staticmethod
     def save_email(email_message, instance,
-                   reply_nonce=None, htmlbody=None):
+                   reply_nonce=None, htmlbody=None, template_key=None):
         """
         :param email_message: An instance of
         django.core.mail.message.EmailMessage
@@ -3201,9 +3213,12 @@ class KUEmailMessage(models.Model):
             recipients=', '.join(email_message.recipients()),
             content_type=ctype,
             object_id=instance.id,
-            reply_nonce=reply_nonce
+            reply_nonce=reply_nonce,
+            template_key=template_key
         )
         ku_email_message.save()
+
+        return ku_email_message
 
     @staticmethod
     def send_email(template, context, recipients, instance, unit=None,
@@ -3298,7 +3313,11 @@ class KUEmailMessage(models.Model):
                 message.attach_alternative(htmlbody, 'text/html')
             message.send()
 
-            KUEmailMessage.save_email(message, instance, reply_nonce=nonce)
+            msg_obj = KUEmailMessage.save_email(
+                message, instance, reply_nonce=nonce,
+                template_key=template.key
+            )
+            KUEmailRecipient.register(msg_obj, email)
 
         # Log the sending
         if emails and instance:
@@ -3320,3 +3339,23 @@ class KUEmailMessage(models.Model):
         if full:
             url = settings.PUBLIC_URL + url
         return url
+
+
+class KUEmailRecipient(models.Model):
+    email_message = models.ForeignKey(KUEmailMessage)
+    name = models.TextField(blank=True, null=True)
+    formatted_address = models.TextField(blank=True, null=True)
+    email = models.TextField(blank=True, null=True)
+    user = models.ForeignKey(User, blank=True, null=True)
+
+    @staticmethod
+    def register(msg_obj, userdata):
+        result = KUEmailRecipient(
+            email_message=msg_obj,
+            name=userdata.get("name", None),
+            formatted_address=userdata.get("full", None),
+            email=userdata.get("address", None),
+            user=userdata.get("user", None),
+        )
+        result.save()
+        return result
