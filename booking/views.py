@@ -2147,6 +2147,7 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
                 str(visitoccurrence.pk): {
                     'available': visitoccurrence.available_seats,
                     'waitinglist': visitoccurrence.waiting_list_capacity
+                    if not visitoccurrence.waiting_list_closed else 0
                 }
                 for visitoccurrence in self.visit.visitoccurrence_set.all()
             },

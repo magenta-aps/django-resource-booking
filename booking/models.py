@@ -2585,6 +2585,31 @@ class VisitOccurrence(models.Model):
                 booking.save()
             last = booking.waitinglist_spot
 
+    @property
+    def waiting_list_closing_time(self):
+        if self.visit.waiting_list_deadline_days is None and \
+                self.visit.waiting_list_deadline_hours is None:
+            return None
+        time = self.start_datetime
+        if time:
+            if self.visit.waiting_list_deadline_days > 0:
+                time = time - timedelta(
+                    days=self.visit.waiting_list_deadline_days
+                )
+            if self.visit.waiting_list_deadline_hours > 0:
+                time = time - timedelta(
+                    hours=self.visit.waiting_list_deadline_hours
+                )
+            return time
+        return None
+
+    @property
+    def waiting_list_closed(self):
+        closing_time = self.waiting_list_closing_time
+        if closing_time:
+            return closing_time < timezone.now()
+        return False
+
 
 VisitOccurrence.add_override_property('duration')
 VisitOccurrence.add_override_property('locality')

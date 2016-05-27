@@ -236,6 +236,17 @@
                         {% trans 'Venteliste' %}
                         ({{ object.nr_waiting }}{% if object.visit.waiting_list_length %}/{{ object.visit.waiting_list_length }}{% endif %})
                     </h2>
+                    {% if object.waiting_list_closing_time %}
+                        {% if object.waiting_list_closed %}
+                            {% blocktrans with time=object.waiting_list_closing_time %}
+                                Ventelisten lukkede {{ time }}.
+                            {% endblocktrans %}
+                        {% else %}
+                            {% blocktrans with time=object.waiting_list_closing_time %}
+                                Ventelisten lukker {{ time }}.
+                            {% endblocktrans %}
+                        {% endif %}
+                    {% endif %}
                     {% include "booking/snippets/list.html" with list=object.waiting_list form=waitinglistform listname='waiting' %}
                 </div>
             </div>
