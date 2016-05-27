@@ -2605,6 +2605,8 @@ class VisitOccurrence(models.Model):
 
     @property
     def waiting_list_closed(self):
+        if not self.visit.do_create_waiting_list:
+            return True
         closing_time = self.waiting_list_closing_time
         if closing_time:
             return closing_time < timezone.now()
