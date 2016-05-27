@@ -1,55 +1,59 @@
 {% load i18n %}
 <div class="listcontainer {{ listname }}">
-    <form action="" method="post">
-        {% csrf_token %}
+    {% if list|length > 0 %}
+        <form action="" method="post">
+            {% csrf_token %}
 
-        <input type="hidden" name="listname" value="{{ listname }}"/>
-        <div style="display:none" data-move="input" data-target="#move_{data-attr}.input-container" data-attr="value">
-        {{ form }}
-        </div>
-
-        {% for booking in list %}
-            <div class="list-group-item clearfix">
-                <a href="{% url 'booking-view' booking.id %}">
-                    <dl class="dl-horizontal">
-                        <dt class="text-muted">{% trans 'Skole:' %}</dt>
-                        <dd><strong>{{ booking.booker.school.name }}, {{ booking.booker.school.postcode }}</strong></dd>
-                        <dt class="text-muted">{% trans 'Navn:' %}</dt>
-                        <dd>{{ booking.booker.get_name }}</dd>
-                        <dt class="text-muted">{% trans 'Email:' %}</dt>
-                        <dd>{{ booking.booker.email }}</dd>
-                        <dt class="text-muted">{% trans 'Antal:' %}</dt>
-                        <dd>{{ booking.booker.attendee_count }}</dd>
-                        {% if booking.notes %}
-                            <dt class="text-muted">{% trans 'Noter:' %}</dt>
-                            <dd>{{ booking.notes }}</dd>
-                        {% endif %}
-                        {% if booking.classbooking %}
-                            <dt class="text-muted">{% trans 'Rundvisning:' %}</dt>
-                            <dd>{{ booking.classbooking.tour_desired | yesno }}</dd>
-                        {% endif %}
-                        {% if booking.teacherbooking %}
-                            {% if booking.teacherbooking.subjects %}
-                                <dt class="text-muted">{% trans 'Fag:' %}</dt>
-                                <dd>
-                                    <ul>
-                                        {% for subject in booking.teacherbooking.subjects.all %}
-                                            <li>{{ subject }}</li>
-                                        {% endfor %}
-                                    </ul>
-                                </dd>
-                            {% endif %}
-                        {% endif %}
-                    </dl>
-                </a>
-                <div class="pull-right input-container" id="move_{{ booking.id }}"></div>
+            <input type="hidden" name="listname" value="{{ listname }}"/>
+            <div style="display:none" data-move="input" data-target="#move_{data-attr}.input-container" data-attr="value">
+            {{ form }}
             </div>
-        {% endfor %}
-        <button type="submit" name="action" value="delete" class="btn btn-primary btn-xs pull-right">{% trans 'Slet valgte' %}</button>
-        {% if listname == 'booking' %}
-            <button type="submit" name="action" value="enqueue" class="btn btn-primary btn-xs pull-right">{% trans 'Flyt valgte til venteliste' %}</button>
-        {% elif listname == 'waiting' %}
-            <button type="submit" name="action" value="dequeue" class="btn btn-primary btn-xs pull-right">{% trans 'Tilmeld valgte' %}</button>
-        {% endif %}
-    </form>
+
+            {% for booking in list %}
+                <div class="list-group-item clearfix">
+                    <a href="{% url 'booking-view' booking.id %}">
+                        <dl class="dl-horizontal">
+                            <dt class="text-muted">{% trans 'Skole:' %}</dt>
+                            <dd><strong>{{ booking.booker.school.name }}, {{ booking.booker.school.postcode }}</strong></dd>
+                            <dt class="text-muted">{% trans 'Navn:' %}</dt>
+                            <dd>{{ booking.booker.get_name }}</dd>
+                            <dt class="text-muted">{% trans 'Email:' %}</dt>
+                            <dd>{{ booking.booker.email }}</dd>
+                            <dt class="text-muted">{% trans 'Antal:' %}</dt>
+                            <dd>{{ booking.booker.attendee_count }}</dd>
+                            {% if booking.notes %}
+                                <dt class="text-muted">{% trans 'Noter:' %}</dt>
+                                <dd>{{ booking.notes }}</dd>
+                            {% endif %}
+                            {% if booking.classbooking %}
+                                <dt class="text-muted">{% trans 'Rundvisning:' %}</dt>
+                                <dd>{{ booking.classbooking.tour_desired | yesno }}</dd>
+                            {% endif %}
+                            {% if booking.teacherbooking %}
+                                {% if booking.teacherbooking.subjects %}
+                                    <dt class="text-muted">{% trans 'Fag:' %}</dt>
+                                    <dd>
+                                        <ul>
+                                            {% for subject in booking.teacherbooking.subjects.all %}
+                                                <li>{{ subject }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </dd>
+                                {% endif %}
+                            {% endif %}
+                        </dl>
+                    </a>
+                    <div class="pull-right input-container" id="move_{{ booking.id }}"></div>
+                </div>
+            {% endfor %}
+            <button type="submit" name="action" value="delete" class="btn btn-primary btn-xs pull-right">{% trans 'Slet valgte' %}</button>
+            {% if object.visit.do_create_waiting_list %}
+                {% if listname == 'booking' %}
+                    <button type="submit" name="action" value="enqueue" class="btn btn-primary btn-xs pull-right">{% trans 'Flyt valgte til venteliste' %}</button>
+                {% elif listname == 'waiting' %}
+                    <button type="submit" name="action" value="dequeue" class="btn btn-primary btn-xs pull-right">{% trans 'Tilmeld valgte' %}</button>
+                {% endif %}
+            {% endif %}
+        </form>
+    {% endif %}
 </div>

@@ -326,20 +326,38 @@
                         selectedAttendees += waitingAttendees[this.value];
                     });
                     if (selectedAttendees > availableSeats) {
-                        dequeueButton.attr("disabled", "disabled");
+                        dequeueButton.enable(false, "listFull");
                         dequeueButton.attr("title",
                             "{% trans 'Der er kun {available} pladser tilbage. Du har valgt {selected} deltagere.' %}"
                             .replace("{available}", availableSeats)
                             .replace("{selected}", selectedAttendees)
                         );
                     } else {
-                        dequeueButton.removeAttr("disabled");
+                        dequeueButton.enable(true, "listFull");
                         dequeueButton.removeAttr("title");
                     }
                 };
                 $(".listcontainer.waiting input[type='checkbox']").change(update);
                 update();
             }
+        });
+
+        $(function(){
+            $("form").each(function(){
+                var form = $(this);
+                var button = form.find("button[name='action']");
+                var update = function() {
+                    button.enable(form.find("input[type='checkbox']:checked").length, "selectionPresent");
+                };
+                form.find("input[type='checkbox']").change(update);
+                update();
+            });
+        });
+
+        $(function(){
+            $(".listcontainer form button[name='action'][value='delete']").click(function(){
+                return window.confirm("{% trans 'Er du sikke på at du vil slette disse tilmeldinger?' %}");
+            });
         });
         //-->
     </script>
