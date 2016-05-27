@@ -2635,6 +2635,14 @@ class VisitOccurrence(models.Model):
     def next_waiting_list_spot(self):
         return self.last_waiting_list_spot + 1
 
+    def normalize_waitinglist(self):
+        last = 0
+        for booking in self.waiting_list:
+            if booking.waitinglist_spot > last+1:
+                booking.waitinglist_spot = last+1
+                booking.save()
+            last = booking.waitinglist_spot
+
 
 VisitOccurrence.add_override_property('duration')
 VisitOccurrence.add_override_property('locality')
@@ -3258,6 +3266,17 @@ class Booking(models.Model):
 
     def __unicode__(self):
         return _("Tilmelding #%d") % self.id
+
+    def enqueue(self):
+        if self.waitinglist_spot == 0:
+            self.waitinglist_spot = self.visitoccurrence.next_waiting_list_spot
+            self.save()
+
+    def dequeue(self):
+        if self.waitinglist_spot > 0:
+            self.waitinglist_spot = 0
+            self.save()
+            self.visitoccurrence.normalize_waitinglist()
 
 
 Booking.add_occurrence_attr('visit')
