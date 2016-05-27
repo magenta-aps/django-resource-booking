@@ -2206,8 +2206,19 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
 
             booking = forms['bookingform'].save()
 
-            if booking.booker.attendee_count > \
-                    booking.visitoccurrence.waiting_list_capacity:
+            attendee_count = booking.booker.attendee_count
+            if attendee_count > booking.visitoccurrence.available_seats:
+                # Put in waiting list
+                if booking.visitoccurrence.waiting_list_closed:
+                    raise Exception(_(u"Cannot place booking with in waiting "
+                                      u"list; the waiting list is closed"))
+                waitinglist_capacity = \
+                    booking.visitoccurrence.waiting_list_capacity
+                if attendee_count > waitinglist_capacity:
+                    raise Exception(_(u"Cannot place booking with %d attendees"
+                                      u" in waiting list; there are only %d "
+                                      u"spots") %
+                                    (attendee_count, waitinglist_capacity))
                 booking.waitinglist_spot = \
                     booking.visitoccurrence.next_waiting_list_spot
 
@@ -2766,16 +2777,13 @@ class VisitOccurrenceDetailView(LoginRequiredMixin, LoggedViewMixin,
         if form is not None:
             if form.is_valid():
                 for booking_id in form.cleaned_data['bookings']:
-                    try:
-                        booking = Booking.objects.get(id=booking_id)
-                        if action == 'delete':
-                            booking.delete()
-                        elif action == 'enqueue':
-                            booking.enqueue()
-                        elif action == 'dequeue':
-                            booking.dequeue()
-                    except:
-                        pass
+                    booking = Booking.objects.filter(id=booking_id).first()
+                    if action == 'delete':
+                        booking.delete()
+                    elif action == 'enqueue':
+                        booking.enqueue()
+                    elif action == 'dequeue':
+                        booking.dequeue()
         return self.get(request, *args, **kwargs)
 
 
