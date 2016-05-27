@@ -18,7 +18,7 @@
                 var updateOccurrence = function() {
                     var occurrence = occurrenceAvailable[occurrenceSelect.val()];
                     if (occurrence !== null) {
-                        attendeeField.attr("max", Math.min(occurrence.available + occurrence.waitinglist, existingMax));
+                        attendeeField.attr("max", Math.min(Math.max(occurrence.available, occurrence.waitinglist), existingMax));
                         attendeeField.trigger('change');
                         if (occurrence.available < existingMax) {
                             attendeeField.attr("min", 1);
@@ -29,7 +29,7 @@
                 var updateAttendees = function() {
                     var occurrence = occurrenceAvailable[occurrenceSelect.val()];
                     if (occurrence !== null) {
-                        var doWaitingList = attendeeField.val() > occurrence.available;
+                        var doWaitingList = attendeeField.val() > occurrence.available && attendeeField.val() <= occurrence.waitinglist;
                         submitbutton.text(doWaitingList ? "{% trans 'Tilmeld til venteliste!' %}" : "{% trans 'Tilmeld!' %}");
                         $("#waitinglist_warning").toggle(doWaitingList);
                     }
