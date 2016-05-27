@@ -46,3 +46,26 @@ $("[data-move][data-target]").each(function(){
     });
     $this.remove();
 });
+
+$.fn.enable = function(doEnable, key) {
+    doEnable = !!doEnable;
+    this.each(function(){
+        var $this = $(this);
+        var locks = $this.data("disable") || {};
+        locks[key] = doEnable;
+        var locked = false;
+        for (var k in locks) {
+            if (locks.hasOwnProperty(k)) {
+                if (locks[k] === false) {
+                    locked = true;
+                }
+            }
+        }
+        if (locked) {
+            $this.attr("disabled", "disabled");
+        } else {
+            $this.removeAttr("disabled");
+        }
+        $this.data("disable", locks);
+    });
+};
