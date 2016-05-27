@@ -2767,10 +2767,7 @@ class VisitOccurrenceDetailView(LoginRequiredMixin, LoggedViewMixin,
                             booking.dequeue()
                     except:
                         pass
-            else:
-                print form.errors
         return self.get(request, *args, **kwargs)
-
 
 
 class EmailTemplateListView(LoginRequiredMixin, ListView):
