@@ -548,13 +548,11 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
             context['bookings'] = Booking.objects\
                 .select_related('visitoccurrence__visit__resource_ptr__unit') \
                 .select_related('booker__school')\
-                .prefetch_related('visitoccurrence__visit__resource_ptr'
-                                  '__resourcegymnasiefag_set__subject')\
-                .prefetch_related('visitoccurrence__visit__resource_ptr'
-                                  '__resourcegrundskolefag_set__subject') \
+                .prefetch_related('bookingsubjectlevel_set__subject') \
+                .prefetch_related('bookingsubjectlevel_set__level') \
                 .filter(
                     visitoccurrence__visit__resource_ptr__unit_id=self.unit.id
-                )
+                ).order_by('visitoccurrence__visit__resource_ptr')
         context.update(kwargs)
 
         return super(StatisticsView, self).get_context_data(**context)

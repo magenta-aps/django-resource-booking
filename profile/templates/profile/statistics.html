@@ -27,18 +27,25 @@
     <table class="table table-striped">
         <thead>
             <tr>
+                <th>{% trans 'Tilmelding' %}</th>
+                <th>{% trans 'Type' %}</th>
                 <th>{% trans 'Tilbud' %}</th>
                 <th>{% trans 'Skole' %}</th>
-                <th>{% trans 'Type' %}</th>
-                <th>{% trans '' %}</th>
-
+                <th>{% trans 'Fag/Niveau' %}</th>
             </tr>
         </thead>
         <tbody>
         {% for booking in bookings %}
             <tr>
+                <td><a href="{% url 'booking-view' booking.id %}">{{ booking }}</a></td>
+                <td>{{ booking.visit.get_type_display }}</td>
                 <td><a href="{% url 'resource-view' booking.visitoccurrence.visit.resource_ptr.id %}">{{ booking.visitoccurrence.visit.resource_ptr.title }}</a></td>
-                <td>{{ booking.booker.school.name }}</td>
+                <td>{{ booking.booker.school.name }} ({{ booking.booker.school.get_type_display }})</td>
+                <td>
+                    {% for bookingsubjectlevel in booking.bookingsubjectlevel_set.all %}
+                        {{ bookingsubjectlevel.subject }}/{{ bookingsubjectlevel.level }}
+                    {% endfor %}
+                </td>
             </tr>
         {% endfor %}
         </tbody>
