@@ -18,6 +18,8 @@ from django.template.base import Template, VariableNode
 
 from recurrence.fields import RecurrenceField
 from booking.utils import ClassProperty, full_email, CustomStorage, html2text
+from booking.utils import get_related_content_types
+
 from resource_booking import settings
 
 from datetime import timedelta
@@ -498,6 +500,18 @@ class Locality(models.Model):
             ])
         )
 
+    @property
+    def route_url(self):
+        # return "http://www.findvej.dk/?daddress=%s&dzip=%s" % \
+        return "https://maps.google.dk/maps/dir//%s,%s" % \
+               (self.address_line, self.zip_city)
+
+    @property
+    def location_url(self):
+        # return "http://www.findvej.dk/%s,%s" % \
+        return "https://maps.google.dk/maps/place/%s,%s" % \
+               (self.address_line, self.zip_city)
+
 
 class EmailTemplate(models.Model):
 
@@ -959,10 +973,11 @@ class Resource(models.Model):
         related_name='roomadmin_visit_new'
     )
 
-    preparation_time = models.IntegerField(
-        default=0,
+    preparation_time = models.CharField(
+        max_length=200,
         null=True,
-        verbose_name=_(u'Forberedelsestid (i timer)')
+        blank=True,
+        verbose_name=_(u'Forberedelsestid')
     )
 
     price = models.DecimalField(
@@ -2021,6 +2036,8 @@ class VisitOccurrence(models.Model):
         default=WORKFLOW_STATUS_BEING_PLANNED
     )
 
+    last_workflow_update = models.DateTimeField(default=timezone.now)
+
     comments = models.TextField(
         blank=True,
         default='',
@@ -2134,6 +2151,7 @@ class VisitOccurrence(models.Model):
 
         if self.workflow_status in \
                 VisitOccurrence.noshow_available_after_starttime and \
+                self.start_datetime and \
                 timezone.now() > self.start_datetime:
             allowed.append(VisitOccurrence.WORKFLOW_STATUS_NOSHOW)
 
@@ -2148,6 +2166,20 @@ class VisitOccurrence(models.Model):
             return self.teacherbooking.subjects.all()
         else:
             return None
+
+    def update_last_workflow_change(self):
+        last_workflow_status = None
+        if self.pk:
+            # Fetch old value
+            item = VisitOccurrence.objects.filter(
+                pk=self.pk
+            ).values("workflow_status").first()
+            if item:
+                last_workflow_status = item['workflow_status']
+
+        if last_workflow_status is None or \
+                last_workflow_status != self.workflow_status:
+            self.last_workflow_update = timezone.now()
 
     @property
     def display_value(self):
@@ -2211,6 +2243,28 @@ class VisitOccurrence(models.Model):
         if self.available_seats() == 0:
             return False
         return True
+
+    @property
+    def has_changes_after_planned(self):
+        # This is only valid for statuses that are considered planned
+        if self.workflow_status == self.WORKFLOW_STATUS_BEING_PLANNED:
+            return False
+
+        return self.changes_after_last_status_change().exists()
+
+    def changes_after_last_status_change(self):
+        types = get_related_content_types(VisitOccurrence)
+
+        # Since log entry for workflow status change is logged after
+        # the object itself is saved we have to be a bit fuzzy in our
+        # comparison.
+        fuzzy_adjustment = timezone.timedelta(seconds=1)
+
+        return LogEntry.objects.filter(
+            object_id=self.pk,
+            content_type__in=types,
+            action_time__gt=self.last_workflow_update + fuzzy_adjustment
+        )
 
     def date_display(self):
         return self.start_datetime or _(u'på ikke-fastlagt tidspunkt')
@@ -2306,6 +2360,7 @@ class VisitOccurrence(models.Model):
     def save(self, *args, **kwargs):
 
         self.update_endtime()
+        self.update_last_workflow_change()
 
         # Save once to store relations
         super(VisitOccurrence, self).save(*args, **kwargs)
@@ -2403,12 +2458,12 @@ class VisitOccurrence(models.Model):
                 template_key,
                 {'occurrence': self, 'visit': visit},
                 list(recipients),
+                self,
                 unit
             )
 
             if not only_these_recipients and \
-                    template_key in \
-                    EmailTemplate.booker_keys:
+                    template_key in EmailTemplate.booker_keys:
                 for booking in self.bookings.all():
                     KUEmailMessage.send_email(
                         template_key,
@@ -2419,6 +2474,7 @@ class VisitOccurrence(models.Model):
                             'booker': booking.booker
                         },
                         booking.booker,
+                        self,
                         unit
                     )
 
@@ -2537,9 +2593,63 @@ class VisitOccurrence(models.Model):
         for occurrence in VisitOccurrence.objects.all():
             occurrence.save()
 
+    def add_comment(self, user, text):
+        VisitOccurrenceComment(
+            visitoccurrence=self,
+            author=user,
+            text=text
+        ).save()
+
+    def get_comments(self, user=None):
+        if user is None:
+            return VisitOccurrenceComment.objects.filter(visitoccurrence=self)
+        else:
+            return VisitOccurrenceComment.objects.filter(
+                visitoccurrence=self,
+                author=user
+            )
+
 
 VisitOccurrence.add_override_property('duration')
 VisitOccurrence.add_override_property('locality')
+
+
+class VisitOccurrenceComment(models.Model):
+
+    class Meta:
+        ordering = ["-time"]
+
+    visitoccurrence = models.ForeignKey(
+        VisitOccurrence,
+        verbose_name=_(u'Besøg'),
+        null=False,
+        blank=False
+    )
+    author = models.ForeignKey(
+        User,
+        null=True  # Users can be deleted, but we want to keep their comments
+    )
+    deleted_user_name = models.CharField(
+        max_length=30
+    )
+    text = models.CharField(
+        max_length=500,
+        verbose_name=_(u'Kommentartekst')
+    )
+    time = models.DateTimeField(
+        verbose_name=_(u'Tidsstempel'),
+        auto_now=True
+    )
+
+    def on_delete_author(self):
+        self.deleted_user_name = self.author.username
+        self.author = None
+        self.save()
+
+    @staticmethod
+    def on_delete_user(user):
+        for comment in VisitOccurrenceComment.objects.filter(author=user):
+            comment.on_delete_author()
 
 
 class Autosend(models.Model):

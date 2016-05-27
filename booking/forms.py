@@ -362,7 +362,7 @@ class VisitForm(forms.ModelForm):
 
             'price': NumberInput(attrs={'class': 'form-control input-sm'}),
             'type': Select(attrs={'class': 'form-control input-sm'}),
-            'preparation_time': NumberInput(
+            'preparation_time': Textarea(
                 attrs={'class': 'form-control input-sm'}
             ),
             'comment': Textarea(attrs={'class': 'form-control input-sm'}),
@@ -802,7 +802,8 @@ class BookerForm(forms.ModelForm):
     def __init__(self, data=None, visit=None, language='da', *args, **kwargs):
         super(BookerForm, self).__init__(data, *args, **kwargs)
         attendeecount_widget = self.fields['attendee_count'].widget
-        attendeecount_widget.attrs['min'] = 1
+
+        attendeecount_widget.attrs['min'] = visit.minimum_number_of_visitors
         if visit is not None:
             if visit.maximum_number_of_visitors is not None:
                 attendeecount_widget.attrs['max'] = \
