@@ -221,7 +221,7 @@
                         {% trans 'Tilmeldte' %}
                         ({{ object.nr_attendees }}{% if object.visit.maximum_number_of_visitors %}/{{ object.visit.maximum_number_of_visitors }}{% endif %})
                     </h2>
-                    {% include "booking/snippets/list.html" with list=object.booking_list %}
+                    {% include "booking/snippets/list.html" with list=object.booking_list form=bookinglistform listname='booking' %}
                 </div>
             </div>
         </div>
@@ -236,7 +236,7 @@
                         {% trans 'Venteliste' %}
                         ({{ object.nr_waiting }}{% if object.visit.waiting_list_length %}/{{ object.visit.waiting_list_length }}{% endif %})
                     </h2>
-                    {% include "booking/snippets/list.html" with list=object.waiting_list %}
+                    {% include "booking/snippets/list.html" with list=object.waiting_list form=waitinglistform listname='waiting' %}
                 </div>
             </div>
         </div>
@@ -266,4 +266,36 @@
 {% block extra_scripts %}
     <script src="{% static 'js/custom.js' %}"></script>
     <script src="{% static "js/modalframe-host.js" %}"></script>
+    <script type="text/javascript">
+        <!--
+        $(function(){
+            {% autoescape off %}
+                var waitingAttendees = {{ waitingattendees | jsonify }},
+                    availableSeats = {{ object.available_seats | jsonify }};
+            {% endautoescape %}
+            var dequeueButton = $("button[name='action'][value='dequeue']");
+            if (dequeueButton.length) {
+                var update = function() {
+                    var selectedAttendees = 0;
+                    $(".listcontainer.waiting input[type='checkbox']:checked").each(function(){
+                        selectedAttendees += waitingAttendees[this.value];
+                    });
+                    if (selectedAttendees > availableSeats) {
+                        dequeueButton.attr("disabled", "disabled");
+                        dequeueButton.attr("title",
+                            "{% trans 'Der er kun {available} pladser tilbage. Du har valgt {selected} deltagere.' %}"
+                            .replace("{available}", availableSeats)
+                            .replace("{selected}", selectedAttendees)
+                        );
+                    } else {
+                        dequeueButton.removeAttr("disabled");
+                        dequeueButton.removeAttr("title");
+                    }
+                };
+                $(".listcontainer.waiting input[type='checkbox']").change(update);
+                update();
+            }
+        });
+        //-->
+    </script>
 {% endblock %}

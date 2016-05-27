@@ -53,7 +53,7 @@ from booking.models import log_action
 from booking.models import LOGACTION_CREATE, LOGACTION_CHANGE
 from booking.forms import ResourceInitialForm, OtherResourceForm, VisitForm, \
     GuestEmailComposeForm, StudentForADayBookingForm, OtherVisitForm, \
-    StudyProjectBookingForm
+    StudyProjectBookingForm, BookingListForm
 
 from booking.forms import StudentForADayForm, InternshipForm, OpenHouseForm, \
     TeacherVisitForm, ClassVisitForm, StudyProjectForm, AssignmentHelpForm, \
@@ -2718,11 +2718,59 @@ class VisitOccurrenceDetailView(LoginRequiredMixin, LoggedViewMixin,
             context['can_edit'] = user.userprofile.can_edit(self.object)
             context['can_notify'] = user.userprofile.can_notify(self.object)
 
+        context['bookinglistform'] = self.get_bookinglist_form()
+        context['waitinglistform'] = self.get_waitinglist_form()
+        context['waitingattendees'] = {
+            booking.id: booking.booker.attendee_count
+            for booking in self.object.waiting_list
+        }
+
         context.update(kwargs)
 
         return super(VisitOccurrenceDetailView, self).get_context_data(
             **context
         )
+
+    def get_bookinglist_form(self, **kwargs):
+        bookinglistform = BookingListForm(data=kwargs)
+        bookinglistform.fields['bookings'].choices = [
+            (booking.id, booking.id) for booking in self.object.booking_list
+        ]
+        return bookinglistform
+
+    def get_waitinglist_form(self, **kwargs):
+        waitinglistform = BookingListForm(data=kwargs)
+        waitinglistform.fields['bookings'].choices = [
+            (booking.id, booking.id) for booking in self.object.waiting_list
+            ]
+        return waitinglistform
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        action = request.POST['action']
+        listname = request.POST['listname']
+
+        if listname == 'booking':
+            form = self.get_bookinglist_form(**request.POST)
+        elif listname == 'waiting':
+            form = self.get_waitinglist_form(**request.POST)
+        if form is not None:
+            if form.is_valid():
+                for booking_id in form.cleaned_data['bookings']:
+                    try:
+                        booking = Booking.objects.get(id=booking_id)
+                        if action == 'delete':
+                            booking.delete()
+                        elif action == 'enqueue':
+                            booking.enqueue()
+                        elif action == 'dequeue':
+                            booking.dequeue()
+                    except:
+                        pass
+            else:
+                print form.errors
+        return self.get(request, *args, **kwargs)
+
 
 
 class EmailTemplateListView(LoginRequiredMixin, ListView):

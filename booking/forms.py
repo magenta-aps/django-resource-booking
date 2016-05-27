@@ -1112,3 +1112,9 @@ class EmailReplyForm(forms.Form):
         widget=Textarea(attrs={'class': 'form-control input-sm'}),
         required=True
     )
+
+
+class BookingListForm(forms.Form):
+    bookings = forms.MultipleChoiceField(
+        widget=CheckboxSelectMultiple()
+    )
