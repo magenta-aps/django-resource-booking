@@ -22,25 +22,47 @@
             {% include "booking/fields/basedata.html" %}
             {% include "booking/fields/school.html" %}
             {% include "booking/fields/location.html" %}
-            <div id="rowcontainer">
-            {{ subjectform.management_form }}
-            {% for form in subjectform %}
-                {{ form.id }}
-                <div class="form-group"{% if forloop.first %} id="rowprototype"{% endif %}>
-                    <label class="col-sm-2 control-label" for="{{ form.subject.id_for_label }}">{% trans "Fag/Niveau" %}</label>
-                    <div class="col-sm-4">
-                        {{ form.subject }}
+            {% if visit.resourcegymnasiefag_set.count > 0 %}
+                <div id="gymnasiefag"class="rowcontainer">
+                {{ subjectform.management_form }}
+                {% for form in subjectform %}
+                    {{ form.id }}
+                    <div class="form-group{% if forloop.first %} rowprototype{% endif %}">
+                        <label class="col-sm-2 control-label" for="{{ form.subject.id_for_label }}">{% trans "Fag/Niveau (Gymnasium)" %}</label>
+                        <div class="col-sm-4">
+                            {{ form.subject }}
+                        </div>
+                        <div class="col-sm-2">
+                            {{ form.level }}
+                        </div>
+                        <div class="col-sm-2 rowadder">
+                            <a href="javascript:void()" id="addRow">{% trans "Tilføj ny" %}</a>
+                        </div>
                     </div>
-                    <div class="col-sm-2">
-                        {{ form.level }}
-                    </div>
-                    <div class="col-sm-2 rowadder">
-                        <a href="javascript:void()" id="addRow">{% trans "Tilføj ny" %}</a>
-                    </div>
+                {% endfor %}
                 </div>
-            {% endfor %}
-            </div>
+            {% endif %}
 
+            {% if visit.resourcegrundskolefag_set.count > 0 %}
+                <div id="grundskolefag" class="rowcontainer">
+                {{ grundskolesubjectform.management_form }}
+                {% for form in grundskolesubjectform %}
+                    {{ form.id }}
+                    <div class="form-group{% if forloop.first %} rowprototype{% endif %}">
+                        <label class="col-sm-2 control-label" for="{{ form.subject.id_for_label }}">{% trans "Fag/Niveau (Grundskole)" %}</label>
+                        <div class="col-sm-4">
+                            {{ form.subject }}
+                        </div>
+                        <div class="col-sm-2">
+                            {{ form.level }}
+                        </div>
+                        <div class="col-sm-2 rowadder">
+                            <a href="javascript:void()" id="addRow2">{% trans "Tilføj ny" %}</a>
+                        </div>
+                    </div>
+                {% endfor %}
+                </div>
+            {% endif %}
             {% include "booking/fields/time.html" %}
 
             {% include "booking/fields/attendees.html" %}
@@ -92,7 +114,8 @@
     <script type="text/javascript"><!--
         $(function(){
 
-            var extraRows = $("#rowcontainer > div").not(":first");
+            var extraGymRows = $("#gymnasiefag > div").not(":first");
+            var extraGrundRows = $("#grundskolefag > div").not(":first");
 
             var mingleRow = function(row) {
                 row.removeAttr("id");
@@ -104,14 +127,15 @@
                 adder.find("a").click(removeRowEvent);
             };
 
-            mingleRow(extraRows);
+            mingleRow(extraGymRows);
+            mingleRow(extraGrundRows);
 
             $(".rowadder a").click(function(){
                 var newRow = formset.addRow(
                         $("#{{ subjectform.management_form.TOTAL_FORMS.id_for_label }}"),
                         $("#{{ subjectform.management_form.MAX_NUM_FORMS.id_for_label }}"),
-                        $("#rowprototype"),
-                        $("#rowcontainer")
+                        $(this).closest(".rowprototype"),
+                        $(this).closest(".rowcontainer")
                 );
                 mingleRow(newRow);
                 modal.updateHeight();

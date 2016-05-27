@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from booking.models import StudyMaterial, VisitAutosend, Booking, Person
+from booking.models import StudyMaterial, VisitAutosend, Booking, Person, \
+    BookingGrundskoleSubjectLevel
 from booking.models import Locality, UnitType, Unit
 from booking.models import Resource, OtherResource, Visit
 from booking.models import Booker, Region, PostCode, School
-from booking.models import ClassBooking, TeacherBooking, BookingSubjectLevel
+from booking.models import ClassBooking, TeacherBooking, \
+    BookingGymnasieSubjectLevel
 from booking.models import EmailTemplate
 from booking.models import VisitOccurrence
 from django import forms
@@ -800,7 +802,8 @@ class BookerForm(forms.ModelForm):
     def __init__(self, data=None, visit=None, language='da', *args, **kwargs):
         super(BookerForm, self).__init__(data, *args, **kwargs)
         attendeecount_widget = self.fields['attendee_count'].widget
-        attendeecount_widget.attrs['min'] = 1
+
+        attendeecount_widget.attrs['min'] = visit.minimum_number_of_visitors
         if visit is not None:
             if visit.maximum_number_of_visitors is not None:
                 attendeecount_widget.attrs['max'] = \
@@ -939,9 +942,26 @@ class StudyProjectBookingForm(BookingForm):
         widgets = BookingForm.Meta.widgets
 
 
-BookingSubjectLevelForm = \
+BookingGymnasieSubjectLevelForm = \
     inlineformset_factory(ClassBooking,
-                          BookingSubjectLevel,
+                          BookingGymnasieSubjectLevel,
+                          fields=('subject', 'level'),
+                          can_delete=True,
+                          extra=1,
+                          widgets={
+                              'subject': Select(
+                                  attrs={'class': 'form-control'}
+                              ),
+                              'level': Select(
+                                  attrs={'class': 'form-control'}
+                              )
+                          }
+                          )
+
+
+BookingGrundskoleSubjectLevelForm = \
+    inlineformset_factory(ClassBooking,
+                          BookingGrundskoleSubjectLevel,
                           fields=('subject', 'level'),
                           can_delete=True,
                           extra=1,

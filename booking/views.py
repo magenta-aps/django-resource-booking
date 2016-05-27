@@ -53,14 +53,15 @@ from booking.models import log_action
 from booking.models import LOGACTION_CREATE, LOGACTION_CHANGE
 from booking.forms import ResourceInitialForm, OtherResourceForm, VisitForm, \
     GuestEmailComposeForm, StudentForADayBookingForm, OtherVisitForm, \
-    StudyProjectBookingForm
+    StudyProjectBookingForm, BookingGrundskoleSubjectLevelForm
 
 from booking.forms import StudentForADayForm, InternshipForm, OpenHouseForm, \
     TeacherVisitForm, ClassVisitForm, StudyProjectForm, AssignmentHelpForm, \
     StudyMaterialForm
 
 from booking.forms import ClassBookingForm, TeacherBookingForm
-from booking.forms import ResourceStudyMaterialForm, BookingSubjectLevelForm
+from booking.forms import ResourceStudyMaterialForm, \
+    BookingGymnasieSubjectLevelForm
 from booking.forms import BookerForm
 from booking.forms import EmailTemplateForm, EmailTemplatePreviewContextForm
 from booking.forms import EmailComposeForm
@@ -94,6 +95,7 @@ def import_views(from_module):
         if not value.__module__ == module_prefix:
             continue
 
+        print name
         import_dict[name] = value
 
 
@@ -2135,8 +2137,8 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
                 str(visitoccurrence.pk): visitoccurrence.available_seats()
                 for visitoccurrence in self.visit.visitoccurrence_set.all()
             },
-            'gymnasiefag_selected': self.gymnasiefag_selected(),
-            'grundskolefag_selected': self.grundskolefag_selected()
+            'gymnasiefag_available': self.gymnasiefag_available(),
+            'grundskolefag_available': self.grundskolefag_available()
         }
         context.update(kwargs)
         return super(BookingView, self).get_context_data(**context)
@@ -2173,7 +2175,10 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
         if 'subjectform' in forms:
             del forms['subjectform']
             hadSubjectForm = True
-
+        hadGrundskoleSubjectForm = False
+        if 'grundskolesubjectform' in forms:
+            del forms['grundskolesubjectform']
+            hadGrundskoleSubjectForm = True
         valid = True
         for (name, form) in forms.items():
             if not form.is_valid():
@@ -2219,10 +2224,18 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
             # We can't fetch this form before we have
             # a saved booking object to feed it, or we'll get an error
             if hadSubjectForm:
-                subjectform = BookingSubjectLevelForm(request.POST,
-                                                      instance=booking)
+                subjectform = BookingGymnasieSubjectLevelForm(request.POST,
+                                                              instance=booking)
                 if subjectform.is_valid():
                     subjectform.save()
+            if hadGrundskoleSubjectForm:
+                grundskolesubjectform = \
+                    BookingGrundskoleSubjectLevelForm(
+                        request.POST,
+                        instance=booking
+                    )
+                if grundskolesubjectform.is_valid():
+                    grundskolesubjectform.save()
 
             self.object = booking
             self.model = booking.__class__
@@ -2243,7 +2256,11 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
             )
         else:
             if hadSubjectForm:
-                forms['subjectform'] = BookingSubjectLevelForm(request.POST)
+                forms['subjectform'] = \
+                    BookingGymnasieSubjectLevelForm(request.POST)
+            if hadGrundskoleSubjectForm:
+                forms['grundskolesubjectform'] = \
+                    BookingGrundskoleSubjectLevelForm(request.POST)
 
         return self.render_to_response(
             self.get_context_data(**forms)
@@ -2260,7 +2277,11 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
             if type == Resource.GROUP_VISIT:
                 forms['bookingform'] = ClassBookingForm(data, visit=self.visit)
                 if self.visit.resourcegymnasiefag_set.count() > 0:
-                    forms['subjectform'] = BookingSubjectLevelForm(data)
+                    forms['subjectform'] = \
+                        BookingGymnasieSubjectLevelForm(data)
+                if self.visit.resourcegrundskolefag_set.count() > 0:
+                    forms['grundskolesubjectform'] = \
+                        BookingGrundskoleSubjectLevelForm(data)
 
             elif type == Resource.TEACHER_EVENT:
                 forms['bookingform'] = TeacherBookingForm(data,
@@ -2297,7 +2318,7 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
             else:
                 return ["booking/studyproject.html"]
 
-    def gymnasiefag_selected(self):
+    def gymnasiefag_available(self):
         result = []
         obj = self.visit
         if self.request.method == 'GET':
@@ -2310,7 +2331,7 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
 
         return result
 
-    def grundskolefag_selected(self):
+    def grundskolefag_available(self):
         result = []
         obj = self.visit
         if self.request.method == 'GET':

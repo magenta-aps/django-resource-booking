@@ -17,6 +17,9 @@
                 if (available !== null) {
                     attendeeField.attr("max", Math.min(available, existingMax));
                     attendeeField.trigger('change');
+                    if (available < existingMax) {
+                        attendeeField.attr("min", 1);
+                    }
                 }
             };
             occurrenceSelect.change(update);
