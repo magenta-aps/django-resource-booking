@@ -277,13 +277,13 @@ class UserProfile(models.Model):
 
         return qs
 
-    def is_available_as_teacher(from_datetime, to_datetime):
+    def is_available_as_teacher(self, from_datetime, to_datetime):
         return not self.taught_visitoccurrences.filter(
             start_datetime__lt=to_datetime,
             end_datetime__gt=from_datetime
         ).exists()
 
-    def can_be_teacher_for(visit_occurrence):
+    def can_be_teacher_for(self, visit_occurrence):
         return self.is_available_as_teacher(
             visit_occurrence.start_datetime,
             visit_occurrence.end_datetime
@@ -310,7 +310,7 @@ class UserProfile(models.Model):
 
         return qs
 
-    def is_available_as_host(from_datetime, to_datetime):
+    def is_available_as_host(self, from_datetime, to_datetime):
         return not self.hosted_visitoccurrences.filter(
             Q(
                 end_datetime__isnull=True,
@@ -322,7 +322,7 @@ class UserProfile(models.Model):
             )
         ).exists()
 
-    def can_be_host_for(visit_occurrence):
+    def can_be_host_for(self, visit_occurrence):
         return self.is_available_as_host(
             visit_occurrence.start_datetime,
             visit_occurrence.end_datetime
