@@ -3,55 +3,55 @@
 municipalities = [
         {'region': u'Hovedstaden', 'name': name}
         for name in [
-            "Albertslund Kommune", "Allerød Kommune", "Ballerup kommune",
-            "Bornholms Regionskommune", "Brøndby kommune", "Dragør Kommune",
-            "Egedal kommune", "Fredensborg kommune", "Frederiksberg Kommune",
-            "Frederikssund Kommune", "Furesø Kommune", "Gentofte Kommune",
-            "Gladsaxe Kommune", "Glostrup Kommune", "Gribskov Kommune",
-            "Halsnæs Kommune", "Helsingør Kommune", "Herlev Kommune",
-            "Hillerød Kommune", "Hvidovre Kommune", "Høje-Taastrup Kommune",
-            "Hørsholm Kommune", "Ishøj Kommune", "Københavns Kommune",
-            "Lyngby-Taarbæk Kommune", "Rudersdal Kommune", "Rødovre Kommune",
-            "Tårnby Kommune", "Vallensbæk Kommune"
+            u'Albertslund Kommune', u'Allerød Kommune', u'Ballerup Kommune',
+            u'Bornholms Regionskommune', u'Brøndby Kommune', u'Dragør Kommune',
+            u'Egedal Kommune', u'Fredensborg Kommune', u'Frederiksberg Kommune',
+            u'Frederikssund Kommune', u'Furesø Kommune', u'Gentofte Kommune',
+            u'Gladsaxe Kommune', u'Glostrup Kommune', u'Gribskov Kommune',
+            u'Halsnæs Kommune', u'Helsingør Kommune', u'Herlev Kommune',
+            u'Hillerød Kommune', u'Hvidovre Kommune', u'Høje-Taastrup Kommune',
+            u'Hørsholm Kommune', u'Ishøj Kommune', u'Københavns Kommune',
+            u'Lyngby-Taarbæk Kommune', u'Rudersdal Kommune', u'Rødovre Kommune',
+            u'Tårnby Kommune', u'Vallensbæk Kommune'
         ]
     ] + [
         {'region': u'Sjælland', 'name': name}
         for name in [
-            "Faxe Kommune", "Greve Kommune", "Guldborgsund Kommune",
-            "Holbæk Kommune", "Kalundborg Kommune", "Køge Kommune",
-            "Lejre Kommune", "Lolland Kommune", "Næstved Kommune",
-            "Odsherred Kommune", "Ringsted Kommune", "Roskilde Kommune",
-            "Slagelse Kommune", "Solrød Kommune", "Sorø Kommune",
-            "Stevns Kommune", "Vordingborg Kommune"
+            u'Faxe Kommune', u'Greve Kommune', u'Guldborgsund Kommune',
+            u'Holbæk Kommune', u'Kalundborg Kommune', u'Køge Kommune',
+            u'Lejre Kommune', u'Lolland Kommune', u'Næstved Kommune',
+            u'Odsherred Kommune', u'Ringsted Kommune', u'Roskilde Kommune',
+            u'Slagelse Kommune', u'Solrød Kommune', u'Sorø Kommune',
+            u'Stevns Kommune', u'Vordingborg Kommune'
         ]
     ] + [
         {'region': u'Syddanmark', 'name': name}
         for name in [
-            "Aabenraa Kommune", "Assens Kommune", "Billund Kommune",
-            "Esbjerg Kommune", "Faaborg-Midtfyn Kommune", "Fanø Kommune",
-            "Fredericia kommune", "Haderslev Kommune", "Kerteminde Kommune",
-            "Kolding Kommune", "Langeland Kommune", "Middelfart Kommune",
-            "Nordfyns Kommune", "Nyborg Kommune", "Odense Kommune",
-            "Svendborg Kommune", "Sønderborg Kommune", "Tønder Kommune",
-            "Varde Kommune", "Vejen Kommune", "Vejle Kommune", "Ærø Kommune"
+            u'Aabenraa Kommune', u'Assens Kommune', u'Billund Kommune',
+            u'Esbjerg Kommune', u'Faaborg-Midtfyn Kommune', u'Fanø Kommune',
+            u'Fredericia Kommune', u'Haderslev Kommune', u'Kerteminde Kommune',
+            u'Kolding Kommune', u'Langeland Kommune', u'Middelfart Kommune',
+            u'Nordfyns Kommune', u'Nyborg Kommune', u'Odense Kommune',
+            u'Svendborg Kommune', u'Sønderborg Kommune', u'Tønder Kommune',
+            u'Varde Kommune', u'Vejen Kommune', u'Vejle Kommune', u'Ærø Kommune'
         ]
     ] + [
         {'region': u'Midtjylland', 'name': name}
         for name in [
-            "Favrskov Kommune", "Hedensted Kommune", "Herning Kommune",
-            "Holstebro Kommune", "Horsens Kommune", "Ikast-Brande Kommune",
-            "Lemvig Kommune", "Norddjurs Kommune", "Odder Kommune",
-            "Randers Kommune", "Ringkøbing-Skjern Kommune", "Samsø Kommune",
-            "Silkeborg Kommune", "Skanderborg Kommune", "Skive Kommune",
-            "Struer Kommune", "Syddjurs Kommune", "Viborg Kommune",
-            "Århus Kommune"
+            u'Favrskov Kommune', u'Hedensted Kommune', u'Herning Kommune',
+            u'Holstebro Kommune', u'Horsens Kommune', u'Ikast-Brande Kommune',
+            u'Lemvig Kommune', u'Norddjurs Kommune', u'Odder Kommune',
+            u'Randers Kommune', u'Ringkøbing-Skjern Kommune', u'Samsø Kommune',
+            u'Silkeborg Kommune', u'Skanderborg Kommune', u'Skive Kommune',
+            u'Struer Kommune', u'Syddjurs Kommune', u'Viborg Kommune',
+            u'Århus Kommune'
         ]
     ] + [
         {'region': u'Nordjylland', 'name': name}
         for name in [
-            "Aalborg Kommune", "Brønderslev Kommune", "Frederikshavn Kommune",
-            "Hjørring Kommune", "Jammerbugt Kommune", "Læsø Kommune",
-            "Mariagerfjord Kommune", "Morsø Kommune", "Rebild Kommune",
-            "Thisted Kommune", "Vesthimmerland Kommune"
+            u'Aalborg Kommune', u'Brønderslev Kommune', u'Frederikshavn Kommune',
+            u'Hjørring Kommune', u'Jammerbugt Kommune', u'Læsø Kommune',
+            u'Mariagerfjord Kommune', u'Morsø Kommune', u'Rebild Kommune',
+            u'Thisted Kommune', u'Vesthimmerlands Kommune'
         ]
     ]
