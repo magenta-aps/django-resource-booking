@@ -13,7 +13,8 @@
             attendeeField = $("#{{ bookerform.attendee_count.id_for_label }}"),
             existingMax = attendeeField.attr("max"),
             submitbutton = $("#submitbutton");
-
+            $("#waitinglist_warning").hide();
+        
             if (occurrenceSelect.length && attendeeField.length) {
                 var updateOccurrence = function() {
                     var occurrence = occurrenceAvailable[occurrenceSelect.val()];
