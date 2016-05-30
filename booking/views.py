@@ -278,8 +278,15 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
         form.fields['recipients'].choices = self.recipients
         recipient_ids = request.GET.getlist("recipients", None)
         if recipient_ids is not None:
-            form.fields['recipients'].choices = [self.encode_recipient(recipient) for recipient in self.lookup_recipients(recipient_ids)]
-            form.initial['recipients'] = [id for (id, label) in form.fields['recipients'].choices]
+            # If the URL defines recipients, add them and set them as defaults
+            form.fields['recipients'].choices = [
+                self.encode_recipient(recipient)
+                for recipient in self.lookup_recipients(recipient_ids)
+            ]
+            form.initial['recipients'] = [
+                id
+                for (id, label) in form.fields['recipients'].choices
+            ]
         return self.render_to_response(
             self.get_context_data(form=form)
         )
@@ -360,7 +367,9 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
 
     @staticmethod
     def lookup_recipient(recipient_key):
-        (recipient_type, id) = recipient_key.split(EmailComposeView.RECIPIENT_SEPARATOR, 1)
+        (recipient_type, id) = recipient_key.split(
+            EmailComposeView.RECIPIENT_SEPARATOR, 1
+        )
         if recipient_type == EmailComposeView.RECIPIENT_BOOKER:
             return Booker.objects.filter(id=id)
         elif recipient_type == EmailComposeView.RECIPIENT_PERSON:
@@ -2804,7 +2813,8 @@ class VisitOccurrenceDetailView(LoginRequiredMixin, LoggedViewMixin,
             for (key, label) in EmailTemplate.key_choices
             if key in EmailTemplate.visitoccurrence_manual_keys
         ]
-        context['emailtemplate_waitinglist'] = EmailTemplate.NOTIFY_GUEST__SPOT_OPEN
+        context['emailtemplate_waitinglist'] = \
+            EmailTemplate.NOTIFY_GUEST__SPOT_OPEN
         user = self.request.user
 
         if hasattr(user, 'userprofile'):
