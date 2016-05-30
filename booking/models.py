@@ -2587,9 +2587,12 @@ class School(models.Model):
             cvr = item.get('cvr')
             ean = item.get('ean')
             try:
-                municipality = Municipality.objects.get(name=item.get('municipality')) if 'municipality' in item else None
+                municipality = Municipality.objects.get(
+                    name=item.get('municipality')
+                ) if 'municipality' in item else None
             except Municipality.DoesNotExist:
-                print "Municipality '%s' does not exist" % item.get('municipality')
+                print "Municipality '%s' does not exist" % \
+                      item.get('municipality')
                 return
 
             try:
