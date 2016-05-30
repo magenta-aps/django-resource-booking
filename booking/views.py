@@ -1836,7 +1836,7 @@ class VisitOccurrenceNotifyView(LoginRequiredMixin, ModalMixin,
                     "%s%s%d" % (self.RECIPIENT_BOOKER,
                                 self.RECIPIENT_SEPARATOR,
                                 booking.booker.id):
-                        booking.booker.get_full_email()
+                                    booking.booker.get_full_email()
                     for booking in visitoccurrence.bookings.all()
                     }
             },
@@ -1846,7 +1846,7 @@ class VisitOccurrenceNotifyView(LoginRequiredMixin, ModalMixin,
                     "%s%s%d" % (self.RECIPIENT_BOOKER,
                                 self.RECIPIENT_SEPARATOR,
                                 booking.booker.id):
-                        booking.booker.get_full_email()
+                                    booking.booker.get_full_email()
                     for booking in visitoccurrence.booking_list
                     }
             },
@@ -1856,7 +1856,7 @@ class VisitOccurrenceNotifyView(LoginRequiredMixin, ModalMixin,
                     "%s%s%d" % (self.RECIPIENT_BOOKER,
                                 self.RECIPIENT_SEPARATOR,
                                 booking.booker.id):
-                        booking.booker.get_full_email()
+                                    booking.booker.get_full_email()
                     for booking in visitoccurrence.waiting_list
                     }
             },
