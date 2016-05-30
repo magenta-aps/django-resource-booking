@@ -2242,7 +2242,7 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
             booking = forms['bookingform'].save()
 
             attendee_count = booking.booker.attendee_count
-            if booking.visitoccurrence.visit.do_create_waiting_lists and \
+            if booking.visitoccurrence.visit.do_create_waiting_list and \
                     attendee_count > available_seats:
                 # Put in waiting list
                 if booking.visitoccurrence.waiting_list_closed:
