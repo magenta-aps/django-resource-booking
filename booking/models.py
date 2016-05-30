@@ -2495,6 +2495,7 @@ class School(models.Model):
     class Meta:
         verbose_name = _(u'uddannelsesinstitution')
         verbose_name_plural = _(u'uddannelsesinstitutioner')
+        ordering = ["name", "postcode"]
 
     name = models.CharField(
         max_length=128,
