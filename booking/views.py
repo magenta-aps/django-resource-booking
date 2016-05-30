@@ -2246,11 +2246,13 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
                     attendee_count > available_seats:
                 # Put in waiting list
                 if booking.visitoccurrence.waiting_list_closed:
+                    booking.delete()
                     raise Exception(_(u"Cannot place booking with in waiting "
                                       u"list; the waiting list is closed"))
                 waitinglist_capacity = \
                     booking.visitoccurrence.waiting_list_capacity
                 if attendee_count > waitinglist_capacity:
+                    booking.delete()
                     raise Exception(_(u"Cannot place booking with %d attendees"
                                       u" in waiting list; there are only %d "
                                       u"spots") %
