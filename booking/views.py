@@ -278,6 +278,9 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
     def get(self, request, *args, **kwargs):
         form = self.get_form()
         form.fields['recipients'].choices = self.recipients
+        recipient_ids = request.GET.get("recipients", None)
+        if recipient_ids is not None:
+            self.recipients = self.lookup_recipients(recipient_ids)
         return self.render_to_response(
             self.get_context_data(form=form)
         )
@@ -336,17 +339,19 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
         user_ids = []
         userperson_ids = []
         customs = []
+        if type(recipient_ids) != list:
+            recipient_ids = [recipient_ids]
         for value in recipient_ids:
-            (type, id) = value.split(self.RECIPIENT_SEPARATOR, 1)
-            if type == self.RECIPIENT_BOOKER:
+            (recipient_type, id) = value.split(self.RECIPIENT_SEPARATOR, 1)
+            if recipient_type == self.RECIPIENT_BOOKER:
                 booker_ids.append(id)
-            elif type == self.RECIPIENT_PERSON:
+            elif recipient_type == self.RECIPIENT_PERSON:
                 person_ids.append(id)
-            elif type == self.RECIPIENT_USER:
+            elif recipient_type == self.RECIPIENT_USER:
                 user_ids.append(id)
-            elif type == self.RECIPIENT_USERPERSON:
+            elif recipient_type == self.RECIPIENT_USERPERSON:
                 userperson_ids.append(id)
-            elif type == self.RECIPIENT_CUSTOM:
+            elif recipient_type == self.RECIPIENT_CUSTOM:
                 customs.append(id)
         return list(Booker.objects.filter(id__in=booker_ids)) + \
             list(Person.objects.filter(id__in=person_ids)) + \
@@ -2221,13 +2226,16 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
                 occ.save()
                 booking.visitoccurrence = occ
 
+            available_seats = booking.visitoccurrence.available_seats
+
             if 'bookerform' in forms:
                 booking.booker = forms['bookerform'].save()
 
             booking = forms['bookingform'].save()
 
             attendee_count = booking.booker.attendee_count
-            if attendee_count > booking.visitoccurrence.available_seats:
+            if booking.visitoccurrence.visit.do_create_waiting_lists and \
+                    attendee_count > available_seats:
                 # Put in waiting list
                 if booking.visitoccurrence.waiting_list_closed:
                     raise Exception(_(u"Cannot place booking with in waiting "
