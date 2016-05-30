@@ -1796,13 +1796,14 @@ class Visit(Resource):
     @property
     def is_bookable(self):
         return self.is_type_bookable and \
-               self.state == Resource.ACTIVE and \
-               self.has_bookable_occurrences
+            self.state == Resource.ACTIVE and \
+            self.has_bookable_occurrences
+
     @property
     def can_join_waitinglist(self):
         return self.is_type_bookable and \
-               self.state == Resource.ACTIVE and \
-               self.has_waitinglist_occurrence_spots
+            self.state == Resource.ACTIVE and \
+            self.has_waitinglist_occurrence_spots
 
     @property
     def duration_as_timedelta(self):
