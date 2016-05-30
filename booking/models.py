@@ -539,6 +539,7 @@ class EmailTemplate(models.Model):
     SYSTEM__EMAIL_REPLY = 13
     SYSTEM__USER_CREATED = 14
     NOTIFY_GUEST_REMINDER = 15  # Ticket 15510
+    NOTIFY_GUEST__SPOT_OPEN = 16  # Ticket 13804
 
     # Choice labels
     key_choices = [
@@ -548,6 +549,8 @@ class EmailTemplate(models.Model):
          _(u'Generel besked til gæst(er)')),
         (NOTIFY_GUEST_REMINDER,
          _(u'Reminder til gæst')),
+        (NOTIFY_GUEST__SPOT_OPEN,
+         _(u'Besked til gæst på venteliste om ledig plads')),
         (NOTIFY_EDITORS__BOOKING_CREATED,
          _(u'Besked til koordinatorer ved booking af besøg')),
         (NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
@@ -590,7 +593,8 @@ class EmailTemplate(models.Model):
         NOTIFY_ALL__BOOKING_COMPLETE,
         NOTIFY_ALL__BOOKING_CANCELED,
         NOTITY_ALL__BOOKING_REMINDER,
-        NOTIFY_GUEST_REMINDER
+        NOTIFY_GUEST_REMINDER,
+        NOTIFY_GUEST__SPOT_OPEN
     ]
 
     # Templates available for manual sending from bookings
@@ -828,18 +832,6 @@ class ObjectStatistics(models.Model):
     def on_update(self):
         self.updated_time = timezone.now()
         self.save()
-
-
-class WaitingList(models.Model):
-
-    closing_time = models.DateTimeField(
-        null=True,
-        blank=True
-    )
-    guests = models.ManyToManyField(
-        "Booking",
-        verbose_name=_(u'Tilmeldinger')
-    )
 
 
 # Bookable resources

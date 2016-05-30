@@ -1820,14 +1820,34 @@ class VisitOccurrenceNotifyView(LoginRequiredMixin, ModalMixin,
         ]
         context['recp'] = {
             'guests': {
-                'label': _(u'Gæster'),
+                'label': _(u'Alle gæster'),
                 'items': {
                     "%s%s%d" % (self.RECIPIENT_BOOKER,
                                 self.RECIPIENT_SEPARATOR,
                                 booking.booker.id):
-                    booking.booker.get_full_email()
+                                    booking.booker.get_full_email()
                     for booking in visitoccurrence.bookings.all()
-                }
+                    }
+            },
+            'guests_accepted': {
+                'label': _(u'Deltagende gæster'),
+                'items': {
+                    "%s%s%d" % (self.RECIPIENT_BOOKER,
+                                self.RECIPIENT_SEPARATOR,
+                                booking.booker.id):
+                                    booking.booker.get_full_email()
+                    for booking in visitoccurrence.booking_list
+                    }
+            },
+            'guests_waiting': {
+                'label': _(u'Gæster på venteliste'),
+                'items': {
+                    "%s%s%d" % (self.RECIPIENT_BOOKER,
+                                self.RECIPIENT_SEPARATOR,
+                                booking.booker.id):
+                                    booking.booker.get_full_email()
+                    for booking in visitoccurrence.waiting_list
+                    }
             },
             'contacts': {
                 'label': _(u'Kontaktpersoner'),
