@@ -12,6 +12,7 @@ from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
 from django.db.models.aggregates import Count, Sum
 from django.db.models.functions import Coalesce
+from django.http import Http404
 from django.shortcuts import redirect
 from django.utils import timezone
 from django.utils.decorators import method_decorator
@@ -617,6 +618,111 @@ class EditMyResourcesView(EditorRequriedMixin, UpdateView):
             return redirect(self.get_success_url())
 
         return super(EditMyResourcesView, self).post(request, *args, **kwargs)
+
+    def get_success_url(self):
+        return reverse('user_profile')
+
+
+class TeacherAvailabilityView(LoginRequiredMixin, DetailView):
+    model = UserProfile
+    template_name = 'profile/teacher_availability.html'
+
+    def get_context_data(self, **kwargs):
+        context = {}
+
+        if self.object.is_teacher:
+            user = self.object.user
+            accepted_qs = user.taught_visitoccurrences.order_by(
+                'start_datetime'
+            )
+            context['accepted'] = self.to_datelist(accepted_qs)
+            unaccepted_qs = self.object.requested_as_teacher_for_qs(
+                exclude_accepted=True
+            ).order_by('start_datetime')
+            context['unaccepted'] = self.to_datelist(unaccepted_qs)
+        else:
+            context['not_a_teacher'] = True
+
+        context.update(kwargs)
+
+        return super(
+            TeacherAvailabilityView, self
+        ).get_context_data(**context)
+
+    def to_datelist(self, qs):
+        dates = []
+        current = None
+        today = timezone.localtime(timezone.now()).date()
+        for x in qs:
+            if x.start_datetime:
+                date = timezone.localtime(x.start_datetime).date()
+            else:
+                date = None
+            if current is None or current['date'] != date:
+                if today and date > today:
+                    dates.append({
+                        'date': today,
+                        'today': True,
+                        'items': []
+                    })
+                    today = None
+
+                current = {
+                    'date': date,
+                    'items': [],
+                    'today': False
+                }
+
+                if today and today == date:
+                    current['today'] = True
+                    today = None
+
+                dates.append(current)
+
+            current['items'].append(x)
+
+        if today:
+            dates.append({
+                'date': today,
+                'today': True,
+                'items': []
+            })
+
+        return dates
+
+
+class TeacherAvailabilityEditView(LoginRequiredMixin, UpdateView):
+    model = UserProfile
+    template_name = 'profile/teacher_availability_edit.html'
+    fields = ['teacher_availability_text']
+
+    def get_object(self, queryset=None):
+        user = self.request.user
+        if user.userprofile and user.userprofile.is_teacher:
+            return user.userprofile
+        else:
+            raise Http404("Only teachers can edit availability")
+
+    def get_form(self, form_class=None):
+        form = super(TeacherAvailabilityEditView, self).get_form(form_class)
+
+        for f in form.fields.values():
+            css = f.widget.attrs.get("class")
+            if css:
+                f.widget.attrs['class'] = css + ' form-control'
+            else:
+                f.widget.attrs['class'] = 'form-control'
+
+        return form
+
+    def post(self, request, *args, **kwargs):
+        if "cancel" in request.POST:
+            self.object = self.get_object()
+            return redirect(self.get_success_url())
+        else:
+            return super(TeacherAvailabilityEditView, self).post(
+                request, *args, **kwargs
+            )
 
     def get_success_url(self):
         return reverse('user_profile')

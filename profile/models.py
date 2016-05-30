@@ -8,7 +8,9 @@ from django.db.models import Aggregate
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
+import booking.models
 from booking.models import Unit, Resource
+from booking.utils import get_related_content_types
 import uuid
 
 # User roles
@@ -131,6 +133,12 @@ class UserProfile(models.Model):
         verbose_name=_(u"Mine tilbud")
     )
 
+    teacher_availability_text = models.TextField(
+        verbose_name=_(u"Mulige undervisningstidspunkter"),
+        blank=True,
+        default=""
+    )
+
     def __unicode__(self):
         return self.user.username
 
@@ -247,6 +255,78 @@ class UserProfile(models.Model):
             )
         else:
             return User.objects.none()
+
+    def requested_as_teacher_for_qs(self, exclude_accepted=False):
+        bm = booking.models
+        cts = get_related_content_types(bm.VisitOccurrence)
+        template_key = bm.EmailTemplate.NOTIFY_HOST__REQ_TEACHER_VOLUNTEER
+
+        mail_qs = bm.KUEmailRecipient.objects.filter(
+            user=self.user,
+            email_message__template_key=template_key,
+            email_message__content_type__in=cts,
+        )
+
+        if exclude_accepted:
+            accepted_qs = self.user.taught_visitoccurrences.all()
+            mail_qs = mail_qs.exclude(email_message__object_id__in=accepted_qs)
+
+        qs = bm.VisitOccurrence.objects.filter(
+            pk__in=mail_qs.values_list("email_message__object_id", flat=True)
+        )
+
+        return qs
+
+    def is_available_as_teacher(self, from_datetime, to_datetime):
+        return not self.taught_visitoccurrences.filter(
+            start_datetime__lt=to_datetime,
+            end_datetime__gt=from_datetime
+        ).exists()
+
+    def can_be_teacher_for(self, visit_occurrence):
+        return self.is_available_as_teacher(
+            visit_occurrence.start_datetime,
+            visit_occurrence.end_datetime
+        )
+
+    def requested_as_host_for_qs(self, exclude_accepted=False):
+        bm = booking.models
+        cts = get_related_content_types(bm.VisitOccurrence)
+        template_key = bm.EmailTemplate.NOTIFY_HOST__REQ_HOST_VOLUNTEER
+
+        mail_qs = bm.KUEmailRecipient.objects.filter(
+            user=self.user,
+            email_message__template_key=template_key,
+            email_message__content_type__in=cts,
+        )
+
+        if exclude_accepted:
+            accepted_qs = self.user.hosted_visitoccurrences.all()
+            mail_qs = mail_qs.exclude(email_message__object_id__in=accepted_qs)
+
+        qs = bm.VisitOccurrence.objects.filter(
+            pk__in=mail_qs.values_list("email_message__object_id", flat=True)
+        )
+
+        return qs
+
+    def is_available_as_host(self, from_datetime, to_datetime):
+        return not self.hosted_visitoccurrences.filter(
+            Q(
+                end_datetime__isnull=True,
+                start_datetime__lt=to_datetime,
+                start_datetime__gt=from_datetime
+            ) | Q(
+                start_datetime__lt=to_datetime,
+                end_datetime__gt=from_datetime
+            )
+        ).exists()
+
+    def can_be_host_for(self, visit_occurrence):
+        return self.is_available_as_host(
+            visit_occurrence.start_datetime,
+            visit_occurrence.end_datetime
+        )
 
     @property
     def available_roles(self):

@@ -1,0 +1,77 @@
+{% extends "index.html" %}
+{% load i18n %}
+
+{% block htmltitle %} - {% blocktrans with name=object.user %}Information om underviser {{ name }}{% endblocktrans %}{% endblock %}
+
+
+{% block content %}
+    <div class="divider"></div>
+
+    <h1>{% blocktrans with name=object.user %}Information om underviser {{ name }}{% endblocktrans %}</h1>
+
+    <div class="divider"></div>
+
+    <div class="row">
+        <div class="col-sm-12">
+            <h2>{% trans "Mulige undervisningstidspunkter" %}</h2>
+            {% if object.teacher_availability_text %}
+            <p>
+                <p>{% blocktrans with name=object.user %}{{ name }} har angivet følgende mulige undervisningstidspunkter{% endblocktrans %}</p>
+                <pre>{{object.teacher_availability_text}}</pre>
+            </p>
+            {% else %}
+            <p>{% blocktrans with name=object.user %}{{ name }} har ikke angivet hvornår de ønsker at undervise{% endblocktrans %}</p>
+            {% endif %}
+            {% if request.user.pk = object.user.pk %}
+                <a href="" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
+            {% endif %}
+
+            <div class="divider"></div>
+
+            <h2>{% blocktrans with name=object.user %}Besøg {{ name }} er tilknyttet{% endblocktrans %}</h2>
+            <ul>
+            {% for date in accepted %}
+                <li>
+                    <strong>{% if date.date %}{{ date.date }}{% else %}{% trans 'Ingen dato angivet' %}{% endif %}</strong>
+                    <ul>
+                        {% if date.today %}
+                        <li><strong id="todaysdate">{% trans "Dags dato" %}</strong></li>
+                        {% endif %}
+                        {% for vo in date.items %}
+                        <li>
+                            <a href="{% url 'visit-occ-view' vo.pk %}">{{ vo }}</a>
+                            <span class="label label-{{ vo.get_workflow_status_class }}">{{ vo.get_workflow_status_display }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </li>
+            {% endfor %}
+            </ul>
+            <div class="divider"></div>
+            <h2>{% blocktrans with name=object.user %}Besøg {{ name }} ikke har accepteret{% endblocktrans %}</h2>
+            <ul>
+            {% for date in unaccepted %}
+                <li>
+                    <strong>{% if date.date %}{{ date.date }}{% else %}{% trans 'Ingen dato angivet' %}{% endif %}</strong>
+                    <ul>
+                        {% if date.today %}
+                        <li><strong id="todaysdate_unaccepted">{% trans "Dags dato" %}</strong></li>
+                        {% endif %}
+                        {% for vo in date.items %}
+                        <li>
+                            <a href="{% url 'visit-occ-view' vo.pk %}">{{ vo }}</a>
+                            {% if vo.needs_teachers %}
+                            ({% trans 'Mangler stadig undervisere' %})
+                            {% else %}
+                            ({% trans 'Mangler ikke undervisere' %})
+                            {% endif %}
+                            <span class="label label-{{ vo.get_workflow_status_class }}">{{ vo.get_workflow_status_display }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </li>
+            {% endfor %}
+            </ul>
+        </div>
+    </div>
+{% endblock %}
