@@ -1781,11 +1781,6 @@ class VisitDetailView(ResourceBookingDetailView):
         else:
             context['can_edit'] = False
 
-        if self.object.is_bookable:
-            context['can_book'] = True
-        else:
-            context['can_book'] = False
-
         context['breadcrumbs'] = [
             {'url': reverse('search'), 'text': _(u'Søgning')},
             {'url': self.request.GET.get("search", reverse('search')),

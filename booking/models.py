@@ -1787,10 +1787,22 @@ class Visit(Resource):
         return False
 
     @property
+    def has_waitinglist_occurrence_spots(self):
+        for occurrence in self.future_events:
+            if occurrence.can_join_waitinglist:
+                return True
+        return False
+
+    @property
     def is_bookable(self):
         return self.is_type_bookable and \
-            self.state == Resource.ACTIVE and \
-            self.has_bookable_occurrences
+               self.state == Resource.ACTIVE and \
+               self.has_bookable_occurrences
+    @property
+    def can_join_waitinglist(self):
+        return self.is_type_bookable and \
+               self.state == Resource.ACTIVE and \
+               self.has_waitinglist_occurrence_spots
 
     @property
     def duration_as_timedelta(self):
@@ -2195,6 +2207,21 @@ class VisitOccurrence(models.Model):
         if self.expired:
             return False
         if self.available_seats == 0:
+            return False
+        return True
+
+    @property
+    def can_join_waitinglist(self):
+        # Can this occurrence be booked (with spots on the waiting list)?
+        if not self.bookable:
+            return False
+        if self.workflow_status not in self.BOOKABLE_STATES:
+            return False
+        if self.expired:
+            return False
+        if self.waiting_list_capacity <= 0:
+            return False
+        if self.waiting_list_closed:
             return False
         return True
 

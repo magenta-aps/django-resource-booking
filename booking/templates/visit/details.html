@@ -58,9 +58,14 @@
                 </ul>
             {% endif %}
             <div class="well order-buttons hidden-print">
-                {% if can_book %}
+                {% if object.is_bookable %}
                     <a class="btn btn-default" data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'visit-book' object.id %}?modal=1">
                         {% trans 'Tilmeld' %}
+                        <span class="glyphicon glyphicon-chevron-right"></span>
+                    </a>
+                    {% elif object.can_join_waitinglist %}
+                    <a class="btn btn-default" data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'visit-book' object.id %}?modal=1">
+                        {% trans 'Skriv på venteliste' %}
                         <span class="glyphicon glyphicon-chevron-right"></span>
                     </a>
                 {% endif %}
@@ -71,7 +76,7 @@
                     </a>
                 {% endif %}
             </div>
-            {% if can_book %}
+            {% if object.is_bookable %}
                 <div class="disclaimer">{% trans 'Bemærk at din bestilling først er bindende, når du har modtaget en bekræftelse fra den ansvarlige arrangør fra Københavns Universitet.' %}</div>
             {% endif %}
             <div class="go-back">
