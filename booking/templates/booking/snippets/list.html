@@ -43,7 +43,10 @@
                             {% endif %}
                         </dl>
                     </a>
-                    <div class="pull-right input-container" id="move_{{ booking.id }}"></div>
+                    <div class="pull-right">
+                        <label>{% trans 'Vælg:' %}</label>
+                        <span class="input-container" id="move_{{ booking.id }}"></span>
+                    </div>
                 </div>
             {% endfor %}
             <button type="submit" name="action" value="delete" class="btn btn-primary btn-xs pull-right">{% trans 'Slet valgte' %}</button>
