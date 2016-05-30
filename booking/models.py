@@ -3024,6 +3024,19 @@ class School(models.Model):
         Municipality,
         null=True
     )
+    address = models.CharField(
+        max_length=128,
+        verbose_name=_(u'Adresse'),
+        null=True
+    )
+    cvr = models.IntegerField(
+        verbose_name=_(u'CVR-nummer'),
+        null=True
+    )
+    ean = models.BigIntegerField(
+        verbose_name=_(u'EAN-nummer'),
+        null=True
+    )
 
     ELEMENTARY_SCHOOL = Subject.SUBJECT_TYPE_GRUNDSKOLE
     GYMNASIE = Subject.SUBJECT_TYPE_GYMNASIE
@@ -3059,26 +3072,68 @@ class School(models.Model):
         PostCode.create_defaults()
         Municipality.create_defaults()
         from booking.data import schools
-        for data, type in [
-                (schools.elementary_schools, School.ELEMENTARY_SCHOOL),
-                (schools.high_schools, School.GYMNASIE)]:
-            for name, postnr in data:
+        # for data, type in [
+        #        (schools.elementary_schools, School.ELEMENTARY_SCHOOL),
+        #        (schools.high_schools, School.GYMNASIE)]:
+        data = schools.high_schools
+        type = School.GYMNASIE
+        for name, postnr in data:
+            try:
+                school = School.objects.get(name=name,
+                                            postcode__number=postnr)
+                if school.type != type:
+                    school.type = type
+                    school.save()
+            except School.DoesNotExist:
                 try:
-                    school = School.objects.get(name=name,
-                                                postcode__number=postnr)
-                    if school.type != type:
-                        school.type = type
-                        school.save()
-                except School.DoesNotExist:
-                    try:
-                        postcode = PostCode.get(postnr)
-                        School(
-                            name=name, postcode=postcode,
-                            type=type
-                        ).save()
-                    except PostCode.DoesNotExist:
-                        print "Warning: Postcode %d not found in database. " \
-                              "Not adding school %s" % (postcode, name)
+                    postcode = PostCode.get(postnr)
+                    School(
+                        name=name, postcode=postcode,
+                        type=type
+                    ).save()
+                except PostCode.DoesNotExist:
+                    print "Warning: Postcode %d not found in database. " \
+                          "Not adding school %s" % (postcode, name)
+
+        data = schools.elementary_schools
+        type = School.ELEMENTARY_SCHOOL
+        for item in data:
+            name = item['name']
+            postnr = item['postnr']
+            address = item.get('address')
+            cvr = item.get('cvr')
+            ean = item.get('ean')
+            try:
+                municipality = Municipality.objects.get(
+                    name=item.get('municipality')
+                ) if 'municipality' in item else None
+            except Municipality.DoesNotExist:
+                print "Municipality '%s' does not exist" % \
+                      item.get('municipality')
+                return
+
+            try:
+                school = School.objects.get(name=name,
+                                            postcode__number=postnr)
+                if school.type != type:
+                    school.type = type
+
+                school.address = address
+                school.cvr = cvr
+                school.ean = ean
+                school.municipality = municipality
+                school.save()
+            except School.DoesNotExist:
+                try:
+                    postcode = PostCode.get(postnr)
+                    School(
+                        name=name, postcode=postcode, type=type,
+                        address=address, cvr=cvr, ean=ean,
+                        municipality=municipality
+                    ).save()
+                except PostCode.DoesNotExist:
+                    print "Warning: Postcode %d not found in database. " \
+                          "Not adding school %s" % (postcode, name)
 
 
 class Booker(models.Model):
