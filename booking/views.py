@@ -276,9 +276,10 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
     def get(self, request, *args, **kwargs):
         form = self.get_form()
         form.fields['recipients'].choices = self.recipients
-        recipient_ids = request.GET.get("recipients", None)
+        recipient_ids = request.GET.getlist("recipients", None)
         if recipient_ids is not None:
-            self.recipients = self.lookup_recipients(recipient_ids)
+            form.fields['recipients'].choices = [self.encode_recipient(recipient) for recipient in self.lookup_recipients(recipient_ids)]
+            form.initial['recipients'] = [id for (id, label) in form.fields['recipients'].choices]
         return self.render_to_response(
             self.get_context_data(form=form)
         )
@@ -331,7 +332,48 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
         context.update(kwargs)
         return super(EmailComposeView, self).get_context_data(**context)
 
-    def lookup_recipients(self, recipient_ids):
+    @staticmethod
+    def encode_recipient(recipient):
+        recipient_type = None
+        id = None
+        email = None
+        if isinstance(recipient, Booking):
+            recipient = recipient.booker
+        if isinstance(recipient, Booker):
+            recipient_type = EmailComposeView.RECIPIENT_BOOKER
+            id = recipient.id
+            email = recipient.get_full_email()
+        elif isinstance(recipient, Person):
+            recipient_type = EmailComposeView.RECIPIENT_PERSON
+            id = recipient.id
+            email = recipient.get_full_email()
+        elif isinstance(recipient, UserPerson):
+            recipient_type = EmailComposeView.RECIPIENT_USERPERSON
+            id = recipient.id
+            email = recipient.get_full_email()
+        elif isinstance(recipient, User):
+            recipient_type = EmailComposeView.RECIPIENT_USER
+            id = recipient.username
+            email = full_email(recipient.email, recipient.get_full_name())
+        key = recipient_type + EmailComposeView.RECIPIENT_SEPARATOR + str(id)
+        return key, email
+
+    @staticmethod
+    def lookup_recipient(recipient_key):
+        (recipient_type, id) = recipient_key.split(EmailComposeView.RECIPIENT_SEPARATOR, 1)
+        if recipient_type == EmailComposeView.RECIPIENT_BOOKER:
+            return Booker.objects.filter(id=id)
+        elif recipient_type == EmailComposeView.RECIPIENT_PERSON:
+            return Person.objects.filter(id=id)
+        elif recipient_type == EmailComposeView.RECIPIENT_USER:
+            return User.objects.filter(username=id)
+        elif recipient_type == EmailComposeView.RECIPIENT_USERPERSON:
+            return UserPerson.objects.filter(id=id)
+        elif recipient_type == EmailComposeView.RECIPIENT_CUSTOM:
+            return id
+
+    @staticmethod
+    def lookup_recipients(recipient_ids):
         booker_ids = []
         person_ids = []
         user_ids = []
@@ -340,16 +382,24 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
         if type(recipient_ids) != list:
             recipient_ids = [recipient_ids]
         for value in recipient_ids:
-            (recipient_type, id) = value.split(self.RECIPIENT_SEPARATOR, 1)
-            if recipient_type == self.RECIPIENT_BOOKER:
+            (recipient_type, id) = value.split(
+                EmailComposeView.RECIPIENT_SEPARATOR, 1
+            )
+            if recipient_type == "booking":  # We allow booking ids for #13804
+                try:
+                    id = Booking.objects.get(id=id).booker.id
+                    recipient_type = EmailComposeView.RECIPIENT_BOOKER
+                except:
+                    pass
+            if recipient_type == EmailComposeView.RECIPIENT_BOOKER:
                 booker_ids.append(id)
-            elif recipient_type == self.RECIPIENT_PERSON:
+            elif recipient_type == EmailComposeView.RECIPIENT_PERSON:
                 person_ids.append(id)
-            elif recipient_type == self.RECIPIENT_USER:
+            elif recipient_type == EmailComposeView.RECIPIENT_USER:
                 user_ids.append(id)
-            elif recipient_type == self.RECIPIENT_USERPERSON:
+            elif recipient_type == EmailComposeView.RECIPIENT_USERPERSON:
                 userperson_ids.append(id)
-            elif recipient_type == self.RECIPIENT_CUSTOM:
+            elif recipient_type == EmailComposeView.RECIPIENT_CUSTOM:
                 customs.append(id)
         return list(Booker.objects.filter(id__in=booker_ids)) + \
             list(Person.objects.filter(id__in=person_ids)) + \
@@ -2754,6 +2804,7 @@ class VisitOccurrenceDetailView(LoginRequiredMixin, LoggedViewMixin,
             for (key, label) in EmailTemplate.key_choices
             if key in EmailTemplate.visitoccurrence_manual_keys
         ]
+        context['emailtemplate_waitinglist'] = EmailTemplate.NOTIFY_GUEST__SPOT_OPEN
         user = self.request.user
 
         if hasattr(user, 'userprofile'):

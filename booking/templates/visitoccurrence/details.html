@@ -325,6 +325,25 @@
                 return window.confirm("{% trans 'Er du sikke på at du vil slette disse tilmeldinger?' %}");
             });
         });
+
+        $(function () {
+            var button = $("button[name='action'][value='mail']");
+            var update = function() {
+                var selected = [];
+                $(".listcontainer.waiting input[type='checkbox']:checked").each(function(){
+                    selected.push("recipients=booking:" + $(this).val());
+                });
+                var href = button.attr("data-modal-href");
+                href = href.replace(/&?recipients=[^&]/, "");
+                href += (href.indexOf("?")==-1) ? "?" : "&";
+                href += selected.join("&");
+                button.attr("data-modal-href", href);
+            };
+            $(".listcontainer.waiting input[type='checkbox']").change(update);
+            update();
+        });
+
+
         //-->
     </script>
 {% endblock %}

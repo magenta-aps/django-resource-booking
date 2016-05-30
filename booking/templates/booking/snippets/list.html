@@ -55,6 +55,7 @@
                     <button type="submit" name="action" value="enqueue" class="btn btn-primary btn-xs pull-right">{% trans 'Flyt valgte til venteliste' %}</button>
                 {% elif listname == 'waiting' %}
                     <button type="submit" name="action" value="dequeue" class="btn btn-primary btn-xs pull-right">{% trans 'Tilmeld valgte' %}</button>
+                    <button type="button" name="action" value="mail" data-toggle="modal" data-target="#modalhost" class="btn btn-primary btn-xs pull-right" data-modal-href="{% url 'visit-occ-notify' object.pk %}?template={{ emailtemplate_waitinglist }}">{% trans 'Send venteliste-mail til valgte' %}</button>
                 {% endif %}
             {% endif %}
         </form>
