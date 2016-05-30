@@ -31,7 +31,7 @@
                                     </li>
                                     <li>{% trans 'Antal tilmeldte:' %} {{ occurrence.nr_attendees }}</li>
                                     {% if request.user.userprofile.has_edit_role and occurrence.has_changes_after_planned %}
-                                    <li><span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span> {% trans 'Nylige ændrigner'%}</li>
+                                    <li><span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span> {% trans 'Nylige ændringer'%}</li>
                                     {% endif %}
                                 </ul>
                             </div>

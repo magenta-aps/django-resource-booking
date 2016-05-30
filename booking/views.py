@@ -3101,5 +3101,6 @@ class EmailReplyView(DetailView):
         else:
             return self.get(request, *args, **kwargs)
 
+
 import booking_workflows.views  # noqa
 import_views(booking_workflows.views)
