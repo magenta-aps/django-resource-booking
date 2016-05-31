@@ -1119,6 +1119,7 @@ class BookingListForm(forms.Form):
         widget=CheckboxSelectMultiple()
     )
 
+
 class AcceptBookingForm(forms.Form):
     comment = forms.CharField(
         widget=forms.Textarea,

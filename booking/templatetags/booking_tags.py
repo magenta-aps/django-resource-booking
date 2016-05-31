@@ -177,7 +177,7 @@ class FullURLNode(defaulttags.Node):
                     user,
                     expires_in=datetime.timedelta(hours=72)
                 )
-                return entry.as_url(answer=="yes")
+                return entry.as_url(answer == "yes")
         return url
 
     def prefix(self, url):

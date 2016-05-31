@@ -3445,7 +3445,10 @@ class EmailBookerEntry(models.Model):
     expires_in = models.DurationField(default=timedelta(hours=48))
 
     def as_url(self, answer=False):
-        return reverse('booking-accept-view', args=[self.uuid, 'yes' if answer else 'no'])
+        return reverse('booking-accept-view', args=[
+            self.uuid,
+            'yes' if answer else 'no'
+        ])
 
     def as_full_url(self, request, answer):
         return request.build_absolute_uri(self.as_url(answer))

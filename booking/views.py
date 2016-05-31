@@ -3211,7 +3211,8 @@ class BookingAcceptView(FormView):
             raise AccessDenied(_(u"Token er udløbet"))
         if self.object.booker != bookerentry.booker:
             raise AccessDenied(_(u"Ugyldig token"))
-        return super(BookingAcceptView, self).dispatch(request, *args, **kwargs)
+        return super(BookingAcceptView, self).\
+            dispatch(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
         answer = kwargs.get('answer', None)

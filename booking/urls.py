@@ -15,7 +15,8 @@ from booking.views import EditVisitView, VisitDetailView
 from booking.views import EmailSuccessView, VisitInquireSuccessView
 from booking.views import SearchView, EmbedcodesView
 
-from booking.views import BookingNotifyView, BookingDetailView, BookingAcceptView
+from booking.views import BookingNotifyView, BookingDetailView
+from booking.views import BookingAcceptView
 from booking.views import EmailTemplateListView, EmailTemplateEditView
 from booking.views import EmailTemplateDetailView, EmailTemplateDeleteView
 from booking.views import ChangeVisitOccurrenceEvalView
