@@ -46,7 +46,7 @@
                     <div class="pull-right">
                         {% if listname == 'waiting' %}
                         <button type="button" data-toggle="modal" data-target="#modalhost" class="btn btn-primary btn-xs"
-                                data-modal-href="{% url 'booking-notify' booking.id %}?template={{ emailtemplate_waitinglist }}&recipients=booking:{{ booking.id }}">
+                                data-modal-href="{% url 'booking-notify' booking.id %}?template={{ emailtemplate_waitinglist }}&recipients=booking:{{ booking.id }}&nogroups=1">
                             {% trans 'Send venteliste-mail' %}
                         </button>
                         {% endif %}
