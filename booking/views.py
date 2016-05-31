@@ -2036,7 +2036,7 @@ class BookingNotifyView(LoginRequiredMixin, ModalMixin, EmailComposeView):
              'text': _(u'Detaljevisning')},
             {'text': _(u'Send notifikation')},
         ]
-        if not 'nogroups' in self.request.GET:
+        if 'nogroups' not in self.request.GET:
             context['recp'] = {
                 'guests': {
                     'label': _(u'Gæster'),
