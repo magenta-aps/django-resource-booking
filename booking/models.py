@@ -18,14 +18,9 @@ from django.utils.translation import ugettext_lazy as _
 from django.template.base import Template, VariableNode
 
 from recurrence.fields import RecurrenceField
-<<<<<<< HEAD
-from booking.utils import ClassProperty, full_email, CustomStorage, html2text, \
-    INFINITY
-=======
 from booking.utils import ClassProperty, full_email, CustomStorage, html2text
-from booking.utils import get_related_content_types
+from booking.utils import get_related_content_types, INFINITY
 
->>>>>>> develop
 from resource_booking import settings
 
 from datetime import timedelta
