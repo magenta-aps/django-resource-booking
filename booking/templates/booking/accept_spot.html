@@ -12,7 +12,15 @@
 
 <div class="row titlebar hidden-print">
     <div class="col-sm-12 col-md-9">
-        <h1>{% blocktrans with id=object.id %}Booking #{{ id }}{% endblocktrans %}</h1>
+        <h1>
+            {% if object and object.id %}
+                {% blocktrans with id=object.id %}Booking #{{ id }}{% endblocktrans %}
+            {% elif object_id %}
+                {% blocktrans with id=object_id %}Booking #{{ id }}{% endblocktrans %}
+            {% else %}
+                {% trans 'Booking' %}
+            {% endif %}
+        </h1>
     </div>
     <div class="divider"></div>
 </div>
