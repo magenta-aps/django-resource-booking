@@ -665,7 +665,8 @@ class EmailTemplate(models.Model):
         NOTIFY_GUEST__GENERAL_MSG,
         NOTIFY_ALL__BOOKING_COMPLETE,
         NOTIFY_ALL__BOOKING_CANCELED,
-        NOTITY_ALL__BOOKING_REMINDER
+        NOTITY_ALL__BOOKING_REMINDER,
+        NOTIFY_GUEST__SPOT_OPEN
     ]
 
     # Templates where already assigned people will not receive mails
@@ -3437,13 +3438,22 @@ class Booking(models.Model):
     def __unicode__(self):
         return _("Tilmelding #%d") % self.id
 
+    @property
+    def is_waiting(self):
+        return self.waitinglist_spot > 0
+
     def enqueue(self):
-        if self.waitinglist_spot == 0:
+        if not self.is_waiting:
             self.waitinglist_spot = self.visitoccurrence.next_waiting_list_spot
             self.save()
 
+    @property
+    def can_dequeue(self):
+        return self.is_waiting and self.visitoccurrence.available_seats \
+            >= self.booker.attendee_count
+
     def dequeue(self):
-        if self.waitinglist_spot > 0:
+        if self.can_dequeue:
             self.waitinglist_spot = 0
             self.save()
             self.visitoccurrence.normalize_waitinglist()
@@ -3745,3 +3755,34 @@ class KUEmailRecipient(models.Model):
         )
         result.save()
         return result
+
+
+class EmailBookerEntry(models.Model):
+    uuid = models.UUIDField(default=uuid.uuid4)
+    booker = models.ForeignKey(Booker)
+    created = models.DateTimeField(default=timezone.now)
+    expires_in = models.DurationField(default=timedelta(hours=48))
+
+    def as_url(self, answer=False):
+        return reverse('booking-accept-view', args=[
+            self.uuid,
+            'yes' if answer else 'no'
+        ])
+
+    def as_full_url(self, request, answer):
+        return request.build_absolute_uri(self.as_url(answer))
+
+    def as_public_url(self, answer):
+        return settings.PUBLIC_URL + self.as_url(answer)
+
+    def is_expired(self):
+        return (self.created + self.expires_in) < timezone.now()
+
+    @classmethod
+    def create(cls, booker, **kwargs):
+        attrs = {
+            'booker': booker,
+        }
+        attrs.update(kwargs)
+
+        return cls.objects.create(**attrs)

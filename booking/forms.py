@@ -1147,3 +1147,10 @@ class BookingListForm(forms.Form):
     bookings = forms.MultipleChoiceField(
         widget=CheckboxSelectMultiple()
     )
+
+
+class AcceptBookingForm(forms.Form):
+    comment = forms.CharField(
+        widget=forms.Textarea,
+        label=_(u'Kommentar')
+    )

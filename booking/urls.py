@@ -16,6 +16,7 @@ from booking.views import EmailSuccessView, VisitInquireSuccessView
 from booking.views import SearchView, EmbedcodesView
 
 from booking.views import BookingNotifyView, BookingDetailView
+from booking.views import BookingAcceptView
 from booking.views import EmailTemplateListView, EmailTemplateEditView
 from booking.views import EmailTemplateDetailView, EmailTemplateDeleteView
 from booking.views import ChangeVisitOccurrenceEvalView
@@ -132,6 +133,9 @@ urlpatterns = patterns(
     url(r'^booking/(?P<pk>[0-9]+)/?$',
         BookingDetailView.as_view(),
         name='booking-view'),
+    url(r'^booking/accept/(?P<token>[0-9a-f-]+)/(?P<answer>yes|no)?',
+        BookingAcceptView.as_view(),
+        name='booking-accept-view'),
 
     url(r'^visit/occurrence/(?P<pk>[0-9]+)/change_status/?$',
         ChangeVisitOccurrenceStatusView.as_view(),

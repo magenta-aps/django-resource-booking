@@ -44,8 +44,15 @@
                         </dl>
                     </a>
                     <div class="pull-right">
-                        <label>{% trans 'Vælg:' %}</label>
-                        <span class="input-container" id="move_{{ booking.id }}"></span>
+                        {% if listname == 'waiting' %}
+                        <button type="button" data-toggle="modal" data-target="#modalhost" class="btn btn-primary btn-xs"
+                                data-modal-href="{% url 'booking-notify' booking.id %}?template={{ emailtemplate_waitinglist }}&recipients=booking:{{ booking.id }}">
+                            {% trans 'Send venteliste-mail' %}
+                        </button>
+                        {% endif %}
+                        <label>{% trans 'Vælg:' %}
+                            <span class="input-container" id="move_{{ booking.id }}"></span>
+                        </label>
                     </div>
                 </div>
             {% endfor %}
@@ -55,7 +62,6 @@
                     <button type="submit" name="action" value="enqueue" class="btn btn-primary btn-xs pull-right">{% trans 'Flyt valgte til venteliste' %}</button>
                 {% elif listname == 'waiting' %}
                     <button type="submit" name="action" value="dequeue" class="btn btn-primary btn-xs pull-right">{% trans 'Tilmeld valgte' %}</button>
-                    <button type="button" name="action" value="mail" data-toggle="modal" data-target="#modalhost" class="btn btn-primary btn-xs pull-right" data-modal-href="{% url 'visit-occ-notify' object.pk %}?template={{ emailtemplate_waitinglist }}">{% trans 'Send venteliste-mail til valgte' %}</button>
                 {% endif %}
             {% endif %}
         </form>
