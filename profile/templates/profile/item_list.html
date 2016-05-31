@@ -18,9 +18,11 @@
             {% if list.type == 'VisitOccurrence' %}
                 {% for occurrence in list.limited_qs|default:list.queryset %}
                     <div class="list-group-item clearfix">
-                        {{ occurrence.dateduff }}
                         <a href="{% url 'visit-occ-view' occurrence.pk %}" title="{% trans 'Se arrangementets detaljer' %}">
-                            <h2 class="list-group-item-heading">{{ occurrence.visit.title }}</h2>
+                            <h2 class="list-group-item-heading">
+                                {{ occurrence.visit.title }}
+                            </h2>
+
                             <div class="list-group-item-text">
                                 <ul>
                                     <li>#{{ occurrence.pk }}</li>
@@ -28,12 +30,15 @@
                                         {% blocktrans with date=occurrence.start_datetime|date:"d. m. Y" time=occurrence.start_datetime|date:"H:i" %}Dato/tid: {{ date }} kl. {{ time }}{% endblocktrans %}
                                     </li>
                                     <li>{% trans 'Antal tilmeldte:' %} {{ occurrence.nr_attendees }}</li>
+                                    {% if request.user.userprofile.has_edit_role and occurrence.has_changes_after_planned %}
+                                    <li><span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span> {% trans 'Nylige ændringer'%}</li>
+                                    {% endif %}
                                 </ul>
                             </div>
                         </a>
                         <div class="tools">
-                            <a class="new-signups pull-left" title="{% trans 'Antal nye tilmeldinger' %}" href="{% url 'visit-occ-view' occurrence.pk %}">
-                                {% trans 'Nye tilmeldinger' %}
+                            <a class="new-signups pull-left" title="{% trans 'Antal tilmeldinger' %}" href="{% url 'visit-occ-view' occurrence.pk %}">
+                                {% trans 'Tilmeldinger' %}
                                 <span class="no-of-new-signups">({{ occurrence.bookings.count }})</span>
                             </a>
                             <div class="pull-right">

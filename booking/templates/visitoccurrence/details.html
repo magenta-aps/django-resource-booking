@@ -175,6 +175,14 @@
                                 <a href="{% url 'change-visit-occ-comments' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
                             {% endif %}
                         </dd>
+                        {% if can_edit and object.has_changes_after_planned %}
+                        <dt>{% trans 'Nylige ændringer' %}</dt>
+                        <dd>
+                            <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                            {% trans 'Dette besøg er markeret som havende nylige ændringer' %}.<br />
+                            <a href="{% url 'visit-occ-reset-changes-marker' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Klik her for at fjerne markeringen' %}</a>
+                        </dd>
+                        {% endif %}
                     </dl>
 
                 </div>
@@ -191,22 +199,59 @@
 
                     <ul class="list-unstyled scroll-400">
                         {% for entry in log_entries %}
-                        <li>
-                            <dl class="dl-horizontal">
-                                <dt>{% trans 'Hvem:' %}</dt>
-                                <dd>{% if entry.user.get_full_name %}{{ entry.user.get_full_name }}{% else %}{{ entry.user }}{% endif %}</dd>
-                                <dt>{% trans 'Hvad:' %}</dt>
-                                <dd>{{ entry.action_flag|logaction_type_display }}</dd>
-                                <dt>{% trans 'Hvornår' %}:</dt>
-                                <dd>{{ entry.action_time }}</dd>
-                                <dt>{% trans 'Besked:' %}</dt>
-                                <dd><pre>{{ entry.change_message }}</pre></dd>
-                            </dl>
-                        </li>
+                            <li>
+                                <dl class="dl-horizontal">
+                                    <dt>{% trans 'Hvem:' %}</dt>
+                                    <dd>{% if entry.user.get_full_name %}{{ entry.user.get_full_name }}{% else %}{{ entry.user }}{% endif %}</dd>
+                                    <dt>{% trans 'Hvad:' %}</dt>
+                                    <dd>{{ entry.action_flag|logaction_type_display }}</dd>
+                                    <dt>{% trans 'Hvornår' %}:</dt>
+                                    <dd>{{ entry.action_time }}</dd>
+                                    <dt>{% trans 'Besked:' %}</dt>
+                                    <dd><pre>{{ entry.change_message }}</pre></dd>
+                                </dl>
+                            </li>
                         {% endfor %}
                     </ul>
                     <div>
                         <a href="{% url 'visit-occ-add-logentry' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Tilføj ny log-post' %}</a>&nbsp;
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row comments">
+        <div class="col-sm-12 col-md-10">
+            <div class="panel panel-default">
+                <div class="panel-body">
+
+                    <h2>{% trans 'Kommentarer' %}</h2>
+
+                    <ul class="list-unstyled scroll-400">
+                        {% for comment in object.visitoccurrencecomment_set.all %}
+                            <li>
+                                <dl class="dl-horizontal">
+                                    <dt>{% trans 'Hvem:' %}</dt>
+                                    <dd>
+                                        {% if comment.author.get_full_name %}
+                                            {{ comment.author.get_full_name }}
+                                        {% elif comment.author %}
+                                            {{ comment.author }}
+                                        {% elif comment.deleted_user_name %}
+                                            {{ comment.deleted_user_name }}
+                                        {% endif %}
+                                    </dd>
+                                    <dt>{% trans 'Hvornår' %}:</dt>
+                                    <dd>{{ comment.time }}</dd>
+                                    <dt>{% trans 'Kommentar:' %}</dt>
+                                    <dd>{{ comment.text }}</dd>
+                                </dl>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                    <div>
+                        <a href="{% url 'visit-occ-add-comment' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Tilføj ny kommentar' %}</a>&nbsp;
                     </div>
                 </div>
             </div>

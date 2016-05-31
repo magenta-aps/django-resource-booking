@@ -13,17 +13,27 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
+from django.utils import formats
 from django.utils.translation import ugettext_lazy as _
 from django.template.base import Template, VariableNode
 
 from recurrence.fields import RecurrenceField
+<<<<<<< HEAD
 from booking.utils import ClassProperty, full_email, CustomStorage, html2text, \
     INFINITY
+=======
+from booking.utils import ClassProperty, full_email, CustomStorage, html2text
+from booking.utils import get_related_content_types
+
+>>>>>>> develop
 from resource_booking import settings
 
 from datetime import timedelta
 
 import uuid
+
+BLANK_LABEL = '---------'
+BLANK_OPTION = (None, BLANK_LABEL,)
 
 LOGACTION_CREATE = ADDITION
 LOGACTION_CHANGE = CHANGE
@@ -882,6 +892,7 @@ class Resource(models.Model):
     AUDIENCE_ALL = AUDIENCE_TEACHER | AUDIENCE_STUDENT
 
     audience_choices = (
+        (None, "---------"),
         (AUDIENCE_TEACHER, _(u'Lærer')),
         (AUDIENCE_STUDENT, _(u'Elev')),
         (AUDIENCE_ALL, _(u'Alle'))
@@ -908,6 +919,7 @@ class Resource(models.Model):
     DISCONTINUED = 2
 
     state_choices = (
+        BLANK_OPTION,
         (CREATED, _(u"Under udarbejdelse")),
         (ACTIVE, _(u"Offentlig")),
         (DISCONTINUED, _(u"Skjult"))
@@ -917,7 +929,7 @@ class Resource(models.Model):
 
     type = models.IntegerField(choices=resource_type_choices,
                                default=STUDY_MATERIAL)
-    state = models.IntegerField(choices=state_choices, default=CREATED,
+    state = models.IntegerField(choices=state_choices,
                                 verbose_name=_(u"Status"), blank=False)
     title = models.CharField(
         max_length=60,
@@ -941,8 +953,9 @@ class Resource(models.Model):
     links = models.ManyToManyField(Link, blank=True, verbose_name=_('Links'))
     audience = models.IntegerField(choices=audience_choices,
                                    verbose_name=_(u'Målgruppe'),
-                                   default=AUDIENCE_ALL,
-                                   blank=False)
+                                   default=None,
+                                   blank=False,
+                                   null=False)
 
     institution_level = models.IntegerField(choices=institution_choices,
                                             verbose_name=_(u'Institution'),
@@ -1433,6 +1446,57 @@ class GymnasieLevel(models.Model):
         return self.get_level_display()
 
 
+class GrundskoleLevel(models.Model):
+
+    class Meta:
+        verbose_name = _(u'Grundskoleniveau')
+        verbose_name_plural = _(u'Grundskoleniveauer')
+        ordering = ['level']
+
+    f0 = 0
+    f1 = 1
+    f2 = 2
+    f3 = 3
+    f4 = 4
+    f5 = 5
+    f6 = 6
+    f7 = 7
+    f8 = 8
+    f9 = 9
+    f10 = 10
+
+    level_choices = (
+        (f0, _(u'0. klasse')),
+        (f1, _(u'1. klasse')),
+        (f2, _(u'2. klasse')),
+        (f3, _(u'3. klasse')),
+        (f4, _(u'4. klasse')),
+        (f5, _(u'5. klasse')),
+        (f6, _(u'6. klasse')),
+        (f7, _(u'7. klasse')),
+        (f8, _(u'8. klasse')),
+        (f9, _(u'9. klasse')),
+        (f10, _(u'10. klasse')),
+    )
+
+    level = models.IntegerField(choices=level_choices,
+                                verbose_name=_(u"Grundskoleniveau"),
+                                blank=True,
+                                null=True)
+
+    @classmethod
+    def create_defaults(cls):
+        for val, desc in GrundskoleLevel.level_choices:
+            try:
+                GrundskoleLevel.objects.filter(level=val)[0]
+            except IndexError:
+                o = GrundskoleLevel(level=val)
+                o.save()
+
+    def __unicode__(self):
+        return self.get_level_display()
+
+
 class OtherResource(Resource):
     """A non-bookable, non-visit resource, basically material on the Web."""
 
@@ -1672,22 +1736,27 @@ class Visit(Resource):
     NEEDED_NUMBER_NONE = 0
     NEEDED_NUMBER_MORE_THAN_TEN = -10
 
-    needed_number_choices = (
-        ((NEEDED_NUMBER_NONE, _(u'Ingen')),) +
-        tuple((x, unicode(x)) for x in range(1, 11)) +
-        ((NEEDED_NUMBER_MORE_THAN_TEN, _(u'Mere end 10')),)
-    )
+    needed_number_choices = [
+        BLANK_OPTION,
+        (NEEDED_NUMBER_NONE, _(u'Ingen'))
+    ] + [
+        (x, unicode(x)) for x in range(1, 11)
+    ] + [
+        (NEEDED_NUMBER_MORE_THAN_TEN, _(u'Mere end 10'))
+    ]
 
     needed_hosts = models.IntegerField(
-        default=0,
+        default=None,
         verbose_name=_(u'Nødvendigt antal værter'),
-        choices=needed_number_choices
+        choices=needed_number_choices,
+        blank=False
     )
 
     needed_teachers = models.IntegerField(
-        default=0,
+        default=None,
         verbose_name=_(u'Nødvendigt antal undervisere'),
-        choices=needed_number_choices
+        choices=needed_number_choices,
+        blank=False
     )
 
     default_hosts = models.ManyToManyField(
@@ -2040,6 +2109,8 @@ class VisitOccurrence(models.Model):
         default=WORKFLOW_STATUS_BEING_PLANNED
     )
 
+    last_workflow_update = models.DateTimeField(default=timezone.now)
+
     comments = models.TextField(
         blank=True,
         default='',
@@ -2153,6 +2224,7 @@ class VisitOccurrence(models.Model):
 
         if self.workflow_status in \
                 VisitOccurrence.noshow_available_after_starttime and \
+                self.start_datetime and \
                 timezone.now() > self.start_datetime:
             allowed.append(VisitOccurrence.WORKFLOW_STATUS_NOSHOW)
 
@@ -2168,20 +2240,38 @@ class VisitOccurrence(models.Model):
         else:
             return None
 
+    def update_last_workflow_change(self):
+        last_workflow_status = None
+        if self.pk:
+            # Fetch old value
+            item = VisitOccurrence.objects.filter(
+                pk=self.pk
+            ).values("workflow_status").first()
+            if item:
+                last_workflow_status = item['workflow_status']
+
+        if last_workflow_status is None or \
+                last_workflow_status != self.workflow_status:
+            self.last_workflow_update = timezone.now()
+
     @property
     def display_value(self):
         if not self.start_datetime:
             return None
 
-        result = self.start_datetime.strftime('%d. %m %Y %H:%M')
+        start = timezone.localtime(self.start_datetime)
+        result = formats.date_format(start, "DATETIME_FORMAT")
 
         if self.duration:
             try:
                 (hours, mins) = self.duration.split(":", 2)
-                endtime = self.start_datetime + timedelta(
-                    hours=int(hours), minutes=int(mins)
-                )
-                result += endtime.strftime('-%H:%M')
+                if int(hours) > 0 or int(mins) > 0:
+                    endtime = start + timedelta(
+                        hours=int(hours), minutes=int(mins)
+                    )
+                    result += " - " + formats.date_format(
+                        endtime, "TIME_FORMAT"
+                    )
             except Exception as e:
                 print e
 
@@ -2246,6 +2336,28 @@ class VisitOccurrence(models.Model):
             return False
         return True
 
+    @property
+    def has_changes_after_planned(self):
+        # This is only valid for statuses that are considered planned
+        if self.workflow_status == self.WORKFLOW_STATUS_BEING_PLANNED:
+            return False
+
+        return self.changes_after_last_status_change().exists()
+
+    def changes_after_last_status_change(self):
+        types = get_related_content_types(VisitOccurrence)
+
+        # Since log entry for workflow status change is logged after
+        # the object itself is saved we have to be a bit fuzzy in our
+        # comparison.
+        fuzzy_adjustment = timezone.timedelta(seconds=1)
+
+        return LogEntry.objects.filter(
+            object_id=self.pk,
+            content_type__in=types,
+            action_time__gt=self.last_workflow_update + fuzzy_adjustment
+        )
+
     def date_display(self):
         return self.start_datetime or _(u'på ikke-fastlagt tidspunkt')
 
@@ -2297,7 +2409,7 @@ class VisitOccurrence(models.Model):
 
     def __unicode__(self):
         if self.start_datetime:
-            return u'%s @ %s' % (self.visit.title, self.display_value)
+            return u'%s | %s' % (self.visit.title, self.display_value)
         else:
             return u'%s (uden fastlagt tidspunkt)' % (self.visit.title)
 
@@ -2362,6 +2474,7 @@ class VisitOccurrence(models.Model):
     def save(self, *args, **kwargs):
 
         self.update_endtime()
+        self.update_last_workflow_change()
 
         # Save once to store relations
         super(VisitOccurrence, self).save(*args, **kwargs)
@@ -2652,9 +2765,63 @@ class VisitOccurrence(models.Model):
             return closing_time < timezone.now()
         return False
 
+    def add_comment(self, user, text):
+        VisitOccurrenceComment(
+            visitoccurrence=self,
+            author=user,
+            text=text
+        ).save()
+
+    def get_comments(self, user=None):
+        if user is None:
+            return VisitOccurrenceComment.objects.filter(visitoccurrence=self)
+        else:
+            return VisitOccurrenceComment.objects.filter(
+                visitoccurrence=self,
+                author=user
+            )
+
 
 VisitOccurrence.add_override_property('duration')
 VisitOccurrence.add_override_property('locality')
+
+
+class VisitOccurrenceComment(models.Model):
+
+    class Meta:
+        ordering = ["-time"]
+
+    visitoccurrence = models.ForeignKey(
+        VisitOccurrence,
+        verbose_name=_(u'Besøg'),
+        null=False,
+        blank=False
+    )
+    author = models.ForeignKey(
+        User,
+        null=True  # Users can be deleted, but we want to keep their comments
+    )
+    deleted_user_name = models.CharField(
+        max_length=30
+    )
+    text = models.CharField(
+        max_length=500,
+        verbose_name=_(u'Kommentartekst')
+    )
+    time = models.DateTimeField(
+        verbose_name=_(u'Tidsstempel'),
+        auto_now=True
+    )
+
+    def on_delete_author(self):
+        self.deleted_user_name = self.author.username
+        self.author = None
+        self.save()
+
+    @staticmethod
+    def on_delete_user(user):
+        for comment in VisitOccurrenceComment.objects.filter(author=user):
+            comment.on_delete_author()
 
 
 class Autosend(models.Model):
@@ -3270,11 +3437,11 @@ class TeacherBooking(Booking):
         return " ".join(result)
 
 
-class BookingSubjectLevel(models.Model):
+class BookingGymnasieSubjectLevel(models.Model):
 
     class Meta:
-        verbose_name = _('fagniveau for booking')
-        verbose_name_plural = _('fagniveauer for bookinger')
+        verbose_name = _('fagniveau for booking (gymnasium)')
+        verbose_name_plural = _('fagniveauer for bookinger (gymnasium)')
 
     booking = models.ForeignKey(Booking, blank=False, null=False)
     subject = models.ForeignKey(
@@ -3282,11 +3449,34 @@ class BookingSubjectLevel(models.Model):
         limit_choices_to={
             'subject_type__in': [
                 Subject.SUBJECT_TYPE_GYMNASIE,
-                Subject.SUBJECT_TYPE_BOTH
             ]
         }
     )
     level = models.ForeignKey(GymnasieLevel, blank=False, null=False)
+
+    def __unicode__(self):
+        return u"%s (for booking %s)" % (self.display_value(), self.booking.pk)
+
+    def display_value(self):
+        return u'%s på %s niveau' % (self.subject.name, self.level)
+
+
+class BookingGrundskoleSubjectLevel(models.Model):
+
+    class Meta:
+        verbose_name = _('klasseniveau for booking (grundskole)')
+        verbose_name_plural = _('klasseniveauer for bookinger(grundskole)')
+
+    booking = models.ForeignKey(Booking, blank=False, null=False)
+    subject = models.ForeignKey(
+        Subject, blank=False, null=False,
+        limit_choices_to={
+            'subject_type__in': [
+                Subject.SUBJECT_TYPE_GRUNDSKOLE,
+            ]
+        }
+    )
+    level = models.ForeignKey(GrundskoleLevel, blank=False, null=False)
 
     def __unicode__(self):
         return u"%s (for booking %s)" % (self.display_value(), self.booking.pk)
@@ -3317,10 +3507,17 @@ class KUEmailMessage(models.Model):
         null=True,
         default=None
     )
+    template_key = models.IntegerField(
+        verbose_name=u'Template key',
+        choices=EmailTemplate.key_choices,
+        default=None,
+        null=True,
+        blank=True
+    )
 
     @staticmethod
     def save_email(email_message, instance,
-                   reply_nonce=None, htmlbody=None):
+                   reply_nonce=None, htmlbody=None, template_key=None):
         """
         :param email_message: An instance of
         django.core.mail.message.EmailMessage
@@ -3336,9 +3533,12 @@ class KUEmailMessage(models.Model):
             recipients=', '.join(email_message.recipients()),
             content_type=ctype,
             object_id=instance.id,
-            reply_nonce=reply_nonce
+            reply_nonce=reply_nonce,
+            template_key=template_key
         )
         ku_email_message.save()
+
+        return ku_email_message
 
     @staticmethod
     def send_email(template, context, recipients, instance, unit=None,
@@ -3433,7 +3633,11 @@ class KUEmailMessage(models.Model):
                 message.attach_alternative(htmlbody, 'text/html')
             message.send()
 
-            KUEmailMessage.save_email(message, instance, reply_nonce=nonce)
+            msg_obj = KUEmailMessage.save_email(
+                message, instance, reply_nonce=nonce,
+                template_key=template.key
+            )
+            KUEmailRecipient.register(msg_obj, email)
 
         # Log the sending
         if emails and instance:
@@ -3455,6 +3659,26 @@ class KUEmailMessage(models.Model):
         if full:
             url = settings.PUBLIC_URL + url
         return url
+
+
+class KUEmailRecipient(models.Model):
+    email_message = models.ForeignKey(KUEmailMessage)
+    name = models.TextField(blank=True, null=True)
+    formatted_address = models.TextField(blank=True, null=True)
+    email = models.TextField(blank=True, null=True)
+    user = models.ForeignKey(User, blank=True, null=True)
+
+    @staticmethod
+    def register(msg_obj, userdata):
+        result = KUEmailRecipient(
+            email_message=msg_obj,
+            name=userdata.get("name", None),
+            formatted_address=userdata.get("full", None),
+            email=userdata.get("address", None),
+            user=userdata.get("user", None),
+        )
+        result.save()
+        return result
 
 
 class EmailBookerEntry(models.Model):

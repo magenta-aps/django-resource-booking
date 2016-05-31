@@ -1,5 +1,6 @@
 {% extends 'index.html' %}
 {% load staticfiles %}
+{% load booking_tags %}
 {% load i18n %}
 
 {% block htmltitle %} - {% blocktrans with object=object %}Redigér undervisere for {{ object }}{% endblocktrans %}{% endblock %}
@@ -23,12 +24,44 @@
     <div class="divider"></div>
     <div class="row">
         <div class="col-sm-12 col-md-8">
-            <form name="changebookinteachersform" id="changebookinteachersform" action="{% url 'change-visit-occ-teachers' object.pk %}" method="post">
+            <form name="changebookingteachersform" id="changebookingteachersform" class="changebookingform" action="{% url 'change-visit-occ-teachers' object.pk %}" method="post">
                 {% csrf_token %}
-                {{ form.as_p }}
+
+                <p>{{ form.teacher_status.label_tag }} {{ form.teacher_status }}</p>
+                <p>{{ form.teachers.label_tag}}</p>
+                <ul id="id_{{ form.teachers.name }}">
+                    {% for x in form.teachers.field.queryset %}
+                    <li>
+                        <label for="id_{{ form.teachers.name }}_{{ forloop.counter0 }}">
+                            <input
+                                {% if x.pk in form.teachers.value %}
+                                checked="checked"
+                                {% endif %}
+                                id="id_{{ form.teachers.name }}_{{ forloop.counter0 }}"
+                                name="{{ form.teachers.name }}"
+                                type="checkbox"
+                                value="{{ x.pk }}"
+                            >
+                            {{ x }}
+                            <a href="{% url 'teacher-availability' x.userprofile.pk %}#todaysdate"
+                               role="button" class="btn btn-primary btn-xs"
+                               onclick="this.target='_blank'"
+                            >
+                                Se detaljer
+                                <span class="glyphicon glyphicon-new-window"></span>
+                            </a>
+                        </label>
+                    </li>
+                {% endfor %}
+                </ul>
+                <p></p>
                 <input class="btn btn-success btn-sm" type="submit" value="{% trans 'Opdater' %}" name="confirm" />
                 <input class="btn btn-danger btn-sm" type="submit" value="{% trans 'Annullér' %}" name="cancel" />
             </form>
         </div>
     </div>
+{% endblock %}
+
+{% block extra_scripts %}
+    {% include "booking/workflow/usercomments_script.html" with comments=comments fieldname="teachers" %}
 {% endblock %}

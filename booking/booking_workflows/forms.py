@@ -43,7 +43,7 @@ class ChangeVisitOccurrenceTeachersForm(forms.ModelForm):
         super(ChangeVisitOccurrenceTeachersForm, self)\
             .__init__(*args, **kwargs)
 
-        self.base_fields['teachers'].queryset = User.objects.filter(
+        self.fields['teachers'].queryset = User.objects.filter(
             userprofile__user_role__role=TEACHER,
             userprofile__unit_id=kwargs['instance'].visit.unit_id
         )
@@ -61,7 +61,7 @@ class ChangeVisitOccurrenceHostsForm(forms.ModelForm):
             **kwargs
         )
 
-        self.base_fields['hosts'].queryset = User.objects.filter(
+        self.fields['hosts'].queryset = User.objects.filter(
             userprofile__user_role__role=HOST,
             userprofile__unit_id=kwargs['instance'].visit.unit_id
         )
@@ -90,6 +90,27 @@ class VisitOccurrenceAddLogEntryForm(forms.Form):
         widget=forms.Textarea,
         label=_(u'Ny log-post')
     )
+
+
+class ResetVisitOccurrenceChangesForm(forms.ModelForm):
+    class Meta:
+        model = VisitOccurrence
+        fields = []
+
+
+class VisitOccurrenceAddCommentForm(forms.Form):
+    new_comment = forms.CharField(
+        widget=forms.Textarea,
+        label=_(u'Ny kommentar')
+    )
+
+
+class BecomeSomethingForm(forms.Form):
+    comment = forms.CharField(
+        widget=forms.Textarea,
+        label=_(u'Kommentar')
+    )
+
 
 VisitOccurrenceAutosendFormSet = inlineformset_factory(
     VisitOccurrence,

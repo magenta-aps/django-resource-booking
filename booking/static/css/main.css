@@ -1109,6 +1109,30 @@ a.template-overridden:visited {
 
 /* nested menu dropdown end */
 
+.comments ul li {
+    border: 1px solid #ccc;
+    margin-bottom: 4px;
+    border-radius: 4px;
+    padding: 4px;
+}
+
+.changebookingform .comments {
+    display: inline-block;
+    margin-left: 30px;
+    margin-top: 5px;
+    vertical-align: top;
+}
+
+.changebookingform .comments ul {
+    list-style-position: inside;
+    padding-left: 0;
+}
+
+.changebookingform .comments ul li {
+    border: 0 none;
+    list-style-type: none;
+}
+
 /*Backend specific styles end */
 
 
@@ -1302,6 +1326,9 @@ body.lightbox {
     }
     .form-horizontal .control-label {
         padding-top: 3px;
+    }
+    #visitform .control-label {
+        width: 100%;
     }
     footer {
         border-left: 1px solid #ccc;

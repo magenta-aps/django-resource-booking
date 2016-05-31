@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 
 from booking.models import StudyMaterial, VisitAutosend, Booking, Person
+from booking.models import BookingGrundskoleSubjectLevel
 from booking.models import Locality, UnitType, Unit
 from booking.models import Resource, OtherResource, Visit
 from booking.models import Booker, Region, PostCode, School
-from booking.models import ClassBooking, TeacherBooking, BookingSubjectLevel
+from booking.models import ClassBooking, TeacherBooking, \
+    BookingGymnasieSubjectLevel
 from booking.models import EmailTemplate
 from booking.models import VisitOccurrence
+from booking.models import BLANK_LABEL, BLANK_OPTION
 from django import forms
 from django.db.models import Q
 from django.db.models.expressions import OrderBy
@@ -354,7 +357,7 @@ class VisitForm(forms.ModelForm):
                     'maxlength': 210
                 }
             ),
-            'description': TinyMCE(attrs={'rows': 10, 'cols': 90}),
+            'description': TinyMCE(),
             'custom_name': TextInput(attrs={
                 'class': 'titlefield form-control input-sm',
                 'rows': 1, 'size': 62
@@ -404,7 +407,7 @@ class VisitForm(forms.ModelForm):
             'duration': Select(attrs={'class': 'form-control input-sm'}),
             'locality': Select(attrs={'class': 'form-control input-sm'}),
             'unit': Select(attrs={'class': 'form-control input-sm'}),
-            'audience': RadioSelect(),
+            'audience': Select(attrs={'class': 'form-control input-sm'}),
             'tags': CheckboxSelectMultiple(),
             'contacts': SelectMultiple(),
             'room_contact': CheckboxSelectMultiple(),
@@ -466,7 +469,7 @@ class VisitForm(forms.ModelForm):
                     )
 
         if unit is not None:
-            self.fields['locality'].choices = [(None, "---------")] + \
+            self.fields['locality'].choices = [BLANK_OPTION] + \
                 [
                     (x.id, x.name_and_address)
                     for x in Locality.objects.order_by(
@@ -831,7 +834,8 @@ class BookerForm(forms.ModelForm):
     def __init__(self, data=None, visit=None, language='da', *args, **kwargs):
         super(BookerForm, self).__init__(data, *args, **kwargs)
         attendeecount_widget = self.fields['attendee_count'].widget
-        attendeecount_widget.attrs['min'] = 1
+
+        attendeecount_widget.attrs['min'] = visit.minimum_number_of_visitors
         if visit is not None:
             if visit.maximum_number_of_visitors is not None:
                 attendeecount_widget.attrs['max'] = \
@@ -841,7 +845,7 @@ class BookerForm(forms.ModelForm):
                 visit.institution_level
 
             available_level_choices = Booker.level_map[visit.institution_level]
-            self.fields['level'].choices = [(u'', u'---------')] + [
+            self.fields['level'].choices = [(u'', BLANK_LABEL)] + [
                 (value, title)
                 for (value, title) in Booker.level_choices
                 if value in available_level_choices
@@ -970,9 +974,26 @@ class StudyProjectBookingForm(BookingForm):
         widgets = BookingForm.Meta.widgets
 
 
-BookingSubjectLevelForm = \
+BookingGymnasieSubjectLevelForm = \
     inlineformset_factory(ClassBooking,
-                          BookingSubjectLevel,
+                          BookingGymnasieSubjectLevel,
+                          fields=('subject', 'level'),
+                          can_delete=True,
+                          extra=1,
+                          widgets={
+                              'subject': Select(
+                                  attrs={'class': 'form-control'}
+                              ),
+                              'level': Select(
+                                  attrs={'class': 'form-control'}
+                              )
+                          }
+                          )
+
+
+BookingGrundskoleSubjectLevelForm = \
+    inlineformset_factory(ClassBooking,
+                          BookingGrundskoleSubjectLevel,
                           fields=('subject', 'level'),
                           can_delete=True,
                           extra=1,
@@ -1000,7 +1021,7 @@ class EmailTemplateForm(forms.ModelForm):
 
     def __init__(self, user, *args, **kwargs):
         super(EmailTemplateForm, self).__init__(*args, **kwargs)
-        self.fields['unit'].choices = [(None, u'---------')] + [
+        self.fields['unit'].choices = [BLANK_OPTION] + [
             (x.pk, unicode(x))
             for x in user.userprofile.get_unit_queryset()]
 
