@@ -3638,6 +3638,7 @@ class KUEmailMessage(models.Model):
     @staticmethod
     def send_email(template, context, recipients, instance, unit=None,
                    **kwargs):
+        print "send_email"
         if isinstance(template, int):
             template_key = template
             template = EmailTemplate.get_template(template_key, unit)

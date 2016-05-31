@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from booking.models import StudyMaterial, VisitAutosend, Booking, \
-    BookingGrundskoleSubjectLevel
+from booking.models import StudyMaterial, VisitAutosend, Booking
+from booking.models import BookingGrundskoleSubjectLevel
 from booking.models import Locality, UnitType, Unit, UserPerson
 from booking.models import Resource, OtherResource, Visit
 from booking.models import Booker, Region, PostCode, School

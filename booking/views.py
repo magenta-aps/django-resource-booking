@@ -2772,8 +2772,17 @@ class BookingDetailView(LoginRequiredMixin, LoggedViewMixin,
 
         context['breadcrumbs'] = [
             {'url': reverse('search'), 'text': _(u'Søgning')},
-            {'url': '#', 'text': _(u'Søgeresultatliste')},
-            {'text': _(u'Detaljevisning')},
+            {'url': reverse('visit-view', args=[
+                self.object.visitoccurrence.visit.id
+                ]),
+             'text': self.object.visitoccurrence.visit.title
+             },
+            {'url': reverse('visit-occ-view', args=[
+                self.object.visitoccurrence.id
+                ]),
+             'text': self.object.visitoccurrence.date_display
+             },
+            {'text': self.object},
         ]
 
         context['thisurl'] = reverse('booking-view', args=[self.object.id])
@@ -3203,6 +3212,9 @@ class BookingAcceptView(FormView):
     answer = None
     dequeued = False
 
+    # Placeholder for storing a deleted booking's id for display
+    object_id = None
+
     def dispatch(self, request, *args, **kwargs):
         token = kwargs.get('token')
         if not token:
@@ -3233,6 +3245,8 @@ class BookingAcceptView(FormView):
             self.answer = False
             self.object.autosend(EmailTemplate.NOTIFY_GUEST__SPOT_REJECTED)
             self.object.autosend(EmailTemplate.NOTIFY_EDITORS__SPOT_REJECTED)
+            self.object_id = self.object.id
+            # self.object.delete()
         return super(BookingAcceptView, self).get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
@@ -3247,7 +3261,29 @@ class BookingAcceptView(FormView):
     def get_context_data(self, **kwargs):
         context = {}
         context['object'] = self.object
+        context['object_id'] = self.object_id
         context['answer'] = self.answer
         context['dequeued'] = self.dequeued
+
+        context['breadcrumbs'] = [
+            {'url': reverse('search'), 'text': _(u'Søgning')},
+            {
+                'url': reverse(
+                    'visit-view',
+                    args=[self.object.visitoccurrence.visit.id]
+                ),
+                'text': self.object.visitoccurrence.visit.title
+            },
+            {
+                'url': reverse(
+                    'visit-occ-view', args=[self.object.visitoccurrence.id]
+                ),
+                'text': self.object.visitoccurrence.date_display
+            },
+            {'url': reverse('booking-view', args=[self.object.id]),
+             'text': self.object},
+            {'text': _(u'Svar på ledig plads')}
+        ]
+
         context.update(kwargs)
         return super(BookingAcceptView, self).get_context_data(**context)
