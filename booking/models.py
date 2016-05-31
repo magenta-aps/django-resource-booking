@@ -542,6 +542,7 @@ class EmailTemplate(models.Model):
     NOTIFY_GUEST__SPOT_OPEN = 16  # Ticket 13804
     NOTIFY_GUEST__SPOT_ACCEPTED = 17  # Ticket 13804
     NOTIFY_GUEST__SPOT_REJECTED = 18  # Ticket 13804
+    NOTIFY_EDITORS__SPOT_REJECTED = 19  # Ticket 13804
 
     # Choice labels
     key_choices = [
@@ -557,6 +558,9 @@ class EmailTemplate(models.Model):
          _(u'Besked til gæst ved accept af plads (fra venteliste)')),
         (NOTIFY_GUEST__SPOT_REJECTED,
          _(u'Besked til gæst ved afvisning af plads (fra venteliste)')),
+        (NOTIFY_EDITORS__SPOT_REJECTED,
+         _(u'Besked til koordinatorer ved afvisning '
+           u'af plads (fra venteliste)')),
         (NOTIFY_EDITORS__BOOKING_CREATED,
          _(u'Besked til koordinatorer ved booking af besøg')),
         (NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
@@ -625,6 +629,7 @@ class EmailTemplate(models.Model):
         NOTIFY_EDITORS__BOOKING_CREATED,
         NOTIFY_ALL__BOOKING_CANCELED,
         NOTITY_ALL__BOOKING_REMINDER,
+        NOTIFY_EDITORS__SPOT_REJECTED
     ]
     # Templates that will be autosent to booker
     booker_keys = [
@@ -674,7 +679,10 @@ class EmailTemplate(models.Model):
         NOTIFY_ALL__BOOKING_COMPLETE,
         NOTIFY_ALL__BOOKING_CANCELED,
         NOTITY_ALL__BOOKING_REMINDER,
-        NOTIFY_GUEST__SPOT_OPEN
+        NOTIFY_GUEST__SPOT_OPEN,
+        NOTIFY_GUEST__SPOT_ACCEPTED,
+        NOTIFY_GUEST__SPOT_REJECTED,
+        NOTIFY_EDITORS__SPOT_REJECTED
     ]
 
     # Templates where already assigned people will not receive mails
@@ -690,7 +698,8 @@ class EmailTemplate(models.Model):
         NOTIFY_ALL__BOOKING_COMPLETE,
         SYSTEM__EMAIL_REPLY,
         NOTIFY_GUEST__SPOT_ACCEPTED,
-        NOTIFY_GUEST__SPOT_REJECTED
+        NOTIFY_GUEST__SPOT_REJECTED,
+        NOTIFY_EDITORS__SPOT_REJECTED
     ]
 
     key = models.IntegerField(
