@@ -27,6 +27,9 @@ from datetime import timedelta
 
 import uuid
 
+BLANK_LABEL = '---------'
+BLANK_OPTION = (None, BLANK_LABEL,)
+
 LOGACTION_CREATE = ADDITION
 LOGACTION_CHANGE = CHANGE
 LOGACTION_DELETE = DELETION
@@ -860,6 +863,7 @@ class Resource(models.Model):
     AUDIENCE_ALL = AUDIENCE_TEACHER | AUDIENCE_STUDENT
 
     audience_choices = (
+        (None, "---------"),
         (AUDIENCE_TEACHER, _(u'Lærer')),
         (AUDIENCE_STUDENT, _(u'Elev')),
         (AUDIENCE_ALL, _(u'Alle'))
@@ -886,6 +890,7 @@ class Resource(models.Model):
     DISCONTINUED = 2
 
     state_choices = (
+        BLANK_OPTION,
         (CREATED, _(u"Under udarbejdelse")),
         (ACTIVE, _(u"Offentlig")),
         (DISCONTINUED, _(u"Skjult"))
@@ -895,7 +900,7 @@ class Resource(models.Model):
 
     type = models.IntegerField(choices=resource_type_choices,
                                default=STUDY_MATERIAL)
-    state = models.IntegerField(choices=state_choices, default=CREATED,
+    state = models.IntegerField(choices=state_choices,
                                 verbose_name=_(u"Status"), blank=False)
     title = models.CharField(
         max_length=60,
@@ -919,8 +924,9 @@ class Resource(models.Model):
     links = models.ManyToManyField(Link, blank=True, verbose_name=_('Links'))
     audience = models.IntegerField(choices=audience_choices,
                                    verbose_name=_(u'Målgruppe'),
-                                   default=AUDIENCE_ALL,
-                                   blank=False)
+                                   default=None,
+                                   blank=False,
+                                   null=False)
 
     institution_level = models.IntegerField(choices=institution_choices,
                                             verbose_name=_(u'Institution'),
@@ -1682,22 +1688,27 @@ class Visit(Resource):
     NEEDED_NUMBER_NONE = 0
     NEEDED_NUMBER_MORE_THAN_TEN = -10
 
-    needed_number_choices = (
-        ((NEEDED_NUMBER_NONE, _(u'Ingen')),) +
-        tuple((x, unicode(x)) for x in range(1, 11)) +
-        ((NEEDED_NUMBER_MORE_THAN_TEN, _(u'Mere end 10')),)
-    )
+    needed_number_choices = [
+        BLANK_OPTION,
+        (NEEDED_NUMBER_NONE, _(u'Ingen'))
+    ] + [
+        (x, unicode(x)) for x in range(1, 11)
+    ] + [
+        (NEEDED_NUMBER_MORE_THAN_TEN, _(u'Mere end 10'))
+    ]
 
     needed_hosts = models.IntegerField(
-        default=0,
+        default=None,
         verbose_name=_(u'Nødvendigt antal værter'),
-        choices=needed_number_choices
+        choices=needed_number_choices,
+        blank=False
     )
 
     needed_teachers = models.IntegerField(
-        default=0,
+        default=None,
         verbose_name=_(u'Nødvendigt antal undervisere'),
-        choices=needed_number_choices
+        choices=needed_number_choices,
+        blank=False
     )
 
     default_hosts = models.ManyToManyField(
