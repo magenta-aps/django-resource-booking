@@ -3268,16 +3268,19 @@ class BookingAcceptView(FormView):
 
         context['breadcrumbs'] = [
             {'url': reverse('search'), 'text': _(u'Søgning')},
-            {'url': reverse('visit-view', args=[
-                self.object.visitoccurrence.visit.id
-            ]),
-             'text': self.object.visitoccurrence.visit.title
-             },
-            {'url': reverse('visit-occ-view', args=[
-                self.object.visitoccurrence.id
-            ]),
-             'text': self.object.visitoccurrence.date_display
-             },
+            {
+                'url': reverse(
+                    'visit-view',
+                    args=[self.object.visitoccurrence.visit.id]
+                ),
+                'text': self.object.visitoccurrence.visit.title
+            },
+            {
+                'url': reverse(
+                    'visit-occ-view', args=[self.object.visitoccurrence.id]
+                ),
+                'text': self.object.visitoccurrence.date_display
+            },
             {'url': reverse('booking-view', args=[self.object.id]),
              'text': self.object},
             {'text': _(u'Svar på ledig plads')}
