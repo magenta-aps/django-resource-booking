@@ -2036,58 +2036,59 @@ class BookingNotifyView(LoginRequiredMixin, ModalMixin, EmailComposeView):
              'text': _(u'Detaljevisning')},
             {'text': _(u'Send notifikation')},
         ]
-        context['recp'] = {
-            'guests': {
-                'label': _(u'Gæster'),
-                'items': {
-                    "%s%s%d" % (self.RECIPIENT_BOOKER,
-                                self.RECIPIENT_SEPARATOR,
-                                self.object.booker.id):
-                    self.object.booker.get_full_email()
+        if not 'nogroups' in self.request.GET:
+            context['recp'] = {
+                'guests': {
+                    'label': _(u'Gæster'),
+                    'items': {
+                        "%s%s%d" % (self.RECIPIENT_BOOKER,
+                                    self.RECIPIENT_SEPARATOR,
+                                    self.object.booker.id):
+                        self.object.booker.get_full_email()
+                    }
+                },
+                'contacts': {
+                    'label': _(u'Kontaktpersoner'),
+                    'items': {
+                        "%s%s%d" % (self.RECIPIENT_USERPERSON,
+                                    self.RECIPIENT_SEPARATOR, person.id):
+                                        person.get_full_email()
+                        for person in self.object.visit.contacts.all()
+                    }
+                },
+                'roomadmins': {
+                    'label': _(u'Lokaleansvarlige'),
+                    'items': {
+                        "%s%s%d" % (self.RECIPIENT_USERPERSON,
+                                    self.RECIPIENT_SEPARATOR,
+                                    person.id):
+                                        person.get_full_email()
+                        for person in self.object.visit.room_contact.all()
+                        }
+                },
+                'hosts': {
+                    'label': _(u'Værter'),
+                    'items': {
+                        "%s%s%s" % (self.RECIPIENT_USER,
+                                    self.RECIPIENT_SEPARATOR,
+                                    user.username):
+                        full_email(user.email, user.get_full_name())
+                        for user in self.object.hosts.all()
+                        if user.email is not None
+                        }
+                },
+                'teachers': {
+                    'label': _(u'Undervisere'),
+                    'items': {
+                        "%s%s%s" % (self.RECIPIENT_USER,
+                                    self.RECIPIENT_SEPARATOR,
+                                    user.username):
+                        full_email(user.email, user.get_full_name())
+                        for user in self.object.teachers.all()
+                        if user.email is not None
+                        }
                 }
-            },
-            'contacts': {
-                'label': _(u'Kontaktpersoner'),
-                'items': {
-                    "%s%s%d" % (self.RECIPIENT_USERPERSON,
-                                self.RECIPIENT_SEPARATOR, person.id):
-                                    person.get_full_email()
-                    for person in self.object.visit.contacts.all()
-                }
-            },
-            'roomadmins': {
-                'label': _(u'Lokaleansvarlige'),
-                'items': {
-                    "%s%s%d" % (self.RECIPIENT_USERPERSON,
-                                self.RECIPIENT_SEPARATOR,
-                                person.id):
-                                    person.get_full_email()
-                    for person in self.object.visit.room_contact.all()
-                    }
-            },
-            'hosts': {
-                'label': _(u'Værter'),
-                'items': {
-                    "%s%s%s" % (self.RECIPIENT_USER,
-                                self.RECIPIENT_SEPARATOR,
-                                user.username):
-                    full_email(user.email, user.get_full_name())
-                    for user in self.object.hosts.all()
-                    if user.email is not None
-                    }
-            },
-            'teachers': {
-                'label': _(u'Undervisere'),
-                'items': {
-                    "%s%s%s" % (self.RECIPIENT_USER,
-                                self.RECIPIENT_SEPARATOR,
-                                user.username):
-                    full_email(user.email, user.get_full_name())
-                    for user in self.object.teachers.all()
-                    if user.email is not None
-                    }
             }
-        }
 
         context.update(kwargs)
         return super(BookingNotifyView, self).get_context_data(**context)
