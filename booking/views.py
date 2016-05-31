@@ -32,7 +32,8 @@ from django.utils.translation import ugettext as _
 from django.views.generic import View, TemplateView, ListView, DetailView
 from django.views.generic import RedirectView
 from django.views.generic.base import ContextMixin
-from django.views.generic.edit import UpdateView, FormMixin, DeleteView
+from django.views.generic.edit import UpdateView, FormMixin, DeleteView, \
+    FormView
 from django.views.defaults import bad_request
 
 from profile.models import EDIT_ROLES
@@ -51,6 +52,7 @@ from booking.models import ResourceGymnasieFag, ResourceGrundskoleFag
 from booking.models import EmailTemplate
 from booking.models import log_action
 from booking.models import LOGACTION_CREATE, LOGACTION_CHANGE
+from booking.models import EmailBookerEntry
 from booking.forms import ResourceInitialForm, OtherResourceForm, VisitForm, \
     GuestEmailComposeForm, StudentForADayBookingForm, OtherVisitForm, \
     StudyProjectBookingForm, BookingListForm
@@ -68,6 +70,7 @@ from booking.forms import EmailReplyForm
 from booking.forms import AdminVisitSearchForm
 from booking.forms import VisitAutosendFormSet
 from booking.forms import VisitOccurrenceSearchForm
+from booking.forms import AcceptBookingForm
 from booking.utils import full_email, get_model_field_map
 
 import re
@@ -308,6 +311,7 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
             recipients = self.lookup_recipients(
                 form.cleaned_data['recipients']
             )
+            print "send A"
             KUEmailMessage.send_email(template, context, recipients,
                                       self.object)
             return super(EmailComposeView, self).form_valid(form)
@@ -1834,6 +1838,7 @@ class VisitInquireView(FormMixin, HasBackButtonMixin, ModalMixin,
             recipients = []
             recipients.extend(self.object.contacts.all())
             recipients.extend(self.object.unit.get_editors())
+            print "send B"
             KUEmailMessage.send_email(template, context, recipients,
                                       self.object)
             return super(VisitInquireView, self).form_valid(form)
@@ -3159,6 +3164,7 @@ class EmailReplyView(DetailView):
             reply = form.cleaned_data.get('reply', "").strip()
             occurrence = self.get_occurrence()
             recipients = occurrence.visit.unit.get_editors()
+            print "send C"
             KUEmailMessage.send_email(
                 EmailTemplate.SYSTEM__EMAIL_REPLY,
                 {
@@ -3181,3 +3187,56 @@ class EmailReplyView(DetailView):
 
 import booking_workflows.views  # noqa
 import_views(booking_workflows.views)
+
+
+class BookingAcceptView(FormView):
+    template_name = "booking/accept_spot.html"
+    form_class = AcceptBookingForm
+    object = None
+    answer = None
+    dequeued = False
+
+    def dispatch(self, request, *args, **kwargs):
+        token = kwargs.get('token')
+        if not token:
+            raise Http404
+        try:
+            bookerentry = EmailBookerEntry.objects.get(uuid=token)
+            self.object = Booking.objects.get(booker=bookerentry.booker)
+        except Booking.DoesNotExist:
+            raise AccessDenied(_(u"Booking findes ikke længere"))
+        except EmailBookerEntry.DoesNotExist:
+            raise AccessDenied(_(u"Ugyldig token"))
+        if bookerentry.is_expired():
+            raise AccessDenied(_(u"Token er udløbet"))
+        if self.object.booker != bookerentry.booker:
+            raise AccessDenied(_(u"Ugyldig token"))
+        return super(BookingAcceptView, self).dispatch(request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        answer = kwargs.get('answer', None)
+        if answer.lower() == 'yes':
+            self.answer = True
+            if self.object.can_dequeue:
+                self.object.dequeue()
+                self.dequeued = True
+        elif answer.lower() == 'no':
+            self.answer = False
+        return super(BookingAcceptView, self).get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        form = self.get_form()
+        if form.is_valid():
+            comment = form.cleaned_data['comment']
+            self.object.visitoccurrence.add_comment(None, comment)
+        return self.render_to_response(
+            self.get_context_data(comment_added=True)
+        )
+
+    def get_context_data(self, **kwargs):
+        context = {}
+        context['object'] = self.object
+        context['answer'] = self.answer
+        context['dequeued'] = self.dequeued
+        context.update(kwargs)
+        return super(BookingAcceptView, self).get_context_data(**context)
