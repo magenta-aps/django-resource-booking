@@ -311,7 +311,6 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
             recipients = self.lookup_recipients(
                 form.cleaned_data['recipients']
             )
-            print "send A"
             KUEmailMessage.send_email(template, context, recipients,
                                       self.object)
             return super(EmailComposeView, self).form_valid(form)
@@ -1838,7 +1837,6 @@ class VisitInquireView(FormMixin, HasBackButtonMixin, ModalMixin,
             recipients = []
             recipients.extend(self.object.contacts.all())
             recipients.extend(self.object.unit.get_editors())
-            print "send B"
             KUEmailMessage.send_email(template, context, recipients,
                                       self.object)
             return super(VisitInquireView, self).form_valid(form)
@@ -3165,7 +3163,6 @@ class EmailReplyView(DetailView):
             reply = form.cleaned_data.get('reply', "").strip()
             occurrence = self.get_occurrence()
             recipients = occurrence.visit.unit.get_editors()
-            print "send C"
             KUEmailMessage.send_email(
                 EmailTemplate.SYSTEM__EMAIL_REPLY,
                 {
@@ -3226,6 +3223,7 @@ class BookingAcceptView(FormView):
         elif answer.lower() == 'no':
             self.answer = False
             self.object.autosend(EmailTemplate.NOTIFY_GUEST__SPOT_REJECTED)
+            self.object.autosend(EmailTemplate.NOTIFY_EDITORS__SPOT_REJECTED)
         return super(BookingAcceptView, self).get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
