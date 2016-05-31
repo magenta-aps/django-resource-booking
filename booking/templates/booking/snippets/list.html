@@ -47,7 +47,7 @@
                         {% if listname == 'waiting' %}
                         <button type="button" data-toggle="modal" data-target="#modalhost" class="btn btn-primary btn-xs"
                                 data-modal-href="{% url 'booking-notify' booking.id %}?template={{ emailtemplate_waitinglist }}&recipients=booking:{{ booking.id }}&nogroups=1"
-                                {% if booking.booker.attendee_count >= object.waiting_list_capacity %}disabled="disabled" title="{% trans 'Der er ikke plads nok på ventelisten' %}"{% endif %}
+                                {% if booking.booker.attendee_count > object.waiting_list_capacity %}disabled="disabled" title="{% trans 'Der er ikke plads nok på ventelisten' %}"{% endif %}
                         >
                             {% trans 'Send venteliste-mail' %}
                         </button>
