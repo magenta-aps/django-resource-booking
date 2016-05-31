@@ -553,7 +553,8 @@ class EmailTemplate(models.Model):
         (NOTIFY_GUEST__SPOT_REJECTED,
          _(u'Besked til gæst ved afvisning af plads (fra venteliste)')),
         (NOTIFY_EDITORS__SPOT_REJECTED,
-         _(u'Besked til koordinatorer ved afvisning af plads (fra venteliste)')),
+         _(u'Besked til koordinatorer ved afvisning '
+           u'af plads (fra venteliste)')),
         (NOTIFY_EDITORS__BOOKING_CREATED,
          _(u'Besked til koordinatorer ved booking af besøg')),
         (NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
