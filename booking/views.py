@@ -3222,8 +3222,10 @@ class BookingAcceptView(FormView):
             if self.object.can_dequeue:
                 self.object.dequeue()
                 self.dequeued = True
+                self.object.autosend(EmailTemplate.NOTIFY_GUEST__SPOT_ACCEPTED)
         elif answer.lower() == 'no':
             self.answer = False
+            self.object.autosend(EmailTemplate.NOTIFY_GUEST__SPOT_REJECTED)
         return super(BookingAcceptView, self).get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):

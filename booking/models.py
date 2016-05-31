@@ -534,6 +534,8 @@ class EmailTemplate(models.Model):
     SYSTEM__USER_CREATED = 14
     NOTIFY_GUEST_REMINDER = 15  # Ticket 15510
     NOTIFY_GUEST__SPOT_OPEN = 16  # Ticket 13804
+    NOTIFY_GUEST__SPOT_ACCEPTED = 17  # Ticket 13804
+    NOTIFY_GUEST__SPOT_REJECTED = 18  # Ticket 13804
 
     # Choice labels
     key_choices = [
@@ -545,6 +547,10 @@ class EmailTemplate(models.Model):
          _(u'Reminder til gæst')),
         (NOTIFY_GUEST__SPOT_OPEN,
          _(u'Besked til gæst på venteliste om ledig plads')),
+        (NOTIFY_GUEST__SPOT_ACCEPTED,
+         _(u'Besked til gæst ved accept af plads (fra venteliste)')),
+        (NOTIFY_GUEST__SPOT_REJECTED,
+         _(u'Besked til gæst ved afvisning af plads (fra venteliste)')),
         (NOTIFY_EDITORS__BOOKING_CREATED,
          _(u'Besked til koordinatorer ved booking af besøg')),
         (NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
@@ -619,7 +625,9 @@ class EmailTemplate(models.Model):
         NOTIFY_GUEST__BOOKING_CREATED,
         NOTIFY_ALL__BOOKING_COMPLETE,
         NOTIFY_ALL__BOOKING_CANCELED,
-        NOTITY_ALL__BOOKING_REMINDER
+        NOTITY_ALL__BOOKING_REMINDER,
+        NOTIFY_GUEST__SPOT_ACCEPTED,
+        NOTIFY_GUEST__SPOT_REJECTED
     ]
     # Templates that will be autosent to hosts in the unit
     unit_hosts_keys = [
@@ -674,7 +682,9 @@ class EmailTemplate(models.Model):
         NOTIFY_EDITORS__BOOKING_CREATED,
         NOTITY_ALL__BOOKING_REMINDER,
         NOTIFY_ALL__BOOKING_COMPLETE,
-        SYSTEM__EMAIL_REPLY
+        SYSTEM__EMAIL_REPLY,
+        NOTIFY_GUEST__SPOT_ACCEPTED,
+        NOTIFY_GUEST__SPOT_REJECTED
     ]
 
     key = models.IntegerField(
