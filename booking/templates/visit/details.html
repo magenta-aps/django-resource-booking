@@ -232,13 +232,24 @@
             var dato = $("#dato"),
                 showmore = "{% trans 'Vis flere datoer' %}",
                 showless = "{% trans 'Vis færre datoer' %}",
-                surplus = dato.find('[data-expired="true"]').add(dato.find('[data-expired="false"]').slice(6))
-            surplus.hide();
-            dato.after("<a href=\"#\" class=\"showhide\">"+showmore+"</a>");
+                showexpired = "{% trans 'Vis udløbne datoer' %}",
+                surplus = dato.find('[data-expired="false"]').slice(6),
+                tohide = dato.find('[data-expired="true"]').add(surplus),
+                expandText = (surplus.length ? showmore : showexpired),
+                expanded = false;
+            tohide.hide();
+            dato.after("<a href=\"#\" class=\"showhide\">" + expandText + "</a>");
+
             $(".showhide").click(function(e) {
                 e.preventDefault();
-                surplus.toggle(400);
-                ($(this).text() === showmore) ? $(this).text(showless): $(this).text(showmore);
+                if (expanded) {
+                    tohide.hide(400);
+                    $(this).text(expandText);
+                } else {
+                    tohide.show(400);
+                    $(this).text(showless)
+                }
+                expanded = !expanded;
             });
         }
         //-->
