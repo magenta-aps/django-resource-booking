@@ -14,7 +14,9 @@ from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
 from django.db.models.aggregates import Count, Sum
 from django.db.models.functions import Coalesce
+from django.http import HttpResponse
 from django.shortcuts import redirect
+from django.template import loader
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.functional import Promise
@@ -611,6 +613,17 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
         if self.request.GET.get('to_date') != '':
             form.fields['to_date'].initial = \
                 self.request.GET.get('to_date', None)
+        # Handle csv download
+        if self.request.GET.get('view') == 'csv':
+            response = HttpResponse(content_type='text/csv')
+            response[
+                'Content-Disposition'] = 'attachment; filename="statistik.csv"'
+
+            t = loader.get_template('profile/statistics_csv.txt')
+            c = self.get_context_data()
+            response.write(t.render(c))
+            return response
+
         return self.render_to_response(
             self.get_context_data(form=form)
         )
