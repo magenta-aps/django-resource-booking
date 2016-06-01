@@ -12,6 +12,7 @@
         var levelSelect = $("#{{ bookerform.level.id_for_label }}");
 
         schoolField.typeahead({
+            items: 12,
             source: function (query, process) {
                 $.ajax({
                     url: "{% url 'school' %}",
@@ -27,10 +28,16 @@
                     }.bind(this)
                 });
             },
+            displayText: function(item) {
+                if (item.postcode) {
+                    return [item.name, " (", item.postcode.number, " ", item.postcode.city, ")"].join("");
+                }
+                return item.name;
+            },
             updater: function (selected) {
                 if (selected.postcode && postcode.length) {
                     // Update the postcode field
-                    postcode.val(selected.postcode);
+                    postcode.val(selected.postcode.number);
                     postcode.change();
                 }
 

@@ -189,6 +189,46 @@
             </div>
         </div>
     </div>
+    
+    <div class="row attendees">
+        <div class="col-sm-12 col-md-10">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <h2>
+                        {% trans 'Tilmeldte' %}
+                        ({{ object.nr_attendees }}{% if object.visit.maximum_number_of_visitors %}/{{ object.visit.maximum_number_of_visitors }}{% endif %})
+                    </h2>
+                    {% include "booking/snippets/list.html" with list=object.booking_list form=bookinglistform listname='booking' %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row waiting">
+        <div class="col-sm-12 col-md-10">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <a name="waitinglist"></a>
+                    <h2>
+                        {% trans 'Venteliste' %}
+                        ({{ object.nr_waiting }}{% if object.visit.waiting_list_length %}/{{ object.visit.waiting_list_length }}{% endif %})
+                    </h2>
+                    {% if object.waiting_list_closing_time %}
+                        {% if object.waiting_list_closed %}
+                            {% blocktrans with time=object.waiting_list_closing_time %}
+                                Ventelisten lukkede {{ time }}.
+                            {% endblocktrans %}
+                        {% else %}
+                            {% blocktrans with time=object.waiting_list_closing_time %}
+                                Ventelisten lukker {{ time }}.
+                            {% endblocktrans %}
+                        {% endif %}
+                    {% endif %}
+                    {% include "booking/snippets/list.html" with list=object.waiting_list form=waitinglistform listname='waiting' %}
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="row activitylog">
         <div class="col-sm-12 col-md-10">
@@ -253,46 +293,6 @@
                     <div>
                         <a href="{% url 'visit-occ-add-comment' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Tilføj ny kommentar' %}</a>&nbsp;
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row attendees">
-        <div class="col-sm-12 col-md-10">
-            <div class="panel panel-default">
-                <div class="panel-body">
-                    <h2>
-                        {% trans 'Tilmeldte' %}
-                        ({{ object.nr_attendees }}{% if object.visit.maximum_number_of_visitors %}/{{ object.visit.maximum_number_of_visitors }}{% endif %})
-                    </h2>
-                    {% include "booking/snippets/list.html" with list=object.booking_list form=bookinglistform listname='booking' %}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row waiting">
-        <div class="col-sm-12 col-md-10">
-            <div class="panel panel-default">
-                <div class="panel-body">
-                    <a name="waitinglist"></a>
-                    <h2>
-                        {% trans 'Venteliste' %}
-                        ({{ object.nr_waiting }}{% if object.visit.waiting_list_length %}/{{ object.visit.waiting_list_length }}{% endif %})
-                    </h2>
-                    {% if object.waiting_list_closing_time %}
-                        {% if object.waiting_list_closed %}
-                            {% blocktrans with time=object.waiting_list_closing_time %}
-                                Ventelisten lukkede {{ time }}.
-                            {% endblocktrans %}
-                        {% else %}
-                            {% blocktrans with time=object.waiting_list_closing_time %}
-                                Ventelisten lukker {{ time }}.
-                            {% endblocktrans %}
-                        {% endif %}
-                    {% endif %}
-                    {% include "booking/snippets/list.html" with list=object.waiting_list form=waitinglistform listname='waiting' %}
                 </div>
             </div>
         </div>
@@ -370,24 +370,6 @@
                 return window.confirm("{% trans 'Er du sikke på at du vil slette disse tilmeldinger?' %}");
             });
         });
-
-        $(function () {
-            var button = $("button[name='mail']");
-            var update = function() {
-                var selected = [];
-                $(".listcontainer.waiting input[type='checkbox']:checked").each(function(){
-                    selected.push("recipients=booking:" + $(this).val());
-                });
-                var href = button.attr("data-modal-href");
-                href = href.replace(/&?recipients=[^&]/, "");
-                href += (href.indexOf("?")==-1) ? "?" : "&";
-                href += selected.join("&");
-                button.attr("data-modal-href", href);
-            };
-            $(".listcontainer.waiting input[type='checkbox']").change(update);
-            update();
-        });
-
 
         //-->
     </script>
