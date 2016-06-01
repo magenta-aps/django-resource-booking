@@ -1,13 +1,13 @@
 {% extends "index.html" %}
 {% load i18n %}
 
-{% block htmltitle %} - {% blocktrans with name=object.user %}Rediger mulige undervisningstidspunkter for {{name}}{% endblocktrans %}{% endblock %}
+{% block htmltitle %} - {% blocktrans with name=object.user %}Rediger mulige tidspunkter for {{name}}{% endblocktrans %}{% endblock %}
 
 
 {% block content %}
     <div class="divider"></div>
 
-    <h1>{% blocktrans with name=object.user %}Rediger mulige undervisningstidspunkter for {{name}}{% endblocktrans %}</h1>
+    <h1>{% blocktrans with name=object.user %}Rediger mulige tidspunkter for {{name}}{% endblocktrans %}</h1>
 
     <div class="divider"></div>
 
@@ -15,7 +15,7 @@
         <div class="col-sm-12">
             <form name="updateteacheravailability"
                   id="updateteacheravailability"
-                  action="{% url 'teacher-availability-edit' %}"
+                  action="{% url 'availability-edit' %}"
                   method="post"
             >
                 {% csrf_token %}

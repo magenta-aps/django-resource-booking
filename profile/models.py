@@ -133,8 +133,14 @@ class UserProfile(models.Model):
         verbose_name=_(u"Mine tilbud")
     )
 
-    teacher_availability_text = models.TextField(
-        verbose_name=_(u"Mulige undervisningstidspunkter"),
+    availability_text = models.TextField(
+        verbose_name=_(u"Mulige tidspunkter for vært/underviser"),
+        blank=True,
+        default=""
+    )
+
+    additional_information = models.TextField(
+        verbose_name=_(u"Yderligere information"),
         blank=True,
         default=""
     )

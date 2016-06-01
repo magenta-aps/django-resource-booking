@@ -25,7 +25,33 @@
         <div class="col-sm-12 col-md-8">
             <form name="changebookinghostsform" id="changebookinghostsform" class="changebookingform" action="{% url 'change-visit-occ-hosts' object.pk %}" method="post">
                 {% csrf_token %}
-                {{ form }}
+                <p>{{ form.host_status.label_tag }} {{ form.host_status }}</p>
+                <p>{{ form.hosts.label_tag}}</p>
+                <ul id="id_{{ form.hosts.name }}">
+                    {% for x in form.hosts.field.queryset %}
+                    <li>
+                        <label for="id_{{ form.hosts.name }}_{{ forloop.counter0 }}">
+                            <input
+                                {% if x.pk in form.hosts.value %}
+                                checked="checked"
+                                {% endif %}
+                                id="id_{{ form.hosts.name }}_{{ forloop.counter0 }}"
+                                name="{{ form.hosts.name }}"
+                                type="checkbox"
+                                value="{{ x.pk }}"
+                            >
+                            {{ x }}
+                            <a href="{% url 'availability' x.userprofile.pk %}#todaysdate"
+                               role="button" class="btn btn-primary btn-xs"
+                               onclick="this.target='_blank'"
+                            >
+                                Se detaljer
+                                <span class="glyphicon glyphicon-new-window"></span>
+                            </a>
+                        </label>
+                    </li>
+                    {% endfor %}
+                </ul>
                 <input class="btn btn-success btn-sm" type="submit" value="{% trans 'Opdater' %}" name="confirm" />
                 <input class="btn btn-danger btn-sm" type="submit" value="{% trans 'Annullér' %}" name="cancel" />
             </form>

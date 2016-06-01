@@ -146,8 +146,8 @@
                         {% trans 'Du kan her vælge faste værter og undervisere der automatisk kopieres til alle besøg der efterfølgende oprettes for dette tilbud.' %}
                     </p>
                     {% endif %}
-                    {% include 'resource/fields/generic_field.html' with field=form.default_hosts %}
-                    {% include 'resource/fields/generic_field.html' with field=form.default_teachers %}
+                    {% include 'resource/fields/teacherhost_select.html' with field=form.default_hosts %}
+                    {% include 'resource/fields/teacherhost_select.html' with field=form.default_teachers %}
                     </div>
                 </div>
             </div>
