@@ -39,9 +39,11 @@
 
 <div class="divider"></div>
 
-<div>
-    <a href="{{ request.get_full_path}}&view=csv" class="btn btn-default"><span class="glyphicon glyphicon-save-file"></span> {% trans 'Download csv' %}</a>
-</div>
+{% if request.GET.urlencode %}
+    <div>
+        <a href="{{ request.get_full_path}}&view=csv" class="btn btn-default"><span class="glyphicon glyphicon-save-file"></span> {% trans 'Download csv' %}</a>
+    </div>
+{% endif %}
 
 <div class="table-responsive">
     <table class="table table-striped">
