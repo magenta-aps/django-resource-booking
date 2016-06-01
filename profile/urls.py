@@ -5,8 +5,8 @@ from profile.views import ProfileView, CreateUserView, UnitListView
 from profile.views import DeleteUserView, UserListView
 from profile.views import EmailLoginView
 from profile.views import EditMyResourcesView
-from profile.views import TeacherAvailabilityEditView
-from profile.views import TeacherAvailabilityView
+from profile.views import AvailabilityEditView
+from profile.views import AvailabilityView
 
 urlpatterns = patterns(
 
@@ -50,9 +50,9 @@ urlpatterns = patterns(
         name='my-resources'),
 
     url(r'^availability/(?P<pk>[0-9]+)/?$',
-        TeacherAvailabilityView.as_view(),
-        name='teacher-availability'),
+        AvailabilityView.as_view(),
+        name='availability'),
     url(r'^availability/edit/?$',
-        TeacherAvailabilityEditView.as_view(),
-        name='teacher-availability-edit'),
+        AvailabilityEditView.as_view(),
+        name='availability-edit'),
 )
