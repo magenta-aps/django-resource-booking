@@ -95,8 +95,22 @@ class EditMyResourcesForm(forms.ModelForm):
 
 
 class StatisticsForm(forms.Form):
-    unit = forms.ModelChoiceField(
+    units = forms.ModelMultipleChoiceField(
         queryset=Unit.objects.none(),
-        label=_(u'Enhed'),
+        widget=forms.CheckboxSelectMultiple,
         error_messages={'required': _(u'Dette felt er påkrævet!')}
+    )
+    from_date = forms.DateField(
+        widget=forms.TextInput(
+            attrs={
+                'class': 'form-control input-sm datepicker datepicker-admin'
+            }
+        )
+    )
+    to_date = forms.DateField(
+        widget=forms.TextInput(
+            attrs={
+                'class': 'form-control input-sm datepicker datepicker-admin'
+            }
+        )
     )

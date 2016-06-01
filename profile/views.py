@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from datetime import datetime
+
 from booking.models import Unit, Resource, VisitOccurrence, UserPerson, Booking
 from booking.models import EmailTemplate, KUEmailMessage
 from booking.models import VisitOccurrenceComment
@@ -542,21 +544,49 @@ class UnitListView(EditorRequriedMixin, ListView):
 class StatisticsView(EditorRequriedMixin, TemplateView):
     template_name = "profile/statistics.html"
     form_class = StatisticsForm
-    unit = None
+    units = []
 
     def get_context_data(self, **kwargs):
         context = {}
         context['user'] = self.request.user
-        if self.unit:
-            context['unit'] = self.unit
-            context['bookings'] = Booking.objects\
+        current_tz = timezone.get_current_timezone()
+        from_date = None
+        to_date = None
+        if self.request.GET.get('from_date') \
+                and self.request.GET.get('from_date') != '':
+            from_date = datetime.strptime(
+                self.request.GET.get('from_date', None),
+                '%d-%m-%Y'
+            )
+            from_date = current_tz.localize(from_date)
+        if self.request.GET.get('to_date') \
+                and self.request.GET.get('to_date') != '':
+            to_date = datetime.strptime(
+                self.request.GET.get('to_date', None),
+                '%d-%m-%Y'
+            )
+            to_date = current_tz.localize(to_date)
+
+        if self.units:
+            context['units'] = self.units
+            qs = Booking.objects\
                 .select_related('visitoccurrence__visit__resource_ptr__unit') \
                 .select_related('booker__school')\
-                .prefetch_related('bookingsubjectlevel_set__subject') \
-                .prefetch_related('bookingsubjectlevel_set__level') \
+                .prefetch_related('bookinggymnasiesubjectlevel_set__subject') \
+                .prefetch_related('bookinggymnasiesubjectlevel_set__level') \
+                .prefetch_related('bookinggrundskolesubjectlevel_set'
+                                  '__subject')\
+                .prefetch_related('bookinggrundskolesubjectlevel_set__level') \
                 .filter(
-                    visitoccurrence__visit__resource_ptr__unit_id=self.unit.id
-                ).order_by('visitoccurrence__visit__resource_ptr')
+                    visitoccurrence__visit__resource_ptr__unit_id__in=self
+                        .units
+                )
+            if from_date:
+                qs = qs.filter(visitoccurrence__start_datetime__gte=from_date)
+            if to_date:
+                qs = qs.filter(visitoccurrence__end_datetime__lte=to_date)
+            qs = qs.order_by('visitoccurrence__visit__resource_ptr')
+            context['bookings'] = qs
         context.update(kwargs)
 
         return super(StatisticsView, self).get_context_data(**context)
@@ -564,14 +594,23 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
     def get(self, request, *args, **kwargs):
         user = self.request.user
         form = self.form_class()
-        form.fields['unit'].queryset = user.userprofile.get_unit_queryset()
+        form.fields['units'].queryset = user.userprofile.get_unit_queryset()
+        unit_ids = []
+        for unit_id in self.request.GET.getlist('units', None):
+            unit_ids.append(int(unit_id))
         if user.userprofile.unit:
-            form.fields['unit'].initial = user.userprofile.unit.pk
-            form.fields['unit'].empty_label = None
-        if self.request.GET.get('unit', None):
-            unit_id = int(self.request.GET.get('unit', None))
-            self.unit = Unit.objects.get(pk=unit_id)
-            form.fields['unit'].initial = self.unit
+            form.fields['units'].initial = [user.userprofile.unit.pk]
+            form.fields['units'].empty_label = None
+        if len(unit_ids) > 0:
+            self.units = Unit.objects.all()\
+                .filter(pk__in=unit_ids)
+            form.fields['units'].initial = self.units
+        if self.request.GET.get('from_date') != '':
+            form.fields['from_date'].initial = \
+                self.request.GET.get('from_date', None)
+        if self.request.GET.get('to_date') != '':
+            form.fields['to_date'].initial = \
+                self.request.GET.get('to_date', None)
         return self.render_to_response(
             self.get_context_data(form=form)
         )
