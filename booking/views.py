@@ -2103,15 +2103,19 @@ class SchoolView(View):
         query = request.GET['q']
         type = request.GET.get('t')
         items = School.search(query, type)
-        json = {'schools':
-                [
-                    {'name': item.name,
-                     'postcode': item.postcode.number
-                     if item.postcode is not None else None,
-                     'type': item.type}
-                    for item in items
-                ]
+        json = {
+            'schools': [
+                {
+                    'name': item.name,
+                    'postcode': {
+                        'number': item.postcode.number,
+                        'city': item.postcode.city
+                    } if item.postcode is not None else None,
+                    'type': item.type
                 }
+                for item in items
+            ]
+        }
         return JsonResponse(json)
 
 
