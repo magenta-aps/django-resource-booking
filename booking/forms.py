@@ -493,22 +493,6 @@ class VisitForm(forms.ModelForm):
                     ) if x
                 ])
 
-        # Limit choices for non-admins to those in the same unit
-        userperson_choices = [
-            (person.id, unicode(person))
-            for person in UserPerson.objects.all()
-            if self.user.userprofile.is_administrator or
-            person.unit == self.user.userprofile.unit
-        ]
-
-        userperson_choices.sort(key=lambda choice: choice[1].lower())
-
-        # Limit choices for non-admins to those in the same unit
-        if 'contacts' in self.fields:
-            self.fields['contacts'].choices = userperson_choices
-        if 'room_contact' in self.fields:
-            self.fields['room_contact'].choices = userperson_choices
-
         if 'duration' in self.fields:
             self.fields['duration'].choices = [
                 ('00:00', _(u'Ingen')), ('00:15', _(u'15 minutter')),
@@ -538,6 +522,22 @@ class VisitForm(forms.ModelForm):
                 ('20:00', _(u'20 timer')), ('24:00', _(u'24 timer')),
                 ('36:00', _(u'36 timer')), ('48:00', _(u'48 timer'))
             ]
+
+        # Limit choices for non-admins to those in the same unit
+        userperson_choices = [
+            (person.id, unicode(person))
+            for person in UserPerson.objects.all()
+            if self.user.userprofile.is_administrator or
+            person.unit == self.user.userprofile.unit
+            ]
+
+        userperson_choices.sort(key=lambda choice: choice[1].lower())
+
+        # Limit choices for non-admins to those in the same unit
+        if 'contacts' in self.fields:
+            self.fields['contacts'].choices = userperson_choices
+        if 'room_contact' in self.fields:
+            self.fields['room_contact'].choices = userperson_choices
 
     def clean_type(self):
         instance = getattr(self, 'instance', None)
