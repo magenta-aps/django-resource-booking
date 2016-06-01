@@ -12,6 +12,7 @@
         var levelSelect = $("#{{ bookerform.level.id_for_label }}");
 
         schoolField.typeahead({
+            items: 12,
             source: function (query, process) {
                 $.ajax({
                     url: "{% url 'school' %}",
