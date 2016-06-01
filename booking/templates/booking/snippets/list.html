@@ -28,6 +28,14 @@
                             {% if booking.classbooking %}
                                 <dt class="text-muted">{% trans 'Rundvisning:' %}</dt>
                                 <dd>{{ booking.classbooking.tour_desired | yesno }}</dd>
+                                <dt class="text-muted">{% trans 'Forplejning:' %}</dt>
+                                <dd>{{ booking.classbooking.catering_desired | yesno }}</dd>
+                                <dt class="text-muted">{% trans 'Oplæg om uddannelse:' %}</dt>
+                                <dd>{{ booking.classbooking.presentation_desired | yesno }}</dd>
+                                {% if booking.visitoccurrence.visit.custom_available %}
+                                    <dt class="text-muted">{{ booking.visitoccurrence.visit.custom_name }}:</dt>
+                                    <dd>{{ booking.classbooking.custom_desired | yesno }}</dd>
+                                {% endif %}
                             {% endif %}
                             {% if booking.teacherbooking %}
                                 {% if booking.teacherbooking.subjects %}
