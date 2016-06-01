@@ -116,6 +116,7 @@ class UserPerson(models.Model):
     class Meta:
         verbose_name = _(u'Lokaleanvarlig')
         verbose_name_plural = _(u'Lokaleanvarlige')
+        ordering = ['person__name', 'user__first_name', 'user__username']
 
     person = models.ForeignKey(Person, blank=True, null=True)
     user = models.ForeignKey(User, blank=True, null=True)
