@@ -3247,7 +3247,7 @@ class BookingAcceptView(FormView):
             self.object.autosend(EmailTemplate.NOTIFY_GUEST__SPOT_REJECTED)
             self.object.autosend(EmailTemplate.NOTIFY_EDITORS__SPOT_REJECTED)
             self.object_id = self.object.id
-            # self.object.delete()
+            self.object.delete()
         return super(BookingAcceptView, self).get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
