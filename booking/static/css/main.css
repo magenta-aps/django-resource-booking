@@ -1133,13 +1133,6 @@ a.template-overridden:visited {
     list-style-type: none;
 }
 
-/* For elements that otherwise don't want to be centered */
-.force-center {
-    position: absolute;
-    left: 50%;
-    transform: translate(-50%, 0);
-}
-
 /*Backend specific styles end */
 
 
