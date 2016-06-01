@@ -26,7 +26,12 @@
                     {% blocktrans with firstname=object.booker.firstname lastname=object.booker.lastname visittitle=object.visit.title occurrencetime=object.visitoccurrence.start_datetime %}
                         <strong>{{ firstname }} {{ lastname }}</strong> har tilmeldt sig <a href="{{ visiturl }}">{{ visittitle }}</a> med afvikling <a href="{{ occurrenceurl }}">{{ occurrencetime }}</a>
                     {% endblocktrans %}
+                    {% if object.is_waiting %}
+                        <br/>
+                        {% blocktrans with spot=object.waitinglist_spot %}Står på venteliste som nr {{ spot }}{% endblocktrans %}
+                    {% endif %}
                 </div>
+
             </div>
 
             {% if can_notify %}
