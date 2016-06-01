@@ -115,6 +115,36 @@
                         </div>
                     </div>
                 </fieldset>
+                {% if form.instance.userprofile.is_teacher or form.instance.userprofile.is_host %}
+                <fieldset>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="{{ form.availability_text.id_for_unit}}">{{ form.availability_text.label }}:</label>
+                        <div class="col-sm-5">
+                            {{ form.availability_text }}
+                        </div>
+                        <div class="col-sm-5 with-errors">
+                            {{ form.availability_text.errors }}
+                        </div>
+                    </div>
+                </fieldset>
+                {% else %}
+                {{ form.availability_text.as_hidden }}
+                {% endif %}
+                {% if request.user.userprofile.has_edit_role %}
+                <fieldset>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="{{ form.additional_information.id_for_unit}}">{{ form.additional_information.label }}:</label>
+                        <div class="col-sm-5">
+                            {{ form.additional_information }}
+                        </div>
+                        <div class="col-sm-5 with-errors">
+                            {{ form.additional_information.errors }}
+                        </div>
+                    </div>
+                </fieldset>
+                {% else %}
+                {{ form.additional_information.as_hidden }}
+                {% endif %}
                 <div class="row">
                     <div class="col-sm-2 col-sm-offset-2">
                         <input class="btn btn-primary" type="submit" value="Gem" name="submit" />

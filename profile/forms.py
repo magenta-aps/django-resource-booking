@@ -19,6 +19,20 @@ class UserCreateForm(UserCreationForm):
         queryset=Unit.objects.all(),
         label=_(u'Enhed')
     )
+    availability_text = forms.CharField(
+        widget=forms.Textarea,
+        required=False,
+        label=UserProfile._meta.get_field_by_name(
+            'availability_text'
+        )[0].verbose_name
+    )
+    additional_information = forms.CharField(
+        widget=forms.Textarea,
+        required=False,
+        label=UserProfile._meta.get_field_by_name(
+            'additional_information'
+        )[0].verbose_name
+    )
 
     class Meta:
         model = User
@@ -48,9 +62,12 @@ class UserCreateForm(UserCreationForm):
         self.fields['password2'].widget.attrs = {'autocomplete': 'off'}
 
         if hasattr(self.instance, 'userprofile'):
+            up = self.instance.userprofile
             self.initial.update({
-                'role': self.instance.userprofile.user_role,
-                'unit': self.instance.userprofile.unit
+                'role': up.user_role,
+                'unit': up.unit,
+                'availability_text': up.availability_text,
+                'additional_information': up.additional_information
             })
 
     def get_unit_query_set(self):

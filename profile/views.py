@@ -371,12 +371,19 @@ class CreateUserView(FormView, UpdateView):
             user = form.save()
             user_role = UserRole.objects.get(pk=user_role_id)
             unit = Unit.objects.get(pk=unit_id)
+
+            cd = form.cleaned_data
+            avail_txt = cd['availability_text']
+            add_info = cd['additional_information']
+
             # Create
             if not pk:
                 user_profile = UserProfile(
                     user=user,
                     user_role=user_role,
-                    unit=unit
+                    unit=unit,
+                    availability_text=avail_txt,
+                    additional_information=add_info,
                 )
             else:
                 # Update
@@ -384,6 +391,9 @@ class CreateUserView(FormView, UpdateView):
                 user_profile.user = user
                 user_profile.user_role = user_role
                 user_profile.unit = unit
+                cd = form.cleaned_data
+                user_profile.availability_text = avail_txt
+                user_profile.additional_information = add_info
 
             user_profile.save()
 
@@ -503,7 +513,7 @@ class UserListView(EditorRequriedMixin, ListView):
                 Q(last_name__contains=q)
             )
 
-        return qs
+        return qs.order_by('first_name', 'last_name', 'username')
 
     def get_context_data(self, **kwargs):
         context = {}
@@ -623,20 +633,29 @@ class EditMyResourcesView(EditorRequriedMixin, UpdateView):
         return reverse('user_profile')
 
 
-class TeacherAvailabilityView(LoginRequiredMixin, DetailView):
+class AvailabilityView(LoginRequiredMixin, DetailView):
     model = UserProfile
-    template_name = 'profile/teacher_availability.html'
+    template_name = 'profile/availability.html'
 
     def get_context_data(self, **kwargs):
         context = {}
 
+        user = self.object.user
         if self.object.is_teacher:
-            user = self.object.user
             accepted_qs = user.taught_visitoccurrences.order_by(
                 'start_datetime'
             )
             context['accepted'] = self.to_datelist(accepted_qs)
             unaccepted_qs = self.object.requested_as_teacher_for_qs(
+                exclude_accepted=True
+            ).order_by('start_datetime')
+            context['unaccepted'] = self.to_datelist(unaccepted_qs)
+        elif self.object.is_host:
+            accepted_qs = user.hosted_visitoccurrences.order_by(
+                'start_datetime'
+            )
+            context['accepted'] = self.to_datelist(accepted_qs)
+            unaccepted_qs = self.object.requested_as_host_for_qs(
                 exclude_accepted=True
             ).order_by('start_datetime')
             context['unaccepted'] = self.to_datelist(unaccepted_qs)
@@ -646,7 +665,7 @@ class TeacherAvailabilityView(LoginRequiredMixin, DetailView):
         context.update(kwargs)
 
         return super(
-            TeacherAvailabilityView, self
+            AvailabilityView, self
         ).get_context_data(**context)
 
     def to_datelist(self, qs):
@@ -691,20 +710,21 @@ class TeacherAvailabilityView(LoginRequiredMixin, DetailView):
         return dates
 
 
-class TeacherAvailabilityEditView(LoginRequiredMixin, UpdateView):
+class AvailabilityEditView(LoginRequiredMixin, UpdateView):
     model = UserProfile
-    template_name = 'profile/teacher_availability_edit.html'
-    fields = ['teacher_availability_text']
+    template_name = 'profile/availability_edit.html'
+    fields = ['availability_text']
 
     def get_object(self, queryset=None):
         user = self.request.user
-        if user.userprofile and user.userprofile.is_teacher:
+        if user.userprofile and (user.userprofile.is_teacher or
+                                 user.userprofile.is_host):
             return user.userprofile
         else:
-            raise Http404("Only teachers can edit availability")
+            raise Http404("Only teachers or hosts can edit availability")
 
     def get_form(self, form_class=None):
-        form = super(TeacherAvailabilityEditView, self).get_form(form_class)
+        form = super(AvailabilityEditView, self).get_form(form_class)
 
         for f in form.fields.values():
             css = f.widget.attrs.get("class")
@@ -720,7 +740,7 @@ class TeacherAvailabilityEditView(LoginRequiredMixin, UpdateView):
             self.object = self.get_object()
             return redirect(self.get_success_url())
         else:
-            return super(TeacherAvailabilityEditView, self).post(
+            return super(AvailabilityEditView, self).post(
                 request, *args, **kwargs
             )
 

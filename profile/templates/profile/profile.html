@@ -28,8 +28,16 @@
                 {% blocktrans %}Som underviser har du mulighed for at angive hvornår du kan undervise{% endblocktrans %}.<br />
             </p>
             <p>
-                <a href="{% url 'teacher-availability-edit' %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér mulige undervisningstidspunkter' %}</a>
-                <a href="{% url 'teacher-availability' request.user.userprofile.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Se dato-oversigt for undervisning' %}</a>
+                <a href="{% url 'availability-edit' %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér mulige undervisningstidspunkter' %}</a>
+                <a href="{% url 'availability' request.user.userprofile.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Se dato-oversigt for undervisning' %}</a>
+            </p>
+            {% elif request.user.userprofile.is_host %}
+            <p>
+                {% blocktrans %}Som vært har du mulighed for at angive hvornår du kan deltage i besøg{% endblocktrans %}.<br />
+            </p>
+            <p>
+                <a href="{% url 'availability-edit' %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér mulige tidspunkter' %}</a>
+                <a href="{% url 'availability' request.user.userprofile.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Se dato-oversigt for besøg' %}</a>
             </p>
             {% endif %}
             <div class="divider"></div>
