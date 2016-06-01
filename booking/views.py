@@ -3281,9 +3281,16 @@ class BookingAcceptView(FormView):
                 ),
                 'text': self.object.visitoccurrence.date_display
             },
-            {'url': reverse('booking-view', args=[self.object.id]),
-             'text': self.object},
-            {'text': _(u'Svar på ledig plads')}
+            {
+                'url': reverse('booking-view', args=[
+                    self.object_id if self.object_id else self.object.id
+                ]),
+                'text': _(u"Slettet tilmelding")
+                    if self.object_id else self.object
+            },
+            {
+                'text': _(u'Svar på ledig plads')
+            }
         ]
 
         context.update(kwargs)

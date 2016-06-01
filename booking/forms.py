@@ -604,6 +604,8 @@ class TeacherVisitForm(VisitForm):
         fields = ('type', 'title', 'teaser', 'description', 'price', 'state',
                   'institution_level', 'topics', 'audience',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
+                  'do_create_waiting_list', 'waiting_list_length',
+                  'waiting_list_deadline_days', 'waiting_list_deadline_hours',
                   'duration', 'locality',
                   'rooms_needed',
                   'contacts', 'room_contact', 'unit',
