@@ -93,6 +93,12 @@
                             </h4>
                         </a>
                     {% endif %}
+                    <a class="list-group-item" href="{% url 'evaluations' %}">
+                        <h4 class="list-group-item-heading">
+                            {% trans 'Overblik over evalueringer' %}
+                            <span class="glyphicon glyphicon-question-sign pull-right" data-toggle="tooltip" data-placement="right" title="{% trans 'Her kan du se et overblik over besøg med tilknyttede evalueringer.' %}"></span>
+                        </h4>
+                    </a>
                     {% if not "disabled by: not yet implemented" %}
                         <a class="list-group-item" href="{% url 'user_list' %}">
                             <h4 class="list-group-item-heading">

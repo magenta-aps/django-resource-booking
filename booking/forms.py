@@ -1102,3 +1102,27 @@ class EmailReplyForm(forms.Form):
         widget=Textarea(attrs={'class': 'form-control input-sm'}),
         required=True
     )
+
+
+class EvaluationOverviewForm(forms.Form):
+    user = None
+
+    unit = forms.MultipleChoiceField(
+        label=_(u'Afgræns ud fra enhed(er)'),
+        required=False,
+    )
+
+    limit_to_personal = forms.BooleanField(
+        label=_(u'Begræns til besøg jeg personligt er involveret i'),
+        required=False
+    )
+
+    def __init__(self, qdict, *args, **kwargs):
+        self.user = kwargs.pop("user")
+        userprofile = self.user.userprofile
+
+        super(EvaluationOverviewForm, self).__init__(qdict, *args, **kwargs)
+
+        self.fields['unit'].choices = [
+            (x.pk, unicode(x)) for x in userprofile.get_unit_queryset()
+        ]

@@ -66,6 +66,7 @@ from booking.forms import BookerForm
 from booking.forms import EmailTemplateForm, EmailTemplatePreviewContextForm
 from booking.forms import EmailComposeForm
 from booking.forms import EmailReplyForm
+from booking.forms import EvaluationOverviewForm
 from booking.forms import AdminVisitSearchForm
 from booking.forms import VisitAutosendFormSet
 from booking.forms import VisitOccurrenceSearchForm
@@ -3044,6 +3045,63 @@ class EmailReplyView(DetailView):
         else:
             return self.get(request, *args, **kwargs)
 
+
+class EvaluationOverviewView(LoginRequiredMixin, ListView):
+    model = VisitOccurrence
+    template_name = "evaluation/list.html"
+    context_object_name = "results"
+    form = None
+
+    def get_form(self):
+        if not self.form:
+            self.form = EvaluationOverviewForm(
+                self.request.GET,
+                user=self.request.user
+            )
+            self.form.is_valid()
+
+        return self.form
+
+    def get_queryset(self):
+        form = self.get_form()
+
+        if form.is_valid():
+            formdata = form.cleaned_data
+            qs = self.model.objects.filter(
+                visit__unit__in=form.user.userprofile.get_unit_queryset(),
+                evaluation_link__isnull=False,
+            ).exclude(
+                evaluation_link="",
+            )
+            unit_limit = formdata.get('unit', [])
+            if unit_limit:
+                qs = qs.filter(
+                    visit__unit__in=unit_limit
+                )
+            if formdata.get('limit_to_personal'):
+                user = self.request.user
+                qs = qs.filter(
+                    Q(visit__created_by=user) |
+                    Q(teachers=user) |
+                    Q(hosts=user) |
+                    Q(visit__contacts__user=user)
+                )
+        else:
+            qs = self.model.objects.none()
+
+        return qs.order_by('-start_datetime', '-end_datetime')
+
+    def get_context_data(self, **kwargs):
+        return super(EvaluationOverviewView, self).get_context_data(
+            form=self.get_form(),
+            breadcrumbs=[
+                {
+                    'url': reverse('evaluations'),
+                    'text': _(u'Oversigt over evalueringer')
+                },
+            ],
+            **kwargs
+        )
 
 import booking_workflows.views  # noqa
 import_views(booking_workflows.views)
