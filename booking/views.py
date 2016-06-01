@@ -3266,6 +3266,9 @@ class BookingAcceptView(FormView):
         context['answer'] = self.answer
         context['dequeued'] = self.dequeued
 
+        objectdisplay = _(u"Slettet tilmelding") if self.object_id \
+            else unicode(self.object)
+
         context['breadcrumbs'] = [
             {'url': reverse('search'), 'text': _(u'Søgning')},
             {
@@ -3285,8 +3288,7 @@ class BookingAcceptView(FormView):
                 'url': reverse('booking-view', args=[
                     self.object_id if self.object_id else self.object.id
                 ]),
-                'text': _(u"Slettet tilmelding")
-                    if self.object_id else self.object
+                'text': objectdisplay
             },
             {
                 'text': _(u'Svar på ledig plads')
