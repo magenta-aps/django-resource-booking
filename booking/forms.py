@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from booking.models import StudyMaterial, VisitAutosend, Booking, Person
+from booking.models import StudyMaterial, VisitAutosend, Booking, UserPerson
 from booking.models import BookingGrundskoleSubjectLevel
 from booking.models import Locality, UnitType, Unit
 from booking.models import Resource, OtherResource, Visit
@@ -498,7 +498,7 @@ class VisitForm(forms.ModelForm):
         # Limit choices for non-admins to those in the same unit
         userperson_choices = [
             (person.id, unicode(person))
-            for person in Person.objects.all()
+            for person in UserPerson.objects.all()
             if self.user.userprofile.is_administrator or
             person.unit == self.user.userprofile.unit
         ]
