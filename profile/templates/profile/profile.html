@@ -105,6 +105,10 @@
                         <h4 class="list-group-item-heading">
                             {% trans 'Overblik over evalueringer' %}
                             <span class="glyphicon glyphicon-question-sign pull-right" data-toggle="tooltip" data-placement="right" title="{% trans 'Her kan du se et overblik over besøg med tilknyttede evalueringer.' %}"></span>
+                    <a class="list-group-item" href="{% url 'statistics' %}">
+                        <h4 class="list-group-item-heading">
+                            {% trans 'Statistik' %}
+                            <span class="glyphicon glyphicon-question-sign pull-right" data-toggle="tooltip" data-placement="right" title="{% trans 'Her kan du som administrator eller koordinator se statistik over tilmeldinger under de enheder, som du har rettigheder til at administrere.' %}"></span>
                         </h4>
                     </a>
                     {% if not "disabled by: not yet implemented" %}
