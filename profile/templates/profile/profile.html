@@ -23,6 +23,15 @@
                 <p>{% trans 'Din enhed' %}: {{ user.userprofile.unit.name }}</p>
             {% endif %}
             <p>{% trans 'På denne side kan du se en oversigt over dine tilbud, hvilke der har tilmeldinger, og hvilke der er under planlægning.' %}</p>
+            {% if request.user.userprofile.is_teacher %}
+            <p>
+                {% blocktrans %}Som underviser har du mulighed for at angive hvornår du kan undervise{% endblocktrans %}.<br />
+            </p>
+            <p>
+                <a href="{% url 'teacher-availability-edit' %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér mulige undervisningstidspunkter' %}</a>
+                <a href="{% url 'teacher-availability' request.user.userprofile.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Se dato-oversigt for undervisning' %}</a>
+            </p>
+            {% endif %}
             <div class="divider"></div>
         </div>
         <div class="col-sm-3">

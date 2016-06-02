@@ -2103,15 +2103,19 @@ class SchoolView(View):
         query = request.GET['q']
         type = request.GET.get('t')
         items = School.search(query, type)
-        json = {'schools':
-                [
-                    {'name': item.name,
-                     'postcode': item.postcode.number
-                     if item.postcode is not None else None,
-                     'type': item.type}
-                    for item in items
-                ]
+        json = {
+            'schools': [
+                {
+                    'name': item.name,
+                    'postcode': {
+                        'number': item.postcode.number,
+                        'city': item.postcode.city
+                    } if item.postcode is not None else None,
+                    'type': item.type
                 }
+                for item in items
+            ]
+        }
         return JsonResponse(json)
 
 
@@ -3039,6 +3043,7 @@ class EmailReplyView(DetailView):
             return redirect(result_url + '?thanks=1')
         else:
             return self.get(request, *args, **kwargs)
+
 
 import booking_workflows.views  # noqa
 import_views(booking_workflows.views)

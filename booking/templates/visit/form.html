@@ -21,15 +21,14 @@
         </div>
     </div>
     <hr/>
-    <form action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data" autocomplete="off">
+    <form id="visitform" action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data" autocomplete="off">
         {% csrf_token %}
 
         {{ form.non_field_errors }}
 
-        <div id="accordion" class="panel-group" aria-multiselectable="true" role="tablist">
+        {{ form.type }}
 
-            {{ form.type }}
-        {{ form.errors }}
+        <div id="accordion" class="panel-group" aria-multiselectable="true" role="tablist">
 
             {% if form.unit %}
             <div class="panel panel-default">

@@ -13,6 +13,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
+from django.utils import formats
 from django.utils.translation import ugettext_lazy as _
 from django.template.base import Template, VariableNode
 
@@ -25,6 +26,9 @@ from resource_booking import settings
 from datetime import timedelta
 
 import uuid
+
+BLANK_LABEL = '---------'
+BLANK_OPTION = (None, BLANK_LABEL,)
 
 LOGACTION_CREATE = ADDITION
 LOGACTION_CHANGE = CHANGE
@@ -112,6 +116,7 @@ class UserPerson(models.Model):
     class Meta:
         verbose_name = _(u'Lokaleanvarlig')
         verbose_name_plural = _(u'Lokaleanvarlige')
+        ordering = ['person__name', 'user__first_name', 'user__username']
 
     person = models.ForeignKey(Person, blank=True, null=True)
     user = models.ForeignKey(User, blank=True, null=True)
@@ -859,6 +864,7 @@ class Resource(models.Model):
     AUDIENCE_ALL = AUDIENCE_TEACHER | AUDIENCE_STUDENT
 
     audience_choices = (
+        (None, "---------"),
         (AUDIENCE_TEACHER, _(u'Lærer')),
         (AUDIENCE_STUDENT, _(u'Elev')),
         (AUDIENCE_ALL, _(u'Alle'))
@@ -885,6 +891,7 @@ class Resource(models.Model):
     DISCONTINUED = 2
 
     state_choices = (
+        BLANK_OPTION,
         (CREATED, _(u"Under udarbejdelse")),
         (ACTIVE, _(u"Offentlig")),
         (DISCONTINUED, _(u"Skjult"))
@@ -894,7 +901,7 @@ class Resource(models.Model):
 
     type = models.IntegerField(choices=resource_type_choices,
                                default=STUDY_MATERIAL)
-    state = models.IntegerField(choices=state_choices, default=CREATED,
+    state = models.IntegerField(choices=state_choices,
                                 verbose_name=_(u"Status"), blank=False)
     title = models.CharField(
         max_length=60,
@@ -918,8 +925,9 @@ class Resource(models.Model):
     links = models.ManyToManyField(Link, blank=True, verbose_name=_('Links'))
     audience = models.IntegerField(choices=audience_choices,
                                    verbose_name=_(u'Målgruppe'),
-                                   default=AUDIENCE_ALL,
-                                   blank=False)
+                                   default=None,
+                                   blank=False,
+                                   null=False)
 
     institution_level = models.IntegerField(choices=institution_choices,
                                             verbose_name=_(u'Institution'),
@@ -1681,22 +1689,27 @@ class Visit(Resource):
     NEEDED_NUMBER_NONE = 0
     NEEDED_NUMBER_MORE_THAN_TEN = -10
 
-    needed_number_choices = (
-        ((NEEDED_NUMBER_NONE, _(u'Ingen')),) +
-        tuple((x, unicode(x)) for x in range(1, 11)) +
-        ((NEEDED_NUMBER_MORE_THAN_TEN, _(u'Mere end 10')),)
-    )
+    needed_number_choices = [
+        BLANK_OPTION,
+        (NEEDED_NUMBER_NONE, _(u'Ingen'))
+    ] + [
+        (x, unicode(x)) for x in range(1, 11)
+    ] + [
+        (NEEDED_NUMBER_MORE_THAN_TEN, _(u'Mere end 10'))
+    ]
 
     needed_hosts = models.IntegerField(
-        default=0,
+        default=None,
         verbose_name=_(u'Nødvendigt antal værter'),
-        choices=needed_number_choices
+        choices=needed_number_choices,
+        blank=False
     )
 
     needed_teachers = models.IntegerField(
-        default=0,
+        default=None,
         verbose_name=_(u'Nødvendigt antal undervisere'),
-        choices=needed_number_choices
+        choices=needed_number_choices,
+        blank=False
     )
 
     default_hosts = models.ManyToManyField(
@@ -2186,15 +2199,19 @@ class VisitOccurrence(models.Model):
         if not self.start_datetime:
             return None
 
-        result = self.start_datetime.strftime('%d. %m %Y %H:%M')
+        start = timezone.localtime(self.start_datetime)
+        result = formats.date_format(start, "DATETIME_FORMAT")
 
         if self.duration:
             try:
                 (hours, mins) = self.duration.split(":", 2)
-                endtime = self.start_datetime + timedelta(
-                    hours=int(hours), minutes=int(mins)
-                )
-                result += endtime.strftime('-%H:%M')
+                if int(hours) > 0 or int(mins) > 0:
+                    endtime = start + timedelta(
+                        hours=int(hours), minutes=int(mins)
+                    )
+                    result += " - " + formats.date_format(
+                        endtime, "TIME_FORMAT"
+                    )
             except Exception as e:
                 print e
 
@@ -2295,7 +2312,7 @@ class VisitOccurrence(models.Model):
 
     def __unicode__(self):
         if self.start_datetime:
-            return u'%s @ %s' % (self.visit.title, self.display_value)
+            return u'%s | %s' % (self.visit.title, self.display_value)
         else:
             return u'%s (uden fastlagt tidspunkt)' % (self.visit.title)
 
@@ -3310,10 +3327,17 @@ class KUEmailMessage(models.Model):
         null=True,
         default=None
     )
+    template_key = models.IntegerField(
+        verbose_name=u'Template key',
+        choices=EmailTemplate.key_choices,
+        default=None,
+        null=True,
+        blank=True
+    )
 
     @staticmethod
     def save_email(email_message, instance,
-                   reply_nonce=None, htmlbody=None):
+                   reply_nonce=None, htmlbody=None, template_key=None):
         """
         :param email_message: An instance of
         django.core.mail.message.EmailMessage
@@ -3329,9 +3353,12 @@ class KUEmailMessage(models.Model):
             recipients=', '.join(email_message.recipients()),
             content_type=ctype,
             object_id=instance.id,
-            reply_nonce=reply_nonce
+            reply_nonce=reply_nonce,
+            template_key=template_key
         )
         ku_email_message.save()
+
+        return ku_email_message
 
     @staticmethod
     def send_email(template, context, recipients, instance, unit=None,
@@ -3426,7 +3453,11 @@ class KUEmailMessage(models.Model):
                 message.attach_alternative(htmlbody, 'text/html')
             message.send()
 
-            KUEmailMessage.save_email(message, instance, reply_nonce=nonce)
+            msg_obj = KUEmailMessage.save_email(
+                message, instance, reply_nonce=nonce,
+                template_key=template.key
+            )
+            KUEmailRecipient.register(msg_obj, email)
 
         # Log the sending
         if emails and instance:
@@ -3448,3 +3479,23 @@ class KUEmailMessage(models.Model):
         if full:
             url = settings.PUBLIC_URL + url
         return url
+
+
+class KUEmailRecipient(models.Model):
+    email_message = models.ForeignKey(KUEmailMessage)
+    name = models.TextField(blank=True, null=True)
+    formatted_address = models.TextField(blank=True, null=True)
+    email = models.TextField(blank=True, null=True)
+    user = models.ForeignKey(User, blank=True, null=True)
+
+    @staticmethod
+    def register(msg_obj, userdata):
+        result = KUEmailRecipient(
+            email_message=msg_obj,
+            name=userdata.get("name", None),
+            formatted_address=userdata.get("full", None),
+            email=userdata.get("address", None),
+            user=userdata.get("user", None),
+        )
+        result.save()
+        return result
