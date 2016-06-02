@@ -36,7 +36,7 @@ from booking.views import VisitOccurrenceAddCommentView
 from booking.views import VisitOccurrenceDetailView
 from booking.views import VisitOccurrenceCustomListView
 from booking.views import CloneResourceView
-
+from booking.views import EvaluationOverviewView
 
 from django.views.generic import TemplateView
 
@@ -228,7 +228,11 @@ urlpatterns = patterns(
 
     url(r'^reply-to-email/(?P<reply_nonce>[0-9a-f-]{36})',
         EmailReplyView.as_view(),
-        name='reply-to-email')
+        name='reply-to-email'),
+
+    url(r'^evaluations/?',
+        EvaluationOverviewView.as_view(),
+        name='evaluations'),
 
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
