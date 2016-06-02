@@ -82,6 +82,11 @@ strong,
     font-weight: bold;
 }
 
+pre {
+    font-family: 'noto_sansregular', verdana, sans-serif;
+    font-size: 12px;
+}
+
 .btn-default {
     background: rgb(250, 250, 250);
     background: -moz-linear-gradient(top, rgba(250, 250, 250, 1) 0%, rgba(230, 230, 230, 1) 100%);
