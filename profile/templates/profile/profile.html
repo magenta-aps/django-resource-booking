@@ -93,6 +93,12 @@
                             </h4>
                         </a>
                     {% endif %}
+                    <a class="list-group-item" href="{% url 'statistics' %}">
+                        <h4 class="list-group-item-heading">
+                            {% trans 'Statistik' %}
+                            <span class="glyphicon glyphicon-question-sign pull-right" data-toggle="tooltip" data-placement="right" title="{% trans 'Her kan du som administrator eller koordinator se statistik over tilmeldinger under de enheder, som du har rettigheder til at administrere.' %}"></span>
+                        </h4>
+                    </a>
                     {% if not "disabled by: not yet implemented" %}
                         <a class="list-group-item" href="{% url 'user_list' %}">
                             <h4 class="list-group-item-heading">
