@@ -70,6 +70,7 @@
                 <li><a href="{% url 'embedcodes' view.request.get_full_path|slice:"1:" %}">{% trans 'Indlejr side' %}</a></li>
                 {% endif %}
                 <li class="pull-right"><a href="{% url 'logout' %}">{% trans 'Log ud' %}</a></li>
+                <li class="pull-right">{% blocktrans with role=user.userprofile.user_role.name %}Du er logget ind som {{ role }}{% endblocktrans %}</li>
             </ul>
         </div>
         {% endif %}
