@@ -97,7 +97,7 @@ class EditMyResourcesForm(forms.ModelForm):
 class StatisticsForm(forms.Form):
     units = forms.ModelMultipleChoiceField(
         queryset=Unit.objects.none(),
-        widget=forms.CheckboxSelectMultiple,
+        widget=forms.SelectMultiple,
         error_messages={'required': _(u'Dette felt er påkrævet!')}
     )
     from_date = forms.DateField(

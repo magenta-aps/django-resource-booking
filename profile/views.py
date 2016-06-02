@@ -4,6 +4,7 @@ from datetime import datetime
 from booking.models import Unit, Resource, VisitOccurrence, UserPerson, Booking
 from booking.models import EmailTemplate, KUEmailMessage
 from booking.models import VisitOccurrenceComment
+from booking.utils import UnicodeWriter
 from django.contrib import messages
 from django.db.models import F
 from django.db.models import Q
@@ -16,7 +17,6 @@ from django.db.models.aggregates import Count, Sum
 from django.db.models.functions import Coalesce
 from django.http import HttpResponse, Http404
 from django.shortcuts import redirect
-from django.template import loader
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.functional import Promise
@@ -618,15 +618,84 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
             response = HttpResponse(content_type='text/csv')
             response[
                 'Content-Disposition'] = 'attachment; filename="statistik.csv"'
-
-            t = loader.get_template('profile/statistics_csv.txt')
-            c = self.get_context_data()
-            response.write(t.render(c))
-            return response
+            return self._write_csv(response)
 
         return self.render_to_response(
             self.get_context_data(form=form)
         )
+
+    def _write_csv(self, response):
+        context = self.get_context_data()
+        writer = UnicodeWriter(response, delimiter=';')
+
+        # Heading
+        writer.writerow(
+            [_(u"Enhed"), _(u"Tilmelding"), _(u"Type"), _(u"Tilbud"),
+             _(u"Besøgsdato"), _(u"Klassetrin/Niveau"), _(u"Antal deltagere"),
+             _(u"Oplæg om uddannelser"), _(u"Rundvisning"), _(u"Region"),
+             _(u"Skole"), _(u"Postnummer og by"), _(u"Adresse"), _(u"Lærer"),
+             _(u"Lærer email"), _(u"Bemærkninger fra koordinator"),
+             _(u"Bemærkninger fra lærer"), _(u"Værter"), _(u"Undervisere")]
+        )
+        # Rows
+        for booking in context['bookings']:
+            presentation_desired = _(u'Nej')
+            tour_desired = _(u'Nej')
+            has_classbooking = False
+            try:
+                has_classbooking = (booking.classbooking is not None)
+            except:
+                pass
+
+            if has_classbooking:
+                if booking.classbooking.presentation_desired:
+                        presentation_desired = _(u'Ja')
+                if booking.classbooking:
+                    if booking.classbooking.tour_desired:
+                        tour_desired = _(u'Ja')
+
+            writer.writerow([
+                booking.visitoccurrence.visit.resource_ptr.unit.name,
+                booking.__unicode__(),
+                booking.visit.get_type_display(),
+                booking.visitoccurrence.visit.resource_ptr.title,
+                str(booking.visitoccurrence.start_datetime) + " til " +
+                str(booking.visitoccurrence.end_datetime),
+                u", ".join([
+                    u'%s/%s' % (x.subject, x.level)
+                    for x in booking.bookinggrundskolesubjectlevel_set.all()
+                ]) +
+                u", ".join([
+                    u'%s/%s' % (x.subject, x.level)
+                    for x in
+                    booking.bookinggymnasiesubjectlevel_set.all()
+                ]),
+                str(booking.booker.attendee_count),
+                presentation_desired,
+                tour_desired,
+                booking.booker.school.postcode.region.name,
+                booking.booker.school.name + "(" +
+                booking.booker.school.get_type_display() + ")",
+                str(booking.booker.school.postcode.number) + " " +
+                booking.booker.school.postcode.city,
+                str(booking.booker.school.address),
+                booking.booker.get_full_name(),
+                booking.booker.get_email(),
+                booking.visitoccurrence.visit.resource_ptr.comment,
+                booking.comments,
+                u", ".join([
+                    u'%s' % (x.get_full_name())
+                    for x in
+                    booking.hosts.all()
+                ]),
+                u", ".join([
+                    u'%s' % (x.get_full_name())
+                    for x in
+                    booking.teachers.all()
+                ]),
+            ])
+
+        return response
 
 
 class EmailLoginView(DetailView):

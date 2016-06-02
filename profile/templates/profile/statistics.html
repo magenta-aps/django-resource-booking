@@ -61,6 +61,7 @@
                 <th>{% trans 'Region' %}</th>
                 <th>{% trans 'Skole' %}</th>
                 <th>{% trans 'Postnummer og by' %}</th>
+                <th>{% trans 'Adresse' %}</th>
                 <th>{% trans 'Lærer' %}</th>
                 <th>{% trans 'Lærer email' %}</th>
                 <th>{% trans 'Bemærkninger fra koordinator' %}</th>
@@ -80,11 +81,11 @@
                 <td>{{ booking.visitoccurrence.start_datetime|date:'d-m-Y H:i:s'}} til {{ booking.visitoccurrence.end_datetime|date:'d-m-Y H:i:s'}}</td>
                 <td>
                     {% for bookingsubjectlevel in booking.bookinggrundskolesubjectlevel_set.all %}
-                        {{ bookingsubjectlevel.subject }}/{{ bookingsubjectlevel.level }}
+                        {{ bookingsubjectlevel.subject }}/{{ bookingsubjectlevel.level }},
                     {% endfor %}
 
                     {% for bookingsubjectlevel in booking.bookinggymnasiesubjectlevel_set.all %}
-                        {{ bookingsubjectlevel.subject }}/{{ bookingsubjectlevel.level }}
+                        {{ bookingsubjectlevel.subject }}/{{ bookingsubjectlevel.level }},
                     {% endfor %}
                 </td>
                 <td>{{ booking.booker.attendee_count }}</td>
@@ -105,6 +106,7 @@
                 <td>{{ booking.booker.school.postcode.region.name }}</td>
                 <td>{{ booking.booker.school.name }} ({{ booking.booker.school.get_type_display }})</td>
                 <td>{{ booking.booker.school.postcode.number }} {{ booking.booker.school.postcode.city }}</td>
+                <td>{{ booking.booker.school.address }}</td>
                 <td>{{ booking.booker.get_full_name }} </td>
                 <td>{{ booking.booker.get_email }} </td>
                 <td>{{ booking.visitoccurrence.visit.resource_ptr.comment }} </td>
@@ -112,14 +114,14 @@
                 <td>
                     {% if booking.hosts %}
                         {% for host in booking.hosts.all %}
-                             {{ host.get_full_name }}
+                             {{ host.get_full_name }},
                         {% endfor %}
                     {% endif %}
                 </td>
                 <td>
                     {% if booking.teachers %}
                         {% for teacher in booking.teachers.all %}
-                             {{ teacher.get_full_name }}
+                             {{ teacher.get_full_name }},
                         {% endfor %}
                     {% endif %}
                 </td>
