@@ -1,0 +1,139 @@
+{% extends "index.html" %}
+{% load i18n %}
+
+{% block htmltitle %} -
+{% trans 'opret ny bruger' %}
+{% endblock %}
+
+{% block content %}
+
+<div class="divider"></div>
+
+<h1>{{ unit.name }}</h1>
+
+<div class="divider"></div>
+
+<h2>Statistik</h2>
+
+<form action="{% url 'statistics' %}" method="get">
+    <div class="divider"></div>
+    <div class="form-group">
+        {{ form.units.errors }}
+        <label class="control-label" for="{{ form.unit.id_units}}">{% trans 'Enheder:' %}</label>
+        {{ form.units }}
+    </div>
+    <div class="form-group">
+        {{ form.from_date.errors }}
+        <label class="control-label" for="{{ form.from_date.id_from_date}}">{% trans 'Fra:' %}</label>
+        {{ form.from_date }}
+    </div>
+    <div class="form-group">
+        {{ form.to_date.errors }}
+        <label class="control-label" for="{{ form.to_date.id_to_date}}">{% trans 'Til:' %}</label>
+        {{ form.to_date }}
+    </div>
+    <div>
+        <input type="submit" value="{% trans 'Hent data' %}" class="btn btn-primary formpartbutton"/>
+    </div>
+</form>
+
+<div class="divider"></div>
+
+{% if request.GET.urlencode %}
+    <div>
+        <a href="{{ request.get_full_path}}&view=csv" class="btn btn-default"><span class="glyphicon glyphicon-save-file"></span> {% trans 'Download csv' %}</a>
+    </div>
+{% endif %}
+
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>{% trans 'Enhed' %}</th>
+                <th>{% trans 'Tilmelding' %}</th>
+                <th>{% trans 'Type' %}</th>
+                <th>{% trans 'Tilbud' %}</th>
+                <th>{% trans 'Besøgsdato' %}</th>
+                <th>{% trans 'Klassetrin/Niveau' %}</th>
+                <th>{% trans 'Antal deltagere' %}</th>
+                <th>{% trans 'Oplæg om uddannelser' %}</th>
+                <th>{% trans 'Rundvisning' %}</th>
+                <th>{% trans 'Region' %}</th>
+                <th>{% trans 'Skole' %}</th>
+                <th>{% trans 'Postnummer og by' %}</th>
+                <th>{% trans 'Adresse' %}</th>
+                <th>{% trans 'Lærer' %}</th>
+                <th>{% trans 'Lærer email' %}</th>
+                <th>{% trans 'Bemærkninger fra koordinator' %}</th>
+                <th>{% trans 'Bemærkninger fra lærer' %}</th>
+                <th>{% trans 'Værter' %}</th>
+                <th>{% trans 'Undervisere' %}</th>
+
+            </tr>
+        </thead>
+        <tbody>
+        {% for booking in bookings %}
+            <tr>
+                <td>{{ booking.visitoccurrence.visit.resource_ptr.unit.name }}</td>
+                <td><a href="{% url 'booking-view' booking.id %}">{{ booking }}</a></td>
+                <td>{{ booking.visit.get_type_display }}</td>
+                <td><a href="{% url 'resource-view' booking.visitoccurrence.visit.resource_ptr.id %}">{{ booking.visitoccurrence.visit.resource_ptr.title }}</a></td>
+                <td>{{ booking.visitoccurrence.start_datetime|date:'d-m-Y H:i:s'}} til {{ booking.visitoccurrence.end_datetime|date:'d-m-Y H:i:s'}}</td>
+                <td>
+                    {% for bookingsubjectlevel in booking.bookinggrundskolesubjectlevel_set.all %}
+                        {{ bookingsubjectlevel.subject }}/{{ bookingsubjectlevel.level }},
+                    {% endfor %}
+
+                    {% for bookingsubjectlevel in booking.bookinggymnasiesubjectlevel_set.all %}
+                        {{ bookingsubjectlevel.subject }}/{{ bookingsubjectlevel.level }},
+                    {% endfor %}
+                </td>
+                <td>{{ booking.booker.attendee_count }}</td>
+                <td>
+                    {% if booking.classbooking.presentation_desired %}
+                        Ja
+                    {% else %}
+                        Nej
+                    {% endif %}
+                </td>
+                <td>
+                    {% if booking.classbooking.tour_desired %}
+                        Ja
+                    {% else %}
+                        Nej
+                    {% endif %}
+                </td>
+                <td>{{ booking.booker.school.postcode.region.name }}</td>
+                <td>{{ booking.booker.school.name }} ({{ booking.booker.school.get_type_display }})</td>
+                <td>{{ booking.booker.school.postcode.number }} {{ booking.booker.school.postcode.city }}</td>
+                <td>{{ booking.booker.school.address }}</td>
+                <td>{{ booking.booker.get_full_name }} </td>
+                <td>{{ booking.booker.get_email }} </td>
+                <td>{{ booking.visitoccurrence.visit.resource_ptr.comment }} </td>
+                <td>{{ booking.comments }} </td>
+                <td>
+                    {% if booking.hosts %}
+                        {% for host in booking.hosts.all %}
+                             {{ host.get_full_name }},
+                        {% endfor %}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if booking.teachers %}
+                        {% for teacher in booking.teachers.all %}
+                             {{ teacher.get_full_name }},
+                        {% endfor %}
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+
+    {% include 'common/resources/datepicker_script.html' %}
+
+{% endblock %}

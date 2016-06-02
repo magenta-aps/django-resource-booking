@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from booking.models import Unit
 from django import forms
 from django.contrib.auth.models import User
@@ -108,3 +109,25 @@ class EditMyResourcesForm(forms.ModelForm):
         model = UserProfile
         fields = ('my_resources',)
         widgets = {'my_resources': forms.CheckboxSelectMultiple()}
+
+
+class StatisticsForm(forms.Form):
+    units = forms.ModelMultipleChoiceField(
+        queryset=Unit.objects.none(),
+        widget=forms.SelectMultiple,
+        error_messages={'required': _(u'Dette felt er påkrævet!')}
+    )
+    from_date = forms.DateField(
+        widget=forms.TextInput(
+            attrs={
+                'class': 'form-control input-sm datepicker datepicker-admin'
+            }
+        )
+    )
+    to_date = forms.DateField(
+        widget=forms.TextInput(
+            attrs={
+                'class': 'form-control input-sm datepicker datepicker-admin'
+            }
+        )
+    )

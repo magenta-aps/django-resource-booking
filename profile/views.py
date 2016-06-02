@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
-from booking.models import Unit, Resource, VisitOccurrence, UserPerson
+from datetime import datetime
+
+from booking.models import Unit, Resource, VisitOccurrence, UserPerson, Booking
 from booking.models import EmailTemplate, KUEmailMessage
 from booking.models import VisitOccurrenceComment
+from booking.utils import UnicodeWriter
 from django.contrib import messages
 from django.db.models import F
 from django.db.models import Q
@@ -12,7 +15,7 @@ from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
 from django.db.models.aggregates import Count, Sum
 from django.db.models.functions import Coalesce
-from django.http import Http404
+from django.http import HttpResponse, Http404
 from django.shortcuts import redirect
 from django.utils import timezone
 from django.utils.decorators import method_decorator
@@ -24,8 +27,7 @@ from django.views.generic.edit import UpdateView, FormView, DeleteView
 from booking.views import LoginRequiredMixin, AccessDenied
 from booking.views import EditorRequriedMixin, VisitOccurrenceCustomListView
 from django.views.generic.list import ListView
-
-from profile.forms import UserCreateForm, EditMyResourcesForm
+from profile.forms import UserCreateForm, EditMyResourcesForm, StatisticsForm
 from profile.models import AbsDateDist
 from profile.models import EmailLoginEntry
 from profile.models import UserProfile, UserRole, EDIT_ROLES, NONE
@@ -549,6 +551,161 @@ class UnitListView(EditorRequriedMixin, ListView):
     def get_queryset(self):
         user = self.request.user
         return user.userprofile.get_unit_queryset()
+
+
+class StatisticsView(EditorRequriedMixin, TemplateView):
+    template_name = "profile/statistics.html"
+    form_class = StatisticsForm
+    units = []
+
+    def get_context_data(self, **kwargs):
+        context = {}
+        context['user'] = self.request.user
+        current_tz = timezone.get_current_timezone()
+        from_date = None
+        to_date = None
+        if self.request.GET.get('from_date') \
+                and self.request.GET.get('from_date') != '':
+            from_date = datetime.strptime(
+                self.request.GET.get('from_date', None),
+                '%d-%m-%Y'
+            )
+            from_date = current_tz.localize(from_date)
+        if self.request.GET.get('to_date') \
+                and self.request.GET.get('to_date') != '':
+            to_date = datetime.strptime(
+                self.request.GET.get('to_date', None),
+                '%d-%m-%Y'
+            )
+            to_date = current_tz.localize(to_date)
+
+        if self.units:
+            context['units'] = self.units
+            qs = Booking.objects\
+                .select_related('visitoccurrence__visit__resource_ptr__unit') \
+                .select_related('booker__school')\
+                .prefetch_related('bookinggymnasiesubjectlevel_set__subject') \
+                .prefetch_related('bookinggymnasiesubjectlevel_set__level') \
+                .prefetch_related('bookinggrundskolesubjectlevel_set'
+                                  '__subject')\
+                .prefetch_related('bookinggrundskolesubjectlevel_set__level') \
+                .filter(
+                    visitoccurrence__visit__resource_ptr__unit_id__in=self
+                        .units
+                )
+            if from_date:
+                qs = qs.filter(visitoccurrence__start_datetime__gte=from_date)
+            if to_date:
+                qs = qs.filter(visitoccurrence__end_datetime__lte=to_date)
+            qs = qs.order_by('visitoccurrence__visit__resource_ptr')
+            context['bookings'] = qs
+        context.update(kwargs)
+
+        return super(StatisticsView, self).get_context_data(**context)
+
+    def get(self, request, *args, **kwargs):
+        user = self.request.user
+        form = self.form_class()
+        form.fields['units'].queryset = user.userprofile.get_unit_queryset()
+        unit_ids = []
+        for unit_id in self.request.GET.getlist('units', None):
+            unit_ids.append(int(unit_id))
+        if user.userprofile.unit:
+            form.fields['units'].initial = [user.userprofile.unit.pk]
+            form.fields['units'].empty_label = None
+        if len(unit_ids) > 0:
+            self.units = Unit.objects.all()\
+                .filter(pk__in=unit_ids)
+            form.fields['units'].initial = self.units
+        if self.request.GET.get('from_date') != '':
+            form.fields['from_date'].initial = \
+                self.request.GET.get('from_date', None)
+        if self.request.GET.get('to_date') != '':
+            form.fields['to_date'].initial = \
+                self.request.GET.get('to_date', None)
+        # Handle csv download
+        if self.request.GET.get('view') == 'csv':
+            response = HttpResponse(content_type='text/csv')
+            response[
+                'Content-Disposition'] = 'attachment; filename="statistik.csv"'
+            return self._write_csv(response)
+
+        return self.render_to_response(
+            self.get_context_data(form=form)
+        )
+
+    def _write_csv(self, response):
+        context = self.get_context_data()
+        writer = UnicodeWriter(response, delimiter=';')
+
+        # Heading
+        writer.writerow(
+            [_(u"Enhed"), _(u"Tilmelding"), _(u"Type"), _(u"Tilbud"),
+             _(u"Besøgsdato"), _(u"Klassetrin/Niveau"), _(u"Antal deltagere"),
+             _(u"Oplæg om uddannelser"), _(u"Rundvisning"), _(u"Region"),
+             _(u"Skole"), _(u"Postnummer og by"), _(u"Adresse"), _(u"Lærer"),
+             _(u"Lærer email"), _(u"Bemærkninger fra koordinator"),
+             _(u"Bemærkninger fra lærer"), _(u"Værter"), _(u"Undervisere")]
+        )
+        # Rows
+        for booking in context['bookings']:
+            presentation_desired = _(u'Nej')
+            tour_desired = _(u'Nej')
+            has_classbooking = False
+            try:
+                has_classbooking = (booking.classbooking is not None)
+            except:
+                pass
+
+            if has_classbooking:
+                if booking.classbooking.presentation_desired:
+                        presentation_desired = _(u'Ja')
+                if booking.classbooking:
+                    if booking.classbooking.tour_desired:
+                        tour_desired = _(u'Ja')
+
+            writer.writerow([
+                booking.visitoccurrence.visit.resource_ptr.unit.name,
+                booking.__unicode__(),
+                booking.visit.get_type_display(),
+                booking.visitoccurrence.visit.resource_ptr.title,
+                str(booking.visitoccurrence.start_datetime) + " til " +
+                str(booking.visitoccurrence.end_datetime),
+                u", ".join([
+                    u'%s/%s' % (x.subject, x.level)
+                    for x in booking.bookinggrundskolesubjectlevel_set.all()
+                ]) +
+                u", ".join([
+                    u'%s/%s' % (x.subject, x.level)
+                    for x in
+                    booking.bookinggymnasiesubjectlevel_set.all()
+                ]),
+                str(booking.booker.attendee_count),
+                presentation_desired,
+                tour_desired,
+                booking.booker.school.postcode.region.name,
+                booking.booker.school.name + "(" +
+                booking.booker.school.get_type_display() + ")",
+                str(booking.booker.school.postcode.number) + " " +
+                booking.booker.school.postcode.city,
+                str(booking.booker.school.address),
+                booking.booker.get_full_name(),
+                booking.booker.get_email(),
+                booking.visitoccurrence.visit.resource_ptr.comment,
+                booking.comments,
+                u", ".join([
+                    u'%s' % (x.get_full_name())
+                    for x in
+                    booking.hosts.all()
+                ]),
+                u", ".join([
+                    u'%s' % (x.get_full_name())
+                    for x in
+                    booking.teachers.all()
+                ]),
+            ])
+
+        return response
 
 
 class EmailLoginView(DetailView):

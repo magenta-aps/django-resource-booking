@@ -2,7 +2,7 @@ import django.contrib.auth.views as auth_views
 
 from django.conf.urls import patterns, url
 from profile.views import ProfileView, CreateUserView, UnitListView
-from profile.views import DeleteUserView, UserListView
+from profile.views import DeleteUserView, UserListView, StatisticsView
 from profile.views import EmailLoginView
 from profile.views import EditMyResourcesView
 from profile.views import AvailabilityEditView
@@ -44,7 +44,9 @@ urlpatterns = patterns(
     url(r'^units/$', UnitListView.as_view(
         template_name='profile/unit_list.html'
     ), name='unit_list'),
-
+    url(r'^statistics/$',
+        StatisticsView.as_view(),
+        name='statistics'),
     url(r'^my_resources/?$',
         EditMyResourcesView.as_view(),
         name='my-resources'),
