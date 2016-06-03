@@ -918,7 +918,7 @@ class SearchView(ListView):
 
         context["audience_choices"] = self.make_facet(
             "audience",
-            self.model.audience_choices,
+            self.model.audience_choices_without_none,
             self.request.GET.getlist("a"),
             add_to_all=[Resource.AUDIENCE_ALL]
         )

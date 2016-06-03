@@ -883,8 +883,8 @@ class Resource(models.Model):
     )
 
     # Target audience choice - student or teacher.
-    AUDIENCE_TEACHER = 2**1
-    AUDIENCE_STUDENT = 2**2
+    AUDIENCE_TEACHER = 2**0
+    AUDIENCE_STUDENT = 2**1
     AUDIENCE_ALL = AUDIENCE_TEACHER | AUDIENCE_STUDENT
 
     audience_choices = (
@@ -893,6 +893,10 @@ class Resource(models.Model):
         (AUDIENCE_STUDENT, _(u'Elev')),
         (AUDIENCE_ALL, _(u'Alle'))
     )
+
+    audience_choices_without_none = [
+        x for x in audience_choices if x[0] is not None
+    ]
 
     # Institution choice - primary or secondary school.
     PRIMARY = 0
