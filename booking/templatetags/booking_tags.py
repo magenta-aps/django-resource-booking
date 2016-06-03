@@ -149,7 +149,6 @@ class FullURLNode(defaulttags.Node):
     def tokenize(self, url, context):
         # If a valid token_for arg is supplied, put a token on the url
         kwargs = self.kwargs
-        print kwargs
         if url is not None and url != '' and self.TOKEN_USER_KEY in kwargs:
             user = kwargs[self.TOKEN_USER_KEY]
             if isinstance(user, FilterExpression):

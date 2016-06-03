@@ -105,6 +105,9 @@ class Person(models.Model):
     def get_name(self):
         return self.name
 
+    def get_full_name(self):
+        return self.get_name()
+
     def get_email(self):
         return self.email
 
@@ -141,6 +144,10 @@ class UserPerson(models.Model):
             return self.person.get_full_email()
         elif self.user:
             return full_email(self.user.email, self.user.get_full_name())
+
+    @property
+    def as_email_link(self):
+        return '<a href="mailto:%s">%s</a>' % (self.email, self.full_email)
 
     @property
     def unit(self):
@@ -506,6 +513,14 @@ class Locality(models.Model):
         )
 
     @property
+    def full_address(self):
+        return " ".join([
+            unicode(x)
+            for x in (self.name, self.address_line, self.zip_city)
+            if x
+        ])
+
+    @property
     def route_url(self):
         # return "http://www.findvej.dk/?daddress=%s&dzip=%s" % \
         return "https://maps.google.dk/maps/dir//%s,%s" % \
@@ -748,9 +763,12 @@ class EmailTemplate(models.Model):
 
     @staticmethod
     def get_template_object(template_text):
+        # Add default includes and encapsulate in danish
         return Template(
             "\n".join(EmailTemplate.default_includes) +
-            unicode(template_text)
+            "{% language 'da' %}\n" +
+            unicode(template_text) +
+            "{% endlanguage %}\n"
         )
 
     @staticmethod
@@ -1047,7 +1065,8 @@ class Resource(models.Model):
         User,
         blank=True,
         null=True,
-        verbose_name=_(u"Oprettet af")
+        verbose_name=_(u"Oprettet af"),
+        on_delete=models.SET_NULL
     )
 
     # ts_vector field for fulltext search
@@ -1925,6 +1944,21 @@ class Visit(Resource):
                     booking.visitoccurrence.visit is not None:
                 visits.add(booking.visitoccurrence.visit)
         return list(visits)
+
+    @property
+    def contact_users(self):
+        users = []
+
+        for x in self.contacts.all():
+            if x.user:
+                users.append(x.user)
+            elif x.person:
+                users.append(x.person)
+
+        if not users:
+            users = self.unit.get_editors()
+
+        return users
 
 
 class VisitOccurrence(models.Model):
@@ -2838,7 +2872,7 @@ class Autosend(models.Model):
     )
 
     def get_name(self):
-        return str(EmailTemplate.get_name(self.template_key))
+        return unicode(EmailTemplate.get_name(self.template_key))
 
     def __unicode__(self):
         return "[%d] %s (%s)" % (
@@ -3638,7 +3672,6 @@ class KUEmailMessage(models.Model):
     @staticmethod
     def send_email(template, context, recipients, instance, unit=None,
                    **kwargs):
-        print "send_email"
         if isinstance(template, int):
             template_key = template
             template = EmailTemplate.get_template(template_key, unit)
@@ -3663,6 +3696,7 @@ class KUEmailMessage(models.Model):
             name = None
             address = None
             user = None
+            guest = None
             if isinstance(recipient, basestring):
                 address = recipient
             elif isinstance(recipient, User):
@@ -3674,6 +3708,10 @@ class KUEmailMessage(models.Model):
                 address = recipient.email
                 if recipient.user:
                     user = recipient.user
+            elif isinstance(recipient, Booker):
+                name = recipient.get_name()
+                address = recipient.get_email()
+                guest = recipient
             else:
                 try:
                     name = recipient.get_name()
@@ -3687,7 +3725,13 @@ class KUEmailMessage(models.Model):
                     (address not in emails or
                         (user and not emails[address]['user'])
                      ):
-                email = {'address': address}
+
+                email = {
+                    'address': address,
+                    'user': user,
+                    'guest': guest,
+                }
+
                 if name is not None:
                     email['name'] = name
                     email['full'] = u"\"%s\" <%s>" % (name, address)
@@ -3695,7 +3739,6 @@ class KUEmailMessage(models.Model):
                     email['full'] = address
 
                 email['get_full_name'] = email['full']
-                email['user'] = user
 
                 emails[address] = email
 
@@ -3708,6 +3751,16 @@ class KUEmailMessage(models.Model):
                 'reply_nonce': nonce
             }
             ctx.update(context)
+
+            # If we know the visitoccurrence and the guest we can find the
+            # booking if it is missing.
+            if 'booking' not in context and \
+               'bosoeg' in context and email['guest']:
+                context['booking'] = Booking.objects.filter(
+                    visitoccurrence=context['besoeg'],
+                    booker=context['guest']
+                ).first()
+
             subject = template.expand_subject(ctx)
             subject = subject.replace('\n', '')
 
