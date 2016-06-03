@@ -153,7 +153,7 @@
             </div>
             {% endif %}
 
-            {% if form.contacts %}
+            {% if form.contacts or form.room_contact %}
             <div class="panel panel-default">
                 <div id="headingContact" class="panel-heading" role="tab">
                     <h4 class="panel-title">
@@ -165,7 +165,7 @@
                 " aria-labelledby="headingContact" role="tabpanel" aria-expanded="false" style="">
                     <div class="panel-body">
                         {% include 'resource/fields/contact.html' %}
-                        {% include 'resource/fields/generic_field.html' with field=form.room_responsible %}
+                        {% include 'resource/fields/room_contact.html' %}
                     </div>
                 </div>
             </div>

@@ -105,11 +105,22 @@ class Person(models.Model):
     def get_name(self):
         return self.name
 
+    def get_full_name(self):
+        return self.get_name()
+
     def get_email(self):
         return self.email
 
     def get_full_email(self):
         return full_email(self.email, self.name)
+
+    def save(self, *args, **kwargs):
+        result = super(Person, self).save(*args, **kwargs)
+
+        if not self.userperson_set.exists():
+            UserPerson.create(self)
+
+        return result
 
 
 class UserPerson(models.Model):
@@ -141,6 +152,10 @@ class UserPerson(models.Model):
             return self.person.get_full_email()
         elif self.user:
             return full_email(self.user.email, self.user.get_full_name())
+
+    @property
+    def as_email_link(self):
+        return '<a href="mailto:%s">%s</a>' % (self.email, self.full_email)
 
     @property
     def unit(self):
@@ -243,7 +258,8 @@ class Unit(models.Model):
     contact = models.ForeignKey(
         Person, null=True, blank=True,
         verbose_name=_(u'Kontaktperson'),
-        related_name="contactperson_for_units"
+        related_name="contactperson_for_units",
+        on_delete=models.SET_NULL,
     )
     url = models.URLField(
         verbose_name=u'Hjemmeside',
@@ -506,6 +522,14 @@ class Locality(models.Model):
         )
 
     @property
+    def full_address(self):
+        return " ".join([
+            unicode(x)
+            for x in (self.name, self.address_line, self.zip_city)
+            if x
+        ])
+
+    @property
     def route_url(self):
         # return "http://www.findvej.dk/?daddress=%s&dzip=%s" % \
         return "https://maps.google.dk/maps/dir//%s,%s" % \
@@ -543,17 +567,22 @@ class EmailTemplate(models.Model):
     NOTIFY_GUEST__SPOT_ACCEPTED = 17  # Ticket 13804
     NOTIFY_GUEST__SPOT_REJECTED = 18  # Ticket 13804
     NOTIFY_EDITORS__SPOT_REJECTED = 19  # Ticket 13804
+    NOTIFY_GUEST__BOOKING_CREATED_WAITING = 20  # ticket 13804
+    NOTIFY_TEACHER__ASSOCIATED = 21  # Ticket 15701
+    NOTIFY_ALL_EVALUATION = 22  # Ticket 15701
 
     # Choice labels
     key_choices = [
         (NOTIFY_GUEST__BOOKING_CREATED,
          _(u'Besked til gæst ved booking af besøg')),
+        (NOTIFY_GUEST__BOOKING_CREATED_WAITING,
+         _(u'Besked til gæst ved tilmelding på venteliste')),
         (NOTIFY_GUEST__GENERAL_MSG,
          _(u'Generel besked til gæst(er)')),
         (NOTIFY_GUEST_REMINDER,
          _(u'Reminder til gæst')),
         (NOTIFY_GUEST__SPOT_OPEN,
-         _(u'Besked til gæst på venteliste om ledig plads')),
+         _(u'Mail til gæst fra venteliste, der får tilbudt plads på besøget')),
         (NOTIFY_GUEST__SPOT_ACCEPTED,
          _(u'Besked til gæst ved accept af plads (fra venteliste)')),
         (NOTIFY_GUEST__SPOT_REJECTED,
@@ -569,6 +598,8 @@ class EmailTemplate(models.Model):
          _(u'Anmodning om deltagelse i besøg til værter')),
         (NOTIFY_HOST__ASSOCIATED,
          _(u'Notifikation til vært om tilknytning til besøg')),
+        (NOTIFY_TEACHER__ASSOCIATED,
+         _(u'Notifikation til underviser om tilknytning til besøg')),
         (NOTIFY_HOST__REQ_ROOM,
          _(u'Anmodning til lokaleansvarlig om lokale')),
         (NOTIFY_ALL__BOOKING_COMPLETE,
@@ -577,6 +608,8 @@ class EmailTemplate(models.Model):
          _(u'Besked om aflyst besøg til alle involverede')),
         (NOTITY_ALL__BOOKING_REMINDER,
          _(u'Reminder om besøg til alle involverede')),
+        (NOTIFY_ALL_EVALUATION,
+         _(u'Besked til alle om evaluering')),
         (NOTIFY_HOST__HOSTROLE_IDLE,
          _(u'Notifikation til koordinatorer om ledig værtsrolle på besøg')),
         (SYSTEM__BASICMAIL_ENVELOPE,
@@ -597,12 +630,14 @@ class EmailTemplate(models.Model):
     visitoccurrence_manual_keys = [
         NOTIFY_GUEST__GENERAL_MSG,
         NOTIFY_HOST__ASSOCIATED,
+        NOTIFY_TEACHER__ASSOCIATED,
         NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
         NOTIFY_HOST__REQ_HOST_VOLUNTEER,
         NOTIFY_HOST__REQ_ROOM,
         NOTIFY_ALL__BOOKING_COMPLETE,
         NOTIFY_ALL__BOOKING_CANCELED,
         NOTITY_ALL__BOOKING_REMINDER,
+        NOTIFY_ALL_EVALUATION,
         NOTIFY_GUEST_REMINDER,
         NOTIFY_GUEST__SPOT_OPEN
     ]
@@ -610,6 +645,7 @@ class EmailTemplate(models.Model):
     # Templates available for manual sending from bookings
     booking_manual_keys = [
         NOTIFY_GUEST__BOOKING_CREATED,
+        NOTIFY_GUEST__BOOKING_CREATED_WAITING,
         NOTIFY_GUEST__GENERAL_MSG,
         NOTIFY_ALL__BOOKING_COMPLETE,
         NOTIFY_ALL__BOOKING_CANCELED,
@@ -634,6 +670,7 @@ class EmailTemplate(models.Model):
     # Templates that will be autosent to booker
     booker_keys = [
         NOTIFY_GUEST__BOOKING_CREATED,
+        NOTIFY_GUEST__BOOKING_CREATED_WAITING,
         NOTIFY_ALL__BOOKING_COMPLETE,
         NOTIFY_ALL__BOOKING_CANCELED,
         NOTITY_ALL__BOOKING_REMINDER,
@@ -664,6 +701,10 @@ class EmailTemplate(models.Model):
     # when they are added to an occurrence
     occurrence_added_host_key = NOTIFY_HOST__ASSOCIATED
 
+    # Template that will be autosent to teachers
+    # when they are added to an occurrence
+    occurrence_added_teacher_key = NOTIFY_TEACHER__ASSOCIATED
+
     # Templates where the "days" field makes sense
     enable_days = [
         NOTITY_ALL__BOOKING_REMINDER,
@@ -672,6 +713,7 @@ class EmailTemplate(models.Model):
     # Templates where the {{ booking }} variable makes sense
     enable_booking = [
         NOTIFY_GUEST__BOOKING_CREATED,
+        NOTIFY_GUEST__BOOKING_CREATED_WAITING,
         NOTIFY_EDITORS__BOOKING_CREATED,
         NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
         NOTIFY_HOST__REQ_HOST_VOLUNTEER,
@@ -693,6 +735,7 @@ class EmailTemplate(models.Model):
 
     default = [
         NOTIFY_GUEST__BOOKING_CREATED,
+        NOTIFY_GUEST__BOOKING_CREATED_WAITING,
         NOTIFY_EDITORS__BOOKING_CREATED,
         NOTITY_ALL__BOOKING_REMINDER,
         NOTIFY_ALL__BOOKING_COMPLETE,
@@ -748,9 +791,12 @@ class EmailTemplate(models.Model):
 
     @staticmethod
     def get_template_object(template_text):
+        # Add default includes and encapsulate in danish
         return Template(
             "\n".join(EmailTemplate.default_includes) +
-            unicode(template_text)
+            "{% language 'da' %}\n" +
+            unicode(template_text) +
+            "{% endlanguage %}\n"
         )
 
     @staticmethod
@@ -822,6 +868,26 @@ class EmailTemplate(models.Model):
                 if isinstance(node, VariableNode):
                     variables.append(unicode(node.filter_expression))
         return variables
+
+    @staticmethod
+    def add_defaults_to_all():
+        for visit in Visit.objects.all():
+            for template_key in EmailTemplate.default:
+                print EmailTemplate.get_name(template_key)
+                if visit.visitautosend_set.filter(
+                    template_key=template_key
+                ).count() == 0:
+                    print "    create autosends for visit %d" % visit.id
+                    autosend = VisitAutosend(
+                        template_key=template_key,
+                        visit=visit,
+                        enabled=True
+                    )
+                    autosend.save()
+                    for occurrence in visit.visitoccurrence_set.all():
+                        print "        creating inheriting autosends for " \
+                              "occurrence %d" % occurrence.id
+                        occurrence.create_inheriting_autosends()
 
 
 class ObjectStatistics(models.Model):
@@ -1051,7 +1117,8 @@ class Resource(models.Model):
         User,
         blank=True,
         null=True,
-        verbose_name=_(u"Oprettet af")
+        verbose_name=_(u"Oprettet af"),
+        on_delete=models.SET_NULL
     )
 
     # ts_vector field for fulltext search
@@ -1929,6 +1996,45 @@ class Visit(Resource):
                     booking.visitoccurrence.visit is not None:
                 visits.add(booking.visitoccurrence.visit)
         return list(visits)
+
+    @property
+    def contact_users(self):
+        users = []
+
+        for x in self.contacts.all():
+            if x.user:
+                users.append(x.user)
+            elif x.person:
+                users.append(x.person)
+
+        if not users:
+            users = self.unit.get_editors()
+
+        return users
+
+    @property
+    def contact_person_persons(self):
+        return Person.objects.filter(
+            userperson__contact_visit__pk=self.pk
+        )
+
+    @property
+    def contact_person_users(self):
+        return User.objects.filter(
+            userperson__contact_visit__pk=self.pk
+        )
+
+    @property
+    def room_responsible_persons(self):
+        return Person.objects.filter(
+            userperson__roomadmin_visit_new__pk=self.pk
+        )
+
+    @property
+    def room_responsible_users(self):
+        return User.objects.filter(
+            userperson__roomadmin_visit_new__pk=self.pk
+        )
 
 
 class VisitOccurrence(models.Model):
@@ -2842,7 +2948,7 @@ class Autosend(models.Model):
     )
 
     def get_name(self):
-        return str(EmailTemplate.get_name(self.template_key))
+        return unicode(EmailTemplate.get_name(self.template_key))
 
     def __unicode__(self):
         return "[%d] %s (%s)" % (
@@ -3642,7 +3748,6 @@ class KUEmailMessage(models.Model):
     @staticmethod
     def send_email(template, context, recipients, instance, unit=None,
                    **kwargs):
-        print "send_email"
         if isinstance(template, int):
             template_key = template
             template = EmailTemplate.get_template(template_key, unit)
@@ -3667,6 +3772,7 @@ class KUEmailMessage(models.Model):
             name = None
             address = None
             user = None
+            guest = None
             if isinstance(recipient, basestring):
                 address = recipient
             elif isinstance(recipient, User):
@@ -3678,6 +3784,10 @@ class KUEmailMessage(models.Model):
                 address = recipient.email
                 if recipient.user:
                     user = recipient.user
+            elif isinstance(recipient, Booker):
+                name = recipient.get_name()
+                address = recipient.get_email()
+                guest = recipient
             else:
                 try:
                     name = recipient.get_name()
@@ -3691,7 +3801,13 @@ class KUEmailMessage(models.Model):
                     (address not in emails or
                         (user and not emails[address]['user'])
                      ):
-                email = {'address': address}
+
+                email = {
+                    'address': address,
+                    'user': user,
+                    'guest': guest,
+                }
+
                 if name is not None:
                     email['name'] = name
                     email['full'] = u"\"%s\" <%s>" % (name, address)
@@ -3699,7 +3815,6 @@ class KUEmailMessage(models.Model):
                     email['full'] = address
 
                 email['get_full_name'] = email['full']
-                email['user'] = user
 
                 emails[address] = email
 
@@ -3712,6 +3827,16 @@ class KUEmailMessage(models.Model):
                 'reply_nonce': nonce
             }
             ctx.update(context)
+
+            # If we know the visitoccurrence and the guest we can find the
+            # booking if it is missing.
+            if 'booking' not in context and \
+               'bosoeg' in context and email['guest']:
+                context['booking'] = Booking.objects.filter(
+                    visitoccurrence=context['besoeg'],
+                    booker=context['guest']
+                ).first()
+
             subject = template.expand_subject(ctx)
             subject = subject.replace('\n', '')
 
@@ -3787,17 +3912,14 @@ class EmailBookerEntry(models.Model):
     created = models.DateTimeField(default=timezone.now)
     expires_in = models.DurationField(default=timedelta(hours=48))
 
-    def as_url(self, answer=False):
-        return reverse('booking-accept-view', args=[
-            self.uuid,
-            'yes' if answer else 'no'
-        ])
+    def as_url(self):
+        return reverse('booking-accept-view', args=[self.uuid])
 
-    def as_full_url(self, request, answer):
-        return request.build_absolute_uri(self.as_url(answer))
+    def as_full_url(self, request):
+        return request.build_absolute_uri(self.as_url())
 
-    def as_public_url(self, answer):
-        return settings.PUBLIC_URL + self.as_url(answer)
+    def as_public_url(self):
+        return settings.PUBLIC_URL + self.as_url()
 
     def is_expired(self):
         return (self.created + self.expires_in) < timezone.now()

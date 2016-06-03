@@ -1,64 +1,32 @@
-{% load booking_tags %}
 <p>Kære {{ recipient.get_full_name }}.</p>
 
 <p>
-    Gæsten {{ booker.get_full_email }} har tilmeldt sig tilbudet
-    {{ visit.title }} (#{{ visit.pk }}){% if besoeg.start_datetime %}
-      på tidspunktet: {{ besoeg.start_datetime }}
-    {% endif %}.
-</p>
+{% if recipient.user %}
 
-{% if not besoeg.start_datetime %}
-<p>
-    Gæsten har ikke tilmeldt sig et fast tidspunkt så der skal findes et passende
-    tidspunkt for besøget:<br />
-    <a href="{% full_url 'visit-occ-view' besoeg.pk %}">{% full_url 'visit-occ-view' besoeg.pk %}</a>
-</p>
+    {# Denne besked sendes til brugere der login i systemet (koordinatorer) #}
+
+    En eller flere gæster har tilmeldt sig besøget
+    <a href="{% full_url 'visit-occ-view' besoeg.pk %}">{{ visit.title }}{% if besoeg.start_datetime %} den {{ besoeg.display_value }}{% endif %}</a>.
+    Besøget afholdes på lokaliteten <a href="{% full_url 'visit-view' visit.pk %}#mapinfo">{{ visit.locality.full_address }}</a>.
+
+{% else %}
+
+    {# Denne besked sendes til kontaktpersoner (uden login) der er angivet på tilbuddet #}
+
+    En eller flere gæster har tilmeldt sig besøget
+    <a href="{% full_url 'visit-view' visit.pk %}">{{ visit.title }}{% if besoeg.start_datetime %} den {{ besoeg.display_value }}{% endif %}</a>.
+    Besøget afholdes på lokaliteten <a href="{% full_url 'visit-view' visit.pk %}#mapinfo">{{ visit.locality.full_address }}</a>.
+    Du er anført som kontaktperson for besøget.
+
 {% endif %}
-
-<h2>Detaljer for gæst og tilmelding</h2>
+</p>
+<p>Detaljer for tilmelding:</p>
 <p>
-    <strong>Navn</strong>:
-    {{ booker.get_full_name }}
+{% include 'booking/email/snippets/booking_info.html' with booking=booking booker=booking.booker %}
+</p>
+{% include 'booking/email/snippets/reply_link.html' %}
+<p>
+    Venlig hilsen<br />
     <br />
-    <strong>E-mail</strong>:
-    {{ booker.get_email }}
-    <br />
-    <strong>Telefonnummer</strong>:
-    {{ booker.phone }}
-    <br />
-    <strong>Gymnasium/skole</strong>:
-    {{ booker.school }}
-    <br />
-    <strong>Linje</strong>:
-    {{ booker.get_line_display }}
-    <br />
-    <strong>Klasse</strong>:
-    {{ booker.get_level_display }}
-    <br />
-    <strong>Postnummer</strong>:
-    {{ booker.school.postcode.number }}
-    <br />
-    <strong>By</strong>:
-    {{ booker.school.postcode.city }}
-    <br />
-    <strong>Region</strong>:
-    {{ booker.school.postcode.region }}
-    <br />
-    <strong>Kommentar</strong>:
-    {{ booking.notes }}
-    <br />
-    {% if booker.attendee_count %}
-    <strong>Antal deltagere</strong>: {{ booker.attendee_count }}
-    <br />
-    {% endif %}
-    {% if booking.tour_desired %}
-    <strong>Ønske om rundvisning</strong>: Ja
-    <br />
-    {% endif %}
-    {% if booking.subjects %}    
-    <strong>Fag</strong>:
-    {{ booking.subjects.all|join:", " }}
-    <br />
-    {% endif %}
+    {{ visit.unit.name }}
 </p>

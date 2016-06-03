@@ -1,25 +1,40 @@
-{% load booking_tags %}
 <p>Kære {{ recipient.get_full_name }}.</p>
-
-<p>Tak for tilmelding til tilbuddet "{{ visit.title }}".</p>
 
 {% if besoeg.start_datetime %}
 <p>
-    Arrangementet starter {{ besoeg.start_datetime }}{% if besoeg.end_datetime %}
-        og forventes at slutte {{ besoeg.end_datetime }}{% endif %}.
+    Du har tilmeldt dig besøg {{ visit.title }} den {{ besoeg.display_value }}
+    på Københavns Universitet:
+    <a href="{% full_url 'visit-view' visit.pk %}#mapinfo">{{ visit.locality.full_address }}</a>.
+    Hvis du har spørgsmål til din tilmelding, kan du skrive til
+    {% include 'booking/email/snippets/contact_addresses.html' with visit=visit %}
 </p>
 {% else %}
 <p>
-    Dine ønsker til besøgstidspunkt vil blive taget i betragtning og du vil
-    blive kontaktet omkring fastlæggelse af et endeligt besøgstidspunkt.
+    Du har tilmeldt dig besøg {{ visit.title }} på Københavns Universitet.
+    Vi vil gøre, hvad vi kan for at opfylde dit ønske om tidspunkt,
+    og du hører fra os, når besøget er planlagt.  Hvis du har spørgsmål til
+    din tilmelding, kan du skrive til
+    {% include 'booking/email/snippets/contact_addresses.html' with visit=visit %}
 </p>
 {% endif %}
-
 <p>
-    Du kan læse mere om tilbuddet på adressen
-    <a href="{% full_url 'visit-view' visit.pk %}">{% full_url 'visit-view' visit.pk %}</a>
+    Detaljer for din tilmelding:
 </p>
 <p>
-    Du kan svare på denne besked via følgende URL:<br />
-    <a href="{% full_url 'reply-to-email' reply_nonce %}">{% full_url 'reply-to-email' reply_nonce %}</a>
+{% include 'booking/email/snippets/booking_info.html' with booking=booking booker=booking.booker %}
+</p>
+<p>
+    Vi glæder os til at se dig!
+</p>
+<p>
+    <a href="{% full_url 'visit-view' visit.pk %}">Læs mere om tilbuddet her</a>.
+</p>
+{% include 'booking/email/snippets/reply_link.html' %}
+<p>
+    På foKUs.ku.dk kan du se alle tilbud fra Københavns Universitet.
+</p>
+<p>
+    Venlig hilsen<br />
+    <br />
+    {{ visit.unit.name }}
 </p>

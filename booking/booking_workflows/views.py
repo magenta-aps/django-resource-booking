@@ -118,6 +118,36 @@ class ChangeVisitOccurrenceTeachersView(AutologgerMixin, UpdateWithCancelView):
         return super(ChangeVisitOccurrenceTeachersView, self).\
             get_context_data(**context)
 
+    # When the status or teacher list changes, autosend emails
+    def form_valid(self, form):
+        old = self.get_object()
+        old_teachers = set([x for x in old.teachers.all()])
+        response = super(
+            ChangeVisitOccurrenceTeachersView, self
+        ).form_valid(form)
+        assigned_status = VisitOccurrence.STATUS_ASSIGNED
+        if form.cleaned_data['teacher_status'] == assigned_status:
+            new_teachers = self.object.teachers.all()
+            if old.teacher_status != assigned_status:
+                # Status changed from not-ok to ok, notify all hosts
+                recipients = new_teachers
+            else:
+                # Status was also ok before, send message to hosts
+                # that weren't there before
+                recipients = [
+                    teacher
+                    for teacher in new_teachers
+                    if teacher not in old_teachers
+                ]
+            if len(recipients) > 0:
+                # Send a message to only these recipients
+                self.object.autosend(
+                    EmailTemplate.occurrence_added_teacher_key,
+                    recipients,
+                    True
+                )
+        return response
+
 
 class ChangeVisitOccurrenceHostsView(AutologgerMixin, UpdateWithCancelView):
     model = VisitOccurrence
@@ -147,6 +177,7 @@ class ChangeVisitOccurrenceHostsView(AutologgerMixin, UpdateWithCancelView):
     # When the status or host list changes, autosend emails
     def form_valid(self, form):
         old = self.get_object()
+        old_hosts = set([x for x in old.hosts.all()])
         response = super(ChangeVisitOccurrenceHostsView, self).form_valid(form)
         if form.cleaned_data['host_status'] == VisitOccurrence.STATUS_ASSIGNED:
             new_hosts = self.object.hosts.all()
@@ -159,7 +190,7 @@ class ChangeVisitOccurrenceHostsView(AutologgerMixin, UpdateWithCancelView):
                 recipients = [
                     host
                     for host in new_hosts
-                    if host not in old.hosts.all()
+                    if host not in old_hosts
                 ]
             if len(recipients) > 0:
                 # Send a message to only these recipients
@@ -378,6 +409,7 @@ class BecomeSomethingView(AutologgerMixin, VisitOccurrenceBreadcrumbMixin,
     view_title = _(u'Tilmeld rolle')
     roles = [HOST, TEACHER] + list(EDIT_ROLES)
     form_class = BecomeSomethingForm
+    notify_mail_template_key = None
 
     ERROR_NONE_NEEDED = _(
         u"Det valgte besøg har ikke behov for flere personer i den " +
@@ -446,6 +478,15 @@ class BecomeSomethingView(AutologgerMixin, VisitOccurrenceBreadcrumbMixin,
                     setattr(self.object, self.status_attribute,
                             VisitOccurrence.STATUS_ASSIGNED)
                     self.object.save()
+
+                    # Notify the user about the association
+                    if self.notify_mail_template_key:
+                        self.object.autosend(
+                            self.notify_mail_template_key,
+                            [request.user],
+                            True
+                        )
+
                 self._log_changes()
         return self.get(request, *args, **kwargs)
 
@@ -462,6 +503,7 @@ class BecomeTeacherView(BecomeSomethingView):
     status_attribute = "teacher_status"
     template_name = "booking/workflow/become_teacher.html"
     view_title = _(u'Tilmeld som underviser')
+    notify_mail_template_key = EmailTemplate.occurrence_added_teacher_key
 
     ERROR_NONE_NEEDED = _(u"Besøget har ikke brug for flere undervisere")
     ERROR_WRONG_ROLE = _(
@@ -483,6 +525,7 @@ class BecomeHostView(BecomeSomethingView):
     status_attribute = "host_status"
     template_name = "booking/workflow/become_host.html"
     view_title = _(u'Tilmeld som vært')
+    notify_mail_template_key = EmailTemplate.occurrence_added_host_key
 
     ERROR_NONE_NEEDED = _(u"Besøget har ikke brug for flere værter")
     ERROR_WRONG_ROLE = _(
