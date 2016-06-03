@@ -2333,7 +2333,6 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
             else:
                 booking.autosend(EmailTemplate.NOTIFY_GUEST__BOOKING_CREATED)
 
-
             booking.autosend(EmailTemplate.NOTIFY_EDITORS__BOOKING_CREATED)
 
             if booking.visitoccurrence.needs_teachers:
