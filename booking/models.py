@@ -19,7 +19,7 @@ from django.template.base import Template, VariableNode
 
 from recurrence.fields import RecurrenceField
 from booking.utils import ClassProperty, full_email, CustomStorage, html2text
-from booking.utils import get_related_content_types
+from booking.utils import get_related_content_types, INFINITY
 
 from resource_booking import settings
 
@@ -539,6 +539,10 @@ class EmailTemplate(models.Model):
     SYSTEM__EMAIL_REPLY = 13
     SYSTEM__USER_CREATED = 14
     NOTIFY_GUEST_REMINDER = 15  # Ticket 15510
+    NOTIFY_GUEST__SPOT_OPEN = 16  # Ticket 13804
+    NOTIFY_GUEST__SPOT_ACCEPTED = 17  # Ticket 13804
+    NOTIFY_GUEST__SPOT_REJECTED = 18  # Ticket 13804
+    NOTIFY_EDITORS__SPOT_REJECTED = 19  # Ticket 13804
 
     # Choice labels
     key_choices = [
@@ -548,6 +552,15 @@ class EmailTemplate(models.Model):
          _(u'Generel besked til gæst(er)')),
         (NOTIFY_GUEST_REMINDER,
          _(u'Reminder til gæst')),
+        (NOTIFY_GUEST__SPOT_OPEN,
+         _(u'Besked til gæst på venteliste om ledig plads')),
+        (NOTIFY_GUEST__SPOT_ACCEPTED,
+         _(u'Besked til gæst ved accept af plads (fra venteliste)')),
+        (NOTIFY_GUEST__SPOT_REJECTED,
+         _(u'Besked til gæst ved afvisning af plads (fra venteliste)')),
+        (NOTIFY_EDITORS__SPOT_REJECTED,
+         _(u'Besked til koordinatorer ved afvisning '
+           u'af plads (fra venteliste)')),
         (NOTIFY_EDITORS__BOOKING_CREATED,
          _(u'Besked til koordinatorer ved booking af besøg')),
         (NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
@@ -590,7 +603,8 @@ class EmailTemplate(models.Model):
         NOTIFY_ALL__BOOKING_COMPLETE,
         NOTIFY_ALL__BOOKING_CANCELED,
         NOTITY_ALL__BOOKING_REMINDER,
-        NOTIFY_GUEST_REMINDER
+        NOTIFY_GUEST_REMINDER,
+        NOTIFY_GUEST__SPOT_OPEN
     ]
 
     # Templates available for manual sending from bookings
@@ -615,13 +629,16 @@ class EmailTemplate(models.Model):
         NOTIFY_EDITORS__BOOKING_CREATED,
         NOTIFY_ALL__BOOKING_CANCELED,
         NOTITY_ALL__BOOKING_REMINDER,
+        NOTIFY_EDITORS__SPOT_REJECTED
     ]
     # Templates that will be autosent to booker
     booker_keys = [
         NOTIFY_GUEST__BOOKING_CREATED,
         NOTIFY_ALL__BOOKING_COMPLETE,
         NOTIFY_ALL__BOOKING_CANCELED,
-        NOTITY_ALL__BOOKING_REMINDER
+        NOTITY_ALL__BOOKING_REMINDER,
+        NOTIFY_GUEST__SPOT_ACCEPTED,
+        NOTIFY_GUEST__SPOT_REJECTED
     ]
     # Templates that will be autosent to hosts in the unit
     unit_hosts_keys = [
@@ -661,7 +678,11 @@ class EmailTemplate(models.Model):
         NOTIFY_GUEST__GENERAL_MSG,
         NOTIFY_ALL__BOOKING_COMPLETE,
         NOTIFY_ALL__BOOKING_CANCELED,
-        NOTITY_ALL__BOOKING_REMINDER
+        NOTITY_ALL__BOOKING_REMINDER,
+        NOTIFY_GUEST__SPOT_OPEN,
+        NOTIFY_GUEST__SPOT_ACCEPTED,
+        NOTIFY_GUEST__SPOT_REJECTED,
+        NOTIFY_EDITORS__SPOT_REJECTED
     ]
 
     # Templates where already assigned people will not receive mails
@@ -675,7 +696,10 @@ class EmailTemplate(models.Model):
         NOTIFY_EDITORS__BOOKING_CREATED,
         NOTITY_ALL__BOOKING_REMINDER,
         NOTIFY_ALL__BOOKING_COMPLETE,
-        SYSTEM__EMAIL_REPLY
+        SYSTEM__EMAIL_REPLY,
+        NOTIFY_GUEST__SPOT_ACCEPTED,
+        NOTIFY_GUEST__SPOT_REJECTED,
+        NOTIFY_EDITORS__SPOT_REJECTED
     ]
 
     key = models.IntegerField(
@@ -1647,9 +1671,28 @@ class Visit(Resource):
         blank=True,
         verbose_name=_(u'Højeste antal deltagere')
     )
+
+    # Waiting lists
     do_create_waiting_list = models.BooleanField(
-        default=False, verbose_name=_(u'Opret venteliste')
+        default=False,
+        verbose_name=_(u'Ventelister')
     )
+    waiting_list_length = models.IntegerField(
+        null=True,
+        blank=True,
+        verbose_name=_(u'Antal pladser')
+    )
+    waiting_list_deadline_days = models.IntegerField(
+        null=True,
+        blank=True,
+        verbose_name=_(u'Lukning af venteliste (dage inden besøg)')
+    )
+    waiting_list_deadline_hours = models.IntegerField(
+        null=True,
+        blank=True,
+        verbose_name=_(u'Lukning af venteliste (timer inden besøg)')
+    )
+
     do_show_countdown = models.BooleanField(
         default=False,
         verbose_name=_(u'Vis nedtælling')
@@ -1829,10 +1872,23 @@ class Visit(Resource):
         return False
 
     @property
+    def has_waitinglist_occurrence_spots(self):
+        for occurrence in self.future_events:
+            if occurrence.can_join_waitinglist:
+                return True
+        return False
+
+    @property
     def is_bookable(self):
         return self.is_type_bookable and \
             self.state == Resource.ACTIVE and \
             self.has_bookable_occurrences
+
+    @property
+    def can_join_waitinglist(self):
+        return self.is_type_bookable and \
+            self.state == Resource.ACTIVE and \
+            self.has_waitinglist_occurrence_spots
 
     @property
     def duration_as_timedelta(self):
@@ -2257,7 +2313,7 @@ class VisitOccurrence(models.Model):
             return False
         if self.expired:
             return False
-        if self.available_seats() == 0:
+        if self.available_seats == 0:
             return False
         return True
 
@@ -2283,25 +2339,62 @@ class VisitOccurrence(models.Model):
             action_time__gt=self.last_workflow_update + fuzzy_adjustment
         )
 
+    @property
+    def can_join_waitinglist(self):
+        # Can this occurrence be booked (with spots on the waiting list)?
+        if not self.bookable:
+            return False
+        if self.workflow_status not in self.BOOKABLE_STATES:
+            return False
+        if self.expired:
+            return False
+        if self.waiting_list_capacity <= 0:
+            return False
+        if self.waiting_list_closed:
+            return False
+        return True
+
     def date_display(self):
         return self.start_datetime or _(u'på ikke-fastlagt tidspunkt')
 
-    def nr_bookers(self):
-        nr = len(Booker.objects.filter(booking__visitoccurrence=self))
-        nr += self.nr_additional_participants()
-        return nr
+    def get_bookings(self, include_waitinglist=False, include_regular=True):
+        if include_regular:  # Include non-waitinglist bookings
+            if include_waitinglist:
+                return self.bookings.all()
+            else:
+                return self.bookings.filter(waitinglist_spot=0)
+        else:
+            if include_waitinglist:
+                return self.bookings.filter(waitinglist_spot__gt=0). \
+                    order_by("waitinglist_spot")
+            else:
+                return self.bookings.none()
 
-    def nr_additional_participants(self):
-        res = VisitOccurrence.objects.filter(pk=self.pk).aggregate(
-            attendees=Sum('bookings__booker__attendee_count')
-        )
-        return res['attendees'] or 0
+    @property
+    def booking_list(self):
+        return self.get_bookings(False, True)
+
+    @property
+    def waiting_list(self):
+        return self.get_bookings(True, False)
+
+    def get_attendee_count(self,
+                           include_waitinglist=False, include_regular=True):
+        return self.get_bookings(
+            include_waitinglist, include_regular
+        ).aggregate(
+            Sum('booker__attendee_count')
+        )['booker__attendee_count__sum'] or 0
 
     @property
     def nr_attendees(self):
-        # Return the total number of participants for this occurrence
-        return self.nr_additional_participants()
+        return self.get_attendee_count(False, True)
 
+    @property
+    def nr_waiting(self):
+        return self.get_attendee_count(True, False)
+
+    @property
     def available_seats(self):
         limit = self.visit.maximum_number_of_visitors
         if limit is not None:
@@ -2625,6 +2718,64 @@ class VisitOccurrence(models.Model):
                 visitoccurrence=self,
                 author=user
             )
+
+    @property
+    def waiting_list_capacity(self):
+        if not self.visit.do_create_waiting_list:
+            return 0
+        if self.visit.waiting_list_length is None:
+            return INFINITY
+        elif self.visit.waiting_list_length <= 0:
+            return 0
+        idlespots = self.visit.waiting_list_length - self.nr_waiting
+        return max(idlespots, 0)
+
+    @property
+    def last_waiting_list_spot(self):
+        list = self.get_bookings(True, False)
+        if list.count() == 0:
+            return 0
+        else:
+            return list.last().waitinglist_spot
+
+    @property
+    def next_waiting_list_spot(self):
+        return self.last_waiting_list_spot + 1
+
+    def normalize_waitinglist(self):
+        last = 0
+        for booking in self.waiting_list:
+            if booking.waitinglist_spot > last+1:
+                booking.waitinglist_spot = last+1
+                booking.save()
+            last = booking.waitinglist_spot
+
+    @property
+    def waiting_list_closing_time(self):
+        if self.visit.waiting_list_deadline_days is None and \
+                self.visit.waiting_list_deadline_hours is None:
+            return None
+        time = self.start_datetime
+        if time:
+            if self.visit.waiting_list_deadline_days > 0:
+                time = time - timedelta(
+                    days=self.visit.waiting_list_deadline_days
+                )
+            if self.visit.waiting_list_deadline_hours > 0:
+                time = time - timedelta(
+                    hours=self.visit.waiting_list_deadline_hours
+                )
+            return time
+        return None
+
+    @property
+    def waiting_list_closed(self):
+        if not self.visit.do_create_waiting_list:
+            return True
+        closing_time = self.waiting_list_closing_time
+        if closing_time:
+            return closing_time < timezone.now()
+        return False
 
 
 VisitOccurrence.add_override_property('duration')
@@ -3195,6 +3346,11 @@ class Booking(models.Model):
         verbose_name=_(u'Tidspunkt')
     )
 
+    waitinglist_spot = models.IntegerField(
+        default=0,
+        verbose_name=_(u'Ventelisteposition')
+    )
+
     notes = models.TextField(
         blank=True,
         verbose_name=u'Bemærkninger'
@@ -3300,6 +3456,26 @@ class Booking(models.Model):
 
     def __unicode__(self):
         return _("Tilmelding #%d") % self.id
+
+    @property
+    def is_waiting(self):
+        return self.waitinglist_spot > 0
+
+    def enqueue(self):
+        if not self.is_waiting:
+            self.waitinglist_spot = self.visitoccurrence.next_waiting_list_spot
+            self.save()
+
+    @property
+    def can_dequeue(self):
+        return self.is_waiting and self.visitoccurrence.available_seats \
+            >= self.booker.attendee_count
+
+    def dequeue(self):
+        if self.can_dequeue:
+            self.waitinglist_spot = 0
+            self.save()
+            self.visitoccurrence.normalize_waitinglist()
 
 
 Booking.add_occurrence_attr('visit')
@@ -3462,6 +3638,7 @@ class KUEmailMessage(models.Model):
     @staticmethod
     def send_email(template, context, recipients, instance, unit=None,
                    **kwargs):
+        print "send_email"
         if isinstance(template, int):
             template_key = template
             template = EmailTemplate.get_template(template_key, unit)
@@ -3598,3 +3775,34 @@ class KUEmailRecipient(models.Model):
         )
         result.save()
         return result
+
+
+class EmailBookerEntry(models.Model):
+    uuid = models.UUIDField(default=uuid.uuid4)
+    booker = models.ForeignKey(Booker)
+    created = models.DateTimeField(default=timezone.now)
+    expires_in = models.DurationField(default=timedelta(hours=48))
+
+    def as_url(self, answer=False):
+        return reverse('booking-accept-view', args=[
+            self.uuid,
+            'yes' if answer else 'no'
+        ])
+
+    def as_full_url(self, request, answer):
+        return request.build_absolute_uri(self.as_url(answer))
+
+    def as_public_url(self, answer):
+        return settings.PUBLIC_URL + self.as_url(answer)
+
+    def is_expired(self):
+        return (self.created + self.expires_in) < timezone.now()
+
+    @classmethod
+    def create(cls, booker, **kwargs):
+        attrs = {
+            'booker': booker,
+        }
+        attrs.update(kwargs)
+
+        return cls.objects.create(**attrs)

@@ -32,7 +32,8 @@ from django.utils.translation import ugettext as _
 from django.views.generic import View, TemplateView, ListView, DetailView
 from django.views.generic import RedirectView
 from django.views.generic.base import ContextMixin
-from django.views.generic.edit import UpdateView, FormMixin, DeleteView
+from django.views.generic.edit import UpdateView, FormMixin, DeleteView, \
+    FormView
 from django.views.defaults import bad_request
 
 from profile.models import EDIT_ROLES
@@ -51,10 +52,10 @@ from booking.models import ResourceGymnasieFag, ResourceGrundskoleFag
 from booking.models import EmailTemplate
 from booking.models import log_action
 from booking.models import LOGACTION_CREATE, LOGACTION_CHANGE
+from booking.models import EmailBookerEntry
 from booking.forms import ResourceInitialForm, OtherResourceForm, VisitForm, \
     GuestEmailComposeForm, StudentForADayBookingForm, OtherVisitForm, \
-    StudyProjectBookingForm, BookingGrundskoleSubjectLevelForm
-
+    StudyProjectBookingForm, BookingGrundskoleSubjectLevelForm, BookingListForm
 from booking.forms import StudentForADayForm, InternshipForm, OpenHouseForm, \
     TeacherVisitForm, ClassVisitForm, StudyProjectForm, AssignmentHelpForm, \
     StudyMaterialForm
@@ -66,9 +67,11 @@ from booking.forms import BookerForm
 from booking.forms import EmailTemplateForm, EmailTemplatePreviewContextForm
 from booking.forms import EmailComposeForm
 from booking.forms import EmailReplyForm
+from booking.forms import EvaluationOverviewForm
 from booking.forms import AdminVisitSearchForm
 from booking.forms import VisitAutosendFormSet
 from booking.forms import VisitOccurrenceSearchForm
+from booking.forms import AcceptBookingForm
 from booking.utils import full_email, get_model_field_map
 from booking.utils import get_related_content_types
 
@@ -278,6 +281,17 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
     def get(self, request, *args, **kwargs):
         form = self.get_form()
         form.fields['recipients'].choices = self.recipients
+        recipient_ids = request.GET.getlist("recipients", None)
+        if recipient_ids is not None:
+            # If the URL defines recipients, add them and set them as defaults
+            form.fields['recipients'].choices = [
+                self.encode_recipient(recipient)
+                for recipient in self.lookup_recipients(recipient_ids)
+            ]
+            form.initial['recipients'] = [
+                id
+                for (id, label) in form.fields['recipients'].choices
+            ]
         return self.render_to_response(
             self.get_context_data(form=form)
         )
@@ -330,23 +344,76 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
         context.update(kwargs)
         return super(EmailComposeView, self).get_context_data(**context)
 
-    def lookup_recipients(self, recipient_ids):
+    @staticmethod
+    def encode_recipient(recipient):
+        recipient_type = None
+        id = None
+        email = None
+        if isinstance(recipient, Booking):
+            recipient = recipient.booker
+        if isinstance(recipient, Booker):
+            recipient_type = EmailComposeView.RECIPIENT_BOOKER
+            id = recipient.id
+            email = recipient.get_full_email()
+        elif isinstance(recipient, Person):
+            recipient_type = EmailComposeView.RECIPIENT_PERSON
+            id = recipient.id
+            email = recipient.get_full_email()
+        elif isinstance(recipient, UserPerson):
+            recipient_type = EmailComposeView.RECIPIENT_USERPERSON
+            id = recipient.id
+            email = recipient.get_full_email()
+        elif isinstance(recipient, User):
+            recipient_type = EmailComposeView.RECIPIENT_USER
+            id = recipient.username
+            email = full_email(recipient.email, recipient.get_full_name())
+        key = recipient_type + EmailComposeView.RECIPIENT_SEPARATOR + str(id)
+        return key, email
+
+    @staticmethod
+    def lookup_recipient(recipient_key):
+        (recipient_type, id) = recipient_key.split(
+            EmailComposeView.RECIPIENT_SEPARATOR, 1
+        )
+        if recipient_type == EmailComposeView.RECIPIENT_BOOKER:
+            return Booker.objects.filter(id=id)
+        elif recipient_type == EmailComposeView.RECIPIENT_PERSON:
+            return Person.objects.filter(id=id)
+        elif recipient_type == EmailComposeView.RECIPIENT_USER:
+            return User.objects.filter(username=id)
+        elif recipient_type == EmailComposeView.RECIPIENT_USERPERSON:
+            return UserPerson.objects.filter(id=id)
+        elif recipient_type == EmailComposeView.RECIPIENT_CUSTOM:
+            return id
+
+    @staticmethod
+    def lookup_recipients(recipient_ids):
         booker_ids = []
         person_ids = []
         user_ids = []
         userperson_ids = []
         customs = []
+        if type(recipient_ids) != list:
+            recipient_ids = [recipient_ids]
         for value in recipient_ids:
-            (type, id) = value.split(self.RECIPIENT_SEPARATOR, 1)
-            if type == self.RECIPIENT_BOOKER:
+            (recipient_type, id) = value.split(
+                EmailComposeView.RECIPIENT_SEPARATOR, 1
+            )
+            if recipient_type == "booking":  # We allow booking ids for #13804
+                try:
+                    id = Booking.objects.get(id=id).booker.id
+                    recipient_type = EmailComposeView.RECIPIENT_BOOKER
+                except:
+                    pass
+            if recipient_type == EmailComposeView.RECIPIENT_BOOKER:
                 booker_ids.append(id)
-            elif type == self.RECIPIENT_PERSON:
+            elif recipient_type == EmailComposeView.RECIPIENT_PERSON:
                 person_ids.append(id)
-            elif type == self.RECIPIENT_USER:
+            elif recipient_type == EmailComposeView.RECIPIENT_USER:
                 user_ids.append(id)
-            elif type == self.RECIPIENT_USERPERSON:
+            elif recipient_type == EmailComposeView.RECIPIENT_USERPERSON:
                 userperson_ids.append(id)
-            elif type == self.RECIPIENT_CUSTOM:
+            elif recipient_type == EmailComposeView.RECIPIENT_CUSTOM:
                 customs.append(id)
         return list(Booker.objects.filter(id__in=booker_ids)) + \
             list(Person.objects.filter(id__in=person_ids)) + \
@@ -1706,11 +1773,6 @@ class VisitDetailView(ResourceBookingDetailView):
         else:
             context['can_edit'] = False
 
-        if self.object.is_bookable:
-            context['can_book'] = True
-        else:
-            context['can_book'] = False
-
         context['breadcrumbs'] = [
             {'url': reverse('search'), 'text': _(u'Søgning')},
             {'url': self.request.GET.get("search", reverse('search')),
@@ -1820,14 +1882,34 @@ class VisitOccurrenceNotifyView(LoginRequiredMixin, ModalMixin,
         ]
         context['recp'] = {
             'guests': {
-                'label': _(u'Gæster'),
+                'label': _(u'Alle gæster'),
                 'items': {
                     "%s%s%d" % (self.RECIPIENT_BOOKER,
                                 self.RECIPIENT_SEPARATOR,
                                 booking.booker.id):
-                    booking.booker.get_full_email()
+                                    booking.booker.get_full_email()
                     for booking in visitoccurrence.bookings.all()
-                }
+                    }
+            },
+            'guests_accepted': {
+                'label': _(u'Deltagende gæster'),
+                'items': {
+                    "%s%s%d" % (self.RECIPIENT_BOOKER,
+                                self.RECIPIENT_SEPARATOR,
+                                booking.booker.id):
+                                    booking.booker.get_full_email()
+                    for booking in visitoccurrence.booking_list
+                    }
+            },
+            'guests_waiting': {
+                'label': _(u'Gæster på venteliste'),
+                'items': {
+                    "%s%s%d" % (self.RECIPIENT_BOOKER,
+                                self.RECIPIENT_SEPARATOR,
+                                booking.booker.id):
+                                    booking.booker.get_full_email()
+                    for booking in visitoccurrence.waiting_list
+                    }
             },
             'contacts': {
                 'label': _(u'Kontaktpersoner'),
@@ -1941,58 +2023,59 @@ class BookingNotifyView(LoginRequiredMixin, ModalMixin, EmailComposeView):
              'text': _(u'Detaljevisning')},
             {'text': _(u'Send notifikation')},
         ]
-        context['recp'] = {
-            'guests': {
-                'label': _(u'Gæster'),
-                'items': {
-                    "%s%s%d" % (self.RECIPIENT_BOOKER,
-                                self.RECIPIENT_SEPARATOR,
-                                self.object.booker.id):
-                    self.object.booker.get_full_email()
+        if 'nogroups' not in self.request.GET:
+            context['recp'] = {
+                'guests': {
+                    'label': _(u'Gæster'),
+                    'items': {
+                        "%s%s%d" % (self.RECIPIENT_BOOKER,
+                                    self.RECIPIENT_SEPARATOR,
+                                    self.object.booker.id):
+                        self.object.booker.get_full_email()
+                    }
+                },
+                'contacts': {
+                    'label': _(u'Kontaktpersoner'),
+                    'items': {
+                        "%s%s%d" % (self.RECIPIENT_USERPERSON,
+                                    self.RECIPIENT_SEPARATOR, person.id):
+                                        person.get_full_email()
+                        for person in self.object.visit.contacts.all()
+                    }
+                },
+                'roomadmins': {
+                    'label': _(u'Lokaleansvarlige'),
+                    'items': {
+                        "%s%s%d" % (self.RECIPIENT_USERPERSON,
+                                    self.RECIPIENT_SEPARATOR,
+                                    person.id):
+                                        person.get_full_email()
+                        for person in self.object.visit.room_contact.all()
+                        }
+                },
+                'hosts': {
+                    'label': _(u'Værter'),
+                    'items': {
+                        "%s%s%s" % (self.RECIPIENT_USER,
+                                    self.RECIPIENT_SEPARATOR,
+                                    user.username):
+                        full_email(user.email, user.get_full_name())
+                        for user in self.object.hosts.all()
+                        if user.email is not None
+                        }
+                },
+                'teachers': {
+                    'label': _(u'Undervisere'),
+                    'items': {
+                        "%s%s%s" % (self.RECIPIENT_USER,
+                                    self.RECIPIENT_SEPARATOR,
+                                    user.username):
+                        full_email(user.email, user.get_full_name())
+                        for user in self.object.teachers.all()
+                        if user.email is not None
+                        }
                 }
-            },
-            'contacts': {
-                'label': _(u'Kontaktpersoner'),
-                'items': {
-                    "%s%s%d" % (self.RECIPIENT_USERPERSON,
-                                self.RECIPIENT_SEPARATOR, person.id):
-                                    person.get_full_email()
-                    for person in self.object.visit.contacts.all()
-                }
-            },
-            'roomadmins': {
-                'label': _(u'Lokaleansvarlige'),
-                'items': {
-                    "%s%s%d" % (self.RECIPIENT_USERPERSON,
-                                self.RECIPIENT_SEPARATOR,
-                                person.id):
-                                    person.get_full_email()
-                    for person in self.object.visit.room_contact.all()
-                    }
-            },
-            'hosts': {
-                'label': _(u'Værter'),
-                'items': {
-                    "%s%s%s" % (self.RECIPIENT_USER,
-                                self.RECIPIENT_SEPARATOR,
-                                user.username):
-                    full_email(user.email, user.get_full_name())
-                    for user in self.object.hosts.all()
-                    if user.email is not None
-                    }
-            },
-            'teachers': {
-                'label': _(u'Undervisere'),
-                'items': {
-                    "%s%s%s" % (self.RECIPIENT_USER,
-                                self.RECIPIENT_SEPARATOR,
-                                user.username):
-                    full_email(user.email, user.get_full_name())
-                    for user in self.object.teachers.all()
-                    if user.email is not None
-                    }
             }
-        }
 
         context.update(kwargs)
         return super(BookingNotifyView, self).get_context_data(**context)
@@ -2137,7 +2220,11 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
             'modal': self.modal,
             'back': self.back,
             'occurrence_available': {
-                str(visitoccurrence.pk): visitoccurrence.available_seats()
+                str(visitoccurrence.pk): {
+                    'available': visitoccurrence.available_seats,
+                    'waitinglist': visitoccurrence.waiting_list_capacity
+                    if not visitoccurrence.waiting_list_closed else 0
+                }
                 for visitoccurrence in self.visit.visitoccurrence_set.all()
             },
             'gymnasiefag_available': self.gymnasiefag_available(),
@@ -2201,10 +2288,31 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
                 occ.save()
                 booking.visitoccurrence = occ
 
+            available_seats = booking.visitoccurrence.available_seats
+
             if 'bookerform' in forms:
                 booking.booker = forms['bookerform'].save()
 
             booking = forms['bookingform'].save()
+
+            attendee_count = booking.booker.attendee_count
+            if booking.visitoccurrence.visit.do_create_waiting_list and \
+                    attendee_count > available_seats:
+                # Put in waiting list
+                if booking.visitoccurrence.waiting_list_closed:
+                    booking.delete()
+                    raise Exception(_(u"Cannot place booking with in waiting "
+                                      u"list; the waiting list is closed"))
+                waitinglist_capacity = \
+                    booking.visitoccurrence.waiting_list_capacity
+                if attendee_count > waitinglist_capacity:
+                    booking.delete()
+                    raise Exception(_(u"Cannot place booking with %d attendees"
+                                      u" in waiting list; there are only %d "
+                                      u"spots") %
+                                    (attendee_count, waitinglist_capacity))
+                booking.waitinglist_spot = \
+                    booking.visitoccurrence.next_waiting_list_spot
 
             booking.save()
 
@@ -2668,8 +2776,17 @@ class BookingDetailView(LoginRequiredMixin, LoggedViewMixin,
 
         context['breadcrumbs'] = [
             {'url': reverse('search'), 'text': _(u'Søgning')},
-            {'url': '#', 'text': _(u'Søgeresultatliste')},
-            {'text': _(u'Detaljevisning')},
+            {'url': reverse('visit-view', args=[
+                self.object.visitoccurrence.visit.id
+                ]),
+             'text': self.object.visitoccurrence.visit.title
+             },
+            {'url': reverse('visit-occ-view', args=[
+                self.object.visitoccurrence.id
+                ]),
+             'text': self.object.visitoccurrence.date_display
+             },
+            {'text': self.object},
         ]
 
         context['thisurl'] = reverse('booking-view', args=[self.object.id])
@@ -2716,17 +2833,61 @@ class VisitOccurrenceDetailView(LoginRequiredMixin, LoggedViewMixin,
             for (key, label) in EmailTemplate.key_choices
             if key in EmailTemplate.visitoccurrence_manual_keys
         ]
+        context['emailtemplate_waitinglist'] = \
+            EmailTemplate.NOTIFY_GUEST__SPOT_OPEN
         user = self.request.user
 
         if hasattr(user, 'userprofile'):
             context['can_edit'] = user.userprofile.can_edit(self.object)
             context['can_notify'] = user.userprofile.can_notify(self.object)
 
+        context['bookinglistform'] = self.get_bookinglist_form()
+        context['waitinglistform'] = self.get_waitinglist_form()
+        context['waitingattendees'] = {
+            booking.id: booking.booker.attendee_count
+            for booking in self.object.waiting_list
+        }
+
         context.update(kwargs)
 
         return super(VisitOccurrenceDetailView, self).get_context_data(
             **context
         )
+
+    def get_bookinglist_form(self, **kwargs):
+        bookinglistform = BookingListForm(data=kwargs)
+        bookinglistform.fields['bookings'].choices = [
+            (booking.id, booking.id) for booking in self.object.booking_list
+        ]
+        return bookinglistform
+
+    def get_waitinglist_form(self, **kwargs):
+        waitinglistform = BookingListForm(data=kwargs)
+        waitinglistform.fields['bookings'].choices = [
+            (booking.id, booking.id) for booking in self.object.waiting_list
+            ]
+        return waitinglistform
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        action = request.POST['action']
+        listname = request.POST['listname']
+
+        if listname == 'booking':
+            form = self.get_bookinglist_form(**request.POST)
+        elif listname == 'waiting':
+            form = self.get_waitinglist_form(**request.POST)
+        if form is not None:
+            if form.is_valid():
+                for booking_id in form.cleaned_data['bookings']:
+                    booking = Booking.objects.filter(id=booking_id).first()
+                    if action == 'delete':
+                        booking.delete()
+                    elif action == 'enqueue':
+                        booking.enqueue()
+                    elif action == 'dequeue':
+                        booking.dequeue()
+        return self.get(request, *args, **kwargs)
 
 
 class EmailTemplateListView(LoginRequiredMixin, ListView):
@@ -3044,5 +3205,155 @@ class EmailReplyView(DetailView):
             return self.get(request, *args, **kwargs)
 
 
+class EvaluationOverviewView(LoginRequiredMixin, ListView):
+    model = VisitOccurrence
+    template_name = "evaluation/list.html"
+    context_object_name = "results"
+    form = None
+
+    def get_form(self):
+        if not self.form:
+            self.form = EvaluationOverviewForm(
+                self.request.GET,
+                user=self.request.user
+            )
+            self.form.is_valid()
+
+        return self.form
+
+    def get_queryset(self):
+        form = self.get_form()
+
+        if form.is_valid():
+            formdata = form.cleaned_data
+            qs = self.model.objects.filter(
+                visit__unit__in=form.user.userprofile.get_unit_queryset(),
+                evaluation_link__isnull=False,
+            ).exclude(
+                evaluation_link="",
+            )
+            unit_limit = formdata.get('unit', [])
+            if unit_limit:
+                qs = qs.filter(
+                    visit__unit__in=unit_limit
+                )
+            if formdata.get('limit_to_personal'):
+                user = self.request.user
+                qs = qs.filter(
+                    Q(visit__created_by=user) |
+                    Q(teachers=user) |
+                    Q(hosts=user) |
+                    Q(visit__contacts__user=user)
+                )
+        else:
+            qs = self.model.objects.none()
+
+        return qs.order_by('-start_datetime', '-end_datetime')
+
+    def get_context_data(self, **kwargs):
+        return super(EvaluationOverviewView, self).get_context_data(
+            form=self.get_form(),
+            breadcrumbs=[
+                {
+                    'url': reverse('evaluations'),
+                    'text': _(u'Oversigt over evalueringer')
+                },
+            ],
+            **kwargs
+        )
+
 import booking_workflows.views  # noqa
 import_views(booking_workflows.views)
+
+
+class BookingAcceptView(FormView):
+    template_name = "booking/accept_spot.html"
+    form_class = AcceptBookingForm
+    object = None
+    answer = None
+    dequeued = False
+
+    # Placeholder for storing a deleted booking's id for display
+    object_id = None
+
+    def dispatch(self, request, *args, **kwargs):
+        token = kwargs.get('token')
+        if not token:
+            raise Http404
+        try:
+            bookerentry = EmailBookerEntry.objects.get(uuid=token)
+            self.object = Booking.objects.get(booker=bookerentry.booker)
+        except Booking.DoesNotExist:
+            raise AccessDenied(_(u"Booking findes ikke længere"))
+        except EmailBookerEntry.DoesNotExist:
+            raise AccessDenied(_(u"Ugyldig token"))
+        if bookerentry.is_expired():
+            raise AccessDenied(_(u"Token er udløbet"))
+        if self.object.booker != bookerentry.booker:
+            raise AccessDenied(_(u"Ugyldig token"))
+        return super(BookingAcceptView, self).\
+            dispatch(request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        answer = kwargs.get('answer', None)
+        if answer.lower() == 'yes':
+            self.answer = True
+            if self.object.can_dequeue:
+                self.object.dequeue()
+                self.dequeued = True
+                self.object.autosend(EmailTemplate.NOTIFY_GUEST__SPOT_ACCEPTED)
+        elif answer.lower() == 'no':
+            self.answer = False
+            self.object.autosend(EmailTemplate.NOTIFY_GUEST__SPOT_REJECTED)
+            self.object.autosend(EmailTemplate.NOTIFY_EDITORS__SPOT_REJECTED)
+            self.object_id = self.object.id
+            self.object.delete()
+        return super(BookingAcceptView, self).get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        form = self.get_form()
+        if form.is_valid():
+            comment = form.cleaned_data['comment']
+            self.object.visitoccurrence.add_comment(None, comment)
+        return self.render_to_response(
+            self.get_context_data(comment_added=True)
+        )
+
+    def get_context_data(self, **kwargs):
+        context = {}
+        context['object'] = self.object
+        context['object_id'] = self.object_id
+        context['answer'] = self.answer
+        context['dequeued'] = self.dequeued
+
+        objectdisplay = _(u"Slettet tilmelding") if self.object_id \
+            else unicode(self.object)
+
+        context['breadcrumbs'] = [
+            {'url': reverse('search'), 'text': _(u'Søgning')},
+            {
+                'url': reverse(
+                    'visit-view',
+                    args=[self.object.visitoccurrence.visit.id]
+                ),
+                'text': self.object.visitoccurrence.visit.title
+            },
+            {
+                'url': reverse(
+                    'visit-occ-view', args=[self.object.visitoccurrence.id]
+                ),
+                'text': self.object.visitoccurrence.date_display
+            },
+            {
+                'url': reverse('booking-view', args=[
+                    self.object_id if self.object_id else self.object.id
+                ]),
+                'text': objectdisplay
+            },
+            {
+                'text': _(u'Svar på ledig plads')
+            }
+        ]
+
+        context.update(kwargs)
+        return super(BookingAcceptView, self).get_context_data(**context)

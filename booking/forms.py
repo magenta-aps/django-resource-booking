@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from booking.models import StudyMaterial, VisitAutosend, Booking, UserPerson
+from booking.models import StudyMaterial, VisitAutosend, Booking
 from booking.models import BookingGrundskoleSubjectLevel
-from booking.models import Locality, UnitType, Unit
+from booking.models import Locality, UnitType, Unit, UserPerson
 from booking.models import Resource, OtherResource, Visit
 from booking.models import Booker, Region, PostCode, School
 from booking.models import ClassBooking, TeacherBooking, \
@@ -14,7 +14,7 @@ from django import forms
 from django.db.models import Q
 from django.db.models.expressions import OrderBy
 from django.contrib.auth.models import User
-from django.forms import SelectMultiple, CheckboxSelectMultiple
+from django.forms import SelectMultiple, CheckboxSelectMultiple, CheckboxInput
 from django.forms import RadioSelect, EmailInput
 from django.forms import formset_factory, inlineformset_factory
 from django.forms import TextInput, NumberInput, Textarea, Select
@@ -334,6 +334,8 @@ class VisitForm(forms.ModelForm):
                   'type', 'tags',
                   'institution_level', 'topics', 'audience',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
+                  'do_create_waiting_list', 'waiting_list_length',
+                  'waiting_list_deadline_days', 'waiting_list_deadline_hours',
                   'duration', 'locality',
                   'rooms_needed', 'tour_available', 'catering_available',
                   'presentation_available', 'custom_available', 'custom_name',
@@ -375,6 +377,32 @@ class VisitForm(forms.ModelForm):
             ),
             'maximum_number_of_visitors': NumberInput(
                 attrs={'class': 'form-control input-sm', 'min': 1}
+            ),
+            'do_create_waiting_list': CheckboxInput(
+                attrs={
+                    'class': 'form-control input-sm',
+                    'data-toggle': 'hide',
+                    'data-target': '!.waitinglist-dependent'
+                }
+            ),
+            'waiting_list_length': NumberInput(
+                attrs={
+                    'class': 'form-control input-sm waitinglist-dependent',
+                    'min': 1
+                }
+            ),
+            'waiting_list_deadline_days': NumberInput(
+                attrs={
+                    'class': 'form-control input-sm waitinglist-dependent',
+                    'min': 0
+                }
+            ),
+            'waiting_list_deadline_hours': NumberInput(
+                attrs={
+                    'class': 'form-control input-sm waitinglist-dependent',
+                    'min': 0,
+                    'max': 23
+                }
             ),
             'duration': Select(attrs={'class': 'form-control input-sm'}),
             'locality': Select(attrs={'class': 'form-control input-sm'}),
@@ -501,7 +529,7 @@ class VisitForm(forms.ModelForm):
             for person in UserPerson.objects.all()
             if self.user.userprofile.is_administrator or
             person.unit == self.user.userprofile.unit
-        ]
+            ]
 
         userperson_choices.sort(key=lambda choice: choice[1].lower())
 
@@ -584,6 +612,8 @@ class TeacherVisitForm(VisitForm):
         fields = ('type', 'title', 'teaser', 'description', 'price', 'state',
                   'institution_level', 'topics', 'audience',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
+                  'do_create_waiting_list', 'waiting_list_length',
+                  'waiting_list_deadline_days', 'waiting_list_deadline_hours',
                   'duration', 'locality',
                   'rooms_needed',
                   'contacts', 'room_contact', 'unit',
@@ -600,6 +630,8 @@ class ClassVisitForm(VisitForm):
         fields = ('type', 'title', 'teaser', 'description', 'price', 'state',
                   'institution_level', 'topics', 'audience',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
+                  'do_create_waiting_list', 'waiting_list_length',
+                  'waiting_list_deadline_days', 'waiting_list_deadline_hours',
                   'duration', 'locality',
                   'rooms_needed', 'tour_available', 'catering_available',
                   'presentation_available', 'custom_available', 'custom_name',
@@ -717,18 +749,19 @@ class BookingForm(forms.ModelForm):
         )
         if self.scheduled:
             choices = []
-            for x in visit.future_events.order_by('start_datetime'):
-                available_seats = x.available_seats()
+            for occurrence in visit.future_events.order_by('start_datetime'):
+                available_seats = occurrence.available_seats
                 date = formats.date_format(
-                    timezone.localtime(x.start_datetime),
+                    timezone.localtime(occurrence.start_datetime),
                     "DATETIME_FORMAT"
                 )
                 if available_seats is None:
-                    choices.append((x.pk, date))
-                elif available_seats > 0:
+                    choices.append((occurrence.pk, date))
+                elif available_seats > 0 or \
+                        occurrence.waiting_list_capacity > 0:
                     choices.append(
                         (
-                            x.pk,
+                            occurrence.pk,
                             date + " " +
                             _("(%d pladser tilbage)") % available_seats
                         )
@@ -1110,3 +1143,40 @@ class EmailReplyForm(forms.Form):
         widget=Textarea(attrs={'class': 'form-control input-sm'}),
         required=True
     )
+
+
+class BookingListForm(forms.Form):
+    bookings = forms.MultipleChoiceField(
+        widget=CheckboxSelectMultiple()
+    )
+
+
+class AcceptBookingForm(forms.Form):
+    comment = forms.CharField(
+        widget=forms.Textarea,
+        label=_(u'Kommentar')
+    )
+
+
+class EvaluationOverviewForm(forms.Form):
+    user = None
+
+    unit = forms.MultipleChoiceField(
+        label=_(u'Afgræns ud fra enhed(er)'),
+        required=False,
+    )
+
+    limit_to_personal = forms.BooleanField(
+        label=_(u'Begræns til besøg jeg personligt er involveret i'),
+        required=False
+    )
+
+    def __init__(self, qdict, *args, **kwargs):
+        self.user = kwargs.pop("user")
+        userprofile = self.user.userprofile
+
+        super(EvaluationOverviewForm, self).__init__(qdict, *args, **kwargs)
+
+        self.fields['unit'].choices = [
+            (x.pk, unicode(x)) for x in userprofile.get_unit_queryset()
+        ]

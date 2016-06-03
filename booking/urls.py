@@ -16,6 +16,7 @@ from booking.views import EmailSuccessView, VisitInquireSuccessView
 from booking.views import SearchView, EmbedcodesView
 
 from booking.views import BookingNotifyView, BookingDetailView
+from booking.views import BookingAcceptView
 from booking.views import EmailTemplateListView, EmailTemplateEditView
 from booking.views import EmailTemplateDetailView, EmailTemplateDeleteView
 from booking.views import ChangeVisitOccurrenceEvalView
@@ -35,7 +36,7 @@ from booking.views import VisitOccurrenceAddCommentView
 from booking.views import VisitOccurrenceDetailView
 from booking.views import VisitOccurrenceCustomListView
 from booking.views import CloneResourceView
-
+from booking.views import EvaluationOverviewView
 
 from django.views.generic import TemplateView
 
@@ -132,6 +133,9 @@ urlpatterns = patterns(
     url(r'^booking/(?P<pk>[0-9]+)/?$',
         BookingDetailView.as_view(),
         name='booking-view'),
+    url(r'^booking/accept/(?P<token>[0-9a-f-]+)/(?P<answer>yes|no)?',
+        BookingAcceptView.as_view(),
+        name='booking-accept-view'),
 
     url(r'^visit/occurrence/(?P<pk>[0-9]+)/change_status/?$',
         ChangeVisitOccurrenceStatusView.as_view(),
@@ -224,7 +228,11 @@ urlpatterns = patterns(
 
     url(r'^reply-to-email/(?P<reply_nonce>[0-9a-f-]{36})',
         EmailReplyView.as_view(),
-        name='reply-to-email')
+        name='reply-to-email'),
+
+    url(r'^evaluations/?',
+        EvaluationOverviewView.as_view(),
+        name='evaluations'),
 
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

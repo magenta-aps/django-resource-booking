@@ -350,3 +350,40 @@ $(function() {
         }
     }).trigger("change");
 })(jQuery);
+
+(function($){
+
+    var isCheckbox = function(el) {
+        return el.prop("nodeName")=="INPUT" && el.attr("type") == 'checkbox';
+    };
+
+    var toggle = function() {
+        var $this = $(this),
+            targetString = $(this).attr("data-target") || "",
+            checkbox = isCheckbox($this);
+        var targetList = targetString.split(/\s+/);
+
+        var on = checkbox ? $this.prop("checked") : $this.data("toggleon");
+
+        if (!checkbox) {
+            $this.data("toggleon", on === false);
+        }
+        for (var i=0; i<targetList.length; i++) {
+            var target = targetList[i],
+                invert = false;
+            if (target.indexOf("!")==0) {
+                target = target.substr(1);
+                invert = true;
+            }
+            target = $(target);
+            target.toggle(!!(on ^ !invert));
+        }
+    };
+
+    $("[data-toggle='hide']").each(function() {
+        var $this = $(this);
+        toggle.call($this);
+        $this.change(toggle);
+    });
+
+}(jQuery));

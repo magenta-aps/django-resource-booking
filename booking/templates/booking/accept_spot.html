@@ -1,0 +1,67 @@
+{% extends 'index.html' %}
+{% load staticfiles %}
+{% load booking_tags %}
+{% load i18n %}
+{% load booking_tags %}
+
+{% block htmltitle %} - {{ object.visitoccurrence.visit.title }} - {{ object.visitoccurrence.date_display }} - {% blocktrans with id=object.id %}Booking #{{ id }}{% endblocktrans %}{% endblock %}
+
+{% block content %}
+
+{% include 'common/breadcrumbrow.html' %}
+
+<div class="row titlebar hidden-print">
+    <div class="col-sm-12 col-md-9">
+        <h1>
+            {% if object and object.id %}
+                {% blocktrans with id=object.id %}Booking #{{ id }}{% endblocktrans %}
+            {% elif object_id %}
+                {% blocktrans with id=object_id %}Booking #{{ id }}{% endblocktrans %}
+            {% else %}
+                {% trans 'Booking' %}
+            {% endif %}
+        </h1>
+    </div>
+    <div class="divider"></div>
+</div>
+<div class="row">
+    <div class="col-sm-12 col-md-8">
+
+        <div class="panel panel-default">
+            <div class="panel-body">
+                {% url 'visit-view' object.visitoccurrence.visit.id as visiturl %}
+                {% url 'visit-occ-view' object.visitoccurrence.id as occurrenceurl %}
+                {% blocktrans with firstname=object.booker.firstname lastname=object.booker.lastname visittitle=object.visit.title occurrencetime=object.visitoccurrence.start_datetime %}
+                    <strong>{{ firstname }} {{ lastname }}</strong> har tilmeldt sig <a href="{{ visiturl }}">{{ visittitle }}</a> med afvikling <a href="{{ occurrenceurl }}">{{ occurrencetime }}</a>
+                {% endblocktrans %}
+            </div>
+
+            <div class="panel-body">
+                {% if comment_added %}
+                    Kommentar tilføjet
+                {% elif answer %}
+                    {% if dequeued %}
+                        Du er nu tilmeldt besøget. Vi ses.
+                    {% elif not object.is_waiting %}
+                        Du er allerede tilmeldt besøget
+                    {% else %}
+                        Vi kunne ikke tilmelde dig besøget, fordi der ikke er ledige pladser nok. Nogen må have snuppet pladsen for næsen af dig.
+                    {% endif %}
+                {% else %}
+                    Du har svaret nej tak til at deltage.
+                {% endif %}
+            </div>
+
+            {% if form %}
+                <div class="panel-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form }}
+                        <button class="btn btn-success btn-sm">Tilføj kommentar</button>
+                    </form>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

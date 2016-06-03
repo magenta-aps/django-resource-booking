@@ -152,6 +152,11 @@
                                 <a href="{% url 'change-visit-occ-status' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Skift status' %}</a>
                             {% endif %}
                         </dd>
+                        <dt>{% trans 'Antal på venteliste' %}</dt>
+                        <dd>
+                            {{ object.nr_waiting }}
+                            <a href="#waitinglist" role="button" class="btn btn-primary btn-xs">{% trans 'Se liste' %}</a>
+                        </dd>
                         <dt>{% trans 'Link til evaluering' %}</dt>
                         <dd>
                             {% if object.evaluation_link %}
@@ -180,6 +185,46 @@
                         {% endif %}
                     </dl>
 
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row attendees">
+        <div class="col-sm-12 col-md-10">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <h2>
+                        {% trans 'Tilmeldte' %}
+                        ({{ object.nr_attendees }}{% if object.visit.maximum_number_of_visitors %}/{{ object.visit.maximum_number_of_visitors }}{% endif %})
+                    </h2>
+                    {% include "booking/snippets/list.html" with list=object.booking_list form=bookinglistform listname='booking' %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row waiting">
+        <div class="col-sm-12 col-md-10">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <a name="waitinglist"></a>
+                    <h2>
+                        {% trans 'Venteliste' %}
+                        ({{ object.nr_waiting }}{% if object.visit.waiting_list_length %}/{{ object.visit.waiting_list_length }}{% endif %})
+                    </h2>
+                    {% if object.waiting_list_closing_time %}
+                        {% if object.waiting_list_closed %}
+                            {% blocktrans with time=object.waiting_list_closing_time %}
+                                Ventelisten lukkede {{ time }}.
+                            {% endblocktrans %}
+                        {% else %}
+                            {% blocktrans with time=object.waiting_list_closing_time %}
+                                Ventelisten lukker {{ time }}.
+                            {% endblocktrans %}
+                        {% endif %}
+                    {% endif %}
+                    {% include "booking/snippets/list.html" with list=object.waiting_list form=waitinglistform listname='waiting' %}
                 </div>
             </div>
         </div>
@@ -253,68 +298,15 @@
         </div>
     </div>
 
-    <div class="row attendees">
-        <div class="col-sm-12 col-md-10">
-            <div class="panel panel-default">
-                <div class="panel-body">
-                    <h2>{% trans 'Tilmeldte' %}</h2>
-                    <div class="listcontainer">
-                        {% for booking in object.bookings.all %}
-                            <div class="list-group-item clearfix">
-                                <a href="{% url 'booking-view' booking.id %}">
-                                    <dl class="dl-horizontal">
-                                        <dt class="text-muted">{% trans 'Skole:' %}</dt>
-                                        <dd><strong>{{ booking.booker.school.name }}, {{ booking.booker.school.postcode }}</strong></dd>
-                                        <dt class="text-muted">{% trans 'Navn:' %}</dt>
-                                        <dd>{{ booking.booker.get_name }}</dd>
-                                        <dt class="text-muted">{% trans 'Email:' %}</dt>
-                                        <dd>{{ booking.booker.email }}</dd>
-                                        <dt class="text-muted">{% trans 'Antal:' %}</dt>
-                                        <dd>{{ booking.booker.attendee_count }}</dd>
-                                        {% if booking.notes %}
-                                            <dt class="text-muted">{% trans 'Noter:' %}</dt>
-                                            <dd>{{ booking.notes }}</dd>
-                                        {% endif %}
-                                        {% if booking.classbooking %}
-                                            <dt class="text-muted">{% trans 'Rundvisning:' %}</dt>
-                                            <dd>{{ booking.classbooking.tour_desired | yesno }}</dd>
-                                            <dt class="text-muted">{% trans 'Forplejning:' %}</dt>
-                                            <dd>{{ booking.classbooking.catering_desired | yesno }}</dd>
-                                            <dt class="text-muted">{% trans 'Oplæg om uddannelse:' %}</dt>
-                                            <dd>{{ booking.classbooking.presentation_desired | yesno }}</dd>
-                                            {% if booking.visitoccurrence.visit.custom_available %}
-                                                <dt class="text-muted">{{ booking.visitoccurrence.visit.custom_name }}:</dt>
-                                                <dd>{{ booking.classbooking.custom_desired | yesno }}</dd>
-                                            {% endif %}
-                                        {% endif %}
-                                        {% if booking.teacherbooking %}
-                                            {% if booking.teacherbooking.subjects %}
-                                                <dt class="text-muted">{% trans 'Fag:' %}</dt>
-                                                <dd>
-                                                    <ul>
-                                                    {% for subject in booking.teacherbooking.subjects.all %}
-                                                        <li>{{ subject }}</li>
-                                                    {% endfor %}
-                                                    </ul>
-                                                </dd>
-                                            {% endif %}
-                                        {% endif %}
-                                    </dl>
-                                </a>
-                            </div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <div class="row">
         <div class="col-sm-12 col-md-10">
             <div class="panel panel-default">
                 <div class="panel-body">
                         <div class="go-back">
-                            <a href="/visit/occurrence/search" class="btn btn-default"><span class="glyphicon glyphicon-chevron-left"></span> {% trans 'Søg i besøg' %}</a>
+                            <a href="{% url 'visit-occ-search' %}" class="btn btn-default">
+                                <span class="glyphicon glyphicon-chevron-left"></span>
+                                {% trans 'Søg i besøg' %}
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -330,4 +322,55 @@
 {% block extra_scripts %}
     <script src="{% static 'js/custom.js' %}"></script>
     <script src="{% static "js/modalframe-host.js" %}"></script>
+    <script type="text/javascript">
+        <!--
+        $(function(){
+            {% autoescape off %}
+                var waitingAttendees = {{ waitingattendees | jsonify }},
+                    availableSeats = {{ object.available_seats | jsonify }};
+            {% endautoescape %}
+            var dequeueButton = $("button[name='action'][value='dequeue']");
+            if (dequeueButton.length) {
+                var update = function() {
+                    var selectedAttendees = 0;
+                    $(".listcontainer.waiting input[type='checkbox']:checked").each(function(){
+                        selectedAttendees += waitingAttendees[this.value];
+                    });
+                    if (selectedAttendees > availableSeats) {
+                        dequeueButton.enable(false, "listFull");
+                        dequeueButton.attr("title",
+                            "{% trans 'Der er kun {available} pladser tilbage. Du har valgt {selected} deltagere.' %}"
+                            .replace("{available}", availableSeats)
+                            .replace("{selected}", selectedAttendees)
+                        );
+                    } else {
+                        dequeueButton.enable(true, "listFull");
+                        dequeueButton.removeAttr("title");
+                    }
+                };
+                $(".listcontainer.waiting input[type='checkbox']").change(update);
+                update();
+            }
+        });
+
+        $(function(){
+            $("form").each(function(){
+                var form = $(this);
+                var button = form.find("button[name='action']");
+                var update = function() {
+                    button.enable(form.find("input[type='checkbox']:checked").length, "selectionPresent");
+                };
+                form.find("input[type='checkbox']").change(update);
+                update();
+            });
+        });
+
+        $(function(){
+            $(".listcontainer form button[name='action'][value='delete']").click(function(){
+                return window.confirm("{% trans 'Er du sikke på at du vil slette disse tilmeldinger?' %}");
+            });
+        });
+
+        //-->
+    </script>
 {% endblock %}

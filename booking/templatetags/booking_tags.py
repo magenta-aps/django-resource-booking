@@ -9,7 +9,7 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
 from timedelta.helpers import parse, nice_repr
-from booking.models import LOGACTION_DISPLAY_MAP
+from booking.models import LOGACTION_DISPLAY_MAP, Booker, EmailBookerEntry
 from profile.models import EmailLoginEntry, UserProfile
 import datetime
 import re
@@ -148,9 +148,10 @@ class FullURLNode(defaulttags.Node):
 
     def tokenize(self, url, context):
         # If a valid token_for arg is supplied, put a token on the url
-        if url is not None and url != '' and \
-                self.TOKEN_USER_KEY in self.kwargs:
-            user = self.kwargs[self.TOKEN_USER_KEY]
+        kwargs = self.kwargs
+        print kwargs
+        if url is not None and url != '' and self.TOKEN_USER_KEY in kwargs:
+            user = kwargs[self.TOKEN_USER_KEY]
             if isinstance(user, FilterExpression):
                 user = user.resolve(context)
             elif isinstance(user, basestring):
@@ -159,8 +160,6 @@ class FullURLNode(defaulttags.Node):
                 pass
             elif isinstance(user, UserProfile):
                 user = user.user
-            else:
-                user = None
 
             if isinstance(user, User):
                 entry = EmailLoginEntry.create_from_url(
@@ -169,6 +168,17 @@ class FullURLNode(defaulttags.Node):
                     expires_in=datetime.timedelta(hours=72)
                 )
                 return entry.as_url()
+
+            # Special hack for letting Bookers respond to mails
+            if isinstance(user, Booker):
+                answer = "no"
+                if len(self.url_node.args) >= 2:
+                    answer = self.url_node.args[1].resolve(context)
+                entry = EmailBookerEntry.create(
+                    user,
+                    expires_in=datetime.timedelta(hours=72)
+                )
+                return entry.as_url(answer == "yes")
         return url
 
     def prefix(self, url):

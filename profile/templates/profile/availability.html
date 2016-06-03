@@ -1,26 +1,41 @@
 {% extends "index.html" %}
 {% load i18n %}
 
-{% block htmltitle %} - {% blocktrans with name=object.user %}Information om underviser {{ name }}{% endblocktrans %}{% endblock %}
+{% block htmltitle %} - {% blocktrans with name=object.user role=object.get_role_name %}Information om {{ role|lower }} {{ name }}{% endblocktrans %}{% endblock %}
 
 
 {% block content %}
     <div class="divider"></div>
 
-    <h1>{% blocktrans with name=object.user %}Information om underviser {{ name }}{% endblocktrans %}</h1>
+    <h1>{% blocktrans with name=object.user role=object.get_role_name %}Information om {{ role|lower }} {{ name }}{% endblocktrans %}</h1>
 
     <div class="divider"></div>
 
     <div class="row">
         <div class="col-sm-12">
-            <h2>{% trans "Mulige undervisningstidspunkter" %}</h2>
-            {% if object.teacher_availability_text %}
+            <h2>{% trans "Mulige tidspunkter" %}</h2>
+            {% if object.availability_text %}
             <p>
-                <p>{% blocktrans with name=object.user %}{{ name }} har angivet følgende mulige undervisningstidspunkter{% endblocktrans %}</p>
-                <pre>{{object.teacher_availability_text}}</pre>
+                <p>{% blocktrans with name=object.user %}{{ name }} har angivet følgende mulige tidspunkter{% endblocktrans %}</p>
+                <pre>{{object.availability_text}}</pre>
             </p>
             {% else %}
-            <p>{% blocktrans with name=object.user %}{{ name }} har ikke angivet hvornår de ønsker at undervise{% endblocktrans %}</p>
+            <p>{% blocktrans with name=object.user %}{{ name }} har ikke angivet mulige tidspunkter{% endblocktrans %}</p>
+            {% endif %}
+            {% if request.user.pk = object.user.pk %}
+                <a href="" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
+            {% endif %}
+
+            <div class="divider"></div>
+
+            <h2>{% trans "Yderligere information" %}</h2>
+            {% if object.additional_information %}
+            <p>
+                <p>{% blocktrans with name=object.user %}Der er angivet følgende yderligere information for {{ name }}:{% endblocktrans %}</p>
+                <pre>{{object.additional_information}}</pre>
+            </p>
+            {% else %}
+            <p>{% blocktrans with name=object.user %}Der er ikke angivet følgende yderligere information for {{ name }}.{% endblocktrans %}</p>
             {% endif %}
             {% if request.user.pk = object.user.pk %}
                 <a href="" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>

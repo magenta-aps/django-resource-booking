@@ -78,7 +78,11 @@
                     <dl class="dl-horizontal">
                         <dt>{% trans 'Navn:' %}</dt>
                         <dd>
-                            {{ otheruser }}
+                            {% if otheruser.get_full_name %}
+                            {{ otheruser.get_full_name }} ({{ otheruser.username }})
+                            {% else %}
+                            "{{ otheruser.username }}"
+                            {% endif %}
                             {% if user == otheruser or otheruser.userprofile.get_role in user.userprofile.available_roles %}
                                 <a href="{% url 'user_edit' otheruser.pk %}">{% trans 'Redigér' %}</a>
                                 <a href="{% url 'user_delete' otheruser.pk %}">{% trans 'Slet' %}</a>
