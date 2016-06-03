@@ -558,11 +558,14 @@ class EmailTemplate(models.Model):
     NOTIFY_GUEST__SPOT_ACCEPTED = 17  # Ticket 13804
     NOTIFY_GUEST__SPOT_REJECTED = 18  # Ticket 13804
     NOTIFY_EDITORS__SPOT_REJECTED = 19  # Ticket 13804
+    NOTIFY_GUEST__BOOKING_CREATED_WAITING = 20  # ticket 13804
 
     # Choice labels
     key_choices = [
         (NOTIFY_GUEST__BOOKING_CREATED,
          _(u'Besked til gæst ved booking af besøg')),
+        (NOTIFY_GUEST__BOOKING_CREATED_WAITING,
+         _(u'Besked til gæst ved tilmelding på venteliste')),
         (NOTIFY_GUEST__GENERAL_MSG,
          _(u'Generel besked til gæst(er)')),
         (NOTIFY_GUEST_REMINDER,
@@ -625,6 +628,7 @@ class EmailTemplate(models.Model):
     # Templates available for manual sending from bookings
     booking_manual_keys = [
         NOTIFY_GUEST__BOOKING_CREATED,
+        NOTIFY_GUEST__BOOKING_CREATED_WAITING,
         NOTIFY_GUEST__GENERAL_MSG,
         NOTIFY_ALL__BOOKING_COMPLETE,
         NOTIFY_ALL__BOOKING_CANCELED,
@@ -649,6 +653,7 @@ class EmailTemplate(models.Model):
     # Templates that will be autosent to booker
     booker_keys = [
         NOTIFY_GUEST__BOOKING_CREATED,
+        NOTIFY_GUEST__BOOKING_CREATED_WAITING,
         NOTIFY_ALL__BOOKING_COMPLETE,
         NOTIFY_ALL__BOOKING_CANCELED,
         NOTITY_ALL__BOOKING_REMINDER,
@@ -687,6 +692,7 @@ class EmailTemplate(models.Model):
     # Templates where the {{ booking }} variable makes sense
     enable_booking = [
         NOTIFY_GUEST__BOOKING_CREATED,
+        NOTIFY_GUEST__BOOKING_CREATED_WAITING,
         NOTIFY_EDITORS__BOOKING_CREATED,
         NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
         NOTIFY_HOST__REQ_HOST_VOLUNTEER,
@@ -708,6 +714,7 @@ class EmailTemplate(models.Model):
 
     default = [
         NOTIFY_GUEST__BOOKING_CREATED,
+        NOTIFY_GUEST__BOOKING_CREATED_WAITING,
         NOTIFY_EDITORS__BOOKING_CREATED,
         NOTITY_ALL__BOOKING_REMINDER,
         NOTIFY_ALL__BOOKING_COMPLETE,
