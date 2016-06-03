@@ -567,19 +567,22 @@ class EmailTemplate(models.Model):
     NOTIFY_GUEST__SPOT_ACCEPTED = 17  # Ticket 13804
     NOTIFY_GUEST__SPOT_REJECTED = 18  # Ticket 13804
     NOTIFY_EDITORS__SPOT_REJECTED = 19  # Ticket 13804
-    NOTIFY_TEACHER__ASSOCIATED = 30
-    NOTIFY_ALL_EVALUATION = 31
+    NOTIFY_GUEST__BOOKING_CREATED_WAITING = 20  # ticket 13804
+    NOTIFY_TEACHER__ASSOCIATED = 21  # Ticket 15701
+    NOTIFY_ALL_EVALUATION = 22  # Ticket 15701
 
     # Choice labels
     key_choices = [
         (NOTIFY_GUEST__BOOKING_CREATED,
          _(u'Besked til gæst ved booking af besøg')),
+        (NOTIFY_GUEST__BOOKING_CREATED_WAITING,
+         _(u'Besked til gæst ved tilmelding på venteliste')),
         (NOTIFY_GUEST__GENERAL_MSG,
          _(u'Generel besked til gæst(er)')),
         (NOTIFY_GUEST_REMINDER,
          _(u'Reminder til gæst')),
         (NOTIFY_GUEST__SPOT_OPEN,
-         _(u'Besked til gæst på venteliste om ledig plads')),
+         _(u'Mail til gæst fra venteliste, der får tilbudt plads på besøget')),
         (NOTIFY_GUEST__SPOT_ACCEPTED,
          _(u'Besked til gæst ved accept af plads (fra venteliste)')),
         (NOTIFY_GUEST__SPOT_REJECTED,
@@ -642,6 +645,7 @@ class EmailTemplate(models.Model):
     # Templates available for manual sending from bookings
     booking_manual_keys = [
         NOTIFY_GUEST__BOOKING_CREATED,
+        NOTIFY_GUEST__BOOKING_CREATED_WAITING,
         NOTIFY_GUEST__GENERAL_MSG,
         NOTIFY_ALL__BOOKING_COMPLETE,
         NOTIFY_ALL__BOOKING_CANCELED,
@@ -666,6 +670,7 @@ class EmailTemplate(models.Model):
     # Templates that will be autosent to booker
     booker_keys = [
         NOTIFY_GUEST__BOOKING_CREATED,
+        NOTIFY_GUEST__BOOKING_CREATED_WAITING,
         NOTIFY_ALL__BOOKING_COMPLETE,
         NOTIFY_ALL__BOOKING_CANCELED,
         NOTITY_ALL__BOOKING_REMINDER,
@@ -708,6 +713,7 @@ class EmailTemplate(models.Model):
     # Templates where the {{ booking }} variable makes sense
     enable_booking = [
         NOTIFY_GUEST__BOOKING_CREATED,
+        NOTIFY_GUEST__BOOKING_CREATED_WAITING,
         NOTIFY_EDITORS__BOOKING_CREATED,
         NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
         NOTIFY_HOST__REQ_HOST_VOLUNTEER,
@@ -729,6 +735,7 @@ class EmailTemplate(models.Model):
 
     default = [
         NOTIFY_GUEST__BOOKING_CREATED,
+        NOTIFY_GUEST__BOOKING_CREATED_WAITING,
         NOTIFY_EDITORS__BOOKING_CREATED,
         NOTITY_ALL__BOOKING_REMINDER,
         NOTIFY_ALL__BOOKING_COMPLETE,
@@ -861,6 +868,26 @@ class EmailTemplate(models.Model):
                 if isinstance(node, VariableNode):
                     variables.append(unicode(node.filter_expression))
         return variables
+
+    @staticmethod
+    def add_defaults_to_all():
+        for visit in Visit.objects.all():
+            for template_key in EmailTemplate.default:
+                print EmailTemplate.get_name(template_key)
+                if visit.visitautosend_set.filter(
+                    template_key=template_key
+                ).count() == 0:
+                    print "    create autosends for visit %d" % visit.id
+                    autosend = VisitAutosend(
+                        template_key=template_key,
+                        visit=visit,
+                        enabled=True
+                    )
+                    autosend.save()
+                    for occurrence in visit.visitoccurrence_set.all():
+                        print "        creating inheriting autosends for " \
+                              "occurrence %d" % occurrence.id
+                        occurrence.create_inheriting_autosends()
 
 
 class ObjectStatistics(models.Model):
@@ -3881,17 +3908,14 @@ class EmailBookerEntry(models.Model):
     created = models.DateTimeField(default=timezone.now)
     expires_in = models.DurationField(default=timedelta(hours=48))
 
-    def as_url(self, answer=False):
-        return reverse('booking-accept-view', args=[
-            self.uuid,
-            'yes' if answer else 'no'
-        ])
+    def as_url(self):
+        return reverse('booking-accept-view', args=[self.uuid])
 
-    def as_full_url(self, request, answer):
-        return request.build_absolute_uri(self.as_url(answer))
+    def as_full_url(self, request):
+        return request.build_absolute_uri(self.as_url())
 
-    def as_public_url(self, answer):
-        return settings.PUBLIC_URL + self.as_url(answer)
+    def as_public_url(self):
+        return settings.PUBLIC_URL + self.as_url()
 
     def is_expired(self):
         return (self.created + self.expires_in) < timezone.now()

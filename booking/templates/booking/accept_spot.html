@@ -37,27 +37,44 @@
             </div>
 
             <div class="panel-body">
-                {% if comment_added %}
-                    Kommentar tilføjet
-                {% elif answer %}
-                    {% if dequeued %}
-                        Du er nu tilmeldt besøget. Vi ses.
-                    {% elif not object.is_waiting %}
-                        Du er allerede tilmeldt besøget
+                {% if request.method == 'GET' %}
+                    {% if not object.is_waiting %}
+                        {% trans 'Du er allerede tilmeldt besøget' %}
+                    {% elif not object.can_dequeue %}
+                        {% trans 'Du kan ikke tilmelde dig besøget, fordi der ikke er ledige pladser nok. Nogen må have snuppet de ledige pladser for næsen af dig.' %}
                     {% else %}
-                        Vi kunne ikke tilmelde dig besøget, fordi der ikke er ledige pladser nok. Nogen må have snuppet pladsen for næsen af dig.
+                        {% trans 'Du står på venteliste, men der er blevet pladser ledige til dig.' %}
                     {% endif %}
-                {% else %}
-                    Du har svaret nej tak til at deltage.
+                {% elif request.method == 'POST' %}
+                    {% if answer == 'yes' %}
+                        {% trans 'Du er nu tilmeldt besøget. Vi ses.' %}
+                    {% elif answer == 'no' %}
+                        {% trans 'Du har svaret nej tak til at deltage.' %}
+                    {% elif dequeued == False %}
+                        {% trans 'Vi kunne ikke tilmelde dig besøget, fordi der ikke er ledige pladser nok. Nogen må have snuppet pladsen for næsen af dig.' %}
+                    {% endif %}
                 {% endif %}
             </div>
 
-            {% if form %}
+            {% if form and object.is_waiting and object.can_dequeue %}
                 <div class="panel-body">
                     <form method="post">
                         {% csrf_token %}
-                        {{ form }}
-                        <button class="btn btn-success btn-sm">Tilføj kommentar</button>
+                        <div class="row">
+                            <label class="col-sm-2 control-label {{ form.comment.css_classes }}" for="{{ form.comment.id_for_label }}">{{ form.comment.label }}:</label>
+                            <div class="col-sm-6{% if form.comment.errors %} has-error{% endif %}">
+                                {{ form.comment }}
+                            </div>
+                            <div class="col-sm-3 help-block with-errors">
+                                {{ form.comment.errors }}
+                            </div>
+                        </div>
+                        <hr/>
+                        <p>{% trans 'Ønsker du at deltage i besøget?' %}</p>
+                        <p>
+                            <button name="answer" class="btn btn-success btn-sm" value="yes">{% trans 'Ja' %}</button>
+                            <button name="answer" class="btn btn-success btn-sm" value="no">{% trans 'Nej' %}</button>
+                        </p>
                     </form>
                 </div>
             {% endif %}

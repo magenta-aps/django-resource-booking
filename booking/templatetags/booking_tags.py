@@ -138,6 +138,7 @@ class FullURLNode(defaulttags.Node):
 
     def __init__(self, url_node):
         # Grab any kwargs that we lay claim to
+        self.kwargs = {}
         for key in self.our_kwarg_keys:
             if key in url_node.kwargs:
                 self.kwargs[key] = url_node.kwargs.pop(key)
@@ -170,14 +171,11 @@ class FullURLNode(defaulttags.Node):
 
             # Special hack for letting Bookers respond to mails
             if isinstance(user, Booker):
-                answer = "no"
-                if len(self.url_node.args) >= 2:
-                    answer = self.url_node.args[1].resolve(context)
                 entry = EmailBookerEntry.create(
                     user,
                     expires_in=datetime.timedelta(hours=72)
                 )
-                return entry.as_url(answer == "yes")
+                return entry.as_url()
         return url
 
     def prefix(self, url):

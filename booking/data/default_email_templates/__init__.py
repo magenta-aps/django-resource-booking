@@ -27,6 +27,12 @@ IMPORT_MAP = {
     EmailTemplate.SYSTEM__BASICMAIL_ENVELOPE: 'contact_mail',
     EmailTemplate.SYSTEM__EMAIL_REPLY: 'email_reply',
     EmailTemplate.SYSTEM__USER_CREATED: 'user_created',
+    EmailTemplate.NOTIFY_GUEST__BOOKING_CREATED_WAITING: 'waitinglist_joined',
+    EmailTemplate.NOTIFY_GUEST__SPOT_OPEN: 'waitinglist_offer',
+    EmailTemplate.NOTIFY_GUEST__SPOT_ACCEPTED: 'waitinglist_accepted',
+    EmailTemplate.NOTIFY_GUEST__SPOT_REJECTED: 'waitinglist_rejected',
+    EmailTemplate.NOTIFY_EDITORS__SPOT_REJECTED:
+        'waitinglist_rejected_coordinator'
 }
 
 

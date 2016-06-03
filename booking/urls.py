@@ -133,7 +133,7 @@ urlpatterns = patterns(
     url(r'^booking/(?P<pk>[0-9]+)/?$',
         BookingDetailView.as_view(),
         name='booking-view'),
-    url(r'^booking/accept/(?P<token>[0-9a-f-]+)/(?P<answer>yes|no)?',
+    url(r'^booking/accept/(?P<token>[0-9a-f-]+)/?',
         BookingAcceptView.as_view(),
         name='booking-accept-view'),
 
