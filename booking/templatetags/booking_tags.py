@@ -138,6 +138,7 @@ class FullURLNode(defaulttags.Node):
 
     def __init__(self, url_node):
         # Grab any kwargs that we lay claim to
+        self.kwargs = {}
         for key in self.our_kwarg_keys:
             if key in url_node.kwargs:
                 self.kwargs[key] = url_node.kwargs.pop(key)
