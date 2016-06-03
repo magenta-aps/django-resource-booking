@@ -3295,26 +3295,30 @@ class BookingAcceptView(FormView):
             dispatch(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
-        answer = kwargs.get('answer', None)
-        if answer.lower() == 'yes':
-            self.answer = True
-            if self.object.can_dequeue:
-                self.object.dequeue()
-                self.dequeued = True
-                self.object.autosend(EmailTemplate.NOTIFY_GUEST__SPOT_ACCEPTED)
-        elif answer.lower() == 'no':
-            self.answer = False
-            self.object.autosend(EmailTemplate.NOTIFY_GUEST__SPOT_REJECTED)
-            self.object.autosend(EmailTemplate.NOTIFY_EDITORS__SPOT_REJECTED)
-            self.object_id = self.object.id
-            self.object.delete()
         return super(BookingAcceptView, self).get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
         form = self.get_form()
         if form.is_valid():
+            self.answer = request.POST.get('answer')
+            if self.answer == 'yes':
+                if self.object.can_dequeue:
+                    self.object.dequeue()
+                    self.dequeued = True
+                    self.object.autosend(
+                        EmailTemplate.NOTIFY_GUEST__SPOT_ACCEPTED
+                    )
+            elif self.answer == 'no':
+                self.object.autosend(EmailTemplate.NOTIFY_GUEST__SPOT_REJECTED)
+                self.object.autosend(
+                    EmailTemplate.NOTIFY_EDITORS__SPOT_REJECTED
+                )
+                self.object_id = self.object.id
+                self.object.delete()
+
             comment = form.cleaned_data['comment']
             self.object.visitoccurrence.add_comment(None, comment)
+
         return self.render_to_response(
             self.get_context_data(comment_added=True)
         )

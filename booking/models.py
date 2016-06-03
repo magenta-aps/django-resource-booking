@@ -568,7 +568,7 @@ class EmailTemplate(models.Model):
         (NOTIFY_GUEST_REMINDER,
          _(u'Reminder til gæst')),
         (NOTIFY_GUEST__SPOT_OPEN,
-         _(u'Besked til gæst på venteliste om ledig plads')),
+         _(u'Mail til gæst fra venteliste, der får tilbudt plads på besøget')),
         (NOTIFY_GUEST__SPOT_ACCEPTED,
          _(u'Besked til gæst ved accept af plads (fra venteliste)')),
         (NOTIFY_GUEST__SPOT_REJECTED,
@@ -3836,17 +3836,14 @@ class EmailBookerEntry(models.Model):
     created = models.DateTimeField(default=timezone.now)
     expires_in = models.DurationField(default=timedelta(hours=48))
 
-    def as_url(self, answer=False):
-        return reverse('booking-accept-view', args=[
-            self.uuid,
-            'yes' if answer else 'no'
-        ])
+    def as_url(self):
+        return reverse('booking-accept-view', args=[self.uuid])
 
-    def as_full_url(self, request, answer):
-        return request.build_absolute_uri(self.as_url(answer))
+    def as_full_url(self, request):
+        return request.build_absolute_uri(self.as_url())
 
-    def as_public_url(self, answer):
-        return settings.PUBLIC_URL + self.as_url(answer)
+    def as_public_url(self):
+        return settings.PUBLIC_URL + self.as_url()
 
     def is_expired(self):
         return (self.created + self.expires_in) < timezone.now()

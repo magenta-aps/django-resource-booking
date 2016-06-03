@@ -170,14 +170,11 @@ class FullURLNode(defaulttags.Node):
 
             # Special hack for letting Bookers respond to mails
             if isinstance(user, Booker):
-                answer = "no"
-                if len(self.url_node.args) >= 2:
-                    answer = self.url_node.args[1].resolve(context)
                 entry = EmailBookerEntry.create(
                     user,
                     expires_in=datetime.timedelta(hours=72)
                 )
-                return entry.as_url(answer == "yes")
+                return entry.as_url()
         return url
 
     def prefix(self, url):
