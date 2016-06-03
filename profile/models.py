@@ -9,7 +9,7 @@ from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 import booking.models
-from booking.models import Unit, Resource
+from booking.models import Unit, Resource, UserPerson
 from booking.utils import get_related_content_types
 import uuid
 
