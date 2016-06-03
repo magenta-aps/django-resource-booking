@@ -1,0 +1,1 @@
+Tilmelding til venteliste på foKUs-tilbud "{{ visit.title }}"
