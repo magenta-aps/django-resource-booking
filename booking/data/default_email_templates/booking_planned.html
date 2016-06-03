@@ -1,42 +1,91 @@
-<p>Kære {{ recipient.get_full_name }}.</p>
+{% if recipient.guest %}
 
-{% if recipient.is_guest %}
-<p>
-    Vi glæder os til at se dig til {{ visit.title }} den {{ besoeg.display_value }} på Københavns Universitet:
-    <a href="{% full_url 'visit-view' visit.pk %}#mapinfo">{{ visit.locality.full_address }}</a>.
-    Hvis du har spørgsmål vedrørende din tilmelding, kan du skrive til
-    {% include 'booking/email/snippets/contact_addresses.html' with visit=visit %}
-</p>
-<p>
-    Detaljer for din tilmelding:
-</p>
-<p>
-    {% include 'booking/email/snippets/booking_info.html' with booking=booking booker=booking.booker %}
-</p>
-<p>
-    Vi glæder os til at se dig!
-</p>
-<p>
-    <a href="{% full_url 'visit-view' visit.pk %}">Læs mere om tilbuddet her</a>.
-</p>
-<p>
-    På foKUs.ku.dk kan du se alle tilbud fra Københavns Universitet.
-</p>
-<p>
-    Du kan svare på denne besked via følgende URL:<br />
-    <a href="{% full_url 'reply-to-email' reply_nonce %}">{% full_url 'reply-to-email' reply_nonce %}</a>
-</p>
+    <p>Kære {{ recipient.get_full_name }}.</p>
+
+    <p>
+        Vi glæder os til at se dig til {{ visit.title }} den {{ besoeg.display_value }} på Københavns Universitet:
+        <a href="{% full_url 'visit-view' visit.pk %}#mapinfo">{{ visit.locality.full_address }}</a>.
+        Hvis du har spørgsmål vedrørende din tilmelding, kan du skrive til
+        {% include 'booking/email/snippets/contact_addresses.html' with visit=visit %}
+    </p>
+    <p>
+        Detaljer for din tilmelding:
+    </p>
+    <p>
+        {% include 'booking/email/snippets/booking_info.html' with booking=booking booker=booking.booker %}
+    </p>
+    <p>
+        Vi glæder os til at se dig!
+    </p>
+    <p>
+        <a href="{% full_url 'visit-view' visit.pk %}">Læs mere om tilbuddet her</a>.
+    </p>
+    <p>
+        På foKUs.ku.dk kan du se alle tilbud fra Københavns Universitet.
+    </p>
+
+{% elif recipient.user.userprofile.is_host %}
+
+    {# Denne besked sendes til værter #}
+
+    <p>Kære vært.</p>
+
+    <p>
+        Dette er en reminder om, at du skal være vært på besøg
+        <a href="{% full_url 'visit-occ-view' besoeg.pk %}">{{ visit.title }}{% if besoeg.start_datetime %} den {{ besoeg.display_value }}{% endif %}</a>.
+        Besøget afholdes på denne lokalitet
+        <a href="{% full_url 'visit-view' visit.pk %}#mapinfo">{{ visit.locality.full_address }}</a>.
+    </p>
+    <p>
+        Vær opmærksom på, om der er forberedelsestid.
+    </p>
+    <p>
+        <strong>Forberedelsestid</strong>: {{ visit.preparation_time|default:"Ikke angivet" }}
+    </p>
+    <p>
+        Detaljer for tilmelding(er):
+    </p>
+    {% include 'booking/email/snippets/booking_list.html' %}
+
+{% elif recipient.user.userprofile.is_teacher %}
+
+    {# Denne besked sendes til undervisere #}
+
+    <p>Kære underviser.</p>
+    <p>
+        Dette er en reminder om, at du skal være underviser på besøg
+        <a href="{% full_url 'visit-occ-view' besoeg.pk %}">{{ visit.title }}{% if besoeg.start_datetime %} den {{ besoeg.display_value }}{% endif %}</a>.
+        Besøget afholdes på denne lokalitet
+        <a href="{% full_url 'visit-view' visit.pk %}#mapinfo">{{ visit.locality.full_address }}</a>.
+    </p>
+    <p>
+        Vær opmærksom på, om der er forberedelsestid.
+    </p>
+    <p>
+        <strong>Forberedelsestid</strong>: {{ visit.preparation_time|default:"Ikke angivet" }}
+    </p>
+    <p>
+        Detaljer for tilmelding(er):
+    </p>
+
+    {% include 'booking/email/snippets/booking_list.html' %}
+
 {% else %}
-<p>
-    Besøget <a href="{% full_url 'visit-occ-view' besoeg.pk %}">{{ visit.title }} d. {{ besoeg.start_datetime }}</a> er nu færdigplanlagt.
-</p>
-<p>
-    Du kan læse yderligere om besøget på adressen
-    <a href="{% full_url 'visit-occ-view' besoeg.pk %}">{% full_url 'visit-occ-view' besoeg.pk %}</a>
-</p>
+
+    <p>
+        Besøget <a href="{% full_url 'visit-occ-view' besoeg.pk %}">{{ visit.title }} d. {{ besoeg.start_datetime }}</a> er nu færdigplanlagt.
+    </p>
+    <p>
+        Du kan læse yderligere om besøget på adressen
+        <a href="{% full_url 'visit-occ-view' besoeg.pk %}">{% full_url 'visit-occ-view' besoeg.pk %}</a>
+    </p>
+
+{% endif %}
+
+{% include 'booking/email/snippets/reply_link.html' %}
+
 <p>
     Venlig hilsen<br />
     <br />
-    {{ visit.unit }}
+    {{ visit.unit.name }}
 </p>
-{% endif %}

@@ -1,0 +1,21 @@
+<p>Kære {{ recipient.get_full_name }}.</p>
+
+<p>
+    Vi vil sætte stor pris på, hvis du vil tage dig tid til at evaluere besøg
+    <a href="{% full_url 'visit-view' visit.pk %}">{{ visit.title }}</a>
+    der blev gennemført den {{ besoeg.display_value }} på Københavns Universitet.
+    <br />
+    Evaluér her
+    <a href="{{ besoeg.evaluation_link }}">{{ besoeg.evaluation_link }}</a>.
+</p>
+<p>
+    På forhånd tak for hjælpen!
+</p>
+<p>
+    På foKUs.ku.dk kan du se alle tilbud fra Københavns Universitet.
+</p>
+<p>
+    Venlig hilsen<br />
+    <br />
+    {{ visit.unit.name }}
+</p>

@@ -338,6 +338,14 @@ class UserProfile(models.Model):
     def available_roles(self):
         return available_roles[self.get_role()]
 
+    def save(self, *args, **kwargs):
+        result = super(UserProfile, self).save(*args, **kwargs)
+
+        if self.user and not self.user.userperson_set.exists():
+            UserPerson.create(self.user)
+
+        return result
+
 
 class EmailLoginEntry(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4)

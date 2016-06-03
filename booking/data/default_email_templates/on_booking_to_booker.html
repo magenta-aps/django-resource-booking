@@ -29,15 +29,12 @@
 <p>
     <a href="{% full_url 'visit-view' visit.pk %}">Læs mere om tilbuddet her</a>.
 </p>
-<p>
-    Du kan svare på denne besked via følgende URL:<br />
-    <a href="{% full_url 'reply-to-email' reply_nonce %}">{% full_url 'reply-to-email' reply_nonce %}</a>
-</p>
+{% include 'booking/email/snippets/reply_link.html' %}
 <p>
     På foKUs.ku.dk kan du se alle tilbud fra Københavns Universitet.
 </p>
 <p>
     Venlig hilsen<br />
     <br />
-    {{ visit.unit }}
+    {{ visit.unit.name }}
 </p>
