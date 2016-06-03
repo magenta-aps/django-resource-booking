@@ -919,6 +919,10 @@ class Resource(models.Model):
         (AUDIENCE_ALL, _(u'Alle'))
     )
 
+    audience_choices_without_none = [
+        x for x in audience_choices if x[0] is not None
+    ]
+
     # Institution choice - primary or secondary school.
     PRIMARY = 0
     SECONDARY = 1
