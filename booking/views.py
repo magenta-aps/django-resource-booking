@@ -2295,10 +2295,14 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
 
             booking = forms['bookingform'].save()
 
+            put_in_waitinglist = False
+
             attendee_count = booking.booker.attendee_count
             if booking.visitoccurrence.visit.do_create_waiting_list and \
                     attendee_count > available_seats:
                 # Put in waiting list
+                put_in_waitinglist = True
+
                 if booking.visitoccurrence.waiting_list_closed:
                     booking.delete()
                     raise Exception(_(u"Cannot place booking with in waiting "
@@ -2311,6 +2315,7 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
                                       u" in waiting list; there are only %d "
                                       u"spots") %
                                     (attendee_count, waitinglist_capacity))
+
                 booking.waitinglist_spot = \
                     booking.visitoccurrence.next_waiting_list_spot
 
@@ -2321,7 +2326,12 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
             # Trigger updating of search index
             booking.visitoccurrence.save()
 
-            booking.autosend(EmailTemplate.NOTIFY_GUEST__BOOKING_CREATED)
+            if put_in_waitinglist:
+                booking.autosend(
+                    EmailTemplate.NOTIFY_GUEST__BOOKING_CREATED_WAITING
+                )
+            else:
+                booking.autosend(EmailTemplate.NOTIFY_GUEST__BOOKING_CREATED)
 
             booking.autosend(EmailTemplate.NOTIFY_EDITORS__BOOKING_CREATED)
 
