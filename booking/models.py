@@ -848,6 +848,26 @@ class EmailTemplate(models.Model):
                     variables.append(unicode(node.filter_expression))
         return variables
 
+    @staticmethod
+    def add_defaults_to_all():
+        for visit in Visit.objects.all():
+            for template_key in EmailTemplate.default:
+                print EmailTemplate.get_name(template_key)
+                if visit.visitautosend_set.filter(
+                    template_key=template_key
+                ).count() == 0:
+                    print "    create autosends for visit %d" % visit.id
+                    autosend = VisitAutosend(
+                        template_key=template_key,
+                        visit=visit,
+                        enabled=True
+                    )
+                    autosend.save()
+                    for occurrence in visit.visitoccurrence_set.all():
+                        print "        creating inheriting autosends for " \
+                              "occurrence %d" % occurrence.id
+                        occurrence.create_inheriting_autosends()
+
 
 class ObjectStatistics(models.Model):
 
