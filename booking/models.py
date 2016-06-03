@@ -901,8 +901,8 @@ class Resource(models.Model):
     )
 
     # Target audience choice - student or teacher.
-    AUDIENCE_TEACHER = 2**0
-    AUDIENCE_STUDENT = 2**1
+    AUDIENCE_TEACHER = 2**1
+    AUDIENCE_STUDENT = 2**2
     AUDIENCE_ALL = AUDIENCE_TEACHER | AUDIENCE_STUDENT
 
     audience_choices = (
