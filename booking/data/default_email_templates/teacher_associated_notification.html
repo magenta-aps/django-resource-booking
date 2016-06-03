@@ -1,7 +1,7 @@
-<p>Kære vært.</p>
+<p>Kære underviser.</p>
 
 <p>
-    Du er nu sat på som vært til besøg
+    Du er nu sat på som underviser til besøg
     <a href="{% full_url 'visit-occ-view' besoeg.pk %}">{{ visit.title }}{% if besoeg.start_datetime %} den {{ besoeg.display_value }}{% endif %}</a>.
     Besøget afholdes på
     <a href="{% full_url 'visit-view' visit.pk %}#mapinfo">{{ visit.locality.full_address }}</a>.

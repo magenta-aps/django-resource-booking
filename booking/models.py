@@ -114,6 +114,14 @@ class Person(models.Model):
     def get_full_email(self):
         return full_email(self.email, self.name)
 
+    def save(self, *args, **kwargs):
+        result = super(Person, self).save(*args, **kwargs)
+
+        if not self.userperson_set.exists():
+            UserPerson.create(self)
+
+        return result
+
 
 class UserPerson(models.Model):
     class Meta:
@@ -250,7 +258,8 @@ class Unit(models.Model):
     contact = models.ForeignKey(
         Person, null=True, blank=True,
         verbose_name=_(u'Kontaktperson'),
-        related_name="contactperson_for_units"
+        related_name="contactperson_for_units",
+        on_delete=models.SET_NULL,
     )
     url = models.URLField(
         verbose_name=u'Hjemmeside',
@@ -559,6 +568,8 @@ class EmailTemplate(models.Model):
     NOTIFY_GUEST__SPOT_REJECTED = 18  # Ticket 13804
     NOTIFY_EDITORS__SPOT_REJECTED = 19  # Ticket 13804
     NOTIFY_GUEST__BOOKING_CREATED_WAITING = 20  # ticket 13804
+    NOTIFY_TEACHER__ASSOCIATED = 21  # Ticket 15701
+    NOTIFY_ALL_EVALUATION = 22  # Ticket 15701
 
     # Choice labels
     key_choices = [
@@ -587,6 +598,8 @@ class EmailTemplate(models.Model):
          _(u'Anmodning om deltagelse i besøg til værter')),
         (NOTIFY_HOST__ASSOCIATED,
          _(u'Notifikation til vært om tilknytning til besøg')),
+        (NOTIFY_TEACHER__ASSOCIATED,
+         _(u'Notifikation til underviser om tilknytning til besøg')),
         (NOTIFY_HOST__REQ_ROOM,
          _(u'Anmodning til lokaleansvarlig om lokale')),
         (NOTIFY_ALL__BOOKING_COMPLETE,
@@ -595,6 +608,8 @@ class EmailTemplate(models.Model):
          _(u'Besked om aflyst besøg til alle involverede')),
         (NOTITY_ALL__BOOKING_REMINDER,
          _(u'Reminder om besøg til alle involverede')),
+        (NOTIFY_ALL_EVALUATION,
+         _(u'Besked til alle om evaluering')),
         (NOTIFY_HOST__HOSTROLE_IDLE,
          _(u'Notifikation til koordinatorer om ledig værtsrolle på besøg')),
         (SYSTEM__BASICMAIL_ENVELOPE,
@@ -615,12 +630,14 @@ class EmailTemplate(models.Model):
     visitoccurrence_manual_keys = [
         NOTIFY_GUEST__GENERAL_MSG,
         NOTIFY_HOST__ASSOCIATED,
+        NOTIFY_TEACHER__ASSOCIATED,
         NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
         NOTIFY_HOST__REQ_HOST_VOLUNTEER,
         NOTIFY_HOST__REQ_ROOM,
         NOTIFY_ALL__BOOKING_COMPLETE,
         NOTIFY_ALL__BOOKING_CANCELED,
         NOTITY_ALL__BOOKING_REMINDER,
+        NOTIFY_ALL_EVALUATION,
         NOTIFY_GUEST_REMINDER,
         NOTIFY_GUEST__SPOT_OPEN
     ]
@@ -683,6 +700,10 @@ class EmailTemplate(models.Model):
     # Template that will be autosent to hosts
     # when they are added to an occurrence
     occurrence_added_host_key = NOTIFY_HOST__ASSOCIATED
+
+    # Template that will be autosent to teachers
+    # when they are added to an occurrence
+    occurrence_added_teacher_key = NOTIFY_TEACHER__ASSOCIATED
 
     # Templates where the "days" field makes sense
     enable_days = [
@@ -1990,6 +2011,30 @@ class Visit(Resource):
             users = self.unit.get_editors()
 
         return users
+
+    @property
+    def contact_person_persons(self):
+        return Person.objects.filter(
+            userperson__contact_visit__pk=self.pk
+        )
+
+    @property
+    def contact_person_users(self):
+        return User.objects.filter(
+            userperson__contact_visit__pk=self.pk
+        )
+
+    @property
+    def room_responsible_persons(self):
+        return Person.objects.filter(
+            userperson__roomadmin_visit_new__pk=self.pk
+        )
+
+    @property
+    def room_responsible_users(self):
+        return User.objects.filter(
+            userperson__roomadmin_visit_new__pk=self.pk
+        )
 
 
 class VisitOccurrence(models.Model):

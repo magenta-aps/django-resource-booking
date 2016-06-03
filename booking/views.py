@@ -2336,8 +2336,9 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
             booking.autosend(EmailTemplate.NOTIFY_EDITORS__BOOKING_CREATED)
 
             if booking.visitoccurrence.needs_teachers:
-                booking.autosend(EmailTemplate.
-                                 NOTIFY_HOST__REQ_TEACHER_VOLUNTEER)
+                booking.autosend(
+                    EmailTemplate.NOTIFY_HOST__REQ_TEACHER_VOLUNTEER
+                )
 
             if booking.visitoccurrence.needs_hosts:
                 booking.autosend(EmailTemplate.NOTIFY_HOST__REQ_HOST_VOLUNTEER)

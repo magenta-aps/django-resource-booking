@@ -1,0 +1,27 @@
+<p>Kære {{ recipient.get_full_name }}.</p>
+
+<p>
+    Der er nu plads på besøg {{ visit.title }} den {{ besoeg.display_value }} på Københavns Universitet: {{ visit.locality.name_and_address }}.
+    Hvis du ønsker at deltage i besøget, skal du klikke <a href="{% full_url 'booking-accept-view' booking.id token_user=booking.booker %}">her</a> og svare ja eller nej til at deltage.
+    Pladserne bliver fordelt efter først-til-mølle-princippet.
+</p>
+<p>
+    Hvis du har spørgsmål til din tilmelding, kan du skrive til
+    {% include 'booking/email/snippets/contact_addresses.html' with visit=visit %}
+</p>
+<p>Detaljer for din tilmelding:</p>
+<p>
+    {% include 'booking/email/snippets/booking_info.html' with booking=booking booker=booking.booker %}
+</p>
+<p>Vi håber at se dig!</p>
+<p>
+    <a href="{% full_url 'visit-view' visit.pk %}">Læs mere om tilbuddet her</a>.
+</p>
+<p>
+    På <a href="fokus.ku.dk">foKUs.ku.dk</a> kan du se alle tilbud fra Københavns Universitet.
+</p>
+<p>
+    Venlig hilsen<br />
+    <br />
+    {{ visit.unit }}
+</p>

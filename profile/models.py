@@ -9,7 +9,7 @@ from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 import booking.models
-from booking.models import Unit, Resource
+from booking.models import Unit, Resource, UserPerson
 from booking.utils import get_related_content_types
 import uuid
 
@@ -337,6 +337,14 @@ class UserProfile(models.Model):
     @property
     def available_roles(self):
         return available_roles[self.get_role()]
+
+    def save(self, *args, **kwargs):
+        result = super(UserProfile, self).save(*args, **kwargs)
+
+        if self.user and not self.user.userperson_set.exists():
+            UserPerson.create(self.user)
+
+        return result
 
 
 class EmailLoginEntry(models.Model):

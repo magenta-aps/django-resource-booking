@@ -1,0 +1,15 @@
+{% load i18n %}
+{% if form.room_contact %}
+<div class="row form-group">
+    <div class="col-sm-2">
+        <label for="{{ form.contacts.id_for_label }}" class="control-label">{{ form.room_contact.label }}:</label>
+    </div>
+    <div class="col-sm-7">
+        {% trans 'Vælg lokaleansvarlige' %}
+        {{ form.room_contact }}
+    </div>
+    <div class="col-sm-3 with-errors">
+        {{ form.room_contact.errors }}
+    </div>
+</div>
+{% endif %}
