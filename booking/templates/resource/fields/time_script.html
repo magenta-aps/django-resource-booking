@@ -259,7 +259,18 @@
             count: 10,
             wkst: RRule.MO
         });
-        
+
+        var rrdatepickStart = $('#input-start').datepicker({
+            language: 'da',
+            format: 'dd-mm-yyyy',
+            weekStart: 1,
+            calendarWeeks: true,
+            todayHighlight: true,
+            startDate: 'Date',
+            clearBtn: false,
+            autoclose: true
+        });
+
         var rrdatepick = $('#input-until').datepicker({
             language: 'da',
             format: 'dd-mm-yyyy',
@@ -287,7 +298,21 @@
         
         
         // RRule input methods
-        
+
+        rrdatepickStart.datepicker().on('hide', function(ev) {
+            if ($(this).val() != '') {
+                var dparts = $(this).val().split('-');
+                var d = new Date();
+                d.setDate(dparts[0]);
+                d.setMonth(parseInt(dparts[1]) - 1);
+                d.setFullYear(dparts[2]);
+                rule.options.dtstart = d;
+                updateRRDates();
+            } else {
+                return false;
+            }
+        });
+
         rrdatepick.datepicker().on('hide', function(ev) {
             if ($(this).val() != '') {
                 var dparts = $(this).val().split('-');

@@ -129,6 +129,10 @@ $(function() {
         var val = $(this).val(),
             dropdown = $('#existingrooms')[0];
 
+        if (dropdown == undefined) {
+            return;
+        }
+
         while (dropdown.options[1]) {
             dropdown.options[1] = null;
         }
