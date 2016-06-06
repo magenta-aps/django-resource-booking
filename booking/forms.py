@@ -468,7 +468,7 @@ class VisitForm(forms.ModelForm):
                         userprofile__unit__in=self.get_unit_query_set()
                     )
 
-        if unit is not None:
+        if unit is not None and 'locality' in self.fields:
             self.fields['locality'].choices = [BLANK_OPTION] + \
                 [
                     (x.id, x.name_and_address)
