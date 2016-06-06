@@ -414,8 +414,8 @@ class CreateUserView(FormView, UpdateView):
                         [user],
                         user
                     )
-                except:
-                    pass
+                except Exception as e:
+                    print "Error sending mail to user: %s" % e
 
             messages.add_message(
                 request,
