@@ -1813,14 +1813,14 @@ class Visit(Resource):
     ]
 
     needed_hosts = models.IntegerField(
-        default=None,
+        default=0,
         verbose_name=_(u'Nødvendigt antal værter'),
         choices=needed_number_choices,
         blank=False
     )
 
     needed_teachers = models.IntegerField(
-        default=None,
+        default=0,
         verbose_name=_(u'Nødvendigt antal undervisere'),
         choices=needed_number_choices,
         blank=False
