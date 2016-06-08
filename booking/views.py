@@ -15,13 +15,10 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse, reverse_lazy
-from django.db.models import Case
 from django.db.models import Count
-from django.db.models import IntegerField
 from django.db.models import Min
 from django.db.models import Q
 from django.db.models import Sum
-from django.db.models import When
 from django.db.models.functions import Coalesce
 from django.forms.models import model_to_dict
 from django.http import Http404
