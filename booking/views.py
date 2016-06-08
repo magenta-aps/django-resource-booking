@@ -15,10 +15,13 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse, reverse_lazy
+from django.db.models import Case
 from django.db.models import Count
+from django.db.models import IntegerField
 from django.db.models import Min
-from django.db.models import Sum
 from django.db.models import Q
+from django.db.models import Sum
+from django.db.models import When
 from django.db.models.functions import Coalesce
 from django.forms.models import model_to_dict
 from django.http import Http404
@@ -651,10 +654,6 @@ class SearchView(ListView):
 
             qs = self.model.objects.search(searchexpression)
 
-            qs = qs.annotate(
-                num_bookings=Count('visit__visitoccurrence__bookings')
-            )
-
             date_cond = Q()
 
             t_from = self.get_date_from_request("from")
@@ -691,13 +690,25 @@ class SearchView(ListView):
                 # as well as the ones matching the date limit. We do this
                 # with the following OR condition:
                 qs = qs.filter(
-                    # Stuff that is not bookable
+                    # Stuff that is not bookable, eg. materials
                     Q(visit__isnull=True) |
                     # Anything without any specific booking times
-                    Q(visit__visitoccurrence__isnull=True) |
+                    Q(
+                        pk__in=Resource.objects.exclude(
+                            visit__visitoccurrence__bookable=True
+                        )
+                    ) |
                     # The actual date conditions
                     date_cond
                 )
+
+                # Simplify, since the above conditions are slow when
+                # used for making facets.
+                qs = Resource.objects.filter(pk__in=[x.pk for x in qs])
+
+            qs = qs.annotate(
+                num_bookings=Count('visit__visitoccurrence__bookings'),
+            )
 
             qs = qs.distinct()
 
