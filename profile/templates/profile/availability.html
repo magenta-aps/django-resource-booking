@@ -23,7 +23,7 @@
             <p>{% blocktrans with name=object.user %}{{ name }} har ikke angivet mulige tidspunkter{% endblocktrans %}</p>
             {% endif %}
             {% if request.user.pk = object.user.pk %}
-                <a href="" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
+                <a href="{% url 'availability-edit' %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
             {% endif %}
 
             <div class="divider"></div>
@@ -38,7 +38,7 @@
             <p>{% blocktrans with name=object.user %}Der er ikke angivet følgende yderligere information for {{ name }}.{% endblocktrans %}</p>
             {% endif %}
             {% if request.user.pk = object.user.pk %}
-                <a href="" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
+                <a href="{% url 'user_edit' request.user.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
             {% endif %}
 
             <div class="divider"></div>

@@ -353,7 +353,11 @@ class CreateUserView(FormView, UpdateView):
                     )
             return result
         else:
-            raise PermissionDenied
+            # Allow all users to edit themselves
+            if self.object.pk == self.request.user.pk:
+                return result
+            else:
+                raise PermissionDenied
 
     def get(self, request, *args, **kwargs):
         self.get_object()
@@ -462,7 +466,10 @@ class CreateUserView(FormView, UpdateView):
 
     def get_success_url(self):
         try:
-            return reverse("user_list")
+            if self.request.user.userprofile.get_role() in EDIT_ROLES:
+                return reverse("user_list")
+            else:
+                return reverse("user_profile")
         except:
             return '/'
 
