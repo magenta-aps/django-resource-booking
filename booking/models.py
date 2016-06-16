@@ -1,4 +1,5 @@
 # encoding: utf-8
+from django.core import validators
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMultiAlternatives
 from django.db import models
@@ -3409,7 +3410,8 @@ class Booker(models.Model):
     attendee_count = models.IntegerField(
         blank=True,
         null=True,
-        verbose_name=u'Antal deltagere'
+        verbose_name=u'Antal deltagere',
+        validators=[validators.MinValueValidator(int(1))]
     )
 
     def as_searchtext(self):
