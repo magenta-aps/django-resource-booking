@@ -943,7 +943,31 @@ class SearchView(ListView):
             self.model.resource_type_choices,
             self.request.GET.getlist("t"),
         )
-
+        context['hiddenrepeats'] = []
+        list = self.request.GET.getlist("i", None)
+        if list is not None:
+            for x in list:
+                context['hiddenrepeats'].append({'name': "i", 'value': x})
+        list = self.request.GET.getlist("a", None)
+        if list is not None:
+            for x in list:
+                context['hiddenrepeats'].append({'name': "a", 'value': x})
+        list = self.request.GET.getlist("t", None)
+        if list is not None:
+            for x in list:
+                context['hiddenrepeats'].append({'name': "t", 'value': x})
+        list = self.request.GET.getlist("f", None)
+        if list is not None:
+            for x in list:
+                context['hiddenrepeats'].append({'name': "f", 'value': x})
+        list = self.request.GET.getlist("from", None)
+        if list is not None:
+            for x in list:
+                context['hiddenrepeats'].append({'name': "from", 'value': x})
+        list = self.request.GET.getlist("to", None)
+        if list is not None:
+            for x in list:
+                context['hiddenrepeats'].append({'name': "to", 'value': x})
         gym_subject_choices = []
         gs_subject_choices = []
 
