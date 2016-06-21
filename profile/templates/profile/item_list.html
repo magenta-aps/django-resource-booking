@@ -1,10 +1,10 @@
 {% load i18n %}
-<div class="col-sm-4">
+<div class="col-sm-6">
     <div class="panel panel-bookings">
         <div class="panel-heading {{ list.color }}">
             <h3 class="panel-title">
                 {% if list.title.link %}
-                    <a href="{{ list.title.link }}">{{ list.title.text }}</a>
+                    {{ list.title.text }}
                 {% else %}
                     {{ list.title }}
                 {% endif %}
