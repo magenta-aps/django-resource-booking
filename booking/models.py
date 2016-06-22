@@ -1791,7 +1791,7 @@ class Visit(Resource):
     custom_available = models.BooleanField(
         default=False,
         blank=True,
-        verbose_name=_(u'Tilpasset mulighed')
+        verbose_name=_(u'Andet')
     )
 
     custom_name = models.CharField(
