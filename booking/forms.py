@@ -13,7 +13,6 @@ from booking.models import BLANK_LABEL, BLANK_OPTION
 from django import forms
 from django.db.models import Q
 from django.db.models.expressions import OrderBy
-from django.contrib.auth.models import User
 from django.forms import SelectMultiple, CheckboxSelectMultiple, CheckboxInput
 from django.forms import RadioSelect, EmailInput
 from django.forms import formset_factory, inlineformset_factory
@@ -21,7 +20,6 @@ from django.forms import TextInput, NumberInput, Textarea, Select
 from django.forms import HiddenInput
 from django.utils import formats, timezone
 from django.utils.translation import ugettext_lazy as _
-from profile.models import HOST, TEACHER
 from tinymce.widgets import TinyMCE
 from .fields import ExtensibleMultipleChoiceField
 
