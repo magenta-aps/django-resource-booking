@@ -411,8 +411,6 @@ class VisitForm(forms.ModelForm):
             'tags': CheckboxSelectMultiple(),
             'contacts': SelectMultiple(),
             'room_contact': CheckboxSelectMultiple(),
-            'default_hosts': CheckboxSelectMultiple(),
-            'default_teachers': CheckboxSelectMultiple()
         }
         labels = {
             'custom_name': _('Navn')
@@ -442,31 +440,6 @@ class VisitForm(forms.ModelForm):
         super(VisitForm, self).__init__(*args, **kwargs)
         self.fields['unit'].queryset = self.get_unit_query_set()
         self.fields['type'].widget = HiddenInput()
-
-        # Not all resources have hosts and teachers!
-        if 'default_hosts' in self.fields \
-                and 'default_teachers' in self.fields:
-            # The operation is 'update'
-            if kwargs['instance'] and kwargs['instance'].unit_id:
-                self.fields['default_hosts'].queryset = User.objects.filter(
-                    userprofile__user_role__role=HOST,
-                    userprofile__unit_id=kwargs['instance'].unit_id
-                )
-                self.fields['default_teachers'].queryset = \
-                    User.objects.filter(
-                        userprofile__user_role__role=TEACHER,
-                        userprofile__unit_id=kwargs['instance'].unit_id
-                    )
-            else:  # The operation is 'create'
-                self.fields['default_hosts'].queryset = User.objects.filter(
-                    userprofile__user_role__role=HOST,
-                    userprofile__unit__in=self.get_unit_query_set()
-                )
-                self.fields['default_teachers'].queryset = \
-                    User.objects.filter(
-                        userprofile__user_role__role=TEACHER,
-                        userprofile__unit__in=self.get_unit_query_set()
-                    )
 
         if unit is not None and 'locality' in self.fields:
             self.fields['locality'].choices = [BLANK_OPTION] + \
@@ -577,7 +550,6 @@ class StudentForADayForm(VisitForm):
                   'contacts', 'unit',
                   'needed_hosts', 'needed_teachers',
                   'preparation_time', 'comment',
-                  'default_hosts', 'default_teachers',
                   )
         widgets = VisitForm.Meta.widgets
 
@@ -619,7 +591,6 @@ class TeacherVisitForm(VisitForm):
                   'contacts', 'room_contact', 'unit',
                   'needed_hosts', 'needed_teachers',
                   'preparation_time', 'comment',
-                  'default_hosts', 'default_teachers',
                   )
         widgets = VisitForm.Meta.widgets
 
@@ -638,7 +609,6 @@ class ClassVisitForm(VisitForm):
                   'contacts', 'room_contact', 'unit',
                   'needed_hosts', 'needed_teachers',
                   'preparation_time', 'comment',
-                  'default_hosts', 'default_teachers',
                   )
         widgets = VisitForm.Meta.widgets
         labels = VisitForm.Meta.labels

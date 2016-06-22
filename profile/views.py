@@ -213,8 +213,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     'link': reverse('search') + '?u=-3'
                 },
                 'queryset': Resource.objects.filter(
-                    Q(visit__visitoccurrence=taught_vos) |
-                    Q(visit__default_teachers=self.request.user)
+                    visit__visitoccurrence=taught_vos
                 ).order_by("title"),
             },
             {

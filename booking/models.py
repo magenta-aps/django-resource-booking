@@ -1827,26 +1827,6 @@ class Visit(Resource):
         blank=False
     )
 
-    default_hosts = models.ManyToManyField(
-        User,
-        blank=True,
-        limit_choices_to={
-            'userprofile__user_role__role': HOST
-        },
-        related_name="hosted_visits",
-        verbose_name=_(u'Faste værter')
-    )
-
-    default_teachers = models.ManyToManyField(
-        User,
-        blank=True,
-        limit_choices_to={
-            'userprofile__user_role__role': TEACHER
-        },
-        related_name="taught_visits",
-        verbose_name=_(u'Faste undervisere')
-    )
-
     @property
     def bookable_occurrences(self):
         return self.visitoccurrence_set.filter(
@@ -1899,14 +1879,6 @@ class Visit(Resource):
         occ.save()
         occ.create_inheriting_autosends()
         occ.ensure_statistics()
-
-        if self.default_hosts.exists() or self.default_teachers.exists():
-
-            for x in self.default_hosts.all():
-                occ.hosts.add(x)
-
-            for x in self.default_teachers.all():
-                occ.teachers.add(x)
 
         # Copy rooms
         if self.rooms.exists():
