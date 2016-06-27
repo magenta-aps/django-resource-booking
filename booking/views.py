@@ -1999,7 +1999,8 @@ class VisitOccurrenceNotifyView(LoginRequiredMixin, ModalMixin,
                                         user.email,
                                         user.get_full_name())
                     for user in unit.get_hosts()
-                    if user.email is not None
+                    if user.email is not None and
+                    user not in visitoccurrence.hosts_rejected.all()
                 }
             },
             'potential_teachers': {
@@ -2012,7 +2013,8 @@ class VisitOccurrenceNotifyView(LoginRequiredMixin, ModalMixin,
                                         user.email,
                                         user.get_full_name())
                     for user in unit.get_teachers()
-                    if user.email is not None
+                    if user.email is not None and
+                    user not in visitoccurrence.teachers_rejected.all()
                 }
             }
         }
