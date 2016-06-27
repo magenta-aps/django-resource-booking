@@ -2082,6 +2082,16 @@ class VisitOccurrence(models.Model):
         verbose_name=_(u'Værter')
     )
 
+    hosts_rejected = models.ManyToManyField(
+        User,
+        blank=True,
+        limit_choices_to={
+            'userprofile__user_role__role': HOST
+        },
+        related_name='rejected_hosted_visitoccurrences',
+        verbose_name=_(u'Værter, som har afslået')
+    )
+
     teachers = models.ManyToManyField(
         User,
         blank=True,
@@ -2090,6 +2100,16 @@ class VisitOccurrence(models.Model):
         },
         related_name="taught_visitoccurrences",
         verbose_name=_(u'Undervisere')
+    )
+
+    teachers_rejected = models.ManyToManyField(
+        User,
+        blank=True,
+        limit_choices_to={
+            'userprofile__user_role__role': TEACHER
+        },
+        related_name='rejected_taught_visitoccurrences',
+        verbose_name=_(u'Undervisere, som har afslået')
     )
 
     STATUS_NOT_NEEDED = 0

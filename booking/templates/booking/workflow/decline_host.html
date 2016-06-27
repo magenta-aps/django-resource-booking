@@ -2,23 +2,23 @@
 {% load staticfiles %}
 {% load i18n %}
 
-{% block htmltitle %} - {% blocktrans with object=object %}Bliv underviser for {{ object }}{% endblocktrans %}{% endblock %}
+{% block htmltitle %} - {% blocktrans with object=object %}Afslå at blive vært for {{ object }}{% endblocktrans %}{% endblock %}
 
 {% block content %}
     {% include 'common/breadcrumbrow.html' %}
 
     <div class="row titlebar hidden-print">
         <div class="col-sm-12 col-md-9">
-            <h2>{% blocktrans with object=object %}Bliv underviser for {{ object }}{% endblocktrans %}</h2>
+            <h2>{% blocktrans with object=object %}Afslå at blive vært for {{ object }}{% endblocktrans %}</h2>
         </div>
         <div class="divider"></div>
     </div>
     {% if view.is_valid %}
         {% if request.method == "GET" %}
-            <form name="becometeacherform" id="becometeacherform" action="{% url 'become-teacher' object.pk %}" method="post">
+            <form name="declineehostform" id="declinehostform" action="{% url 'decline-host' object.pk %}" method="post">
                 {% csrf_token %}
 
-                <p>{% blocktrans with object=object %}Ønsker du at blive underviser for besøget {{ object }}?{% endblocktrans %}</p>
+                <p>{% blocktrans with object=object %}Skriv hvorfor du ikke ønsker at blive vært for besøget {{ object }}{% endblocktrans %}</p>
 
                 <div class="row">
                     <label class="col-sm-2 control-label {{ form.comment.css_classes }}" for="{{ form.comment.id_for_label }}">{{ form.comment.label }}:</label>
@@ -31,7 +31,7 @@
                 </div>
                 <div class="row">
                     <div class="col-sm-12">
-                        <input class="btn btn-success btn-sm" type="submit" value="{% trans 'Bliv underviser' %}" name="confirm" />
+                        <input class="btn btn-danger btn-sm" type="submit" value="{% trans 'Afslå' %}" name="cancel" />
                     </div>
                 </div>
             </form>
@@ -39,7 +39,7 @@
             <div class="row">
                 <div class="col-sm-12 col-md-8">
                     <p>
-                        {% blocktrans with object=object %}Du er nu blevet sat som underviser for besøget {{ object }}.{% endblocktrans %}
+                        {% blocktrans with object=object %}Du har nu afslået at blive vært for besøget {{ object }}.{% endblocktrans %}
                     </p>
                     <p>
                         <a href="{% url 'visit-occ-view' object.pk %}">{% trans 'Klik her for at vende tilbage til besøget' %}</a>
@@ -51,12 +51,12 @@
         <div class="row">
             <div class="col-sm-12 col-md-8">
                 <p>
-                    {% trans 'Det er ikke muligt at blive underviser for besøget på grund af følgende:' %}
-                    <ul>
+                    {% trans 'Det er ikke muligt at blive vært for besøget på grund af følgende:' %}
+                <ul>
                     {% for error in view.errors %}
                         <li>{{ error }}</li>
                     {% endfor %}
-                    </ul>
+                </ul>
                 </p>
                 <p>
                     <a href="{% url 'visit-occ-view' object.pk %}">{% trans 'Klik her for at vende tilbage til besøget' %}</a>

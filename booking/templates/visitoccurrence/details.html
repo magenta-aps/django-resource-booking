@@ -102,11 +102,18 @@
                             {% blocktrans with found=object.teachers.all|length needed=object.visit.needed_teachers %}{{ found }}/{{ needed }} undervisere fundet{% endblocktrans %}
                             {% if can_edit %}
                                 <a href="{% url 'change-visit-occ-teachers' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
-                            {% elif request.user.userprofile.is_teacher and object.needs_teachers %}
-                                {% if request.user in object.teachers.all %}
-                                    (allerede underviser for dette besøg)
+                            {% elif request.user.userprofile.is_teacher %}
+                                {% if object.needs_teachers %}
+                                    {% if request.user in object.teachers.all %}
+                                        (allerede underviser for dette besøg)
+                                    {% else %}
+                                        <a href="{% url 'become-teacher' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Bliv underviser for dette besøg' %}</a>
+                                        {% if teacher %}
+                                            <a href="{% url 'decline-teacher' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Jeg ønsker ikke at være underviser' %}</a>
+                                        {% endif %}
+                                    {% endif %}
                                 {% else %}
-                                    <a href="{% url 'become-teacher' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Bliv underviser for dette besøg' %}</a>
+                                    <button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#teachers-found" >{% trans 'Alle fundet' %}</button>
                                 {% endif %}
                             {% endif %}
                         </dd>
@@ -116,11 +123,18 @@
                             {% blocktrans with found=object.hosts.all|length needed=object.visit.needed_hosts %}{{ found }}/{{ needed }} værter fundet{% endblocktrans %}
                             {% if can_edit %}
                                 <a href="{% url 'change-visit-occ-hosts' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
-                            {% elif request.user.userprofile.is_host and object.needs_hosts %}
-                                {% if request.user in object.hosts.all %}
-                                    {% trans '(allerede vært for dette besøg)' %}
+                            {% elif request.user.userprofile.is_host %}
+                                {% if object.needs_hosts %}
+                                    {% if request.user in object.hosts.all %}
+                                        {% trans '(allerede vært for dette besøg)' %}
+                                    {% else %}
+                                        <a href="{% url 'become-host' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Bliv vært for dette besøg.' %}</a>
+                                        {% if host %}
+                                            <a href="{% url 'decline-host' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Jeg ønsker ikke at være vært' %}</a>
+                                        {% endif %}
+                                    {% endif %}
                                 {% else %}
-                                    <a href="{% url 'become-host' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Bliv vært for dette besøg.' %}</a>
+                                    <button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#hosts-found" >{% trans 'Alle fundet' %}</button>
                                 {% endif %}
                             {% endif %}
                         </dd>
@@ -316,6 +330,8 @@
 
     {% include 'common/modal_contact.html' %}
     {% include 'common/modal_framehost.html' %}
+    {% include 'common/modal_teachers_found.html' %}
+    {% include 'common/modal_hosts_found.html' %}
 
 {% endblock %}
 
