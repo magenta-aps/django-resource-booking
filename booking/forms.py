@@ -116,7 +116,7 @@ class AdminVisitSearchForm(forms.Form):
             ])
 
         self.hiddenfields = []
-        for x in ("a", "t", "f", "g","i"):
+        for x in ("a", "t", "f", "g", "i"):
             for y in qdict.getlist(x, []):
                 self.hiddenfields.append((x, y,))
 
