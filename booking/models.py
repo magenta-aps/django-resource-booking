@@ -736,14 +736,8 @@ class EmailTemplate(models.Model):
 
     default = [
         NOTIFY_GUEST__BOOKING_CREATED,
-        NOTIFY_GUEST__BOOKING_CREATED_WAITING,
         NOTIFY_EDITORS__BOOKING_CREATED,
-        NOTITY_ALL__BOOKING_REMINDER,
         NOTIFY_ALL__BOOKING_COMPLETE,
-        SYSTEM__EMAIL_REPLY,
-        NOTIFY_GUEST__SPOT_ACCEPTED,
-        NOTIFY_GUEST__SPOT_REJECTED,
-        NOTIFY_EDITORS__SPOT_REJECTED
     ]
 
     key = models.IntegerField(
