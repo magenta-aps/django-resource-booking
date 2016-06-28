@@ -10,10 +10,12 @@
 {% endblock %}
 
 {% block content %}
+    {% with success=True %}
     {% include 'booking/snippets/header.html' %}
+    {% endwith %}
 
     <div class="modal-body">
-        <p>{% trans "Tak for din tilmelding! Du hører fra os snarest." %}</p>
+        <p>{% blocktrans with title=visit.title %}Tak for din tilmelding til "{{ title }}". Du hører fra os snarest.{% endblocktrans%}</p>
         <p><a id="rebook" href="{% url 'visit-book' visit.id %}?modal=1">{% trans "Foretag ny tilmelding" %}</a></p>
     </div>
 
