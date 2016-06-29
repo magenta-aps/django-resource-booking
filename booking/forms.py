@@ -672,7 +672,7 @@ VisitAutosendFormSetBase = inlineformset_factory(
     fields=('template_key', 'enabled', 'days'),
     can_delete=True,
     min_num=1,
-    extra=len(EmailTemplate.default)
+    extra=len(EmailTemplate.default) - 1
 )
 
 

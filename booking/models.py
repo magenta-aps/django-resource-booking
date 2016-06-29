@@ -746,6 +746,12 @@ class EmailTemplate(models.Model):
         NOTIFY_EDITORS__SPOT_REJECTED
     ]
 
+    default_enabled = [
+        NOTIFY_GUEST__BOOKING_CREATED,
+        NOTIFY_EDITORS__BOOKING_CREATED,
+        NOTIFY_ALL__BOOKING_COMPLETE
+    ]
+
     key = models.IntegerField(
         verbose_name=u'Type',
         choices=key_choices,

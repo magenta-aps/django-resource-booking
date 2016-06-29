@@ -1506,13 +1506,17 @@ class EditVisitView(EditResourceView):
             if self.object.is_type_bookable:
                 initial = []
                 if not self.object or not self.object.pk:
-                    initial = [
-                        {
-                            'template_key': item,
-                            'active': True,
-                        }
-                        for item in EmailTemplate.default
-                    ]
+                    for item in EmailTemplate.default:
+                        if item in EmailTemplate.default_enabled:
+                            initial.append({
+                                'template_key': item,
+                                'enabled': True,
+                            })
+                        else:
+                            initial.append({
+                                'template_key': item,
+                                'enabled': False,
+                            })
 
                 forms['autosendformset'] = VisitAutosendFormSet(
                     None, instance=self.object, initial=initial
