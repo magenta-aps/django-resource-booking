@@ -153,7 +153,7 @@
                                         {% if event.start_datetime %}
                                             <li data-expired="{% if event.expired %}true{% else %}false{% endif %}">
                                                 <a href="{% url 'visit-occ-view' event.pk %}">
-                                                    {{ event.start_datetime|date:'d-m-Y' }} kl. {{ event.start_datetime|time:'H:i' }}
+                                                    {{ event.start_datetime|date:'d.m.Y' }} kl. {{ event.start_datetime|time:'H.i' }}
                                                     {% if event.expired %}
                                                         <br/>{% trans '(udløbet)' %}
                                                     {% elif event.available_seats != None %}
@@ -172,7 +172,7 @@
                                 <dd>
                                     <ul class="list-unstyled" id="dato">
                                     {% for event in object.future_events %}
-                                        <li>{{ event.start_datetime|date:'d-m-Y' }} kl. {{ event.start_datetime|time:'H:i' }}</li>
+                                        <li>{{ event.start_datetime|date:'d.m.Y' }} kl. {{ event.start_datetime|time:'H.i' }}</li>
                                     {% endfor %}
                                     </ul>
                                 </dd>
