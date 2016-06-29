@@ -63,8 +63,8 @@
                                         </li>
                                     {% endif %}
                                     <li>{% trans 'Hvor:' %} {{ res.display_locality }}</li>
-                                    <li>{% trans 'Oprettet: ' %} {{ res.statistics.created_time|date:'d.m.Y' }}{% blocktrans with time=res.statistics.created_time|time:'H.i' %} kl. {{ time }}</li>
-                                    <li>{% trans 'Opdateret: ' %} {{ res.statistics.updated_time|date:'d.m.Y' }}{% blocktrans with time=res.statistics.updated_time|time:'H.i' %} kl. {{ time }}</li>
+                                    <li>{% trans 'Oprettet: ' %} {{ res.statistics.created_time|date:'d.m.Y' }}{% blocktrans with time=res.statistics.created_time|time:'H.i' %} kl. {{ time }}{% endblocktrans %}</li>
+                                    <li>{% trans 'Opdateret: ' %} {{ res.statistics.updated_time|date:'d.m.Y' }}{% blocktrans with time=res.statistics.updated_time|time:'H.i' %} kl. {{ time }}{% endblocktrans %}</li>
                                 </ul>
                             </div>
                         </a>
