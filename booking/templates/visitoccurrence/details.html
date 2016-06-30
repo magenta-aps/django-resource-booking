@@ -251,6 +251,10 @@
 
                     <h2>{% trans 'Aktivitetslog' %}</h2>
 
+                    <div>
+                        <a href="{% url 'visit-occ-add-logentry' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Tilføj ny log-post' %}</a>&nbsp;
+                    </div>
+                    <div class="divider"></div>
                     <ul class="list-unstyled scroll-400">
                         {% for entry in log_entries %}
                             <li>
@@ -267,9 +271,6 @@
                             </li>
                         {% endfor %}
                     </ul>
-                    <div>
-                        <a href="{% url 'visit-occ-add-logentry' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Tilføj ny log-post' %}</a>&nbsp;
-                    </div>
                 </div>
             </div>
         </div>
@@ -282,6 +283,10 @@
 
                     <h2>{% trans 'Kommentarer' %}</h2>
 
+                    <div>
+                        <a href="{% url 'visit-occ-add-comment' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Tilføj ny kommentar' %}</a>&nbsp;
+                    </div>
+                    <div class="divider"></div>
                     <ul class="list-unstyled scroll-400">
                         {% for comment in object.visitoccurrencecomment_set.all %}
                             <li>
@@ -304,9 +309,6 @@
                             </li>
                         {% endfor %}
                     </ul>
-                    <div>
-                        <a href="{% url 'visit-occ-add-comment' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Tilføj ny kommentar' %}</a>&nbsp;
-                    </div>
                 </div>
             </div>
         </div>
