@@ -248,8 +248,8 @@ class ChangeVisitOccurrenceRoomsView(AutologgerMixin, UpdateWithCancelView):
         self.object = form.save()
 
         self.save_rooms()
-
-        return HttpResponseRedirect(self.get_success_url())
+        result = super(ChangeVisitOccurrenceRoomsView, self).form_valid(form)
+        return result # HttpResponseRedirect(self.get_success_url())
 
     def save_rooms(self):
         # This code is more or less the same as EditVisitView.save_rooms()
