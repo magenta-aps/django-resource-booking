@@ -66,3 +66,43 @@ def import_all():
 
     for key in IMPORT_MAP:
         import_one(key)
+
+
+def export_one(key):
+    basefname = IMPORT_MAP[key]
+
+    fname = os.path.join(DIR, basefname + ".html")
+    fname2 = os.path.join(DIR, basefname + "_subject.txt")
+
+    try:
+        template = EmailTemplate.objects.get(key=key, unit__isnull=True)
+    except EmailTemplate.DoesNotExist:
+        print("Template not found!")
+
+    subject = template.subject
+    body = template.body
+
+    if os.path.exists(fname2):
+        with open(fname2, 'w+') as subject_file:
+            try:
+                subject_file.write(subject.encode('utf8'))
+            except os.error:
+                print("Couldn't write file: %s" % fname2)
+            finally:
+                subject_file.close()
+
+    if os.path.exists(fname):
+        with open(fname, 'w+') as body_file:
+            try:
+                body_file.write(body.encode('utf8'))
+            except os.error:
+                print("Couldn't write file: %s" % fname)
+            finally:
+                body_file.close()
+
+
+def export_all():
+    django.setup()
+
+    for key in IMPORT_MAP:
+        export_one(key)

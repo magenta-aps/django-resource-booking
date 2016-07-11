@@ -3,7 +3,8 @@
 <p>
     Vi vil sætte stor pris på, hvis du vil tage dig tid til at evaluere besøg
     <a href="{% full_url 'visit-view' visit.pk %}">{{ visit.title }}</a>
-    der blev gennemført den {{ besoeg.display_value }} på Københavns Universitet.
+    der blev gennemført {% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date: 'd.m.Y' }}
+    {% blocktrans with time=besoeg.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}{% endif %} på Københavns Universitet.
     <br />
     Evaluér her
     <a href="{{ besoeg.evaluation_link }}">{{ besoeg.evaluation_link }}</a>.

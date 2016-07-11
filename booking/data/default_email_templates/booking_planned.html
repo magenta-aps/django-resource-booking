@@ -3,7 +3,9 @@
     <p>Kære {{ recipient.get_full_name }}.</p>
 
     <p>
-        Vi glæder os til at se dig til {{ visit.title }} den {{ besoeg.display_value }} på Københavns Universitet:
+        Vi glæder os til at se dig til "{{ visit.title }}"{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date: 'd.m.Y' }}
+        {% blocktrans with time=besoeg.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}{% endif %}
+        på Københavns Universitet:
         <a href="{% full_url 'visit-view' visit.pk %}#mapinfo">{{ visit.locality.full_address }}</a>.
         Hvis du har spørgsmål vedrørende din tilmelding, kan du skrive til
         {% include 'booking/email/snippets/contact_addresses.html' with visit=visit %}
@@ -32,7 +34,7 @@
 
     <p>
         Dette er en reminder om, at du skal være vært på besøg
-        <a href="{% full_url 'visit-occ-view' besoeg.pk %}">{{ visit.title }}{% if besoeg.start_datetime %} den {{ besoeg.display_value }}{% endif %}</a>.
+        <a href="{% full_url 'visit-occ-view' besoeg.pk %}">{{ visit.title }}</a>{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date: 'd.m.Y' }}{% blocktrans with time=besoeg.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}{% endif %}.
         Besøget afholdes på denne lokalitet
         <a href="{% full_url 'visit-view' visit.pk %}#mapinfo">{{ visit.locality.full_address }}</a>.
     </p>
@@ -40,10 +42,10 @@
         Vær opmærksom på, om der er forberedelsestid.
     </p>
     <p>
-        <strong>Forberedelsestid</strong>: {{ visit.preparation_time|default:"Ikke angivet" }}
+        Detaljer for tilmelding(er):
     </p>
     <p>
-        Detaljer for tilmelding(er):
+        <strong>Forberedelsestid</strong>: {{ visit.preparation_time|default:"Ikke angivet" }}
     </p>
     {% include 'booking/email/snippets/booking_list.html' %}
 
@@ -54,7 +56,7 @@
     <p>Kære underviser.</p>
     <p>
         Dette er en reminder om, at du skal være underviser på besøg
-        <a href="{% full_url 'visit-occ-view' besoeg.pk %}">{{ visit.title }}{% if besoeg.start_datetime %} den {{ besoeg.display_value }}{% endif %}</a>.
+        <a href="{% full_url 'visit-occ-view' besoeg.pk %}">{{ visit.title }}</a>{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date: 'd.m.Y' }}{% blocktrans with time=besoeg.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}{% endif %}.
         Besøget afholdes på denne lokalitet
         <a href="{% full_url 'visit-view' visit.pk %}#mapinfo">{{ visit.locality.full_address }}</a>.
     </p>
@@ -62,10 +64,10 @@
         Vær opmærksom på, om der er forberedelsestid.
     </p>
     <p>
-        <strong>Forberedelsestid</strong>: {{ visit.preparation_time|default:"Ikke angivet" }}
+        Detaljer for tilmelding(er):
     </p>
     <p>
-        Detaljer for tilmelding(er):
+        <strong>Forberedelsestid</strong>: {{ visit.preparation_time|default:"Ikke angivet" }}
     </p>
 
     {% include 'booking/email/snippets/booking_list.html' %}
