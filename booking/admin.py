@@ -8,12 +8,13 @@ from profile.models import COORDINATOR, FACULTY_EDITOR, EDIT_ROLES
 EXCLUDE_MODELS = set([
     booking_models.Resource,
     booking_models.GymnasieLevel,
+    booking_models.Person,
+    booking_models.UserPerson,
 ])
 
 CLASSES_BY_ROLE = {}
 CLASSES_BY_ROLE[COORDINATOR] = set([
     booking_models.Locality,
-    booking_models.Person,
 ])
 
 CLASSES_BY_ROLE[FACULTY_EDITOR] = set([

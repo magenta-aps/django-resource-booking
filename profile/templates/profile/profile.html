@@ -87,10 +87,10 @@
                             <span class="glyphicon glyphicon-question-sign pull-right" data-toggle="tooltip" data-placement="right" title="{% trans 'En lokalitet er en fysisk adresse, fx det sted hvor et besøg skal afholdes, her kan du redigere lokaliteter.' %}"></span>
                         </h4>
                     </a>
-                    <a class="list-group-item" href="{% url 'admin:booking_person_changelist' %}">
+                    <a class="list-group-item" href="{% url 'admin:booking_lokaleansvarlig_changelist' %}">
                         <h4 class="list-group-item-heading">
-                            {% trans 'Administrér kontaktpersoner' %}
-                            <span class="glyphicon glyphicon-question-sign pull-right" data-toggle="tooltip" data-placement="right" title="{% trans 'Kontaktpersoner er personer, der ikke har adgang til backend i dette bookingmodul. De kan udelukkende svare på henvendelser via e-mail fx fra en gæst, når de er blevet oprettet som kontaktpersoner ved oprettelsen af et tilbud.' %}"></span>
+                            {% trans 'Administrér lokaleansvarlige' %}
+                            <span class="glyphicon glyphicon-question-sign pull-right" data-toggle="tooltip" data-placement="right" title="{% trans 'Lokaleansvarlige er personer eller mailbokse der kan kontaktes for booking af lokaler.' %}"></span>
                         </h4>
                     </a>
                     {% if request.user.userprofile.can_edit_units %}

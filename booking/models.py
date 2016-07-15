@@ -126,8 +126,8 @@ class Person(models.Model):
 
 class UserPerson(models.Model):
     class Meta:
-        verbose_name = _(u'Lokaleanvarlig')
-        verbose_name_plural = _(u'Lokaleanvarlige')
+        verbose_name = _(u'Lokaleanvarlig-eller-kontaktperson')
+        verbose_name_plural = _(u'Lokaleanvarlige-eller-kontaktpersoner')
         ordering = ['person__name', 'user__first_name', 'user__username']
 
     person = models.ForeignKey(Person, blank=True, null=True)
@@ -220,15 +220,34 @@ class UserPerson(models.Model):
         for user in User.objects.all():
             UserPerson.create(user)
 
-        for resource in Resource.objects.all():
-            for person in resource.contact_persons.all():
-                resource.contacts.add(
-                    UserPerson.create(person)
-                )
-            for person in resource.room_responsible.all():
-                resource.room_contact.add(
-                    UserPerson.create(person)
-                )
+
+class LokaleAnsvarlig(models.Model):
+    class Meta:
+        verbose_name = _(u'Lokaleanvarlig')
+        verbose_name_plural = _(u'Lokaleanvarlige')
+
+    name = models.CharField(max_length=50)
+    email = models.EmailField(max_length=64, null=True, blank=True)
+    phone = models.CharField(max_length=14, null=True, blank=True)
+
+    unit = models.ForeignKey("Unit", blank=True, null=True)
+
+    allow_null_unit_editing = True
+
+    def __unicode__(self):
+        return self.name
+
+    def get_name(self):
+        return self.name
+
+    def get_full_name(self):
+        return self.get_name()
+
+    def get_email(self):
+        return self.email
+
+    def get_full_email(self):
+        return full_email(self.email, self.name)
 
 
 # Units (faculties, institutes etc)
@@ -661,13 +680,14 @@ class EmailTemplate(models.Model):
         SYSTEM__EMAIL_REPLY,
     ]
 
-    # Templates that will be autosent to visit.contacts
+    # Templates that will be autosent to visit.tilbudsansvarlig
     contact_person_keys = [
         NOTIFY_EDITORS__BOOKING_CREATED,
         NOTIFY_ALL__BOOKING_CANCELED,
         NOTITY_ALL__BOOKING_REMINDER,
         NOTIFY_EDITORS__SPOT_REJECTED
     ]
+
     # Templates that will be autosent to booker
     booker_keys = [
         NOTIFY_GUEST__BOOKING_CREATED,
@@ -1054,32 +1074,19 @@ class Resource(models.Model):
         verbose_name=_(u'Gentagelser')
     )
 
-    contact_persons = models.ManyToManyField(
-        Person,
+    tilbudsansvarlig = models.ForeignKey(
+        User,
+        verbose_name=_(u'Tilbudsansvarlig'),
+        related_name='tilbudsansvarlig_for_set',
         blank=True,
-        verbose_name=_(u'Kontaktpersoner'),
-        related_name='contact_visit'
+        null=True
     )
 
-    contacts = models.ManyToManyField(
-        UserPerson,
-        blank=True,
-        verbose_name=_(u'Kontaktpersoner'),
-        related_name='contact_visit'
-    )
-
-    room_responsible = models.ManyToManyField(
-        Person,
-        blank=True,
+    lokaleansvarlige = models.ManyToManyField(
+        LokaleAnsvarlig,
         verbose_name=_(u'Lokaleansvarlige'),
-        related_name='roomadmin_visit'
-    )
-
-    room_contact = models.ManyToManyField(
-        UserPerson,
+        related_name='ansvarlig_for_besoeg_set',
         blank=True,
-        verbose_name=_(u'Lokaleansvarlige'),
-        related_name='roomadmin_visit_new'
     )
 
     preparation_time = models.CharField(
@@ -1125,6 +1132,7 @@ class Resource(models.Model):
         blank=True,
         null=True,
         verbose_name=_(u"Oprettet af"),
+        related_name='created_visits_set',
         on_delete=models.SET_NULL
     )
 
@@ -1275,9 +1283,11 @@ class Resource(models.Model):
     def get_recipients(self, template_key):
         recipients = self.unit.get_recipients(template_key)
         if template_key in EmailTemplate.contact_person_keys:
-            contacts = self.contacts.all()
-            if len(contacts) == 0:
-                contacts = [self.created_by]
+            contacts = []
+            if self.tilbudsansvarlig:
+                contacts.append(self.tilbudsansvarlig)
+            elif self.created_by:
+                contacts.append(self.created_by)
             recipients.extend(contacts)
         return recipients
 
@@ -1626,8 +1636,6 @@ class OtherResource(Resource):
         visit.save()
         for link in self.links.all():
             visit.links.add(link)
-        for contact in self.contacts.all():
-            visit.contacts.add(contact)
         for intermediate in self.resourcegymnasiefag_set.all():
             values = [str(intermediate.subject.id)]
             for level in intermediate.level.all():
@@ -1977,43 +1985,8 @@ class Visit(Resource):
         return list(visits)
 
     @property
-    def contact_users(self):
-        users = []
-
-        for x in self.contacts.all():
-            if x.user:
-                users.append(x.user)
-            elif x.person:
-                users.append(x.person)
-
-        if not users:
-            users = self.unit.get_editors()
-
-        return users
-
-    @property
-    def contact_person_persons(self):
-        return Person.objects.filter(
-            userperson__contact_visit__pk=self.pk
-        )
-
-    @property
-    def contact_person_users(self):
-        return User.objects.filter(
-            userperson__contact_visit__pk=self.pk
-        )
-
-    @property
-    def room_responsible_persons(self):
-        return Person.objects.filter(
-            userperson__roomadmin_visit_new__pk=self.pk
-        )
-
-    @property
     def room_responsible_users(self):
-        return User.objects.filter(
-            userperson__roomadmin_visit_new__pk=self.pk
-        )
+        return self.lokaleansvarlige.all()
 
 
 class VisitOccurrence(models.Model):
