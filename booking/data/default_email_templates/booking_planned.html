@@ -3,7 +3,7 @@
     <p>Kære {{ recipient.get_full_name }}.</p>
 
     <p>
-        Vi glæder os til at se dig til "{{ visit.title }}"{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date: 'd.m.Y' }}
+        Vi glæder os til at se dig til "{{ visit.title }}"{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date:'d.m.Y' }}
         {% blocktrans with time=besoeg.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}{% endif %}
         på Københavns Universitet:
         <a href="{% full_url 'visit-view' visit.pk %}#mapinfo">{{ visit.locality.full_address }}</a>.
@@ -34,7 +34,7 @@
 
     <p>
         Dette er en reminder om, at du skal være vært på besøg
-        <a href="{% full_url 'visit-occ-view' besoeg.pk %}">{{ visit.title }}</a>{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date: 'd.m.Y' }}{% blocktrans with time=besoeg.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}{% endif %}.
+        <a href="{% full_url 'visit-occ-view' besoeg.pk %}">{{ visit.title }}</a>{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date:'d.m.Y' }}{% blocktrans with time=besoeg.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}{% endif %}.
         Besøget afholdes på denne lokalitet
         <a href="{% full_url 'visit-view' visit.pk %}#mapinfo">{{ visit.locality.full_address }}</a>.
     </p>
@@ -56,7 +56,7 @@
     <p>Kære underviser.</p>
     <p>
         Dette er en reminder om, at du skal være underviser på besøg
-        <a href="{% full_url 'visit-occ-view' besoeg.pk %}">{{ visit.title }}</a>{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date: 'd.m.Y' }}{% blocktrans with time=besoeg.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}{% endif %}.
+        <a href="{% full_url 'visit-occ-view' besoeg.pk %}">{{ visit.title }}</a>{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date:'d.m.Y' }}{% blocktrans with time=besoeg.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}{% endif %}.
         Besøget afholdes på denne lokalitet
         <a href="{% full_url 'visit-view' visit.pk %}#mapinfo">{{ visit.locality.full_address }}</a>.
     </p>

@@ -2,7 +2,7 @@
 
 <p>
     Du er nu sat på som vært til besøg
-    <a href="{% full_url 'visit-occ-view' besoeg.pk %}">{{ visit.title }}</a>{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date: 'd.m.Y' }}
+    <a href="{% full_url 'visit-occ-view' besoeg.pk %}">{{ visit.title }}</a>{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date:'d.m.Y' }}
     {% blocktrans with time=besoeg.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}{% endif %}.
     Besøget afholdes på
     <a href="{% full_url 'visit-view' visit.pk %}#mapinfo">{{ visit.locality.full_address }}</a>.

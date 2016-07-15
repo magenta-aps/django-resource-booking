@@ -1,7 +1,7 @@
 <p>Kære {{ recipient.get_full_name }}.</p>
 
 <p>
-    Der er nu plads på besøg {{ visit.title }} {% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date: 'd.m.Y' }}
+    Der er nu plads på besøg {{ visit.title }} {% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date:'d.m.Y' }}
     {% blocktrans with time=besoeg.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}{% endif %} på Københavns Universitet: <a href="{% full_url 'visit-view' visit.pk %}#mapinfo">{{ visit.locality.full_address }}</a>.
     Hvis du ønsker at deltage i besøget, skal du klikke <a href="{% full_url 'booking-accept-view' booking.id token_user=booking.booker %}">her</a> og svare ja eller nej til at deltage.
     Pladserne bliver fordelt efter først-til-mølle-princippet.

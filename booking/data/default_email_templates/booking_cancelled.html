@@ -1,6 +1,6 @@
 <p>Kære alle</p>
 <p>
-    Besøg <a href="{% full_url 'visit-view' visit.pk %}">{{ visit.title }}</a>{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date: 'd.m.Y' }}
+    Besøg <a href="{% full_url 'visit-view' visit.pk %}">{{ visit.title }}</a>{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date:'d.m.Y' }}
     {% blocktrans with time=besoeg.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}{% endif %}.
     på Københavns Universitet er desværre blevet aflyst.
     Hvis du har spørgsmål til din tilmelding, kan du skrive til

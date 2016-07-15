@@ -6,7 +6,7 @@
 
     <p>
         Vi glæder os til at se dig til
-        <a href="{% full_url 'visit-view' visit.pk %}">{{ visit.title }}</a>{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date: 'd.m.Y' }}{% blocktrans with time=besoeg.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}{% endif %}
+        <a href="{% full_url 'visit-view' visit.pk %}">{{ visit.title }}</a>{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date:'d.m.Y' }}{% blocktrans with time=besoeg.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}{% endif %}
         på Københavns Universitet:
         <a href="{% full_url 'visit-view' visit.pk %}#mapinfo">{{ visit.locality.full_address }}</a>.
         Hvis du har spørgsmål vedrørende din tilmelding, kan du skrive til
@@ -37,7 +37,7 @@
     <p>
         Dette er en påmindelse om at besøget
         <a href="{% full_url 'visit-view' visit.pk %}">{{ visit.title }}</a>
-        afholdes{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date: 'd.m.Y' }}
+        afholdes{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date:'d.m.Y' }}
         {% blocktrans with time=besoeg.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}{% endif %} på Københavns Universitet:
         <a href="{% full_url 'visit-view' visit.pk %}#mapinfo">{{ visit.locality.full_address }}</a>.
     </p>
