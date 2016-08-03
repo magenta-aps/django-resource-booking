@@ -2067,7 +2067,7 @@ class VisitOccurrence(models.Model):
     )
 
     persons_needed_choices = (
-        (None, _(u"Brug værdi fra tilbud")), 
+        (None, _(u"Brug værdi fra tilbud")),
     ) + tuple((x, x) for x in range(1, 10))
 
     override_needed_hosts = models.IntegerField(
