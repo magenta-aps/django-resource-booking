@@ -51,7 +51,7 @@ urlpatterns = patterns(
         EditMyResourcesView.as_view(),
         name='my-resources'),
 
-    url(r'^availability/(?P<pk>[0-9]+)/?$',
+    url(r'^availability/(?P<user_pk>[0-9]+)/?$',
         AvailabilityView.as_view(),
         name='availability'),
     url(r'^availability/edit/?$',

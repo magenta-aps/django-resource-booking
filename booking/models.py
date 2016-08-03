@@ -26,6 +26,9 @@ from resource_booking import settings
 
 from datetime import timedelta
 
+from profile.constants import TEACHER, HOST
+from profile.constants import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
+
 import uuid
 
 BLANK_LABEL = '---------'
@@ -326,15 +329,12 @@ class Unit(models.Model):
         return [profile.user for profile in profiles]
 
     def get_hosts(self):
-        from profile.models import HOST
         return self.get_users(HOST)
 
     def get_teachers(self):
-        from profile.models import TEACHER
         return self.get_users(TEACHER)
 
     def get_editors(self):
-        from profile.models import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
 
         # Try using all available coordinators
         res = self.get_users(COORDINATOR)
@@ -1089,6 +1089,26 @@ class Resource(models.Model):
         blank=True,
     )
 
+    potentielle_undervisere = models.ManyToManyField(
+        User,
+        verbose_name=_(u'Potentielle undervisere'),
+        related_name='potentiel_underviser_for_set',
+        blank=True,
+        limit_choices_to={
+            'userprofile__user_role__role': TEACHER
+        },
+    )
+
+    potentielle_vaerter = models.ManyToManyField(
+        User,
+        verbose_name=_(u'Potentielle værter'),
+        related_name='potentiel_vaert_for_set',
+        blank=True,
+        limit_choices_to={
+            'userprofile__user_role__role': HOST
+        },
+    )
+
     preparation_time = models.CharField(
         max_length=200,
         null=True,
@@ -1664,11 +1684,6 @@ class OtherResource(Resource):
         for otherresource in OtherResource.objects.all():
             otherresource.clone_to_visit()
             otherresource.delete()
-
-
-# Have to do late import of this here or we will get problems
-# with cyclic dependencies
-from profile.models import TEACHER, HOST  # noqa
 
 
 class Visit(Resource):

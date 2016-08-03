@@ -34,6 +34,9 @@
             {% if user.userprofile.can_create %}
                 <a class="pull-right btn btn-primary margin-bottom-10 margin-right-10" href="{% url 'visit-clone' object.pk %}">{% trans 'Kopier tilbud' %}</a>
             {% endif %}
+            {% if can_edit %}
+                <a class="pull-right btn btn-primary margin-bottom-10 margin-right-10" href="{% url 'visit-simple-ressources' object.pk %}">{% trans 'Redigér ressourcer' %}</a>
+            {% endif %}
             
             <h1>{{ object.title }}</h1>
             <div class="well">

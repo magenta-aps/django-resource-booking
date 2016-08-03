@@ -29,7 +29,7 @@
             </p>
             <p>
                 <a href="{% url 'availability-edit' %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér mulige undervisningstidspunkter' %}</a>
-                <a href="{% url 'availability' request.user.userprofile.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Se dato-oversigt for undervisning' %}</a>
+                <a href="{% url 'availability' request.user.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Se dato-oversigt for undervisning' %}</a>
             </p>
             {% elif request.user.userprofile.is_host %}
             <p>
@@ -37,7 +37,7 @@
             </p>
             <p>
                 <a href="{% url 'availability-edit' %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér mulige tidspunkter' %}</a>
-                <a href="{% url 'availability' request.user.userprofile.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Se dato-oversigt for besøg' %}</a>
+                <a href="{% url 'availability' request.user.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Se dato-oversigt for besøg' %}</a>
             </p>
             {% endif %}
             <div class="divider"></div>

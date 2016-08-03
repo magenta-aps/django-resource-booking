@@ -41,7 +41,7 @@
                                 value="{{ x.pk }}"
                             >
                             {{ x }}
-                            <a href="{% url 'availability' x.userprofile.pk %}#todaysdate"
+                            <a href="{% url 'availability' x.pk %}#todaysdate"
                                role="button" class="btn btn-primary btn-xs"
                                onclick="this.target='_blank'"
                             >
