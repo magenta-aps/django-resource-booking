@@ -36,24 +36,34 @@ class ChangeVisitOccurrenceStartTimeForm(forms.ModelForm):
 class ChangeVisitOccurrenceTeachersForm(forms.ModelForm):
     class Meta:
         model = VisitOccurrence
-        fields = ['teacher_status', 'teachers']
+        fields = ['teachers', 'override_needed_teachers']
         widgets = {'teachers': forms.CheckboxSelectMultiple()}
+
+    send_emails = forms.BooleanField(
+        label=_(u"Udsend emails til nye undervisere der tilknyttes"),
+        initial=True,
+        required=False
+    )
 
     def __init__(self, *args, **kwargs):
         super(ChangeVisitOccurrenceTeachersForm, self)\
             .__init__(*args, **kwargs)
 
-        self.fields['teachers'].queryset = User.objects.filter(
-            userprofile__user_role__role=TEACHER,
-            userprofile__unit_id=kwargs['instance'].visit.unit_id
-        )
+        self.fields['teachers'].queryset = \
+            kwargs['instance'].visit.potentielle_undervisere.all()
 
 
 class ChangeVisitOccurrenceHostsForm(forms.ModelForm):
     class Meta:
         model = VisitOccurrence
-        fields = ['host_status', 'hosts']
+        fields = ['hosts', 'override_needed_hosts']
         widgets = {'hosts': forms.CheckboxSelectMultiple()}
+
+    send_emails = forms.BooleanField(
+        label=_(u"Udsend emails til nye værter der tilknyttes"),
+        initial=True,
+        required=False
+    )
 
     def __init__(self, *args, **kwargs):
         super(ChangeVisitOccurrenceHostsForm, self).__init__(
@@ -61,10 +71,8 @@ class ChangeVisitOccurrenceHostsForm(forms.ModelForm):
             **kwargs
         )
 
-        self.fields['hosts'].queryset = User.objects.filter(
-            userprofile__user_role__role=HOST,
-            userprofile__unit_id=kwargs['instance'].visit.unit_id
-        )
+        self.fields['hosts'].queryset = \
+            kwargs['instance'].visit.potentielle_vaerter.all()
 
 
 class ChangeVisitOccurrenceRoomsForm(forms.ModelForm):

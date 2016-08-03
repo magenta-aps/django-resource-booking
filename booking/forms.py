@@ -339,7 +339,6 @@ class VisitForm(forms.ModelForm):
                   'presentation_available', 'custom_available', 'custom_name',
                   'tilbudsansvarlig', 'unit',
                   'needed_hosts', 'needed_teachers',
-                  'potentielle_vaerter', 'potentielle_undervisere',
                   'preparation_time', 'comment',
                   )
 
@@ -550,7 +549,6 @@ class StudentForADayForm(VisitForm):
                   'duration', 'locality',
                   'tilbudsansvarlig', 'unit',
                   'needed_hosts', 'needed_teachers',
-                  'potentielle_vaerter', 'potentielle_undervisere',
                   'preparation_time', 'comment',
                   )
         widgets = VisitForm.Meta.widgets
@@ -592,7 +590,6 @@ class TeacherVisitForm(VisitForm):
                   'rooms_needed',
                   'tilbudsansvarlig', 'lokaleansvarlige', 'unit',
                   'needed_hosts', 'needed_teachers',
-                  'potentielle_vaerter', 'potentielle_undervisere',
                   'preparation_time', 'comment',
                   )
         widgets = VisitForm.Meta.widgets
@@ -611,7 +608,6 @@ class ClassVisitForm(VisitForm):
                   'presentation_available', 'custom_available', 'custom_name',
                   'tilbudsansvarlig', 'lokaleansvarlige', 'unit',
                   'needed_hosts', 'needed_teachers',
-                  'potentielle_vaerter', 'potentielle_undervisere',
                   'preparation_time', 'comment',
                   )
         widgets = VisitForm.Meta.widgets

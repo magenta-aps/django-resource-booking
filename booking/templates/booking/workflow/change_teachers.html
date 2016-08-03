@@ -14,52 +14,31 @@
         </div>
         <div class="divider"></div>
     </div>
-    <div class="row">
-        <div class="col-sm-12 col-md-8">
-            {% blocktrans with title=object.visit.title needed=object.visit.get_needed_teachers_display %}
-            Antal nødvendige undervisere angivet på "{{ title }}": {{ needed }}
-            {% endblocktrans %}
-        </div>
-    </div>
     <div class="divider"></div>
-    <div class="row">
-        <div class="col-sm-12 col-md-8">
-            <form name="changebookingteachersform" id="changebookingteachersform" class="changebookingform" action="{% url 'change-visit-occ-teachers' object.pk %}" method="post">
-                {% csrf_token %}
+    <form name="changebookingteachersform" id="changebookingteachersform" class="changebookingform" action="{% url 'change-visit-occ-teachers' object.pk %}" method="post">
+        {% csrf_token %}
 
-                <p>{{ form.teacher_status.label_tag }} {{ form.teacher_status }}</p>
-                <p>{{ form.teachers.label_tag}}</p>
-                <ul id="id_{{ form.teachers.name }}">
-                    {% for x in form.teachers.field.queryset %}
-                    <li>
-                        <label for="id_{{ form.teachers.name }}_{{ forloop.counter0 }}">
-                            <input
-                                {% if x.pk in form.teachers.value %}
-                                checked="checked"
-                                {% endif %}
-                                id="id_{{ form.teachers.name }}_{{ forloop.counter0 }}"
-                                name="{{ form.teachers.name }}"
-                                type="checkbox"
-                                value="{{ x.pk }}"
-                            >
-                            {{ x }}
-                            <a href="{% url 'availability' x.pk %}#todaysdate"
-                               role="button" class="btn btn-primary btn-xs"
-                               onclick="this.target='_blank'"
-                            >
-                                Se detaljer
-                                <span class="glyphicon glyphicon-new-window"></span>
-                            </a>
-                        </label>
-                    </li>
-                    {% endfor %}
-                </ul>
-                <p></p>
-                <input class="btn btn-success btn-sm" type="submit" value="{% trans 'Opdater' %}" name="confirm" />
-                <input class="btn btn-danger btn-sm" type="submit" value="{% trans 'Annullér' %}" name="cancel" />
-            </form>
+        {% include 'resource/fields/generic_field.html' with field=form.override_needed_teachers %}
+        <div class="row form-group">
+            <div class="col-sm-2"></div>
+            <div class="col-sm-7">
+                {% blocktrans with title=object.visit.title needed=object.visit.get_needed_teachers_display %}
+                Antal nødvendige undervisere angivet på "{{ title }}": {{ needed }}
+                {% endblocktrans %}
+            </div>
+            <div class="col-sm-3 with-errors"></div>
         </div>
-    </div>
+
+        {% trans "Vælg undervisere der er knyttet til dette tilbud" as uv_helptext %}
+        {% include 'resource/fields/userselect_with_availability_link.html' with field=form.teachers helptext=uv_helptext %}
+
+        {% if can_send_emails %}
+        {% include 'resource/fields/boolean_field.html' with field=form.send_emails %}
+        {% endif %}
+
+        <input class="btn btn-success btn-sm" type="submit" value="{% trans 'Opdater' %}" name="confirm" />
+        <input class="btn btn-danger btn-sm" type="submit" value="{% trans 'Annullér' %}" name="cancel" />
+    </form>
 {% endblock %}
 
 {% block extra_scripts %}
