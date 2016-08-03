@@ -513,7 +513,6 @@ class VisitForm(forms.ModelForm):
                     obj.email
                 )
 
-
     def clean_type(self):
         instance = getattr(self, 'instance', None)
         if instance:
