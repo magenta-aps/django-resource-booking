@@ -1533,7 +1533,6 @@ class EditVisitView(EditResourceView):
                     None, instance=self.object, initial=initial
                 )
 
-
         if self.request.method == 'POST':
             forms['autosendformset'] = VisitAutosendFormSet(
                 self.request.POST, instance=self.object

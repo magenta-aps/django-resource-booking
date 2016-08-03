@@ -2,7 +2,7 @@
 
 from booking.models import StudyMaterial, VisitAutosend, Booking
 from booking.models import BookingGrundskoleSubjectLevel
-from booking.models import Locality, UnitType, Unit, UserPerson
+from booking.models import Locality, UnitType, Unit
 from booking.models import Resource, OtherResource, Visit
 from booking.models import Booker, Region, PostCode, School
 from booking.models import ClassBooking, TeacherBooking, \
@@ -11,10 +11,9 @@ from booking.models import EmailTemplate
 from booking.models import VisitOccurrence
 from booking.models import BLANK_LABEL, BLANK_OPTION
 from django import forms
-from django.contrib.auth.models import User
 from django.db.models import Q
 from django.db.models.expressions import OrderBy
-from django.forms import SelectMultiple, CheckboxSelectMultiple, CheckboxInput
+from django.forms import CheckboxSelectMultiple, CheckboxInput
 from django.forms import RadioSelect, EmailInput
 from django.forms import formset_factory, inlineformset_factory
 from django.forms import TextInput, NumberInput, Textarea, Select
