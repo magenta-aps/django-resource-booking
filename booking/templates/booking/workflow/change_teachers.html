@@ -29,11 +29,25 @@
             <div class="col-sm-3 with-errors"></div>
         </div>
 
-        {% trans "Vælg undervisere der er knyttet til dette tilbud" as uv_helptext %}
+        {% trans "Vælg undervisere der er knyttet til dette tilbud:" as uv_helptext %}
         {% include 'resource/fields/userselect_with_availability_link.html' with field=form.teachers helptext=uv_helptext %}
 
         {% if can_send_emails %}
-        {% include 'resource/fields/boolean_field.html' with field=form.send_emails %}
+        {% include 'resource/fields/boolean_field.html' with field=form.send_emails left_label="Udsendelse af e-mail:" %}
+        {% else %}
+        <div class="row form-group">
+            <div class="col-sm-2"><strong>Udsendelse af e-mail:</strong></div>
+            <div class="col-sm-7">
+                <p>
+                    {% blocktrans with inviteret_type="undervisere" template_name=email_template_name %}
+                        Det er i øjeblikket ikke muligt at udsende e-mails til {{ inviteret_type }} der tilknyttes dette besøg.
+                        Hvis du vil have muligheden for at udsende emails skal du tilføje automatisk e-mail udsendelse
+                        for "{{ template_name }}" til besøget.
+                    {% endblocktrans %}
+                </p>
+            </div>
+            <div class="col-sm-3 with-errors"></div>
+        </div>
         {% endif %}
 
         <input class="btn btn-success btn-sm" type="submit" value="{% trans 'Opdater' %}" name="confirm" />

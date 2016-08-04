@@ -117,6 +117,9 @@ class ChangeVisitOccurrenceTeachersView(AutologgerMixin, UpdateWithCancelView):
         context['can_send_emails'] = self.object.autosend_enabled(
             EmailTemplate.NOTIFY_TEACHER__ASSOCIATED
         )
+        context['email_template_name'] = EmailTemplate.get_name(
+            EmailTemplate.NOTIFY_TEACHER__ASSOCIATED
+        )
         context.update(kwargs)
         return super(ChangeVisitOccurrenceTeachersView, self).\
             get_context_data(**context)
@@ -171,6 +174,9 @@ class ChangeVisitOccurrenceHostsView(AutologgerMixin, UpdateWithCancelView):
             for user in self.get_form().base_fields['hosts'].queryset.all()
             }
         context['can_send_emails'] = self.object.autosend_enabled(
+            EmailTemplate.NOTIFY_HOST__ASSOCIATED
+        )
+        context['email_template_name'] = EmailTemplate.get_name(
             EmailTemplate.NOTIFY_HOST__ASSOCIATED
         )
         context.update(kwargs)
