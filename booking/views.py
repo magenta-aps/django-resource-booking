@@ -1788,6 +1788,44 @@ class EditVisitView(EditResourceView):
         return kwargs
 
 
+class SimpleRessourcesView(LoginRequiredMixin,
+                           RoleRequiredMixin,
+                           UpdateView):
+    roles = EDIT_ROLES
+    model = Visit
+    fields = ['potentielle_vaerter', 'potentielle_undervisere']
+    template_name = 'visit/simple_ressources.html'
+
+    def get_form(self, form_class=None):
+        form = super(SimpleRessourcesView, self).get_form(form_class)
+
+        if 'potentielle_vaerter' in form.fields:
+            qs = form.fields['potentielle_vaerter']._get_queryset()
+            form.fields['potentielle_vaerter']._set_queryset(
+                qs.filter(userprofile__unit=self.object.unit)
+            )
+            form.fields['potentielle_vaerter'].label_from_instance = \
+                lambda obj: "%s (%s) <%s>" % (
+                    obj.get_full_name(),
+                    obj.username,
+                    obj.email
+                )
+
+        if 'potentielle_undervisere' in form.fields:
+            qs = form.fields['potentielle_undervisere']._get_queryset()
+            form.fields['potentielle_undervisere']._set_queryset(
+                qs.filter(userprofile__unit=self.object.unit)
+            )
+            form.fields['potentielle_undervisere'].label_from_instance = \
+                lambda obj: "%s (%s) <%s>" % (
+                    obj.get_full_name(),
+                    obj.username,
+                    obj.email
+                )
+
+        return form
+
+
 class VisitDetailView(ResourceBookingDetailView):
     """Display Visit details"""
     model = Visit

@@ -31,6 +31,7 @@ from profile.forms import UserCreateForm, EditMyResourcesForm, StatisticsForm
 from profile.models import AbsDateDist
 from profile.models import EmailLoginEntry
 from profile.models import UserProfile, UserRole, EDIT_ROLES, NONE
+from profile.models import HOST, TEACHER
 from profile.models import FACULTY_EDITOR, COORDINATOR, user_role_choices
 
 import warnings
@@ -798,6 +799,21 @@ class EditMyResourcesView(EditorRequriedMixin, UpdateView):
 class AvailabilityView(LoginRequiredMixin, DetailView):
     model = UserProfile
     template_name = 'profile/availability.html'
+
+    def get_object(self, queryset=None):
+        """ Look up the userprofile from the user pk.
+            Only allow lookups of TEACHERs and HOSTs.
+        """
+        try:
+            # Get the single item from the filtered queryset
+            obj = self.model.objects.get(
+                user__pk=self.kwargs.get("user_pk"),
+                user_role__role__in=[TEACHER, HOST]
+            )
+        except self.model.DoesNotExist:
+            raise Http404(_("No %(verbose_name)s found matching the query") %
+                          {'verbose_name': self.model._meta.verbose_name})
+        return obj
 
     def get_context_data(self, **kwargs):
         context = {}

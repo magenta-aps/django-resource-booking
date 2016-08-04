@@ -26,6 +26,9 @@ from resource_booking import settings
 
 from datetime import timedelta
 
+from profile.constants import TEACHER, HOST
+from profile.constants import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
+
 import uuid
 
 BLANK_LABEL = '---------'
@@ -326,15 +329,12 @@ class Unit(models.Model):
         return [profile.user for profile in profiles]
 
     def get_hosts(self):
-        from profile.models import HOST
         return self.get_users(HOST)
 
     def get_teachers(self):
-        from profile.models import TEACHER
         return self.get_users(TEACHER)
 
     def get_editors(self):
-        from profile.models import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
 
         # Try using all available coordinators
         res = self.get_users(COORDINATOR)
@@ -1089,6 +1089,26 @@ class Resource(models.Model):
         blank=True,
     )
 
+    potentielle_undervisere = models.ManyToManyField(
+        User,
+        verbose_name=_(u'Potentielle undervisere'),
+        related_name='potentiel_underviser_for_set',
+        blank=True,
+        limit_choices_to={
+            'userprofile__user_role__role': TEACHER
+        },
+    )
+
+    potentielle_vaerter = models.ManyToManyField(
+        User,
+        verbose_name=_(u'Potentielle værter'),
+        related_name='potentiel_vaert_for_set',
+        blank=True,
+        limit_choices_to={
+            'userprofile__user_role__role': HOST
+        },
+    )
+
     preparation_time = models.CharField(
         max_length=200,
         null=True,
@@ -1666,11 +1686,6 @@ class OtherResource(Resource):
             otherresource.delete()
 
 
-# Have to do late import of this here or we will get problems
-# with cyclic dependencies
-from profile.models import TEACHER, HOST  # noqa
-
-
 class Visit(Resource):
     """A bookable visit of any kind."""
 
@@ -2051,6 +2066,17 @@ class VisitOccurrence(models.Model):
         blank=True
     )
 
+    persons_needed_choices = (
+        (None, _(u"Brug værdi fra tilbud")),
+    ) + tuple((x, x) for x in range(1, 10))
+
+    override_needed_hosts = models.IntegerField(
+        verbose_name=_(u"Antal nødvendige værter"),
+        choices=persons_needed_choices,
+        blank=True,
+        null=True
+    )
+
     hosts = models.ManyToManyField(
         User,
         blank=True,
@@ -2058,7 +2084,7 @@ class VisitOccurrence(models.Model):
             'userprofile__user_role__role': HOST
         },
         related_name="hosted_visitoccurrences",
-        verbose_name=_(u'Værter')
+        verbose_name=_(u'Tilknyttede værter')
     )
 
     hosts_rejected = models.ManyToManyField(
@@ -2071,6 +2097,13 @@ class VisitOccurrence(models.Model):
         verbose_name=_(u'Værter, som har afslået')
     )
 
+    override_needed_teachers = models.IntegerField(
+        verbose_name=_(u"Antal nødvendige undervisere"),
+        choices=persons_needed_choices,
+        blank=True,
+        null=True
+    )
+
     teachers = models.ManyToManyField(
         User,
         blank=True,
@@ -2078,7 +2111,7 @@ class VisitOccurrence(models.Model):
             'userprofile__user_role__role': TEACHER
         },
         related_name="taught_visitoccurrences",
-        verbose_name=_(u'Undervisere')
+        verbose_name=_(u'Tilknyttede undervisere')
     )
 
     teachers_rejected = models.ManyToManyField(
@@ -2094,30 +2127,6 @@ class VisitOccurrence(models.Model):
     STATUS_NOT_NEEDED = 0
     STATUS_ASSIGNED = 1
     STATUS_NOT_ASSIGNED = 2
-
-    host_status_choices = (
-        (STATUS_NOT_NEEDED, _(u'Tildeling af værter ikke påkrævet')),
-        (STATUS_NOT_ASSIGNED, _(u'Afventer tildeling')),
-        (STATUS_ASSIGNED, _(u'Tildelt'))
-    )
-
-    host_status = models.IntegerField(
-        choices=host_status_choices,
-        default=STATUS_NOT_ASSIGNED,
-        verbose_name=_(u'Status for tildeling af værter')
-    )
-
-    teacher_status_choices = (
-        (STATUS_NOT_NEEDED, _(u'Tildeling af undervisere ikke påkrævet')),
-        (STATUS_NOT_ASSIGNED, _(u'Afventer tildeling')),
-        (STATUS_ASSIGNED, _(u'Tildelt'))
-    )
-
-    teacher_status = models.IntegerField(
-        choices=teacher_status_choices,
-        default=STATUS_NOT_ASSIGNED,
-        verbose_name=_(u'Status for tildeling af undervisere')
-    )
 
     room_status_choices = (
         (STATUS_NOT_NEEDED, _(u'Tildeling af lokaler ikke påkrævet')),
@@ -2288,9 +2297,12 @@ class VisitOccurrence(models.Model):
         if ws_planned not in (x[0] for x in self.possible_status_choices()):
             return False
 
-        statuses = (self.host_status, self.teacher_status, self.room_status)
+        # Correct number of hosts/teachers must be assigned
+        if self.needed_hosts > 0 or self.needed_teachers > 0:
+            return True
 
-        if VisitOccurrence.STATUS_NOT_ASSIGNED in statuses:
+        # Room assignment must be resolved
+        if self.room_status == VisitOccurrence.STATUS_NOT_ASSIGNED:
             return True
 
         return False
@@ -2362,16 +2374,30 @@ class VisitOccurrence(models.Model):
         return ""
 
     @property
+    def total_required_teachers(self):
+        if self.override_needed_teachers is not None:
+            return self.override_needed_teachers
+
+        return self.visit.needed_teachers
+
+    @property
     def needed_teachers(self):
-        return self.visit.needed_teachers - self.teachers.count()
+        return self.total_required_teachers - self.teachers.count()
 
     @property
     def needs_teachers(self):
         return self.needed_teachers > 0
 
     @property
+    def total_required_hosts(self):
+        if self.override_needed_hosts is not None:
+            return self.override_needed_hosts
+
+        return self.visit.needed_hosts
+
+    @property
     def needed_hosts(self):
-        return self.visit.needed_hosts - self.hosts.count()
+        return self.total_required_hosts - self.hosts.count()
 
     @property
     def needs_hosts(self):

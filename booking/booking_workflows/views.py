@@ -114,6 +114,12 @@ class ChangeVisitOccurrenceTeachersView(AutologgerMixin, UpdateWithCancelView):
             ]
             for user in self.get_form().base_fields['teachers'].queryset.all()
         }
+        context['can_send_emails'] = self.object.autosend_enabled(
+            EmailTemplate.NOTIFY_TEACHER__ASSOCIATED
+        )
+        context['email_template_name'] = EmailTemplate.get_name(
+            EmailTemplate.NOTIFY_TEACHER__ASSOCIATED
+        )
         context.update(kwargs)
         return super(ChangeVisitOccurrenceTeachersView, self).\
             get_context_data(**context)
@@ -122,30 +128,27 @@ class ChangeVisitOccurrenceTeachersView(AutologgerMixin, UpdateWithCancelView):
     def form_valid(self, form):
         old = self.get_object()
         old_teachers = set([x for x in old.teachers.all()])
+
         response = super(
             ChangeVisitOccurrenceTeachersView, self
         ).form_valid(form)
-        assigned_status = VisitOccurrence.STATUS_ASSIGNED
-        if form.cleaned_data['teacher_status'] == assigned_status:
+
+        if form.cleaned_data.get('send_emails', False):
             new_teachers = self.object.teachers.all()
-            if old.teacher_status != assigned_status:
-                # Status changed from not-ok to ok, notify all hosts
-                recipients = new_teachers
-            else:
-                # Status was also ok before, send message to hosts
-                # that weren't there before
-                recipients = [
-                    teacher
-                    for teacher in new_teachers
-                    if teacher not in old_teachers
-                ]
+            recipients = [
+                teacher
+                for teacher in new_teachers
+                if teacher not in old_teachers
+            ]
             if len(recipients) > 0:
+                print recipients
                 # Send a message to only these recipients
                 self.object.autosend(
-                    EmailTemplate.occurrence_added_teacher_key,
+                    EmailTemplate.NOTIFY_TEACHER__ASSOCIATED,
                     recipients,
                     True
                 )
+
         return response
 
 
@@ -170,6 +173,12 @@ class ChangeVisitOccurrenceHostsView(AutologgerMixin, UpdateWithCancelView):
                 ]
             for user in self.get_form().base_fields['hosts'].queryset.all()
             }
+        context['can_send_emails'] = self.object.autosend_enabled(
+            EmailTemplate.NOTIFY_HOST__ASSOCIATED
+        )
+        context['email_template_name'] = EmailTemplate.get_name(
+            EmailTemplate.NOTIFY_HOST__ASSOCIATED
+        )
         context.update(kwargs)
         return super(ChangeVisitOccurrenceHostsView, self).\
             get_context_data(**context)
@@ -178,20 +187,16 @@ class ChangeVisitOccurrenceHostsView(AutologgerMixin, UpdateWithCancelView):
     def form_valid(self, form):
         old = self.get_object()
         old_hosts = set([x for x in old.hosts.all()])
+
         response = super(ChangeVisitOccurrenceHostsView, self).form_valid(form)
-        if form.cleaned_data['host_status'] == VisitOccurrence.STATUS_ASSIGNED:
+
+        if form.cleaned_data.get('send_emails', False):
             new_hosts = self.object.hosts.all()
-            if old.host_status != VisitOccurrence.STATUS_ASSIGNED:
-                # Status changed from not-ok to ok, notify all hosts
-                recipients = new_hosts
-            else:
-                # Status was also ok before, send message to hosts
-                # that weren't there before
-                recipients = [
-                    host
-                    for host in new_hosts
-                    if host not in old_hosts
-                ]
+            recipients = [
+                host
+                for host in new_hosts
+                if host not in old_hosts
+            ]
             if len(recipients) > 0:
                 # Send a message to only these recipients
                 self.object.autosend(
@@ -199,6 +204,7 @@ class ChangeVisitOccurrenceHostsView(AutologgerMixin, UpdateWithCancelView):
                     recipients,
                     True
                 )
+
         return response
 
 
