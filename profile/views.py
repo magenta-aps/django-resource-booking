@@ -8,14 +8,13 @@ from booking.utils import UnicodeWriter
 from django.contrib import messages
 from django.db.models import F
 from django.db.models import Q
+from django.db.models.aggregates import Count, Sum
 from django.db.models.functions import Coalesce
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
-from django.db.models.aggregates import Count, Sum
-from django.db.models.functions import Coalesce
 from django.http import HttpResponse, Http404
 from django.shortcuts import redirect
 from django.utils import timezone
