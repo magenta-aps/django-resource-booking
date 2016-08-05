@@ -1955,7 +1955,6 @@ class VisitOccurrenceNotifyView(LoginRequiredMixin, ModalMixin,
     def get_context_data(self, **kwargs):
         visitoccurrence = self.object
         visit = visitoccurrence.visit
-        unit = visit.unit
         context = {}
         context['breadcrumbs'] = [
             {'url': reverse('search'), 'text': _(u'Søgning')},
@@ -2040,9 +2039,10 @@ class VisitOccurrenceNotifyView(LoginRequiredMixin, ModalMixin,
                                     full_email(
                                         user.email,
                                         user.get_full_name())
-                    for user in unit.get_hosts()
+                    for user in visit.potentielle_vaerter.all()
                     if user.email is not None and
-                    user not in visitoccurrence.hosts_rejected.all()
+                    user not in visitoccurrence.hosts_rejected.all() and
+                    user not in visitoccurrence.hosts.all()
                 }
             },
             'potential_teachers': {
@@ -2054,9 +2054,10 @@ class VisitOccurrenceNotifyView(LoginRequiredMixin, ModalMixin,
                                     full_email(
                                         user.email,
                                         user.get_full_name())
-                    for user in unit.get_teachers()
+                    for user in visit.potentielle_undervisere.all()
                     if user.email is not None and
-                    user not in visitoccurrence.teachers_rejected.all()
+                    user not in visitoccurrence.teachers_rejected.all() and
+                    user not in visitoccurrence.teachers.all()
                 }
             }
         }

@@ -698,12 +698,18 @@ class EmailTemplate(models.Model):
         NOTIFY_GUEST__SPOT_ACCEPTED,
         NOTIFY_GUEST__SPOT_REJECTED
     ]
-    # Templates that will be autosent to hosts in the unit
+    # Templates that will be autosent to all hosts in the unit
     unit_hosts_keys = [
+    ]
+    # Templates that will be autosent to all teachers in the unit
+    unit_teachers_keys = [
+    ]
+    # Templates that will be sent to potential hosts
+    potential_hosts_keys = [
         NOTIFY_HOST__REQ_HOST_VOLUNTEER
     ]
-    # Templates that will be autosent to teachers in the unit
-    unit_teachers_keys = [
+    # Templates that will be sent to potential hosts
+    potential_teachers_keys = [
         NOTIFY_HOST__REQ_TEACHER_VOLUNTEER
     ]
     # Templates that will be autosent to hosts in the occurrence
@@ -1302,6 +1308,13 @@ class Resource(models.Model):
 
     def get_recipients(self, template_key):
         recipients = self.unit.get_recipients(template_key)
+
+        if template_key in EmailTemplate.potential_hosts_keys:
+            recipients.extend(self.potentielle_vaerter.all())
+
+        if template_key in EmailTemplate.potential_teachers_keys:
+            recipients.extend(self.potentielle_undervisere.all())
+
         if template_key in EmailTemplate.contact_person_keys:
             contacts = []
             if self.tilbudsansvarlig:
@@ -1309,6 +1322,7 @@ class Resource(models.Model):
             elif self.created_by:
                 contacts.append(self.created_by)
             recipients.extend(contacts)
+
         return recipients
 
     def get_view_url(self):
