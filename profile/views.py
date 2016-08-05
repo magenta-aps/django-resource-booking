@@ -8,6 +8,7 @@ from booking.utils import UnicodeWriter
 from django.contrib import messages
 from django.db.models import F
 from django.db.models import Q
+from django.db.models.functions import Coalesce
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -226,9 +227,14 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     'count'
                 ),
                 'queryset': self.sort_vo_queryset(
-                    VisitOccurrence.objects.filter(
+                    VisitOccurrence.objects.annotate(
+                        num_assigned=Count('hosts')
+                    ).filter(
                         visit__unit=unit_qs,
-                        teacher_status=VisitOccurrence.STATUS_NOT_ASSIGNED
+                        num_assigned__lt=Coalesce(
+                            'override_needed_hosts',
+                            'visit__needed_hosts'
+                        )
                     ).exclude(
                         teachers=self.request.user
                     )
@@ -249,6 +255,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
     def lists_for_hosts(self):
         user = self.request.user
         hosted_vos = user.hosted_visitoccurrences.all()
+        unit_qs = self.request.user.userprofile.get_unit_queryset()
 
         return [
             {
@@ -270,11 +277,16 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     u"%(count)d besøg der mangler værter",
                     'count',
                 ),
-                'queryset': VisitOccurrence.objects.filter(
-                    visit__unit=user.userprofile.get_unit_queryset(),
-                    host_status=VisitOccurrence.STATUS_NOT_ASSIGNED
+                'queryset': VisitOccurrence.objects.annotate(
+                    num_assigned=Count('hosts')
+                ).filter(
+                    visit__unit=unit_qs,
+                    num_assigned__lt=Coalesce(
+                        'override_needed_hosts',
+                        'visit__needed_hosts'
+                    )
                 ).exclude(
-                    hosts=self.request.user
+                    hosts=self.request.user.pk
                 )
             },
             {

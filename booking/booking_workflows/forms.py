@@ -114,7 +114,8 @@ class VisitOccurrenceAddCommentForm(forms.Form):
 class BecomeSomethingForm(forms.Form):
     comment = forms.CharField(
         widget=forms.Textarea,
-        label=_(u'Kommentar')
+        label=_(u'Kommentar'),
+        required=False
     )
 
 

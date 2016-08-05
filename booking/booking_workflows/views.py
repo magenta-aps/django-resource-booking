@@ -435,7 +435,12 @@ class BecomeSomethingView(AutologgerMixin, VisitOccurrenceBreadcrumbMixin,
         raise NotImplementedError
 
     def get_object(self, queryset=None):
-        return self.model.objects.get(pk=self.kwargs.get("pk"))
+        res = self.model.objects.get(pk=self.kwargs.get("pk"))
+
+        # Store state for autologger
+        self._old_state = self._as_state(res)
+
+        return res
 
     def get_context_data(self, **kwargs):
         self.object = self.get_object()
@@ -447,6 +452,7 @@ class BecomeSomethingView(AutologgerMixin, VisitOccurrenceBreadcrumbMixin,
     def is_valid(self):
         if self.errors is None:
             self.errors = []
+
             # Are we the right role?
             if not self.is_right_role():
                 self.errors.append(self.ERROR_WRONG_ROLE)
@@ -467,7 +473,12 @@ class BecomeSomethingView(AutologgerMixin, VisitOccurrenceBreadcrumbMixin,
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         form = self.get_form()
-        if form.is_valid() and self.is_valid():
+
+        if self.is_valid():
+
+            # Process the form to get cleaned_data, but ignore any error.
+            form.is_valid()
+
             if 'comment' in form.cleaned_data:
                 comment = form.cleaned_data['comment']
                 if comment:
@@ -476,30 +487,27 @@ class BecomeSomethingView(AutologgerMixin, VisitOccurrenceBreadcrumbMixin,
                         comment
                     )
 
-        if request.POST.get("cancel"):
-            if isinstance(self, DeclineHostView):
-                self.object.hosts_rejected.add(request.user)
-            if isinstance(self, DeclineTeacherView):
-                self.object.teachers_rejected.add(request.user)
-            self.object.save()
+            if request.POST.get("cancel"):
+                if isinstance(self, DeclineHostView):
+                    self.object.hosts_rejected.add(request.user)
+                if isinstance(self, DeclineTeacherView):
+                    self.object.teachers_rejected.add(request.user)
+                self.object.save()
 
-        elif request.POST.get("confirm"):
+            elif request.POST.get("confirm"):
                 # Add user to the specified m2m relation
                 getattr(self.object, self.m2m_attribute).add(request.user)
-                if not self.needs_more():
-                    setattr(self.object, self.status_attribute,
-                            VisitOccurrence.STATUS_ASSIGNED)
-                    self.object.save()
 
-                    # Notify the user about the association
-                    if self.notify_mail_template_key:
-                        self.object.autosend(
-                            self.notify_mail_template_key,
-                            [request.user],
-                            True
-                        )
+                # Notify the user about the association
+                if self.notify_mail_template_key:
+                    self.object.autosend(
+                        self.notify_mail_template_key,
+                        [request.user],
+                        True
+                    )
 
-        self._log_changes()
+            self._log_changes()
+
         return self.get(request, *args, **kwargs)
 
     def render_with_error(self, error, request, *args, **kwargs):
@@ -512,7 +520,6 @@ class BecomeSomethingView(AutologgerMixin, VisitOccurrenceBreadcrumbMixin,
 
 class BecomeTeacherView(BecomeSomethingView):
     m2m_attribute = "teachers"
-    status_attribute = "teacher_status"
     template_name = "booking/workflow/become_teacher.html"
     view_title = _(u'Tilmeld som underviser')
     notify_mail_template_key = EmailTemplate.occurrence_added_teacher_key
@@ -534,7 +541,6 @@ class BecomeTeacherView(BecomeSomethingView):
 
 class DeclineTeacherView(BecomeSomethingView):
     m2m_attribute = "teachers"
-    status_attribute = "teacher_status"
     template_name = "booking/workflow/decline_teacher.html"
     view_title = _(u'Tilmeld som underviser')
     notify_mail_template_key = EmailTemplate.occurrence_added_teacher_key
@@ -556,7 +562,6 @@ class DeclineTeacherView(BecomeSomethingView):
 
 class BecomeHostView(BecomeSomethingView):
     m2m_attribute = "hosts"
-    status_attribute = "host_status"
     template_name = "booking/workflow/become_host.html"
     view_title = _(u'Tilmeld som vært')
     notify_mail_template_key = EmailTemplate.occurrence_added_host_key
@@ -578,7 +583,6 @@ class BecomeHostView(BecomeSomethingView):
 
 class DeclineHostView(BecomeSomethingView):
     m2m_attribute = "hosts"
-    status_attribute = "host_status"
     template_name = "booking/workflow/decline_host.html"
     view_title = _(u'Tilmeld som vært')
     notify_mail_template_key = EmailTemplate.occurrence_added_host_key
