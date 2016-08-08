@@ -32,7 +32,8 @@
 </div>
 {% endif %}
 
-{% if bookerform.level %}
+{{ no_level_field }}
+{% if bookerform.level and not no_level_field %}
 <div class="form-group">
     <label class="col-sm-2 control-label {{ bookerform.level.css_classes }}" for="{{ bookerform.level.id_for_label }}">
         {% if not bookerform.fields.level.required %}
