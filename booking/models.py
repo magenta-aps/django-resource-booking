@@ -1919,6 +1919,10 @@ class Visit(Resource):
             bookable=bookable,
             **kwargs
         )
+
+        if not self.rooms_needed:
+            occ.room_status = VisitOccurrence.STATUS_NOT_NEEDED
+
         occ.save()
         occ.create_inheriting_autosends()
         occ.ensure_statistics()
