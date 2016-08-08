@@ -3031,7 +3031,10 @@ class Room(models.Model):
     )
 
     def __unicode__(self):
-        return unicode(self.name)
+        if self.locality:
+            return '%s - %s' % (unicode(self.name), unicode(self.locality))
+        else:
+            return '%s - %s' % (unicode(self.name), _(u'Ingen lokalitet'))
 
     @property
     def name_with_locality(self):
