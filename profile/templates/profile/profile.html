@@ -87,6 +87,12 @@
                             <span class="glyphicon glyphicon-question-sign pull-right" data-toggle="tooltip" data-placement="right" title="{% trans 'En lokalitet er en fysisk adresse, fx det sted hvor et besøg skal afholdes, her kan du redigere lokaliteter.' %}"></span>
                         </h4>
                     </a>
+                    <a class="list-group-item" href="{% url 'admin:booking_room_changelist' %}">
+                        <h4 class="list-group-item-heading">
+                            {% trans 'Administrér lokaler' %}
+                            <span class="glyphicon glyphicon-question-sign pull-right" data-toggle="tooltip" data-placement="right" title="{% trans 'Et lokale er et fysisk lokale placeret på en lokalitet, her kan du redigere lokaler.' %}"></span>
+                        </h4>
+                    </a>
                     <a class="list-group-item" href="{% url 'admin:booking_lokaleansvarlig_changelist' %}">
                         <h4 class="list-group-item-heading">
                             {% trans 'Administrér lokaleansvarlige' %}
