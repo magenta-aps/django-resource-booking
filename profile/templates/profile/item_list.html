@@ -25,7 +25,6 @@
 
                             <div class="list-group-item-text">
                                 <ul>
-                                    <li>#{{ occurrence.pk }}</li>
                                     <li>
                                         {% blocktrans with date=occurrence.start_datetime|date:"d.m.Y" time=occurrence.start_datetime|time:"H.i" %}Dato/tid: {{ date }} kl. {{ time }}{% endblocktrans %}
                                     </li>
@@ -72,7 +71,6 @@
                             <h2 class="list-group-item-heading">{{ res.title }}</h2>
                             <div class="list-group-item-text">
                                 <ul>
-                                    <li>#{{res.pk}}</li>
                                     <li>{% trans 'Type:' %} {{ res.get_type_display }}</li>
                                     {% if res.get_occurrences|length %}
                                         <li>
@@ -92,8 +90,12 @@
                                     {%if res.display_locality %}
                                         <li>{% trans 'Hvor:' %} {{ res.display_locality }}</li>
                                     {% endif %}
-                                    <li>{% trans 'Oprettet: ' %} {{ res.statistics.created_time|date:"d.m.Y" }}{% blocktrans with time=res.statistics.created_time|time:"H.i" %} kl. {{ time }}{% endblocktrans %}</li>
-                                    <li>{% trans 'Opdateret: ' %} {{ res.statistics.updated_time|date:"d.m.Y" }}{% blocktrans with time=res.statistics.updated_time|time:"H.i" %} kl. {{ time }}{% endblocktrans %}</li>
+                                    {% if item.price %}
+                                        <li>
+                                            {% trans 'Pris:' %}
+                                            <span class="type-offer">{{ item.price }}</span>
+                                        </li>
+                                    {% endif %}
                                 </ul>
                             </div>
                         </a>

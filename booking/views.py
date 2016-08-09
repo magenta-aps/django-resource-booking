@@ -1921,6 +1921,7 @@ class VisitInquireView(FormMixin, HasBackButtonMixin, ModalMixin,
     def get_context_data(self, **kwargs):
         context = {}
         context['modal'] = self.modal
+        context['object'] = self.object
         context.update(kwargs)
         return super(VisitInquireView, self).get_context_data(**context)
 
