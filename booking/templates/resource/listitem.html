@@ -47,12 +47,8 @@
                     <span class="type-offer">{{ item.display_locality }}</span>
                 </li>
                 <li>
-                    <strong>{% trans 'Oprettet: ' %}</strong>
-                    <span class="type-offer">{% blocktrans with date=item.statistics.created_time|date:'d.m.Y' time=item.statistics.created_time|time:'H.i' %}{{ date }} kl. {{ time }}{% endblocktrans %}</span>
-                </li>
-                <li>
-                    <strong>{% trans 'Opdateret: ' %}</strong>
-                    <span class="type-offer">{% blocktrans with date=item.statistics.updated_time|date:'d.m.Y' time=item.statistics.updated_time|time:'H.i' %}{{ date }} kl. {{ time }}{% endblocktrans %}</span>
+                    <strong>{% trans 'Pris:' %}</strong>
+                    <span class="type-offer">{{ item.price }}</span>
                 </li>
             </ul>
         </div>
