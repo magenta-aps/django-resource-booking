@@ -26,6 +26,9 @@ from resource_booking import settings
 
 from datetime import timedelta
 
+from profile.constants import TEACHER, HOST
+from profile.constants import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
+
 import uuid
 
 BLANK_LABEL = '---------'
@@ -126,8 +129,8 @@ class Person(models.Model):
 
 class UserPerson(models.Model):
     class Meta:
-        verbose_name = _(u'Lokaleanvarlig')
-        verbose_name_plural = _(u'Lokaleanvarlige')
+        verbose_name = _(u'Lokaleanvarlig-eller-kontaktperson')
+        verbose_name_plural = _(u'Lokaleanvarlige-eller-kontaktpersoner')
         ordering = ['person__name', 'user__first_name', 'user__username']
 
     person = models.ForeignKey(Person, blank=True, null=True)
@@ -220,15 +223,34 @@ class UserPerson(models.Model):
         for user in User.objects.all():
             UserPerson.create(user)
 
-        for resource in Resource.objects.all():
-            for person in resource.contact_persons.all():
-                resource.contacts.add(
-                    UserPerson.create(person)
-                )
-            for person in resource.room_responsible.all():
-                resource.room_contact.add(
-                    UserPerson.create(person)
-                )
+
+class LokaleAnsvarlig(models.Model):
+    class Meta:
+        verbose_name = _(u'Lokaleanvarlig')
+        verbose_name_plural = _(u'Lokaleanvarlige')
+
+    name = models.CharField(max_length=50)
+    email = models.EmailField(max_length=64, null=True, blank=True)
+    phone = models.CharField(max_length=14, null=True, blank=True)
+
+    unit = models.ForeignKey("Unit", blank=True, null=True)
+
+    allow_null_unit_editing = True
+
+    def __unicode__(self):
+        return self.name
+
+    def get_name(self):
+        return self.name
+
+    def get_full_name(self):
+        return self.get_name()
+
+    def get_email(self):
+        return self.email
+
+    def get_full_email(self):
+        return full_email(self.email, self.name)
 
 
 # Units (faculties, institutes etc)
@@ -307,15 +329,12 @@ class Unit(models.Model):
         return [profile.user for profile in profiles]
 
     def get_hosts(self):
-        from profile.models import HOST
         return self.get_users(HOST)
 
     def get_teachers(self):
-        from profile.models import TEACHER
         return self.get_users(TEACHER)
 
     def get_editors(self):
-        from profile.models import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
 
         # Try using all available coordinators
         res = self.get_users(COORDINATOR)
@@ -661,13 +680,14 @@ class EmailTemplate(models.Model):
         SYSTEM__EMAIL_REPLY,
     ]
 
-    # Templates that will be autosent to visit.contacts
+    # Templates that will be autosent to visit.tilbudsansvarlig
     contact_person_keys = [
         NOTIFY_EDITORS__BOOKING_CREATED,
         NOTIFY_ALL__BOOKING_CANCELED,
         NOTITY_ALL__BOOKING_REMINDER,
         NOTIFY_EDITORS__SPOT_REJECTED
     ]
+
     # Templates that will be autosent to booker
     booker_keys = [
         NOTIFY_GUEST__BOOKING_CREATED,
@@ -678,12 +698,18 @@ class EmailTemplate(models.Model):
         NOTIFY_GUEST__SPOT_ACCEPTED,
         NOTIFY_GUEST__SPOT_REJECTED
     ]
-    # Templates that will be autosent to hosts in the unit
+    # Templates that will be autosent to all hosts in the unit
     unit_hosts_keys = [
+    ]
+    # Templates that will be autosent to all teachers in the unit
+    unit_teachers_keys = [
+    ]
+    # Templates that will be sent to potential hosts
+    potential_hosts_keys = [
         NOTIFY_HOST__REQ_HOST_VOLUNTEER
     ]
-    # Templates that will be autosent to teachers in the unit
-    unit_teachers_keys = [
+    # Templates that will be sent to potential hosts
+    potential_teachers_keys = [
         NOTIFY_HOST__REQ_TEACHER_VOLUNTEER
     ]
     # Templates that will be autosent to hosts in the occurrence
@@ -1054,32 +1080,39 @@ class Resource(models.Model):
         verbose_name=_(u'Gentagelser')
     )
 
-    contact_persons = models.ManyToManyField(
-        Person,
+    tilbudsansvarlig = models.ForeignKey(
+        User,
+        verbose_name=_(u'Tilbudsansvarlig'),
+        related_name='tilbudsansvarlig_for_set',
         blank=True,
-        verbose_name=_(u'Kontaktpersoner'),
-        related_name='contact_visit'
+        null=True
     )
 
-    contacts = models.ManyToManyField(
-        UserPerson,
-        blank=True,
-        verbose_name=_(u'Kontaktpersoner'),
-        related_name='contact_visit'
-    )
-
-    room_responsible = models.ManyToManyField(
-        Person,
-        blank=True,
+    lokaleansvarlige = models.ManyToManyField(
+        LokaleAnsvarlig,
         verbose_name=_(u'Lokaleansvarlige'),
-        related_name='roomadmin_visit'
+        related_name='ansvarlig_for_besoeg_set',
+        blank=True,
     )
 
-    room_contact = models.ManyToManyField(
-        UserPerson,
+    potentielle_undervisere = models.ManyToManyField(
+        User,
+        verbose_name=_(u'Potentielle undervisere'),
+        related_name='potentiel_underviser_for_set',
         blank=True,
-        verbose_name=_(u'Lokaleansvarlige'),
-        related_name='roomadmin_visit_new'
+        limit_choices_to={
+            'userprofile__user_role__role': TEACHER
+        },
+    )
+
+    potentielle_vaerter = models.ManyToManyField(
+        User,
+        verbose_name=_(u'Potentielle værter'),
+        related_name='potentiel_vaert_for_set',
+        blank=True,
+        limit_choices_to={
+            'userprofile__user_role__role': HOST
+        },
     )
 
     preparation_time = models.CharField(
@@ -1125,6 +1158,7 @@ class Resource(models.Model):
         blank=True,
         null=True,
         verbose_name=_(u"Oprettet af"),
+        related_name='created_visits_set',
         on_delete=models.SET_NULL
     )
 
@@ -1274,11 +1308,21 @@ class Resource(models.Model):
 
     def get_recipients(self, template_key):
         recipients = self.unit.get_recipients(template_key)
+
+        if template_key in EmailTemplate.potential_hosts_keys:
+            recipients.extend(self.potentielle_vaerter.all())
+
+        if template_key in EmailTemplate.potential_teachers_keys:
+            recipients.extend(self.potentielle_undervisere.all())
+
         if template_key in EmailTemplate.contact_person_keys:
-            contacts = self.contacts.all()
-            if len(contacts) == 0:
-                contacts = [self.created_by]
+            contacts = []
+            if self.tilbudsansvarlig:
+                contacts.append(self.tilbudsansvarlig)
+            elif self.created_by:
+                contacts.append(self.created_by)
             recipients.extend(contacts)
+
         return recipients
 
     def get_view_url(self):
@@ -1626,8 +1670,6 @@ class OtherResource(Resource):
         visit.save()
         for link in self.links.all():
             visit.links.add(link)
-        for contact in self.contacts.all():
-            visit.contacts.add(contact)
         for intermediate in self.resourcegymnasiefag_set.all():
             values = [str(intermediate.subject.id)]
             for level in intermediate.level.all():
@@ -1656,11 +1698,6 @@ class OtherResource(Resource):
         for otherresource in OtherResource.objects.all():
             otherresource.clone_to_visit()
             otherresource.delete()
-
-
-# Have to do late import of this here or we will get problems
-# with cyclic dependencies
-from profile.models import TEACHER, HOST  # noqa
 
 
 class Visit(Resource):
@@ -1882,6 +1919,10 @@ class Visit(Resource):
             bookable=bookable,
             **kwargs
         )
+
+        if not self.rooms_needed:
+            occ.room_status = VisitOccurrence.STATUS_NOT_NEEDED
+
         occ.save()
         occ.create_inheriting_autosends()
         occ.ensure_statistics()
@@ -1977,43 +2018,8 @@ class Visit(Resource):
         return list(visits)
 
     @property
-    def contact_users(self):
-        users = []
-
-        for x in self.contacts.all():
-            if x.user:
-                users.append(x.user)
-            elif x.person:
-                users.append(x.person)
-
-        if not users:
-            users = self.unit.get_editors()
-
-        return users
-
-    @property
-    def contact_person_persons(self):
-        return Person.objects.filter(
-            userperson__contact_visit__pk=self.pk
-        )
-
-    @property
-    def contact_person_users(self):
-        return User.objects.filter(
-            userperson__contact_visit__pk=self.pk
-        )
-
-    @property
-    def room_responsible_persons(self):
-        return Person.objects.filter(
-            userperson__roomadmin_visit_new__pk=self.pk
-        )
-
-    @property
     def room_responsible_users(self):
-        return User.objects.filter(
-            userperson__roomadmin_visit_new__pk=self.pk
-        )
+        return self.lokaleansvarlige.all()
 
 
 class VisitOccurrence(models.Model):
@@ -2078,6 +2084,17 @@ class VisitOccurrence(models.Model):
         blank=True
     )
 
+    persons_needed_choices = (
+        (None, _(u"Brug værdi fra tilbud")),
+    ) + tuple((x, x) for x in range(1, 10))
+
+    override_needed_hosts = models.IntegerField(
+        verbose_name=_(u"Antal nødvendige værter"),
+        choices=persons_needed_choices,
+        blank=True,
+        null=True
+    )
+
     hosts = models.ManyToManyField(
         User,
         blank=True,
@@ -2085,7 +2102,7 @@ class VisitOccurrence(models.Model):
             'userprofile__user_role__role': HOST
         },
         related_name="hosted_visitoccurrences",
-        verbose_name=_(u'Værter')
+        verbose_name=_(u'Tilknyttede værter')
     )
 
     hosts_rejected = models.ManyToManyField(
@@ -2098,6 +2115,13 @@ class VisitOccurrence(models.Model):
         verbose_name=_(u'Værter, som har afslået')
     )
 
+    override_needed_teachers = models.IntegerField(
+        verbose_name=_(u"Antal nødvendige undervisere"),
+        choices=persons_needed_choices,
+        blank=True,
+        null=True
+    )
+
     teachers = models.ManyToManyField(
         User,
         blank=True,
@@ -2105,7 +2129,7 @@ class VisitOccurrence(models.Model):
             'userprofile__user_role__role': TEACHER
         },
         related_name="taught_visitoccurrences",
-        verbose_name=_(u'Undervisere')
+        verbose_name=_(u'Tilknyttede undervisere')
     )
 
     teachers_rejected = models.ManyToManyField(
@@ -2121,30 +2145,6 @@ class VisitOccurrence(models.Model):
     STATUS_NOT_NEEDED = 0
     STATUS_ASSIGNED = 1
     STATUS_NOT_ASSIGNED = 2
-
-    host_status_choices = (
-        (STATUS_NOT_NEEDED, _(u'Tildeling af værter ikke påkrævet')),
-        (STATUS_NOT_ASSIGNED, _(u'Afventer tildeling')),
-        (STATUS_ASSIGNED, _(u'Tildelt'))
-    )
-
-    host_status = models.IntegerField(
-        choices=host_status_choices,
-        default=STATUS_NOT_ASSIGNED,
-        verbose_name=_(u'Status for tildeling af værter')
-    )
-
-    teacher_status_choices = (
-        (STATUS_NOT_NEEDED, _(u'Tildeling af undervisere ikke påkrævet')),
-        (STATUS_NOT_ASSIGNED, _(u'Afventer tildeling')),
-        (STATUS_ASSIGNED, _(u'Tildelt'))
-    )
-
-    teacher_status = models.IntegerField(
-        choices=teacher_status_choices,
-        default=STATUS_NOT_ASSIGNED,
-        verbose_name=_(u'Status for tildeling af undervisere')
-    )
 
     room_status_choices = (
         (STATUS_NOT_NEEDED, _(u'Tildeling af lokaler ikke påkrævet')),
@@ -2315,9 +2315,12 @@ class VisitOccurrence(models.Model):
         if ws_planned not in (x[0] for x in self.possible_status_choices()):
             return False
 
-        statuses = (self.host_status, self.teacher_status, self.room_status)
+        # Correct number of hosts/teachers must be assigned
+        if self.needed_hosts > 0 or self.needed_teachers > 0:
+            return True
 
-        if VisitOccurrence.STATUS_NOT_ASSIGNED in statuses:
+        # Room assignment must be resolved
+        if self.room_status == VisitOccurrence.STATUS_NOT_ASSIGNED:
             return True
 
         return False
@@ -2389,16 +2392,30 @@ class VisitOccurrence(models.Model):
         return ""
 
     @property
+    def total_required_teachers(self):
+        if self.override_needed_teachers is not None:
+            return self.override_needed_teachers
+
+        return self.visit.needed_teachers
+
+    @property
     def needed_teachers(self):
-        return self.visit.needed_teachers - self.teachers.count()
+        return self.total_required_teachers - self.teachers.count()
 
     @property
     def needs_teachers(self):
         return self.needed_teachers > 0
 
     @property
+    def total_required_hosts(self):
+        if self.override_needed_hosts is not None:
+            return self.override_needed_hosts
+
+        return self.visit.needed_hosts
+
+    @property
     def needed_hosts(self):
-        return self.visit.needed_hosts - self.hosts.count()
+        return self.total_required_hosts - self.hosts.count()
 
     @property
     def needs_hosts(self):
@@ -3018,7 +3035,10 @@ class Room(models.Model):
     )
 
     def __unicode__(self):
-        return unicode(self.name)
+        if self.locality:
+            return '%s - %s' % (unicode(self.name), unicode(self.locality))
+        else:
+            return '%s - %s' % (unicode(self.name), _(u'Ingen lokalitet'))
 
     @property
     def name_with_locality(self):

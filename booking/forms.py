@@ -2,7 +2,7 @@
 
 from booking.models import StudyMaterial, VisitAutosend, Booking
 from booking.models import BookingGrundskoleSubjectLevel
-from booking.models import Locality, UnitType, Unit, UserPerson
+from booking.models import Locality, UnitType, Unit
 from booking.models import Resource, OtherResource, Visit
 from booking.models import Booker, Region, PostCode, School
 from booking.models import ClassBooking, TeacherBooking, \
@@ -13,7 +13,7 @@ from booking.models import BLANK_LABEL, BLANK_OPTION
 from django import forms
 from django.db.models import Q
 from django.db.models.expressions import OrderBy
-from django.forms import SelectMultiple, CheckboxSelectMultiple, CheckboxInput
+from django.forms import CheckboxSelectMultiple, CheckboxInput
 from django.forms import RadioSelect, EmailInput
 from django.forms import formset_factory, inlineformset_factory
 from django.forms import TextInput, NumberInput, Textarea, Select
@@ -289,7 +289,7 @@ class OtherResourceForm(forms.ModelForm):
                   'type', 'tags',
                   'institution_level', 'topics', 'audience',
                   'locality',
-                  'contacts', 'unit',
+                  'tilbudsansvarlig', 'unit',
                   'preparation_time', 'comment'
                   )
         widgets = {
@@ -337,7 +337,7 @@ class VisitForm(forms.ModelForm):
                   'duration', 'locality',
                   'rooms_needed', 'tour_available', 'catering_available',
                   'presentation_available', 'custom_available', 'custom_name',
-                  'contacts', 'unit',
+                  'tilbudsansvarlig', 'unit',
                   'needed_hosts', 'needed_teachers',
                   'preparation_time', 'comment',
                   )
@@ -407,8 +407,7 @@ class VisitForm(forms.ModelForm):
             'unit': Select(attrs={'class': 'form-control input-sm'}),
             'audience': Select(attrs={'class': 'form-control input-sm'}),
             'tags': CheckboxSelectMultiple(),
-            'contacts': SelectMultiple(),
-            'room_contact': CheckboxSelectMultiple(),
+            'lokaleansvarlige': CheckboxSelectMultiple,
         }
         labels = {
             'custom_name': _('Navn')
@@ -434,6 +433,13 @@ class VisitForm(forms.ModelForm):
                 self.user is not None and self.user.userprofile is not None:
             unit = self.user.userprofile.unit
 
+        self.current_unit = unit
+
+        if not self.instance.pk and 'initial' in kwargs:
+            kwargs['initial']['tilbudsansvarlig'] = self.user.pk
+            if unit is not None:
+                kwargs['initial']['unit'] = unit.pk
+
         # self.unit = kwargs.get('instance').unit_id
         super(VisitForm, self).__init__(*args, **kwargs)
         self.fields['unit'].queryset = self.get_unit_query_set()
@@ -452,17 +458,6 @@ class VisitForm(forms.ModelForm):
                         "name"
                     )
                 ]
-
-        # Add classes to certain widgets
-        for x in ('needed_hosts', 'needed_teachers'):
-            f = self.fields.get(x)
-            if f is not None:
-                f.widget.attrs['class'] = " ".join([
-                    x for x in (
-                        f.widget.attrs.get('class'),
-                        'form-control input-sm'
-                    ) if x
-                ])
 
         if 'duration' in self.fields:
             self.fields['duration'].choices = [
@@ -494,21 +489,28 @@ class VisitForm(forms.ModelForm):
                 ('36:00', _(u'36 timer')), ('48:00', _(u'48 timer'))
             ]
 
-        # Limit choices for non-admins to those in the same unit
-        userperson_choices = [
-            (person.id, unicode(person))
-            for person in UserPerson.objects.all()
-            if self.user.userprofile.is_administrator or
-            person.unit == self.user.userprofile.unit
-            ]
+        if 'tilbudsansvarlig' in self.fields:
+            qs = self.fields['tilbudsansvarlig']._get_queryset()
+            self.fields['tilbudsansvarlig']._set_queryset(
+                qs.filter(userprofile__unit=unit)
+            )
+            self.fields['tilbudsansvarlig'].label_from_instance = \
+                lambda obj: "%s (%s) <%s>" % (
+                    obj.get_full_name(),
+                    obj.username,
+                    obj.email
+                )
 
-        userperson_choices.sort(key=lambda choice: choice[1].lower())
-
-        # Limit choices for non-admins to those in the same unit
-        if 'contacts' in self.fields:
-            self.fields['contacts'].choices = userperson_choices
-        if 'room_contact' in self.fields:
-            self.fields['room_contact'].choices = userperson_choices
+        if 'lokaleansvarlige' in self.fields:
+            qs = self.fields['lokaleansvarlige']._get_queryset()
+            self.fields['lokaleansvarlige']._set_queryset(
+                qs.filter(unit=unit)
+            )
+            self.fields['lokaleansvarlige'].label_from_instance = \
+                lambda obj: "%s <%s>" % (
+                    obj.get_full_name(),
+                    obj.email
+                )
 
     def clean_type(self):
         instance = getattr(self, 'instance', None)
@@ -545,7 +547,7 @@ class StudentForADayForm(VisitForm):
         fields = ('type', 'title', 'teaser', 'description', 'state',
                   'institution_level', 'topics', 'audience',
                   'duration', 'locality',
-                  'contacts', 'unit',
+                  'tilbudsansvarlig', 'unit',
                   'needed_hosts', 'needed_teachers',
                   'preparation_time', 'comment',
                   )
@@ -558,7 +560,7 @@ class InternshipForm(VisitForm):
         fields = ('type', 'title', 'teaser', 'description', 'state',
                   'institution_level', 'topics', 'audience',
                   'locality',
-                  'contacts', 'unit',
+                  'tilbudsansvarlig', 'unit',
                   'preparation_time', 'comment',
                   )
         widgets = VisitForm.Meta.widgets
@@ -570,7 +572,7 @@ class OpenHouseForm(VisitForm):
         fields = ('type', 'title', 'teaser', 'description', 'state',
                   'institution_level', 'topics', 'audience',
                   'locality', 'rooms_needed',
-                  'contacts', 'unit',
+                  'tilbudsansvarlig', 'unit',
                   'preparation_time', 'comment',
                   )
         widgets = VisitForm.Meta.widgets
@@ -586,7 +588,7 @@ class TeacherVisitForm(VisitForm):
                   'waiting_list_deadline_days', 'waiting_list_deadline_hours',
                   'duration', 'locality',
                   'rooms_needed',
-                  'contacts', 'room_contact', 'unit',
+                  'tilbudsansvarlig', 'lokaleansvarlige', 'unit',
                   'needed_hosts', 'needed_teachers',
                   'preparation_time', 'comment',
                   )
@@ -604,7 +606,7 @@ class ClassVisitForm(VisitForm):
                   'duration', 'locality',
                   'rooms_needed', 'tour_available', 'catering_available',
                   'presentation_available', 'custom_available', 'custom_name',
-                  'contacts', 'room_contact', 'unit',
+                  'tilbudsansvarlig', 'lokaleansvarlige', 'unit',
                   'needed_hosts', 'needed_teachers',
                   'preparation_time', 'comment',
                   )
@@ -618,7 +620,7 @@ class StudyProjectForm(VisitForm):
         fields = ('type', 'title', 'teaser', 'description', 'state',
                   'institution_level', 'topics', 'audience',
                   'locality', 'rooms_needed',
-                  'contacts', 'unit',
+                  'tilbudsansvarlig', 'unit',
                   'preparation_time', 'comment',
                   )
         widgets = VisitForm.Meta.widgets
@@ -629,7 +631,7 @@ class AssignmentHelpForm(VisitForm):
         model = Visit
         fields = ('type', 'title', 'teaser', 'description', 'state',
                   'institution_level', 'topics', 'audience',
-                  'contacts', 'unit',
+                  'tilbudsansvarlig', 'unit',
                   'comment',
                   )
         widgets = VisitForm.Meta.widgets
@@ -640,7 +642,7 @@ class StudyMaterialForm(VisitForm):
         model = Visit
         fields = ('type', 'title', 'teaser', 'description', 'price', 'state',
                   'institution_level', 'topics', 'audience',
-                  'contacts', 'unit',
+                  'tilbudsansvarlig', 'unit',
                   'comment'
                   )
         widgets = VisitForm.Meta.widgets

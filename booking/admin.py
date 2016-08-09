@@ -8,12 +8,14 @@ from profile.models import COORDINATOR, FACULTY_EDITOR, EDIT_ROLES
 EXCLUDE_MODELS = set([
     booking_models.Resource,
     booking_models.GymnasieLevel,
+    booking_models.Person,
+    booking_models.UserPerson,
 ])
 
 CLASSES_BY_ROLE = {}
 CLASSES_BY_ROLE[COORDINATOR] = set([
     booking_models.Locality,
-    booking_models.Person,
+    booking_models.Room,
 ])
 
 CLASSES_BY_ROLE[FACULTY_EDITOR] = set([
@@ -27,6 +29,10 @@ CLASSES_BY_ROLE[FACULTY_EDITOR].update(CLASSES_BY_ROLE[COORDINATOR])
 # Dict for registering custom admin classes for certain models
 CUSTOM_ADMIN_CLASSES = {}
 
+MODEL_UNIT_FILTER_MAP = {
+    'Room': 'locality__unit'
+}
+
 
 class KUBookingModelAdmin(admin.ModelAdmin):
     def has_module_permission(self, request):
@@ -37,7 +43,6 @@ class KUBookingModelAdmin(admin.ModelAdmin):
             return True
 
         role = request.user.userprofile.get_role()
-        print role
         if role in CLASSES_BY_ROLE:
             return self.model in CLASSES_BY_ROLE[role]
 
@@ -56,14 +61,22 @@ class KUBookingModelAdmin(admin.ModelAdmin):
             return qs
 
         # Filter anything that has a unit to the units the user has access to
+        model_name = self.model._meta.object_name
+        unit_filter_match = None
         if hasattr(self.model, 'unit'):
-            unit_qs = request.user.userprofile.get_unit_queryset()
-            if getattr(self.model, 'allow_null_unit_editing', False):
-                qs = qs.filter(Q(unit=None) | Q(unit=unit_qs))
-            else:
-                qs = qs.filter(unit=unit_qs)
+            unit_filter_match = 'unit'
+        elif model_name in MODEL_UNIT_FILTER_MAP:
+            unit_filter_match = MODEL_UNIT_FILTER_MAP[model_name]
 
-        print qs.query
+        if unit_filter_match is not None:
+            unit_qs = request.user.userprofile.get_unit_queryset()
+            match1 = {unit_filter_match: unit_qs}
+            if getattr(self.model, 'allow_null_unit_editing', False):
+                match2 = {unit_filter_match: None}
+                qs = qs.filter(Q(**match1) | Q(**match2))
+            else:
+                qs = qs.filter(**match1)
+
         return qs
 
     def get_form(self, request, obj=None, **kwargs):
@@ -74,6 +87,7 @@ class KUBookingModelAdmin(admin.ModelAdmin):
         if request.user.userprofile.is_administrator:
             return form
 
+        model_name = self.model._meta.object_name
         if hasattr(self.model, 'unit') and 'unit' in form.base_fields:
             # Limit choices to the unit the user has access to
             unit_qs = request.user.userprofile.get_unit_queryset()
@@ -82,6 +96,16 @@ class KUBookingModelAdmin(admin.ModelAdmin):
             if not getattr(self.model, 'allow_null_unit_editing', False):
                 # Do not allow selecting the blank option
                 form.base_fields['unit'].empty_label = None
+        elif model_name in MODEL_UNIT_FILTER_MAP:
+            match_str = MODEL_UNIT_FILTER_MAP[model_name]
+
+            (fieldname, match) = match_str.split("__", 1)
+
+            field = form.base_fields[fieldname]
+            unit_qs = request.user.userprofile.get_unit_queryset()
+            field.queryset = field.queryset.filter(
+                **{match: unit_qs}
+            )
 
         return form
 

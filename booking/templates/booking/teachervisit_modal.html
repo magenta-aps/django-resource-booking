@@ -22,7 +22,7 @@
             {{ bookerform.non_field_errors }}
             {% include "booking/fields/basedata.html" %}
             {% include "booking/fields/subjects.html" %}
-            {% include "booking/fields/school.html" %}
+            {% include "booking/fields/school.html" with no_level_field="true" %}
             {% include "booking/fields/time.html" %}
             {% include "booking/fields/attendees.html" %}
             {% include "booking/fields/notes.html" %}

@@ -8,13 +8,13 @@ from booking.utils import UnicodeWriter
 from django.contrib import messages
 from django.db.models import F
 from django.db.models import Q
+from django.db.models.aggregates import Count, Sum
+from django.db.models.functions import Coalesce
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
-from django.db.models.aggregates import Count, Sum
-from django.db.models.functions import Coalesce
 from django.http import HttpResponse, Http404
 from django.shortcuts import redirect
 from django.utils import timezone
@@ -31,6 +31,7 @@ from profile.forms import UserCreateForm, EditMyResourcesForm, StatisticsForm
 from profile.models import AbsDateDist
 from profile.models import EmailLoginEntry
 from profile.models import UserProfile, UserRole, EDIT_ROLES, NONE
+from profile.models import HOST, TEACHER
 from profile.models import FACULTY_EDITOR, COORDINATOR, user_role_choices
 
 import warnings
@@ -225,9 +226,14 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     'count'
                 ),
                 'queryset': self.sort_vo_queryset(
-                    VisitOccurrence.objects.filter(
+                    VisitOccurrence.objects.annotate(
+                        num_assigned=Count('hosts')
+                    ).filter(
                         visit__unit=unit_qs,
-                        teacher_status=VisitOccurrence.STATUS_NOT_ASSIGNED
+                        num_assigned__lt=Coalesce(
+                            'override_needed_hosts',
+                            'visit__needed_hosts'
+                        )
                     ).exclude(
                         teachers=self.request.user
                     )
@@ -248,6 +254,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
     def lists_for_hosts(self):
         user = self.request.user
         hosted_vos = user.hosted_visitoccurrences.all()
+        unit_qs = self.request.user.userprofile.get_unit_queryset()
 
         return [
             {
@@ -269,11 +276,16 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     u"%(count)d besøg der mangler værter",
                     'count',
                 ),
-                'queryset': VisitOccurrence.objects.filter(
-                    visit__unit=user.userprofile.get_unit_queryset(),
-                    host_status=VisitOccurrence.STATUS_NOT_ASSIGNED
+                'queryset': VisitOccurrence.objects.annotate(
+                    num_assigned=Count('hosts')
+                ).filter(
+                    visit__unit=unit_qs,
+                    num_assigned__lt=Coalesce(
+                        'override_needed_hosts',
+                        'visit__needed_hosts'
+                    )
                 ).exclude(
-                    hosts=self.request.user
+                    hosts=self.request.user.pk
                 )
             },
             {
@@ -798,6 +810,21 @@ class EditMyResourcesView(EditorRequriedMixin, UpdateView):
 class AvailabilityView(LoginRequiredMixin, DetailView):
     model = UserProfile
     template_name = 'profile/availability.html'
+
+    def get_object(self, queryset=None):
+        """ Look up the userprofile from the user pk.
+            Only allow lookups of TEACHERs and HOSTs.
+        """
+        try:
+            # Get the single item from the filtered queryset
+            obj = self.model.objects.get(
+                user__pk=self.kwargs.get("user_pk"),
+                user_role__role__in=[TEACHER, HOST]
+            )
+        except self.model.DoesNotExist:
+            raise Http404(_("No %(verbose_name)s found matching the query") %
+                          {'verbose_name': self.model._meta.verbose_name})
+        return obj
 
     def get_context_data(self, **kwargs):
         context = {}

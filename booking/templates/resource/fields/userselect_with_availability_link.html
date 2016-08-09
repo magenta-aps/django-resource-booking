@@ -1,0 +1,54 @@
+{% load i18n %}
+{% if field.label %}
+<div class="row form-group">
+    <div class="col-sm-2{% if field.errors %} has-error{% endif %}">
+        {{ field.label_tag}}
+    </div>
+    <div class="col-sm-7">
+        {% if helptext %}
+            <p>{{ helptext }}</p>
+        {% endif %}
+        {% if not field.field.queryset.count %}
+            <p>
+            {% blocktrans %}
+            Der blev ikke fundet nogen brugere at vælge ud fra. Undersøg
+            om der findes brugere af den korrekte type inden inden for din
+            enhed. For besøg bør du også undersøge om der er blevet tilknyttet
+            potentielle værter/undervisere til det tilbud besøget er baseret
+            på.
+            {% endblocktrans %}
+            </p>
+        {% else %}
+            <div id="id_{{ form.teachers.name }}">
+                {% for pk, label in field.field.choices %}
+                <div class="checkbox">
+                    <label for="id_{{ form.teachers.name }}_{{ forloop.counter0 }}">
+                        <input
+                            {% if pk in field.value %}
+                            checked="checked"
+                            {% endif %}
+                            id="id_{{ field.name }}_{{ forloop.counter0 }}"
+                            name="{{ field.name }}"
+                            type="checkbox"
+                            value="{{ pk }}"
+                        >
+                        {{ label }}
+                        <a href="{% url 'availability' pk %}#todaysdate"
+                           role="button" class="btn btn-primary btn-xs"
+                           onclick="this.target='_blank';"
+                        >
+                            Se detaljer
+                            <span class="glyphicon glyphicon-new-window"></span>
+                        </a>
+                    </label>
+                </div>
+                {% endfor %}
+                
+            </div>
+        {% endif %}
+    </div>
+    <div class="col-sm-3 with-errors">
+        {{ field.errors }}
+    </div>
+</div>
+{% endif %}

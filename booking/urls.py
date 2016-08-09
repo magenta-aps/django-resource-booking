@@ -40,6 +40,8 @@ from booking.views import VisitOccurrenceCustomListView
 from booking.views import CloneResourceView
 from booking.views import EvaluationOverviewView
 
+import booking.views
+
 from django.views.generic import TemplateView
 
 js_info_dict = {
@@ -108,6 +110,9 @@ urlpatterns = patterns(
         EditVisitView.as_view(),
         {'clone': True},
         name='visit-clone'),
+    url(r'^visit/(?P<pk>[0-9]+)/simple_ressources$',
+        booking.views.SimpleRessourcesView.as_view(),
+        name='visit-simple-ressources'),
     url(r'^visit/(?P<visit>[0-9]+)/book$',
         BookingView.as_view(),
         name='visit-book'),
