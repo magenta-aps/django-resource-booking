@@ -4,7 +4,7 @@
     <div class="media-body">
         <div class="small">{{ item.get_type_display }}</div>
         <h3 class="media-heading">
-            #{{ item.pk }} <a href="{{item.get_view_url}}{% if fullquery %}?search={{ fullquery | urlencode }}{% endif %}">{{ item.title }}</a>
+            <a href="{{item.get_view_url}}{% if fullquery %}?search={{ fullquery | urlencode }}{% endif %}">{{ item.title }}</a>
         </h3>
         <p>
             {% if request.GET.q %}
