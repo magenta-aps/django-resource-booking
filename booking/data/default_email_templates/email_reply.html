@@ -12,7 +12,9 @@
     Indhold af den oprindelige e-mail:<br />
     <pre style="margin-left: 2em; padding: 1em; border: 1px solid black;">{{ orig_message.body }}</pre>
 </p>
+{% if besoeg %}
 <p>
     Beskeden er relateret til følgende besøg:<br />
     <a href="{% full_url 'visit-occ-view' besoeg.pk %}">{% full_url 'visit-occ-view' besoeg.pk %}</a>
 </p>
+{% endif %}
