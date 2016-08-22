@@ -21,7 +21,7 @@
             <p>
                 Tak for din henvendelse.
             </p>
-            {% elif occurrence or visit %}
+            {% elif occurrence %}
             <form name="reply-to-email-form" id="reply-to-email-form"
                   action="{% url 'reply-to-email' object.reply_nonce %}"
                   method="post">

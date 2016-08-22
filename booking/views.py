@@ -3261,18 +3261,6 @@ class EmailReplyView(DetailView):
 
         return occ
 
-    def get_visit(self):
-        visit = None
-
-        try:
-            ct = ContentType.objects.get(pk=self.object.content_type_id)
-            if ct.model_class() == Visit:
-                visit = ct.get_object_for_this_type(pk=self.object.object_id)
-        except Exception as e:
-            print "Error when getting email-reply object: %s" % e
-
-        return visit
-
     def get_context_data(self, **kwargs):
         context = super(EmailReplyView, self).get_context_data(**kwargs)
 
@@ -3283,7 +3271,6 @@ class EmailReplyView(DetailView):
         ]
 
         context['occurrence'] = self.get_occurrence()
-        context['visit'] = self.get_visit()
 
         return context
 
@@ -3294,23 +3281,19 @@ class EmailReplyView(DetailView):
             orig_message = self.object
             reply = form.cleaned_data.get('reply', "").strip()
             occurrence = self.get_occurrence()
-            visit = self.get_visit()
-            instance = occurrence if occurrence else visit
-            if occurrence:
-                visit = occurrence.visit
-            recipients = visit.unit.get_editors()
+            recipients = occurrence.visit.unit.get_editors()
             KUEmailMessage.send_email(
                 EmailTemplate.SYSTEM__EMAIL_REPLY,
                 {
                     'occurrence': occurrence,
-                    'visit': visit,
+                    'visit': occurrence.visit,
                     'orig_message': orig_message,
                     'reply': reply,
                     'log_message': _(u"Svar:") + "\n" + reply
                 },
                 recipients,
-                instance=instance,
-                unit=visit.unit
+                occurrence,
+                unit=occurrence.visit.unit
             )
             result_url = reverse(
                 'reply-to-email', args=[self.object.reply_nonce]
