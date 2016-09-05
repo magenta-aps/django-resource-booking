@@ -615,9 +615,9 @@ class OtherProductForm(ProductForm):
 
 
 ProductStudyMaterialFormBase = inlineformset_factory(Product,
-                                                      StudyMaterial,
-                                                      fields=('file',),
-                                                      can_delete=True, extra=1)
+                                                     StudyMaterial,
+                                                     fields=('file',),
+                                                     can_delete=True, extra=1)
 
 
 class ProductStudyMaterialForm(ProductStudyMaterialFormBase):

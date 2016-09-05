@@ -339,8 +339,7 @@ class StudyMaterial(models.Model):
     file = models.FileField(upload_to='material', null=True,
                             blank=True, storage=CustomStorage())
     product = models.ForeignKey('Product', null=True,
-                                 on_delete=models.CASCADE,
-                                 )
+                                on_delete=models.CASCADE,)
 
     def __unicode__(self):
         s = u"{0}: {1}".format(
@@ -1692,21 +1691,6 @@ class Product(models.Model):
                 hours=int(hours),
                 minutes=int(minutes)
             )
-
-    @staticmethod
-    def get_latest_created():
-        return Product.objects.filter(statistics__isnull=False).\
-            order_by('-statistics__created_time')
-
-    @staticmethod
-    def get_latest_updated():
-        return Product.objects.filter(statistics__isnull=False).\
-            order_by('-statistics__updated_time')
-
-    @staticmethod
-    def get_latest_displayed():
-        return Product.objects.filter(statistics__isnull=False).\
-            order_by('-statistics__visited_time')
 
     @staticmethod
     def get_latest_booked():

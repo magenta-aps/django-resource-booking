@@ -1080,7 +1080,7 @@ class ProductCustomListView(ProductListView):
 
 
 class EditProductInitialView(LoginRequiredMixin, HasBackButtonMixin,
-                              TemplateView):
+                             TemplateView):
 
     template_name = 'resource/form.html'
 
@@ -1126,18 +1126,8 @@ class CloneProductView(RedirectView):
             raise Http404()
 
 
-class ProductDetailView(View):
-
-    def get(self, request, *args, **kwargs):
-        pk = kwargs.get("pk")
-        if pk is not None:
-            if Product.objects.filter(id=pk).count() > 0:
-                return redirect(reverse('product-view', args=[pk]))
-        raise Http404
-
-
 class EditProductView(LoginRequiredMixin, RoleRequiredMixin,
-                       HasBackButtonMixin, ProductBookingUpdateView):
+                      HasBackButtonMixin, ProductBookingUpdateView):
     is_creating = True
 
     def __init__(self, *args, **kwargs):
@@ -1178,7 +1168,7 @@ class EditProductView(LoginRequiredMixin, RoleRequiredMixin,
             return {
                 'form': self.get_form(),
                 'fileformset': ProductStudyMaterialForm(None,
-                                                         instance=self.object)
+                                                        instance=self.object)
             }
         if self.request.method == 'POST':
             return {

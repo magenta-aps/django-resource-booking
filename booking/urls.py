@@ -7,7 +7,7 @@ from .views import MainPageView, VisitNotifyView
 from booking.views import PostcodeView, SchoolView, ProductInquireView
 from booking.views import RrulestrView
 from booking.views import ProductListView, ProductCustomListView
-from booking.views import EditProductInitialView, ProductDetailView
+from booking.views import EditProductInitialView
 from booking.views import BookingView, BookingSuccessView
 from booking.views import VisitSearchView
 from booking.views import EditProductView, ProductDetailView
