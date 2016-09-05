@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
 
-from booking.models import OrganizationalUnit, Resource, Visit, Booking
+from booking.models import OrganizationalUnit, Product, Visit, Booking
 from booking.models import EmailTemplate, KUEmailMessage
 from booking.models import VisitComment
 from booking.utils import UnicodeWriter
@@ -27,7 +27,7 @@ from django.views.generic.edit import UpdateView, FormView, DeleteView
 from booking.views import LoginRequiredMixin, AccessDenied
 from booking.views import EditorRequriedMixin, VisitCustomListView
 from django.views.generic.list import ListView
-from profile.forms import UserCreateForm, EditMyResourcesForm, StatisticsForm
+from profile.forms import UserCreateForm, EditMyProductsForm, StatisticsForm
 from profile.models import AbsDateDist
 from profile.models import EmailLoginURL
 from profile.models import UserProfile, UserRole, EDIT_ROLES, NONE
@@ -128,7 +128,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
     def lists_for_editors(self):
         visitlist = {
             'color': self.HEADING_BLUE,
-            'type': 'Resource',
+            'type': 'Product',
             'title': {
                 'text': ungettext_lazy(
                     u'%(count)d tilbud i min enhed',
@@ -137,7 +137,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                 ),
                 'link': reverse('search') + '?u=-3'
             },
-            'queryset': Resource.objects.filter(
+            'queryset': Product.objects.filter(
                 organizationalunit=self.request.user
                 .userprofile.get_unit_queryset()
             ).order_by("-statistics__created_time"),
@@ -209,12 +209,12 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         return [
             {
                 'color': self.HEADING_BLUE,
-                'type': 'Resource',
+                'type': 'Product',
                 'title': {
                     'text': _(u'Mine tilbud'),
                     'link': reverse('search') + '?u=-3'
                 },
-                'queryset': Resource.objects.filter(
+                'queryset': Product.objects.filter(
                     product__visit=taught_vos
                 ).order_by("title"),
             },
@@ -260,12 +260,12 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         return [
             {
                 'color': self.HEADING_BLUE,
-                'type': 'Resource',
+                'type': 'Product',
                 'title': {
                     'text': _(u'Mine tilbud'),
                     'link': reverse('search') + '?u=-3'
                 },
-                'queryset': Resource.objects.filter(
+                'queryset': Product.objects.filter(
                     product__visit=hosted_vos
                 ).order_by("title"),
             },
@@ -785,17 +785,17 @@ class EmailLoginView(DetailView):
         return redirect(self.get_dest(request, *args, **kwargs))
 
 
-class EditMyResourcesView(EditorRequriedMixin, UpdateView):
+class EditMyProductsView(EditorRequriedMixin, UpdateView):
     model = UserProfile
-    form_class = EditMyResourcesForm
+    form_class = EditMyProductsForm
     template_name = 'profile/my_resources.html'
 
     def get_form(self, form_class=None):
-        form = super(EditMyResourcesView, self).get_form(form_class=form_class)
+        form = super(EditMyProductsView, self).get_form(form_class=form_class)
 
         userprofile = self.request.user.userprofile
 
-        form.fields['my_resources'].queryset = Resource.objects.filter(
+        form.fields['my_resources'].queryset = Product.objects.filter(
             organizationalunit=userprofile.get_unit_queryset()
         ).order_by('title')
 
@@ -808,7 +808,7 @@ class EditMyResourcesView(EditorRequriedMixin, UpdateView):
         if request.POST.get("cancel"):
             return redirect(self.get_success_url())
 
-        return super(EditMyResourcesView, self).post(request, *args, **kwargs)
+        return super(EditMyProductsView, self).post(request, *args, **kwargs)
 
     def get_success_url(self):
         return reverse('user_profile')

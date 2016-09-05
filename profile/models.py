@@ -11,7 +11,7 @@ from django.utils.translation import ugettext_lazy as _
 
 import booking.models
 
-from booking.models import OrganizationalUnit, Resource
+from booking.models import OrganizationalUnit, Product
 from booking.utils import get_related_content_types
 
 # User roles
@@ -103,7 +103,7 @@ class UserProfile(models.Model):
     )
 
     my_resources = models.ManyToManyField(
-        Resource,
+        Product,
         blank=True,
         verbose_name=_(u"Mine tilbud")
     )

@@ -64,7 +64,7 @@
                     </div>
                 {% endfor %}
 
-            {% elif list.type == 'Resource' %}
+            {% elif list.type == 'Product' %}
                 {% for res in list.limited_qs|default:list.queryset %}
                     <div class="list-group-item clearfix">
                         <a href="{% url 'resource-view' res.pk %}" title="{% trans 'Se tilbuddets detaljer og evt. tilmeldinger' %}">

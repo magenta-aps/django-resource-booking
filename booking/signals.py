@@ -1,11 +1,10 @@
 from django.db.models.signals import post_save
 from booking.models import Guest
 from booking.models import Booking, ClassBooking, TeacherBooking
-from booking.models import Resource, Product
+from booking.models import Product
 from booking.models import Visit
 
 MODELS_WITH_SEARCHINDEX = set([
-    Resource,
     Product,
     Visit
 ])
