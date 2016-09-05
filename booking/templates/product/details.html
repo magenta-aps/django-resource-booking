@@ -29,13 +29,13 @@
             <h2>{{ object.get_type_display }}</h2>
             
             {% if can_edit %}
-                <a class="pull-right btn btn-primary margin-bottom-10" href="{% url 'visit-edit' object.pk %}">{% trans '+ Redigér' %}</a>
+                <a class="pull-right btn btn-primary margin-bottom-10" href="{% url 'product-edit' object.pk %}">{% trans '+ Redigér' %}</a>
             {% endif %}
             {% if user.userprofile.can_create %}
-                <a class="pull-right btn btn-primary margin-bottom-10 margin-right-10" href="{% url 'visit-clone' object.pk %}">{% trans 'Kopier tilbud' %}</a>
+                <a class="pull-right btn btn-primary margin-bottom-10 margin-right-10" href="{% url 'product-clone' object.pk %}">{% trans 'Kopier tilbud' %}</a>
             {% endif %}
             {% if can_edit %}
-                <a class="pull-right btn btn-primary margin-bottom-10 margin-right-10" href="{% url 'visit-simple-ressources' object.pk %}">{% trans 'Redigér ressourcer' %}</a>
+                <a class="pull-right btn btn-primary margin-bottom-10 margin-right-10" href="{% url 'product-simple-ressources' object.pk %}">{% trans 'Redigér ressourcer' %}</a>
             {% endif %}
             
             <h1>{{ object.title }}</h1>
@@ -62,18 +62,18 @@
             {% endif %}
             <div class="well order-buttons hidden-print">
                 {% if object.is_bookable %}
-                    <a class="btn btn-default" data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'visit-book' object.id %}?modal=1">
+                    <a class="btn btn-default" data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'product-book' object.id %}?modal=1">
                         {% trans 'Tilmeld' %}
                         <span class="glyphicon glyphicon-chevron-right"></span>
                     </a>
                     {% elif object.can_join_waitinglist %}
-                    <a class="btn btn-default" data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'visit-book' object.id %}?modal=1">
+                    <a class="btn btn-default" data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'product-book' object.id %}?modal=1">
                         {% trans 'Skriv på venteliste' %}
                         <span class="glyphicon glyphicon-chevron-right"></span>
                     </a>
                 {% endif %}
                 {% if object.tilbudsansvarlig or object.created_by %}
-                    <a class="btn btn-default" data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'visit-inquire' object.id %}?modal=1" >
+                    <a class="btn btn-default" data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'product-inquire' object.id %}?modal=1" >
                         {% trans 'Spørg om tilbud' %}
                         <span class="glyphicon glyphicon-question-sign"></span>
                     </a>
@@ -138,24 +138,24 @@
                             
                             <dt>{% trans 'Arrangør' %}:</dt>
                             <dd>
-                                {% if object.unit.url %}
-                                    <a href="{{ object.unit.url }}" target="_blank">
+                                {% if object.organizationalunit.url %}
+                                    <a href="{{ object.organizationalunit.url }}" target="_blank">
                                 {% endif %}
-                                <strong>{{ object.unit.name }}</strong>
-                                {% if object.unit.url %}
+                                <strong>{{ object.organizationalunit.name }}</strong>
+                                {% if object.organizationalunit.url %}
                                     </a> <span class="glyphicon glyphicon-new-window"></span>
                                 {% endif %}
                             </dd>
 
                             {% if request.user.userprofile.can_create %}
-                                {% if object.visitoccurrence_set.all %}
+                                {% if object.visit_set.all %}
                                 <dt>{% trans 'Hvornår:' %}</dt>
                                 <dd>
                                     <ul class="list-unstyled" id="dato">
-                                    {% for event in object.visitoccurrence_set.all %}
+                                    {% for event in object.visit_set.all %}
                                         {% if event.start_datetime %}
                                             <li data-expired="{% if event.expired %}true{% else %}false{% endif %}">
-                                                <a href="{% url 'visit-occ-view' event.pk %}">
+                                                <a href="{% url 'visit-view' event.pk %}">
                                                     {{ event.start_datetime|date:'d.m.Y' }} kl. {{ event.start_datetime|time:'H.i' }}
                                                     {% if event.expired %}
                                                         <br/>{% trans '(udløbet)' %}

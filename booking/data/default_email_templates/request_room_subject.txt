@@ -1,1 +1,1 @@
-Anmodning om lokale til besøg "{{ visit.title }}"
+Anmodning om lokale til besøg "{{ product.title }}"

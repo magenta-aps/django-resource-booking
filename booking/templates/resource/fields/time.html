@@ -8,23 +8,23 @@
         <div class="col-sm-10 pre-scrollable">
             <ul id="id_time" class="list-unstyled"></ul>
             
-            {% if object and object.visitoccurrence_set %}
-                <ul id="existing-recurrence-dates" class="list-unstyled" data-visit-id="{{ object.id }}">
-                    {% for occurrence in object.visitoccurrence_set.all %}
-                        {% if occurrence.is_booked %}
-                            <li class="date" data-date="{{ occurrence.start_datetime|date:'d-m-Y H:i' }} 1">
-                                <div><span class="glyphicon glyphicon-calendar"></span> {{ occurrence.start_datetime|date:'d-m-Y' }}</div>h
+            {% if object and object.visit_set %}
+                <ul id="existing-recurrence-dates" class="list-unstyled" data-product-id="{{ object.id }}">
+                    {% for visit in object.visit_set.all %}
+                        {% if visit.is_booked %}
+                            <li class="date" data-date="{{ visit.start_datetime|date:'d-m-Y H:i' }} 1">
+                                <div><span class="glyphicon glyphicon-calendar"></span> {{ visit.start_datetime|date:'d-m-Y' }}</div>h
                             </li>
                         {% else %}
-                            <li class="date" data-date="{{ occurrence.start_datetime|date:'d-m-Y H:i' }}">
-                                <div><span class="glyphicon glyphicon-calendar"></span> {{ occurrence.start_datetime|date:'d-m-Y' }}</div>
-                                <div><span class="glyphicon glyphicon-time"></span> <input class="btn-add-time timepick" type="text" name="timepick" placeholder="{% trans 'Tilføj starttid' %}" value="{{ occurrence.start_datetime|date:'H:i' }}"></div>
+                            <li class="date" data-date="{{ visit.start_datetime|date:'d-m-Y H:i' }}">
+                                <div><span class="glyphicon glyphicon-calendar"></span> {{ visit.start_datetime|date:'d-m-Y' }}</div>
+                                <div><span class="glyphicon glyphicon-time"></span> <input class="btn-add-time timepick" type="text" name="timepick" placeholder="{% trans 'Tilføj starttid' %}" value="{{ visit.start_datetime|date:'H:i' }}"></div>
                                 <button type="button" class="btn-rm-date"><span class="glyphicon glyphicon-remove"></span></button>
                             </li>
                         {% endif %}
                     {% endfor %}
                 </ul>
-                <input id="occurrences" name="occurrences" type="hidden">
+                <input id="visits" name="visits" type="hidden">
             {% endif %}
             
             <label class="btn btn-primary btn-sm" for="id_datepick">

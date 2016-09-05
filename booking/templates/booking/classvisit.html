@@ -22,7 +22,7 @@
             {% include "booking/fields/basedata.html" %}
             {% include "booking/fields/school.html" %}
             {% include "booking/fields/location.html" %}
-            {% if visit.resourcegymnasiefag_set.count > 0 %}
+            {% if product.resourcegymnasiefag_set.count > 0 %}
                 <div id="gymnasiefag"class="rowcontainer">
                 {{ subjectform.management_form }}
                 {% for form in subjectform %}
@@ -65,7 +65,7 @@
                 </div>
             {% endif %}
 
-            {% if visit.resourcegrundskolefag_set.count > 0 %}
+            {% if product.resourcegrundskolefag_set.count > 0 %}
                 <div id="grundskolefag" class="rowcontainer">
                 {{ grundskolesubjectform.management_form }}
                 {% for form in grundskolesubjectform %}

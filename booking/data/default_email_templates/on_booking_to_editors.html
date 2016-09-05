@@ -6,18 +6,18 @@
     {# Denne besked sendes til brugere der login i systemet (koordinatorer) #}
 
     En eller flere gæster har tilmeldt sig besøget
-    <a href="{% full_url 'visit-occ-view' besoeg.pk %}">{{ visit.title }}</a>{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date:'d.m.Y' }}
+    <a href="{% full_url 'visit-view' besoeg.pk %}">{{ product.title }}</a>{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date:'d.m.Y' }}
     {% blocktrans with time=besoeg.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}{% endif %}.
-    Besøget afholdes på lokaliteten <a href="{% full_url 'visit-view' visit.pk %}#mapinfo">{{ visit.locality.full_address }}</a>.
+    Besøget afholdes på lokaliteten <a href="{% full_url 'product-view' product.pk %}#mapinfo">{{ product.locality.full_address }}</a>.
 
 {% else %}
 
     {# Denne besked sendes til kontaktpersoner (uden login) der er angivet på tilbuddet #}
 
     En eller flere gæster har tilmeldt sig besøget
-    <a href="{% full_url 'visit-view' visit.pk %}">{{ visit.title }}</a>{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date:'d.m.Y' }}
+    <a href="{% full_url 'product-view' product.pk %}">{{ product.title }}</a>{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date:'d.m.Y' }}
     {% blocktrans with time=besoeg.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}{% endif %}.
-    Besøget afholdes på lokaliteten <a href="{% full_url 'visit-view' visit.pk %}#mapinfo">{{ visit.locality.full_address }}</a>.
+    Besøget afholdes på lokaliteten <a href="{% full_url 'product-view' product.pk %}#mapinfo">{{ product.locality.full_address }}</a>.
     Du er anført som kontaktperson for besøget.
 
 {% endif %}
@@ -30,5 +30,5 @@
 <p>
     Venlig hilsen<br />
     <br />
-    {{ visit.unit.name }}
+    {{ product.organizationalunit.name }}
 </p>

@@ -3,12 +3,12 @@
     <p>Kære {{ recipient.get_full_name }}.</p>
 
     <p>
-        Vi glæder os til at se dig til "{{ visit.title }}"{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date:'d.m.Y' }}
+        Vi glæder os til at se dig til "{{ product.title }}"{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date:'d.m.Y' }}
         {% blocktrans with time=besoeg.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}{% endif %}
         på Københavns Universitet:
-        <a href="{% full_url 'visit-view' visit.pk %}#mapinfo">{{ visit.locality.full_address }}</a>.
+        <a href="{% full_url 'product-view' product.pk %}#mapinfo">{{ product.locality.full_address }}</a>.
         Hvis du har spørgsmål vedrørende din tilmelding, kan du skrive til
-        {% include 'booking/email/snippets/contact_addresses.html' with visit=visit %}
+        {% include 'booking/email/snippets/contact_addresses.html' with product=product %}
     </p>
     <p>
         Detaljer for din tilmelding:
@@ -20,7 +20,7 @@
         Vi glæder os til at se dig!
     </p>
     <p>
-        <a href="{% full_url 'visit-view' visit.pk %}">Læs mere om tilbuddet her</a>.
+        <a href="{% full_url 'product-view' product.pk %}">Læs mere om tilbuddet her</a>.
     </p>
     <p>
         På foKUs.ku.dk kan du se alle tilbud fra Københavns Universitet.
@@ -34,9 +34,9 @@
 
     <p>
         Dette er en reminder om, at du skal være vært på besøg
-        <a href="{% full_url 'visit-occ-view' besoeg.pk %}">{{ visit.title }}</a>{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date:'d.m.Y' }}{% blocktrans with time=besoeg.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}{% endif %}.
+        <a href="{% full_url 'visit-view' besoeg.pk %}">{{ product.title }}</a>{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date:'d.m.Y' }}{% blocktrans with time=besoeg.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}{% endif %}.
         Besøget afholdes på denne lokalitet
-        <a href="{% full_url 'visit-view' visit.pk %}#mapinfo">{{ visit.locality.full_address }}</a>.
+        <a href="{% full_url 'product-view' product.pk %}#mapinfo">{{ product.locality.full_address }}</a>.
     </p>
     <p>
         Vær opmærksom på, om der er forberedelsestid.
@@ -45,7 +45,7 @@
         Detaljer for tilmelding(er):
     </p>
     <p>
-        <strong>Forberedelsestid</strong>: {{ visit.preparation_time|default:"Ikke angivet" }}
+        <strong>Forberedelsestid</strong>: {{ product.preparation_time|default:"Ikke angivet" }}
     </p>
     {% include 'booking/email/snippets/booking_list.html' %}
 
@@ -56,9 +56,9 @@
     <p>Kære underviser.</p>
     <p>
         Dette er en reminder om, at du skal være underviser på besøg
-        <a href="{% full_url 'visit-occ-view' besoeg.pk %}">{{ visit.title }}</a>{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date:'d.m.Y' }}{% blocktrans with time=besoeg.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}{% endif %}.
+        <a href="{% full_url 'visit-view' besoeg.pk %}">{{ product.title }}</a>{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date:'d.m.Y' }}{% blocktrans with time=besoeg.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}{% endif %}.
         Besøget afholdes på denne lokalitet
-        <a href="{% full_url 'visit-view' visit.pk %}#mapinfo">{{ visit.locality.full_address }}</a>.
+        <a href="{% full_url 'product-view' product.pk %}#mapinfo">{{ product.locality.full_address }}</a>.
     </p>
     <p>
         Vær opmærksom på, om der er forberedelsestid.
@@ -67,7 +67,7 @@
         Detaljer for tilmelding(er):
     </p>
     <p>
-        <strong>Forberedelsestid</strong>: {{ visit.preparation_time|default:"Ikke angivet" }}
+        <strong>Forberedelsestid</strong>: {{ product.preparation_time|default:"Ikke angivet" }}
     </p>
 
     {% include 'booking/email/snippets/booking_list.html' %}
@@ -75,11 +75,11 @@
 {% else %}
 
     <p>
-        Besøget <a href="{% full_url 'visit-occ-view' besoeg.pk %}">{{ visit.title }} d. {{ besoeg.start_datetime }}</a> er nu færdigplanlagt.
+        Besøget <a href="{% full_url 'visit-view' besoeg.pk %}">{{ product.title }} d. {{ besoeg.start_datetime }}</a> er nu færdigplanlagt.
     </p>
     <p>
         Du kan læse yderligere om besøget på adressen
-        <a href="{% full_url 'visit-occ-view' besoeg.pk %}">{% full_url 'visit-occ-view' besoeg.pk %}</a>
+        <a href="{% full_url 'visit-view' besoeg.pk %}">{% full_url 'visit-view' besoeg.pk %}</a>
     </p>
 
 {% endif %}
@@ -89,5 +89,5 @@
 <p>
     Venlig hilsen<br />
     <br />
-    {{ visit.unit.name }}
+    {{ product.organizationalunit.name }}
 </p>

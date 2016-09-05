@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
 
-from booking.models import Unit, Resource, VisitOccurrence, UserPerson, Booking
+from booking.models import OrganizationalUnit, Resource, Visit, Booking
 from booking.models import EmailTemplate, KUEmailMessage
-from booking.models import VisitOccurrenceComment
+from booking.models import VisitComment
 from booking.utils import UnicodeWriter
 from django.contrib import messages
 from django.db.models import F
@@ -25,11 +25,11 @@ from django.views.generic import TemplateView, DetailView
 from django.views.generic.edit import UpdateView, FormView, DeleteView
 
 from booking.views import LoginRequiredMixin, AccessDenied
-from booking.views import EditorRequriedMixin, VisitOccurrenceCustomListView
+from booking.views import EditorRequriedMixin, VisitCustomListView
 from django.views.generic.list import ListView
 from profile.forms import UserCreateForm, EditMyResourcesForm, StatisticsForm
 from profile.models import AbsDateDist
-from profile.models import EmailLoginEntry
+from profile.models import EmailLoginURL
 from profile.models import UserProfile, UserRole, EDIT_ROLES, NONE
 from profile.models import HOST, TEACHER
 from profile.models import FACULTY_EDITOR, COORDINATOR, user_role_choices
@@ -61,33 +61,33 @@ class ProfileView(LoginRequiredMixin, TemplateView):
 
         context['lists'].extend([{
             'color': self.HEADING_GREEN,
-            'type': 'VisitOccurrence',
+            'type': 'Visit',
             'title': ungettext_lazy(
                 u'%(count)d senest afviklet besøg',
                 u'%(count)d seneste afviklede besøg',
                 'count'
-            ) % {'count': VisitOccurrence.get_recently_held().count()},
-            'queryset': VisitOccurrence.get_recently_held(),
+            ) % {'count': Visit.get_recently_held().count()},
+            'queryset': Visit.get_recently_held(),
             'limit': 10,
             'button': {
                 'text': _(u'Søg i alle'),
-                'link': reverse('visit-occ-customlist') + "?type=%s" %
-                VisitOccurrenceCustomListView.TYPE_LATEST_COMPLETED
+                'link': reverse('visit-customlist') + "?type=%s" %
+                                                          VisitCustomListView.TYPE_LATEST_COMPLETED
             }
         }, {
             'color': self.HEADING_BLUE,
-            'type': 'VisitOccurrence',
+            'type': 'Visit',
             'title': ungettext_lazy(
                 u'%(count)d dagens besøg',
                 u'%(count)d dagens besøg',
                 'count'
             ),
-            'queryset': VisitOccurrence.get_todays_occurrences(),
+            'queryset': Visit.get_todays_visits(),
             'limit': 10,
             'button': {
                 'text': _(u'Søg i alle'),
-                'link': reverse('visit-occ-customlist') + "?type=%s" %
-                VisitOccurrenceCustomListView.TYPE_TODAY
+                'link': reverse('visit-customlist') + "?type=%s" %
+                                                          VisitCustomListView.TYPE_TODAY
             }
         }])
 
@@ -138,7 +138,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                 'link': reverse('search') + '?u=-3'
             },
             'queryset': Resource.objects.filter(
-                unit=self.request.user.userprofile.get_unit_queryset()
+                organizationalunit=self.request.user.userprofile.get_unit_queryset()
             ).order_by("-statistics__created_time"),
         }
 
@@ -153,14 +153,14 @@ class ProfileView(LoginRequiredMixin, TemplateView):
 
         unplanned = {
             'color': self.HEADING_RED,
-            'type': 'VisitOccurrence',
+            'type': 'Visit',
             'title': ungettext_lazy(
                 u"%(count)d besøg under planlægning",
                 u"%(count)d besøg under planlægning",
                 'count'
             ),
             'queryset': self.sort_vo_queryset(
-                VisitOccurrence.being_planned_queryset(visit__unit=unit_qs)
+                Visit.being_planned_queryset(product__organizationalunit=unit_qs)
                             .annotate(num_participants=(
                                 Coalesce(Count("bookings__booker__pk"), 0) +
                                 Coalesce(
@@ -169,40 +169,40 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                                 )
                             )
                 ).filter(num_participants__gte=1)
-                # See also VisitOccurrenceSearchView.filter_by_participants
+                # See also VisitSearchView.filter_by_participants
             )
         }
         if len(unplanned['queryset']) > 10:
             unplanned['limited_qs'] = unplanned['queryset'][:10]
             unplanned['button'] = {
                 'text': _(u'Søg i alle'),
-                'link': reverse('visit-occ-search') + '?u=-3&w=-1&go=1&p_min=1'
+                'link': reverse('visit-search') + '?u=-3&w=-1&go=1&p_min=1'
             }
 
         planned = {
             'color': self.HEADING_GREEN,
-            'type': 'VisitOccurrence',
+            'type': 'Visit',
             'title': ungettext_lazy(
                 u"%(count)d planlagt besøg",
                 u"%(count)d planlagte besøg",
                 'count'
             ),
             'queryset': self.sort_vo_queryset(
-                VisitOccurrence.planned_queryset(visit__unit=unit_qs)
+                Visit.planned_queryset(product__organizationalunit=unit_qs)
             )
         }
         if len(planned['queryset']) > 10:
             planned['limited_qs'] = planned['queryset'][:10]
             planned['button'] = {
                 'text': _(u'Søg i alle'),
-                'link': reverse('visit-occ-search') + '?u=-3&w=-2&go=1'
+                'link': reverse('visit-search') + '?u=-3&w=-2&go=1'
             }
 
         return [visitlist, unplanned, planned]
 
     def lists_for_teachers(self):
         user = self.request.user
-        taught_vos = user.taught_visitoccurrences.all()
+        taught_vos = user.taught_visits.all()
         unit_qs = self.request.user.userprofile.get_unit_queryset()
 
         return [
@@ -214,25 +214,25 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     'link': reverse('search') + '?u=-3'
                 },
                 'queryset': Resource.objects.filter(
-                    visit__visitoccurrence=taught_vos
+                    product__visit=taught_vos
                 ).order_by("title"),
             },
             {
                 'color': self.HEADING_RED,
-                'type': 'VisitOccurrence',
+                'type': 'Visit',
                 'title': ungettext_lazy(
                     u"%(count)d besøg der mangler undervisere",
                     u"%(count)d besøg der mangler undervisere",
                     'count'
                 ),
                 'queryset': self.sort_vo_queryset(
-                    VisitOccurrence.objects.annotate(
+                    Visit.objects.annotate(
                         num_assigned=Count('hosts')
                     ).filter(
-                        visit__unit=unit_qs,
+                        product__organizationalunit=unit_qs,
                         num_assigned__lt=Coalesce(
                             'override_needed_hosts',
-                            'visit__needed_hosts'
+                            'product__needed_hosts'
                         )
                     ).exclude(
                         teachers=self.request.user
@@ -241,7 +241,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             },
             {
                 'color': self.HEADING_GREEN,
-                'type': 'VisitOccurrence',
+                'type': 'Visit',
                 'title': ungettext_lazy(
                     u"%(count)d besøg hvor jeg er underviser",
                     u"%(count)d besøg hvor jeg er underviser",
@@ -253,7 +253,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
 
     def lists_for_hosts(self):
         user = self.request.user
-        hosted_vos = user.hosted_visitoccurrences.all()
+        hosted_vos = user.hosted_visits.all()
         unit_qs = self.request.user.userprofile.get_unit_queryset()
 
         return [
@@ -265,24 +265,24 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     'link': reverse('search') + '?u=-3'
                 },
                 'queryset': Resource.objects.filter(
-                    visit__visitoccurrence=hosted_vos
+                    product__visit=hosted_vos
                 ).order_by("title"),
             },
             {
                 'color': self.HEADING_RED,
-                'type': 'VisitOccurrence',
+                'type': 'Visit',
                 'title': ungettext_lazy(
                     u"%(count)d besøg der mangler værter",
                     u"%(count)d besøg der mangler værter",
                     'count',
                 ),
-                'queryset': VisitOccurrence.objects.annotate(
+                'queryset': Visit.objects.annotate(
                     num_assigned=Count('hosts')
                 ).filter(
-                    visit__unit=unit_qs,
+                    product__organizationalunit=unit_qs,
                     num_assigned__lt=Coalesce(
                         'override_needed_hosts',
-                        'visit__needed_hosts'
+                        'product__needed_hosts'
                     )
                 ).exclude(
                     hosts=self.request.user.pk
@@ -290,7 +290,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             },
             {
                 'color': self.HEADING_GREEN,
-                'type': 'VisitOccurrence',
+                'type': 'Visit',
                 'title': ungettext_lazy(
                     u"%(count)d besøg hvor jeg er vært",
                     u"%(count)d besøg hvor jeg er vært",
@@ -320,7 +320,7 @@ class CreateUserView(FormView, UpdateView):
         current_user = self.request.user
         current_profile = current_user.userprofile
         current_role = current_profile.get_role()
-        current_unit = current_profile.unit
+        current_unit = current_profile.organizationalunit
 
         self.get_object()
 
@@ -328,12 +328,12 @@ class CreateUserView(FormView, UpdateView):
             if self.request.method == 'POST':
                 if current_role == FACULTY_EDITOR:
                     # This should not be possible!
-                    if current_profile.unit is None:
+                    if current_profile.organizationalunit is None:
                         raise AccessDenied(
                             _(u"Du har rollen 'Fakultetsredaktør', men " +
                               "er ikke tilknyttet nogen enhed.")
                         )
-                    unit = Unit.objects.get(pk=self.request.POST[u'unit'])
+                    unit = OrganizationalUnit.objects.get(pk=self.request.POST[u'organizationalunit'])
                     if unit and not unit.belongs_to(current_unit):
                         raise AccessDenied(
                             _(u"Du kan kun redigere enheder, som " +
@@ -341,12 +341,12 @@ class CreateUserView(FormView, UpdateView):
                         )
                 elif current_role == COORDINATOR:
                     # This should not be possible!
-                    if current_profile.unit is None:
+                    if current_profile.organizationalunit is None:
                         raise AccessDenied(
                             _(u"Du har rollen 'Koordinator', men er ikke " +
                               "tilknyttet nogen enhed.")
                         )
-                    unit = Unit.objects.get(pk=self.request.POST[u'unit'])
+                    unit = OrganizationalUnit.objects.get(pk=self.request.POST[u'organizationalunit'])
                     if unit and not unit == current_unit:
                         raise AccessDenied(
                             _(u"Du kan kun redigere enheder, som du selv er" +
@@ -382,11 +382,11 @@ class CreateUserView(FormView, UpdateView):
         form = self.get_form()
         if form.is_valid():
             user_role_id = int(self.request.POST[u'role'])
-            unit_id = int(self.request.POST[u'unit'])
+            unit_id = int(self.request.POST[u'organizationalunit'])
 
             user = form.save()
             user_role = UserRole.objects.get(pk=user_role_id)
-            unit = Unit.objects.get(pk=unit_id)
+            unit = OrganizationalUnit.objects.get(pk=unit_id)
 
             cd = form.cleaned_data
             avail_txt = cd['availability_text']
@@ -397,7 +397,7 @@ class CreateUserView(FormView, UpdateView):
                 user_profile = UserProfile(
                     user=user,
                     user_role=user_role,
-                    unit=unit,
+                    organizationalunit=unit,
                     availability_text=avail_txt,
                     additional_information=add_info,
                 )
@@ -406,15 +406,12 @@ class CreateUserView(FormView, UpdateView):
                 user_profile = user.userprofile
                 user_profile.user = user
                 user_profile.user_role = user_role
-                user_profile.unit = unit
+                user_profile.organizationalunit = unit
                 cd = form.cleaned_data
                 user_profile.availability_text = avail_txt
                 user_profile.additional_information = add_info
 
             user_profile.save()
-
-            # Create a UserPerson object if one doesn't exist
-            UserPerson.create(user)
 
             # Send email to newly created users
             if not pk:
@@ -493,7 +490,7 @@ class DeleteUserView(DeleteView):
         return "/profile/users"
 
     def delete(self, request, *args, **kwargs):
-        VisitOccurrenceComment.on_delete_user(self.get_object())
+        VisitComment.on_delete_user(self.get_object())
         return super(DeleteUserView, self).delete(request, *args, **kwargs)
 
 
@@ -509,14 +506,14 @@ class UserListView(EditorRequriedMixin, ListView):
         user = self.request.user
         unit_qs = user.userprofile.get_unit_queryset()
 
-        qs = self.model.objects.filter(userprofile__unit__in=unit_qs)
+        qs = self.model.objects.filter(userprofile__organizationalunit__in=unit_qs)
 
         try:
-            self.selected_unit = int(self.request.GET.get("unit", None))
+            self.selected_unit = int(self.request.GET.get("organizationalunit", None))
         except:
             pass
         if self.selected_unit:
-            qs = qs.filter(userprofile__unit=self.selected_unit)
+            qs = qs.filter(userprofile__organizationalunit=self.selected_unit)
 
         try:
             self.selected_role = int(self.request.GET.get("role", None))
@@ -559,7 +556,7 @@ class UserListView(EditorRequriedMixin, ListView):
 
 
 class UnitListView(EditorRequriedMixin, ListView):
-    model = Unit
+    model = OrganizationalUnit
 
     def get_context_data(self, **kwargs):
         context = super(UnitListView, self).get_context_data(**kwargs)
@@ -599,7 +596,7 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
         if self.units:
             context['units'] = self.units
             qs = Booking.objects\
-                .select_related('visitoccurrence__visit__resource_ptr__unit') \
+                .select_related('visit__productresource_ptr__organizationalunit') \
                 .select_related('booker__school')\
                 .prefetch_related('bookinggymnasiesubjectlevel_set__subject') \
                 .prefetch_related('bookinggymnasiesubjectlevel_set__level') \
@@ -607,14 +604,14 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
                                   '__subject')\
                 .prefetch_related('bookinggrundskolesubjectlevel_set__level') \
                 .filter(
-                    visitoccurrence__visit__resource_ptr__unit_id__in=self
+                    visit__productresource_ptr__organizationalunit_id__in=self
                         .units
                 )
             if from_date:
-                qs = qs.filter(visitoccurrence__start_datetime__gte=from_date)
+                qs = qs.filter(visit__start_datetime__gte=from_date)
             if to_date:
-                qs = qs.filter(visitoccurrence__end_datetime__lte=to_date)
-            qs = qs.order_by('visitoccurrence__visit__resource_ptr')
+                qs = qs.filter(visit__end_datetime__lte=to_date)
+            qs = qs.order_by('visit__productresource_ptr')
             context['bookings'] = qs
         context.update(kwargs)
 
@@ -627,11 +624,11 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
         unit_ids = []
         for unit_id in self.request.GET.getlist('units', None):
             unit_ids.append(int(unit_id))
-        if user.userprofile.unit:
-            form.fields['units'].initial = [user.userprofile.unit.pk]
+        if user.userprofile.organizationalunit:
+            form.fields['units'].initial = [user.userprofile.organizationalunit.pk]
             form.fields['units'].empty_label = None
         if len(unit_ids) > 0:
-            self.units = Unit.objects.all()\
+            self.units = OrganizationalUnit.objects.all()\
                 .filter(pk__in=unit_ids)
             form.fields['units'].initial = self.units
         if self.request.GET.get('from_date') != '':
@@ -682,12 +679,12 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
                         tour_desired = _(u'Ja')
 
             writer.writerow([
-                booking.visitoccurrence.visit.resource_ptr.unit.name,
+                booking.visit.product.resource_ptr.organizationalunit.name,
                 booking.__unicode__(),
                 booking.visit.get_type_display(),
-                booking.visitoccurrence.visit.resource_ptr.title,
-                str(booking.visitoccurrence.start_datetime) + " til " +
-                str(booking.visitoccurrence.end_datetime),
+                booking.visit.product.resource_ptr.title,
+                str(booking.visit.start_datetime) + " til " +
+                str(booking.visit.end_datetime),
                 u", ".join([
                     u'%s/%s' % (x.subject, x.level)
                     for x in booking.bookinggrundskolesubjectlevel_set.all()
@@ -708,7 +705,7 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
                 str(booking.booker.school.address),
                 booking.booker.get_full_name(),
                 booking.booker.get_email(),
-                booking.visitoccurrence.visit.resource_ptr.comment,
+                booking.visit.product.resource_ptr.comment,
                 booking.comments,
                 u", ".join([
                     u'%s' % (x.get_full_name())
@@ -726,7 +723,7 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
 
 
 class EmailLoginView(DetailView):
-    model = EmailLoginEntry
+    model = EmailLoginURL
     template_name = "profile/email_login.html"
     slug_field = 'uuid'
     expired = False
@@ -789,7 +786,7 @@ class EditMyResourcesView(EditorRequriedMixin, UpdateView):
         userprofile = self.request.user.userprofile
 
         form.fields['my_resources'].queryset = Resource.objects.filter(
-            unit=userprofile.get_unit_queryset()
+            organizationalunit=userprofile.get_unit_queryset()
         ).order_by('title')
 
         return form
@@ -831,7 +828,7 @@ class AvailabilityView(LoginRequiredMixin, DetailView):
 
         user = self.object.user
         if self.object.is_teacher:
-            accepted_qs = user.taught_visitoccurrences.order_by(
+            accepted_qs = user.taught_visits.order_by(
                 'start_datetime'
             )
             context['accepted'] = self.to_datelist(accepted_qs)
@@ -840,7 +837,7 @@ class AvailabilityView(LoginRequiredMixin, DetailView):
             ).order_by('start_datetime')
             context['unaccepted'] = self.to_datelist(unaccepted_qs)
         elif self.object.is_host:
-            accepted_qs = user.hosted_visitoccurrences.order_by(
+            accepted_qs = user.hosted_visits.order_by(
                 'start_datetime'
             )
             context['accepted'] = self.to_datelist(accepted_qs)

@@ -8,19 +8,19 @@ from django.shortcuts import redirect
 from django.utils import formats, timezone
 from django.utils.translation import ugettext as _
 from django.views.generic import UpdateView, FormView
-from booking.booking_workflows.forms import ChangeVisitOccurrenceStatusForm, \
+from booking.booking_workflows.forms import ChangeVisitStatusForm, \
     BecomeSomethingForm
-from booking.booking_workflows.forms import VisitOccurrenceAutosendFormSet
-from booking.booking_workflows.forms import ChangeVisitOccurrenceTeachersForm
-from booking.booking_workflows.forms import ChangeVisitOccurrenceHostsForm
-from booking.booking_workflows.forms import ChangeVisitOccurrenceRoomsForm
-from booking.booking_workflows.forms import ChangeVisitOccurrenceCommentsForm
-from booking.booking_workflows.forms import ChangeVisitOccurrenceEvalForm
-from booking.booking_workflows.forms import VisitOccurrenceAddLogEntryForm
-from booking.booking_workflows.forms import VisitOccurrenceAddCommentForm
-from booking.booking_workflows.forms import ChangeVisitOccurrenceStartTimeForm
-from booking.booking_workflows.forms import ResetVisitOccurrenceChangesForm
-from booking.models import VisitOccurrence
+from booking.booking_workflows.forms import VisitAutosendFormSet
+from booking.booking_workflows.forms import ChangeVisitTeachersForm
+from booking.booking_workflows.forms import ChangeVisitHostsForm
+from booking.booking_workflows.forms import ChangeVisitRoomsForm
+from booking.booking_workflows.forms import ChangeVisitCommentsForm
+from booking.booking_workflows.forms import ChangeVisitEvalForm
+from booking.booking_workflows.forms import VisitAddLogEntryForm
+from booking.booking_workflows.forms import VisitAddCommentForm
+from booking.booking_workflows.forms import ChangeVisitStartTimeForm
+from booking.booking_workflows.forms import ResetVisitChangesForm
+from booking.models import Visit
 from booking.models import EmailTemplate
 from booking.models import Locality
 from booking.models import LOGACTION_MANUAL_ENTRY
@@ -32,28 +32,28 @@ from django.views.generic.base import ContextMixin
 from profile.models import TEACHER, HOST, EDIT_ROLES
 
 
-class VisitOccurrenceBreadcrumbMixin(ContextMixin):
+class VisitBreadcrumbMixin(ContextMixin):
     view_title = _(u'opdater')
 
     def get_context_data(self, **kwargs):
         context = {}
         context['breadcrumbs'] = [
             {
-                'url': reverse('visit-occ-search'),
+                'url': reverse('visit-search'),
                 'text': _(u'Søg i besøg')
             },
             {
-                'url': reverse('visit-occ-view', args=[self.object.pk]),
+                'url': reverse('visit-view', args=[self.object.pk]),
                 'text': _(u'Besøg #%s') % self.object.pk
             },
             {'text': self.view_title},
         ]
         context.update(kwargs)
-        return super(VisitOccurrenceBreadcrumbMixin, self).\
+        return super(VisitBreadcrumbMixin, self).\
             get_context_data(**context)
 
 
-class UpdateWithCancelView(VisitOccurrenceBreadcrumbMixin, EditorRequriedMixin,
+class UpdateWithCancelView(VisitBreadcrumbMixin, EditorRequriedMixin,
                            UpdateView):
     def post(self, request, *args, **kwargs):
         if "cancel" in request.POST:
@@ -65,37 +65,37 @@ class UpdateWithCancelView(VisitOccurrenceBreadcrumbMixin, EditorRequriedMixin,
             )
 
 
-class ChangeVisitOccurrenceStartTimeView(AutologgerMixin,
-                                         UpdateWithCancelView):
-    model = VisitOccurrence
-    form_class = ChangeVisitOccurrenceStartTimeForm
+class ChangeVisitStartTimeView(AutologgerMixin,
+                               UpdateWithCancelView):
+    model = Visit
+    form_class = ChangeVisitStartTimeForm
     template_name = "booking/workflow/change_starttime.html"
     view_title = _(u'Redigér tidspunkt')
 
 
-class ChangeVisitOccurrenceStatusView(AutologgerMixin, UpdateWithCancelView):
-    model = VisitOccurrence
-    form_class = ChangeVisitOccurrenceStatusForm
+class ChangeVisitStatusView(AutologgerMixin, UpdateWithCancelView):
+    model = Visit
+    form_class = ChangeVisitStatusForm
     template_name = "booking/workflow/change_status.html"
     view_title = _(u'Skift status')
 
     def form_valid(self, form):
-        response = super(ChangeVisitOccurrenceStatusView, self).form_valid(
+        response = super(ChangeVisitStatusView, self).form_valid(
             form
         )
         status = form.cleaned_data['workflow_status']
-        if status == VisitOccurrence.WORKFLOW_STATUS_PLANNED:
+        if status == Visit.WORKFLOW_STATUS_PLANNED:
             # Booking is planned
             self.object.autosend(EmailTemplate.NOTIFY_ALL__BOOKING_COMPLETE)
-        if status == VisitOccurrence.WORKFLOW_STATUS_CANCELLED:
+        if status == Visit.WORKFLOW_STATUS_CANCELLED:
             # Booking is cancelled
             self.object.autosend(EmailTemplate.NOTIFY_ALL__BOOKING_CANCELED)
         return response
 
 
-class ChangeVisitOccurrenceTeachersView(AutologgerMixin, UpdateWithCancelView):
-    model = VisitOccurrence
-    form_class = ChangeVisitOccurrenceTeachersForm
+class ChangeVisitTeachersView(AutologgerMixin, UpdateWithCancelView):
+    model = Visit
+    form_class = ChangeVisitTeachersForm
     template_name = "booking/workflow/change_teachers.html"
     view_title = _(u'Redigér undervisere')
 
@@ -121,7 +121,7 @@ class ChangeVisitOccurrenceTeachersView(AutologgerMixin, UpdateWithCancelView):
             EmailTemplate.NOTIFY_TEACHER__ASSOCIATED
         )
         context.update(kwargs)
-        return super(ChangeVisitOccurrenceTeachersView, self).\
+        return super(ChangeVisitTeachersView, self).\
             get_context_data(**context)
 
     # When the status or teacher list changes, autosend emails
@@ -130,7 +130,7 @@ class ChangeVisitOccurrenceTeachersView(AutologgerMixin, UpdateWithCancelView):
         old_teachers = set([x for x in old.teachers.all()])
 
         response = super(
-            ChangeVisitOccurrenceTeachersView, self
+            ChangeVisitTeachersView, self
         ).form_valid(form)
 
         if form.cleaned_data.get('send_emails', False):
@@ -152,9 +152,9 @@ class ChangeVisitOccurrenceTeachersView(AutologgerMixin, UpdateWithCancelView):
         return response
 
 
-class ChangeVisitOccurrenceHostsView(AutologgerMixin, UpdateWithCancelView):
-    model = VisitOccurrence
-    form_class = ChangeVisitOccurrenceHostsForm
+class ChangeVisitHostsView(AutologgerMixin, UpdateWithCancelView):
+    model = Visit
+    form_class = ChangeVisitHostsForm
     template_name = "booking/workflow/change_hosts.html"
     view_title = _(u'Redigér værter')
 
@@ -180,7 +180,7 @@ class ChangeVisitOccurrenceHostsView(AutologgerMixin, UpdateWithCancelView):
             EmailTemplate.NOTIFY_HOST__ASSOCIATED
         )
         context.update(kwargs)
-        return super(ChangeVisitOccurrenceHostsView, self).\
+        return super(ChangeVisitHostsView, self).\
             get_context_data(**context)
 
     # When the status or host list changes, autosend emails
@@ -188,7 +188,7 @@ class ChangeVisitOccurrenceHostsView(AutologgerMixin, UpdateWithCancelView):
         old = self.get_object()
         old_hosts = set([x for x in old.hosts.all()])
 
-        response = super(ChangeVisitOccurrenceHostsView, self).form_valid(form)
+        response = super(ChangeVisitHostsView, self).form_valid(form)
 
         if form.cleaned_data.get('send_emails', False):
             new_hosts = self.object.hosts.all()
@@ -200,7 +200,7 @@ class ChangeVisitOccurrenceHostsView(AutologgerMixin, UpdateWithCancelView):
             if len(recipients) > 0:
                 # Send a message to only these recipients
                 self.object.autosend(
-                    EmailTemplate.occurrence_added_host_key,
+                    EmailTemplate.visit_added_host_key,
                     recipients,
                     True
                 )
@@ -208,9 +208,9 @@ class ChangeVisitOccurrenceHostsView(AutologgerMixin, UpdateWithCancelView):
         return response
 
 
-class ChangeVisitOccurrenceRoomsView(AutologgerMixin, UpdateWithCancelView):
-    model = VisitOccurrence
-    form_class = ChangeVisitOccurrenceRoomsForm
+class ChangeVisitRoomsView(AutologgerMixin, UpdateWithCancelView):
+    model = Visit
+    form_class = ChangeVisitRoomsForm
     template_name = "booking/workflow/change_rooms.html"
     view_title = _(u'Redigér lokaler')
 
@@ -229,8 +229,8 @@ class ChangeVisitOccurrenceRoomsView(AutologgerMixin, UpdateWithCancelView):
 
         context['rooms'] = self.object.rooms.all()
 
-        locality = self.object.visit.locality
-        unit = self.object.visit.unit
+        locality = self.object.product.locality
+        unit = self.object.product.organizationalunit
 
         context['locality_choices'] = [(None, "---------")] + \
             [
@@ -238,27 +238,27 @@ class ChangeVisitOccurrenceRoomsView(AutologgerMixin, UpdateWithCancelView):
                  locality is not None and x.id == locality.id)
                 for x in Locality.objects.order_by(
                     # Sort stuff where unit is null last
-                    OrderBy(Q(unit__isnull=False), descending=True),
+                    OrderBy(Q(organizationalunit__isnull=False), descending=True),
                     # Sort localities belong to current unit first
-                    OrderBy(Q(unit=unit), descending=True),
+                    OrderBy(Q(organizationalunit=unit), descending=True),
                     # Lastly, sort by name
                     "name"
                 )
             ]
 
         return super(
-            ChangeVisitOccurrenceRoomsView, self
+            ChangeVisitRoomsView, self
         ).get_context_data(**context)
 
     def form_valid(self, form):
         self.object = form.save()
 
         self.save_rooms()
-        result = super(ChangeVisitOccurrenceRoomsView, self).form_valid(form)
+        result = super(ChangeVisitRoomsView, self).form_valid(form)
         return result
 
     def save_rooms(self):
-        # This code is more or less the same as EditVisitView.save_rooms()
+        # This code is more or less the same as EditProductView.save_rooms()
         # If you update this you might have to update there as well.
         existing_rooms = set([x.pk for x in self.object.rooms.all()])
 
@@ -286,23 +286,23 @@ class ChangeVisitOccurrenceRoomsView(AutologgerMixin, UpdateWithCancelView):
             self.object.rooms.remove(x)
 
 
-class ChangeVisitOccurrenceCommentsView(AutologgerMixin, UpdateWithCancelView):
-    model = VisitOccurrence
-    form_class = ChangeVisitOccurrenceCommentsForm
+class ChangeVisitCommentsView(AutologgerMixin, UpdateWithCancelView):
+    model = Visit
+    form_class = ChangeVisitCommentsForm
     template_name = "booking/workflow/change_comments.html"
     view_title = _(u'Redigér kommentarer')
 
 
-class ChangeVisitOccurrenceEvalView(AutologgerMixin, UpdateWithCancelView):
-    model = VisitOccurrence
-    form_class = ChangeVisitOccurrenceEvalForm
+class ChangeVisitEvalView(AutologgerMixin, UpdateWithCancelView):
+    model = Visit
+    form_class = ChangeVisitEvalForm
     template_name = "booking/workflow/change_eval_link.html"
     view_title = _(u'Redigér evalueringslink')
 
 
-class VisitOccurrenceAddLogEntryView(FormView):
-    model = VisitOccurrence
-    form_class = VisitOccurrenceAddLogEntryForm
+class VisitAddLogEntryView(FormView):
+    model = Visit
+    form_class = VisitAddLogEntryForm
     template_name = "booking/workflow/add_logentry.html"
     object = None
     view_title = _(u'Tilføj log-post')
@@ -311,9 +311,9 @@ class VisitOccurrenceAddLogEntryView(FormView):
         try:
             self.object = self.model.objects.get(pk=kwargs['pk'])
         except:
-            raise Http404("VisitOccurrence not found")
+            raise Http404("Visit not found")
 
-        return super(VisitOccurrenceAddLogEntryView, self).dispatch(
+        return super(VisitAddLogEntryView, self).dispatch(
             request, *args, **kwargs
         )
 
@@ -321,7 +321,7 @@ class VisitOccurrenceAddLogEntryView(FormView):
         if "cancel" in request.POST:
             return redirect(self.get_success_url())
         else:
-            return super(VisitOccurrenceAddLogEntryView, self).post(
+            return super(VisitAddLogEntryView, self).post(
                 request, *args, **kwargs
             )
 
@@ -329,17 +329,17 @@ class VisitOccurrenceAddLogEntryView(FormView):
         context = {}
         context['breadcrumbs'] = [
             {
-                'url': reverse('visit-occ-search'),
+                'url': reverse('visit-search'),
                 'text': _(u'Søg i besøg')
             },
             {
-                'url': reverse('visit-occ-view', args=[self.object.pk]),
+                'url': reverse('visit-view', args=[self.object.pk]),
                 'text': _(u'Besøg #%s') % self.object.pk
             },
             {'text': self.view_title},
         ]
         context.update(kwargs)
-        return super(VisitOccurrenceAddLogEntryView, self).get_context_data(
+        return super(VisitAddLogEntryView, self).get_context_data(
             object=self.object,
             **context
         )
@@ -351,15 +351,15 @@ class VisitOccurrenceAddLogEntryView(FormView):
             LOGACTION_MANUAL_ENTRY,
             form.cleaned_data['new_comment']
         )
-        return super(VisitOccurrenceAddLogEntryView, self).form_valid(form)
+        return super(VisitAddLogEntryView, self).form_valid(form)
 
     def get_success_url(self):
-        return reverse('visit-occ-view', args=[self.object.pk])
+        return reverse('visit-view', args=[self.object.pk])
 
 
-class VisitOccurrenceAddCommentView(VisitOccurrenceAddLogEntryView):
-    model = VisitOccurrence
-    form_class = VisitOccurrenceAddCommentForm
+class VisitAddCommentView(VisitAddLogEntryView):
+    model = Visit
+    form_class = VisitAddCommentForm
     template_name = "booking/workflow/add_comment.html"
     object = None
     view_title = _(u'Tilføj kommentar')
@@ -369,12 +369,12 @@ class VisitOccurrenceAddCommentView(VisitOccurrenceAddLogEntryView):
             self.request.user,
             form.cleaned_data['new_comment']
         )
-        return super(VisitOccurrenceAddLogEntryView, self).form_valid(form)
+        return super(VisitAddLogEntryView, self).form_valid(form)
 
 
-class ChangeVisitOccurrenceAutosendView(AutologgerMixin, UpdateWithCancelView):
-    model = VisitOccurrence
-    form_class = VisitOccurrenceAutosendFormSet
+class ChangeVisitAutosendView(AutologgerMixin, UpdateWithCancelView):
+    model = Visit
+    form_class = VisitAutosendFormSet
     template_name = "booking/workflow/change_autosend.html"
     view_title = _(u'Redigér automatiske emails')
 
@@ -383,7 +383,7 @@ class ChangeVisitOccurrenceAutosendView(AutologgerMixin, UpdateWithCancelView):
         return HttpResponseRedirect(self.get_success_url())
 
     def get_success_url(self):
-        return reverse('visit-occ-view', args=[self.object.pk])
+        return reverse('visit-view', args=[self.object.pk])
 
     def get_context_data(self, **kwargs):
         context = {}
@@ -394,22 +394,22 @@ class ChangeVisitOccurrenceAutosendView(AutologgerMixin, UpdateWithCancelView):
                 'enabled': item.enabled,
                 'days': item.days
             }
-            for item in self.object.visit.visitautosend_set.all()
+            for item in self.object.product.productautosend_set.all()
         }
         context['template_keys'] = list(set(
             template.key
-            for template in EmailTemplate.get_templates(self.object.visit.unit)
+            for template in EmailTemplate.get_templates(self.object.product.organizationalunit)
         ))
-        context['unit'] = self.object.visit.unit
+        context['organizationalunit'] = self.object.product.organizationalunit
         context['autosend_enable_days'] = EmailTemplate.enable_days
         context.update(kwargs)
-        return super(ChangeVisitOccurrenceAutosendView, self).\
+        return super(ChangeVisitAutosendView, self).\
             get_context_data(**context)
 
 
-class BecomeSomethingView(AutologgerMixin, VisitOccurrenceBreadcrumbMixin,
+class BecomeSomethingView(AutologgerMixin, VisitBreadcrumbMixin,
                           RoleRequiredMixin, FormView):
-    model = VisitOccurrence
+    model = Visit
     errors = None
     m2m_attribute = None
     view_title = _(u'Tilmeld rolle')
@@ -515,14 +515,14 @@ class BecomeSomethingView(AutologgerMixin, VisitOccurrenceBreadcrumbMixin,
         return self.get(request, *args, **kwargs)
 
     def get_success_url(self):
-        return reverse('visit-occ-view', args=[self.object.pk])
+        return reverse('visit-view', args=[self.object.pk])
 
 
 class BecomeTeacherView(BecomeSomethingView):
     m2m_attribute = "teachers"
     template_name = "booking/workflow/become_teacher.html"
     view_title = _(u'Tilmeld som underviser')
-    notify_mail_template_key = EmailTemplate.occurrence_added_teacher_key
+    notify_mail_template_key = EmailTemplate.visit_added_teacher_key
 
     ERROR_NONE_NEEDED = _(u"Besøget har ikke brug for flere undervisere")
     ERROR_WRONG_ROLE = _(
@@ -543,7 +543,7 @@ class DeclineTeacherView(BecomeSomethingView):
     m2m_attribute = "teachers"
     template_name = "booking/workflow/decline_teacher.html"
     view_title = _(u'Tilmeld som underviser')
-    notify_mail_template_key = EmailTemplate.occurrence_added_teacher_key
+    notify_mail_template_key = EmailTemplate.visit_added_teacher_key
 
     ERROR_NONE_NEEDED = _(u"Besøget har ikke brug for flere undervisere")
     ERROR_WRONG_ROLE = _(
@@ -564,7 +564,7 @@ class BecomeHostView(BecomeSomethingView):
     m2m_attribute = "hosts"
     template_name = "booking/workflow/become_host.html"
     view_title = _(u'Tilmeld som vært')
-    notify_mail_template_key = EmailTemplate.occurrence_added_host_key
+    notify_mail_template_key = EmailTemplate.visit_added_host_key
 
     ERROR_NONE_NEEDED = _(u"Besøget har ikke brug for flere værter")
     ERROR_WRONG_ROLE = _(
@@ -585,7 +585,7 @@ class DeclineHostView(BecomeSomethingView):
     m2m_attribute = "hosts"
     template_name = "booking/workflow/decline_host.html"
     view_title = _(u'Tilmeld som vært')
-    notify_mail_template_key = EmailTemplate.occurrence_added_host_key
+    notify_mail_template_key = EmailTemplate.visit_added_host_key
 
     ERROR_NONE_NEEDED = _(u"Besøget har ikke brug for flere værter")
     ERROR_WRONG_ROLE = _(
@@ -602,9 +602,9 @@ class DeclineHostView(BecomeSomethingView):
         return self.request.user.userprofile.is_host
 
 
-class ResetVisitOccurrenceChangesView(UpdateWithCancelView):
-    model = VisitOccurrence
-    form_class = ResetVisitOccurrenceChangesForm
+class ResetVisitChangesView(UpdateWithCancelView):
+    model = Visit
+    form_class = ResetVisitChangesForm
     template_name = "booking/workflow/change_changes_marker.html"
     view_title = _(u'Nulstil markør for nylige ændringer')
 

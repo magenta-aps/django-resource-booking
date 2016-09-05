@@ -42,7 +42,7 @@
                         {% blocktrans with object=object %}Du har nu afslået at blive vært for besøget {{ object }}.{% endblocktrans %}
                     </p>
                     <p>
-                        <a href="{% url 'visit-occ-view' object.pk %}">{% trans 'Klik her for at vende tilbage til besøget' %}</a>
+                        <a href="{% url 'visit-view' object.pk %}">{% trans 'Klik her for at vende tilbage til besøget' %}</a>
                     </p>
                 </div>
             </div>
@@ -59,7 +59,7 @@
                 </ul>
                 </p>
                 <p>
-                    <a href="{% url 'visit-occ-view' object.pk %}">{% trans 'Klik her for at vende tilbage til besøget' %}</a>
+                    <a href="{% url 'visit-view' object.pk %}">{% trans 'Klik her for at vende tilbage til besøget' %}</a>
                 </p>
             </div>
         </div>

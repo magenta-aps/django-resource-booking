@@ -86,145 +86,7 @@ def log_action(user, obj, action_flag, change_message=''):
     )
 
 
-class Person(models.Model):
-    """A dude or chick"""
-
-    class Meta:
-        verbose_name = _(u'kontaktperson')
-        verbose_name_plural = _(u'kontaktpersoner')
-        ordering = ["name"]
-
-    # Eventually this could just be a pointer to AD
-    name = models.CharField(max_length=50)
-    email = models.EmailField(max_length=64, null=True, blank=True)
-    phone = models.CharField(max_length=14, null=True, blank=True)
-
-    unit = models.ForeignKey("Unit", blank=True, null=True)
-
-    allow_null_unit_editing = True
-
-    def __unicode__(self):
-        return self.name
-
-    def get_name(self):
-        return self.name
-
-    def get_full_name(self):
-        return self.get_name()
-
-    def get_email(self):
-        return self.email
-
-    def get_full_email(self):
-        return full_email(self.email, self.name)
-
-    def save(self, *args, **kwargs):
-        result = super(Person, self).save(*args, **kwargs)
-
-        if not self.userperson_set.exists():
-            UserPerson.create(self)
-
-        return result
-
-
-class UserPerson(models.Model):
-    class Meta:
-        verbose_name = _(u'Lokaleanvarlig-eller-kontaktperson')
-        verbose_name_plural = _(u'Lokaleanvarlige-eller-kontaktpersoner')
-        ordering = ['person__name', 'user__first_name', 'user__username']
-
-    person = models.ForeignKey(Person, blank=True, null=True)
-    user = models.ForeignKey(User, blank=True, null=True)
-
-    @property
-    def name(self):
-        if self.person:
-            return self.person.name
-        elif self.user:
-            return self.user.get_full_name() or self.user.username
-
-    @property
-    def email(self):
-        if self.person:
-            return self.person.get_email()
-        elif self.user:
-            return self.user.email
-
-    @property
-    def full_email(self):
-        if self.person:
-            return self.person.get_full_email()
-        elif self.user:
-            return full_email(self.user.email, self.user.get_full_name())
-
-    @property
-    def as_email_link(self):
-        return '<a href="mailto:%s">%s</a>' % (self.email, self.full_email)
-
-    @property
-    def unit(self):
-        if self.person:
-            return self.person.unit
-        elif self.user and hasattr(self.user, 'userprofile'):
-            return self.user.userprofile.unit
-
-    def __unicode__(self):
-        return self.name
-
-    def get_name(self):
-        return self.name
-
-    def get_email(self):
-        return self.email
-
-    def get_full_email(self):
-        return self.full_email
-
-    @staticmethod
-    def find(item):
-        # See if we can find an existing UserPerson
-        if isinstance(item, Person):
-            qs = UserPerson.objects.filter(person=item)
-            if qs.count() > 0:
-                return qs.first()
-        elif isinstance(item, User):
-            qs = UserPerson.objects.filter(user=item)
-            if qs.count() > 0:
-                return qs.first()
-
-    @staticmethod
-    def create(item):
-
-        userperson = UserPerson.find(item)
-        if userperson:
-            return userperson
-
-        # No? Create one then
-        userperson = UserPerson()
-        if isinstance(item, Person):
-            userperson.person = item
-        elif isinstance(item, User):
-            userperson.user = item
-        else:
-            pass
-            raise Exception(
-                "UserPerson must be called with "
-                "either a User or a Person as argument. "
-                "%s is not an acceptable input" % unicode(item)
-            )
-        userperson.save()
-        return userperson
-
-    @staticmethod
-    def migrate():
-        for person in Person.objects.all():
-            UserPerson.create(person)
-
-        for user in User.objects.all():
-            UserPerson.create(user)
-
-
-class LokaleAnsvarlig(models.Model):
+class RoomResponsible(models.Model):
     class Meta:
         verbose_name = _(u'Lokaleanvarlig')
         verbose_name_plural = _(u'Lokaleanvarlige')
@@ -233,7 +95,7 @@ class LokaleAnsvarlig(models.Model):
     email = models.EmailField(max_length=64, null=True, blank=True)
     phone = models.CharField(max_length=14, null=True, blank=True)
 
-    unit = models.ForeignKey("Unit", blank=True, null=True)
+    organizationalunit = models.ForeignKey("OrganizationalUnit", blank=True, null=True)
 
     allow_null_unit_editing = True
 
@@ -254,7 +116,7 @@ class LokaleAnsvarlig(models.Model):
 
 
 # Units (faculties, institutes etc)
-class UnitType(models.Model):
+class OrganizationalUnitType(models.Model):
     """A type of organization, e.g. 'faculty' """
 
     class Meta:
@@ -267,7 +129,7 @@ class UnitType(models.Model):
         return self.name
 
 
-class Unit(models.Model):
+class OrganizationalUnit(models.Model):
     """A generic organizational unit, such as a faculty or an institute"""
 
     class Meta:
@@ -276,10 +138,10 @@ class Unit(models.Model):
         ordering = ['name']
 
     name = models.CharField(max_length=100)
-    type = models.ForeignKey(UnitType)
+    type = models.ForeignKey(OrganizationalUnitType)
     parent = models.ForeignKey('self', null=True, blank=True)
     contact = models.ForeignKey(
-        Person, null=True, blank=True,
+        User, null=True, blank=True,
         verbose_name=_(u'Kontaktperson'),
         related_name="contactperson_for_units",
         on_delete=models.SET_NULL,
@@ -300,11 +162,11 @@ class Unit(models.Model):
 
     def get_descendants(self):
         """Return all units at a lower level"""
-        offspring = Unit.objects.filter(parent=self)
-        all_children = Unit.objects.none()
+        offspring = OrganizationalUnit.objects.filter(parent=self)
+        all_children = OrganizationalUnit.objects.none()
         for u in offspring:
             all_children = all_children | u.get_descendants()
-        return all_children | Unit.objects.filter(pk=self.pk)
+        return all_children | OrganizationalUnit.objects.filter(pk=self.pk)
 
     def get_faculty_queryset(self):
         u = self
@@ -314,9 +176,9 @@ class Unit(models.Model):
             u = u.parent
 
         if u:
-            return Unit.objects.filter(Q(pk=u.pk) | Q(parent=u))
+            return OrganizationalUnit.objects.filter(Q(pk=u.pk) | Q(parent=u))
         else:
-            return Unit.objects.none()
+            return OrganizationalUnit.objects.none()
 
     def __unicode__(self):
         return "%s (%s)" % (self.name, self.type.name)
@@ -343,7 +205,7 @@ class Unit(models.Model):
 
         # If no coordinators was found use faculty editors
         res = User.objects.filter(
-            userprofile__unit=self.get_faculty_queryset(),
+            userprofile__organizationalunit=self.get_faculty_queryset(),
             userprofile__user_role__role=FACULTY_EDITOR
         )
         if len(res) > 0:
@@ -455,34 +317,6 @@ class Topic(models.Model):
         return self.name
 
 
-class AdditionalService(models.Model):
-    """Additional services, i.e. tour of the place, food and drink, etc."""
-
-    class Meta:
-        verbose_name = _(u'ekstra ydelse')
-        verbose_name_plural = _(u'ekstra ydelser')
-
-    name = models.CharField(max_length=256)
-    description = models.TextField(blank=True)
-
-    def __unicode__(self):
-        return self.name
-
-
-class SpecialRequirement(models.Model):
-    """Special requirements for visit - e.g., driver's license."""
-
-    class Meta:
-        verbose_name = _(u'særligt krav')
-        verbose_name_plural = _(u'særlige ydelser')
-
-    name = models.CharField(max_length=256)
-    description = models.TextField(blank=True)
-
-    def __unicode__(self):
-        return self.name
-
-
 class StudyMaterial(models.Model):
     """Material for the students to study before visiting."""
 
@@ -526,8 +360,8 @@ class Locality(models.Model):
     zip_city = models.CharField(
         max_length=256, verbose_name=_(u'Postnummer og by')
     )
-    unit = models.ForeignKey(Unit, verbose_name=_(u'Enhed'), blank=True,
-                             null=True)
+    organizationalunit = models.ForeignKey(OrganizationalUnit, verbose_name=_(u'Enhed'), blank=True,
+                                           null=True)
 
     def __unicode__(self):
         return self.name
@@ -646,8 +480,8 @@ class EmailTemplate(models.Model):
             if key == template_key:
                 return label
 
-    # Templates available for manual sending from visit occurrences
-    visitoccurrence_manual_keys = [
+    # Templates available for manual sending from visits
+    visit_manual_keys = [
         NOTIFY_GUEST__GENERAL_MSG,
         NOTIFY_HOST__ASSOCIATED,
         NOTIFY_TEACHER__ASSOCIATED,
@@ -712,25 +546,25 @@ class EmailTemplate(models.Model):
     potential_teachers_keys = [
         NOTIFY_HOST__REQ_TEACHER_VOLUNTEER
     ]
-    # Templates that will be autosent to hosts in the occurrence
-    occurrence_hosts_keys = [
+    # Templates that will be autosent to hosts in the visit
+    visit_hosts_keys = [
         NOTIFY_ALL__BOOKING_COMPLETE,
         NOTIFY_ALL__BOOKING_CANCELED,
         NOTITY_ALL__BOOKING_REMINDER
     ]
-    # Templates that will be autosent to teachers in the occurrence
-    occurrence_teachers_keys = [
+    # Templates that will be autosent to teachers in the visit
+    visit_teachers_keys = [
         NOTIFY_ALL__BOOKING_COMPLETE,
         NOTIFY_ALL__BOOKING_CANCELED,
         NOTITY_ALL__BOOKING_REMINDER
     ]
     # Template that will be autosent to hosts
-    # when they are added to an occurrence
-    occurrence_added_host_key = NOTIFY_HOST__ASSOCIATED
+    # when they are added to a visit
+    visit_added_host_key = NOTIFY_HOST__ASSOCIATED
 
     # Template that will be autosent to teachers
-    # when they are added to an occurrence
-    occurrence_added_teacher_key = NOTIFY_TEACHER__ASSOCIATED
+    # when they are added to a visit
+    visit_added_teacher_key = NOTIFY_TEACHER__ASSOCIATED
 
     # Templates where the "days" field makes sense
     enable_days = [
@@ -782,8 +616,8 @@ class EmailTemplate(models.Model):
         verbose_name=u'Tekst'
     )
 
-    unit = models.ForeignKey(
-        Unit,
+    organizationalunit = models.ForeignKey(
+        OrganizationalUnit,
         verbose_name=u'Enhed',
         null=True,
         blank=True
@@ -848,7 +682,7 @@ class EmailTemplate(models.Model):
             try:
                 templates.append(EmailTemplate.objects.filter(
                     key=template_key,
-                    unit=unit
+                    organizationalunit=unit
                 ).all()[0])
             except:
                 pass
@@ -857,7 +691,7 @@ class EmailTemplate(models.Model):
             try:
                 templates.append(
                     EmailTemplate.objects.filter(key=template_key,
-                                                 unit__isnull=True)[0]
+                                                 organizationalunit__isnull=True)[0]
                 )
             except:
                 pass
@@ -870,11 +704,11 @@ class EmailTemplate(models.Model):
     def get_templates(unit, include_inherited=True):
         if unit is None:
             templates = EmailTemplate.objects.filter(
-                unit__isnull=True
+                organizationalunit__isnull=True
             ).all()
         else:
             templates = list(EmailTemplate.objects.filter(
-                unit=unit
+                organizationalunit=unit
             ).all())
         if include_inherited and unit is not None and unit.parent != unit:
             templates.extend(EmailTemplate.get_templates(unit.parent, True))
@@ -892,23 +726,23 @@ class EmailTemplate(models.Model):
 
     @staticmethod
     def add_defaults_to_all():
-        for visit in Visit.objects.all():
+        for product in Product.objects.all():
             for template_key in EmailTemplate.default:
                 print EmailTemplate.get_name(template_key)
-                if visit.visitautosend_set.filter(
+                if product.productautosend_set.filter(
                     template_key=template_key
                 ).count() == 0:
-                    print "    create autosends for visit %d" % visit.id
-                    autosend = VisitAutosend(
+                    print "    create autosends for product %d" % product.id
+                    autosend = ProductAutosend(
                         template_key=template_key,
-                        visit=visit,
+                        product=product,
                         enabled=True
                     )
                     autosend.save()
-                    for occurrence in visit.visitoccurrence_set.all():
+                    for visit in product.visit_set.all():
                         print "        creating inheriting autosends for " \
-                              "occurrence %d" % occurrence.id
-                        occurrence.create_inheriting_autosends()
+                              "visit %d" % visit.id
+                        visit.create_inheriting_autosends()
 
 
 class ObjectStatistics(models.Model):
@@ -1035,8 +869,8 @@ class Resource(models.Model):
     mouseover_description = models.CharField(
         max_length=512, blank=True, verbose_name=_(u'Mouseover-tekst')
     )
-    unit = models.ForeignKey(Unit, null=True, blank=False,
-                             verbose_name=_('Enhed'))
+    organizationalunit = models.ForeignKey(OrganizationalUnit, null=True, blank=False,
+                                           verbose_name=_('Enhed'))
     links = models.ManyToManyField(Link, blank=True, verbose_name=_('Links'))
     audience = models.IntegerField(choices=audience_choices,
                                    verbose_name=_(u'Målgruppe'),
@@ -1076,8 +910,8 @@ class Resource(models.Model):
         null=True
     )
 
-    lokaleansvarlige = models.ManyToManyField(
-        LokaleAnsvarlig,
+    roomresponsible = models.ManyToManyField(
+        RoomResponsible,
         verbose_name=_(u'Lokaleansvarlige'),
         related_name='ansvarlig_for_besoeg_set',
         blank=True,
@@ -1203,12 +1037,12 @@ class Resource(models.Model):
         texts.append(self.get_type_display() or "")
 
         # Unit name
-        if self.unit:
-            texts.append(self.unit.name)
+        if self.organizationalunit:
+            texts.append(self.organizationalunit.name)
 
             # Unit's parent name
-            if self.unit.parent:
-                texts.append(self.unit.parent.name)
+            if self.organizationalunit.parent:
+                texts.append(self.organizationalunit.parent.name)
 
         # Url, name and description of all links
         for l in self.links.all():
@@ -1250,8 +1084,8 @@ class Resource(models.Model):
         ] if x])
 
     def get_dates_display(self):
-        if self.visit:
-            return self.visit.get_dates_display()
+        if self.product:
+            return self.product.get_dates_display()
 
         return "-"
 
@@ -1263,8 +1097,8 @@ class Resource(models.Model):
 
     def display_locality(self):
         try:
-            return self.visit.locality
-        except Visit.DoesNotExist:
+            return self.product.locality
+        except Product.DoesNotExist:
             pass
         return "-"
 
@@ -1277,14 +1111,14 @@ class Resource(models.Model):
     def url(self):
         return self.get_url()
 
-    def get_occurrences(self):
-        if not hasattr(self, "visit") or not self.visit:
-            return VisitOccurrence.objects.none()
+    def get_visits(self):
+        if not hasattr(self, "product") or not self.product:
+            return Visit.objects.none()
         else:
-            return self.visit.visitoccurrence_set.all()
+            return self.product.visit_set.all()
 
-    def first_occurence(self):
-        return self.get_occurrences().first()
+    def first_visit(self):
+        return self.get_visits().first()
 
     def get_state_class(self):
         if self.state == self.CREATED:
@@ -1295,7 +1129,7 @@ class Resource(models.Model):
             return 'default'
 
     def get_recipients(self, template_key):
-        recipients = self.unit.get_recipients(template_key)
+        recipients = self.organizationalunit.get_recipients(template_key)
 
         if template_key in EmailTemplate.potential_hosts_keys:
             recipients.extend(self.potentielle_vaerter.all())
@@ -1314,10 +1148,8 @@ class Resource(models.Model):
         return recipients
 
     def get_view_url(self):
-        if hasattr(self, 'visit') and self.visit:
-            return reverse('visit-view', args=[self.visit.pk])
-        if hasattr(self, 'otherresource') and self.otherresource:
-            return reverse('otherresource-view', args=[self.otherresource.pk])
+        if hasattr(self, 'product') and self.product:
+            return reverse('product-view', args=[self.product.pk])
         return reverse('resource-view', args=[self.pk])
 
     def add_room_by_name(self, name):
@@ -1603,93 +1435,8 @@ class GrundskoleLevel(models.Model):
         return self.get_level_display()
 
 
-class OtherResource(Resource):
-    """A non-bookable, non-visit resource, basically material on the Web."""
-
-    objects = SearchManager(
-        fields=(
-            'title',
-            'description',
-            'mouseover_description',
-            'extra_search_text'
-        ),
-        config='pg_catalog.danish',
-        auto_update_search_field=True
-    )
-
-    applicable_types = []
-
-    @ClassProperty
-    def type_choices(self):
-        return (type for type in
-                Resource.resource_type_choices
-                if type[0] in OtherResource.applicable_types)
-
-    def save(self, *args, **kwargs):
-        # Save once to store relations
-        super(OtherResource, self).save(*args, **kwargs)
-
-        # Update search_text
-        self.extra_search_text = self.generate_extra_search_text()
-
-        # Do the final save
-        return super(OtherResource, self).save(*args, **kwargs)
-
-    def get_absolute_url(self):
-        return reverse('otherresource-view', args=[self.pk])
-
-    def clone_to_visit(self):
-        save = []
-        visit = Visit()
-        visit.type = self.type
-        visit.state = self.state
-        visit.title = self.title
-        visit.teaser = self.teaser
-        visit.mouseover_description = self.mouseover_description
-        visit.unit = self.unit
-        visit.audience = self.audience
-        visit.institution_level = self.institution_level
-        visit.locality = self.locality
-        visit.recurrences = self.recurrences
-        visit.comment = self.comment
-        visit.extra_search_text = self.extra_search_text
-        visit.preparation_time = self.preparation_time
-        visit.price = self.price
-        visit.save()
-        for link in self.links.all():
-            visit.links.add(link)
-        for intermediate in self.resourcegymnasiefag_set.all():
-            values = [str(intermediate.subject.id)]
-            for level in intermediate.level.all():
-                values.append(str(level.id))
-            clone = ResourceGymnasieFag.create_from_submitvalue(
-                visit, ','.join(values)
-            )
-            save.append(clone)
-        for intermediate in self.resourcegrundskolefag_set.all():
-            clone = ResourceGrundskoleFag()
-            clone.resource = visit
-            clone.subject = intermediate.subject
-            clone.class_level_max = intermediate.class_level_max
-            clone.class_level_min = intermediate.class_level_min
-            save.append(clone)
-        for tag in self.tags.all():
-            visit.tags.add(tag)
-        for topic in self.topics.all():
-            visit.topics.add(topic)
-        for item in save:
-            item.save()
-        print "OtherResource %d cloned into Visit %d" % (self.id, visit.id)
-
-    @staticmethod
-    def migrate_to_visits():
-        for otherresource in OtherResource.objects.all():
-            otherresource.clone_to_visit()
-            otherresource.delete()
-
-
-class Visit(Resource):
-    """A bookable visit of any kind."""
+class Product(Resource):
+    """A bookable Product of any kind."""
 
     class Meta:
         verbose_name = _("tilbud")
@@ -1723,7 +1470,7 @@ class Visit(Resource):
     def type_choices(self):
         return (x for x in
                 Resource.resource_type_choices
-                if x[0] in Visit.applicable_types)
+                if x[0] in Product.applicable_types)
 
     rooms_needed = models.BooleanField(
         default=True,
@@ -1747,17 +1494,6 @@ class Visit(Resource):
     do_send_evaluation = models.BooleanField(
         verbose_name=_(u"Udsend evaluering"),
         default=False
-    )
-
-    additional_services = models.ManyToManyField(
-        AdditionalService,
-        verbose_name=_(u'Ekstra ydelser'),
-        blank=True
-    )
-    special_requirements = models.ManyToManyField(
-        SpecialRequirement,
-        verbose_name=_(u'Særlige krav'),
-        blank=True
     )
     is_group_visit = models.BooleanField(
         default=True,
@@ -1859,15 +1595,15 @@ class Visit(Resource):
     )
 
     @property
-    def bookable_occurrences(self):
-        return self.visitoccurrence_set.filter(
+    def bookable_visits(self):
+        return self.visit_set.filter(
             bookable=True,
-            workflow_status__in=VisitOccurrence.BOOKABLE_STATES
+            workflow_status__in=Visit.BOOKABLE_STATES
         )
 
     @property
     def future_events(self):
-        return self.bookable_occurrences.filter(
+        return self.bookable_visits.filter(
             start_datetime__gte=timezone.now()
         )
 
@@ -1880,7 +1616,7 @@ class Visit(Resource):
 
     def get_dates_display(self):
         dates = [
-            x.display_value for x in self.visitoccurrence_set.all()
+            x.display_value for x in self.visit_set.all()
         ]
         if len(dates) > 0:
             return ", ".join(dates)
@@ -1898,33 +1634,33 @@ class Visit(Resource):
         return None
 
     def get_absolute_url(self):
-        return reverse('visit-view', args=[self.pk])
+        return reverse('product-view', args=[self.pk])
 
-    def make_occurrence(self, starttime=None, bookable=False, **kwargs):
-        occ = VisitOccurrence(
-            visit=self,
+    def make_visit(self, starttime=None, bookable=False, **kwargs):
+        visit = Visit(
+            product=self,
             start_datetime=starttime,
             bookable=bookable,
             **kwargs
         )
 
         if not self.rooms_needed:
-            occ.room_status = VisitOccurrence.STATUS_NOT_NEEDED
+            visit.room_status = Visit.STATUS_NOT_NEEDED
 
-        occ.save()
-        occ.create_inheriting_autosends()
-        occ.ensure_statistics()
+        visit.save()
+        visit.create_inheriting_autosends()
+        visit.ensure_statistics()
 
         # Copy rooms
         if self.rooms.exists():
             for x in self.rooms.all():
-                occ.rooms.add(x)
+                visit.rooms.add(x)
 
-        return occ
+        return visit
 
     def get_autosend(self, template_key):
         try:
-            item = self.visitautosend_set.filter(
+            item = self.productautosend_set.filter(
                 template_key=template_key, enabled=True)[0]
             return item
         except:
@@ -1938,22 +1674,22 @@ class Visit(Resource):
         return self.type in self.bookable_types
 
     @property
-    def has_bookable_occurrences(self):
-        # If there are no bookable occurrences the booker is allowed to
+    def has_bookable_visits(self):
+        # If there are no bookable visits the booker is allowed to
         # suggest their own.
-        if len(self.visitoccurrence_set.filter(bookable=True)) == 0:
+        if len(self.visit_set.filter(bookable=True)) == 0:
             return True
 
         # Only bookable if there is a valid event in the future:
-        for occurrence in self.future_events:
-            if occurrence.is_bookable:
+        for visit in self.future_events:
+            if visit.is_bookable:
                 return True
         return False
 
     @property
-    def has_waitinglist_occurrence_spots(self):
-        for occurrence in self.future_events:
-            if occurrence.can_join_waitinglist:
+    def has_waitinglist_visit_spots(self):
+        for visit in self.future_events:
+            if visit.can_join_waitinglist:
                 return True
         return False
 
@@ -1961,13 +1697,13 @@ class Visit(Resource):
     def is_bookable(self):
         return self.is_type_bookable and \
             self.state == Resource.ACTIVE and \
-            self.has_bookable_occurrences
+            self.has_bookable_visits
 
     @property
     def can_join_waitinglist(self):
         return self.is_type_bookable and \
             self.state == Resource.ACTIVE and \
-            self.has_waitinglist_occurrence_spots
+            self.has_waitinglist_visit_spots
 
     @property
     def duration_as_timedelta(self):
@@ -1980,37 +1716,37 @@ class Visit(Resource):
 
     @staticmethod
     def get_latest_created():
-        return Visit.objects.filter(statistics__isnull=False).\
+        return Product.objects.filter(statistics__isnull=False).\
             order_by('-statistics__created_time')
 
     @staticmethod
     def get_latest_updated():
-        return Visit.objects.filter(statistics__isnull=False).\
+        return Product.objects.filter(statistics__isnull=False).\
             order_by('-statistics__updated_time')
 
     @staticmethod
     def get_latest_displayed():
-        return Visit.objects.filter(statistics__isnull=False).\
+        return Product.objects.filter(statistics__isnull=False).\
             order_by('-statistics__visited_time')
 
     @staticmethod
     def get_latest_booked():
         bookings = Booking.objects.order_by(
             '-statistics__created_time'
-        ).select_related('visitoccurrence__visit')
-        visits = set()
+        ).select_related('visit__product')
+        products = set()
         for booking in bookings:
-            if booking.visitoccurrence is not None and \
-                    booking.visitoccurrence.visit is not None:
-                visits.add(booking.visitoccurrence.visit)
-        return list(visits)
+            if booking.visit is not None and \
+                    booking.visit.product is not None:
+                products.add(booking.visit.product)
+        return list(products)
 
     @property
     def room_responsible_users(self):
-        return self.lokaleansvarlige.all()
+        return self.roomresponsible.all()
 
 
-class VisitOccurrence(models.Model):
+class Visit(models.Model):
 
     class Meta:
         verbose_name = _(u"besøg")
@@ -2023,8 +1759,8 @@ class VisitOccurrence(models.Model):
         auto_update_search_field=True
     )
 
-    visit = models.ForeignKey(
-        Visit,
+    product = models.ForeignKey(
+        Product,
         on_delete=models.CASCADE
     )
 
@@ -2039,7 +1775,7 @@ class VisitOccurrence(models.Model):
         blank=True,
     )
 
-    # Whether the occurrence is publicly bookable
+    # Whether the visit is publicly bookable
     bookable = models.BooleanField(
         default=False,
         verbose_name=_(u'Kan bookes')
@@ -2089,7 +1825,7 @@ class VisitOccurrence(models.Model):
         limit_choices_to={
             'userprofile__user_role__role': HOST
         },
-        related_name="hosted_visitoccurrences",
+        related_name="hosted_visits",
         verbose_name=_(u'Tilknyttede værter')
     )
 
@@ -2099,7 +1835,7 @@ class VisitOccurrence(models.Model):
         limit_choices_to={
             'userprofile__user_role__role': HOST
         },
-        related_name='rejected_hosted_visitoccurrences',
+        related_name='rejected_hosted_visits',
         verbose_name=_(u'Værter, som har afslået')
     )
 
@@ -2116,7 +1852,7 @@ class VisitOccurrence(models.Model):
         limit_choices_to={
             'userprofile__user_role__role': TEACHER
         },
-        related_name="taught_visitoccurrences",
+        related_name="taught_visits",
         verbose_name=_(u'Tilknyttede undervisere')
     )
 
@@ -2126,7 +1862,7 @@ class VisitOccurrence(models.Model):
         limit_choices_to={
             'userprofile__user_role__role': TEACHER
         },
-        related_name='rejected_taught_visitoccurrences',
+        related_name='rejected_taught_visits',
         verbose_name=_(u'Undervisere, som har afslået')
     )
 
@@ -2229,8 +1965,8 @@ class VisitOccurrence(models.Model):
     )
 
     @property
-    def unit(self):
-        return self.visit.unit
+    def organizationalunit(self):
+        return self.product.organizationalunit
 
     valid_status_changes = {
         WORKFLOW_STATUS_BEING_PLANNED: [
@@ -2279,7 +2015,7 @@ class VisitOccurrence(models.Model):
         ],
     }
 
-    # 15556: For these statuses, when the occurrence's starttime is passed,
+    # 15556: For these statuses, when the visit's starttime is passed,
     # add WORKFLOW_STATUS_NOSHOW to the list of status choices
     noshow_available_after_starttime = [
         WORKFLOW_STATUS_BEING_PLANNED,
@@ -2290,7 +2026,7 @@ class VisitOccurrence(models.Model):
     ]
 
     def can_assign_resources(self):
-        being_planned = VisitOccurrence.WORKFLOW_STATUS_BEING_PLANNED
+        being_planned = Visit.WORKFLOW_STATUS_BEING_PLANNED
         return self.workflow_status == being_planned
 
     def planned_status_is_blocked(self):
@@ -2299,7 +2035,7 @@ class VisitOccurrence(models.Model):
             return True
 
         # It's not blocked if we can't choose it
-        ws_planned = VisitOccurrence.WORKFLOW_STATUS_PLANNED
+        ws_planned = Visit.WORKFLOW_STATUS_PLANNED
         if ws_planned not in (x[0] for x in self.possible_status_choices()):
             return False
 
@@ -2308,7 +2044,7 @@ class VisitOccurrence(models.Model):
             return True
 
         # Room assignment must be resolved
-        if self.room_status == VisitOccurrence.STATUS_NOT_ASSIGNED:
+        if self.room_status == Visit.STATUS_NOT_ASSIGNED:
             return True
 
         return False
@@ -2319,10 +2055,10 @@ class VisitOccurrence(models.Model):
         allowed = self.valid_status_changes[self.workflow_status]
 
         if self.workflow_status in \
-                VisitOccurrence.noshow_available_after_starttime and \
+                Visit.noshow_available_after_starttime and \
                 self.start_datetime and \
                 timezone.now() > self.start_datetime:
-            allowed.append(VisitOccurrence.WORKFLOW_STATUS_NOSHOW)
+            allowed.append(Visit.WORKFLOW_STATUS_NOSHOW)
 
         for x in self.workflow_status_choices:
             if x[0] in allowed:
@@ -2340,7 +2076,7 @@ class VisitOccurrence(models.Model):
         last_workflow_status = None
         if self.pk:
             # Fetch old value
-            item = VisitOccurrence.objects.filter(
+            item = Visit.objects.filter(
                 pk=self.pk
             ).values("workflow_status").first()
             if item:
@@ -2384,7 +2120,7 @@ class VisitOccurrence(models.Model):
         if self.override_needed_teachers is not None:
             return self.override_needed_teachers
 
-        return self.visit.needed_teachers
+        return self.product.needed_teachers
 
     @property
     def needed_teachers(self):
@@ -2399,7 +2135,7 @@ class VisitOccurrence(models.Model):
         if self.override_needed_hosts is not None:
             return self.override_needed_hosts
 
-        return self.visit.needed_hosts
+        return self.product.needed_hosts
 
     @property
     def needed_hosts(self):
@@ -2415,12 +2151,12 @@ class VisitOccurrence(models.Model):
 
     @property
     def is_booked(self):
-        """Has this VisitOccurrence instance been booked yet?"""
+        """Has this Visit instance been booked yet?"""
         return len(self.bookings.all()) > 0
 
     @property
     def is_bookable(self):
-        # Can this occurrence be booked?
+        # Can this visit be booked?
         if not self.bookable:
             return False
         if self.workflow_status not in self.BOOKABLE_STATES:
@@ -2440,7 +2176,7 @@ class VisitOccurrence(models.Model):
         return self.changes_after_last_status_change().exists()
 
     def changes_after_last_status_change(self):
-        types = get_related_content_types(VisitOccurrence)
+        types = get_related_content_types(Visit)
 
         # Since log entry for workflow status change is logged after
         # the object itself is saved we have to be a bit fuzzy in our
@@ -2455,7 +2191,7 @@ class VisitOccurrence(models.Model):
 
     @property
     def can_join_waitinglist(self):
-        # Can this occurrence be booked (with spots on the waiting list)?
+        # Can this visit be booked (with spots on the waiting list)?
         if not self.bookable:
             return False
         if self.workflow_status not in self.BOOKABLE_STATES:
@@ -2510,7 +2246,7 @@ class VisitOccurrence(models.Model):
 
     @property
     def available_seats(self):
-        limit = self.visit.maximum_number_of_visitors
+        limit = self.product.maximum_number_of_visitors
         if limit is not None:
             return max(limit - self.nr_attendees, 0)
 
@@ -2519,15 +2255,15 @@ class VisitOccurrence(models.Model):
 
     def __unicode__(self):
         if self.start_datetime:
-            return u'%s | %s' % (self.visit.title, self.display_value)
+            return u'%s | %s' % (self.product.title, self.display_value)
         else:
-            return u'%s (uden fastlagt tidspunkt)' % (self.visit.title)
+            return u'%s (uden fastlagt tidspunkt)' % (self.product.title)
 
     def get_override_attr(self, attrname):
         result = getattr(self, 'override_' + attrname, None)
 
-        if result is None and self.visit:
-            result = getattr(self.visit, attrname)
+        if result is None and self.product:
+            result = getattr(self.product, attrname)
 
         return result
 
@@ -2544,8 +2280,8 @@ class VisitOccurrence(models.Model):
     def as_searchtext(self):
         result = []
 
-        if self.visit:
-            result.append(self.visit.as_searchtext())
+        if self.product:
+            result.append(self.product.as_searchtext())
 
         if self.bookings:
             for booking in self.bookings.all():
@@ -2587,16 +2323,16 @@ class VisitOccurrence(models.Model):
         self.update_last_workflow_change()
 
         # Save once to store relations
-        super(VisitOccurrence, self).save(*args, **kwargs)
+        super(Visit, self).save(*args, **kwargs)
 
     def get_absolute_url(self):
-        return reverse('visit-occ-view', args=[self.pk])
+        return reverse('visit-view', args=[self.pk])
 
     def get_recipients(self, template_key):
-        recipients = self.visit.get_recipients(template_key)
-        if template_key in EmailTemplate.occurrence_hosts_keys:
+        recipients = self.product.get_recipients(template_key)
+        if template_key in EmailTemplate.visit_hosts_keys:
             recipients.extend(self.hosts.all())
-        if template_key in EmailTemplate.occurrence_teachers_keys:
+        if template_key in EmailTemplate.visit_teachers_keys:
             recipients.extend(self.teachers.all())
         if template_key in EmailTemplate.avoid_already_assigned:
             for item in self.hosts.all():
@@ -2608,19 +2344,19 @@ class VisitOccurrence(models.Model):
         return recipients
 
     def create_inheriting_autosends(self):
-        for visitautosend in self.visit.visitautosend_set.all():
-            if not self.get_autosend(visitautosend.template_key, False, False):
-                occurrenceautosend = VisitOccurrenceAutosend(
-                    visitoccurrence=self,
+        for productautosend in self.product.productautosend_set.all():
+            if not self.get_autosend(productautosend.template_key, False, False):
+                visitautosend = VisitAutosend(
+                    visit=self,
                     inherit=True,
-                    template_key=visitautosend.template_key,
-                    days=visitautosend.days,
-                    enabled=visitautosend.enabled
+                    template_key=productautosend.template_key,
+                    days=productautosend.days,
+                    enabled=productautosend.enabled
                 )
-                occurrenceautosend.save()
+                visitautosend.save()
 
     def autosend_inherits(self, template_key):
-        s = self.visitoccurrenceautosend_set.filter(
+        s = self.visitautosend_set.filter(
             template_key=template_key
         )
 
@@ -2635,10 +2371,10 @@ class VisitOccurrence(models.Model):
     def get_autosend(self, template_key, follow_inherit=True,
                      include_disabled=False):
         if follow_inherit and self.autosend_inherits(template_key):
-            return self.visit.get_autosend(template_key)
+            return self.product.get_autosend(template_key)
         else:
             try:
-                query = self.visitoccurrenceautosend_set.filter(
+                query = self.visitautosend_set.filter(
                     template_key=template_key)
                 if not include_disabled:
                     query = query.filter(enabled=True)
@@ -2649,7 +2385,7 @@ class VisitOccurrence(models.Model):
     def get_autosends(self, follow_inherit=True,
                       include_disabled=False, yield_inherited=True):
         result = set()
-        for autosend in self.visitoccurrenceautosend_set.all():
+        for autosend in self.visitautosend_set.all():
             if autosend.enabled or include_disabled:
                 result.add(autosend)
             elif autosend.inherit and follow_inherit:
@@ -2665,12 +2401,12 @@ class VisitOccurrence(models.Model):
     def autosend_enabled(self, template_key):
         return self.get_autosend(template_key, True) is not None
 
-    # Sends a message to defined recipients pertaining to the VisitOccurrence
+    # Sends a message to defined recipients pertaining to the Visit
     def autosend(self, template_key, recipients=None,
                  only_these_recipients=False):
         if self.autosend_enabled(template_key):
-            visit = self.visit
-            unit = visit.unit
+            product = self.product
+            unit = product.organizationalunit
             if recipients is None:
                 recipients = set()
             else:
@@ -2680,7 +2416,7 @@ class VisitOccurrence(models.Model):
 
             KUEmailMessage.send_email(
                 template_key,
-                {'occurrence': self, 'visit': visit},
+                {'visit': self, 'product': product},
                 list(recipients),
                 self,
                 unit
@@ -2692,8 +2428,8 @@ class VisitOccurrence(models.Model):
                     KUEmailMessage.send_email(
                         template_key,
                         {
-                            'occurrence': self,
-                            'visit': visit,
+                            'visit': self,
+                            'product': product,
                             'booking': booking,
                             'booker': booking.booker
                         },
@@ -2708,14 +2444,14 @@ class VisitOccurrence(models.Model):
 
     def update_endtime(self):
         if self.start_datetime is not None:
-            duration = self.visit.duration_as_timedelta
+            duration = self.product.duration_as_timedelta
             if duration is not None:
                 self.end_datetime = self.start_datetime + duration
 
     def add_room_by_name(self, name):
         locality = None
-        if self.visit and self.visit.locality:
-            locality = self.visit.locality
+        if self.product and self.product.locality:
+            locality = self.product.locality
 
         room = Room.objects.filter(
             name=name,
@@ -2735,35 +2471,35 @@ class VisitOccurrence(models.Model):
 
     @staticmethod
     def get_latest_created():
-        return VisitOccurrence.objects.\
+        return Visit.objects.\
             order_by('-statistics__created_time')
 
     @staticmethod
     def get_latest_updated():
-        return VisitOccurrence.objects.\
+        return Visit.objects.\
             order_by('-statistics__updated_time')
 
     @staticmethod
     def get_latest_displayed():
-        return VisitOccurrence.objects.\
+        return Visit.objects.\
             order_by('-statistics__visited_time')
 
     @staticmethod
     def get_latest_booked():
-        return VisitOccurrence.objects.filter(
+        return Visit.objects.filter(
             bookings__isnull=False
         ).order_by(
             '-bookings__statistics__created_time'
         )
 
     @staticmethod
-    def get_todays_occurrences():
-        return VisitOccurrence.get_occurring_on_date(timezone.now().date())
+    def get_todays_visits():
+        return Visit.get_occurring_on_date(timezone.now().date())
 
     @staticmethod
     def get_starting_on_date(date):
-        return VisitOccurrence.objects.none()
-        return VisitOccurrence.objects.filter(
+        return Visit.objects.none()
+        return Visit.objects.filter(
             start_datetime__year=date.year,
             start_datetime__month=date.month,
             start_datetime__day=date.day
@@ -2771,9 +2507,9 @@ class VisitOccurrence(models.Model):
 
     @staticmethod
     def get_occurring_at_time(time):
-        # Return the occurrences that take place exactly at this time
+        # Return the visits that take place exactly at this time
         # Meaning they begin before the queried time and end after the time
-        return VisitOccurrence.objects.filter(
+        return Visit.objects.filter(
             start_datetime__lte=time,
             end_datetime__gte=time
         )
@@ -2788,19 +2524,19 @@ class VisitOccurrence(models.Model):
             tzinfo=timezone.get_current_timezone()
         )
 
-        # An occurrence happens on a date if it starts before the
+        # A visit happens on a date if it starts before the
         # end of the day and ends after the beginning of the day
-        return VisitOccurrence.objects.filter(
+        return Visit.objects.filter(
             start_datetime__lte=date + timedelta(days=1),
             end_datetime__gte=date
         )
 
     @staticmethod
     def get_recently_held(time=timezone.now()):
-        return VisitOccurrence.objects.filter(
+        return Visit.objects.filter(
             workflow_status__in=[
-                VisitOccurrence.WORKFLOW_STATUS_EXECUTED,
-                VisitOccurrence.WORKFLOW_STATUS_EVALUATED],
+                Visit.WORKFLOW_STATUS_EXECUTED,
+                Visit.WORKFLOW_STATUS_EVALUATED],
             start_datetime__isnull=False,
             end_datetime__lte=time
         ).order_by('-end_datetime')
@@ -2814,34 +2550,34 @@ class VisitOccurrence(models.Model):
 
     @staticmethod
     def set_endtime():
-        for occurrence in VisitOccurrence.objects.all():
-            occurrence.save()
+        for visit in Visit.objects.all():
+            visit.save()
 
     def add_comment(self, user, text):
-        VisitOccurrenceComment(
-            visitoccurrence=self,
+        VisitComment(
+            visit=self,
             author=user,
             text=text
         ).save()
 
     def get_comments(self, user=None):
         if user is None:
-            return VisitOccurrenceComment.objects.filter(visitoccurrence=self)
+            return VisitComment.objects.filter(visit=self)
         else:
-            return VisitOccurrenceComment.objects.filter(
-                visitoccurrence=self,
+            return VisitComment.objects.filter(
+                visit=self,
                 author=user
             )
 
     @property
     def waiting_list_capacity(self):
-        if not self.visit.do_create_waiting_list:
+        if not self.product.do_create_waiting_list:
             return 0
-        if self.visit.waiting_list_length is None:
+        if self.product.waiting_list_length is None:
             return INFINITY
-        elif self.visit.waiting_list_length <= 0:
+        elif self.product.waiting_list_length <= 0:
             return 0
-        idlespots = self.visit.waiting_list_length - self.nr_waiting
+        idlespots = self.product.waiting_list_length - self.nr_waiting
         return max(idlespots, 0)
 
     @property
@@ -2866,25 +2602,25 @@ class VisitOccurrence(models.Model):
 
     @property
     def waiting_list_closing_time(self):
-        if self.visit.waiting_list_deadline_days is None and \
-                self.visit.waiting_list_deadline_hours is None:
+        if self.product.waiting_list_deadline_days is None and \
+                self.product.waiting_list_deadline_hours is None:
             return None
         time = self.start_datetime
         if time:
-            if self.visit.waiting_list_deadline_days > 0:
+            if self.product.waiting_list_deadline_days > 0:
                 time = time - timedelta(
-                    days=self.visit.waiting_list_deadline_days
+                    days=self.product.waiting_list_deadline_days
                 )
-            if self.visit.waiting_list_deadline_hours > 0:
+            if self.product.waiting_list_deadline_hours > 0:
                 time = time - timedelta(
-                    hours=self.visit.waiting_list_deadline_hours
+                    hours=self.product.waiting_list_deadline_hours
                 )
             return time
         return None
 
     @property
     def waiting_list_closed(self):
-        if not self.visit.do_create_waiting_list:
+        if not self.product.do_create_waiting_list:
             return True
         closing_time = self.waiting_list_closing_time
         if closing_time:
@@ -2892,17 +2628,17 @@ class VisitOccurrence(models.Model):
         return False
 
 
-VisitOccurrence.add_override_property('duration')
-VisitOccurrence.add_override_property('locality')
+Visit.add_override_property('duration')
+Visit.add_override_property('locality')
 
 
-class VisitOccurrenceComment(models.Model):
+class VisitComment(models.Model):
 
     class Meta:
         ordering = ["-time"]
 
-    visitoccurrence = models.ForeignKey(
-        VisitOccurrence,
+    visit = models.ForeignKey(
+        Visit,
         verbose_name=_(u'Besøg'),
         null=False,
         blank=False
@@ -2930,7 +2666,7 @@ class VisitOccurrenceComment(models.Model):
 
     @staticmethod
     def on_delete_user(user):
-        for comment in VisitOccurrenceComment.objects.filter(author=user):
+        for comment in VisitComment.objects.filter(author=user):
             comment.on_delete_author()
 
 
@@ -2962,23 +2698,23 @@ class Autosend(models.Model):
         )
 
 
-class VisitAutosend(Autosend):
-    visit = models.ForeignKey(
-        Visit,
+class ProductAutosend(Autosend):
+    product = models.ForeignKey(
+        Product,
         verbose_name=_(u'Besøg'),
         blank=False
     )
 
     def __unicode__(self):
         return "%s on %s" % (
-            super(VisitAutosend, self).__unicode__(),
-            self.visit.__unicode__()
+            super(ProductAutosend, self).__unicode__(),
+            self.product.__unicode__()
         )
 
 
-class VisitOccurrenceAutosend(Autosend):
-    visitoccurrence = models.ForeignKey(
-        VisitOccurrence,
+class VisitAutosend(Autosend):
+    visit = models.ForeignKey(
+        Visit,
         verbose_name=_(u'BesøgForekomst'),
         blank=False
     )
@@ -2988,12 +2724,12 @@ class VisitOccurrenceAutosend(Autosend):
 
     def get_inherited(self):
         if self.inherit:
-            return self.visitoccurrence.visit.get_autosend(self.template_key)
+            return self.product.visit.get_autosend(self.template_key)
 
     def __unicode__(self):
         return "%s on %s" % (
-            super(VisitOccurrenceAutosend, self).__unicode__(),
-            self.visitoccurrence.__unicode__()
+            super(VisitAutosend, self).__unicode__(),
+            self.visit.__unicode__()
         )
 
 
@@ -3004,8 +2740,8 @@ class Room(models.Model):
         verbose_name_plural = _(u"lokaler")
 
     # Old field, to be removed later
-    visit = models.ForeignKey(
-        Visit, verbose_name=_(u'Besøg'),
+    product = models.ForeignKey(
+        Product, verbose_name=_(u'Besøg'),
         blank=True,
         null=True,
         editable=False
@@ -3044,13 +2780,13 @@ class Room(models.Model):
     @classmethod
     def migrate(cls):
         for x in cls.objects.filter(locality__isnull=True):
-            if x.visit and x.visit.locality:
-                x.visit.add_room_by_name(x.name)
+            if x.product and x.product.locality:
+                x.product.add_room_by_name(x.name)
             x.delete()
 
         # Copy any rooms from visits each visit's VOs.
-        for x in Visit.objects.filter(rooms__isnull=False).distinct():
-            for y in x.visitoccurrence_set.all():
+        for x in Product.objects.filter(rooms__isnull=False).distinct():
+            for y in x.visit_set.all():
                 for r in x.rooms.all():
                     y.rooms.add(r)
 
@@ -3310,7 +3046,7 @@ class School(models.Model):
                           "Not adding school %s" % (postcode, name)
 
 
-class Booker(models.Model):
+class Guest(models.Model):
 
     class Meta:
         verbose_name = _(u'besøgende')
@@ -3454,10 +3190,10 @@ class Booking(models.Model):
         verbose_name = _(u'booking')
         verbose_name_plural = _(u'bookinger')
 
-    booker = models.ForeignKey(Booker)
+    booker = models.ForeignKey(Guest)
 
-    visitoccurrence = models.ForeignKey(
-        VisitOccurrence,
+    visit = models.ForeignKey(
+        Visit,
         null=True,
         blank=True,
         related_name='bookings',
@@ -3479,24 +3215,24 @@ class Booking(models.Model):
         null=True
     )
 
-    def get_occurrence_attr(self, attrname):
-        if not self.visitoccurrence:
+    def get_visit_attr(self, attrname):
+        if not self.visit:
             return None
-        return getattr(self.visitoccurrence, attrname, None)
+        return getattr(self.visit, attrname, None)
 
     def raise_readonly_attr_error(self, attrname):
         raise Exception(
             _(u"Attribute %s on Booking is readonly.") % attrname +
-            _(u"Set it on the VisitOccurance instead.")
+            _(u"Set it on the Visit instead.")
         )
 
     @classmethod
     # Adds property to this class that will fetch the same attribute on
-    # the associated visitoccorrence, if available. The property will raise
+    # the associated visit, if available. The property will raise
     # an exception on assignment.
-    def add_occurrence_attr(cls, attrname):
+    def add_visit_attr(cls, attrname):
         setattr(cls, attrname, property(
-            lambda self: self.get_occurrence_attr(attrname),
+            lambda self: self.get_visit_attr(attrname),
             lambda self, val: self.raise_readonly_attr_error(attrname)
         ))
 
@@ -3508,7 +3244,7 @@ class Booking(models.Model):
         if qs is None:
             qs = Booking.objects.all()
 
-        return qs.filter(visit__unit=user.userprofile.get_unit_queryset())
+        return qs.filter(product__organizationalunit=user.userprofile.get_unit_queryset())
 
     def get_absolute_url(self):
         return reverse('booking-view', args=[self.pk])
@@ -3517,16 +3253,16 @@ class Booking(models.Model):
         return settings.PUBLIC_URL + self.get_absolute_url()
 
     def get_recipients(self, template_key):
-        recipients = self.visitoccurrence.get_recipients(template_key)
+        recipients = self.visit.get_recipients(template_key)
         if template_key in EmailTemplate.booker_keys:
             recipients.append(self.booker)
         return recipients
 
     def autosend(self, template_key, recipients=None,
                  only_these_recipients=False):
-        if self.visitoccurrence.autosend_enabled(template_key):
-            visit = self.visitoccurrence.visit
-            unit = visit.unit
+        if self.visit.autosend_enabled(template_key):
+            product = self.visit.product
+            unit = product.organizationalunit
             if recipients is None:
                 recipients = set()
             else:
@@ -3538,13 +3274,13 @@ class Booking(models.Model):
                 template_key,
                 {
                     'booking': self,
-                    'visit': visit,
+                    'product': product,
                     'booker': self.booker,
-                    'besoeg': self.visitoccurrence,
+                    'besoeg': self.visit,
                 },
                 list(recipients),
-                self.visitoccurrence,
-                unit=unit
+                self.visit,
+                organizationalunit=unit
             )
 
     def as_searchtext(self):
@@ -3581,29 +3317,29 @@ class Booking(models.Model):
 
     def enqueue(self):
         if not self.is_waiting:
-            self.waitinglist_spot = self.visitoccurrence.next_waiting_list_spot
+            self.waitinglist_spot = self.visit.next_waiting_list_spot
             self.save()
 
     @property
     def can_dequeue(self):
-        return self.is_waiting and self.visitoccurrence.available_seats \
+        return self.is_waiting and self.visit.available_seats \
             >= self.booker.attendee_count
 
     def dequeue(self):
         if self.can_dequeue:
             self.waitinglist_spot = 0
             self.save()
-            self.visitoccurrence.normalize_waitinglist()
+            self.visit.normalize_waitinglist()
 
 
-Booking.add_occurrence_attr('visit')
-Booking.add_occurrence_attr('hosts')
-Booking.add_occurrence_attr('teachers')
-Booking.add_occurrence_attr('host_status')
-Booking.add_occurrence_attr('teacher_status')
-Booking.add_occurrence_attr('room_status')
-Booking.add_occurrence_attr('workflow_status')
-Booking.add_occurrence_attr('comments')
+Booking.add_visit_attr('product')
+Booking.add_visit_attr('hosts')
+Booking.add_visit_attr('teachers')
+Booking.add_visit_attr('host_status')
+Booking.add_visit_attr('teacher_status')
+Booking.add_visit_attr('room_status')
+Booking.add_visit_attr('workflow_status')
+Booking.add_visit_attr('comments')
 
 
 class ClassBooking(Booking):
@@ -3735,7 +3471,7 @@ class KUEmailMessage(models.Model):
         :param email_message: An instance of
         django.core.mail.message.EmailMessage
         :param instance: The object that the message concerns i.e. Booking,
-        Visit etc.
+        Product etc.
         :return: None
         """
         ctype = ContentType.objects.get_for_model(instance)
@@ -3768,9 +3504,9 @@ class KUEmailMessage(models.Model):
                 u"Invalid template object '%s'" % str(template)
             )
 
-        # Alias any occurrence to "besoeg" for easier use by danes
-        if 'besoeg' not in context and 'occurrence' in context:
-            context['besoeg'] = context['occurrence']
+        # Alias any visit to "besoeg" for easier use by danes
+        if 'besoeg' not in context and 'visit' in context:
+            context['besoeg'] = context['visit']
 
         emails = {}
         if type(recipients) is not list:
@@ -3787,12 +3523,7 @@ class KUEmailMessage(models.Model):
                 name = recipient.get_full_name()
                 address = recipient.email
                 user = recipient
-            elif isinstance(recipient, UserPerson):
-                name = recipient.name
-                address = recipient.email
-                if recipient.user:
-                    user = recipient.user
-            elif isinstance(recipient, Booker):
+            elif isinstance(recipient, Guest):
                 name = recipient.get_name()
                 address = recipient.get_email()
                 guest = recipient
@@ -3829,19 +3560,19 @@ class KUEmailMessage(models.Model):
         for email in emails.values():
             nonce = uuid.uuid4()
             ctx = {
-                'unit': unit,
+                'organizationalunit': unit,
                 'recipient': email,
                 'sender': settings.DEFAULT_FROM_EMAIL,
                 'reply_nonce': nonce
             }
             ctx.update(context)
 
-            # If we know the visitoccurrence and the guest we can find the
+            # If we know the visit and the guest we can find the
             # booking if it is missing.
             if 'booking' not in context and \
                'bosoeg' in context and email['guest']:
                 context['booking'] = Booking.objects.filter(
-                    visitoccurrence=context['besoeg'],
+                    visit=context['besoeg'],
                     booker=context['guest']
                 ).first()
 
@@ -3914,9 +3645,9 @@ class KUEmailRecipient(models.Model):
         return result
 
 
-class EmailBookerEntry(models.Model):
+class BookerResponseNonce(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4)
-    booker = models.ForeignKey(Booker)
+    booker = models.ForeignKey(Guest)
     created = models.DateTimeField(default=timezone.now)
     expires_in = models.DurationField(default=timedelta(hours=48))
 

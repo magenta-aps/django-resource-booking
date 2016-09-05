@@ -1,39 +1,39 @@
 # -*- coding: utf-8 -*-
-from booking.models import VisitOccurrence, VisitOccurrenceAutosend
+from booking.models import Visit, VisitAutosend
 from django import forms
 from django.forms import inlineformset_factory
 from django.utils.translation import ugettext_lazy as _
 
 
-class ChangeVisitOccurrenceStatusForm(forms.ModelForm):
+class ChangeVisitStatusForm(forms.ModelForm):
 
     class Meta:
-        model = VisitOccurrence
+        model = Visit
         fields = ['workflow_status']
 
     def __init__(self, *args, **kwargs):
-        super(ChangeVisitOccurrenceStatusForm, self).__init__(*args, **kwargs)
+        super(ChangeVisitStatusForm, self).__init__(*args, **kwargs)
 
         if "instance" in kwargs:
             choices = kwargs['instance'].possible_status_choices()
 
             if kwargs['instance'].planned_status_is_blocked():
-                remove_val = VisitOccurrence.WORKFLOW_STATUS_PLANNED
+                remove_val = Visit.WORKFLOW_STATUS_PLANNED
                 choices = (x for x in choices if x[0] != remove_val)
 
             self.fields['workflow_status'].widget.choices = choices
             self.fields['workflow_status'].label = _(u'Ny status')
 
 
-class ChangeVisitOccurrenceStartTimeForm(forms.ModelForm):
+class ChangeVisitStartTimeForm(forms.ModelForm):
     class Meta:
-        model = VisitOccurrence
+        model = Visit
         fields = ['start_datetime']
 
 
-class ChangeVisitOccurrenceTeachersForm(forms.ModelForm):
+class ChangeVisitTeachersForm(forms.ModelForm):
     class Meta:
-        model = VisitOccurrence
+        model = Visit
         fields = ['teachers', 'override_needed_teachers']
         widgets = {'teachers': forms.CheckboxSelectMultiple()}
 
@@ -44,16 +44,16 @@ class ChangeVisitOccurrenceTeachersForm(forms.ModelForm):
     )
 
     def __init__(self, *args, **kwargs):
-        super(ChangeVisitOccurrenceTeachersForm, self)\
+        super(ChangeVisitTeachersForm, self)\
             .__init__(*args, **kwargs)
 
         self.fields['teachers'].queryset = \
-            kwargs['instance'].visit.potentielle_undervisere.all()
+            kwargs['instance'].product.potentielle_undervisere.all()
 
 
-class ChangeVisitOccurrenceHostsForm(forms.ModelForm):
+class ChangeVisitHostsForm(forms.ModelForm):
     class Meta:
-        model = VisitOccurrence
+        model = Visit
         fields = ['hosts', 'override_needed_hosts']
         widgets = {'hosts': forms.CheckboxSelectMultiple()}
 
@@ -64,47 +64,47 @@ class ChangeVisitOccurrenceHostsForm(forms.ModelForm):
     )
 
     def __init__(self, *args, **kwargs):
-        super(ChangeVisitOccurrenceHostsForm, self).__init__(
+        super(ChangeVisitHostsForm, self).__init__(
             *args,
             **kwargs
         )
 
         self.fields['hosts'].queryset = \
-            kwargs['instance'].visit.potentielle_vaerter.all()
+            kwargs['instance'].product.potentielle_vaerter.all()
 
 
-class ChangeVisitOccurrenceRoomsForm(forms.ModelForm):
+class ChangeVisitRoomsForm(forms.ModelForm):
     class Meta:
-        model = VisitOccurrence
+        model = Visit
         fields = ['room_status']
 
 
-class ChangeVisitOccurrenceCommentsForm(forms.ModelForm):
+class ChangeVisitCommentsForm(forms.ModelForm):
     class Meta:
-        model = VisitOccurrence
+        model = Visit
         fields = ['comments']
 
 
-class ChangeVisitOccurrenceEvalForm(forms.ModelForm):
+class ChangeVisitEvalForm(forms.ModelForm):
     class Meta:
-        model = VisitOccurrence
+        model = Visit
         fields = ['evaluation_link']
 
 
-class VisitOccurrenceAddLogEntryForm(forms.Form):
+class VisitAddLogEntryForm(forms.Form):
     new_comment = forms.CharField(
         widget=forms.Textarea,
         label=_(u'Ny log-post')
     )
 
 
-class ResetVisitOccurrenceChangesForm(forms.ModelForm):
+class ResetVisitChangesForm(forms.ModelForm):
     class Meta:
-        model = VisitOccurrence
+        model = Visit
         fields = []
 
 
-class VisitOccurrenceAddCommentForm(forms.Form):
+class VisitAddCommentForm(forms.Form):
     new_comment = forms.CharField(
         widget=forms.Textarea,
         label=_(u'Ny kommentar')
@@ -119,9 +119,9 @@ class BecomeSomethingForm(forms.Form):
     )
 
 
-VisitOccurrenceAutosendFormSet = inlineformset_factory(
-    VisitOccurrence,
-    VisitOccurrenceAutosend,
+VisitAutosendFormSet = inlineformset_factory(
+    Visit,
+    VisitAutosend,
     fields=('template_key', 'enabled', 'inherit', 'days'),
     can_delete=True,
     extra=0,

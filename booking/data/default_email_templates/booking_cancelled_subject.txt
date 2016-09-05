@@ -1,1 +1,1 @@
-Aflysning af besøg "{{ visit.title }}" d. {{ besoeg.start_datetime }}
+Aflysning af besøg "{{ product.title }}" d. {{ besoeg.start_datetime }}

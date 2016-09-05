@@ -24,10 +24,10 @@
                     {% for res in results %}
                         <li class="media">
                             <div class="media-body">
-                                <strong><a href="{% url 'visit-occ-view' res.pk %}">{% trans 'Besøg' %} {{ res.pk }}</a></strong>
+                                <strong><a href="{% url 'visit-view' res.pk %}">{% trans 'Besøg' %} {{ res.pk }}</a></strong>
                                 <dl class="dl-horizontal">
                                     <dt>{% trans 'Tilbud:' %}</dt>
-                                    <dd><a href="{% url 'visit-view' res.visit.pk %}">{{ res.visit.title }}</a></dd>
+                                    <dd><a href="{% url 'product-view' res.product.pk %}">{{ res.product.title }}</a></dd>
                                     <dt>{% trans 'Booket af:' %}</dt>
                                     <dd>{% blocktrans with count=res.nr_attendees %}{{ count }} personer{% endblocktrans %}</dd>
                                 </dl>

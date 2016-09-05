@@ -14,23 +14,23 @@
         </div>
         <div class="panel-body">
 
-            {% if list.type == 'VisitOccurrence' %}
-                {% for occurrence in list.queryset %}
+            {% if list.type == 'Visit' %}
+                {% for visit in list.queryset %}
                     {% if not list.limit or forloop.counter0 < list.limit %}
                     <div class="list-group-item clearfix">
-                        <a href="{% url 'visit-occ-view' occurrence.pk %}" title="{% trans 'Se arrangementets detaljer' %}">
-                            <h2 class="list-group-item-heading">{{ occurrence.visit.title }}</h2>
+                        <a href="{% url 'visit-view' visit.pk %}" title="{% trans 'Se arrangementets detaljer' %}">
+                            <h2 class="list-group-item-heading">{{ visit.product.title }}</h2>
                             <div class="list-group-item-text">
                                 <ul>
                                     <li>
-                                        {% blocktrans with date=occurrence.start_datetime|date:"d.m.Y" time=occurrence.start_datetime|time:"H.i" %}Dato/tid: {{ date }} kl. {{ time }}{% endblocktrans %}
+                                        {% blocktrans with date=visit.start_datetime|date:"d.m.Y" time=visit.start_datetime|time:"H.i" %}Dato/tid: {{ date }} kl. {{ time }}{% endblocktrans %}
                                     </li>
-                                    <li>{% trans 'Antal tilmeldte:' %} {{ occurrence.nr_attendees }}</li>
+                                    <li>{% trans 'Antal tilmeldte:' %} {{ visit.nr_attendees }}</li>
                                 </ul>
                             </div>
                         </a>
                         <div class="tools">
-                            <span class="label label-{{ occurrence.get_workflow_status_class }} pull-right">{{ occurrence.get_workflow_status_display }}</span>
+                            <span class="label label-{{ visit.get_workflow_status_class }} pull-right">{{ visit.get_workflow_status_display }}</span>
                         </div>
                     </div>
                     {% endif %}
@@ -45,15 +45,15 @@
                             <div class="list-group-item-text">
                                 <ul>
                                     <li>{% trans 'Type:' %} {{ res.get_type_display }}</li>
-                                    {% if res.get_occurrences|length %}
+                                    {% if res.get_visits|length %}
                                         <li>
                                             {% trans 'Dato/tid:' %}
                                             <span class="type-offer">
-                                                {% if res.get_occurrences|length == 1 %}
-                                                    {{ res.first_occurence.start_datetime|date:"d.m.Y" }}
-                                                    {% blocktrans with time=res.first_occurence.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}
+                                                {% if res.get_visits|length == 1 %}
+                                                    {{ res.first_visit.start_datetime|date:"d.m.Y" }}
+                                                    {% blocktrans with time=res.first_visit.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}
                                                 {% else %}
-                                                    {% blocktrans with count=res.get_occurrences|length date=res.first_occurence.start_datetime|date:"d.m.Y" time=res.first_occurence.start_datetime|time:"H.i" %}
+                                                    {% blocktrans with count=res.get_visits|length date=res.first_visit.start_datetime|date:"d.m.Y" time=res.first_visit.start_datetime|time:"H.i" %}
                                                         {{ count }} mulige tidspunkter, første gang {{ date }} kl. {{ time }}
                                                     {% endblocktrans %}
                                                 {% endif %}

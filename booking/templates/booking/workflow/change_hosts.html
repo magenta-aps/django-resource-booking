@@ -14,14 +14,14 @@
         <div class="divider"></div>
     </div>
     <div class="divider"></div>
-    <form name="changebookinghostsform" id="changebookinghostsform" class="changebookingform" action="{% url 'change-visit-occ-hosts' object.pk %}" method="post">
+    <form name="changebookinghostsform" id="changebookinghostsform" class="changebookingform" action="{% url 'change-visit-hosts' object.pk %}" method="post">
         {% csrf_token %}
 
         {% include 'resource/fields/generic_field.html' with field=form.override_needed_hosts %}
         <div class="row form-group">
             <div class="col-sm-2"></div>
             <div class="col-sm-7">
-                {% blocktrans with title=object.visit.title needed=object.visit.get_needed_hosts_display %}
+                {% blocktrans with title=object.product.title needed=object.product.get_needed_hosts_display %}
                 Antal nødvendige værter angivet på "{{ title }}": {{ needed }}
                 {% endblocktrans %}
             </div>

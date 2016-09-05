@@ -2,7 +2,7 @@
 
 <p>
     En eller flere gæster har tilmeldt sig besøg
-    <a href="{% full_url 'visit-view' visit.pk %}">{{ visit.title }}</a>{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date:'d.m.Y' }}
+    <a href="{% full_url 'product-view' product.pk %}">{{ product.title }}</a>{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date:'d.m.Y' }}
     {% blocktrans with time=besoeg.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}{% endif %}.
     Vil du sørge for at booke et lokale, hvor besøget kan afholdes?
 </p>
@@ -16,6 +16,6 @@
 <p>
     Venlig hilsen<br />
     <br />
-    {{ visit.unit.name }}
+    {{ product.organizationalunit.name }}
 </p>
 

@@ -38,27 +38,26 @@ from django.views.defaults import bad_request
 
 from profile.models import EDIT_ROLES
 from profile.models import role_to_text
-from booking.models import Visit, VisitOccurrence, StudyMaterial, \
-    VisitAutosend, UserPerson
+from booking.models import Product, Visit, StudyMaterial, \
+    ProductAutosend
 from booking.models import KUEmailMessage
 from booking.models import Resource, Subject
-from booking.models import Unit
-from booking.models import OtherResource
+from booking.models import OrganizationalUnit
 from booking.models import GymnasieLevel
-from booking.models import Room, Person
+from booking.models import Room
 from booking.models import PostCode, School
-from booking.models import Booking, Booker
+from booking.models import Booking, Guest
 from booking.models import ResourceGymnasieFag, ResourceGrundskoleFag
 from booking.models import EmailTemplate
 from booking.models import log_action
 from booking.models import LOGACTION_CREATE, LOGACTION_CHANGE
-from booking.models import LokaleAnsvarlig
-from booking.models import EmailBookerEntry
-from booking.forms import ResourceInitialForm, OtherResourceForm, VisitForm, \
-    GuestEmailComposeForm, StudentForADayBookingForm, OtherVisitForm, \
+from booking.models import RoomResponsible
+from booking.models import BookerResponseNonce
+from booking.forms import ResourceInitialForm, ProductForm, \
+    GuestEmailComposeForm, StudentForADayBookingForm, OtherProductForm, \
     StudyProjectBookingForm, BookingGrundskoleSubjectLevelForm, BookingListForm
 from booking.forms import StudentForADayForm, InternshipForm, OpenHouseForm, \
-    TeacherVisitForm, ClassVisitForm, StudyProjectForm, AssignmentHelpForm, \
+    TeacherProductForm, ClassProductForm, StudyProjectForm, AssignmentHelpForm, \
     StudyMaterialForm
 
 from booking.forms import ClassBookingForm, TeacherBookingForm
@@ -69,9 +68,9 @@ from booking.forms import EmailTemplateForm, EmailTemplatePreviewContextForm
 from booking.forms import EmailComposeForm
 from booking.forms import EmailReplyForm
 from booking.forms import EvaluationOverviewForm
-from booking.forms import AdminVisitSearchForm
-from booking.forms import VisitAutosendFormSet
-from booking.forms import VisitOccurrenceSearchForm
+from booking.forms import AdminProductSearchForm
+from booking.forms import ProductAutosendFormSet
+from booking.forms import VisitSearchForm
 from booking.forms import AcceptBookingForm
 from booking.utils import full_email, get_model_field_map
 from booking.utils import get_related_content_types
@@ -123,7 +122,7 @@ class MainPageView(TemplateView):
                     'color': self.HEADING_GREEN,
                     'type': 'Resource',
                     'title': _(u'Senest opdaterede tilbud'),
-                    'queryset': Visit.get_latest_updated(),
+                    'queryset': Product.get_latest_updated(),
                     'limit': 10,
                     'button': {
                         'text': _(u'Vis alle'),
@@ -134,7 +133,7 @@ class MainPageView(TemplateView):
                     'color': self.HEADING_BLUE,
                     'type': 'Resource',
                     'title': _(u'Senest bookede tilbud'),
-                    'queryset': Visit.get_latest_booked(),
+                    'queryset': Product.get_latest_booked(),
                     'limit': 10,
                     'button': {
                         'text': _(u'Vis alle'),
@@ -266,11 +265,9 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
     modal = True
 
     RECIPIENT_BOOKER = 'booker'
-    RECIPIENT_PERSON = 'person'
     RECIPIENT_USER = 'user'
-    RECIPIENT_USERPERSON = 'userperson'
     RECIPIENT_CUSTOM = 'custom'
-    RECIPIENT_LOKALEANSVARLIG = 'lokaleansvarlig'
+    RECIPIENT_ROOMRESPONSIBLE = 'roomresponsible'
     RECIPIENT_SEPARATOR = ':'
 
     def dispatch(self, request, *args, **kwargs):
@@ -353,24 +350,16 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
         email = None
         if isinstance(recipient, Booking):
             recipient = recipient.booker
-        if isinstance(recipient, Booker):
+        if isinstance(recipient, Guest):
             recipient_type = EmailComposeView.RECIPIENT_BOOKER
-            id = recipient.id
-            email = recipient.get_full_email()
-        elif isinstance(recipient, Person):
-            recipient_type = EmailComposeView.RECIPIENT_PERSON
-            id = recipient.id
-            email = recipient.get_full_email()
-        elif isinstance(recipient, UserPerson):
-            recipient_type = EmailComposeView.RECIPIENT_USERPERSON
             id = recipient.id
             email = recipient.get_full_email()
         elif isinstance(recipient, User):
             recipient_type = EmailComposeView.RECIPIENT_USER
             id = recipient.username
             email = full_email(recipient.email, recipient.get_full_name())
-        elif isinstance(recipient, LokaleAnsvarlig):
-            recipient_type = EmailComposeView.RECIPIENT_LOKALEANSVARLIG
+        elif isinstance(recipient, RoomResponsible):
+            recipient_type = EmailComposeView.RECIPIENT_ROOMRESPONSIBLE
             id = recipient.id
             email = full_email(recipient.email, recipient.get_full_name())
         key = recipient_type + EmailComposeView.RECIPIENT_SEPARATOR + str(id)
@@ -382,23 +371,17 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
             EmailComposeView.RECIPIENT_SEPARATOR, 1
         )
         if recipient_type == EmailComposeView.RECIPIENT_BOOKER:
-            return Booker.objects.filter(id=id)
-        elif recipient_type == EmailComposeView.RECIPIENT_PERSON:
-            return Person.objects.filter(id=id)
+            return Guest.objects.filter(id=id)
         elif recipient_type == EmailComposeView.RECIPIENT_USER:
             return User.objects.filter(username=id)
-        elif recipient_type == EmailComposeView.RECIPIENT_USERPERSON:
-            return UserPerson.objects.filter(id=id)
         elif recipient_type == EmailComposeView.RECIPIENT_CUSTOM:
             return id
 
     @staticmethod
     def lookup_recipients(recipient_ids):
         booker_ids = []
-        person_ids = []
         user_ids = []
-        userperson_ids = []
-        lokaleansvarlig_ids = []
+        roomresponsible_ids = []
         customs = []
         if type(recipient_ids) != list:
             recipient_ids = [recipient_ids]
@@ -414,26 +397,20 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
                     pass
             if recipient_type == EmailComposeView.RECIPIENT_BOOKER:
                 booker_ids.append(id)
-            elif recipient_type == EmailComposeView.RECIPIENT_PERSON:
-                person_ids.append(id)
             elif recipient_type == EmailComposeView.RECIPIENT_USER:
                 user_ids.append(id)
-            elif recipient_type == EmailComposeView.RECIPIENT_USERPERSON:
-                userperson_ids.append(id)
             elif recipient_type == EmailComposeView.RECIPIENT_CUSTOM:
                 customs.append(id)
-            elif recipient_type == EmailComposeView.RECIPIENT_LOKALEANSVARLIG:
-                lokaleansvarlig_ids.append(id)
+            elif recipient_type == EmailComposeView.RECIPIENT_ROOMRESPONSIBLE:
+                roomresponsible_ids.append(id)
 
-        return list(Booker.objects.filter(id__in=booker_ids)) + \
-            list(Person.objects.filter(id__in=person_ids)) + \
-            list(User.objects.filter(username__in=user_ids)) + \
-            list(UserPerson.objects.filter(id__in=userperson_ids)) + \
-            list(LokaleAnsvarlig.objects.filter(id__in=lokaleansvarlig_ids)) + \
-            customs
+        return list(Guest.objects.filter(id__in=booker_ids)) + \
+               list(User.objects.filter(username__in=user_ids)) + \
+            list(RoomResponsible.objects.filter(id__in=roomresponsible_ids)) + \
+               customs
 
     def get_unit(self):
-        return self.request.user.userprofile.unit
+        return self.request.user.userprofile.organizationalunit
 
     def get_template_names(self):
         if self.modal:
@@ -635,7 +612,7 @@ class SearchView(ListView):
     def get_admin_form(self):
         if self.admin_form is None:
             if self.request.user.is_authenticated():
-                self.admin_form = AdminVisitSearchForm(
+                self.admin_form = AdminProductSearchForm(
                     self.request.GET,
                     user=self.request.user
                 )
@@ -673,21 +650,21 @@ class SearchView(ListView):
                     t_from = timezone.now()
 
                 # Public users only want to search within bookable dates
-                ok_states = VisitOccurrence.BOOKABLE_STATES
+                ok_states = Visit.BOOKABLE_STATES
                 date_cond = (
-                    Q(visit__visitoccurrence__bookable=True) &
-                    Q(visit__visitoccurrence__workflow_status__in=ok_states)
+                    Q(product__visit__bookable=True) &
+                    Q(product__visit__workflow_status__in=ok_states)
                 )
 
             if t_from:
                 date_cond = (
                     date_cond &
-                    Q(visit__visitoccurrence__start_datetime__gt=t_from)
+                    Q(product__visit__start_datetime__gt=t_from)
                 )
 
             if t_to:
                 date_cond = date_cond & Q(
-                    Q(visit__visitoccurrence__start_datetime__lte=t_from)
+                    Q(product__visit__start_datetime__lte=t_from)
                 )
 
             self.from_datetime = t_from or ""
@@ -699,11 +676,11 @@ class SearchView(ListView):
                 # with the following OR condition:
                 qs = qs.filter(
                     # Stuff that is not bookable, eg. materials
-                    Q(visit__isnull=True) |
+                    Q(product__isnull=True) |
                     # Anything without any specific booking times
                     Q(
                         pk__in=Resource.objects.exclude(
-                            visit__visitoccurrence__bookable=True
+                            product__visit__bookable=True
                         )
                     ) |
                     # The actual date conditions
@@ -715,7 +692,7 @@ class SearchView(ListView):
                 qs = Resource.objects.filter(pk__in=[x.pk for x in qs])
 
             qs = qs.annotate(
-                num_bookings=Count('visit__visitoccurrence__bookings'),
+                num_bookings=Count('product__visit__bookings'),
             )
 
             qs = qs.distinct()
@@ -726,8 +703,8 @@ class SearchView(ListView):
 
     def annotate(self, qs):
         return qs.annotate(
-            num_occurences=Count('visit__visitoccurrence__pk', distinct=True),
-            first_occurence=Min('visit__visitoccurrence__start_datetime')
+            num_visits=Count('product__visit__pk', distinct=True),
+            first_visit=Min('product__visit__start_datetime')
         )
 
     def get_filters(self):
@@ -811,10 +788,8 @@ class SearchView(ListView):
 
         v = int(v)
 
-        if v == AdminVisitSearchForm.IS_VISIT:
-            self.filters["visit__pk__isnull"] = False
-        elif v == AdminVisitSearchForm.IS_NOT_VISIT:
-            self.filters["otherresource__pk__isnull"] = False
+        if v == AdminProductSearchForm.IS_VISIT:
+            self.filters["product__pk__isnull"] = False
 
     def filter_by_has_bookings(self, form):
         b = form.cleaned_data.get("b", "")
@@ -824,9 +799,9 @@ class SearchView(ListView):
 
         b = int(b)
 
-        if b == AdminVisitSearchForm.HAS_BOOKINGS:
+        if b == AdminProductSearchForm.HAS_BOOKINGS:
             self.filters["num_bookings__gt"] = 0
-        elif b == AdminVisitSearchForm.HAS_NO_BOOKINGS:
+        elif b == AdminProductSearchForm.HAS_NO_BOOKINGS:
             self.filters["num_bookings"] = 0
 
     def filter_by_unit(self, form):
@@ -837,16 +812,16 @@ class SearchView(ListView):
 
         u = int(u)
 
-        if u == AdminVisitSearchForm.MY_UNIT:
-            self.filters["unit"] = self.request.user.userprofile.unit
-        elif u == AdminVisitSearchForm.MY_FACULTY:
-            self.filters["unit"] = \
-                self.request.user.userprofile.unit.get_faculty_queryset()
-        elif u == AdminVisitSearchForm.MY_UNITS:
-            self.filters["unit"] = \
+        if u == AdminProductSearchForm.MY_UNIT:
+            self.filters["organizationalunit"] = self.request.user.userprofile.organizationalunit
+        elif u == AdminProductSearchForm.MY_FACULTY:
+            self.filters["organizationalunit"] = \
+                self.request.user.userprofile.organizationalunit.get_faculty_queryset()
+        elif u == AdminProductSearchForm.MY_UNITS:
+            self.filters["organizationalunit"] = \
                 self.user.userprofile.get_unit_queryset()
         else:
-            self.filters["unit__pk"] = u
+            self.filters["organizationalunit__pk"] = u
 
     def get_queryset(self):
         filters = self.get_filters()
@@ -1098,7 +1073,7 @@ class ResourceCustomListView(ResourceListView):
             listtype = self.request.GET.get("type", "")
 
             if listtype == self.TYPE_LATEST_BOOKED:
-                return Visit.get_latest_booked()
+                return Product.get_latest_booked()
             elif listtype == self.TYPE_LATEST_UPDATED:
                 return Resource.get_latest_updated()
 
@@ -1115,10 +1090,8 @@ class EditResourceInitialView(LoginRequiredMixin, HasBackButtonMixin,
     def get(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
         if pk is not None:
-            if OtherResource.objects.filter(id=pk).count() > 0:
-                return redirect(reverse('otherresource-edit', args=[pk]))
-            elif Visit.objects.filter(id=pk).count() > 0:
-                return redirect(reverse('visit-edit', args=[pk]))
+            if Product.objects.filter(id=pk).count() > 0:
+                return redirect(reverse('product-edit', args=[pk]))
             else:
                 raise Http404
         else:
@@ -1132,11 +1105,8 @@ class EditResourceInitialView(LoginRequiredMixin, HasBackButtonMixin,
         if form.is_valid():
             type_id = int(form.cleaned_data['type'])
             back = urlquote(request.GET.get('back'))
-            if type_id in Visit.applicable_types:
-                return redirect(reverse('visit-create') +
-                                "?type=%d&back=%s" % (type_id, back))
-            else:
-                return redirect(reverse('otherresource-create') +
+            if type_id in Product.applicable_types:
+                return redirect(reverse('product-create') +
                                 "?type=%d&back=%s" % (type_id, back))
 
         return self.render_to_response(
@@ -1153,10 +1123,8 @@ class CloneResourceView(RedirectView):
         except Resource.DoesNotExist:
             raise Http404()
 
-        if hasattr(res, "visit") and res.visit:
-            return reverse('visit-clone', args=[res.visit.pk])
-        elif hasattr(res, "otherresource") and res.otherresource:
-            return reverse('otherresource-clone', args=[res.otherresource.pk])
+        if hasattr(res, "product") and res.product:
+            return reverse('product-clone', args=[res.product.pk])
         else:
             raise Http404()
 
@@ -1166,10 +1134,8 @@ class ResourceDetailView(View):
     def get(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
         if pk is not None:
-            if OtherResource.objects.filter(id=pk).count() > 0:
-                return redirect(reverse('otherresource-view', args=[pk]))
-            elif Visit.objects.filter(id=pk).count() > 0:
-                return redirect(reverse('visit-view', args=[pk]))
+            if Product.objects.filter(id=pk).count() > 0:
+                return redirect(reverse('product-view', args=[pk]))
         raise Http404
 
 
@@ -1195,7 +1161,7 @@ class EditResourceView(LoginRequiredMixin, RoleRequiredMixin,
         pk = kwargs.get("pk")
         if self.object is None:
             self.object = None if pk is None else self.model.objects.get(id=pk)
-        if self.object is not None and self.object.unit:
+        if self.object is not None and self.object.organizationalunit:
             if not current_user.userprofile.can_edit(self.object):
                 raise AccessDenied(
                     _(u"Du kan kun redigere enheder,som du selv er" +
@@ -1387,112 +1353,11 @@ class EditResourceView(LoginRequiredMixin, RoleRequiredMixin,
             self.request.user.userprofile.my_resources.add(self.object)
 
 
-class EditOtherResourceView(EditResourceView):
+class EditProductView(EditResourceView):
 
-    template_name = 'otherresource/form.html'
-    form_class = OtherResourceForm
-    model = OtherResource
-
-    forms = {
-        Resource.STUDIEPRAKTIK: InternshipForm,
-        Resource.OPEN_HOUSE: OpenHouseForm,
-        Resource.STUDY_PROJECT: StudyProjectForm,
-        Resource.ASSIGNMENT_HELP: AssignmentHelpForm,
-        Resource.STUDY_MATERIAL: StudyMaterialForm
-    }
-
-    # Display a view with two form objects; one for the regular model,
-    # and one for the file upload
-
-    roles = EDIT_ROLES
-
-    def post(self, request, *args, **kwargs):
-        pk = kwargs.get("pk")
-        is_cloning = kwargs.get("clone", False)
-        self.set_object(pk, request, is_cloning)
-        forms = self.get_forms()
-
-        if forms['form'].is_valid():
-            self.object = forms['form'].save()
-
-            self.object.ensure_statistics()
-
-            self.save_studymaterials()
-
-            self.save_subjects()
-
-            self.add_to_my_resources()
-
-            return super(EditOtherResourceView, self).form_valid(forms['form'])
-        else:
-            return self.form_invalid(forms['form'])
-
-    def get_success_url(self):
-        try:
-            return reverse('otherresource-view', args=[self.object.id])
-        except:
-            return '/'
-
-    def get_context_data(self, **kwargs):
-        context = {}
-        if self.object is not None and self.object.id:
-            context['thisurl'] = reverse('otherresource-edit',
-                                         args=[self.object.id])
-        else:
-            context['thisurl'] = reverse('otherresource-create')
-        context.update(kwargs)
-        return super(EditOtherResourceView, self).get_context_data(**context)
-
-
-class OtherResourceDetailView(ResourceBookingDetailView):
-    """Display Visit details"""
-    model = OtherResource
-    template_name = 'otherresource/details.html'
-
-    def get_queryset(self):
-        """Get queryset, only include active visits."""
-        qs = super(OtherResourceDetailView, self).get_queryset()
-        # Dismiss visits that are not active.
-        if not self.request.user.is_authenticated():
-            qs = qs.filter(state=Resource.ACTIVE)
-        return qs
-
-    def get_context_data(self, **kwargs):
-        context = {}
-
-        user = self.request.user
-
-        if hasattr(user, 'userprofile'):
-            context['can_edit'] = user.userprofile.can_edit(self.object)
-
-        # if self.object.type in [Resource.STUDENT_FOR_A_DAY,
-        #                        Resource.STUDY_PROJECT,
-        #                        Resource.GROUP_VISIT,
-        #                        Resource.TEACHER_EVENT]:
-        #    context['can_book'] = True
-        # else:
-        context['can_book'] = False
-
-        context['breadcrumbs'] = [
-            {'url': reverse('search'), 'text': _(u'Søgning')},
-            {'url': self.request.GET.get("search", reverse('search')),
-             'text': _(u'Søgeresultat')},
-            {'text': _(u'Om tilbuddet')},
-        ]
-
-        context['thisurl'] = reverse('otherresource-view',
-                                     args=[self.object.id])
-
-        context.update(kwargs)
-
-        return super(OtherResourceDetailView, self).get_context_data(**context)
-
-
-class EditVisitView(EditResourceView):
-
-    template_name = 'visit/form.html'
-    form_class = VisitForm
-    model = Visit
+    template_name = 'product/form.html'
+    form_class = ProductForm
+    model = Product
 
     # Display a view with two form objects; one for the regular model,
     # and one for the file upload
@@ -1501,18 +1366,18 @@ class EditVisitView(EditResourceView):
 
     forms = {
         Resource.STUDENT_FOR_A_DAY: StudentForADayForm,
-        Resource.TEACHER_EVENT: TeacherVisitForm,
-        Resource.GROUP_VISIT: ClassVisitForm,
+        Resource.TEACHER_EVENT: TeacherProductForm,
+        Resource.GROUP_VISIT: ClassProductForm,
         Resource.STUDIEPRAKTIK: InternshipForm,
         Resource.OPEN_HOUSE: OpenHouseForm,
         Resource.STUDY_PROJECT: StudyProjectForm,
         Resource.ASSIGNMENT_HELP: AssignmentHelpForm,
         Resource.STUDY_MATERIAL: StudyMaterialForm,
-        Resource.OTHER_OFFERS: OtherVisitForm
+        Resource.OTHER_OFFERS: OtherProductForm
     }
 
     def get_forms(self):
-        forms = super(EditVisitView, self).get_forms()
+        forms = super(EditProductView, self).get_forms()
         if self.request.method == 'GET':
             if self.object.is_type_bookable:
                 initial = []
@@ -1524,19 +1389,19 @@ class EditVisitView(EditResourceView):
                         }
                         for item in EmailTemplate.default
                     ]
-                forms['autosendformset'] = VisitAutosendFormSet(
+                forms['autosendformset'] = ProductAutosendFormSet(
                     None, instance=self.object, initial=initial
                 )
 
         if self.request.method == 'POST':
-            forms['autosendformset'] = VisitAutosendFormSet(
+            forms['autosendformset'] = ProductAutosendFormSet(
                 self.request.POST, instance=self.object
             )
         return forms
 
     def _is_any_booking_outside_new_attendee_count_bounds(
             self,
-            visit_id,
+            product_id,
             min=0,
             max=0
     ):
@@ -1547,7 +1412,7 @@ class EditVisitView(EditResourceView):
         """
         Check if any existing bookings exists with attendee count outside
         the new min-/max_attendee_count bounds.
-        :param visit_id:
+        :param product_id:
         :param min:
         :param max:
         :return: Boolean
@@ -1557,15 +1422,15 @@ class EditVisitView(EditResourceView):
         if max == u'':
             max = 0
 
-        existing_bookings_outside_bounds = Booker.objects.filter(
-            booking__visitoccurrence__visit__pk=visit_id
+        existing_bookings_outside_bounds = Guest.objects.filter(
+            booking__visit__product__pk=product_id
         ).exclude(
             attendee_count__gte=min,
             attendee_count__lte=max
         )
         return existing_bookings_outside_bounds.exists()
 
-    # Handle both forms, creating a Visit and a number of StudyMaterials
+    # Handle both forms, creating a Product and a number of StudyMaterials
     def post(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
         if pk is not None:
@@ -1596,7 +1461,7 @@ class EditVisitView(EditResourceView):
 
             self.save_rooms()
 
-            self.save_occurrences()
+            self.save_visits()
 
             self.save_subjects()
 
@@ -1608,7 +1473,7 @@ class EditVisitView(EditResourceView):
                 _(u'Tilbuddet blev gemt.')
             )
 
-            return super(EditVisitView, self).form_valid(forms['form'])
+            return super(EditProductView, self).form_valid(forms['form'])
         else:
             return self.form_invalid(forms)
 
@@ -1640,17 +1505,17 @@ class EditVisitView(EditResourceView):
         context['klassetrin_range'] = range(0, 10)
 
         if self.object is not None and self.object.id:
-            context['thisurl'] = reverse('visit-edit', args=[self.object.id])
+            context['thisurl'] = reverse('product-edit', args=[self.object.id])
         else:
-            context['thisurl'] = reverse('visit-create')
+            context['thisurl'] = reverse('product-create')
 
         context['template_keys'] = list(
             set(
                 template.key
-                for template in EmailTemplate.get_templates(self.object.unit)
+                for template in EmailTemplate.get_templates(self.object.organizationalunit)
             )
         )
-        context['unit'] = self.object.unit
+        context['organizationalunit'] = self.object.organizationalunit
         context['autosend_enable_days'] = EmailTemplate.enable_days
 
         context['hastime'] = self.object.type in [
@@ -1661,11 +1526,11 @@ class EditVisitView(EditResourceView):
 
         context.update(kwargs)
 
-        return super(EditVisitView, self).get_context_data(**context)
+        return super(EditProductView, self).get_context_data(**context)
 
     def save_autosend(self):
         if self.object.is_type_bookable:
-            autosendformset = VisitAutosendFormSet(
+            autosendformset = ProductAutosendFormSet(
                 self.request.POST, instance=self.object
             )
             if autosendformset.is_valid():
@@ -1675,8 +1540,8 @@ class EditVisitView(EditResourceView):
                         data = autosendform.cleaned_data
                         if len(data) > 0:
                             if data.get('DELETE'):
-                                VisitAutosend.objects.filter(
-                                    visit=data['visit'],
+                                ProductAutosend.objects.filter(
+                                    product=data['product'],
                                     template_key=data['template_key']
                                 ).delete()
                             else:
@@ -1687,7 +1552,7 @@ class EditVisitView(EditResourceView):
 
     def save_rooms(self):
         # This code is more or less the same as
-        # ChangeVisitOccurrenceRoomsView.save_rooms()
+        # ChangeVisitRoomsView.save_rooms()
         # If you update this you might have to update there as well.
         existing_rooms = set([x.pk for x in self.object.rooms.all()])
 
@@ -1714,14 +1579,14 @@ class EditVisitView(EditResourceView):
         for x in existing_rooms:
             self.object.rooms.remove(x)
 
-    def save_occurrences(self):
-        # update occurrences
-        existing_visit_occurrences = \
+    def save_visits(self):
+        # update visits
+        existing_vists = \
             set([x.start_datetime
-                 for x in self.object.bookable_occurrences])
+                 for x in self.object.bookable_visits])
 
         # convert date strings to datetimes
-        date_string = self.request.POST.get(u'occurrences')
+        date_string = self.request.POST.get(u'visits')
         dates = date_string.split(',') if date_string is not None else None
 
         datetimes = []
@@ -1736,22 +1601,22 @@ class EditVisitView(EditResourceView):
         # remove existing to avoid duplicates,
         # then save the rest...
         for date_t in datetimes:
-            if date_t in existing_visit_occurrences:
-                existing_visit_occurrences.remove(date_t)
+            if date_t in existing_vists:
+                existing_vists.remove(date_t)
             else:
-                instance = self.object.make_occurrence(date_t, True)
+                instance = self.object.make_visit(date_t, True)
                 instance.save()
-        # If the set of existing occurrences still is not empty,
+        # If the set of existing visits still is not empty,
         # it means that the user un-ticket one or more existing.
         # So, we remove those to...
-        if len(existing_visit_occurrences) > 0:
-            self.object.bookable_occurrences.filter(
-                start_datetime__in=existing_visit_occurrences
+        if len(existing_vists) > 0:
+            self.object.bookable_visits.filter(
+                start_datetime__in=existing_vists
             ).delete()
 
     def get_success_url(self):
         try:
-            return reverse('visit-view', args=[self.object.id])
+            return reverse('product-view', args=[self.object.id])
         except:
             return '/'
 
@@ -1763,13 +1628,13 @@ class EditVisitView(EditResourceView):
     @method_decorator(login_required)
     def dispatch(self, *args, **kwargs):
         # First, check all is well in superclass
-        result = super(EditVisitView, self).dispatch(*args, **kwargs)
+        result = super(EditProductView, self).dispatch(*args, **kwargs)
         # Now, check that the user belongs to the correct unit.
         current_user = self.request.user
         pk = kwargs.get("pk")
         if self.object is None:
-            self.object = None if pk is None else Visit.objects.get(id=pk)
-        if self.object is not None and self.object.unit:
+            self.object = None if pk is None else Product.objects.get(id=pk)
+        if self.object is not None and self.object.organizationalunit:
             if not current_user.userprofile.can_edit(self.object):
                 raise AccessDenied(
                     _(u"Du kan kun redigere enheder, som du selv er" +
@@ -1778,7 +1643,7 @@ class EditVisitView(EditResourceView):
         return result
 
     def get_form_kwargs(self):
-        kwargs = super(EditVisitView, self).get_form_kwargs()
+        kwargs = super(EditProductView, self).get_form_kwargs()
         kwargs['user'] = self.request.user
         return kwargs
 
@@ -1787,9 +1652,9 @@ class SimpleRessourcesView(LoginRequiredMixin,
                            RoleRequiredMixin,
                            UpdateView):
     roles = EDIT_ROLES
-    model = Visit
+    model = Product
     fields = ['potentielle_vaerter', 'potentielle_undervisere']
-    template_name = 'visit/simple_ressources.html'
+    template_name = 'product/simple_ressources.html'
 
     def get_form(self, form_class=None):
         form = super(SimpleRessourcesView, self).get_form(form_class)
@@ -1797,7 +1662,7 @@ class SimpleRessourcesView(LoginRequiredMixin,
         if 'potentielle_vaerter' in form.fields:
             qs = form.fields['potentielle_vaerter']._get_queryset()
             form.fields['potentielle_vaerter']._set_queryset(
-                qs.filter(userprofile__unit=self.object.unit)
+                qs.filter(userprofile__organizationalunit=self.object.organizationalunit)
             )
             form.fields['potentielle_vaerter'].label_from_instance = \
                 lambda obj: "%s (%s) <%s>" % (
@@ -1809,7 +1674,7 @@ class SimpleRessourcesView(LoginRequiredMixin,
         if 'potentielle_undervisere' in form.fields:
             qs = form.fields['potentielle_undervisere']._get_queryset()
             form.fields['potentielle_undervisere']._set_queryset(
-                qs.filter(userprofile__unit=self.object.unit)
+                qs.filter(userprofile__organizationalunit=self.object.organizationalunit)
             )
             form.fields['potentielle_undervisere'].label_from_instance = \
                 lambda obj: "%s (%s) <%s>" % (
@@ -1821,18 +1686,18 @@ class SimpleRessourcesView(LoginRequiredMixin,
         return form
 
 
-class VisitDetailView(ResourceBookingDetailView):
-    """Display Visit details"""
-    model = Visit
-    template_name = 'visit/details.html'
+class ProductDetailView(ResourceBookingDetailView):
+    """Display Product details"""
+    model = Product
+    template_name = 'product/details.html'
 
     def get(self, request, *args, **kwargs):
-        return super(VisitDetailView, self).get(request, *args, **kwargs)
+        return super(ProductDetailView, self).get(request, *args, **kwargs)
 
     def get_queryset(self):
-        """Get queryset, only include active visits."""
-        qs = super(VisitDetailView, self).get_queryset()
-        # Dismiss visits that are not active.
+        """Get queryset, only include active products."""
+        qs = super(ProductDetailView, self).get_queryset()
+        # Dismiss products that are not active.
         if not self.request.user.is_authenticated():
             qs = qs.filter(state=Resource.ACTIVE)
         return qs
@@ -1855,7 +1720,7 @@ class VisitDetailView(ResourceBookingDetailView):
             {'text': _(u'Om tilbuddet')},
         ]
 
-        context['thisurl'] = reverse('visit-view', args=[self.object.id])
+        context['thisurl'] = reverse('product-view', args=[self.object.id])
         context['searchurl'] = self.request.GET.get(
             "search",
             reverse('search')
@@ -1865,18 +1730,18 @@ class VisitDetailView(ResourceBookingDetailView):
 
         context.update(kwargs)
 
-        return super(VisitDetailView, self).get_context_data(**context)
+        return super(ProductDetailView, self).get_context_data(**context)
 
 
-class VisitInquireView(FormMixin, HasBackButtonMixin, ModalMixin,
-                       TemplateView):
+class ProductInquireView(FormMixin, HasBackButtonMixin, ModalMixin,
+                         TemplateView):
     template_name = 'email/compose_modal.html'
     form_class = GuestEmailComposeForm
     modal = True
 
     def dispatch(self, request, *args, **kwargs):
-        self.object = Visit.objects.get(id=kwargs['visit'])
-        return super(VisitInquireView, self).dispatch(request, *args, **kwargs)
+        self.object = Product.objects.get(id=kwargs['product'])
+        return super(ProductInquireView, self).dispatch(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
         form = self.get_form()
@@ -1895,7 +1760,7 @@ class VisitInquireView(FormMixin, HasBackButtonMixin, ModalMixin,
                 raise Exception(_(u"There are no root templates with "
                                   u"the SYSTEM__BASICMAIL_ENVELOPE key"))
             context = {
-                'visit': self.object
+                'product': self.object
             }
             context.update(form.cleaned_data)
             recipients = []
@@ -1904,10 +1769,10 @@ class VisitInquireView(FormMixin, HasBackButtonMixin, ModalMixin,
             elif self.object.created_by:
                 recipients.append(self.object.created_by)
             else:
-                recipients.extend(self.object.unit.get_editors())
+                recipients.extend(self.object.organizationalunit.get_editors())
             KUEmailMessage.send_email(template, context, recipients,
                                       self.object)
-            return super(VisitInquireView, self).form_valid(form)
+            return super(ProductInquireView, self).form_valid(form)
 
         return self.render_to_response(
             self.get_context_data(form=form)
@@ -1918,44 +1783,44 @@ class VisitInquireView(FormMixin, HasBackButtonMixin, ModalMixin,
         context['modal'] = self.modal
         context['object'] = self.object
         context.update(kwargs)
-        return super(VisitInquireView, self).get_context_data(**context)
+        return super(ProductInquireView, self).get_context_data(**context)
 
     def get_success_url(self):
         if self.modal:
             return self.modalurl(
-                reverse('visit-inquire-success', args=[self.object.id])
+                reverse('product-inquire-success', args=[self.object.id])
             )
         else:
-            return reverse('visit-view', args=[self.object.id])
+            return reverse('product-view', args=[self.object.id])
 
 
-class VisitInquireSuccessView(TemplateView):
+class ProductInquireSuccessView(TemplateView):
     template_name = "email/inquire-success.html"
 
 
-class VisitOccurrenceNotifyView(LoginRequiredMixin, ModalMixin,
-                                EmailComposeView):
+class VisitNotifyView(LoginRequiredMixin, ModalMixin,
+                      EmailComposeView):
 
     def dispatch(self, request, *args, **kwargs):
         self.recipients = []
         pk = kwargs['pk']
-        self.object = VisitOccurrence.objects.get(id=pk)
+        self.object = Visit.objects.get(id=pk)
 
-        self.template_context['visit'] = self.object.visit
-        self.template_context['visitoccurrence'] = self.object
+        self.template_context['product'] = self.object.product
+        self.template_context['visit'] = self.object
         self.template_context['besoeg'] = self.object
         self.template_context['web_user'] = self.request.user
-        return super(VisitOccurrenceNotifyView, self).\
+        return super(VisitNotifyView, self).\
             dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
-        visitoccurrence = self.object
-        visit = visitoccurrence.visit
+        visit = self.object
+        product = visit.product
         context = {}
         context['breadcrumbs'] = [
             {'url': reverse('search'), 'text': _(u'Søgning')},
             {'url': reverse('search'), 'text': _(u'Søgeresultat')},
-            {'url': reverse('visit-occ-view', args=[visitoccurrence.id]),
+            {'url': reverse('visit-view', args=[visit.id]),
              'text': _(u'Om tilbuddet')},
             {'text': _(u'Send notifikation')},
         ]
@@ -1967,7 +1832,7 @@ class VisitOccurrenceNotifyView(LoginRequiredMixin, ModalMixin,
                                 self.RECIPIENT_SEPARATOR,
                                 booking.booker.id):
                                     booking.booker.get_full_email()
-                    for booking in visitoccurrence.bookings.all()
+                    for booking in visit.bookings.all()
                     }
             },
             'guests_accepted': {
@@ -1977,7 +1842,7 @@ class VisitOccurrenceNotifyView(LoginRequiredMixin, ModalMixin,
                                 self.RECIPIENT_SEPARATOR,
                                 booking.booker.id):
                                     booking.booker.get_full_email()
-                    for booking in visitoccurrence.booking_list
+                    for booking in visit.booking_list
                     }
             },
             'guests_waiting': {
@@ -1987,17 +1852,17 @@ class VisitOccurrenceNotifyView(LoginRequiredMixin, ModalMixin,
                                 self.RECIPIENT_SEPARATOR,
                                 booking.booker.id):
                                     booking.booker.get_full_email()
-                    for booking in visitoccurrence.waiting_list
+                    for booking in visit.waiting_list
                     }
             },
             'roomadmins': {
                 'label': _(u'Lokaleansvarlige'),
                 'items': {
-                    "%s%s%d" % (self.RECIPIENT_LOKALEANSVARLIG,
+                    "%s%s%d" % (self.RECIPIENT_ROOMRESPONSIBLE,
                                 self.RECIPIENT_SEPARATOR,
-                                person.id):
-                                    person.get_full_email()
-                    for person in visit.lokaleansvarlige.all()
+                                roomresponsible.id):
+                                    roomresponsible.get_full_email()
+                    for roomresponsible in product.roomresponsible.all()
                 }
             },
             'assigned_hosts': {
@@ -2009,7 +1874,7 @@ class VisitOccurrenceNotifyView(LoginRequiredMixin, ModalMixin,
                                     full_email(
                                         user.email,
                                         user.get_full_name())
-                    for user in visitoccurrence.hosts.all()
+                    for user in visit.hosts.all()
                     if user.email is not None
                 }
             },
@@ -2022,7 +1887,7 @@ class VisitOccurrenceNotifyView(LoginRequiredMixin, ModalMixin,
                                     full_email(
                                         user.email,
                                         user.get_full_name())
-                    for user in visitoccurrence.teachers.all()
+                    for user in visit.teachers.all()
                     if user.email is not None
                 }
             },
@@ -2035,10 +1900,10 @@ class VisitOccurrenceNotifyView(LoginRequiredMixin, ModalMixin,
                                     full_email(
                                         user.email,
                                         user.get_full_name())
-                    for user in visit.potentielle_vaerter.all()
+                    for user in product.potentielle_vaerter.all()
                     if user.email is not None and
-                    user not in visitoccurrence.hosts_rejected.all() and
-                    user not in visitoccurrence.hosts.all()
+                    user not in visit.hosts_rejected.all() and
+                    user not in visit.hosts.all()
                 }
             },
             'potential_teachers': {
@@ -2050,27 +1915,27 @@ class VisitOccurrenceNotifyView(LoginRequiredMixin, ModalMixin,
                                     full_email(
                                         user.email,
                                         user.get_full_name())
-                    for user in visit.potentielle_undervisere.all()
+                    for user in product.potentielle_undervisere.all()
                     if user.email is not None and
-                    user not in visitoccurrence.teachers_rejected.all() and
-                    user not in visitoccurrence.teachers.all()
+                    user not in visit.teachers_rejected.all() and
+                    user not in visit.teachers.all()
                 }
             }
         }
         context.update(kwargs)
-        return super(VisitOccurrenceNotifyView, self).\
+        return super(VisitNotifyView, self).\
             get_context_data(**context)
 
     def get_unit(self):
-        return self.object.visit.unit
+        return self.object.product.organizationalunit
 
     def get_success_url(self):
         if self.modal:
             return self.modalurl(
-                reverse('visit-occ-notify-success', args=[self.object.id])
+                reverse('visit-notify-success', args=[self.object.id])
             )
         else:
-            return reverse('visit-occ-view', args=[self.object.id])
+            return reverse('visit-view', args=[self.object.id])
 
 
 class BookingNotifyView(LoginRequiredMixin, ModalMixin, EmailComposeView):
@@ -2080,8 +1945,8 @@ class BookingNotifyView(LoginRequiredMixin, ModalMixin, EmailComposeView):
         pk = kwargs['pk']
         self.object = Booking.objects.get(id=pk)
 
-        self.template_context['visit'] = self.object.visitoccurrence.visit
-        self.template_context['visitoccurrence'] = self.object.visitoccurrence
+        self.template_context['product'] = self.object.visit.product
+        self.template_context['visit'] = self.object.visit
         self.template_context['booking'] = self.object
         return super(BookingNotifyView, self).dispatch(
             request, *args, **kwargs
@@ -2111,11 +1976,11 @@ class BookingNotifyView(LoginRequiredMixin, ModalMixin, EmailComposeView):
                     'label': _(u'Tilbudsansvarlig'),
                     'items': {
                         "%s%s%d" % (self.RECIPIENT_USER,
-                                    self.RECIPIENT_SEPARATOR, person.id):
-                                        person.get_full_email()
-                        for person in [
-                            self.object.visit.tilbudsansvarlig
-                        ] if person
+                                    self.RECIPIENT_SEPARATOR, user.id):
+                                        user.get_full_email()
+                        for user in [
+                            self.object.product.tilbudsansvarlig
+                        ] if user
                     }
                 },
                 'roomadmins': {
@@ -2123,9 +1988,9 @@ class BookingNotifyView(LoginRequiredMixin, ModalMixin, EmailComposeView):
                     'items': {
                         "%s%s%d" % (self.RECIPIENT_USER,
                                     self.RECIPIENT_SEPARATOR,
-                                    person.id):
-                                        person.get_full_email()
-                        for person in self.object.visit.lokaleansvarlige.all()
+                                    roomresponslible.id):
+                                        roomresponslible.get_full_email()
+                        for roomresponslible in self.object.product.roomresponsible.all()
                     }
                 },
                 'hosts': {
@@ -2156,7 +2021,7 @@ class BookingNotifyView(LoginRequiredMixin, ModalMixin, EmailComposeView):
         return super(BookingNotifyView, self).get_context_data(**context)
 
     def get_unit(self):
-        return self.object.visitoccurrence.visit.unit
+        return self.object.visit.product.organizationalunit
 
     def get_success_url(self):
         if self.modal:
@@ -2185,17 +2050,17 @@ class RrulestrView(View):
         dates = []
         lines = rrulestring.split("\n")
         times_list = request.POST[u'start_times'].split(',')
-        visit_id = None
-        if request.POST[u'visit_id'] != 'None':
-            visit_id = int(request.POST[u'visit_id'])
+        product_id = None
+        if request.POST[u'product_id'] != 'None':
+            product_id = int(request.POST[u'product_id'])
         existing_dates_strings = set()
 
-        if visit_id is not None:
-            visit = Visit.objects.get(pk=visit_id)
+        if product_id is not None:
+            product = Product.objects.get(pk=product_id)
 
-            for occurrence in visit.visitoccurrence_set.all():
+            for visit in product.visit_set.all():
                 existing_dates_strings.add(
-                    occurrence.start_datetime.strftime('%d-%m-%Y %H:%M')
+                    visit.start_datetime.strftime('%d-%m-%Y %H:%M')
                 )
 
         for line in lines:
@@ -2277,30 +2142,30 @@ class SchoolView(View):
 
 
 class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
-    visit = None
+    product = None
     modal = True
     back = None
 
-    def set_visit(self, visit_id):
-        if visit_id is not None:
+    def set_product(self, product_id):
+        if product_id is not None:
             try:
-                self.visit = Visit.objects.get(id=visit_id)
+                self.product = Product.objects.get(id=product_id)
             except:
                 pass
 
     def get_context_data(self, **kwargs):
         context = {
-            'visit': self.visit,
-            'level_map': Booker.level_map,
+            'product': self.product,
+            'level_map': Guest.level_map,
             'modal': self.modal,
             'back': self.back,
-            'occurrence_available': {
-                str(visitoccurrence.pk): {
-                    'available': visitoccurrence.available_seats,
-                    'waitinglist': visitoccurrence.waiting_list_capacity
-                    if not visitoccurrence.waiting_list_closed else 0
+            'visit_available': {
+                str(visit.pk): {
+                    'available': visit.available_seats,
+                    'waitinglist': visit.waiting_list_capacity
+                    if not visit.waiting_list_closed else 0
                 }
-                for visitoccurrence in self.visit.visitoccurrence_set.all()
+                for visit in self.product.visit_set.all()
             },
             'gymnasiefag_available': self.gymnasiefag_available(),
             'grundskolefag_available': self.grundskolefag_available()
@@ -2314,8 +2179,8 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
         return super(BookingView, self).dispatch(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
-        self.set_visit(kwargs.get("visit"))
-        if self.visit is None:
+        self.set_product(kwargs.get("product"))
+        if self.product is None:
             return bad_request(request)
 
         self.object = Booking()
@@ -2324,8 +2189,8 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
         )
 
     def post(self, request, *args, **kwargs):
-        self.set_visit(kwargs.get("visit"))
-        if self.visit is None:
+        self.set_product(kwargs.get("product"))
+        if self.product is None:
             return bad_request(request)
 
         self.object = Booking()
@@ -2355,15 +2220,15 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
             else:
                 booking = self.object
 
-            if not booking.visitoccurrence:
-                # Make an anonymous visitoccurrence
-                occ = self.visit.make_occurrence(
+            if not booking.visit:
+                # Make an anonymous visit
+                occ = self.product.make_visit(
                     None, False
                 )
                 occ.save()
-                booking.visitoccurrence = occ
+                booking.visit = occ
 
-            available_seats = booking.visitoccurrence.available_seats
+            available_seats = booking.visit.available_seats
 
             if 'bookerform' in forms:
                 booking.booker = forms['bookerform'].save()
@@ -2373,17 +2238,17 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
             put_in_waitinglist = False
 
             attendee_count = booking.booker.attendee_count
-            if booking.visitoccurrence.visit.do_create_waiting_list and \
+            if booking.visit.product.do_create_waiting_list and \
                     attendee_count > available_seats:
                 # Put in waiting list
                 put_in_waitinglist = True
 
-                if booking.visitoccurrence.waiting_list_closed:
+                if booking.visit.waiting_list_closed:
                     booking.delete()
                     raise Exception(_(u"Cannot place booking with in waiting "
                                       u"list; the waiting list is closed"))
                 waitinglist_capacity = \
-                    booking.visitoccurrence.waiting_list_capacity
+                    booking.visit.waiting_list_capacity
                 if attendee_count > waitinglist_capacity:
                     booking.delete()
                     raise Exception(_(u"Cannot place booking with %d attendees"
@@ -2392,14 +2257,14 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
                                     (attendee_count, waitinglist_capacity))
 
                 booking.waitinglist_spot = \
-                    booking.visitoccurrence.next_waiting_list_spot
+                    booking.visit.next_waiting_list_spot
 
             booking.save()
 
             booking.ensure_statistics()
 
             # Trigger updating of search index
-            booking.visitoccurrence.save()
+            booking.visit.save()
 
             if put_in_waitinglist:
                 booking.autosend(
@@ -2410,12 +2275,12 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
 
             booking.autosend(EmailTemplate.NOTIFY_EDITORS__BOOKING_CREATED)
 
-            if booking.visitoccurrence.needs_teachers:
+            if booking.visit.needs_teachers:
                 booking.autosend(
                     EmailTemplate.NOTIFY_HOST__REQ_TEACHER_VOLUNTEER
                 )
 
-            if booking.visitoccurrence.needs_hosts:
+            if booking.visit.needs_hosts:
                 booking.autosend(EmailTemplate.NOTIFY_HOST__REQ_HOST_VOLUNTEER)
 
             # We can't fetch this form before we have
@@ -2447,7 +2312,7 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
 
             return redirect(
                 self.modalurl(
-                    reverse("visit-book-success", args=[self.visit.id]) +
+                    reverse("product-book-success", args=[self.product.id]) +
                     "?" + urllib.urlencode(params)
                 )
             )
@@ -2465,51 +2330,51 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
 
     def get_forms(self, data=None):
         forms = {}
-        if self.visit is not None:
+        if self.product is not None:
             forms['bookerform'] = \
-                BookerForm(data, visit=self.visit,
+                BookerForm(data, product=self.product,
                            language=self.request.LANGUAGE_CODE)
 
-            type = self.visit.type
+            type = self.product.type
             if type == Resource.GROUP_VISIT:
-                forms['bookingform'] = ClassBookingForm(data, visit=self.visit)
-                if self.visit.resourcegymnasiefag_set.count() > 0:
+                forms['bookingform'] = ClassBookingForm(data, product=self.product)
+                if self.product.resourcegymnasiefag_set.count() > 0:
                     forms['subjectform'] = \
                         BookingGymnasieSubjectLevelForm(data)
-                if self.visit.resourcegrundskolefag_set.count() > 0:
+                if self.product.resourcegrundskolefag_set.count() > 0:
                     forms['grundskolesubjectform'] = \
                         BookingGrundskoleSubjectLevelForm(data)
 
             elif type == Resource.TEACHER_EVENT:
                 forms['bookingform'] = TeacherBookingForm(data,
-                                                          visit=self.visit)
+                                                          product=self.product)
             elif type == Resource.STUDENT_FOR_A_DAY:
                 forms['bookingform'] = \
-                    StudentForADayBookingForm(data, visit=self.visit)
+                    StudentForADayBookingForm(data, product=self.product)
             elif type == Resource.STUDY_PROJECT:
                 forms['bookingform'] = \
-                    StudyProjectBookingForm(data, visit=self.visit)
+                    StudyProjectBookingForm(data, product=self.product)
         return forms
 
     def get_template_names(self):
-        if self.visit is None:
+        if self.product is None:
             return [""]
-        if self.visit.type == Resource.STUDENT_FOR_A_DAY:
+        if self.product.type == Resource.STUDENT_FOR_A_DAY:
             if self.modal:
                 return ["booking/studentforaday_modal.html"]
             else:
                 return ["booking/studentforaday.html"]
-        if self.visit.type == Resource.GROUP_VISIT:
+        if self.product.type == Resource.GROUP_VISIT:
             if self.modal:
                 return ["booking/classvisit_modal.html"]
             else:
                 return ["booking/classvisit.html"]
-        if self.visit.type == Resource.TEACHER_EVENT:
+        if self.product.type == Resource.TEACHER_EVENT:
             if self.modal:
                 return ["booking/teachervisit_modal.html"]
             else:
                 return ["booking/teachervisit.html"]
-        if self.visit.type == Resource.STUDY_PROJECT:
+        if self.product.type == Resource.STUDY_PROJECT:
             if self.modal:
                 return ["booking/studyproject_modal.html"]
             else:
@@ -2517,7 +2382,7 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
 
     def gymnasiefag_available(self):
         result = []
-        obj = self.visit
+        obj = self.product
         if self.request.method == 'GET':
             if obj and obj.pk:
                 for x in obj.resourcegymnasiefag_set.all():
@@ -2530,7 +2395,7 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
 
     def grundskolefag_available(self):
         result = []
-        obj = self.visit
+        obj = self.product
         if self.request.method == 'GET':
             if obj and obj.pk:
                 for x in obj.resourcegrundskolefag_set.all():
@@ -2547,21 +2412,21 @@ class BookingSuccessView(TemplateView):
     modal = True
 
     def get(self, request, *args, **kwargs):
-        visit_id = kwargs.get("visit")
+        product_id = kwargs.get("product")
         self.modal = request.GET.get('modal', '1') == '1'
         back = request.GET.get('back')
 
-        visit = None
-        if visit_id is not None:
+        product = None
+        if product_id is not None:
             try:
-                visit = Visit.objects.get(id=visit_id)
+                product = Product.objects.get(id=product_id)
             except:
                 pass
-        if visit is None:
+        if product is None:
             return bad_request(request)
 
         data = {
-            'visit': visit,
+            'product': product,
             'back': back
         }
 
@@ -2614,9 +2479,9 @@ class EmbedcodesView(TemplateView):
         return super(EmbedcodesView, self).get_context_data(**context)
 
 
-class VisitOccurrenceListView(LoginRequiredMixin, ListView):
-    model = VisitOccurrence
-    template_name = "visitoccurrence/list.html"
+class VisitListView(LoginRequiredMixin, ListView):
+    model = Visit
+    template_name = "visit/list.html"
     context_object_name = "results"
     paginate_by = 10
 
@@ -2637,7 +2502,7 @@ class VisitOccurrenceListView(LoginRequiredMixin, ListView):
 
         context['breadcrumbs'] = [
             {
-                'url': reverse('visit-occ-search'),
+                'url': reverse('visit-search'),
                 'text': _(u'Besøg')
             },
             {'text': _(u'Besøgsliste')},
@@ -2645,7 +2510,7 @@ class VisitOccurrenceListView(LoginRequiredMixin, ListView):
 
         context.update(kwargs)
 
-        return super(VisitOccurrenceListView, self).get_context_data(
+        return super(VisitListView, self).get_context_data(
             **context
         )
 
@@ -2658,7 +2523,7 @@ class VisitOccurrenceListView(LoginRequiredMixin, ListView):
         return size
 
 
-class VisitOccurrenceCustomListView(VisitOccurrenceListView):
+class VisitCustomListView(VisitListView):
 
     TYPE_LATEST_COMPLETED = "latest_completed"
     TYPE_LATEST_BOOKED = "latest_booked"
@@ -2670,27 +2535,27 @@ class VisitOccurrenceCustomListView(VisitOccurrenceListView):
             listtype = self.request.GET.get("type", "")
 
             if listtype == self.TYPE_LATEST_COMPLETED:
-                return VisitOccurrence.get_recently_held()
+                return Visit.get_recently_held()
             elif listtype == self.TYPE_LATEST_BOOKED:
-                return VisitOccurrence.get_latest_booked()
+                return Visit.get_latest_booked()
             elif listtype == self.TYPE_LATEST_UPDATED:
-                return VisitOccurrence.get_latest_updated()
+                return Visit.get_latest_updated()
             elif listtype == self.TYPE_TODAY:
-                return VisitOccurrence.get_todays_occurrences()
+                return Visit.get_todays_visits()
         except:
             pass
         raise Http404
 
 
-class VisitOccurrenceSearchView(VisitOccurrenceListView):
-    template_name = "visitoccurrence/searchresult.html"
+class VisitSearchView(VisitListView):
+    template_name = "visit/searchresult.html"
 
     form = None
 
     def get_form(self):
         if not self.form:
             # Make new form object
-            self.form = VisitOccurrenceSearchForm(
+            self.form = VisitSearchForm(
                 self.request.GET,
                 user=self.request.user
             )
@@ -2729,7 +2594,7 @@ class VisitOccurrenceSearchView(VisitOccurrenceListView):
         if re.match('^#?\d+$', t):
             if t[0] == "#":
                 t = t[1:]
-            qs = qs.filter(visit__pk=t)
+            qs = qs.filter(product__pk=t)
         elif t:
             qs = self.model.objects.none()
 
@@ -2746,13 +2611,13 @@ class VisitOccurrenceSearchView(VisitOccurrenceListView):
         profile = self.request.user.userprofile
 
         if u == form.MY_UNIT:
-            return qs.filter(visit__unit=profile.unit)
+            return qs.filter(product__organizationalunit=profile.organizationalunit)
         elif u == form.MY_FACULTY:
-            return qs.filter(visit__unit=profile.unit.get_faculty_queryset())
+            return qs.filter(product__organizationalunit=profile.organizationalunit.get_faculty_queryset())
         elif u == form.MY_UNITS:
-            return qs.filter(visit__unit=profile.get_unit_queryset())
+            return qs.filter(product__organizationalunit=profile.get_unit_queryset())
         else:
-            return qs.filter(visit__unit__pk=u)
+            return qs.filter(product__organizationalunit__pk=u)
 
         return qs
 
@@ -2792,7 +2657,7 @@ class VisitOccurrenceSearchView(VisitOccurrenceListView):
 
         w = int(w)
 
-        planned_status = VisitOccurrence.WORKFLOW_STATUS_BEING_PLANNED
+        planned_status = Visit.WORKFLOW_STATUS_BEING_PLANNED
         if w == form.WORKFLOW_STATUS_PENDING:
             return qs.filter(workflow_status=planned_status)
         elif w == form.WORKFLOW_STATUS_READY:
@@ -2838,7 +2703,7 @@ class VisitOccurrenceSearchView(VisitOccurrenceListView):
 
         context['breadcrumbs'] = [
             {
-                'url': reverse('visit-occ-search'),
+                'url': reverse('visit-search'),
                 'text': _(u'Besøg')
             },
             {'text': _(u'Søgeresultatliste')},
@@ -2846,7 +2711,7 @@ class VisitOccurrenceSearchView(VisitOccurrenceListView):
 
         context.update(kwargs)
 
-        return super(VisitOccurrenceSearchView, self).get_context_data(
+        return super(VisitSearchView, self).get_context_data(
             **context
         )
 
@@ -2862,15 +2727,15 @@ class BookingDetailView(LoginRequiredMixin, LoggedViewMixin,
 
         context['breadcrumbs'] = [
             {'url': reverse('search'), 'text': _(u'Søgning')},
-            {'url': reverse('visit-view', args=[
-                self.object.visitoccurrence.visit.id
+            {'url': reverse('product-view', args=[
+                self.object.visit.product.id
                 ]),
-             'text': self.object.visitoccurrence.visit.title
+             'text': self.object.visit.product.title
              },
-            {'url': reverse('visit-occ-view', args=[
-                self.object.visitoccurrence.id
+            {'url': reverse('visit-view', args=[
+                self.object.visit.id
                 ]),
-             'text': self.object.visitoccurrence.date_display
+             'text': self.object.visit.date_display
              },
             {'text': self.object},
         ]
@@ -2894,30 +2759,30 @@ class BookingDetailView(LoginRequiredMixin, LoggedViewMixin,
         return super(BookingDetailView, self).get_context_data(**context)
 
 
-class VisitOccurrenceDetailView(LoginRequiredMixin, LoggedViewMixin,
-                                ResourceBookingDetailView):
+class VisitDetailView(LoginRequiredMixin, LoggedViewMixin,
+                      ResourceBookingDetailView):
     """Display Booking details"""
-    model = VisitOccurrence
-    template_name = 'visitoccurrence/details.html'
+    model = Visit
+    template_name = 'visit/details.html'
 
     def get_context_data(self, **kwargs):
         context = {}
 
         context['breadcrumbs'] = [
             {
-                'url': reverse('visit-occ-search'),
+                'url': reverse('visit-search'),
                 'text': _(u'Søg i besøg')
             },
             {'text': _(u'Besøg #%s') % self.object.pk},
         ]
 
-        context['thisurl'] = reverse('visit-occ-view', args=[self.object.id])
-        context['modal'] = VisitOccurrenceNotifyView.modal
+        context['thisurl'] = reverse('visit-view', args=[self.object.id])
+        context['modal'] = VisitNotifyView.modal
 
         context['emailtemplates'] = [
             (key, label)
             for (key, label) in EmailTemplate.key_choices
-            if key in EmailTemplate.visitoccurrence_manual_keys
+            if key in EmailTemplate.visit_manual_keys
         ]
         context['emailtemplate_waitinglist'] = \
             EmailTemplate.NOTIFY_GUEST__SPOT_OPEN
@@ -2948,7 +2813,7 @@ class VisitOccurrenceDetailView(LoginRequiredMixin, LoggedViewMixin,
 
         context.update(kwargs)
 
-        return super(VisitOccurrenceDetailView, self).get_context_data(
+        return super(VisitDetailView, self).get_context_data(
             **context
         )
 
@@ -3001,7 +2866,7 @@ class EmailTemplateListView(LoginRequiredMixin, ListView):
                 objectB = self.object_list[j]
                 if objectA != objectB \
                         and objectA.key == objectB.key \
-                        and objectA.unit == objectB.unit:
+                        and objectA.organizationalunit == objectB.organizationalunit:
                     context['duplicates'].extend([objectA, objectB])
         context['breadcrumbs'] = [
             {'text': _(u'Emailskabelonliste')},
@@ -3034,8 +2899,8 @@ class EmailTemplateEditView(LoginRequiredMixin, UnitAccessRequiredMixin,
         form = self.get_form()
         if 'key' in request.GET:
             form.initial['key'] = request.GET['key']
-        if 'unit' in request.GET:
-            form.initial['unit'] = request.GET['unit']
+        if 'organizationalunit' in request.GET:
+            form.initial['organizationalunit'] = request.GET['organizationalunit']
         return self.render_to_response(
             self.get_context_data(form=form)
         )
@@ -3084,7 +2949,7 @@ class EmailTemplateEditView(LoginRequiredMixin, UnitAccessRequiredMixin,
 
         context['modelmap'] = modelmap = {}
 
-        for model in [Booking, VisitOccurrence, Visit]:
+        for model in [Booking, Visit, Product]:
             model_name = model.__name__
             modelmap[(model_name.lower(), model._meta.verbose_name)] = \
                 get_model_field_map(model)
@@ -3101,10 +2966,9 @@ class EmailTemplateEditView(LoginRequiredMixin, UnitAccessRequiredMixin,
 class EmailTemplateDetailView(LoginRequiredMixin, View):
     template_name = 'email/preview.html'
 
-    classes = {'Unit': Unit,
-               # 'OtherResource': OtherResource,
+    classes = {'OrganizationalUnit': OrganizationalUnit,
+               'Product': Product,
                'Visit': Visit,
-               'VisitOccurrence': VisitOccurrence,
                # 'StudyMaterial': StudyMaterial,
                # 'Resource': Resource,
                # 'Subject': Subject,
@@ -3249,12 +3113,12 @@ class EmailReplyView(DetailView):
                 self.form = EmailReplyForm(self.request.POST)
         return self.form
 
-    def get_occurrence(self):
+    def get_visit(self):
         occ = None
 
         try:
             ct = ContentType.objects.get(pk=self.object.content_type_id)
-            if ct.model_class() == VisitOccurrence:
+            if ct.model_class() == Visit:
                 occ = ct.get_object_for_this_type(pk=self.object.object_id)
         except Exception as e:
             print "Error when getting email-reply object: %s" % e
@@ -3270,7 +3134,7 @@ class EmailReplyView(DetailView):
             {'text': _(u'Svar på e-mail')},
         ]
 
-        context['occurrence'] = self.get_occurrence()
+        context['visit'] = self.get_visit()
 
         return context
 
@@ -3280,20 +3144,20 @@ class EmailReplyView(DetailView):
             self.object = self.get_object()
             orig_message = self.object
             reply = form.cleaned_data.get('reply', "").strip()
-            occurrence = self.get_occurrence()
-            recipients = occurrence.visit.unit.get_editors()
+            visit = self.get_visit()
+            recipients = visit.product.organizationalunit.get_editors()
             KUEmailMessage.send_email(
                 EmailTemplate.SYSTEM__EMAIL_REPLY,
                 {
-                    'occurrence': occurrence,
-                    'visit': occurrence.visit,
+                    'visit': visit,
+                    'product': visit.product,
                     'orig_message': orig_message,
                     'reply': reply,
                     'log_message': _(u"Svar:") + "\n" + reply
                 },
                 recipients,
-                occurrence,
-                unit=occurrence.visit.unit
+                visit,
+                organizationalunit=visit.product.organizationalunit
             )
             result_url = reverse(
                 'reply-to-email', args=[self.object.reply_nonce]
@@ -3304,7 +3168,7 @@ class EmailReplyView(DetailView):
 
 
 class EvaluationOverviewView(LoginRequiredMixin, ListView):
-    model = VisitOccurrence
+    model = Visit
     template_name = "evaluation/list.html"
     context_object_name = "results"
     form = None
@@ -3325,23 +3189,23 @@ class EvaluationOverviewView(LoginRequiredMixin, ListView):
         if form.is_valid():
             formdata = form.cleaned_data
             qs = self.model.objects.filter(
-                visit__unit__in=form.user.userprofile.get_unit_queryset(),
+                product__organizationalunit__in=form.user.userprofile.get_unit_queryset(),
                 evaluation_link__isnull=False,
             ).exclude(
                 evaluation_link="",
             )
-            unit_limit = formdata.get('unit', [])
+            unit_limit = formdata.get('organizationalunit', [])
             if unit_limit:
                 qs = qs.filter(
-                    visit__unit__in=unit_limit
+                    product__organizationalunit__in=unit_limit
                 )
             if formdata.get('limit_to_personal'):
                 user = self.request.user
                 qs = qs.filter(
-                    Q(visit__created_by=user) |
+                    Q(product__created_by=user) |
                     Q(teachers=user) |
                     Q(hosts=user) |
-                    Q(visit__tilbudsansvarlig=user)
+                    Q(product__tilbudsansvarlig=user)
                 )
         else:
             qs = self.model.objects.none()
@@ -3379,11 +3243,11 @@ class BookingAcceptView(FormView):
         if not token:
             raise Http404
         try:
-            bookerentry = EmailBookerEntry.objects.get(uuid=token)
+            bookerentry = BookerResponseNonce.objects.get(uuid=token)
             self.object = Booking.objects.get(booker=bookerentry.booker)
         except Booking.DoesNotExist:
             raise AccessDenied(_(u"Booking findes ikke længere"))
-        except EmailBookerEntry.DoesNotExist:
+        except BookerResponseNonce.DoesNotExist:
             raise AccessDenied(_(u"Ugyldig token"))
         if bookerentry.is_expired():
             raise AccessDenied(_(u"Token er udløbet"))
@@ -3415,7 +3279,7 @@ class BookingAcceptView(FormView):
                 self.object.delete()
 
             comment = form.cleaned_data['comment']
-            self.object.visitoccurrence.add_comment(None, comment)
+            self.object.visit.add_comment(None, comment)
 
         return self.render_to_response(
             self.get_context_data(comment_added=True)
@@ -3435,16 +3299,16 @@ class BookingAcceptView(FormView):
             {'url': reverse('search'), 'text': _(u'Søgning')},
             {
                 'url': reverse(
-                    'visit-view',
-                    args=[self.object.visitoccurrence.visit.id]
+                    'product-view',
+                    args=[self.object.visit.product.id]
                 ),
-                'text': self.object.visitoccurrence.visit.title
+                'text': self.object.visit.product.title
             },
             {
                 'url': reverse(
-                    'visit-occ-view', args=[self.object.visitoccurrence.id]
+                    'visit-view', args=[self.object.visit.id]
                 ),
-                'text': self.object.visitoccurrence.date_display
+                'text': self.object.visit.date_display
             },
             {
                 'url': reverse('booking-view', args=[

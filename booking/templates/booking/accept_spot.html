@@ -4,7 +4,7 @@
 {% load i18n %}
 {% load booking_tags %}
 
-{% block htmltitle %} - {{ object.visitoccurrence.visit.title }} - {{ object.visitoccurrence.date_display }} - {% blocktrans with id=object.id %}Booking #{{ id }}{% endblocktrans %}{% endblock %}
+{% block htmltitle %} - {{ object.visit.product.title }} - {{ object.visit.date_display }} - {% blocktrans with id=object.id %}Booking #{{ id }}{% endblocktrans %}{% endblock %}
 
 {% block content %}
 
@@ -29,10 +29,10 @@
 
         <div class="panel panel-default">
             <div class="panel-body">
-                {% url 'visit-view' object.visitoccurrence.visit.id as visiturl %}
-                {% url 'visit-occ-view' object.visitoccurrence.id as occurrenceurl %}
-                {% blocktrans with firstname=object.booker.firstname lastname=object.booker.lastname visittitle=object.visit.title occurrencetime=object.visitoccurrence.start_datetime %}
-                    <strong>{{ firstname }} {{ lastname }}</strong> har tilmeldt sig <a href="{{ visiturl }}">{{ visittitle }}</a> med afvikling <a href="{{ occurrenceurl }}">{{ occurrencetime }}</a>
+                {% url 'product-view' object.visit.product.id as producturl %}
+                {% url 'visit-view' object.visit.id as visiturl %}
+                {% blocktrans with firstname=object.booker.firstname lastname=object.booker.lastname producttitle=object.product.title visittime=object.visit.start_datetime %}
+                    <strong>{{ firstname }} {{ lastname }}</strong> har tilmeldt sig <a href="{{ producturl }}">{{ producttitle }}</a> med afvikling <a href="{{ visiturl }}">{{ visittime }}</a>
                 {% endblocktrans %}
             </div>
 

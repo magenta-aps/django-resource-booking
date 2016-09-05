@@ -119,7 +119,7 @@
             </div>
             {% endif %}
 
-            {% if form.unit or form.contacts %}
+            {% if form.organizationalunit or form.contacts %}
             <div class="panel panel-default">
                 <div id="headingContact" class="panel-heading" role="tab">
                     <h4 class="panel-title">
@@ -127,7 +127,7 @@
                     </h4>
                 </div>
                 <div id="collapseContact" class="panel-collapse collapse
-                {% if not object.pk or form.unit.errors or form.contacts.errors %}in{% endif %}
+                {% if not object.pk or form.organizationalunit.errors or form.contacts.errors %}in{% endif %}
                 " aria-labelledby="headingContact" role="tabpanel" aria-expanded="false" style="">
                     <div class="panel-body">
                         {% include 'resource/fields/unit.html' %}

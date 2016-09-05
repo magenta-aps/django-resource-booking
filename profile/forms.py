@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from booking.models import Unit
+from booking.models import OrganizationalUnit
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
@@ -15,9 +15,9 @@ class UserCreateForm(UserCreationForm):
         queryset=UserRole.objects.all(),
         label=_(u'Rolle')
     )
-    unit = ModelChoiceField(
+    organizationalunit = ModelChoiceField(
         required=True,
-        queryset=Unit.objects.all(),
+        queryset=OrganizationalUnit.objects.all(),
         label=_(u'Enhed')
     )
     availability_text = forms.CharField(
@@ -53,7 +53,7 @@ class UserCreateForm(UserCreationForm):
         # Now, we can change the queryset attributes of role and unit fields
         if self.user is not None:
             self.fields['role'].queryset = self.get_role_query_set()
-            self.fields['unit'].queryset = self.get_unit_query_set()
+            self.fields['organizationalunit'].queryset = self.get_unit_query_set()
 
         if kwargs.get('instance') is not None:
             # We are editing an existing user
@@ -66,7 +66,7 @@ class UserCreateForm(UserCreationForm):
             up = self.instance.userprofile
             self.initial.update({
                 'role': up.user_role,
-                'unit': up.unit,
+                'organizationalunit': up.organizationalunit,
                 'availability_text': up.availability_text,
                 'additional_information': up.additional_information
             })
@@ -112,8 +112,8 @@ class EditMyResourcesForm(forms.ModelForm):
 
 
 class StatisticsForm(forms.Form):
-    units = forms.ModelMultipleChoiceField(
-        queryset=Unit.objects.none(),
+    organizationalunits = forms.ModelMultipleChoiceField(
+        queryset=OrganizationalUnit.objects.none(),
         widget=forms.SelectMultiple,
         error_messages={'required': _(u'Dette felt er påkrævet!')}
     )

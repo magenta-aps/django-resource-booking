@@ -4,7 +4,7 @@
 {% load i18n %}
 {% load booking_tags %}
 
-{% block htmltitle %} - {{ object.visitoccurrence.visit.title }} - {{ object.visitoccurrence.date_display }} - {% blocktrans with id=object.id %}Booking #{{ id }}{% endblocktrans %}{% endblock %}
+{% block htmltitle %} - {{ object.visit.product.title }} - {{ object.visit.date_display }} - {% blocktrans with id=object.id %}Booking #{{ id }}{% endblocktrans %}{% endblock %}
 
 {% block content %}
 
@@ -21,10 +21,10 @@
         
             <div class="panel panel-default">
                 <div class="panel-body">
-                    {% url 'visit-view' object.visitoccurrence.visit.id as visiturl %}
-                    {% url 'visit-occ-view' object.visitoccurrence.id as occurrenceurl %}
-                    {% blocktrans with firstname=object.booker.firstname lastname=object.booker.lastname visittitle=object.visit.title occurrencetime=object.visitoccurrence.start_datetime %}
-                        <strong>{{ firstname }} {{ lastname }}</strong> har tilmeldt sig <a href="{{ visiturl }}">{{ visittitle }}</a> med afvikling <a href="{{ occurrenceurl }}">{{ occurrencetime }}</a>
+                    {% url 'product-view' object.visit.product.id as producturl %}
+                    {% url 'visit-view' object.visit.id as visiturl %}
+                    {% blocktrans with firstname=object.booker.firstname lastname=object.booker.lastname producttitle=object.product.title visittime=object.visit.start_datetime %}
+                        <strong>{{ firstname }} {{ lastname }}</strong> har tilmeldt sig <a href="{{ producturl }}">{{ producttitle }}</a> med afvikling <a href="{{ visiturl }}">{{ visittime }}</a>
                     {% endblocktrans %}
                     {% if object.is_waiting %}
                         <br/>
@@ -119,8 +119,8 @@
                     <dd>{{ object.classbooking.presentation_desired | yesno }}</dd>
                 {% endif %}
 
-                {% if object.classbooking and object.visit.custom_available and object.visit.custom_name %}
-                    <dt>{{ object.visit.custom_name }}</dt>
+                {% if object.classbooking and object.product.custom_available and object.product.custom_name %}
+                    <dt>{{ object.product.custom_name }}</dt>
                     <dd>{{ object.classbooking.custom_desired | yesno }}</dd>
                 {% endif %}
 
@@ -140,7 +140,7 @@
             <div class="divider"></div>
 
             <div class="go-back">
-                <a href="{% url 'visit-occ-search' %}" class="btn btn-default"><span class="glyphicon glyphicon-chevron-left"></span> {% trans 'Søg i besøg' %}</a>
+                <a href="{% url 'visit-search' %}" class="btn btn-default"><span class="glyphicon glyphicon-chevron-left"></span> {% trans 'Søg i besøg' %}</a>
             </div>
         </div>
         <div class="col-sm-6 col-md-4">
@@ -152,77 +152,77 @@
                     <div class="panel-body">
                         <dl class="dl-horizontal">
 
-                            {% if object.visit.title %}
+                            {% if object.product.title %}
                                 <dt>{% trans 'Titel:' %}</dt>
-                                <dd><a href="{% url 'visit-view' object.visitoccurrence.visit.id %}">{{ object.visit.title }}</a></dd>
+                                <dd><a href="{% url 'product-view' object.visit.product.id %}">{{ object.product.title }}</a></dd>
                             {% endif %}
 
-                            {% if object.visitoccurrence.start_datetime %}
+                            {% if object.visit.start_datetime %}
                                 <dt>{% trans 'Tidspunkt:' %}</dt>
-                                <dd><a href="{% url 'visit-occ-view' object.visitoccurrence.id %}">{{ object.visitoccurrence.start_datetime }}</a></dd>
+                                <dd><a href="{% url 'visit-view' object.visit.id %}">{{ object.visit.start_datetime }}</a></dd>
                             {% endif %}
 
-                            {% if object.visit.get_audience_display %}
+                            {% if object.product.get_audience_display %}
                                 <dt>{% trans 'Henvendt til:' %}</dt>
-                                <dd>{{ object.visit.get_audience_display }}</dd>
+                                <dd>{{ object.product.get_audience_display }}</dd>
                             {% endif %}
 
-                            {% if object.visit.resource_ptr.all_subjects  %}
+                            {% if object.product.resource_ptr.all_subjects  %}
                                 <dt>{% trans 'Fag/niveau:' %}</dt>
                                 <dd>
                                     <ul class="type-offer list-inline">
-                                        {% for x in object.visit.resource_ptr.all_subjects %}
+                                        {% for x in object.product.resource_ptr.all_subjects %}
                                             <li>{{ x.display_value }}</li>
                                         {% endfor %}
                                     </ul>
                                 </dd>
                             {% endif %}
 
-                            {% if object.visit.num_of_participants_display %}
+                            {% if object.product.num_of_participants_display %}
                                 <dt>{% trans 'Max antal:' %}</dt>
-                                <dd>{{ object.visit.num_of_participants_display }}</dd>
+                                <dd>{{ object.product.num_of_participants_display }}</dd>
                             {% endif %}
 
-                            {% if object.visit.get_type_display %}
+                            {% if object.product.get_type_display %}
                                 <dt>{% trans 'Hvad:' %}</dt>
-                                <dd>{{ object.visit.get_type_display }}</dd>
+                                <dd>{{ object.product.get_type_display }}</dd>
                             {% endif %}
 
-                            {% if object.visit.locality %}
+                            {% if object.product.locality %}
                                 <dt>{% trans 'Hvor:' %}</dt>
                                 <dd>
-                                    {{ object.visit.locality.name }},<br/>
-                                    {{ object.visit.locality.address_line }},<br/>
-                                    {{ object.visit.locality.zip_city }}
+                                    {{ object.product.locality.name }},<br/>
+                                    {{ object.product.locality.address_line }},<br/>
+                                    {{ object.product.locality.zip_city }}
                                 </dd>
                             {% endif %}
 
                             <dt>{% trans 'Arrangør:' %}</dt>
                             <dd>
-                                {% if object.visit.unit.url %}
-                                    <a href="{{ object.visit.unit.url }}" target="_blank">
+                                {% if object.product.organizationalunit.url %}
+                                    <a href="{{ object.product.organizationalunit.url }}" target="_blank">
                                 {% endif %}
-                                <strong>{{ object.visit.unit.name }}</strong>
-                                {% if object.visit.unit.url %}
+                                <strong>{{ object.product.organizationalunit.name }}</strong>
+                                {% if object.product.organizationalunit.url %}
                                     </a> <span class="glyphicon glyphicon-new-window"></span>
                                 {% endif %}
                             </dd>
 
-                            {% if object.visit.duration and object.visit.duration != '00:00' %}
+                            {% if object.product.duration and object.product.duration != '00:00' %}
                                 <dt>{% trans 'Varighed:' %}</dt>
-                                <dd>{{ object.visit.duration|timedelta_i18n }}</dd>
+                                <dd>{{ object.product.duration|timedelta_i18n }}</dd>
                             {% endif %}
 
-                            {% if object.visit.price %}
+                            {% if object.product.price %}
                                 <dt>{% trans 'Pris:' %}</dt>
-                                <dd>{{ object.visit.price }}</dd>
+                                <dd>{{ object.product.price }}</dd>
                             {% endif %}
 
                         </dl>
                     </div>
                 </div>
 
-                {% include 'common/map.html' with locality=object.visit.locality %}
+                {% include 'common/map.html' with locality=object.product.locality %}
             </form>
         </div>
     </div>

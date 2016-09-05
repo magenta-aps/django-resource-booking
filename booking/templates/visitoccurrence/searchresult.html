@@ -11,13 +11,13 @@
 
 
 {% block content %}
-    <div id="visitoccsearch" class="row">
+    <div id="visitsearch" class="row">
         <div id="main" class="col-sm-12 col-md-12">
 
             {% include 'common/breadcrumbrow.html' %}
 
             <div class="divider"></div>
-            <form class="clearfix" role="søg" action={% url 'visit-occ-search' %}>
+            <form class="clearfix" role="søg" action={% url 'visit-search' %}>
                 <h2>{% trans 'Filtrér søgning' %}</h2>
                 <dl class="dl-horizontal">
                     <dt><label for="{{ form.q.id_for_label }}">{{ form.q.label }}</label></dt>
@@ -70,10 +70,10 @@
             {% for res in results %}
                 <li class="media">
                     <div class="media-body">
-                        <strong><a href="{% url 'visit-occ-view' res.pk %}">{% trans 'Besøg' %} #{{ res.pk }}</a></strong>
+                        <strong><a href="{% url 'visit-view' res.pk %}">{% trans 'Besøg' %} #{{ res.pk }}</a></strong>
                         <dl class="dl-horizontal">
                             <dt>{% trans 'Tilbud:' %}</dt>
-                            <dd><a href="{% url 'visit-view' res.visit.pk %}">#{{ res.visit.pk }} {{ res.visit.title }}</a></dd>
+                            <dd><a href="{% url 'product-view' res.product.pk %}">#{{ res.product.pk }} {{ res.product.title }}</a></dd>
                             <dt>{% trans 'Booket af:' %}</dt>
                             <dd>{% blocktrans with count=res.nr_attendees %}{{ count }} personer{% endblocktrans %}</dd>
                         </dl>

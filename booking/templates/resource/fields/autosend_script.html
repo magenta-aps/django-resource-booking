@@ -73,7 +73,7 @@
                 toggleEnabled(daysInput, "reminder", $.inArray(value, enabledKeys) != -1);
             };
 
-            // Enables/disables the "enabled" field, and sets its value, depending on whether we inherit from a VisitAutosend
+            // Enables/disables the "enabled" field, and sets its value, depending on whether we inherit from a ProductAutosend
             var toggleInherit = function(row) {
                 if (window.inherited) {
                     var inheritField = row.find("[name$='-inherit']");
@@ -135,7 +135,7 @@
                 var key = parseInt(templateSelect.val(), 10),
                     id = "missingtemplate";
                 if (window.template_keys && !isNaN(key) && $.inArray(key, window.template_keys) == -1) {
-                    var url = "{% url "emailtemplate-create" %}?key=" + key + "&unit={{ unit.id }}";
+                    var url = "{% url "emailtemplate-create" %}?key=" + key + "&organizationalunit={{ organizationalunit.id }}";
                     addWarning(row, id, "{% trans "Der er ingen skabelon til denne hændelse!" %} <a href=\""+url+"\" target=\"_blank\">{% trans "Opret" %}</a>");
                 } else {
                     removeWarning(id);

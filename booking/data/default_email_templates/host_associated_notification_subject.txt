@@ -1,1 +1,1 @@
-Tilknytning som vært til besøg "{{ visit.title }}"
+Tilknytning som vært til besøg "{{ product.title }}"

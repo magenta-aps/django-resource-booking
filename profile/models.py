@@ -11,7 +11,7 @@ from django.utils.translation import ugettext_lazy as _
 
 import booking.models
 
-from booking.models import Unit, Resource, UserPerson
+from booking.models import OrganizationalUnit, Resource
 from booking.utils import get_related_content_types
 
 # User roles
@@ -42,7 +42,7 @@ def get_public_web_user():
         user = User.objects.create_user("public_web_user")
         profile = UserProfile(
             user=user,
-            unit=None,
+            organizationalunit=None,
             user_role=get_none_role()
         )
         profile.save()
@@ -96,7 +96,7 @@ class UserProfile(models.Model):
     # Unit must always be specified for coordinators,
     # possibly also for teachers and hosts.
     # Unit is not needed for administrators.
-    unit = models.ForeignKey(Unit, null=True, blank=True)
+    organizationalunit = models.ForeignKey(OrganizationalUnit, null=True, blank=True)
 
     my_resources = models.ManyToManyField(
         Resource,
@@ -163,11 +163,11 @@ class UserProfile(models.Model):
         if role == ADMINISTRATOR:
             return True
 
-        if not hasattr(item, "unit") or not item.unit:
+        if not hasattr(item, "organizationalunit") or not item.organizationalunit:
             return False
 
         if role in EDIT_ROLES:
-            qs = self.get_unit_queryset().filter(pk=item.unit.pk)
+            qs = self.get_unit_queryset().filter(pk=item.organizationalunit.pk)
             return len(qs) > 0
 
         return False
@@ -191,26 +191,26 @@ class UserProfile(models.Model):
         role = self.get_role()
 
         if role is None:
-            return Unit.objects.none()
+            return OrganizationalUnit.objects.none()
 
         if role == ADMINISTRATOR:
-            return Unit.objects.all()
+            return OrganizationalUnit.objects.all()
 
-        unit = self.unit
+        unit = self.organizationalunit
 
         if not unit:
-            return Unit.objects.none()
+            return OrganizationalUnit.objects.none()
 
         # Faculty editors gets everything that has their unit as a parent
         # as well as the unit itself
         if role == FACULTY_EDITOR:
-            return Unit.objects.filter(Q(parent=unit) | Q(pk=unit.pk))
+            return OrganizationalUnit.objects.filter(Q(parent=unit) | Q(pk=unit.pk))
 
         # Everyone else just get access to their own group
-        return Unit.objects.filter(pk=unit.pk)
+        return OrganizationalUnit.objects.filter(pk=unit.pk)
 
     def get_faculty(self):
-        unit = self.unit
+        unit = self.organizationalunit
 
         while unit and unit.type.name != "Fakultet":
             unit = unit.parent
@@ -228,14 +228,14 @@ class UserProfile(models.Model):
         if faculty:
             return User.objects.filter(
                 userprofile__user_role__role=FACULTY_EDITOR,
-                userprofile__unit=faculty
+                userprofile__organizationalunit=faculty
             )
         else:
             return User.objects.none()
 
     def requested_as_teacher_for_qs(self, exclude_accepted=False):
         bm = booking.models
-        cts = get_related_content_types(bm.VisitOccurrence)
+        cts = get_related_content_types(bm.Visit)
         template_key = bm.EmailTemplate.NOTIFY_HOST__REQ_TEACHER_VOLUNTEER
 
         mail_qs = bm.KUEmailRecipient.objects.filter(
@@ -245,30 +245,30 @@ class UserProfile(models.Model):
         )
 
         if exclude_accepted:
-            accepted_qs = self.user.taught_visitoccurrences.all()
+            accepted_qs = self.user.taught_visits.all()
             mail_qs = mail_qs.exclude(email_message__object_id__in=accepted_qs)
 
-        qs = bm.VisitOccurrence.objects.filter(
+        qs = bm.Visit.objects.filter(
             pk__in=mail_qs.values_list("email_message__object_id", flat=True)
         )
 
         return qs
 
     def is_available_as_teacher(self, from_datetime, to_datetime):
-        return not self.taught_visitoccurrences.filter(
+        return not self.taught_visits.filter(
             start_datetime__lt=to_datetime,
             end_datetime__gt=from_datetime
         ).exists()
 
-    def can_be_teacher_for(self, visit_occurrence):
+    def can_be_teacher_for(self, visit):
         return self.is_available_as_teacher(
-            visit_occurrence.start_datetime,
-            visit_occurrence.end_datetime
+            visit.start_datetime,
+            visit.end_datetime
         )
 
     def requested_as_host_for_qs(self, exclude_accepted=False):
         bm = booking.models
-        cts = get_related_content_types(bm.VisitOccurrence)
+        cts = get_related_content_types(bm.Visit)
         template_key = bm.EmailTemplate.NOTIFY_HOST__REQ_HOST_VOLUNTEER
 
         mail_qs = bm.KUEmailRecipient.objects.filter(
@@ -278,17 +278,17 @@ class UserProfile(models.Model):
         )
 
         if exclude_accepted:
-            accepted_qs = self.user.hosted_visitoccurrences.all()
+            accepted_qs = self.user.hosted_visits.all()
             mail_qs = mail_qs.exclude(email_message__object_id__in=accepted_qs)
 
-        qs = bm.VisitOccurrence.objects.filter(
+        qs = bm.Visit.objects.filter(
             pk__in=mail_qs.values_list("email_message__object_id", flat=True)
         )
 
         return qs
 
     def is_available_as_host(self, from_datetime, to_datetime):
-        return not self.hosted_visitoccurrences.filter(
+        return not self.hosted_visits.filter(
             Q(
                 end_datetime__isnull=True,
                 start_datetime__lt=to_datetime,
@@ -299,10 +299,10 @@ class UserProfile(models.Model):
             )
         ).exists()
 
-    def can_be_host_for(self, visit_occurrence):
+    def can_be_host_for(self, visit):
         return self.is_available_as_host(
-            visit_occurrence.start_datetime,
-            visit_occurrence.end_datetime
+            visit.start_datetime,
+            visit.end_datetime
         )
 
     @property
@@ -312,13 +312,10 @@ class UserProfile(models.Model):
     def save(self, *args, **kwargs):
         result = super(UserProfile, self).save(*args, **kwargs)
 
-        if self.user and not self.user.userperson_set.exists():
-            UserPerson.create(self.user)
-
         return result
 
 
-class EmailLoginEntry(models.Model):
+class EmailLoginURL(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4)
     success_url = models.CharField(max_length=2024)
     user = models.ForeignKey(User)

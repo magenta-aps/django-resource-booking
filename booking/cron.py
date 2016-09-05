@@ -1,7 +1,7 @@
 from datetime import timedelta, date
 
-from booking.models import VisitOccurrenceAutosend, EmailTemplate, \
-    VisitOccurrence
+from booking.models import VisitAutosend, EmailTemplate, \
+    Visit
 from django_cron import CronJobBase, Schedule
 
 
@@ -14,7 +14,7 @@ class ReminderJob(CronJobBase):
     def do(self):
         print "---------------------------------------------------------------"
         print "Beginning ReminderJob (sends reminder emails)"
-        autosends = list(VisitOccurrenceAutosend.objects.filter(
+        autosends = list(VisitAutosend.objects.filter(
             enabled=True,
             template_key=EmailTemplate.NOTITY_ALL__BOOKING_REMINDER,
             days__isnull=False,
@@ -22,7 +22,7 @@ class ReminderJob(CronJobBase):
         ).all())
         print "Found %d enabled autosends" % len(autosends)
 
-        inheriting_autosends = list(VisitOccurrenceAutosend.objects.filter(
+        inheriting_autosends = list(VisitAutosend.objects.filter(
             inherit=True,
             template_key=EmailTemplate.NOTITY_ALL__BOOKING_REMINDER,
         ).all())
@@ -43,18 +43,18 @@ class ReminderJob(CronJobBase):
 
             for autosend in autosends:
                 if autosend is not None:
-                    print "Autosend %d for VisitOccurrence %d:" % \
-                        (autosend.id, autosend.visitoccurrence.id)
-                    print "    VisitOccurrence starts on %s" % \
-                        unicode(autosend.visitoccurrence.start_datetime.date())
-                    reminderday = autosend.visitoccurrence.\
+                    print "Autosend %d for Visit %d:" % \
+                        (autosend.id, autosend.visit.id)
+                    print "    Visit starts on %s" % \
+                        unicode(autosend.visit.start_datetime.date())
+                    reminderday = autosend.visit.\
                         start_datetime.date() - \
                         timedelta(autosend.days)
                     print "    Autosend specifies to send %d " \
                           "days prior, on %s" % (autosend.days, reminderday)
                     if reminderday == today:
                         print "    That's today; send reminder now"
-                        autosend.visitoccurrence.autosend(
+                        autosend.visit.autosend(
                             EmailTemplate.NOTITY_ALL__BOOKING_REMINDER
                         )
                     else:
@@ -72,23 +72,23 @@ class IdleHostroleJob(CronJobBase):
         print "Beginning IdleHostroleJob (sends notification emails " \
               "regarding idle host roles)"
 
-        autosends = list(VisitOccurrenceAutosend.objects.filter(
+        autosends = list(VisitAutosend.objects.filter(
             enabled=True,
             template_key=EmailTemplate.NOTIFY_HOST__HOSTROLE_IDLE,
             days__isnull=False,
             inherit=False,
-            visitoccurrence__hosts=None,
-            visitoccurrence__host_status=VisitOccurrence.STATUS_NOT_ASSIGNED,
-            visitoccurrence__bookings__isnull=False
+            visit__hosts=None,
+            visit__host_status=Visit.STATUS_NOT_ASSIGNED,
+            visit__bookings__isnull=False
         ).all())
         print "Found %d enabled autosends" % len(autosends)
 
-        inheriting_autosends = list(VisitOccurrenceAutosend.objects.filter(
+        inheriting_autosends = list(VisitAutosend.objects.filter(
             inherit=True,
             template_key=EmailTemplate.NOTIFY_HOST__HOSTROLE_IDLE,
-            visitoccurrence__hosts=None,
-            visitoccurrence__host_status=VisitOccurrence.STATUS_NOT_ASSIGNED,
-            visitoccurrence__bookings__isnull=False
+            visit__hosts=None,
+            visit__host_status=Visit.STATUS_NOT_ASSIGNED,
+            visit__bookings__isnull=False
         ).all())
 
         extra = []
@@ -107,11 +107,11 @@ class IdleHostroleJob(CronJobBase):
 
             for autosend in autosends:
                 if autosend is not None:
-                    print "Autosend %d for VisitOccurrence %d:" % \
-                          (autosend.id, autosend.visitoccurrence.id)
-                    first_booking = autosend.visitoccurrence.\
+                    print "Autosend %d for Visit %d:" % \
+                          (autosend.id, autosend.visit.id)
+                    first_booking = autosend.visit.\
                         bookings.earliest('statistics__created_time')
-                    print "    VisitOccurrence has its first booking on %s" % \
+                    print "    Visit has its first booking on %s" % \
                           unicode(first_booking.statistics.created_time.date())
 
                     alertday = first_booking.statistics.created_time.date() + \
@@ -121,7 +121,7 @@ class IdleHostroleJob(CronJobBase):
                     if alertday == today:
                         print "    That's today; send alert now"
                         try:
-                            autosend.visitoccurrence.autosend(
+                            autosend.visit.autosend(
                                 EmailTemplate.NOTIFY_HOST__HOSTROLE_IDLE
                             )
                         except Exception as e:

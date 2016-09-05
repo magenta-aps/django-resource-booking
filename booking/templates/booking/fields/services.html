@@ -37,7 +37,7 @@
 
 {% if bookingform.custom_desired %}
     <div class="form-group">
-        <label class="col-sm-2 control-label" for="{{ bookingform.custom_desired.id_for_label }}">{{ visit.custom_name }}</label>
+        <label class="col-sm-2 control-label" for="{{ bookingform.custom_desired.id_for_label }}">{{ product.custom_name }}</label>
         <div class="col-sm-6{% if bookingform.custom_desired.errors %} has-error{% endif %}">
             {{ bookingform.custom_desired }}
         </div>

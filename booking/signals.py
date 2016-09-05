@@ -1,14 +1,13 @@
 from django.db.models.signals import post_save
-from booking.models import Booker
+from booking.models import Guest
 from booking.models import Booking, ClassBooking, TeacherBooking
-from booking.models import Resource, Visit, OtherResource
-from booking.models import VisitOccurrence
+from booking.models import Resource, Product
+from booking.models import Visit
 
 MODELS_WITH_SEARCHINDEX = set([
     Resource,
-    Visit,
-    OtherResource,
-    VisitOccurrence
+    Product,
+    Visit
 ])
 
 BOOKING_MODELS = set([
@@ -38,7 +37,7 @@ for x in MODELS_WITH_SEARCHINDEX:
 
 
 def on_booking_save(sender, instance, **kwargs):
-    vo = getattr(instance, 'visitoccurrence', None)
+    vo = getattr(instance, 'visit', None)
     if vo:
         run_searchindex_for_object(vo)
 
@@ -48,8 +47,8 @@ for x in BOOKING_MODELS:
 
 def on_booker_save(sender, instance, **kwargs):
     for x in instance.booking_set.all():
-        vo = getattr(x, 'visitoccurrence', None)
+        vo = getattr(x, 'visit', None)
         if vo:
             run_searchindex_for_object(vo)
 
-post_save.connect(on_booker_save, sender=Booker)
+post_save.connect(on_booker_save, sender=Guest)

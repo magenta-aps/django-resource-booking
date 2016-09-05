@@ -8,7 +8,7 @@
                     'rrulestr': $(this).val(),
                     'start_times': $('#id_time').val() === "" ? "00:00" : $('#id_time').val(),
                     'duration': $('#id_duration').val(),
-                    'visit_id': $('#existing-recurrence-dates').data('visitId'),
+                    'product_id': $('#existing-recurrence-dates').data('productId'),
                     'csrfmiddlewaretoken': '{{ csrf_token }}',
                 },
 
@@ -21,7 +21,7 @@
 
                     $.each(json, function(i, item) {
 
-                        items.push('<li><input type="checkbox" name="occurrences" value="' + item + '"/>' + item + '</li>');
+                        items.push('<li><input type="checkbox" name="visits" value="' + item + '"/>' + item + '</li>');
 
                     });  // close each()
 

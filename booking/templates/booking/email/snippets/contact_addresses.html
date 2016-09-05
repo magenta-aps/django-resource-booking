@@ -1,6 +1,6 @@
-{% if visit.contact_users|length > 1 %}
+{% if product.contact_users|length > 1 %}
 en af følgende kontaktpersoner:
 {% endif %}
-{% for x in visit.contact_users %}
+{% for x in product.contact_users %}
 <a href="mailto:{{ x.email }}">{% if x.get_full_name %}{{ x.get_full_name }}{% else %}{{ x.username }}{% endif %}</a>{% if forloop.last %}.{% else %}, {% endif %}
 {% endfor %}

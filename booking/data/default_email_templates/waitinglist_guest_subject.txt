@@ -1,1 +1,1 @@
-Der er en ledig plads på besøget "{{ visit.title }}".
+Der er en ledig plads på besøget "{{ product.title }}".
