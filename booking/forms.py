@@ -14,7 +14,7 @@ from django import forms
 from django.db.models import Q
 from django.db.models.expressions import OrderBy
 from django.forms import CheckboxSelectMultiple, CheckboxInput
-from django.forms import RadioSelect, EmailInput
+from django.forms import EmailInput
 from django.forms import formset_factory, inlineformset_factory
 from django.forms import TextInput, NumberInput, Textarea, Select
 from django.forms import HiddenInput
@@ -361,7 +361,9 @@ class ProductForm(forms.ModelForm):
             ),
             'duration': Select(attrs={'class': 'form-control input-sm'}),
             'locality': Select(attrs={'class': 'form-control input-sm'}),
-            'organizationalunit': Select(attrs={'class': 'form-control input-sm'}),
+            'organizationalunit': Select(
+                attrs={'class': 'form-control input-sm'}
+            ),
             'audience': Select(attrs={'class': 'form-control input-sm'}),
             'tags': CheckboxSelectMultiple(),
             'roomresponsible': CheckboxSelectMultiple,
@@ -407,7 +409,8 @@ class ProductForm(forms.ModelForm):
                     (x.id, x.name_and_address)
                     for x in Locality.objects.order_by(
                         # Sort stuff where unit is null last
-                        OrderBy(Q(organizationalunit__isnull=False), descending=True),
+                        OrderBy(Q(organizationalunit__isnull=False),
+                                descending=True),
                         # Sort localities belong to current unit first
                         OrderBy(Q(organizationalunit=unit), descending=True),
                         # Lastly, sort by name
@@ -767,7 +770,8 @@ class BookerForm(forms.ModelForm):
         required=False
     )
 
-    def __init__(self, data=None, product=None, language='da', *args, **kwargs):
+    def __init__(self, data=None, product=None, language='da', *args,
+                 **kwargs):
         super(BookerForm, self).__init__(data, *args, **kwargs)
         attendeecount_widget = self.fields['attendee_count'].widget
 
@@ -780,7 +784,8 @@ class BookerForm(forms.ModelForm):
             self.fields['school'].widget.attrs['data-institution-level'] = \
                 product.institution_level
 
-            available_level_choices = Guest.level_map[product.institution_level]
+            available_level_choices = \
+                Guest.level_map[product.institution_level]
             self.fields['level'].choices = [(u'', BLANK_LABEL)] + [
                 (value, title)
                 for (value, title) in Guest.level_choices
@@ -788,7 +793,8 @@ class BookerForm(forms.ModelForm):
                 ]
             # Visit types where attendee count is mandatory
             if product.type in [Resource.GROUP_VISIT,
-                                Resource.TEACHER_EVENT, Resource.STUDY_PROJECT]:
+                                Resource.TEACHER_EVENT,
+                                Resource.STUDY_PROJECT]:
                 self.fields['attendee_count'].required = True
             # Class level is not mandatory for teacher events.
             if product.type == Resource.TEACHER_EVENT:

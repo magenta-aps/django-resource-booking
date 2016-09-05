@@ -22,7 +22,8 @@ def custom_update_user(sender, **kwargs):
             group = None
         if group:
             try:
-                group = booking_models.OrganizationalUnit.objects.get(name=group)
+                group = \
+                    booking_models.OrganizationalUnit.objects.get(name=group)
             except booking_models.OrganizationalUnit.DoesNotExist:
                 group = None
 

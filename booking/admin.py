@@ -86,7 +86,8 @@ class KUBookingModelAdmin(admin.ModelAdmin):
             return form
 
         model_name = self.model._meta.object_name
-        if hasattr(self.model, 'organizationalunit') and 'organizationalunit' in form.base_fields:
+        if hasattr(self.model, 'organizationalunit') and 'organizationalunit' \
+                in form.base_fields:
             # Limit choices to the unit the user has access to
             unit_qs = request.user.userprofile.get_unit_queryset()
             form.base_fields['organizationalunit'].queryset = unit_qs

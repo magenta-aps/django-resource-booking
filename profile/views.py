@@ -72,7 +72,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             'button': {
                 'text': _(u'Søg i alle'),
                 'link': reverse('visit-customlist') + "?type=%s" %
-                                                          VisitCustomListView.TYPE_LATEST_COMPLETED
+                VisitCustomListView.TYPE_LATEST_COMPLETED
             }
         }, {
             'color': self.HEADING_BLUE,
@@ -87,7 +87,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             'button': {
                 'text': _(u'Søg i alle'),
                 'link': reverse('visit-customlist') + "?type=%s" %
-                                                          VisitCustomListView.TYPE_TODAY
+                VisitCustomListView.TYPE_TODAY
             }
         }])
 
@@ -138,7 +138,8 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                 'link': reverse('search') + '?u=-3'
             },
             'queryset': Resource.objects.filter(
-                organizationalunit=self.request.user.userprofile.get_unit_queryset()
+                organizationalunit=self.request.user
+                .userprofile.get_unit_queryset()
             ).order_by("-statistics__created_time"),
         }
 
@@ -160,15 +161,15 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                 'count'
             ),
             'queryset': self.sort_vo_queryset(
-                Visit.being_planned_queryset(product__organizationalunit=unit_qs)
-                            .annotate(num_participants=(
-                                Coalesce(Count("bookings__booker__pk"), 0) +
-                                Coalesce(
-                                    Sum("bookings__booker__attendee_count"),
-                                    0
-                                )
-                            )
-                ).filter(num_participants__gte=1)
+                Visit.being_planned_queryset(
+                    product__organizationalunit=unit_qs
+                ).annotate(num_participants=(
+                    Coalesce(Count("bookings__booker__pk"), 0) +
+                    Coalesce(
+                        Sum("bookings__booker__attendee_count"),
+                        0
+                    )
+                )).filter(num_participants__gte=1)
                 # See also VisitSearchView.filter_by_participants
             )
         }
@@ -333,7 +334,9 @@ class CreateUserView(FormView, UpdateView):
                             _(u"Du har rollen 'Fakultetsredaktør', men " +
                               "er ikke tilknyttet nogen enhed.")
                         )
-                    unit = OrganizationalUnit.objects.get(pk=self.request.POST[u'organizationalunit'])
+                    unit = OrganizationalUnit.objects.get(
+                        pk=self.request.POST[u'organizationalunit']
+                    )
                     if unit and not unit.belongs_to(current_unit):
                         raise AccessDenied(
                             _(u"Du kan kun redigere enheder, som " +
@@ -346,7 +349,9 @@ class CreateUserView(FormView, UpdateView):
                             _(u"Du har rollen 'Koordinator', men er ikke " +
                               "tilknyttet nogen enhed.")
                         )
-                    unit = OrganizationalUnit.objects.get(pk=self.request.POST[u'organizationalunit'])
+                    unit = OrganizationalUnit.objects.get(
+                        pk=self.request.POST[u'organizationalunit']
+                    )
                     if unit and not unit == current_unit:
                         raise AccessDenied(
                             _(u"Du kan kun redigere enheder, som du selv er" +
@@ -506,10 +511,14 @@ class UserListView(EditorRequriedMixin, ListView):
         user = self.request.user
         unit_qs = user.userprofile.get_unit_queryset()
 
-        qs = self.model.objects.filter(userprofile__organizationalunit__in=unit_qs)
+        qs = self.model.objects.filter(
+            userprofile__organizationalunit__in=unit_qs
+        )
 
         try:
-            self.selected_unit = int(self.request.GET.get("organizationalunit", None))
+            self.selected_unit = int(
+                self.request.GET.get("organizationalunit", None)
+            )
         except:
             pass
         if self.selected_unit:
@@ -625,7 +634,8 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
         for unit_id in self.request.GET.getlist('units', None):
             unit_ids.append(int(unit_id))
         if user.userprofile.organizationalunit:
-            form.fields['units'].initial = [user.userprofile.organizationalunit.pk]
+            form.fields['units'].initial = \
+                [user.userprofile.organizationalunit.pk]
             form.fields['units'].empty_label = None
         if len(unit_ids) > 0:
             self.units = OrganizationalUnit.objects.all()\

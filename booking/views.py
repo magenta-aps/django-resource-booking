@@ -405,9 +405,10 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
                 roomresponsible_ids.append(id)
 
         return list(Guest.objects.filter(id__in=booker_ids)) + \
-               list(User.objects.filter(username__in=user_ids)) + \
-            list(RoomResponsible.objects.filter(id__in=roomresponsible_ids)) + \
-               customs
+            list(User.objects.filter(username__in=user_ids)) + \
+            list(RoomResponsible.objects.filter(
+                id__in=roomresponsible_ids)
+            ) + customs
 
     def get_unit(self):
         return self.request.user.userprofile.organizationalunit
@@ -813,10 +814,12 @@ class SearchView(ListView):
         u = int(u)
 
         if u == AdminProductSearchForm.MY_UNIT:
-            self.filters["organizationalunit"] = self.request.user.userprofile.organizationalunit
+            self.filters["organizationalunit"] = \
+                self.request.user.userprofile.organizationalunit
         elif u == AdminProductSearchForm.MY_FACULTY:
             self.filters["organizationalunit"] = \
-                self.request.user.userprofile.organizationalunit.get_faculty_queryset()
+                self.request.user.userprofile\
+                    .organizationalunit.get_faculty_queryset()
         elif u == AdminProductSearchForm.MY_UNITS:
             self.filters["organizationalunit"] = \
                 self.user.userprofile.get_unit_queryset()
@@ -1512,7 +1515,9 @@ class EditProductView(EditResourceView):
         context['template_keys'] = list(
             set(
                 template.key
-                for template in EmailTemplate.get_templates(self.object.organizationalunit)
+                for template in EmailTemplate.get_templates(
+                    self.object.organizationalunit
+                )
             )
         )
         context['organizationalunit'] = self.object.organizationalunit
@@ -1662,7 +1667,10 @@ class SimpleRessourcesView(LoginRequiredMixin,
         if 'potentielle_vaerter' in form.fields:
             qs = form.fields['potentielle_vaerter']._get_queryset()
             form.fields['potentielle_vaerter']._set_queryset(
-                qs.filter(userprofile__organizationalunit=self.object.organizationalunit)
+                qs.filter(
+                    userprofile__organizationalunit=self.object
+                    .organizationalunit
+                )
             )
             form.fields['potentielle_vaerter'].label_from_instance = \
                 lambda obj: "%s (%s) <%s>" % (
@@ -1674,7 +1682,8 @@ class SimpleRessourcesView(LoginRequiredMixin,
         if 'potentielle_undervisere' in form.fields:
             qs = form.fields['potentielle_undervisere']._get_queryset()
             form.fields['potentielle_undervisere']._set_queryset(
-                qs.filter(userprofile__organizationalunit=self.object.organizationalunit)
+                qs.filter(userprofile__organizationalunit=self.object
+                          .organizationalunit)
             )
             form.fields['potentielle_undervisere'].label_from_instance = \
                 lambda obj: "%s (%s) <%s>" % (
@@ -1741,7 +1750,8 @@ class ProductInquireView(FormMixin, HasBackButtonMixin, ModalMixin,
 
     def dispatch(self, request, *args, **kwargs):
         self.object = Product.objects.get(id=kwargs['product'])
-        return super(ProductInquireView, self).dispatch(request, *args, **kwargs)
+        return super(ProductInquireView, self).dispatch(
+            request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
         form = self.get_form()
@@ -1990,7 +2000,8 @@ class BookingNotifyView(LoginRequiredMixin, ModalMixin, EmailComposeView):
                                     self.RECIPIENT_SEPARATOR,
                                     roomresponslible.id):
                                         roomresponslible.get_full_email()
-                        for roomresponslible in self.object.product.roomresponsible.all()
+                        for roomresponslible in
+                        self.object.product.roomresponsible.all()
                     }
                 },
                 'hosts': {
@@ -2337,7 +2348,10 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
 
             type = self.product.type
             if type == Resource.GROUP_VISIT:
-                forms['bookingform'] = ClassBookingForm(data, product=self.product)
+                forms['bookingform'] = ClassBookingForm(
+                    data,
+                    product=self.product
+                )
                 if self.product.resourcegymnasiefag_set.count() > 0:
                     forms['subjectform'] = \
                         BookingGymnasieSubjectLevelForm(data)
@@ -2611,11 +2625,18 @@ class VisitSearchView(VisitListView):
         profile = self.request.user.userprofile
 
         if u == form.MY_UNIT:
-            return qs.filter(product__organizationalunit=profile.organizationalunit)
+            return qs.filter(
+                product__organizationalunit=profile.organizationalunit
+            )
         elif u == form.MY_FACULTY:
-            return qs.filter(product__organizationalunit=profile.organizationalunit.get_faculty_queryset())
+            return qs.filter(
+                product__organizationalunit=profile.organizationalunit
+                .get_faculty_queryset()
+            )
         elif u == form.MY_UNITS:
-            return qs.filter(product__organizationalunit=profile.get_unit_queryset())
+            return qs.filter(
+                product__organizationalunit=profile.get_unit_queryset()
+            )
         else:
             return qs.filter(product__organizationalunit__pk=u)
 
@@ -2866,7 +2887,8 @@ class EmailTemplateListView(LoginRequiredMixin, ListView):
                 objectB = self.object_list[j]
                 if objectA != objectB \
                         and objectA.key == objectB.key \
-                        and objectA.organizationalunit == objectB.organizationalunit:
+                        and objectA.organizationalunit == \
+                        objectB.organizationalunit:
                     context['duplicates'].extend([objectA, objectB])
         context['breadcrumbs'] = [
             {'text': _(u'Emailskabelonliste')},
@@ -2900,7 +2922,8 @@ class EmailTemplateEditView(LoginRequiredMixin, UnitAccessRequiredMixin,
         if 'key' in request.GET:
             form.initial['key'] = request.GET['key']
         if 'organizationalunit' in request.GET:
-            form.initial['organizationalunit'] = request.GET['organizationalunit']
+            form.initial['organizationalunit'] = \
+                request.GET['organizationalunit']
         return self.render_to_response(
             self.get_context_data(form=form)
         )
@@ -3189,7 +3212,8 @@ class EvaluationOverviewView(LoginRequiredMixin, ListView):
         if form.is_valid():
             formdata = form.cleaned_data
             qs = self.model.objects.filter(
-                product__organizationalunit__in=form.user.userprofile.get_unit_queryset(),
+                product__organizationalunit__in=form.user
+                .userprofile.get_unit_queryset(),
                 evaluation_link__isnull=False,
             ).exclude(
                 evaluation_link="",

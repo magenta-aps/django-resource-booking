@@ -238,7 +238,10 @@ class ChangeVisitRoomsView(AutologgerMixin, UpdateWithCancelView):
                  locality is not None and x.id == locality.id)
                 for x in Locality.objects.order_by(
                     # Sort stuff where unit is null last
-                    OrderBy(Q(organizationalunit__isnull=False), descending=True),
+                    OrderBy(
+                        Q(organizationalunit__isnull=False),
+                        descending=True
+                    ),
                     # Sort localities belong to current unit first
                     OrderBy(Q(organizationalunit=unit), descending=True),
                     # Lastly, sort by name
@@ -398,7 +401,9 @@ class ChangeVisitAutosendView(AutologgerMixin, UpdateWithCancelView):
         }
         context['template_keys'] = list(set(
             template.key
-            for template in EmailTemplate.get_templates(self.object.product.organizationalunit)
+            for template in EmailTemplate.get_templates(
+                self.object.product.organizationalunit
+            )
         ))
         context['organizationalunit'] = self.object.product.organizationalunit
         context['autosend_enable_days'] = EmailTemplate.enable_days

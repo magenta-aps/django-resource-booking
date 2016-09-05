@@ -53,7 +53,8 @@ class UserCreateForm(UserCreationForm):
         # Now, we can change the queryset attributes of role and unit fields
         if self.user is not None:
             self.fields['role'].queryset = self.get_role_query_set()
-            self.fields['organizationalunit'].queryset = self.get_unit_query_set()
+            self.fields['organizationalunit'].queryset = \
+                self.get_unit_query_set()
 
         if kwargs.get('instance') is not None:
             # We are editing an existing user

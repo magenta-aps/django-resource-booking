@@ -95,7 +95,11 @@ class RoomResponsible(models.Model):
     email = models.EmailField(max_length=64, null=True, blank=True)
     phone = models.CharField(max_length=14, null=True, blank=True)
 
-    organizationalunit = models.ForeignKey("OrganizationalUnit", blank=True, null=True)
+    organizationalunit = models.ForeignKey(
+        "OrganizationalUnit",
+        blank=True,
+        null=True
+    )
 
     allow_null_unit_editing = True
 
@@ -360,8 +364,12 @@ class Locality(models.Model):
     zip_city = models.CharField(
         max_length=256, verbose_name=_(u'Postnummer og by')
     )
-    organizationalunit = models.ForeignKey(OrganizationalUnit, verbose_name=_(u'Enhed'), blank=True,
-                                           null=True)
+    organizationalunit = models.ForeignKey(
+        OrganizationalUnit,
+        verbose_name=_(u'Enhed'),
+        blank=True,
+        null=True
+    )
 
     def __unicode__(self):
         return self.name
@@ -690,8 +698,9 @@ class EmailTemplate(models.Model):
         if include_overridden or len(templates) == 0:
             try:
                 templates.append(
-                    EmailTemplate.objects.filter(key=template_key,
-                                                 organizationalunit__isnull=True)[0]
+                    EmailTemplate.objects.filter(
+                        key=template_key,
+                        organizationalunit__isnull=True)[0]
                 )
             except:
                 pass
@@ -869,8 +878,12 @@ class Resource(models.Model):
     mouseover_description = models.CharField(
         max_length=512, blank=True, verbose_name=_(u'Mouseover-tekst')
     )
-    organizationalunit = models.ForeignKey(OrganizationalUnit, null=True, blank=False,
-                                           verbose_name=_('Enhed'))
+    organizationalunit = models.ForeignKey(
+        OrganizationalUnit,
+        null=True,
+        blank=False,
+        verbose_name=_('Enhed')
+    )
     links = models.ManyToManyField(Link, blank=True, verbose_name=_('Links'))
     audience = models.IntegerField(choices=audience_choices,
                                    verbose_name=_(u'Målgruppe'),
@@ -2345,7 +2358,11 @@ class Visit(models.Model):
 
     def create_inheriting_autosends(self):
         for productautosend in self.product.productautosend_set.all():
-            if not self.get_autosend(productautosend.template_key, False, False):
+            if not self.get_autosend(
+                    productautosend.template_key,
+                    False,
+                    False
+            ):
                 visitautosend = VisitAutosend(
                     visit=self,
                     inherit=True,
@@ -3244,7 +3261,9 @@ class Booking(models.Model):
         if qs is None:
             qs = Booking.objects.all()
 
-        return qs.filter(product__organizationalunit=user.userprofile.get_unit_queryset())
+        return qs.filter(
+            product__organizationalunit=user.userprofile.get_unit_queryset()
+        )
 
     def get_absolute_url(self):
         return reverse('booking-view', args=[self.pk])

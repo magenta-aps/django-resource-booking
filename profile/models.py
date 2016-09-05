@@ -96,7 +96,11 @@ class UserProfile(models.Model):
     # Unit must always be specified for coordinators,
     # possibly also for teachers and hosts.
     # Unit is not needed for administrators.
-    organizationalunit = models.ForeignKey(OrganizationalUnit, null=True, blank=True)
+    organizationalunit = models.ForeignKey(
+        OrganizationalUnit,
+        null=True,
+        blank=True
+    )
 
     my_resources = models.ManyToManyField(
         Resource,
@@ -163,7 +167,8 @@ class UserProfile(models.Model):
         if role == ADMINISTRATOR:
             return True
 
-        if not hasattr(item, "organizationalunit") or not item.organizationalunit:
+        if not hasattr(item, "organizationalunit") or not \
+                item.organizationalunit:
             return False
 
         if role in EDIT_ROLES:
@@ -204,7 +209,8 @@ class UserProfile(models.Model):
         # Faculty editors gets everything that has their unit as a parent
         # as well as the unit itself
         if role == FACULTY_EDITOR:
-            return OrganizationalUnit.objects.filter(Q(parent=unit) | Q(pk=unit.pk))
+            return OrganizationalUnit.objects.filter(Q(parent=unit) |
+                                                     Q(pk=unit.pk))
 
         # Everyone else just get access to their own group
         return OrganizationalUnit.objects.filter(pk=unit.pk)
