@@ -1126,23 +1126,23 @@ class CloneProductView(RedirectView):
             raise Http404()
 
 
-class EditProductView(LoginRequiredMixin, RoleRequiredMixin,
-                      HasBackButtonMixin, ProductBookingUpdateView):
+class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
+                          HasBackButtonMixin, ProductBookingUpdateView):
     is_creating = True
 
     def __init__(self, *args, **kwargs):
-        super(EditProductView, self).__init__(*args, **kwargs)
+        super(EditProductBaseView, self).__init__(*args, **kwargs)
         self.object = None
 
     def get_form_kwargs(self):
-        kwargs = super(EditProductView, self).get_form_kwargs()
+        kwargs = super(EditProductBaseView, self).get_form_kwargs()
         kwargs['user'] = self.request.user
         return kwargs
 
     @method_decorator(login_required)
     def dispatch(self, *args, **kwargs):
         # First, check all is well in superclass
-        result = super(EditProductView, self).dispatch(*args, **kwargs)
+        result = super(EditProductBaseView, self).dispatch(*args, **kwargs)
         # Now, check that the user belongs to the correct unit.
         current_user = self.request.user
         pk = kwargs.get("pk")
@@ -1232,14 +1232,14 @@ class EditProductView(LoginRequiredMixin, RoleRequiredMixin,
 
         context.update(kwargs)
 
-        return super(EditProductView, self).get_context_data(**context)
+        return super(EditProductBaseView, self).get_context_data(**context)
 
     def gymnasiefag_selected(self):
         result = []
         obj = self.object
         if self.request.method == 'GET':
             if obj and obj.pk:
-                for x in obj.resourcegymnasiefag_set.all():
+                for x in obj.productgymnasiefag_set.all():
                     result.append({
                         'submitvalue': x.as_submitvalue(),
                         'description': x.display_value()
@@ -1265,7 +1265,7 @@ class EditProductView(LoginRequiredMixin, RoleRequiredMixin,
         obj = self.object
         if self.request.method == 'GET':
             if obj and obj.pk:
-                for x in obj.resourcegrundskolefag_set.all():
+                for x in obj.productgrundskolefag_set.all():
                     result.append({
                         'submitvalue': x.as_submitvalue(),
                         'description': x.display_value()
@@ -1304,7 +1304,7 @@ class EditProductView(LoginRequiredMixin, RoleRequiredMixin,
 
     def save_subjects(self):
         existing_gym_fag = {}
-        for x in self.object.resourcegymnasiefag_set.all():
+        for x in self.object.productgymnasiefag_set.all():
             existing_gym_fag[x.as_submitvalue()] = x
 
         for gval in self.request.POST.getlist('gymnasiefag', []):
@@ -1318,7 +1318,7 @@ class EditProductView(LoginRequiredMixin, RoleRequiredMixin,
             x.delete()
 
         existing_gs_fag = {}
-        for x in self.object.resourcegrundskolefag_set.all():
+        for x in self.object.productgrundskolefag_set.all():
             existing_gs_fag[x.as_submitvalue()] = x
 
         for gval in self.request.POST.getlist('grundskolefag', []):
@@ -1340,7 +1340,7 @@ class EditProductView(LoginRequiredMixin, RoleRequiredMixin,
             self.request.user.userprofile.my_resources.add(self.object)
 
 
-class EditProductView(EditProductView):
+class EditProductView(EditProductBaseView):
 
     template_name = 'product/form.html'
     form_class = ProductForm
@@ -2336,10 +2336,10 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
                     data,
                     product=self.product
                 )
-                if self.product.resourcegymnasiefag_set.count() > 0:
+                if self.product.productgymnasiefag_set.count() > 0:
                     forms['subjectform'] = \
                         BookingGymnasieSubjectLevelForm(data)
-                if self.product.resourcegrundskolefag_set.count() > 0:
+                if self.product.productgrundskolefag_set.count() > 0:
                     forms['grundskolesubjectform'] = \
                         BookingGrundskoleSubjectLevelForm(data)
 
@@ -2383,7 +2383,7 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
         obj = self.product
         if self.request.method == 'GET':
             if obj and obj.pk:
-                for x in obj.resourcegymnasiefag_set.all():
+                for x in obj.productgymnasiefag_set.all():
                     result.append({
                         'submitvalue': x.as_submitvalue(),
                         'description': x.display_value()
@@ -2396,7 +2396,7 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
         obj = self.product
         if self.request.method == 'GET':
             if obj and obj.pk:
-                for x in obj.resourcegrundskolefag_set.all():
+                for x in obj.productgrundskolefag_set.all():
                     result.append({
                         'submitvalue': x.as_submitvalue(),
                         'description': x.display_value()

@@ -624,7 +624,7 @@ class ProductStudyMaterialForm(ProductStudyMaterialFormBase):
 
     def __init__(self, data, instance=None):
         super(ProductStudyMaterialForm, self).__init__(data)
-        self.studymaterials = StudyMaterial.objects.filter(resource=instance)
+        self.studymaterials = StudyMaterial.objects.filter(product=instance)
 
 
 ProductAutosendFormSetBase = inlineformset_factory(
