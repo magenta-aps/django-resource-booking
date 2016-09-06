@@ -2741,7 +2741,7 @@ class VisitAutosend(Autosend):
 
     def get_inherited(self):
         if self.inherit:
-            return self.product.visit.get_autosend(self.template_key)
+            return self.visit.get_autosend(self.template_key)
 
     def __unicode__(self):
         return "%s on %s" % (
