@@ -1,10 +1,10 @@
 {% load i18n %}
-<div class="col-sm-4">
+<div class="col-sm-6">
     <div class="panel panel-bookings">
         <div class="panel-heading {{ list.color }}">
             <h3 class="panel-title">
                 {% if list.title.link %}
-                    <a href="{{ list.title.link }}">{{ list.title.text }}</a>
+                    {{ list.title.text }}
                 {% else %}
                     {{ list.title }}
                 {% endif %}
@@ -25,9 +25,8 @@
 
                             <div class="list-group-item-text">
                                 <ul>
-                                    <li>#{{ occurrence.pk }}</li>
                                     <li>
-                                        {% blocktrans with date=occurrence.start_datetime|date:"d. m. Y" time=occurrence.start_datetime|date:"H:i" %}Dato/tid: {{ date }} kl. {{ time }}{% endblocktrans %}
+                                        {% blocktrans with date=occurrence.start_datetime|date:"d.m.Y" time=occurrence.start_datetime|time:"H.i" %}Dato/tid: {{ date }} kl. {{ time }}{% endblocktrans %}
                                     </li>
                                     <li>{% trans 'Antal tilmeldte:' %} {{ occurrence.nr_attendees }}</li>
                                     {% if request.user.userprofile.has_edit_role and occurrence.has_changes_after_planned %}
@@ -72,17 +71,16 @@
                             <h2 class="list-group-item-heading">{{ res.title }}</h2>
                             <div class="list-group-item-text">
                                 <ul>
-                                    <li>#{{res.pk}}</li>
                                     <li>{% trans 'Type:' %} {{ res.get_type_display }}</li>
                                     {% if res.get_occurrences|length %}
                                         <li>
                                             {% trans 'Dato/tid:' %}
                                             <span class="type-offer">
                                                 {% if res.get_occurrences|length == 1 %}
-                                                    {{ res.first_occurence.start_datetime|date:"d. m. Y" }}
-                                                    {% blocktrans with time=res.first_occurence.start_datetime|date:"H:i" %}kl. {{ time }}{% endblocktrans %}
+                                                    {{ res.first_occurence.start_datetime|date:"d.m.Y" }}
+                                                    {% blocktrans with time=res.first_occurence.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}
                                                 {% else %}
-                                                    {% blocktrans with count=res.get_occurrences|length date=res.first_occurence.start_datetime|date:"d. m. Y" time=res.first_occurence.start_datetime|date:"H:i" %}
+                                                    {% blocktrans with count=res.get_occurrences|length date=res.first_occurence.start_datetime|date:"d.m.Y" time=res.first_occurence.start_datetime|time:"H.i" %}
                                                         {{ count }} mulige tidspunkter, første gang {{ date }} kl. {{ time }}
                                                     {% endblocktrans %}
                                                 {% endif %}
@@ -92,8 +90,12 @@
                                     {%if res.display_locality %}
                                         <li>{% trans 'Hvor:' %} {{ res.display_locality }}</li>
                                     {% endif %}
-                                    <li>{% trans 'Oprettet: ' %} {{ res.statistics.created_time }}</li>
-                                    <li>{% trans 'Opdateret: ' %} {{ res.statistics.updated_time }}</li>
+                                    {% if item.price %}
+                                        <li>
+                                            {% trans 'Pris:' %}
+                                            <span class="type-offer">{{ item.price }}</span>
+                                        </li>
+                                    {% endif %}
                                 </ul>
                             </div>
                         </a>

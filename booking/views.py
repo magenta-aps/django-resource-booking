@@ -17,8 +17,8 @@ from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse, reverse_lazy
 from django.db.models import Count
 from django.db.models import Min
-from django.db.models import Sum
 from django.db.models import Q
+from django.db.models import Sum
 from django.db.models.functions import Coalesce
 from django.forms.models import model_to_dict
 from django.http import Http404
@@ -38,8 +38,8 @@ from django.views.defaults import bad_request
 
 from profile.models import EDIT_ROLES
 from profile.models import role_to_text
-from booking.models import Visit, VisitOccurrence, StudyMaterial, VisitAutosend, \
-    UserPerson
+from booking.models import Visit, VisitOccurrence, StudyMaterial, \
+    VisitAutosend, UserPerson
 from booking.models import KUEmailMessage
 from booking.models import Resource, Subject
 from booking.models import Unit
@@ -52,6 +52,7 @@ from booking.models import ResourceGymnasieFag, ResourceGrundskoleFag
 from booking.models import EmailTemplate
 from booking.models import log_action
 from booking.models import LOGACTION_CREATE, LOGACTION_CHANGE
+from booking.models import LokaleAnsvarlig
 from booking.models import EmailBookerEntry
 from booking.forms import ResourceInitialForm, OtherResourceForm, VisitForm, \
     GuestEmailComposeForm, StudentForADayBookingForm, OtherVisitForm, \
@@ -269,6 +270,7 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
     RECIPIENT_USER = 'user'
     RECIPIENT_USERPERSON = 'userperson'
     RECIPIENT_CUSTOM = 'custom'
+    RECIPIENT_LOKALEANSVARLIG = 'lokaleansvarlig'
     RECIPIENT_SEPARATOR = ':'
 
     def dispatch(self, request, *args, **kwargs):
@@ -367,6 +369,10 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
             recipient_type = EmailComposeView.RECIPIENT_USER
             id = recipient.username
             email = full_email(recipient.email, recipient.get_full_name())
+        elif isinstance(recipient, LokaleAnsvarlig):
+            recipient_type = EmailComposeView.RECIPIENT_LOKALEANSVARLIG
+            id = recipient.id
+            email = full_email(recipient.email, recipient.get_full_name())
         key = recipient_type + EmailComposeView.RECIPIENT_SEPARATOR + str(id)
         return key, email
 
@@ -392,6 +398,7 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
         person_ids = []
         user_ids = []
         userperson_ids = []
+        lokaleansvarlig_ids = []
         customs = []
         if type(recipient_ids) != list:
             recipient_ids = [recipient_ids]
@@ -415,10 +422,14 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
                 userperson_ids.append(id)
             elif recipient_type == EmailComposeView.RECIPIENT_CUSTOM:
                 customs.append(id)
+            elif recipient_type == EmailComposeView.RECIPIENT_LOKALEANSVARLIG:
+                lokaleansvarlig_ids.append(id)
+
         return list(Booker.objects.filter(id__in=booker_ids)) + \
             list(Person.objects.filter(id__in=person_ids)) + \
             list(User.objects.filter(username__in=user_ids)) + \
             list(UserPerson.objects.filter(id__in=userperson_ids)) + \
+            list(LokaleAnsvarlig.objects.filter(id__in=lokaleansvarlig_ids)) + \
             customs
 
     def get_unit(self):
@@ -651,10 +662,6 @@ class SearchView(ListView):
 
             qs = self.model.objects.search(searchexpression)
 
-            qs = qs.annotate(
-                num_bookings=Count('visit__visitoccurrence__bookings')
-            )
-
             date_cond = Q()
 
             t_from = self.get_date_from_request("from")
@@ -691,13 +698,25 @@ class SearchView(ListView):
                 # as well as the ones matching the date limit. We do this
                 # with the following OR condition:
                 qs = qs.filter(
-                    # Stuff that is not bookable
+                    # Stuff that is not bookable, eg. materials
                     Q(visit__isnull=True) |
                     # Anything without any specific booking times
-                    Q(visit__visitoccurrence__isnull=True) |
+                    Q(
+                        pk__in=Resource.objects.exclude(
+                            visit__visitoccurrence__bookable=True
+                        )
+                    ) |
                     # The actual date conditions
                     date_cond
                 )
+
+                # Simplify, since the above conditions are slow when
+                # used for making facets.
+                qs = Resource.objects.filter(pk__in=[x.pk for x in qs])
+
+            qs = qs.annotate(
+                num_bookings=Count('visit__visitoccurrence__bookings'),
+            )
 
             qs = qs.distinct()
 
@@ -918,7 +937,7 @@ class SearchView(ListView):
 
         context["audience_choices"] = self.make_facet(
             "audience",
-            self.model.audience_choices,
+            self.model.audience_choices_without_none,
             self.request.GET.getlist("a"),
             add_to_all=[Resource.AUDIENCE_ALL]
         )
@@ -935,7 +954,31 @@ class SearchView(ListView):
             self.model.resource_type_choices,
             self.request.GET.getlist("t"),
         )
-
+        context['hiddenrepeats'] = []
+        list = self.request.GET.getlist("i", None)
+        if list is not None:
+            for x in list:
+                context['hiddenrepeats'].append({'name': "i", 'value': x})
+        list = self.request.GET.getlist("a", None)
+        if list is not None:
+            for x in list:
+                context['hiddenrepeats'].append({'name': "a", 'value': x})
+        list = self.request.GET.getlist("t", None)
+        if list is not None:
+            for x in list:
+                context['hiddenrepeats'].append({'name': "t", 'value': x})
+        list = self.request.GET.getlist("f", None)
+        if list is not None:
+            for x in list:
+                context['hiddenrepeats'].append({'name': "f", 'value': x})
+        list = self.request.GET.getlist("from", None)
+        if list is not None:
+            for x in list:
+                context['hiddenrepeats'].append({'name': "from", 'value': x})
+        list = self.request.GET.getlist("to", None)
+        if list is not None:
+            for x in list:
+                context['hiddenrepeats'].append({'name': "to", 'value': x})
         gym_subject_choices = []
         gs_subject_choices = []
 
@@ -1477,19 +1520,13 @@ class EditVisitView(EditResourceView):
                     initial = [
                         {
                             'template_key': item,
-                            'active': True,
+                            'active': True
                         }
                         for item in EmailTemplate.default
                     ]
-
                 forms['autosendformset'] = VisitAutosendFormSet(
                     None, instance=self.object, initial=initial
                 )
-
-            if not self.object or not self.object.pk:
-                forms['form'].initial['room_contact'] = [
-                    UserPerson.find(self.request.user)
-                ]
 
         if self.request.method == 'POST':
             forms['autosendformset'] = VisitAutosendFormSet(
@@ -1746,6 +1783,44 @@ class EditVisitView(EditResourceView):
         return kwargs
 
 
+class SimpleRessourcesView(LoginRequiredMixin,
+                           RoleRequiredMixin,
+                           UpdateView):
+    roles = EDIT_ROLES
+    model = Visit
+    fields = ['potentielle_vaerter', 'potentielle_undervisere']
+    template_name = 'visit/simple_ressources.html'
+
+    def get_form(self, form_class=None):
+        form = super(SimpleRessourcesView, self).get_form(form_class)
+
+        if 'potentielle_vaerter' in form.fields:
+            qs = form.fields['potentielle_vaerter']._get_queryset()
+            form.fields['potentielle_vaerter']._set_queryset(
+                qs.filter(userprofile__unit=self.object.unit)
+            )
+            form.fields['potentielle_vaerter'].label_from_instance = \
+                lambda obj: "%s (%s) <%s>" % (
+                    obj.get_full_name(),
+                    obj.username,
+                    obj.email
+                )
+
+        if 'potentielle_undervisere' in form.fields:
+            qs = form.fields['potentielle_undervisere']._get_queryset()
+            form.fields['potentielle_undervisere']._set_queryset(
+                qs.filter(userprofile__unit=self.object.unit)
+            )
+            form.fields['potentielle_undervisere'].label_from_instance = \
+                lambda obj: "%s (%s) <%s>" % (
+                    obj.get_full_name(),
+                    obj.username,
+                    obj.email
+                )
+
+        return form
+
+
 class VisitDetailView(ResourceBookingDetailView):
     """Display Visit details"""
     model = Visit
@@ -1824,8 +1899,12 @@ class VisitInquireView(FormMixin, HasBackButtonMixin, ModalMixin,
             }
             context.update(form.cleaned_data)
             recipients = []
-            recipients.extend(self.object.contacts.all())
-            recipients.extend(self.object.unit.get_editors())
+            if self.object.tilbudsansvarlig:
+                recipients.append(self.object.tilbudsansvarlig)
+            elif self.object.created_by:
+                recipients.append(self.object.created_by)
+            else:
+                recipients.extend(self.object.unit.get_editors())
             KUEmailMessage.send_email(template, context, recipients,
                                       self.object)
             return super(VisitInquireView, self).form_valid(form)
@@ -1837,6 +1916,7 @@ class VisitInquireView(FormMixin, HasBackButtonMixin, ModalMixin,
     def get_context_data(self, **kwargs):
         context = {}
         context['modal'] = self.modal
+        context['object'] = self.object
         context.update(kwargs)
         return super(VisitInquireView, self).get_context_data(**context)
 
@@ -1871,7 +1951,6 @@ class VisitOccurrenceNotifyView(LoginRequiredMixin, ModalMixin,
     def get_context_data(self, **kwargs):
         visitoccurrence = self.object
         visit = visitoccurrence.visit
-        unit = visit.unit
         context = {}
         context['breadcrumbs'] = [
             {'url': reverse('search'), 'text': _(u'Søgning')},
@@ -1911,24 +1990,14 @@ class VisitOccurrenceNotifyView(LoginRequiredMixin, ModalMixin,
                     for booking in visitoccurrence.waiting_list
                     }
             },
-            'contacts': {
-                'label': _(u'Kontaktpersoner'),
-                'items': {
-                    "%s%s%d" % (self.RECIPIENT_USERPERSON,
-                                self.RECIPIENT_SEPARATOR,
-                                person.id):
-                                    person.get_full_email()
-                    for person in visit.contacts.all()
-                }
-            },
             'roomadmins': {
                 'label': _(u'Lokaleansvarlige'),
                 'items': {
-                    "%s%s%d" % (self.RECIPIENT_USERPERSON,
+                    "%s%s%d" % (self.RECIPIENT_LOKALEANSVARLIG,
                                 self.RECIPIENT_SEPARATOR,
                                 person.id):
                                     person.get_full_email()
-                    for person in visit.room_contact.all()
+                    for person in visit.lokaleansvarlige.all()
                 }
             },
             'assigned_hosts': {
@@ -1966,8 +2035,10 @@ class VisitOccurrenceNotifyView(LoginRequiredMixin, ModalMixin,
                                     full_email(
                                         user.email,
                                         user.get_full_name())
-                    for user in unit.get_hosts()
-                    if user.email is not None
+                    for user in visit.potentielle_vaerter.all()
+                    if user.email is not None and
+                    user not in visitoccurrence.hosts_rejected.all() and
+                    user not in visitoccurrence.hosts.all()
                 }
             },
             'potential_teachers': {
@@ -1979,8 +2050,10 @@ class VisitOccurrenceNotifyView(LoginRequiredMixin, ModalMixin,
                                     full_email(
                                         user.email,
                                         user.get_full_name())
-                    for user in unit.get_teachers()
-                    if user.email is not None
+                    for user in visit.potentielle_undervisere.all()
+                    if user.email is not None and
+                    user not in visitoccurrence.teachers_rejected.all() and
+                    user not in visitoccurrence.teachers.all()
                 }
             }
         }
@@ -2034,24 +2107,26 @@ class BookingNotifyView(LoginRequiredMixin, ModalMixin, EmailComposeView):
                         self.object.booker.get_full_email()
                     }
                 },
-                'contacts': {
-                    'label': _(u'Kontaktpersoner'),
+                'tilbudsansvarlig': {
+                    'label': _(u'Tilbudsansvarlig'),
                     'items': {
-                        "%s%s%d" % (self.RECIPIENT_USERPERSON,
+                        "%s%s%d" % (self.RECIPIENT_USER,
                                     self.RECIPIENT_SEPARATOR, person.id):
                                         person.get_full_email()
-                        for person in self.object.visit.contacts.all()
+                        for person in [
+                            self.object.visit.tilbudsansvarlig
+                        ] if person
                     }
                 },
                 'roomadmins': {
                     'label': _(u'Lokaleansvarlige'),
                     'items': {
-                        "%s%s%d" % (self.RECIPIENT_USERPERSON,
+                        "%s%s%d" % (self.RECIPIENT_USER,
                                     self.RECIPIENT_SEPARATOR,
                                     person.id):
                                         person.get_full_email()
-                        for person in self.object.visit.room_contact.all()
-                        }
+                        for person in self.object.visit.lokaleansvarlige.all()
+                    }
                 },
                 'hosts': {
                     'label': _(u'Værter'),
@@ -2336,8 +2411,9 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
             booking.autosend(EmailTemplate.NOTIFY_EDITORS__BOOKING_CREATED)
 
             if booking.visitoccurrence.needs_teachers:
-                booking.autosend(EmailTemplate.
-                                 NOTIFY_HOST__REQ_TEACHER_VOLUNTEER)
+                booking.autosend(
+                    EmailTemplate.NOTIFY_HOST__REQ_TEACHER_VOLUNTEER
+                )
 
             if booking.visitoccurrence.needs_hosts:
                 booking.autosend(EmailTemplate.NOTIFY_HOST__REQ_HOST_VOLUNTEER)
@@ -2857,6 +2933,18 @@ class VisitOccurrenceDetailView(LoginRequiredMixin, LoggedViewMixin,
             booking.id: booking.booker.attendee_count
             for booking in self.object.waiting_list
         }
+        context['teacher'] = False
+        teacher = self.request.GET.getlist('teacher', None)
+        if teacher is not None:
+            for item in teacher:
+                if item.lower() == 'true':
+                    context['teacher'] = True
+        context['host'] = False
+        host = self.request.GET.getlist('host', None)
+        if host is not None:
+            for item in host:
+                if item.lower() == 'true':
+                    context['host'] = True
 
         context.update(kwargs)
 
@@ -3253,7 +3341,7 @@ class EvaluationOverviewView(LoginRequiredMixin, ListView):
                     Q(visit__created_by=user) |
                     Q(teachers=user) |
                     Q(hosts=user) |
-                    Q(visit__contacts__user=user)
+                    Q(visit__tilbudsansvarlig=user)
                 )
         else:
             qs = self.model.objects.none()

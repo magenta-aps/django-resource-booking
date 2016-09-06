@@ -1,15 +1,21 @@
-{% load booking_tags %}
 <p>Kære {{ recipient.get_full_name }}.</p>
 
 <p>
-    {{ web_user.get_full_name }} ønsker at du tildeler et lokalte til besøget
-    "{{ visit.title }}" der afholdes d. {{ besoeg.start_datetime }}.
+    En eller flere gæster har tilmeldt sig besøg
+    <a href="{% full_url 'visit-view' visit.pk %}">{{ visit.title }}</a>{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date:'d.m.Y' }}
+    {% blocktrans with time=besoeg.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}{% endif %}.
+    Vil du sørge for at booke et lokale, hvor besøget kan afholdes?
 </p>
+
+<p>Detaljer for tilmeldte:</p>
+
+{% include 'booking/email/snippets/booking_list.html' %}
+
+{% include 'booking/email/snippets/reply_link.html' %}
+
 <p>
-    Du kan læse yderligere om besøget på adressen
-    <a href="{% full_url 'visit-view' visit.pk %}">{% full_url 'visit-view' visit.pk %}</a>
+    Venlig hilsen<br />
+    <br />
+    {{ visit.unit.name }}
 </p>
-<p>
-    Du kan kontakte {{ web_user.get_full_name }} via email på
-    <a href="mailto:{{ web_user.email }}">{{ web_user.email }}</a>
-</p>
+

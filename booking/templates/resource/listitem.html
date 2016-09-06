@@ -4,7 +4,7 @@
     <div class="media-body">
         <div class="small">{{ item.get_type_display }}</div>
         <h3 class="media-heading">
-            #{{ item.pk }} <a href="{{item.get_view_url}}{% if fullquery %}?search={{ fullquery | urlencode }}{% endif %}">{{ item.title }}</a>
+            <a href="{{item.get_view_url}}{% if fullquery %}?search={{ fullquery | urlencode }}{% endif %}">{{ item.title }}</a>
         </h3>
         <p>
             {% if request.GET.q %}
@@ -31,11 +31,11 @@
                         <strong>{% trans 'Hvornår:' %}</strong>
                         <span class="type-offer">
                             {% if item.num_occurences == 1 %}
-                                {% blocktrans with date=item.first_occurence|date:"d. m. Y" time=item.first_occurence|date:"H:i" %}
+                                {% blocktrans with date=item.first_occurence|date:"d.m.Y" time=item.first_occurence|time:"H.i" %}
                                     {{ date }} kl. {{ time }}
                                 {% endblocktrans %}
                             {% else %}
-                                {% blocktrans with count=item.num_occurences date=item.first_occurence|date:"d. m. Y" time=item.first_occurence|date:"H:i" %}
+                                {% blocktrans with count=item.num_occurences date=item.first_occurence|date:"d.m.Y" time=item.first_occurence|time:"H.i" %}
                                     {{ count }} mulige tidspunkter, første gang {{ date }} kl. {{ time }}
                                 {% endblocktrans %}
                             {% endif %}
@@ -47,12 +47,8 @@
                     <span class="type-offer">{{ item.display_locality }}</span>
                 </li>
                 <li>
-                    <strong>{% trans 'Oprettet: ' %}</strong>
-                    <span class="type-offer">{{ item.statistics.created_time }}</span>
-                </li>
-                <li>
-                    <strong>{% trans 'Opdateret: ' %}</strong>
-                    <span class="type-offer">{{ item.statistics.updated_time }}</span>
+                    <strong>{% trans 'Pris:' %}</strong>
+                    <span class="type-offer">{{ item.price }}</span>
                 </li>
             </ul>
         </div>

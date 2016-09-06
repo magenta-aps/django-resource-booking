@@ -1,0 +1,26 @@
+{% load i18n %}
+{% if form.lokaleansvarlige.label %}
+<div class="row form-group">
+    <div class="col-sm-2">
+        <label for="{{ form.lokaleansvarlige.id_for_label }}" class="control-label">{{ form.lokaleansvarlige.label }}:</label>
+    </div>
+    <div class="col-sm-7">
+        {% if form.lokaleansvarlige %}
+            {% trans 'Vælg lokaleansvarlige' %}
+            {{ form.lokaleansvarlige }}
+        {% else %}
+            <p>
+            {% trans 'Ingen lokaleansvarlige fundet for ' %}{{ form.current_unit }}
+            </p>
+        {% endif %}
+        <p>
+            <a href="{% url 'admin:booking_lokaleansvarlig_changelist' %}"
+               onclick="this.target='_blank';"
+            >{% trans 'Klik her for at redigere mulige lokaleansvarlige' %} <span class="glyphicon glyphicon-new-window" aria-hidden="true"></span></a>
+        </p>
+    </div>
+    <div class="col-sm-3 with-errors">
+        {{ form.lokaleansvarlige.errors }}
+    </div>
+</div>
+{% endif %}

@@ -66,6 +66,11 @@
                     
                     <div id="rruleInput" class="form">
                         <div class="form-group">
+                            <p><strong>{% trans 'Starter' %}:</strong></p>
+                            <label class="label-unstyled" for="input-start">{% trans 'På dato' %}</label>
+                            <input id="input-start" name="start" type="text" class="form-control" placeholder="{% trans 'Dato' %}">
+                        </div>
+                        <div class="form-group">
                             <div class="checkbox" id="input-weekdays">
                                 <p><strong>{% trans 'Gentages ugentligt på' %}:</strong></p>
                                 <label><input id="input-weekdays-mon" type="checkbox" name="RRule.MO"> {% trans 'Mandage' %}</label>

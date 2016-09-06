@@ -29,7 +29,9 @@ from booking.views import ChangeVisitOccurrenceCommentsView
 from booking.views import ChangeVisitOccurrenceAutosendView
 from booking.views import ResetVisitOccurrenceChangesView
 from booking.views import BecomeTeacherView
+from booking.views import DeclineTeacherView
 from booking.views import BecomeHostView
+from booking.views import DeclineHostView
 from booking.views import EmailReplyView
 from booking.views import VisitOccurrenceAddLogEntryView
 from booking.views import VisitOccurrenceAddCommentView
@@ -37,6 +39,8 @@ from booking.views import VisitOccurrenceDetailView
 from booking.views import VisitOccurrenceCustomListView
 from booking.views import CloneResourceView
 from booking.views import EvaluationOverviewView
+
+import booking.views
 
 from django.views.generic import TemplateView
 
@@ -106,6 +110,9 @@ urlpatterns = patterns(
         EditVisitView.as_view(),
         {'clone': True},
         name='visit-clone'),
+    url(r'^visit/(?P<pk>[0-9]+)/simple_ressources$',
+        booking.views.SimpleRessourcesView.as_view(),
+        name='visit-simple-ressources'),
     url(r'^visit/(?P<visit>[0-9]+)/book$',
         BookingView.as_view(),
         name='visit-book'),
@@ -167,9 +174,15 @@ urlpatterns = patterns(
     url(r'^visit/occurrence/(?P<pk>[0-9]+)/become_teacher/?$',
         BecomeTeacherView.as_view(),
         name='become-teacher'),
+    url(r'^visit/occurrence/(?P<pk>[0-9]+)/decline_teacher/?$',
+        DeclineTeacherView.as_view(),
+        name='decline-teacher'),
     url(r'^visit/occurrence/(?P<pk>[0-9]+)/become_host/?$',
         BecomeHostView.as_view(),
         name='become-host'),
+    url(r'^visit/occurrence/(?P<pk>[0-9]+)/decline_host/?$',
+        DeclineHostView.as_view(),
+        name='decline-host'),
     url(r'^visit/occurrence/(?P<pk>[0-9]+)/reset_changes_marker/?$',
         ResetVisitOccurrenceChangesView.as_view(),
         name='visit-occ-reset-changes-marker'),

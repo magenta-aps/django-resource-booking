@@ -129,6 +129,10 @@ $(function() {
         var val = $(this).val(),
             dropdown = $('#existingrooms')[0];
 
+        if (dropdown == undefined) {
+            return;
+        }
+
         while (dropdown.options[1]) {
             dropdown.options[1] = null;
         }
@@ -152,8 +156,13 @@ $(function() {
 });
 
 (function($) {
-    var item_template = $('#gymnasiefag-item-template').get(0).innerHTML,
+    var template_elem = $('#gymnasiefag-item-template'),
+        item_template = (template_elem.get(0)||{}).innerHTML,
         $fag_select = $('#gymnasiefag-fag');
+
+    if (!item_template || !$fag_select) {
+        return
+    }
 
     $fag_select.attr('data-reset-value', $fag_select.val())
 
@@ -237,12 +246,18 @@ $(function() {
 })(jQuery);
 
 (function($) {
-    var item_template = $('#grundskolefag-item-template').get(0).innerHTML,
+    var item_template = (
+            $('#grundskolefag-item-template').get(0) || {}
+        ).innerHTML,
         reset_elems = [
             $('#grundskolefag-fag'),
             $('#grundskolefag-minclass'),
             $('#grundskolefag-maxclass')
         ];
+
+    if (!item_template) {
+        return
+    }
     
     $.each(reset_elems, function() {
         $(this).attr('data-reset-value', $(this).val())

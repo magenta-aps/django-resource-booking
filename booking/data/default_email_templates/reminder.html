@@ -1,15 +1,57 @@
-{% load booking_tags %}
-<p>Kære {{ recipient.get_full_name }}.</p>
+{% if recipient.guest %}
+
+    {# Denne besked sendes til gæster #}
+
+    <p>Kære {{ recipient.get_full_name }}.</p>
+
+    <p>
+        Vi glæder os til at se dig til
+        <a href="{% full_url 'visit-view' visit.pk %}">{{ visit.title }}</a>{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date:'d.m.Y' }}{% blocktrans with time=besoeg.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}{% endif %}
+        på Københavns Universitet:
+        <a href="{% full_url 'visit-view' visit.pk %}#mapinfo">{{ visit.locality.full_address }}</a>.
+        Hvis du har spørgsmål vedrørende din tilmelding, kan du skrive til
+        {% include 'booking/email/snippets/contact_addresses.html' with visit=visit %}
+    </p>
+    <p>
+        Detaljer for din tilmelding:
+    </p>
+    <p>
+        {% include 'booking/email/snippets/booking_info.html' with booking=booking booker=booking.booker %}
+    </p>
+    <p>
+        Vi glæder os til at se dig!
+    </p>
+    <p>
+        <a href="{% full_url 'visit-view' visit.pk %}">Læs mere om tilbuddet her</a>.
+    </p>
+    <p>
+        På foKUs.ku.dk kan du se alle tilbud fra Københavns Universitet.
+    </p>
+
+{% else %}
+
+    {# Denne besked sendes til alle andre #}
+
+    <p>Kære {{ recipient.get_full_name }}.</p>
+
+    <p>
+        Dette er en påmindelse om at besøget
+        <a href="{% full_url 'visit-view' visit.pk %}">{{ visit.title }}</a>
+        afholdes{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date:'d.m.Y' }}
+        {% blocktrans with time=besoeg.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}{% endif %} på Københavns Universitet:
+        <a href="{% full_url 'visit-view' visit.pk %}#mapinfo">{{ visit.locality.full_address }}</a>.
+    </p>
+    <p>
+        Du kan læse yderligere om besøget på adressen
+        <a href="{% full_url 'visit-view' visit.pk %}">{% full_url 'visit-view' visit.pk %}</a>
+    </p>
+
+{% endif %}
+
+{% include 'booking/email/snippets/reply_link.html' %}
 
 <p>
-    Dette er en påmindelse om at besøget "{{ visit.title }}" vil blive
-    afholdt d. {{ besoeg.start_datetime }}.
-</p>
-<p>
-    Du kan læse yderligere om besøget på adressen
-    <a href="{% full_url 'visit-view' visit.pk %}">{% full_url 'visit-view' visit.pk %}</a>
-</p>
-<p>
-    Du kan svare på denne besked via følgende URL:<br />
-    <a href="{% full_url 'reply-to-email' reply_nonce %}">{% full_url 'reply-to-email' reply_nonce %}</a>
+    Venlig hilsen<br />
+    <br />
+    {{ visit.unit.name }}
 </p>

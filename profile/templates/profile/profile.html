@@ -29,7 +29,7 @@
             </p>
             <p>
                 <a href="{% url 'availability-edit' %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér mulige undervisningstidspunkter' %}</a>
-                <a href="{% url 'availability' request.user.userprofile.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Se dato-oversigt for undervisning' %}</a>
+                <a href="{% url 'availability' request.user.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Se dato-oversigt for undervisning' %}</a>
             </p>
             {% elif request.user.userprofile.is_host %}
             <p>
@@ -37,7 +37,7 @@
             </p>
             <p>
                 <a href="{% url 'availability-edit' %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér mulige tidspunkter' %}</a>
-                <a href="{% url 'availability' request.user.userprofile.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Se dato-oversigt for besøg' %}</a>
+                <a href="{% url 'availability' request.user.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Se dato-oversigt for besøg' %}</a>
             </p>
             {% endif %}
             <div class="divider"></div>
@@ -45,9 +45,9 @@
         <div class="col-sm-3">
             <div class="list-group admin-links">
                 {% if request.user.userprofile.can_create %}
-                    <a class="list-group-item" href="{% url 'visit-occ-search' %}" style="float: left">
-                        <h4 class="list-group-item-heading">{% trans 'Søg i besøg' %}</h4>
-                        <p class="list-group-item-text">{% trans 'Søg i besøg der ligger i systemet.' %}</p>
+                    <a class="list-group-item" href="{% url 'search' %}" style="float: left">
+                        <h4 class="list-group-item-heading">{% trans 'Søg i tilbud' %}</h4>
+                        <p class="list-group-item-text">{% trans 'Søg i tilbud der ligger i systemet.' %}</p>
                     </a>
                 {% endif %}
             </div>
@@ -55,9 +55,9 @@
         <div class="col-sm-3">
             <div class="list-group admin-links">
                 {% if request.user.userprofile.can_create %}
-                    <a class="list-group-item" href="{% url 'search' %}" style="float: left">
-                        <h4 class="list-group-item-heading">{% trans 'Søg i tilbud' %}</h4>
-                        <p class="list-group-item-text">{% trans 'Søg i tilbud der ligger i systemet.' %}</p>
+                    <a class="list-group-item" href="{% url 'visit-occ-search' %}" style="float: left">
+                        <h4 class="list-group-item-heading">{% trans 'Søg i besøg' %}</h4>
+                        <p class="list-group-item-text">{% trans 'Søg i besøg der ligger i systemet.' %}</p>
                     </a>
                 {% endif %}
             </div>
@@ -87,10 +87,16 @@
                             <span class="glyphicon glyphicon-question-sign pull-right" data-toggle="tooltip" data-placement="right" title="{% trans 'En lokalitet er en fysisk adresse, fx det sted hvor et besøg skal afholdes, her kan du redigere lokaliteter.' %}"></span>
                         </h4>
                     </a>
-                    <a class="list-group-item" href="{% url 'admin:booking_person_changelist' %}">
+                    <a class="list-group-item" href="{% url 'admin:booking_room_changelist' %}">
                         <h4 class="list-group-item-heading">
-                            {% trans 'Administrér kontaktpersoner' %}
-                            <span class="glyphicon glyphicon-question-sign pull-right" data-toggle="tooltip" data-placement="right" title="{% trans 'Kontaktpersoner er personer, der har ikke adgang til backend i dette bookingmodul. De kan udelukkende svare på henvendelser via e-mail fx fra en gæst, når de er blevet oprettet som kontaktpersoner ved oprettelsen af et tilbud.' %}"></span>
+                            {% trans 'Administrér lokaler' %}
+                            <span class="glyphicon glyphicon-question-sign pull-right" data-toggle="tooltip" data-placement="right" title="{% trans 'Et lokale er et fysisk lokale placeret på en lokalitet, her kan du redigere lokaler.' %}"></span>
+                        </h4>
+                    </a>
+                    <a class="list-group-item" href="{% url 'admin:booking_lokaleansvarlig_changelist' %}">
+                        <h4 class="list-group-item-heading">
+                            {% trans 'Administrér lokaleansvarlige' %}
+                            <span class="glyphicon glyphicon-question-sign pull-right" data-toggle="tooltip" data-placement="right" title="{% trans 'Lokaleansvarlige er personer eller mailbokse der kan kontaktes for booking af lokaler.' %}"></span>
                         </h4>
                     </a>
                     {% if request.user.userprofile.can_edit_units %}

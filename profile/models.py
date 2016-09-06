@@ -8,47 +8,18 @@ from django.db.models import Aggregate
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
+
 import booking.models
-from booking.models import Unit, Resource
+
+from booking.models import Unit, Resource, UserPerson
 from booking.utils import get_related_content_types
-import uuid
 
 # User roles
+from profile.constants import TEACHER, HOST, COORDINATOR, ADMINISTRATOR
+from profile.constants import FACULTY_EDITOR, NONE
+from profile.constants import EDIT_ROLES, user_role_choices, available_roles
 
-TEACHER = 0
-HOST = 1
-COORDINATOR = 2
-ADMINISTRATOR = 3
-FACULTY_EDITOR = 4
-NONE = 5
-
-EDIT_ROLES = set([
-    ADMINISTRATOR,
-    FACULTY_EDITOR,
-    COORDINATOR
-])
-
-user_role_choices = (
-    (TEACHER, _(u"Underviser")),
-    (HOST, _(u"Vært")),
-    (COORDINATOR, _(u"Koordinator")),
-    (ADMINISTRATOR, _(u"Administrator")),
-    (FACULTY_EDITOR, _(u"Fakultetsredaktør")),
-    (NONE, _(u"Ingen"))
-)
-
-# Which roles are available for editing?
-# E.g. a faculty editor can create, edit and delete coordinators but not admins
-available_roles = {
-    NONE: [],
-    TEACHER: [],
-    HOST: [],
-    COORDINATOR: [NONE, TEACHER, HOST],
-    FACULTY_EDITOR: [NONE, TEACHER, HOST, COORDINATOR],
-    ADMINISTRATOR: [
-        NONE, TEACHER, HOST, COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
-    ]
-}
+import uuid
 
 
 def get_none_role():
@@ -337,6 +308,14 @@ class UserProfile(models.Model):
     @property
     def available_roles(self):
         return available_roles[self.get_role()]
+
+    def save(self, *args, **kwargs):
+        result = super(UserProfile, self).save(*args, **kwargs)
+
+        if self.user and not self.user.userperson_set.exists():
+            UserPerson.create(self.user)
+
+        return result
 
 
 class EmailLoginEntry(models.Model):

@@ -39,11 +39,11 @@
                         <label class="col-sm-2 control-label" for="{{ form.subject.id_for_label }}">{% trans "Fag/Niveau (Gymnasium)" %}</label>
                         <div class="col-sm-4">
                             {{ form.subject }}
-                            {% if grundskolefag_selected or gymnasiefag_selected %}
+                            {% if grundskolefag_available or gymnasiefag_available %}
                                 <p><strong>Bemærk: </strong>Dette tilbud er tiltænkt følgende klasseniveauer:</p>
-                                {% if grundskolefag_selected %}
+                                {% if grundskolefag_available %}
                                     <ul id="grundskolefag-list">
-                                    {% for fag in grundskolefag_selected %}
+                                    {% for fag in grundskolefag_available %}
                                         <li>
                                             <span class="fag-description">{{ fag.description }} (Grundskole)</span>
                                         </li>
@@ -51,9 +51,9 @@
                                     </ul>
 
                                 {% endif %}
-                                {% if gymnasiefag_selected %}
+                                {% if gymnasiefag_available %}
                                     <ul id="gymnasiefag-list">
-                                    {% for fag in gymnasiefag_selected %}
+                                    {% for fag in gymnasiefag_available %}
                                         <li>
                                             <span class="fag-description">{{ fag.description }} (Gymnasie)</span>
                                         </li>
