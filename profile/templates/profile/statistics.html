@@ -18,7 +18,7 @@
 <form action="{% url 'statistics' %}" method="get">
     <div class="divider"></div>
     <div class="form-group">
-        {{ form.units.errors }}
+        {{ form.organizationalunits.errors }}
         <label class="control-label" for="{{ form.organizationalunit.id_units}}">{% trans 'Enheder:' %}</label>
         {{ form.units }}
     </div>
