@@ -338,9 +338,8 @@ class StudyMaterial(models.Model):
     url = models.URLField(null=True, blank=True)
     file = models.FileField(upload_to='material', null=True,
                             blank=True, storage=CustomStorage())
-    resource = models.ForeignKey('Resource', null=True,
-                                 on_delete=models.CASCADE,
-                                 )
+    product = models.ForeignKey('Product', null=True,
+                                on_delete=models.CASCADE,)
 
     def __unicode__(self):
         s = u"{0}: {1}".format(
@@ -784,428 +783,7 @@ class ObjectStatistics(models.Model):
         self.save()
 
 
-# Bookable resources
-class Resource(models.Model):
-    """Abstract superclass for a bookable resource of any kind."""
-
-    # Resource type.
-    STUDENT_FOR_A_DAY = 0
-    GROUP_VISIT = 1
-    _UNUSED = 2
-    STUDY_PROJECT = 3
-    OTHER_OFFERS = 4
-    STUDY_MATERIAL = 5
-    TEACHER_EVENT = 6
-    OPEN_HOUSE = 7
-    ASSIGNMENT_HELP = 8
-    STUDIEPRAKTIK = 9
-
-    resource_type_choices = (
-        (STUDENT_FOR_A_DAY, _(u"Studerende for en dag")),
-        (STUDIEPRAKTIK, _(u"Studiepraktik")),
-        (OPEN_HOUSE, _(u"Åbent hus")),
-        (TEACHER_EVENT, _(u"Lærerarrangement")),
-        (GROUP_VISIT, _(u"Besøg med klassen")),
-        (STUDY_PROJECT, _(u"Studieretningsprojekt")),
-        (ASSIGNMENT_HELP, _(u"Lektiehjælp")),
-        (OTHER_OFFERS,  _(u"Andre tilbud")),
-        (STUDY_MATERIAL, _(u"Undervisningsmateriale"))
-    )
-
-    # Target audience choice - student or teacher.
-    AUDIENCE_TEACHER = 2**0
-    AUDIENCE_STUDENT = 2**1
-    AUDIENCE_ALL = AUDIENCE_TEACHER | AUDIENCE_STUDENT
-
-    audience_choices = (
-        (None, "---------"),
-        (AUDIENCE_TEACHER, _(u'Lærer')),
-        (AUDIENCE_STUDENT, _(u'Elev')),
-        (AUDIENCE_ALL, _(u'Alle'))
-    )
-
-    audience_choices_without_none = [
-        x for x in audience_choices if x[0] is not None
-    ]
-
-    # Institution choice - primary or secondary school.
-    PRIMARY = 0
-    SECONDARY = 1
-
-    institution_choices = Subject.type_choices
-
-    # Level choices - A, B or C
-    A = 0
-    B = 1
-    C = 2
-
-    level_choices = (
-        (A, u'A'), (B, u'B'), (C, u'C')
-    )
-
-    # Resource state - created, active and discontinued.
-    CREATED = 0
-    ACTIVE = 1
-    DISCONTINUED = 2
-
-    state_choices = (
-        BLANK_OPTION,
-        (CREATED, _(u"Under udarbejdelse")),
-        (ACTIVE, _(u"Offentlig")),
-        (DISCONTINUED, _(u"Skjult"))
-    )
-
-    class_level_choices = [(i, unicode(i)) for i in range(0, 11)]
-
-    type = models.IntegerField(choices=resource_type_choices,
-                               default=STUDY_MATERIAL)
-    state = models.IntegerField(choices=state_choices,
-                                verbose_name=_(u"Status"), blank=False)
-    title = models.CharField(
-        max_length=60,
-        blank=False,
-        verbose_name=_(u'Titel')
-    )
-    teaser = models.TextField(
-        max_length=210,
-        blank=False,
-        verbose_name=_(u'Teaser')
-    )
-    description = models.TextField(
-        blank=False,
-        verbose_name=_(u'Beskrivelse')
-    )
-    mouseover_description = models.CharField(
-        max_length=512, blank=True, verbose_name=_(u'Mouseover-tekst')
-    )
-    organizationalunit = models.ForeignKey(
-        OrganizationalUnit,
-        null=True,
-        blank=False,
-        verbose_name=_('Enhed')
-    )
-    links = models.ManyToManyField(Link, blank=True, verbose_name=_('Links'))
-    audience = models.IntegerField(choices=audience_choices,
-                                   verbose_name=_(u'Målgruppe'),
-                                   default=None,
-                                   blank=False,
-                                   null=False)
-
-    institution_level = models.IntegerField(choices=institution_choices,
-                                            verbose_name=_(u'Institution'),
-                                            default=SECONDARY,
-                                            blank=False)
-
-    locality = models.ForeignKey(
-        Locality,
-        verbose_name=_(u'Lokalitet'),
-        blank=True,
-        null=True
-    )
-
-    rooms = models.ManyToManyField(
-        'Room',
-        verbose_name=_(u'Lokaler'),
-        blank=True
-    )
-
-    recurrences = RecurrenceField(
-        null=True,
-        blank=True,
-        verbose_name=_(u'Gentagelser')
-    )
-
-    tilbudsansvarlig = models.ForeignKey(
-        User,
-        verbose_name=_(u'Tilbudsansvarlig'),
-        related_name='tilbudsansvarlig_for_set',
-        blank=True,
-        null=True
-    )
-
-    roomresponsible = models.ManyToManyField(
-        RoomResponsible,
-        verbose_name=_(u'Lokaleansvarlige'),
-        related_name='ansvarlig_for_besoeg_set',
-        blank=True,
-    )
-
-    potentielle_undervisere = models.ManyToManyField(
-        User,
-        verbose_name=_(u'Potentielle undervisere'),
-        related_name='potentiel_underviser_for_set',
-        blank=True,
-        limit_choices_to={
-            'userprofile__user_role__role': TEACHER
-        },
-    )
-
-    potentielle_vaerter = models.ManyToManyField(
-        User,
-        verbose_name=_(u'Potentielle værter'),
-        related_name='potentiel_vaert_for_set',
-        blank=True,
-        limit_choices_to={
-            'userprofile__user_role__role': HOST
-        },
-    )
-
-    preparation_time = models.CharField(
-        max_length=200,
-        null=True,
-        blank=True,
-        verbose_name=_(u'Forberedelsestid')
-    )
-
-    price = models.DecimalField(
-        default=0,
-        null=True,
-        blank=True,
-        max_digits=10,
-        decimal_places=2,
-        verbose_name=_(u'Pris')
-    )
-
-    gymnasiefag = models.ManyToManyField(
-        Subject, blank=True,
-        verbose_name=_(u'Gymnasiefag'),
-        through='ResourceGymnasieFag',
-        related_name='gymnasie_resources'
-    )
-
-    grundskolefag = models.ManyToManyField(
-        Subject, blank=True,
-        verbose_name=_(u'Grundskolefag'),
-        through='ResourceGrundskoleFag',
-        related_name='grundskole_resources'
-    )
-
-    tags = models.ManyToManyField(Tag, blank=True, verbose_name=_(u'Tags'))
-    topics = models.ManyToManyField(
-        Topic, blank=True, verbose_name=_(u'Emner')
-    )
-
-    # Comment field for internal use in backend.
-    comment = models.TextField(blank=True, verbose_name=_(u'Kommentar'))
-
-    created_by = models.ForeignKey(
-        User,
-        blank=True,
-        null=True,
-        verbose_name=_(u"Oprettet af"),
-        related_name='created_visits_set',
-        on_delete=models.SET_NULL
-    )
-
-    # ts_vector field for fulltext search
-    search_index = VectorField()
-
-    # Field for concatenating search data from relations
-    extra_search_text = models.TextField(
-        blank=True,
-        default='',
-        verbose_name=_(u'Tekst-værdier til fritekstsøgning'),
-        editable=False
-    )
-
-    objects = SearchManager(
-        fields=(
-            'title',
-            'teaser',
-            'description',
-            'mouseover_description',
-            'extra_search_text'
-        ),
-        config='pg_catalog.danish',
-        auto_update_search_field=True
-    )
-
-    statistics = models.ForeignKey(
-        ObjectStatistics,
-        null=True
-    )
-
-    def __unicode__(self):
-        return self.title + "(%s)" % str(self.id)
-
-    # This is used from booking.signals.update_search_indexes
-    def update_searchindex(self):
-        if not self.pk:
-            return False
-
-        old_value = self.extra_search_text or ""
-        new_value = self.generate_extra_search_text() or ""
-
-        if old_value != new_value:
-            self.extra_search_text = new_value
-            self.save()
-            return True
-        else:
-            return False
-
-    def generate_extra_search_text(self):
-        texts = []
-
-        # Display-value for type
-        texts.append(self.get_type_display() or "")
-
-        # Unit name
-        if self.organizationalunit:
-            texts.append(self.organizationalunit.name)
-
-            # Unit's parent name
-            if self.organizationalunit.parent:
-                texts.append(self.organizationalunit.parent.name)
-
-        # Url, name and description of all links
-        for l in self.links.all():
-            if l.url:
-                texts.append(l.url)
-            if l.name:
-                texts.append(l.name)
-            if l.description:
-                texts.append(l.description)
-
-        # Display-value for audience
-        texts.append(self.get_audience_display() or "")
-
-        # Display-value for institution_level
-        texts.append(self.get_institution_level_display() or "")
-
-        # All subjects
-        for x in self.all_subjects():
-            texts.append(x.display_value())
-
-        # Name of all tags
-        for t in self.tags.all():
-            texts.append(t.name)
-
-        # Name of all topocs
-        for t in self.topics.all():
-            texts.append(t.name)
-
-        return "\n".join(texts)
-
-    def as_searchtext(self):
-        return " ".join([unicode(x) for x in [
-            self.pk,
-            self.title,
-            self.teaser,
-            self.description,
-            self.mouseover_description,
-            self.extra_search_text
-        ] if x])
-
-    def get_dates_display(self):
-        if self.product:
-            return self.product.get_dates_display()
-
-        return "-"
-
-    def all_subjects(self):
-        return (
-            [x for x in self.resourcegymnasiefag_set.all()] +
-            [x for x in self.resourcegrundskolefag_set.all()]
-        )
-
-    def display_locality(self):
-        try:
-            return self.product.locality
-        except Product.DoesNotExist:
-            pass
-        return "-"
-
-    def get_absolute_url(self):
-        return reverse('resource-view', args=[self.pk])
-
-    def get_url(self):
-        return settings.PUBLIC_URL + self.get_absolute_url()
-
-    def url(self):
-        return self.get_url()
-
-    def get_visits(self):
-        if not hasattr(self, "product") or not self.product:
-            return Visit.objects.none()
-        else:
-            return self.product.visit_set.all()
-
-    def first_visit(self):
-        return self.get_visits().first()
-
-    def get_state_class(self):
-        if self.state == self.CREATED:
-            return 'info'
-        elif self.state == self.ACTIVE:
-            return 'primary'
-        else:
-            return 'default'
-
-    def get_recipients(self, template_key):
-        recipients = self.organizationalunit.get_recipients(template_key)
-
-        if template_key in EmailTemplate.potential_hosts_keys:
-            recipients.extend(self.potentielle_vaerter.all())
-
-        if template_key in EmailTemplate.potential_teachers_keys:
-            recipients.extend(self.potentielle_undervisere.all())
-
-        if template_key in EmailTemplate.contact_person_keys:
-            contacts = []
-            if self.tilbudsansvarlig:
-                contacts.append(self.tilbudsansvarlig)
-            elif self.created_by:
-                contacts.append(self.created_by)
-            recipients.extend(contacts)
-
-        return recipients
-
-    def get_view_url(self):
-        if hasattr(self, 'product') and self.product:
-            return reverse('product-view', args=[self.product.pk])
-        return reverse('resource-view', args=[self.pk])
-
-    def add_room_by_name(self, name):
-        room = Room.objects.filter(
-            name=name,
-            locality=self.locality
-        ).first()
-
-        if room is None:
-            room = Room(
-                name=name,
-                locality=self.locality
-            )
-            room.save()
-
-        self.rooms.add(room)
-
-        return room
-
-    @staticmethod
-    def get_latest_created():
-        return Resource.objects.filter(statistics__isnull=False).\
-            order_by('-statistics__created_time')
-
-    @staticmethod
-    def get_latest_updated():
-        return Resource.objects.filter(statistics__isnull=False).\
-            order_by('-statistics__updated_time')
-
-    @staticmethod
-    def get_latest_displayed():
-        return Resource.objects.filter(statistics__isnull=False).\
-            order_by('-statistics__visited_time')
-
-    def ensure_statistics(self):
-        if self.statistics is None:
-            statistics = ObjectStatistics()
-            statistics.save()
-            self.statistics = statistics
-            self.save()
-
-
-class ResourceGymnasieFag(models.Model):
+class ProductGymnasieFag(models.Model):
     class Meta:
         verbose_name = _(u"gymnasiefagtilknytning")
         verbose_name_plural = _(u"gymnasiefagtilknytninger")
@@ -1213,7 +791,7 @@ class ResourceGymnasieFag(models.Model):
 
     class_level_choices = [(i, unicode(i)) for i in range(0, 11)]
 
-    resource = models.ForeignKey(Resource, blank=False, null=False)
+    product = models.ForeignKey("Product", blank=False, null=False)
     subject = models.ForeignKey(
         Subject, blank=False, null=False,
         limit_choices_to={
@@ -1227,8 +805,8 @@ class ResourceGymnasieFag(models.Model):
     level = models.ManyToManyField('GymnasieLevel')
 
     @classmethod
-    def create_from_submitvalue(cls, resource, value):
-        f = ResourceGymnasieFag(resource=resource)
+    def create_from_submitvalue(cls, product, value):
+        f = ProductGymnasieFag(product=product)
 
         values = value.split(",")
 
@@ -1245,7 +823,7 @@ class ResourceGymnasieFag(models.Model):
         return f
 
     def __unicode__(self):
-        return u"%s (for '%s')" % (self.display_value(), self.resource.title)
+        return u"%s (for '%s')" % (self.display_value(), self.product.title)
 
     def ordered_levels(self):
         return [x for x in self.level.all().order_by('level')]
@@ -1271,7 +849,7 @@ class ResourceGymnasieFag(models.Model):
             return unicode(subject.name)
 
     def display_value(self):
-        return ResourceGymnasieFag.display(
+        return ProductGymnasieFag.display(
             self.subject, self.ordered_levels()
         )
 
@@ -1285,7 +863,7 @@ class ResourceGymnasieFag(models.Model):
         return res
 
 
-class ResourceGrundskoleFag(models.Model):
+class ProductGrundskoleFag(models.Model):
     class Meta:
         verbose_name = _(u"grundskolefagtilknytning")
         verbose_name_plural = _(u"grundskolefagtilknytninger")
@@ -1293,7 +871,7 @@ class ResourceGrundskoleFag(models.Model):
 
     class_level_choices = [(i, unicode(i)) for i in range(0, 11)]
 
-    resource = models.ForeignKey(Resource, blank=False, null=False)
+    product = models.ForeignKey("Product", blank=False, null=False)
     subject = models.ForeignKey(
         Subject, blank=False, null=False,
         limit_choices_to={
@@ -1313,8 +891,8 @@ class ResourceGrundskoleFag(models.Model):
                                           verbose_name=_(u'Klassetrin til'))
 
     @classmethod
-    def create_from_submitvalue(cls, resource, value):
-        f = ResourceGrundskoleFag(resource=resource)
+    def create_from_submitvalue(cls, product, value):
+        f = ProductGrundskoleFag(product=product)
 
         values = value.split(",")
 
@@ -1329,7 +907,7 @@ class ResourceGrundskoleFag(models.Model):
         return f
 
     def __unicode__(self):
-        return u"%s (for '%s')" % (self.display_value(), self.resource.title)
+        return u"%s (for '%s')" % (self.display_value(), self.product.title)
 
     @classmethod
     def display(cls, subject, clevel_min, clevel_max):
@@ -1351,7 +929,7 @@ class ResourceGrundskoleFag(models.Model):
             return unicode(subject.name)
 
     def display_value(self):
-        return ResourceGrundskoleFag.display(
+        return ProductGrundskoleFag.display(
             self.subject, self.class_level_min, self.class_level_max
         )
 
@@ -1448,12 +1026,237 @@ class GrundskoleLevel(models.Model):
         return self.get_level_display()
 
 
-class Product(Resource):
+class Product(models.Model):
     """A bookable Product of any kind."""
 
     class Meta:
         verbose_name = _("tilbud")
         verbose_name_plural = _("tilbud")
+
+    # Product type.
+    STUDENT_FOR_A_DAY = 0
+    GROUP_VISIT = 1
+    _UNUSED = 2
+    STUDY_PROJECT = 3
+    OTHER_OFFERS = 4
+    STUDY_MATERIAL = 5
+    TEACHER_EVENT = 6
+    OPEN_HOUSE = 7
+    ASSIGNMENT_HELP = 8
+    STUDIEPRAKTIK = 9
+
+    resource_type_choices = (
+        (STUDENT_FOR_A_DAY, _(u"Studerende for en dag")),
+        (STUDIEPRAKTIK, _(u"Studiepraktik")),
+        (OPEN_HOUSE, _(u"Åbent hus")),
+        (TEACHER_EVENT, _(u"Lærerarrangement")),
+        (GROUP_VISIT, _(u"Besøg med klassen")),
+        (STUDY_PROJECT, _(u"Studieretningsprojekt")),
+        (ASSIGNMENT_HELP, _(u"Lektiehjælp")),
+        (OTHER_OFFERS,  _(u"Andre tilbud")),
+        (STUDY_MATERIAL, _(u"Undervisningsmateriale"))
+    )
+
+    # Target audience choice - student or teacher.
+    AUDIENCE_TEACHER = 2**0
+    AUDIENCE_STUDENT = 2**1
+    AUDIENCE_ALL = AUDIENCE_TEACHER | AUDIENCE_STUDENT
+
+    audience_choices = (
+        (None, "---------"),
+        (AUDIENCE_TEACHER, _(u'Lærer')),
+        (AUDIENCE_STUDENT, _(u'Elev')),
+        (AUDIENCE_ALL, _(u'Alle'))
+    )
+
+    audience_choices_without_none = [
+        x for x in audience_choices if x[0] is not None
+    ]
+
+    # Institution choice - primary or secondary school.
+    PRIMARY = 0
+    SECONDARY = 1
+
+    institution_choices = Subject.type_choices
+
+    # Level choices - A, B or C
+    A = 0
+    B = 1
+    C = 2
+
+    level_choices = (
+        (A, u'A'), (B, u'B'), (C, u'C')
+    )
+
+    # Product state - created, active and discontinued.
+    CREATED = 0
+    ACTIVE = 1
+    DISCONTINUED = 2
+
+    state_choices = (
+        BLANK_OPTION,
+        (CREATED, _(u"Under udarbejdelse")),
+        (ACTIVE, _(u"Offentlig")),
+        (DISCONTINUED, _(u"Skjult"))
+    )
+
+    class_level_choices = [(i, unicode(i)) for i in range(0, 11)]
+
+    type = models.IntegerField(choices=resource_type_choices,
+                               default=STUDY_MATERIAL)
+    state = models.IntegerField(choices=state_choices,
+                                verbose_name=_(u"Status"), blank=False)
+    title = models.CharField(
+        max_length=60,
+        blank=False,
+        verbose_name=_(u'Titel')
+    )
+    teaser = models.TextField(
+        max_length=210,
+        blank=False,
+        verbose_name=_(u'Teaser')
+    )
+    description = models.TextField(
+        blank=False,
+        verbose_name=_(u'Beskrivelse')
+    )
+    mouseover_description = models.CharField(
+        max_length=512, blank=True, verbose_name=_(u'Mouseover-tekst')
+    )
+    organizationalunit = models.ForeignKey(
+        OrganizationalUnit,
+        null=True,
+        blank=False,
+        verbose_name=_('Enhed')
+    )
+    links = models.ManyToManyField(Link, blank=True, verbose_name=_('Links'))
+    audience = models.IntegerField(choices=audience_choices,
+                                   verbose_name=_(u'Målgruppe'),
+                                   default=None,
+                                   blank=False,
+                                   null=True)
+
+    institution_level = models.IntegerField(choices=institution_choices,
+                                            verbose_name=_(u'Institution'),
+                                            default=SECONDARY,
+                                            blank=False)
+
+    locality = models.ForeignKey(
+        Locality,
+        verbose_name=_(u'Lokalitet'),
+        blank=True,
+        null=True
+    )
+
+    rooms = models.ManyToManyField(
+        'Room',
+        verbose_name=_(u'Lokaler'),
+        blank=True
+    )
+
+    recurrences = RecurrenceField(
+        null=True,
+        blank=True,
+        verbose_name=_(u'Gentagelser')
+    )
+
+    tilbudsansvarlig = models.ForeignKey(
+        User,
+        verbose_name=_(u'Tilbudsansvarlig'),
+        related_name='tilbudsansvarlig_for_set',
+        blank=True,
+        null=True
+    )
+
+    roomresponsible = models.ManyToManyField(
+        RoomResponsible,
+        verbose_name=_(u'Lokaleansvarlige'),
+        related_name='ansvarlig_for_besoeg_set',
+        blank=True,
+    )
+
+    potentielle_undervisere = models.ManyToManyField(
+        User,
+        verbose_name=_(u'Potentielle undervisere'),
+        related_name='potentiel_underviser_for_set',
+        blank=True,
+        limit_choices_to={
+            'userprofile__user_role__role': TEACHER
+        },
+    )
+
+    potentielle_vaerter = models.ManyToManyField(
+        User,
+        verbose_name=_(u'Potentielle værter'),
+        related_name='potentiel_vaert_for_set',
+        blank=True,
+        limit_choices_to={
+            'userprofile__user_role__role': HOST
+        },
+    )
+
+    preparation_time = models.CharField(
+        max_length=200,
+        null=True,
+        blank=True,
+        verbose_name=_(u'Forberedelsestid')
+    )
+
+    price = models.DecimalField(
+        default=0,
+        null=True,
+        blank=True,
+        max_digits=10,
+        decimal_places=2,
+        verbose_name=_(u'Pris')
+    )
+
+    gymnasiefag = models.ManyToManyField(
+        Subject, blank=True,
+        verbose_name=_(u'Gymnasiefag'),
+        through='ProductGymnasieFag',
+        related_name='gymnasie_resources'
+    )
+
+    grundskolefag = models.ManyToManyField(
+        Subject, blank=True,
+        verbose_name=_(u'Grundskolefag'),
+        through='ProductGrundskoleFag',
+        related_name='grundskole_resources'
+    )
+
+    tags = models.ManyToManyField(Tag, blank=True, verbose_name=_(u'Tags'))
+    topics = models.ManyToManyField(
+        Topic, blank=True, verbose_name=_(u'Emner')
+    )
+
+    # Comment field for internal use in backend.
+    comment = models.TextField(blank=True, verbose_name=_(u'Kommentar'))
+
+    created_by = models.ForeignKey(
+        User,
+        blank=True,
+        null=True,
+        verbose_name=_(u"Oprettet af"),
+        related_name='created_visits_set',
+        on_delete=models.SET_NULL
+    )
+
+    # ts_vector field for fulltext search
+    search_index = VectorField()
+
+    # Field for concatenating search data from relations
+    extra_search_text = models.TextField(
+        blank=True,
+        default='',
+        verbose_name=_(u'Tekst-værdier til fritekstsøgning'),
+        editable=False
+    )
+
+    statistics = models.ForeignKey(
+        ObjectStatistics,
+        null=True
+    )
 
     objects = SearchManager(
         fields=(
@@ -1468,21 +1271,21 @@ class Product(Resource):
     )
 
     applicable_types = [
-        Resource.STUDENT_FOR_A_DAY, Resource.GROUP_VISIT,
-        Resource.TEACHER_EVENT, Resource.OTHER_OFFERS, Resource.STUDY_MATERIAL,
-        Resource.OPEN_HOUSE, Resource.ASSIGNMENT_HELP, Resource.STUDIEPRAKTIK,
-        Resource.STUDY_PROJECT
+        STUDENT_FOR_A_DAY, GROUP_VISIT,
+        TEACHER_EVENT, OTHER_OFFERS, STUDY_MATERIAL,
+        OPEN_HOUSE, ASSIGNMENT_HELP, STUDIEPRAKTIK,
+        STUDY_PROJECT
     ]
 
     bookable_types = [
-        Resource.STUDENT_FOR_A_DAY, Resource.GROUP_VISIT,
-        Resource.TEACHER_EVENT, Resource.STUDY_PROJECT
+        STUDENT_FOR_A_DAY, GROUP_VISIT,
+        TEACHER_EVENT, STUDY_PROJECT
     ]
 
     @ClassProperty
     def type_choices(self):
         return (x for x in
-                Resource.resource_type_choices
+                Product.resource_type_choices
                 if x[0] in Product.applicable_types)
 
     rooms_needed = models.BooleanField(
@@ -1682,6 +1485,168 @@ class Product(Resource):
     def autosend_enabled(self, template_key):
         return self.get_autosend(template_key) is not None
 
+    # This is used from booking.signals.update_search_indexes
+    def update_searchindex(self):
+        if not self.pk:
+            return False
+
+        old_value = self.extra_search_text or ""
+        new_value = self.generate_extra_search_text() or ""
+
+        if old_value != new_value:
+            self.extra_search_text = new_value
+            self.save()
+            return True
+        else:
+            return False
+
+    def generate_extra_search_text(self):
+        texts = []
+
+        # Display-value for type
+        texts.append(self.get_type_display() or "")
+
+        # Unit name
+        if self.organizationalunit:
+            texts.append(self.organizationalunit.name)
+
+            # Unit's parent name
+            if self.organizationalunit.parent:
+                texts.append(self.organizationalunit.parent.name)
+
+        # Url, name and description of all links
+        for l in self.links.all():
+            if l.url:
+                texts.append(l.url)
+            if l.name:
+                texts.append(l.name)
+            if l.description:
+                texts.append(l.description)
+
+        # Display-value for audience
+        texts.append(self.get_audience_display() or "")
+
+        # Display-value for institution_level
+        texts.append(self.get_institution_level_display() or "")
+
+        # All subjects
+        for x in self.all_subjects():
+            texts.append(x.display_value())
+
+        # Name of all tags
+        for t in self.tags.all():
+            texts.append(t.name)
+
+        # Name of all topocs
+        for t in self.topics.all():
+            texts.append(t.name)
+
+        return "\n".join(texts)
+
+    def as_searchtext(self):
+        return " ".join([unicode(x) for x in [
+            self.pk,
+            self.title,
+            self.teaser,
+            self.description,
+            self.mouseover_description,
+            self.extra_search_text
+        ] if x])
+
+    def all_subjects(self):
+        return (
+            [x for x in self.productgymnasiefag_set.all()] +
+            [x for x in self.productgrundskolefag_set.all()]
+        )
+
+    def display_locality(self):
+        try:
+            return self.locality
+        except Product.DoesNotExist:
+            pass
+        return "-"
+
+    def get_url(self):
+        return settings.PUBLIC_URL + self.get_absolute_url()
+
+    def url(self):
+        return self.get_url()
+
+    def get_visits(self):
+        return self.visit_set.all()
+
+    def first_visit(self):
+        return self.get_visits().first()
+
+    def get_state_class(self):
+        if self.state == self.CREATED:
+            return 'info'
+        elif self.state == self.ACTIVE:
+            return 'primary'
+        else:
+            return 'default'
+
+    def get_recipients(self, template_key):
+        recipients = self.organizationalunit.get_recipients(template_key)
+
+        if template_key in EmailTemplate.potential_hosts_keys:
+            recipients.extend(self.potentielle_vaerter.all())
+
+        if template_key in EmailTemplate.potential_teachers_keys:
+            recipients.extend(self.potentielle_undervisere.all())
+
+        if template_key in EmailTemplate.contact_person_keys:
+            contacts = []
+            if self.tilbudsansvarlig:
+                contacts.append(self.tilbudsansvarlig)
+            elif self.created_by:
+                contacts.append(self.created_by)
+            recipients.extend(contacts)
+
+        return recipients
+
+    def get_view_url(self):
+        return reverse('product-view', args=[self.pk])
+
+    def add_room_by_name(self, name):
+        room = Room.objects.filter(
+            name=name,
+            locality=self.locality
+        ).first()
+
+        if room is None:
+            room = Room(
+                name=name,
+                locality=self.locality
+            )
+            room.save()
+
+        self.rooms.add(room)
+
+        return room
+
+    @staticmethod
+    def get_latest_created():
+        return Product.objects.filter(statistics__isnull=False).\
+            order_by('-statistics__created_time')
+
+    @staticmethod
+    def get_latest_updated():
+        return Product.objects.filter(statistics__isnull=False).\
+            order_by('-statistics__updated_time')
+
+    @staticmethod
+    def get_latest_displayed():
+        return Product.objects.filter(statistics__isnull=False).\
+            order_by('-statistics__visited_time')
+
+    def ensure_statistics(self):
+        if self.statistics is None:
+            statistics = ObjectStatistics()
+            statistics.save()
+            self.statistics = statistics
+            self.save()
+
     @property
     def is_type_bookable(self):
         return self.type in self.bookable_types
@@ -1709,13 +1674,13 @@ class Product(Resource):
     @property
     def is_bookable(self):
         return self.is_type_bookable and \
-            self.state == Resource.ACTIVE and \
+            self.state == Product.ACTIVE and \
             self.has_bookable_visits
 
     @property
     def can_join_waitinglist(self):
         return self.is_type_bookable and \
-            self.state == Resource.ACTIVE and \
+            self.state == Product.ACTIVE and \
             self.has_waitinglist_visit_spots
 
     @property
@@ -1726,21 +1691,6 @@ class Product(Resource):
                 hours=int(hours),
                 minutes=int(minutes)
             )
-
-    @staticmethod
-    def get_latest_created():
-        return Product.objects.filter(statistics__isnull=False).\
-            order_by('-statistics__created_time')
-
-    @staticmethod
-    def get_latest_updated():
-        return Product.objects.filter(statistics__isnull=False).\
-            order_by('-statistics__updated_time')
-
-    @staticmethod
-    def get_latest_displayed():
-        return Product.objects.filter(statistics__isnull=False).\
-            order_by('-statistics__visited_time')
 
     @staticmethod
     def get_latest_booked():
@@ -2755,14 +2705,6 @@ class Room(models.Model):
     class Meta:
         verbose_name = _(u"lokale")
         verbose_name_plural = _(u"lokaler")
-
-    # Old field, to be removed later
-    product = models.ForeignKey(
-        Product, verbose_name=_(u'Besøg'),
-        blank=True,
-        null=True,
-        editable=False
-    )
 
     locality = models.ForeignKey(
         Locality,

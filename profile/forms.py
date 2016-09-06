@@ -105,7 +105,7 @@ class UserCreateForm(UserCreationForm):
         return user
 
 
-class EditMyResourcesForm(forms.ModelForm):
+class EditMyProductsForm(forms.ModelForm):
     class Meta:
         model = UserProfile
         fields = ('my_resources',)

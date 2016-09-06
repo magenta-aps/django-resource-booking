@@ -36,7 +36,7 @@
                     {% endif %}
                 {% endfor %}
 
-            {% elif list.type == 'Resource' %}
+            {% elif list.type == 'Product' %}
                 {% for res in list.queryset %}
                     {% if not list.limit or forloop.counter0 < list.limit %}
                     <div class="list-group-item clearfix">

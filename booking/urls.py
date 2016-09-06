@@ -6,8 +6,8 @@ from .views import MainPageView, VisitNotifyView
 
 from booking.views import PostcodeView, SchoolView, ProductInquireView
 from booking.views import RrulestrView
-from booking.views import ResourceListView, ResourceCustomListView
-from booking.views import EditResourceInitialView, ResourceDetailView
+from booking.views import ProductListView, ProductCustomListView
+from booking.views import EditProductInitialView
 from booking.views import BookingView, BookingSuccessView
 from booking.views import VisitSearchView
 from booking.views import EditProductView, ProductDetailView
@@ -36,7 +36,7 @@ from booking.views import VisitAddLogEntryView
 from booking.views import VisitAddCommentView
 from booking.views import VisitDetailView
 from booking.views import VisitCustomListView
-from booking.views import CloneResourceView
+from booking.views import CloneProductView
 from booking.views import EvaluationOverviewView
 
 import booking.views
@@ -65,23 +65,23 @@ urlpatterns = patterns(
         name='iframe_search'),
 
     url(r'^resource/create$',
-        EditResourceInitialView.as_view(),
+        EditProductInitialView.as_view(),
         name='resource-create'),
     url(r'^resource/(?P<pk>[0-9]+)/$',
-        ResourceDetailView.as_view(),
+        ProductDetailView.as_view(),
         name='resource-view'),
     url(r'^resource/?$',
-        ResourceListView.as_view(),
+        ProductListView.as_view(),
         name='resource-list'),
 
     url(r'^resource/customlist/?$',
-        ResourceCustomListView.as_view(),
+        ProductCustomListView.as_view(),
         name='resource-customlist'),
     url(r'^resource/(?P<pk>[0-9]+)/edit$',
-        EditResourceInitialView.as_view(),
+        EditProductInitialView.as_view(),
         name='resource-edit'),
     url(r'^resource/(?P<pk>[0-9]+)/clone$',
-        CloneResourceView.as_view(),
+        CloneProductView.as_view(),
         name='resource-clone'),
 
     url(r'^product/create$',

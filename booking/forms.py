@@ -3,7 +3,7 @@
 from booking.models import StudyMaterial, ProductAutosend, Booking
 from booking.models import BookingGrundskoleSubjectLevel
 from booking.models import Locality, OrganizationalUnitType, OrganizationalUnit
-from booking.models import Resource, Product
+from booking.models import Product
 from booking.models import Guest, Region, PostCode, School
 from booking.models import ClassBooking, TeacherBooking, \
     BookingGymnasieSubjectLevel
@@ -34,7 +34,7 @@ class AdminProductSearchForm(forms.Form):
 
     s = forms.ChoiceField(
         label=_(u'Status'),
-        choices=(('', _(u'[Vælg status]')),) + Resource.state_choices,
+        choices=(('', _(u'[Vælg status]')),) + Product.state_choices,
         required=False
     )
 
@@ -223,7 +223,7 @@ class VisitSearchForm(forms.Form):
                 qdict["u"] = self.MY_UNITS
 
             if qdict.get("s", "") == "":
-                qdict["s"] = Resource.ACTIVE
+                qdict["s"] = Product.ACTIVE
 
         super(VisitSearchForm, self).__init__(qdict, *args, **kwargs)
 
@@ -274,9 +274,9 @@ class OrganizationalUnitForm(forms.ModelForm):
         fields = ('name', 'type', 'parent')
 
 
-class ResourceInitialForm(forms.Form):
+class ProductInitialForm(forms.Form):
     type = forms.ChoiceField(
-        choices=Resource.resource_type_choices
+        choices=Product.resource_type_choices
     )
 
 
@@ -614,16 +614,16 @@ class OtherProductForm(ProductForm):
         widgets = ProductForm.Meta.widgets
 
 
-ResourceStudyMaterialFormBase = inlineformset_factory(Resource,
-                                                      StudyMaterial,
-                                                      fields=('file',),
-                                                      can_delete=True, extra=1)
+ProductStudyMaterialFormBase = inlineformset_factory(Product,
+                                                     StudyMaterial,
+                                                     fields=('file',),
+                                                     can_delete=True, extra=1)
 
 
-class ResourceStudyMaterialForm(ResourceStudyMaterialFormBase):
+class ProductStudyMaterialForm(ProductStudyMaterialFormBase):
 
     def __init__(self, data, instance=None):
-        super(ResourceStudyMaterialForm, self).__init__(data)
+        super(ProductStudyMaterialForm, self).__init__(data)
         self.studymaterials = StudyMaterial.objects.filter(resource=instance)
 
 
@@ -671,7 +671,7 @@ class BookingForm(forms.ModelForm):
 
         self.product = product
         # self.scheduled = visit is not None and \
-        #    visit.type == Resource.FIXED_SCHEDULE_GROUP_VISIT
+        #    visit.type == Product.FIXED_SCHEDULE_GROUP_VISIT
         self.scheduled = (
             product is not None and
             len(product.future_events) > 0
@@ -792,12 +792,12 @@ class BookerForm(forms.ModelForm):
                 if value in available_level_choices
                 ]
             # Visit types where attendee count is mandatory
-            if product.type in [Resource.GROUP_VISIT,
-                                Resource.TEACHER_EVENT,
-                                Resource.STUDY_PROJECT]:
+            if product.type in [Product.GROUP_VISIT,
+                                Product.TEACHER_EVENT,
+                                Product.STUDY_PROJECT]:
                 self.fields['attendee_count'].required = True
             # Class level is not mandatory for teacher events.
-            if product.type == Resource.TEACHER_EVENT:
+            if product.type == Product.TEACHER_EVENT:
                 self.fields['level'].required = False
 
         # Eventually we may want a prettier solution,
@@ -980,7 +980,7 @@ class EmailTemplatePreviewContextEntryForm(forms.Form):
             ('Product', _(u'Tilbud')),
             ('Visit', _(u'Besøg')),
             # ('StudyMaterial', StudyMaterial),
-            # ('Resource',Resource),
+            # ('Product',Product),
             # ('Subject', Subject),
             # ('GymnasieLevel', GymnasieLevel),
             # ('Room', Room),

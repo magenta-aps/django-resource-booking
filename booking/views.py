@@ -41,19 +41,19 @@ from profile.models import role_to_text
 from booking.models import Product, Visit, StudyMaterial, \
     ProductAutosend
 from booking.models import KUEmailMessage
-from booking.models import Resource, Subject
+from booking.models import Subject
 from booking.models import OrganizationalUnit
 from booking.models import GymnasieLevel
 from booking.models import Room
 from booking.models import PostCode, School
 from booking.models import Booking, Guest
-from booking.models import ResourceGymnasieFag, ResourceGrundskoleFag
+from booking.models import ProductGymnasieFag, ProductGrundskoleFag
 from booking.models import EmailTemplate
 from booking.models import log_action
 from booking.models import LOGACTION_CREATE, LOGACTION_CHANGE
 from booking.models import RoomResponsible
 from booking.models import BookerResponseNonce
-from booking.forms import ResourceInitialForm, ProductForm, \
+from booking.forms import ProductInitialForm, ProductForm, \
     GuestEmailComposeForm, StudentForADayBookingForm, OtherProductForm, \
     StudyProjectBookingForm, BookingGrundskoleSubjectLevelForm, BookingListForm
 from booking.forms import StudentForADayForm, InternshipForm, OpenHouseForm, \
@@ -61,7 +61,7 @@ from booking.forms import StudentForADayForm, InternshipForm, OpenHouseForm, \
     StudyMaterialForm
 
 from booking.forms import ClassBookingForm, TeacherBookingForm
-from booking.forms import ResourceStudyMaterialForm, \
+from booking.forms import ProductStudyMaterialForm, \
     BookingGymnasieSubjectLevelForm
 from booking.forms import BookerForm
 from booking.forms import EmailTemplateForm, EmailTemplatePreviewContextForm
@@ -120,25 +120,25 @@ class MainPageView(TemplateView):
             'lists': [
                 {
                     'color': self.HEADING_GREEN,
-                    'type': 'Resource',
+                    'type': 'Product',
                     'title': _(u'Senest opdaterede tilbud'),
                     'queryset': Product.get_latest_updated(),
                     'limit': 10,
                     'button': {
                         'text': _(u'Vis alle'),
                         'link': reverse('resource-customlist') + "?type=%s" %
-                        ResourceCustomListView.TYPE_LATEST_UPDATED
+                        ProductCustomListView.TYPE_LATEST_UPDATED
                     }
                 }, {
                     'color': self.HEADING_BLUE,
-                    'type': 'Resource',
+                    'type': 'Product',
                     'title': _(u'Senest bookede tilbud'),
                     'queryset': Product.get_latest_booked(),
                     'limit': 10,
                     'button': {
                         'text': _(u'Vis alle'),
                         'link': reverse('resource-customlist') + "?type=%s" %
-                        ResourceCustomListView.TYPE_LATEST_BOOKED
+                        ProductCustomListView.TYPE_LATEST_BOOKED
                     }
                 }
             ]
@@ -226,7 +226,7 @@ class ModalMixin(object):
         return url
 
 
-class ResourceBookingDetailView(DetailView):
+class ProductBookingDetailView(DetailView):
 
     def on_display(self):
         try:
@@ -236,13 +236,13 @@ class ResourceBookingDetailView(DetailView):
         self.object.statistics.on_display()
 
     def get(self, request, *args, **kwargs):
-        response = super(ResourceBookingDetailView, self).\
+        response = super(ProductBookingDetailView, self).\
             get(request, *args, **kwargs)
         self.on_display()
         return response
 
 
-class ResourceBookingUpdateView(UpdateView):
+class ProductBookingUpdateView(UpdateView):
 
     def on_update(self):
         try:
@@ -253,7 +253,7 @@ class ResourceBookingUpdateView(UpdateView):
 
     def form_valid(self, form):
         self.on_update()
-        return super(ResourceBookingUpdateView, self).form_valid(form)
+        return super(ProductBookingUpdateView, self).form_valid(form)
 
 
 class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
@@ -572,7 +572,7 @@ class LoggedViewMixin(object):
 
 class SearchView(ListView):
     """Class for handling main search."""
-    model = Resource
+    model = Product
     template_name = "resource/searchresult.html"
     context_object_name = "results"
     paginate_by = 10
@@ -604,9 +604,9 @@ class SearchView(ListView):
             if q[0] == "#":
                 q = q[1:]
             try:
-                res = Resource.objects.get(pk=q)
+                res = Product.objects.get(pk=q)
                 return reverse('resource-view', args=[res.pk])
-            except Resource.DoesNotExist:
+            except Product.DoesNotExist:
                 pass
         return None
 
@@ -653,19 +653,19 @@ class SearchView(ListView):
                 # Public users only want to search within bookable dates
                 ok_states = Visit.BOOKABLE_STATES
                 date_cond = (
-                    Q(product__visit__bookable=True) &
-                    Q(product__visit__workflow_status__in=ok_states)
+                    Q(visit__bookable=True) &
+                    Q(visit__workflow_status__in=ok_states)
                 )
 
             if t_from:
                 date_cond = (
                     date_cond &
-                    Q(product__visit__start_datetime__gt=t_from)
+                    Q(visit__start_datetime__gt=t_from)
                 )
 
             if t_to:
                 date_cond = date_cond & Q(
-                    Q(product__visit__start_datetime__lte=t_from)
+                    Q(visit__start_datetime__lte=t_from)
                 )
 
             self.from_datetime = t_from or ""
@@ -676,24 +676,18 @@ class SearchView(ListView):
                 # as well as the ones matching the date limit. We do this
                 # with the following OR condition:
                 qs = qs.filter(
-                    # Stuff that is not bookable, eg. materials
-                    Q(product__isnull=True) |
                     # Anything without any specific booking times
-                    Q(
-                        pk__in=Resource.objects.exclude(
-                            product__visit__bookable=True
-                        )
-                    ) |
+                    Q(pk__in=Product.objects.exclude(visit__bookable=True)) |
                     # The actual date conditions
                     date_cond
                 )
 
                 # Simplify, since the above conditions are slow when
                 # used for making facets.
-                qs = Resource.objects.filter(pk__in=[x.pk for x in qs])
+                qs = Product.objects.filter(pk__in=[x.pk for x in qs])
 
             qs = qs.annotate(
-                num_bookings=Count('product__visit__bookings'),
+                num_bookings=Count('visit__bookings'),
             )
 
             qs = qs.distinct()
@@ -704,8 +698,8 @@ class SearchView(ListView):
 
     def annotate(self, qs):
         return qs.annotate(
-            num_visits=Count('product__visit__pk', distinct=True),
-            first_visit=Min('product__visit__start_datetime')
+            num_visits=Count('visit__pk', distinct=True),
+            first_visit=Min('visit__start_datetime')
         )
 
     def get_filters(self):
@@ -733,14 +727,14 @@ class SearchView(ListView):
 
     def filter_for_public_view(self):
         # Public users can only see active resources
-        self.filters["state__in"] = [Resource.ACTIVE]
+        self.filters["state__in"] = [Product.ACTIVE]
 
     def filter_by_audience(self):
         # Audience will always include a search for resources marked for
         # all audiences.
         a = [x for x in self.request.GET.getlist("a")]
         if a:
-            a.append(Resource.AUDIENCE_ALL)
+            a.append(Product.AUDIENCE_ALL)
             self.filters["audience__in"] = a
 
     def filter_by_institution(self):
@@ -846,7 +840,7 @@ class SearchView(ListView):
 
         base_qs = self.get_base_queryset().filter(**new_filters)
 
-        qs = Resource.objects.filter(
+        qs = Product.objects.filter(
             pk__in=base_qs
         ).values(facet_field).annotate(hits=Count("pk"))
 
@@ -917,7 +911,7 @@ class SearchView(ListView):
             "audience",
             self.model.audience_choices_without_none,
             self.request.GET.getlist("a"),
-            add_to_all=[Resource.AUDIENCE_ALL]
+            add_to_all=[Product.AUDIENCE_ALL]
         )
 
         context["institution_choices"] = self.make_facet(
@@ -1026,9 +1020,9 @@ class SearchView(ListView):
         return size
 
 
-class ResourceListView(ListView):
+class ProductListView(ListView):
     template_name = "resource/list.html"
-    model = Resource
+    model = Product
     context_object_name = "results"
     paginate_by = 10
 
@@ -1053,7 +1047,7 @@ class ResourceListView(ListView):
 
         context.update(kwargs)
 
-        return super(ResourceListView, self).get_context_data(
+        return super(ProductListView, self).get_context_data(
             **context
         )
 
@@ -1066,7 +1060,7 @@ class ResourceListView(ListView):
         return size
 
 
-class ResourceCustomListView(ResourceListView):
+class ProductCustomListView(ProductListView):
 
     TYPE_LATEST_BOOKED = "latest_booked"
     TYPE_LATEST_UPDATED = "latest_updated"
@@ -1078,15 +1072,15 @@ class ResourceCustomListView(ResourceListView):
             if listtype == self.TYPE_LATEST_BOOKED:
                 return Product.get_latest_booked()
             elif listtype == self.TYPE_LATEST_UPDATED:
-                return Resource.get_latest_updated()
+                return Product.get_latest_updated()
 
         except:
             pass
         raise Http404
 
 
-class EditResourceInitialView(LoginRequiredMixin, HasBackButtonMixin,
-                              TemplateView):
+class EditProductInitialView(LoginRequiredMixin, HasBackButtonMixin,
+                             TemplateView):
 
     template_name = 'resource/form.html'
 
@@ -1098,13 +1092,13 @@ class EditResourceInitialView(LoginRequiredMixin, HasBackButtonMixin,
             else:
                 raise Http404
         else:
-            form = ResourceInitialForm()
+            form = ProductInitialForm()
             return self.render_to_response(
                 self.get_context_data(form=form)
             )
 
     def post(self, request, *args, **kwargs):
-        form = ResourceInitialForm(request.POST)
+        form = ProductInitialForm(request.POST)
         if form.is_valid():
             type_id = int(form.cleaned_data['type'])
             back = urlquote(request.GET.get('back'))
@@ -1117,13 +1111,13 @@ class EditResourceInitialView(LoginRequiredMixin, HasBackButtonMixin,
         )
 
 
-class CloneResourceView(RedirectView):
+class CloneProductView(RedirectView):
     permanent = False
 
     def get_redirect_url(self, *args, **kwargs):
         try:
-            res = Resource.objects.get(pk=kwargs["pk"])
-        except Resource.DoesNotExist:
+            res = Product.objects.get(pk=kwargs["pk"])
+        except Product.DoesNotExist:
             raise Http404()
 
         if hasattr(res, "product") and res.product:
@@ -1132,33 +1126,23 @@ class CloneResourceView(RedirectView):
             raise Http404()
 
 
-class ResourceDetailView(View):
-
-    def get(self, request, *args, **kwargs):
-        pk = kwargs.get("pk")
-        if pk is not None:
-            if Product.objects.filter(id=pk).count() > 0:
-                return redirect(reverse('product-view', args=[pk]))
-        raise Http404
-
-
-class EditResourceView(LoginRequiredMixin, RoleRequiredMixin,
-                       HasBackButtonMixin, ResourceBookingUpdateView):
+class EditProductView(LoginRequiredMixin, RoleRequiredMixin,
+                      HasBackButtonMixin, ProductBookingUpdateView):
     is_creating = True
 
     def __init__(self, *args, **kwargs):
-        super(EditResourceView, self).__init__(*args, **kwargs)
+        super(EditProductView, self).__init__(*args, **kwargs)
         self.object = None
 
     def get_form_kwargs(self):
-        kwargs = super(EditResourceView, self).get_form_kwargs()
+        kwargs = super(EditProductView, self).get_form_kwargs()
         kwargs['user'] = self.request.user
         return kwargs
 
     @method_decorator(login_required)
     def dispatch(self, *args, **kwargs):
         # First, check all is well in superclass
-        result = super(EditResourceView, self).dispatch(*args, **kwargs)
+        result = super(EditProductView, self).dispatch(*args, **kwargs)
         # Now, check that the user belongs to the correct unit.
         current_user = self.request.user
         pk = kwargs.get("pk")
@@ -1183,13 +1167,13 @@ class EditResourceView(LoginRequiredMixin, RoleRequiredMixin,
         if self.request.method == 'GET':
             return {
                 'form': self.get_form(),
-                'fileformset': ResourceStudyMaterialForm(None,
-                                                         instance=self.object)
+                'fileformset': ProductStudyMaterialForm(None,
+                                                        instance=self.object)
             }
         if self.request.method == 'POST':
             return {
                 'form': self.get_form(),
-                'fileformset': ResourceStudyMaterialForm(self.request.POST),
+                'fileformset': ProductStudyMaterialForm(self.request.POST),
             }
 
     def get(self, request, *args, **kwargs):
@@ -1248,7 +1232,7 @@ class EditResourceView(LoginRequiredMixin, RoleRequiredMixin,
 
         context.update(kwargs)
 
-        return super(EditResourceView, self).get_context_data(**context)
+        return super(EditProductView, self).get_context_data(**context)
 
     def gymnasiefag_selected(self):
         result = []
@@ -1268,7 +1252,7 @@ class EditResourceView(LoginRequiredMixin, RoleRequiredMixin,
                 subject = Subject.objects.get(pk=subject_pk)
                 result.append({
                     'submitvalue': sv_text,
-                    'description': ResourceGymnasieFag.display(
+                    'description': ProductGymnasieFag.display(
                         subject,
                         [GymnasieLevel.objects.get(pk=x) for x in sv]
                     )
@@ -1296,7 +1280,7 @@ class EditResourceView(LoginRequiredMixin, RoleRequiredMixin,
                 subject = Subject.objects.get(pk=subject_pk)
                 result.append({
                     'submitvalue': sv_text,
-                    'description': ResourceGrundskoleFag.display(
+                    'description': ProductGrundskoleFag.display(
                         subject, lv_min, lv_max
                     )
                 })
@@ -1305,7 +1289,7 @@ class EditResourceView(LoginRequiredMixin, RoleRequiredMixin,
 
     def save_studymaterials(self):
 
-        fileformset = ResourceStudyMaterialForm(self.request.POST)
+        fileformset = ProductStudyMaterialForm(self.request.POST)
         if fileformset.is_valid():
             # Attach uploaded files
             for fileform in fileformset:
@@ -1327,7 +1311,7 @@ class EditResourceView(LoginRequiredMixin, RoleRequiredMixin,
             if gval in existing_gym_fag:
                 del existing_gym_fag[gval]
             else:
-                ResourceGymnasieFag.create_from_submitvalue(self.object, gval)
+                ProductGymnasieFag.create_from_submitvalue(self.object, gval)
 
         # Delete any remaining values that were not submitted
         for x in existing_gym_fag.itervalues():
@@ -1341,7 +1325,7 @@ class EditResourceView(LoginRequiredMixin, RoleRequiredMixin,
             if gval in existing_gs_fag:
                 del existing_gs_fag[gval]
             else:
-                ResourceGrundskoleFag.create_from_submitvalue(
+                ProductGrundskoleFag.create_from_submitvalue(
                     self.object, gval
                 )
 
@@ -1356,7 +1340,7 @@ class EditResourceView(LoginRequiredMixin, RoleRequiredMixin,
             self.request.user.userprofile.my_resources.add(self.object)
 
 
-class EditProductView(EditResourceView):
+class EditProductView(EditProductView):
 
     template_name = 'product/form.html'
     form_class = ProductForm
@@ -1368,15 +1352,15 @@ class EditProductView(EditResourceView):
     roles = EDIT_ROLES
 
     forms = {
-        Resource.STUDENT_FOR_A_DAY: StudentForADayForm,
-        Resource.TEACHER_EVENT: TeacherProductForm,
-        Resource.GROUP_VISIT: ClassProductForm,
-        Resource.STUDIEPRAKTIK: InternshipForm,
-        Resource.OPEN_HOUSE: OpenHouseForm,
-        Resource.STUDY_PROJECT: StudyProjectForm,
-        Resource.ASSIGNMENT_HELP: AssignmentHelpForm,
-        Resource.STUDY_MATERIAL: StudyMaterialForm,
-        Resource.OTHER_OFFERS: OtherProductForm
+        Product.STUDENT_FOR_A_DAY: StudentForADayForm,
+        Product.TEACHER_EVENT: TeacherProductForm,
+        Product.GROUP_VISIT: ClassProductForm,
+        Product.STUDIEPRAKTIK: InternshipForm,
+        Product.OPEN_HOUSE: OpenHouseForm,
+        Product.STUDY_PROJECT: StudyProjectForm,
+        Product.ASSIGNMENT_HELP: AssignmentHelpForm,
+        Product.STUDY_MATERIAL: StudyMaterialForm,
+        Product.OTHER_OFFERS: OtherProductForm
     }
 
     def get_forms(self):
@@ -1524,9 +1508,9 @@ class EditProductView(EditResourceView):
         context['autosend_enable_days'] = EmailTemplate.enable_days
 
         context['hastime'] = self.object.type in [
-            Resource.STUDENT_FOR_A_DAY, Resource.STUDIEPRAKTIK,
-            Resource.OPEN_HOUSE, Resource.TEACHER_EVENT, Resource.GROUP_VISIT,
-            Resource.STUDY_PROJECT, Resource.OTHER_OFFERS
+            Product.STUDENT_FOR_A_DAY, Product.STUDIEPRAKTIK,
+            Product.OPEN_HOUSE, Product.TEACHER_EVENT, Product.GROUP_VISIT,
+            Product.STUDY_PROJECT, Product.OTHER_OFFERS
         ]
 
         context.update(kwargs)
@@ -1695,7 +1679,7 @@ class SimpleRessourcesView(LoginRequiredMixin,
         return form
 
 
-class ProductDetailView(ResourceBookingDetailView):
+class ProductDetailView(ProductBookingDetailView):
     """Display Product details"""
     model = Product
     template_name = 'product/details.html'
@@ -1708,7 +1692,7 @@ class ProductDetailView(ResourceBookingDetailView):
         qs = super(ProductDetailView, self).get_queryset()
         # Dismiss products that are not active.
         if not self.request.user.is_authenticated():
-            qs = qs.filter(state=Resource.ACTIVE)
+            qs = qs.filter(state=Product.ACTIVE)
         return qs
 
     def get_context_data(self, **kwargs):
@@ -2152,7 +2136,7 @@ class SchoolView(View):
         return JsonResponse(json)
 
 
-class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
+class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
     product = None
     modal = True
     back = None
@@ -2347,7 +2331,7 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
                            language=self.request.LANGUAGE_CODE)
 
             type = self.product.type
-            if type == Resource.GROUP_VISIT:
+            if type == Product.GROUP_VISIT:
                 forms['bookingform'] = ClassBookingForm(
                     data,
                     product=self.product
@@ -2359,13 +2343,13 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
                     forms['grundskolesubjectform'] = \
                         BookingGrundskoleSubjectLevelForm(data)
 
-            elif type == Resource.TEACHER_EVENT:
+            elif type == Product.TEACHER_EVENT:
                 forms['bookingform'] = TeacherBookingForm(data,
                                                           product=self.product)
-            elif type == Resource.STUDENT_FOR_A_DAY:
+            elif type == Product.STUDENT_FOR_A_DAY:
                 forms['bookingform'] = \
                     StudentForADayBookingForm(data, product=self.product)
-            elif type == Resource.STUDY_PROJECT:
+            elif type == Product.STUDY_PROJECT:
                 forms['bookingform'] = \
                     StudyProjectBookingForm(data, product=self.product)
         return forms
@@ -2373,22 +2357,22 @@ class BookingView(AutologgerMixin, ModalMixin, ResourceBookingUpdateView):
     def get_template_names(self):
         if self.product is None:
             return [""]
-        if self.product.type == Resource.STUDENT_FOR_A_DAY:
+        if self.product.type == Product.STUDENT_FOR_A_DAY:
             if self.modal:
                 return ["booking/studentforaday_modal.html"]
             else:
                 return ["booking/studentforaday.html"]
-        if self.product.type == Resource.GROUP_VISIT:
+        if self.product.type == Product.GROUP_VISIT:
             if self.modal:
                 return ["booking/classvisit_modal.html"]
             else:
                 return ["booking/classvisit.html"]
-        if self.product.type == Resource.TEACHER_EVENT:
+        if self.product.type == Product.TEACHER_EVENT:
             if self.modal:
                 return ["booking/teachervisit_modal.html"]
             else:
                 return ["booking/teachervisit.html"]
-        if self.product.type == Resource.STUDY_PROJECT:
+        if self.product.type == Product.STUDY_PROJECT:
             if self.modal:
                 return ["booking/studyproject_modal.html"]
             else:
@@ -2738,7 +2722,7 @@ class VisitSearchView(VisitListView):
 
 
 class BookingDetailView(LoginRequiredMixin, LoggedViewMixin,
-                        ResourceBookingDetailView):
+                        ProductBookingDetailView):
     """Display Booking details"""
     model = Booking
     template_name = 'booking/details.html'
@@ -2781,7 +2765,7 @@ class BookingDetailView(LoginRequiredMixin, LoggedViewMixin,
 
 
 class VisitDetailView(LoginRequiredMixin, LoggedViewMixin,
-                      ResourceBookingDetailView):
+                      ProductBookingDetailView):
     """Display Booking details"""
     model = Visit
     template_name = 'visit/details.html'
@@ -2993,15 +2977,15 @@ class EmailTemplateDetailView(LoginRequiredMixin, View):
                'Product': Product,
                'Visit': Visit,
                # 'StudyMaterial': StudyMaterial,
-               # 'Resource': Resource,
+               # 'Product': Product,
                # 'Subject': Subject,
                # 'GymnasieLevel': GymnasieLevel,
                # 'Room': Room,
                # 'PostCode': PostCode,
                # 'School': School,
                'Booking': Booking,
-               # 'ResourceGymnasieFag': ResourceGymnasieFag,
-               # 'ResourceGrundskoleFag': ResourceGrundskoleFag
+               # 'ProductGymnasieFag': ProductGymnasieFag,
+               # 'ProductGrundskoleFag': ProductGrundskoleFag
                }
 
     @staticmethod

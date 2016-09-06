@@ -6,7 +6,6 @@ from . import models as booking_models
 from profile.models import COORDINATOR, FACULTY_EDITOR, EDIT_ROLES
 
 EXCLUDE_MODELS = set([
-    booking_models.Resource,
     booking_models.GymnasieLevel,
 ])
 
