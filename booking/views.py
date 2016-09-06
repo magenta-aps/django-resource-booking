@@ -3235,6 +3235,9 @@ class EvaluationOverviewView(LoginRequiredMixin, ListView):
 import booking_workflows.views  # noqa
 import_views(booking_workflows.views)
 
+import resource_based.views  # noqa
+import_views(resource_based.views)
+
 
 class BookingAcceptView(FormView):
     template_name = "booking/accept_spot.html"
