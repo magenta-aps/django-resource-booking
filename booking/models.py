@@ -3632,3 +3632,17 @@ class BookerResponseNonce(models.Model):
         attrs.update(kwargs)
 
         return cls.objects.create(**attrs)
+
+
+from booking.resource_based import models as rb_models  # noqa
+
+EventTime = rb_models.EventTime
+Calendar = rb_models.Calendar
+ResourceType = rb_models.ResourceType
+Resource = rb_models.Resource
+TeacherResource = rb_models.TeacherResource
+RoomResource = rb_models.RoomResource
+ItemResource = rb_models.ItemResource
+VehicleResource = rb_models.VehicleResource
+ResourcePool = rb_models.ResourcePool
+ResourceRequirement = rb_models.ResourceRequirement
