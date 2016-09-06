@@ -15,7 +15,7 @@
     </div>
     <div class="row">
         <div class="col-sm-12 col-md-8">
-            <form name="addoccurrencecommentform" id="addoccurrencecommentform" action="{% url 'visit-occ-add-comment' object.pk %}" method="post">
+            <form name="addvisitcommentform" id="addvisitcommentform" action="{% url 'visit-add-comment' object.pk %}" method="post">
                 {% csrf_token %}
                 <div class="row form-group">
                     <div class="col-sm-2">

@@ -15,7 +15,7 @@
     </div>
     <div class="row">
         <div class="col-sm-12">
-            <form name="changebookinroomsform" id="changebookinroomsform" action="{% url 'change-visit-occ-rooms' object.pk %}" method="post">
+            <form name="changebookinroomsform" id="changebookinroomsform" action="{% url 'change-visit-rooms' object.pk %}" method="post">
                 {% csrf_token %}
                 {% include 'resource/fields/generic_field.html' with field=form.room_status %}
                 <div class="row form-group">

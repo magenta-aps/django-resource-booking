@@ -970,13 +970,13 @@ a.template-overridden:visited {
 
 /* > Admin-visit-search end */
 
-/* > Visitoccurrence-search start */
+/* > Visit-search start */
 
-#visitoccsearch .dl-horizontal dt {
+#visitsearch .dl-horizontal dt {
     white-space: normal;
 }
 
-/* > Visitoccurrence-search end */
+/* > Visit-search end */
 
 /* frontpage lists */
 

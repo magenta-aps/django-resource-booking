@@ -91,7 +91,7 @@
                         <dt>{% trans 'Email:' %}</dt>
                         <dd>{{ otheruser.email }}</dd>
                         <dt>{% trans 'Enhed:' %}</dt>
-                        <dd>{{ otheruser.userprofile.unit.name }}</dd>
+                        <dd>{{ otheruser.userprofile.organizationalunit.name }}</dd>
                         <dt>{% trans 'Rolle:' %}</dt>
                         <dd>{{ otheruser.userprofile.get_role_name }}</dd>
                     </dl>

@@ -1,20 +1,20 @@
 # -*- coding: utf-8 -*-
 
-from booking.models import StudyMaterial, VisitAutosend, Booking
+from booking.models import StudyMaterial, ProductAutosend, Booking
 from booking.models import BookingGrundskoleSubjectLevel
-from booking.models import Locality, UnitType, Unit
-from booking.models import Resource, OtherResource, Visit
-from booking.models import Booker, Region, PostCode, School
+from booking.models import Locality, OrganizationalUnitType, OrganizationalUnit
+from booking.models import Product
+from booking.models import Guest, Region, PostCode, School
 from booking.models import ClassBooking, TeacherBooking, \
     BookingGymnasieSubjectLevel
 from booking.models import EmailTemplate
-from booking.models import VisitOccurrence
+from booking.models import Visit
 from booking.models import BLANK_LABEL, BLANK_OPTION
 from django import forms
 from django.db.models import Q
 from django.db.models.expressions import OrderBy
 from django.forms import CheckboxSelectMultiple, CheckboxInput
-from django.forms import RadioSelect, EmailInput
+from django.forms import EmailInput
 from django.forms import formset_factory, inlineformset_factory
 from django.forms import TextInput, NumberInput, Textarea, Select
 from django.forms import HiddenInput
@@ -24,7 +24,7 @@ from tinymce.widgets import TinyMCE
 from .fields import ExtensibleMultipleChoiceField
 
 
-class AdminVisitSearchForm(forms.Form):
+class AdminProductSearchForm(forms.Form):
 
     q = forms.CharField(
         label=_(u'Fritekst'),
@@ -34,7 +34,7 @@ class AdminVisitSearchForm(forms.Form):
 
     s = forms.ChoiceField(
         label=_(u'Status'),
-        choices=(('', _(u'[Vælg status]')),) + Resource.state_choices,
+        choices=(('', _(u'[Vælg status]')),) + Product.state_choices,
         required=False
     )
 
@@ -96,7 +96,7 @@ class AdminVisitSearchForm(forms.Form):
     def __init__(self, qdict, *args, **kwargs):
         self.user = kwargs.pop("user")
 
-        super(AdminVisitSearchForm, self).__init__(qdict, *args, **kwargs)
+        super(AdminProductSearchForm, self).__init__(qdict, *args, **kwargs)
 
         self.fields['u'].choices = self.get_unit_choices()
 
@@ -142,10 +142,10 @@ class AdminVisitSearchForm(forms.Form):
         if field_name in ('from_date', 'to_date'):
             field_name = field_name[:-5]
 
-        return super(AdminVisitSearchForm, self).add_prefix(field_name)
+        return super(AdminProductSearchForm, self).add_prefix(field_name)
 
 
-class VisitOccurrenceSearchForm(forms.Form):
+class VisitSearchForm(forms.Form):
     q = forms.CharField(
         label=_(u'Fritekst'),
         max_length=60,
@@ -178,7 +178,7 @@ class VisitOccurrenceSearchForm(forms.Form):
             (WORKFLOW_STATUS_PENDING, _(u'Alle ikke-planlagte')),
             (WORKFLOW_STATUS_READY, _(u'Alle planlagte')),
             ('', u'====='),
-        ) + VisitOccurrence.workflow_status_choices,
+        ) + Visit.workflow_status_choices,
         required=False
     )
 
@@ -223,9 +223,9 @@ class VisitOccurrenceSearchForm(forms.Form):
                 qdict["u"] = self.MY_UNITS
 
             if qdict.get("s", "") == "":
-                qdict["s"] = Resource.ACTIVE
+                qdict["s"] = Product.ACTIVE
 
-        super(VisitOccurrenceSearchForm, self).__init__(qdict, *args, **kwargs)
+        super(VisitSearchForm, self).__init__(qdict, *args, **kwargs)
 
         self.fields['u'].choices = self.get_unit_choices()
 
@@ -262,72 +262,29 @@ class VisitOccurrenceSearchForm(forms.Form):
         return choices
 
 
-class UnitTypeForm(forms.ModelForm):
+class OrganizationalUnitTypeForm(forms.ModelForm):
     class Meta:
-        model = UnitType
+        model = OrganizationalUnitType
         fields = ('name',)
 
 
-class UnitForm(forms.ModelForm):
+class OrganizationalUnitForm(forms.ModelForm):
     class Meta:
-        model = Unit
+        model = OrganizationalUnit
         fields = ('name', 'type', 'parent')
 
 
-class ResourceInitialForm(forms.Form):
+class ProductInitialForm(forms.Form):
     type = forms.ChoiceField(
-        choices=Resource.resource_type_choices
+        choices=Product.resource_type_choices
     )
 
 
-class OtherResourceForm(forms.ModelForm):
+class ProductForm(forms.ModelForm):
     required_css_class = 'required'
 
     class Meta:
-        model = OtherResource
-        fields = ('title', 'teaser', 'description', 'price', 'state',
-                  'type', 'tags',
-                  'institution_level', 'topics', 'audience',
-                  'locality',
-                  'tilbudsansvarlig', 'unit',
-                  'preparation_time', 'comment'
-                  )
-        widgets = {
-            'title': TextInput(attrs={
-                'class': 'titlefield form-control input-sm'
-            }),
-            'teaser': Textarea(attrs={
-                'rows': 3,
-                'cols': 70,
-                'maxlength': 1000,
-                'class': 'form-control input-sm'
-            }),
-            'description': TinyMCE(attrs={
-                'rows': 10,
-                'cols': 90
-            }),
-            'tags': CheckboxSelectMultiple(),
-            'topics': CheckboxSelectMultiple(),
-            'audience': RadioSelect(),
-        }
-
-    def __init__(self, *args, **kwargs):
-        self.user = kwargs.pop('user')
-        super(OtherResourceForm, self).__init__(*args, **kwargs)
-        self.fields['unit'].queryset = self.get_unit_query_set()
-        self.fields['type'].widget = HiddenInput()
-
-    def get_unit_query_set(self):
-        """"Get units for which user can create events."""
-        user = self.user
-        return user.userprofile.get_unit_queryset()
-
-
-class VisitForm(forms.ModelForm):
-    required_css_class = 'required'
-
-    class Meta:
-        model = Visit
+        model = Product
         fields = ('title', 'teaser', 'description', 'price', 'state',
                   'type', 'tags',
                   'institution_level', 'topics', 'audience',
@@ -337,7 +294,7 @@ class VisitForm(forms.ModelForm):
                   'duration', 'locality',
                   'rooms_needed', 'tour_available', 'catering_available',
                   'presentation_available', 'custom_available', 'custom_name',
-                  'tilbudsansvarlig', 'unit',
+                  'tilbudsansvarlig', 'organizationalunit',
                   'needed_hosts', 'needed_teachers',
                   'preparation_time', 'comment',
                   )
@@ -404,10 +361,12 @@ class VisitForm(forms.ModelForm):
             ),
             'duration': Select(attrs={'class': 'form-control input-sm'}),
             'locality': Select(attrs={'class': 'form-control input-sm'}),
-            'unit': Select(attrs={'class': 'form-control input-sm'}),
+            'organizationalunit': Select(
+                attrs={'class': 'form-control input-sm'}
+            ),
             'audience': Select(attrs={'class': 'form-control input-sm'}),
             'tags': CheckboxSelectMultiple(),
-            'lokaleansvarlige': CheckboxSelectMultiple,
+            'roomresponsible': CheckboxSelectMultiple,
         }
         labels = {
             'custom_name': _('Navn')
@@ -428,21 +387,20 @@ class VisitForm(forms.ModelForm):
 
         unit = None
         if self.instance is not None:
-            unit = self.instance.unit
+            unit = self.instance.organizationalunit
         if unit is None and \
                 self.user is not None and self.user.userprofile is not None:
-            unit = self.user.userprofile.unit
+            unit = self.user.userprofile.organizationalunit
 
         self.current_unit = unit
 
         if not self.instance.pk and 'initial' in kwargs:
             kwargs['initial']['tilbudsansvarlig'] = self.user.pk
             if unit is not None:
-                kwargs['initial']['unit'] = unit.pk
+                kwargs['initial']['organizationalunit'] = unit.pk
 
-        # self.unit = kwargs.get('instance').unit_id
-        super(VisitForm, self).__init__(*args, **kwargs)
-        self.fields['unit'].queryset = self.get_unit_query_set()
+        super(ProductForm, self).__init__(*args, **kwargs)
+        self.fields['organizationalunit'].queryset = self.get_unit_query_set()
         self.fields['type'].widget = HiddenInput()
 
         if unit is not None and 'locality' in self.fields:
@@ -451,9 +409,10 @@ class VisitForm(forms.ModelForm):
                     (x.id, x.name_and_address)
                     for x in Locality.objects.order_by(
                         # Sort stuff where unit is null last
-                        OrderBy(Q(unit__isnull=False), descending=True),
+                        OrderBy(Q(organizationalunit__isnull=False),
+                                descending=True),
                         # Sort localities belong to current unit first
-                        OrderBy(Q(unit=unit), descending=True),
+                        OrderBy(Q(organizationalunit=unit), descending=True),
                         # Lastly, sort by name
                         "name"
                     )
@@ -492,7 +451,7 @@ class VisitForm(forms.ModelForm):
         if 'tilbudsansvarlig' in self.fields:
             qs = self.fields['tilbudsansvarlig']._get_queryset()
             self.fields['tilbudsansvarlig']._set_queryset(
-                qs.filter(userprofile__unit=unit)
+                qs.filter(userprofile__organizationalunit=unit)
             )
             self.fields['tilbudsansvarlig'].label_from_instance = \
                 lambda obj: "%s (%s) <%s>" % (
@@ -501,12 +460,12 @@ class VisitForm(forms.ModelForm):
                     obj.email
                 )
 
-        if 'lokaleansvarlige' in self.fields:
-            qs = self.fields['lokaleansvarlige']._get_queryset()
-            self.fields['lokaleansvarlige']._set_queryset(
-                qs.filter(unit=unit)
+        if 'roomresponsible' in self.fields:
+            qs = self.fields['roomresponsible']._get_queryset()
+            self.fields['roomresponsible']._set_queryset(
+                qs.filter(organizationalunit=unit)
             )
-            self.fields['lokaleansvarlige'].label_from_instance = \
+            self.fields['roomresponsible'].label_from_instance = \
                 lambda obj: "%s <%s>" % (
                     obj.get_full_name(),
                     obj.email
@@ -520,7 +479,7 @@ class VisitForm(forms.ModelForm):
             return self.cleaned_data['type']
 
     def clean(self):
-        cleaned_data = super(VisitForm, self).clean()
+        cleaned_data = super(ProductForm, self).clean()
         min_visitors = cleaned_data.get('minimum_number_of_visitors')
         max_visitors = cleaned_data.get('maximum_number_of_visitors')
         if min_visitors is not None and max_visitors is not None and \
@@ -541,46 +500,46 @@ class VisitForm(forms.ModelForm):
         return user.userprofile.get_unit_queryset()
 
 
-class StudentForADayForm(VisitForm):
+class StudentForADayForm(ProductForm):
     class Meta:
-        model = Visit
+        model = Product
         fields = ('type', 'title', 'teaser', 'description', 'state',
                   'institution_level', 'topics', 'audience',
                   'duration', 'locality',
-                  'tilbudsansvarlig', 'unit',
+                  'tilbudsansvarlig', 'organizationalunit',
                   'needed_hosts', 'needed_teachers',
                   'preparation_time', 'comment',
                   )
-        widgets = VisitForm.Meta.widgets
+        widgets = ProductForm.Meta.widgets
 
 
-class InternshipForm(VisitForm):
+class InternshipForm(ProductForm):
     class Meta:
-        model = Visit
+        model = Product
         fields = ('type', 'title', 'teaser', 'description', 'state',
                   'institution_level', 'topics', 'audience',
                   'locality',
-                  'tilbudsansvarlig', 'unit',
+                  'tilbudsansvarlig', 'organizationalunit',
                   'preparation_time', 'comment',
                   )
-        widgets = VisitForm.Meta.widgets
+        widgets = ProductForm.Meta.widgets
 
 
-class OpenHouseForm(VisitForm):
+class OpenHouseForm(ProductForm):
     class Meta:
-        model = Visit
+        model = Product
         fields = ('type', 'title', 'teaser', 'description', 'state',
                   'institution_level', 'topics', 'audience',
                   'locality', 'rooms_needed',
-                  'tilbudsansvarlig', 'unit',
+                  'tilbudsansvarlig', 'organizationalunit',
                   'preparation_time', 'comment',
                   )
-        widgets = VisitForm.Meta.widgets
+        widgets = ProductForm.Meta.widgets
 
 
-class TeacherVisitForm(VisitForm):
+class TeacherProductForm(ProductForm):
     class Meta:
-        model = Visit
+        model = Product
         fields = ('type', 'title', 'teaser', 'description', 'price', 'state',
                   'institution_level', 'topics', 'audience',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
@@ -588,16 +547,16 @@ class TeacherVisitForm(VisitForm):
                   'waiting_list_deadline_days', 'waiting_list_deadline_hours',
                   'duration', 'locality',
                   'rooms_needed',
-                  'tilbudsansvarlig', 'lokaleansvarlige', 'unit',
+                  'tilbudsansvarlig', 'roomresponsible', 'organizationalunit',
                   'needed_hosts', 'needed_teachers',
                   'preparation_time', 'comment',
                   )
-        widgets = VisitForm.Meta.widgets
+        widgets = ProductForm.Meta.widgets
 
 
-class ClassVisitForm(VisitForm):
+class ClassProductForm(ProductForm):
     class Meta:
-        model = Visit
+        model = Product
         fields = ('type', 'title', 'teaser', 'description', 'price', 'state',
                   'institution_level', 'topics', 'audience',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
@@ -606,71 +565,71 @@ class ClassVisitForm(VisitForm):
                   'duration', 'locality',
                   'rooms_needed', 'tour_available', 'catering_available',
                   'presentation_available', 'custom_available', 'custom_name',
-                  'tilbudsansvarlig', 'lokaleansvarlige', 'unit',
+                  'tilbudsansvarlig', 'roomresponsible', 'organizationalunit',
                   'needed_hosts', 'needed_teachers',
                   'preparation_time', 'comment',
                   )
-        widgets = VisitForm.Meta.widgets
-        labels = VisitForm.Meta.labels
+        widgets = ProductForm.Meta.widgets
+        labels = ProductForm.Meta.labels
 
 
-class StudyProjectForm(VisitForm):
+class StudyProjectForm(ProductForm):
     class Meta:
-        model = Visit
+        model = Product
         fields = ('type', 'title', 'teaser', 'description', 'state',
                   'institution_level', 'topics', 'audience',
                   'locality', 'rooms_needed',
-                  'tilbudsansvarlig', 'unit',
+                  'tilbudsansvarlig', 'organizationalunit',
                   'preparation_time', 'comment',
                   )
-        widgets = VisitForm.Meta.widgets
+        widgets = ProductForm.Meta.widgets
 
 
-class AssignmentHelpForm(VisitForm):
+class AssignmentHelpForm(ProductForm):
     class Meta:
-        model = Visit
+        model = Product
         fields = ('type', 'title', 'teaser', 'description', 'state',
                   'institution_level', 'topics', 'audience',
-                  'tilbudsansvarlig', 'unit',
+                  'tilbudsansvarlig', 'organizationalunit',
                   'comment',
                   )
-        widgets = VisitForm.Meta.widgets
+        widgets = ProductForm.Meta.widgets
 
 
-class StudyMaterialForm(VisitForm):
+class StudyMaterialForm(ProductForm):
     class Meta:
-        model = Visit
+        model = Product
         fields = ('type', 'title', 'teaser', 'description', 'price', 'state',
                   'institution_level', 'topics', 'audience',
-                  'tilbudsansvarlig', 'unit',
+                  'tilbudsansvarlig', 'organizationalunit',
                   'comment'
                   )
-        widgets = VisitForm.Meta.widgets
+        widgets = ProductForm.Meta.widgets
 
 
-class OtherVisitForm(VisitForm):
+class OtherProductForm(ProductForm):
     class Meta:
-        model = Visit
-        fields = VisitForm.Meta.fields
-        widgets = VisitForm.Meta.widgets
+        model = Product
+        fields = ProductForm.Meta.fields
+        widgets = ProductForm.Meta.widgets
 
 
-ResourceStudyMaterialFormBase = inlineformset_factory(Resource,
-                                                      StudyMaterial,
-                                                      fields=('file',),
-                                                      can_delete=True, extra=1)
+ProductStudyMaterialFormBase = inlineformset_factory(Product,
+                                                     StudyMaterial,
+                                                     fields=('file',),
+                                                     can_delete=True, extra=1)
 
 
-class ResourceStudyMaterialForm(ResourceStudyMaterialFormBase):
+class ProductStudyMaterialForm(ProductStudyMaterialFormBase):
 
     def __init__(self, data, instance=None):
-        super(ResourceStudyMaterialForm, self).__init__(data)
-        self.studymaterials = StudyMaterial.objects.filter(resource=instance)
+        super(ProductStudyMaterialForm, self).__init__(data)
+        self.studymaterials = StudyMaterial.objects.filter(product=instance)
 
 
-VisitAutosendFormSetBase = inlineformset_factory(
-    Visit,
-    VisitAutosend,
+ProductAutosendFormSetBase = inlineformset_factory(
+    Product,
+    ProductAutosend,
     fields=('template_key', 'enabled', 'days'),
     can_delete=True,
     min_num=1,
@@ -678,7 +637,7 @@ VisitAutosendFormSetBase = inlineformset_factory(
 )
 
 
-class VisitAutosendFormSet(VisitAutosendFormSetBase):
+class ProductAutosendFormSet(ProductAutosendFormSetBase):
 
     def is_valid(self):
         return True
@@ -699,7 +658,7 @@ class BookingForm(forms.ModelForm):
         model = Booking
         fields = ()
         labels = {
-            'visitoccurrence': _(u"Tidspunkt")
+            'visit': _(u"Tidspunkt")
         },
         widgets = {
             'notes': Textarea(attrs={
@@ -707,44 +666,44 @@ class BookingForm(forms.ModelForm):
             })
         }
 
-    def __init__(self, data=None, visit=None, *args, **kwargs):
+    def __init__(self, data=None, product=None, *args, **kwargs):
         super(BookingForm, self).__init__(data, *args, **kwargs)
 
-        self.visit = visit
+        self.product = product
         # self.scheduled = visit is not None and \
-        #    visit.type == Resource.FIXED_SCHEDULE_GROUP_VISIT
+        #    visit.type == Product.FIXED_SCHEDULE_GROUP_VISIT
         self.scheduled = (
-            visit is not None and
-            len(visit.future_events) > 0
+            product is not None and
+            len(product.future_events) > 0
         )
         if self.scheduled:
             choices = []
-            for occurrence in visit.future_events.order_by('start_datetime'):
-                available_seats = occurrence.available_seats
+            for visit in product.future_events.order_by('start_datetime'):
+                available_seats = visit.available_seats
                 date = formats.date_format(
-                    timezone.localtime(occurrence.start_datetime),
+                    timezone.localtime(visit.start_datetime),
                     "DATETIME_FORMAT"
                 )
                 if available_seats is None:
-                    choices.append((occurrence.pk, date))
+                    choices.append((visit.pk, date))
                 elif available_seats > 0 or \
-                        occurrence.waiting_list_capacity > 0:
+                        visit.waiting_list_capacity > 0:
                     choices.append(
                         (
-                            occurrence.pk,
+                            visit.pk,
                             date + " " +
                             _("(%d pladser tilbage)") % available_seats
                         )
                     )
 
-            self.fields['visitoccurrence'].choices = choices
-            self.fields['visitoccurrence'].required = True
+            self.fields['visit'].choices = choices
+            self.fields['visit'].required = True
 
 
 class BookerForm(forms.ModelForm):
 
     class Meta:
-        model = Booker
+        model = Guest
         fields = ('firstname', 'lastname', 'email', 'phone', 'line',
                   'level', 'attendee_count')
         widgets = {
@@ -811,31 +770,34 @@ class BookerForm(forms.ModelForm):
         required=False
     )
 
-    def __init__(self, data=None, visit=None, language='da', *args, **kwargs):
+    def __init__(self, data=None, product=None, language='da', *args,
+                 **kwargs):
         super(BookerForm, self).__init__(data, *args, **kwargs)
         attendeecount_widget = self.fields['attendee_count'].widget
 
-        attendeecount_widget.attrs['min'] = visit.minimum_number_of_visitors
-        if visit is not None:
-            if visit.maximum_number_of_visitors is not None:
+        attendeecount_widget.attrs['min'] = product.minimum_number_of_visitors
+        if product is not None:
+            if product.maximum_number_of_visitors is not None:
                 attendeecount_widget.attrs['max'] = \
-                    visit.maximum_number_of_visitors
+                    product.maximum_number_of_visitors
 
             self.fields['school'].widget.attrs['data-institution-level'] = \
-                visit.institution_level
+                product.institution_level
 
-            available_level_choices = Booker.level_map[visit.institution_level]
+            available_level_choices = \
+                Guest.level_map[product.institution_level]
             self.fields['level'].choices = [(u'', BLANK_LABEL)] + [
                 (value, title)
-                for (value, title) in Booker.level_choices
+                for (value, title) in Guest.level_choices
                 if value in available_level_choices
-            ]
+                ]
             # Visit types where attendee count is mandatory
-            if visit.type in [Resource.GROUP_VISIT,
-                              Resource.TEACHER_EVENT, Resource.STUDY_PROJECT]:
+            if product.type in [Product.GROUP_VISIT,
+                                Product.TEACHER_EVENT,
+                                Product.STUDY_PROJECT]:
                 self.fields['attendee_count'].required = True
             # Class level is not mandatory for teacher events.
-            if visit.type == Resource.TEACHER_EVENT:
+            if product.type == Product.TEACHER_EVENT:
                 self.fields['level'].required = False
 
         # Eventually we may want a prettier solution,
@@ -866,7 +828,7 @@ class BookerForm(forms.ModelForm):
         level = cleaned_data.get("level")
 
         if level == '':
-            cleaned_data['level'] = Booker.other
+            cleaned_data['level'] = Guest.other
 
         if email is not None and repeatemail is not None \
                 and email != repeatemail:
@@ -896,7 +858,7 @@ class ClassBookingForm(BookingForm):
     class Meta:
         model = ClassBooking
         fields = ('tour_desired', 'catering_desired', 'presentation_desired',
-                  'custom_desired', 'visitoccurrence', 'notes')
+                  'custom_desired', 'visit', 'notes')
         labels = BookingForm.Meta.labels
         widgets = BookingForm.Meta.widgets
 
@@ -905,15 +867,15 @@ class ClassBookingForm(BookingForm):
         required=False
     )
 
-    def __init__(self, data=None, visit=None, *args, **kwargs):
-        super(ClassBookingForm, self).__init__(data, visit, *args, **kwargs)
+    def __init__(self, data=None, product=None, *args, **kwargs):
+        super(ClassBookingForm, self).__init__(data, product, *args, **kwargs)
 
         if not self.scheduled:
             self.fields['desired_time'].required = True
 
-        if self.visit is not None:
+        if self.product is not None:
             for service in ['tour', 'catering', 'presentation', 'custom']:
-                if not getattr(self.visit, service + '_available'):
+                if not getattr(self.product, service + '_available'):
                     del self.fields[service + '_desired']
 
     def save(self, commit=True, *args, **kwargs):
@@ -933,7 +895,7 @@ class ClassBookingForm(BookingForm):
 class TeacherBookingForm(BookingForm):
     class Meta:
         model = TeacherBooking
-        fields = ('subjects', 'notes', 'visitoccurrence')
+        fields = ('subjects', 'notes', 'visit')
         labels = BookingForm.Meta.labels
         widgets = BookingForm.Meta.widgets
 
@@ -941,7 +903,7 @@ class TeacherBookingForm(BookingForm):
 class StudentForADayBookingForm(BookingForm):
     class Meta:
         model = Booking
-        fields = ('notes', 'visitoccurrence')
+        fields = ('notes', 'visit')
         labels = BookingForm.Meta.labels
         widgets = BookingForm.Meta.widgets
 
@@ -949,7 +911,7 @@ class StudentForADayBookingForm(BookingForm):
 class StudyProjectBookingForm(BookingForm):
     class Meta:
         model = Booking
-        fields = ('notes', 'visitoccurrence')
+        fields = ('notes', 'visit')
         labels = BookingForm.Meta.labels
         widgets = BookingForm.Meta.widgets
 
@@ -992,7 +954,7 @@ class EmailTemplateForm(forms.ModelForm):
 
     class Meta:
         model = EmailTemplate
-        fields = ('key', 'subject', 'body', 'unit')
+        fields = ('key', 'subject', 'body', 'organizationalunit')
         widgets = {
             'subject': TextInput(attrs={'class': 'form-control'}),
             'body': Textarea(attrs={'rows': 10, 'cols': 90}),
@@ -1001,7 +963,7 @@ class EmailTemplateForm(forms.ModelForm):
 
     def __init__(self, user, *args, **kwargs):
         super(EmailTemplateForm, self).__init__(*args, **kwargs)
-        self.fields['unit'].choices = [BLANK_OPTION] + [
+        self.fields['organizationalunit'].choices = [BLANK_OPTION] + [
             (x.pk, unicode(x))
             for x in user.userprofile.get_unit_queryset()]
 
@@ -1014,12 +976,11 @@ class EmailTemplatePreviewContextEntryForm(forms.Form):
     type = forms.ChoiceField(
         choices=(
             ('string', _(u'Tekst')),
-            ('Unit', _(u'Enhed')),
-            # ('OtherResource': OtherResource),
-            ('Visit', _(u'Tilbud')),
-            ('VisitOccurrence', _(u'Besøg')),
+            ('OrganizationalUnit', _(u'Enhed')),
+            ('Product', _(u'Tilbud')),
+            ('Visit', _(u'Besøg')),
             # ('StudyMaterial', StudyMaterial),
-            # ('Resource',Resource),
+            # ('Product',Product),
             # ('Subject', Subject),
             # ('GymnasieLevel', GymnasieLevel),
             # ('Room', Room),
@@ -1132,7 +1093,7 @@ class AcceptBookingForm(forms.Form):
 class EvaluationOverviewForm(forms.Form):
     user = None
 
-    unit = forms.MultipleChoiceField(
+    organizationalunit = forms.MultipleChoiceField(
         label=_(u'Afgræns ud fra enhed(er)'),
         required=False,
     )
@@ -1148,6 +1109,6 @@ class EvaluationOverviewForm(forms.Form):
 
         super(EvaluationOverviewForm, self).__init__(qdict, *args, **kwargs)
 
-        self.fields['unit'].choices = [
+        self.fields['organizationalunit'].choices = [
             (x.pk, unicode(x)) for x in userprofile.get_unit_queryset()
         ]

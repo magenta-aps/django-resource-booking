@@ -1,1 +1,1 @@
-Du har afvist en ledig plads på tilbuddet "{{ visit.title }}"
+Du har afvist en ledig plads på tilbuddet "{{ product.title }}"

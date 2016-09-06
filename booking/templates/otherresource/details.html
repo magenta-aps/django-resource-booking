@@ -21,13 +21,6 @@
             <div class="divider"></div>
             <h2>{{ object.get_type_display }}</h2>
             
-            {% if can_edit %}
-                <a class="pull-right btn btn-primary edit-btn" href="{% url 'otherresource-edit' object.pk %}?back={{ thisurl | urlencode }}">{% trans '+ Redigér' %}</a>
-            {% endif %}
-            {% if user.userprofile.can_create %}
-                <a class="pull-right btn btn-primary" href="{% url 'otherresource-clone' object.pk %}?back={{ thisurl | urlencode }}">{% trans 'Opret kopi' %}</a>
-            {% endif %}
-            
             <h1>{{ object.title }}</h1>
             <div class="well">
                 {% autoescape off %}
@@ -88,11 +81,11 @@
 
                             <dt>{% trans 'Arrangør:' %}</dt>
                             <dd>
-                                {% if object.unit.url %}
-                                    <a href="{{ object.unit.url }}" target="_blank">
+                                {% if object.organizationalunit.url %}
+                                    <a href="{{ object.organizationalunit.url }}" target="_blank">
                                 {% endif %}
-                                <strong>{{ object.unit.name }}</strong>
-                                {% if object.unit.url %}
+                                <strong>{{ object.organizationalunit.name }}</strong>
+                                {% if object.organizationalunit.url %}
                                     </a> <span class="glyphicon glyphicon-new-window"></span>
                                 {% endif %}
                             </dd>

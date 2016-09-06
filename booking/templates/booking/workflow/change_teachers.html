@@ -15,14 +15,14 @@
         <div class="divider"></div>
     </div>
     <div class="divider"></div>
-    <form name="changebookingteachersform" id="changebookingteachersform" class="changebookingform" action="{% url 'change-visit-occ-teachers' object.pk %}" method="post">
+    <form name="changebookingteachersform" id="changebookingteachersform" class="changebookingform" action="{% url 'change-visit-teachers' object.pk %}" method="post">
         {% csrf_token %}
 
         {% include 'resource/fields/generic_field.html' with field=form.override_needed_teachers %}
         <div class="row form-group">
             <div class="col-sm-2"></div>
             <div class="col-sm-7">
-                {% blocktrans with title=object.visit.title needed=object.visit.get_needed_teachers_display %}
+                {% blocktrans with title=object.product.title needed=object.product.get_needed_teachers_display %}
                 Antal nødvendige undervisere angivet på "{{ title }}": {{ needed }}
                 {% endblocktrans %}
             </div>

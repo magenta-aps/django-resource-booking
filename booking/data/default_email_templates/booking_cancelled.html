@@ -1,10 +1,10 @@
 <p>Kære alle</p>
 <p>
-    Besøg <a href="{% full_url 'visit-view' visit.pk %}">{{ visit.title }}</a>{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date:'d.m.Y' }}
+    Besøg <a href="{% full_url 'product-view' product.pk %}">{{ product.title }}</a>{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date:'d.m.Y' }}
     {% blocktrans with time=besoeg.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}{% endif %}.
     på Københavns Universitet er desværre blevet aflyst.
     Hvis du har spørgsmål til din tilmelding, kan du skrive til
-    {% include 'booking/email/snippets/contact_addresses.html' with visit=visit %}.
+    {% include 'booking/email/snippets/contact_addresses.html' with product=product %}.
 </p>
 {% if recipient.guest %}
 
@@ -18,7 +18,7 @@
     </p>
 
     <p>
-        <a href="{% full_url 'visit-view' visit.pk %}">Læs mere om besøget her</a>.
+        <a href="{% full_url 'product-view' product.pk %}">Læs mere om besøget her</a>.
     </p>
 
     <p>
@@ -36,7 +36,7 @@
     {% include 'booking/email/snippets/booking_list.html' %}
 
     <p>
-        <a href="{% full_url 'visit-view' visit.pk %}">Læs mere om besøget her</a>.
+        <a href="{% full_url 'product-view' product.pk %}">Læs mere om besøget her</a>.
     </p>
 
 {% endif %}
@@ -46,5 +46,5 @@
 <p>
     Venlig hilsen<br />
     <br />
-    {{ visit.unit.name }}
+    {{ product.organizationalunit.name }}
 </p>

@@ -1,1 +1,1 @@
-Tilmelding til venteliste på foKUs-tilbud "{{ visit.title }}"
+Tilmelding til venteliste på foKUs-tilbud "{{ product.title }}"

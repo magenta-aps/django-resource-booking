@@ -9,7 +9,7 @@
 
 <div class="divider"></div>
 
-<h1>{{ unit.name }}</h1>
+<h1>{{ organizationalunit.name }}</h1>
 
 <div class="divider"></div>
 
@@ -18,8 +18,8 @@
 <form action="{% url 'statistics' %}" method="get">
     <div class="divider"></div>
     <div class="form-group">
-        {{ form.units.errors }}
-        <label class="control-label" for="{{ form.unit.id_units}}">{% trans 'Enheder:' %}</label>
+        {{ form.organizationalunits.errors }}
+        <label class="control-label" for="{{ form.organizationalunit.id_units}}">{% trans 'Enheder:' %}</label>
         {{ form.units }}
     </div>
     <div class="form-group">
@@ -73,11 +73,11 @@
             <tbody>
             {% for booking in bookings %}
                 <tr>
-                    <td>{{ booking.visitoccurrence.visit.resource_ptr.unit.name }}</td>
+                    <td>{{ booking.visit.product.resource_ptr.organizationalunit.name }}</td>
                     <td><a href="{% url 'booking-view' booking.id %}">{{ booking }}</a></td>
                     <td>{{ booking.visit.get_type_display }}</td>
-                    <td><a href="{% url 'resource-view' booking.visitoccurrence.visit.resource_ptr.id %}">{{ booking.visitoccurrence.visit.resource_ptr.title }}</a></td>
-                    <td>{{ booking.visitoccurrence.start_datetime|date:'d-m-Y H:i:s'}} til {{ booking.visitoccurrence.end_datetime|date:'d-m-Y H:i:s'}}</td>
+                    <td><a href="{% url 'resource-view' booking.visit.product.resource_ptr.id %}">{{ booking.visit.product.resource_ptr.title }}</a></td>
+                    <td>{{ booking.visit.start_datetime|date:'d-m-Y H:i:s'}} til {{ booking.visit.end_datetime|date:'d-m-Y H:i:s'}}</td>
                     <td>
                         {% for bookingsubjectlevel in booking.bookinggrundskolesubjectlevel_set.all %}
                             {{ bookingsubjectlevel.subject }}/{{ bookingsubjectlevel.level }},
@@ -108,7 +108,7 @@
                     <td>{{ booking.booker.school.address }}</td>
                     <td>{{ booking.booker.get_full_name }} </td>
                     <td>{{ booking.booker.get_email }} </td>
-                    <td>{{ booking.visitoccurrence.visit.resource_ptr.comment }} </td>
+                    <td>{{ booking.visit.product.resource_ptr.comment }} </td>
                     <td>{{ booking.comments }} </td>
                     <td>
                         {% if booking.hosts %}

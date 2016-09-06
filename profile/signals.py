@@ -22,14 +22,15 @@ def custom_update_user(sender, **kwargs):
             group = None
         if group:
             try:
-                group = booking_models.Unit.objects.get(name=group)
-            except booking_models.Unit.DoesNotExist:
+                group = \
+                    booking_models.OrganizationalUnit.objects.get(name=group)
+            except booking_models.OrganizationalUnit.DoesNotExist:
                 group = None
 
         # Give the user a profile
         profile = profile_models.UserProfile(
             user=user,
-            unit=group,
+            organizationalunit=group,
             user_role=profile_models.get_none_role()
         )
         profile.save()

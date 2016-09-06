@@ -6,10 +6,7 @@ from . import models as booking_models
 from profile.models import COORDINATOR, FACULTY_EDITOR, EDIT_ROLES
 
 EXCLUDE_MODELS = set([
-    booking_models.Resource,
     booking_models.GymnasieLevel,
-    booking_models.Person,
-    booking_models.UserPerson,
 ])
 
 CLASSES_BY_ROLE = {}
@@ -19,7 +16,7 @@ CLASSES_BY_ROLE[COORDINATOR] = set([
 ])
 
 CLASSES_BY_ROLE[FACULTY_EDITOR] = set([
-    booking_models.Unit
+    booking_models.OrganizationalUnit
 ])
 
 # Faculty editors will always have access to the same things as
@@ -30,7 +27,7 @@ CLASSES_BY_ROLE[FACULTY_EDITOR].update(CLASSES_BY_ROLE[COORDINATOR])
 CUSTOM_ADMIN_CLASSES = {}
 
 MODEL_UNIT_FILTER_MAP = {
-    'Room': 'locality__unit'
+    'Room': 'locality__organizationalunit'
 }
 
 
@@ -63,8 +60,8 @@ class KUBookingModelAdmin(admin.ModelAdmin):
         # Filter anything that has a unit to the units the user has access to
         model_name = self.model._meta.object_name
         unit_filter_match = None
-        if hasattr(self.model, 'unit'):
-            unit_filter_match = 'unit'
+        if hasattr(self.model, 'organizationalunit'):
+            unit_filter_match = 'organizationalunit'
         elif model_name in MODEL_UNIT_FILTER_MAP:
             unit_filter_match = MODEL_UNIT_FILTER_MAP[model_name]
 
@@ -88,14 +85,15 @@ class KUBookingModelAdmin(admin.ModelAdmin):
             return form
 
         model_name = self.model._meta.object_name
-        if hasattr(self.model, 'unit') and 'unit' in form.base_fields:
+        if hasattr(self.model, 'organizationalunit') and 'organizationalunit' \
+                in form.base_fields:
             # Limit choices to the unit the user has access to
             unit_qs = request.user.userprofile.get_unit_queryset()
-            form.base_fields['unit'].queryset = unit_qs
+            form.base_fields['organizationalunit'].queryset = unit_qs
 
             if not getattr(self.model, 'allow_null_unit_editing', False):
                 # Do not allow selecting the blank option
-                form.base_fields['unit'].empty_label = None
+                form.base_fields['organizationalunit'].empty_label = None
         elif model_name in MODEL_UNIT_FILTER_MAP:
             match_str = MODEL_UNIT_FILTER_MAP[model_name]
 
@@ -138,7 +136,7 @@ class KUBookingUnitAdmin(KUBookingModelAdmin):
         return form
 
 
-CUSTOM_ADMIN_CLASSES[booking_models.Unit] = KUBookingUnitAdmin
+CUSTOM_ADMIN_CLASSES[booking_models.OrganizationalUnit] = KUBookingUnitAdmin
 
 # Register your models here.
 for name, value in booking_models.__dict__.iteritems():

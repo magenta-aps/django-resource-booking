@@ -4,7 +4,7 @@ from django.conf.urls import patterns, url
 from profile.views import ProfileView, CreateUserView, UnitListView
 from profile.views import DeleteUserView, UserListView, StatisticsView
 from profile.views import EmailLoginView
-from profile.views import EditMyResourcesView
+from profile.views import EditMyProductsView
 from profile.views import AvailabilityEditView
 from profile.views import AvailabilityView
 
@@ -48,7 +48,7 @@ urlpatterns = patterns(
         StatisticsView.as_view(),
         name='statistics'),
     url(r'^my_resources/?$',
-        EditMyResourcesView.as_view(),
+        EditMyProductsView.as_view(),
         name='my-resources'),
 
     url(r'^availability/(?P<user_pk>[0-9]+)/?$',

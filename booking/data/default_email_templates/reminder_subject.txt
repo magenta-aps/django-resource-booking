@@ -1,1 +1,1 @@
-Påmindelse om besøg på KU: "{{ visit.title }}"
+Påmindelse om besøg på KU: "{{ product.title }}"

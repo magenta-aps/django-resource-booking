@@ -2,42 +2,41 @@ from django.conf.urls import patterns, url, include
 from django.conf.urls.static import static
 from django.conf import settings
 
-from .views import MainPageView, VisitOccurrenceNotifyView
+from .views import MainPageView, VisitNotifyView
 
-from booking.views import PostcodeView, SchoolView, VisitInquireView
+from booking.views import PostcodeView, SchoolView, ProductInquireView
 from booking.views import RrulestrView
-from booking.views import ResourceListView, ResourceCustomListView
-from booking.views import EditResourceInitialView, ResourceDetailView
+from booking.views import ProductListView, ProductCustomListView
+from booking.views import EditProductInitialView
 from booking.views import BookingView, BookingSuccessView
-from booking.views import VisitOccurrenceSearchView
-from booking.views import EditOtherResourceView, OtherResourceDetailView
-from booking.views import EditVisitView, VisitDetailView
-from booking.views import EmailSuccessView, VisitInquireSuccessView
+from booking.views import VisitSearchView
+from booking.views import EditProductView, ProductDetailView
+from booking.views import EmailSuccessView, ProductInquireSuccessView
 from booking.views import SearchView, EmbedcodesView
 
 from booking.views import BookingNotifyView, BookingDetailView
 from booking.views import BookingAcceptView
 from booking.views import EmailTemplateListView, EmailTemplateEditView
 from booking.views import EmailTemplateDetailView, EmailTemplateDeleteView
-from booking.views import ChangeVisitOccurrenceEvalView
-from booking.views import ChangeVisitOccurrenceStatusView
-from booking.views import ChangeVisitOccurrenceStartTimeView
-from booking.views import ChangeVisitOccurrenceTeachersView
-from booking.views import ChangeVisitOccurrenceHostsView
-from booking.views import ChangeVisitOccurrenceRoomsView
-from booking.views import ChangeVisitOccurrenceCommentsView
-from booking.views import ChangeVisitOccurrenceAutosendView
-from booking.views import ResetVisitOccurrenceChangesView
+from booking.views import ChangeVisitEvalView
+from booking.views import ChangeVisitStatusView
+from booking.views import ChangeVisitStartTimeView
+from booking.views import ChangeVisitTeachersView
+from booking.views import ChangeVisitHostsView
+from booking.views import ChangeVisitRoomsView
+from booking.views import ChangeVisitCommentsView
+from booking.views import ChangeVisitAutosendView
+from booking.views import ResetVisitChangesView
 from booking.views import BecomeTeacherView
 from booking.views import DeclineTeacherView
 from booking.views import BecomeHostView
 from booking.views import DeclineHostView
 from booking.views import EmailReplyView
-from booking.views import VisitOccurrenceAddLogEntryView
-from booking.views import VisitOccurrenceAddCommentView
-from booking.views import VisitOccurrenceDetailView
-from booking.views import VisitOccurrenceCustomListView
-from booking.views import CloneResourceView
+from booking.views import VisitAddLogEntryView
+from booking.views import VisitAddCommentView
+from booking.views import VisitDetailView
+from booking.views import VisitCustomListView
+from booking.views import CloneProductView
 from booking.views import EvaluationOverviewView
 
 import booking.views
@@ -66,76 +65,64 @@ urlpatterns = patterns(
         name='iframe_search'),
 
     url(r'^resource/create$',
-        EditResourceInitialView.as_view(),
+        EditProductInitialView.as_view(),
         name='resource-create'),
     url(r'^resource/(?P<pk>[0-9]+)/$',
-        ResourceDetailView.as_view(),
+        ProductDetailView.as_view(),
         name='resource-view'),
     url(r'^resource/?$',
-        ResourceListView.as_view(),
+        ProductListView.as_view(),
         name='resource-list'),
 
     url(r'^resource/customlist/?$',
-        ResourceCustomListView.as_view(),
+        ProductCustomListView.as_view(),
         name='resource-customlist'),
     url(r'^resource/(?P<pk>[0-9]+)/edit$',
-        EditResourceInitialView.as_view(),
+        EditProductInitialView.as_view(),
         name='resource-edit'),
     url(r'^resource/(?P<pk>[0-9]+)/clone$',
-        CloneResourceView.as_view(),
+        CloneProductView.as_view(),
         name='resource-clone'),
 
-    url(r'^otherresource/create$',
-        EditOtherResourceView.as_view(success_url='create'),
-        name='otherresource-create'),
-    url(r'^otherresource/(?P<pk>[0-9]+)/?$',
-        OtherResourceDetailView.as_view(),
-        name='otherresource-view'),
-    url(r'^otherresource/(?P<pk>[0-9]+)/edit$',
-        EditOtherResourceView.as_view(), name='otherresource-edit'),
-    url(r'^otherresource/(?P<pk>[0-9]+)/clone$',
-        EditOtherResourceView.as_view(), {'clone': True},
-        name='otherresource-clone'),
+    url(r'^product/create$',
+        EditProductView.as_view(success_url='create'),
+        name='product-create'),
+    url(r'^product/(?P<pk>[0-9]+)/?$',
+        ProductDetailView.as_view(),
+        name='product-view'),
+    url(r'^product/(?P<pk>[0-9]+)/edit$',
+        EditProductView.as_view(),
+        name='product-edit'),
+    url(r'^product/(?P<pk>[0-9]+)/clone$',
+        EditProductView.as_view(),
+        {'clone': True},
+        name='product-clone'),
+    url(r'^product/(?P<pk>[0-9]+)/simple_ressources$',
+        booking.views.SimpleRessourcesView.as_view(),
+        name='product-simple-ressources'),
+    url(r'^product/(?P<product>[0-9]+)/book$',
+        BookingView.as_view(),
+        name='product-book'),
+    url(r'^product/(?P<product>[0-9]+)/book/success$',
+        BookingSuccessView.as_view(),
+        name='product-book-success'),
+    url(r'^product/(?P<product>[0-9]+)/inquire$',
+        ProductInquireView.as_view(),
+        name='product-inquire'),
+    url(r'^product/(?P<product>[0-9]+)/inquire/success$',
+        ProductInquireSuccessView.as_view(),
+        name='product-inquire-success'),
 
-    url(r'^visit/create$',
-        EditVisitView.as_view(success_url='create'),
-        name='visit-create'),
-    url(r'^visit/(?P<pk>[0-9]+)/?$',
+    url(r'^visit/(?P<pk>[0-9]+)/notify$',
+        VisitNotifyView.as_view(),
+        name='visit-notify'),
+    url(r'^visit/(?P<pk>[0-9]+)/notify/success$',
+        EmailSuccessView.as_view(),
+        name='visit-notify-success'),
+
+    url(r'^visit/(?P<pk>[0-9]+)$',
         VisitDetailView.as_view(),
         name='visit-view'),
-    url(r'^visit/(?P<pk>[0-9]+)/edit$',
-        EditVisitView.as_view(),
-        name='visit-edit'),
-    url(r'^visit/(?P<pk>[0-9]+)/clone$',
-        EditVisitView.as_view(),
-        {'clone': True},
-        name='visit-clone'),
-    url(r'^visit/(?P<pk>[0-9]+)/simple_ressources$',
-        booking.views.SimpleRessourcesView.as_view(),
-        name='visit-simple-ressources'),
-    url(r'^visit/(?P<visit>[0-9]+)/book$',
-        BookingView.as_view(),
-        name='visit-book'),
-    url(r'^visit/(?P<visit>[0-9]+)/book/success$',
-        BookingSuccessView.as_view(),
-        name='visit-book-success'),
-    url(r'^visit/(?P<visit>[0-9]+)/inquire$',
-        VisitInquireView.as_view(),
-        name='visit-inquire'),
-    url(r'^visit/(?P<visit>[0-9]+)/inquire/success$',
-        VisitInquireSuccessView.as_view(),
-        name='visit-inquire-success'),
-
-    url(r'^visit/occurrence/(?P<pk>[0-9]+)/notify$',
-        VisitOccurrenceNotifyView.as_view(),
-        name='visit-occ-notify'),
-    url(r'^visit/occurrence/(?P<pk>[0-9]+)/notify/success$',
-        EmailSuccessView.as_view(),
-        name='visit-occ-notify-success'),
-
-    url(r'^visit/occurrence/(?P<pk>[0-9]+)$',
-        VisitOccurrenceDetailView.as_view(),
-        name='visit-occ-view'),
 
     url(r'^booking/(?P<pk>[0-9]+)/?$',
         BookingDetailView.as_view(),
@@ -144,62 +131,62 @@ urlpatterns = patterns(
         BookingAcceptView.as_view(),
         name='booking-accept-view'),
 
-    url(r'^visit/occurrence/(?P<pk>[0-9]+)/change_status/?$',
-        ChangeVisitOccurrenceStatusView.as_view(),
-        name='change-visit-occ-status'),
-    url(r'^visit/occurrence/(?P<pk>[0-9]+)/change_starttime/?$',
-        ChangeVisitOccurrenceStartTimeView.as_view(),
-        name='change-visit-occ-starttime'),
-    url(r'^visit/occurrence/(?P<pk>[0-9]+)/change_teachers/?$',
-        ChangeVisitOccurrenceTeachersView.as_view(),
-        name='change-visit-occ-teachers'),
-    url(r'^visit/occurrence/(?P<pk>[0-9]+)/change_hosts/?$',
-        ChangeVisitOccurrenceHostsView.as_view(),
-        name='change-visit-occ-hosts'),
-    url(r'^visit/occurrence/(?P<pk>[0-9]+)/change_rooms/?$',
-        ChangeVisitOccurrenceRoomsView.as_view(),
-        name='change-visit-occ-rooms'),
-    url(r'^visit/occurrence/(?P<pk>[0-9]+)/change_comments/?$',
-        ChangeVisitOccurrenceCommentsView.as_view(),
-        name='change-visit-occ-comments'),
-    url(r'^visit/occurrence/(?P<pk>[0-9]+)/change_evaluation_link/?$',
-        ChangeVisitOccurrenceEvalView.as_view(),
-        name='change-visit-occ-eval'),
-    url(r'^visit/occurrence/(?P<pk>[0-9]+)/add_logentry/?$',
-        VisitOccurrenceAddLogEntryView.as_view(),
-        name='visit-occ-add-logentry'),
-    url(r'^visit/occurrence/(?P<pk>[0-9]+)/add_comment/?$',
-        VisitOccurrenceAddCommentView.as_view(),
-        name='visit-occ-add-comment'),
-    url(r'^visit/occurrence/(?P<pk>[0-9]+)/become_teacher/?$',
+    url(r'^visit/(?P<pk>[0-9]+)/change_status/?$',
+        ChangeVisitStatusView.as_view(),
+        name='change-visit-status'),
+    url(r'^visit/(?P<pk>[0-9]+)/change_starttime/?$',
+        ChangeVisitStartTimeView.as_view(),
+        name='change-visit-starttime'),
+    url(r'^visit/(?P<pk>[0-9]+)/change_teachers/?$',
+        ChangeVisitTeachersView.as_view(),
+        name='change-visit-teachers'),
+    url(r'^visit/(?P<pk>[0-9]+)/change_hosts/?$',
+        ChangeVisitHostsView.as_view(),
+        name='change-visit-hosts'),
+    url(r'^visit/(?P<pk>[0-9]+)/change_rooms/?$',
+        ChangeVisitRoomsView.as_view(),
+        name='change-visit-rooms'),
+    url(r'^visit/(?P<pk>[0-9]+)/change_comments/?$',
+        ChangeVisitCommentsView.as_view(),
+        name='change-visit-comments'),
+    url(r'^visit/(?P<pk>[0-9]+)/change_evaluation_link/?$',
+        ChangeVisitEvalView.as_view(),
+        name='change-visit-eval'),
+    url(r'^visit/(?P<pk>[0-9]+)/add_logentry/?$',
+        VisitAddLogEntryView.as_view(),
+        name='visit-add-logentry'),
+    url(r'^visit/(?P<pk>[0-9]+)/add_comment/?$',
+        VisitAddCommentView.as_view(),
+        name='visit-add-comment'),
+    url(r'^visit/(?P<pk>[0-9]+)/become_teacher/?$',
         BecomeTeacherView.as_view(),
         name='become-teacher'),
-    url(r'^visit/occurrence/(?P<pk>[0-9]+)/decline_teacher/?$',
+    url(r'^visit/(?P<pk>[0-9]+)/decline_teacher/?$',
         DeclineTeacherView.as_view(),
         name='decline-teacher'),
-    url(r'^visit/occurrence/(?P<pk>[0-9]+)/become_host/?$',
+    url(r'^visit/(?P<pk>[0-9]+)/become_host/?$',
         BecomeHostView.as_view(),
         name='become-host'),
-    url(r'^visit/occurrence/(?P<pk>[0-9]+)/decline_host/?$',
+    url(r'^visit/(?P<pk>[0-9]+)/decline_host/?$',
         DeclineHostView.as_view(),
         name='decline-host'),
-    url(r'^visit/occurrence/(?P<pk>[0-9]+)/reset_changes_marker/?$',
-        ResetVisitOccurrenceChangesView.as_view(),
-        name='visit-occ-reset-changes-marker'),
-    url(r'^visit/occurrence/search$',
-        VisitOccurrenceSearchView.as_view(),
-        name='visit-occ-search'),
-    url(r'^visit/occurrence/(?P<pk>[0-9]+)/change_autosend/?$',
-        ChangeVisitOccurrenceAutosendView.as_view(),
-        name='change-visit-occ-autosend'),
-    url(r'^visit/occurrence/customlist/?$',
-        VisitOccurrenceCustomListView.as_view(),
-        name='visit-occ-customlist'),
+    url(r'^visit/(?P<pk>[0-9]+)/reset_changes_marker/?$',
+        ResetVisitChangesView.as_view(),
+        name='visit-reset-changes-marker'),
+    url(r'^visit/search$',
+        VisitSearchView.as_view(),
+        name='visit-search'),
+    url(r'^visit/(?P<pk>[0-9]+)/change_autosend/?$',
+        ChangeVisitAutosendView.as_view(),
+        name='change-visit-autosend'),
+    url(r'^visit/customlist/?$',
+        VisitCustomListView.as_view(),
+        name='visit-customlist'),
 
     url(r'^booking/(?P<pk>[0-9]+)/notify$',
         BookingNotifyView.as_view(),
         name='booking-notify'),
-    url(r'^booking/(?P<visit>[0-9]+)/notify/success$',
+    url(r'^booking/(?P<product>[0-9]+)/notify/success$',
         EmailSuccessView.as_view(),
         name='booking-notify-success'),
 
@@ -251,8 +238,7 @@ urlpatterns = patterns(
 
 embed_views = [
     'index',
-    'visit-view',
-    'otherresource-view',
+    'product-view',
     'search',
 ]
 

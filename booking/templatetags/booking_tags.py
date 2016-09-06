@@ -9,8 +9,8 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
 from timedelta.helpers import parse, nice_repr
-from booking.models import LOGACTION_DISPLAY_MAP, Booker, EmailBookerEntry
-from profile.models import EmailLoginEntry, UserProfile
+from booking.models import LOGACTION_DISPLAY_MAP, Guest, BookerResponseNonce
+from profile.models import EmailLoginURL, UserProfile
 import datetime
 import re
 import json
@@ -162,7 +162,7 @@ class FullURLNode(defaulttags.Node):
                 user = user.user
 
             if isinstance(user, User):
-                entry = EmailLoginEntry.create_from_url(
+                entry = EmailLoginURL.create_from_url(
                     user,
                     url,
                     expires_in=datetime.timedelta(hours=72)
@@ -170,8 +170,8 @@ class FullURLNode(defaulttags.Node):
                 return entry.as_url()
 
             # Special hack for letting Bookers respond to mails
-            if isinstance(user, Booker):
-                entry = EmailBookerEntry.create(
+            if isinstance(user, Guest):
+                entry = BookerResponseNonce.create(
                     user,
                     expires_in=datetime.timedelta(hours=72)
                 )

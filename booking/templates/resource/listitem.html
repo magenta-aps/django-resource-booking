@@ -26,16 +26,16 @@
                         </ul>
                     </li>
                 {% endif %}
-                {% if item.num_occurences %}
+                {% if item.num_visits %}
                     <li>
                         <strong>{% trans 'Hvornår:' %}</strong>
                         <span class="type-offer">
-                            {% if item.num_occurences == 1 %}
-                                {% blocktrans with date=item.first_occurence|date:"d.m.Y" time=item.first_occurence|time:"H.i" %}
+                            {% if item.num_visits == 1 %}
+                                {% blocktrans with date=item.first_visit|date:"d.m.Y" time=item.first_visit|time:"H.i" %}
                                     {{ date }} kl. {{ time }}
                                 {% endblocktrans %}
                             {% else %}
-                                {% blocktrans with count=item.num_occurences date=item.first_occurence|date:"d.m.Y" time=item.first_occurence|time:"H.i" %}
+                                {% blocktrans with count=item.num_visits date=item.first_visit|date:"d.m.Y" time=item.first_visit|time:"H.i" %}
                                     {{ count }} mulige tidspunkter, første gang {{ date }} kl. {{ time }}
                                 {% endblocktrans %}
                             {% endif %}

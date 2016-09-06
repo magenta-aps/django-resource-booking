@@ -52,9 +52,9 @@ def import_one(key):
         body = open(fname).read()
 
     try:
-        template = EmailTemplate.objects.get(key=key, unit__isnull=True)
+        template = EmailTemplate.objects.get(key=key, organizationalunit__isnull=True)
     except EmailTemplate.DoesNotExist:
-        template = EmailTemplate(key=key, unit=None)
+        template = EmailTemplate(key=key, organizationalunit=None)
 
     template.subject = subject
     template.body = body
@@ -75,7 +75,7 @@ def export_one(key):
     fname2 = os.path.join(DIR, basefname + "_subject.txt")
 
     try:
-        template = EmailTemplate.objects.get(key=key, unit__isnull=True)
+        template = EmailTemplate.objects.get(key=key, organizationalunit__isnull=True)
     except EmailTemplate.DoesNotExist:
         print("Template not found!")
 

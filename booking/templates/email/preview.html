@@ -4,8 +4,8 @@
 {% load booking_tags %}
 
 {% block htmltitle %} -
-    {% if template.unit %}
-        {% blocktrans with templatename=template.name unitname=template.unit.name %}
+    {% if template.organizationalunit %}
+        {% blocktrans with templatename=template.name unitname=template.organizationalunit.name %}
             Preview emailskabelon '{{ templatename }}' for {{ unitname }}
         {% endblocktrans %}
     {% else %}
@@ -29,8 +29,8 @@
                     Preview emailskabelon '{{ templatename }}'
                 {% endblocktrans %}
             </h1>
-            {% if template.unit %}
-                <dl class="dl-horizontal"><dt>{% trans 'Enhed:'%}</dt><dd>{{ template.unit.name }}</dd>
+            {% if template.organizationalunit %}
+                <dl class="dl-horizontal"><dt>{% trans 'Enhed:'%}</dt><dd>{{ template.organizationalunit.name }}</dd>
             {% else %}
                 {% trans 'Grundskabelon'%}
             {% endif %}

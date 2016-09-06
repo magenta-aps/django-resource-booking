@@ -19,7 +19,7 @@
             <form name="evaluationoverviewform" id="evaluationoverviewform"
                   action="{{ request.uri }}" method="get">
                 <div>
-                    {% include 'resource/fields/generic_field.html' with field=form.unit %}
+                    {% include 'resource/fields/generic_field.html' with field=form.organizationalunit %}
                     <div class="row form-group">
                         <div class="col-sm-2"></div>
                         <div class="col-sm-7">
@@ -71,10 +71,10 @@
 
                     {% for res in results %}
                         <tr>
-                            <td><a href="{% url 'visit-view' res.visit.pk %}">#{{ res.visit.pk }}</a></td>
-                            <td><a href="{% url 'visit-view' res.visit.pk %}">{{ res.visit.title }}</a></td>
-                            <td><a href="{% url 'visit-occ-view' res.pk %}">#{{ res.pk }}</a></td>
-                            <td><a href="{% url 'visit-occ-view' res.pk %}">{{ res.display_value }}</a></td>
+                            <td><a href="{% url 'product-view' res.product.pk %}">#{{ res.product.pk }}</a></td>
+                            <td><a href="{% url 'product-view' res.product.pk %}">{{ res.product.title }}</a></td>
+                            <td><a href="{% url 'visit-view' res.pk %}">#{{ res.pk }}</a></td>
+                            <td><a href="{% url 'visit-view' res.pk %}">{{ res.display_value }}</a></td>
                             <td><a href="{{ res.evaluation_link }}">{{ res.evaluation_link }}</a></td>
                             <td><span class="label label-{{ res.get_workflow_status_class }}">{{ res.get_workflow_status_display }}</span></td>
                         </tr>
