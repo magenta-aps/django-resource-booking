@@ -4,6 +4,7 @@ from django.db.models import Q
 
 from . import models as booking_models
 from profile.models import COORDINATOR, FACULTY_EDITOR, EDIT_ROLES
+from booking.resource_based import models as resource_models
 
 EXCLUDE_MODELS = set([
     booking_models.GymnasieLevel,
@@ -150,6 +151,26 @@ for name, value in booking_models.__dict__.iteritems():
 
     # Skip stuff that is not native to the booking.models module
     if not value.__module__ == 'booking.models':
+        continue
+
+    if value in EXCLUDE_MODELS:
+        continue
+
+    cls = CUSTOM_ADMIN_CLASSES.get(value, KUBookingModelAdmin)
+    admin.site.register(value, cls)
+
+# Register your models here.
+for name, value in resource_models.__dict__.iteritems():
+    # Skip stuff that is not classes
+    if not isinstance(value, type):
+        continue
+
+    # Skip stuff that is not models
+    if not issubclass(value, django_models.Model):
+        continue
+
+    # Skip stuff that is not native to the booking.models module
+    if not value.__module__ == 'booking.resource_based.models':
         continue
 
     if value in EXCLUDE_MODELS:
