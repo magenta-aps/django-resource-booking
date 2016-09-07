@@ -32,7 +32,7 @@
         {% include 'resource/fields/userselect_with_availability_link.html' with field=form.hosts helptext=vaerter_helptext %}
 
         {% if can_send_emails %}
-        {% include 'resource/fields/boolean_field.html' with field=form.send_emails left_label="Udsendelse af e-mail:" %}
+        {% include 'common/fields/boolean_field.html' with field=form.send_emails left_label="Udsendelse af e-mail:" %}
         {% else %}
         <div class="row form-group">
             <div class="col-sm-2"><strong>Udsendelse af e-mail:</strong></div>
