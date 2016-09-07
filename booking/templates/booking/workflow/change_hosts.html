@@ -29,7 +29,7 @@
         </div>
 
         {% trans "Vælg værter der er knyttet til dette tilbud:" as vaerter_helptext %}
-        {% include 'resource/fields/userselect_with_availability_link.html' with field=form.hosts helptext=vaerter_helptext %}
+        {% include 'common/fields/userselect_with_availability_link.html' with field=form.hosts helptext=vaerter_helptext %}
 
         {% if can_send_emails %}
         {% include 'common/fields/boolean_field.html' with field=form.send_emails left_label="Udsendelse af e-mail:" %}

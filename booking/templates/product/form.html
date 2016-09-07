@@ -7,7 +7,7 @@
 
 {% block head %}
     {% include 'common/resources/datetime-picker_style.html' %}
-    {% include 'resource/fields/time_style.html' %}
+    {% include 'product/fields/time_style.html' %}
 {% endblock %}
 
 {% block content %}
@@ -63,9 +63,9 @@
                         {% include 'common/fields/generic_field.html' with field=form.title %}
                         {% include 'common/fields/generic_field.html' with field=form.teaser %}
                         {% include 'common/fields/generic_field.html' with field=form.description %}
-                        {% include 'resource/fields/tour.html' %}
+                        {% include 'product/fields/tour.html' %}
                         {% include 'common/fields/generic_field.html' with field=form.price %}
-                        {% include 'resource/fields/studymaterials.html' %}
+                        {% include 'product/fields/studymaterials.html' %}
                     </div>
                 </div>
             </div>
@@ -84,10 +84,10 @@
                     <div class="panel-body">
                         {% include 'common/fields/generic_field.html' with field=form.audience %}
                         {% include 'common/fields/generic_field.html' with field=form.institution_level %}
-                        {% include 'resource/fields/subjects.html' %}
+                        {% include 'product/fields/subjects.html' %}
                         {% include 'common/fields/generic_field.html' with field=form.minimum_number_of_visitors %}
                         {% include 'common/fields/generic_field.html' with field=form.maximum_number_of_visitors %}
-                        {% include 'resource/fields/waiting_list.html' %}
+                        {% include 'product/fields/waiting_list.html' %}
                     </div>
                 </div>
             </div>
@@ -104,7 +104,7 @@
                 {% if not object.pk or form.time.errors or form.duration.errors %}in{% endif %}
                 " aria-labelledby="headingTimeDuration" role="tabpanel" aria-expanded="false" style="">
                     <div class="panel-body">
-                        {% include 'resource/fields/time.html' %}
+                        {% include 'product/fields/time.html' %}
                         {% include 'common/fields/generic_field.html' with field=form.duration %}
                     </div>
                 </div>
@@ -123,7 +123,7 @@
                 " aria-labelledby="headingContact" role="tabpanel" aria-expanded="false" style="">
                     <div class="panel-body">
                         {% include 'common/fields/generic_field.html' with field=form.locality %}
-                        {% include 'resource/fields/rooms.html' %}
+                        {% include 'product/fields/rooms.html' %}
                     </div>
                 </div>
             </div>
@@ -158,8 +158,8 @@
                 {% if not object.pk or form.contacts.errors %}in{% endif %}
                 " aria-labelledby="headingContact" role="tabpanel" aria-expanded="false" style="">
                     <div class="panel-body">
-                        {% include 'resource/fields/contact.html' %}
-                        {% include 'resource/fields/room_contact.html' %}
+                        {% include 'product/fields/contact.html' %}
+                        {% include 'product/fields/room_contact.html' %}
                     </div>
                 </div>
             </div>
@@ -179,7 +179,7 @@
                         {% include 'common/fields/generic_field.html' with field=form.state %}
                         {% include 'common/fields/generic_field.html' with field=form.preparation_time %}
                         {% include 'common/fields/generic_field.html' with field=form.comment %}
-                        {% include 'resource/fields/autosend.html' %}
+                        {% include 'product/fields/autosend.html' %}
                     </div>
                 </div>
             </div>
@@ -197,11 +197,10 @@
     {% include 'common/resources/datetime-picker_script.html' %}
     <script type="text/javascript" src="{% static 'js/formutil.js' %}"></script>
 
-    {% include 'resource/fields/studymaterials_script.html' %}
-
-    {% include 'resource/fields/autosend_script.html' %}
-    {% include 'resource/fields/institution_level_script.html' %}
-    {% include 'resource/fields/time_script.html' %}
+    {% include 'product/fields/studymaterials_script.html' %}
+    {% include 'common/fields/autosend_script.html' %}
+    {% include 'product/fields/institution_level_script.html' %}
+    {% include 'product/fields/time_script.html' %}
 
     <script type="text/javascript"><!--
 
