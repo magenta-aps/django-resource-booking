@@ -18,7 +18,7 @@
     <form name="changebookingteachersform" id="changebookingteachersform" class="changebookingform" action="{% url 'change-visit-teachers' object.pk %}" method="post">
         {% csrf_token %}
 
-        {% include 'resource/fields/generic_field.html' with field=form.override_needed_teachers %}
+        {% include 'common/fields/generic_field.html' with field=form.override_needed_teachers %}
         <div class="row form-group">
             <div class="col-sm-2"></div>
             <div class="col-sm-7">

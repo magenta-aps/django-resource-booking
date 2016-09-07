@@ -17,7 +17,7 @@
     <form name="changebookinghostsform" id="changebookinghostsform" class="changebookingform" action="{% url 'change-visit-hosts' object.pk %}" method="post">
         {% csrf_token %}
 
-        {% include 'resource/fields/generic_field.html' with field=form.override_needed_hosts %}
+        {% include 'common/fields/generic_field.html' with field=form.override_needed_hosts %}
         <div class="row form-group">
             <div class="col-sm-2"></div>
             <div class="col-sm-7">

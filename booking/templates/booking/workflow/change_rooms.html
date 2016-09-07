@@ -17,7 +17,7 @@
         <div class="col-sm-12">
             <form name="changebookinroomsform" id="changebookinroomsform" action="{% url 'change-visit-rooms' object.pk %}" method="post">
                 {% csrf_token %}
-                {% include 'resource/fields/generic_field.html' with field=form.room_status %}
+                {% include 'common/fields/generic_field.html' with field=form.room_status %}
                 <div class="row form-group">
                     <div class="col-sm-2">
                         <label class="" for="id_locality">Lokalitet for eksisterende lokaler:</label>
