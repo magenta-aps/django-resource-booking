@@ -30,7 +30,6 @@ from django.utils.decorators import method_decorator
 from django.utils.http import urlquote
 from django.utils.translation import ugettext as _
 from django.views.generic import View, TemplateView, ListView, DetailView
-from django.views.generic import RedirectView
 from django.views.generic.base import ContextMixin
 from django.views.generic.edit import UpdateView, FormMixin, DeleteView, \
     FormView
@@ -126,7 +125,7 @@ class MainPageView(TemplateView):
                     'limit': 10,
                     'button': {
                         'text': _(u'Vis alle'),
-                        'link': reverse('resource-customlist') + "?type=%s" %
+                        'link': reverse('product-customlist') + "?type=%s" %
                         ProductCustomListView.TYPE_LATEST_UPDATED
                     }
                 }, {
@@ -137,7 +136,7 @@ class MainPageView(TemplateView):
                     'limit': 10,
                     'button': {
                         'text': _(u'Vis alle'),
-                        'link': reverse('resource-customlist') + "?type=%s" %
+                        'link': reverse('product-customlist') + "?type=%s" %
                         ProductCustomListView.TYPE_LATEST_BOOKED
                     }
                 }
@@ -573,7 +572,7 @@ class LoggedViewMixin(object):
 class SearchView(ListView):
     """Class for handling main search."""
     model = Product
-    template_name = "resource/searchresult.html"
+    template_name = "product/searchresult.html"
     context_object_name = "results"
     paginate_by = 10
     base_queryset = None
@@ -605,7 +604,7 @@ class SearchView(ListView):
                 q = q[1:]
             try:
                 res = Product.objects.get(pk=q)
-                return reverse('resource-view', args=[res.pk])
+                return reverse('product-view', args=[res.pk])
             except Product.DoesNotExist:
                 pass
         return None
@@ -1020,11 +1019,28 @@ class SearchView(ListView):
         return size
 
 
-class ProductListView(ListView):
-    template_name = "resource/list.html"
+class ProductCustomListView(ListView):
+
+    TYPE_LATEST_BOOKED = "latest_booked"
+    TYPE_LATEST_UPDATED = "latest_updated"
+
+    template_name = "product/list.html"
     model = Product
     context_object_name = "results"
     paginate_by = 10
+
+    def get_queryset(self):
+        try:
+            listtype = self.request.GET.get("type", "")
+
+            if listtype == self.TYPE_LATEST_BOOKED:
+                return Product.get_latest_booked()
+            elif listtype == self.TYPE_LATEST_UPDATED:
+                return Product.get_latest_updated()
+
+        except:
+            pass
+        raise Http404
 
     def get_context_data(self, **kwargs):
         context = {}
@@ -1047,7 +1063,7 @@ class ProductListView(ListView):
 
         context.update(kwargs)
 
-        return super(ProductListView, self).get_context_data(
+        return super(ProductCustomListView, self).get_context_data(
             **context
         )
 
@@ -1060,29 +1076,10 @@ class ProductListView(ListView):
         return size
 
 
-class ProductCustomListView(ProductListView):
-
-    TYPE_LATEST_BOOKED = "latest_booked"
-    TYPE_LATEST_UPDATED = "latest_updated"
-
-    def get_queryset(self):
-        try:
-            listtype = self.request.GET.get("type", "")
-
-            if listtype == self.TYPE_LATEST_BOOKED:
-                return Product.get_latest_booked()
-            elif listtype == self.TYPE_LATEST_UPDATED:
-                return Product.get_latest_updated()
-
-        except:
-            pass
-        raise Http404
-
-
 class EditProductInitialView(LoginRequiredMixin, HasBackButtonMixin,
                              TemplateView):
 
-    template_name = 'resource/form.html'
+    template_name = 'product/typeform.html'
 
     def get(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
@@ -1103,27 +1100,14 @@ class EditProductInitialView(LoginRequiredMixin, HasBackButtonMixin,
             type_id = int(form.cleaned_data['type'])
             back = urlquote(request.GET.get('back'))
             if type_id in Product.applicable_types:
-                return redirect(reverse('product-create') +
-                                "?type=%d&back=%s" % (type_id, back))
+                return redirect(
+                    reverse('product-create-type', args=[type_id]) +
+                    "?back=%s" % back
+                )
 
         return self.render_to_response(
             self.get_context_data(form=form)
         )
-
-
-class CloneProductView(RedirectView):
-    permanent = False
-
-    def get_redirect_url(self, *args, **kwargs):
-        try:
-            res = Product.objects.get(pk=kwargs["pk"])
-        except Product.DoesNotExist:
-            raise Http404()
-
-        if hasattr(res, "product") and res.product:
-            return reverse('product-clone', args=[res.product.pk])
-        else:
-            raise Http404()
 
 
 class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
@@ -1189,7 +1173,7 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
             if pk is None:
                 self.object = self.model()
                 try:
-                    type = int(request.GET['type'])
+                    type = int(self.kwargs['type'])
                     if type in self.model.applicable_types:
                         self.object.type = type
                 except:
@@ -1223,10 +1207,9 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
         context['klassetrin_range'] = range(0, 10)
 
         if self.object and self.object.id:
-            context['thisurl'] = reverse('resource-edit',
-                                         args=[self.object.id])
+            context['thisurl'] = reverse('product-edit', args=[self.object.id])
         else:
-            context['thisurl'] = reverse('resource-create')
+            context['thisurl'] = reverse('product-create')
 
         # context['oncancel'] = self.request.GET.get('back')
 
@@ -1288,7 +1271,6 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
         return result
 
     def save_studymaterials(self):
-
         fileformset = ProductStudyMaterialForm(self.request.POST)
         if fileformset.is_valid():
             # Attach uploaded files
@@ -1459,7 +1441,6 @@ class EditProductView(EditProductBaseView):
                 messages.INFO,
                 _(u'Tilbuddet blev gemt.')
             )
-
             return super(EditProductView, self).form_valid(forms['form'])
         else:
             return self.form_invalid(forms)
