@@ -89,7 +89,7 @@ class TeacherResource(Resource):
 
 class RoomResource(Resource):
     # TODO: Begræns ud fra enhed
-    user = models.ForeignKey(
+    room = models.ForeignKey(
         "Room",
         verbose_name=_(u"Lokale")
     )
@@ -100,7 +100,9 @@ class RoomResource(Resource):
 
 
 class ItemResource(Resource):
-    name = models.CharField(max_length=1024)
+    name = models.CharField(
+        max_length=1024
+    )
     locality = models.ForeignKey(
         "Locality",
         null=True,
@@ -113,7 +115,9 @@ class ItemResource(Resource):
 
 
 class VehicleResource(Resource):
-    name = models.CharField(max_length=1024)
+    name = models.CharField(
+        max_length=1024
+    )
     locality = models.ForeignKey(
         "Locality",
         null=True,
@@ -127,7 +131,9 @@ class VehicleResource(Resource):
 
 class ResourcePool(models.Model):
     resource_type = models.ForeignKey(ResourceType)
-    name = models.CharField(max_length=1024)
+    name = models.CharField(
+        max_length=1024
+    )
     organizationalunit = models.ForeignKey(
         "OrganizationalUnit",
         verbose_name=_(u"Ressourcens enhed")
