@@ -1,0 +1,40 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load booking_tags %}
+
+{% block htmltitle %} - {% trans "opret ressource" %}{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+    <div class="divider"></div>
+    <form id="resourceform" action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        {{ form.non_field_errors }}
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <div class="row form-group">
+                        <div>{{ form.type.errors }}</div>
+                        <div class="col-sm-2">
+                            <label for="{{ form.type.id_for_label }}">{{ form.type.label }}:</label>
+                        </div>
+                        <div class="col-sm-10">
+                            {{ form.type }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% include 'common/continue_cancel.html' %}
+        <div class="divider"></div>
+    </form>
+
+{% endblock %}
+
+{% block extra_scripts %}
+
+    {{ form.media }}
+
+{% endblock %}

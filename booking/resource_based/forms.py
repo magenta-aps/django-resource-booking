@@ -7,14 +7,20 @@ from django import forms
 from django.utils.translation import ugettext_lazy as _
 
 
+class ResourceTypeForm(forms.Form):
 
-class CreateResourceForm(forms.Form):
+    EXCEPT_TYPES = [
+        ResourceType.RESOURCE_TYPE_TEACHER,
+        ResourceType.RESOURCE_TYPE_ROOM
+    ]
+
     type = forms.ChoiceField(
         label=_(u'Type'),
         choices=[
             (x.id, x.name)
             for x in ResourceType.objects.all()
-            ],
+            if x.id not in EXCEPT_TYPES
+        ],
         required=True
     )
     unit = forms.ChoiceField(
@@ -22,13 +28,13 @@ class CreateResourceForm(forms.Form):
         choices=[
             (x.id, x.name)
             for x in OrganizationalUnit.objects.all()
-            ]
+        ]
     )
 
-class EditTeacherResourceForm(forms.Modelform):
+class EditTeacherResourceForm(forms.ModelForm):
     class Meta:
         model = TeacherResource
-        fields = ('user', 'type', 'unit')
+        fields = ('user', 'resource_type', 'organizationalunit')
         widgets = {
             'type': forms.HiddenInput(),
             'unit': forms.HiddenInput()

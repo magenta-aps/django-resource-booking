@@ -3,22 +3,13 @@
 {% load staticfiles %}
 {% load booking_tags %}
 
-{% block htmltitle %} - {% if object %}{% trans "rediger tilbud" %}{% else %}{% trans "opret tilbud" %}{% endif %}{% endblock %}
+{% block htmltitle %} - {% trans "opret ressource" %}{% endblock %}
 
 {% block head %}
 {% endblock %}
 
 {% block content %}
     <div class="divider"></div>
-    <div class="row form-group">
-        <div class="col-sm-8">
-            <h1></h1>
-        </div>
-        <div class="col-sm-4 text-right">
-            <a href="#" class="btn btn-default btn-sm openall">{% trans "Udvid alle felter" %}</a> <a href="#" class="btn btn-default btn-sm closeall">{% trans "Luk alle felter" %}</a>
-        </div>
-    </div>
-    <hr/>
     <form id="resourceform" action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
         {% csrf_token %}
 
@@ -36,6 +27,12 @@
                 " aria-labelledby="headingCategory" role="tabpanel" aria-expanded="true" style="">
                     <div class="panel-body">
                         {% include 'common/fields/generic_field.html' with field=form.type %}
+                        <div class="row form-group">
+                            {% trans 'Undervisere og lokaler skal oprettes i deres egne systemer:' %}<br/>
+                            <a href="#">{% trans 'Klik her for at oprette en underviser' %}</a><br/>
+                            <a href="#">{% trans 'Klik her for at oprette et lokale' %}</a>
+                        </div>
+                        {% include 'common/fields/generic_field.html' with field=form.unit %}
                     </div>
                 </div>
             </div>

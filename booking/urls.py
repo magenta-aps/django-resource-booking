@@ -38,6 +38,8 @@ from booking.views import VisitDetailView
 from booking.views import VisitCustomListView
 from booking.views import EvaluationOverviewView
 
+from booking.resource_based.views import CreateResourceView
+
 import booking.views
 
 from django.views.generic import TemplateView
@@ -218,6 +220,11 @@ urlpatterns = patterns(
     url(r'^evaluations/?',
         EvaluationOverviewView.as_view(),
         name='evaluations'),
+
+    url(r'^resource/create/?',
+        CreateResourceView.as_view(),
+        name='resource-create'
+        )
 
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
