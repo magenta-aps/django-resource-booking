@@ -1,6 +1,7 @@
 # encoding: utf-8
 from django.core.urlresolvers import reverse, reverse_lazy
 from django.http import Http404
+from django.utils.translation import ugettext as _
 from django.views.generic import TemplateView, ListView
 from django.views.generic.edit import UpdateView, FormView, DeleteView
 from booking.resource_based.forms import ResourceTypeForm, EditResourceForm
@@ -35,6 +36,15 @@ class ResourceCreateView(BackMixin, FormView):
             self.get_context_data(**context)
         )
 
+    def get_context_data(self, **kwargs):
+        context = {}
+        context['breadcrumbs'] = [
+            {'url': reverse('resource-list'), 'text': _(u'Ressourcer')},
+            {'text': _(u'Opret ressource')},
+        ]
+        context.update(kwargs)
+        return super(ResourceCreateView, self).get_context_data(**context)
+
 
 class ResourceDetailView(TemplateView):
     template_name = "resource/details.html"
@@ -51,9 +61,12 @@ class ResourceDetailView(TemplateView):
         )
 
     def get_context_data(self, **kwargs):
-        context = {
-            'object': self.object
-        }
+        context = {}
+        context['object'] = self.object
+        context['breadcrumbs'] = [
+            {'url': reverse('resource-list'), 'text': _(u'Ressourcer')},
+            {'text': unicode(self.object)}
+        ]
         context.update(kwargs)
         return super(ResourceDetailView, self).get_context_data(**context)
 
@@ -72,6 +85,14 @@ class ResourceListView(ListView):
             TeacherResource.objects.all(),
             VehicleResource.objects.all()
         )
+
+    def get_context_data(self, **kwargs):
+        context = {}
+        context['breadcrumbs'] = [
+            {'text': _(u'Ressourcer')}
+        ]
+        context.update(kwargs)
+        return super(ResourceListView, self).get_context_data(**context)
 
 
 class ResourceUpdateView(BackMixin, UpdateView):
@@ -110,8 +131,16 @@ class ResourceUpdateView(BackMixin, UpdateView):
         return EditResourceForm.get_resource_form_class(type)
 
     def get_context_data(self, **kwargs):
+        breadcrumbs = [{'url': reverse('resource-list'), 'text': _(u'Ressourcer')}]
+        if self.object.pk:
+            breadcrumbs.append({'url': reverse('resource-view', args=[self.object.id]), 'text': unicode(self.object)})
+            breadcrumbs.append({'text': _(u'Redigér')})
+        else:
+            breadcrumbs.append({'text': _(u'Opret ressource')})
+
         context = {}
         context['object'] = self.object
+        context['breadcrumbs'] = breadcrumbs
         context.update(kwargs)
         return super(ResourceUpdateView, self).get_context_data(**context)
 
@@ -148,3 +177,13 @@ class ResourceDeleteView(BackMixin, DeleteView):
 
     def get_object(self):
         return Resource.get_subclass_instance(self.kwargs.get("pk"))
+
+    def get_context_data(self, **kwargs):
+        context = {}
+        context['breadcrumbs'] = [
+            {'url': reverse('resource-list'), 'text': _(u'Ressourcer')},
+            {'url': reverse('resource-view', args=[self.object.id]), 'text': self.object},
+            {'text': _(u'Slet')}
+        ]
+        context.update(kwargs)
+        return super(ResourceDeleteView, self).get_context_data(**context)

@@ -123,6 +123,9 @@ class Resource(models.Model):
         cls = type.resource_class
         return cls()
 
+    def __unicode__(self):
+        return "%s (%s)" % (self.get_name(), self.resource_type)
+
 
 class TeacherResource(Resource):
     # TODO: Begræns til brugertype og enhed

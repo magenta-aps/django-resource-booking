@@ -9,7 +9,11 @@
 {% endblock %}
 
 {% block content %}
+
+    {% include 'common/breadcrumbrow.html' %}
+
     <div class="divider"></div>
+
     <form id="resourceform" action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
         {% csrf_token %}
 
@@ -23,8 +27,9 @@
                     </h4>
                 </div>
                 <div id="collapseCategory" class="panel-collapse collapse in
-                {% if form.type.errors or form.tags.errors %}in{% endif %}
+                {% if form.type.errors or form.unit.errors %}in{% endif %}
                 " aria-labelledby="headingCategory" role="tabpanel" aria-expanded="true" style="">
+
                     <div class="panel-body">
                         {% include 'common/fields/generic_field.html' with field=form.type %}
                         <div class="row form-group">
@@ -34,6 +39,7 @@
                         </div>
                         {% include 'common/fields/generic_field.html' with field=form.unit %}
                     </div>
+
                 </div>
             </div>
         </div>
