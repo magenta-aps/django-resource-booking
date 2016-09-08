@@ -10,9 +10,6 @@
 
 {% block content %}
 
-
-<div class="container grey-sides content-container">
-
     <div class="divider"></div>
 
     <div class="row">
@@ -30,7 +27,6 @@
                     </tr>
                 </thead>
                 <tbody>
-
                 {% for resource in resources %}
                     <tr>
                         <td>
@@ -42,7 +38,9 @@
                         <td>
                             <a href="{% url 'resource-edit' resource.id %}?back={% url 'resource-list' %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
                             <a href="#" role="button" class="btn btn-primary btn-xs">{% trans 'Kalender' %}</a>
+                            {% if resource.can_delete %}
                             <a href="{% url 'resource-delete' resource.id %}?back={% url 'resource-list' %}" role="button" class="btn btn-primary btn-xs">{% trans 'Slet' %}</a>
+                            {% endif %}
                         </td>
                     </tr>
                 {% empty %}
@@ -52,15 +50,12 @@
                         </td>
                     </tr>
                 {% endfor %}
-
                 </tbody>
             </table>
-
             <p>
                 (Undervisere og lokaler kan ikke slettes herfra)
             </p>
         </div>
     </div>
-</div>
 
 {% endblock %}

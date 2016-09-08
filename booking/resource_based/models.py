@@ -95,6 +95,9 @@ class Resource(models.Model):
     def get_name(self):
         return "Resource"
 
+    def can_delete(self):
+        return True
+
     @classmethod
     def subclasses(cls):
         subs = set()
@@ -137,6 +140,9 @@ class TeacherResource(Resource):
     def get_name(self):
         return self.user.get_full_name()
 
+    def can_delete(self):
+        return False
+
     @staticmethod
     def create_missing():
         known_teachers = list([
@@ -175,6 +181,9 @@ class RoomResource(Resource):
 
     def get_name(self):
         return self.room.name
+
+    def can_delete(self):
+        return False
 
     @staticmethod
     def create_missing():

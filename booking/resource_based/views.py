@@ -37,7 +37,6 @@ class ResourceCreateView(BackMixin, FormView):
 
 
 class ResourceDetailView(TemplateView):
-
     template_name = "resource/details.html"
 
     def dispatch(self, request, *args, **kwargs):
@@ -142,7 +141,6 @@ class ResourceUpdateView(BackMixin, UpdateView):
 
 
 class ResourceDeleteView(BackMixin, DeleteView):
-
     success_url = reverse_lazy('resource-list')
 
     def get_template_names(self):
