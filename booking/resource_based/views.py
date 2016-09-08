@@ -8,13 +8,13 @@ from booking.resource_based.forms import ResourceTypeForm, EditResourceForm
 from booking.resource_based.models import Resource
 from booking.resource_based.models import ItemResource, RoomResource
 from booking.resource_based.models import TeacherResource, VehicleResource
-from booking.views import BackMixin
+from booking.views import BackMixin, BreadcrumbMixin
 from itertools import chain
 
 import booking.models as booking_models
 
 
-class ResourceCreateView(BackMixin, FormView):
+class ResourceCreateView(BackMixin, BreadcrumbMixin, FormView):
     template_name = "resource/typeform.html"
     form_class = ResourceTypeForm
     just_preserve_back = True
@@ -36,17 +36,14 @@ class ResourceCreateView(BackMixin, FormView):
             self.get_context_data(**context)
         )
 
-    def get_context_data(self, **kwargs):
-        context = {}
-        context['breadcrumbs'] = [
+    def get_breadcrumbs(self):
+        return [
             {'url': reverse('resource-list'), 'text': _(u'Ressourcer')},
             {'text': _(u'Opret ressource')},
         ]
-        context.update(kwargs)
-        return super(ResourceCreateView, self).get_context_data(**context)
 
 
-class ResourceDetailView(TemplateView):
+class ResourceDetailView(BreadcrumbMixin, TemplateView):
     template_name = "resource/details.html"
 
     def dispatch(self, request, *args, **kwargs):
@@ -60,18 +57,20 @@ class ResourceDetailView(TemplateView):
             request, *args, **kwargs
         )
 
-    def get_context_data(self, **kwargs):
-        context = {}
-        context['object'] = self.object
-        context['breadcrumbs'] = [
+    def get_breadcrumbs(self):
+        return [
             {'url': reverse('resource-list'), 'text': _(u'Ressourcer')},
             {'text': unicode(self.object)}
         ]
+
+    def get_context_data(self, **kwargs):
+        context = {}
+        context['object'] = self.object
         context.update(kwargs)
         return super(ResourceDetailView, self).get_context_data(**context)
 
 
-class ResourceListView(ListView):
+class ResourceListView(BreadcrumbMixin, ListView):
     model = Resource
     template_name = "resource/list.html"
 
@@ -86,16 +85,13 @@ class ResourceListView(ListView):
             VehicleResource.objects.all()
         )
 
-    def get_context_data(self, **kwargs):
-        context = {}
-        context['breadcrumbs'] = [
+    def get_breadcrumbs(self):
+        return [
             {'text': _(u'Ressourcer')}
         ]
-        context.update(kwargs)
-        return super(ResourceListView, self).get_context_data(**context)
 
 
-class ResourceUpdateView(BackMixin, UpdateView):
+class ResourceUpdateView(BackMixin, BreadcrumbMixin, UpdateView):
     template_name = "resource/form.html"
     object = None
 
@@ -130,17 +126,24 @@ class ResourceUpdateView(BackMixin, UpdateView):
             type = self.object.resource_type.id
         return EditResourceForm.get_resource_form_class(type)
 
-    def get_context_data(self, **kwargs):
-        breadcrumbs = [{'url': reverse('resource-list'), 'text': _(u'Ressourcer')}]
+    def get_breadcrumbs(self):
+        breadcrumbs = [{
+            'url': reverse('resource-list'),
+            'text': _(u'Ressourcer')
+        }]
         if self.object.pk:
-            breadcrumbs.append({'url': reverse('resource-view', args=[self.object.id]), 'text': unicode(self.object)})
+            breadcrumbs.append({
+                'url': reverse('resource-view', args=[self.object.id]),
+                'text': unicode(self.object)
+            })
             breadcrumbs.append({'text': _(u'Redigér')})
         else:
             breadcrumbs.append({'text': _(u'Opret ressource')})
+        return breadcrumbs
 
+    def get_context_data(self, **kwargs):
         context = {}
         context['object'] = self.object
-        context['breadcrumbs'] = breadcrumbs
         context.update(kwargs)
         return super(ResourceUpdateView, self).get_context_data(**context)
 
@@ -169,7 +172,7 @@ class ResourceUpdateView(BackMixin, UpdateView):
             self.object.created_by = self.request.user
 
 
-class ResourceDeleteView(BackMixin, DeleteView):
+class ResourceDeleteView(BackMixin, BreadcrumbMixin, DeleteView):
     success_url = reverse_lazy('resource-list')
 
     def get_template_names(self):
@@ -178,12 +181,10 @@ class ResourceDeleteView(BackMixin, DeleteView):
     def get_object(self):
         return Resource.get_subclass_instance(self.kwargs.get("pk"))
 
-    def get_context_data(self, **kwargs):
-        context = {}
-        context['breadcrumbs'] = [
+    def get_breadcrumbs(self):
+        return [
             {'url': reverse('resource-list'), 'text': _(u'Ressourcer')},
-            {'url': reverse('resource-view', args=[self.object.id]), 'text': self.object},
+            {'url': reverse('resource-view', args=[self.object.id]),
+             'text': self.object},
             {'text': _(u'Slet')}
         ]
-        context.update(kwargs)
-        return super(ResourceDeleteView, self).get_context_data(**context)
