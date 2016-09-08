@@ -40,6 +40,7 @@ from booking.views import EvaluationOverviewView
 
 from booking.resource_based.views import ResourceCreateView, ResourceDetailView
 from booking.resource_based.views import ResourceListView, ResourceUpdateView
+from booking.resource_based.views import ResourceDeleteView
 
 import booking.views
 
@@ -236,7 +237,10 @@ urlpatterns = patterns(
         name='resource-list'),
     url(r'^resource/(?P<pk>[0-9]+)/edit/?$',
         ResourceUpdateView.as_view(),
-        name='resource-edit')
+        name='resource-edit'),
+    url(r'^resource/(?P<pk>[0-9]+)/delete/?$',
+        ResourceDeleteView.as_view(),
+        name='resource-delete')
 
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

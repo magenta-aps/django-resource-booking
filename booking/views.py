@@ -203,7 +203,7 @@ class HasBackButtonMixin(ContextMixin):
         return context
 
 
-class BackMixin(object):
+class BackMixin(HasBackButtonMixin):
     backparam = "back"
     just_preserve_back = False
 

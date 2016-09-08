@@ -15,19 +15,18 @@
     <div class="row">
         <div class="col-md-12">
             <div>
-                <input type="submit" role="button" class="btn btn-primary" value="{% trans 'Slet ressourcen' %}" />
+                <a href="{% url 'resource-delete' object.id %}?back={% url 'resource-view' object.id %}" class="btn btn-primary">{% trans 'Slet ressourcen' %}</a>
                 <a href="{% url 'resource-edit' object.id %}?back={% url 'resource-view' object.id %}" role="button" class="btn btn-primary">{% trans 'Redigér' %}</a>
             </div>
 
             <dl>
-                <dt>Type</dt>
+                <dt>{% trans 'Type' %}</dt>
                 <dd>{{ object.resource_type }}</dd>
-                <dt>Navn</dt>
+                <dt>{% trans 'Navn' %}</dt>
                 <dd>{{ object.name }}</dd>
             </dl>
         </div>
     </div>
-
-
+</div>
 
 {% endblock %}

@@ -1,8 +1,8 @@
 # encoding: utf-8
-from django.core.urlresolvers import reverse
+from django.core.urlresolvers import reverse, reverse_lazy
 from django.http import Http404
 from django.views.generic import TemplateView, ListView
-from django.views.generic.edit import UpdateView, FormView
+from django.views.generic.edit import UpdateView, FormView, DeleteView
 from booking.resource_based.forms import ResourceTypeForm, EditItemResourceForm
 from booking.resource_based.forms import EditVehicleResourceForm
 from booking.resource_based.models import ResourceType, Resource
@@ -144,3 +144,14 @@ class ResourceUpdateView(BackMixin, UpdateView):
         else:
             self.is_creating = True
             self.object.created_by = self.request.user
+
+
+class ResourceDeleteView(BackMixin, DeleteView):
+
+    success_url = reverse_lazy('resource-list')
+
+    def get_template_names(self):
+        return ['resource/delete.html']
+
+    def get_object(self):
+        return Resource.get_subclass_instance(self.kwargs.get("pk"))

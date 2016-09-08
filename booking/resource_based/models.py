@@ -108,7 +108,8 @@ class Resource(models.Model):
                 try:
                     return typeclass.objects.get(id=pk)
                 except typeclass.DoesNotExist:
-                    raise Resource.DoesNotExist
+                    pass
+        raise Resource.DoesNotExist
 
     @classmethod
     def create_subclass_instance(cls, type):
