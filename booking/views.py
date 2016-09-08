@@ -586,6 +586,17 @@ class LoggedViewMixin(object):
         )
 
 
+class BreadcrumbMixin(object):
+
+    def get_breadcrumbs(self):
+        return []
+
+    def get_context_data(self, **kwargs):
+        context = {'breadcrumbs': self.get_breadcrumbs()}
+        context.update(kwargs)
+        return super(BreadcrumbMixin, self).get_context_data(**context)
+
+
 class SearchView(ListView):
     """Class for handling main search."""
     model = Product
