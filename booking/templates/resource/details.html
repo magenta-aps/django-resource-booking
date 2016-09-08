@@ -1,0 +1,33 @@
+{% extends 'index.html' %}
+{% load staticfiles %}
+{% load timedelta %}
+{% load i18n %}
+{% load booking_tags %}
+
+{% block htmltitle %} - {{ object.title }}{% endblock %}
+
+{% block content %}
+
+<div class="container grey-sides content-container">
+
+    <div class="divider"></div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div>
+                <input type="submit" role="button" class="btn btn-primary" value="{% trans 'Slet ressourcen' %}" />
+                <a href="{% url 'resource-edit' object.id %}?back={% url 'resource-view' object.id %}" role="button" class="btn btn-primary">{% trans 'Redigér' %}</a>
+            </div>
+
+            <dl>
+                <dt>Type</dt>
+                <dd>{{ object.resource_type }}</dd>
+                <dt>Navn</dt>
+                <dd>{{ object.name }}</dd>
+            </dl>
+        </div>
+    </div>
+
+
+
+{% endblock %}

@@ -52,6 +52,19 @@ class ResourceType(models.Model):
         RESOURCE_TYPE_ROOM: _(u"Lokale"),
     }
 
+    def __init__(self, *args, **kwargs):
+        super(ResourceType, self).__init__(*args, **kwargs)
+        if self.id == ResourceType.RESOURCE_TYPE_ITEM:
+            self.resource_class = ItemResource
+        elif self.id == ResourceType.RESOURCE_TYPE_VEHICLE:
+            self.resource_class = VehicleResource
+        elif self.id == ResourceType.RESOURCE_TYPE_TEACHER:
+            self.resource_class = TeacherResource
+        elif self.id == ResourceType.RESOURCE_TYPE_ROOM:
+            self.resource_class = RoomResource
+        else:
+            self.resource_class = CustomResource
+
     name = models.CharField(
         max_length=30
     )
@@ -59,6 +72,9 @@ class ResourceType(models.Model):
     @classmethod
     def create_defaults(cls):
         raise NotImplementedError()
+
+    def __unicode__(self):
+        return self.name
 
 
 class Resource(models.Model):
@@ -74,6 +90,33 @@ class Resource(models.Model):
         verbose_name=_(u"Ressourcens kalender")
     )
 
+    def get_name(self):
+        return "Resource"
+
+    @classmethod
+    def subclasses(cls):
+        subs = set()
+        for subclass in cls.__subclasses__():
+            subs.add(subclass)
+            subs.update(subclass.subclasses())
+        return subs
+
+    @classmethod
+    def get_subclass_instance(cls, pk):
+        for typeclass in cls.subclasses():
+            if not typeclass._meta.abstract:
+                try:
+                    return typeclass.objects.get(id=pk)
+                except typeclass.DoesNotExist:
+                    raise Resource.DoesNotExist
+
+    @classmethod
+    def create_subclass_instance(cls, type):
+        if not isinstance(type, ResourceType):
+            type = ResourceType.objects.get(id=type)
+        cls = type.resource_class
+        return cls()
+
 
 class TeacherResource(Resource):
     # TODO: Begræns til brugertype og enhed
@@ -84,7 +127,12 @@ class TeacherResource(Resource):
 
     def __init__(self, *args, **kwargs):
         super(TeacherResource, self).__init__(*args, **kwargs)
-        self.resource_type = ResourceType.RESOURCE_TYPE_TEACHER
+        self.resource_type = ResourceType.objects.get(
+            id=ResourceType.RESOURCE_TYPE_TEACHER
+        )
+
+    def get_name(self):
+        return self.user.name
 
 
 class RoomResource(Resource):
@@ -96,13 +144,26 @@ class RoomResource(Resource):
 
     def __init__(self, *args, **kwargs):
         super(RoomResource, self).__init__(*args, **kwargs)
-        self.resource_type = ResourceType.RESOURCE_TYPE_ROOM
+        self.resource_type = ResourceType.objects.get(
+            id=ResourceType.RESOURCE_TYPE_ROOM
+        )
+
+    def get_name(self):
+        return self.room.name
 
 
-class ItemResource(Resource):
+class NamedResource(Resource):
+    class Meta:
+        abstract = True
     name = models.CharField(
         max_length=1024
     )
+
+    def get_name(self):
+        return self.name
+
+
+class ItemResource(NamedResource):
     locality = models.ForeignKey(
         "Locality",
         null=True,
@@ -111,13 +172,12 @@ class ItemResource(Resource):
 
     def __init__(self, *args, **kwargs):
         super(ItemResource, self).__init__(*args, **kwargs)
-        self.resource_type = ResourceType.RESOURCE_TYPE_ITEM
+        self.resource_type = ResourceType.objects.get(
+            id=ResourceType.RESOURCE_TYPE_ITEM
+        )
 
 
-class VehicleResource(Resource):
-    name = models.CharField(
-        max_length=1024
-    )
+class VehicleResource(NamedResource):
     locality = models.ForeignKey(
         "Locality",
         null=True,
@@ -125,8 +185,14 @@ class VehicleResource(Resource):
     )
 
     def __init__(self, *args, **kwargs):
-        super(ItemResource, self).__init__(*args, **kwargs)
-        self.resource_type = ResourceType.RESOURCE_TYPE_VEHICLE
+        super(VehicleResource, self).__init__(*args, **kwargs)
+        self.resource_type = ResourceType.objects.get(
+            id=ResourceType.RESOURCE_TYPE_VEHICLE
+        )
+
+
+class CustomResource(NamedResource):
+    pass
 
 
 class ResourcePool(models.Model):

@@ -38,7 +38,8 @@ from booking.views import VisitDetailView
 from booking.views import VisitCustomListView
 from booking.views import EvaluationOverviewView
 
-from booking.resource_based.views import CreateResourceView
+from booking.resource_based.views import ResourceCreateView, ResourceDetailView
+from booking.resource_based.views import ResourceListView, ResourceUpdateView
 
 import booking.views
 
@@ -221,10 +222,21 @@ urlpatterns = patterns(
         EvaluationOverviewView.as_view(),
         name='evaluations'),
 
-    url(r'^resource/create/?',
-        CreateResourceView.as_view(),
-        name='resource-create'
-        )
+    url(r'^resource/create/?$',
+        ResourceCreateView.as_view(),
+        name='resource-create'),
+    url(r'^resource/create/(?P<type>[0-9]+)/(?P<unit>[0-9]+)/?$',
+        ResourceUpdateView.as_view(success_url='create'),
+        name='resource-create-type'),
+    url(r'^resource/(?P<pk>[0-9]+)/?$',
+        ResourceDetailView.as_view(),
+        name='resource-view'),
+    url(r'^resource/?$',
+        ResourceListView.as_view(),
+        name='resource-list'),
+    url(r'^resource/(?P<pk>[0-9]+)/edit/?$',
+        ResourceUpdateView.as_view(),
+        name='resource-edit')
 
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

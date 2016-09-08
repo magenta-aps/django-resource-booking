@@ -203,6 +203,23 @@ class HasBackButtonMixin(ContextMixin):
         return context
 
 
+class BackMixin(object):
+    backparam = "back"
+    just_preserve_back = False
+
+    def redirect(self, regular):
+        if self.backparam in self.request.GET:
+            back = self.request.GET[self.backparam]
+            if self.just_preserve_back:
+                url = regular + ('?' if '?' not in regular else '&') + \
+                    "back=%s" % back
+            else:
+                url = back
+        else:
+            url = regular
+        return redirect(url)
+
+
 class ModalMixin(object):
     modalid = None
 

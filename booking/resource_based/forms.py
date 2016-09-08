@@ -2,7 +2,7 @@
 from booking.models import OrganizationalUnit
 from booking.models import Resource
 from booking.models import ResourceType
-from booking.models import TeacherResource
+from booking.models import ItemResource, VehicleResource
 from django import forms
 from django.utils.translation import ugettext_lazy as _
 
@@ -31,20 +31,29 @@ class ResourceTypeForm(forms.Form):
         ]
     )
 
-class EditTeacherResourceForm(forms.ModelForm):
+
+class EditResourceForm(forms.ModelForm):
     class Meta:
-        model = TeacherResource
-        fields = ('user', 'resource_type', 'organizationalunit')
+        model = Resource
+        fields = []
+
         widgets = {
-            'type': forms.HiddenInput(),
-            'unit': forms.HiddenInput()
+            'name': forms.TextInput(attrs={
+                'class': 'form-control input-sm',
+                'rows': 1, 'size': 62
+            })
         }
 
-    def __init__(self, *args, **kwargs):
-        self.instance = kwargs.get('instance')
-        if not self.instance.pk:
-            if 'initial' not in kwargs:
-                kwargs['initial'] = {}
-            if 'unit' in kwargs:
-                kwargs['initial']['unit'] = kwargs['unit']
-        super(EditTeacherResourceForm, self).__init__(*args, **kwargs)
+
+class EditItemResourceForm(EditResourceForm):
+    class Meta:
+        model = ItemResource
+        fields = EditResourceForm.Meta.fields + ['name', 'locality']
+        widgets = EditResourceForm.Meta.widgets
+
+
+class EditVehicleResourceForm(EditResourceForm):
+    class Meta:
+        model = VehicleResource
+        fields = EditResourceForm.Meta.fields + ['name', 'locality']
+        widgets = EditResourceForm.Meta.widgets
