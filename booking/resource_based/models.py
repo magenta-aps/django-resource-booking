@@ -3,6 +3,8 @@ from django.db import models
 from django.contrib.auth import models as auth_models
 from django.utils.translation import ugettext_lazy as _
 from recurrence.fields import RecurrenceField
+from booking.models import Room
+from profile.constants import TEACHER
 
 
 class EventTime(models.Model):
@@ -133,7 +135,29 @@ class TeacherResource(Resource):
         )
 
     def get_name(self):
-        return self.user.name
+        return self.user.get_full_name()
+
+    @staticmethod
+    def create_missing():
+        known_teachers = list([
+            teacher.id
+            for teacher in auth_models.User.objects.filter(
+                userprofile__user_role__role=TEACHER
+            )
+        ])
+        missing_teachers = auth_models.User.objects.exclude(
+            id__in=known_teachers
+        )
+        for teacher in missing_teachers:
+            try:
+                teacher_resource = TeacherResource(
+                    user=teacher,
+                    organizationalunit=teacher.userprofile.organizationalunit
+                )
+                teacher_resource.save()
+            except Exception as e:
+                print e
+                pass
 
 
 class RoomResource(Resource):
@@ -151,6 +175,23 @@ class RoomResource(Resource):
 
     def get_name(self):
         return self.room.name
+
+    @staticmethod
+    def create_missing():
+        known_rooms = list([
+            roomresource.room.id
+            for roomresource in RoomResource.objects.all()
+        ])
+        missing_rooms = Room.objects.exclude(id__in=known_rooms)
+        for room in missing_rooms:
+            try:
+                room_resource = RoomResource(
+                    room=room,
+                    organizationalunit=room.locality.organizationalunit
+                )
+                room_resource.save()
+            except:
+                pass
 
 
 class NamedResource(Resource):

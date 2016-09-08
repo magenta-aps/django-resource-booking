@@ -2,7 +2,8 @@
 from booking.models import OrganizationalUnit
 from booking.models import Resource
 from booking.models import ResourceType
-from booking.models import ItemResource, VehicleResource
+from booking.models import ItemResource, RoomResource
+from booking.models import TeacherResource, VehicleResource
 from django import forms
 from django.utils.translation import ugettext_lazy as _
 
@@ -44,11 +45,36 @@ class EditResourceForm(forms.ModelForm):
             })
         }
 
+    @staticmethod
+    def get_resource_form_class(resource_type):
+        if resource_type == ResourceType.RESOURCE_TYPE_ITEM:
+            return EditItemResourceForm
+        elif resource_type == ResourceType.RESOURCE_TYPE_ROOM:
+            return EditRoomResourceForm
+        elif resource_type == ResourceType.RESOURCE_TYPE_TEACHER:
+            return EditTeacherResourceForm
+        elif resource_type == ResourceType.RESOURCE_TYPE_VEHICLE:
+            return EditVehicleResourceForm
+
 
 class EditItemResourceForm(EditResourceForm):
     class Meta:
         model = ItemResource
         fields = EditResourceForm.Meta.fields + ['name', 'locality']
+        widgets = EditResourceForm.Meta.widgets
+
+
+class EditRoomResourceForm(EditResourceForm):
+    class Meta:
+        model = RoomResource
+        fields = EditResourceForm.Meta.fields
+        widgets = EditResourceForm.Meta.widgets
+
+
+class EditTeacherResourceForm(EditResourceForm):
+    class Meta:
+        model = TeacherResource
+        fields = EditResourceForm.Meta.fields
         widgets = EditResourceForm.Meta.widgets
 
 

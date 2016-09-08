@@ -3,9 +3,8 @@ from django.core.urlresolvers import reverse, reverse_lazy
 from django.http import Http404
 from django.views.generic import TemplateView, ListView
 from django.views.generic.edit import UpdateView, FormView, DeleteView
-from booking.resource_based.forms import ResourceTypeForm, EditItemResourceForm
-from booking.resource_based.forms import EditVehicleResourceForm
-from booking.resource_based.models import ResourceType, Resource
+from booking.resource_based.forms import ResourceTypeForm, EditResourceForm
+from booking.resource_based.models import Resource
 from booking.resource_based.models import ItemResource, RoomResource
 from booking.resource_based.models import TeacherResource, VehicleResource
 from booking.views import BackMixin
@@ -109,11 +108,7 @@ class ResourceUpdateView(BackMixin, UpdateView):
             type = int(self.kwargs['type'])
         else:
             type = self.object.resource_type.id
-        if type == ResourceType.RESOURCE_TYPE_ITEM:
-            form_class = EditItemResourceForm
-        elif type == ResourceType.RESOURCE_TYPE_VEHICLE:
-            form_class = EditVehicleResourceForm
-        return form_class
+        return EditResourceForm.get_resource_form_class(type)
 
     def get_context_data(self, **kwargs):
         context = {}
