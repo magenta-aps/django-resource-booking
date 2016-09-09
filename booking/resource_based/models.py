@@ -278,6 +278,12 @@ class ResourcePool(models.Model):
         verbose_name=_(u"Ressourcer")
     )
 
+    def can_delete(self):
+        return True
+
+    def __unicode__(self):
+        return "%s (%s)" % (self.name, _("Gruppe af %s") % self.resource_type)
+
 
 class ResourceRequirement(models.Model):
     product = models.ForeignKey("Product")

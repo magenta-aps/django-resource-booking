@@ -1,0 +1,51 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load booking_tags %}
+
+{% block htmltitle %} - {% trans "opret ressource" %}{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+
+    {% include 'common/breadcrumbrow.html' %}
+
+    <div class="divider"></div>
+
+    <form id="resourceform" action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        {{ form.non_field_errors }}
+
+        <div id="accordion" class="panel-group" aria-multiselectable="true" role="tablist">
+            <div class="panel panel-default">
+                <div id="headingCategory" class="panel-heading" role="tab">
+                    <h4 class="panel-title">
+                        <a class="" aria-controls="collapseCategory" aria-expanded="true" href="#collapseCategory" data-parent="#accordion" role="button">{% trans "Kategorisering" %}</a><span class="caret"></span>
+                    </h4>
+                </div>
+                <div id="collapseCategory" class="panel-collapse collapse in
+                {% if form.type.errors or form.unit.errors %}in{% endif %}
+                " aria-labelledby="headingCategory" role="tabpanel" aria-expanded="true" style="">
+
+                    <div class="panel-body">
+                        {% include 'common/fields/generic_field.html' with field=form.type %}
+                        {% include 'common/fields/generic_field.html' with field=form.unit %}
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        {% include 'common/continue_cancel.html' %}
+        <div class="divider"></div>
+    </form>
+
+{% endblock %}
+
+{% block extra_scripts %}
+
+    {{ form.media }}
+
+{% endblock %}

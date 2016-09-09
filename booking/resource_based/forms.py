@@ -4,6 +4,7 @@ from booking.models import Resource
 from booking.models import ResourceType
 from booking.models import ItemResource, RoomResource
 from booking.models import TeacherResource, VehicleResource
+from booking.models import ResourcePool
 from django import forms
 from django.utils.translation import ugettext_lazy as _
 
@@ -83,3 +84,32 @@ class EditVehicleResourceForm(EditResourceForm):
         model = VehicleResource
         fields = EditResourceForm.Meta.fields + ['name', 'locality']
         widgets = EditResourceForm.Meta.widgets
+
+
+class ResourcePoolTypeForm(forms.Form):
+    type = forms.ChoiceField(
+        label=_(u'Type'),
+        choices=[
+            (x.id, x.name) for x in ResourceType.objects.all()
+        ],
+        required=True
+    )
+    unit = forms.ChoiceField(
+        label=_(u'Enhed'),
+        choices=[
+            (x.id, x.name) for x in OrganizationalUnit.objects.all()
+        ]
+    )
+
+
+class EditResourcePoolForm(forms.ModelForm):
+    class Meta:
+        model = ResourcePool
+        fields = ['name']
+
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'form-control input-sm',
+                'rows': 1, 'size': 62
+            })
+        }
