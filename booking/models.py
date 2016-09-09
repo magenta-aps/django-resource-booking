@@ -2749,6 +2749,16 @@ class Room(models.Model):
                 for r in x.rooms.all():
                     y.rooms.add(r)
 
+    def save(self, *args, **kwargs):
+        creating = self.pk is None
+        return_value = super(Room, self).save(*args, **kwargs)
+        if creating:
+            try:
+                RoomResource.create(self)
+            except:
+                pass
+        return return_value
+
 
 class Region(models.Model):
 

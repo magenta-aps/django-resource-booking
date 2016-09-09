@@ -197,13 +197,16 @@ class RoomResource(Resource):
         missing_rooms = Room.objects.exclude(id__in=known_rooms)
         for room in missing_rooms:
             try:
-                room_resource = RoomResource(
-                    room=room,
-                    organizationalunit=room.locality.organizationalunit
-                )
-                room_resource.save()
+                RoomResource.create(room)
             except:
                 pass
+
+    @staticmethod
+    def create(room, unit=None):
+        if unit is None:
+            unit = room.locality.organizationalunit
+        room_resource = RoomResource(room=room, organizationalunit=unit)
+        room_resource.save()
 
 
 class NamedResource(Resource):
