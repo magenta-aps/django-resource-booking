@@ -6,6 +6,7 @@
 {% block htmltitle %} - {% if object.pk %}{% trans "rediger tilbud" %}{% else %}{% trans "opret tilbud" %}{% endif %}{% endblock %}
 
 {% block content %}
+    {% include 'common/breadcrumbrow.html' %}
     <div class="divider"></div>
     <div class="row form-group">
         <div class="col-sm-8">
