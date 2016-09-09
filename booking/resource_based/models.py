@@ -168,6 +168,14 @@ class TeacherResource(Resource):
                 print e
                 pass
 
+    @staticmethod
+    def create(user, unit=None):
+        if user.userprofile.is_teacher:
+            if unit is None:
+                unit = user.userprofile.organizationalunit
+            teacher_resource = TeacherResource(user=user, organizationalunit=unit)
+            teacher_resource.save()
+
 
 class RoomResource(Resource):
     # TODO: Begræns ud fra enhed

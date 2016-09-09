@@ -3,7 +3,6 @@ from djangosaml2.signals import pre_user_save
 import booking.models as booking_models
 import profile.models as profile_models
 
-
 def custom_update_user(sender, **kwargs):
     try:
         user = sender
@@ -34,6 +33,14 @@ def custom_update_user(sender, **kwargs):
             user_role=profile_models.get_none_role()
         )
         profile.save()
+
+        # Create a resource for the user
+        if profile.is_teacher and group is not None:
+            resource = booking_models.TeacherResource(
+                user=user,
+                organizationalunit=group
+            )
+            resource.save()
 
     except Exception as e:
         print "Error during user autogeneration: %s" % e
