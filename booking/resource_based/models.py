@@ -173,7 +173,10 @@ class TeacherResource(Resource):
         if user.userprofile.is_teacher:
             if unit is None:
                 unit = user.userprofile.organizationalunit
-            teacher_resource = TeacherResource(user=user, organizationalunit=unit)
+            teacher_resource = TeacherResource(
+                user=user,
+                organizationalunit=unit
+            )
             teacher_resource.save()
 
 

@@ -3,6 +3,7 @@ from djangosaml2.signals import pre_user_save
 import booking.models as booking_models
 import profile.models as profile_models
 
+
 def custom_update_user(sender, **kwargs):
     try:
         user = sender
