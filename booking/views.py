@@ -1519,7 +1519,10 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
     def get_breadcrumbs(self):
         if self.object and self.object.pk:
             return [
-                {'url': reverse('product-view', args=[self.object.pk]), 'text': self.object.title},
+                {
+                    'url': reverse('product-view', args=[self.object.pk]),
+                    'text': self.object.title
+                },
                 {'text': _(u'Redigér')}
             ]
         else:
@@ -2774,19 +2777,19 @@ class BookingDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
     def get_breadcrumbs(self):
         return [
             {'url': reverse('search'), 'text': _(u'Søgning')},
-            {'url': reverse('product-view', args=[
-                self.object.visit.product.id
-            ]),
-             'text': self.object.visit.product.title
-             },
-            {'url': reverse('visit-view', args=[
-                self.object.visit.id
-            ]),
-             'text': self.object.visit.date_display
-             },
+            {
+                'url': reverse(
+                    'product-view',
+                    args=[self.object.visit.product.id]
+                ),
+                'text': self.object.visit.product.title
+            },
+            {
+                'url': reverse('visit-view', args=[self.object.visit.id]),
+                'text': self.object.visit.date_display
+            },
             {'text': self.object},
         ]
-
 
 
 class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
@@ -2882,7 +2885,6 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
             },
             {'text': _(u'Besøg #%s') % self.object.pk},
         ]
-
 
 
 class EmailTemplateListView(LoginRequiredMixin, BreadcrumbMixin, ListView):
@@ -3121,7 +3123,6 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
         ]
 
 
-
 class EmailTemplateDeleteView(HasBackButtonMixin, LoginRequiredMixin,
                               BreadcrumbMixin, DeleteView):
     template_name = 'email/delete.html'
@@ -3338,13 +3339,12 @@ class BookingAcceptView(BreadcrumbMixin, FormView):
         context['answer'] = self.answer
         context['dequeued'] = self.dequeued
 
-        objectdisplay = _(u"Slettet tilmelding") if self.object_id \
-            else unicode(self.object)
-
         context.update(kwargs)
         return super(BookingAcceptView, self).get_context_data(**context)
 
     def get_breadcrumbs(self):
+        objectdisplay = _(u"Slettet tilmelding") if self.object_id \
+            else unicode(self.object)
         return [
             {'url': reverse('search'), 'text': _(u'Søgning')},
             {
