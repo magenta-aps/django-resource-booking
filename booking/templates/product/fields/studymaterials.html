@@ -9,9 +9,11 @@
         {% if fileformset.studymaterials %}
             <ul>
                 {% for material in fileformset.studymaterials %}
+                    {% if material.file and material.file.size %}
                     <li>
                         <a href="{{ MEDIA_URL }}{{ material.file.url }}">{{ material.file.name | upload_name_strip_path }} ({{ material.file.size | filesizeformat }})</a>
                     </li>
+                    {% endif %}
                 {% endfor %}
             </ul>
         {% endif %}
