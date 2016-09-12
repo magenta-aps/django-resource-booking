@@ -56,12 +56,13 @@ class EditResourceForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         # Populate initial values from the reverse m2m relation
-        if 'instance' in kwargs:
-            initial = kwargs.setdefault('initial', {})
-            initial['resourcepools'] = [
-                p.pk for p in kwargs['instance'].resourcepool_set.all()
-            ]
+
         forms.ModelForm.__init__(self, *args, **kwargs)
+
+        if self.instance.pk:
+            self.initial['resourcepools'] = [
+                p.pk for p in self.instance.resourcepool_set.all()
+            ]
 
         # Limit choices to the same unit and type
         self.fields['resourcepools'].queryset = ResourcePool.objects.filter(
