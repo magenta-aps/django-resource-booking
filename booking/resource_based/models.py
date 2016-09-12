@@ -73,7 +73,19 @@ class ResourceType(models.Model):
 
     @classmethod
     def create_defaults(cls):
-        raise NotImplementedError()
+        for id, name in cls.default_resource_names.iteritems():
+            try:
+                item = ResourceType.objects.get(id=id)
+                if item.name != name:  # WTF!
+                    raise Exception(
+                        u"ResourceType(id=%d) already exists, but has "
+                        u"name %s instead of %s" % (id, item.name, name)
+                    )
+                else:
+                    pass  # Item already exists; all is well
+            except ResourceType.DoesNotExist:
+                item = ResourceType(id=id, name=name)
+                item.save()
 
     def __unicode__(self):
         return self.name
