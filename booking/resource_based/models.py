@@ -298,7 +298,8 @@ class ResourcePool(models.Model):
     # TODO: Begrænse på enhed, resource_type
     resources = models.ManyToManyField(
         Resource,
-        verbose_name=_(u"Ressourcer")
+        verbose_name=_(u"Ressourcer"),
+        blank=True
     )
 
     def can_delete(self):

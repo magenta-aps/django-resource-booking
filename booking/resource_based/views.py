@@ -4,6 +4,7 @@ from django.http import Http404
 from django.utils.translation import ugettext as _
 from django.views.generic import TemplateView, ListView, DetailView
 from django.views.generic.edit import UpdateView, FormView, DeleteView
+from booking.models import OrganizationalUnit
 from booking.resource_based.forms import ResourceTypeForm, EditResourceForm
 from booking.resource_based.forms import ResourcePoolTypeForm
 from booking.resource_based.forms import EditResourcePoolForm
@@ -15,6 +16,9 @@ from booking.views import BackMixin, BreadcrumbMixin
 from itertools import chain
 
 import booking.models as booking_models
+
+from pprint import pprint
+from inspect import getmembers
 
 
 class ResourceCreateView(BackMixin, BreadcrumbMixin, FormView):
@@ -160,8 +164,11 @@ class ResourceUpdateView(BackMixin, BreadcrumbMixin, UpdateView):
         if is_cloning or not hasattr(self, 'object') or self.object is None:
             if pk is None:
                 try:
-                    typeId = int(self.kwargs['type'])
-                    self.object = Resource.create_subclass_instance(typeId)
+                    self.object = Resource.create_subclass_instance(self.kwargs['type'])
+                    self.object.organizationalunit = \
+                        booking_models.OrganizationalUnit.objects.get(
+                            id=self.kwargs['unit']
+                        )
                 except Exception as e:
                     print e
                     pass
@@ -324,6 +331,10 @@ class ResourcePoolUpdateView(BackMixin, BreadcrumbMixin, UpdateView):
                 if 'type' in self.kwargs:
                     self.object.resource_type = ResourceType.objects.get(
                         id=self.kwargs['type']
+                    )
+                if 'unit' in self.kwargs:
+                    self.object.organizationalunit = OrganizationalUnit.objects.get(
+                        id=self.kwargs['unit']
                     )
             else:
                 try:
