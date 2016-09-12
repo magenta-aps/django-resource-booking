@@ -1448,8 +1448,6 @@ class EditProductView(EditProductBaseView):
 
             self.save_rooms()
 
-            self.save_visits()
-
             self.save_subjects()
 
             self.add_to_my_resources()
@@ -1567,41 +1565,6 @@ class EditProductView(EditProductBaseView):
         # Delete any rooms left in existing rooms
         for x in existing_rooms:
             self.object.rooms.remove(x)
-
-    def save_visits(self):
-        # update visits
-        existing_vists = \
-            set([x.start_datetime
-                 for x in self.object.bookable_visits])
-
-        # convert date strings to datetimes
-        date_string = self.request.POST.get(u'visits')
-        dates = date_string.split(',') if date_string is not None else None
-
-        datetimes = []
-        if dates is not None:
-            for date in dates:
-                if date != '':
-                    dt = timezone.make_aware(
-                        parser.parse(date, dayfirst=True),
-                        timezone.pytz.timezone('Europe/Copenhagen')
-                    )
-                    datetimes.append(dt)
-        # remove existing to avoid duplicates,
-        # then save the rest...
-        for date_t in datetimes:
-            if date_t in existing_vists:
-                existing_vists.remove(date_t)
-            else:
-                instance = self.object.make_visit(date_t, True)
-                instance.save()
-        # If the set of existing visits still is not empty,
-        # it means that the user un-ticket one or more existing.
-        # So, we remove those to...
-        if len(existing_vists) > 0:
-            self.object.bookable_visits.filter(
-                start_datetime__in=existing_vists
-            ).delete()
 
     def get_success_url(self):
         try:

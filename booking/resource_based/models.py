@@ -13,15 +13,22 @@ class EventTime(models.Model):
         blank=True
     )
     start = models.DateTimeField(
-        verbose_name=_(u"Starttidspunkt")
+        verbose_name=_(u"Starttidspunkt"),
+        blank=True,
+        null=True
     )
     end = models.DateTimeField(
         verbose_name=_(u"Sluttidspunkt"),
-        blank=True
+        blank=True,
+        null=True
     )
     has_specific_time = models.BooleanField(
-        default=False,
-        verbose_name=_(u"Har fastsat tidspunkt")
+        default=True,
+        verbose_name=_(u"Angivelse af tidspunkt"),
+        choices=(
+            (True, _(u"Både dato og tidspunkt")),
+            (False, _(u"Kun dato")),
+        ),
     )
     notes = models.TextField(
         blank=True,

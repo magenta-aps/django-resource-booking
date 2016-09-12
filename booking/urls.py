@@ -32,6 +32,7 @@ from booking.views import DeclineTeacherView
 from booking.views import BecomeHostView
 from booking.views import DeclineHostView
 from booking.views import EmailReplyView
+from booking.views import ManageTimesView
 from booking.views import VisitAddLogEntryView
 from booking.views import VisitAddCommentView
 from booking.views import VisitDetailView
@@ -100,6 +101,12 @@ urlpatterns = patterns(
     url(r'^product/(?P<pk>[0-9]+)/simple_ressources$',
         booking.views.SimpleRessourcesView.as_view(),
         name='product-simple-ressources'),
+    url(r'^product/(?P<pk>[0-9]+)/manage_times$',
+        booking.views.ManageTimesView.as_view(),
+        name='manage-times'),
+    url(r'^product/(?P<product_pk>[0-9]+)/manage_times/create$',
+        booking.views.CreateTimeView.as_view(),
+        name='create-time'),
     url(r'^product/(?P<product>[0-9]+)/book$',
         BookingView.as_view(),
         name='product-book'),

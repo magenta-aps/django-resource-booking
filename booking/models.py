@@ -18,7 +18,6 @@ from django.utils import formats
 from django.utils.translation import ugettext_lazy as _
 from django.template.base import Template, VariableNode
 
-from recurrence.fields import RecurrenceField
 from booking.utils import ClassProperty, full_email, CustomStorage, html2text
 from booking.utils import get_related_content_types, INFINITY
 
@@ -29,6 +28,7 @@ from datetime import timedelta
 from profile.constants import TEACHER, HOST
 from profile.constants import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
 
+import math
 import uuid
 
 BLANK_LABEL = '---------'
@@ -1154,10 +1154,28 @@ class Product(models.Model):
         blank=True
     )
 
-    recurrences = RecurrenceField(
-        null=True,
-        blank=True,
-        verbose_name=_(u'Gentagelser')
+    TIME_MODE_NONE = 1
+    TIME_MODE_RESOURCE_CONTROLLED = 2
+    TIME_MODE_SPECIFIC = 3
+    TIME_MODE_GUEST_SUGGESTED = 4
+
+    time_mode_choices = (
+        (TIME_MODE_RESOURCE_CONTROLLED,
+         _(u"Tilbuddets tidspunkter styres af ressourcer")),
+        (TIME_MODE_SPECIFIC,
+         _(u"Tilbuddet har faste tidspunkter")),
+        (TIME_MODE_GUEST_SUGGESTED,
+         _(u"Gæster foreslår mulige tidspunkter")),
+    )
+
+    # Note: Default here is a type that can not be selected in the dropdown.
+    # This is to get that default on products that does not have a form field
+    # for time_mode. Products that does a have a form field will have to
+    # choose a specific time mode.
+    time_mode = models.IntegerField(
+        verbose_name=_(u"Håndtering af tidspunkter"),
+        choices=time_mode_choices,
+        default=TIME_MODE_NONE,
     )
 
     tilbudsansvarlig = models.ForeignKey(
@@ -1422,13 +1440,6 @@ class Product(models.Model):
         return self.bookable_visits.filter(
             start_datetime__gte=timezone.now()
         )
-
-    @property
-    def recurrences_description(self):
-        if self.recurrences and self.recurrences.rrules:
-            return [d.to_text() for d in self.recurrences.rrules]
-        else:
-            return []
 
     def get_dates_display(self):
         dates = [
@@ -1707,6 +1718,41 @@ class Product(models.Model):
     @property
     def room_responsible_users(self):
         return self.roomresponsible.all()
+
+    @property
+    def uses_time_management(self):
+        return self.time_mode is not None and self.time_mode in (
+            Product.TIME_MODE_RESOURCE_CONTROLLED,
+            Product.TIME_MODE_SPECIFIC,
+        )
+
+    @property
+    def duration_in_minutes(self):
+        result = 0
+        if self.duration:
+            parts = self.duration.split(":")
+            try:
+                result = int(parts[0]) * 60 + int(parts[1])
+            except:
+                pass
+        return result
+
+    @property
+    def latest_starttime(self):
+        mins = 60 * 24 - self.duration_in_minutes
+        return u'%.2d:%.2d' % (math.floor(mins / 60), mins % 60)
+
+    def get_duration_display(self):
+        mins = self.duration_in_minutes
+        if mins > 0:
+            hours = math.floor(mins / 60)
+            mins = mins % 60
+            if(hours == 1):
+                return _(u"1 time og %d minutter") % (mins)
+            else:
+                return _(u"%d timer og %d minutter") % (hours, mins)
+        else:
+            return ""
 
 
 class Visit(models.Model):

@@ -1,0 +1,262 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load booking_tags %}
+
+{% block htmltitle %} - {% trans "Opret tidspunkt for" %} '{{ product.title }}'{% endblock %}
+
+{% block head %}
+{% include 'common/resources/datepicker_style.html' %}
+<link rel="stylesheet" href="{% static 'css/bootstrap-slider.css' %}" />
+<style type="text/css">
+.input-group.clockpicker {
+    width: 10em;
+}
+.input-group.datefield .input-group-addon {
+    cursor: pointer;
+}
+#time_range_container {
+    display: none;
+}
+.input-group.timeslider strong {
+    margin-left: 1em;
+    margin-right: 1em;
+}
+</style>
+{% endblock %}
+
+
+{% block content %}
+    <div class="divider"></div>
+    <h1>{% trans "Opret tidspunkt for" %} '{{ product.title }}'</h1>
+
+    <div class="divider"></div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <form action="" id="create-time-form">
+                {{ form.product.as_hidden }}
+                {{ form.start.as_hidden }}
+                {{ form.end.as_hidden }}
+
+                <div class="row form-group">
+                    <div class="col-sm-2{% if field.errors %} has-error{% endif %}">
+                        <label for="chosen_datetime" class="control-label">{% trans 'Valgt tidspunkt' %}:</label>
+                    </div>
+                    <div class="col-sm-7">
+                        <div class="form-inline">
+                            <p>
+                                <span id="chosen_datetime"
+                                      class="time-interval-output"
+                                      data-no-date-selected-text="{% trans '<Ingen dato angivet>' %}"></span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {% include 'resource/fields/generic_field.html' with field=form.has_specific_time %}
+
+                <div class="row form-group">
+                    <div class="col-sm-2{% if field.errors %} has-error{% endif %}">
+                        <label for="start_date" class="control-label">{% trans 'Dato' %}:</label>
+                    </div>
+                    <div class="col-sm-7">
+                        <div class="form-inline">
+                            <div class="input-group datefield">
+                                <input class="form-control inline start-date" type="text" name="start_date" id="start_date" />
+                                <span class="input-group-addon">
+                                    <span class="glyphicon glyphicon-calendar"></span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 with-errors">
+                        {{ form.start.errors }}
+                    </div>
+                </div>
+
+                <div class="row form-group" id="end_container">
+                    <div class="col-sm-2{% if field.errors %} has-error{% endif %}">
+                        <label class="control-label">{% trans 'Tidspunkt' %}:</label>
+                    </div>
+                    <div class="col-sm-7">
+                        <div id="end_inputs">
+                        {% if product.duration_in_minutes > 0 %}
+                            <div class="input-group">
+                                <label for="product_duration">
+                                    <input
+                                        type="checkbox"
+                                        name="product_duration"
+                                        id="product_duration"
+                                        class="product-duration"
+                                        value="{{ product.duration_in_minutes }}"
+                                    />
+                                    {% trans 'Brug varighed fra tilbud:' %}
+                                    {{ product.get_duration_display }}
+                                </label>
+                            </div>
+                        {% endif %}
+                            <div class="input-group timeslider">
+                                <div>
+                                    <strong>00:00</strong>
+                                    <input class="start-time" type="text" />
+                                    <strong>{{ product.latest_starttime }}</strong>
+                                </div>
+                            </div>
+                            <div class="input-group timeslider" id="time_range_container">
+                                <div>
+                                    <strong>00:00</strong>
+                                    <input class="time-range" type="text" />
+                                    <strong>24:00</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 with-errors">
+                        {{ form.end.errors }}
+                    </div>
+                </div>
+
+                {% include 'resource/fields/generic_field.html' with field=form.notes %}
+            </form>
+        </div>
+    </div>
+
+    </div>
+{% endblock %}
+
+{% block extra_scripts %}
+{% include 'common/resources/datepicker_script.html' %}
+{% include 'common/resources/timepicker_script.html' %}
+<script type="text/javascript" src="{% static 'js/bootstrap-slider.js' %}"></script>
+<script type="text/javascript"><!--
+(function(root_id) {
+    var MINUTES_PER_STEP = 5,
+        STEPS_PER_HOUR = 60 / MINUTES_PER_STEP,
+        STEPS_IN_DAY = 24 * STEPS_PER_HOUR,
+        START_AT_0800 = STEPS_PER_HOUR * 8,
+        END_AT_1600 = STEPS_PER_HOUR * 16,
+
+        $root = $(root_id),
+        $duration = $root.find('input.product-duration'),
+        $output = $root.find('span.time-interval-output'),
+        $start_date = $root.find('input.start-date'),
+        $start_time = $root.find('input.start-time'),
+        $time_range = $root.find('input.time-range'),
+
+        duration_in_minutes = $('#product_duration').val() ?
+                              $('#product_duration').val() :
+                              0,
+        duration_in_steps = Math.floor(
+                                duration_in_minutes / MINUTES_PER_STEP
+                            ),
+        interval_values = [0, 0],
+        display_values = ["-", "-"],
+        display_string = ''
+        ;
+
+    function display_time_value(val) {
+        var hrs = Math.floor(val / STEPS_PER_HOUR),
+            mins = (val % STEPS_PER_HOUR) * MINUTES_PER_STEP;
+
+        if(hrs < 10)
+            hrs = "0" + hrs;
+        if(mins < 10)
+            mins = "0" + mins;
+
+        return hrs + ":" + mins;
+    }
+
+    function update_time_values(from, to) {
+        if(!from || !to)
+            return;
+        interval_values = [from, to];
+        display_values = [
+            display_time_value(from),
+            display_time_value(to)
+        ];
+        display_string = display_values.join(" - ");
+    }
+
+    function interval_display_string() {
+        return display_values.join(" - ");
+    }
+
+    function update_interval_output() {
+        var date_val = $start_date.val(),
+            time_values, from, to;
+
+        if(!date_val) {
+            date_val = $output.attr('data-no-date-selected-text');
+        }
+        if(!display_string) {
+            if ($duration.is(":checked")) {
+                time_values = [
+                    $start_time.slider('getValue'),
+                    $start_time.slider('getValue') + duration_in_steps
+                ];
+            } else {
+                time_values = $time_range.slider('getValue');
+            }
+
+            update_time_values(time_values[0], time_values[1]);
+        }
+        
+        $output.text(date_val + " " + display_string);
+    }
+
+    $start_time.slider({
+        min: 0,
+        max: STEPS_IN_DAY - duration_in_steps,
+        value: START_AT_0800,
+        formatter: function(value) {
+            update_time_values(value, value + duration_in_steps);
+            update_interval_output();
+            return display_string;
+        }
+    });
+    
+    $time_range.slider({
+        min: 0,
+        max: STEPS_IN_DAY,
+        value: [START_AT_0800, END_AT_1600],
+        formatter: function(values) {
+            update_time_values(values[0], values[1]);
+            update_interval_output();
+            return display_string;
+        }
+    });
+
+    $duration.on("change", function() {
+        if($(this).is(":checked")) {
+            $start_time.parents('.timeslider').first().show();
+            $time_range.parents('.timeslider').first().hide();
+        } else {
+            $start_time.parents('.timeslider').first().hide();
+            $time_range.parents('.timeslider').first().show();
+        }
+        // Force update of displayed interval
+        display_string = '';
+        update_interval_output();
+    }).trigger("change");
+
+    $root.find('.input-group.datefield input').datepicker({
+        language: 'da',
+        format: 'dd-mm-yyyy',
+        weekStart: 1,
+        calendarWeeks: true,
+        todayHighlight: true,
+        startDate: 'Date',
+        clearBtn: false,
+        autoclose: true,
+    }).on('changeDate', update_interval_output);
+
+    $root.find('.input-group.datefield .input-group-addon').on(
+        'click',
+        function() {
+            $(this).parent().find('input').datepicker('show');
+        }
+    );
+})('#create-time-form');
+//--></script>
+{% endblock %}
