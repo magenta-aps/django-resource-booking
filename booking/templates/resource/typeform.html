@@ -23,7 +23,7 @@
             <div class="panel panel-default">
                 <div id="headingCategory" class="panel-heading" role="tab">
                     <h4 class="panel-title">
-                        <a class="" aria-controls="collapseCategory" aria-expanded="true" href="#collapseCategory" data-parent="#accordion" role="button">{% trans "Ressource" %}</a><span class="caret"></span>
+                        <a class="" aria-controls="collapseCategory" aria-expanded="true" href="#collapseCategory" data-parent="#accordion" role="button">{% trans "Kategorisering" %}</a><span class="caret"></span>
                     </h4>
                 </div>
                 <div id="collapseCategory" class="panel-collapse collapse in
@@ -31,16 +31,13 @@
                 " aria-labelledby="headingCategory" role="tabpanel" aria-expanded="true" style="">
 
                     <div class="panel-body">
+                        {% include 'common/fields/generic_field.html' with field=form.type %}
                         <div class="row form-group">
-                            <div class="col-sm-2">
-                                <label for="{{ field.id_for_label }}" class="control-label">{% trans 'Type:' %}</label>
-                            </div>
-                            <div class="col-sm-7">
-                                {{ object.resource_type }}
-                            </div>
+                            {% trans 'Undervisere og lokaler skal oprettes i deres egne systemer:' %}<br/>
+                            <a href="#">{% trans 'Klik her for at oprette en underviser' %}</a><br/>
+                            <a href="#">{% trans 'Klik her for at oprette et lokale' %}</a>
                         </div>
-                        {% include 'common/fields/generic_field.html' with field=form.name %}
-                        {% include 'common/fields/generic_field.html' with field=form.locality %}
+                        {% include 'common/fields/generic_field.html' with field=form.unit %}
                     </div>
 
                 </div>

@@ -1,7 +1,7 @@
 {% load i18n %}
 {% load booking_tags %}
 
-{% include 'resource/fields/generic_field.html' with field=form.rooms_needed %}
+{% include 'common/fields/generic_field.html' with field=form.rooms_needed %}
 
 {% if form.rooms_needed %}
 <div id="rooms_needed_fields">
@@ -22,6 +22,6 @@
             {% endblocktrans %}
         </div>
     </div>
-    {% include 'resource/fields/rooms-control.html' %}
+    {% include 'common/fields/rooms-control.html' %}
 </div>
 {% endif %}

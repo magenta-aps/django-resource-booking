@@ -6,7 +6,7 @@ from .views import MainPageView, VisitNotifyView
 
 from booking.views import PostcodeView, SchoolView, ProductInquireView
 from booking.views import RrulestrView
-from booking.views import ProductListView, ProductCustomListView
+from booking.views import ProductCustomListView
 from booking.views import EditProductInitialView
 from booking.views import BookingView, BookingSuccessView
 from booking.views import VisitSearchView
@@ -36,8 +36,11 @@ from booking.views import VisitAddLogEntryView
 from booking.views import VisitAddCommentView
 from booking.views import VisitDetailView
 from booking.views import VisitCustomListView
-from booking.views import CloneProductView
 from booking.views import EvaluationOverviewView
+
+from booking.resource_based.views import ResourceCreateView, ResourceDetailView
+from booking.resource_based.views import ResourceListView, ResourceUpdateView
+from booking.resource_based.views import ResourceDeleteView
 
 import booking.views
 
@@ -64,29 +67,12 @@ urlpatterns = patterns(
         template_name='iframe-index.html'),
         name='iframe_search'),
 
-    url(r'^resource/create$',
+    url(r'^product/create/?$',
         EditProductInitialView.as_view(),
-        name='resource-create'),
-    url(r'^resource/(?P<pk>[0-9]+)/$',
-        ProductDetailView.as_view(),
-        name='resource-view'),
-    url(r'^resource/?$',
-        ProductListView.as_view(),
-        name='resource-list'),
-
-    url(r'^resource/customlist/?$',
-        ProductCustomListView.as_view(),
-        name='resource-customlist'),
-    url(r'^resource/(?P<pk>[0-9]+)/edit$',
-        EditProductInitialView.as_view(),
-        name='resource-edit'),
-    url(r'^resource/(?P<pk>[0-9]+)/clone$',
-        CloneProductView.as_view(),
-        name='resource-clone'),
-
-    url(r'^product/create$',
-        EditProductView.as_view(success_url='create'),
         name='product-create'),
+    url(r'^product/create/(?P<type>[0-9]+)/?$',
+        EditProductView.as_view(success_url='create'),
+        name='product-create-type'),
     url(r'^product/(?P<pk>[0-9]+)/?$',
         ProductDetailView.as_view(),
         name='product-view'),
@@ -112,6 +98,9 @@ urlpatterns = patterns(
     url(r'^product/(?P<product>[0-9]+)/inquire/success$',
         ProductInquireSuccessView.as_view(),
         name='product-inquire-success'),
+    url(r'^product/customlist/?$',
+        ProductCustomListView.as_view(),
+        name='product-customlist'),
 
     url(r'^visit/(?P<pk>[0-9]+)/notify$',
         VisitNotifyView.as_view(),
@@ -233,6 +222,25 @@ urlpatterns = patterns(
     url(r'^evaluations/?',
         EvaluationOverviewView.as_view(),
         name='evaluations'),
+
+    url(r'^resource/create/?$',
+        ResourceCreateView.as_view(),
+        name='resource-create'),
+    url(r'^resource/create/(?P<type>[0-9]+)/(?P<unit>[0-9]+)/?$',
+        ResourceUpdateView.as_view(success_url='create'),
+        name='resource-create-type'),
+    url(r'^resource/(?P<pk>[0-9]+)/?$',
+        ResourceDetailView.as_view(),
+        name='resource-view'),
+    url(r'^resource/?$',
+        ResourceListView.as_view(),
+        name='resource-list'),
+    url(r'^resource/(?P<pk>[0-9]+)/edit/?$',
+        ResourceUpdateView.as_view(),
+        name='resource-edit'),
+    url(r'^resource/(?P<pk>[0-9]+)/delete/?$',
+        ResourceDeleteView.as_view(),
+        name='resource-delete')
 
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

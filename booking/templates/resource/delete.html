@@ -1,0 +1,22 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load staticfiles %}
+
+{% block content %}
+
+    {% include 'common/breadcrumbrow.html' %}
+
+    <form action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <p>{% trans 'Er du sikker på at du vil slette denne ressource?' %}</p>
+        <dl>
+            <dt>{% trans 'Type' %}</dt>
+            <dd>{{ object.resource_type }}</dd>
+            <dt>{% trans 'Navn' %}</dt>
+            <dd>{{ object.name }}</dd>
+        </dl>
+        <button type="submit" class="btn btn-primary">{% trans 'Ja' %}</button>
+        <a class="btn btn-primary" href="{% if oncancel %}{{ oncancel }}{% else %}javascript:history.back(){% endif %}">{% trans 'Nej' %}</a>
+    </form>
+
+{% endblock %}

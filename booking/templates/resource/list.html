@@ -1,100 +1,63 @@
-{% extends "index.html" %}
+{% extends 'index.html' %}
+{% load i18n %}
 {% load staticfiles %}
 {% load booking_tags %}
-{% load i18n %}
 
-{% block htmltitle %} - {% trans 'liste af tilbud' %}{% endblock %}
+{% block htmltitle %} - {% trans "ressourcer" %}{% endblock %}
 
-{% block content %}
-    <div class="row">
-        <div id="main" class="col-sm-12 col-md-12">
-
-            {% include 'common/breadcrumbrow.html' %}
-
-            <div class="divider"></div>
-
-            {% if not results %}
-                <p>{% trans 'Ingen tilbud fundet.' %}</p>
-            {% else %}
-                <h2 class="bold">
-                    {% blocktrans with count=paginator.count %}{{ count }} tilbud fundet{% endblocktrans %}
-                </h2>
-                <div class="divider"></div>
-                <ul class="media-list">
-                    {% for res in results %}
-                        {% include 'resource/listitem.html' with item=res %}
-                    {% endfor %}
-                </ul>
-            {% endif %}
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-sm-6 col-md-5 col-sm-offset-1 col-md-offset-3">
-            {% if paginator %}
-                <nav>
-                    <ul class="pager">
-
-                        {% if page_obj.has_previous %}
-                            <li>
-                                <a href="?{{ qstring }}&page={{ page_obj.previous_page_number }}&pagesize={{paginator.per_page}}" aria-label="{% trans 'Forrige' %}">
-                                    <span class="glyphicon glyphicon-chevron-left small" aria-hidden="true"></span>
-                                    {% trans 'Forrige' %}
-                                </a>
-                            </li>
-                        {% else %}
-                            <li class="disabled">
-                            <span>
-                                <span class="glyphicon glyphicon-chevron-left small" aria-hidden="true"></span>
-                                {% trans 'Forrige' %}
-                            </span>
-                            </li>
-                        {% endif %}
-                        
-                        {% if page_obj.has_next %}
-                            <li>
-                                <a href="?{{ qstring }}&page={{ page_obj.next_page_number }}&pagesize={{paginator.per_page}}" aria-label="{% trans 'Næste' %}">
-                                <span>
-                                    {% trans 'Næste' %}
-                                    <span class="glyphicon glyphicon-chevron-right small" aria-hidden="true"></span>
-                                </span>
-                                </a>
-                            </li>
-                        {% else %}
-                            <li class="disabled">
-                                {% trans 'Næste' %}
-                                <span class="glyphicon glyphicon-chevron-right small" aria-hidden="true"></span>
-                            </li>
-                        {% endif %}
-                    </ul>
-                </nav>
-            {% endif %}
-        </div>
-        <div class="col-sm-4 col-md-3">
-            <div class="input-group input-group-sm search-list items-pr-side">
-                <span class="input-group-addon">Vis</span>
-                <div class="input-group-btn">
-                    <button type="button" class="btn btn-default">
-                        {% if request.GET.pagesize == "all" %}
-                            Vis alle
-                        {% else %}
-                            {{ paginator.per_page }}
-                        {% endif %}
-                    </button>
-                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> <span class="caret"></span> <span class="sr-only">Vis anrtal resultater pr. side</span> </button>
-                    <ul class="dropdown-menu">
-                        <li{% if request.GET.pagesize == "all" %} class="selected"{% endif %}><a href="?{{ qstring }}&pagesize=all">Vis alle</a></li>
-                        {% for size in pagesizes %}
-                            <li{% if size == paginator.per_page %} class="selected"{% endif %}><a href="?{{ qstring }}&pagesize={{size}}">{{size}}</a></li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                <span class="input-group-addon"> pr. side</span>
-            </div>
-        </div>
-    </div>
-
+{% block head %}
 {% endblock %}
 
-{% block extra_scripts %}
-    <script src="{% static 'js/custom.js' %}"></script>
+{% block content %}
+
+    {% include 'common/breadcrumbrow.html' %}
+
+    <div class="divider"></div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div>
+                <a href="{% url 'resource-create' %}?back={% url 'resource-list' %}" role="button" class="btn btn-primary">{% trans 'Opret ny ressource' %}</a>
+            </div>
+
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>{% trans 'Navn' %}</th>
+                        <th>{% trans 'Type' %}</th>
+                        <th>{% trans 'Handling' %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for resource in resources %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'resource-view' resource.id %}">{{ resource.get_name }}</a>
+                        </td>
+                        <td>
+                            {{ resource.resource_type.name }}
+                        </td>
+                        <td>
+                            <a href="{% url 'resource-edit' resource.id %}?back={% url 'resource-list' %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
+                            <a href="#" role="button" class="btn btn-primary btn-xs">{% trans 'Kalender' %}</a>
+                            {% if resource.can_delete %}
+                            <a href="{% url 'resource-delete' resource.id %}?back={% url 'resource-list' %}" role="button" class="btn btn-primary btn-xs">{% trans 'Slet' %}</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="4">
+                            {% trans 'Ingen ressourcer' %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            <p>
+                (Undervisere og lokaler kan ikke slettes herfra)
+            </p>
+        </div>
+    </div>
+
 {% endblock %}

@@ -40,7 +40,7 @@
                 {% for res in list.queryset %}
                     {% if not list.limit or forloop.counter0 < list.limit %}
                     <div class="list-group-item clearfix">
-                        <a href="{% url 'resource-view' res.pk %}" title="{% trans 'Se tilbuddets detaljer og evt. tilmeldinger' %}">
+                        <a href="{% url 'product-view' res.pk %}" title="{% trans 'Se tilbuddets detaljer og evt. tilmeldinger' %}">
                             <h2 class="list-group-item-heading">{{ res.title }}</h2>
                             <div class="list-group-item-text">
                                 <ul>
@@ -73,8 +73,8 @@
                         <div class="tools">
                             {% if user.userprofile.has_edit_role %}
                                 <span class="edit-tools pull-left">
-                                    <a href="{% url 'resource-edit' res.pk %}">{% trans 'Rediger' %}</a> |
-                                    <a href="{% url 'resource-clone' res.pk %}">{% trans 'Kopiér' %}</a>
+                                    <a href="{% url 'product-edit' res.pk %}">{% trans 'Rediger' %}</a> |
+                                    <a href="{% url 'product-clone' res.pk %}">{% trans 'Kopiér' %}</a>
                                 </span>
                             {% endif %}
                             <span class="label label-{{ res.get_state_class }} pull-right">{{ res.get_state_display }}</span>

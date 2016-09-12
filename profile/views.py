@@ -579,7 +579,7 @@ class UnitListView(EditorRequriedMixin, ListView):
 class StatisticsView(EditorRequriedMixin, TemplateView):
     template_name = "profile/statistics.html"
     form_class = StatisticsForm
-    units = []
+    organizationalunits = []
 
     def get_context_data(self, **kwargs):
         context = {}
@@ -602,8 +602,8 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
             )
             to_date = current_tz.localize(to_date)
 
-        if self.units:
-            context['units'] = self.units
+        if self.organizationalunits:
+            context['organizationalunits'] = self.organizationalunits
             qs = Booking.objects\
                 .select_related('visit__productresource_ptr__organizationalunit') \
                 .select_related('booker__school')\
@@ -614,7 +614,7 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
                 .prefetch_related('bookinggrundskolesubjectlevel_set__level') \
                 .filter(
                     visit__productresource_ptr__organizationalunit_id__in=self
-                        .units
+                        .organizationalunits
                 )
             if from_date:
                 qs = qs.filter(visit__start_datetime__gte=from_date)
@@ -629,18 +629,20 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
     def get(self, request, *args, **kwargs):
         user = self.request.user
         form = self.form_class()
-        form.fields['units'].queryset = user.userprofile.get_unit_queryset()
+        form.fields['organizationalunits'].queryset = \
+            user.userprofile.get_unit_queryset()
         unit_ids = []
-        for unit_id in self.request.GET.getlist('units', None):
+        for unit_id in self.request.GET.getlist('organizationalunits', None):
             unit_ids.append(int(unit_id))
         if user.userprofile.organizationalunit:
-            form.fields['units'].initial = \
+            form.fields['organizationalunits'].initial = \
                 [user.userprofile.organizationalunit.pk]
-            form.fields['units'].empty_label = None
+            form.fields['organizationalunits'].empty_label = None
         if len(unit_ids) > 0:
-            self.units = OrganizationalUnit.objects.all()\
+            self.organizationalunits = OrganizationalUnit.objects.all()\
                 .filter(pk__in=unit_ids)
-            form.fields['units'].initial = self.units
+            form.fields['organizationalunits'].initial = \
+                self.organizationalunits
         if self.request.GET.get('from_date') != '':
             form.fields['from_date'].initial = \
                 self.request.GET.get('from_date', None)

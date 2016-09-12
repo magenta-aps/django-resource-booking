@@ -3,17 +3,14 @@
 {% load staticfiles %}
 {% load booking_tags %}
 
-{% block htmltitle %} - {% trans "opret ressource" %}{% endblock %}
+{% block htmltitle %} - {% if object %}{% trans "rediger tilbud" %}{% else %}{% trans "opret tilbud" %}{% endif %}{% endblock %}
 
 {% block head %}
 {% endblock %}
 
 {% block content %}
-
     {% include 'common/breadcrumbrow.html' %}
-
     <div class="divider"></div>
-
     <form id="resourceform" action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
         {% csrf_token %}
 
@@ -23,26 +20,15 @@
             <div class="panel panel-default">
                 <div id="headingCategory" class="panel-heading" role="tab">
                     <h4 class="panel-title">
-                        <a class="" aria-controls="collapseCategory" aria-expanded="true" href="#collapseCategory" data-parent="#accordion" role="button">{% trans "Ressource" %}</a><span class="caret"></span>
+                        <a class="" aria-controls="collapseCategory" aria-expanded="true" href="#collapseCategory" data-parent="#accordion" role="button">{% trans "Kategorisering" %}</a><span class="caret"></span>
                     </h4>
                 </div>
                 <div id="collapseCategory" class="panel-collapse collapse in
-                {% if form.type.errors or form.unit.errors %}in{% endif %}
+                {% if form.type.errors or form.tags.errors %}in{% endif %}
                 " aria-labelledby="headingCategory" role="tabpanel" aria-expanded="true" style="">
-
                     <div class="panel-body">
-                        <div class="row form-group">
-                            <div class="col-sm-2">
-                                <label for="{{ field.id_for_label }}" class="control-label">{% trans 'Type:' %}</label>
-                            </div>
-                            <div class="col-sm-7">
-                                {{ object.resource_type }}
-                            </div>
-                        </div>
-                        {% include 'common/fields/generic_field.html' with field=form.name %}
-                        {% include 'common/fields/generic_field.html' with field=form.locality %}
+                        {% include 'common/fields/generic_field.html' with field=form.type %}
                     </div>
-
                 </div>
             </div>
         </div>
