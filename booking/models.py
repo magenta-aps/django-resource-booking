@@ -3651,6 +3651,7 @@ Calendar = rb_models.Calendar
 ResourceType = rb_models.ResourceType
 Resource = rb_models.Resource
 TeacherResource = rb_models.TeacherResource
+HostResource = rb_models.HostResource
 RoomResource = rb_models.RoomResource
 ItemResource = rb_models.ItemResource
 VehicleResource = rb_models.VehicleResource
