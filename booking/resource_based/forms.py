@@ -72,7 +72,6 @@ class EditResourceForm(forms.ModelForm):
 
     # Cribbed from
     # http://stackoverflow.com/questions/2216974/
-    # django-modelform-for-many-to-many-fields
     # Save the choices in the reverse m2m relation
     def save(self, commit=True):
         instance = forms.ModelForm.save(self, False)

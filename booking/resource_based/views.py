@@ -115,7 +115,7 @@ class ResourceUpdateView(BackMixin, BreadcrumbMixin, UpdateView):
         if form.is_valid():
             if 'unit' in self.kwargs:
                 unitId = int(self.kwargs['unit'])
-                self.object = form.save(commit=False)
+                self.object = form.save()
                 self.object.organizationalunit = \
                     booking_models.OrganizationalUnit.objects.get(id=unitId)
                 self.object.save()
