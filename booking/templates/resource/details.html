@@ -21,11 +21,21 @@
                 <a href="{% url 'resource-edit' object.id %}?back={% url 'resource-view' object.id %}" role="button" class="btn btn-primary" role="button">{% trans 'Redigér' %}</a>
             </div>
 
-            <dl>
+            <dl class="dl-horizontal">
                 <dt>{% trans 'Type' %}</dt>
                 <dd>{{ object.resource_type }}</dd>
                 <dt>{% trans 'Navn' %}</dt>
                 <dd>{{ object.get_name }}</dd>
+                <dt>{% trans 'Grupper' %}</dt>
+                <dd>
+                    <ul>
+                        {% for resourcepool in object.resourcepool_set.all %}
+                            <li>
+                                <a href="{% url 'resourcepool-view' resourcepool.id %}">{{ resourcepool.name }}</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </dd>
             </dl>
         </div>
     </div>

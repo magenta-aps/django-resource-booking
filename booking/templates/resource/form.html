@@ -3,7 +3,7 @@
 {% load staticfiles %}
 {% load booking_tags %}
 
-{% block htmltitle %} - {% trans "opret ressource" %}{% endblock %}
+{% block htmltitle %} - {% if object.pk %}{% trans "rediger ressource" %}{% else %}{% trans "opret ressource" %}{% endif %}{% endblock %}
 
 {% block head %}
 {% endblock %}
@@ -41,6 +41,7 @@
                         </div>
                         {% include 'common/fields/generic_field.html' with field=form.name %}
                         {% include 'common/fields/generic_field.html' with field=form.locality %}
+                        {% include 'resource/fields/resourcepools.html' %}
                     </div>
 
                 </div>

@@ -3,7 +3,7 @@
 {% load staticfiles %}
 {% load booking_tags %}
 
-{% block htmltitle %} - {% trans "opret ressource" %}{% endblock %}
+{% block htmltitle %} - {% trans "opret ressourcegruppe" %}{% endblock %}
 
 {% block head %}
 {% endblock %}
@@ -38,6 +38,7 @@
                             </div>
                         </div>
                         {% include 'common/fields/generic_field.html' with field=form.name %}
+                        {% include 'resourcepool/fields/resources.html' %}
                     </div>
 
                 </div>

@@ -120,7 +120,13 @@ class ResourceUpdateView(BackMixin, BreadcrumbMixin, UpdateView):
                 self.object.save()
             else:
                 self.object = form.save(commit=True)
-        return self.redirect(reverse('resource-view', args=[self.object.id]))
+            return self.redirect(
+                reverse('resource-view', args=[self.object.id])
+            )
+        else:
+            return self.render_to_response(
+                self.get_context_data(form=form)
+            )
 
     def get_form_class(self):
         if 'type' in self.kwargs:
@@ -282,7 +288,13 @@ class ResourcePoolUpdateView(BackMixin, BreadcrumbMixin, UpdateView):
                 self.object.save()
             else:
                 self.object = form.save(commit=True)
-        return self.redirect(reverse('resource-view', args=[self.object.id]))
+            return self.redirect(
+                reverse('resource-view', args=[self.object.id])
+            )
+        else:
+            return self.render_to_response(
+                self.get_context_data(form=form)
+            )
 
     def get_breadcrumbs(self):
         breadcrumbs = [{
@@ -342,7 +354,9 @@ class ResourcePoolDeleteView(BackMixin, BreadcrumbMixin, DeleteView):
                 'url': reverse('resourcepool-list'),
                 'text': _(u'Ressourcegrupper')
             },
-            {'url': reverse('resourcepool-view', args=[self.object.id]),
-             'text': self.object},
+            {
+                'url': reverse('resourcepool-view', args=[self.object.id]),
+                'text': self.object
+            },
             {'text': _(u'Slet')}
         ]
