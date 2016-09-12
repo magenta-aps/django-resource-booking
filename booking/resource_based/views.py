@@ -17,9 +17,6 @@ from itertools import chain
 
 import booking.models as booking_models
 
-from pprint import pprint
-from inspect import getmembers
-
 
 class ResourceCreateView(BackMixin, BreadcrumbMixin, FormView):
     template_name = "resource/typeform.html"
@@ -164,7 +161,9 @@ class ResourceUpdateView(BackMixin, BreadcrumbMixin, UpdateView):
         if is_cloning or not hasattr(self, 'object') or self.object is None:
             if pk is None:
                 try:
-                    self.object = Resource.create_subclass_instance(self.kwargs['type'])
+                    self.object = Resource.create_subclass_instance(
+                        self.kwargs['type']
+                    )
                     self.object.organizationalunit = \
                         booking_models.OrganizationalUnit.objects.get(
                             id=self.kwargs['unit']
@@ -333,9 +332,8 @@ class ResourcePoolUpdateView(BackMixin, BreadcrumbMixin, UpdateView):
                         id=self.kwargs['type']
                     )
                 if 'unit' in self.kwargs:
-                    self.object.organizationalunit = OrganizationalUnit.objects.get(
-                        id=self.kwargs['unit']
-                    )
+                    self.object.organizationalunit = \
+                        OrganizationalUnit.objects.get(id=self.kwargs['unit'])
             else:
                 try:
                     self.object = ResourcePool.objects.get(pk=pk)
