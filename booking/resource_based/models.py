@@ -144,7 +144,10 @@ class Resource(models.Model):
         return cls()
 
     def __unicode__(self):
-        return "%s (%s)" % (unicode(self.get_name()), unicode(self.resource_type))
+        return "%s (%s)" % (
+            unicode(self.get_name()),
+            unicode(self.resource_type)
+        )
 
     @property
     def subclass_instance(self):
@@ -230,7 +233,6 @@ class TeacherResource(UserResource):
 class HostResource(UserResource):
     role = HOST
     resource_type_id = ResourceType.RESOURCE_TYPE_HOST
-
 
 
 class RoomResource(Resource):
