@@ -80,7 +80,10 @@ class ResourceType(models.Model):
 
 
 class Resource(models.Model):
-    resource_type = models.ForeignKey(ResourceType)
+    resource_type = models.ForeignKey(
+        ResourceType,
+        verbose_name=_(u'Type')
+    )
     organizationalunit = models.ForeignKey(
         "OrganizationalUnit",
         verbose_name=_(u"Ressourcens enhed")
@@ -125,6 +128,10 @@ class Resource(models.Model):
 
     def __unicode__(self):
         return "%s (%s)" % (self.get_name(), self.resource_type)
+
+    @property
+    def subclass_instance(self):
+        return Resource.get_subclass_instance(self.pk)
 
 
 class TeacherResource(Resource):
@@ -224,7 +231,8 @@ class NamedResource(Resource):
     class Meta:
         abstract = True
     name = models.CharField(
-        max_length=1024
+        max_length=1024,
+        verbose_name=_(u'Navn')
     )
 
     def get_name(self):
@@ -235,7 +243,8 @@ class ItemResource(NamedResource):
     locality = models.ForeignKey(
         "Locality",
         null=True,
-        blank=True
+        blank=True,
+        verbose_name=_(u'Lokalitet')
     )
 
     def __init__(self, *args, **kwargs):
@@ -249,7 +258,8 @@ class VehicleResource(NamedResource):
     locality = models.ForeignKey(
         "Locality",
         null=True,
-        blank=True
+        blank=True,
+        verbose_name=_(u'Lokalitet')
     )
 
     def __init__(self, *args, **kwargs):
@@ -266,7 +276,8 @@ class CustomResource(NamedResource):
 class ResourcePool(models.Model):
     resource_type = models.ForeignKey(ResourceType)
     name = models.CharField(
-        max_length=1024
+        max_length=1024,
+        verbose_name=_(u'Navn')
     )
     organizationalunit = models.ForeignKey(
         "OrganizationalUnit",
@@ -277,6 +288,19 @@ class ResourcePool(models.Model):
         Resource,
         verbose_name=_(u"Ressourcer")
     )
+
+    def can_delete(self):
+        return True
+
+    def __unicode__(self):
+        return "%s (%s)" % (self.name, _("Gruppe af %s") % self.resource_type)
+
+    @property
+    def specific_resources(self):
+        return [
+            resource.subclass_instance
+            for resource in self.resources.all()
+        ]
 
 
 class ResourceRequirement(models.Model):

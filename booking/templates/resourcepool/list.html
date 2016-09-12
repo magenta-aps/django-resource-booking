@@ -1,0 +1,64 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load booking_tags %}
+
+{% block htmltitle %} - {% trans "ressourcer" %}{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+
+    {% include 'common/breadcrumbrow.html' %}
+
+    <div class="divider"></div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div>
+                <a href="{% url 'resourcepool-create' %}?back={% url 'resourcepool-list' %}" role="button" class="btn btn-primary">{% trans 'Opret ny ressourcegruppe' %}</a>
+                <a href="{% url 'resource-list' %}" role="button" class="btn btn-primary pull-right">{% trans 'Administrér ressourcer' %}</a>
+            </div>
+
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>{% trans 'Navn' %}</th>
+                        <th>{% trans 'Type' %}</th>
+                        <th>{% trans 'Antal medlemmer' %}</th>
+                        <th>{% trans 'Handling' %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for resourcepool in resourcepools %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'resourcepool-view' resourcepool.id %}">{{ resourcepool.name }}</a>
+                        </td>
+                        <td>
+                            {{ resourcepool.resource_type.name }}
+                        </td>
+                        <td>
+                            {{ resourcepool.resources.count }}
+                        </td>
+                        <td>
+                            <a href="{% url 'resourcepool-edit' resourcepool.id %}?back={% url 'resourcepool-list' %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
+                            {% if resourcepool.can_delete %}
+                            <a href="{% url 'resourcepool-delete' resourcepool.id %}?back={% url 'resourcepool-list' %}" role="button" class="btn btn-primary btn-xs">{% trans 'Slet' %}</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="3">
+                            {% trans 'Ingen ressourcegrupper' %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+{% endblock %}
