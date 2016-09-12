@@ -4,7 +4,7 @@ from django.contrib.auth import models as auth_models
 from django.utils.translation import ugettext_lazy as _
 from recurrence.fields import RecurrenceField
 from booking.models import Room
-from profile.constants import TEACHER
+from profile.constants import TEACHER, HOST, NONE
 
 
 class EventTime(models.Model):
@@ -46,12 +46,14 @@ class ResourceType(models.Model):
     RESOURCE_TYPE_VEHICLE = 2
     RESOURCE_TYPE_TEACHER = 3
     RESOURCE_TYPE_ROOM = 4
+    RESOURCE_TYPE_HOST = 5
 
     default_resource_names = {
         RESOURCE_TYPE_ITEM: _(u"Materiale"),
         RESOURCE_TYPE_VEHICLE: _(u"Transportmiddel"),
         RESOURCE_TYPE_TEACHER: _(u"Underviser"),
         RESOURCE_TYPE_ROOM: _(u"Lokale"),
+        RESOURCE_TYPE_HOST: _(u"Vært"),
     }
 
     def __init__(self, *args, **kwargs):
@@ -64,6 +66,8 @@ class ResourceType(models.Model):
             self.resource_class = TeacherResource
         elif self.id == ResourceType.RESOURCE_TYPE_ROOM:
             self.resource_class = RoomResource
+        elif self.id == ResourceType.RESOURCE_TYPE_HOST:
+            self.resource_class = HostResource
         else:
             self.resource_class = CustomResource
 
@@ -86,6 +90,7 @@ class ResourceType(models.Model):
             except ResourceType.DoesNotExist:
                 item = ResourceType(id=id, name=name)
                 item.save()
+                print "Created new ResourceType %d=%s" % (id, name)
 
     def __unicode__(self):
         return self.name
@@ -139,64 +144,93 @@ class Resource(models.Model):
         return cls()
 
     def __unicode__(self):
-        return "%s (%s)" % (self.get_name(), self.resource_type)
+        return "%s (%s)" % (unicode(self.get_name()), unicode(self.resource_type))
 
     @property
     def subclass_instance(self):
         return Resource.get_subclass_instance(self.pk)
 
 
-class TeacherResource(Resource):
-    # TODO: Begræns til brugertype og enhed
+class UserResource(Resource):
+    class Meta:
+        abstract = True
+
+    role = NONE
+    resource_type_id = 0
+
     user = models.ForeignKey(
         auth_models.User,
         verbose_name=_(u"Underviser")
     )
 
     def __init__(self, *args, **kwargs):
-        super(TeacherResource, self).__init__(*args, **kwargs)
+        super(UserResource, self).__init__(*args, **kwargs)
         self.resource_type = ResourceType.objects.get(
-            id=ResourceType.RESOURCE_TYPE_TEACHER
+            id=self.__class__.resource_type_id
         )
 
     def get_name(self):
-        return self.user.get_full_name()
+        return unicode(self.user.get_full_name())
 
     def can_delete(self):
         return False
 
-    @staticmethod
-    def create_missing():
-        known_teachers = list([
-            teacher.id
-            for teacher in auth_models.User.objects.filter(
-                userprofile__user_role__role=TEACHER
+    @classmethod
+    def create_missing(cls):
+        known_users = list([
+            userresource.user.id
+            for userresource in cls.objects.filter(
+                user__userprofile__user_role__role=cls.role
             )
         ])
-        missing_teachers = auth_models.User.objects.exclude(
-            id__in=known_teachers
+        print "We already have resources for %d users" % len(known_users)
+        missing_users = auth_models.User.objects.filter(
+            userprofile__user_role__role=cls.role
+        ).exclude(
+            pk__in=known_users
         )
-        for teacher in missing_teachers:
+        print "We are missing resources for %d users" % len(missing_users)
+        created = 0
+        skipped = 0
+        for user in missing_users:
             try:
-                teacher_resource = TeacherResource(
-                    user=teacher,
-                    organizationalunit=teacher.userprofile.organizationalunit
-                )
-                teacher_resource.save()
+                if user.userprofile.organizationalunit is not None:
+                    user_resource = cls(
+                        user=user,
+                        organizationalunit=user.userprofile.organizationalunit
+                    )
+                    user_resource.save()
+                    created += 1
+                else:
+                    skipped += 1
             except Exception as e:
                 print e
-                pass
+        print "Created %d %s objects" % (created, cls.__name__)
+        if skipped > 0:
+            print "Skipped creating resources for %d objects " \
+                  "that had no unit" % skipped
 
-    @staticmethod
-    def create(user, unit=None):
-        if user.userprofile.is_teacher:
+    @classmethod
+    def create(cls, user, unit=None):
+        if user.userprofile.get_role() == cls.role:
             if unit is None:
                 unit = user.userprofile.organizationalunit
-            teacher_resource = TeacherResource(
+            user_resource = cls(
                 user=user,
                 organizationalunit=unit
             )
-            teacher_resource.save()
+            user_resource.save()
+
+
+class TeacherResource(UserResource):
+    role = TEACHER
+    resource_type_id = ResourceType.RESOURCE_TYPE_TEACHER
+
+
+class HostResource(UserResource):
+    role = HOST
+    resource_type_id = ResourceType.RESOURCE_TYPE_HOST
+
 
 
 class RoomResource(Resource):

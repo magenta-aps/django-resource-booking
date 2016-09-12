@@ -3,7 +3,7 @@ from booking.models import OrganizationalUnit
 from booking.models import Resource
 from booking.models import ResourceType
 from booking.models import ItemResource, RoomResource
-from booking.models import TeacherResource, VehicleResource
+from booking.models import TeacherResource, HostResource, VehicleResource
 from booking.models import ResourcePool
 from django import forms
 from django.forms import CheckboxSelectMultiple
@@ -97,6 +97,8 @@ class EditResourceForm(forms.ModelForm):
             return EditRoomResourceForm
         elif resource_type == ResourceType.RESOURCE_TYPE_TEACHER:
             return EditTeacherResourceForm
+        elif resource_type == ResourceType.RESOURCE_TYPE_HOST:
+            return EditHostResourceForm
         elif resource_type == ResourceType.RESOURCE_TYPE_VEHICLE:
             return EditVehicleResourceForm
 
@@ -118,6 +120,13 @@ class EditRoomResourceForm(EditResourceForm):
 class EditTeacherResourceForm(EditResourceForm):
     class Meta:
         model = TeacherResource
+        fields = EditResourceForm.Meta.fields
+        widgets = EditResourceForm.Meta.widgets
+
+
+class EditHostResourceForm(EditResourceForm):
+    class Meta:
+        model = HostResource
         fields = EditResourceForm.Meta.fields
         widgets = EditResourceForm.Meta.widgets
 

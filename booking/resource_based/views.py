@@ -10,7 +10,8 @@ from booking.resource_based.forms import ResourcePoolTypeForm
 from booking.resource_based.forms import EditResourcePoolForm
 from booking.resource_based.models import Resource, ResourceType
 from booking.resource_based.models import ItemResource, RoomResource
-from booking.resource_based.models import TeacherResource, VehicleResource
+from booking.resource_based.models import TeacherResource, HostResource
+from booking.resource_based.models import VehicleResource
 from booking.resource_based.models import ResourcePool
 from booking.views import BackMixin, BreadcrumbMixin
 from itertools import chain
@@ -86,6 +87,7 @@ class ResourceListView(BreadcrumbMixin, ListView):
             ItemResource.objects.all(),
             RoomResource.objects.all(),
             TeacherResource.objects.all(),
+            HostResource.objects.all(),
             VehicleResource.objects.all()
         )
 
