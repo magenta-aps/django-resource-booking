@@ -129,6 +129,10 @@ class Resource(models.Model):
     def __unicode__(self):
         return "%s (%s)" % (self.get_name(), self.resource_type)
 
+    @property
+    def subclass_instance(self):
+        return Resource.get_subclass_instance(self.pk)
+
 
 class TeacherResource(Resource):
     # TODO: Begræns til brugertype og enhed
@@ -290,6 +294,13 @@ class ResourcePool(models.Model):
 
     def __unicode__(self):
         return "%s (%s)" % (self.name, _("Gruppe af %s") % self.resource_type)
+
+    @property
+    def specific_resources(self):
+        return [
+            resource.subclass_instance
+            for resource in self.resources.all()
+        ]
 
 
 class ResourceRequirement(models.Model):

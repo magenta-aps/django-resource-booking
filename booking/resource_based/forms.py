@@ -161,7 +161,11 @@ class EditResourcePoolForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(EditResourcePoolForm, self).__init__(*args, **kwargs)
         # Limit choices to the same unit and type
-        self.fields['resources'].queryset = Resource.objects.filter(
-            organizationalunit=self.instance.organizationalunit,
-            resource_type=self.instance.resource_type
-        )
+        self.fields['resources'].choices = [
+            (resource.subclass_instance.id,
+             resource.subclass_instance.get_name())
+            for resource in Resource.objects.filter(
+                organizationalunit=self.instance.organizationalunit,
+                resource_type=self.instance.resource_type
+            )
+        ]
