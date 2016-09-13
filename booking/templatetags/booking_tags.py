@@ -129,6 +129,26 @@ def replace(value, arg):
     return arg
 
 
+@register.filter
+def lt(a, b):
+    return a < b
+
+
+@register.filter
+def lte(a, b):
+    return a <= b
+
+
+@register.filter
+def gt(a, b):
+    return a > b
+
+
+@register.filter
+def gte(a, b):
+    return a >= b
+
+
 class FullURLNode(defaulttags.Node):
 
     TOKEN_USER_KEY = 'token_user'
