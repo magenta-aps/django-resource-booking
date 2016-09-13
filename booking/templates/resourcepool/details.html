@@ -26,6 +26,8 @@
             <dl class="dl-horizontal">
                 <dt>{% trans 'Type' %}</dt>
                 <dd>{{ object.resource_type }}</dd>
+                <dt>{% trans 'Enhed' %}</dt>
+                <dd>{{ object.organizationalunit.name }}</dd>
                 <dt>{% trans 'Navn' %}</dt>
                 <dd>{{ object.name }}</dd>
                 <dt>{% trans 'Medlemmer' %}</dt>

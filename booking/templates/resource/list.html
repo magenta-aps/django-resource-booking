@@ -26,6 +26,7 @@
                     <tr>
                         <th>{% trans 'Navn' %}</th>
                         <th>{% trans 'Type' %}</th>
+                        <th>{% trans 'Enhed' %}</th>
                         <th>{% trans 'Grupper' %}</th>
                         <th>{% trans 'Handling' %}</th>
                     </tr>
@@ -38,6 +39,9 @@
                         </td>
                         <td>
                             {{ resource.resource_type.name }}
+                        </td>
+                        <td>
+                            {{ resource.organizationalunit.name }}
                         </td>
                         <td>
                             {% for group in resource.group_preview %}

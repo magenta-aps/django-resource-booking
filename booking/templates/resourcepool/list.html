@@ -26,6 +26,7 @@
                     <tr>
                         <th>{% trans 'Navn' %}</th>
                         <th>{% trans 'Type' %}</th>
+                        <th>{% trans 'Enhed' %}</th>
                         <th>{% trans 'Antal medlemmer' %}</th>
                         <th>{% trans 'Handling' %}</th>
                     </tr>
@@ -38,6 +39,9 @@
                         </td>
                         <td>
                             {{ resourcepool.resource_type.name }}
+                        </td>
+                        <td>
+                            {{ resourcepool.organizationalunit.name }}
                         </td>
                         <td>
                             {{ resourcepool.resources.count }}
