@@ -44,6 +44,20 @@
                         {% endfor %}
                     </ul>
                 </dd>
+                <dt>{% trans 'Anvendes af' %}</dt>
+                <dd>
+                    <ul class="list-unstyled">
+                        {% for requirement in object.resourcerequirement_set.all %}
+                            <li>
+                                <a href="{% url 'resourcerequirement-list' requirement.product.id %}">{{ requirement.product }}</a>
+                            </li>
+                        {% empty %}
+                            <li>
+                                {% trans 'Ingen tilbud' %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </dd>
             </dl>
         </div>
     </div>

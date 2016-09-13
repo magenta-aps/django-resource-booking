@@ -198,9 +198,10 @@ class EditResourceRequirementForm(forms.ModelForm):
             unit = product.organizationalunit
             self.fields['resource_pool'].choices = [
                 (pool.id, pool.name)
-                for pool in ResourcePool.objects.filter(organizationalunit=unit)
+                for pool in ResourcePool.objects.filter(
+                    organizationalunit=unit
+                )
             ]
-            # self.fields['resource_pool'].queryset = ResourcePool.objects.filter(organizationalunit=unit)
 
     def save(self, commit=True):
         if getattr(self.instance, 'product', None) is None \

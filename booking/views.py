@@ -226,7 +226,7 @@ class BackMixin(HasBackButtonMixin):
             back = self.request.GET[self.backparam]
             if self.just_preserve_back:
                 return regular + ('?' if '?' not in regular else '&') + \
-                      "back=%s" % back
+                    "back=%s" % back
             else:
                 return back
         else:

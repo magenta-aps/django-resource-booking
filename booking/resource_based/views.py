@@ -223,10 +223,12 @@ class ResourcePoolCreateView(BackMixin, BreadcrumbMixin, FormView):
             typeId = int(form.cleaned_data['type'])
             unitId = int(form.cleaned_data['unit'])
 
-            return self.redirect(reverse(
-                'resourcepool-create-type',
-                kwargs={'type': typeId, 'unit': unitId}
-            ))
+            return self.redirect(
+                reverse(
+                    'resourcepool-create-type',
+                    kwargs={'type': typeId, 'unit': unitId}
+                )
+            )
 
         return self.render_to_response(
             self.get_context_data(**context)
@@ -391,17 +393,38 @@ class ResourceRequirementCreateView(BackMixin, BreadcrumbMixin, CreateView):
     def get_template_names(self):
         return ['resourcerequirement/form.html']
 
+    def dispatch(self, request, *args, **kwargs):
+        self.product = Product.objects.get(id=self.kwargs['product'])
+        return super(ResourceRequirementCreateView, self).dispatch(
+            request, *args, **kwargs
+        )
+
     def get_form_kwargs(self):
         kwargs = super(ResourceRequirementCreateView, self).get_form_kwargs()
-        kwargs['product'] = Product.objects.get(id=self.kwargs['product'])
+        kwargs['product'] = self.product
         kwargs['initial']['required_amount'] = 1
         return kwargs
 
     def form_valid(self, form):
         self.object = form.save()
         return self.redirect(
-            reverse('product-view', args=[self.object.product.id])
+            reverse('product-view', args=[self.product.id])
         )
+
+    def get_breadcrumbs(self):
+        return [
+            {'url': reverse('search'), 'text': _(u'Søgning')},
+            {
+                'url': self.request.GET.get("search", reverse('search')),
+                'text': _(u'Søgeresultat')
+            },
+            {
+                'url': reverse('product-view', args=[self.product.id]),
+                'text': unicode(self.product)
+            },
+            {'text': _(u'Opret ressourcebehov')}
+        ]
+
 
 class ResourceRequirementUpdateView(BackMixin, BreadcrumbMixin, UpdateView):
     model = ResourceRequirement
@@ -421,13 +444,30 @@ class ResourceRequirementUpdateView(BackMixin, BreadcrumbMixin, UpdateView):
             reverse('product-view', args=[self.object.product.id])
         )
 
+    def get_breadcrumbs(self):
+        return [
+            {'url': reverse('search'), 'text': _(u'Søgning')},
+            {
+                'url': self.request.GET.get("search", reverse('search')),
+                'text': _(u'Søgeresultat')
+            },
+            {
+                'url': reverse('product-view', args=[self.object.product.id]),
+                'text': unicode(self.object.product)
+            },
+            {'text': _(u'Redigér ressourcebehov')}
+        ]
+
+
 class ResourceRequirementListView(BreadcrumbMixin, ListView):
     model = ResourceRequirement
     template_name = "resourcerequirement/list.html"
 
     def dispatch(self, request, *args, **kwargs):
         self.product = Product.objects.get(id=self.kwargs['product'])
-        return super(ResourceRequirementListView, self).dispatch(request, *args, **kwargs)
+        return super(ResourceRequirementListView, self).dispatch(
+            request, *args, **kwargs
+        )
 
     def get_context_object_name(self, queryset):
         return "resourcerequirements"
@@ -436,7 +476,9 @@ class ResourceRequirementListView(BreadcrumbMixin, ListView):
         context = {}
         context['product'] = self.product
         context.update(kwargs)
-        return super(ResourceRequirementListView, self).get_context_data(**context)
+        return super(ResourceRequirementListView, self).get_context_data(
+            **context
+        )
 
     def get_queryset(self):
         return self.product.resourcerequirement_set
@@ -464,12 +506,14 @@ class ResourceRequirementDeleteView(BackMixin, BreadcrumbMixin, DeleteView):
 
     def get_breadcrumbs(self):
         return [
+            {'url': reverse('search'), 'text': _(u'Søgning')},
             {
-                'url': reverse('resourcerequirement-list', args=[self.object.product.id]),
-                'text': _(u'Ressourcegrupper')
+                'url': self.request.GET.get("search", reverse('search')),
+                'text': _(u'Søgeresultat')
             },
             {
-                'text': self.object.resource_pool.name
+                'url': reverse('product-view', args=[self.object.product.id]),
+                'text': unicode(self.object.product)
             },
-            {'text': _(u'Slet')}
+            {'text': _(u'Slet ressourcebehov')}
         ]
