@@ -3,7 +3,7 @@
 {% load staticfiles %}
 {% load booking_tags %}
 
-{% block htmltitle %} - {% trans "opret ressourcegruppe" %}{% endblock %}
+{% block htmltitle %} - {% if object.pk %}{% trans "redigér ressourcegruppe" %}{% else %}{% trans "opret ressourcegruppe" %}{% endif %}{% endblock %}
 
 {% block head %}
 {% endblock %}
