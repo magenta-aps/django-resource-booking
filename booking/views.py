@@ -219,6 +219,19 @@ class BackMixin(HasBackButtonMixin):
             url = regular
         return redirect(url)
 
+    def get_success_url(self, regular=None):
+        if regular is None:
+            regular = self.success_url
+        if self.backparam in self.request.GET:
+            back = self.request.GET[self.backparam]
+            if self.just_preserve_back:
+                return regular + ('?' if '?' not in regular else '&') + \
+                      "back=%s" % back
+            else:
+                return back
+        else:
+            return regular
+
 
 class ModalMixin(object):
     modalid = None
@@ -1717,7 +1730,7 @@ class SimpleRessourcesView(LoginRequiredMixin, BreadcrumbMixin,
         ]
 
 
-class ProductDetailView(ProductBookingDetailView):
+class ProductDetailView(BreadcrumbMixin, ProductBookingDetailView):
     """Display Product details"""
     model = Product
     template_name = 'product/details.html'
@@ -1744,13 +1757,6 @@ class ProductDetailView(ProductBookingDetailView):
         else:
             context['can_edit'] = False
 
-        context['breadcrumbs'] = [
-            {'url': reverse('search'), 'text': _(u'Søgning')},
-            {'url': self.request.GET.get("search", reverse('search')),
-             'text': _(u'Søgeresultat')},
-            {'text': _(u'Om tilbuddet')},
-        ]
-
         context['thisurl'] = reverse('product-view', args=[self.object.id])
         context['searchurl'] = self.request.GET.get(
             "search",
@@ -1762,6 +1768,14 @@ class ProductDetailView(ProductBookingDetailView):
         context.update(kwargs)
 
         return super(ProductDetailView, self).get_context_data(**context)
+
+    def get_breadcrumbs(self):
+        return [
+            {'url': reverse('search'), 'text': _(u'Søgning')},
+            {'url': self.request.GET.get("search", reverse('search')),
+             'text': _(u'Søgeresultat')},
+            {'text': unicode(self.object)},
+        ]
 
 
 class ProductInquireView(FormMixin, HasBackButtonMixin, ModalMixin,

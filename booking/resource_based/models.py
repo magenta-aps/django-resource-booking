@@ -378,3 +378,6 @@ class ResourceRequirement(models.Model):
     required_amount = models.IntegerField(
         verbose_name=_(u"Påkrævet antal")
     )
+
+    def can_delete(self):
+        return True

@@ -5,8 +5,9 @@ from booking.models import ResourceType
 from booking.models import ItemResource, RoomResource
 from booking.models import TeacherResource, HostResource, VehicleResource
 from booking.models import ResourcePool
+from booking.models import ResourceRequirement
 from django import forms
-from django.forms import CheckboxSelectMultiple
+from django.forms import CheckboxSelectMultiple, NumberInput
 from django.utils.translation import ugettext_lazy as _
 
 
@@ -178,3 +179,31 @@ class EditResourcePoolForm(forms.ModelForm):
                 resource_type=self.instance.resource_type
             )
         ]
+
+
+class EditResourceRequirementForm(forms.ModelForm):
+    class Meta:
+        model = ResourceRequirement
+        fields = ['resource_pool', 'required_amount']
+        widgets = {
+            'required_amount': NumberInput(attrs={
+                'min': 1
+            })
+        }
+
+    def __init__(self, product=None, *args, **kwargs):
+        super(EditResourceRequirementForm, self).__init__(*args, **kwargs)
+        if product is not None:
+            self.product = product
+            unit = product.organizationalunit
+            self.fields['resource_pool'].choices = [
+                (pool.id, pool.name)
+                for pool in ResourcePool.objects.filter(organizationalunit=unit)
+            ]
+            # self.fields['resource_pool'].queryset = ResourcePool.objects.filter(organizationalunit=unit)
+
+    def save(self, commit=True):
+        if getattr(self.instance, 'product', None) is None \
+                and self.product is not None:
+            self.instance.product = self.product
+        return super(EditResourceRequirementForm, self).save(commit)

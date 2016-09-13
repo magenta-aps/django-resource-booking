@@ -48,6 +48,11 @@ from booking.resource_based.views import ResourcePoolListView
 from booking.resource_based.views import ResourcePoolUpdateView
 from booking.resource_based.views import ResourcePoolDeleteView
 
+from booking.resource_based.views import ResourceRequirementCreateView
+from booking.resource_based.views import ResourceRequirementUpdateView
+from booking.resource_based.views import ResourceRequirementListView
+from booking.resource_based.views import ResourceRequirementDeleteView
+
 import booking.views
 
 from django.views.generic import TemplateView
@@ -266,6 +271,19 @@ urlpatterns = patterns(
     url(r'^resourcepool/(?P<pk>[0-9]+)/delete/?$',
         ResourcePoolDeleteView.as_view(),
         name='resourcepool-delete'),
+
+    url(r'^visit/(?P<product>[0-9]+)/resourcerequirement/create/?$',
+        ResourceRequirementCreateView.as_view(),
+        name='resourcerequirement-create'),
+    url(r'^visit/(?P<product>[0-9]+)/resourcerequirement/(?P<pk>[0-9]+)/edit/?$',
+        ResourceRequirementUpdateView.as_view(),
+        name='resourcerequirement-edit'),
+    url(r'^visit/(?P<product>[0-9]+)/resourcerequirement/?$',
+        ResourceRequirementListView.as_view(),
+        name='resourcerequirement-list'),
+    url(r'^visit/(?P<product>[0-9]+)/resourcerequirement/(?P<pk>[0-9]+)/delete/?$',
+        ResourceRequirementDeleteView.as_view(),
+        name='resourcerequirement-delete'),
 
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

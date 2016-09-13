@@ -3,7 +3,7 @@
 {% load staticfiles %}
 {% load booking_tags %}
 
-{% block htmltitle %} - {% if object.pk %}{% trans "redigér ressourcegruppe" %}{% else %}{% trans "opret ressourcegruppe" %}{% endif %}{% endblock %}
+{% block htmltitle %} - {% if object.pk %}{% trans "redigér ressourcebehov" %}{% else %}{% trans "opret ressourcebehov" %}{% endif %}{% endblock %}
 
 {% block head %}
 {% endblock %}
@@ -23,23 +23,15 @@
             <div class="panel panel-default">
                 <div id="headingCategory" class="panel-heading" role="tab">
                     <h4 class="panel-title">
-                        <a class="" aria-controls="collapseCategory" aria-expanded="true" href="#collapseCategory" data-parent="#accordion" role="button">{% trans "Ressourcegruppe" %}</a>
+                        <a class="" aria-controls="collapseCategory" aria-expanded="true" href="#collapseCategory" data-parent="#accordion" role="button">{% trans "Ressourcebehov" %}</a>
                         <span class="caret"></span>
                     </h4>
                 </div>
                 <div id="collapseCategory" class="panel-collapse collapse in" aria-labelledby="headingCategory" role="tabpanel" aria-expanded="true" style="">
 
                     <div class="panel-body">
-                        <div class="row form-group">
-                            <div class="col-sm-2">
-                                <label for="{{ field.id_for_label }}" class="control-label">{% trans 'Type:' %}</label>
-                            </div>
-                            <div class="col-sm-7">
-                                {{ object.resource_type }}
-                            </div>
-                        </div>
-                        {% include 'common/fields/generic_field.html' with field=form.name %}
-                        {% include 'resourcepool/fields/resources.html' %}
+                        {% include 'common/fields/generic_field.html' with field=form.resource_pool %}
+                        {% include 'common/fields/generic_field.html' with field=form.required_amount %}
                     </div>
 
                 </div>
