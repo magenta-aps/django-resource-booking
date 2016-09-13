@@ -14,12 +14,15 @@
 
     <div class="row">
         <div class="col-md-12">
+
             <div class="pull-right">
                 {% if object.can_delete %}
-                <a href="{% url 'resource-delete' object.id %}?back={% url 'resource-view' object.id %}" class="btn btn-primary" role="button">{% trans 'Slet ressourcen' %}</a>
+                    <a href="{% url 'resource-delete' object.id %}?back={% url 'resource-view' object.id %}" class="btn btn-primary" role="button">{% trans 'Slet ressourcen' %}</a>
                 {% endif %}
                 <a href="{% url 'resource-edit' object.id %}?back={% url 'resource-view' object.id %}" role="button" class="btn btn-primary" role="button">{% trans 'Redigér' %}</a>
             </div>
+
+            <h1>{{ object.get_name }}</h1>
 
             <dl class="dl-horizontal">
                 <dt>{% trans 'Type' %}</dt>
@@ -28,10 +31,14 @@
                 <dd>{{ object.get_name }}</dd>
                 <dt>{% trans 'Grupper' %}</dt>
                 <dd>
-                    <ul>
+                    <ul class="list-unstyled">
                         {% for resourcepool in object.resourcepool_set.all %}
                             <li>
                                 <a href="{% url 'resourcepool-view' resourcepool.id %}">{{ resourcepool.name }}</a>
+                            </li>
+                        {% empty %}
+                            <li>
+                                {% trans 'Ikke medlem af nogen grupper' %}
                             </li>
                         {% endfor %}
                     </ul>

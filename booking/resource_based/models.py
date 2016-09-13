@@ -153,6 +153,19 @@ class Resource(models.Model):
     def subclass_instance(self):
         return Resource.get_subclass_instance(self.pk)
 
+    def group_preview(self, maxchars=50):
+        display_groups = []
+        chars = 0
+        for group in self.resourcepool_set.all():
+            display_groups.append({'name': group.name, 'group': group})
+            chars += len(group.name)
+            if maxchars is not None and chars >= maxchars:
+                break
+        if maxchars is not None and len(display_groups) > 0 and chars > maxchars:
+            lastgroup = display_groups[-1]
+            lastgroup['name'] = lastgroup['name'][0:(maxchars - chars)] + "..."
+        return display_groups
+
 
 class UserResource(Resource):
     class Meta:
@@ -193,25 +206,27 @@ class UserResource(Resource):
             pk__in=known_users
         )
         print "We are missing resources for %d users" % len(missing_users)
-        created = 0
-        skipped = 0
-        for user in missing_users:
-            try:
-                if user.userprofile.organizationalunit is not None:
-                    user_resource = cls(
-                        user=user,
-                        organizationalunit=user.userprofile.organizationalunit
-                    )
-                    user_resource.save()
-                    created += 1
-                else:
-                    skipped += 1
-            except Exception as e:
-                print e
-        print "Created %d %s objects" % (created, cls.__name__)
-        if skipped > 0:
-            print "Skipped creating resources for %d objects " \
-                  "that had no unit" % skipped
+        if len(missing_users) > 0:
+            created = 0
+            skipped = 0
+            for user in missing_users:
+                try:
+                    if user.userprofile.organizationalunit is not None:
+                        user_resource = cls(
+                            user=user,
+                            organizationalunit=user.userprofile.
+                                organizationalunit
+                        )
+                        user_resource.save()
+                        created += 1
+                    else:
+                        skipped += 1
+                except Exception as e:
+                    print e
+            print "Created %d %s objects" % (created, cls.__name__)
+            if skipped > 0:
+                print "Skipped creating resources for %d objects " \
+                      "that had no unit" % skipped
 
     @classmethod
     def create(cls, user, unit=None):

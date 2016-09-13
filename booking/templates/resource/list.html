@@ -26,6 +26,7 @@
                     <tr>
                         <th>{% trans 'Navn' %}</th>
                         <th>{% trans 'Type' %}</th>
+                        <th>{% trans 'Grupper' %}</th>
                         <th>{% trans 'Handling' %}</th>
                     </tr>
                 </thead>
@@ -37,6 +38,11 @@
                         </td>
                         <td>
                             {{ resource.resource_type.name }}
+                        </td>
+                        <td>
+                            {% for group in resource.group_preview %}
+                                <a href="{% url 'resourcepool-view' group.group.id %}">{{ group.name }}</a>
+                            {% endfor %}
                         </td>
                         <td>
                             <a href="{% url 'resource-edit' resource.id %}?back={% url 'resource-list' %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
