@@ -2967,15 +2967,6 @@ class EmailTemplateEditView(LoginRequiredMixin, UnitAccessRequiredMixin,
 
     def get_context_data(self, **kwargs):
         context = {}
-        if self.object and self.object.id:
-            context['breadcrumbs'].extend([
-                {'url': reverse('emailtemplate-view', args={self.object.id}),
-                 'text': _(u'Emailskabelon')},
-                {'text': _(u'Redigér')},
-            ])
-        else:
-            context['breadcrumbs'].append({'text': _(u'Opret')})
-
         if self.object is not None and self.object.id is not None:
             context['thisurl'] = reverse('emailtemplate-edit',
                                          args=[self.object.id])
@@ -2998,12 +2989,21 @@ class EmailTemplateEditView(LoginRequiredMixin, UnitAccessRequiredMixin,
         return args
 
     def get_breadcrumbs(self):
-        return [
+        breadcrumbs = [
             {
                 'url': reverse('emailtemplate-list'),
                 'text': _(u'Emailskabelonliste')
             }
         ]
+        if self.object and self.object.id:
+            breadcrumbs.extend([
+                {'url': reverse('emailtemplate-view', args={self.object.id}),
+                 'text': _(u'Emailskabelon')},
+                {'text': _(u'Redigér')},
+            ])
+        else:
+            breadcrumbs.append({'text': _(u'Opret')})
+        return breadcrumbs
 
 
 class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
