@@ -3,7 +3,7 @@
 {% load staticfiles %}
 {% load booking_tags %}
 
-{% block htmltitle %} - {% if object.pk %}{% trans "rediger ressource" %}{% else %}{% trans "opret ressource" %}{% endif %}{% endblock %}
+{% block htmltitle %} - {% if object.pk %}{% trans "redigér ressourcegruppe" %}{% else %}{% trans "opret ressourcegruppe" %}{% endif %}{% endblock %}
 
 {% block head %}
 {% endblock %}
@@ -23,12 +23,10 @@
             <div class="panel panel-default">
                 <div id="headingCategory" class="panel-heading" role="tab">
                     <h4 class="panel-title">
-                        <a class="" aria-controls="collapseCategory" aria-expanded="true" href="#collapseCategory" data-parent="#accordion" role="button">{% trans "Ressource" %}</a><span class="caret"></span>
+                        <a class="" aria-controls="collapseCategory" aria-expanded="true" href="#collapseCategory" data-parent="#accordion" role="button">{% trans "Ressourcegruppe" %}</a><span class="caret"></span>
                     </h4>
                 </div>
-                <div id="collapseCategory" class="panel-collapse collapse in
-                {% if form.type.errors or form.unit.errors %}in{% endif %}
-                " aria-labelledby="headingCategory" role="tabpanel" aria-expanded="true" style="">
+                <div id="collapseCategory" class="panel-collapse collapse in" aria-labelledby="headingCategory" role="tabpanel" aria-expanded="true" style="">
 
                     <div class="panel-body">
                         <div class="row form-group">
@@ -40,8 +38,7 @@
                             </div>
                         </div>
                         {% include 'common/fields/generic_field.html' with field=form.name %}
-                        {% include 'common/fields/generic_field.html' with field=form.locality %}
-                        {% include 'resource/fields/resourcepools.html' %}
+                        {% include 'resourcepool/fields/resources.html' %}
                     </div>
 
                 </div>

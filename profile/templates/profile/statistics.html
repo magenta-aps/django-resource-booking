@@ -18,7 +18,7 @@
 <form action="{% url 'statistics' %}" method="get">
     <div class="divider"></div>
     <div class="form-group">
-        {{ form.units.errors }}
+        {{ form.organizationalunits.errors }}
         <label class="control-label" for="{{ form.organizationalunit.id_units}}">{% trans 'Enheder:' %}</label>
         {{ form.units }}
     </div>
@@ -41,7 +41,7 @@
 
 {% if request.GET.urlencode %}
     <div>
-        <a href="{{ request.get_full_path}}&view=csv" class="btn btn-default"><span class="glyphicon glyphicon-save-file"></span> {% trans 'Download csv' %}</a>
+        <a href="{{ request.get_full_path }}&view=csv" class="btn btn-default"><span class="glyphicon glyphicon-save-file"></span> {% trans 'Download csv' %}</a>
     </div>
 
     <div class="table-responsive">
@@ -76,7 +76,7 @@
                     <td>{{ booking.visit.product.resource_ptr.organizationalunit.name }}</td>
                     <td><a href="{% url 'booking-view' booking.id %}">{{ booking }}</a></td>
                     <td>{{ booking.visit.get_type_display }}</td>
-                    <td><a href="{% url 'resource-view' booking.visit.product.resource_ptr.id %}">{{ booking.visit.product.resource_ptr.title }}</a></td>
+                    <td><a href="{% url 'product-view' booking.visit.product.resource_ptr.id %}">{{ booking.visit.product.resource_ptr.title }}</a></td>
                     <td>{{ booking.visit.start_datetime|date:'d-m-Y H:i:s'}} til {{ booking.visit.end_datetime|date:'d-m-Y H:i:s'}}</td>
                     <td>
                         {% for bookingsubjectlevel in booking.bookinggrundskolesubjectlevel_set.all %}
