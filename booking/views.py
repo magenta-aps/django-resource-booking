@@ -599,7 +599,7 @@ class LoggedViewMixin(object):
         )
 
 
-class BreadcrumbMixin(object):
+class BreadcrumbMixin(ContextMixin):
 
     def get_breadcrumbs(self):
         return []
