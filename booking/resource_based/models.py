@@ -161,7 +161,9 @@ class Resource(models.Model):
             chars += len(group.name)
             if maxchars is not None and chars >= maxchars:
                 break
-        if maxchars is not None and len(display_groups) > 0 and chars > maxchars:
+        if maxchars is not None and \
+                len(display_groups) > 0 and \
+                chars > maxchars:
             lastgroup = display_groups[-1]
             lastgroup['name'] = lastgroup['name'][0:(maxchars - chars)] + "..."
         return display_groups
@@ -211,11 +213,11 @@ class UserResource(Resource):
             skipped = 0
             for user in missing_users:
                 try:
-                    if user.userprofile.organizationalunit is not None:
+                    profile = user.userprofile
+                    if profile.organizationalunit is not None:
                         user_resource = cls(
                             user=user,
-                            organizationalunit=user.userprofile.
-                                organizationalunit
+                            organizationalunit=profile.organizationalunit
                         )
                         user_resource.save()
                         created += 1
