@@ -289,7 +289,7 @@ class ResourcePoolUpdateView(BackMixin, BreadcrumbMixin, UpdateView):
             if 'unit' in self.kwargs and 'type' in self.kwargs:
                 unitId = int(self.kwargs['unit'])
                 typeId = int(self.kwargs['type'])
-                self.object = form.save(commit=False)
+                self.object = form.save()
                 self.object.organizationalunit = \
                     booking_models.OrganizationalUnit.objects.get(id=unitId)
                 self.object.resource_type = ResourceType.objects.get(id=typeId)
@@ -355,6 +355,14 @@ class ResourcePoolUpdateView(BackMixin, BreadcrumbMixin, UpdateView):
 class ResourcePoolDeleteView(BackMixin, BreadcrumbMixin, DeleteView):
     success_url = reverse_lazy('resourcepool-list')
     model = ResourcePool
+
+    def delete(self, request, *args, **kwargs):
+        if request.POST.get('delete_members') == 'delete':
+            for member in self.get_object().resources.all():
+                member.delete()
+        return super(ResourcePoolDeleteView, self).delete(
+            request, *args, **kwargs
+        )
 
     def get_template_names(self):
         return ['resourcepool/delete.html']

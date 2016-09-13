@@ -21,6 +21,8 @@
                 <a href="{% url 'resourcepool-edit' object.id %}?back={% url 'resourcepool-view' object.id %}" role="button" class="btn btn-primary" role="button">{% trans 'Redigér' %}</a>
             </div>
 
+            <h1>{{ object.name }}</h1>
+
             <dl class="dl-horizontal">
                 <dt>{% trans 'Type' %}</dt>
                 <dd>{{ object.resource_type }}</dd>
@@ -28,10 +30,14 @@
                 <dd>{{ object.name }}</dd>
                 <dt>{% trans 'Medlemmer' %}</dt>
                 <dd>
-                    <ul>
+                    <ul class="list-unstyled">
                         {% for resource in object.specific_resources %}
                             <li>
                                 <a href="{% url 'resource-view' resource.id %}">{{ resource.get_name }}</a>
+                            </li>
+                        {% empty %}
+                            <li>
+                                {% trans 'Ingen medlemmer' %}
                             </li>
                         {% endfor %}
                     </ul>
