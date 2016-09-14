@@ -272,17 +272,17 @@ urlpatterns = patterns(
         ResourcePoolDeleteView.as_view(),
         name='resourcepool-delete'),
 
-    url(r'^visit/(?P<product>[0-9]+)/resourcerequirement/create/?$',
+    url(r'^product/(?P<product>[0-9]+)/resourcerequirement/create/?$',
         ResourceRequirementCreateView.as_view(),
         name='resourcerequirement-create'),
-    url(r'^visit/(?P<product>[0-9]+)/resource'
+    url(r'^product/(?P<product>[0-9]+)/resource'
         r'requirement/(?P<pk>[0-9]+)/edit/?$',
         ResourceRequirementUpdateView.as_view(),
         name='resourcerequirement-edit'),
-    url(r'^visit/(?P<product>[0-9]+)/resourcerequirement/?$',
+    url(r'^product/(?P<product>[0-9]+)/resourcerequirement/?$',
         ResourceRequirementListView.as_view(),
         name='resourcerequirement-list'),
-    url(r'^visit/(?P<product>[0-9]+)/resource'
+    url(r'^product/(?P<product>[0-9]+)/resource'
         r'requirement/(?P<pk>[0-9]+)/delete/?$',
         ResourceRequirementDeleteView.as_view(),
         name='resourcerequirement-delete'),

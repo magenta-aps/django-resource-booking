@@ -203,9 +203,11 @@ class HasBackButtonMixin(ContextMixin):
         return context
 
 
-class BackMixin(HasBackButtonMixin):
+class BackMixin(ContextMixin):
     backparam = "back"
     just_preserve_back = False
+    back_on_success = True
+    back_on_cancel = True
 
     def redirect(self, regular):
         if self.backparam in self.request.GET:
@@ -220,17 +222,28 @@ class BackMixin(HasBackButtonMixin):
         return redirect(url)
 
     def get_success_url(self, regular=None):
-        if regular is None:
-            regular = self.success_url
-        if self.backparam in self.request.GET:
-            back = self.request.GET[self.backparam]
-            if self.just_preserve_back:
-                return regular + ('?' if '?' not in regular else '&') + \
-                    "back=%s" % back
+        if self.back_on_success:
+            if regular is None:
+                regular = self.success_url
+            if self.backparam in self.request.GET:
+                back = self.request.GET[self.backparam]
+                if self.just_preserve_back:
+                    return regular + ('?' if '?' not in regular else '&') + \
+                        "back=%s" % back
+                else:
+                    return back
             else:
-                return back
+                return regular
+        elif hasattr(self, 'success_url') and self.success_url is not None:
+            return self.success_url
         else:
-            return regular
+            return super(BackMixin, self).get_success_url()
+
+    def get_context_data(self, **kwargs):
+        context = super(BackMixin, self).get_context_data(**kwargs)
+        if self.back_on_cancel:
+            context['oncancel'] = self.request.GET.get('back')
+        return context
 
 
 class ModalMixin(object):

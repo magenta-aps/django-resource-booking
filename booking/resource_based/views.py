@@ -194,6 +194,7 @@ class ResourceUpdateView(BackMixin, BreadcrumbMixin, UpdateView):
 
 class ResourceDeleteView(BackMixin, BreadcrumbMixin, DeleteView):
     success_url = reverse_lazy('resource-list')
+    back_on_success = False
 
     def get_template_names(self):
         return ['resource/delete.html']
@@ -360,6 +361,7 @@ class ResourcePoolUpdateView(BackMixin, BreadcrumbMixin, UpdateView):
 class ResourcePoolDeleteView(BackMixin, BreadcrumbMixin, DeleteView):
     success_url = reverse_lazy('resourcepool-list')
     model = ResourcePool
+    back_on_success = False
 
     def delete(self, request, *args, **kwargs):
         if request.POST.get('delete_members') == 'delete':
@@ -500,6 +502,11 @@ class ResourceRequirementListView(BreadcrumbMixin, ListView):
 
 class ResourceRequirementDeleteView(BackMixin, BreadcrumbMixin, DeleteView):
     model = ResourceRequirement
+    success_url = reverse_lazy('resourcerequirement-list')
+    back_on_success = False
+
+    def get_success_url(self, regular=None):
+        return reverse('resourcerequirement-list', args=[self.object.product.id])
 
     def get_template_names(self):
         return ['resourcerequirement/delete.html']
