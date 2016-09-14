@@ -3,7 +3,7 @@
 {% load staticfiles %}
 {% load booking_tags %}
 
-{% block htmltitle %} - {% trans "opret ressourcegruppe" %}{% endblock %}
+{% block htmltitle %} - {% if object.pk %}{% trans "redigér ressourcebehov" %}{% else %}{% trans "opret ressourcebehov" %}{% endif %}{% endblock %}
 
 {% block head %}
 {% endblock %}
@@ -13,7 +13,7 @@
     {% include 'common/breadcrumbrow.html' %}
     <div class="divider"></div>
 
-    <h1>{% trans 'Opret ressourcegruppe' %}</h1>
+    <h1>{% if object.pk %}{% trans "Redigér ressourcebehov" %}{% else %}{% trans "Opret ressourcebehov" %}{% endif %}</h1>
     <hr/>
 
     <form id="resourceform" action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
@@ -23,8 +23,8 @@
 
         <div class="panel panel-default">
             <div class="panel-body">
-                {% include 'common/fields/generic_field.html' with field=form.type %}
-                {% include 'common/fields/generic_field.html' with field=form.unit %}
+                {% include 'common/fields/generic_field.html' with field=form.resource_pool %}
+                {% include 'common/fields/generic_field.html' with field=form.required_amount %}
             </div>
         </div>
 

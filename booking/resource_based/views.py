@@ -3,16 +3,19 @@ from django.core.urlresolvers import reverse, reverse_lazy
 from django.http import Http404
 from django.utils.translation import ugettext as _
 from django.views.generic import TemplateView, ListView, DetailView
-from django.views.generic.edit import UpdateView, FormView, DeleteView
-from booking.models import OrganizationalUnit
+from django.views.generic.edit import CreateView, UpdateView
+from django.views.generic.edit import FormView, DeleteView
+from booking.models import OrganizationalUnit, Product
 from booking.resource_based.forms import ResourceTypeForm, EditResourceForm
 from booking.resource_based.forms import ResourcePoolTypeForm
 from booking.resource_based.forms import EditResourcePoolForm
+from booking.resource_based.forms import EditResourceRequirementForm
 from booking.resource_based.models import Resource, ResourceType
 from booking.resource_based.models import ItemResource, RoomResource
 from booking.resource_based.models import TeacherResource, HostResource
 from booking.resource_based.models import VehicleResource
 from booking.resource_based.models import ResourcePool
+from booking.resource_based.models import ResourceRequirement
 from booking.views import BackMixin, BreadcrumbMixin
 from itertools import chain
 
@@ -191,6 +194,7 @@ class ResourceUpdateView(BackMixin, BreadcrumbMixin, UpdateView):
 
 class ResourceDeleteView(BackMixin, BreadcrumbMixin, DeleteView):
     success_url = reverse_lazy('resource-list')
+    back_on_success = False
 
     def get_template_names(self):
         return ['resource/delete.html']
@@ -220,10 +224,12 @@ class ResourcePoolCreateView(BackMixin, BreadcrumbMixin, FormView):
             typeId = int(form.cleaned_data['type'])
             unitId = int(form.cleaned_data['unit'])
 
-            return self.redirect(reverse(
-                'resourcepool-create-type',
-                kwargs={'type': typeId, 'unit': unitId}
-            ))
+            return self.redirect(
+                reverse(
+                    'resourcepool-create-type',
+                    kwargs={'type': typeId, 'unit': unitId}
+                )
+            )
 
         return self.render_to_response(
             self.get_context_data(**context)
@@ -355,6 +361,7 @@ class ResourcePoolUpdateView(BackMixin, BreadcrumbMixin, UpdateView):
 class ResourcePoolDeleteView(BackMixin, BreadcrumbMixin, DeleteView):
     success_url = reverse_lazy('resourcepool-list')
     model = ResourcePool
+    back_on_success = False
 
     def delete(self, request, *args, **kwargs):
         if request.POST.get('delete_members') == 'delete':
@@ -378,4 +385,145 @@ class ResourcePoolDeleteView(BackMixin, BreadcrumbMixin, DeleteView):
                 'text': self.object
             },
             {'text': _(u'Slet')}
+        ]
+
+
+class ResourceRequirementCreateView(BackMixin, BreadcrumbMixin, CreateView):
+    model = ResourceRequirement
+    form_class = EditResourceRequirementForm
+
+    def get_template_names(self):
+        return ['resourcerequirement/form.html']
+
+    def dispatch(self, request, *args, **kwargs):
+        self.product = Product.objects.get(id=self.kwargs['product'])
+        return super(ResourceRequirementCreateView, self).dispatch(
+            request, *args, **kwargs
+        )
+
+    def get_form_kwargs(self):
+        kwargs = super(ResourceRequirementCreateView, self).get_form_kwargs()
+        kwargs['product'] = self.product
+        kwargs['initial']['required_amount'] = 1
+        return kwargs
+
+    def form_valid(self, form):
+        self.object = form.save()
+        return self.redirect(
+            reverse('product-view', args=[self.product.id])
+        )
+
+    def get_breadcrumbs(self):
+        return [
+            {'url': reverse('search'), 'text': _(u'Søgning')},
+            {
+                'url': self.request.GET.get("search", reverse('search')),
+                'text': _(u'Søgeresultat')
+            },
+            {
+                'url': reverse('product-view', args=[self.product.id]),
+                'text': unicode(self.product)
+            },
+            {'text': _(u'Opret ressourcebehov')}
+        ]
+
+
+class ResourceRequirementUpdateView(BackMixin, BreadcrumbMixin, UpdateView):
+    model = ResourceRequirement
+    form_class = EditResourceRequirementForm
+
+    def get_template_names(self):
+        return ['resourcerequirement/form.html']
+
+    def get_form_kwargs(self):
+        kwargs = super(ResourceRequirementUpdateView, self).get_form_kwargs()
+        kwargs['product'] = self.object.product
+        return kwargs
+
+    def form_valid(self, form):
+        self.object = form.save()
+        return self.redirect(
+            reverse('product-view', args=[self.object.product.id])
+        )
+
+    def get_breadcrumbs(self):
+        return [
+            {'url': reverse('search'), 'text': _(u'Søgning')},
+            {
+                'url': self.request.GET.get("search", reverse('search')),
+                'text': _(u'Søgeresultat')
+            },
+            {
+                'url': reverse('product-view', args=[self.object.product.id]),
+                'text': unicode(self.object.product)
+            },
+            {'text': _(u'Redigér ressourcebehov')}
+        ]
+
+
+class ResourceRequirementListView(BreadcrumbMixin, ListView):
+    model = ResourceRequirement
+    template_name = "resourcerequirement/list.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.product = Product.objects.get(id=self.kwargs['product'])
+        return super(ResourceRequirementListView, self).dispatch(
+            request, *args, **kwargs
+        )
+
+    def get_context_object_name(self, queryset):
+        return "resourcerequirements"
+
+    def get_context_data(self, **kwargs):
+        context = {}
+        context['product'] = self.product
+        context.update(kwargs)
+        return super(ResourceRequirementListView, self).get_context_data(
+            **context
+        )
+
+    def get_queryset(self):
+        return self.product.resourcerequirement_set
+
+    def get_breadcrumbs(self):
+        return [
+            {'url': reverse('search'), 'text': _(u'Søgning')},
+            {
+                'url': self.request.GET.get("search", reverse('search')),
+                'text': _(u'Søgeresultat')
+            },
+            {
+                'url': reverse('product-view', args=[self.product.id]),
+                'text': unicode(self.product)
+            },
+            {'text': _(u'Ressourcebehov')}
+        ]
+
+
+class ResourceRequirementDeleteView(BackMixin, BreadcrumbMixin, DeleteView):
+    model = ResourceRequirement
+    success_url = reverse_lazy('resourcerequirement-list')
+    back_on_success = False
+
+    def get_success_url(self, regular=None):
+        return reverse(
+            'resourcerequirement-list',
+            args=[self.object.product.id]
+        )
+
+    def get_template_names(self):
+        return ['resourcerequirement/delete.html']
+
+    def get_breadcrumbs(self):
+        return [
+            {'url': reverse('search'), 'text': _(u'Søgning')},
+            {
+                'url': self.request.GET.get("search", reverse('search')),
+                'text': _(u'Søgeresultat')
+            },
+            {
+                'url': reverse('product-view', args=[self.object.product.id]),
+                'text': unicode(self.object.product)
+            },
+            {'text': _(u'Slet ressourcebehov')}
         ]

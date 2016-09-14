@@ -9,43 +9,53 @@
 {% block content %}
 
     {% include 'common/breadcrumbrow.html' %}
-
     <div class="divider"></div>
 
-    <div class="row">
-        <div class="col-md-12">
-            <div class="pull-right">
-                {% if object.can_delete %}
-                <a href="{% url 'resourcepool-delete' object.id %}?back={% url 'resourcepool-view' object.id %}" class="btn btn-primary" role="button">{% trans 'Slet ressourcegruppen' %}</a>
-                {% endif %}
-                <a href="{% url 'resourcepool-edit' object.id %}?back={% url 'resourcepool-view' object.id %}" role="button" class="btn btn-primary" role="button">{% trans 'Redigér' %}</a>
-            </div>
-
-            <h1>{{ object.name }}</h1>
-
-            <dl class="dl-horizontal">
-                <dt>{% trans 'Type' %}</dt>
-                <dd>{{ object.resource_type }}</dd>
-                <dt>{% trans 'Enhed' %}</dt>
-                <dd>{{ object.organizationalunit.name }}</dd>
-                <dt>{% trans 'Navn' %}</dt>
-                <dd>{{ object.name }}</dd>
-                <dt>{% trans 'Medlemmer' %}</dt>
-                <dd>
-                    <ul class="list-unstyled">
-                        {% for resource in object.specific_resources %}
-                            <li>
-                                <a href="{% url 'resource-view' resource.id %}">{{ resource.get_name }}</a>
-                            </li>
-                        {% empty %}
-                            <li>
-                                {% trans 'Ingen medlemmer' %}
-                            </li>
-                        {% endfor %}
-                    </ul>
-                </dd>
-            </dl>
-        </div>
+    <div class="pull-right">
+        {% if object.can_delete %}
+        <a href="{% url 'resourcepool-delete' object.id %}?back={% url 'resourcepool-view' object.id %}" class="btn btn-primary" role="button">{% trans 'Slet ressourcegruppen' %}</a>
+        {% endif %}
+        <a href="{% url 'resourcepool-edit' object.id %}?back={% url 'resourcepool-view' object.id %}" role="button" class="btn btn-primary" role="button">{% trans 'Redigér' %}</a>
     </div>
+
+    <h1>{{ object.name }}</h1>
+    <hr/>
+
+    <dl class="dl-horizontal">
+        <dt>{% trans 'Type' %}</dt>
+        <dd>{{ object.resource_type }}</dd>
+        <dt>{% trans 'Enhed' %}</dt>
+        <dd>{{ object.organizationalunit.name }}</dd>
+        <dt>{% trans 'Navn' %}</dt>
+        <dd>{{ object.name }}</dd>
+        <dt>{% trans 'Medlemmer' %}</dt>
+        <dd>
+            <ul class="list-unstyled">
+                {% for resource in object.specific_resources %}
+                    <li>
+                        <a href="{% url 'resource-view' resource.id %}">{{ resource.get_name }}</a>
+                    </li>
+                {% empty %}
+                    <li>
+                        {% trans 'Ingen medlemmer' %}
+                    </li>
+                {% endfor %}
+            </ul>
+        </dd>
+        <dt>{% trans 'Anvendes af' %}</dt>
+        <dd>
+            <ul class="list-unstyled">
+                {% for requirement in object.resourcerequirement_set.all %}
+                    <li>
+                        <a href="{% url 'resourcerequirement-list' requirement.product.id %}">{{ requirement.product }}</a>
+                    </li>
+                {% empty %}
+                    <li>
+                        {% trans 'Ingen tilbud' %}
+                    </li>
+                {% endfor %}
+            </ul>
+        </dd>
+    </dl>
 
 {% endblock %}

@@ -1708,6 +1708,9 @@ class Product(models.Model):
     def room_responsible_users(self):
         return self.roomresponsible.all()
 
+    def __unicode__(self):
+        return self.title
+
 
 class Visit(models.Model):
 

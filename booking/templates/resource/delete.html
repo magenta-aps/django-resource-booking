@@ -5,6 +5,10 @@
 {% block content %}
 
     {% include 'common/breadcrumbrow.html' %}
+    <div class="divider"></div>
+
+    <h1>{% trans 'Slet ressource' %}</h1>
+    <hr/>
 
     <form action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
         {% csrf_token %}
@@ -12,6 +16,8 @@
         <dl class="dl-horizontal">
             <dt>{% trans 'Type' %}</dt>
             <dd>{{ object.resource_type }}</dd>
+            <dt>{% trans 'Enhed' %}</dt>
+            <dd>{{ object.organizationalunit.name }}</dd>
             <dt>{% trans 'Navn' %}</dt>
             <dd>{{ object.name }}</dd>
             <dt>{% trans 'Grupper' %}</dt>
