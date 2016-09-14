@@ -31,7 +31,7 @@
 
                 {% include 'eventtime/date_interval.html' with product=product start_field=form.start end_field=form.end specific_time_field=form.has_specific_time %}
 
-                {% include 'resource/fields/generic_field.html' with field=form.notes %}
+                {% include 'common/fields/generic_field.html' with field=form.notes %}
                 <input class="btn btn-primary" type="submit" value="{% trans  'Gem' %}" role="button" />
                 <a href="{% url 'manage-times' product.pk %}" role="button" class="btn btn-danger">{% trans 'Annullér' %}</a>
             </form>
