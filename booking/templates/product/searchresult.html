@@ -141,7 +141,7 @@
             {% include 'common/breadcrumbrow.html' %}
 
             {% if user.userprofile.can_create %}
-                <a class="pull-right btn btn-primary" href="{% url 'resource-create' %}?back={{ thisurl | urlencode }}">{% trans '+ Opret tilbud' %}</a>
+                <a class="pull-right btn btn-primary" href="{% url 'product-create' %}?back={{ thisurl | urlencode }}">{% trans '+ Opret tilbud' %}</a>
             {% endif %}
 
             <h1>{% trans 'Søgeresultat' %}</h1>
@@ -165,7 +165,7 @@
 
             <ul class="media-list">
                 {% for res in results %}
-                    {% include 'resource/listitem.html' with item=res fullquery=fullquery %}
+                    {% include 'resource/../product/listitem.html' with item=res fullquery=fullquery %}
                {% endfor %}
             </ul>
             {% endif %}

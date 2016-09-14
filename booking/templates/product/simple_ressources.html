@@ -6,6 +6,7 @@
 {% block htmltitle %} - {% if object.pk %}{% trans "rediger tilbud" %}{% else %}{% trans "opret tilbud" %}{% endif %}{% endblock %}
 
 {% block content %}
+    {% include 'common/breadcrumbrow.html' %}
     <div class="divider"></div>
     <div class="row form-group">
         <div class="col-sm-8">
@@ -23,8 +24,6 @@
         {{ form.non_field_errors }}
 
         <div id="accordion" class="panel-group" aria-multiselectable="true" role="tablist">
-
-
             <div class="panel panel-default">
                 <div id="headingTeachersAndHosts" class="panel-heading" role="tab">
                     <h4 class="panel-title">
@@ -34,9 +33,9 @@
                 <div id="collapseTeachersAndHosts" class="panel-collapse collapse in" aria-labelledby="headingContact" role="tabpanel" aria-expanded="false" style="">
                     <div class="panel-body">
                     {% trans "Vælg værter der skal kunne kontaktes for afvikling af dette tilbud" as vaerter_helptext %}
-                    {% include 'resource/fields/userselect_with_availability_link.html' with field=form.potentielle_vaerter helptext=vaerter_helptext %}
+                    {% include 'common/fields/userselect_with_availability_link.html' with field=form.potentielle_vaerter helptext=vaerter_helptext %}
                     {% trans "Vælg undervisere der skal kunne kontaktes for afvikling af dette tilbud" as uv_helptext %}
-                    {% include 'resource/fields/userselect_with_availability_link.html' with field=form.potentielle_undervisere helptext=uv_helptext %}
+                    {% include 'common/fields/userselect_with_availability_link.html' with field=form.potentielle_undervisere helptext=uv_helptext %}
                     </div>
                 </div>
             </div>
@@ -53,11 +52,10 @@
     {% include 'common/resources/datetime-picker_script.html' %}
     <script type="text/javascript" src="{% static 'js/formutil.js' %}"></script>
 
-    {% include 'resource/fields/studymaterials_script.html' %}
-
-    {% include 'resource/fields/autosend_script.html' %}
-    {% include 'resource/fields/institution_level_script.html' %}
-    {% include 'resource/fields/time_script.html' %}
+    {% include 'product/fields/studymaterials_script.html' %}
+    {% include 'common/fields/autosend_script.html' %}
+    {% include 'product/fields/institution_level_script.html' %}
+    {% include 'product/fields/time_script.html' %}
 
     <script type="text/javascript"><!--
 

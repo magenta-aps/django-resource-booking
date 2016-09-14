@@ -1,7 +1,7 @@
 
-{% include 'resource/fields/generic_field.html' with field=form.tour_available %}
-{% include 'resource/fields/generic_field.html' with field=form.catering_available %}
-{% include 'resource/fields/generic_field.html' with field=form.presentation_available %}
+{% include 'common/fields/generic_field.html' with field=form.tour_available %}
+{% include 'common/fields/generic_field.html' with field=form.catering_available %}
+{% include 'common/fields/generic_field.html' with field=form.presentation_available %}
 
 {% if form.custom_available and form.custom_name %}
     <div class="row form-group">

@@ -65,7 +65,7 @@
         <div class="col-sm-6">
             {% if request.user.userprofile.can_create %}
                 <div class="text-right">
-                    <a href="{% url 'resource-create' %}?back={{ thisurl | urlencode }}" class="btn btn-primary margin-bottom-5">{% trans '+ Opret tilbud' %}</a>
+                    <a href="{% url 'product-create' %}?back={{ thisurl | urlencode }}" class="btn btn-primary margin-bottom-5">{% trans '+ Opret tilbud' %}</a>
                     <a href="#adminblock" class="btn btn-primary margin-bottom-5" role="button" data-toggle="collapse" aria-expanded="false" aria-controls="adminblock">{% trans 'Administration' %} <span class="glyphicon glyphicon-cog"></span> </a>
                 </div>
                 <div class="collapse list-group admin-links" id="adminblock">

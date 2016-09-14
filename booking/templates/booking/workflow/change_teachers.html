@@ -18,7 +18,7 @@
     <form name="changebookingteachersform" id="changebookingteachersform" class="changebookingform" action="{% url 'change-visit-teachers' object.pk %}" method="post">
         {% csrf_token %}
 
-        {% include 'resource/fields/generic_field.html' with field=form.override_needed_teachers %}
+        {% include 'common/fields/generic_field.html' with field=form.override_needed_teachers %}
         <div class="row form-group">
             <div class="col-sm-2"></div>
             <div class="col-sm-7">
@@ -30,10 +30,10 @@
         </div>
 
         {% trans "Vælg undervisere der er knyttet til dette tilbud:" as uv_helptext %}
-        {% include 'resource/fields/userselect_with_availability_link.html' with field=form.teachers helptext=uv_helptext %}
+        {% include 'common/fields/userselect_with_availability_link.html' with field=form.teachers helptext=uv_helptext %}
 
         {% if can_send_emails %}
-        {% include 'resource/fields/boolean_field.html' with field=form.send_emails left_label="Udsendelse af e-mail:" %}
+        {% include 'common/fields/boolean_field.html' with field=form.send_emails left_label="Udsendelse af e-mail:" %}
         {% else %}
         <div class="row form-group">
             <div class="col-sm-2"><strong>Udsendelse af e-mail:</strong></div>
