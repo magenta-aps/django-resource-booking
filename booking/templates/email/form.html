@@ -35,7 +35,7 @@
         {% if object.pk %}
             <div class="col-sm-4 text-right">
                 <!--a href="{% url 'emailtemplate-view' object.pk %}" class="btn btn-primary">{% trans "Preview skabelon" %}</a-->
-                <a href="{% url 'emailtemplate-delete' object.pk %}?back={{ thisurl | urlencode }}" class="btn btn-primary">{% trans "Slet skabelon" %}</a>
+                <a href="{% url 'emailtemplate-delete' object.pk %}?back={{ request.get_full_path | urlencode }}" class="btn btn-primary">{% trans "Slet skabelon" %}</a>
             </div>
         {% endif %}
     </div>

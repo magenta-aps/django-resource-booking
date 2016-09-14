@@ -38,6 +38,21 @@ from booking.views import VisitDetailView
 from booking.views import VisitCustomListView
 from booking.views import EvaluationOverviewView
 
+from booking.resource_based.views import ResourceCreateView, ResourceDetailView
+from booking.resource_based.views import ResourceListView, ResourceUpdateView
+from booking.resource_based.views import ResourceDeleteView
+
+from booking.resource_based.views import ResourcePoolCreateView
+from booking.resource_based.views import ResourcePoolDetailView
+from booking.resource_based.views import ResourcePoolListView
+from booking.resource_based.views import ResourcePoolUpdateView
+from booking.resource_based.views import ResourcePoolDeleteView
+
+from booking.resource_based.views import ResourceRequirementCreateView
+from booking.resource_based.views import ResourceRequirementUpdateView
+from booking.resource_based.views import ResourceRequirementListView
+from booking.resource_based.views import ResourceRequirementDeleteView
+
 import booking.views
 
 from django.views.generic import TemplateView
@@ -218,6 +233,59 @@ urlpatterns = patterns(
     url(r'^evaluations/?',
         EvaluationOverviewView.as_view(),
         name='evaluations'),
+
+    url(r'^resource/create/?$',
+        ResourceCreateView.as_view(),
+        name='resource-create'),
+    url(r'^resource/create/(?P<type>[0-9]+)/(?P<unit>[0-9]+)/?$',
+        ResourceUpdateView.as_view(success_url='create'),
+        name='resource-create-type'),
+    url(r'^resource/(?P<pk>[0-9]+)/?$',
+        ResourceDetailView.as_view(),
+        name='resource-view'),
+    url(r'^resource/?$',
+        ResourceListView.as_view(),
+        name='resource-list'),
+    url(r'^resource/(?P<pk>[0-9]+)/edit/?$',
+        ResourceUpdateView.as_view(),
+        name='resource-edit'),
+    url(r'^resource/(?P<pk>[0-9]+)/delete/?$',
+        ResourceDeleteView.as_view(),
+        name='resource-delete'),
+
+    url(r'^resourcepool/create/?$',
+        ResourcePoolCreateView.as_view(),
+        name='resourcepool-create'),
+    url(r'^resourcepool/create/(?P<type>[0-9]+)/(?P<unit>[0-9]+)/?$',
+        ResourcePoolUpdateView.as_view(success_url='create'),
+        name='resourcepool-create-type'),
+    url(r'^resourcepool/(?P<pk>[0-9]+)/?$',
+        ResourcePoolDetailView.as_view(),
+        name='resourcepool-view'),
+    url(r'^resourcepool/?$',
+        ResourcePoolListView.as_view(),
+        name='resourcepool-list'),
+    url(r'^resourcepool/(?P<pk>[0-9]+)/edit/?$',
+        ResourcePoolUpdateView.as_view(),
+        name='resourcepool-edit'),
+    url(r'^resourcepool/(?P<pk>[0-9]+)/delete/?$',
+        ResourcePoolDeleteView.as_view(),
+        name='resourcepool-delete'),
+
+    url(r'^product/(?P<product>[0-9]+)/resourcerequirement/create/?$',
+        ResourceRequirementCreateView.as_view(),
+        name='resourcerequirement-create'),
+    url(r'^product/(?P<product>[0-9]+)/resource'
+        r'requirement/(?P<pk>[0-9]+)/edit/?$',
+        ResourceRequirementUpdateView.as_view(),
+        name='resourcerequirement-edit'),
+    url(r'^product/(?P<product>[0-9]+)/resourcerequirement/?$',
+        ResourceRequirementListView.as_view(),
+        name='resourcerequirement-list'),
+    url(r'^product/(?P<product>[0-9]+)/resource'
+        r'requirement/(?P<pk>[0-9]+)/delete/?$',
+        ResourceRequirementDeleteView.as_view(),
+        name='resourcerequirement-delete'),
 
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

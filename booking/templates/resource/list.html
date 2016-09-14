@@ -1,0 +1,74 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load booking_tags %}
+
+{% block htmltitle %} - {% trans "ressourcer" %}{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+
+    {% include 'common/breadcrumbrow.html' %}
+
+    <div class="divider"></div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div>
+                <a href="{% url 'resource-create' %}?back={{ request.get_full_path | urlencode }}" role="button" class="btn btn-primary">{% trans 'Opret ny ressource' %}</a>
+                <a href="{% url 'resourcepool-list' %}" role="button" class="btn btn-primary pull-right">{% trans 'Administrér ressourcegrupper' %}</a>
+            </div>
+
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>{% trans 'Navn' %}</th>
+                        <th>{% trans 'Type' %}</th>
+                        <th>{% trans 'Enhed' %}</th>
+                        <th>{% trans 'Grupper' %}</th>
+                        <th>{% trans 'Handling' %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for resource in resources %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'resource-view' resource.id %}">{{ resource.get_name }}</a>
+                        </td>
+                        <td>
+                            {{ resource.resource_type.name }}
+                        </td>
+                        <td>
+                            {{ resource.organizationalunit.name }}
+                        </td>
+                        <td>
+                            {% for group in resource.group_preview %}
+                                <a href="{% url 'resourcepool-view' group.group.id %}">{{ group.name }}</a>
+                            {% endfor %}
+                        </td>
+                        <td>
+                            <a href="{% url 'resource-edit' resource.id %}?back={{ request.get_full_path | urlencode }}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
+                            <a href="#" role="button" class="btn btn-primary btn-xs">{% trans 'Kalender' %}</a>
+                            {% if resource.can_delete %}
+                            <a href="{% url 'resource-delete' resource.id %}?back={{ request.get_full_path | urlencode }}" role="button" class="btn btn-primary btn-xs">{% trans 'Slet' %}</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="4">
+                            {% trans 'Ingen ressourcer' %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            <p>
+                (Undervisere og lokaler kan ikke slettes herfra)
+            </p>
+        </div>
+    </div>
+
+{% endblock %}
