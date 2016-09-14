@@ -3,7 +3,7 @@
 {% load staticfiles %}
 {% load booking_tags %}
 
-{% block htmltitle %} - {% trans "Opret tidspunkt for" %} '{{ product.title }}'{% endblock %}
+{% block htmltitle %} - {% trans "Rediger tidspunkt for" %} '{{ product.title }}'{% endblock %}
 
 {% block head %}
 {% include 'common/resources/datepicker_style.html' %}
@@ -22,14 +22,17 @@
 
     <div class="row">
         <div class="col-md-12">
-            <form action="{% url 'create-time' product.pk %}" id="create-time-form" method="POST">
+            <div>
+                {{form.errors}}
+            </div>
+            <form action="{% url 'edit-time' product.pk object.pk %}" id="create-time-form" method="POST">
                 {% csrf_token %}
                 {{ form.product.as_hidden }}
 
                 {% include 'eventtime/date_interval.html' with product=product start_field=form.start end_field=form.end specific_time_field=form.has_specific_time %}
 
                 {% include 'resource/fields/generic_field.html' with field=form.notes %}
-                <input class="btn btn-primary" type="submit" value="{% trans  'Opret' %}" role="button" />
+                <input class="btn btn-primary" type="submit" value="{% trans  'Gem' %}" role="button" />
                 <a href="{% url 'manage-times' product.pk %}" role="button" class="btn btn-danger">{% trans 'Annullér' %}</a>
             </form>
         </div>

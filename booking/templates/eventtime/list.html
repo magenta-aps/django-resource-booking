@@ -25,7 +25,7 @@
             <form action="TODO: url-til-slet-tidspunkter">
                 <div>
                     <input type="submit" role="button" class="btn btn-primary" value="{% trans 'Slet markerede' %}">
-                    <a href="#" role="button" class="btn btn-primary">{% trans 'Opret nyt tidspunkt' %}</a>
+                    <a href="{% url 'create-time' product.pk %}" role="button" class="btn btn-primary">{% trans 'Opret nyt tidspunkt' %}</a>
                     <a href="" role="button" class="btn btn-primary pull-right">{% trans 'Opret nye tidspunkter ud fra regler' %}</a>
                 </div>
                 {% if object.eventtime_set.all %}
@@ -43,35 +43,22 @@
                     {% for eventtime in object.eventtime_set.all %}
                         <tr>
                             <td>
-                                <input type="checkbox">
+                                {% if eventtime.can_be_deleted %}
+                                <input type="checkbox" name="selected_eventtimes" value="{{ eventtime.pk }}" />
+                                {% endif %}
                             </td>
-                            <td><a href="#">1. juli 2016 kl. 12-13</a></td>
-                            <td>0</td>
-                            <td>0</td>
-                            <td>-</td>
+                            <td><a href="{% url 'edit-time' eventtime.product.pk eventtime.pk %}">{{ eventtime }}</a></td>
+                            <td>{{ eventtime.number_of_bookings|default:"0" }} ({{ eventtime.number_of_attendees|default:"0" }})</td>
+                            <td>{{ eventtime.number_of_teachers_and_hosts|default:"0" }}</td>
+                            <td>
+                                {% if eventtime.visit %}
+                                <a href="{% url 'visit-view' eventtime.visit.pk %}">{{ eventtime.visit.get_status_display }}</a>
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
                         </tr>
                     {% endfor %}
-                        <tr>
-                            <td></td>
-                            <td><a href="#">1. juli 2016 kl. 13-14</a></td>
-                            <td>1</td>
-                            <td>0</td>
-                            <td><a href="#">Under planlægning</a></td>
-                        </tr>
-                        <tr>
-                            <td></td>
-                            <td><a href="#">1. juli 2016 kl. 14-15</a></td>
-                            <td>0</td>
-                            <td>3</td>
-                            <td><a href="#">Under planlægning</a></td>
-                        </tr>
-                        <tr>
-                            <td><input type="checkbox"></td>
-                            <td><a href="#">3. juli 2016 kl. 12-13</a></td>
-                            <td>0</td>
-                            <td>0</td>
-                            <td>-</td>
-                        </tr>
                     </tbody>
                 </table>
                 {% else %}

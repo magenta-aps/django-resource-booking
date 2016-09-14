@@ -1,8 +1,12 @@
 # encoding: utf-8
 from django.db import models
 from django.contrib.auth import models as auth_models
+from django.utils import formats
+from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from recurrence.fields import RecurrenceField
+
+import math
 
 
 class EventTime(models.Model):
@@ -35,6 +39,64 @@ class EventTime(models.Model):
         default='',
         verbose_name=_(u'Interne kommentarer')
     )
+
+    @property
+    def naive_start(self):
+        if self.start:
+            return timezone.make_naive(self.start)
+        else:
+            return self.start
+
+    @property
+    def naive_end(self):
+        if self.end:
+            return timezone.make_naive(self.end)
+        else:
+            return self.end
+
+    @property
+    def l10n_start(self):
+        if self.start:
+            return unicode(
+                formats.date_format(self.naive_start, "SHORT_DATETIME_FORMAT")
+            )
+        else:
+            return ''
+
+    @property
+    def l10n_end(self):
+        if self.end:
+            return unicode(
+                formats.date_format(self.naive_end, "SHORT_DATETIME_FORMAT")
+            )
+        else:
+            return ''
+
+    @property
+    def l10n_end_time(self):
+        if self.end:
+            return unicode(formats.time_format(self.naive_end))
+        else:
+            return ''
+
+    @property
+    def duration_in_minutes(self):
+        return math.floor((self.end - self.start).total_seconds() / 60)
+
+    @property
+    def can_be_deleted(self):
+        return not self.visit
+
+    def __unicode__(self):
+        if self.has_specific_time:
+            if self.start.date() != self.end.date():
+                return " - ".join([self.l10n_start, self.l10n_end])
+            else:
+                return " - ".join([self.l10n_start, self.l10n_end_time])
+        else:
+            return unicode(
+                formats.date_format(self.naive_start, "SHORT_DATE_FORMAT")
+            )
 
 
 class Calendar(models.Model):
