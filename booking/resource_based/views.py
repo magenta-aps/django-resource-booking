@@ -2,7 +2,6 @@
 import booking.models as booking_models
 from django.core.urlresolvers import reverse
 from django.http import Http404
-from django.utils import timezone
 from django.views.generic import CreateView, UpdateView
 from django.views.generic import DetailView
 

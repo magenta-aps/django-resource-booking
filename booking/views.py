@@ -5,7 +5,6 @@ import urllib
 
 from datetime import datetime, timedelta
 
-from dateutil import parser
 from dateutil.rrule import rrulestr
 from django.contrib import messages
 from django.contrib.admin.models import LogEntry
