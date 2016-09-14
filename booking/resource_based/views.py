@@ -506,7 +506,10 @@ class ResourceRequirementDeleteView(BackMixin, BreadcrumbMixin, DeleteView):
     back_on_success = False
 
     def get_success_url(self, regular=None):
-        return reverse('resourcerequirement-list', args=[self.object.product.id])
+        return reverse(
+            'resourcerequirement-list',
+            args=[self.object.product.id]
+        )
 
     def get_template_names(self):
         return ['resourcerequirement/delete.html']
