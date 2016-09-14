@@ -149,9 +149,9 @@
             <div class="divider"></div>
 
             {% if request.user.is_authenticated %}
-            {% include 'resource/searchresult-adminform.html' with form=adminform %}
+                {% include 'product/searchresult-adminform.html' with form=adminform %}
             {% else %}
-            {% include 'common/searchform.html' %}
+                {% include 'common/searchform.html' %}
             {% endif %}
 
             <div class="divider"></div>
