@@ -96,6 +96,19 @@
                                 <a href="{% url 'change-visit-starttime' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
                             {% endif %}
                         </dd>
+
+                        <dt>{% trans 'Ressourcer' %}</dt>
+                        <dd>
+                            <ul class="list-unstyled" style="display:inline-block">
+                            {% for requirementdata in object.requirement_details %}
+                                <li>({{ requirementdata.acquired }}/{{ requirementdata.required }}) {{ requirementdata.name }}</li>
+                            {% endfor %}
+                            </ul>
+                            {% if can_edit %}
+                                <a href="{% url 'visit-resources-edit' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
+                            {% endif %}
+                        </dd>
+
                         <dt>{% trans 'Undervisere' %}</dt>
                         <dd>
                             {% blocktrans with found=object.teachers.all|length needed=object.total_required_teachers %}{{ found }}/{{ needed }} undervisere fundet{% endblocktrans %}

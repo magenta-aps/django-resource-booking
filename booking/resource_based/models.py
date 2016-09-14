@@ -381,3 +381,21 @@ class ResourceRequirement(models.Model):
 
     def can_delete(self):
         return True
+
+
+class VisitResource(models.Model):
+    visit = models.ForeignKey(
+        "Visit",
+        verbose_name=_(u"Besøg"),
+        related_name='visitresource'
+    )
+    resource = models.ForeignKey(
+        Resource,
+        verbose_name=_(u"Ressource"),
+        related_name='visitresource'
+    )
+    resource_requirement = models.ForeignKey(
+        ResourceRequirement,
+        verbose_name=_(u"Ressourcebehov"),
+        related_name='visitresource'
+    )

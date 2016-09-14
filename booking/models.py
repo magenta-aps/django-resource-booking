@@ -1853,6 +1853,13 @@ class Visit(models.Model):
         null=True
     )
 
+    resources = models.ManyToManyField(
+        "Resource",
+        through="VisitResource",
+        blank=True,
+        verbose_name=_(u'Besøgets ressourcer')
+    )
+
     WORKFLOW_STATUS_BEING_PLANNED = 0
     WORKFLOW_STATUS_REJECTED = 1
     WORKFLOW_STATUS_PLANNED = 2
@@ -2596,6 +2603,18 @@ class Visit(models.Model):
         if closing_time:
             return closing_time < timezone.now()
         return False
+
+    def requirement_details(self):
+        return [
+            {
+                'name': requirement.resource_pool.name,
+                'required': requirement.required_amount,
+                'acquired': self.resources.filter(
+                    visitresource__resource_requirement=requirement
+                ).count()
+            }
+            for requirement in self.product.resourcerequirement_set.all()
+        ]
 
 
 Visit.add_override_property('duration')
@@ -3660,3 +3679,4 @@ ItemResource = rb_models.ItemResource
 VehicleResource = rb_models.VehicleResource
 ResourcePool = rb_models.ResourcePool
 ResourceRequirement = rb_models.ResourceRequirement
+VisitResource = rb_models.VisitResource
