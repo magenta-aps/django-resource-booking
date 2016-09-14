@@ -32,7 +32,6 @@ from booking.views import DeclineTeacherView
 from booking.views import BecomeHostView
 from booking.views import DeclineHostView
 from booking.views import EmailReplyView
-from booking.views import ManageTimesView
 from booking.views import VisitAddLogEntryView
 from booking.views import VisitAddCommentView
 from booking.views import VisitDetailView
