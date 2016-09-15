@@ -13,6 +13,11 @@
 </div>
 {% endif %}
 
+{% if hide_date %}
+<div class="input-group datefield">
+    <input class="form-control inline start-date" type="hidden" name="start_date" id="{{ id_prefix }}start_date" value="{% now "SHORT_DATE_FORMAT" %}" />
+</div>
+{% else %}
 <div class="row form-group">
     <div class="col-sm-2{% if start_field.errors %} has-error{% endif %}">
         <label for="{{ id_prefix }}start_date" class="control-label">{% trans 'Dato' %}:</label>
@@ -31,6 +36,7 @@
         {{ start_field.errors }}
     </div>
 </div>
+{% endif %}
 
 <div class="row form-group time-inputs">
     <div class="col-sm-2{% if field.errors %} has-error{% endif %}">
@@ -70,7 +76,7 @@
     </div>
 </div>
 
-<div class="row form-group">
+<div class="row form-group" {% if hide_output %}style="display: none"{% endif %}>
     <div class="col-sm-2{% if field.errors %} has-error{% endif %}">
         <label for="{{ id_prefix }}chosen_datetime" class="control-label">{% trans 'Valgt tidspunkt' %}:</label>
     </div>

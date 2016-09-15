@@ -9,7 +9,7 @@ var KU = KU || {};
         DEFAULT_TICKS = [0, STEPS_IN_DAY]
         ;
 
-    KU.initialize_time_interval = function(root_id) {
+    KU.initialize_time_interval = function(root_id, update_callback) {
         var $root = $(root_id),
             $duration = $root.find('input.product-duration'),
             $output = $root.find('span.time-interval-output'),
@@ -94,7 +94,7 @@ var KU = KU || {};
             var parts = date_val.split(/[.\/-]/);
             var date = new Date();
             date.setFullYear(parts[2]);
-            date.setMonth(parts[1]);
+            date.setMonth(parts[1] - 1);
             date.setDate(parts[0]);
 
             // Add 24 hours
@@ -102,7 +102,7 @@ var KU = KU || {};
 
             return [
                 zero_pad(date.getDate()),
-                zero_pad(date.getMonth()),
+                zero_pad(date.getMonth() + 1),
                 date.getFullYear()
             ].join(".");
         }
@@ -123,6 +123,8 @@ var KU = KU || {};
                         date_val = $output.attr('data-no-date-selected-text');
                     }
                     $output.text(date_val);
+                    if(update_callback)
+                        update_callback();
                     return;
                 }
             }
@@ -149,6 +151,8 @@ var KU = KU || {};
             }
 
             $output.text(date_val + " " + time_string);
+            if(update_callback)
+                update_callback();
         }
 
         

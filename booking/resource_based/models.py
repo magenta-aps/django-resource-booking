@@ -6,10 +6,17 @@ from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from recurrence.fields import RecurrenceField
 
+import datetime
 import math
 
 
 class EventTime(models.Model):
+
+    class Meta:
+        verbose_name = _(u"tidspunkt")
+        verbose_name_plural = _(u"tidspunkter")
+        ordering = ['-start', '-end']
+
     product = models.ForeignKey("Product")
     visit = models.ForeignKey(
         "Visit",
@@ -86,6 +93,46 @@ class EventTime(models.Model):
     @property
     def can_be_deleted(self):
         return not self.visit
+
+    @staticmethod
+    # Parses the human readable interval that is used on web pages.
+    def parse_human_readable_interval(interval_str):
+        parts = interval_str.split(" ", 1)
+
+        dateparts = parts[0].split(".")
+        start = timezone.datetime(
+            year=int(dateparts[2]),
+            month=int(dateparts[1]),
+            day=int(dateparts[0]),
+            hour=0,
+            minute=0
+        )
+        end = timezone.datetime(
+            year=int(dateparts[2]),
+            month=int(dateparts[1]),
+            day=int(dateparts[0]),
+            hour=0,
+            minute=0
+        )
+        if len(parts) > 1:
+            timeparts = parts[1].split(" - ")
+
+            starttimes = timeparts[0].split(":")
+            start = start + datetime.timedelta(
+                hours=int(starttimes[0]),
+                minutes=int(starttimes[1])
+            )
+
+            if len(timeparts) > 1:
+                endtimes = timeparts[1].split(":")
+                end = end + datetime.timedelta(
+                    hours=int(endtimes[0]),
+                    minutes=int(endtimes[1])
+                )
+        else:
+            end = end + datetime.timedelta(days=1)
+
+        return (timezone.make_aware(start), timezone.make_aware(end))
 
     def __unicode__(self):
         if self.has_specific_time:
