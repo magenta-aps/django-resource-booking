@@ -101,11 +101,11 @@
                         <dd>
                             <ul class="list-unstyled" style="display:inline-block">
                             {% for requirementdata in object.requirement_details %}
-                                <li>({{ requirementdata.acquired }}/{{ requirementdata.required }}) {{ requirementdata.name }}</li>
+                                <li>{{ requirementdata.acquired }}/{{ requirementdata.required }} {{ requirementdata.name }}</li>
                             {% endfor %}
                             </ul>
                             {% if can_edit %}
-                                <a href="{% url 'visit-resources-edit' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
+                                <a href="{% url 'visit-resources-edit' object.pk %}" role="button" class="btn btn-primary btn-xs" style="vertical-align:top">{% trans 'Redigér' %}</a>
                             {% endif %}
                         </dd>
 
