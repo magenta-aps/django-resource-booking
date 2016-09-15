@@ -1,12 +1,9 @@
 # encoding: utf-8
 import booking.models as booking_models
 import booking.resource_based.forms as rb_forms
-import datetime
-from django import forms
 from django.core.urlresolvers import reverse
 from django.http import Http404
 from django.shortcuts import redirect
-from django.utils import timezone
 from django.views.generic import CreateView, FormView, TemplateView, UpdateView
 from django.views.generic import DetailView
 
