@@ -53,6 +53,8 @@ from booking.resource_based.views import ResourceRequirementUpdateView
 from booking.resource_based.views import ResourceRequirementListView
 from booking.resource_based.views import ResourceRequirementDeleteView
 
+from booking.resource_based.views import VisitResourceEditView
+
 import booking.views
 
 from django.views.generic import TemplateView
@@ -286,6 +288,11 @@ urlpatterns = patterns(
         r'requirement/(?P<pk>[0-9]+)/delete/?$',
         ResourceRequirementDeleteView.as_view(),
         name='resourcerequirement-delete'),
+
+    url(r'^visit/(?P<pk>[0-9]+)/resources/?$',
+        VisitResourceEditView.as_view(),
+        name='visit-resources-edit'
+        )
 
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

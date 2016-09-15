@@ -10,6 +10,7 @@ from booking.resource_based.forms import ResourceTypeForm, EditResourceForm
 from booking.resource_based.forms import ResourcePoolTypeForm
 from booking.resource_based.forms import EditResourcePoolForm
 from booking.resource_based.forms import EditResourceRequirementForm
+from booking.resource_based.forms import EditVisitResourcesForm
 from booking.resource_based.models import Resource, ResourceType
 from booking.resource_based.models import ItemResource, RoomResource
 from booking.resource_based.models import TeacherResource, HostResource
@@ -527,3 +528,43 @@ class ResourceRequirementDeleteView(BackMixin, BreadcrumbMixin, DeleteView):
             },
             {'text': _(u'Slet ressourcebehov')}
         ]
+
+
+class VisitResourceEditView(FormView):
+    template_name = "visit/resources.html"
+    form_class = EditVisitResourcesForm
+
+    def dispatch(self, request, *args, **kwargs):
+        self.visit = booking_models.Visit.objects.get(id=kwargs['pk'])
+        return super(VisitResourceEditView, self).dispatch(
+            request, *args, **kwargs
+        )
+
+    def get_form_kwargs(self):
+        kwargs = super(VisitResourceEditView, self).get_form_kwargs()
+        kwargs['visit'] = self.visit
+        kwargs['initial'] = [
+            {
+                'resources': [
+                    resource.id
+                    for resource in self.visit.resources.filter(
+                        visitresource__resource_requirement=requirement
+                    )
+                ]
+            }
+            for requirement in self.visit.product.resourcerequirement_set.all()
+        ]
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = {}
+        context['visit'] = self.visit
+        context.update(kwargs)
+        return super(VisitResourceEditView, self).get_context_data(**context)
+
+    def form_valid(self, form):
+        form.save()
+        return super(VisitResourceEditView, self).form_valid(form)
+
+    def get_success_url(self):
+        return reverse('visit-view', args=[self.visit.id])

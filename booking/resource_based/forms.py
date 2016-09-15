@@ -6,9 +6,11 @@ from booking.models import ItemResource, RoomResource
 from booking.models import TeacherResource, HostResource, VehicleResource
 from booking.models import ResourcePool
 from booking.models import ResourceRequirement
+from booking.models import VisitResource
 from django import forms
 from django.forms import CheckboxSelectMultiple, NumberInput
-from django.utils.translation import ugettext_lazy as _
+from django.forms import formset_factory, BaseFormSet
+from django.utils.translation import ugettext_lazy as _, ungettext_lazy as __
 
 
 class ResourceTypeForm(forms.Form):
@@ -208,3 +210,87 @@ class EditResourceRequirementForm(forms.ModelForm):
                 and self.product is not None:
             self.instance.product = self.product
         return super(EditResourceRequirementForm, self).save(commit)
+
+
+class EditVisitResourceForm(forms.Form):
+    resources = forms.MultipleChoiceField(
+        label='Ressourcer',
+        required=False,
+        widget=CheckboxSelectMultiple()
+    )
+
+    def __init__(self, visit, resource_requirement, *args, **kwargs):
+        super(EditVisitResourceForm, self).__init__(*args, **kwargs)
+        self.visit = visit
+        self.resource_requirement = resource_requirement
+        resourcefield = self.fields['resources']
+        resourcefield.label = resource_requirement.resource_pool.name
+        resourcefield.help_text = __(
+            u"%(count)d nødvendig",
+            u"%(count)d nødvendige",
+            'count'
+        ) % {'count': resource_requirement.required_amount}
+        resourcefield.choices = [
+            (resource.id, resource.get_name())
+            for resource
+            in resource_requirement.resource_pool.specific_resources
+        ]
+
+    def save(self):
+        resources = set(
+            Resource.objects.get(id=resource_id)
+            for resource_id in self.cleaned_data['resources']
+        )
+        existing = set(
+            Resource.objects.filter(
+                visitresource__visit=self.visit,
+                visitresource__resource_requirement=self.resource_requirement
+            )
+        )
+        # Create new references
+        for resource in resources - existing:
+            VisitResource(
+                visit=self.visit,
+                resource_requirement=self.resource_requirement,
+                resource=resource
+            ).save()
+        # Delete obsolete references
+        VisitResource.objects.filter(
+            visit=self.visit,
+            resource_requirement=self.resource_requirement
+        ).exclude(
+            resource__in=resources
+        ).delete()
+
+
+class EditVisitResourceFormset(BaseFormSet):
+
+    def __init__(self, visit, *args, **kwargs):
+        super(EditVisitResourceFormset, self).__init__(*args, **kwargs)
+        self.visit = visit
+        self.requirements = self.visit.product.resourcerequirement_set.all()
+        self.absolute_max = len(self.requirements)
+
+    def _construct_form(self, index, **kwargs):
+        kwargs.update(self.get_form_kwargs(index))
+        return super(EditVisitResourceFormset, self)._construct_form(
+            index,
+            **kwargs
+        )
+
+    def get_form_kwargs(self, index):
+        kwargs = {}
+        kwargs['visit'] = self.visit
+        kwargs['resource_requirement'] = self.requirements[index]
+        return kwargs
+
+    def save(self):
+        for form in self.forms:
+            form.save()
+
+
+EditVisitResourcesForm = formset_factory(
+    EditVisitResourceForm,
+    formset=EditVisitResourceFormset,
+    extra=0
+)
