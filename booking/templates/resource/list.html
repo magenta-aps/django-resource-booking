@@ -11,8 +11,17 @@
 {% block content %}
 
     {% include 'common/breadcrumbrow.html' %}
-
     <div class="divider"></div>
+
+    <h1>{% trans 'Ressourcer' %}</h1>
+    <hr/>
+
+    <p>
+        {% blocktrans %}
+            Ressourcer er enkelte objekter, personer eller lokaler som kan anvendes under et besøg, og som kun kan anvendes af ét besøg ad gangen.
+            Under planlægningen af et besøg udvælges de specifikke ressourcer, med henblik på at reservere disse til besøget.
+        {% endblocktrans %}
+    </p>
 
     <div class="row">
         <div class="col-md-12">
