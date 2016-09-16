@@ -25,9 +25,9 @@
             <div class="panel-body">
                 {% include 'common/fields/generic_field.html' with field=form.type %}
                 <div class="row form-group">
-                    {% trans 'Undervisere og lokaler skal oprettes i deres egne systemer:' %}<br/>
-                    <a href="#">{% trans 'Klik her for at oprette en underviser' %}</a><br/>
-                    <a href="#">{% trans 'Klik her for at oprette et lokale' %}</a>
+                    {% trans 'Undervisere, værter og lokaler skal oprettes i deres egne systemer:' %}<br/>
+                    <a href="{% url 'user_create' %}">{% trans 'Klik her for at oprette en underviser eller vært' %}</a><br/>
+                    <a href="{% url 'admin:booking_room_add' %}">{% trans 'Klik her for at oprette et lokale' %}</a>
                 </div>
                 {% include 'common/fields/generic_field.html' with field=form.unit %}
             </div>

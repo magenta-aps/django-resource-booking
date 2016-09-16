@@ -43,6 +43,14 @@ def custom_update_user(sender, **kwargs):
             )
             resource.save()
 
+        # Create a resource for the user
+        if profile.is_host and group is not None:
+            resource = booking_models.HostResource(
+                user=user,
+                organizationalunit=group
+            )
+            resource.save()
+
     except Exception as e:
         print "Error during user autogeneration: %s" % e
 

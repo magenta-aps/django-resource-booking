@@ -14,6 +14,21 @@
     <div class="divider"></div>
 
     <h1>{% trans 'Ressourcegrupper' %}</h1>
+    <hr/>
+
+    <p>
+        {% blocktrans %}
+            Ressourcegrupper er puljer af ressourcer; en samling af ressourcer af samme type.
+            Et tilbud kan specificere at der skal bruges X antal af en ressourcegruppe, og under planlægningen af besøg under tilbuddes kan der udvælges hvilke X ressourcer i gruppen der reserveres.
+        {% endblocktrans %}
+    </p>
+    <p>
+        {% blocktrans %}
+            For eksempel kan en gruppe repræsentere undervisningslokaler i en bygning.
+            For et givet tilbud er det underordnet hvilket af disse undervisningslokaler der bruges.
+            Under planlægningen af et besøg udvælges ét af disse lokaler (én ressource i gruppen), så andre besøg ikke kommer til at reservere det samtidigt.
+        {% endblocktrans %}
+    </p>
 
     <div class="row">
         <div class="col-md-12">
