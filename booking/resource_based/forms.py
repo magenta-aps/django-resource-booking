@@ -14,6 +14,7 @@ class ResourceTypeForm(forms.Form):
 
     EXCEPT_TYPES = [
         ResourceType.RESOURCE_TYPE_TEACHER,
+        ResourceType.RESOURCE_TYPE_HOST,
         ResourceType.RESOURCE_TYPE_ROOM
     ]
 
