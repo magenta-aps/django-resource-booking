@@ -19,27 +19,13 @@
 
         {{ form.non_field_errors }}
 
-        <div id="accordion" class="panel-group" aria-multiselectable="true" role="tablist">
-            <div class="panel panel-default">
-                <div id="headingCategory" class="panel-heading" role="tab">
-                    <h4 class="panel-title">
-                        <a class="" aria-controls="collapseCategory" aria-expanded="true" href="#collapseCategory" data-parent="#accordion" role="button">{% trans "Kategorisering" %}</a><span class="caret"></span>
-                    </h4>
-                </div>
-                <div id="collapseCategory" class="panel-collapse collapse in
-                {% if form.type.errors or form.unit.errors %}in{% endif %}
-                " aria-labelledby="headingCategory" role="tabpanel" aria-expanded="true" style="">
-
-                    <div class="panel-body">
-                        {% include 'common/fields/generic_field.html' with field=form.type %}
-                        <div class="row form-group">
-                            {% trans 'Undervisere og lokaler skal oprettes i deres egne systemer:' %}<br/>
-                            <a href="#">{% trans 'Klik her for at oprette en underviser' %}</a><br/>
-                            <a href="#">{% trans 'Klik her for at oprette et lokale' %}</a>
-                        </div>
-                        {% include 'common/fields/generic_field.html' with field=form.unit %}
-                    </div>
-
+        <div class="panel panel-default">
+            <div class="panel-body">
+                {% include 'common/fields/generic_field.html' with field=form.type %}
+                <div class="row form-group">
+                    {% trans 'Undervisere, værter og lokaler skal oprettes i deres egne systemer:' %}<br/>
+                    <a href="{% url 'user_create' %}">{% trans 'Klik her for at oprette en underviser eller vært' %}</a><br/>
+                    <a href="{% url 'admin:booking_room_add' %}">{% trans 'Klik her for at oprette et lokale' %}</a>
                 </div>
             </div>
         </div>
