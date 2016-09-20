@@ -1,0 +1,45 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load booking_tags %}
+
+{% block htmltitle %} - {% trans "opret ressource" %}{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+
+    {% include 'common/breadcrumbrow.html' %}
+    <div class="divider"></div>
+
+    <h1>{% trans 'Opret ressource' %}</h1>
+    <hr/>
+
+    <form id="resourceform" action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
+
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <div class="panel panel-default">
+            <div class="panel-body">
+                {% include 'common/fields/generic_field.html' with field=form.type %}
+                <div class="row form-group">
+                    {% trans 'Undervisere og lokaler skal oprettes i deres egne systemer:' %}<br/>
+                    <a href="#">{% trans 'Klik her for at oprette en underviser' %}</a><br/>
+                    <a href="#">{% trans 'Klik her for at oprette et lokale' %}</a>
+                </div>
+                {% include 'common/fields/generic_field.html' with field=form.unit %}
+            </div>
+        </div>
+
+        {% include 'common/continue_cancel.html' %}
+        <div class="divider"></div>
+
+    </form>
+
+{% endblock %}
+
+{% block extra_scripts %}
+    {{ form.media }}
+{% endblock %}

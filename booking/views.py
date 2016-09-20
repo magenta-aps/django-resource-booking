@@ -203,6 +203,49 @@ class HasBackButtonMixin(ContextMixin):
         return context
 
 
+class BackMixin(ContextMixin):
+    backparam = "back"
+    just_preserve_back = False
+    back_on_success = True
+    back_on_cancel = True
+
+    def redirect(self, regular):
+        if self.backparam in self.request.GET:
+            back = self.request.GET[self.backparam]
+            if self.just_preserve_back:
+                url = regular + ('?' if '?' not in regular else '&') + \
+                    "back=%s" % back
+            else:
+                url = back
+        else:
+            url = regular
+        return redirect(url)
+
+    def get_success_url(self, regular=None):
+        if self.back_on_success:
+            if regular is None:
+                regular = self.success_url
+            if self.backparam in self.request.GET:
+                back = self.request.GET[self.backparam]
+                if self.just_preserve_back:
+                    return regular + ('?' if '?' not in regular else '&') + \
+                        "back=%s" % back
+                else:
+                    return back
+            else:
+                return regular
+        elif hasattr(self, 'success_url') and self.success_url is not None:
+            return self.success_url
+        else:
+            return super(BackMixin, self).get_success_url()
+
+    def get_context_data(self, **kwargs):
+        context = super(BackMixin, self).get_context_data(**kwargs)
+        if self.back_on_cancel:
+            context['oncancel'] = self.request.GET.get('back')
+        return context
+
+
 class ModalMixin(object):
     modalid = None
 
@@ -1003,10 +1046,8 @@ class SearchView(BreadcrumbMixin, ListView):
         if len(querylist) > 0:
             context['fullquery'] = reverse('search') + \
                 "?" + "&".join(querylist)
-            context['thisurl'] = context['fullquery']
         else:
             context['fullquery'] = None
-            context['thisurl'] = reverse('search')
 
         if (self.request.user.is_authenticated() and
                 self.request.user.userprofile.has_edit_role()):
@@ -1223,11 +1264,6 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
         context['grundskolefag_selected'] = self.grundskolefag_selected()
 
         context['klassetrin_range'] = range(0, 10)
-
-        if self.object and self.object.id:
-            context['thisurl'] = reverse('product-edit', args=[self.object.id])
-        else:
-            context['thisurl'] = reverse('product-create')
 
         # context['oncancel'] = self.request.GET.get('back')
 
@@ -1490,11 +1526,6 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
 
         context['klassetrin_range'] = range(0, 10)
 
-        if self.object is not None and self.object.id:
-            context['thisurl'] = reverse('product-edit', args=[self.object.id])
-        else:
-            context['thisurl'] = reverse('product-create')
-
         context['template_keys'] = list(
             set(
                 template.key
@@ -1700,7 +1731,7 @@ class SimpleRessourcesView(LoginRequiredMixin, BreadcrumbMixin,
         ]
 
 
-class ProductDetailView(ProductBookingDetailView):
+class ProductDetailView(BreadcrumbMixin, ProductBookingDetailView):
     """Display Product details"""
     model = Product
     template_name = 'product/details.html'
@@ -1727,14 +1758,6 @@ class ProductDetailView(ProductBookingDetailView):
         else:
             context['can_edit'] = False
 
-        context['breadcrumbs'] = [
-            {'url': reverse('search'), 'text': _(u'Søgning')},
-            {'url': self.request.GET.get("search", reverse('search')),
-             'text': _(u'Søgeresultat')},
-            {'text': _(u'Om tilbuddet')},
-        ]
-
-        context['thisurl'] = reverse('product-view', args=[self.object.id])
         context['searchurl'] = self.request.GET.get(
             "search",
             reverse('search')
@@ -1745,6 +1768,14 @@ class ProductDetailView(ProductBookingDetailView):
         context.update(kwargs)
 
         return super(ProductDetailView, self).get_context_data(**context)
+
+    def get_breadcrumbs(self):
+        return [
+            {'url': reverse('search'), 'text': _(u'Søgning')},
+            {'url': self.request.GET.get("search", reverse('search')),
+             'text': _(u'Søgeresultat')},
+            {'text': unicode(self.object)},
+        ]
 
 
 class ProductInquireView(FormMixin, HasBackButtonMixin, ModalMixin,
@@ -2756,7 +2787,6 @@ class BookingDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
     def get_context_data(self, **kwargs):
         context = {}
 
-        context['thisurl'] = reverse('booking-view', args=[self.object.id])
         context['modal'] = BookingNotifyView.modal
 
         user = self.request.user
@@ -2801,7 +2831,6 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
     def get_context_data(self, **kwargs):
         context = {}
 
-        context['thisurl'] = reverse('visit-view', args=[self.object.id])
         context['modal'] = VisitNotifyView.modal
 
         context['emailtemplates'] = [
@@ -2903,7 +2932,6 @@ class EmailTemplateListView(LoginRequiredMixin, BreadcrumbMixin, ListView):
                         and objectA.organizationalunit == \
                         objectB.organizationalunit:
                     context['duplicates'].extend([objectA, objectB])
-        context['thisurl'] = reverse('emailtemplate-list')
         context.update(kwargs)
         return super(EmailTemplateListView, self).get_context_data(**context)
 
@@ -2967,12 +2995,6 @@ class EmailTemplateEditView(LoginRequiredMixin, UnitAccessRequiredMixin,
 
     def get_context_data(self, **kwargs):
         context = {}
-        if self.object is not None and self.object.id is not None:
-            context['thisurl'] = reverse('emailtemplate-edit',
-                                         args=[self.object.id])
-        else:
-            context['thisurl'] = reverse('emailtemplate-create')
-
         context['modelmap'] = modelmap = {}
 
         for model in [Booking, Visit, Product]:
@@ -3106,12 +3128,6 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
         data.update(self.get_context_data())
 
         return render(request, self.template_name, data)
-
-    def get_context_data(self, **kwargs):
-        context = {}
-        context['thisurl'] = reverse('emailtemplate-view',
-                                     args=[self.object.id])
-        return context
 
     def get_breadcrumbs(self):
         return [

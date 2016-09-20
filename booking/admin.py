@@ -139,42 +139,35 @@ class KUBookingUnitAdmin(KUBookingModelAdmin):
 
 CUSTOM_ADMIN_CLASSES[booking_models.OrganizationalUnit] = KUBookingUnitAdmin
 
-# Register your models here.
-for name, value in booking_models.__dict__.iteritems():
-    # Skip stuff that is not classes
-    if not isinstance(value, type):
-        continue
 
-    # Skip stuff that is not models
-    if not issubclass(value, django_models.Model):
-        continue
+def register_models(models, namespace=None):
+    for name, value in models:
+        # Skip stuff that is not classes
+        if not isinstance(value, type):
+            continue
 
-    # Skip stuff that is not native to the booking.models module
-    if not value.__module__ == 'booking.models':
-        continue
+        # Skip stuff that is not models
+        if not issubclass(value, django_models.Model):
+            continue
 
-    if value in EXCLUDE_MODELS:
-        continue
+        if value._meta.abstract:
+            continue
 
-    cls = CUSTOM_ADMIN_CLASSES.get(value, KUBookingModelAdmin)
-    admin.site.register(value, cls)
+        # Skip stuff that is not native to the booking.models module
+        if namespace is not None and not value.__module__ == namespace:
+            continue
 
-# Register your models here.
-for name, value in resource_models.__dict__.iteritems():
-    # Skip stuff that is not classes
-    if not isinstance(value, type):
-        continue
+        if value in EXCLUDE_MODELS:
+            continue
 
-    # Skip stuff that is not models
-    if not issubclass(value, django_models.Model):
-        continue
+        cls = CUSTOM_ADMIN_CLASSES.get(value, KUBookingModelAdmin)
+        admin.site.register(value, cls)
 
-    # Skip stuff that is not native to the booking.models module
-    if not value.__module__ == 'booking.resource_based.models':
-        continue
-
-    if value in EXCLUDE_MODELS:
-        continue
-
-    cls = CUSTOM_ADMIN_CLASSES.get(value, KUBookingModelAdmin)
-    admin.site.register(value, cls)
+register_models(
+    booking_models.__dict__.iteritems(),
+    'booking.models'
+)
+register_models(
+    resource_models.__dict__.iteritems(),
+    'booking.resource_based.models'
+)

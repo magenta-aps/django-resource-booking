@@ -36,9 +36,9 @@
             {% endif %}
         </div>
         <div class="col-sm-6 text-right">
-            <a href="{% url 'emailtemplate-edit' template.id %}?back={{ thisurl | urlencode }}" class="btn btn-primary">{% trans "Rediger skabelon" %}</a>
-            <a href="{% url 'emailtemplate-clone' template.id %}?back={{ thisurl | urlencode }}" class="btn btn-primary">{% trans "Kopier skabelon" %}</a>
-            <a href="{% url 'emailtemplate-delete' template.id %}?back={{ thisurl | urlencode }}" class="btn btn-primary">{% trans "Slet skabelon" %}</a>
+            <a href="{% url 'emailtemplate-edit' template.id %}?back={{ request.get_full_path | urlencode }}" class="btn btn-primary">{% trans "Rediger skabelon" %}</a>
+            <a href="{% url 'emailtemplate-clone' template.id %}?back={{ request.get_full_path | urlencode }}" class="btn btn-primary">{% trans "Kopier skabelon" %}</a>
+            <a href="{% url 'emailtemplate-delete' template.id %}?back={{ request.get_full_path | urlencode }}" class="btn btn-primary">{% trans "Slet skabelon" %}</a>
         </div>
         </div>
     <div class="row">
