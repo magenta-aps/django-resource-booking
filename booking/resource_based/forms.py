@@ -294,4 +294,3 @@ EditVisitResourcesForm = formset_factory(
     formset=EditVisitResourceFormset,
     extra=0
 )
-
