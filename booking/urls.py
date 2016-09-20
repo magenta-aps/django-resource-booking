@@ -1,3 +1,4 @@
+from booking.resource_based.views import CalendarView
 from django.conf.urls import patterns, url, include
 from django.conf.urls.static import static
 from django.conf import settings
@@ -174,6 +175,10 @@ urlpatterns = patterns(
     url(r'^booking/(?P<product>[0-9]+)/notify/success$',
         EmailSuccessView.as_view(),
         name='booking-notify-success'),
+
+    url(r'^calendar$',
+        CalendarView.as_view(),
+        name='calendar'),
 
     # Ajax api
     url(r'^jsapi/rrulestr$', RrulestrView.as_view(), name='jsapi_rrulestr'),
