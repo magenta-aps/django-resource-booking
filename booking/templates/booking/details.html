@@ -49,7 +49,7 @@
                                     {% if modal %}
                                         <a data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'booking-notify' object.pk %}?template={{ id }}">{{ label }}</a>
                                     {% else %}
-                                        <a href="{% url 'booking-notify' object.pk %}?template={{ id }}&back={{ thisurl | urlencode }}">{{ label }}</a>
+                                        <a href="{% url 'booking-notify' object.pk %}?template={{ id }}&back={{ request.get_full_path | urlencode }}">{{ label }}</a>
                                     {% endif %}
                                 </li>
                             {% endfor %}

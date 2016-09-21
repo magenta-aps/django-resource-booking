@@ -1891,6 +1891,13 @@ class Visit(models.Model):
         null=True
     )
 
+    resources = models.ManyToManyField(
+        "Resource",
+        through="VisitResource",
+        blank=True,
+        verbose_name=_(u'Besøgets ressourcer')
+    )
+
     WORKFLOW_STATUS_BEING_PLANNED = 0
     WORKFLOW_STATUS_REJECTED = 1
     WORKFLOW_STATUS_PLANNED = 2
@@ -2697,6 +2704,18 @@ class Visit(models.Model):
             return closing_time < timezone.now()
         return False
 
+    def requirement_details(self):
+        return [
+            {
+                'name': requirement.resource_pool.name,
+                'required': requirement.required_amount,
+                'acquired': self.resources.filter(
+                    visitresource__resource_requirement=requirement
+                ).count()
+            }
+            for requirement in self.product.resourcerequirement_set.all()
+        ]
+
 
 Visit.add_override_property('duration')
 Visit.add_override_property('locality')
@@ -2851,6 +2870,16 @@ class Room(models.Model):
             for y in x.visit_set.all():
                 for r in x.rooms.all():
                     y.rooms.add(r)
+
+    def save(self, *args, **kwargs):
+        creating = self.pk is None
+        return_value = super(Room, self).save(*args, **kwargs)
+        if creating:
+            try:
+                RoomResource.create(self)
+            except:
+                pass
+        return return_value
 
 
 class Region(models.Model):
@@ -3744,8 +3773,10 @@ Calendar = rb_models.Calendar
 ResourceType = rb_models.ResourceType
 Resource = rb_models.Resource
 TeacherResource = rb_models.TeacherResource
+HostResource = rb_models.HostResource
 RoomResource = rb_models.RoomResource
 ItemResource = rb_models.ItemResource
 VehicleResource = rb_models.VehicleResource
 ResourcePool = rb_models.ResourcePool
 ResourceRequirement = rb_models.ResourceRequirement
+VisitResource = rb_models.VisitResource

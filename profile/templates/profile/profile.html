@@ -65,7 +65,7 @@
         <div class="col-sm-6">
             {% if request.user.userprofile.can_create %}
                 <div class="text-right">
-                    <a href="{% url 'product-create' %}?back={{ thisurl | urlencode }}" class="btn btn-primary margin-bottom-5">{% trans '+ Opret tilbud' %}</a>
+                    <a href="{% url 'product-create' %}?back={{ request.get_full_path | urlencode }}" class="btn btn-primary margin-bottom-5">{% trans '+ Opret tilbud' %}</a>
                     <a href="#adminblock" class="btn btn-primary margin-bottom-5" role="button" data-toggle="collapse" aria-expanded="false" aria-controls="adminblock">{% trans 'Administration' %} <span class="glyphicon glyphicon-cog"></span> </a>
                 </div>
                 <div class="collapse list-group admin-links" id="adminblock">
@@ -107,6 +107,18 @@
                             </h4>
                         </a>
                     {% endif %}
+                    <a class="list-group-item" href="{% url 'resource-list' %}">
+                        <h4 class="list-group-item-heading">
+                            {% trans 'Administrér ressourcer' %}
+                            <span class="glyphicon glyphicon-question-sign pull-right" data-toggle="tooltip" data-placement="right" title="{% trans 'Opret og redigér ressourcer som kan tildeles besøg.' %}"></span>
+                        </h4>
+                    </a>
+                    <a class="list-group-item" href="{% url 'resourcepool-list' %}">
+                        <h4 class="list-group-item-heading">
+                            {% trans 'Administrér ressourcegrupper' %}
+                            <span class="glyphicon glyphicon-question-sign pull-right" data-toggle="tooltip" data-placement="right" title="{% trans 'Opret og redigér ressourcegrupper som tilbud kan behøve.' %}"></span>
+                        </h4>
+                    </a>
                     <a class="list-group-item" href="{% url 'evaluations' %}">
                         <h4 class="list-group-item-heading">
                             {% trans 'Overblik over evalueringer' %}

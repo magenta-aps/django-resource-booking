@@ -37,6 +37,9 @@
             {% if can_edit %}
                 <a class="pull-right btn btn-primary margin-bottom-10 margin-right-10" href="{% url 'product-simple-ressources' object.pk %}">{% trans 'Redigér ressourcer' %}</a>
             {% endif %}
+            {% if can_edit %}
+                <a class="pull-right btn btn-primary margin-bottom-10 margin-right-10" href="{% url 'resourcerequirement-list' object.pk %}">{% trans 'Redigér ressourcebehov' %}</a>
+            {% endif %}
             
             <h1>{{ object.title }}</h1>
             <div class="well">

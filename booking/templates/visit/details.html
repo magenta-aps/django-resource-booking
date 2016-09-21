@@ -55,7 +55,7 @@
                                         {% if modal %}
                                             <a data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'visit-notify' object.pk %}?template={{ id }}">{{ label }}</a>
                                         {% else %}
-                                            <a href="{% url 'visit-notify' object.pk %}?template={{ id }}&back={{ thisurl | urlencode }}">{{ label }}</a>
+                                            <a href="{% url 'visit-notify' object.pk %}?template={{ id }}&back={{ request.get_full_path | urlencode }}">{{ label }}</a>
                                         {% endif %}
                                     </li>
                                 {% endfor %}
@@ -96,6 +96,23 @@
                                 <a href="{% url 'change-visit-starttime' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
                             {% endif %}
                         </dd>
+
+                        <dt>{% trans 'Ressourcer' %}</dt>
+                        <dd>
+                            {% if object.product.resourcerequirement_set.count %}
+                                <ul class="list-unstyled" style="display:inline-block; margin-bottom:0">
+                                {% for requirementdata in object.requirement_details %}
+                                    <li>{{ requirementdata.acquired }}/{{ requirementdata.required }} {{ requirementdata.name }}</li>
+                                {% endfor %}
+                                </ul>
+                                {% if can_edit %}
+                                    <a href="{% url 'visit-resources-edit' object.pk %}" role="button" class="btn btn-primary btn-xs" style="vertical-align:top">{% trans 'Redigér' %}</a>
+                                {% endif %}
+                            {% else %}
+                                {% trans 'Tilbuddet kræver ingen ressourcer' %}
+                            {% endif %}
+                        </dd>
+
                         <dt>{% trans 'Undervisere' %}</dt>
                         <dd>
                             {% blocktrans with found=object.teachers.all|length needed=object.total_required_teachers %}{{ found }}/{{ needed }} undervisere fundet{% endblocktrans %}
