@@ -111,7 +111,6 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         qs = qs.annotate(
             datediff=AbsDateDist(F('eventtime__start'))
         ).order_by('datediff')
-        print qs.query
         return qs
 
     def lists_by_role(self):

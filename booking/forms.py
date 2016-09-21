@@ -654,11 +654,17 @@ class BookingForm(forms.ModelForm):
 
     scheduled = False
 
+    eventtime = forms.ChoiceField(
+        required=False,
+        label=_(u"Tidspunkt"),
+        choices=(),
+    )
+
     class Meta:
         model = Booking
         fields = ()
         labels = {
-            'visit': _(u"Tidspunkt")
+            'eventtime': _(u"Tidspunkt")
         },
         widgets = {
             'notes': Textarea(attrs={
@@ -674,30 +680,36 @@ class BookingForm(forms.ModelForm):
         #    visit.type == Product.FIXED_SCHEDULE_GROUP_VISIT
         self.scheduled = (
             product is not None and
-            len(product.future_events) > 0
+            product.time_mode != Product.TIME_MODE_GUEST_SUGGESTED
         )
         if self.scheduled:
             choices = []
-            for visit in product.future_events.order_by('start_datetime'):
-                available_seats = visit.available_seats
-                date = formats.date_format(
-                    timezone.localtime(visit.start_datetime),
-                    "DATETIME_FORMAT"
-                )
+            qs = product.future_bookable_times.order_by('start', 'end')
+            for eventtime in qs:
+                date = eventtime.interval_display
+
+                visit = eventtime.visit
+                product = eventtime.product
+
+                if visit:
+                    available_seats = eventtime.visit.available_seats
+                else:
+                    available_seats = product.maximum_number_of_visitors
+
                 if available_seats is None:
-                    choices.append((visit.pk, date))
+                    choices.append((eventtime.pk, date))
                 elif available_seats > 0 or \
-                        visit.waiting_list_capacity > 0:
+                        visit and visit.waiting_list_capacity > 0:
                     choices.append(
                         (
-                            visit.pk,
+                            eventtime.pk,
                             date + " " +
                             _("(%d pladser tilbage)") % available_seats
                         )
                     )
 
-            self.fields['visit'].choices = choices
-            self.fields['visit'].required = True
+            self.fields['eventtime'].choices = choices
+            self.fields['eventtime'].required = True
 
 
 class BookerForm(forms.ModelForm):
@@ -858,7 +870,7 @@ class ClassBookingForm(BookingForm):
     class Meta:
         model = ClassBooking
         fields = ('tour_desired', 'catering_desired', 'presentation_desired',
-                  'custom_desired', 'visit', 'notes')
+                  'custom_desired', 'eventtime', 'notes')
         labels = BookingForm.Meta.labels
         widgets = BookingForm.Meta.widgets
 
@@ -895,7 +907,7 @@ class ClassBookingForm(BookingForm):
 class TeacherBookingForm(BookingForm):
     class Meta:
         model = TeacherBooking
-        fields = ('subjects', 'notes', 'visit')
+        fields = ('subjects', 'notes', 'eventtime')
         labels = BookingForm.Meta.labels
         widgets = BookingForm.Meta.widgets
 
@@ -903,7 +915,7 @@ class TeacherBookingForm(BookingForm):
 class StudentForADayBookingForm(BookingForm):
     class Meta:
         model = Booking
-        fields = ('notes', 'visit')
+        fields = ('notes', 'eventtime')
         labels = BookingForm.Meta.labels
         widgets = BookingForm.Meta.widgets
 
@@ -911,7 +923,7 @@ class StudentForADayBookingForm(BookingForm):
 class StudyProjectBookingForm(BookingForm):
     class Meta:
         model = Booking
-        fields = ('notes', 'visit')
+        fields = ('notes', 'eventtime')
         labels = BookingForm.Meta.labels
         widgets = BookingForm.Meta.widgets
 

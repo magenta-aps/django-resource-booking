@@ -1432,10 +1432,10 @@ class Product(models.Model):
     @property
     def bookable_times(self):
         return self.eventtime_set.filter(
-            Q(visit__isnull=True) |
-            Q(
-                visit__bookable=True,
-                visit__workflow_status__in=Visit.BOOKABLE_STATES
+            Q(bookable=True) &
+            (
+                Q(visit__isnull=True) |
+                Q(visit__workflow_status__in=Visit.BOOKABLE_STATES)
             )
         )
 
@@ -1566,7 +1566,7 @@ class Product(models.Model):
         return self.get_url()
 
     def get_visits(self):
-        return self.visit_set.all()
+        return Visit.objects.filter(eventtime__product=self)
 
     def first_visit(self):
         return self.get_visits().first()
@@ -1658,10 +1658,21 @@ class Product(models.Model):
 
     @property
     def has_waitinglist_visit_spots(self):
-        for visit in self.future_events:
-            if visit.can_join_waitinglist:
+        for t in self.future_times:
+            if t.visit and t.visit.can_join_waitinglist:
                 return True
         return False
+
+    @property
+    def fixed_waiting_list_capacity(self):
+        if not self.do_create_waiting_list:
+            return 0
+        if self.waiting_list_length is None:
+            return INFINITY
+        elif self.waiting_list_length <= 0:
+            return 0
+        else:
+            return None
 
     @property
     def is_bookable(self):
@@ -1736,13 +1747,19 @@ class Product(models.Model):
     # by them not having any visits
     def migrate_time_mode(cls):
         for x in cls.objects.filter(time_mode=cls.TIME_MODE_NONE):
-            if len(x.visit_set.all()) > 0:
+            if x.visit_set.filter(deprecated_bookable=True).count() > 0:
                 x.time_mode = cls.TIME_MODE_SPECIFIC
             else:
                 x.time_mode = cls.TIME_MODE_GUEST_SUGGESTED
 
             print u"%s => %s" % (x, x.get_time_mode_display())
             x.save()
+
+        # EventTimes with TIME_MODE_GUEST_SUGGESTED should not be bookable:
+        EventTime.objects.filter(
+            bookable=True,
+            product__time_mode=cls.TIME_MODE_GUEST_SUGGESTED
+        ).update(bookable=False)
 
     def __unicode__(self):
         return u"#%s - %s" % (self.pk, self.title)
@@ -1780,7 +1797,7 @@ class Visit(models.Model):
     )
 
     # Whether the visit is publicly bookable
-    bookable = models.BooleanField(
+    deprecated_bookable = models.BooleanField(
         default=False,
         verbose_name=_(u'Kan bookes')
     )
@@ -1977,7 +1994,10 @@ class Visit(models.Model):
 
     @property
     def organizationalunit(self):
-        return self.first_eventtime.product.organizationalunit
+        if self.product:
+            return self.product.organizationalunit
+        else:
+            return None
 
     valid_status_changes = {
         WORKFLOW_STATUS_BEING_PLANNED: [
@@ -2042,7 +2062,7 @@ class Visit(models.Model):
 
     def planned_status_is_blocked(self):
         # We have to have a chosen starttime before we are planned
-        if not self.first_eventtime or not self.first_eventtime.start:
+        if not hasattr(self, 'eventtime') or not self.eventtime.start:
             return True
 
         # It's not blocked if we can't choose it
@@ -2067,8 +2087,8 @@ class Visit(models.Model):
 
         if self.workflow_status in \
                 Visit.noshow_available_after_starttime and \
-                self.first_eventtime and self.first_eventtime.start and \
-                timezone.now() > self.first_eventtime.start:
+                hasattr(self, 'eventtime') and self.eventtime.start and \
+                timezone.now() > self.eventtime.start:
             allowed.append(Visit.WORKFLOW_STATUS_NOSHOW)
 
         for x in self.workflow_status_choices:
@@ -2099,10 +2119,10 @@ class Visit(models.Model):
 
     @property
     def display_value(self):
-        if not self.first_eventtime or not self.first_eventtime.start:
+        if not hasattr(self, 'eventtime') or not self.eventtime.start:
             return None
 
-        start = timezone.localtime(self.first_eventtime.start)
+        start = timezone.localtime(self.eventtime.start)
         result = formats.date_format(start, "DATETIME_FORMAT")
 
         if self.duration:
@@ -2122,8 +2142,8 @@ class Visit(models.Model):
 
     @property
     def expired(self):
-        if self.first_eventtime and self.first_eventtime.start and \
-                self.first_eventtime.start <= timezone.now():
+        if hasattr(self, 'eventtime') and self.eventtime.start and \
+                self.eventtime.start <= timezone.now():
             return "expired"
         return ""
 
@@ -2132,7 +2152,7 @@ class Visit(models.Model):
         if self.override_needed_teachers is not None:
             return self.override_needed_teachers
 
-        return self.first_eventtime.product.needed_teachers
+        return self.product.needed_teachers
 
     @property
     def needed_teachers(self):
@@ -2147,7 +2167,7 @@ class Visit(models.Model):
         if self.override_needed_hosts is not None:
             return self.override_needed_hosts
 
-        return self.first_eventtime.product.needed_hosts
+        return self.product.needed_hosts
 
     @property
     def needed_hosts(self):
@@ -2204,7 +2224,9 @@ class Visit(models.Model):
     @property
     def can_join_waitinglist(self):
         # Can this visit be booked (with spots on the waiting list)?
-        if not self.bookable:
+        if not hasattr(self, 'eventtime'):
+            return False
+        if not self.eventtime.bookable:
             return False
         if self.workflow_status not in self.BOOKABLE_STATES:
             return False
@@ -2217,8 +2239,8 @@ class Visit(models.Model):
         return True
 
     def date_display(self):
-        if self.first_eventtime and self.first_eventtime.start:
-            return self.first_eventtime.start
+        if hasattr(self, 'eventtime') and self.eventtime.start:
+            return self.eventtime.start
         else:
             return _(u'på ikke-fastlagt tidspunkt')
 
@@ -2261,7 +2283,7 @@ class Visit(models.Model):
 
     @property
     def available_seats(self):
-        limit = self.first_eventtime.product.maximum_number_of_visitors
+        limit = self.product.maximum_number_of_visitors
         if limit is not None:
             return max(limit - self.nr_attendees, 0)
 
@@ -2269,41 +2291,33 @@ class Visit(models.Model):
         return self.status_to_class_map.get(self.workflow_status, 'default')
 
     @property
-    def first_eventtime(self):
-        return self.eventtime_set.first()
-
-    @property
     def start_datetime(self):
-        eventtime = self.first_eventtime
-        if eventtime:
-            return eventtime.start
+        if hasattr(self, 'eventtime'):
+            return self.eventtime.start
         else:
             return None
 
     @property
     def end_datetime(self):
-        eventtime = self.first_eventtime
-        if eventtime:
-            return eventtime.end
+        if hasattr(self, 'eventtime'):
+            return self.eventtime.end
         else:
             return None
 
     def __unicode__(self):
-        eventtime = self.first_eventtime
-        if eventtime:
+        if hasattr(self, 'eventtime'):
             return _(u'Besøg %s - %s - %s') % (
                 self.pk,
-                unicode(eventtime.product.title),
-                unicode(eventtime.interval_display)
+                unicode(self.product.title),
+                unicode(self.eventtime.interval_display)
             )
         else:
             return unicode(_(u'Besøg %s - uden tidspunkt') % self.pk)
 
     @property
     def product(self):
-        eventtime = self.first_eventtime
-        if eventtime:
-            return eventtime.product
+        if hasattr(self, 'eventtime'):
+            return self.eventtime.product
         else:
             return None
 
@@ -2639,15 +2653,16 @@ class Visit(models.Model):
     @property
     def waiting_list_capacity(self):
         product = self.product
+
         if not product:
             return 0
-        if not product.do_create_waiting_list:
-            return 0
-        if product.waiting_list_length is None:
-            return INFINITY
-        elif product.waiting_list_length <= 0:
-            return 0
+
+        from_product = product.fixed_waiting_list_capacity
+        if from_product is not None:
+            return from_product
+
         idlespots = product.waiting_list_length - self.nr_waiting
+
         return max(idlespots, 0)
 
     @property
@@ -2680,8 +2695,7 @@ class Visit(models.Model):
         if product.waiting_list_deadline_days is None and \
                 product.waiting_list_deadline_hours is None:
             return None
-        eventtime = self.first_eventtime
-        time = eventtime.start if eventtime else None
+        time = self.eventtime.start if hasattr(self, 'eventtime') else None
         if time:
             if product.waiting_list_deadline_days > 0:
                 time = time - timedelta(
@@ -3288,7 +3302,7 @@ class Booking(models.Model):
         null=True,
         blank=True,
         related_name='bookings',
-        verbose_name=_(u'Tidspunkt')
+        verbose_name=_(u'Besøg')
     )
 
     waitinglist_spot = models.IntegerField(
@@ -3370,6 +3384,7 @@ class Booking(models.Model):
                     'product': product,
                     'booker': self.booker,
                     'besoeg': self.visit,
+                    'eventtime': self.eventtime
                 },
                 list(recipients),
                 self.visit,

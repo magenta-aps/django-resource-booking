@@ -2167,19 +2167,20 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
                 pass
 
     def get_context_data(self, **kwargs):
+        available_times = {}
+
+        for eventtime in self.product.future_times:
+            available_times[str(eventtime.pk)] = {
+                'available': eventtime.available_seats,
+                'waitinglist': eventtime.waiting_list_capacity
+            }
+
         context = {
             'product': self.product,
             'level_map': Guest.level_map,
             'modal': self.modal,
             'back': self.back,
-            'visit_available': {
-                str(visit.pk): {
-                    'available': visit.available_seats,
-                    'waitinglist': visit.waiting_list_capacity
-                    if not visit.waiting_list_closed else 0
-                }
-                for visit in self.product.visit_set.all()
-            },
+            'times_available': available_times,
             'gymnasiefag_available': self.gymnasiefag_available(),
             'grundskolefag_available': self.grundskolefag_available()
         }
@@ -2233,11 +2234,14 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
             else:
                 booking = self.object
 
-            if not booking.visit:
-                # Make a non-bookable visit with no time specified
-                time = EventTime(product=self.product)
-                time.save()
-                booking.visit = time.make_visit(False)
+            if not booking.eventtime:
+                # Make a non-bookable time with no time specified
+                booking.eventtime = EventTime(
+                    product=self.product,
+                    bookable=False,
+                )
+            if not booking.eventtime.visit:
+                booking.eventtime.make_visit()
 
             available_seats = booking.visit.available_seats
 

@@ -21,11 +21,35 @@ class EventTime(models.Model):
         ordering = ['-start', '-end']
 
     product = models.ForeignKey("Product")
-    visit = models.ForeignKey(
+
+    visit = models.OneToOneField(
         "Visit",
         null=True,
         blank=True
     )
+
+    # Whether the time is publicly bookable
+    bookable = models.BooleanField(
+        default=True,
+        verbose_name=_(u'Kan bookes')
+    )
+
+    RESOURCE_STATUS_AVAILABLE = 1
+    RESOURCE_STATUS_BLOCKED = 2
+    RESOURCE_STATUS_ASSIGNED = 3
+
+    resource_status_choices = (
+        (RESOURCE_STATUS_AVAILABLE, _(u"Ressourcer ledige")),
+        (RESOURCE_STATUS_BLOCKED, _(u"Blokeret af manglende ressourcer")),
+        (RESOURCE_STATUS_ASSIGNED, _(u"Ressourcer tildelt")),
+    )
+
+    resource_status = models.IntegerField(
+        choices=resource_status_choices,
+        default=RESOURCE_STATUS_AVAILABLE,
+        verbose_name=_(u"Ressource-status"),
+    )
+
     start = models.DateTimeField(
         verbose_name=_(u"Starttidspunkt"),
         blank=True,
@@ -79,7 +103,7 @@ class EventTime(models.Model):
                     tz_start.minute == 0 and
                     self.duration_in_minutes == 24 * 60)
 
-    def make_visit(self, bookable=False, **kwargs):
+    def make_visit(self, **kwargs):
         if not self.product:
             raise Exception("Can not create a visit without a product")
 
@@ -90,10 +114,7 @@ class EventTime(models.Model):
 
         visit_model = EventTime.visit.field.related_model
 
-        visit = visit_model(
-            bookable=bookable,
-            **kwargs
-        )
+        visit = visit_model(**kwargs)
 
         # If the product specifies no rooms are needed, set this on the
         # visit.
@@ -158,6 +179,31 @@ class EventTime(models.Model):
     def duration_in_minutes(self):
         if self.end:
             return math.floor((self.end - self.start).total_seconds() / 60)
+        else:
+            return 0
+
+    @property
+    def available_seats(self):
+        if self.visit:
+            if self.visit.waiting_list_closed:
+                return 0
+            else:
+                return self.visit.available_seats
+        elif self.product:
+            return self.product.maximum_number_of_visitors
+        else:
+            return 0
+
+    @property
+    def waiting_list_capacity(self):
+        if self.visit:
+            return self.visit.waiting_list_capacity
+        elif self.product:
+            fixed = self.product.fixed_waiting_list_capacity
+            if fixed is not None:
+                return fixed
+            else:
+                return self.product.waiting_list_length
         else:
             return 0
 
@@ -233,13 +279,14 @@ class EventTime(models.Model):
                 start=x.deprecated_start_datetime,
                 notes=_(u'Migreret fra Visit')
             )
+
             if x.deprecated_end_datetime:
                 obj.end = x.deprecated_end_datetime
             else:
                 # Try to calculate the end time
                 obj.set_calculated_end_time()
 
-            has_specific_time = obj.calculated_has_specific_time()
+            obj.has_specific_time = obj.calculated_has_specific_time()
 
             print obj
             obj.save()

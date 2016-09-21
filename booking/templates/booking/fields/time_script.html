@@ -7,9 +7,9 @@
         (function(){
             {% autoescape off %}
                 // How many idle spots are available on each visit
-                var visitAvailable = {{ visit_available | jsonify }},
+                var visitAvailable = {{ times_available | jsonify }},
             {% endautoescape %}
-            visitSelect = $("#{{ bookingform.visit.id_for_label }}"),
+            visitSelect = $("#{{ bookingform.eventtime.id_for_label }}"),
             attendeeField = $("#{{ bookerform.attendee_count.id_for_label }}"),
             existingMax = attendeeField.attr("max"),
             submitbutton = $("#submitbutton");

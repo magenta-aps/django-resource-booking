@@ -183,12 +183,12 @@
                                     {% endif %}
                                 </dd>
                             {% else %}
-                                {% if object.future_events %}
+                                {% if object.future_bookable_events %}
                                 <dt>{% trans 'Hvornår:' %}</dt>
                                 <dd>
                                     <ul class="list-unstyled" id="dato">
-                                    {% for event in object.future_events %}
-                                        <li>{{ event.start_datetime|date:'d.m.Y' }} kl. {{ event.start_datetime|time:'H.i' }}</li>
+                                    {% for eventtime in object.future_bookable_events %}
+                                        <li>{{ eventtime.interval_display }}</li>
                                     {% endfor %}
                                     </ul>
                                 </dd>
