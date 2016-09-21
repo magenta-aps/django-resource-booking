@@ -14,7 +14,7 @@
     <div class="divider"></div>
     <h1>
         {% trans 'Administrér tidspunkter for' %}
-        "{{ object.title }}"
+        '<a href="{% url 'product-view' object.pk %}">{{ object.title }}</a>'
         ({{ object.get_type_display }})
     </h1>
 

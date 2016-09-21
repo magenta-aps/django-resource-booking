@@ -25,12 +25,6 @@ class ChangeVisitStatusForm(forms.ModelForm):
             self.fields['workflow_status'].label = _(u'Ny status')
 
 
-class ChangeVisitStartTimeForm(forms.ModelForm):
-    class Meta:
-        model = Visit
-        fields = ['start_datetime']
-
-
 class ChangeVisitTeachersForm(forms.ModelForm):
     class Meta:
         model = Visit

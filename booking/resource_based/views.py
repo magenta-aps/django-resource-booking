@@ -3,7 +3,7 @@ import booking.models as booking_models
 import booking.resource_based.forms as rb_forms
 from django.core.urlresolvers import reverse
 from django.http import Http404
-from django.shortcuts import redirect
+from django.shortcuts import render, redirect
 from django.views.generic import CreateView, FormView, TemplateView, UpdateView
 from django.views.generic import DetailView
 
@@ -128,23 +128,18 @@ class EditTimeView(UpdateView):
         return form
 
     def get_context_data(self, **kwargs):
-
-        use_duration = False
-        duration = self.object.product.duration_in_minutes
-
-        if duration > 0 and duration == self.object.duration_in_minutes:
-            use_duration = True
-
         return super(EditTimeView, self).get_context_data(
             product=self.object.product,
-            use_product_duration=use_duration,
+            use_product_duration=self.object.duration_matches_product,
             **kwargs
         )
 
     def get_success_url(self):
-        return reverse(
-            'manage-times', args=[self.kwargs.get('product_pk', -1)]
-        )
+        if 'visit_pk' in self.kwargs:
+            return reverse('visit-view', args=[self.kwargs['visit_pk']])
+        else:
+            product_pk = self.kwargs.get('product_pk', -1)
+            return reverse('manage-times', args=[product_pk])
 
 
 class DeleteTimesView(TemplateView):
@@ -194,3 +189,32 @@ class DeleteTimesView(TemplateView):
 
     def get_success_url(self):
         return reverse('manage-times', args=[self.kwargs['product_pk']])
+
+
+class TimeDetailsView(DetailView):
+    model = booking_models.EventTime
+    template_name = 'eventtime/details.html'
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+
+        # If object
+        if self.object.visit:
+            return redirect(self.get_success_url())
+
+        context = self.get_context_data(object=self.object)
+        return self.render_to_response(context)
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+
+        if(request.POST.get("confirm")):
+            self.object.make_visit(True)
+            return redirect(self.get_success_url())
+        else:
+            # Do same thing as for get method
+            context = self.get_context_data(object=self.object)
+            return self.render_to_response(context)
+
+    def get_success_url(self):
+        return reverse('visit-view', args=[self.object.visit.pk])

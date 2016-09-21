@@ -1,6 +1,7 @@
 # encoding: utf-8
 from django.db import models
 from django.contrib.auth import models as auth_models
+from django.core.urlresolvers import reverse
 from django.utils import formats
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
@@ -47,6 +48,71 @@ class EventTime(models.Model):
         verbose_name=_(u'Interne kommentarer')
     )
 
+    def set_calculated_end_time(self):
+        # Don't calculate if already set
+        if self.end is None:
+            return
+
+        # Can not calculate end unless we have a start and a product
+        if self.start is None or self.product is None:
+            return
+
+        duraction = self.product.duration_in_minutes or 0
+
+        if duration > 0:
+            self.end = self.start + datetime.timedelta(minutes=duration)
+
+    def calculated_has_specific_time(self):
+        # If start time is not defined assume that it should be set with a
+        # a timestamp
+        if self.start is None:
+            return True
+
+        # We need to check for midnight in current timezone
+        tz_start = self.start.astimezone(timezone.get_current_timezone())
+
+        # No specific time if  start time is set to midnight and end time is
+        # 24 hours later.
+        return not (tz_start.hour == 0 and
+                    tz_start.minute == 0 and
+                    self.duration_in_minutes == 24 * 60)
+
+    def make_visit(self, bookable=False, **kwargs):
+        if not self.product:
+            raise Exception("Can not create a visit without a product")
+
+        if self.visit is not None:
+            raise Exception(
+                "Trying to create a visit for eventtime which already has one"
+            )
+
+        visit_model = EventTime.visit.field.related_model
+
+        visit = visit_model(
+            bookable=bookable,
+            **kwargs
+        )
+
+        # If the product specifies no rooms are needed, set this on the
+        # visit.
+        if not self.product.rooms_needed:
+            visit.room_status = Visit.STATUS_NOT_NEEDED
+
+        visit.save()
+
+        # Copy rooms from product to the visit
+        if self.product.rooms.exists():
+            for x in self.product.rooms.all():
+                visit.rooms.add(x)
+
+        visit.create_inheriting_autosends()
+        visit.ensure_statistics()
+
+        self.visit = visit
+        self.save()
+
+        return visit
+
     @property
     def naive_start(self):
         if self.start:
@@ -88,7 +154,10 @@ class EventTime(models.Model):
 
     @property
     def duration_in_minutes(self):
-        return math.floor((self.end - self.start).total_seconds() / 60)
+        if self.end:
+            return math.floor((self.end - self.start).total_seconds() / 60)
+        else:
+            return 0
 
     @property
     def can_be_deleted(self):
@@ -134,16 +203,80 @@ class EventTime(models.Model):
 
         return (timezone.make_aware(start), timezone.make_aware(end))
 
-    def __unicode__(self):
-        if self.has_specific_time:
-            if self.start.date() != self.end.date():
+    @property
+    def duration_matches_product(self):
+        return (self.duration_in_minutes > 0 and
+                self.product is not None and
+                self.product.duration_in_minutes == self.duration_in_minutes)
+
+    @classmethod
+    def migrate_from_visits(cls):
+        visit_model = cls.visit.field.related_model
+
+        # Skip if the neccessary date fields are no longer present on the
+        # Visit model
+        try:
+            visit_model._meta.get_field_by_name("deprecated_start_datetime")
+            visit_model._meta.get_field_by_name("deprecated_end_datetime")
+        except:
+            return
+
+        qs = visit_model.objects.filter(eventtime__isnull=True)
+
+        for x in qs.order_by("deprecated_start_datetime",
+                             "deprecated_end_datetime"):
+            obj = cls(
+                product=x.deprecated_product,
+                visit=x,
+                start=x.deprecated_start_datetime,
+                notes=_(u'Migreret fra Visit')
+            )
+            if x.deprecated_end_datetime:
+                obj.end = x.deprecated_end_datetime
+            else:
+                # Try to calculate the end time
+                obj.set_calculated_end_time()
+
+            has_specific_time = obj.calculated_has_specific_time()
+
+            print obj
+            obj.save()
+
+    @property
+    def expired(self):
+        return self.start and self.start < timezone.now()
+
+    @property
+    def visit_link(self):
+        if self.visit:
+            return reverse('visit-view', args=[self.visit.pk])
+        else:
+            return reverse('time-view', args=[self.product.pk, self.pk])
+
+    @property
+    def interval_display(self):
+        if self.end and self.has_specific_time:
+            if self.naive_start.date() != self.naive_end.date():
                 return " - ".join([self.l10n_start, self.l10n_end])
             else:
                 return " - ".join([self.l10n_start, self.l10n_end_time])
         else:
-            return unicode(
-                formats.date_format(self.naive_start, "SHORT_DATE_FORMAT")
-            )
+            if self.start:
+                return unicode(
+                    formats.date_format(self.naive_start, "SHORT_DATE_FORMAT")
+                )
+            else:
+                return unicode(_(u"<Intet tidspunkt angivet>"))
+
+    def __unicode__(self):
+        parts = [_(u"Tidspunkt:")]
+        if self.product:
+            parts.append(self.product.title)
+        if self.visit:
+            parts.append(_(u"(Besøg: %s)") % self.visit.pk)
+        parts.append(self.interval_display)
+
+        return " ".join([unicode(x) for x in parts])
 
 
 class Calendar(models.Model):

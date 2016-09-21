@@ -18,10 +18,10 @@ from booking.booking_workflows.forms import ChangeVisitCommentsForm
 from booking.booking_workflows.forms import ChangeVisitEvalForm
 from booking.booking_workflows.forms import VisitAddLogEntryForm
 from booking.booking_workflows.forms import VisitAddCommentForm
-from booking.booking_workflows.forms import ChangeVisitStartTimeForm
 from booking.booking_workflows.forms import ResetVisitChangesForm
 from booking.models import Visit
 from booking.models import EmailTemplate
+from booking.models import EventTime
 from booking.models import Locality
 from booking.models import LOGACTION_MANUAL_ENTRY
 from booking.models import log_action
@@ -67,10 +67,32 @@ class UpdateWithCancelView(VisitBreadcrumbMixin, EditorRequriedMixin,
 
 class ChangeVisitStartTimeView(AutologgerMixin,
                                UpdateWithCancelView):
-    model = Visit
-    form_class = ChangeVisitStartTimeForm
+    model = EventTime
     template_name = "booking/workflow/change_starttime.html"
     view_title = _(u'Redigér tidspunkt')
+
+    fields = ('has_specific_time', 'start', 'end', 'notes')
+
+    def get_object(self, queryset=None):
+        return self.model.objects.filter(visit=self.kwargs['visit_pk']).first()
+
+    def get_form(self, form_class=None):
+        form = super(ChangeVisitStartTimeView, self).get_form(
+            form_class=form_class
+        )
+        form.fields['has_specific_time'].coerce = lambda x: x == 'True'
+
+        return form
+
+    def get_context_data(self, **kwargs):
+        return super(ChangeVisitStartTimeView, self).get_context_data(
+            product=self.object.product,
+            use_product_duration=self.object.duration_matches_product,
+            **kwargs
+        )
+
+    def get_success_url(self):
+        return reverse('visit-view', args=[self.object.visit.pk])
 
 
 class ChangeVisitStatusView(AutologgerMixin, UpdateWithCancelView):

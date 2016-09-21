@@ -8,7 +8,7 @@ from booking.utils import UnicodeWriter
 from django.contrib import messages
 from django.db.models import F
 from django.db.models import Q
-from django.db.models.aggregates import Count, Sum
+from django.db.models.aggregates import Count, Max, Sum
 from django.db.models.functions import Coalesce
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
@@ -108,11 +108,11 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         return super(ProfileView, self).get_context_data(**context)
 
     def sort_vo_queryset(self, qs):
-        return qs.annotate(
-            datediff=AbsDateDist(
-                F('start_datetime') - timezone.now()
-            )
+        qs = qs.annotate(
+            datediff=AbsDateDist(F('eventtime__start'))
         ).order_by('datediff')
+        print qs.query
+        return qs
 
     def lists_by_role(self):
         role = self.request.user.userprofile.get_role()
@@ -162,7 +162,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             ),
             'queryset': self.sort_vo_queryset(
                 Visit.being_planned_queryset(
-                    product__organizationalunit=unit_qs
+                    eventtime__product__organizationalunit=unit_qs
                 ).annotate(num_participants=(
                     Coalesce(Count("bookings__booker__pk"), 0) +
                     Coalesce(
@@ -189,7 +189,9 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                 'count'
             ),
             'queryset': self.sort_vo_queryset(
-                Visit.planned_queryset(product__organizationalunit=unit_qs)
+                Visit.planned_queryset(
+                    eventtime__product__organizationalunit=unit_qs
+                )
             )
         }
         if len(planned['queryset']) > 10:
@@ -215,7 +217,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     'link': reverse('search') + '?u=-3'
                 },
                 'queryset': Product.objects.filter(
-                    product__visit=taught_vos
+                    eventtime__visit=taught_vos
                 ).order_by("title"),
             },
             {
@@ -230,10 +232,10 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     Visit.objects.annotate(
                         num_assigned=Count('hosts')
                     ).filter(
-                        product__organizationalunit=unit_qs,
+                        eventtime__product__organizationalunit=unit_qs,
                         num_assigned__lt=Coalesce(
                             'override_needed_hosts',
-                            'product__needed_hosts'
+                            'eventtime__product__needed_hosts'
                         )
                     ).exclude(
                         teachers=self.request.user
@@ -266,7 +268,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     'link': reverse('search') + '?u=-3'
                 },
                 'queryset': Product.objects.filter(
-                    product__visit=hosted_vos
+                    eventtime__visit=hosted_vos
                 ).order_by("title"),
             },
             {
@@ -280,10 +282,10 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                 'queryset': Visit.objects.annotate(
                     num_assigned=Count('hosts')
                 ).filter(
-                    product__organizationalunit=unit_qs,
+                    eventtime__product__organizationalunit=unit_qs,
                     num_assigned__lt=Coalesce(
                         'override_needed_hosts',
-                        'product__needed_hosts'
+                        'eventtime__product__needed_hosts'
                     )
                 ).exclude(
                     hosts=self.request.user.pk
@@ -617,9 +619,9 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
                         .organizationalunits
                 )
             if from_date:
-                qs = qs.filter(visit__start_datetime__gte=from_date)
+                qs = qs.filter(visit__eventtime__start__gte=from_date)
             if to_date:
-                qs = qs.filter(visit__end_datetime__lte=to_date)
+                qs = qs.filter(visit__eventtime__end__lt=to_date)
             qs = qs.order_by('visit__productresource_ptr')
             context['bookings'] = qs
         context.update(kwargs)
@@ -695,8 +697,8 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
                 booking.__unicode__(),
                 booking.visit.get_type_display(),
                 booking.visit.product.resource_ptr.title,
-                str(booking.visit.start_datetime) + " til " +
-                str(booking.visit.end_datetime),
+                str(booking.visit.first_eventtime.start) + " til " +
+                str(booking.visit.first_eventtime.end),
                 u", ".join([
                     u'%s/%s' % (x.subject, x.level)
                     for x in booking.bookinggrundskolesubjectlevel_set.all()
@@ -841,21 +843,21 @@ class AvailabilityView(LoginRequiredMixin, DetailView):
         user = self.object.user
         if self.object.is_teacher:
             accepted_qs = user.taught_visits.order_by(
-                'start_datetime'
+                'eventtime__start'
             )
             context['accepted'] = self.to_datelist(accepted_qs)
             unaccepted_qs = self.object.requested_as_teacher_for_qs(
                 exclude_accepted=True
-            ).order_by('start_datetime')
+            ).order_by('eventtime__start')
             context['unaccepted'] = self.to_datelist(unaccepted_qs)
         elif self.object.is_host:
             accepted_qs = user.hosted_visits.order_by(
-                'start_datetime'
+                'eventtime__start'
             )
             context['accepted'] = self.to_datelist(accepted_qs)
             unaccepted_qs = self.object.requested_as_host_for_qs(
                 exclude_accepted=True
-            ).order_by('start_datetime')
+            ).order_by('eventtime__start')
             context['unaccepted'] = self.to_datelist(unaccepted_qs)
         else:
             context['not_a_teacher'] = True
@@ -871,8 +873,9 @@ class AvailabilityView(LoginRequiredMixin, DetailView):
         current = None
         today = timezone.localtime(timezone.now()).date()
         for x in qs:
-            if x.start_datetime:
-                date = timezone.localtime(x.start_datetime).date()
+            eventtime = x.first_eventtime
+            if eventtime and eventtime.start:
+                date = timezone.localtime(eventtime.start).date()
             else:
                 date = None
             if current is None or current['date'] != date:

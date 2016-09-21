@@ -669,24 +669,22 @@ class SearchView(BreadcrumbMixin, ListView):
             if t_from:
                 date_cond = (
                     date_cond &
-                    Q(visit__start_datetime__gt=t_from)
+                    Q(visit__eventtime__start__gt=t_from)
                 )
 
             if t_to:
                 date_cond = date_cond & Q(
-                    Q(visit__start_datetime__lte=t_from)
+                    Q(visit__eventtime__start__lte=t_from)
                 )
 
             self.from_datetime = t_from or ""
             self.to_datetime = t_to or ""
 
             if len(date_cond):
-                # Since not all resources have dates we have to find those
-                # as well as the ones matching the date limit. We do this
-                # with the following OR condition:
+                # Bookings where the guest decides the time should always
+                # show up in results.
                 qs = qs.filter(
-                    # Anything without any specific booking times
-                    Q(pk__in=Product.objects.exclude(visit__bookable=True)) |
+                    Q(time_mode=Product.TIME_MODE_GUEST_SUGGESTED) |
                     # The actual date conditions
                     date_cond
                 )
@@ -708,7 +706,7 @@ class SearchView(BreadcrumbMixin, ListView):
     def annotate(self, qs):
         return qs.annotate(
             num_visits=Count('visit__pk', distinct=True),
-            first_visit=Min('visit__start_datetime')
+            first_visit=Min('visit__eventtime__start')
         )
 
     def get_filters(self):
@@ -1409,7 +1407,7 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
             max = 0
 
         existing_bookings_outside_bounds = Guest.objects.filter(
-            booking__visit__product__pk=product_id
+            booking__visit__eventtime__product__pk=product_id
         ).exclude(
             attendee_count__gte=min,
             attendee_count__lte=max
@@ -2042,9 +2040,10 @@ class RrulestrView(View):
             product = Product.objects.get(pk=product_id)
 
             for visit in product.visit_set.all():
-                existing_dates_strings.add(
-                    visit.start_datetime.strftime('%d-%m-%Y %H:%M')
-                )
+                for time in visit.eventtime_set.all():
+                    existing_dates_strings.add(
+                        time.start.strftime('%d-%m-%Y %H:%M')
+                    )
 
         for line in lines:
             # When handling RRULEs, we don't want to send all dates until
@@ -2204,12 +2203,10 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
                 booking = self.object
 
             if not booking.visit:
-                # Make an anonymous visit
-                occ = self.product.make_visit(
-                    None, False
-                )
-                occ.save()
-                booking.visit = occ
+                # Make a non-bookable visit with no time specified
+                time = EventTime(product=self.product)
+                time.save()
+                booking.visit = time.make_visit(False)
 
             available_seats = booking.visit.available_seats
 
@@ -2596,20 +2593,16 @@ class VisitSearchView(VisitListView):
         profile = self.request.user.userprofile
 
         if u == form.MY_UNIT:
-            return qs.filter(
-                product__organizationalunit=profile.organizationalunit
-            )
+            p_unit = profile.organizationalunit
+            return qs.filter(eventtime__product__organizationalunit=p_unit)
         elif u == form.MY_FACULTY:
-            return qs.filter(
-                product__organizationalunit=profile.organizationalunit
-                .get_faculty_queryset()
-            )
+            unit_qs = profile.organizationalunit.get_faculty_queryset()
+            return qs.filter(eventtime__product__organizationalunit=unit_qs)
         elif u == form.MY_UNITS:
-            return qs.filter(
-                product__organizationalunit=profile.get_unit_queryset()
-            )
+            unit_qs = profile.get_unit_queryset()
+            return qs.filter(eventtime__product__organizationalunit=unit_qs)
         else:
-            return qs.filter(product__organizationalunit__pk=u)
+            return qs.filter(eventtime__product__organizationalunit__pk=u)
 
         return qs
 
@@ -2624,7 +2617,7 @@ class VisitSearchView(VisitListView):
                 day=from_date.day,
                 tzinfo=timezone.get_default_timezone()
             )
-            qs = qs.filter(start_datetime__gte=from_date)
+            qs = qs.filter(eventtime__start__gte=from_date)
 
         to_date = form.cleaned_data.get("to_date", None)
         if to_date is not None:
@@ -2636,7 +2629,7 @@ class VisitSearchView(VisitListView):
                 minute=59,
                 tzinfo=timezone.get_default_timezone()
             )
-            qs = qs.filter(start_datetime__lte=to_date)
+            qs = qs.filter(eventtime__end__lte=to_date)
 
         return qs
 
@@ -3217,7 +3210,7 @@ class EvaluationOverviewView(LoginRequiredMixin, BreadcrumbMixin, ListView):
         else:
             qs = self.model.objects.none()
 
-        return qs.order_by('-start_datetime', '-end_datetime')
+        return qs.order_by('-eventtime__start', '-eventtime__end')
 
     def get_context_data(self, **kwargs):
         return super(EvaluationOverviewView, self).get_context_data(

@@ -214,7 +214,7 @@ var KU = KU || {};
             calendarWeeks: true,
             todayHighlight: true,
             startDate: 'Date',
-            clearBtn: false,
+            clearBtn: true,
             autoclose: true,
         }).on('changeDate', update_interval_output);
 
