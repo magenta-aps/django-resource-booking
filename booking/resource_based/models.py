@@ -59,7 +59,7 @@ class EventTime(models.Model):
         if self.start is None or self.product is None:
             return
 
-        duraction = self.product.duration_in_minutes or 0
+        duration = self.product.duration_in_minutes or 0
 
         if duration > 0:
             self.end = self.start + datetime.timedelta(minutes=duration)
