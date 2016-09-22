@@ -18,7 +18,6 @@ from django.forms import EmailInput
 from django.forms import formset_factory, inlineformset_factory
 from django.forms import TextInput, NumberInput, Textarea, Select
 from django.forms import HiddenInput
-from django.utils import formats, timezone
 from django.utils.translation import ugettext_lazy as _
 from tinymce.widgets import TinyMCE
 from .fields import ExtensibleMultipleChoiceField

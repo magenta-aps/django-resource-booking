@@ -8,7 +8,7 @@ from booking.utils import UnicodeWriter
 from django.contrib import messages
 from django.db.models import F
 from django.db.models import Q
-from django.db.models.aggregates import Count, Max, Sum
+from django.db.models.aggregates import Count, Sum
 from django.db.models.functions import Coalesce
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required

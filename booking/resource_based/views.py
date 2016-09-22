@@ -1,7 +1,7 @@
 # encoding: utf-8
 from django.core.urlresolvers import reverse, reverse_lazy
 from django.http import Http404
-from django.shortcuts import render, redirect
+from django.shortcuts import redirect
 from django.utils.translation import ugettext as _
 from django.views.generic import TemplateView, ListView, DetailView
 from django.views.generic.edit import CreateView, UpdateView
