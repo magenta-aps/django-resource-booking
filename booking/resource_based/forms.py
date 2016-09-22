@@ -10,7 +10,6 @@ from booking.models import VisitResource
 from booking.resource_based.models import CalendarEvent
 from django import forms
 from django.forms import CheckboxSelectMultiple, NumberInput
-from django.forms import TextInput
 from django.forms import formset_factory, BaseFormSet
 from django.utils.translation import ugettext_lazy as _, ungettext_lazy as __
 

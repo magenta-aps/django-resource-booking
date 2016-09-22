@@ -40,7 +40,7 @@ class Calendar(models.Model):
             availability=CalendarEvent.AVAILABLE
         ):
             result.extend(x.between(from_dt, to))
-        result.sort(key=lambda x: x[0] )
+        result.sort(key=lambda x: x[0])
         return result
 
 

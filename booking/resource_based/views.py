@@ -20,8 +20,7 @@ from booking.resource_based.models import TeacherResource, HostResource
 from booking.resource_based.models import VehicleResource
 from booking.resource_based.models import ResourcePool
 from booking.resource_based.models import ResourceRequirement
-from booking.views import BackMixin, BreadcrumbMixin, LoginRequiredMixin, \
-    RoleRequiredMixin
+from booking.views import BackMixin, BreadcrumbMixin, LoginRequiredMixin
 from itertools import chain
 
 import booking.models as booking_models
