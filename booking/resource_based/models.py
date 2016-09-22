@@ -464,6 +464,22 @@ class Resource(models.Model):
             lastgroup['name'] = lastgroup['name'][0:(maxchars - chars)] + "..."
         return display_groups
 
+    def occupied_by(self, start_time, end_time):
+        visits = []
+        for visitresource in self.visitresource.filter(
+            visit__eventtime__start__lte=end_time,
+            visit__eventtime__end__gte=start_time
+        ):
+            visits.append(visitresource.visit)
+        return visits
+
+    def available_for_visit(self, visit):
+        occupying_visits = self.occupied_by(
+            visit.eventtime.start,
+            visit.eventtime.end
+        )
+        return len(set(occupying_visits) - set([visit])) == 0
+
 
 class UserResource(Resource):
     class Meta:
