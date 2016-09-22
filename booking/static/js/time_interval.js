@@ -196,7 +196,14 @@ var KU = KU || {};
             // Force update of displayed interval
             time_string = '';
             update_interval_output();
-        }).trigger("change");
+        });
+
+        if($duration.length) {
+            $duration.trigger("change");
+        } else {
+            $start_time.parents('.timeslider').first().hide();
+            $time_range.parents('.timeslider').first().show();
+        }
 
         $specific_time.on("change", function() {
             if(use_specific_time()) {
