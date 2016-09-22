@@ -14,10 +14,33 @@ from django.forms import formset_factory, BaseFormSet
 from django.utils.translation import ugettext_lazy as _, ungettext_lazy as __
 
 
+class CreateTimesFromRulesForm(forms.Form):
+    start = forms.DateTimeField(
+        label=_(u'Starttidspunkt'),
+        required=False,
+        initial='',
+    )
+    end = forms.DateTimeField(
+        label=_(u'Sluttidspunkt'),
+        required=False,
+        initial='',
+    )
+    has_specific_time = forms.ChoiceField(
+        initial=True,
+        required=False,
+        label=_(u"Angivelse af tidspunkt"),
+        choices=(
+            (True, _(u"Både dato og tidspunkt")),
+            (False, _(u"Kun dato")),
+        ),
+    )
+
+
 class ResourceTypeForm(forms.Form):
 
     EXCEPT_TYPES = [
         ResourceType.RESOURCE_TYPE_TEACHER,
+        ResourceType.RESOURCE_TYPE_HOST,
         ResourceType.RESOURCE_TYPE_ROOM
     ]
 

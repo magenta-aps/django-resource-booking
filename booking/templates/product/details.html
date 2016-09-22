@@ -153,34 +153,46 @@
                             </dd>
 
                             {% if request.user.userprofile.can_create %}
-                                {% if object.visit_set.all %}
                                 <dt>{% trans 'Hvornår:' %}</dt>
                                 <dd>
                                     <ul class="list-unstyled" id="dato">
-                                    {% for event in object.visit_set.all %}
-                                        {% if event.start_datetime %}
-                                            <li data-expired="{% if event.expired %}true{% else %}false{% endif %}">
-                                                <a href="{% url 'visit-view' event.pk %}">
-                                                    {{ event.start_datetime|date:'d.m.Y' }} kl. {{ event.start_datetime|time:'H.i' }}
-                                                    {% if event.expired %}
-                                                        <br/>{% trans '(udløbet)' %}
-                                                    {% elif event.available_seats != None %}
-                                                        <br/>{% blocktrans with seats=event.available_seats %}({{ seats }} pladser tilbage){% endblocktrans %}
-                                                    {% endif %}
-                                                </a>
-                                            </li>
-                                        {% endif %}
-                                    {% endfor %}
+                                    {% if object.eventtime_set.all %}
+                                        {% for eventtime in object.eventtime_set.all %}
+                                            {% if eventtime.start %}
+                                                <li data-expired="{% if eventtime.expired %}true{% else %}false{% endif %}">
+                                                    <a href="{{ eventtime.visit_link }}">
+                                                        {{ eventtime.interval_display }}
+                                                        {% if eventtime.expired %}
+                                                            <br/>{% trans '(udløbet)' %}
+                                                        {% elif eventtime.visit.available_seats != None %}
+                                                            <br/>{% blocktrans with seats=eventtime.visit.available_seats %}({{ seats }} pladser tilbage){% endblocktrans %}
+                                                        {% endif %}
+                                                    </a>
+                                                </li>
+                                            {% else %}
+                                                <li >
+                                                    <a href="{{ eventtime.visit_link }}">Besøg #{{eventtime.visit.pk}} (uden tidspunkt)</a>
+                                                </li>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% else %}
+                                        <li>{% trans 'Ingen tidspunkter angivet' %}</li>
+                                    {% endif %}
                                     </ul>
+                                    {% if object.uses_time_management %}
+                                    <div class="divider"></div>
+                                    <p>
+                                        <a class="pull-right btn btn-primary btn-xs margin-bottom-10 margin-right-10" href="{% url 'manage-times' object.pk %}">{% trans 'Administrér tidspunkter' %}</a>
+                                    </p>
+                                    {% endif %}
                                 </dd>
-                                {% endif %}
                             {% else %}
-                                {% if object.future_events %}
+                                {% if object.future_bookable_events %}
                                 <dt>{% trans 'Hvornår:' %}</dt>
                                 <dd>
                                     <ul class="list-unstyled" id="dato">
-                                    {% for event in object.future_events %}
-                                        <li>{{ event.start_datetime|date:'d.m.Y' }} kl. {{ event.start_datetime|time:'H.i' }}</li>
+                                    {% for eventtime in object.future_bookable_events %}
+                                        <li>{{ eventtime.interval_display }}</li>
                                     {% endfor %}
                                     </ul>
                                 </dd>

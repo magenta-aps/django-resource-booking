@@ -74,6 +74,8 @@
                         <dl class="dl-horizontal">
                             <dt>{% trans 'Tilbud:' %}</dt>
                             <dd><a href="{% url 'product-view' res.product.pk %}">#{{ res.product.pk }} {{ res.product.title }}</a></dd>
+                            <dt>{% trans 'Hvornår:' %}</dt>
+                            <dd>{{ res.first_eventtime.interval_display }}</a></dd>
                             <dt>{% trans 'Booket af:' %}</dt>
                             <dd>{% blocktrans with count=res.nr_attendees %}{{ count }} personer{% endblocktrans %}</dd>
                         </dl>

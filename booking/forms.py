@@ -18,7 +18,6 @@ from django.forms import EmailInput
 from django.forms import formset_factory, inlineformset_factory
 from django.forms import TextInput, NumberInput, Textarea, Select
 from django.forms import HiddenInput
-from django.utils import formats, timezone
 from django.utils.translation import ugettext_lazy as _
 from tinymce.widgets import TinyMCE
 from .fields import ExtensibleMultipleChoiceField
@@ -291,7 +290,7 @@ class ProductForm(forms.ModelForm):
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'do_create_waiting_list', 'waiting_list_length',
                   'waiting_list_deadline_days', 'waiting_list_deadline_hours',
-                  'duration', 'locality',
+                  'time_mode', 'duration', 'locality',
                   'rooms_needed', 'tour_available', 'catering_available',
                   'presentation_available', 'custom_available', 'custom_name',
                   'tilbudsansvarlig', 'organizationalunit',
@@ -505,7 +504,7 @@ class StudentForADayForm(ProductForm):
         model = Product
         fields = ('type', 'title', 'teaser', 'description', 'state',
                   'institution_level', 'topics', 'audience',
-                  'duration', 'locality',
+                  'time_mode', 'duration', 'locality',
                   'tilbudsansvarlig', 'organizationalunit',
                   'needed_hosts', 'needed_teachers',
                   'preparation_time', 'comment',
@@ -518,7 +517,7 @@ class InternshipForm(ProductForm):
         model = Product
         fields = ('type', 'title', 'teaser', 'description', 'state',
                   'institution_level', 'topics', 'audience',
-                  'locality',
+                  'time_mode', 'locality',
                   'tilbudsansvarlig', 'organizationalunit',
                   'preparation_time', 'comment',
                   )
@@ -530,7 +529,7 @@ class OpenHouseForm(ProductForm):
         model = Product
         fields = ('type', 'title', 'teaser', 'description', 'state',
                   'institution_level', 'topics', 'audience',
-                  'locality', 'rooms_needed',
+                  'time_mode', 'locality', 'rooms_needed',
                   'tilbudsansvarlig', 'organizationalunit',
                   'preparation_time', 'comment',
                   )
@@ -545,7 +544,7 @@ class TeacherProductForm(ProductForm):
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'do_create_waiting_list', 'waiting_list_length',
                   'waiting_list_deadline_days', 'waiting_list_deadline_hours',
-                  'duration', 'locality',
+                  'time_mode', 'duration', 'locality',
                   'rooms_needed',
                   'tilbudsansvarlig', 'roomresponsible', 'organizationalunit',
                   'needed_hosts', 'needed_teachers',
@@ -562,7 +561,7 @@ class ClassProductForm(ProductForm):
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'do_create_waiting_list', 'waiting_list_length',
                   'waiting_list_deadline_days', 'waiting_list_deadline_hours',
-                  'duration', 'locality',
+                  'time_mode', 'duration', 'locality',
                   'rooms_needed', 'tour_available', 'catering_available',
                   'presentation_available', 'custom_available', 'custom_name',
                   'tilbudsansvarlig', 'roomresponsible', 'organizationalunit',
@@ -578,7 +577,7 @@ class StudyProjectForm(ProductForm):
         model = Product
         fields = ('type', 'title', 'teaser', 'description', 'state',
                   'institution_level', 'topics', 'audience',
-                  'locality', 'rooms_needed',
+                  'time_mode', 'locality', 'rooms_needed',
                   'tilbudsansvarlig', 'organizationalunit',
                   'preparation_time', 'comment',
                   )
@@ -654,11 +653,17 @@ class BookingForm(forms.ModelForm):
 
     scheduled = False
 
+    eventtime = forms.ChoiceField(
+        required=False,
+        label=_(u"Tidspunkt"),
+        choices=(),
+    )
+
     class Meta:
         model = Booking
         fields = ()
         labels = {
-            'visit': _(u"Tidspunkt")
+            'eventtime': _(u"Tidspunkt")
         },
         widgets = {
             'notes': Textarea(attrs={
@@ -674,30 +679,36 @@ class BookingForm(forms.ModelForm):
         #    visit.type == Product.FIXED_SCHEDULE_GROUP_VISIT
         self.scheduled = (
             product is not None and
-            len(product.future_events) > 0
+            product.time_mode != Product.TIME_MODE_GUEST_SUGGESTED
         )
         if self.scheduled:
             choices = []
-            for visit in product.future_events.order_by('start_datetime'):
-                available_seats = visit.available_seats
-                date = formats.date_format(
-                    timezone.localtime(visit.start_datetime),
-                    "DATETIME_FORMAT"
-                )
+            qs = product.future_bookable_times.order_by('start', 'end')
+            for eventtime in qs:
+                date = eventtime.interval_display
+
+                visit = eventtime.visit
+                product = eventtime.product
+
+                if visit:
+                    available_seats = eventtime.visit.available_seats
+                else:
+                    available_seats = product.maximum_number_of_visitors
+
                 if available_seats is None:
-                    choices.append((visit.pk, date))
+                    choices.append((eventtime.pk, date))
                 elif available_seats > 0 or \
-                        visit.waiting_list_capacity > 0:
+                        visit and visit.waiting_list_capacity > 0:
                     choices.append(
                         (
-                            visit.pk,
+                            eventtime.pk,
                             date + " " +
                             _("(%d pladser tilbage)") % available_seats
                         )
                     )
 
-            self.fields['visit'].choices = choices
-            self.fields['visit'].required = True
+            self.fields['eventtime'].choices = choices
+            self.fields['eventtime'].required = True
 
 
 class BookerForm(forms.ModelForm):
@@ -858,7 +869,7 @@ class ClassBookingForm(BookingForm):
     class Meta:
         model = ClassBooking
         fields = ('tour_desired', 'catering_desired', 'presentation_desired',
-                  'custom_desired', 'visit', 'notes')
+                  'custom_desired', 'eventtime', 'notes')
         labels = BookingForm.Meta.labels
         widgets = BookingForm.Meta.widgets
 
@@ -895,7 +906,7 @@ class ClassBookingForm(BookingForm):
 class TeacherBookingForm(BookingForm):
     class Meta:
         model = TeacherBooking
-        fields = ('subjects', 'notes', 'visit')
+        fields = ('subjects', 'notes', 'eventtime')
         labels = BookingForm.Meta.labels
         widgets = BookingForm.Meta.widgets
 
@@ -903,7 +914,7 @@ class TeacherBookingForm(BookingForm):
 class StudentForADayBookingForm(BookingForm):
     class Meta:
         model = Booking
-        fields = ('notes', 'visit')
+        fields = ('notes', 'eventtime')
         labels = BookingForm.Meta.labels
         widgets = BookingForm.Meta.widgets
 
@@ -911,7 +922,7 @@ class StudentForADayBookingForm(BookingForm):
 class StudyProjectBookingForm(BookingForm):
     class Meta:
         model = Booking
-        fields = ('notes', 'visit')
+        fields = ('notes', 'eventtime')
         labels = BookingForm.Meta.labels
         widgets = BookingForm.Meta.widgets
 

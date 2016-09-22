@@ -1,0 +1,54 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load booking_tags %}
+
+{% block htmltitle %} - {% trans "Slet tidspunkter for" %} '{{ product.title }}'{% endblock %}
+
+{% block head %}
+{% include 'common/resources/datepicker_style.html' %}
+<link rel="stylesheet" href="{% static 'css/bootstrap-slider.css' %}" />
+{% endblock %}
+
+
+{% block content %}
+    <div class="divider"></div>
+    <h1>
+        {% trans "Slet tidspunkter for" %}
+        '<a href="{% url 'product-view' product.pk %}">{{ product.title }}</a>'
+    </h1>
+
+    <div class="divider"></div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <form action="{% url 'delete-times' product.pk %}" method="post">
+            {% csrf_token %}
+            <p>
+                {% trans 'Er du sikker på du vil slette følgende tidspunkter?' %}
+            </p>
+            <ul>
+            {% for eventtime in items %}
+                <li>
+                    <input type="hidden" name="selected_eventtimes" value="{{ eventtime.pk }}" />
+                    <a href="{% url 'edit-time' eventtime.product.pk eventtime.pk %}">{{ eventtime }}</a>
+                </li>
+            {% endfor %}
+            </ul>
+            <input type="submit" value="Slet tidspunkter" name="confirm"
+                   role="button" class="btn btn-sm btn-success"/>
+            <input type="submit" value="Annullér" name="cancel"
+                   role="button" class="btn btn-sm btn-danger"/>
+            </form>
+        </div>
+    </div>
+
+    </div>
+{% endblock %}
+
+{% block extra_scripts %}
+{% include 'eventtime/date_interval_script.html' %}
+<script type="text/javascript"><!--
+KU.initialize_time_interval('#create-time-form');
+//--></script>
+{% endblock %}

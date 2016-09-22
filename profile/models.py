@@ -59,7 +59,11 @@ def role_to_text(role):
 
 
 class AbsDateDist(Aggregate):
-    template = 'ABS(EXTRACT(EPOCH FROM (%(expressions)s)))'
+    template = (
+        "ABS(EXTRACT(EPOCH FROM MAX(%(expressions)s)) - " +
+        "EXTRACT(EPOCH FROM STATEMENT_TIMESTAMP()))"
+    )
+    name = "AbsDateDist"
 
     def __init__(self, expression, **extra):
 

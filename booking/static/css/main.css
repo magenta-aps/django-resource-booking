@@ -1347,3 +1347,17 @@ body.lightbox {
         display: flex;
     }
 }
+
+/* Time interval selector START */
+.input-group.datefield .input-group-addon {
+    cursor: pointer;
+}
+.input-group.timeslider strong {
+    margin-left: 1em;
+    margin-right: 1em;
+}
+.input-group.timeslider.dslider .slider-selection,
+.input-group.timeslider.dslider .slider-tick.in-selection{
+	background: transparent;
+}
+/* Time interval selector END */
