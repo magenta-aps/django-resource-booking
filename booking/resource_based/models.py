@@ -6,7 +6,7 @@ from django.utils import formats
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from recurrence.fields import RecurrenceField
-from booking.models import Room
+from booking.models import Room, Visit
 from profile.constants import TEACHER, HOST, NONE
 
 import datetime
@@ -332,12 +332,89 @@ class Calendar(models.Model):
 
     def available_list(self, from_dt, to):
         result = []
+
         for x in self.calendarevent_set.filter(
             availability=CalendarEvent.AVAILABLE
         ):
             result.extend(x.between(from_dt, to))
-        result.sort(key=lambda x: x[0])
+
+        result.sort(key=lambda x: x.start)
+
         return result
+
+    def unavailable_list(self, from_dt, to):
+        result = []
+
+        for x in self.calendarevent_set.filter(
+            availability=CalendarEvent.NOT_AVAILABLE
+        ):
+            result.extend(x.between(from_dt, to))
+
+        # Not available on times when we are booked
+        if hasattr(self, 'resource'):
+            for x in self.resource.booked_eventtimes(from_dt, to):
+                result.append(CalendarEventInstance(
+                    x.start,
+                    x.end,
+                    available=False,
+                    source=x
+                ))
+
+        result.sort(key=lambda x: x.start)
+
+        return result
+
+
+class CalendarEventInstance(object):
+    start = None
+    end = None
+    available = False
+    source = None
+
+    EMS_IN_DAY = 12
+    SECONDS_IN_DAY = 24 * 60 * 60
+    SECONDS_PER_EM = SECONDS_IN_DAY / EMS_IN_DAY
+
+    def __init__(self, start, end, available=False, source=None):
+        if not timezone.is_aware(start):
+            start = timezone.make_aware(start)
+
+        if not timezone.is_aware(end):
+            end = timezone.make_aware(end)
+
+        self.start = start
+        self.end = end
+        self.available = available
+        self.source = source
+
+    def day_marker(self, date):
+        day_start = timezone.make_aware(
+            datetime.datetime.combine(date, datetime.time())
+        )
+        day_end = day_start + datetime.timedelta(days=1)
+
+        obj = {
+            'event': self,
+            'start': max(self.start, day_start),
+            'end': min(self.end, day_end),
+        }
+
+        if self.available:
+            obj['available_class'] = 'available'
+        else:
+            obj['available_class'] = 'unavailable'
+
+        # Calculate offset from top of day in 5 minute intervals
+        top_offset_seconds = (obj['start'] - day_start).total_seconds()
+        obj['top_offset'] = '%.2f' % (
+            top_offset_seconds / CalendarEventInstance.SECONDS_PER_EM
+        )
+        height_seconds = (obj['end'] - obj['start']).total_seconds()
+        obj['height'] = '%.2f' % (
+             height_seconds / CalendarEventInstance.SECONDS_PER_EM
+        )
+
+        return obj
 
 
 class CalendarEvent(models.Model):
@@ -381,8 +458,12 @@ class CalendarEvent(models.Model):
         recurrences.dtstart = self.start
 
         for x in recurrences.between(from_dt, to):
-            result.append([self.start, self.start + duration,
-                           self.availability])
+            result.append(CalendarEventInstance(
+                self.start,
+                self.start + duration,
+                available=self.availability,
+                source=self
+            ))
 
         return result
 
@@ -451,7 +532,7 @@ class Resource(models.Model):
         "OrganizationalUnit",
         verbose_name=_(u"Ressourcens enhed")
     )
-    calendar = models.ForeignKey(
+    calendar = models.OneToOneField(
         Calendar,
         blank=True,
         null=True,
@@ -463,6 +544,19 @@ class Resource(models.Model):
 
     def can_delete(self):
         return True
+
+    def booked_eventtimes(self, dt_from=None, dt_to=None):
+        qs = EventTime.objects.filter(
+            visit__resources=self
+        ).exclude(
+            visit__workflow_status=Visit.WORKFLOW_STATUS_CANCELLED
+        )
+        if dt_from:
+            qs = qs.filter(end__gt=dt_from)
+        if dt_to:
+            qs = qs.filter(start__lt=dt_to)
+
+        return qs
 
     @classmethod
     def subclasses(cls):

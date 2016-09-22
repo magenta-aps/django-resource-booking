@@ -793,6 +793,7 @@ class CalendarView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         pk = kwargs['pk']
         resource = Resource.objects.get(pk=pk)
+        calendar = resource.calendar
 
         input_month = self.request.GET.get("month")
         if input_month and len(input_month) == 6:
@@ -824,25 +825,56 @@ class CalendarView(LoginRequiredMixin, TemplateView):
                 days=7 - end_date.isoweekday()
             )
 
+        events_by_date = {}
+
         current_date = start_date
         week = []
         weeks = []
         while current_date <= end_date:
+            events = []
+
             week.append({
                 'date': current_date,
-                'events': []
+                'events': events
             })
+
+            events_by_date[current_date.isoformat()] = events
+
             if len(week) == 7:
                 weeks.append(week)
                 week = []
+
             current_date = current_date + datetime.timedelta(days=1)
+
+        start_dt = timezone.make_aware(
+            timezone.datetime.combine(start_date, datetime.time())
+        )
+        end_dt = timezone.make_aware(
+            timezone.datetime.combine(end_date, datetime.time())
+        )
+
+        available = calendar.available_list(start_dt, end_dt)
+        unavailable = calendar.unavailable_list(start_dt, end_dt)
+
+        for x in available + unavailable:
+            date = x.start.date()
+            # Add event to all the days it spans
+            for y in range(0, (x.end - x.start).days + 1):
+                print date
+                events_by_date[date.isoformat()].append(x.day_marker(date))
+                date = date + datetime.timedelta(days=1)
+
+        print weeks
 
         return super(CalendarView, self).get_context_data(
             resource=resource,
+            calendar=calendar,
             month=first_of_the_month,
             next_month=first_of_the_month + datetime.timedelta(days=31),
             prev_month=first_of_the_month - datetime.timedelta(days=1),
             calendar_weeks=weeks,
+            available=available,
+            unavailable=unavailable,
             **kwargs
         )
 

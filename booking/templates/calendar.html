@@ -6,6 +6,22 @@
 {% block htmltitle %} - {% trans "Kalender" %}{% endblock %}
 
 {% block head %}
+<style type="text/css">
+    table.ressource-kalender div.marker-container {
+        height: 12em;
+        position: relative;
+    }
+    table.ressource-kalender div.marker {
+        position: absolute;
+        width: 100%;
+    }
+    table.ressource-kalender div.marker.available {
+        background-color: green;
+    }
+    table.ressource-kalender div.marker.unavailable {
+        background-color: red;
+    }
+</style>
 {% endblock %}
 
 
@@ -70,8 +86,12 @@
                         <td>
                             {{ day.date.day }}.
                             <div class="marker-container">
-                                <div class="marker" style="top: 1em; height: 7.5em; background-color: green;">&nbsp;</div>
-                                <div class="marker" style="top: 5em; height: 2.25em; background-color: red;">&nbsp;</div>
+                                {% for marker in day.events %}
+                                <div class="marker {{ marker.available_class }}" style="top: {{ marker.top_offset }}em; height: {{ marker.height }}em;">
+                                    {{ marker.start }}
+                                </div>
+                                {% endfor %}
+                                <!--div class="marker" style="top: 5em; height: 2.25em; background-color: red;">&nbsp;</div-->
                             </div>
                         </td>
                         {% endfor%}
