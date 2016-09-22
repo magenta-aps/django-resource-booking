@@ -3384,7 +3384,6 @@ class Booking(models.Model):
                     'product': product,
                     'booker': self.booker,
                     'besoeg': self.visit,
-                    'eventtime': self.eventtime
                 },
                 list(recipients),
                 self.visit,
