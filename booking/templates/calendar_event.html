@@ -24,12 +24,10 @@
             <div class="col-sm-6">
                 <label for="id_start_date">Startdato:</label>
                 <input class="form-control input-sm datepicker" id="id_start_date" name="start_date" type="text">
-                <input name="start" type="hidden" />
             </div>
             <div class="col-sm-6">
                 <label for="id_end_date">Slutdato:</label>
                 <input class="form-control input-sm datepicker" id="id_end_date" name="end_date" type="text">
-                <input name="end" type="hidden" />
             </div>
         </div>
     </div>
@@ -55,6 +53,10 @@
     <div class="container">
         <div class="row">
             <input id="time-slider" type="text" />
+            <input id="start_time" name="start_time" type="hidden" />
+            <input id="end_time" name="end_time" type="hidden" />
+            <input id="start" name="start" type="hidden" />
+            <input id="end" name="end" type="hidden" />
         </div>
     </div>
 
@@ -64,10 +66,28 @@
 {% endblock %}
 
 {% block extra_scripts %}
-    {% include 'common/resources/datepicker_script.html' %}
     <script type="text/javascript">recurrence.language_code ='da';new recurrence.widget.Widget('id_recurrences', {});</script>
     <script type="text/javascript" src="{% static 'js/bootstrap-slider.js' %}"></script>
+    <script type="text/javascript" src="{% static 'thirdparty/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'thirdparty/bootstrap-datepicker/dist/locales/bootstrap-datepicker.da.min.js' %}"></script>
+
     <script type="text/javascript">
+
+    $(function(){
+        $('input.datepicker').each(function() {
+            var options = {
+                language: 'da',
+                format: 'dd-mm-yyyy',
+                weekStart: 1,
+                calendarWeeks: true,
+                todayHighlight: true,
+                clearBtn: true,
+                autoclose: true
+            };
+            $(this).datepicker(options);
+            $(this).datepicker('setDate', new Date());
+        });
+    });
 
     var MINUTES_PER_STEP = 5,
         STEPS_PER_HOUR = 60 / MINUTES_PER_STEP,
@@ -92,10 +112,6 @@
             return zero_pad(hrs) + ":" + zero_pad(mins);
         }
 
-        <!--function update_timestamps() {-->
-            <!--var-->
-        <!--}-->
-
         $('#time-slider').slider({
             min: 0,
             max: STEPS_IN_DAY,
@@ -103,8 +119,12 @@
             ticks: DEFAULT_TICKS,
             ticks_labels: DEFAULT_LABELS,
             formatter: function(values) {
-                // update values
-                return display_time_value(values[0]) + ' - ' + display_time_value(values[1]);
+                // workaround: sometimes values is not an array...
+                if( Object.prototype.toString.call( values ) === '[object Array]' ) {
+                    $('#start_time').val($('#id_start_date').val() + ' ' + display_time_value(values[0]));
+                    $('#end_time').val($('#id_end_date').val() + ' ' + display_time_value(values[1]));
+                    return display_time_value(values[0]) + ' - ' + display_time_value(values[1]);
+                }
             }
         });
 

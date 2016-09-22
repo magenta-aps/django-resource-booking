@@ -633,7 +633,7 @@ class CalendarView(LoginRequiredMixin, TemplateView):
         )
 
 
-class CalendarEventView(LoginRequiredMixin, TemplateView):
+class CalendarEventView(LoginRequiredMixin, CreateView):
     template_name = 'calendar_event.html'
     form_class = CalendarEventForm
 
@@ -647,4 +647,9 @@ class CalendarEventView(LoginRequiredMixin, TemplateView):
     #     )
 
     def post(self, request, *args, **kwargs):
-        return
+        form = self.get_form()
+        if form.is_valid():
+            pass
+        return self.render_to_response(
+            self.get_context_data(form=form)
+        )
