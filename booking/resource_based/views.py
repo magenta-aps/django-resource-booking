@@ -8,7 +8,8 @@ from django.views.generic import TemplateView, ListView, DetailView
 from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic.edit import FormView, DeleteView
 from booking.models import OrganizationalUnit, Product
-from booking.resource_based.forms import ResourceTypeForm, EditResourceForm
+from booking.resource_based.forms import ResourceTypeForm, EditResourceForm, \
+    CalendarEventForm
 from booking.resource_based.forms import ResourcePoolTypeForm
 from booking.resource_based.forms import EditResourcePoolForm
 from booking.resource_based.forms import EditResourceRequirementForm
@@ -19,7 +20,8 @@ from booking.resource_based.models import TeacherResource, HostResource
 from booking.resource_based.models import VehicleResource
 from booking.resource_based.models import ResourcePool
 from booking.resource_based.models import ResourceRequirement
-from booking.views import BackMixin, BreadcrumbMixin
+from booking.views import BackMixin, BreadcrumbMixin, LoginRequiredMixin, \
+    RoleRequiredMixin
 from itertools import chain
 
 import booking.models as booking_models
@@ -572,10 +574,12 @@ class VisitResourceEditView(FormView):
         return reverse('visit-view', args=[self.visit.id])
 
 
-class CalendarView(TemplateView):
+class CalendarView(LoginRequiredMixin, TemplateView):
     template_name = 'calendar.html'
 
     def get_context_data(self, **kwargs):
+        pk = kwargs['pk']
+        resource = Resource.objects.get(pk=pk)
 
         input_month = self.request.GET.get("month")
         if input_month and len(input_month) == 6:
@@ -621,9 +625,27 @@ class CalendarView(TemplateView):
             current_date = current_date + datetime.timedelta(days=1)
 
         return super(CalendarView, self).get_context_data(
+            resource=resource,
             month=first_of_the_month,
             next_month=first_of_the_month + datetime.timedelta(days=31),
             prev_month=first_of_the_month - datetime.timedelta(days=1),
             calendar_weeks=weeks,
             **kwargs
         )
+
+
+class CalendarEventView(LoginRequiredMixin, TemplateView):
+    template_name = 'calendar_event.html'
+    form_class = CalendarEventForm
+
+    # def get_context_data(self, **kwargs):
+    #     pk = kwargs['pk']
+    #     resource = Resource.objects.get(pk=pk)
+    #     calendar = resource.calendar
+    #     return super(CalendarEventView, self).get_context_data(
+    #         calendar=calendar,
+    #         **kwargs
+    #     )
+
+    def post(self, request, *args, **kwargs):
+        return

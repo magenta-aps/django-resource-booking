@@ -20,7 +20,7 @@
     <div class="row">
         <div class="col-md-12">
             <p class="pull-right">
-                <a href="ressourcer-4.html" role="button" class="btn btn-primary">Gå til ressource</a>
+                <a href="{% url 'resource-view' resource.id %}" role="button" class="btn btn-primary">Gå til ressource</a>
             </p>
             <p>
                 <input type="checkbox" checked="checked"> <label>Brug kalender til at styre denne ressource</label>
@@ -34,7 +34,7 @@
                 <li>Sidste fredag i hver måned fra 13-15 <a href=""><span class="glyphicon glyphicon-remove"></span></a></li>
             </ul>
             <p>
-                <a href="ressourcer-6.html" role="button" class="btn btn-primary btn-xs">Opret ny regel</a>
+                <a href="{% url 'calendar-event' resource.id %}" role="button" class="btn btn-primary btn-xs">Opret ny regel</a>
             </p>
             <h2>Regler for utilgængelighed</h2>
             <ul>
@@ -42,7 +42,7 @@
                 <li>Ferie <a href=""><span class="glyphicon glyphicon-remove"></span></a></li>
             </ul>
             <p>
-                <a href="ressourcer-6.html" role="button" class="btn btn-primary btn-xs">Opret ny regel</a>
+                <a href="{% url 'calendar-event' resource.id %}" role="button" class="btn btn-primary btn-xs">Opret ny regel</a>
             </p>
             <table class="ressource-kalender table table-bordered table-striped">
                 <thead>
