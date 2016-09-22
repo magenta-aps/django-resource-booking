@@ -411,7 +411,7 @@ class CalendarEventInstance(object):
         )
         height_seconds = (obj['end'] - obj['start']).total_seconds()
         obj['height'] = '%.2f' % (
-             height_seconds / CalendarEventInstance.SECONDS_PER_EM
+            height_seconds / CalendarEventInstance.SECONDS_PER_EM
         )
 
         return obj
