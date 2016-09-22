@@ -169,6 +169,10 @@
                                                         {% endif %}
                                                     </a>
                                                 </li>
+                                            {% else %}
+                                                <li >
+                                                    <a href="{{ eventtime.visit_link }}">Besøg #{{eventtime.visit.pk}} (uden tidspunkt)</a>
+                                                </li>
                                             {% endif %}
                                         {% endfor %}
                                     {% else %}
