@@ -7,6 +7,7 @@ from booking.models import TeacherResource, HostResource, VehicleResource
 from booking.models import ResourcePool
 from booking.models import ResourceRequirement
 from booking.models import VisitResource
+from booking.resource_based.models import CalendarEvent
 from django import forms
 from django.forms import CheckboxSelectMultiple, NumberInput
 from django.forms import formset_factory, BaseFormSet
@@ -311,6 +312,19 @@ class EditVisitResourceFormset(BaseFormSet):
         for form in self.forms:
             form.save()
 
+
+class CalendarEventForm(forms.ModelForm):
+    class Meta:
+        model = CalendarEvent
+        fields = ('start', 'end', 'availability', 'recurrences')
+        # widgets = {
+        #     'start': TextInput(attrs={
+        #         'class': 'form-control input-sm datepicker',
+        #     }),
+        #     'end': TextInput(attrs={
+        #         'class': 'form-control input-sm datepicker',
+        #     }),
+        # }
 
 EditVisitResourcesForm = formset_factory(
     EditVisitResourceForm,

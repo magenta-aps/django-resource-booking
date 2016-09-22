@@ -1,0 +1,112 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load booking_tags %}
+
+{% block htmltitle %} - {% trans "Kalender-regel" %}{% endblock %}
+
+{% block head %}
+    {% include 'common/resources/datepicker_style.html' %}
+    <link href="{% static 'css/bootstrap-slider.css' %}" type="text/css" media="all" rel="stylesheet"  />
+    <link href="{% static 'recurrence/css/recurrence.css' %}" type="text/css" media="all" rel="stylesheet" />
+    <script type="text/javascript" src="{% static '/da/jsi18n/' %}"></script>
+    <script type="text/javascript" src="{% static 'recurrence/js/recurrence.js' %}"></script>
+    <script type="text/javascript" src="{% static 'recurrence/js/recurrence-widget.js' %}"></script>
+{% endblock %}
+
+
+{% block content %}
+<form method="POST" class="post-form">
+    {% csrf_token %}
+    {{ form.media }}
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-6">
+                <label for="id_start_date">Startdato:</label>
+                <input class="form-control input-sm datepicker" id="id_start_date" name="start_date" type="text">
+                <input name="start" type="hidden" />
+            </div>
+            <div class="col-sm-6">
+                <label for="id_end_date">Slutdato:</label>
+                <input class="form-control input-sm datepicker" id="id_end_date" name="end_date" type="text">
+                <input name="end" type="hidden" />
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="row">
+
+            <label for="id_availability">Tilgængelighed:</label>
+            <select id="id_availability" name="availability">
+                <option value="0" selected="selected">Tilgængelig</option>
+                <option value="1">Utilgængelig</option>
+            </select>
+        </div>
+    </div>
+    <div class="container">
+        <div class="row">
+            <label for="id_recurrences">Gentagelser:</label>
+            <div class="recurrence-widget">
+                <div class="panels"></div>
+            </div>
+            <textarea class="recurrence-widget" cols="40" id="id_recurrences" name="recurrences" rows="10" style="display: none;"></textarea>
+        </div>
+    </div>
+    <div class="container">
+        <div class="row">
+            <input id="time-slider" type="text" />
+        </div>
+    </div>
+
+    <button type="submit">Submit</button>
+
+</form>
+{% endblock %}
+
+{% block extra_scripts %}
+    {% include 'common/resources/datepicker_script.html' %}
+    <script type="text/javascript">recurrence.language_code ='da';new recurrence.widget.Widget('id_recurrences', {});</script>
+    <script type="text/javascript" src="{% static 'js/bootstrap-slider.js' %}"></script>
+    <script type="text/javascript">
+
+    var MINUTES_PER_STEP = 5,
+        STEPS_PER_HOUR = 60 / MINUTES_PER_STEP,
+        STEPS_IN_DAY = 24 * STEPS_PER_HOUR,
+        START_AT_0800 = STEPS_PER_HOUR * 8,
+        END_AT_1600 = STEPS_PER_HOUR * 16,
+        DEFAULT_LABELS = ["00:00", "24:00"],
+        DEFAULT_TICKS = [0, STEPS_IN_DAY]
+        ;
+
+        function zero_pad(int_val) {
+            if(int_val < 10)
+                return "0" + int_val;
+            else
+                return int_val;
+        }
+
+        function display_time_value(val) {
+            var hrs = Math.floor(val / STEPS_PER_HOUR),
+                mins = (val % STEPS_PER_HOUR) * MINUTES_PER_STEP;
+
+            return zero_pad(hrs) + ":" + zero_pad(mins);
+        }
+
+        <!--function update_timestamps() {-->
+            <!--var-->
+        <!--}-->
+
+        $('#time-slider').slider({
+            min: 0,
+            max: STEPS_IN_DAY,
+            value: [START_AT_0800, END_AT_1600],
+            ticks: DEFAULT_TICKS,
+            ticks_labels: DEFAULT_LABELS,
+            formatter: function(values) {
+                // update values
+                return display_time_value(values[0]) + ' - ' + display_time_value(values[1]);
+            }
+        });
+
+    </script>
+{% endblock %}

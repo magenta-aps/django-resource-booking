@@ -38,6 +38,7 @@ from booking.views import VisitDetailView
 from booking.views import VisitCustomListView
 from booking.views import EvaluationOverviewView
 
+from booking.resource_based.views import CalendarView, CalendarEventView
 from booking.resource_based.views import ResourceCreateView, ResourceDetailView
 from booking.resource_based.views import ResourceListView, ResourceUpdateView
 from booking.resource_based.views import ResourceDeleteView
@@ -263,6 +264,12 @@ urlpatterns = patterns(
     url(r'^resource/(?P<pk>[0-9]+)/?$',
         ResourceDetailView.as_view(),
         name='resource-view'),
+    url(r'^resource/(?P<pk>[0-9]+)/calendar/?$',
+        CalendarView.as_view(),
+        name='calendar'),
+    url(r'^resource/(?P<pk>[0-9]+)/calendar/calendar-event/?$',
+        CalendarEventView.as_view(),
+        name='calendar-event'),
     url(r'^resource/?$',
         ResourceListView.as_view(),
         name='resource-list'),

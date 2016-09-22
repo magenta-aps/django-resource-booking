@@ -329,12 +329,62 @@ class EventTime(models.Model):
 
 
 class Calendar(models.Model):
-    available_list = RecurrenceField(
-        verbose_name=_(u"Tilgængelige tider")
+
+    def available_list(self, from_dt, to):
+        result = []
+        for x in self.calendarevent_set.filter(
+            availability=CalendarEvent.AVAILABLE
+        ):
+            result.extend(x.between(from_dt, to))
+        result.sort(key=lambda x: x[0])
+        return result
+
+
+class CalendarEvent(models.Model):
+
+    calendar = models.ForeignKey(
+        Calendar,
+        null=False,
+        blank=False,
+        verbose_name=_('Kalender')
+
     )
-    unavailable_list = RecurrenceField(
-        verbose_name=_(u"Utilgængelige tider")
+
+    AVAILABLE = 0
+    NOT_AVAILABLE = 1
+
+    availability_choices = (
+        (AVAILABLE, _(u"Tilgængelig")),
+        (NOT_AVAILABLE, _(u"Utilgængelig")),
     )
+    availability = models.IntegerField(
+        choices=availability_choices,
+        verbose_name=_(u'Tilgængelighed'),
+        default=AVAILABLE,
+        blank=False,
+    )
+    start = models.DateTimeField(
+        verbose_name=_(u"Starttidspunkt")
+    )
+    end = models.DateTimeField(
+        verbose_name=_(u"Sluttidspunkt"),
+        blank=True
+    )
+    recurrences = RecurrenceField(
+        verbose_name=_(u"Gentagelser"),
+    )
+
+    def between(self, from_dt, to):
+        result = []
+        duration = self.end - self.start
+        recurrences = self.recurrences
+        recurrences.dtstart = self.start
+
+        for x in recurrences.between(from_dt, to):
+            result.append([self.start, self.start + duration,
+                           self.availability])
+
+        return result
 
 
 class ResourceType(models.Model):

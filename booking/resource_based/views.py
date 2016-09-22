@@ -1,13 +1,16 @@
 # encoding: utf-8
+import datetime
 from django.core.urlresolvers import reverse, reverse_lazy
 from django.http import Http404
 from django.shortcuts import redirect
+from django.utils import timezone
 from django.utils.translation import ugettext as _
 from django.views.generic import TemplateView, ListView, DetailView
 from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic.edit import FormView, DeleteView
 from booking.models import OrganizationalUnit, Product
-from booking.resource_based.forms import ResourceTypeForm, EditResourceForm
+from booking.resource_based.forms import ResourceTypeForm, EditResourceForm, \
+    CalendarEventForm
 from booking.resource_based.forms import ResourcePoolTypeForm
 from booking.resource_based.forms import EditResourcePoolForm
 from booking.resource_based.forms import EditResourceRequirementForm
@@ -18,7 +21,7 @@ from booking.resource_based.models import TeacherResource, HostResource
 from booking.resource_based.models import VehicleResource
 from booking.resource_based.models import ResourcePool
 from booking.resource_based.models import ResourceRequirement
-from booking.views import BackMixin, BreadcrumbMixin
+from booking.views import BackMixin, BreadcrumbMixin, LoginRequiredMixin
 from itertools import chain
 
 import booking.models as booking_models
@@ -782,3 +785,80 @@ class VisitResourceEditView(FormView):
 
     def get_success_url(self):
         return reverse('visit-view', args=[self.visit.id])
+
+
+class CalendarView(LoginRequiredMixin, TemplateView):
+    template_name = 'calendar.html'
+
+    def get_context_data(self, **kwargs):
+        pk = kwargs['pk']
+        resource = Resource.objects.get(pk=pk)
+
+        input_month = self.request.GET.get("month")
+        if input_month and len(input_month) == 6:
+            start_year = int(input_month[:4])
+            start_month = int(input_month[4:])
+        else:
+            now = timezone.now()
+            start_year = now.year
+            start_month = now.month
+
+        first_of_the_month = datetime.date(start_year, start_month, 1)
+
+        start_date = first_of_the_month
+
+        # Make start date the monday before the first in the month
+        if start_date.isoweekday() != 1:
+            start_date = start_date - datetime.timedelta(
+                days=start_date.isoweekday() - 1
+            )
+
+        # Make end date in next month
+        end_date = first_of_the_month + datetime.timedelta(31)
+        # And subtract the number of days within that month so we get last
+        # day of current month
+        end_date = end_date - datetime.timedelta(days=end_date.day)
+        # And then add days to get the next sunday
+        if end_date.isoweekday() != 7:
+            end_date = end_date + datetime.timedelta(
+                days=7 - end_date.isoweekday()
+            )
+
+        current_date = start_date
+        week = []
+        weeks = []
+        while current_date <= end_date:
+            week.append({
+                'date': current_date,
+                'events': []
+            })
+            if len(week) == 7:
+                weeks.append(week)
+                week = []
+            current_date = current_date + datetime.timedelta(days=1)
+
+        return super(CalendarView, self).get_context_data(
+            resource=resource,
+            month=first_of_the_month,
+            next_month=first_of_the_month + datetime.timedelta(days=31),
+            prev_month=first_of_the_month - datetime.timedelta(days=1),
+            calendar_weeks=weeks,
+            **kwargs
+        )
+
+
+class CalendarEventView(LoginRequiredMixin, TemplateView):
+    template_name = 'calendar_event.html'
+    form_class = CalendarEventForm
+
+    # def get_context_data(self, **kwargs):
+    #     pk = kwargs['pk']
+    #     resource = Resource.objects.get(pk=pk)
+    #     calendar = resource.calendar
+    #     return super(CalendarEventView, self).get_context_data(
+    #         calendar=calendar,
+    #         **kwargs
+    #     )
+
+    def post(self, request, *args, **kwargs):
+        return
