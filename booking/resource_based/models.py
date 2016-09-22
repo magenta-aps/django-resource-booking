@@ -119,7 +119,7 @@ class EventTime(models.Model):
         # If the product specifies no rooms are needed, set this on the
         # visit.
         if not self.product.rooms_needed:
-            visit.room_status = Visit.STATUS_NOT_NEEDED
+            visit.room_status = visit_model.STATUS_NOT_NEEDED
 
         visit.save()
 

@@ -73,6 +73,8 @@ from booking.forms import AcceptBookingForm
 from booking.utils import full_email, get_model_field_map
 from booking.utils import get_related_content_types
 
+
+import booking.models as booking_models
 import re
 import urls
 
@@ -2234,14 +2236,28 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
             else:
                 booking = self.object
 
-            if not booking.eventtime:
+            eventtime_pk = forms['bookingform'].cleaned_data.get(
+                'eventtime', ''
+            )
+            if eventtime_pk:
+                eventtime = self.product.eventtime_set.filter(
+                    pk=eventtime_pk
+                ).first()
+            else:
+                eventtime = None
+
+            if not eventtime:
                 # Make a non-bookable time with no time specified
-                booking.eventtime = EventTime(
+                eventtime = booking_models.EventTime(
                     product=self.product,
                     bookable=False,
                 )
-            if not booking.eventtime.visit:
-                booking.eventtime.make_visit()
+
+            # If the chosen eventtime does not have a visit, create it now
+            if not eventtime.visit:
+                eventtime.make_visit()
+
+            booking.visit = eventtime.visit
 
             available_seats = booking.visit.available_seats
 
