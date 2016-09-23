@@ -866,7 +866,7 @@ class CalendarView(LoginRequiredMixin, TemplateView):
         print weeks
 
         return super(CalendarView, self).get_context_data(
-            resource=resource,  
+            resource=resource,
             calendar=calendar,
             month=first_of_the_month,
             next_month=first_of_the_month + datetime.timedelta(days=31),
@@ -917,4 +917,3 @@ class CalendarEventDeleteView(DeleteView):
     def get_success_url(self):
         resource_pk = self.object.calendar.resource.pk
         return '/resource/%d/calendar/' % resource_pk
-

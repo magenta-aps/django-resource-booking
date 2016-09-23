@@ -7,7 +7,6 @@ from booking.models import TeacherResource, HostResource, VehicleResource
 from booking.models import ResourcePool
 from booking.models import ResourceRequirement
 from booking.models import VisitResource
-from booking.resource_based.models import CalendarEvent
 from django import forms
 from django.forms import CheckboxSelectMultiple, NumberInput
 from django.forms import formset_factory, BaseFormSet
