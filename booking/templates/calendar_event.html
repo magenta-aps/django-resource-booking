@@ -19,6 +19,8 @@
 <form method="POST" class="post-form">
     {% csrf_token %}
     {{ form.media }}
+    {{ form.errors }}
+    {{ form.calendar.as_hidden }}
     <div class="container">
         <div class="row">
             <div class="col-sm-6">
@@ -55,8 +57,8 @@
             <input id="time-slider" type="text" />
             <input id="start_time" name="start_time" type="hidden" />
             <input id="end_time" name="end_time" type="hidden" />
-            <input id="start" name="start" type="hidden" />
-            <input id="end" name="end" type="hidden" />
+            {{ form.start.as_hidden }}
+            {{ form.end.as_hidden }}
         </div>
     </div>
 
@@ -77,7 +79,7 @@
         $('input.datepicker').each(function() {
             var options = {
                 language: 'da',
-                format: 'dd-mm-yyyy',
+                format: 'dd.mm.yyyy',
                 weekStart: 1,
                 calendarWeeks: true,
                 todayHighlight: true,
@@ -112,6 +114,13 @@
             return zero_pad(hrs) + ":" + zero_pad(mins);
         }
 
+        var start_time, end_time;
+
+        function update_dates() {
+            $('#id_start').val($('#id_start_date').val() + ' ' + start_time + ':00');
+            $('#id_end').val($('#id_end_date').val() + ' ' + end_time + ':00');
+        }
+
         $('#time-slider').slider({
             min: 0,
             max: STEPS_IN_DAY,
@@ -121,12 +130,16 @@
             formatter: function(values) {
                 // workaround: sometimes values is not an array...
                 if( Object.prototype.toString.call( values ) === '[object Array]' ) {
-                    $('#start_time').val($('#id_start_date').val() + ' ' + display_time_value(values[0]));
-                    $('#end_time').val($('#id_end_date').val() + ' ' + display_time_value(values[1]));
+                    start_time = display_time_value(values[0]);
+                    end_time = display_time_value(values[1]);
+                    update_dates();
                     return display_time_value(values[0]) + ' - ' + display_time_value(values[1]);
                 }
             }
         });
+
+        $('#id_start_date').change(update_dates);
+        $('#id_end_date').change(update_dates);
 
     </script>
 {% endblock %}

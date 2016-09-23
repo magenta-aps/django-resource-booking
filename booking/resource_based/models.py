@@ -419,6 +419,12 @@ class CalendarEventInstance(object):
 
 class CalendarEvent(models.Model):
 
+    title = models.CharField(
+        max_length=60,
+        blank=False,
+        verbose_name=_(u'Titel')
+    )
+
     calendar = models.ForeignKey(
         Calendar,
         null=False,
@@ -466,6 +472,60 @@ class CalendarEvent(models.Model):
             ))
 
         return result
+
+    @property
+    def naive_start(self):
+        if self.start:
+            return timezone.make_naive(self.start)
+        else:
+            return self.start
+
+    @property
+    def naive_end(self):
+        if self.end:
+            return timezone.make_naive(self.end)
+        else:
+            return self.end
+
+    @property
+    def l10n_start(self):
+        if self.start:
+            return unicode(
+                formats.date_format(self.naive_start, "SHORT_DATETIME_FORMAT")
+            )
+        else:
+            return ''
+
+    @property
+    def l10n_end(self):
+        if self.end:
+            return unicode(
+                formats.date_format(self.naive_end, "SHORT_DATETIME_FORMAT")
+            )
+        else:
+            return ''
+
+    @property
+    def l10n_end_time(self):
+        if self.end:
+            return unicode(formats.time_format(self.naive_end))
+        else:
+            return ''
+
+    @property
+    def interval_display(self):
+        if self.end:
+            if self.naive_start.date() != self.naive_end.date():
+                return " - ".join([self.l10n_start, self.l10n_end])
+            else:
+                return " - ".join([self.l10n_start, self.l10n_end_time])
+        else:
+            if self.start:
+                return unicode(
+                    formats.date_format(self.naive_start, "SHORT_DATE_FORMAT")
+                )
+            else:
+                return unicode(_(u"<Intet tidspunkt angivet>"))
 
 
 class ResourceType(models.Model):

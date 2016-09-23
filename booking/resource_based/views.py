@@ -9,8 +9,7 @@ from django.views.generic import TemplateView, ListView, DetailView
 from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic.edit import FormView, DeleteView
 from booking.models import OrganizationalUnit, Product
-from booking.resource_based.forms import ResourceTypeForm, EditResourceForm, \
-    CalendarEventForm
+from booking.resource_based.forms import ResourceTypeForm, EditResourceForm
 from booking.resource_based.forms import ResourcePoolTypeForm
 from booking.resource_based.forms import EditResourcePoolForm
 from booking.resource_based.forms import EditResourceRequirementForm
@@ -867,35 +866,55 @@ class CalendarView(LoginRequiredMixin, TemplateView):
         print weeks
 
         return super(CalendarView, self).get_context_data(
-            resource=resource,
+            resource=resource,  
             calendar=calendar,
             month=first_of_the_month,
             next_month=first_of_the_month + datetime.timedelta(days=31),
             prev_month=first_of_the_month - datetime.timedelta(days=1),
             calendar_weeks=weeks,
-            available=available,
-            unavailable=unavailable,
+            available=calendar.calendarevent_set.filter(
+                availability=booking_models.CalendarEvent.AVAILABLE
+            ),
+            unavailable=calendar.calendarevent_set.filter(
+                availability=booking_models.CalendarEvent.NOT_AVAILABLE
+            ),
             **kwargs
         )
 
 
-class CalendarEventView(LoginRequiredMixin, CreateView):
+class CalendarEventView(CreateView):
+    model = booking_models.CalendarEvent
     template_name = 'calendar_event.html'
-    form_class = CalendarEventForm
 
-    # def get_context_data(self, **kwargs):
-    #     pk = kwargs['pk']
-    #     resource = Resource.objects.get(pk=pk)
-    #     calendar = resource.calendar
-    #     return super(CalendarEventView, self).get_context_data(
-    #         calendar=calendar,
-    #         **kwargs
-    #     )
+    fields = ('start', 'end', 'recurrences', 'availability', 'calendar')
 
-    def post(self, request, *args, **kwargs):
-        form = self.get_form()
-        if form.is_valid():
-            pass
-        return self.render_to_response(
-            self.get_context_data(form=form)
+    def get_form(self, form_class=None):
+        if form_class is None:
+            form_class = self.get_form_class()
+        kwargs = self.get_form_kwargs()
+        resource_pk = self.kwargs.get('pk', -1)
+        try:
+            calendar = booking_models.Calendar.objects.get(pk=resource_pk)
+        except:
+            raise Http404
+        kwargs['initial']['calendar'] = calendar.pk
+        form = form_class(**kwargs)
+        return form
+
+    def get_context_data(self, **kwargs):
+        return super(CalendarEventView, self).get_context_data(
+            **kwargs
         )
+
+    def get_success_url(self):
+        return reverse('calendar', args=[self.kwargs.get('pk')])
+
+
+class CalendarEventDeleteView(DeleteView):
+    model = booking_models.CalendarEvent
+    template_name = 'calendar_event_confirm_delete.html'
+
+    def get_success_url(self):
+        resource_pk = self.object.calendar.resource.pk
+        return '/resource/%d/calendar/' % resource_pk
+

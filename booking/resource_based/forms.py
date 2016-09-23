@@ -313,19 +313,6 @@ class EditVisitResourceFormset(BaseFormSet):
             form.save()
 
 
-class CalendarEventForm(forms.ModelForm):
-    class Meta:
-        model = CalendarEvent
-        fields = ('start', 'end', 'availability', 'recurrences')
-        # widgets = {
-        #     'start': TextInput(attrs={
-        #         'class': 'form-control input-sm datepicker',
-        #     }),
-        #     'end': TextInput(attrs={
-        #         'class': 'form-control input-sm datepicker',
-        #     }),
-        # }
-
 EditVisitResourcesForm = formset_factory(
     EditVisitResourceForm,
     formset=EditVisitResourceFormset,

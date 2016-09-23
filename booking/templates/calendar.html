@@ -38,25 +38,22 @@
             <p class="pull-right">
                 <a href="{% url 'resource-view' resource.id %}" role="button" class="btn btn-primary">Gå til ressource</a>
             </p>
-            <p>
-                <input type="checkbox" checked="checked"> <label>Brug kalender til at styre denne ressource</label>
-            </p>
             <h2>Regler for tilgængelighed</h2>
             <p>
                 (Ingen regler betyder altid tilgængelig)
             </p>
             <ul>
-                <li>Tirsdag og Torsdag hver uge fra 09:00-15:30 <a href=""><span class="glyphicon glyphicon-remove"></span></a></li>
-                <li>Sidste fredag i hver måned fra 13-15 <a href=""><span class="glyphicon glyphicon-remove"></span></a></li>
+                {% for event in available %}
+                    <li>{{ event.title }} {{ event.interval_display }}<a href="{% url 'calendar-event-delete' event.pk %}"><span class="glyphicon glyphicon-remove"></span></a></li>
+                {% endfor %}
             </ul>
-            <p>
-                <a href="{% url 'calendar-event' resource.id %}" role="button" class="btn btn-primary btn-xs">Opret ny regel</a>
-            </p>
             <h2>Regler for utilgængelighed</h2>
             <ul>
-                <li>Kursus <a href=""><span class="glyphicon glyphicon-remove"></span></a></li>
-                <li>Ferie <a href=""><span class="glyphicon glyphicon-remove"></span></a></li>
+                {% for event in unavailable %}
+                    <li>{{ event.title }} {{ event.interval_display }}<a href=""><span class="glyphicon glyphicon-remove"></span></a></li>
+                {% endfor %}
             </ul>
+            <div class="divider"></div>
             <p>
                 <a href="{% url 'calendar-event' resource.id %}" role="button" class="btn btn-primary btn-xs">Opret ny regel</a>
             </p>
