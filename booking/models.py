@@ -1681,6 +1681,10 @@ class Product(models.Model):
             self.has_bookable_visits
 
     @property
+    def is_resource_controlled(self):
+        return self.time_mode == Product.TIME_MODE_RESOURCE_CONTROLLED
+
+    @property
     def can_join_waitinglist(self):
         return self.is_type_bookable and \
             self.state == Product.ACTIVE and \
@@ -3784,6 +3788,8 @@ from booking.resource_based import models as rb_models  # noqa
 
 EventTime = rb_models.EventTime
 Calendar = rb_models.Calendar
+CalendarEvent = rb_models.CalendarEvent
+CalendarEventInstance = rb_models.CalendarEventInstance
 ResourceType = rb_models.ResourceType
 Resource = rb_models.Resource
 TeacherResource = rb_models.TeacherResource
