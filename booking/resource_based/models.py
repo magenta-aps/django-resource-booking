@@ -336,11 +336,8 @@ class Calendar(models.Model):
         for x in self.calendarevent_set.filter(
             availability=CalendarEvent.AVAILABLE
         ):
-            result.extend(x.between(from_dt, to))
-
-        result.sort(key=lambda x: x.start)
-
-        return result
+            for y in x.between(from_dt, to):
+                yield y
 
     def unavailable_list(self, from_dt, to):
         result = []
@@ -348,21 +345,43 @@ class Calendar(models.Model):
         for x in self.calendarevent_set.filter(
             availability=CalendarEvent.NOT_AVAILABLE
         ):
-            result.extend(x.between(from_dt, to))
+            for y in x.between(from_dt, to):
+                yield y
 
         # Not available on times when we are booked
         if hasattr(self, 'resource'):
             for x in self.resource.booked_eventtimes(from_dt, to):
-                result.append(CalendarEventInstance(
+                yield CalendarEventInstance(
                     x.start,
                     x.end,
                     available=False,
                     source=x
-                ))
+                )
 
-        result.sort(key=lambda x: x.start)
+    def is_available(self, from_dt, to_dt, exclude_sources=set([])):
+        # Check if availability rules match
+        available_match = False
 
-        return result
+        for x in self.available_list(from_dt, to_dt):
+            if self.source in exclude_sources:
+                continue
+
+            if x.start <= from_dt and x.end >= to_dt:
+                available_match = True
+                break
+
+        if not available_match:
+            return False
+
+        # Any blocking source that is not in exclude_sources means the
+        # resource is not available.
+        for x in self.unavailable_list(from_dt, to_dt):
+            if self.source in exclude_sources:
+                continue
+
+            return False
+
+        return True
 
 
 class CalendarEventInstance(object):
@@ -457,21 +476,46 @@ class CalendarEvent(models.Model):
         verbose_name=_(u"Gentagelser"),
     )
 
-    def between(self, from_dt, to):
-        result = []
+    @property
+    def has_recurrences(self):
+        return self.recurrences and (
+            len(self.recurrences.rrules) > 0 or
+            len(self.recurrences.rdates) > 0
+        )
+
+    def between(self, from_dt, to_dt):
         duration = self.end - self.start
         recurrences = self.recurrences
-        recurrences.dtstart = self.start
 
-        for x in recurrences.between(from_dt, to):
-            result.append(CalendarEventInstance(
+        if self.has_recurrences:
+            if not timezone.is_naive(from_dt):
+                from_dt = timezone.make_naive(from_dt)
+            if not timezone.is_naive(to_dt):
+                to_dt = timezone.make_naive(to_dt)
+
+            if timezone.is_naive(self.start):
+                naive_start = self.start
+            else:
+                naive_start = timezone.make_naive(self.start)
+
+            for x in recurrences.between(from_dt, to_dt):
+                starttime = timezone.make_aware(
+                    timezone.datetime.combine(x.date(), naive_start.time())
+                )
+
+                yield CalendarEventInstance(
+                    starttime,
+                    starttime + duration,
+                    available=(self.availability == CalendarEvent.AVAILABLE),
+                    source=self
+                )
+        else:
+            yield CalendarEventInstance(
                 self.start,
-                self.start + duration,
-                available=self.availability,
+                self.end,
+                available=(self.availability == CalendarEvent.AVAILABLE),
                 source=self
-            ))
-
-        return result
+            )
 
     @property
     def naive_start(self):
@@ -526,6 +570,17 @@ class CalendarEvent(models.Model):
                 )
             else:
                 return unicode(_(u"<Intet tidspunkt angivet>"))
+
+    def __unicode__(self):
+        return ", ".join(unicode(x) for x in [
+            self.title,
+            "%s %s%s" % (
+                self.get_availability_display().lower(),
+                self.interval_display,
+                _(" (med gentagelser)") if self.has_recurrences else ""
+            ),
+
+        ] if x)
 
 
 class ResourceType(models.Model):
@@ -596,7 +651,8 @@ class Resource(models.Model):
         Calendar,
         blank=True,
         null=True,
-        verbose_name=_(u"Ressourcens kalender")
+        verbose_name=_(u"Ressourcens kalender"),
+        on_delete=models.SET_NULL
     )
 
     def get_name(self):
@@ -678,11 +734,25 @@ class Resource(models.Model):
         return visits
 
     def available_for_visit(self, visit):
+        if self.calendar:
+            return self.calendar.is_available(
+                visit.eventtime.start,
+                visit.eventtime.end,
+                exclude_sources=set([visit])
+            )
+
         occupying_visits = self.occupied_by(
             visit.eventtime.start,
             visit.eventtime.end
         )
         return len(set(occupying_visits) - set([visit])) == 0
+
+    def make_calendar(self):
+        if not self.calendar:
+            cal = Calendar()
+            cal.save()
+            self.calendar = cal
+            self.save()
 
 
 class UserResource(Resource):
@@ -884,6 +954,11 @@ class ResourcePool(models.Model):
             for resource in self.resources.all()
         ]
 
+    def available_resources(self, from_dt, to_dt):
+        for x in self.resources.all():
+            if x.is_available(from_dt, to_dt):
+                yield x
+
 
 class ResourceRequirement(models.Model):
     product = models.ForeignKey("Product")
@@ -897,6 +972,16 @@ class ResourceRequirement(models.Model):
 
     def can_delete(self):
         return True
+
+    def can_be_fullfilled(self, from_dt, to_dt):
+        count = 0
+
+        for x in self.resource_pool.available_resources(from_dt, to_dt):
+            count = count + 1
+            if count >= self.required_amount:
+                return True
+
+        return False
 
 
 class VisitResource(models.Model):

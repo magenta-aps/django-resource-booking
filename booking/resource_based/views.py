@@ -6,6 +6,7 @@ from django.shortcuts import redirect
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 from django.views.generic import TemplateView, ListView, DetailView
+from django.views.generic import RedirectView
 from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic.edit import FormView, DeleteView
 from booking.models import OrganizationalUnit, Product
@@ -111,7 +112,6 @@ class CreateTimesFromRulesView(FormView):
         for dstr in dates:
             (start, end) = cls.parse_human_readable_interval(dstr)
             has_specific_time = True
-            print (end - start).total_seconds()
             if (end - start).total_seconds() >= 24 * 60 * 60:
                 has_specific_time = False
             d = cls(
@@ -786,13 +786,24 @@ class VisitResourceEditView(FormView):
         return reverse('visit-view', args=[self.visit.id])
 
 
-class CalendarView(LoginRequiredMixin, TemplateView):
-    template_name = 'calendar.html'
+class CalendarView(LoginRequiredMixin, DetailView):
+    template_name = 'calendar/calendar.html'
+
+    def get_object(self, queryset=None):
+        queryset = booking_models.Calendar.objects.filter(
+            resource__pk=self.kwargs['pk']
+        )
+        try:
+            # Get the single item from the filtered queryset
+            obj = queryset.get()
+        except queryset.model.DoesNotExist:
+            raise Http404(_("No %(verbose_name)s found matching the query") %
+                          {'verbose_name': queryset.model._meta.verbose_name})
+
+        return obj
 
     def get_context_data(self, **kwargs):
-        pk = kwargs['pk']
-        resource = Resource.objects.get(pk=pk)
-        calendar = resource.calendar
+        calendar = self.object
 
         input_month = self.request.GET.get("month")
         if input_month and len(input_month) == 6:
@@ -852,22 +863,19 @@ class CalendarView(LoginRequiredMixin, TemplateView):
             timezone.datetime.combine(end_date, datetime.time())
         )
 
-        available = calendar.available_list(start_dt, end_dt)
-        unavailable = calendar.unavailable_list(start_dt, end_dt)
+        available = [x for x in calendar.available_list(start_dt, end_dt)]
+        unavailable = [x for x in calendar.unavailable_list(start_dt, end_dt)]
 
         for x in available + unavailable:
             date = x.start.date()
             # Add event to all the days it spans
             for y in range(0, (x.end - x.start).days + 1):
-                print date
                 events_by_date[date.isoformat()].append(x.day_marker(date))
                 date = date + datetime.timedelta(days=1)
 
-        print weeks
-
         return super(CalendarView, self).get_context_data(
-            resource=resource,
             calendar=calendar,
+            resource=calendar.resource,
             month=first_of_the_month,
             next_month=first_of_the_month + datetime.timedelta(days=31),
             prev_month=first_of_the_month - datetime.timedelta(days=1),
@@ -882,11 +890,61 @@ class CalendarView(LoginRequiredMixin, TemplateView):
         )
 
 
+class CalendarCreateView(LoginRequiredMixin, RedirectView):
+    permanent = False
+
+    def get_redirect_url(self, *args, **kwargs):
+        queryset = booking_models.Resource.objects.filter(
+            pk=self.kwargs['pk']
+        )
+        try:
+            # Get the single item from the filtered queryset
+            resource = queryset.get()
+        except queryset.model.DoesNotExist:
+            raise Http404(_("No %(verbose_name)s found matching the query") %
+                          {'verbose_name': queryset.model._meta.verbose_name})
+
+        # Create empty calendar if one does not exist
+        print resource.calendar
+        resource.make_calendar()
+        print resource.calendar
+
+        return reverse('calendar', args=[resource.pk])
+
+
+class CalendarDeleteView(LoginRequiredMixin, DeleteView):
+    template_name = 'calendar/delete.html'
+
+    def get_object(self, queryset=None):
+        queryset = booking_models.Resource.objects.filter(
+            pk=self.kwargs['pk']
+        )
+        try:
+            # Get the single item from the filtered queryset
+            self.resource = queryset.get()
+        except queryset.model.DoesNotExist:
+            raise Http404(_("No %(verbose_name)s found matching the query") %
+                          {'verbose_name': queryset.model._meta.verbose_name})
+
+
+        return self.resource.calendar
+
+    def get_success_url(self):
+        return reverse('resource-view', args=[self.resource.pk])
+
+
 class CalendarEventView(CreateView):
     model = booking_models.CalendarEvent
-    template_name = 'calendar_event.html'
+    template_name = 'calendar/calendar_event.html'
 
-    fields = ('start', 'end', 'recurrences', 'availability', 'calendar')
+    fields = (
+        'title',
+        'start',
+        'end',
+        'recurrences',
+        'availability',
+        'calendar'
+    )
 
     def get_form(self, form_class=None):
         if form_class is None:
@@ -894,7 +952,9 @@ class CalendarEventView(CreateView):
         kwargs = self.get_form_kwargs()
         resource_pk = self.kwargs.get('pk', -1)
         try:
-            calendar = booking_models.Calendar.objects.get(pk=resource_pk)
+            calendar = booking_models.Calendar.objects.get(
+                resource__pk=resource_pk
+            )
         except:
             raise Http404
         kwargs['initial']['calendar'] = calendar.pk

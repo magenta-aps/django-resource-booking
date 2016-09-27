@@ -1,0 +1,41 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load booking_tags %}
+
+{% block htmltitle %} - {% trans 'slet kalender' %}{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+
+    {% include 'common/breadcrumbrow.html' %}
+    <div class="divider"></div>
+
+    <h1>{% trans 'Slet kalender' %}</h1>
+    <hr/>
+
+    <form id="resourceform" action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
+
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <p>
+            {% blocktrans %}
+            Hvis du sletter kalenderen vil den ressource den er tilknyttet
+            blive opfattet som altid tilgængelig. Vil du slette kalenderen?
+            {% endblocktrans %}
+        </p>
+
+        <input type="submit" role="button" class="btn btn-success" value="{% trans 'Slet kalender' %}" />
+        <a href="{% url 'calendar' view.kwargs.pk %}" role="button" class="btn btn-danger" />{% trans 'Annullér' %}</a>
+        <div class="divider"></div>
+
+    </form>
+
+{% endblock %}
+
+{% block extra_scripts %}
+    {{ form.media }}
+{% endblock %}

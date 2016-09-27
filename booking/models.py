@@ -1681,6 +1681,10 @@ class Product(models.Model):
             self.has_bookable_visits
 
     @property
+    def is_resource_controlled(self):
+        return self.time_mode == Product.TIME_MODE_RESOURCE_CONTROLLED
+
+    @property
     def can_join_waitinglist(self):
         return self.is_type_bookable and \
             self.state == Product.ACTIVE and \

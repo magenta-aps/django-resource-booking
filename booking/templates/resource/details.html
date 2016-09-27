@@ -18,6 +18,8 @@
         <a href="{% url 'resource-edit' object.id %}?back={% url 'resource-view' object.id %}" role="button" class="btn btn-primary" role="button">{% trans 'Redigér' %}</a>
     </div>
 
+    <div class="divider"></div>
+
     <h1>{{ object.get_name }}</h1>
     <hr/>
 
@@ -43,5 +45,23 @@
             </ul>
         </dd>
     </dl>
+
+    <div class="divider"></div>
+
+    <div>
+        {% if object.calendar %}
+            <a href="{% url 'calendar' object.id %}" class="btn btn-primary" role="button">{% trans 'Rediger kalender for denne ressource' %}</a>
+        {% else %}
+            <p>
+            {% blocktrans %}
+                Denne ressource har ingen kalender tilknyttet og betragtes derfor som altid tilgængelig med mindre den bliver brugt til et besøg.
+                Hvis du ønsker at styre tilgængeligheden af ressourcen via en kalender kan du klikke på knappen for at oprette en kalender for ressourcen.
+            {% endblocktrans %}
+            </p>
+            <a href="{% url 'calendar-create' object.id %}" class="btn btn-primary" role="button">{% trans 'Opret kalender for ressourcen' %}</a>
+        {% endif %}
+    </div>
+
+    <div class="divider"></div>
 
 {% endblock %}

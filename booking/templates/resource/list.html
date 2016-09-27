@@ -59,7 +59,11 @@
                         </td>
                         <td>
                             <a href="{% url 'resource-edit' resource.id %}?back={{ request.get_full_path | urlencode }}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
-                            <a href="#" role="button" class="btn btn-primary btn-xs">{% trans 'Kalender' %}</a>
+                            {% if resource.calendar %}
+                            <a href="{% url 'calendar' resource.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Kalender' %}</a>
+                            {% else %}
+                            <a href="{% url 'calendar-create' resource.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Opret kalender' %}</a>
+                            {% endif %}
                             {% if resource.can_delete %}
                             <a href="{% url 'resource-delete' resource.id %}?back={{ request.get_full_path | urlencode }}" role="button" class="btn btn-primary btn-xs">{% trans 'Slet' %}</a>
                             {% endif %}

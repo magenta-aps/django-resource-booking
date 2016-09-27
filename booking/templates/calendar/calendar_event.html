@@ -1,0 +1,185 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load booking_tags %}
+
+{% block htmltitle %} - {% trans "Kalender-regel" %}{% endblock %}
+
+{% block head %}
+    {% include 'common/resources/datepicker_style.html' %}
+    <link href="{% static 'css/bootstrap-slider.css' %}" type="text/css" media="all" rel="stylesheet"  />
+
+    {{ form.media }}
+{% endblock %}
+
+
+{% block content %}
+    <div class="divider"></div>
+    <h1>
+        {% trans "Opret regel for kalender" %}
+    </h1>
+
+    <div class="divider"></div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <form method="POST" class="post-form">
+                {% csrf_token %}
+                {{ form.errors }}
+                {{ form.calendar.as_hidden }}
+                {{ form.start.as_hidden }}
+                {{ form.end.as_hidden }}
+
+                {% include 'common/fields/generic_field.html' with field=form.title %}
+
+                {% include 'common/fields/generic_field.html' with field=form.availability %}
+
+                <div class="row form-group">
+                    <div class="col-sm-2">
+                        <label for="id_start_date">Startdato:</label>
+                    </div>
+                    <div class="col-sm-7">
+                        <input class="form-control input-sm datepicker" id="id_start_date" name="start_date" type="text">
+                    </div>
+                    <div class="col-sm-3 with-errors">
+                    </div>
+                </div>
+
+                <div class="row form-group">
+                    <div class="col-sm-2">
+                        <label for="id_end_date">Slutdato:</label>
+                    </div>
+                    <div class="col-sm-7">
+                        <label for="id_separate_end_date">
+                            <input type="checkbox" name="separate_end_date" id="id_separate_end_date">
+                            {% trans 'Brug anden slutdato' %}
+                        </label>
+                        <input class="form-control input-sm datepicker" id="id_end_date" name="end_date" type="text" style="display: none">
+                    </div>
+                    <div class="col-sm-3 with-errors">
+                    </div>
+                </div>
+
+                <div class="row form-group">
+                    <div class="col-sm-2">
+                        <label for="id_end_date">Tidspunkt:</label>
+                    </div>
+                    <div class="col-sm-7">
+                        <input id="time-slider" type="text" style="width: 100%" />
+                    </div>
+                    <div class="col-sm-3 with-errors">
+                    </div>
+                </div>
+
+
+                {% include 'common/fields/generic_field.html' with field=form.recurrences %}
+
+                <div class="row form-group">
+                    <div class="col-sm-2">
+                    </div>
+                    <div class="col-sm-7">
+                        <button class="btn btn-success" role="button" type="submit">Opret</button>
+                        <a class="btn btn-danger" href="{% url 'calendar' view.kwargs.pk %}">Annullér</a>
+                    </div>
+                    <div class="col-sm-3 with-errors">
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    </div>
+    <div class="divider"></div>
+{% endblock %}
+
+{% block extra_scripts %}
+    <script type="text/javascript" src="{% static 'js/bootstrap-slider.js' %}"></script>
+    <script type="text/javascript" src="{% static 'thirdparty/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'thirdparty/bootstrap-datepicker/dist/locales/bootstrap-datepicker.da.min.js' %}"></script>
+
+    <script type="text/javascript">
+
+    $(function(){
+        var MINUTES_PER_STEP = 5,
+            STEPS_PER_HOUR = 60 / MINUTES_PER_STEP,
+            STEPS_IN_DAY = 24 * STEPS_PER_HOUR,
+            START_AT_0800 = STEPS_PER_HOUR * 8,
+            END_AT_1600 = STEPS_PER_HOUR * 16,
+            DEFAULT_LABELS = ["00:00", "24:00"],
+            DEFAULT_TICKS = [0, STEPS_IN_DAY]
+            ;
+
+        $('input.datepicker').each(function() {
+            var options = {
+                language: 'da',
+                format: 'dd.mm.yyyy',
+                weekStart: 1,
+                calendarWeeks: true,
+                todayHighlight: true,
+                clearBtn: true,
+                autoclose: true
+            };
+            $(this).datepicker(options);
+            $(this).datepicker('setDate', new Date());
+        });
+
+        function zero_pad(int_val) {
+            if(int_val < 10)
+                return "0" + int_val;
+            else
+                return int_val;
+        }
+
+        function display_time_value(val) {
+            var hrs = Math.floor(val / STEPS_PER_HOUR),
+                mins = (val % STEPS_PER_HOUR) * MINUTES_PER_STEP;
+
+            return zero_pad(hrs) + ":" + zero_pad(mins);
+        }
+
+        var start_time, end_time;
+
+        function update_dates() {
+            $('#id_start').val($('#id_start_date').val() + ' ' + start_time + ':00');
+            if($('#id_separate_end_date').is(":checked")) {
+                $('#id_end').val($('#id_end_date').val() + ' ' + end_time + ':00');
+            } else {
+                $('#id_end').val($('#id_start_date').val() + ' ' + end_time + ':00');
+            }
+        }
+
+
+        $('#id_separate_end_date').on("change", function() {
+            if($(this).is(":checked")) {
+                $('#id_end_date').show()
+            } else {
+                $('#id_end_date').hide()
+            }
+            update_dates();
+        });
+
+        $('#time-slider').slider({
+            min: 0,
+            max: STEPS_IN_DAY,
+            value: [START_AT_0800, END_AT_1600],
+            ticks: DEFAULT_TICKS,
+            ticks_labels: DEFAULT_LABELS,
+            formatter: function(values) {
+                // workaround: sometimes values is not an array...
+                if( Object.prototype.toString.call( values ) === '[object Array]' ) {
+                    start_time = display_time_value(values[0]);
+                    end_time = display_time_value(values[1]);
+                    update_dates();
+                    return display_time_value(values[0]) + ' - ' + display_time_value(values[1]);
+                }
+            }
+        });
+
+        $('#id_start_date').change(update_dates);
+        $('#id_end_date').change(update_dates);
+
+    });
+
+
+
+    </script>
+{% endblock %}

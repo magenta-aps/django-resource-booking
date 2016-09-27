@@ -16,9 +16,11 @@
         width: 100%;
     }
     table.ressource-kalender div.marker.available {
+
         background-color: green;
     }
     table.ressource-kalender div.marker.unavailable {
+        z-index: 10;
         background-color: red;
     }
 </style>
@@ -39,18 +41,20 @@
                 <a href="{% url 'resource-view' resource.id %}" role="button" class="btn btn-primary">Gå til ressource</a>
             </p>
             <h2>Regler for tilgængelighed</h2>
+            {% if not available %}
             <p>
-                (Ingen regler betyder altid tilgængelig)
+                (Ingen regler betyder aldrig tilgængelig)
             </p>
+            {% endif %}
             <ul>
                 {% for event in available %}
-                    <li>{{ event.title }} {{ event.interval_display }}<a href="{% url 'calendar-event-delete' event.pk %}"><span class="glyphicon glyphicon-remove"></span></a></li>
+                    <li>{{ event.title }} {{ event.interval_display }} {% if event.recurrences %}{% trans "(med gentagelser)" %}{% endif %}<a href="{% url 'calendar-event-delete' event.pk %}"><span class="glyphicon glyphicon-remove"></span></a></li>
                 {% endfor %}
             </ul>
             <h2>Regler for utilgængelighed</h2>
             <ul>
                 {% for event in unavailable %}
-                    <li>{{ event.title }} {{ event.interval_display }}<a href=""><span class="glyphicon glyphicon-remove"></span></a></li>
+                    <li>{{ event.title }} {{ event.interval_display }}<a href="{% url 'calendar-event-delete' event.pk %}"><span class="glyphicon glyphicon-remove"></span></a></li>
                 {% endfor %}
             </ul>
             <div class="divider"></div>
@@ -85,10 +89,10 @@
                             <div class="marker-container">
                                 {% for marker in day.events %}
                                 <div class="marker {{ marker.available_class }}" style="top: {{ marker.top_offset }}em; height: {{ marker.height }}em;">
+                                    {{ marker.available }}
                                     {{ marker.start }}
                                 </div>
                                 {% endfor %}
-                                <!--div class="marker" style="top: 5em; height: 2.25em; background-color: red;">&nbsp;</div-->
                             </div>
                         </td>
                         {% endfor%}
@@ -98,6 +102,12 @@
             </table>
         </div>
     </div>
+    <div class="row">
+        <div class="col-md-12">
+            <a href="{% url 'calendar-delete' view.kwargs.pk %}" role="button" class="btn btn-danger pull-right" />{% trans 'Slet denne kalender' %}</a>
+        </div>
+    </div>
+    <div class="divider"></div>
 
 {% endblock %}
 

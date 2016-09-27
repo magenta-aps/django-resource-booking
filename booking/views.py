@@ -707,19 +707,32 @@ class SearchView(BreadcrumbMixin, ListView):
                 # Public users only want to search within bookable dates
                 ok_states = Visit.BOOKABLE_STATES
                 date_cond = (
-                    Q(visit__bookable=True) &
-                    Q(visit__workflow_status__in=ok_states)
+                    Q(eventtime__bookable=True) &
+                    Q(eventtime__visit__workflow_status__in=ok_states)
+                )
+
+                # Filter out resource-controlled products that are
+                # resource-blocked.
+                res_controlled = Product.TIME_MODE_RESOURCE_CONTROLLED
+                res_blocked = booking_models.EventTime.RESOURCE_STATUS_BLOCKED
+
+                date_cond = date_cond & Q(
+                    (~Q(time_mode=res_controlled)) |
+                    Q(
+                        Q(time_mode=res_controlled) &
+                        (~Q(eventtime__resource_status=res_blocked))
+                    )
                 )
 
             if t_from:
                 date_cond = (
                     date_cond &
-                    Q(visit__eventtime__start__gt=t_from)
+                    Q(eventtime__start__gt=t_from)
                 )
 
             if t_to:
                 date_cond = date_cond & Q(
-                    Q(visit__eventtime__start__lte=t_from)
+                    Q(eventtime__start__lte=t_to)
                 )
 
             self.from_datetime = t_from or ""
@@ -734,15 +747,18 @@ class SearchView(BreadcrumbMixin, ListView):
                     date_cond
                 )
 
+                print qs.query
+
                 # Simplify, since the above conditions are slow when
                 # used for making facets.
                 qs = Product.objects.filter(pk__in=[x.pk for x in qs])
 
             qs = qs.annotate(
-                num_bookings=Count('visit__bookings'),
+                num_bookings=Count('eventtime__visit__bookings'),
             )
 
             qs = qs.distinct()
+            print len(qs)
 
             self.base_queryset = qs
 
@@ -750,8 +766,8 @@ class SearchView(BreadcrumbMixin, ListView):
 
     def annotate(self, qs):
         return qs.annotate(
-            num_visits=Count('visit__pk', distinct=True),
-            first_visit=Min('visit__eventtime__start')
+            num_visits=Count('eventtime__visit__pk', distinct=True),
+            first_visit=Min('eventtime__start')
         )
 
     def get_filters(self):
