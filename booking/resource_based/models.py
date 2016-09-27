@@ -331,8 +331,6 @@ class EventTime(models.Model):
 class Calendar(models.Model):
 
     def available_list(self, from_dt, to):
-        result = []
-
         for x in self.calendarevent_set.filter(
             availability=CalendarEvent.AVAILABLE
         ):
@@ -340,8 +338,6 @@ class Calendar(models.Model):
                 yield y
 
     def unavailable_list(self, from_dt, to):
-        result = []
-
         for x in self.calendarevent_set.filter(
             availability=CalendarEvent.NOT_AVAILABLE
         ):

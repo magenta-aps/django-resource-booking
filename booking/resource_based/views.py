@@ -926,7 +926,6 @@ class CalendarDeleteView(LoginRequiredMixin, DeleteView):
             raise Http404(_("No %(verbose_name)s found matching the query") %
                           {'verbose_name': queryset.model._meta.verbose_name})
 
-
         return self.resource.calendar
 
     def get_success_url(self):
