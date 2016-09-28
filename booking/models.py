@@ -19,12 +19,14 @@ from django.utils import formats
 from django.utils.translation import ugettext_lazy as _
 from django.template.base import Template, VariableNode
 
+from booking.mixins import AvailabilityUpdaterMixin
 from booking.utils import ClassProperty, full_email, CustomStorage, html2text
 from booking.utils import get_related_content_types, INFINITY
 
 from resource_booking import settings
 
 from datetime import timedelta
+
 
 from profile.constants import TEACHER, HOST
 from profile.constants import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
@@ -1027,7 +1029,7 @@ class GrundskoleLevel(models.Model):
         return self.get_level_display()
 
 
-class Product(models.Model):
+class Product(AvailabilityUpdaterMixin, models.Model):
     """A bookable Product of any kind."""
 
     class Meta:
@@ -1436,7 +1438,8 @@ class Product(models.Model):
             (
                 Q(visit__isnull=True) |
                 Q(visit__workflow_status__in=Visit.BOOKABLE_STATES)
-            )
+            ) &
+            (~Q(resource_status=EventTime.RESOURCE_STATUS_BLOCKED))
         )
 
     @property
@@ -1446,6 +1449,29 @@ class Product(models.Model):
     @property
     def future_bookable_times(self):
         return self.bookable_times.filter(start__gte=timezone.now())
+
+    @property
+    # QuerySet that finds all EventTimes that will be affected by a change
+    # in ressource assignment for this product.
+    # Finds:
+    #  - All potential ressources that can be assigned to this product
+    #  - All ResourcePools that make use of these resources
+    #  - All EventTimes for products that has requirements that uses these
+    #    ResourcePools.
+    def affected_eventtimes(self):
+        potential_resources = Resource.objects.filter(
+            resourcepool__resourcerequirement__product=self
+        )
+        resource_pools = ResourcePool.objects.filter(
+            resources=potential_resources
+        )
+        return EventTime.objects.filter(
+            product__resourcerequirement__resource_pool=resource_pools
+        )
+
+    def update_availability(self):
+        for x in self.affected_eventtimes:
+            x.update_availability()
 
     def get_dates_display(self):
         dates = [x.interval_display for x in self.eventtime_set.all()]
@@ -1618,6 +1644,13 @@ class Product(models.Model):
 
         return room
 
+    def can_be_held_between(self, from_dt, to_dt):
+        for x in self.resourcepool_set.all():
+            if not x.can_be_fullfilled_between(from_dt, to_dt):
+                return False
+
+        return True
+
     @staticmethod
     def get_latest_created():
         return Product.objects.filter(statistics__isnull=False).\
@@ -1769,7 +1802,7 @@ class Product(models.Model):
         return u"#%s - %s" % (self.pk, self.title)
 
 
-class Visit(models.Model):
+class Visit(AvailabilityUpdaterMixin, models.Model):
 
     class Meta:
         verbose_name = _(u"besøg")
@@ -2122,6 +2155,26 @@ class Visit(models.Model):
             self.last_workflow_update = timezone.now()
 
     @property
+    # QuerySet that finds EventTimes that will be affected by resource changes
+    # on this visit.
+    def affected_eventtimes(self):
+        if (
+            hasattr(self, 'eventtime') and
+            self.eventtime.start and
+            self.eventtime.end
+        ):
+            return self.product.affected_eventtimes.filter(
+                start__lt=self.eventtime.end,
+                end__gt=self.eventtime.start
+            )
+        else:
+            return EventTime.objects.none()
+
+    def update_availability(self):
+        for x in self.affected_eventtimes:
+            x.update_availability()
+
+    @property
     def display_value(self):
         if not hasattr(self, 'eventtime') or not self.eventtime.start:
             return None
@@ -2391,7 +2444,6 @@ class Visit(models.Model):
         self.update_endtime()
         self.update_last_workflow_change()
 
-        # Save once to store relations
         super(Visit, self).save(*args, **kwargs)
 
     def get_absolute_url(self):

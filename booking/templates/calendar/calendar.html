@@ -89,8 +89,7 @@
                             <div class="marker-container">
                                 {% for marker in day.events %}
                                 <div class="marker {{ marker.available_class }}" style="top: {{ marker.top_offset }}em; height: {{ marker.height }}em;">
-                                    {{ marker.available }}
-                                    {{ marker.start }}
+                                    {{ marker.title }}
                                 </div>
                                 {% endfor %}
                             </div>

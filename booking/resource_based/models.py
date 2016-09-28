@@ -6,6 +6,7 @@ from django.utils import formats
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from recurrence.fields import RecurrenceField
+from booking.mixins import AvailabilityUpdaterMixin
 from booking.models import Room, Visit
 from profile.constants import TEACHER, HOST, NONE
 
@@ -135,6 +136,40 @@ class EventTime(models.Model):
         self.save()
 
         return visit
+
+    def update_availability(self):
+        fully_assigned = True
+
+        result = None
+
+        for req in self.product.resourcerequirement_set.all():
+            if self.visit:
+                assigned = self.visit.visitresource.filter(
+                    resource_requirement=req
+                ).count()
+            else:
+                assigned = 0
+
+            if req.required_amount == assigned:
+                continue
+            else:
+                fully_assigned = False
+
+            if not req.has_free_resources_between(
+                self.start, self.end, req.required_amount - assigned
+            ):
+                result = EventTime.RESOURCE_STATUS_BLOCKED
+                break
+
+        if result is None:
+            if fully_assigned:
+                result = EventTime.RESOURCE_STATUS_ASSIGNED
+            else:
+                result = EventTime.RESOURCE_STATUS_AVAILABLE
+
+        if self.resource_status != result:
+            self.resource_status = result
+            self.save()
 
     @property
     def naive_start(self):
@@ -328,38 +363,38 @@ class EventTime(models.Model):
         return " ".join([unicode(x) for x in parts])
 
 
-class Calendar(models.Model):
+class Calendar(AvailabilityUpdaterMixin, models.Model):
 
-    def available_list(self, from_dt, to):
+    def available_list(self, from_dt, to_dt):
         for x in self.calendarevent_set.filter(
             availability=CalendarEvent.AVAILABLE
         ):
-            for y in x.between(from_dt, to):
+            for y in x.between(from_dt, to_dt):
                 yield y
 
-    def unavailable_list(self, from_dt, to):
+    def unavailable_list(self, from_dt, to_dt):
         for x in self.calendarevent_set.filter(
             availability=CalendarEvent.NOT_AVAILABLE
         ):
-            for y in x.between(from_dt, to):
+            for y in x.between(from_dt, to_dt):
                 yield y
 
         # Not available on times when we are booked
         if hasattr(self, 'resource'):
-            for x in self.resource.booked_eventtimes(from_dt, to):
+            for x in self.resource.booked_eventtimes(from_dt, to_dt):
                 yield CalendarEventInstance(
                     x.start,
                     x.end,
                     available=False,
-                    source=x
+                    source=x.visit
                 )
 
-    def is_available(self, from_dt, to_dt, exclude_sources=set([])):
+    def is_available_between(self, from_dt, to_dt, exclude_sources=set([])):
         # Check if availability rules match
         available_match = False
 
         for x in self.available_list(from_dt, to_dt):
-            if self.source in exclude_sources:
+            if x.source in exclude_sources:
                 continue
 
             if x.start <= from_dt and x.end >= to_dt:
@@ -372,12 +407,19 @@ class Calendar(models.Model):
         # Any blocking source that is not in exclude_sources means the
         # resource is not available.
         for x in self.unavailable_list(from_dt, to_dt):
-            if self.source in exclude_sources:
+            if x.source in exclude_sources:
                 continue
 
             return False
 
         return True
+
+    @property
+    def affected_eventtimes(self):
+        if hasattr(self, 'resource'):
+            return self.resource.affected_eventtimes
+        else:
+            return EventTime.objects.none()
 
 
 class CalendarEventInstance(object):
@@ -412,6 +454,14 @@ class CalendarEventInstance(object):
             'event': self,
             'start': max(self.start, day_start),
             'end': min(self.end, day_end),
+            'title': "%s - %s" % (
+                str(self.start.astimezone(
+                    timezone.get_current_timezone()
+                ).time())[:5],
+                str(self.end.astimezone(
+                    timezone.get_current_timezone()
+                ).time())[:5]
+            )
         }
 
         if self.available:
@@ -432,7 +482,7 @@ class CalendarEventInstance(object):
         return obj
 
 
-class CalendarEvent(models.Model):
+class CalendarEvent(AvailabilityUpdaterMixin, models.Model):
 
     title = models.CharField(
         max_length=60,
@@ -489,29 +539,38 @@ class CalendarEvent(models.Model):
             if not timezone.is_naive(to_dt):
                 to_dt = timezone.make_naive(to_dt)
 
-            if timezone.is_naive(self.start):
-                naive_start = self.start
-            else:
-                naive_start = timezone.make_naive(self.start)
+            naive_start = timezone.make_naive(self.start)
 
-            for x in recurrences.between(from_dt, to_dt):
-                starttime = timezone.make_aware(
-                    timezone.datetime.combine(x.date(), naive_start.time())
+            recurrences.dtstart = naive_start
+
+            # Since we only find start time we have to extend the search
+            # area with the duration in both directions.
+            search_start = from_dt - duration
+            search_end = to_dt + duration
+
+            for x in recurrences.between(search_start, search_end, inc=True):
+                starttime = timezone.datetime.combine(
+                    x.date(), naive_start.time()
                 )
+                endtime = starttime + duration
 
+                if endtime > from_dt and starttime < to_dt:
+                    yield CalendarEventInstance(
+                        timezone.make_aware(starttime),
+                        timezone.make_aware(endtime),
+                        available=(
+                            self.availability == CalendarEvent.AVAILABLE
+                        ),
+                        source=self
+                    )
+        else:
+            if self.end > from_dt and self.start < to_dt:
                 yield CalendarEventInstance(
-                    starttime,
-                    starttime + duration,
+                    self.start,
+                    self.end,
                     available=(self.availability == CalendarEvent.AVAILABLE),
                     source=self
                 )
-        else:
-            yield CalendarEventInstance(
-                self.start,
-                self.end,
-                available=(self.availability == CalendarEvent.AVAILABLE),
-                source=self
-            )
 
     @property
     def naive_start(self):
@@ -566,6 +625,13 @@ class CalendarEvent(models.Model):
                 )
             else:
                 return unicode(_(u"<Intet tidspunkt angivet>"))
+
+    @property
+    def affected_eventtimes(self):
+        if self.calendar:
+            return self.calendar.affected_eventtimes
+        else:
+            return EventTime.objects.none()
 
     def __unicode__(self):
         return ", ".join(unicode(x) for x in [
@@ -634,7 +700,7 @@ class ResourceType(models.Model):
         return self.name
 
 
-class Resource(models.Model):
+class Resource(AvailabilityUpdaterMixin, models.Model):
     resource_type = models.ForeignKey(
         ResourceType,
         verbose_name=_(u'Type')
@@ -669,6 +735,22 @@ class Resource(models.Model):
             qs = qs.filter(start__lt=dt_to)
 
         return qs
+
+    def is_available_between(self, from_dt, to_dt, exclude_sources=set()):
+        if self.calendar:
+            return self.calendar.is_available_between(
+                from_dt, to_dt, exclude_sources
+            )
+
+        qs = self.booked_eventtimes(from_dt, to_dt)
+
+        visit_exclude_sources = set([
+            x for x in exclude_sources if type(x) is Visit
+        ])
+        if len(visit_exclude_sources) > 0:
+            qs = qs.exclude(visit__in=visit_exclude_sources)
+
+        return not qs.exists()
 
     @classmethod
     def subclasses(cls):
@@ -730,18 +812,11 @@ class Resource(models.Model):
         return visits
 
     def available_for_visit(self, visit):
-        if self.calendar:
-            return self.calendar.is_available(
-                visit.eventtime.start,
-                visit.eventtime.end,
-                exclude_sources=set([visit])
-            )
-
-        occupying_visits = self.occupied_by(
+        return self.is_available_between(
             visit.eventtime.start,
-            visit.eventtime.end
+            visit.eventtime.end,
+            exclude_sources=set([visit])
         )
-        return len(set(occupying_visits) - set([visit])) == 0
 
     def make_calendar(self):
         if not self.calendar:
@@ -749,6 +824,15 @@ class Resource(models.Model):
             cal.save()
             self.calendar = cal
             self.save()
+
+    @property
+    def affected_eventtimes(self):
+        if self.pk:
+            return EventTime.objects.filter(
+                product__resourcerequirement__resource_pool__resources=self
+            )
+        else:
+            return EventTime.objects.none()
 
 
 class UserResource(Resource):
@@ -920,7 +1004,7 @@ class CustomResource(NamedResource):
     pass
 
 
-class ResourcePool(models.Model):
+class ResourcePool(AvailabilityUpdaterMixin, models.Model):
     resource_type = models.ForeignKey(ResourceType)
     name = models.CharField(
         max_length=1024,
@@ -950,13 +1034,23 @@ class ResourcePool(models.Model):
             for resource in self.resources.all()
         ]
 
-    def available_resources(self, from_dt, to_dt):
+    def available_resources_between(self, from_dt, to_dt):
         for x in self.resources.all():
-            if x.is_available(from_dt, to_dt):
+            if x.is_available_between(from_dt, to_dt):
                 yield x
 
+    @property
+    def affected_eventtimes(self):
+        if self.pk:
+            res = self.resources.all()
+            return EventTime.objects.filter(
+                product__resourcerequirement__resource_pool__resources=res
+            )
+        else:
+            return EventTime.objects.none()
 
-class ResourceRequirement(models.Model):
+
+class ResourceRequirement(AvailabilityUpdaterMixin, models.Model):
     product = models.ForeignKey("Product")
     resource_pool = models.ForeignKey(
         ResourcePool,
@@ -969,18 +1063,38 @@ class ResourceRequirement(models.Model):
     def can_delete(self):
         return True
 
-    def can_be_fullfilled(self, from_dt, to_dt):
+    def can_be_fullfilled_between(self, from_dt, to_dt):
+        return self.has_free_resources_between(
+            from_dt, to_dt, self.required_amount
+        )
+
+    def has_free_resources_between(self, from_dt, to_dt, amount=1):
+        if amount <= 0:
+            return True
+
         count = 0
 
-        for x in self.resource_pool.available_resources(from_dt, to_dt):
+        for x in self.resource_pool.available_resources_between(
+            from_dt, to_dt
+        ):
             count = count + 1
-            if count >= self.required_amount:
+            if count >= amount:
                 return True
 
         return False
 
+    @property
+    def affected_eventtimes(self):
+        if self.pk and self.resource_pool:
+            res = self.resource_pool.resources.all()
+            return EventTime.objects.filter(
+                product__resourcerequirement__resource_pool__resources=res
+            )
+        else:
+            return EventTime.objects.none()
 
-class VisitResource(models.Model):
+
+class VisitResource(AvailabilityUpdaterMixin, models.Model):
     visit = models.ForeignKey(
         "Visit",
         verbose_name=_(u"Besøg"),
@@ -996,3 +1110,10 @@ class VisitResource(models.Model):
         verbose_name=_(u"Ressourcebehov"),
         related_name='visitresource'
     )
+
+    @property
+    def affected_eventtimes(self):
+        if self.resource_requirement:
+            return self.resource_requirement.affected_eventtimes
+        else:
+            return EventTime.objects.none()
