@@ -1,0 +1,114 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load booking_tags %}
+
+{% block htmltitle %} - {% trans "Kalender" %}{% endblock %}
+
+{% block head %}
+<style type="text/css">
+    table.ressource-kalender div.marker-container {
+        height: 12em;
+        position: relative;
+    }
+    table.ressource-kalender div.marker {
+        position: absolute;
+        width: 100%;
+    }
+    table.ressource-kalender div.marker.available {
+
+        background-color: green;
+    }
+    table.ressource-kalender div.marker.unavailable {
+        z-index: 10;
+        background-color: red;
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
+    <div class="divider"></div>
+    <h1>
+        {% trans "Kalender" %}
+    </h1>
+
+    <div class="divider"></div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <p class="pull-right">
+                <a href="{% url 'resource-view' resource.id %}" role="button" class="btn btn-primary">Gå til ressource</a>
+            </p>
+            <h2>Regler for tilgængelighed</h2>
+            {% if not available %}
+            <p>
+                (Ingen regler betyder aldrig tilgængelig)
+            </p>
+            {% endif %}
+            <ul>
+                {% for event in available %}
+                    <li>{{ event.title }} {{ event.interval_display }} {% if event.recurrences %}{% trans "(med gentagelser)" %}{% endif %}<a href="{% url 'calendar-event-delete' event.pk %}"><span class="glyphicon glyphicon-remove"></span></a></li>
+                {% endfor %}
+            </ul>
+            <h2>Regler for utilgængelighed</h2>
+            <ul>
+                {% for event in unavailable %}
+                    <li>{{ event.title }} {{ event.interval_display }}<a href="{% url 'calendar-event-delete' event.pk %}"><span class="glyphicon glyphicon-remove"></span></a></li>
+                {% endfor %}
+            </ul>
+            <div class="divider"></div>
+            <p>
+                <a href="{% url 'calendar-event' resource.id %}" role="button" class="btn btn-primary btn-xs">Opret ny regel</a>
+            </p>
+            <table class="ressource-kalender table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <td colspan="7" class="text-center">
+                            <a href="?month={{ prev_month|date:'Ym' }}"><span class="pull-left">&lt;&lt;</span></a>
+                            {{ month|date:"F Y"|title }}
+                            <a href="?month={{ next_month|date:'Ym' }}"><span class="pull-right">&gt;&gt;</span></a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>{{ calendar_weeks.0.0.date|date:"l"|title }}</td>
+                        <td>{{ calendar_weeks.0.1.date|date:"l"|title }}</td>
+                        <td>{{ calendar_weeks.0.2.date|date:"l"|title }}</td>
+                        <td>{{ calendar_weeks.0.3.date|date:"l"|title }}</td>
+                        <td>{{ calendar_weeks.0.4.date|date:"l"|title }}</td>
+                        <td>{{ calendar_weeks.0.5.date|date:"l"|title }}</td>
+                        <td>{{ calendar_weeks.0.6.date|date:"l"|title }}</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for week in calendar_weeks %}
+                    <tr>
+                        {% for day in week %}
+                        <td>
+                            {{ day.date.day }}.
+                            <div class="marker-container">
+                                {% for marker in day.events %}
+                                <div class="marker {{ marker.available_class }}" style="top: {{ marker.top_offset }}em; height: {{ marker.height }}em;">
+                                    {{ marker.title }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </td>
+                        {% endfor%}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <a href="{% url 'calendar-delete' view.kwargs.pk %}" role="button" class="btn btn-danger pull-right" />{% trans 'Slet denne kalender' %}</a>
+        </div>
+    </div>
+    <div class="divider"></div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+{% endblock %}

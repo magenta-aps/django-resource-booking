@@ -7,6 +7,8 @@ from booking.models import TeacherResource, HostResource, VehicleResource
 from booking.models import ResourcePool
 from booking.models import ResourceRequirement
 from booking.models import VisitResource
+from booking.fields import MultipleChoiceDisableField
+from booking.widgets import CheckboxSelectMultipleDisable
 from django import forms
 from django.forms import CheckboxSelectMultiple, NumberInput
 from django.forms import formset_factory, BaseFormSet
@@ -236,10 +238,15 @@ class EditResourceRequirementForm(forms.ModelForm):
 
 
 class EditVisitResourceForm(forms.Form):
-    resources = forms.MultipleChoiceField(
+    # resources = forms.MultipleChoiceField(
+    #     label='Ressourcer',
+    #     required=False,
+    #     widget=CheckboxSelectMultiple()
+    # )
+    resources = MultipleChoiceDisableField(
         label='Ressourcer',
         required=False,
-        widget=CheckboxSelectMultiple()
+        widget=CheckboxSelectMultipleDisable
     )
 
     def __init__(self, visit, resource_requirement, *args, **kwargs):
@@ -257,6 +264,12 @@ class EditVisitResourceForm(forms.Form):
             (resource.id, resource.get_name())
             for resource
             in resource_requirement.resource_pool.specific_resources
+        ]
+        resourcefield.disabled_values = [
+            resource.id
+            for resource
+            in resource_requirement.resource_pool.specific_resources
+            if not resource.available_for_visit(visit)
         ]
 
     def save(self):

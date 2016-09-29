@@ -41,6 +41,7 @@ def custom_update_user(sender, **kwargs):
                 user=user,
                 organizationalunit=group
             )
+            resource.make_calendar()
             resource.save()
 
         # Create a resource for the user
@@ -49,6 +50,7 @@ def custom_update_user(sender, **kwargs):
                 user=user,
                 organizationalunit=group
             )
+            resource.make_calendar()
             resource.save()
 
     except Exception as e:
