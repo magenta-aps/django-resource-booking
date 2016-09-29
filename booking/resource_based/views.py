@@ -376,6 +376,7 @@ class ResourceUpdateView(BackMixin, BreadcrumbMixin, UpdateView):
     def get_context_data(self, **kwargs):
         context = {}
         context['object'] = self.object
+        context['ResourceType'] = ResourceType
         context.update(kwargs)
         return super(ResourceUpdateView, self).get_context_data(**context)
 

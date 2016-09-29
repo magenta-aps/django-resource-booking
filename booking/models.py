@@ -2942,13 +2942,11 @@ class Room(models.Model):
                     y.rooms.add(r)
 
     def save(self, *args, **kwargs):
-        creating = self.pk is None
         return_value = super(Room, self).save(*args, **kwargs)
-        if creating:
-            try:
-                RoomResource.create(self)
-            except:
-                pass
+
+        if not self.roomresource_set.exists():
+            RoomResource.create(self)
+
         return return_value
 
 
