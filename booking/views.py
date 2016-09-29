@@ -3405,14 +3405,10 @@ class MultiProductVisitUpdateView(BreadcrumbMixin, UpdateView):
     def get_available_products(self):
         if self.object:
             if self.available_products is None:
-                self.available_products = [
-                    product
-                    for product in Product.objects.filter(
-                        state=Product.ACTIVE,
-                        time_mode=Product.TIME_MODE_GUEST_SUGGESTED
+                self.available_products = \
+                    MultiProductAvailableProductsView.get_available_products(
+                        self.object.date
                     )
-                    if product.is_bookable(self.object.date)
-                ]
             return self.available_products
         return None
 
@@ -3435,3 +3431,32 @@ class MultiProductVisitUpdateView(BreadcrumbMixin, UpdateView):
         return super(MultiProductVisitUpdateView, self).get_context_data(
             **context
         )
+
+
+class MultiProductAvailableProductsView(View):
+
+    @staticmethod
+    def get_available_products(date):
+        return [
+            product
+            for product in Product.objects.filter(
+                state=Product.ACTIVE,
+                time_mode=Product.TIME_MODE_GUEST_SUGGESTED
+            )
+            if product.is_bookable(date)
+        ]
+
+    def get(self, request, *args, **kwargs):
+        datestring = kwargs['date']
+        date = datetime.strptime(datestring, '%Y-%m-%d').date()
+        products = self.get_available_products(date)
+        return JsonResponse({
+            'products':[
+                {
+                    'id': product.id,
+                    'title': product.title,
+                    'teaser': product.teaser
+                }
+                for product in products
+            ]
+        })

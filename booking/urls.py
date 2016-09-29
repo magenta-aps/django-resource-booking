@@ -39,6 +39,7 @@ from booking.views import VisitCustomListView
 from booking.views import EvaluationOverviewView
 from booking.views import MultiProductVisitCreateView
 from booking.views import MultiProductVisitUpdateView
+from booking.views import MultiProductAvailableProductsView
 
 from booking.resource_based.views import CalendarView, CalendarEventView, \
     CalendarEventDeleteView
@@ -220,6 +221,9 @@ urlpatterns = patterns(
     url(r'^mpv/(?P<pk>[0-9]+)/edit/?$',
         MultiProductVisitUpdateView.as_view(),
         name='mpv-edit'),
+    url(r'^mpv/queryproducts/(?P<date>[0-9]{4}-[0-9]{2}-[0-9]{2})/?$',
+        MultiProductAvailableProductsView.as_view(),
+        name='mpv-query-products'),
 
     # Ajax api
     url(r'^jsapi/rrulestr$', RrulestrView.as_view(), name='jsapi_rrulestr'),

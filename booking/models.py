@@ -25,7 +25,7 @@ from booking.utils import get_related_content_types, INFINITY
 
 from resource_booking import settings
 
-from datetime import timedelta
+from datetime import timedelta, datetime, date, time
 
 
 from profile.constants import TEACHER, HOST
@@ -1710,6 +1710,10 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     def is_bookable(self, start_time=None, end_time=None):
         # TODO: Return whether the product is bookable
         # within the specified time range
+        if end_time is None and isinstance(start_time, date):
+            start_time = datetime.combine(start_time, time())
+            end_time = start_time + timedelta(days=1)
+
         return self.is_type_bookable and \
             self.state == Product.ACTIVE and \
             self.has_bookable_visits
