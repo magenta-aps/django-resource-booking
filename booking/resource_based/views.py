@@ -870,7 +870,9 @@ class CalendarView(LoginRequiredMixin, DetailView):
             date = x.start.date()
             # Add event to all the days it spans
             for y in range(0, (x.end - x.start).days + 1):
-                events_by_date[date.isoformat()].append(x.day_marker(date))
+                key = date.isoformat()
+                if key in events_by_date:
+                    events_by_date[key].append(x.day_marker(date))
                 date = date + datetime.timedelta(days=1)
 
         return super(CalendarView, self).get_context_data(
