@@ -3403,8 +3403,8 @@ class MultiProductVisitUpdateView(BreadcrumbMixin, UpdateView):
     def get_form(self):
         form = super(MultiProductVisitUpdateView, self).get_form()
         form.fields['products'].choices = [
-           (product.id, product.title)
-           for product in self.get_available_products()
+            (product.id, product.title)
+            for product in self.get_available_products()
         ]
         if self.object:
             form.initial['products'] = [
