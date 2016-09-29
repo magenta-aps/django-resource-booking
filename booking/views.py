@@ -3451,7 +3451,7 @@ class MultiProductAvailableProductsView(View):
         date = datetime.strptime(datestring, '%Y-%m-%d').date()
         products = self.get_available_products(date)
         return JsonResponse({
-            'products':[
+            'products': [
                 {
                     'id': product.id,
                     'title': product.title,
