@@ -37,6 +37,8 @@ from booking.views import VisitAddCommentView
 from booking.views import VisitDetailView
 from booking.views import VisitCustomListView
 from booking.views import EvaluationOverviewView
+from booking.views import MultiProductVisitCreateView
+from booking.views import MultiProductVisitUpdateView
 
 from booking.resource_based.views import ResourceCreateView, ResourceDetailView
 from booking.resource_based.views import ResourceListView, ResourceUpdateView
@@ -209,6 +211,13 @@ urlpatterns = patterns(
     url(r'^booking/(?P<product>[0-9]+)/notify/success$',
         EmailSuccessView.as_view(),
         name='booking-notify-success'),
+
+    url(r'^mpv/create/?$',
+        MultiProductVisitCreateView.as_view(),
+        name='mpv-create'),
+    url(r'^mpv/(?P<pk>[0-9]+)/edit/?$',
+        MultiProductVisitUpdateView.as_view(),
+        name='mpv-edit'),
 
     # Ajax api
     url(r'^jsapi/rrulestr$', RrulestrView.as_view(), name='jsapi_rrulestr'),

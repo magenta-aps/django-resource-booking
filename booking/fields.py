@@ -3,7 +3,7 @@ from django.utils import six
 from collections import defaultdict
 from django.forms.fields import MultipleChoiceField
 
-from .widgets import DurationWidget
+from .widgets import DurationWidget, OrderedMultipleHiddenChooser
 
 COLUMN_TYPES = defaultdict(lambda: "char(20)")
 COLUMN_TYPES["django.db.backends.postgresql_psycopg2"] = "interval"
@@ -52,3 +52,19 @@ class ExtensibleMultipleChoiceField(MultipleChoiceField):
     """
     def valid_value(self, value):
         return True
+
+
+class OrderedMultipleChoiceField(MultipleChoiceField):
+    widget = OrderedMultipleHiddenChooser
+
+    def has_changed(self, initial, data):
+        if super(OrderedMultipleChoiceField, self).has_changed(initial, data):
+            return True
+        if initial is None:
+            initial = []
+        if data is None:
+            data = []
+        for i, value in enumerate(initial):
+            if data[i] != initial[i]:
+                return True
+        return False

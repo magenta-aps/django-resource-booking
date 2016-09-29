@@ -30,14 +30,15 @@ from django.utils.http import urlquote
 from django.utils.translation import ugettext as _
 from django.views.generic import View, TemplateView, ListView, DetailView
 from django.views.generic.base import ContextMixin
-from django.views.generic.edit import UpdateView, FormMixin, DeleteView, \
-    FormView
+from django.views.generic.edit import CreateView, UpdateView, DeleteView
+from django.views.generic.edit import FormMixin, FormView
 from django.views.defaults import bad_request
 
 from profile.models import EDIT_ROLES
 from profile.models import role_to_text
 from booking.models import Product, Visit, StudyMaterial, \
     ProductAutosend
+from booking.models import MultiProductVisit
 from booking.models import KUEmailMessage
 from booking.models import Subject
 from booking.models import OrganizationalUnit
@@ -70,6 +71,8 @@ from booking.forms import AdminProductSearchForm
 from booking.forms import ProductAutosendFormSet
 from booking.forms import VisitSearchForm
 from booking.forms import AcceptBookingForm
+from booking.forms import MultiProductVisitDateForm
+from booking.forms import MultiProductVisitProductsForm
 from booking.utils import full_email, get_model_field_map
 from booking.utils import get_related_content_types
 
@@ -3364,3 +3367,55 @@ class BookingAcceptView(BreadcrumbMixin, FormView):
                 'text': _(u'Svar på ledig plads')
             }
         ]
+
+
+class MultiProductVisitCreateView(BreadcrumbMixin, CreateView):
+    form_class = MultiProductVisitDateForm
+    model = MultiProductVisit
+    template_name = "visit/multi_create_date.html"
+
+    def get_success_url(self):
+        return reverse(
+            'mpv-edit', args=[self.object.id]
+        )
+
+
+class MultiProductVisitUpdateView(BreadcrumbMixin, UpdateView):
+    form_class = MultiProductVisitProductsForm
+    model = MultiProductVisit
+    template_name = "visit/multi_update.html"
+    available_products = None
+
+    def get_available_products(self):
+        if self.object:
+            if self.available_products is None:
+                self.available_products = [
+                    product
+                    for product in Product.objects.filter(
+                        state=Product.ACTIVE,
+                        time_mode=Product.TIME_MODE_GUEST_SUGGESTED
+                    )
+                    if product.is_bookable(self.object.date)
+                ]
+            return self.available_products
+        return None
+
+    def get_form(self):
+        form = super(MultiProductVisitUpdateView, self).get_form()
+        form.fields['products'].choices = [
+           (product.id, product.title)
+           for product in self.get_available_products()
+        ]
+        if self.object:
+            form.initial['products'] = [
+                product.id for product in self.object.products
+            ]
+        return form
+
+    def get_context_data(self, **kwargs):
+        context = {}
+        context['products'] = self.get_available_products()
+        context.update(kwargs)
+        return super(MultiProductVisitUpdateView, self).get_context_data(
+            **context
+        )

@@ -1,0 +1,106 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load booking_tags %}
+
+{% block htmltitle %} - Foo{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+
+    {% include 'common/breadcrumbrow.html' %}
+    <div class="divider"></div>
+
+    <h1>{% blocktrans %}Fooooobar{% endblocktrans %}</h1>
+    <hr/>
+
+    <form id="mpvform" action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
+
+        {{ form.non_field_errors }}
+        {% csrf_token %}
+        {{ form.products }}
+
+        <ul class="list-group" id="selected-product-list"></ul>
+
+        <p>{% trans 'Du kan trække i tilbuddene for at prioritere dem.' %}</p>
+        <p>{% trans 'Vælg yderlige tilbud:' %}</p>
+        <ul class="list-group" id="deselected-product-list">
+            {% for product in products %}
+                <li id="product_{{ product.id }}" class="list-group-item" data-product="{{ product.id }}">
+                    <span class="glyphicon glyphicon-move movebutton"></span>
+                    <a class="btn btn-primary pull-right selectbutton">{% trans 'Vælg' %}</a>
+                    <h2 class="title">{{ product.title }}</h2>
+                    <p class="teaser">{{ product.teaser }}</p>
+                    <a class="deselectbutton">
+                        <span class="glyphicon glyphicon-remove"></span>
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+
+        {% include 'common/continue_cancel.html' %}
+        <div class="divider"></div>
+
+    </form>
+
+{% endblock %}
+
+{% block extra_scripts %}
+    {{ form.media }}
+    <script src="//cdn.jsdelivr.net/sortable/1.4.2/Sortable.min.js"></script>
+    <script>
+        <!--
+        $(function(){
+            var selectedList = $("#selected-product-list");
+            var deselectedList = $("#deselected-product-list");
+            $(".deselectbutton").on('click', function() {
+                var id = $(this).parent().attr("data-product");
+                {% comment %} Disable the associated hidden input field {% endcomment %}
+                var inputField = $("input[name='{{ form.products.name }}'][value='"+id+"']");
+                inputField.attr("disabled", "disabled");
+                {% comment %} Move the <li> to the selected list {% endcomment %}
+                deselectedList.append(selectedList.find("li#product_"+id));
+            });
+            $(".selectbutton").on('click', function() {
+                var id = $(this).parent().attr("data-product");
+                {% comment %} Enable the associated hidden input field, and move it to the bottom of the list of enabled input fields {% endcomment %}
+                var inputField = $("input[name='{{ form.products.name }}'][value='"+id+"']");
+                var inputFields = $("input[name='{{ form.products.name }}'][disabled!='disabled']");
+                if (inputFields.length) {
+                    inputField.insertAfter(inputFields[inputFields.length - 1]);
+                } else {
+                    inputField.insertBefore(inputField.parent().children().first());
+                }
+                inputField.removeAttr("disabled");
+                {% comment %} Move the <li> to the deselected list {% endcomment %}
+                selectedList.append(deselectedList.find("li#product_"+id));
+            });
+
+            $("input[name='{{ form.products.name }}'][disabled!='disabled']").each(function(){
+                selectedList.append(deselectedList.find("li#product_"+this.value));
+            });
+
+            Sortable.create(
+                selectedList.get(0),
+                {
+                    'handle': '.movebutton',
+                    'onSort': function(evt){
+                        {% comment %} Move the associated hidden input field to the correct index {% endcomment %}
+                        var inputFields = $("input[name='{{ form.products.name }}'][disabled!='disabled']");
+                        var inputField = inputFields.filter("[value='"+$(evt.item).attr("data-product")+"']");
+                        if (evt.newIndex < inputFields.length-1) {
+                            inputField.insertBefore(inputFields[evt.newIndex]);
+                        } else {
+                            inputField.insertAfter(inputFields[inputFields.length-1]);
+                        }
+                    }
+                }
+            );
+        });
+
+
+        // -->
+    </script>
+{% endblock %}

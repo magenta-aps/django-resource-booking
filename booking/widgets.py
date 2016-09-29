@@ -1,7 +1,12 @@
 from django.forms.widgets import MultiWidget, NumberInput, Select
+from django.forms.widgets import MultipleHiddenInput
+from django.forms.utils import flatatt
 from datetime import timedelta
 
+from django.utils.encoding import force_text
 from django.utils.safestring import mark_safe
+from django.utils.html import format_html
+from itertools import chain
 
 
 class DurationWidget(MultiWidget):
@@ -97,3 +102,41 @@ class DurationWidget(MultiWidget):
         out += rendered_widgets[2]
 
         return out
+
+
+class OrderedMultipleHiddenChooser(MultipleHiddenInput):
+
+    def render(self, name, value, attrs=None, choices=()):
+        if value is None:
+            value = []
+        print value
+        final_attrs = self.build_attrs(attrs, type=self.input_type, name=name)
+        id_ = final_attrs.get('id', None)
+        selected_elements = [None]*len(value)
+        unselected_elements = []
+        for i, choice in enumerate(chain(self.choices, choices)):
+            v, label = choice
+            input_attrs = dict(value=force_text(v), **final_attrs)
+            selected = v in value
+
+            if not selected:
+                input_attrs['disabled'] = 'disabled'
+            if id_:
+                input_attrs['id'] = '%s_%s' % (id_, i)
+
+            element = format_html('<input{} />', flatatt(input_attrs))
+            if selected:
+                try:
+                    index = value.index(v)
+                    selected_elements[index] = element
+                except ValueError:
+                    pass
+            else:
+                unselected_elements.append(element)
+
+        return mark_safe(
+            '\n'.join(
+                [e for e in selected_elements if e is not None] +
+                unselected_elements
+            )
+        )

@@ -1361,3 +1361,30 @@ body.lightbox {
 	background: transparent;
 }
 /* Time interval selector END */
+
+
+/* MultiProductVisit START */
+#deselected-product-list li .movebutton,
+#deselected-product-list li .deselectbutton {
+    display: none;
+}
+#deselected-product-list,
+#selected-product-list {
+    font-size: 1.5em;
+}
+
+#selected-product-list li .movebutton {
+    cursor: move;
+}
+
+#selected-product-list li .selectbutton,
+#selected-product-list li .teaser {
+    display: none;
+}
+#selected-product-list li .title {
+    display: inline;
+    font-weight: normal;
+    margin: 0;
+    padding: 0;
+}
+/* MultiProductVisit END */

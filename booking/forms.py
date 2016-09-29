@@ -8,7 +8,7 @@ from booking.models import Guest, Region, PostCode, School
 from booking.models import ClassBooking, TeacherBooking, \
     BookingGymnasieSubjectLevel
 from booking.models import EmailTemplate
-from booking.models import Visit
+from booking.models import Visit, MultiProductVisit
 from booking.models import BLANK_LABEL, BLANK_OPTION
 from django import forms
 from django.db.models import Q
@@ -16,11 +16,11 @@ from django.db.models.expressions import OrderBy
 from django.forms import CheckboxSelectMultiple, CheckboxInput
 from django.forms import EmailInput
 from django.forms import formset_factory, inlineformset_factory
-from django.forms import TextInput, NumberInput, Textarea, Select
+from django.forms import TextInput, NumberInput, DateInput, Textarea, Select
 from django.forms import HiddenInput
 from django.utils.translation import ugettext_lazy as _
 from tinymce.widgets import TinyMCE
-from .fields import ExtensibleMultipleChoiceField
+from .fields import ExtensibleMultipleChoiceField, OrderedMultipleChoiceField
 
 
 class AdminProductSearchForm(forms.Form):
@@ -1123,3 +1123,35 @@ class EvaluationOverviewForm(forms.Form):
         self.fields['organizationalunit'].choices = [
             (x.pk, unicode(x)) for x in userprofile.get_unit_queryset()
         ]
+
+
+class MultiProductVisitDateForm(forms.ModelForm):
+    class Meta:
+        fields = ['date']
+        model = MultiProductVisit
+        widgets = {
+            'date': DateInput(
+                attrs={'class': 'datepicker form-control'}
+            )
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(MultiProductVisitDateForm, self).__init__(*args, **kwargs)
+        self.fields['date'].input_formats = ['%d-%m-%Y']
+
+
+class MultiProductVisitProductsForm(forms.ModelForm):
+    class Meta:
+        model = MultiProductVisit
+        fields = []
+
+    products = OrderedMultipleChoiceField()
+
+    def save(self, commit=True, *args, **kwargs):
+        products = self.cleaned_data['products']
+        if type(products) != list:
+            products = [products]
+        self.instance.update_subvisits([
+            Product.objects.get(id=id) for id in products
+        ])
+        return self.instance
