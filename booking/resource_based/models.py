@@ -382,9 +382,20 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
         # Not available on times when we are booked
         if hasattr(self, 'resource'):
             for x in self.resource.booked_eventtimes(from_dt, to_dt):
+
+                if x.has_specific_time:
+                    start = x.start
+                    end = x.end
+                else:
+                    # A booking without specific time is considered to be
+                    # from 08:00 to 16:00. Default time for such events is
+                    # midnight to midnight next day.
+                    start = x.start + datetime.timedelta(hours=8)
+                    end = x.end - datetime.timedelta(hours=8)
+
                 yield CalendarEventInstance(
-                    x.start,
-                    x.end,
+                    start,
+                    end,
                     available=False,
                     source=x.visit
                 )
