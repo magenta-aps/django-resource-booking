@@ -518,7 +518,7 @@ class UserListView(EditorRequriedMixin, ListView):
 
         try:
             self.selected_unit = int(
-                self.request.GET.get("organizationalunit", None)
+                self.request.GET.get("unit", None)
             )
         except:
             pass
