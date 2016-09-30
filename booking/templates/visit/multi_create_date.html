@@ -3,7 +3,7 @@
 {% load staticfiles %}
 {% load booking_tags %}
 
-{% block htmltitle %} - {% if object.pk %}{% trans "redigér ressourcegruppe" %}{% else %}{% trans "opret ressourcegruppe" %}{% endif %}{% endblock %}
+{% block htmltitle %} - {% trans "opret ressourcegruppe" %}{% endblock %}
 
 {% block head %}
     {% include 'common/resources/datepicker_style.html' %}
@@ -22,7 +22,7 @@
         {{ form.non_field_errors }}
 
         {% csrf_token %}
-        {{ form.date }}
+        {% include 'common/fields/generic_field.html' with field=form.date %}
 
         {% include 'common/continue_cancel.html' %}
         <div class="divider"></div>

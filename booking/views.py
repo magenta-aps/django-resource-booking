@@ -31,7 +31,7 @@ from django.utils.translation import ugettext as _
 from django.views.generic import View, TemplateView, ListView, DetailView
 from django.views.generic.base import ContextMixin
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
-from django.views.generic.edit import FormMixin, FormView
+from django.views.generic.edit import FormMixin, FormView, ProcessFormView
 from django.views.defaults import bad_request
 
 from profile.models import EDIT_ROLES
@@ -3385,78 +3385,124 @@ class BookingAcceptView(BreadcrumbMixin, FormView):
         ]
 
 
-class MultiProductVisitCreateView(BreadcrumbMixin, CreateView):
-    form_class = MultiProductVisitDateForm
-    model = MultiProductVisit
-    template_name = "visit/multi_create_date.html"
+# class MultiProductVisitCreateView(BreadcrumbMixin, CreateView):
+#     form_class = MultiProductVisitDateForm
+#     model = MultiProductVisit
+#     template_name = "visit/multi_create_date.html"
+#
+#     def get_success_url(self):
+#         return reverse(
+#             'mpv-edit', args=[self.object.id]
+#         )
 
-    def get_success_url(self):
-        return reverse(
-            'mpv-edit', args=[self.object.id]
-        )
 
-
-class MultiProductVisitUpdateView(BreadcrumbMixin, UpdateView):
+class MultiProductVisitEditView(BreadcrumbMixin, ProcessFormView):
     form_class = MultiProductVisitProductsForm
     model = MultiProductVisit
     template_name = "visit/multi_update.html"
     available_products = None
+    date = None
+
+    def get_date(self):
+        return self.date
 
     def get_available_products(self):
-        if self.object:
-            if self.available_products is None:
-                self.available_products = \
-                    MultiProductAvailableProductsView.get_available_products(
-                        self.object.date
-                    )
-            return self.available_products
-        return None
+        if self.available_products is None:
+            self.available_products = [
+                product
+                for product in Product.objects.filter(
+                    state=Product.ACTIVE,
+                    time_mode=Product.TIME_MODE_GUEST_SUGGESTED
+                )
+                if product.is_bookable(self.get_date())
+            ]
+        return self.available_products
 
     def get_form(self):
-        form = super(MultiProductVisitUpdateView, self).get_form()
+        form = super(MultiProductVisitEditView, self).get_form()
         form.fields['products'].choices = [
             (product.id, product.title)
             for product in self.get_available_products()
         ]
-        if self.object:
-            form.initial['products'] = [
-                product.id for product in self.object.products
-            ]
         return form
 
     def get_context_data(self, **kwargs):
         context = {}
         context['products'] = self.get_available_products()
         context.update(kwargs)
-        return super(MultiProductVisitUpdateView, self).get_context_data(
+        return super(MultiProductVisitEditView, self).get_context_data(
             **context
         )
 
+class MultiProductVisitCreateView(MultiProductVisitEditView, CreateView):
 
-class MultiProductAvailableProductsView(View):
+    def get_date(self):
+        if self.date is None:
+            datestring = self.kwargs.get('date')
+            if datestring:
+                self.date = datetime.strptime(datestring, '%Y-%m-%d').date()
+        return self.date
 
-    @staticmethod
-    def get_available_products(date):
-        return [
-            product
-            for product in Product.objects.filter(
-                state=Product.ACTIVE,
-                time_mode=Product.TIME_MODE_GUEST_SUGGESTED
-            )
-            if product.is_bookable(date)
+    def get_form(self):
+        if self.get_date() is None:
+            return MultiProductVisitDateForm(self.request.POST or None)
+        return super(MultiProductVisitCreateView, self).get_form()
+
+    def get_template_names(self):
+        if self.get_date() is None:
+            return ["visit/multi_create_date.html"]
+        return super(MultiProductVisitCreateView, self).get_template_names()
+
+    def form_valid(self, form):
+        if self.get_date() is None:
+            return redirect(reverse('mpv-create', args=[form.cleaned_data['date']]))
+        return super(MultiProductVisitCreateView, self).form_valid(form)
+
+
+    def get_form_kwargs(self):
+        kwargs = {}
+        kwargs['date'] = self.get_date()
+        kwargs.update(super(MultiProductVisitCreateView, self).get_form_kwargs())
+        return kwargs
+
+
+class MultiProductVisitUpdateView(MultiProductVisitEditView, UpdateView):
+
+    def get_date(self):
+        return self.object.date
+
+    def get_form(self):
+        form = super(MultiProductVisitEditView, self).get_form()
+        form.initial['products'] = [
+            product.id for product in self.object.products
         ]
+        return form
 
-    def get(self, request, *args, **kwargs):
-        datestring = kwargs['date']
-        date = datetime.strptime(datestring, '%Y-%m-%d').date()
-        products = self.get_available_products(date)
-        return JsonResponse({
-            'products': [
-                {
-                    'id': product.id,
-                    'title': product.title,
-                    'teaser': product.teaser
-                }
-                for product in products
-            ]
-        })
+
+# class MultiProductAvailableProductsView(View):
+#
+#     @staticmethod
+#     def get_available_products(date):
+#         return [
+#             product
+#             for product in Product.objects.filter(
+#                 state=Product.ACTIVE,
+#                 time_mode=Product.TIME_MODE_GUEST_SUGGESTED
+#             )
+#             if product.is_bookable(date)
+#         ]
+#
+#     def get(self, request, *args, **kwargs):
+#         datestring = kwargs['date']
+#         date = datetime.strptime(datestring, '%Y-%m-%d').date()
+#         products = self.get_available_products(date)
+#         return JsonResponse({
+#             'products': [
+#                 {
+#                     'id': product.id,
+#                     'title': product.title,
+#                     'teaser': product.teaser
+#                 }
+#                 for product in products
+#             ]
+#         })
