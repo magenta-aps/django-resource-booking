@@ -1822,6 +1822,13 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         blank=True,
     )
 
+    @property
+    def product(self):
+        try:
+            return self.eventtime.product
+        except:
+            return None
+
     deprecated_start_datetime = models.DateTimeField(
         verbose_name=_(u'Starttidspunkt'),
         null=True,
