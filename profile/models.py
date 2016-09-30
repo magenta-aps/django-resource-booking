@@ -320,7 +320,34 @@ class UserProfile(models.Model):
         return available_roles[self.get_role()]
 
     def save(self, *args, **kwargs):
+
         result = super(UserProfile, self).save(*args, **kwargs)
+
+        # Create a resource for the user
+        if (
+            self.is_teacher and
+            self.user.teacherresource_set.exists() and
+            self.organizationalunit
+        ):
+            resource = booking.models.TeacherResource(
+                user=self.user,
+                organizationalunit=self.organizationalunit
+            )
+            resource.make_calendar()
+            resource.save()
+
+        # Create a resource for the user
+        if (
+            self.is_host and
+            not self.user.hostresource_set.exists() and
+            self.organizationalunit
+        ):
+            resource = booking.models.HostResource(
+                user=self.user,
+                organizationalunit=self.organizationalunit
+            )
+            resource.make_calendar()
+            resource.save()
 
         return result
 
