@@ -228,7 +228,7 @@ class TimeDetailsView(DetailView):
         self.object = self.get_object()
 
         if(request.POST.get("confirm")):
-            self.object.make_visit(True)
+            self.object.make_visit()
             return redirect(self.get_success_url())
         else:
             # Do same thing as for get method
