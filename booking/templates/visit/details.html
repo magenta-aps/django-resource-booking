@@ -163,6 +163,7 @@
                         </dd>
                         {% endif %}
 
+                        {% if not object.product.is_resource_controlled %}
                         <dt>{% trans 'Lokaler' %}</dt>
                         <dd>
                             {{ object.get_room_status_display }}
@@ -177,6 +178,8 @@
                                 <a href="{% url 'change-visit-rooms' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
                             {% endif %}
                         </dd>
+                        {% endif %}
+
                         <dt>{% trans 'Automatisk email' %}</dt>
                         <dd>
                             {{ object.get_autosend_display }}
