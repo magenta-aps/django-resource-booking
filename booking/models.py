@@ -2896,9 +2896,10 @@ class MultiProductVisitTemp(models.Model):
     updated = models.DateTimeField(
         auto_now=True
     )
-    def create_real(self):
+
+    def create_mpv(self):
         mpv = MultiProductVisit(
-            date = self.date
+            date=self.date
         )
         mpv.save()
         for index, product in enumerate(self.products.all()):

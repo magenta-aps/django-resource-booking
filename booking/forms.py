@@ -8,7 +8,7 @@ from booking.models import Guest, Region, PostCode, School
 from booking.models import ClassBooking, TeacherBooking, \
     BookingGymnasieSubjectLevel
 from booking.models import EmailTemplate
-from booking.models import Visit, MultiProductVisit, MultiProductVisitTemp
+from booking.models import Visit, MultiProductVisitTemp
 from booking.models import BLANK_LABEL, BLANK_OPTION
 from booking.widgets import OrderedMultipleHiddenChooser
 from django import forms
@@ -20,9 +20,8 @@ from django.forms import formset_factory, inlineformset_factory
 from django.forms import TextInput, NumberInput, DateInput, Textarea, Select
 from django.forms import HiddenInput
 from django.utils.translation import ugettext_lazy as _
-from django.utils import formats, translation
 from tinymce.widgets import TinyMCE
-from .fields import ExtensibleMultipleChoiceField, OrderedMultipleChoiceField
+from .fields import ExtensibleMultipleChoiceField
 
 
 class AdminProductSearchForm(forms.Form):
@@ -1139,6 +1138,7 @@ class MutiProductVisitTempDateForm(forms.ModelForm):
         labels = {
             'date': _(u'Vælg dato')
         }
+
     def __init__(self, *args, **kwargs):
         super(MutiProductVisitTempDateForm, self).__init__(*args, **kwargs)
         self.fields['date'].input_formats = ['%d-%m-%Y', '%d.%m.%Y']

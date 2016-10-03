@@ -38,7 +38,6 @@ from profile.models import EDIT_ROLES
 from profile.models import role_to_text
 from booking.models import Product, Visit, StudyMaterial, \
     ProductAutosend
-from booking.models import MultiProductVisit
 from booking.models import KUEmailMessage
 from booking.models import Subject
 from booking.models import OrganizationalUnit
@@ -74,8 +73,8 @@ from booking.forms import AdminProductSearchForm
 from booking.forms import ProductAutosendFormSet
 from booking.forms import VisitSearchForm
 from booking.forms import AcceptBookingForm
-
-from booking.forms import MutiProductVisitTempDateForm, MutiProductVisitTempProductsForm
+from booking.forms import MutiProductVisitTempDateForm
+from booking.forms import MutiProductVisitTempProductsForm
 
 from booking.utils import full_email, get_model_field_map
 from booking.utils import get_related_content_types
@@ -3462,7 +3461,7 @@ class MultiProductVisitTempConfirmView(BreadcrumbMixin, DetailView):
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
-        mpv = self.object.create_real()
+        mpv = self.object.create_mpv()
         self.object.delete()
         return redirect(
             reverse('visit-view', args=[mpv.id])
