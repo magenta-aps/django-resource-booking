@@ -2318,7 +2318,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     def date_display(self):
         if hasattr(self, 'eventtime') and self.eventtime.start:
-            return self.eventtime.start
+            return self.eventtime.interval_display
         else:
             return _(u'på ikke-fastlagt tidspunkt')
 

@@ -87,8 +87,8 @@
                     <dl class="dl-horizontal status">
                         <dt>{% trans 'Tidspunkt' %}</dt>
                         <dd>
-                            {% if object.start_datetime %}
-                                {{ object.start_datetime }}
+                            {% if object.eventtime.start %}
+                                {{ object.eventtime.interval_display }}
                             {% else %}
                                 {% trans 'Ikke angivet' %}
                             {% endif %}
