@@ -2786,6 +2786,18 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             for requirement in self.product.resourcerequirement_set.all()
         ]
 
+    @property
+    def calendar_event_link(self):
+        return reverse('visit-view', args=[self.pk])
+
+    @property
+    def calender_event_title(self):
+        res = _(u'Besøg #%s') % self.pk
+        if self.product:
+            return '%s - %s' % (res, self.product.title)
+        else:
+            return res
+
 
 Visit.add_override_property('duration')
 Visit.add_override_property('locality')
