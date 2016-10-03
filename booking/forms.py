@@ -8,19 +8,20 @@ from booking.models import Guest, Region, PostCode, School
 from booking.models import ClassBooking, TeacherBooking, \
     BookingGymnasieSubjectLevel
 from booking.models import EmailTemplate
-from booking.models import Visit
+from booking.models import Visit, MultiProductVisit, MultiProductVisitTemp
 from booking.models import BLANK_LABEL, BLANK_OPTION
+from booking.widgets import OrderedMultipleHiddenChooser
 from django import forms
 from django.db.models import Q
 from django.db.models.expressions import OrderBy
 from django.forms import CheckboxSelectMultiple, CheckboxInput
 from django.forms import EmailInput
 from django.forms import formset_factory, inlineformset_factory
-from django.forms import TextInput, NumberInput, Textarea, Select
+from django.forms import TextInput, NumberInput, DateInput, Textarea, Select
 from django.forms import HiddenInput
 from django.utils.translation import ugettext_lazy as _
 from tinymce.widgets import TinyMCE
-from .fields import ExtensibleMultipleChoiceField
+from .fields import ExtensibleMultipleChoiceField, OrderedMultipleChoiceField
 
 
 class AdminProductSearchForm(forms.Form):
@@ -1123,3 +1124,65 @@ class EvaluationOverviewForm(forms.Form):
         self.fields['organizationalunit'].choices = [
             (x.pk, unicode(x)) for x in userprofile.get_unit_queryset()
         ]
+
+
+class MultiProductVisitProductsForm(forms.ModelForm):
+    class Meta:
+        model = MultiProductVisit
+        fields = ['date']
+        widgets = {
+            'date': DateInput(
+                attrs={'class': 'datepicker form-control'},
+            )
+        }
+        labels = {
+            'date': _(u'Vælg dato')
+        }
+
+    products = OrderedMultipleChoiceField(
+        required=False
+    )
+
+    def __init__(self, date=None, *args, **kwargs):
+        super(MultiProductVisitProductsForm, self).__init__(*args, **kwargs)
+        self.fields['date'].input_formats = ['%d-%m-%Y']
+        if date is not None:
+            self.instance.date = date
+
+    def save(self, commit=True, *args, **kwargs):
+        super(MultiProductVisitProductsForm, self).save(commit, *args, **kwargs)
+        products = self.cleaned_data['products']
+        if type(products) != list:
+            products = [products]
+        self.instance.update_subvisits([
+            Product.objects.get(id=id) for id in products
+        ])
+        return self.instance
+
+
+
+
+class MutiProductVisitTempDateForm(forms.ModelForm):
+    class Meta:
+        model = MultiProductVisitTemp
+        fields = ['date']
+        widgets = {
+            'date': DateInput(
+                attrs={'class': 'datepicker form-control'},
+            )
+        }
+        labels = {
+            'date': _(u'Vælg dato')
+        }
+    def __init__(self, *args, **kwargs):
+        super(MultiProductVisitProductsForm, self).__init__(*args, **kwargs)
+        self.fields['date'].input_formats = ['%d-%m-%Y']
+
+
+class MutiProductVisitTempProductsForm(forms.ModelForm):
+    class Meta:
+        model = MultiProductVisitTemp
+        fields = ['products']
+        widgets = {
+            'products': OrderedMultipleHiddenChooser()
+        }

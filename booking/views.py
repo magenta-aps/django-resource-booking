@@ -30,14 +30,15 @@ from django.utils.http import urlquote
 from django.utils.translation import ugettext as _
 from django.views.generic import View, TemplateView, ListView, DetailView
 from django.views.generic.base import ContextMixin
-from django.views.generic.edit import UpdateView, FormMixin, DeleteView, \
-    FormView
+from django.views.generic.edit import CreateView, UpdateView, DeleteView
+from django.views.generic.edit import FormMixin, FormView, ProcessFormView
 from django.views.defaults import bad_request
 
 from profile.models import EDIT_ROLES
 from profile.models import role_to_text
 from booking.models import Product, Visit, StudyMaterial, \
     ProductAutosend
+from booking.models import MultiProductVisit
 from booking.models import KUEmailMessage
 from booking.models import Subject
 from booking.models import OrganizationalUnit
@@ -70,6 +71,10 @@ from booking.forms import AdminProductSearchForm
 from booking.forms import ProductAutosendFormSet
 from booking.forms import VisitSearchForm
 from booking.forms import AcceptBookingForm
+from booking.forms import MultiProductVisitProductsForm
+
+from booking.forms import MutiProductVisitTempDateForm, MutiProductVisitTempProductsForm
+
 from booking.utils import full_email, get_model_field_map
 from booking.utils import get_related_content_types
 
@@ -3380,3 +3385,95 @@ class BookingAcceptView(BreadcrumbMixin, FormView):
                 'text': _(u'Svar på ledig plads')
             }
         ]
+
+
+
+class MultiProductVisitEditView(BreadcrumbMixin, ProcessFormView):
+
+    form_class = MultiProductVisitProductsForm
+    model = MultiProductVisit
+    template_name = "visit/multi_update.html"
+
+
+class MultiProductVisitCreateView(MultiProductVisitEditView, CreateView):
+    pass
+
+
+class MultiProductVisitUpdateView(MultiProductVisitEditView, UpdateView):
+
+    _available_products = None
+
+    def get_form(self):
+        form = super(MultiProductVisitUpdateView, self).get_form()
+        form.fields['products'].choices = [
+            (product.id, product.title)
+            for product in self.available_products
+        ]
+        form.initial['products'] = [
+            product.id for product in self.object.products
+        ]
+        return form
+
+    def get_context_data(self, **kwargs):
+        context = {}
+        context['products'] = self.available_products
+        context.update(kwargs)
+        return super(MultiProductVisitEditView, self).get_context_data(
+            **context
+        )
+
+    @property
+    def available_products(self):
+        if self._available_products is None:
+            self._available_products = MultiProductAvailableProductsView.get_available_products(self.object.date)
+        return self._available_products
+
+
+class MultiProductAvailableProductsView(View):
+
+    @staticmethod
+    def get_available_products(date):
+        return [
+            product
+            for product in Product.objects.filter(
+                state=Product.ACTIVE,
+                time_mode=Product.TIME_MODE_GUEST_SUGGESTED
+            )
+            if product.is_bookable(date)
+        ]
+
+    def get(self, request, *args, **kwargs):
+        datestring = request.GET['date']
+        date = datetime.strptime(datestring, '%Y-%m-%d').date()
+        products = self.get_available_products(date)
+        return JsonResponse({
+            'products': [
+                {
+                    'id': product.id,
+                    'title': product.title,
+                    'teaser': product.teaser
+                }
+                for product in products
+            ]
+        })
+
+
+class MultiProductVisitTempDateView(BreadcrumbMixin, ProcessFormView):
+    form_class = MutiProductVisitTempDateForm
+    model = MultiProductVisitTemp
+    template_name = "visit/multi_date.html"
+
+
+class MultiProductVisitTempCreateView(MultiProductVisitTempDateView, CreateView):
+    pass
+
+
+class MultiProductVisitTempUpdateView(MultiProductVisitTempDateView, UpdateView):
+    pass
+
+
+class MultiProductVisitTempProductsView(BreadcrumbMixin, UpdateView):
+
+    form_class = MutiProductVisitTempDateForm
+    model = MultiProductVisitTemp
+    template_name = "visit/multi_products.html"

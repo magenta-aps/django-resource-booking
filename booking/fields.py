@@ -4,6 +4,7 @@ from collections import defaultdict
 from django.forms.fields import ChoiceField, MultipleChoiceField
 from django.forms.widgets import CheckboxSelectMultiple, Select, SelectMultiple
 
+from .widgets import OrderedMultipleHiddenChooser
 from .widgets import CheckboxSelectMultipleDisable, DurationWidget
 from .widgets import SelectDisable, SelectMultipleDisable
 
@@ -54,6 +55,22 @@ class ExtensibleMultipleChoiceField(MultipleChoiceField):
     """
     def valid_value(self, value):
         return True
+
+
+class OrderedMultipleChoiceField(ExtensibleMultipleChoiceField):
+    widget = OrderedMultipleHiddenChooser
+
+    def has_changed(self, initial, data):
+        if super(OrderedMultipleChoiceField, self).has_changed(initial, data):
+            return True
+        if initial is None:
+            initial = []
+        if data is None:
+            data = []
+        for i, value in enumerate(initial):
+            if data[i] != initial[i]:
+                return True
+        return False
 
 
 class DisableFieldMixin(object):

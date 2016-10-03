@@ -1,11 +1,11 @@
+from django.forms.utils import flatatt
 from django.forms import widgets
-from datetime import timedelta
-
 from django.utils.safestring import mark_safe
 from django.utils.encoding import force_text
 from django.utils.html import format_html
 
 from itertools import chain
+from datetime import timedelta
 
 
 class DurationWidget(widgets.MultiWidget):
@@ -101,6 +101,53 @@ class DurationWidget(widgets.MultiWidget):
         out += rendered_widgets[2]
 
         return out
+
+
+class OrderedMultipleHiddenChooser(widgets.MultipleHiddenInput):
+
+    def render(self, name, value, attrs=None, choices=()):
+        print "render() value: %s" % (unicode(value))
+        if value is None:
+            value = []
+        elif len(choices) == 0:
+            choices = [(v, '') for v in value]
+        final_attrs = self.build_attrs(attrs, type=self.input_type, name=name)
+        id_ = final_attrs.get('id', None)
+        selected_elements = [None]*len(value)
+        unselected_elements = []
+        for i, choice in enumerate(chain(self.choices, choices)):
+            v, label = choice
+            input_attrs = dict(value=force_text(v), **final_attrs)
+            selected = v in value
+            print v
+            print selected
+
+            if not selected:
+                input_attrs['disabled'] = 'disabled'
+            if id_:
+                input_attrs['id'] = '%s_%s' % (id_, i)
+
+            element = format_html('<input{} />', flatatt(input_attrs))
+            if selected:
+                try:
+                    index = value.index(v)
+                    selected_elements[index] = element
+                except ValueError:
+                    pass
+            else:
+                unselected_elements.append(element)
+
+        prototype_attrs = dict(disabled='disabled', **final_attrs)
+        del prototype_attrs['id']
+        prototype_attrs['data-prototype'] = 1
+        unselected_elements.append(format_html('<input{} />', flatatt(prototype_attrs)))
+
+        return mark_safe(
+            '\n'.join(
+                [e for e in selected_elements if e is not None] +
+                unselected_elements
+            )
+        )
 
 
 class DisabledChoiceMixin(object):
