@@ -450,28 +450,27 @@ class CalendarEventInstance(object):
         )
         day_end = day_start + datetime.timedelta(days=1)
 
-        if self.end == day_end:
-            time_interval = "%s - 24:00" % (
-                str(self.start.astimezone(
-                    timezone.get_current_timezone()
-                ).time())[:5]
-            )
-        else:
-            time_interval = "%s - %s" % (
-                str(self.start.astimezone(
-                    timezone.get_current_timezone()
-                ).time())[:5],
-                str(self.end.astimezone(
-                    timezone.get_current_timezone()
-                ).time())[:5]
-            )
-
         obj = {
             'event': self,
             'start': max(self.start, day_start),
             'end': min(self.end, day_end),
-            'time_interval': time_interval
         }
+
+        if obj['end'] == day_end:
+            obj['time_interval'] = "%s - 24:00" % (
+                str(obj['start'].astimezone(
+                    timezone.get_current_timezone()
+                ).time())[:5]
+            )
+        else:
+            obj['time_interval'] = "%s - %s" % (
+                str(obj['start'].astimezone(
+                    timezone.get_current_timezone()
+                ).time())[:5],
+                str(obj['end'].astimezone(
+                    timezone.get_current_timezone()
+                ).time())[:5]
+            )
 
         if self.available:
             obj['available_class'] = 'available'
