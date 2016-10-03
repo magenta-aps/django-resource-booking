@@ -450,8 +450,6 @@ class CalendarEventInstance(object):
         )
         day_end = day_start + datetime.timedelta(days=1)
 
-        sec_diff = (self.end - self.start).total_seconds()
-
         if self.end == day_end:
             time_interval = "%s - 24:00" % (
                 str(self.start.astimezone(
