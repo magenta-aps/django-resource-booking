@@ -450,11 +450,14 @@ class CalendarEventInstance(object):
         )
         day_end = day_start + datetime.timedelta(days=1)
 
-        obj = {
-            'event': self,
-            'start': max(self.start, day_start),
-            'end': min(self.end, day_end),
-            'title': "%s - %s" % (
+        if self.end == day_end:
+            time_interval = "%s - 24:00" % (
+                str(self.start.astimezone(
+                    timezone.get_current_timezone()
+                ).time())[:5]
+            )
+        else:
+            time_interval = "%s - %s" % (
                 str(self.start.astimezone(
                     timezone.get_current_timezone()
                 ).time())[:5],
@@ -462,6 +465,12 @@ class CalendarEventInstance(object):
                     timezone.get_current_timezone()
                 ).time())[:5]
             )
+
+        obj = {
+            'event': self,
+            'start': max(self.start, day_start),
+            'end': min(self.end, day_end),
+            'time_interval': time_interval
         }
 
         if self.available:
@@ -474,9 +483,9 @@ class CalendarEventInstance(object):
         obj['top_offset'] = '%.2f' % (
             top_offset_seconds / CalendarEventInstance.SECONDS_PER_EM
         )
-        height_seconds = (obj['end'] - obj['start']).total_seconds()
+        marker_duration = (obj['end'] - obj['start']).total_seconds()
         obj['height'] = '%.2f' % (
-            height_seconds / CalendarEventInstance.SECONDS_PER_EM
+            marker_duration / CalendarEventInstance.SECONDS_PER_EM
         )
 
         return obj
@@ -632,6 +641,17 @@ class CalendarEvent(AvailabilityUpdaterMixin, models.Model):
             return self.calendar.affected_eventtimes
         else:
             return EventTime.objects.none()
+
+    @property
+    def calendar_event_link(self):
+        return reverse('calendar-event-edit', args=[
+            self.calendar.resource.pk,
+            self.pk
+        ])
+
+    @property
+    def calender_event_title(self):
+        return self.title
 
     def __unicode__(self):
         return ", ".join(unicode(x) for x in [

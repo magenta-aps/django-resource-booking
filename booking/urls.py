@@ -37,15 +37,12 @@ from booking.views import VisitAddCommentView
 from booking.views import VisitDetailView
 from booking.views import VisitCustomListView
 from booking.views import EvaluationOverviewView
-
 from booking.views import MultiProductVisitPromptView
 from booking.views import MultiProductVisitTempCreateView
 from booking.views import MultiProductVisitTempUpdateView
 from booking.views import MultiProductVisitTempProductsView
 from booking.views import MultiProductVisitTempConfirmView
 
-from booking.resource_based.views import CalendarView, CalendarEventView, \
-    CalendarEventDeleteView
 from booking.resource_based.views import ResourceCreateView, ResourceDetailView
 from booking.resource_based.views import ResourceListView, ResourceUpdateView
 from booking.resource_based.views import ResourceDeleteView
@@ -289,7 +286,7 @@ urlpatterns = patterns(
         ResourceDetailView.as_view(),
         name='resource-view'),
     url(r'^resource/(?P<pk>[0-9]+)/calendar/?$',
-        CalendarView.as_view(),
+        booking.views.CalendarView.as_view(),
         name='calendar'),
     url(r'^resource/(?P<pk>[0-9]+)/create_calendar/?$',
         booking.views.CalendarCreateView.as_view(),
@@ -297,11 +294,14 @@ urlpatterns = patterns(
     url(r'^resource/(?P<pk>[0-9]+)/delete_calendar/?$',
         booking.views.CalendarDeleteView.as_view(),
         name='calendar-delete'),
-    url(r'^resource/(?P<pk>[0-9]+)/calendar/calendar-event/?$',
-        CalendarEventView.as_view(),
-        name='calendar-event'),
+    url(r'^resource/(?P<res>[0-9]+)/calendar/calendar-event/?$',
+        booking.views.CalendarEventCreateView.as_view(),
+        name='calendar-event-create'),
+    url(r'^resource/(?P<res>[0-9]+)/calendar/edit-event/(?P<pk>[0-9]+)/?$',
+        booking.views.CalendarEventUpdateView.as_view(),
+        name='calendar-event-edit'),
     url(r'^calendar-event/(?P<pk>[0-9]+)/delete/?$',
-        CalendarEventDeleteView.as_view(),
+        booking.views.CalendarEventDeleteView.as_view(),
         name='calendar-event-delete'),
     url(r'^resource/?$',
         ResourceListView.as_view(),

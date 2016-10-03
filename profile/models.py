@@ -326,7 +326,7 @@ class UserProfile(models.Model):
         # Create a resource for the user
         if (
             self.is_teacher and
-            self.user.teacherresource_set.exists() and
+            not self.user.teacherresource_set.exists() and
             self.organizationalunit
         ):
             resource = booking.models.TeacherResource(

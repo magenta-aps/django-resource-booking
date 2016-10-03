@@ -8,8 +8,13 @@
 {% block head %}
     {% include 'common/resources/datepicker_style.html' %}
     <link href="{% static 'css/bootstrap-slider.css' %}" type="text/css" media="all" rel="stylesheet"  />
-
     {{ form.media }}
+    <style type="text/css">
+        div.recurrence-widget div.mode,
+        div.recurrence-widget a.add-button.add-date {
+            display: none;
+        }
+    </style>
 {% endblock %}
 
 
@@ -36,10 +41,10 @@
 
                 <div class="row form-group">
                     <div class="col-sm-2">
-                        <label for="id_start_date">Startdato:</label>
+                        <label for="id_start_date">Startdato (for første forekomst):</label>
                     </div>
                     <div class="col-sm-7">
-                        <input class="form-control input-sm datepicker" id="id_start_date" name="start_date" type="text">
+                        <input class="form-control input-sm datepicker" id="id_start_date" name="start_date" type="text" data-time="{{ start_time }}">
                     </div>
                     <div class="col-sm-3 with-errors">
                     </div>
@@ -47,14 +52,18 @@
 
                 <div class="row form-group">
                     <div class="col-sm-2">
-                        <label for="id_end_date">Slutdato:</label>
+                        <label for="id_end_date">Slutdato (for første forekomst):</label>
                     </div>
                     <div class="col-sm-7">
                         <label for="id_separate_end_date">
-                            <input type="checkbox" name="separate_end_date" id="id_separate_end_date">
-                            {% trans 'Brug anden slutdato' %}
+                            <input type="checkbox" name="separate_end_date" id="id_separate_end_date"
+                                {% if separate_date %}
+                                    checked="checked"
+                                {% endif %}
+                            >
+                            {% trans 'Anvend separat slutdato' %}
                         </label>
-                        <input class="form-control input-sm datepicker" id="id_end_date" name="end_date" type="text" style="display: none">
+                        <input class="form-control input-sm datepicker" id="id_end_date" name="end_date" type="text" style="display: none" data-time="{{ end_time }}">
                     </div>
                     <div class="col-sm-3 with-errors">
                     </div>
@@ -62,7 +71,7 @@
 
                 <div class="row form-group">
                     <div class="col-sm-2">
-                        <label for="id_end_date">Tidspunkt:</label>
+                        <label for="id_end_date">Start og slut-tidspunkt:</label>
                     </div>
                     <div class="col-sm-7">
                         <input id="time-slider" type="text" style="width: 100%" />
@@ -78,8 +87,14 @@
                     <div class="col-sm-2">
                     </div>
                     <div class="col-sm-7">
-                        <button class="btn btn-success" role="button" type="submit">Opret</button>
-                        <a class="btn btn-danger" href="{% url 'calendar' view.kwargs.pk %}">Annullér</a>
+                        <button class="btn btn-success" role="button" type="submit">
+                            {% if object.pk %}
+                                {% trans 'Gem' %}
+                            {% else %}
+                                {% trans 'Opret' %}
+                            {% endif %}
+                        </button>
+                        <a class="btn btn-danger" href="{% url 'calendar' view.kwargs.res %}">Annullér</a>
                     </div>
                     <div class="col-sm-3 with-errors">
                     </div>
@@ -108,6 +123,42 @@
             DEFAULT_TICKS = [0, STEPS_IN_DAY]
             ;
 
+        function build_date(date_field_selector, time_value) {
+            var date_val = $(date_field_selector).first().val(),
+                date_parts = date_val.split(/[. -]/),
+                time_parts = time_value.split(/[:]/);
+
+            if(date_parts[0].length != 4) {
+                date_parts = date_parts.reverse()
+            }
+
+            var date = new Date(
+                date_parts[0],
+                date_parts[1] - 1,
+                date_parts[2],
+                time_parts[0],
+                time_parts[1],
+                0
+            )
+
+            return [
+                zero_pad(date.getDate()),
+                zero_pad(date.getMonth() + 1),
+                date.getFullYear()
+            ].join(".") + " " + [
+                zero_pad(date.getHours()),
+                zero_pad(date.getMinutes()),
+                "00"
+            ].join(":")
+        }
+
+        $('#id_start_date').val(
+            build_date('#id_start', "00:00").substr(0, 10)
+        );
+        $('#id_end_date').val(
+            build_date('#id_end', "00:00").substr(0, 10)
+        )
+
         $('input.datepicker').each(function() {
             var options = {
                 language: 'da',
@@ -119,8 +170,13 @@
                 autoclose: true
             };
             $(this).datepicker(options);
-            $(this).datepicker('setDate', new Date());
         });
+
+        function to_steps(hhmm) {
+            var parts = hhmm.split(/:/);
+            return parseInt(parts[0] * STEPS_PER_HOUR) +
+                   parseInt(parts[1] / MINUTES_PER_STEP);
+        }
 
         function zero_pad(int_val) {
             if(int_val < 10)
@@ -139,11 +195,11 @@
         var start_time, end_time;
 
         function update_dates() {
-            $('#id_start').val($('#id_start_date').val() + ' ' + start_time + ':00');
+            $('#id_start').val(build_date('#id_start_date', start_time));
             if($('#id_separate_end_date').is(":checked")) {
-                $('#id_end').val($('#id_end_date').val() + ' ' + end_time + ':00');
+                $('#id_end').val(build_date('#id_end_date', end_time));
             } else {
-                $('#id_end').val($('#id_start_date').val() + ' ' + end_time + ':00');
+                $('#id_end').val(build_date('#id_start_date', end_time));
             }
         }
 
@@ -157,10 +213,16 @@
             update_dates();
         });
 
+        var start_val = $('#id_start_date').attr('data-time'),
+            end_val = $('#id_end_date').attr('data-time');
+
+        start_val = start_val ? to_steps(start_val) : START_AT_0800;
+        end_val = end_val ? to_steps(end_val) : END_AT_1600;
+
         $('#time-slider').slider({
             min: 0,
             max: STEPS_IN_DAY,
-            value: [START_AT_0800, END_AT_1600],
+            value: [start_val, end_val],
             ticks: DEFAULT_TICKS,
             ticks_labels: DEFAULT_LABELS,
             formatter: function(values) {
@@ -176,6 +238,7 @@
 
         $('#id_start_date').change(update_dates);
         $('#id_end_date').change(update_dates);
+        $('#id_separate_end_date').trigger('change');
 
     });
 
