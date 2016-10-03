@@ -20,6 +20,8 @@
         </p>
         {% if back %}
             <a href="{{ back }}" class="btn btn-primary">{% trans "OK" %}</a>
+        {% else %}
+            <a href="{% url 'product-view' object.id %}" class="btn btn-primary">{% trans "OK" %}</a>
         {% endif %}
     </div>
 

@@ -106,7 +106,6 @@ class DurationWidget(widgets.MultiWidget):
 class OrderedMultipleHiddenChooser(widgets.MultipleHiddenInput):
 
     def render(self, name, value, attrs=None, choices=()):
-        print "render() value: %s" % (unicode(value))
         if value is None:
             value = []
         elif len(choices) == 0:
@@ -119,8 +118,6 @@ class OrderedMultipleHiddenChooser(widgets.MultipleHiddenInput):
             v, label = choice
             input_attrs = dict(value=force_text(v), **final_attrs)
             selected = v in value
-            print v
-            print selected
 
             if not selected:
                 input_attrs['disabled'] = 'disabled'
@@ -140,7 +137,9 @@ class OrderedMultipleHiddenChooser(widgets.MultipleHiddenInput):
         prototype_attrs = dict(disabled='disabled', **final_attrs)
         del prototype_attrs['id']
         prototype_attrs['data-prototype'] = 1
-        unselected_elements.append(format_html('<input{} />', flatatt(prototype_attrs)))
+        unselected_elements.append(
+            format_html('<input{} />', flatatt(prototype_attrs))
+        )
 
         return mark_safe(
             '\n'.join(

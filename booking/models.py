@@ -1723,6 +1723,10 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         return self.time_mode == Product.TIME_MODE_RESOURCE_CONTROLLED
 
     @property
+    def is_time_guest_suggested(self):
+        return self.time_mode == Product.TIME_MODE_GUEST_SUGGESTED
+
+    @property
     def can_join_waitinglist(self):
         return self.is_type_bookable and \
             self.state == Product.ACTIVE and \
@@ -2896,9 +2900,10 @@ class MultiProductVisitTemp(models.Model):
     updated = models.DateTimeField(
         auto_now=True
     )
-    def create_real(self):
+
+    def create_mpv(self):
         mpv = MultiProductVisit(
-            date = self.date
+            date=self.date
         )
         mpv.save()
         for index, product in enumerate(self.products.all()):

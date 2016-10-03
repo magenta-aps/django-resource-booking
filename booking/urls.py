@@ -38,6 +38,7 @@ from booking.views import VisitDetailView
 from booking.views import VisitCustomListView
 from booking.views import EvaluationOverviewView
 
+from booking.views import MultiProductVisitPromptView
 from booking.views import MultiProductVisitTempCreateView
 from booking.views import MultiProductVisitTempUpdateView
 from booking.views import MultiProductVisitTempProductsView
@@ -127,7 +128,7 @@ urlpatterns = patterns(
     url(r'^product/(?P<product>[0-9]+)/book$',
         BookingView.as_view(),
         name='product-book'),
-    url(r'^product/(?P<product>[0-9]+)/book/success$',
+    url(r'^product/(?P<pk>[0-9]+)/book/success$',
         BookingSuccessView.as_view(),
         name='product-book-success'),
     url(r'^product/(?P<product>[0-9]+)/inquire$',
@@ -139,6 +140,9 @@ urlpatterns = patterns(
     url(r'^product/customlist/?$',
         ProductCustomListView.as_view(),
         name='product-customlist'),
+    url(r'^product/(?P<pk>[0-9]+)/notime/?$',
+        MultiProductVisitPromptView.as_view(),
+        name='product-book-notime'),
 
     url(r'^visit/(?P<pk>[0-9]+)/notify$',
         VisitNotifyView.as_view(),
@@ -217,16 +221,17 @@ urlpatterns = patterns(
         EmailSuccessView.as_view(),
         name='booking-notify-success'),
 
-    url(r'^foo/create/?$',
+
+    url(r'^mpv/create/?$',
         MultiProductVisitTempCreateView.as_view(),
         name='mpv-create'),
-    url(r'^foo/(?P<pk>[0-9]+)/date/?$',
+    url(r'^mpv/(?P<pk>[0-9]+)/date/?$',
         MultiProductVisitTempUpdateView.as_view(),
         name='mpv-edit-date'),
-    url(r'^foo/(?P<pk>[0-9]+)/products/?$',
+    url(r'^mpv/(?P<pk>[0-9]+)/products/?$',
         MultiProductVisitTempProductsView.as_view(),
         name='mpv-edit-products'),
-    url(r'^foo/(?P<pk>[0-9]+)/confirm/?$',
+    url(r'^mpv/(?P<pk>[0-9]+)/confirm/?$',
         MultiProductVisitTempConfirmView.as_view(),
         name='mpv-confirm'),
 

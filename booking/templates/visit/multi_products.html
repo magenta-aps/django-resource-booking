@@ -3,7 +3,7 @@
 {% load staticfiles %}
 {% load booking_tags %}
 
-{% block htmltitle %} - {% trans "opret ressourcegruppe" %}{% endblock %}
+{% block htmltitle %} - {% trans "tilmeld prioriteret liste af arrangementer på samme dag" %}{% endblock %}
 
 {% block head %}
     {% include 'common/resources/datepicker_style.html' %}
@@ -14,7 +14,7 @@
     {% include 'common/breadcrumbrow.html' %}
     <div class="divider"></div>
 
-    <h1>{% blocktrans %}Fooooobar{% endblocktrans %}</h1>
+    <h1>{% blocktrans %}Tilmeld prioriteret liste af arrangementer på samme dag{% endblocktrans %}</h1>
     <hr/>
 
     <form id="mpvform" action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
@@ -46,8 +46,8 @@
             {% endfor %}
         </ul>
 
-        <p>{% trans 'Du kan trække i tilbuddene for at prioritere dem.' %}</p>
-        <p>{% trans 'Vælg yderlige tilbud:' %}</p>
+        <p id="drawhelp">{% trans 'Du kan trække i tilbuddene for at prioritere dem.' %}</p>
+        <p>{% trans 'Vælg tilbud:' %}<br/>{% trans '(Listen er begrænset til tilbud uden faste tider der kan lade sig gøre den pågældende dag)' %}</p>
         <ul class="list-group" id="deselected-product-list">
             {% for product in products %}
                 {% if product.id not in form.products.value %}
@@ -62,6 +62,7 @@
                     </li>
                 {% endif %}
             {% endfor %}
+            <li id="placeholder" class="list-group-item">{% trans 'Ingen tilbud tilgængelige' %}</li>
         </ul>
 
         <ul style="display:none">
@@ -97,6 +98,14 @@
             var selectedList = $("#selected-product-list");
             var deselectedList = $("#deselected-product-list");
             var inputPrototype = $("[name='{{ form.products.name }}'][data-prototype]");
+            var placeholder = deselectedList.find("#placeholder");
+            var drawHelp = $("#drawhelp");
+
+            var update = function() {
+                var anySelected = !!selectedList.children().not(placeholder).length;
+                placeholder.toggle(anySelected);
+                drawHelp.toggle(anySelected);
+            };
 
             // Handle deselect clicks
             var deSelect = function() {
@@ -106,6 +115,7 @@
                 inputField.attr("disabled", "disabled");
                 {% comment %} Move the <li> to the selected list {% endcomment %}
                 deselectedList.append(selectedList.find("li#product_"+id));
+                update();
             };
             $(".deselectbutton").on('click', deSelect);
 
@@ -123,8 +133,10 @@
                 inputField.removeAttr("disabled");
                 {% comment %} Move the <li> to the deselected list {% endcomment %}
                 selectedList.append(deselectedList.find("li#product_"+id));
+                update();
             };
             $(".selectbutton").on('click', select);
+            update();
         });
     //-->
     </script>

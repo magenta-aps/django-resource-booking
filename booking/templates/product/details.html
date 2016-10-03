@@ -68,11 +68,18 @@
             {% endif %}
             <div class="well order-buttons hidden-print">
                 {% if object.is_bookable %}
-                    <a class="btn btn-default" data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'product-book' object.id %}?modal=1">
-                        {% trans 'Tilmeld' %}
-                        <span class="glyphicon glyphicon-chevron-right"></span>
-                    </a>
-                    {% elif object.can_join_waitinglist %}
+                    {% if object.is_time_guest_suggested %}
+                        <a class="btn btn-default" href="{% url 'product-book-notime' object.id %}">
+                            {% trans 'Tilmeld' %}
+                            <span class="glyphicon glyphicon-chevron-right"></span>
+                        </a>
+                    {% else %}
+                        <a class="btn btn-default" data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'product-book' object.id %}?modal=1">
+                            {% trans 'Tilmeld' %}
+                            <span class="glyphicon glyphicon-chevron-right"></span>
+                        </a>
+                    {% endif %}
+                {% elif object.can_join_waitinglist %}
                     <a class="btn btn-default" data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'product-book' object.id %}?modal=1">
                         {% trans 'Skriv på venteliste' %}
                         <span class="glyphicon glyphicon-chevron-right"></span>

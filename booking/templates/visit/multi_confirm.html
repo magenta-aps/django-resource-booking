@@ -3,7 +3,7 @@
 {% load staticfiles %}
 {% load booking_tags %}
 
-{% block htmltitle %} - {% trans "opret ressourcegruppe" %}{% endblock %}
+{% block htmltitle %} - {% trans "tilmeld prioriteret liste af arrangementer på samme dag" %}{% endblock %}
 
 {% block head %}
     {% include 'common/resources/datepicker_style.html' %}
@@ -14,7 +14,7 @@
     {% include 'common/breadcrumbrow.html' %}
     <div class="divider"></div>
 
-    <h1>{% blocktrans %}Fooooobar{% endblocktrans %}</h1>
+    <h1>{% blocktrans %}Tilmeld prioriteret liste af arrangementer på samme dag{% endblocktrans %}</h1>
     <hr/>
 
     <p class="btn-group">
@@ -39,7 +39,7 @@
         </ul>
 
         <fieldset>
-            <a class="btn btn-primary cancelbutton" href="{% url 'mpv-edit-date' object.id %}">{% trans "Tilbage" %}</a>
+            <a class="btn btn-primary cancelbutton" href="{% url 'mpv-edit-products' object.id %}">{% trans "Tilbage" %}</a>
             <button class="btn btn-primary" type="submit">{% trans "Bestil valgte tilbud" %}</button>
         </fieldset>
         <div class="divider"></div>

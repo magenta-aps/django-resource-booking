@@ -38,7 +38,6 @@ from profile.models import EDIT_ROLES
 from profile.models import role_to_text
 from booking.models import Product, Visit, StudyMaterial, \
     ProductAutosend
-from booking.models import MultiProductVisit
 from booking.models import KUEmailMessage
 from booking.models import Subject
 from booking.models import OrganizationalUnit
@@ -74,8 +73,8 @@ from booking.forms import AdminProductSearchForm
 from booking.forms import ProductAutosendFormSet
 from booking.forms import VisitSearchForm
 from booking.forms import AcceptBookingForm
-
-from booking.forms import MutiProductVisitTempDateForm, MutiProductVisitTempProductsForm
+from booking.forms import MutiProductVisitTempDateForm
+from booking.forms import MutiProductVisitTempProductsForm
 
 from booking.utils import full_email, get_model_field_map
 from booking.utils import get_related_content_types
@@ -2464,29 +2463,17 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
         return result
 
 
-class BookingSuccessView(TemplateView):
+class BookingSuccessView(DetailView):
     template_name = "booking/success.html"
+    model = Product
     modal = True
 
     def get(self, request, *args, **kwargs):
-        product_id = kwargs.get("product")
+        self.object = self.get_object()
         self.modal = request.GET.get('modal', '1') == '1'
-        back = request.GET.get('back')
-
-        product = None
-        if product_id is not None:
-            try:
-                product = Product.objects.get(id=product_id)
-            except:
-                pass
-        if product is None:
-            return bad_request(request)
-
         data = {
-            'product': product,
-            'back': back
+            'back': request.GET.get('back')
         }
-
         return self.render_to_response(
             self.get_context_data(**data)
         )
@@ -3389,7 +3376,13 @@ class BookingAcceptView(BreadcrumbMixin, FormView):
         ]
 
 
-class MultiProductVisitTempDateView(BreadcrumbMixin, ProcessFormView):
+class MultiProductVisitPromptView(BreadcrumbMixin, DetailView):
+    model = Product
+    template_name = "visit/multi_prompt.html"
+
+
+class MultiProductVisitTempDateView(BreadcrumbMixin, HasBackButtonMixin,
+                                    ProcessFormView):
     form_class = MutiProductVisitTempDateForm
     model = MultiProductVisitTemp
     template_name = "visit/multi_date.html"
@@ -3397,7 +3390,7 @@ class MultiProductVisitTempDateView(BreadcrumbMixin, ProcessFormView):
     def get_success_url(self):
         if 'next' in self.request.GET:
             return self.request.GET['next']
-        return reverse('mpv2-edit-products', args=[self.object.id])
+        return reverse('mpv-edit-products', args=[self.object.id])
 
 
 class MultiProductVisitTempCreateView(MultiProductVisitTempDateView,
@@ -3453,7 +3446,7 @@ class MultiProductVisitTempProductsView(BreadcrumbMixin, UpdateView):
     def get_success_url(self):
         if 'next' in self.request.GET:
             return self.request.GET['next']
-        return reverse('mpv2-confirm', args=[self.object.id])
+        return reverse('mpv-confirm', args=[self.object.id])
 
 
 class MultiProductVisitTempConfirmView(BreadcrumbMixin, DetailView):
@@ -3462,7 +3455,7 @@ class MultiProductVisitTempConfirmView(BreadcrumbMixin, DetailView):
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
-        mpv = self.object.create_real()
+        mpv = self.object.create_mpv()
         self.object.delete()
         return redirect(
             reverse('visit-view', args=[mpv.id])
