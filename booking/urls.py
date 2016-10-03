@@ -41,6 +41,10 @@ from booking.views import MultiProductVisitCreateView
 from booking.views import MultiProductVisitUpdateView
 from booking.views import MultiProductAvailableProductsView
 
+from booking.views import MultiProductVisitTempCreateView
+from booking.views import MultiProductVisitTempUpdateView
+from booking.views import MultiProductVisitTempProductsView
+
 from booking.resource_based.views import CalendarView, CalendarEventView, \
     CalendarEventDeleteView
 from booking.resource_based.views import ResourceCreateView, ResourceDetailView
@@ -221,6 +225,19 @@ urlpatterns = patterns(
     url(r'^mpv/(?P<pk>[0-9]+)/edit/?$',
         MultiProductVisitUpdateView.as_view(),
         name='mpv-edit'),
+
+
+
+    url(r'^foo/create/?$',
+        MultiProductVisitTempCreateView.as_view(),
+        name='mpv2-create'),
+    url(r'^foo/(?P<pk>[0-9]+)/1/?$',
+        MultiProductVisitTempUpdateView.as_view(),
+        name='mpv2-edit-date'),
+    url(r'^foo/(?P<pk>[0-9]+)/2/?$',
+        MultiProductVisitTempProductsView.as_view(),
+        name='mpv2-edit-products'),
+
 
 
 

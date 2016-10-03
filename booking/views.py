@@ -72,6 +72,9 @@ from booking.forms import ProductAutosendFormSet
 from booking.forms import VisitSearchForm
 from booking.forms import AcceptBookingForm
 from booking.forms import MultiProductVisitProductsForm
+
+from booking.forms import MutiProductVisitTempDateForm, MutiProductVisitTempProductsForm
+
 from booking.utils import full_email, get_model_field_map
 from booking.utils import get_related_content_types
 
@@ -3453,3 +3456,24 @@ class MultiProductAvailableProductsView(View):
                 for product in products
             ]
         })
+
+
+class MultiProductVisitTempDateView(BreadcrumbMixin, ProcessFormView):
+    form_class = MutiProductVisitTempDateForm
+    model = MultiProductVisitTemp
+    template_name = "visit/multi_date.html"
+
+
+class MultiProductVisitTempCreateView(MultiProductVisitTempDateView, CreateView):
+    pass
+
+
+class MultiProductVisitTempUpdateView(MultiProductVisitTempDateView, UpdateView):
+    pass
+
+
+class MultiProductVisitTempProductsView(BreadcrumbMixin, UpdateView):
+
+    form_class = MutiProductVisitTempDateForm
+    model = MultiProductVisitTemp
+    template_name = "visit/multi_products.html"

@@ -2883,6 +2883,18 @@ class MultiProductVisit(Visit):
                 product_list.index(visit.eventtime.product)
 
 
+class MultiProductVisitTemp(models.Model):
+    date = models.DateField(
+        null=False,
+        blank=False,
+        verbose_name=_(u'Dato')
+    )
+    products = models.ManyToManyField(
+        Product,
+        blank=True
+    )
+
+
 class VisitComment(models.Model):
 
     class Meta:
