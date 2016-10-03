@@ -2893,6 +2893,28 @@ class MultiProductVisitTemp(models.Model):
         Product,
         blank=True
     )
+    updated = models.DateTimeField(
+        auto_now=True
+    )
+    def create_real(self):
+        mpv = MultiProductVisit(
+            date = self.date
+        )
+        mpv.save()
+        for index, product in enumerate(self.products.all()):
+            eventtime = EventTime(
+                product=product,
+                bookable=False,
+                has_specific_time=False
+            )
+            eventtime.save()
+            eventtime.make_visit(
+                product=product,
+                multi_master=mpv,
+                multi_priority=index,
+                is_multi_sub=True
+            )
+        return mpv
 
 
 class VisitComment(models.Model):

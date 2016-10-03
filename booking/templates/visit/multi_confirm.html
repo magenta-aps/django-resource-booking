@@ -1,0 +1,54 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load booking_tags %}
+
+{% block htmltitle %} - {% trans "opret ressourcegruppe" %}{% endblock %}
+
+{% block head %}
+    {% include 'common/resources/datepicker_style.html' %}
+{% endblock %}
+
+{% block content %}
+
+    {% include 'common/breadcrumbrow.html' %}
+    <div class="divider"></div>
+
+    <h1>{% blocktrans %}Fooooobar{% endblocktrans %}</h1>
+    <hr/>
+
+    <p class="btn-group">
+        <a class="btn btn-primary" href="{% url 'mpv-edit-date' object.id %}" role="button">{% trans 'Vælg dato' %}</a>
+        <a class="btn btn-primary" href="{% url 'mpv-edit-products' object.id %}" role="button">{% trans 'Vælg tilbud' %}</a>
+        <a class="btn btn-primary active" href="{% url 'mpv-confirm' object.id %}" role="button">{% trans 'Bekræft' %}</a>
+    </p>
+
+    <form id="mpvform" action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
+
+        {{ form.non_field_errors }}
+
+        {% csrf_token %}
+        <label>{% trans 'Valgt dato' %}</label>
+        <p id="confirm-date">{{ object.date }}</p>
+
+        <label>{% trans 'Valgte tilbud' %}</label>
+        <ul id="confirm-product-list" class="list-group">
+            {% for product in object.products.all %}
+                <li class="list-group-item">{{ product.title }}</li>
+            {% endfor %}
+        </ul>
+
+        <fieldset>
+            <a class="btn btn-primary cancelbutton" href="{% url 'mpv-edit-date' object.id %}">{% trans "Tilbage" %}</a>
+            <button class="btn btn-primary" type="submit">{% trans "Bestil valgte tilbud" %}</button>
+        </fieldset>
+        <div class="divider"></div>
+
+    </form>
+
+{% endblock %}
+
+{% block extra_scripts %}
+    {{ form.media }}
+    {% include 'common/resources/datepicker_script.html' %}
+{% endblock %}
