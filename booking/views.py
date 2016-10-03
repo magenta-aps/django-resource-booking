@@ -3381,7 +3381,8 @@ class MultiProductVisitPromptView(BreadcrumbMixin, DetailView):
     template_name = "visit/multi_prompt.html"
 
 
-class MultiProductVisitTempDateView(BreadcrumbMixin, ProcessFormView):
+class MultiProductVisitTempDateView(BreadcrumbMixin, HasBackButtonMixin,
+                                    ProcessFormView):
     form_class = MutiProductVisitTempDateForm
     model = MultiProductVisitTemp
     template_name = "visit/multi_date.html"
