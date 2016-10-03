@@ -1374,6 +1374,7 @@ body.lightbox {
 #selected-product-list,
 #confirm-product-list {
     font-size: 1.5em;
+    list-style-type: none;
 }
 
 #selected-product-list li .movebutton {
@@ -1392,5 +1393,10 @@ body.lightbox {
     font-weight: normal;
     margin: 0;
     padding: 0;
+}
+
+#mpvform #deselected-product-list li#placeholder,
+#mpvform #drawhelp {
+    display: none
 }
 /* MultiProductVisit END */

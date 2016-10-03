@@ -128,7 +128,7 @@ urlpatterns = patterns(
     url(r'^product/(?P<product>[0-9]+)/book$',
         BookingView.as_view(),
         name='product-book'),
-    url(r'^product/(?P<product>[0-9]+)/book/success$',
+    url(r'^product/(?P<pk>[0-9]+)/book/success$',
         BookingSuccessView.as_view(),
         name='product-book-success'),
     url(r'^product/(?P<product>[0-9]+)/inquire$',
@@ -140,6 +140,9 @@ urlpatterns = patterns(
     url(r'^product/customlist/?$',
         ProductCustomListView.as_view(),
         name='product-customlist'),
+    url(r'^product/(?P<pk>[0-9]+)/notime/?$',
+        MultiProductVisitPromptView.as_view(),
+        name='visit-notime'),
 
     url(r'^visit/(?P<pk>[0-9]+)/notify$',
         VisitNotifyView.as_view(),
@@ -218,9 +221,7 @@ urlpatterns = patterns(
         EmailSuccessView.as_view(),
         name='booking-notify-success'),
 
-    url(r'^mpv/prompt/?$',
-        MultiProductVisitPromptView.as_view(),
-        name='mpv-prompt'),
+
     url(r'^mpv/create/?$',
         MultiProductVisitTempCreateView.as_view(),
         name='mpv-create'),

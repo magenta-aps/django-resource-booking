@@ -2463,29 +2463,17 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
         return result
 
 
-class BookingSuccessView(TemplateView):
+class BookingSuccessView(DetailView):
     template_name = "booking/success.html"
+    model = Product
     modal = True
 
     def get(self, request, *args, **kwargs):
-        product_id = kwargs.get("product")
+        self.object = self.get_object()
         self.modal = request.GET.get('modal', '1') == '1'
-        back = request.GET.get('back')
-
-        product = None
-        if product_id is not None:
-            try:
-                product = Product.objects.get(id=product_id)
-            except:
-                pass
-        if product is None:
-            return bad_request(request)
-
         data = {
-            'product': product,
-            'back': back
+            'back': request.GET.get('back')
         }
-
         return self.render_to_response(
             self.get_context_data(**data)
         )
@@ -3388,7 +3376,8 @@ class BookingAcceptView(BreadcrumbMixin, FormView):
         ]
 
 
-class MultiProductVisitPromptView(BreadcrumbMixin, TemplateView):
+class MultiProductVisitPromptView(BreadcrumbMixin, DetailView):
+    model = Product
     template_name = "visit/multi_prompt.html"
 
 
@@ -3400,7 +3389,7 @@ class MultiProductVisitTempDateView(BreadcrumbMixin, ProcessFormView):
     def get_success_url(self):
         if 'next' in self.request.GET:
             return self.request.GET['next']
-        return reverse('mpv2-edit-products', args=[self.object.id])
+        return reverse('mpv-edit-products', args=[self.object.id])
 
 
 class MultiProductVisitTempCreateView(MultiProductVisitTempDateView,
@@ -3456,7 +3445,7 @@ class MultiProductVisitTempProductsView(BreadcrumbMixin, UpdateView):
     def get_success_url(self):
         if 'next' in self.request.GET:
             return self.request.GET['next']
-        return reverse('mpv2-confirm', args=[self.object.id])
+        return reverse('mpv-confirm', args=[self.object.id])
 
 
 class MultiProductVisitTempConfirmView(BreadcrumbMixin, DetailView):
