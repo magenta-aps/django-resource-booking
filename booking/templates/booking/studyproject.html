@@ -17,7 +17,6 @@
 
         <form id="bookingform" class="form-horizontal clearfix" data-toggle="validator" role="form" novalidate="true" method="POST">
             {% csrf_token %}
-
             {{ bookerform.non_field_errors }}
             {% include "booking/fields/basedata.html" %}
             {% include "booking/fields/subjects.html" %}
