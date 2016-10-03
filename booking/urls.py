@@ -142,7 +142,7 @@ urlpatterns = patterns(
         name='product-customlist'),
     url(r'^product/(?P<pk>[0-9]+)/notime/?$',
         MultiProductVisitPromptView.as_view(),
-        name='visit-notime'),
+        name='product-book-notime'),
 
     url(r'^visit/(?P<pk>[0-9]+)/notify$',
         VisitNotifyView.as_view(),
