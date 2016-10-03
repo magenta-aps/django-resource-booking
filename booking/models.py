@@ -2128,13 +2128,18 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         if ws_planned not in (x[0] for x in self.possible_status_choices()):
             return False
 
-        # Correct number of hosts/teachers must be assigned
-        if self.needed_hosts > 0 or self.needed_teachers > 0:
-            return True
+        if self.product.time_mode == Product.TIME_MODE_RESOURCE_CONTROLLED:
+            for x in self.product.resourcerequirement_set.all():
+                if not x.is_fullfilled_for(self):
+                    return True
+        else:
+            # Correct number of hosts/teachers must be assigned
+            if self.needed_hosts > 0 or self.needed_teachers > 0:
+                return True
 
-        # Room assignment must be resolved
-        if self.room_status == Visit.STATUS_NOT_ASSIGNED:
-            return True
+            # Room assignment must be resolved
+            if self.room_status == Visit.STATUS_NOT_ASSIGNED:
+                return True
 
         return False
 

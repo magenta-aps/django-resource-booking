@@ -34,12 +34,32 @@
                     <div class="panel-body">
                     {% trans "Vælg værter der skal kunne kontaktes for afvikling af dette tilbud" as vaerter_helptext %}
                     {% include 'common/fields/userselect_with_availability_link.html' with field=form.potentielle_vaerter helptext=vaerter_helptext %}
+                    {% include 'common/fields/generic_field.html' with field=form.needed_hosts %}
                     {% trans "Vælg undervisere der skal kunne kontaktes for afvikling af dette tilbud" as uv_helptext %}
                     {% include 'common/fields/userselect_with_availability_link.html' with field=form.potentielle_undervisere helptext=uv_helptext %}
+                    {% include 'common/fields/generic_field.html' with field=form.needed_teachers %}
                     </div>
                 </div>
             </div>
+            {% if form.rooms_needed %}
+            <div class="panel panel-default">
+                <div id="headingRooms" class="panel-heading" role="tab">
+                    <h4 class="panel-title">
+                        <a class="" aria-controls="collapseRooms" aria-expanded="false" href="#collapseRooms" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Lokaler" %}</a><span class="caret"></span>
+                    </h4>
+                </div>
+                <div id="collapseRooms" class="panel-collapse collapse in" aria-labelledby="headingContact" role="tabpanel" aria-expanded="false" style="">
+                    <div class="panel-body">
+                        <div style="display: none">
+                        {% include 'common/fields/generic_field.html' with field=form.locality %}
+                        </div>
+                        {% include 'product/fields/rooms.html' %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
         </div>
+
         {% include 'common/save_cancel.html' %}
         <div class="divider"></div>
     </form>

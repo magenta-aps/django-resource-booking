@@ -1102,6 +1102,12 @@ class ResourceRequirement(AvailabilityUpdaterMixin, models.Model):
 
         return False
 
+    def is_fullfilled_for(self, visit):
+        return VisitResource.objects.filter(
+            visit=visit,
+            resource_requirement=self
+        ).count() >= self.required_amount
+
     @property
     def affected_eventtimes(self):
         if self.pk and self.resource_pool:

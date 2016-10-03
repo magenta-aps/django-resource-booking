@@ -1521,20 +1521,6 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
     def get_context_data(self, **kwargs):
         context = {}
 
-        if self.object and self.object.pk:
-            context['rooms'] = self.object.rooms.all()
-        else:
-            context['rooms'] = []
-
-        context['allrooms'] = [
-            {
-                'id': x.pk,
-                'locality_id': x.locality.pk if x.locality else None,
-                'name': x.name_with_locality
-            }
-            for x in Room.objects.all()
-        ]
-
         context['gymnasiefag_choices'] = Subject.gymnasiefag_qs()
         context['grundskolefag_choices'] = Subject.grundskolefag_qs()
         context['gymnasie_level_choices'] = \
@@ -1602,35 +1588,6 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
                                 except:
                                     pass
 
-    def save_rooms(self):
-        # This code is more or less the same as
-        # ChangeVisitRoomsView.save_rooms()
-        # If you update this you might have to update there as well.
-        existing_rooms = set([x.pk for x in self.object.rooms.all()])
-
-        new_rooms = self.request.POST.getlist("rooms")
-
-        for roomdata in new_rooms:
-            if roomdata.startswith("id:"):
-                # Existing rooms are identified by "id:<pk>"
-                try:
-                    room_pk = int(roomdata[3:])
-                    if room_pk in existing_rooms:
-                        existing_rooms.remove(room_pk)
-                    else:
-                        self.object.rooms.add(room_pk)
-                except Exception as e:
-                    print 'Problem adding room: %s' % e
-            elif roomdata.startswith("new:"):
-                # New rooms are identified by "new:<name-of-room>"
-                room = self.object.add_room_by_name(roomdata[4:])
-                if room.pk in existing_rooms:
-                    existing_rooms.remove(room.pk)
-
-        # Delete any rooms left in existing rooms
-        for x in existing_rooms:
-            self.object.rooms.remove(x)
-
     def get_success_url(self):
         try:
             return reverse('product-view', args=[self.object.id])
@@ -1669,7 +1626,11 @@ class SimpleRessourcesView(LoginRequiredMixin, BreadcrumbMixin,
                            RoleRequiredMixin, UpdateView):
     roles = EDIT_ROLES
     model = Product
-    fields = ['potentielle_vaerter', 'potentielle_undervisere']
+    fields = [
+        'locality',
+        'potentielle_vaerter', 'potentielle_undervisere',
+        'needed_hosts', 'needed_teachers', 'rooms_needed',
+    ]
     template_name = 'product/simple_ressources.html'
 
     def get_form(self, form_class=None):
@@ -1703,6 +1664,17 @@ class SimpleRessourcesView(LoginRequiredMixin, BreadcrumbMixin,
                     obj.email
                 )
 
+        if 'roomresponsible' in form.fields:
+            qs = form.fields['roomresponsible']._get_queryset()
+            form.fields['roomresponsible']._set_queryset(
+                qs.filter(organizationalunit=self.object.organizationalunit)
+            )
+            form.fields['roomresponsible'].label_from_instance = \
+                lambda obj: "%s <%s>" % (
+                    obj.get_full_name(),
+                    obj.email
+                )
+
         return form
 
     def get_breadcrumbs(self):
@@ -1713,6 +1685,62 @@ class SimpleRessourcesView(LoginRequiredMixin, BreadcrumbMixin,
             },
             {'text': _(u'Redigér ressourcer')}
         ]
+
+    def form_valid(self, form):
+        res = super(SimpleRessourcesView, self).form_valid(form)
+
+        self.save_rooms()
+
+        return res
+
+    def save_rooms(self):
+        # This code is more or less the same as
+        # ChangeVisitRoomsView.save_rooms()
+        # If you update this you might have to update there as well.
+        existing_rooms = set([x.pk for x in self.object.rooms.all()])
+
+        new_rooms = self.request.POST.getlist("rooms")
+
+        for roomdata in new_rooms:
+            if roomdata.startswith("id:"):
+                # Existing rooms are identified by "id:<pk>"
+                try:
+                    room_pk = int(roomdata[3:])
+                    if room_pk in existing_rooms:
+                        existing_rooms.remove(room_pk)
+                    else:
+                        self.object.rooms.add(room_pk)
+                except Exception as e:
+                    print 'Problem adding room: %s' % e
+            elif roomdata.startswith("new:"):
+                # New rooms are identified by "new:<name-of-room>"
+                room = self.object.add_room_by_name(roomdata[4:])
+                if room.pk in existing_rooms:
+                    existing_rooms.remove(room.pk)
+
+        # Delete any rooms left in existing rooms
+        for x in existing_rooms:
+            self.object.rooms.remove(x)
+
+    def get_context_data(self, **kwargs):
+        context = {}
+
+        if self.object and self.object.pk:
+            context['rooms'] = self.object.rooms.all()
+        else:
+            context['rooms'] = []
+
+        context['allrooms'] = [
+            {
+                'id': x.pk,
+                'locality_id': x.locality.pk if x.locality else None,
+                'name': x.name_with_locality
+            }
+            for x in Room.objects.all()
+        ]
+        context.update(kwargs)
+
+        return super(SimpleRessourcesView, self).get_context_data(**context)
 
 
 class ProductDetailView(BreadcrumbMixin, ProductBookingDetailView):

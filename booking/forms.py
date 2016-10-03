@@ -292,10 +292,9 @@ class ProductForm(forms.ModelForm):
                   'do_create_waiting_list', 'waiting_list_length',
                   'waiting_list_deadline_days', 'waiting_list_deadline_hours',
                   'time_mode', 'duration', 'locality',
-                  'rooms_needed', 'tour_available', 'catering_available',
+                  'tour_available', 'catering_available',
                   'presentation_available', 'custom_available', 'custom_name',
                   'tilbudsansvarlig', 'organizationalunit',
-                  'needed_hosts', 'needed_teachers',
                   'preparation_time', 'comment',
                   )
 
@@ -373,14 +372,6 @@ class ProductForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        # Provide defaults for needed_-fields if not present in submit data.
-        if 'data' in kwargs:
-            kwargs['data']['needed_hosts'] = kwargs['data'].get(
-                'needed_hosts', 0
-            )
-            kwargs['data']['needed_teachers'] = kwargs['data'].get(
-                'needed_teachers', 0
-            )
 
         self.user = kwargs.pop('user')
         self.instance = kwargs.get('instance')
@@ -507,7 +498,6 @@ class StudentForADayForm(ProductForm):
                   'institution_level', 'topics', 'audience',
                   'time_mode', 'duration', 'locality',
                   'tilbudsansvarlig', 'organizationalunit',
-                  'needed_hosts', 'needed_teachers',
                   'preparation_time', 'comment',
                   )
         widgets = ProductForm.Meta.widgets
@@ -530,7 +520,7 @@ class OpenHouseForm(ProductForm):
         model = Product
         fields = ('type', 'title', 'teaser', 'description', 'state',
                   'institution_level', 'topics', 'audience',
-                  'time_mode', 'locality', 'rooms_needed',
+                  'time_mode', 'locality',
                   'tilbudsansvarlig', 'organizationalunit',
                   'preparation_time', 'comment',
                   )
@@ -546,9 +536,7 @@ class TeacherProductForm(ProductForm):
                   'do_create_waiting_list', 'waiting_list_length',
                   'waiting_list_deadline_days', 'waiting_list_deadline_hours',
                   'time_mode', 'duration', 'locality',
-                  'rooms_needed',
                   'tilbudsansvarlig', 'roomresponsible', 'organizationalunit',
-                  'needed_hosts', 'needed_teachers',
                   'preparation_time', 'comment',
                   )
         widgets = ProductForm.Meta.widgets
@@ -563,10 +551,9 @@ class ClassProductForm(ProductForm):
                   'do_create_waiting_list', 'waiting_list_length',
                   'waiting_list_deadline_days', 'waiting_list_deadline_hours',
                   'time_mode', 'duration', 'locality',
-                  'rooms_needed', 'tour_available', 'catering_available',
+                  'tour_available', 'catering_available',
                   'presentation_available', 'custom_available', 'custom_name',
                   'tilbudsansvarlig', 'roomresponsible', 'organizationalunit',
-                  'needed_hosts', 'needed_teachers',
                   'preparation_time', 'comment',
                   )
         widgets = ProductForm.Meta.widgets
@@ -578,7 +565,7 @@ class StudyProjectForm(ProductForm):
         model = Product
         fields = ('type', 'title', 'teaser', 'description', 'state',
                   'institution_level', 'topics', 'audience',
-                  'time_mode', 'locality', 'rooms_needed',
+                  'time_mode', 'locality',
                   'tilbudsansvarlig', 'organizationalunit',
                   'preparation_time', 'comment',
                   )
