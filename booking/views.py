@@ -3388,6 +3388,10 @@ class BookingAcceptView(BreadcrumbMixin, FormView):
         ]
 
 
+class MultiProductVisitPromptView(BreadcrumbMixin, TemplateView):
+    template_name = "visit/multi_prompt.html"
+
+
 class MultiProductVisitTempDateView(BreadcrumbMixin, ProcessFormView):
     form_class = MutiProductVisitTempDateForm
     model = MultiProductVisitTemp
