@@ -1127,40 +1127,6 @@ class EvaluationOverviewForm(forms.Form):
         ]
 
 
-class MultiProductVisitProductsForm(forms.ModelForm):
-    class Meta:
-        model = MultiProductVisit
-        fields = ['date']
-        widgets = {
-            'date': DateInput(
-                attrs={'class': 'datepicker form-control'},
-            )
-        }
-        labels = {
-            'date': _(u'Vælg dato')
-        }
-
-    products = OrderedMultipleChoiceField(
-        required=False
-    )
-
-    def __init__(self, date=None, *args, **kwargs):
-        super(MultiProductVisitProductsForm, self).__init__(*args, **kwargs)
-        self.fields['date'].input_formats = ['%d-%m-%Y']
-        if date is not None:
-            self.instance.date = date
-
-    def save(self, commit=True, *args, **kwargs):
-        super(MultiProductVisitProductsForm, self).save(commit, *args, **kwargs)
-        products = self.cleaned_data['products']
-        if type(products) != list:
-            products = [products]
-        self.instance.update_subvisits([
-            Product.objects.get(id=id) for id in products
-        ])
-        return self.instance
-
-
 class MutiProductVisitTempDateForm(forms.ModelForm):
     class Meta:
         model = MultiProductVisitTemp

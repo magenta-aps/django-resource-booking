@@ -2893,9 +2893,9 @@ class MultiProductVisitTemp(models.Model):
         Product,
         blank=True
     )
-    # updated = models.DateTimeField(
-    #     auto_now=True
-    # )
+    updated = models.DateTimeField(
+        auto_now=True
+    )
     def create_real(self):
         mpv = MultiProductVisit(
             date = self.date
