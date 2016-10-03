@@ -52,6 +52,9 @@ from booking.models import log_action
 from booking.models import LOGACTION_CREATE, LOGACTION_CHANGE
 from booking.models import RoomResponsible
 from booking.models import BookerResponseNonce
+
+from booking.models import MultiProductVisitTemp
+
 from booking.forms import ProductInitialForm, ProductForm, \
     GuestEmailComposeForm, StudentForADayBookingForm, OtherProductForm, \
     StudyProjectBookingForm, BookingGrundskoleSubjectLevelForm, BookingListForm
@@ -3463,6 +3466,11 @@ class MultiProductVisitTempDateView(BreadcrumbMixin, ProcessFormView):
     model = MultiProductVisitTemp
     template_name = "visit/multi_date.html"
 
+    def get_success_url(self):
+        if 'next' in self.request.GET:
+            return self.request.GET['next']
+        return reverse('mpv2-edit-products', args=[self.object.id])
+
 
 class MultiProductVisitTempCreateView(MultiProductVisitTempDateView, CreateView):
     pass
@@ -3474,6 +3482,51 @@ class MultiProductVisitTempUpdateView(MultiProductVisitTempDateView, UpdateView)
 
 class MultiProductVisitTempProductsView(BreadcrumbMixin, UpdateView):
 
-    form_class = MutiProductVisitTempDateForm
+    form_class = MutiProductVisitTempProductsForm
     model = MultiProductVisitTemp
     template_name = "visit/multi_products.html"
+    _available_products = None
+
+    def get_form(self):
+        form = super(MultiProductVisitTempProductsView, self).get_form()
+        form.fields['products'].choices = [
+            (product.id, product.title)
+            for product in self.available_products
+        ]
+        form.initial['products'] = [
+            product for product in self.object.products.all()
+            if product in self.available_products
+        ]
+        return form
+
+    def get_context_data(self, **kwargs):
+        context = {}
+        context['products'] = self.available_products
+        context.update(kwargs)
+        return super(MultiProductVisitTempProductsView, self).get_context_data(
+            **context
+        )
+
+    @property
+    def available_products(self):
+        if self._available_products is None:
+            self._available_products = MultiProductAvailableProductsView.get_available_products(self.object.date)
+        return self._available_products
+
+    def get_success_url(self):
+        if 'next' in self.request.GET:
+            return self.request.GET['next']
+        return reverse('mpv2-confirm', args=[self.object.id])
+
+
+class MultiProductVisitTempConfirmView(BreadcrumbMixin, DetailView):
+    model = MultiProductVisitTemp
+    template_name = "visit/multi_confirm.html"
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        mpv = self.object.create_real()
+        self.object.delete()
+        return redirect(
+            reverse('visit-view', args=[mpv.id])
+        )

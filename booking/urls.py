@@ -44,6 +44,7 @@ from booking.views import MultiProductAvailableProductsView
 from booking.views import MultiProductVisitTempCreateView
 from booking.views import MultiProductVisitTempUpdateView
 from booking.views import MultiProductVisitTempProductsView
+from booking.views import MultiProductVisitTempConfirmView
 
 from booking.resource_based.views import CalendarView, CalendarEventView, \
     CalendarEventDeleteView
@@ -231,12 +232,15 @@ urlpatterns = patterns(
     url(r'^foo/create/?$',
         MultiProductVisitTempCreateView.as_view(),
         name='mpv2-create'),
-    url(r'^foo/(?P<pk>[0-9]+)/1/?$',
+    url(r'^foo/(?P<pk>[0-9]+)/date/?$',
         MultiProductVisitTempUpdateView.as_view(),
         name='mpv2-edit-date'),
-    url(r'^foo/(?P<pk>[0-9]+)/2/?$',
+    url(r'^foo/(?P<pk>[0-9]+)/products/?$',
         MultiProductVisitTempProductsView.as_view(),
         name='mpv2-edit-products'),
+    url(r'^foo/(?P<pk>[0-9]+)/confirm/?$',
+        MultiProductVisitTempConfirmView.as_view(),
+        name='mpv2-confirm'),
 
 
 

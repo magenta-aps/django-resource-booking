@@ -20,6 +20,7 @@ from django.forms import formset_factory, inlineformset_factory
 from django.forms import TextInput, NumberInput, DateInput, Textarea, Select
 from django.forms import HiddenInput
 from django.utils.translation import ugettext_lazy as _
+from django.utils import formats, translation
 from tinymce.widgets import TinyMCE
 from .fields import ExtensibleMultipleChoiceField, OrderedMultipleChoiceField
 
@@ -1160,23 +1161,21 @@ class MultiProductVisitProductsForm(forms.ModelForm):
         return self.instance
 
 
-
-
 class MutiProductVisitTempDateForm(forms.ModelForm):
     class Meta:
         model = MultiProductVisitTemp
         fields = ['date']
         widgets = {
             'date': DateInput(
-                attrs={'class': 'datepicker form-control'},
+                attrs={'class': 'datepicker form-control'}
             )
         }
         labels = {
             'date': _(u'Vælg dato')
         }
     def __init__(self, *args, **kwargs):
-        super(MultiProductVisitProductsForm, self).__init__(*args, **kwargs)
-        self.fields['date'].input_formats = ['%d-%m-%Y']
+        super(MutiProductVisitTempDateForm, self).__init__(*args, **kwargs)
+        self.fields['date'].input_formats = ['%d-%m-%Y', '%d.%m.%Y']
 
 
 class MutiProductVisitTempProductsForm(forms.ModelForm):
