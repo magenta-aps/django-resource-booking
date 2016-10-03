@@ -29,76 +29,10 @@
             </div>
 
             <div id="part2" class="formpart" data-prevbutton="previousbutton" data-nextbutton="submitbutton" data-prev="part1"{% if bookingform.errors and not bookerform.errors %} data-first="true"{% endif %}>
-
-            {{ subjectform.management_form }}
-            {% if product.productgymnasiefag_set.count > 0 %}
-                <div id="gymnasiefag" class="rowcontainer">
-                {% for form in subjectform %}
-                    {{ form.id }}
-                    <div class="form-group{% if forloop.first %} rowprototype{% endif %}">
-                        <label class="col-sm-2 control-label" for="{{ form.subject.id_for_label }}">{% trans "Fag/Niveau (Gymnasium)" %}</label>
-                        <div class="col-sm-4">
-                            {{ form.subject }}
-                            {% if grundskolefag_available or gymnasiefag_available %}
-                                <p><strong>Bemærk: </strong>Dette tilbud er tiltænkt følgende klasseniveauer:</p>
-                                {% if grundskolefag_available %}
-                                    <ul id="grundskolefag-list">
-                                    {% for fag in grundskolefag_available %}
-                                        <li>
-                                            <span class="fag-description">{{ fag.description }} (Grundskole)</span>
-                                        </li>
-                                    {% endfor %}
-                                    </ul>
-
-                                {% endif %}
-                                {% if gymnasiefag_available %}
-                                    <ul id="gymnasiefag-list">
-                                    {% for fag in gymnasiefag_available %}
-                                        <li>
-                                            <span class="fag-description">{{ fag.description }} (Gymnasie)</span>
-                                        </li>
-                                    {% endfor %}
-                                    </ul>
-                                {% endif %}
-                            {% endif %}
-                        </div>
-                        <div class="col-sm-2">
-                            {{ form.level }}
-                        </div>
-                        <div class="col-sm-2 rowadder">
-                            <a href="javascript:void()" id="addRow">{% trans "Tilføj ny" %}</a>
-                        </div>
-                    </div>
-                {% endfor %}
-                </div>
-            {% endif %}
-
-            {{ grundskolesubjectform.management_form }}
-            {% if product.productgrundskolefag_set.count > 0 %}
-                <div id="grundskolefag" class="rowcontainer">
-                {% for form in grundskolesubjectform %}
-                    {{ form.id }}
-                    <div class="form-group{% if forloop.first %} rowprototype{% endif %}">
-                        <label class="col-sm-2 control-label" for="{{ form.subject.id_for_label }}">{% trans "Fag/Niveau (Grundskole)" %}</label>
-                        <div class="col-sm-4">
-                            {{ form.subject }}
-                        </div>
-                        <div class="col-sm-2">
-                            {{ form.level }}
-                        </div>
-                        <div class="col-sm-2 rowadder">
-                            <a href="javascript:void()" id="addRow2">{% trans "Tilføj ny" %}</a>
-                        </div>
-                    </div>
-                {% endfor %}
-                </div>
-            {% endif %}
+                {% include "booking/fields/subjects2.html" %}
                 {% include "booking/fields/time.html" %}
-
                 {% include "booking/fields/attendees.html" %}
-
                 {% include "booking/fields/services.html" %}
-
                 {% if bookingform.notes %}
                 <div class="form-group">
                     <label class="col-sm-2 control-label" for="{{ bookingform.notes.id_for_label }}">{% trans "Kommentarer" %}</label>
