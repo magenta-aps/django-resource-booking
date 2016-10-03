@@ -57,7 +57,7 @@ class ExtensibleMultipleChoiceField(MultipleChoiceField):
         return True
 
 
-class OrderedMultipleChoiceField(MultipleChoiceField):
+class OrderedMultipleChoiceField(ExtensibleMultipleChoiceField):
     widget = OrderedMultipleHiddenChooser
 
     def has_changed(self, initial, data):

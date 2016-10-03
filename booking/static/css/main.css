@@ -1365,11 +1365,14 @@ body.lightbox {
 
 /* MultiProductVisit START */
 #deselected-product-list li .movebutton,
-#deselected-product-list li .deselectbutton {
+#deselected-product-list li .deselectbutton,
+#confirm-product-list li .movebutton,
+#confirm-product-list li .deselectbutton {
     display: none;
 }
 #deselected-product-list,
-#selected-product-list {
+#selected-product-list,
+#confirm-product-list {
     font-size: 1.5em;
 }
 
@@ -1378,10 +1381,13 @@ body.lightbox {
 }
 
 #selected-product-list li .selectbutton,
-#selected-product-list li .teaser {
+#selected-product-list li .teaser,
+#confirm-product-list li .selectbutton,
+#confirm-product-list li .teaser {
     display: none;
 }
-#selected-product-list li .title {
+#selected-product-list li .title,
+#confirm-product-list li .title {
     display: inline;
     font-weight: normal;
     margin: 0;

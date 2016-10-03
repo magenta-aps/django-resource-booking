@@ -6,7 +6,9 @@
 {% block htmltitle %} - Foo{% endblock %}
 
 {% block head %}
+    {% include 'common/resources/datepicker_style.html' %}
 {% endblock %}
+
 
 {% block content %}
 
@@ -16,55 +18,95 @@
     <h1>{% blocktrans %}Fooooobar{% endblocktrans %}</h1>
     <hr/>
 
+    <p class="btn-group">
+        <button class="btn btn-primary" role="button" id="wizard-button-1">{% trans 'Vælg dato' %}</button>
+        <button class="btn btn-primary" role="button" id="wizard-button-2">{% trans 'Vælg tilbud' %}</button>
+        <button class="btn btn-primary" role="button" id="wizard-button-3">{% trans 'Bekræft' %}</button>
+    </p>
+
     <form id="mpvform" action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
 
         {{ form.non_field_errors }}
         {% csrf_token %}
 
-        {{ form.products }}
+        <div class="wizard-page" data-page="1">
+            {% include 'common/fields/generic_field.html' with field=form.date %}
+        </div>
 
-        <ul class="list-group" id="selected-product-list"></ul>
+        <div class="wizard-page" data-page="2">
+            {{ form.products }}
 
-        <p>{% trans 'Du kan trække i tilbuddene for at prioritere dem.' %}</p>
-        <p>{% trans 'Vælg yderlige tilbud:' %}</p>
-        <ul class="list-group" id="deselected-product-list">
-            {% for product in products %}
-                <li id="product_{{ product.id }}" class="list-group-item" data-product="{{ product.id }}">
+            <ul class="list-group" id="selected-product-list"></ul>
+
+            <p>{% trans 'Du kan trække i tilbuddene for at prioritere dem.' %}</p>
+            <p>{% trans 'Vælg yderlige tilbud:' %}</p>
+            <ul class="list-group" id="deselected-product-list">
+                {% for product in products %}
+                    <li id="product_{{ product.id }}" class="list-group-item" data-product="{{ product.id }}">
+                        <span class="glyphicon glyphicon-move movebutton"></span>
+                        <a class="btn btn-primary pull-right selectbutton">{% trans 'Vælg' %}</a>
+                        <h2 class="title">{{ product.title }}</h2>
+                        <p class="teaser">{{ product.teaser }}</p>
+                        <a class="deselectbutton">
+                            <span class="glyphicon glyphicon-remove"></span>
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+
+            <ul style="display:none">
+                <li id="product_prototype" class="list-group-item">
                     <span class="glyphicon glyphicon-move movebutton"></span>
                     <a class="btn btn-primary pull-right selectbutton">{% trans 'Vælg' %}</a>
-                    <h2 class="title">{{ product.title }}</h2>
-                    <p class="teaser">{{ product.teaser }}</p>
+                    <h2 class="title"></h2>
+                    <p class="teaser"></p>
                     <a class="deselectbutton">
                         <span class="glyphicon glyphicon-remove"></span>
                     </a>
                 </li>
-            {% endfor %}
-        </ul>
+            </ul>
+        </div>
 
-        {% include 'common/continue_cancel.html' %}
+        <div class="wizard-page" data-page="3">
+            <label>{% trans 'Valgt dato' %}</label>
+            <p id="confirm-date"></p>
+
+            <label>{% trans 'Valgte tilbud' %}</label>
+            <ul id="confirm-product-list" class="list-group"></ul>
+
+            {% include 'common/continue_cancel.html' %}
+        </div>
+
         <div class="divider"></div>
-
     </form>
 
 {% endblock %}
 
 {% block extra_scripts %}
     {{ form.media }}
+    {% include 'common/resources/datepicker_script.html' %}
     <script src="//cdn.jsdelivr.net/sortable/1.4.2/Sortable.min.js"></script>
     <script>
         <!--
         $(function(){
+            var dateSelect = $("[name='{{ form.date.name }}']");
             var selectedList = $("#selected-product-list");
             var deselectedList = $("#deselected-product-list");
-            $(".deselectbutton").on('click', function() {
+            var inputPrototype = $("[name='{{ form.products.name }}'][data-prototype]");
+
+            // Handle deselect clicks
+            var deSelect = function() {
                 var id = $(this).parent().attr("data-product");
                 {% comment %} Disable the associated hidden input field {% endcomment %}
                 var inputField = $("input[name='{{ form.products.name }}'][value='"+id+"']");
                 inputField.attr("disabled", "disabled");
                 {% comment %} Move the <li> to the selected list {% endcomment %}
                 deselectedList.append(selectedList.find("li#product_"+id));
-            });
-            $(".selectbutton").on('click', function() {
+            };
+            $(".deselectbutton").on('click', deSelect);
+
+            // Handle select clicks
+            var select = function() {
                 var id = $(this).parent().attr("data-product");
                 {% comment %} Enable the associated hidden input field, and move it to the bottom of the list of enabled input fields {% endcomment %}
                 var inputField = $("input[name='{{ form.products.name }}'][value='"+id+"']");
@@ -77,12 +119,106 @@
                 inputField.removeAttr("disabled");
                 {% comment %} Move the <li> to the deselected list {% endcomment %}
                 selectedList.append(deselectedList.find("li#product_"+id));
-            });
+            };
+            $(".selectbutton").on('click', select);
 
-            $("input[name='{{ form.products.name }}'][disabled!='disabled']").each(function(){
-                selectedList.append(deselectedList.find("li#product_"+this.value));
-            });
+            // Populate selectedlist display from hidden form
+            var updateDisplay = function() {
+                var selectedInputs = $("input[name='{{ form.products.name }}'][disabled!='disabled']").not(inputPrototype);
+                selectedInputs.each(function(){
+                    console.log("product "+this.value+" is enabled in form, move to selected list");
+                    selectedList.append(deselectedList.find("li#product_"+this.value));
+                });
+                var deselectedInputs = $("input[name='{{ form.products.name }}'][disabled='disabled']").not(inputPrototype);
+                deselectedInputs.each(function(){
+                    console.log("product "+this.value+" is disabled in form, move to deselected list");
+                    deselectedList.append(selectedList.find("li#product_"+this.value));
+                });
 
+                // Sort display according to inputs
+                var listItems = selectedList.children();
+                var last;
+                for (var i=0; i<selectedInputs.length; i++) {
+                    var listItem = listItems.filter("[data-product='"+selectedInputs[i].value+"']").first();
+                    if (last) {
+                        listItem.insertAfter(last);
+                    } else {
+                        listItem.insertBefore(listItems.first());
+                    }
+                    last = listItem;
+                }
+            };
+            updateDisplay();
+
+            // Handle date change
+            var productPrototype = $("#product_prototype");
+            var dateChange = function(){
+                var date = dateSelect.val();
+                var year, month, day;
+                var match;
+                if (match=/(\d{4})[\.\-\/](\d{2})[\.\-\/](\d{2})/.exec(date)) {
+                    // %Y-%m-%d format
+                    year = match[1];
+                    month = match[2];
+                    day = match[3];
+                } else if (match=/(\d{2})[\.\-\/](\d{2})[\.\-\/](\d{4})/.exec(date)) {
+                    // %d-%m-%Y format
+                    year = match[3];
+                    month = match[2];
+                    day = match[1];
+                } else {
+                    return;
+                }
+                var ymdString = [year,month,day].join("-");
+                $.ajax({
+                    method: 'GET',
+                    url: '{% url 'mpv-query-products' %}',
+                    data: {
+                        'date': ymdString
+                    },
+                    cache: false,
+                    dataType: 'json',
+                    success: function(responseData) {
+                        if (responseData && responseData['products']) {
+                            var products = responseData['products'];
+                            var inputs = $("input[name='{{ form.products.name }}']");
+                            deselectedList.empty();
+                            selectedList.empty();
+                            for (var i=0; i<products.length; i++) {
+                                var product = products[i];
+                                var selected = inputs.filter("[value='"+product.id+"'][disabled!='disabled']");
+                                var listItem = productPrototype.clone();
+                                listItem.attr({
+                                    'id': 'product_' + product.id,
+                                    'data-product': product.id
+                                });
+                                listItem.find(".title").text(product.title);
+                                listItem.find(".teaser").text(product.teaser);
+                                listItem.find(".deselectbutton").on('click', deSelect);
+                                listItem.find(".selectbutton").on('click', select);
+                                var list = selected.length ? selectedList : deselectedList;
+                                list.append(listItem);
+
+                                if (!selected.length) {
+                                    var inputItem = inputPrototype.clone();
+                                    inputItem.removeAttr('data-prototype');
+                                    inputItem.val(product.id);
+                                    inputs.last().after(inputItem);
+                                }
+                            }
+                            updateDisplay();
+                        }
+                    }
+                });
+            };
+            {% if not object or object.date != form.date.value %}
+            if (dateSelect.val()) {
+                dateChange();
+            }
+            {% endif %}
+            dateSelect.on('change', dateChange);
+
+            // Set up dragsort
             Sortable.create(
                 selectedList.get(0),
                 {
@@ -99,9 +235,32 @@
                     }
                 }
             );
+
+            var confirmDate = $("#confirm-date");
+            var confirmProducts = $("#confirm-product-list");
+            var updateConfirm = function() {
+                updateDisplay();
+                confirmDate.text(dateSelect.val());
+                confirmProducts.empty();
+                confirmProducts.append(selectedList.children().clone());
+            };
+
+
+
+
+
+            var gotoStep = function(step) {
+                $(".wizard-page").not("[data-page='"+step+"']").hide();
+                $(".wizard-page[data-page='"+step+"']").show();
+
+                if (step === 3) {
+                    updateConfirm();
+                }
+            }
+            for (var i=1; i<=3; i++) {
+                $("#wizard-button-"+i).on('click', gotoStep.bind(null, i));
+            }
         });
-
-
         // -->
     </script>
 {% endblock %}

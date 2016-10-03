@@ -1125,25 +1125,26 @@ class EvaluationOverviewForm(forms.Form):
         ]
 
 
-class MultiProductVisitDateForm(forms.Form):
-    date = forms.DateField(
-        widget=DateInput(
-            attrs={'class': 'datepicker form-control'}
-        ),
-        input_formats=['%d-%m-%Y'],
-        label=_(u'Vælg dato')
-    )
-
-
 class MultiProductVisitProductsForm(forms.ModelForm):
     class Meta:
         model = MultiProductVisit
-        fields = []
+        fields = ['date']
+        widgets = {
+            'date': DateInput(
+                attrs={'class': 'datepicker form-control'},
+            )
+        }
+        labels = {
+            'date': _(u'Vælg dato')
+        }
 
-    products = OrderedMultipleChoiceField()
+    products = OrderedMultipleChoiceField(
+        required=False
+    )
 
     def __init__(self, date=None, *args, **kwargs):
         super(MultiProductVisitProductsForm, self).__init__(*args, **kwargs)
+        self.fields['date'].input_formats = ['%d-%m-%Y']
         if date is not None:
             self.instance.date = date
 
