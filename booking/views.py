@@ -30,8 +30,8 @@ from django.utils.http import urlquote
 from django.utils.translation import ugettext as _
 from django.views.generic import View, TemplateView, ListView, DetailView
 from django.views.generic.base import ContextMixin
-from django.views.generic.edit import UpdateView, FormMixin, DeleteView, \
-    FormView
+from django.views.generic.edit import CreateView, UpdateView, DeleteView
+from django.views.generic.edit import FormMixin, FormView, ProcessFormView
 from django.views.defaults import bad_request
 
 from profile.models import EDIT_ROLES
@@ -51,6 +51,9 @@ from booking.models import log_action
 from booking.models import LOGACTION_CREATE, LOGACTION_CHANGE
 from booking.models import RoomResponsible
 from booking.models import BookerResponseNonce
+
+from booking.models import MultiProductVisitTemp
+
 from booking.forms import ProductInitialForm, ProductForm, \
     GuestEmailComposeForm, StudentForADayBookingForm, OtherProductForm, \
     StudyProjectBookingForm, BookingGrundskoleSubjectLevelForm, BookingListForm
@@ -70,6 +73,9 @@ from booking.forms import AdminProductSearchForm
 from booking.forms import ProductAutosendFormSet
 from booking.forms import VisitSearchForm
 from booking.forms import AcceptBookingForm
+from booking.forms import MutiProductVisitTempDateForm
+from booking.forms import MutiProductVisitTempProductsForm
+
 from booking.utils import full_email, get_model_field_map
 from booking.utils import get_related_content_types
 
@@ -2457,29 +2463,17 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
         return result
 
 
-class BookingSuccessView(TemplateView):
+class BookingSuccessView(DetailView):
     template_name = "booking/success.html"
+    model = Product
     modal = True
 
     def get(self, request, *args, **kwargs):
-        product_id = kwargs.get("product")
+        self.object = self.get_object()
         self.modal = request.GET.get('modal', '1') == '1'
-        back = request.GET.get('back')
-
-        product = None
-        if product_id is not None:
-            try:
-                product = Product.objects.get(id=product_id)
-            except:
-                pass
-        if product is None:
-            return bad_request(request)
-
         data = {
-            'product': product,
-            'back': back
+            'back': request.GET.get('back')
         }
-
         return self.render_to_response(
             self.get_context_data(**data)
         )
@@ -3380,3 +3374,89 @@ class BookingAcceptView(BreadcrumbMixin, FormView):
                 'text': _(u'Svar på ledig plads')
             }
         ]
+
+
+class MultiProductVisitPromptView(BreadcrumbMixin, DetailView):
+    model = Product
+    template_name = "visit/multi_prompt.html"
+
+
+class MultiProductVisitTempDateView(BreadcrumbMixin, HasBackButtonMixin,
+                                    ProcessFormView):
+    form_class = MutiProductVisitTempDateForm
+    model = MultiProductVisitTemp
+    template_name = "visit/multi_date.html"
+
+    def get_success_url(self):
+        if 'next' in self.request.GET:
+            return self.request.GET['next']
+        return reverse('mpv-edit-products', args=[self.object.id])
+
+
+class MultiProductVisitTempCreateView(MultiProductVisitTempDateView,
+                                      CreateView):
+    pass
+
+
+class MultiProductVisitTempUpdateView(MultiProductVisitTempDateView,
+                                      UpdateView):
+    pass
+
+
+class MultiProductVisitTempProductsView(BreadcrumbMixin, UpdateView):
+
+    form_class = MutiProductVisitTempProductsForm
+    model = MultiProductVisitTemp
+    template_name = "visit/multi_products.html"
+    _available_products = None
+
+    def get_form(self):
+        form = super(MultiProductVisitTempProductsView, self).get_form()
+        form.fields['products'].choices = [
+            (product.id, product.title)
+            for product in self.available_products
+        ]
+        form.initial['products'] = [
+            product for product in self.object.products.all()
+            if product in self.available_products
+        ]
+        return form
+
+    def get_context_data(self, **kwargs):
+        context = {}
+        context['products'] = self.available_products
+        context.update(kwargs)
+        return super(MultiProductVisitTempProductsView, self).get_context_data(
+            **context
+        )
+
+    @property
+    def available_products(self):
+        if self._available_products is None:
+            self._available_products = [
+                product
+                for product in Product.objects.filter(
+                    state=Product.ACTIVE,
+                    time_mode=Product.TIME_MODE_GUEST_SUGGESTED
+                )
+                if product.is_bookable(self.object.date)
+            ]
+        return self._available_products
+
+    def get_success_url(self):
+        if 'next' in self.request.GET:
+            return self.request.GET['next']
+        return reverse('mpv-confirm', args=[self.object.id])
+
+
+class MultiProductVisitTempConfirmView(BreadcrumbMixin, DetailView):
+    model = MultiProductVisitTemp
+    template_name = "visit/multi_confirm.html"
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        mpv = self.object.create_mpv()
+        self.object.delete()
+        return redirect(
+            reverse('visit-view', args=[mpv.id])
+        )

@@ -8,15 +8,16 @@ from booking.models import Guest, Region, PostCode, School
 from booking.models import ClassBooking, TeacherBooking, \
     BookingGymnasieSubjectLevel
 from booking.models import EmailTemplate
-from booking.models import Visit
+from booking.models import Visit, MultiProductVisitTemp
 from booking.models import BLANK_LABEL, BLANK_OPTION
+from booking.widgets import OrderedMultipleHiddenChooser
 from django import forms
 from django.db.models import Q
 from django.db.models.expressions import OrderBy
 from django.forms import CheckboxSelectMultiple, CheckboxInput
 from django.forms import EmailInput
 from django.forms import formset_factory, inlineformset_factory
-from django.forms import TextInput, NumberInput, Textarea, Select
+from django.forms import TextInput, NumberInput, DateInput, Textarea, Select
 from django.forms import HiddenInput
 from django.utils.translation import ugettext_lazy as _
 from tinymce.widgets import TinyMCE
@@ -1123,3 +1124,30 @@ class EvaluationOverviewForm(forms.Form):
         self.fields['organizationalunit'].choices = [
             (x.pk, unicode(x)) for x in userprofile.get_unit_queryset()
         ]
+
+
+class MutiProductVisitTempDateForm(forms.ModelForm):
+    class Meta:
+        model = MultiProductVisitTemp
+        fields = ['date']
+        widgets = {
+            'date': DateInput(
+                attrs={'class': 'datepicker form-control'}
+            )
+        }
+        labels = {
+            'date': _(u'Vælg dato')
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(MutiProductVisitTempDateForm, self).__init__(*args, **kwargs)
+        self.fields['date'].input_formats = ['%d-%m-%Y', '%d.%m.%Y']
+
+
+class MutiProductVisitTempProductsForm(forms.ModelForm):
+    class Meta:
+        model = MultiProductVisitTemp
+        fields = ['products']
+        widgets = {
+            'products': OrderedMultipleHiddenChooser()
+        }

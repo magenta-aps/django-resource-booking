@@ -16,7 +16,7 @@
 
     <div class="modal-body">
         <p>{% blocktrans with title=product.title %}Tak for din tilmelding til "{{ title }}". Du hører fra os snarest.{% endblocktrans%}</p>
-        <p><a id="rebook" href="{% url 'product-book' product.id %}?modal=1">{% trans "Foretag ny tilmelding" %}</a></p>
+        <p><a id="rebook" href="{% url 'product-book' object.id %}?modal=1">{% trans "Foretag ny tilmelding" %}</a></p>
     </div>
 
     <div class="modal-footer">
@@ -31,7 +31,7 @@
 {% block extra_scripts %}
     <script type="text/javascript">
         <!--
-            $("#rebook").attr("href", "{% url 'product-book' product.id %}?modal=1" + document.location.hash);
+            $("#rebook").attr("href", "{% url 'product-book' object.id %}?modal=1" + document.location.hash);
         //-->
     </script>
 {% endblock %}

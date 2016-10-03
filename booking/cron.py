@@ -1,7 +1,7 @@
-from datetime import timedelta, date
+from datetime import timedelta, date, datetime
 
-from booking.models import VisitAutosend, EmailTemplate, \
-    Visit
+from booking.models import VisitAutosend, EmailTemplate, Visit
+from booking.models import MultiProductVisitTemp
 from django_cron import CronJobBase, Schedule
 
 
@@ -128,4 +128,18 @@ class IdleHostroleJob(CronJobBase):
                             print e
                     else:
                         print "    That's not today. Not sending alert"
+        print "CRON job complete"
+
+
+class RemoveOldMvpJob(CronJobBase):
+    RUN_AT_TIMES = ['01:00']
+    schedule = Schedule(run_at_times=RUN_AT_TIMES)
+    code = 'kubooking.removempv'
+
+    def do(self):
+        print "---------------------------------------------------------------"
+        print "Beginning RemoveOldMvpJob (deletes obsolete mvp temps)"
+        MultiProductVisitTemp.objects.filter(
+            updated__lt=datetime.now()-timedelta(days=1)
+        ).delete()
         print "CRON job complete"
