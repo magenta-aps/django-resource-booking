@@ -3512,7 +3512,18 @@ class MultiProductVisitTempDateView(BreadcrumbMixin, HasBackButtonMixin,
 
 class MultiProductVisitTempCreateView(MultiProductVisitTempDateView,
                                       CreateView):
-    pass
+    def form_valid(self, form):
+        response = super(MultiProductVisitTempCreateView, self).\
+            form_valid(form)
+        if 'base' in self.request.GET:
+            try:
+                self.object.baseproduct = Product.objects.get(
+                    id=self.request.GET['base']
+                )
+                self.object.save()
+            except:
+                pass
+        return response
 
 
 class MultiProductVisitTempUpdateView(MultiProductVisitTempDateView,
@@ -3554,7 +3565,8 @@ class MultiProductVisitTempProductsView(BreadcrumbMixin, UpdateView):
                 product
                 for product in Product.objects.filter(
                     state=Product.ACTIVE,
-                    time_mode=Product.TIME_MODE_GUEST_SUGGESTED
+                    time_mode=Product.TIME_MODE_GUEST_SUGGESTED,
+                    institution_level=self.object.baseproduct.institution_level
                 )
                 if product.is_bookable(self.object.date)
             ]
