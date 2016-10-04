@@ -79,7 +79,7 @@ from booking.forms import MutiProductVisitTempDateForm
 from booking.forms import MutiProductVisitTempProductsForm
 
 from booking.utils import full_email, get_model_field_map
-from booking.utils import get_related_content_types
+from booking.utils import get_related_content_types, merge_dicts
 
 
 import booking.models as booking_models
@@ -1873,8 +1873,10 @@ class VisitNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
 
     def get_context_data(self, **kwargs):
         visit = self.object
-        product = visit.product
         context = {}
+        products = [self.object.product]
+        if self.object.multiproductvisit is not None:
+            products = self.object.multiproductvisit.products
         context['recp'] = {
             'guests': {
                 'label': _(u'Alle gæster'),
@@ -1908,13 +1910,13 @@ class VisitNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
             },
             'roomadmins': {
                 'label': _(u'Lokaleansvarlige'),
-                'items': {
+                'items': merge_dicts([{
                     "%s%s%d" % (self.RECIPIENT_ROOMRESPONSIBLE,
                                 self.RECIPIENT_SEPARATOR,
                                 roomresponsible.id):
                                     roomresponsible.get_full_email()
                     for roomresponsible in product.roomresponsible.all()
-                }
+                } for product in products])
             },
             'assigned_hosts': {
                 'label': _(u'Tildelte værter'),
@@ -1944,7 +1946,7 @@ class VisitNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
             },
             'potential_hosts': {
                 'label': _(u'Potentielle værter'),
-                'items': {
+                'items': merge_dicts([{
                     "%s%s%s" % (self.RECIPIENT_USER,
                                 self.RECIPIENT_SEPARATOR,
                                 user.username):
@@ -1955,11 +1957,11 @@ class VisitNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
                     if user.email is not None and
                     user not in visit.hosts_rejected.all() and
                     user not in visit.hosts.all()
-                }
+                } for product in products])
             },
             'potential_teachers': {
                 'label': _(u'Potentielle undervisere'),
-                'items': {
+                'items': merge_dicts([{
                     "%s%s%s" % (self.RECIPIENT_USER,
                                 self.RECIPIENT_SEPARATOR,
                                 user.username):
@@ -1970,7 +1972,7 @@ class VisitNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
                     if user.email is not None and
                     user not in visit.teachers_rejected.all() and
                     user not in visit.teachers.all()
-                }
+                } for product in products])
             }
         }
         context.update(kwargs)
@@ -1978,7 +1980,7 @@ class VisitNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
             get_context_data(**context)
 
     def get_unit(self):
-        return self.object.product.organizationalunit
+        return self.object.organizationalunit
 
     def get_success_url(self):
         if self.modal:
@@ -2015,8 +2017,11 @@ class BookingNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
 
     def get_context_data(self, **kwargs):
         context = {}
+        products = [self.object.visit.product]
+        if self.object.visit.multiproductvisit is not None:
+            products = self.object.visit.multiproductvisit.products
         if 'nogroups' not in self.request.GET:
-            context['recp'] = {
+            recipients = {
                 'guests': {
                     'label': _(u'Gæster'),
                     'items': {
@@ -2026,35 +2031,13 @@ class BookingNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
                         self.object.booker.get_full_email()
                     }
                 },
-                'tilbudsansvarlig': {
-                    'label': _(u'Tilbudsansvarlig'),
-                    'items': {
-                        "%s%s%d" % (self.RECIPIENT_USER,
-                                    self.RECIPIENT_SEPARATOR, user.id):
-                                        user.get_full_email()
-                        for user in [
-                            self.object.product.tilbudsansvarlig
-                        ] if user
-                    }
-                },
-                'roomadmins': {
-                    'label': _(u'Lokaleansvarlige'),
-                    'items': {
-                        "%s%s%d" % (self.RECIPIENT_USER,
-                                    self.RECIPIENT_SEPARATOR,
-                                    roomresponslible.id):
-                                        roomresponslible.get_full_email()
-                        for roomresponslible in
-                        self.object.product.roomresponsible.all()
-                    }
-                },
                 'hosts': {
                     'label': _(u'Værter'),
                     'items': {
                         "%s%s%s" % (self.RECIPIENT_USER,
                                     self.RECIPIENT_SEPARATOR,
                                     user.username):
-                        full_email(user.email, user.get_full_name())
+                            full_email(user.email, user.get_full_name())
                         for user in self.object.hosts.all()
                         if user.email is not None
                         }
@@ -2065,18 +2048,40 @@ class BookingNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
                         "%s%s%s" % (self.RECIPIENT_USER,
                                     self.RECIPIENT_SEPARATOR,
                                     user.username):
-                        full_email(user.email, user.get_full_name())
+                            full_email(user.email, user.get_full_name())
                         for user in self.object.teachers.all()
                         if user.email is not None
                         }
+                },
+                'tilbudsansvarlig': {
+                    'label': _(u'Tilbudsansvarlig'),
+                    'items': merge_dicts([{
+                        "%s%s%d" % (self.RECIPIENT_USER,
+                                    self.RECIPIENT_SEPARATOR, user.id):
+                                        user.get_full_email()
+                        for user in [
+                            product.tilbudsansvarlig
+                        ] if user
+                    } for product in products])
+                },
+                'roomadmins': {
+                    'label': _(u'Lokaleansvarlige'),
+                    'items': merge_dicts([{
+                        "%s%s%d" % (self.RECIPIENT_USER,
+                                    self.RECIPIENT_SEPARATOR,
+                                    roomresponsible.id):
+                                        roomresponsible.get_full_email()
+                        for roomresponsible in product.roomresponsible.all()
+                    } for product in products])
                 }
             }
+            context['recp'] = recipients
 
         context.update(kwargs)
         return super(BookingNotifyView, self).get_context_data(**context)
 
     def get_unit(self):
-        return self.object.visit.product.organizationalunit
+        return self.object.visit.organizationalunit
 
     def get_success_url(self):
         if self.modal:
