@@ -1503,8 +1503,6 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
 
             self.save_studymaterials()
 
-            self.save_rooms()
-
             self.save_subjects()
 
             self.add_to_my_resources()
