@@ -73,9 +73,25 @@
                         <strong><a href="{% url 'visit-view' res.pk %}">{% trans 'Besøg' %} #{{ res.pk }}</a></strong>
                         <dl class="dl-horizontal">
                             <dt>{% trans 'Tilbud:' %}</dt>
-                            <dd><a href="{% url 'product-view' res.product.pk %}">#{{ res.product.pk }} {{ res.product.title }}</a></dd>
+                            <dd>
+                                {% if res.multiproductvisit %}
+                                    <ul>
+                                    {% for product in res.multiproductvisit.products %}
+                                        <li><a href="{% url 'product-view' product.pk %}">#{{ product.pk }} {{ product.title }}</a></li>
+                                    {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    <a href="{% url 'product-view' res.product.pk %}">#{{ res.product.pk }} {{ res.product.title }}</a>
+                                {% endif %}
+                            </dd>
                             <dt>{% trans 'Hvornår:' %}</dt>
-                            <dd>{{ res.first_eventtime.interval_display }}</a></dd>
+                            <dd>
+                                {% if res.multiproductvisit %}
+                                    {{ res.multiproductvisit.date }}
+                                {% else %}
+                                    {{ res.first_eventtime.interval_display }}
+                                {% endif %}
+                            </dd>
                             <dt>{% trans 'Booket af:' %}</dt>
                             <dd>{% blocktrans with count=res.nr_attendees %}{{ count }} personer{% endblocktrans %}</dd>
                         </dl>

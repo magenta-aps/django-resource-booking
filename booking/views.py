@@ -2721,6 +2721,7 @@ class VisitSearchView(VisitListView):
         qs = self.model.objects.search(q)
 
         for filter_method in (
+            self.filter_multiproduct_subs_off,
             self.filter_by_resource_id,
             self.filter_by_unit,
             self.filter_by_date,
@@ -2734,6 +2735,10 @@ class VisitSearchView(VisitListView):
 
         qs = qs.order_by("-pk")
 
+        return qs
+
+    def filter_multiproduct_subs_off(self, qs):
+        qs = qs.filter(is_multi_sub=False)
         return qs
 
     def filter_by_resource_id(self, qs):

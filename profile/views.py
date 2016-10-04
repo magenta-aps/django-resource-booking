@@ -161,7 +161,8 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             ),
             'queryset': self.sort_vo_queryset(
                 Visit.being_planned_queryset(
-                    eventtime__product__organizationalunit=unit_qs
+                    eventtime__product__organizationalunit=unit_qs,
+                    is_multi_sub=False
                 ).annotate(num_participants=(
                     Coalesce(Count("bookings__booker__pk"), 0) +
                     Coalesce(
@@ -189,7 +190,8 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             ),
             'queryset': self.sort_vo_queryset(
                 Visit.planned_queryset(
-                    eventtime__product__organizationalunit=unit_qs
+                    eventtime__product__organizationalunit=unit_qs,
+                    is_multi_sub=False
                 )
             )
         }
@@ -204,7 +206,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
 
     def lists_for_teachers(self):
         user = self.request.user
-        taught_vos = user.taught_visits.all()
+        taught_vos = user.taught_visits.filter(is_multi_sub=False)
         unit_qs = self.request.user.userprofile.get_unit_queryset()
 
         return [
@@ -235,7 +237,8 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                         num_assigned__lt=Coalesce(
                             'override_needed_hosts',
                             'eventtime__product__needed_hosts'
-                        )
+                        ),
+                        is_multi_sub=False
                     ).exclude(
                         teachers=self.request.user
                     )
@@ -255,7 +258,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
 
     def lists_for_hosts(self):
         user = self.request.user
-        hosted_vos = user.hosted_visits.all()
+        hosted_vos = user.hosted_visits.filter(is_multi_sub=False)
         unit_qs = self.request.user.userprofile.get_unit_queryset()
 
         return [
@@ -285,7 +288,8 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     num_assigned__lt=Coalesce(
                         'override_needed_hosts',
                         'eventtime__product__needed_hosts'
-                    )
+                    ),
+                    is_multi_sub=False
                 ).exclude(
                     hosts=self.request.user.pk
                 )

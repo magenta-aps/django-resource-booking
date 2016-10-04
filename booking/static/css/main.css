@@ -364,6 +364,11 @@ h3.media-heading {
     margin-top: 4px;
 }
 
+.media-body ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+
 .media-info {
     margin: 5px 0;
 }

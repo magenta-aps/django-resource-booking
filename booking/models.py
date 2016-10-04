@@ -2659,7 +2659,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         return Visit.objects.filter(
             eventtime__start__year=date.year,
             eventtime__start__month=date.month,
-            eventtime__start__day=date.day
+            eventtime__start__day=date.day,
+            is_multi_sub=False
         ).order_by('eventtime__start')
 
     @staticmethod
@@ -2668,7 +2669,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         # Meaning they begin before the queried time and end after the time
         return Visit.objects.filter(
             eventtime__start__lte=time,
-            eventtime__end__gt=time
+            eventtime__end__gt=time,
+            is_multi_sub=False
         )
 
     @staticmethod
@@ -2685,7 +2687,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         # end of the day and ends after the beginning of the day
         return Visit.objects.filter(
             eventtime__start__lte=date + timedelta(days=1),
-            eventtime__end__gt=date
+            eventtime__end__gt=date,
+            is_multi_sub=False
         )
 
     @staticmethod
@@ -2695,7 +2698,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 Visit.WORKFLOW_STATUS_EXECUTED,
                 Visit.WORKFLOW_STATUS_EVALUATED],
             eventtime__start__isnull=False,
-            eventtime__end__lt=time
+            eventtime__end__lt=time,
+            is_multi_sub=False
         ).order_by('-eventtime__end')
 
     def ensure_statistics(self):
@@ -2849,6 +2853,10 @@ class MultiProductVisit(Visit):
     def available_seats(self):
         return 0
 
+    @property
+    def start_datetime(self):
+        return self.date
+
 
 class MultiProductVisitTemp(models.Model):
     date = models.DateField(
@@ -2879,6 +2887,7 @@ class MultiProductVisitTemp(models.Model):
             date=self.date
         )
         mpv.save()
+        mpv.ensure_statistics()
         for index, product in enumerate(self.products.all()):
             eventtime = EventTime(
                 product=product,

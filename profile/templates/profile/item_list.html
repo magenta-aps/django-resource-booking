@@ -20,13 +20,21 @@
                     <div class="list-group-item clearfix">
                         <a href="{% url 'visit-view' visit.pk %}" title="{% trans 'Se arrangementets detaljer' %}">
                             <h2 class="list-group-item-heading">
-                                {{ visit.product.title }}
+                                {% if visit.multiproductvisit %}
+                                    {% blocktrans with count=visit.multiproductvisit.products|length %}Prioriteret liste af {{ count }} tilbud{% endblocktrans%}
+                                {% else %}
+                                    {{ visit.product.title }}
+                                {% endif %}
                             </h2>
 
                             <div class="list-group-item-text">
                                 <ul>
                                     <li>
-                                        {% blocktrans with date=visit.start_datetime|date:"d.m.Y" time=visit.start_datetime|time:"H.i" %}Dato/tid: {{ date }} kl. {{ time }}{% endblocktrans %}
+                                        {% if visit.multiproductvisit %}
+                                            {% blocktrans with date=visit.multiproductvisit.date|date:"d.m.Y" %}Dato: {{ date }}{% endblocktrans %}
+                                        {% else %}
+                                            {% blocktrans with date=visit.start_datetime|date:"d.m.Y" time=visit.start_datetime|time:"H.i" %}Dato/tid: {{ date }} kl. {{ time }}{% endblocktrans %}
+                                        {% endif %}
                                     </li>
                                     <li>{% trans 'Antal tilmeldte:' %} {{ visit.nr_attendees }}</li>
                                     {% if request.user.userprofile.has_edit_role and visit.has_changes_after_planned %}
@@ -42,20 +50,24 @@
                             </a>
                             <div class="pull-right">
                                 <ul class="list-unstyled">
-                                    {% if visit.needs_teachers %}
-                                        <li>{% blocktrans count needed=visit.needed_teachers %}Mangler {{ needed }} underviser{% plural %}Mangler {{ needed }} undervisere{% endblocktrans %}</li>
-                                    {% endif %}
-                                    {% if visit.needs_hosts %}
-                                        <li>{% blocktrans count needed=visit.needed_hosts %}Mangler {{ needed }} vært{% plural %}Mangler {{ needed }} værter{% endblocktrans %}</li>
-                                    {% endif %}
-                                    {% if visit.needs_room %}
-                                        <li>{% blocktrans with count=1 %}Mangler lokale{% endblocktrans %}</li>
+                                    {% if not visit.multiproductvisit %}
+                                        {% if visit.needs_teachers %}
+                                            <li>{% blocktrans count needed=visit.needed_teachers %}Mangler {{ needed }} underviser{% plural %}Mangler {{ needed }} undervisere{% endblocktrans %}</li>
+                                        {% endif %}
+                                        {% if visit.needs_hosts %}
+                                            <li>{% blocktrans count needed=visit.needed_hosts %}Mangler {{ needed }} vært{% plural %}Mangler {{ needed }} værter{% endblocktrans %}</li>
+                                        {% endif %}
+                                        {% if visit.needs_room %}
+                                            <li>{% blocktrans with count=1 %}Mangler lokale{% endblocktrans %}</li>
+                                        {% endif %}
                                     {% endif %}
                                     {% if visit.comments %}
                                         <li>{% trans 'Kommentar:' %} {{ visit.comments }}</li>
                                     {% endif %}
-                                    {% if visit.nr_waiting > 0 %}
-                                        <li>{% trans 'Antal på venteliste:' %} {{ visit.nr_waiting }}</li>
+                                    {% if not visit.multiproductvisit %}
+                                        {% if visit.nr_waiting > 0 %}
+                                            <li>{% trans 'Antal på venteliste:' %} {{ visit.nr_waiting }}</li>
+                                        {% endif %}
                                     {% endif %}
                                 </ul>
                             </div>
