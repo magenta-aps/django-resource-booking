@@ -233,3 +233,10 @@ class UnicodeWriter:
     def writerows(self, rows):
         for row in rows:
             self.writerow(row)
+
+
+def merge_dicts(dict_list):
+    result = {}
+    for dict in dict_list:
+        result.update(dict)
+    return result
