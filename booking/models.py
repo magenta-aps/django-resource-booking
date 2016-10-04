@@ -2553,7 +2553,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     def autosend_enabled(self, template_key):
         return self.get_autosend(template_key, True) is not None and \
-               not self.is_multi_sub
+            not self.is_multi_sub
 
     # Sends a message to defined recipients pertaining to the Visit
     def autosend(self, template_key, recipients=None,
