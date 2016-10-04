@@ -48,7 +48,7 @@
 
         <p id="drawhelp">{% trans 'Du kan trække i tilbuddene for at prioritere dem.' %}</p>
         <p>{% trans 'Vælg tilbud:' %}<br/>{% trans '(Listen er begrænset til tilbud uden faste tider der kan lade sig gøre den pågældende dag)' %}</p>
-        <ul class="list-group" id="deselected-product-list">
+        <ul class="list-group scroll-500" id="deselected-product-list">
             {% for product in products %}
                 {% if product.id not in form.products.value %}
                     <li id="product_{{ product.id }}" class="list-group-item" data-product="{{ product.id }}">
@@ -76,6 +76,8 @@
                 </a>
             </li>
         </ul>
+
+        {% include 'common/fields/generic_field.html' with field=form.notes %}
 
         <fieldset>
             <a class="btn btn-primary cancelbutton" href="{% url 'mpv-edit-date' object.id %}">{% trans "Tilbage" %}</a>

@@ -2819,6 +2819,11 @@ class MultiProductVisit(Visit):
         verbose_name=_(u'Dato')
     )
 
+    notes = models.TextField(
+        blank=True,
+        verbose_name=u'Bemærkninger'
+    )
+
     @property
     def subvisits(self):
         return Visit.objects.filter(

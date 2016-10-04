@@ -1149,7 +1149,10 @@ class MutiProductVisitTempDateForm(forms.ModelForm):
 class MutiProductVisitTempProductsForm(forms.ModelForm):
     class Meta:
         model = MultiProductVisitTemp
-        fields = ['products']
+        fields = ['products', 'notes']
         widgets = {
-            'products': OrderedMultipleHiddenChooser()
+            'products': OrderedMultipleHiddenChooser(),
+            'notes': Textarea(
+                attrs={'class': 'form-control input-sm'}
+            )
         }
