@@ -2884,6 +2884,12 @@ class MultiProductVisitTemp(models.Model):
         blank=True,
         verbose_name=u'Bemærkninger'
     )
+    baseproduct = models.ForeignKey(
+        Product,
+        null=True,
+        blank=True,
+        related_name='foobar'
+    )
 
     def create_mpv(self):
         mpv = MultiProductVisit(
