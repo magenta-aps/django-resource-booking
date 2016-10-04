@@ -739,7 +739,6 @@ class EmailTemplate(models.Model):
     def add_defaults_to_all():
         for product in Product.objects.all():
             for template_key in EmailTemplate.default:
-                print EmailTemplate.get_name(template_key)
                 if product.productautosend_set.filter(
                     template_key=template_key
                 ).count() == 0:
@@ -2837,6 +2836,22 @@ class MultiProductVisit(Visit):
         verbose_name=_(u'Dato')
     )
 
+    notes = models.TextField(
+        blank=True,
+        verbose_name=u'Bemærkninger'
+    )
+
+    @property
+    def subvisits(self):
+        return Visit.objects.filter(
+            is_multi_sub=True,
+            multi_master=self
+        ).order_by('multi_priority')
+
+    @property
+    def products(self):
+        return [visit.eventtime.product for visit in self.subvisits]
+
     def planned_status_is_blocked(self):
         return True
 
@@ -2853,55 +2868,8 @@ class MultiProductVisit(Visit):
         return False
 
     @property
-    def subvisits(self):
-        return Visit.objects.filter(
-            is_multi_sub=True,
-            multi_master=self
-        ).order_by('multi_priority')
-
-    @property
-    def products(self):
-        return [visit.eventtime.product for visit in self.subvisits]
-
-    def update_subvisits(self, product_list):
-
-        # Prune off products that are not in form input,
-        # or are represented more than once
-        # (we prune the extras, so one remains)
-        delete = []
-        spared = []
-        for visit in self.subvisits:
-            eventtime = visit.eventtime
-            product = eventtime.product
-            if product not in product_list or product in spared:
-                delete.append(eventtime)
-                delete.append(visit)
-            else:
-                spared.append(product)
-        for item in delete:
-            item.delete()
-
-        # Create new visits for products we don't have yet
-        existing_products = self.products
-        for index, product in enumerate(product_list):
-            if product not in existing_products:
-                eventtime = EventTime(
-                    product=product,
-                    bookable=False,
-                    has_specific_time=False
-                )
-                eventtime.save()
-                eventtime.make_visit(
-                    product=product,
-                    multi_master=self,
-                    multi_priority=index,
-                    is_multi_sub=True
-                )
-
-        # Update priorities to match form input
-        for visit in self.subvisits:
-            visit.eventtime.multi_priority = \
-                product_list.index(visit.eventtime.product)
+    def available_seats(self):
+        return 0
 
 
 class MultiProductVisitTemp(models.Model):

@@ -37,6 +37,7 @@ from booking.views import VisitAddCommentView
 from booking.views import VisitDetailView
 from booking.views import VisitCustomListView
 from booking.views import EvaluationOverviewView
+from booking.views import VisitBookingCreateView
 from booking.views import MultiProductVisitPromptView
 from booking.views import MultiProductVisitTempCreateView
 from booking.views import MultiProductVisitTempUpdateView
@@ -151,6 +152,9 @@ urlpatterns = patterns(
     url(r'^visit/(?P<pk>[0-9]+)$',
         VisitDetailView.as_view(),
         name='visit-view'),
+    url(r'visit/(?P<visit>[0-9]+)/book/?$',
+        VisitBookingCreateView.as_view(),
+        name='visit-booking-create'),
 
     url(r'^booking/(?P<pk>[0-9]+)/?$',
         BookingDetailView.as_view(),

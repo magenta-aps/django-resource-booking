@@ -649,7 +649,7 @@ class BookingForm(forms.ModelForm):
 
     class Meta:
         model = Booking
-        fields = ()
+        fields = ['eventtime', 'notes']
         labels = {
             'eventtime': _(u"Tidspunkt")
         },
@@ -774,8 +774,10 @@ class BookerForm(forms.ModelForm):
         super(BookerForm, self).__init__(data, *args, **kwargs)
         attendeecount_widget = self.fields['attendee_count'].widget
 
-        attendeecount_widget.attrs['min'] = product.minimum_number_of_visitors
+        attendeecount_widget.attrs['min'] = 1
         if product is not None:
+            attendeecount_widget.attrs['min'] = \
+                product.minimum_number_of_visitors
             if product.maximum_number_of_visitors is not None:
                 attendeecount_widget.attrs['max'] = \
                     product.maximum_number_of_visitors
@@ -1134,7 +1136,10 @@ class MutiProductVisitTempDateForm(forms.ModelForm):
 class MutiProductVisitTempProductsForm(forms.ModelForm):
     class Meta:
         model = MultiProductVisitTemp
-        fields = ['products']
+        fields = ['products', 'notes']
         widgets = {
-            'products': OrderedMultipleHiddenChooser()
+            'products': OrderedMultipleHiddenChooser(),
+            'notes': Textarea(
+                attrs={'class': 'form-control input-sm'}
+            )
         }
