@@ -322,8 +322,6 @@ class EventTime(models.Model):
                 obj.set_calculated_end_time()
 
             obj.has_specific_time = obj.calculated_has_specific_time()
-
-            print obj
             obj.save()
 
     @property

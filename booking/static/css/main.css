@@ -1165,6 +1165,10 @@ body.lightbox {
     margin: 0;
 }
 
+#waitinglist_warning {
+    display: none;
+}
+
 @media screen and (max-width:768px) {
     html,
     body {

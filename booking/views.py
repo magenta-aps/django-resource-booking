@@ -52,6 +52,7 @@ from booking.models import LOGACTION_CREATE, LOGACTION_CHANGE
 from booking.models import RoomResponsible
 from booking.models import BookerResponseNonce
 
+from booking.models import MultiProductVisit
 from booking.models import MultiProductVisitTemp
 
 from booking.forms import ProductInitialForm, ProductForm, \
@@ -61,6 +62,7 @@ from booking.forms import StudentForADayForm, InternshipForm, OpenHouseForm, \
     TeacherProductForm, ClassProductForm, StudyProjectForm, AssignmentHelpForm, \
     StudyMaterialForm
 
+from booking.forms import BookingForm
 from booking.forms import ClassBookingForm, TeacherBookingForm
 from booking.forms import ProductStudyMaterialForm, \
     BookingGymnasieSubjectLevelForm
@@ -2485,6 +2487,103 @@ class BookingSuccessView(DetailView):
             return ["booking/success.html"]
 
 
+class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
+    model = Booking
+    visit = None
+    object = None
+    template_name = 'booking/form.html'
+    modal = False
+
+    def dispatch(self, request, *args, **kwargs):
+        self.visit = Visit.objects.get(id=kwargs['visit'])
+        return super(VisitBookingCreateView, self).dispatch(
+            request, *args, **kwargs
+        )
+
+    @property
+    def product(self):
+        return self.visit.product
+
+    def get(self, request, *args, **kwargs):
+        return self.render_to_response(
+            self.get_context_data(**self.get_forms())
+        )
+
+    def post(self, request, *args, **kwargs):
+        forms = self.get_forms(request.POST)
+        all_valid = True
+        for key, form in forms.iteritems():
+            if not form.is_valid():
+                all_valid = False
+        if all_valid:
+            return self.form_valid(forms)
+        else:
+            return self.form_invalid(forms)
+
+    def form_valid(self, forms):
+        object = self.object = forms['bookingform'].save(commit=False)
+        object.visit = self.visit
+        if 'bookerform' in forms:
+            object.booker = forms['bookerform'].save()
+        object.save()
+        return redirect(reverse('booking-view', args=[object.id]))
+
+    def form_invalid(self, forms):
+        return self.render_to_response(self.get_context_data(**forms))
+
+    def get_forms(self, data=None):
+        forms = {}
+        forms['bookerform'] = BookerForm(
+            data, product=self.product, language=self.request.LANGUAGE_CODE
+        )
+        type = None
+
+        if self.product:
+            type = self.product.type
+        if type == Product.GROUP_VISIT:
+            forms['bookingform'] = ClassBookingForm(data, product=self.product)
+            if self.product.productgymnasiefag_set.count() > 0:
+                forms['subjectform'] = BookingGymnasieSubjectLevelForm(data)
+            if self.product.productgrundskolefag_set.count() > 0:
+                forms['grundskolesubjectform'] = \
+                    BookingGrundskoleSubjectLevelForm(data)
+
+        elif type == Product.TEACHER_EVENT:
+            forms['bookingform'] = TeacherBookingForm(
+                data, product=self.product
+            )
+        elif type == Product.STUDENT_FOR_A_DAY:
+            forms['bookingform'] = StudentForADayBookingForm(
+                data, product=self.product
+            )
+        elif type == Product.STUDY_PROJECT:
+            forms['bookingform'] = StudyProjectBookingForm(
+                data, product=self.product
+            )
+        else:
+            forms['bookingform'] = BookingForm(data)
+        return forms
+
+    def get_context_data(self, **kwargs):
+        available_times = {}
+
+        if self.product:
+            for eventtime in self.product.future_times:
+                available_times[str(eventtime.pk)] = {
+                    'available': eventtime.available_seats,
+                    'waitinglist': eventtime.waiting_list_capacity
+                }
+
+        context = {
+            'product': self.product,
+            'level_map': Guest.level_map,
+            'modal': self.modal,
+            'times_available': available_times
+        }
+        context.update(kwargs)
+        return super(VisitBookingCreateView, self).get_context_data(**context)
+
+
 class EmbedcodesView(TemplateView):
     template_name = "embedcodes.html"
 
@@ -2790,21 +2889,25 @@ class BookingDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
         return super(BookingDetailView, self).get_context_data(**context)
 
     def get_breadcrumbs(self):
-        return [
-            {'url': reverse('search'), 'text': _(u'Søgning')},
-            {
+        breadcrumbs = [
+            {'url': reverse('search'), 'text': _(u'Søgning')}
+        ]
+        if self.object.visit.product:
+            breadcrumbs.append({
                 'url': reverse(
                     'product-view',
                     args=[self.object.visit.product.id]
                 ),
                 'text': self.object.visit.product.title
-            },
+            })
+        breadcrumbs.extend([
             {
                 'url': reverse('visit-view', args=[self.object.visit.id]),
                 'text': self.object.visit.date_display
             },
-            {'text': self.object},
-        ]
+            {'text': self.object}
+        ])
+        return breadcrumbs
 
 
 class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
@@ -2812,6 +2915,13 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
     """Display Booking details"""
     model = Visit
     template_name = 'visit/details.html'
+
+    def get_object(self):
+        object = super(VisitDetailView, self).get_object()
+        try:
+            return MultiProductVisit.objects.get(visit_ptr_id=object.id)
+        except MultiProductVisit.DoesNotExist:
+            return object
 
     def get_context_data(self, **kwargs):
         context = {}
@@ -3458,5 +3568,5 @@ class MultiProductVisitTempConfirmView(BreadcrumbMixin, DetailView):
         mpv = self.object.create_mpv()
         self.object.delete()
         return redirect(
-            reverse('visit-view', args=[mpv.id])
+            reverse('visit-booking-create', args=[mpv.id])
         )

@@ -12,7 +12,12 @@
 
     <div class="row titlebar hidden-print">
         <div class="col-sm-12 col-md-9">
-            <h1>{% blocktrans with producttitle=object.product.title on_date=object.date_display %}Planlægning af '{{ producttitle }}' {{ on_date }}{% endblocktrans %}</h1>
+            <h1>
+            {% if object.multiproductvisit %}
+                {% blocktrans with on_date=object.multiproductvisit.date %}Planlægning af priorieret liste af tilbud den {{ on_date }}{% endblocktrans %}</h1>
+            {% else %}
+                {% blocktrans with producttitle=object.product.title on_date=object.date_display %}Planlægning af '{{ producttitle }}' {{ on_date }} {% endblocktrans %}</h1>
+            {% endif %}
         </div>
         <div class="divider"></div>
     </div>
@@ -21,12 +26,25 @@
         <div class="col-sm-12 col-md-10 panel panel-default">
 
             <div class="col-xs-9">
-                <div>
-                    {% url 'product-view' object.product.id as producturl %}
-                    {% blocktrans with nr_bookers=object.nr_attendees producttitle=object.product.title %}
-                        {{ nr_bookers }} har tilmeldt sig denne instans af <a href="{{ producturl }}">{{ producttitle }}</a>
-                    {% endblocktrans %}
-                </div>
+                {% if object.multiproductvisit %}
+                    <div>
+                        {% trans 'Ønskede tilbud:' %}
+                        <ul>
+                            {% for product in object.multiproductvisit.products %}
+                                <li>
+                                    <a href="{% url 'product-view' product.id %}">{{ product.title }}</a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% else %}
+                    <div>
+                        {% url 'product-view' object.product.id as producturl %}
+                        {% blocktrans with nr_bookers=object.nr_attendees producttitle=object.product.title %}
+                            {{ nr_bookers }} har tilmeldt sig denne instans af <a href="{{ producturl }}">{{ producttitle }}</a>
+                        {% endblocktrans %}
+                    </div>
+                {% endif %}
 
                 {% if not object.start_datetime %}
                 <div class="divider"></div>
@@ -97,21 +115,23 @@
                             {% endif %}
                         </dd>
 
-                        <dt>{% trans 'Ressourcer' %}</dt>
-                        <dd>
-                            {% if object.product.resourcerequirement_set.count %}
-                                <ul class="list-unstyled" style="display:inline-block; margin-bottom:0">
-                                {% for requirementdata in object.requirement_details %}
-                                    <li>{{ requirementdata.acquired }}/{{ requirementdata.required }} {{ requirementdata.name }}</li>
-                                {% endfor %}
-                                </ul>
-                                {% if can_edit %}
-                                    <a href="{% url 'visit-resources-edit' object.pk %}" role="button" class="btn btn-primary btn-xs" style="vertical-align:top">{% trans 'Redigér' %}</a>
+                        {% if not object.multiproductvisit %}
+                            <dt>{% trans 'Ressourcer' %}</dt>
+                            <dd>
+                                {% if object.product.resourcerequirement_set.count %}
+                                    <ul class="list-unstyled" style="display:inline-block; margin-bottom:0">
+                                    {% for requirementdata in object.requirement_details %}
+                                        <li>{{ requirementdata.acquired }}/{{ requirementdata.required }} {{ requirementdata.name }}</li>
+                                    {% endfor %}
+                                    </ul>
+                                    {% if can_edit %}
+                                        <a href="{% url 'visit-resources-edit' object.pk %}" role="button" class="btn btn-primary btn-xs" style="vertical-align:top">{% trans 'Redigér' %}</a>
+                                    {% endif %}
+                                {% else %}
+                                    {% trans 'Tilbuddet kræver ingen ressourcer' %}
                                 {% endif %}
-                            {% else %}
-                                {% trans 'Tilbuddet kræver ingen ressourcer' %}
-                            {% endif %}
-                        </dd>
+                            </dd>
+                        {% endif %}
 
                         <dt>{% trans 'Undervisere' %}</dt>
                         <dd>

@@ -739,7 +739,6 @@ class EmailTemplate(models.Model):
     def add_defaults_to_all():
         for product in Product.objects.all():
             for template_key in EmailTemplate.default:
-                print EmailTemplate.get_name(template_key)
                 if product.productautosend_set.filter(
                     template_key=template_key
                 ).count() == 0:
@@ -2820,6 +2819,17 @@ class MultiProductVisit(Visit):
         verbose_name=_(u'Dato')
     )
 
+    @property
+    def subvisits(self):
+        return Visit.objects.filter(
+            is_multi_sub=True,
+            multi_master=self
+        ).order_by('multi_priority')
+
+    @property
+    def products(self):
+        return [visit.eventtime.product for visit in self.subvisits]
+
     def planned_status_is_blocked(self):
         return True
 
@@ -2836,15 +2846,8 @@ class MultiProductVisit(Visit):
         return False
 
     @property
-    def subvisits(self):
-        return Visit.objects.filter(
-            is_multi_sub=True,
-            multi_master=self
-        ).order_by('multi_priority')
-
-    @property
-    def products(self):
-        return [visit.eventtime.product for visit in self.subvisits]
+    def available_seats(self):
+        return 0
 
 
 class MultiProductVisitTemp(models.Model):
