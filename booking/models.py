@@ -2489,22 +2489,24 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         return recipients
 
     def create_inheriting_autosends(self):
-        product = self.product
-        if product:
-            for productautosend in product.productautosend_set.all():
-                if not self.get_autosend(
-                        productautosend.template_key,
-                        False,
-                        False
-                ):
-                    visitautosend = VisitAutosend(
-                        visit=self,
-                        inherit=True,
-                        template_key=productautosend.template_key,
-                        days=productautosend.days,
-                        enabled=productautosend.enabled
-                    )
-                    visitautosend.save()
+        products = [self.product]
+        if self.multiproductvisit:
+            products = self.multiproductvisit.products
+        if len(products):
+            for product in products:
+                if product:
+                    for productautosend in product.productautosend_set.all():
+                        if not self.get_autosend(
+                            productautosend.template_key, False, False
+                        ):
+                            visitautosend = VisitAutosend(
+                                visit=self,
+                                inherit=True,
+                                template_key=productautosend.template_key,
+                                days=productautosend.days,
+                                enabled=productautosend.enabled
+                            )
+                            visitautosend.save()
 
     def autosend_inherits(self, template_key):
         s = self.visitautosend_set.filter(
@@ -2550,7 +2552,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         return result
 
     def autosend_enabled(self, template_key):
-        return self.get_autosend(template_key, True) is not None
+        return self.get_autosend(template_key, True) is not None and \
+               not self.is_multi_sub
 
     # Sends a message to defined recipients pertaining to the Visit
     def autosend(self, template_key, recipients=None,
