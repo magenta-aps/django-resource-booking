@@ -2561,6 +2561,7 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
 
     def get_forms(self, data=None):
         forms = {}
+        bookingform = None
         forms['bookerform'] = BookerForm(
             data, product=self.product, language=self.request.LANGUAGE_CODE
         )
@@ -2569,7 +2570,7 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
         if self.product:
             type = self.product.type
         if type == Product.GROUP_VISIT:
-            forms['bookingform'] = ClassBookingForm(data, product=self.product)
+            bookingform = ClassBookingForm(data, product=self.product)
             if self.product.productgymnasiefag_set.count() > 0:
                 forms['subjectform'] = BookingGymnasieSubjectLevelForm(data)
             if self.product.productgrundskolefag_set.count() > 0:
@@ -2577,19 +2578,20 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
                     BookingGrundskoleSubjectLevelForm(data)
 
         elif type == Product.TEACHER_EVENT:
-            forms['bookingform'] = TeacherBookingForm(
-                data, product=self.product
-            )
+            bookingform = TeacherBookingForm(data, product=self.product)
         elif type == Product.STUDENT_FOR_A_DAY:
-            forms['bookingform'] = StudentForADayBookingForm(
-                data, product=self.product
-            )
+            bookingform = StudentForADayBookingForm(data, product=self.product)
         elif type == Product.STUDY_PROJECT:
-            forms['bookingform'] = StudyProjectBookingForm(
-                data, product=self.product
-            )
+            bookingform = StudyProjectBookingForm(data, product=self.product)
         else:
-            forms['bookingform'] = BookingForm(data)
+            bookingform = BookingForm(data)
+        if bookingform is not None:
+            if self.visit.multiproductvisit and 'tmp' in self.request.GET:
+                temp = MultiProductVisitTemp.objects.get(
+                    id=self.request.GET['tmp']
+                )
+                bookingform.initial['notes'] = temp.notes
+            forms['bookingform'] = bookingform
         return forms
 
     def get_context_data(self, **kwargs):
@@ -3594,7 +3596,8 @@ class MultiProductVisitTempConfirmView(BreadcrumbMixin, DetailView):
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         mpv = self.object.create_mpv()
-        self.object.delete()
+        # self.object.delete()
         return redirect(
-            reverse('visit-booking-create', args=[mpv.id])
+            reverse('visit-booking-create', args=[mpv.id]) +
+            "?tmp=%d" % self.object.id
         )

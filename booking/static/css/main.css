@@ -670,22 +670,27 @@ select,
 .scroll-200 {
     max-height: 200px;
     overflow-y: scroll;
+    padding: 1px;
 }
 .scroll-300 {
     max-height: 300px;
     overflow-y: scroll;
+    padding: 1px;
 }
 .scroll-400 {
     max-height: 400px;
     overflow-y: scroll;
+    padding: 1px;
 }
 .scroll-500 {
     max-height: 500px;
     overflow-y: scroll;
+    padding: 1px;
 }
 .scroll-600 {
     max-height: 600px;
     overflow-y: scroll;
+    padding: 1px;
 }
 
 
