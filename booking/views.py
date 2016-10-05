@@ -128,7 +128,7 @@ class MainPageView(TemplateView):
                     'color': self.HEADING_GREEN,
                     'type': 'Product',
                     'title': _(u'Senest opdaterede tilbud'),
-                    'queryset': Product.get_latest_updated(),
+                    'queryset': Product.get_latest_updated(self.request.user),
                     'limit': 10,
                     'button': {
                         'text': _(u'Vis alle'),
@@ -720,13 +720,16 @@ class SearchView(BreadcrumbMixin, ListView):
                 # Filter out resource-controlled products that are
                 # resource-blocked.
                 res_controlled = Product.TIME_MODE_RESOURCE_CONTROLLED
-                res_blocked = booking_models.EventTime.RESOURCE_STATUS_BLOCKED
+
+                eventtime_cls = booking_models.EventTime
+
+                nonblocked = eventtime_cls.NONBLOCKED_RESOURCE_STATES
 
                 date_cond = date_cond & Q(
                     (~Q(time_mode=res_controlled)) |
                     Q(
-                        Q(time_mode=res_controlled) &
-                        (~Q(eventtime__resource_status=res_blocked))
+                        time_mode=res_controlled,
+                        eventtime__resource_status__in=nonblocked
                     )
                 )
 
@@ -753,8 +756,6 @@ class SearchView(BreadcrumbMixin, ListView):
                     date_cond
                 )
 
-                print qs.query
-
                 # Simplify, since the above conditions are slow when
                 # used for making facets.
                 qs = Product.objects.filter(pk__in=[x.pk for x in qs])
@@ -764,7 +765,6 @@ class SearchView(BreadcrumbMixin, ListView):
             )
 
             qs = qs.distinct()
-            print len(qs)
 
             self.base_queryset = qs
 
@@ -1110,7 +1110,7 @@ class ProductCustomListView(BreadcrumbMixin, ListView):
             if listtype == self.TYPE_LATEST_BOOKED:
                 return Product.get_latest_booked()
             elif listtype == self.TYPE_LATEST_UPDATED:
-                return Product.get_latest_updated()
+                return Product.get_latest_updated(self.request.user)
 
         except:
             pass
@@ -1502,8 +1502,6 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
             self.save_autosend()
 
             self.save_studymaterials()
-
-            self.save_rooms()
 
             self.save_subjects()
 
