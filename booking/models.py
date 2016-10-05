@@ -1781,7 +1781,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         return self.time_mode == Product.TIME_MODE_RESOURCE_CONTROLLED
 
     @property
-    def is_time_guest_suggested(self):
+    def is_guest_time_suggested(self):
         return self.time_mode == Product.TIME_MODE_GUEST_SUGGESTED
 
     @property
