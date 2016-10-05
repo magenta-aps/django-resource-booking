@@ -720,7 +720,6 @@ class SearchView(BreadcrumbMixin, ListView):
                 # Filter out resource-controlled products that are
                 # resource-blocked.
                 res_controlled = Product.TIME_MODE_RESOURCE_CONTROLLED
-                res_blocked = booking_models.EventTime.RESOURCE_STATUS_BLOCKED
 
                 eventtime_cls = booking_models.EventTime
 
