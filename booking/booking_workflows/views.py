@@ -30,6 +30,7 @@ from booking.views import AutologgerMixin
 from booking.views import RoleRequiredMixin, EditorRequriedMixin
 from django.views.generic.base import ContextMixin
 from profile.models import TEACHER, HOST, EDIT_ROLES
+from itertools import chain
 
 
 class VisitBreadcrumbMixin(ContextMixin):
@@ -412,6 +413,7 @@ class ChangeVisitAutosendView(AutologgerMixin, UpdateWithCancelView):
 
     def get_context_data(self, **kwargs):
         context = {}
+
         context['inherited'] = {
             item.template_key:
             {
@@ -419,15 +421,20 @@ class ChangeVisitAutosendView(AutologgerMixin, UpdateWithCancelView):
                 'enabled': item.enabled,
                 'days': item.days
             }
-            for item in self.object.product.productautosend_set.all()
+            for item in chain.from_iterable(
+                product.productautosend_set.all()
+                for product in self.object.real.products
+            )
         }
         context['template_keys'] = list(set(
             template.key
-            for template in EmailTemplate.get_templates(
-                self.object.product.organizationalunit
+            for template in chain.from_iterable(
+                EmailTemplate.get_templates(product.organizationalunit)
+                for product in self.object.real.products
             )
         ))
-        context['organizationalunit'] = self.object.product.organizationalunit
+        if self.object.product:
+            context['organizationalunit'] = self.object.product.organizationalunit
         context['autosend_enable_days'] = EmailTemplate.enable_days
         context.update(kwargs)
         return super(ChangeVisitAutosendView, self).\

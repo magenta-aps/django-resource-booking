@@ -2864,10 +2864,15 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             for requirement in self.product.resourcerequirement_set.all()
         ]
 
+    @property
     def real(self):
         if hasattr(self, 'multiproductvisit'):
             return self.multiproductvisit
         return self
+
+    @property
+    def products(self):
+        return [self.product]
 
 
 Visit.add_override_property('duration')
