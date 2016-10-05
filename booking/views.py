@@ -722,11 +722,18 @@ class SearchView(BreadcrumbMixin, ListView):
                 res_controlled = Product.TIME_MODE_RESOURCE_CONTROLLED
                 res_blocked = booking_models.EventTime.RESOURCE_STATUS_BLOCKED
 
+                eventtime_cls = booking_models.EventTime
+
+                nonblocked_statuses = [
+                    x[0] for x in eventtime_cls.resource_status_choices
+                    if x[0] != eventtime_cls.RESOURCE_STATUS_BLOCKED
+                ]
+
                 date_cond = date_cond & Q(
                     (~Q(time_mode=res_controlled)) |
                     Q(
-                        Q(time_mode=res_controlled) &
-                        (~Q(eventtime__resource_status=res_blocked))
+                        time_mode=res_controlled,
+                        eventtime__resource_status__in=nonblocked_statuses
                     )
                 )
 
@@ -753,8 +760,6 @@ class SearchView(BreadcrumbMixin, ListView):
                     date_cond
                 )
 
-                print qs.query
-
                 # Simplify, since the above conditions are slow when
                 # used for making facets.
                 qs = Product.objects.filter(pk__in=[x.pk for x in qs])
@@ -764,7 +769,6 @@ class SearchView(BreadcrumbMixin, ListView):
             )
 
             qs = qs.distinct()
-            print len(qs)
 
             self.base_queryset = qs
 
