@@ -2119,6 +2119,16 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         return self.workflow_status == being_planned
 
     def planned_status_is_blocked(self):
+
+        if hasattr(self, 'multiproductvisit'):
+            needed_subs = 1
+            subs_planned = self.multiproductvisit.subvisits.filter(
+                Q(workflow_status=Visit.WORKFLOW_STATUS_PLANNED) |
+                Q(workflow_status=Visit.WORKFLOW_STATUS_PLANNED_NO_BOOKING)
+            ).count()
+            if subs_planned >= needed_subs:
+                return False
+
         # We have to have a chosen starttime before we are planned
         if not hasattr(self, 'eventtime') or not self.eventtime.start:
             return True

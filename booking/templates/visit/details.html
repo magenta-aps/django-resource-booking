@@ -27,11 +27,12 @@
             <div class="col-xs-9">
                 {% if object.multiproductvisit %}
                     <div>
-                        {% trans 'Ønskede tilbud:' %}
+                        {% trans 'Ønskede tilbud/underbesøg:' %}
                         <ul>
-                            {% for product in object.multiproductvisit.products %}
+                            {% for visit in object.multiproductvisit.subvisits %}
                                 <li>
-                                    <a href="{% url 'product-view' product.id %}">{{ product.title }}</a>
+                                    <a href="{% url 'product-view' visit.product.id %}">{{ visit.product.title }}</a>:
+                                    <a href="{% url 'visit-view' visit.id %}">{% blocktrans with id=visit.id %}Besøg #{{ id }}{% endblocktrans %}</a>
                                 </li>
                             {% endfor %}
                         </ul>
@@ -206,6 +207,7 @@
                                 <a href="{% url 'change-visit-autosend' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
                             {% endif %}
                         </dd>
+
                         <dt>{% trans 'Status' %}</dt>
                         <dd>
                             {{ object.get_workflow_status_display }}
@@ -213,11 +215,15 @@
                                 <a href="{% url 'change-visit-status' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Skift status' %}</a>
                             {% endif %}
                         </dd>
+
+                        {% if not object.multiproductvisit %}
                         <dt>{% trans 'Antal på venteliste' %}</dt>
                         <dd>
                             {{ object.nr_waiting }}
                             <a href="#waitinglist" role="button" class="btn btn-primary btn-xs">{% trans 'Se liste' %}</a>
                         </dd>
+                        {% endif %}
+
                         <dt>{% trans 'Link til evaluering' %}</dt>
                         <dd>
                             {% if object.evaluation_link %}
@@ -229,6 +235,7 @@
                                 <a href="{% url 'change-visit-eval' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
                             {% endif %}
                         </dd>
+
                         <dt>{% trans 'Interne kommentarer' %}</dt>
                         <dd>
                             <pre>{{ object.comments }}</pre>
@@ -236,6 +243,7 @@
                                 <a href="{% url 'change-visit-comments' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
                             {% endif %}
                         </dd>
+
                         {% if can_edit and object.has_changes_after_planned %}
                         <dt>{% trans 'Nylige ændringer' %}</dt>
                         <dd>
