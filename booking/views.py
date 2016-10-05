@@ -1925,7 +1925,7 @@ class VisitNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
                                     full_email(
                                         user.email,
                                         user.get_full_name())
-                    for user in visit.hosts.all()
+                    for user in visit.assigned_hosts.all()
                     if user.email is not None
                 }
             },
@@ -1938,7 +1938,7 @@ class VisitNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
                                     full_email(
                                         user.email,
                                         user.get_full_name())
-                    for user in visit.teachers.all()
+                    for user in visit.assigned_teachers.all()
                     if user.email is not None
                 }
             },
@@ -1951,10 +1951,10 @@ class VisitNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
                                     full_email(
                                         user.email,
                                         user.get_full_name())
-                    for user in product.potentielle_vaerter.all()
+                    for user in product.potential_hosts.all()
                     if user.email is not None and
                     user not in visit.hosts_rejected.all() and
-                    user not in visit.hosts.all()
+                    user not in visit.assigned_hosts.all()
                 }
             },
             'potential_teachers': {
@@ -1966,10 +1966,10 @@ class VisitNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
                                     full_email(
                                         user.email,
                                         user.get_full_name())
-                    for user in product.potentielle_undervisere.all()
+                    for user in product.potential_teachers.all()
                     if user.email is not None and
                     user not in visit.teachers_rejected.all() and
-                    user not in visit.teachers.all()
+                    user not in visit.assigned_teachers.all()
                 }
             }
         }
@@ -2856,8 +2856,8 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
         user = self.request.user
 
         if hasattr(user, 'userprofile'):
-            context['can_edit'] = user.userprofile.can_edit(self.object)
-            context['can_notify'] = user.userprofile.can_notify(self.object)
+            # Add information about the users association with the visit
+            context.update(self.object.context_for_user(self.request.user))
 
         context['bookinglistform'] = self.get_bookinglist_form()
         context['waitinglistform'] = self.get_waitinglist_form()

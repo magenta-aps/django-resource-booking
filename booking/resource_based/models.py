@@ -379,7 +379,7 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
             for y in x.between(from_dt, to_dt):
                 yield y
 
-        # Not available on times when we are booked
+        # Not available on times when we are booked as a resource
         if hasattr(self, 'resource'):
             for x in self.resource.booked_eventtimes(from_dt, to_dt):
                 yield CalendarEventInstance(
@@ -388,6 +388,15 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
                     available=False,
                     source=x.visit
                 )
+            if hasattr(self.resource, 'user'):
+                profile = self.resource.user.userprofile
+                for x in profile.assigned_to_visits.all():
+                    yield CalendarEventInstance(
+                        x.eventtime.start,
+                        x.eventtime.end,
+                        available=False,
+                        source=x
+                    )
 
     def is_available_between(self, from_dt, to_dt, exclude_sources=set([])):
         # Check if availability rules match

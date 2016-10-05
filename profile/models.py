@@ -264,16 +264,33 @@ class UserProfile(models.Model):
 
         return qs
 
+    def get_resource(self):
+        role = self.get_role()
+        if role == TEACHER:
+            return booking.models.TeacherResource.objects.filter(
+                user=self.user
+            ).first()
+        elif role == HOST:
+            return booking.models.HostResource.objects.filter(
+                user=self.user
+            ).first()
+        else:
+            return None
+
     def is_available_as_teacher(self, from_datetime, to_datetime):
-        return not self.taught_visits.filter(
-            start_datetime__lt=to_datetime,
-            end_datetime__gt=from_datetime
+        res = self.get_resource()
+        if res:
+            return res.is_available_between(from_datetime, to_datetime)
+
+        return not self.user.taught_visits.filter(
+            eventtime__start__lt=to_datetime,
+            eventtime__end__gt=from_datetime
         ).exists()
 
     def can_be_teacher_for(self, visit):
         return self.is_available_as_teacher(
-            visit.start_datetime,
-            visit.end_datetime
+            visit.eventtime.start,
+            visit.eventtime.end
         )
 
     def requested_as_host_for_qs(self, exclude_accepted=False):
@@ -298,14 +315,14 @@ class UserProfile(models.Model):
         return qs
 
     def is_available_as_host(self, from_datetime, to_datetime):
-        return not self.hosted_visits.filter(
+        res = self.get_resource()
+        if res:
+            return res.is_available_between(from_datetime, to_datetime)
+
+        return not self.user.hosted_visits.filter(
             Q(
-                end_datetime__isnull=True,
-                start_datetime__lt=to_datetime,
-                start_datetime__gt=from_datetime
-            ) | Q(
-                start_datetime__lt=to_datetime,
-                end_datetime__gt=from_datetime
+                eventtime__start__lt=to_datetime,
+                eventtime__end__gt=from_datetime
             )
         ).exists()
 
@@ -314,6 +331,30 @@ class UserProfile(models.Model):
             visit.start_datetime,
             visit.end_datetime
         )
+
+    @property
+    def assigned_to_visits(self):
+        role = self.get_role()
+        if role == TEACHER:
+            return self.user.taught_visits.all()
+        elif role == HOST:
+            return self.user.hosted_visits.all()
+        else:
+            return booking.models.Visit.objects.none()
+
+    @property
+    def resource_for_visits(self):
+        res = self.get_resource()
+        if res:
+            return booking.models.Visit.objects.filter(
+                resources=res
+            )
+        else:
+            return booking.models.Visit.objects.none()
+
+    def all_assigned_visits(self):
+        qs = self.assigned_to_visits | self.resource_for_visits
+        return qs
 
     @property
     def available_roles(self):

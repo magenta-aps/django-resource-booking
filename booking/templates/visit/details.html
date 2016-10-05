@@ -109,6 +109,20 @@
                                     {% if can_edit %}
                                         <a href="{% url 'visit-resources-edit' object.pk %}" role="button" class="btn btn-primary btn-xs" style="vertical-align:top">{% trans 'Redigér' %}</a>
                                     {% endif %}
+                                    <div>
+                                    {% if can_become_teacher %}
+                                        <a href="{% url 'become-teacher' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Bliv underviser for dette besøg' %}</a>
+                                        {% if teacher %}
+                                            <a href="{% url 'decline-teacher' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Jeg ønsker ikke at være underviser' %}</a>
+                                        {% endif %}
+                                    {% endif %}
+                                    {% if can_become_host %}
+                                        <a href="{% url 'become-host' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Bliv vært for dette besøg.' %}</a>
+                                        {% if host %}
+                                            <a href="{% url 'decline-host' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Jeg ønsker ikke at være vært' %}</a>
+                                        {% endif %}
+                                    {% endif %}
+                                    </div>
                                 {% else %}
                                     {% trans 'Tilbuddet kræver ingen ressourcer' %}
                                 {% endif %}

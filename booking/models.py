@@ -1605,14 +1605,34 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         else:
             return 'default'
 
+    @property
+    def potential_hosts(self):
+        if self.is_resource_controlled:
+            p = self
+            return User.objects.filter(
+                hostresource__resourcepool__resourcerequirement__product=p
+            )
+        else:
+            return self.potentielle_vaerter.all()
+
+    @property
+    def potential_teachers(self):
+        if self.is_resource_controlled:
+            p = self
+            return User.objects.filter(
+                teacherresource__resourcepool__resourcerequirement__product=p
+            )
+        else:
+            return self.potentielle_undervisere.all()
+
     def get_recipients(self, template_key):
         recipients = self.organizationalunit.get_recipients(template_key)
 
         if template_key in EmailTemplate.potential_hosts_keys:
-            recipients.extend(self.potentielle_vaerter.all())
+            recipients.extend(self.potential_hosts.all())
 
         if template_key in EmailTemplate.potential_teachers_keys:
-            recipients.extend(self.potentielle_undervisere.all())
+            recipients.extend(self.potential_teachers.all())
 
         if template_key in EmailTemplate.contact_person_keys:
             contacts = []
@@ -2824,6 +2844,59 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         else:
             return res
 
+    @property
+    def assigned_teachers(self):
+        if self.product.is_resource_controlled:
+            return User.objects.filter(
+                teacherresource__visitresource__visit=self
+            )
+        else:
+            return self.teachers.all()
+
+    @property
+    def assigned_hosts(self):
+        if self.product.is_resource_controlled:
+            return User.objects.filter(
+                hostresource__visitresource__visit=self
+            )
+        else:
+            return self.teachers.all()
+
+    def context_for_user(self, user):
+        profile = user.userprofile
+        context = {
+            'is_teacher': profile.is_teacher,
+            'is_host': profile.is_host,
+        }
+
+        context['is_potential_host'] = (
+            self.product.potential_hosts.filter(pk=user.pk).exists()
+        )
+        context['is_assigned_as_host'] = (
+            self.assigned_hosts.filter(pk=user.pk).exists()
+        )
+
+        context['can_become_host'] = (
+            context['is_potential_host'] and
+            not context['is_assigned_as_host']
+        )
+
+        context['is_potential_teacher'] = (
+            self.product.potential_teachers.filter(pk=user.pk).exists()
+        )
+        context['is_assigned_as_teacher'] = (
+            self.assigned_teachers.filter(pk=user.pk).exists()
+        )
+
+        context['can_become_teacher'] = (
+            context['is_potential_teacher'] and
+            not context['is_assigned_as_teacher']
+        )
+
+        context['can_edit'] = profile.can_edit(self)
+        context['can_notify'] = profile.can_notify(self)
+
+        return context
 
 Visit.add_override_property('duration')
 Visit.add_override_property('locality')
