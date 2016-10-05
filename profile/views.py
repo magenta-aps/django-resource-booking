@@ -204,8 +204,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
 
     def lists_for_teachers(self):
         user = self.request.user
-        taught_vos = user.taught_visits.all()
-        unit_qs = self.request.user.userprofile.get_unit_queryset()
+        taught_vos = user.userprofile.all_assigned_visits()
 
         return [
             {
@@ -217,7 +216,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                 },
                 'queryset': Product.objects.filter(
                     eventtime__visit=taught_vos
-                ).order_by("title"),
+                ).distinct().order_by("title"),
             },
             {
                 'color': self.HEADING_RED,
@@ -227,18 +226,8 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     u"%(count)d besøg der mangler undervisere",
                     'count'
                 ),
-                'queryset': self.sort_vo_queryset(
-                    Visit.objects.annotate(
-                        num_assigned=Count('hosts')
-                    ).filter(
-                        eventtime__product__organizationalunit=unit_qs,
-                        num_assigned__lt=Coalesce(
-                            'override_needed_hosts',
-                            'eventtime__product__needed_hosts'
-                        )
-                    ).exclude(
-                        teachers=self.request.user
-                    )
+                'queryset': user.userprofile.can_be_assigned_to_qs.order_by(
+                    'eventtime__start', 'eventtime__end'
                 )
             },
             {
@@ -255,8 +244,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
 
     def lists_for_hosts(self):
         user = self.request.user
-        hosted_vos = user.hosted_visits.all()
-        unit_qs = self.request.user.userprofile.get_unit_queryset()
+        hosted_vos = user.userprofile.all_assigned_visits()
 
         return [
             {
@@ -278,16 +266,8 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     u"%(count)d besøg der mangler værter",
                     'count',
                 ),
-                'queryset': Visit.objects.annotate(
-                    num_assigned=Count('hosts')
-                ).filter(
-                    eventtime__product__organizationalunit=unit_qs,
-                    num_assigned__lt=Coalesce(
-                        'override_needed_hosts',
-                        'eventtime__product__needed_hosts'
-                    )
-                ).exclude(
-                    hosts=self.request.user.pk
+                'queryset': user.userprofile.can_be_assigned_to_qs.order_by(
+                    'eventtime__start', 'eventtime__end'
                 )
             },
             {

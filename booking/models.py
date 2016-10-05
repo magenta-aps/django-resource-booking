@@ -3,6 +3,8 @@ from django.core import validators
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMultiAlternatives
 from django.db import models
+from django.db.models import Count
+from django.db.models import F
 from django.db.models import Max
 from django.db.models import Sum
 from django.db.models import Q
@@ -2444,6 +2446,33 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             return self.eventtime.end
         else:
             return None
+
+    @classmethod
+    def needs_teachers_qs(cls):
+        req_type_key = "__".join([
+            "eventtime",
+            "product",
+            "resourcerequirement",
+            "resource_pool",
+            "resource_type"
+        ])
+        assigned_type_key = "__".join([
+            "visitresource",
+            "resource_requirement",
+            "resource_pool",
+            "resource_type"
+        ])
+        return cls.objects.filter(
+            **{req_type_key: ResourceType.RESOURCE_TYPE_TEACHER}
+        ).filter(
+            Q(**{assigned_type_key: ResourceType.RESOURCE_TYPE_TEACHER}) |
+            Q(visitresource__isnull=True)
+        ).annotate(
+            needed=Sum(
+                'eventtime__product__resourcerequirement__required_amount'
+            ),
+            assigned=Count('visitresource')
+        ).filter(needed__gt=F("assigned"))
 
     def __unicode__(self):
         if hasattr(self, 'eventtime'):
