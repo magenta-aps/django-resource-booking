@@ -2594,8 +2594,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         return result
 
     def autosend_enabled(self, template_key):
-        if hasattr(self, 'multiproductvisit'): # TEMPORARY HACK: disable
-            # autosends for MPVs until we figure out how to do it
+        if hasattr(self, 'multiproductvisit'):
+            # TEMPORARY HACK: disable autosends for MPVs until
+            # we figure out how to do it
             return False
         return self.get_autosend(template_key, True) is not None and \
             not self.is_multi_sub
