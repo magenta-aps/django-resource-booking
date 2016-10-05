@@ -69,6 +69,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             ) % {'count': Visit.get_recently_held().count()},
             'queryset': Visit.get_recently_held(),
             'limit': 10,
+            'limited_qs': Visit.get_recently_held()[:10],
             'button': {
                 'text': _(u'Søg i alle'),
                 'link': reverse('visit-customlist') + "?type=%s" %
@@ -84,6 +85,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             ),
             'queryset': Visit.get_todays_visits(),
             'limit': 10,
+            'limited_qs': Visit.get_todays_visits()[:10],
             'button': {
                 'text': _(u'Søg i alle'),
                 'link': reverse('visit-customlist') + "?type=%s" %
@@ -142,7 +144,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             ).order_by("-statistics__created_time"),
         }
 
-        if len(visitlist['queryset']) > 10:
+        if visitlist['queryset'].count() > 10:
             visitlist['limited_qs'] = visitlist['queryset'][:10]
             visitlist['button'] = {
                 'text': _(u'Søg i alle'),
@@ -175,8 +177,8 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                 # See also VisitSearchView.filter_by_participants
             )
         }
-        if len(unplanned['queryset']) > 10:
-            unplanned['limited_qs'] = Visit.convert_list(unplanned['queryset'][:10])
+        if unplanned['queryset'].count() > 10:
+            unplanned['limited_qs'] = unplanned['queryset'][:10]
             unplanned['button'] = {
                 'text': _(u'Søg i alle'),
                 'link': reverse('visit-search') + '?u=-3&w=-1&go=1&p_min=1'
@@ -199,8 +201,8 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                 )
             )
         }
-        if len(planned['queryset']) > 10:
-            planned['limited_qs'] = Visit.convert_list(planned['queryset'][:10])
+        if planned['queryset'].count() > 10:
+            planned['limited_qs'] = planned['queryset'][:10]
             planned['button'] = {
                 'text': _(u'Søg i alle'),
                 'link': reverse('visit-search') + '?u=-3&w=-2&go=1'

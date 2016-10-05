@@ -151,6 +151,10 @@ class MainPageView(TemplateView):
                 }
             ]
         }
+        for list in context['lists']:
+            if len(list['queryset']) > 10:
+                list['limited_qs'] = list['queryset'][:10]
+
         context.update(kwargs)
         return super(MainPageView, self).get_context_data(**context)
 
@@ -2775,7 +2779,6 @@ class VisitSearchView(VisitListView):
             unit_qs = u
 
         return Visit.unit_filter(qs, unit_qs)
-
 
     def filter_by_date(self, qs):
         form = self.get_form()

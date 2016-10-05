@@ -2225,7 +2225,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     # Format date for basic display
     def date_display(self):
         if hasattr(self, 'eventtime') and self.eventtime.start:
-            return self.eventtime.start
+            return formats.date_format(self.eventtime.start, "DATETIME_FORMAT")
         else:
             return _(u'ikke-fastlagt tidspunkt')
 
@@ -2233,9 +2233,16 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     @property
     def date_display_context(self):
         if hasattr(self, 'eventtime') and self.eventtime.start:
-            return _("d. %s kl. %s") % (formats.date_format(self.eventtime.start, "DATE_FORMAT"), formats.date_format(self.eventtime.start, "TIME_FORMAT"))
+            return _("d. %s kl. %s") % (
+                formats.date_format(self.eventtime.start, "DATE_FORMAT"),
+                formats.date_format(self.eventtime.start, "TIME_FORMAT")
+            )
         else:
             return _(u'på ikke-fastlagt tidspunkt')
+
+    @property
+    def interval_display(self):
+        return self.eventtime.interval_display()
 
     @property
     def start_datetime(self):
@@ -2460,12 +2467,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     @staticmethod
     def unit_filter(qs, unit_qs):
-        subvisit_qs = Visit.objects.filter(
-            is_multi_sub=True,
-            eventtime__product__organizationalunit=unit_qs
-        )
         mpv_qs = MultiProductVisit.objects.filter(
-            subvisit=subvisit_qs
+            subvisit__is_multi_sub=True,
+            subvisit__eventtime__product__organizationalunit=unit_qs
         )
         return qs.filter(
             Q(eventtime__product__organizationalunit=unit_qs) |
@@ -2841,9 +2845,10 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             for requirement in self.product.resourcerequirement_set.all()
         ]
 
-    @staticmethod
-    def convert_list(list):
-        return [x.multiproductvisit if hasattr(x, 'multiproductvisit') else x for x in list]
+    def real(self):
+        if hasattr(self, 'multiproductvisit'):
+            return self.multiproductvisit
+        return self
 
 
 Visit.add_override_property('duration')
@@ -2909,9 +2914,12 @@ class MultiProductVisit(Visit):
         return _("d. %s") % formats.date_format(self.date, "DATE_FORMAT")
 
     @property
-    def display_value(self):
+    def interval_display(self):
         return self.date_display
 
+    @property
+    def display_value(self):
+        return self.date_display
 
 
 class MultiProductVisitTemp(models.Model):

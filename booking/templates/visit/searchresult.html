@@ -76,7 +76,7 @@
                             <dd>
                                 {% if res.multiproductvisit %}
                                     <ul>
-                                    {% for product in res.multiproductvisit.products %}
+                                    {% for product in res.real.products %}
                                         <li><a href="{% url 'product-view' product.pk %}">#{{ product.pk }} {{ product.title }}</a></li>
                                     {% endfor %}
                                     </ul>
@@ -86,11 +86,7 @@
                             </dd>
                             <dt>{% trans 'Hvornår:' %}</dt>
                             <dd>
-                                {% if res.multiproductvisit %}
-                                    {{ res.multiproductvisit.date }}
-                                {% else %}
-                                    {{ res.first_eventtime.interval_display }}
-                                {% endif %}
+                                {{ res.real.interval_display }}
                             </dd>
                             <dt>{% trans 'Booket af:' %}</dt>
                             <dd>{% blocktrans with count=res.nr_attendees %}{{ count }} personer{% endblocktrans %}</dd>
