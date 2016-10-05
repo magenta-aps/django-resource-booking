@@ -2232,7 +2232,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
         return result
 
-
     @property
     def id_display(self):
         return _(u'Besøg #%d') % self.id
@@ -2977,7 +2976,7 @@ class MultiProductVisit(Visit):
             )
 
             if not only_these_recipients and \
-                            template_key in EmailTemplate.booker_keys:
+                    template_key in EmailTemplate.booker_keys:
                 for booking in self.bookings.all():
                     KUEmailMessage.send_email(
                         template_key,
@@ -2989,7 +2988,6 @@ class MultiProductVisit(Visit):
                         self,
                         unit
                     )
-
 
 
 class MultiProductVisitTemp(models.Model):
