@@ -38,6 +38,13 @@
             {% endfor %}
         </ul>
 
+        {% if object.has_products_in_different_locations %}
+            <p class="bg-warning">
+                <strong>{% trans 'Bemærk:' %}</strong>
+                {% trans 'Flere af de valgte tilbud foregår forskellige steder. Der må indberegnes transporttid på besøgsdagen.' %}
+            </p>
+        {% endif %}
+
         <fieldset>
             <a class="btn btn-primary cancelbutton" href="{% url 'mpv-edit-products' object.id %}">{% trans "Tilbage" %}</a>
             <button class="btn btn-primary" type="submit">{% trans "Bestil valgte tilbud" %}</button>

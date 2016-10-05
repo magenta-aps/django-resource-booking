@@ -2994,6 +2994,12 @@ class MultiProductVisitTemp(models.Model):
             )
         return mpv
 
+    def has_products_in_different_locations(self):
+        return len(
+            set([product.locality for product in self.products.all()])
+        ) > 1
+        # return Locality.objects.filter(product=self.products).count() > 1
+
 
 class VisitComment(models.Model):
 
