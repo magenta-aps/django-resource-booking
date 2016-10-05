@@ -21,7 +21,7 @@ from django.template.base import Template, VariableNode
 
 from booking.mixins import AvailabilityUpdaterMixin
 from booking.utils import ClassProperty, full_email, CustomStorage, html2text
-from booking.utils import get_related_content_types, INFINITY
+from booking.utils import get_related_content_types, INFINITY, merge_dicts
 
 from resource_booking import settings
 
@@ -2594,16 +2594,16 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         return result
 
     def autosend_enabled(self, template_key):
-        if hasattr(self, 'multiproductvisit'):
-            # TEMPORARY HACK: disable autosends for MPVs until
-            # we figure out how to do it
-            return False
-        return self.get_autosend(template_key, True) is not None and \
+        return self.real.get_autosend(template_key, True) is not None and \
             not self.is_multi_sub
 
     # Sends a message to defined recipients pertaining to the Visit
     def autosend(self, template_key, recipients=None,
                  only_these_recipients=False):
+        if hasattr(self, 'multiproductvisit'):
+            return self.multiproductvisit.autosend(
+                template_key, recipients, only_these_recipients
+            )
         if self.autosend_enabled(template_key):
             product = self.product
             unit = product.organizationalunit
@@ -2947,6 +2947,43 @@ class MultiProductVisit(Visit):
             return super(MultiProductVisit, self).get_autosend(
                 template_key, follow_inherit, include_disabled
             )
+
+    # Sends a message to defined recipients pertaining to the Visit
+    def autosend(self, template_key, recipients=None,
+                 only_these_recipients=False):
+        if self.autosend_enabled(template_key):
+            unit = None  # TODO: What should the unit be?
+            if recipients is None:
+                recipients = set()
+            else:
+                recipients = set(recipients)
+            if not only_these_recipients:
+                recipients.update(self.get_recipients(template_key))
+
+            params = {'visit': self, 'products': self.products}
+
+            KUEmailMessage.send_email(
+                template_key,
+                params,
+                list(recipients),
+                self,
+                unit
+            )
+
+            if not only_these_recipients and \
+                            template_key in EmailTemplate.booker_keys:
+                for booking in self.bookings.all():
+                    KUEmailMessage.send_email(
+                        template_key,
+                        merge_dicts(params, {
+                            'booking': booking,
+                            'booker': booking.booker
+                        }),
+                        booking.booker,
+                        self,
+                        unit
+                    )
+
 
 
 class MultiProductVisitTemp(models.Model):

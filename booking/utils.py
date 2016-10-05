@@ -235,8 +235,8 @@ class UnicodeWriter:
             self.writerow(row)
 
 
-def merge_dicts(dict_list):
+def merge_dicts(*dicts):
     result = {}
-    for dict in dict_list:
+    for dict in dicts:
         result.update(dict)
     return result

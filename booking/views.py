@@ -1888,7 +1888,7 @@ class VisitNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
             },
             'roomadmins': {
                 'label': _(u'Lokaleansvarlige'),
-                'items': merge_dicts([{
+                'items': merge_dicts(*[{
                     "%s%s%d" % (self.RECIPIENT_ROOMRESPONSIBLE,
                                 self.RECIPIENT_SEPARATOR,
                                 roomresponsible.id):
@@ -1924,7 +1924,7 @@ class VisitNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
             },
             'potential_hosts': {
                 'label': _(u'Potentielle værter'),
-                'items': merge_dicts([{
+                'items': merge_dicts(*[{
                     "%s%s%s" % (self.RECIPIENT_USER,
                                 self.RECIPIENT_SEPARATOR,
                                 user.username):
@@ -1939,7 +1939,7 @@ class VisitNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
             },
             'potential_teachers': {
                 'label': _(u'Potentielle undervisere'),
-                'items': merge_dicts([{
+                'items': merge_dicts(*[{
                     "%s%s%s" % (self.RECIPIENT_USER,
                                 self.RECIPIENT_SEPARATOR,
                                 user.username):
@@ -1996,7 +1996,7 @@ class BookingNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
     def get_context_data(self, **kwargs):
         context = {}
         products = [self.object.visit.product]
-        if self.object.visit.multiproductvisit is not None:
+        if hasattr(self.object.visit, 'multiproductvisit'):
             products = self.object.visit.multiproductvisit.products
         if 'nogroups' not in self.request.GET:
             recipients = {
@@ -2033,7 +2033,7 @@ class BookingNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
                 },
                 'tilbudsansvarlig': {
                     'label': _(u'Tilbudsansvarlig'),
-                    'items': merge_dicts([{
+                    'items': merge_dicts(*[{
                         "%s%s%d" % (self.RECIPIENT_USER,
                                     self.RECIPIENT_SEPARATOR, user.id):
                                         user.get_full_email()
@@ -2044,7 +2044,7 @@ class BookingNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
                 },
                 'roomadmins': {
                     'label': _(u'Lokaleansvarlige'),
-                    'items': merge_dicts([{
+                    'items': merge_dicts(*[{
                         "%s%s%d" % (self.RECIPIENT_USER,
                                     self.RECIPIENT_SEPARATOR,
                                     roomresponsible.id):
