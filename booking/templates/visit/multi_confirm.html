@@ -28,6 +28,18 @@
         {{ form.non_field_errors }}
 
         {% csrf_token %}
+
+        {% if object.has_products_in_different_locations %}
+            <p>
+                <ul class="warninglist">
+                    <li>
+                        <strong>{% trans 'Bemærk:' %}</strong>
+                        {% trans 'Flere af de valgte tilbud foregår forskellige steder. Der må indberegnes transporttid på besøgsdagen.' %}
+                    </li>
+                </ul>
+            </p>
+        {% endif %}
+
         <label>{% trans 'Valgt dato' %}</label>
         <p id="confirm-date">{{ object.date }}</p>
 
@@ -38,12 +50,6 @@
             {% endfor %}
         </ul>
 
-        {% if object.has_products_in_different_locations %}
-            <p class="bg-warning">
-                <strong>{% trans 'Bemærk:' %}</strong>
-                {% trans 'Flere af de valgte tilbud foregår forskellige steder. Der må indberegnes transporttid på besøgsdagen.' %}
-            </p>
-        {% endif %}
 
         <fieldset>
             <a class="btn btn-primary cancelbutton" href="{% url 'mpv-edit-products' object.id %}">{% trans "Tilbage" %}</a>
