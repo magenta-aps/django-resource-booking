@@ -2917,7 +2917,7 @@ class BookingDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
         breadcrumbs.extend([
             {
                 'url': reverse('visit-view', args=[self.object.visit.id]),
-                'text': self.object.visit.date_display
+                'text': self.object.visit.id_display
             },
             {'text': self.object}
         ])
@@ -3021,7 +3021,7 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
                 'url': reverse('visit-search'),
                 'text': _(u'Søg i besøg')
             },
-            {'text': _(u'Besøg #%s') % self.object.pk},
+            {'text': self.object.id_display},
         ]
 
 

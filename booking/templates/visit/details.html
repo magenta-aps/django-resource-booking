@@ -32,7 +32,7 @@
                             {% for visit in object.multiproductvisit.subvisits %}
                                 <li>
                                     <a href="{% url 'product-view' visit.product.id %}">{{ visit.product.title }}</a>:
-                                    <a href="{% url 'visit-view' visit.id %}">{% blocktrans with id=visit.id %}Besøg #{{ id }}{% endblocktrans %}</a>
+                                    <a href="{% url 'visit-view' visit.id %}">{{ visit.id_display }}</a>
                                 </li>
                             {% endfor %}
                         </ul>

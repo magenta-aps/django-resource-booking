@@ -2232,7 +2232,13 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
         return result
 
+
+    @property
+    def id_display(self):
+        return _(u'Besøg #%d') % self.id
+
     # Format date for basic display
+    @property
     def date_display(self):
         if hasattr(self, 'eventtime') and self.eventtime.start:
             return formats.date_format(self.eventtime.start, "DATETIME_FORMAT")

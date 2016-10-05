@@ -37,7 +37,7 @@
                         </ul>
                     {% else %}
                         {% url 'product-view' object.visit.product.id as producturl %}
-                        {% blocktrans with firstname=object.booker.firstname lastname=object.booker.lastname producttitle=object.product.title visittime=object.visit.start_datetime %}
+                        {% blocktrans with firstname=object.booker.firstname lastname=object.booker.lastname producttitle=object.product.title visittime=object.visit.date_display_context %}
                             <strong>{{ firstname }} {{ lastname }}</strong> har tilmeldt sig <a href="{{ producturl }}">{{ producttitle }}</a> med afvikling <a href="{{ visiturl }}">{{ visittime }}</a>
                         {% endblocktrans %}
                         {% if object.is_waiting %}

@@ -44,7 +44,7 @@ class VisitBreadcrumbMixin(ContextMixin):
             },
             {
                 'url': reverse('visit-view', args=[self.object.pk]),
-                'text': _(u'Besøg #%s') % self.object.pk
+                'text': self.object.id_display
             },
             {'text': self.view_title},
         ]
