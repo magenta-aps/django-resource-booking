@@ -2594,6 +2594,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         return result
 
     def autosend_enabled(self, template_key):
+        if hasattr(self, 'multiproductvisit'): # TEMPORARY HACK: disable
+            # autosends for MPVs until we figure out how to do it
+            return False
         return self.get_autosend(template_key, True) is not None and \
             not self.is_multi_sub
 
@@ -2930,6 +2933,19 @@ class MultiProductVisit(Visit):
     @property
     def display_value(self):
         return self.date_display
+
+    def get_autosend(self, template_key, follow_inherit=True,
+                     include_disabled=False):
+        if follow_inherit and self.autosend_inherits(template_key):
+            for product in self.products:
+                autosend = product.get_autosend(template_key)
+                if autosend:
+                    return autosend
+            return None
+        else:
+            return super(MultiProductVisit, self).get_autosend(
+                template_key, follow_inherit, include_disabled
+            )
 
 
 class MultiProductVisitTemp(models.Model):
