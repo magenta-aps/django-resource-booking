@@ -122,40 +122,13 @@ class MainPageView(TemplateView):
     template_name = 'frontpage.html'
 
     def get_context_data(self, **kwargs):
-        updated_qs = Product.get_latest_updated()
-
-        if not self.request.user.is_authenticated():
-            updated_qs = updated_qs.filter(
-                Q(time_mode=Product.TIME_MODE_GUEST_SUGGESTED) |
-                Q(
-                    # Only stuff that can be booked
-                    eventtime__bookable=True,
-                    # In the future
-                    eventtime__start__gt=timezone.now(),
-                    # Only include stuff with bookable states
-                    eventtime__visit__workflow_status__in=(
-                        Visit.BOOKABLE_STATES
-                    ),
-                ) & Q(
-                    # Either not resource controlled
-                    (~Q(time_mode=Product.TIME_MODE_RESOURCE_CONTROLLED)) |
-                    # Or resource-controlled with nonblocked eventtimes
-                    Q(
-                        time_mode=Product.TIME_MODE_RESOURCE_CONTROLLED,
-                        eventtime__resource_status__in=(
-                            booking_models.EventTime.NONBLOCKED_RESOURCE_STATES
-                        )
-                    )
-                )
-            )
-
         context = {
             'lists': [
                 {
                     'color': self.HEADING_GREEN,
                     'type': 'Product',
                     'title': _(u'Senest opdaterede tilbud'),
-                    'queryset': updated_qs,
+                    'queryset': Product.get_latest_updated(self.request.user),
                     'limit': 10,
                     'button': {
                         'text': _(u'Vis alle'),
@@ -1137,7 +1110,7 @@ class ProductCustomListView(BreadcrumbMixin, ListView):
             if listtype == self.TYPE_LATEST_BOOKED:
                 return Product.get_latest_booked()
             elif listtype == self.TYPE_LATEST_UPDATED:
-                return Product.get_latest_updated()
+                return Product.get_latest_updated(self.request.user)
 
         except:
             pass

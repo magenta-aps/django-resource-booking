@@ -1652,19 +1652,57 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         return True
 
     @staticmethod
-    def get_latest_created():
-        return Product.objects.filter(statistics__isnull=False).\
+    def get_latest_created(user=None):
+        qs = Product.objects.filter(statistics__isnull=False).\
             order_by('-statistics__created_time')
 
-    @staticmethod
-    def get_latest_updated():
-        return Product.objects.filter(statistics__isnull=False).\
-            order_by('-statistics__updated_time')
+        if user and not user.is_authenticated():
+            return Product.filter_public_bookable(qs)
+        else:
+            return qs
 
     @staticmethod
-    def get_latest_displayed():
-        return Product.objects.filter(statistics__isnull=False).\
+    def get_latest_updated(user=None):
+        qs = Product.objects.filter(statistics__isnull=False).\
+            order_by('-statistics__updated_time')
+
+        if user and not user.is_authenticated():
+            return Product.filter_public_bookable(qs)
+        else:
+            return qs
+
+    @staticmethod
+    def get_latest_displayed(user=None):
+        qs = Product.objects.filter(statistics__isnull=False).\
             order_by('-statistics__visited_time')
+
+        if user and not user.is_authenticated():
+            return Product.filter_public_bookable(qs)
+        else:
+            return qs
+
+    @classmethod
+    def filter_public_bookable(cls, queryset):
+        nonblocked = EventTime.NONBLOCKED_RESOURCE_STATES
+        return queryset.filter(
+            Q(time_mode=cls.TIME_MODE_GUEST_SUGGESTED) |
+            Q(
+                # Only stuff that can be booked
+                eventtime__bookable=True,
+                # In the future
+                eventtime__start__gt=timezone.now(),
+                # Only include stuff with bookable states
+                eventtime__visit__workflow_status__in=Visit.BOOKABLE_STATES,
+            ) & Q(
+                # Either not resource controlled
+                (~Q(time_mode=Product.TIME_MODE_RESOURCE_CONTROLLED)) |
+                # Or resource-controlled with nonblocked eventtimes
+                Q(
+                    time_mode=Product.TIME_MODE_RESOURCE_CONTROLLED,
+                    eventtime__resource_status__in=nonblocked
+                )
+            )
+        )
 
     def ensure_statistics(self):
         if self.statistics is None:
