@@ -2536,9 +2536,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         return recipients
 
     def create_inheriting_autosends(self):
-        products = [self.product]
-        if self.multiproductvisit:
-            products = self.multiproductvisit.products
+        products = self.products
         if len(products):
             for product in products:
                 if product:
@@ -2872,6 +2870,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def products(self):
+        if hasattr(self, 'multiproductvisit'):
+            return self.multiproductvisit.products
         return [self.product]
 
 

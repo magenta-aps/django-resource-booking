@@ -105,7 +105,8 @@
 
             var update = function() {
                 var anySelected = !!selectedList.children().not(placeholder).length;
-                placeholder.toggle(anySelected);
+                var anyDeSelected = !!deselectedList.children().not(placeholder).length;
+                placeholder.toggle(!anyDeSelected);
                 drawHelp.toggle(anySelected);
             };
 

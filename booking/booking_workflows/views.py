@@ -433,8 +433,9 @@ class ChangeVisitAutosendView(AutologgerMixin, UpdateWithCancelView):
                 for product in self.object.real.products
             )
         ))
-        if self.object.product:
-            context['organizationalunit'] = self.object.product.organizationalunit
+        if hasattr(self.object, 'product'):
+            context['organizationalunit'] = \
+                self.object.product.organizationalunit
         context['autosend_enable_days'] = EmailTemplate.enable_days
         context.update(kwargs)
         return super(ChangeVisitAutosendView, self).\
