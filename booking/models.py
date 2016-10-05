@@ -1657,7 +1657,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             order_by('-statistics__created_time')
 
         if user and not user.is_authenticated():
-            return Product.filter_public_bookable(qs)
+            return Product.filter_public_bookable(qs).distinct()
         else:
             return qs
 
@@ -1667,7 +1667,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             order_by('-statistics__updated_time')
 
         if user and not user.is_authenticated():
-            return Product.filter_public_bookable(qs)
+            return Product.filter_public_bookable(qs).distinct()
         else:
             return qs
 
@@ -1677,7 +1677,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             order_by('-statistics__visited_time')
 
         if user and not user.is_authenticated():
-            return Product.filter_public_bookable(qs)
+            return Product.filter_public_bookable(qs).distinct()
         else:
             return qs
 
@@ -1702,7 +1702,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
                     eventtime__resource_status__in=nonblocked
                 )
             )
-        )
+        ).filter(state=cls.ACTIVE)
 
     def ensure_statistics(self):
         if self.statistics is None:
