@@ -2040,7 +2040,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     multi_master = models.ForeignKey(
         "MultiProductVisit",
         null=True,
-        blank=True
+        blank=True,
+        related_name='subvisit'
     )
     multi_priority = models.IntegerField(
         default=0
@@ -2195,9 +2196,13 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             x.update_availability()
 
     @property
+    def display_title(self):
+        return self.product.title
+
+    @property
     def display_value(self):
         if not hasattr(self, 'eventtime') or not self.eventtime.start:
-            return None
+            return _(u'ikke-fastlagt tidspunkt')
 
         start = timezone.localtime(self.eventtime.start)
         result = formats.date_format(start, "DATETIME_FORMAT")
@@ -2216,6 +2221,35 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 print e
 
         return result
+
+    # Format date for basic display
+    def date_display(self):
+        if hasattr(self, 'eventtime') and self.eventtime.start:
+            return self.eventtime.start
+        else:
+            return _(u'ikke-fastlagt tidspunkt')
+
+    # Format date for display with context (e.g. "on [date] at [time]")
+    @property
+    def date_display_context(self):
+        if hasattr(self, 'eventtime') and self.eventtime.start:
+            return _("d. %s kl. %s") % (formats.date_format(self.eventtime.start, "DATE_FORMAT"), formats.date_format(self.eventtime.start, "TIME_FORMAT"))
+        else:
+            return _(u'på ikke-fastlagt tidspunkt')
+
+    @property
+    def start_datetime(self):
+        if hasattr(self, 'eventtime'):
+            return self.eventtime.start
+        else:
+            return None
+
+    @property
+    def end_datetime(self):
+        if hasattr(self, 'eventtime'):
+            return self.eventtime.end
+        else:
+            return None
 
     @property
     def expired(self):
@@ -2315,12 +2349,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             return False
         return True
 
-    def date_display(self):
-        if hasattr(self, 'eventtime') and self.eventtime.start:
-            return self.eventtime.start
-        else:
-            return _(u'på ikke-fastlagt tidspunkt')
-
     def get_bookings(self, include_waitinglist=False, include_regular=True):
         if include_regular:  # Include non-waitinglist bookings
             if include_waitinglist:
@@ -2366,20 +2394,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     def get_workflow_status_class(self):
         return self.status_to_class_map.get(self.workflow_status, 'default')
-
-    @property
-    def start_datetime(self):
-        if hasattr(self, 'eventtime'):
-            return self.eventtime.start
-        else:
-            return None
-
-    @property
-    def end_datetime(self):
-        if hasattr(self, 'eventtime'):
-            return self.eventtime.end
-        else:
-            return None
 
     def __unicode__(self):
         if hasattr(self, 'eventtime'):
@@ -2443,6 +2457,20 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         return cls.objects.exclude(
             workflow_status=cls.WORKFLOW_STATUS_BEING_PLANNED,
         ).filter(**kwargs)
+
+    @staticmethod
+    def unit_filter(qs, unit_qs):
+        subvisit_qs = Visit.objects.filter(
+            is_multi_sub=True,
+            eventtime__product__organizationalunit=unit_qs
+        )
+        mpv_qs = MultiProductVisit.objects.filter(
+            subvisit=subvisit_qs
+        )
+        return qs.filter(
+            Q(eventtime__product__organizationalunit=unit_qs) |
+            Q(multiproductvisit=mpv_qs)
+        )
 
     # This is used from booking.signals.update_search_indexes
     def update_searchindex(self):
@@ -2813,6 +2841,10 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             for requirement in self.product.resourcerequirement_set.all()
         ]
 
+    @staticmethod
+    def convert_list(list):
+        return [x.multiproductvisit if hasattr(x, 'multiproductvisit') else x for x in list]
+
 
 Visit.add_override_property('duration')
 Visit.add_override_property('locality')
@@ -2849,6 +2881,10 @@ class MultiProductVisit(Visit):
         return 0
 
     @property
+    def needs_teachers(self):
+        return False
+
+    @property
     def needs_room(self):
         return False
 
@@ -2859,6 +2895,23 @@ class MultiProductVisit(Visit):
     @property
     def start_datetime(self):
         return self.date
+
+    @property
+    def display_title(self):
+        return _(u'prioriteret liste af %d tilbud') % len(self.products)
+
+    @property
+    def date_display(self):
+        return formats.date_format(self.date, "DATE_FORMAT")
+
+    @property
+    def date_display_context(self):
+        return _("d. %s") % formats.date_format(self.date, "DATE_FORMAT")
+
+    @property
+    def display_value(self):
+        return self.date_display
+
 
 
 class MultiProductVisitTemp(models.Model):

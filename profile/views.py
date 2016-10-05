@@ -160,9 +160,11 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                 'count'
             ),
             'queryset': self.sort_vo_queryset(
-                Visit.being_planned_queryset(
-                    eventtime__product__organizationalunit=unit_qs,
-                    is_multi_sub=False
+                Visit.unit_filter(
+                    Visit.being_planned_queryset(
+                        is_multi_sub=False
+                    ),
+                    unit_qs
                 ).annotate(num_participants=(
                     Coalesce(Count("bookings__booker__pk"), 0) +
                     Coalesce(
@@ -174,7 +176,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             )
         }
         if len(unplanned['queryset']) > 10:
-            unplanned['limited_qs'] = unplanned['queryset'][:10]
+            unplanned['limited_qs'] = Visit.convert_list(unplanned['queryset'][:10])
             unplanned['button'] = {
                 'text': _(u'Søg i alle'),
                 'link': reverse('visit-search') + '?u=-3&w=-1&go=1&p_min=1'
@@ -189,14 +191,16 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                 'count'
             ),
             'queryset': self.sort_vo_queryset(
-                Visit.planned_queryset(
-                    eventtime__product__organizationalunit=unit_qs,
-                    is_multi_sub=False
+                Visit.unit_filter(
+                    Visit.planned_queryset(
+                        is_multi_sub=False
+                    ),
+                    unit_qs
                 )
             )
         }
         if len(planned['queryset']) > 10:
-            planned['limited_qs'] = planned['queryset'][:10]
+            planned['limited_qs'] = Visit.convert_list(planned['queryset'][:10])
             planned['button'] = {
                 'text': _(u'Søg i alle'),
                 'link': reverse('visit-search') + '?u=-3&w=-2&go=1'
@@ -230,15 +234,17 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     'count'
                 ),
                 'queryset': self.sort_vo_queryset(
-                    Visit.objects.annotate(
-                        num_assigned=Count('hosts')
-                    ).filter(
-                        eventtime__product__organizationalunit=unit_qs,
-                        num_assigned__lt=Coalesce(
-                            'override_needed_hosts',
-                            'eventtime__product__needed_hosts'
+                    Visit.unit_filter(
+                        Visit.objects.annotate(
+                            num_assigned=Count('hosts')
+                        ).filter(
+                            num_assigned__lt=Coalesce(
+                                'override_needed_hosts',
+                                'eventtime__product__needed_hosts'
+                            ),
+                            is_multi_sub=False
                         ),
-                        is_multi_sub=False
+                        unit_qs
                     ).exclude(
                         teachers=self.request.user
                     )
@@ -281,18 +287,21 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     u"%(count)d besøg der mangler værter",
                     'count',
                 ),
-                'queryset': Visit.objects.annotate(
-                    num_assigned=Count('hosts')
-                ).filter(
-                    eventtime__product__organizationalunit=unit_qs,
-                    num_assigned__lt=Coalesce(
-                        'override_needed_hosts',
-                        'eventtime__product__needed_hosts'
-                    ),
-                    is_multi_sub=False
-                ).exclude(
-                    hosts=self.request.user.pk
-                )
+                'queryset':
+                    Visit.unit_filter(
+                        Visit.objects.annotate(
+                            num_assigned=Count('hosts')
+                        ).filter(
+                            num_assigned__lt=Coalesce(
+                                'override_needed_hosts',
+                                'eventtime__product__needed_hosts'
+                            ),
+                            is_multi_sub=False
+                        ),
+                        unit_qs
+                    ).exclude(
+                        hosts=self.request.user.pk
+                    )
             },
             {
                 'color': self.HEADING_GREEN,

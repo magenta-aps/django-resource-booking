@@ -2763,20 +2763,19 @@ class VisitSearchView(VisitListView):
 
         u = int(u)
         profile = self.request.user.userprofile
+        unit_qs = None
 
         if u == form.MY_UNIT:
-            p_unit = profile.organizationalunit
-            return qs.filter(eventtime__product__organizationalunit=p_unit)
+            unit_qs = profile.organizationalunit
         elif u == form.MY_FACULTY:
             unit_qs = profile.organizationalunit.get_faculty_queryset()
-            return qs.filter(eventtime__product__organizationalunit=unit_qs)
         elif u == form.MY_UNITS:
             unit_qs = profile.get_unit_queryset()
-            return qs.filter(eventtime__product__organizationalunit=unit_qs)
         else:
-            return qs.filter(eventtime__product__organizationalunit__pk=u)
+            unit_qs = u
 
-        return qs
+        return Visit.unit_filter(qs, unit_qs)
+
 
     def filter_by_date(self, qs):
         form = self.get_form()

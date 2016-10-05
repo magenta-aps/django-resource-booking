@@ -13,11 +13,10 @@
     <div class="row titlebar hidden-print">
         <div class="col-sm-12 col-md-9">
             <h1>
-            {% if object.multiproductvisit %}
-                {% blocktrans with on_date=object.multiproductvisit.date %}Planlægning af priorieret liste af tilbud den {{ on_date }}{% endblocktrans %}</h1>
-            {% else %}
-                {% blocktrans with producttitle=object.product.title on_date=object.date_display %}Planlægning af '{{ producttitle }}' {{ on_date }} {% endblocktrans %}</h1>
-            {% endif %}
+                {% blocktrans with title=object.display_title on_date=object.date_display_context %}
+                    Planlægning af {{ title }} {{ on_date }}
+                {% endblocktrans %}
+            </h1>
         </div>
         <div class="divider"></div>
     </div>

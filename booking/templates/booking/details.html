@@ -168,7 +168,7 @@
                     {% if object.visit.multiproductvisit %}
                         {% for product in object.visit.multiproductvisit.products %}
                             <div class="panel-heading">
-                                <h3 class="panel-title">{{ product.title }}</h3>
+                                <h3 class="panel-title">{% blocktrans with title=product.title %}Detaljer om tilbuddet '{{ title }}'{% endblocktrans %}</h3>
                             </div>
                             {% include 'product/rightbox.html' with product=product %}
                         {% endfor %}
