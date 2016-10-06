@@ -462,6 +462,28 @@ class UserProfile(models.Model):
 
         return qs1 | qs2
 
+    @property
+    def potentially_assigned_visits(self):
+        resource = self.get_resource()
+        if resource:
+            qs = booking.models.Visit.objects.filter(**{
+                ('eventtime__product__resourcerequirement__' +
+                 'resource_pool__resources'): resource
+            })
+        else:
+            qs = booking.models.Visit.objects.none()
+
+        if self.is_teacher:
+            qs = qs | booking.models.Visit.objects.filter(
+                eventtime__product__potentielle_undervisere=self.user
+            )
+        elif self.is_host:
+            qs = qs | booking.models.Visit.objects.filter(
+                eventtime__product__potentielle_vaerter=self.user
+            )
+
+        return qs
+
     def save(self, *args, **kwargs):
 
         result = super(UserProfile, self).save(*args, **kwargs)

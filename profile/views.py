@@ -203,8 +203,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         return [visitlist, unplanned, planned]
 
     def lists_for_teachers(self):
-        user = self.request.user
-        taught_vos = user.userprofile.all_assigned_visits()
+        profile = self.request.user.userprofile
 
         return [
             {
@@ -215,7 +214,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     'link': reverse('search') + '?u=-3'
                 },
                 'queryset': Product.objects.filter(
-                    eventtime__visit=taught_vos
+                    eventtime__visit=profile.potentially_assigned_visits
                 ).distinct().order_by("title"),
             },
             {
@@ -226,7 +225,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     u"%(count)d besøg der mangler undervisere",
                     'count'
                 ),
-                'queryset': user.userprofile.can_be_assigned_to_qs.order_by(
+                'queryset': profile.can_be_assigned_to_qs.order_by(
                     'eventtime__start', 'eventtime__end'
                 )
             },
@@ -238,13 +237,14 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     u"%(count)d besøg hvor jeg er underviser",
                     'count'
                 ),
-                'queryset': self.sort_vo_queryset(taught_vos)
+                'queryset': self.sort_vo_queryset(
+                    profile.all_assigned_visits()
+                )
             }
         ]
 
     def lists_for_hosts(self):
-        user = self.request.user
-        hosted_vos = user.userprofile.all_assigned_visits()
+        profile = self.request.user.userprofile
 
         return [
             {
@@ -255,8 +255,8 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     'link': reverse('search') + '?u=-3'
                 },
                 'queryset': Product.objects.filter(
-                    eventtime__visit=hosted_vos
-                ).order_by("title"),
+                    eventtime__visit=profile.potentially_assigned_visits
+                ).distinct().order_by("title"),
             },
             {
                 'color': self.HEADING_RED,
@@ -266,7 +266,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     u"%(count)d besøg der mangler værter",
                     'count',
                 ),
-                'queryset': user.userprofile.can_be_assigned_to_qs.order_by(
+                'queryset': profile.can_be_assigned_to_qs.order_by(
                     'eventtime__start', 'eventtime__end'
                 )
             },
@@ -278,7 +278,9 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     u"%(count)d besøg hvor jeg er vært",
                     'count'
                 ),
-                'queryset': hosted_vos
+                'queryset': self.sort_vo_queryset(
+                    profile.all_assigned_visits()
+                )
             }
         ]
 
