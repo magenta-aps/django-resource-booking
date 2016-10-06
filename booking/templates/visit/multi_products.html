@@ -127,6 +127,25 @@
             };
             $(".selectbutton").on('click', select);
             update();
+
+
+            Sortable.create(
+                selectedList.get(0),
+                {
+                    'handle': '.movebutton',
+                    'onSort': function(evt) {
+                        {# Move the associated hidden input field to the correct index #}
+                        var inputFields = $("input[name='{{ form.products.name }}'][disabled!='disabled']");
+                        var inputField = inputFields.filter("[value='"+$(evt.item).attr("data-product")+"']");
+                        if (evt.newIndex < inputFields.length-1) {
+                            var isBefore = inputFields.index(inputField) < evt.newIndex;
+                            inputField.insertBefore(inputFields[evt.newIndex + (isBefore ? 1 : 0)]);
+                        } else {
+                            inputField.insertAfter(inputFields[inputFields.length-1]);
+                        }
+                    }
+                }
+            );
         });
     //-->
     </script>
