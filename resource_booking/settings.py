@@ -114,7 +114,8 @@ NPM_FILE_PATTERNS = {
                   'lib/compressed/themes/default.css',
                   'lib/compressed/themes/default.time.css'
                   ],
-    'rrule': ['lib/rrule.js']
+    'rrule': ['lib/rrule.js'],
+    'sortablejs': ['Sortable.min.js']
 }
 
 # Django-tinymce config
