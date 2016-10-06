@@ -75,8 +75,8 @@ from booking.forms import AdminProductSearchForm
 from booking.forms import ProductAutosendFormSet
 from booking.forms import VisitSearchForm
 from booking.forms import AcceptBookingForm
-from booking.forms import MutiProductVisitTempDateForm
-from booking.forms import MutiProductVisitTempProductsForm
+from booking.forms import MultiProductVisitTempDateForm
+from booking.forms import MultiProductVisitTempProductsForm
 
 from booking.utils import full_email, get_model_field_map
 from booking.utils import get_related_content_types, merge_dicts
@@ -2511,6 +2511,7 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
 
     @property
     def product(self):
+        # return None
         return self.visit.product
 
     def get(self, request, *args, **kwargs):
@@ -2544,12 +2545,15 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
         forms = {}
         bookingform = None
         forms['bookerform'] = BookerForm(
-            data, product=self.product, language=self.request.LANGUAGE_CODE
+            data,
+            products=self.visit.products,
+            language=self.request.LANGUAGE_CODE
         )
         type = None
 
         if self.product:
             type = self.product.type
+
         if type == Product.GROUP_VISIT:
             bookingform = ClassBookingForm(data, product=self.product)
             if self.product.productgymnasiefag_set.count() > 0:
@@ -2560,8 +2564,10 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
 
         elif type == Product.TEACHER_EVENT:
             bookingform = TeacherBookingForm(data, product=self.product)
+
         elif type == Product.STUDENT_FOR_A_DAY:
             bookingform = StudentForADayBookingForm(data, product=self.product)
+
         elif type == Product.STUDY_PROJECT:
             bookingform = StudyProjectBookingForm(data, product=self.product)
         else:
@@ -2586,7 +2592,6 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
                 }
 
         context = {
-            'product': self.product,
             'level_map': Guest.level_map,
             'modal': self.modal,
             'times_available': available_times
@@ -3507,7 +3512,7 @@ class MultiProductVisitPromptView(BreadcrumbMixin, DetailView):
 
 class MultiProductVisitTempDateView(BreadcrumbMixin, HasBackButtonMixin,
                                     ProcessFormView):
-    form_class = MutiProductVisitTempDateForm
+    form_class = MultiProductVisitTempDateForm
     model = MultiProductVisitTemp
     template_name = "visit/multi_date.html"
 
@@ -3540,7 +3545,7 @@ class MultiProductVisitTempUpdateView(MultiProductVisitTempDateView,
 
 class MultiProductVisitTempProductsView(BreadcrumbMixin, UpdateView):
 
-    form_class = MutiProductVisitTempProductsForm
+    form_class = MultiProductVisitTempProductsForm
     model = MultiProductVisitTemp
     template_name = "visit/multi_products.html"
     _available_products = None

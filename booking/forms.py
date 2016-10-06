@@ -11,6 +11,7 @@ from booking.models import EmailTemplate
 from booking.models import Visit, MultiProductVisitTemp
 from booking.models import BLANK_LABEL, BLANK_OPTION
 from booking.widgets import OrderedMultipleHiddenChooser
+from booking.utils import binary_or
 from django import forms
 from django.db.models import Q
 from django.db.models.expressions import OrderBy
@@ -782,37 +783,46 @@ class BookerForm(forms.ModelForm):
         required=False
     )
 
-    def __init__(self, data=None, product=None, language='da', *args,
-                 **kwargs):
+    def __init__(self, data=None, products=[], language='da', *args, **kwargs):
         super(BookerForm, self).__init__(data, *args, **kwargs)
         attendeecount_widget = self.fields['attendee_count'].widget
 
         attendeecount_widget.attrs['min'] = 1
-        if product is not None:
-            attendeecount_widget.attrs['min'] = \
+        if len(products) > 0:
+            print products
+            attendeecount_widget.attrs['min'] = max([1] + [
                 product.minimum_number_of_visitors
-            if product.maximum_number_of_visitors is not None:
-                attendeecount_widget.attrs['max'] = \
-                    product.maximum_number_of_visitors
+                for product in products if product.minimum_number_of_visitors
+            ])
+            attendeecount_widget.attrs['max'] = min([10000] + [
+                product.maximum_number_of_visitors
+                for product in products if product.maximum_number_of_visitors
+            ])
+
+            # union or intersection?
+            level = binary_or(*[
+                product.institution_level for product in products
+            ])
 
             self.fields['school'].widget.attrs['data-institution-level'] = \
-                product.institution_level
-
-            available_level_choices = \
-                Guest.level_map[product.institution_level]
+                level
+            available_level_choices = Guest.level_map[level]
             self.fields['level'].choices = [(u'', BLANK_LABEL)] + [
                 (value, title)
                 for (value, title) in Guest.level_choices
                 if value in available_level_choices
-                ]
-            # Visit types where attendee count is mandatory
-            if product.type in [Product.GROUP_VISIT,
-                                Product.TEACHER_EVENT,
-                                Product.STUDY_PROJECT]:
-                self.fields['attendee_count'].required = True
-            # Class level is not mandatory for teacher events.
-            if product.type == Product.TEACHER_EVENT:
-                self.fields['level'].required = False
+            ]
+
+            for product in products:
+                # Visit types where attendee count is mandatory
+                if product.type in [
+                    Product.GROUP_VISIT, Product.TEACHER_EVENT,
+                    Product.STUDY_PROJECT
+                ]:
+                    self.fields['attendee_count'].required = True
+                # Class level is not mandatory for teacher events.
+                if product.type == Product.TEACHER_EVENT:
+                    self.fields['level'].required = False
 
         # Eventually we may want a prettier solution,
         # but for now this will have to do
@@ -1128,7 +1138,7 @@ class EvaluationOverviewForm(forms.Form):
         ]
 
 
-class MutiProductVisitTempDateForm(forms.ModelForm):
+class MultiProductVisitTempDateForm(forms.ModelForm):
     class Meta:
         model = MultiProductVisitTemp
         fields = ['date']
@@ -1142,11 +1152,11 @@ class MutiProductVisitTempDateForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        super(MutiProductVisitTempDateForm, self).__init__(*args, **kwargs)
+        super(MultiProductVisitTempDateForm, self).__init__(*args, **kwargs)
         self.fields['date'].input_formats = ['%d-%m-%Y', '%d.%m.%Y']
 
 
-class MutiProductVisitTempProductsForm(forms.ModelForm):
+class MultiProductVisitTempProductsForm(forms.ModelForm):
     class Meta:
         model = MultiProductVisitTemp
         fields = ['products', 'notes']

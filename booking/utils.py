@@ -9,6 +9,7 @@ import os
 import csv
 import codecs
 import cStringIO
+from itertools import chain
 
 
 class LogAction(object):
@@ -240,3 +241,33 @@ def merge_dicts(*dicts):
     for dict in dicts:
         result.update(dict)
     return result
+
+
+def intersection(*lists):
+    """
+    Given several lists, find the intersection between them all
+    """
+    common = set(lists[0])
+    for item in lists[1:]:
+        common = common.intersection(item)
+    return list(common)
+
+
+def union(*lists):
+    """
+    Given several lists, find the union of them all
+    """
+    return list(set(chain(*lists)))
+
+
+def binary_or(*items):
+    """
+    OR several integers together
+    """
+    base = 0
+    for item in items:
+        try:
+            base = base | item
+        except:
+            pass
+    return base
