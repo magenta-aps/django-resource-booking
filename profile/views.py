@@ -820,20 +820,16 @@ class AvailabilityView(LoginRequiredMixin, DetailView):
         context = {}
 
         user = self.object.user
+        context['accepted'] = self.to_datelist(
+            self.object.all_assigned_visits()
+        )
+
         if self.object.is_teacher:
-            accepted_qs = user.taught_visits.order_by(
-                'eventtime__start'
-            )
-            context['accepted'] = self.to_datelist(accepted_qs)
             unaccepted_qs = self.object.requested_as_teacher_for_qs(
                 exclude_accepted=True
             ).order_by('eventtime__start')
             context['unaccepted'] = self.to_datelist(unaccepted_qs)
         elif self.object.is_host:
-            accepted_qs = user.hosted_visits.order_by(
-                'eventtime__start'
-            )
-            context['accepted'] = self.to_datelist(accepted_qs)
             unaccepted_qs = self.object.requested_as_host_for_qs(
                 exclude_accepted=True
             ).order_by('eventtime__start')
@@ -852,9 +848,8 @@ class AvailabilityView(LoginRequiredMixin, DetailView):
         current = None
         today = timezone.localtime(timezone.now()).date()
         for x in qs:
-            eventtime = x.first_eventtime
-            if eventtime and eventtime.start:
-                date = timezone.localtime(eventtime.start).date()
+            if x.eventtime and x.eventtime.start:
+                date = timezone.localtime(x.eventtime.start).date()
             else:
                 date = None
             if current is None or current['date'] != date:
