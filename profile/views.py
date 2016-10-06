@@ -819,7 +819,6 @@ class AvailabilityView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = {}
 
-        user = self.object.user
         context['accepted'] = self.to_datelist(
             self.object.all_assigned_visits()
         )
