@@ -1803,7 +1803,9 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     @staticmethod
     def get_latest_booked():
-        products = Product.objects.annotate(latest_booking=Max(
+        products = Product.objects.filter(
+            eventtime__visit__bookings__statistics__created_time__isnull=False
+        ).annotate(latest_booking=Max(
             'eventtime__visit__bookings__statistics__created_time'
         )).order_by("-latest_booking")
 
