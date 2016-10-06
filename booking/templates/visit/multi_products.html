@@ -28,6 +28,9 @@
         {{ form.non_field_errors }}
 
         {% csrf_token %}
+        {% if form.products.errors %}
+            <div>{{ form.products.errors }}</div>
+        {% endif %}
         {{ form.products }}
 
         <ul class="list-group" id="selected-product-list">
@@ -113,10 +116,10 @@
             // Handle deselect clicks
             var deSelect = function() {
                 var id = $(this).parent().attr("data-product");
-                {% comment %} Disable the associated hidden input field {% endcomment %}
+                {# Disable the associated hidden input field #}
                 var inputField = $("input[name='{{ form.products.name }}'][value='"+id+"']");
                 inputField.attr("disabled", "disabled");
-                {% comment %} Move the <li> to the selected list {% endcomment %}
+                {# Move the <li> to the selected list #}
                 deselectedList.append(selectedList.find("li#product_"+id));
                 update();
             };
@@ -125,7 +128,7 @@
             // Handle select clicks
             var select = function() {
                 var id = $(this).parent().attr("data-product");
-                {% comment %} Enable the associated hidden input field, and move it to the bottom of the list of enabled input fields {% endcomment %}
+                {# Enable the associated hidden input field, and move it to the bottom of the list of enabled input fields #}
                 var inputField = $("input[name='{{ form.products.name }}'][value='"+id+"']");
                 var inputFields = $("input[name='{{ form.products.name }}'][disabled!='disabled']");
                 if (inputFields.length) {
@@ -134,7 +137,7 @@
                     inputField.insertBefore(inputField.parent().children().first());
                 }
                 inputField.removeAttr("disabled");
-                {% comment %} Move the <li> to the deselected list {% endcomment %}
+                {# Move the <li> to the deselected list #}
                 selectedList.append(deselectedList.find("li#product_"+id));
                 update();
             };

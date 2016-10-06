@@ -262,12 +262,25 @@ def union(*lists):
 
 def binary_or(*items):
     """
-    OR several integers together
+    OR several integers together (handy when they vary in number)
     """
     base = 0
     for item in items:
         try:
             base = base | item
+        except:
+            pass
+    return base
+
+
+def binary_and(*items):
+    """
+    AND several integers together (handy when they vary in number)
+    """
+    base = 0
+    for item in items:
+        try:
+            base = base & item
         except:
             pass
     return base

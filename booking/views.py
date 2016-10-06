@@ -3573,13 +3573,16 @@ class MultiProductVisitTempProductsView(BreadcrumbMixin, UpdateView):
     @property
     def available_products(self):
         if self._available_products is None:
+            filter = {
+                'state': Product.ACTIVE,
+                'time_mode': Product.TIME_MODE_GUEST_SUGGESTED,
+            }
+            institution_level = self.object.baseproduct.institution_level
+            if institution_level != Subject.SUBJECT_TYPE_BOTH:
+                filter['institution_level'] = institution_level
             self._available_products = [
                 product
-                for product in Product.objects.filter(
-                    state=Product.ACTIVE,
-                    time_mode=Product.TIME_MODE_GUEST_SUGGESTED,
-                    institution_level=self.object.baseproduct.institution_level
-                )
+                for product in Product.objects.filter(**filter)
                 if product.is_bookable(self.object.date)
             ]
         return self._available_products

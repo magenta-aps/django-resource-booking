@@ -11,7 +11,7 @@ from booking.models import EmailTemplate
 from booking.models import Visit, MultiProductVisitTemp
 from booking.models import BLANK_LABEL, BLANK_OPTION
 from booking.widgets import OrderedMultipleHiddenChooser
-from booking.utils import binary_or
+from booking.utils import binary_or, binary_and
 from django import forms
 from django.db.models import Q
 from django.db.models.expressions import OrderBy
@@ -1166,3 +1166,16 @@ class MultiProductVisitTempProductsForm(forms.ModelForm):
                 attrs={'class': 'form-control input-sm'}
             )
         }
+
+    def clean_products(self):
+        super(MultiProductVisitTempProductsForm, self).clean()
+        products = self.cleaned_data['products']
+        common_institution = binary_and([
+            product.institution_level for product in products
+        ])
+        if common_institution == 0:
+            raise forms.ValidationError(
+                _(u"Nogle af de valgte tilbud henvender sig kun til "
+                  u"folkeskoleklasser, og andre kun til gymnasieklasser")
+            )
+        return products
