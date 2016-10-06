@@ -204,7 +204,7 @@
                                         {% trans 'Foreslå selv et tidspunkt' %}
                                     {% elif object.future_bookable_times %}
                                         <ul class="list-unstyled" id="dato">
-                                        {% for eventtime in object.future_bookable_times %}
+                                        {% for eventtime in object.future_bookable_times reversed %}
                                             <li>{{ eventtime.interval_display }}</li>
                                         {% endfor %}
                                         </ul>
