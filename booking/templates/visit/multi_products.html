@@ -35,16 +35,8 @@
 
         <ul class="list-group" id="selected-product-list">
             {% for product in products %}
-                {% if product.id|slugify in form.products.value %}
-                    <li id="product_{{ product.id }}" class="list-group-item" data-product="{{ product.id }}">
-                        <span class="glyphicon glyphicon-move movebutton"></span>
-                        <a class="btn btn-primary pull-right selectbutton">{% trans 'Vælg' %}</a>
-                        <h2 class="title">{{ product.title }}</h2>
-                        <p class="teaser">{{ product.teaser }}</p>
-                        <a class="deselectbutton">
-                            <span class="glyphicon glyphicon-remove"></span>
-                        </a>
-                    </li>
+                {% if product.id in form.products.value %}
+                    {% include 'visit/multi_product_item.html' with product=product %}
                 {% endif %}
             {% endfor %}
         </ul>
@@ -53,16 +45,8 @@
         <p>{% trans 'Vælg tilbud:' %}<br/>{% trans '(Listen er begrænset til tilbud uden faste tider der kan lade sig gøre den pågældende dag)' %}</p>
         <ul class="list-group scroll-500" id="deselected-product-list">
             {% for product in products %}
-                {% if product.id|slugify not in form.products.value %}
-                    <li id="product_{{ product.id }}" class="list-group-item" data-product="{{ product.id }}">
-                        <span class="glyphicon glyphicon-move movebutton"></span>
-                        <a class="btn btn-primary pull-right selectbutton">{% trans 'Vælg' %}</a>
-                        <h2 class="title">{{ product.title }}</h2>
-                        <p class="teaser">{{ product.teaser }}</p>
-                        <a class="deselectbutton">
-                            <span class="glyphicon glyphicon-remove"></span>
-                        </a>
-                    </li>
+                {% if product.id not in form.products.value %}
+                    {% include 'visit/multi_product_item.html' with product=product %}
                 {% endif %}
             {% endfor %}
             <li id="placeholder" class="list-group-item">{% trans 'Ingen tilbud tilgængelige' %}</li>

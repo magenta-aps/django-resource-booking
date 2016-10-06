@@ -5,6 +5,7 @@ from django.core.exceptions import SuspiciousFileOperation
 from django.core.files.storage import FileSystemStorage
 from subprocess import Popen, PIPE
 import os
+import sys
 
 import csv
 import codecs
@@ -243,6 +244,15 @@ def merge_dicts(*dicts):
     return result
 
 
+def flatten(args):
+    for arg in args:
+        if type(arg) in (type(()), type([])):
+            for elem in arg:
+                yield flatten(elem)
+        else:
+            yield arg
+
+
 def intersection(*lists):
     """
     Given several lists, find the intersection between them all
@@ -265,7 +275,7 @@ def binary_or(*items):
     OR several integers together (handy when they vary in number)
     """
     base = 0
-    for item in items:
+    for item in flatten([items]):
         try:
             base = base | item
         except:
@@ -273,12 +283,12 @@ def binary_or(*items):
     return base
 
 
-def binary_and(*items):
+def binary_and(items):
     """
     AND several integers together (handy when they vary in number)
     """
-    base = 0
-    for item in items:
+    base = sys.maxint
+    for item in flatten(items):
         try:
             base = base & item
         except:

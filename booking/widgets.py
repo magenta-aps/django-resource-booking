@@ -7,6 +7,8 @@ from django.utils.html import format_html
 from itertools import chain
 from datetime import timedelta
 
+from django.utils.datastructures import MergeDict, MultiValueDict
+
 
 class DurationWidget(widgets.MultiWidget):
 
@@ -105,11 +107,31 @@ class DurationWidget(widgets.MultiWidget):
 
 class OrderedMultipleHiddenChooser(widgets.MultipleHiddenInput):
 
+    # Take the extracted value list and attempt to map them to choices
+    # A bug in Django has them as unicodes instead of integers
+    # when the form is bound with submitted data
+    def value_from_datadict(self, data, files, name):
+        value = super(OrderedMultipleHiddenChooser, self).value_from_datadict(
+            data, files, name
+        )
+        choice_map = {
+            choice[0]: choice[1]
+            for choice in self.choices
+        }
+        coerced_value = []
+        for v in value:
+            if int(v) in choice_map:
+                coerced_value.append(int(v))
+            elif unicode(v) in choice_map:
+                coerced_value.append(unicode(v))
+            else:
+                coerced_value.append(v)
+        return coerced_value
+
     def render(self, name, value, attrs=None, choices=()):
         if value is None:
             value = []
-        elif len(choices) == 0:
-            choices = [(v, '') for v in value]
+
         final_attrs = self.build_attrs(attrs, type=self.input_type, name=name)
         id_ = final_attrs.get('id', None)
         selected_elements = [None]*len(value)

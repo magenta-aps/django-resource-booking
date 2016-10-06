@@ -1168,7 +1168,6 @@ class MultiProductVisitTempProductsForm(forms.ModelForm):
         }
 
     def clean_products(self):
-        super(MultiProductVisitTempProductsForm, self).clean()
         products = self.cleaned_data['products']
         common_institution = binary_and([
             product.institution_level for product in products
@@ -1176,6 +1175,7 @@ class MultiProductVisitTempProductsForm(forms.ModelForm):
         if common_institution == 0:
             raise forms.ValidationError(
                 _(u"Nogle af de valgte tilbud henvender sig kun til "
-                  u"folkeskoleklasser, og andre kun til gymnasieklasser")
+                  u"folkeskoleklasser, og andre kun til gymnasieklasser"),
+                code='conflict'
             )
         return products

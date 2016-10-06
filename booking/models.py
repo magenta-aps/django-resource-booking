@@ -257,7 +257,7 @@ class Subject(models.Model):
     type_choices = (
         (SUBJECT_TYPE_GYMNASIE, _(u'Gymnasie')),
         (SUBJECT_TYPE_GRUNDSKOLE, _(u'Grundskole')),
-        (SUBJECT_TYPE_BOTH, _(u'Begge')),
+        (SUBJECT_TYPE_BOTH, _(u'Både gymnasie og grundskole')),
     )
 
     name = models.CharField(max_length=256)
