@@ -7,8 +7,6 @@ from django.utils.html import format_html
 from itertools import chain
 from datetime import timedelta
 
-from django.utils.datastructures import MergeDict, MultiValueDict
-
 
 class DurationWidget(widgets.MultiWidget):
 
