@@ -148,7 +148,12 @@ class OrganizationalUnit(models.Model):
 
     name = models.CharField(max_length=100)
     type = models.ForeignKey(OrganizationalUnitType)
-    parent = models.ForeignKey('self', null=True, blank=True)
+    parent = models.ForeignKey(
+        'self',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
     contact = models.ForeignKey(
         User, null=True, blank=True,
         verbose_name=_(u'Kontaktperson'),
@@ -372,7 +377,8 @@ class Locality(models.Model):
         OrganizationalUnit,
         verbose_name=_(u'Enhed'),
         blank=True,
-        null=True
+        null=True,
+        on_delete=models.SET_NULL,
     )
 
     def __unicode__(self):
@@ -632,7 +638,8 @@ class EmailTemplate(models.Model):
         OrganizationalUnit,
         verbose_name=u'Enhed',
         null=True,
-        blank=True
+        blank=True,
+        on_delete=models.SET_NULL,
     )
 
     @property
@@ -1132,7 +1139,8 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         OrganizationalUnit,
         null=True,
         blank=False,
-        verbose_name=_('Enhed')
+        verbose_name=_('Enhed'),
+        on_delete=models.SET_NULL,
     )
     links = models.ManyToManyField(Link, blank=True, verbose_name=_('Links'))
     audience = models.IntegerField(choices=audience_choices,
@@ -1150,7 +1158,8 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         Locality,
         verbose_name=_(u'Lokalitet'),
         blank=True,
-        null=True
+        null=True,
+        on_delete=models.SET_NULL,
     )
 
     rooms = models.ManyToManyField(
@@ -1188,7 +1197,8 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         verbose_name=_(u'Tilbudsansvarlig'),
         related_name='tilbudsansvarlig_for_set',
         blank=True,
-        null=True
+        null=True,
+        on_delete=models.SET_NULL,
     )
 
     roomresponsible = models.ManyToManyField(
@@ -1278,7 +1288,8 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     statistics = models.ForeignKey(
         ObjectStatistics,
-        null=True
+        null=True,
+        on_delete=models.SET_NULL,
     )
 
     objects = SearchManager(
@@ -1888,7 +1899,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     deprecated_product = models.ForeignKey(
         Product,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True,
     )
@@ -1928,7 +1939,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         Locality,
         verbose_name=_(u'Lokalitet'),
         blank=True,
-        null=True
+        null=True,
+        on_delete=models.SET_NULL,
     )
 
     rooms = models.ManyToManyField(
@@ -2013,7 +2025,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     statistics = models.ForeignKey(
         ObjectStatistics,
-        null=True
+        null=True,
+        on_delete=models.SET_NULL,
     )
 
     resources = models.ManyToManyField(
@@ -2103,7 +2116,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     multi_master = models.ForeignKey(
         "MultiProductVisit",
         null=True,
-        blank=True
+        blank=True,
+        on_delete=models.SET_NULL,
     )
     multi_priority = models.IntegerField(
         default=0
@@ -3094,7 +3108,8 @@ class VisitComment(models.Model):
     )
     author = models.ForeignKey(
         User,
-        null=True  # Users can be deleted, but we want to keep their comments
+        null=True,  # Users can be deleted, but we want to keep their comments
+        on_delete=models.SET_NULL,
     )
     deleted_user_name = models.CharField(
         max_length=30
@@ -3192,7 +3207,8 @@ class Room(models.Model):
         Locality,
         verbose_name=_(u'Lokalitet'),
         blank=True,
-        null=True
+        null=True,
+        on_delete=models.SET_NULL,
     )
 
     name = models.CharField(
@@ -3661,7 +3677,8 @@ class Booking(models.Model):
 
     statistics = models.ForeignKey(
         ObjectStatistics,
-        null=True
+        null=True,
+        on_delete=models.SET_NULL,
     )
 
     def get_visit_attr(self, attrname):

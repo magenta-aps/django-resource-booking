@@ -26,7 +26,8 @@ class EventTime(models.Model):
     visit = models.OneToOneField(
         "Visit",
         null=True,
-        blank=True
+        blank=True,
+        on_delete=models.SET_NULL,
     )
 
     # Whether the time is publicly bookable

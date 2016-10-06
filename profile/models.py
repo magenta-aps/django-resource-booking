@@ -105,7 +105,8 @@ class UserProfile(models.Model):
     organizationalunit = models.ForeignKey(
         OrganizationalUnit,
         null=True,
-        blank=True
+        blank=True,
+        on_delete=models.SET_NULL,
     )
 
     my_resources = models.ManyToManyField(
