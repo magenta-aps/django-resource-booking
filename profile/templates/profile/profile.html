@@ -28,7 +28,11 @@
                 {% blocktrans %}Som underviser har du mulighed for at angive hvornår du kan undervise{% endblocktrans %}.<br />
             </p>
             <p>
-                <a href="{% url 'availability-edit' %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér mulige undervisningstidspunkter' %}</a>
+                {% if request.user.userprofile.get_resource.calendar %}
+                <a href="{% url 'calendar' request.user.userprofile.get_resource.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér mulige undervisningstidspunkter' %}</a>
+                {% else %}
+                <a href="{% url 'availability-edit' request.user.userprofile.get_resource.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér mulige undervisningstidspunkter' %}</a>
+                {% endif %}
                 <a href="{% url 'availability' request.user.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Se dato-oversigt for undervisning' %}</a>
             </p>
             {% elif request.user.userprofile.is_host %}

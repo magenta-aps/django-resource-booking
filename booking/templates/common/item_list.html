@@ -25,7 +25,7 @@
                             <div class="list-group-item-text">
                                 <ul>
                                     <li>
-                                        {% blocktrans with date=visit.display_value %}Dato/tid: {{ date }}{% endblocktrans %}
+                                        {% blocktrans with date=visit.real.interval_display %}Dato/tid: {{ date }}{% endblocktrans %}
                                     </li>
                                     <li>{% trans 'Antal tilmeldte:' %} {{ visit.nr_attendees }}</li>
                                 </ul>
@@ -50,11 +50,10 @@
                                             {% trans 'Dato/tid:' %}
                                             <span class="type-offer">
                                                 {% if res.get_visits|length == 1 %}
-                                                    {{ res.first_visit.start_datetime|date:"d.m.Y" }}
-                                                    {% blocktrans with time=res.first_visit.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}
+                                                    {{ visit.eventtime.interval_display }}
                                                 {% else %}
-                                                    {% blocktrans with count=res.get_visits|length date=res.first_visit.start_datetime|date:"d.m.Y" time=res.first_visit.start_datetime|time:"H.i" %}
-                                                        {{ count }} mulige tidspunkter, første gang {{ date }} kl. {{ time }}
+                                                    {% blocktrans with count=res.get_visits|length interval=res.first_visit.eventtime.interval_display %}
+                                                        {{ count }} mulige tidspunkter, første gang {{ interval }}
                                                     {% endblocktrans %}
                                                 {% endif %}
                                             </span>

@@ -211,9 +211,8 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         return [visitlist, unplanned, planned]
 
     def lists_for_teachers(self):
-        user = self.request.user
-        taught_vos = user.taught_visits.filter(is_multi_sub=False)
         unit_qs = self.request.user.userprofile.get_unit_queryset()
+        profile = self.request.user.userprofile
 
         return [
             {
@@ -224,8 +223,8 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     'link': reverse('search') + '?u=-3'
                 },
                 'queryset': Product.objects.filter(
-                    eventtime__visit=taught_vos
-                ).order_by("title"),
+                    eventtime__visit=profile.potentially_assigned_visits
+                ).distinct().order_by("title"),
             },
             {
                 'color': self.HEADING_RED,
@@ -235,21 +234,8 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     u"%(count)d besøg der mangler undervisere",
                     'count'
                 ),
-                'queryset': self.sort_vo_queryset(
-                    Visit.unit_filter(
-                        Visit.objects.annotate(
-                            num_assigned=Count('hosts')
-                        ).filter(
-                            num_assigned__lt=Coalesce(
-                                'override_needed_hosts',
-                                'eventtime__product__needed_hosts'
-                            ),
-                            is_multi_sub=False
-                        ),
-                        unit_qs
-                    ).exclude(
-                        teachers=self.request.user
-                    )
+                'queryset': profile.can_be_assigned_to_qs.order_by(
+                    'eventtime__start', 'eventtime__end'
                 )
             },
             {
@@ -260,14 +246,15 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     u"%(count)d besøg hvor jeg er underviser",
                     'count'
                 ),
-                'queryset': self.sort_vo_queryset(taught_vos)
+                'queryset': self.sort_vo_queryset(
+                    profile.all_assigned_visits()
+                )
             }
         ]
 
     def lists_for_hosts(self):
-        user = self.request.user
-        hosted_vos = user.hosted_visits.filter(is_multi_sub=False)
         unit_qs = self.request.user.userprofile.get_unit_queryset()
+        profile = self.request.user.userprofile
 
         return [
             {
@@ -278,8 +265,8 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     'link': reverse('search') + '?u=-3'
                 },
                 'queryset': Product.objects.filter(
-                    eventtime__visit=hosted_vos
-                ).order_by("title"),
+                    eventtime__visit=profile.potentially_assigned_visits
+                ).distinct().order_by("title"),
             },
             {
                 'color': self.HEADING_RED,
@@ -289,21 +276,9 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     u"%(count)d besøg der mangler værter",
                     'count',
                 ),
-                'queryset':
-                    Visit.unit_filter(
-                        Visit.objects.annotate(
-                            num_assigned=Count('hosts')
-                        ).filter(
-                            num_assigned__lt=Coalesce(
-                                'override_needed_hosts',
-                                'eventtime__product__needed_hosts'
-                            ),
-                            is_multi_sub=False
-                        ),
-                        unit_qs
-                    ).exclude(
-                        hosts=self.request.user.pk
-                    )
+                'queryset': profile.can_be_assigned_to_qs.order_by(
+                    'eventtime__start', 'eventtime__end'
+                )
             },
             {
                 'color': self.HEADING_GREEN,
@@ -313,7 +288,9 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     u"%(count)d besøg hvor jeg er vært",
                     'count'
                 ),
-                'queryset': hosted_vos
+                'queryset': self.sort_vo_queryset(
+                    profile.all_assigned_visits()
+                )
             }
         ]
 
@@ -854,21 +831,16 @@ class AvailabilityView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = {}
 
-        user = self.object.user
+        context['accepted'] = self.to_datelist(
+            self.object.all_assigned_visits()
+        )
+
         if self.object.is_teacher:
-            accepted_qs = user.taught_visits.order_by(
-                'eventtime__start'
-            )
-            context['accepted'] = self.to_datelist(accepted_qs)
             unaccepted_qs = self.object.requested_as_teacher_for_qs(
                 exclude_accepted=True
             ).order_by('eventtime__start')
             context['unaccepted'] = self.to_datelist(unaccepted_qs)
         elif self.object.is_host:
-            accepted_qs = user.hosted_visits.order_by(
-                'eventtime__start'
-            )
-            context['accepted'] = self.to_datelist(accepted_qs)
             unaccepted_qs = self.object.requested_as_host_for_qs(
                 exclude_accepted=True
             ).order_by('eventtime__start')
@@ -887,9 +859,8 @@ class AvailabilityView(LoginRequiredMixin, DetailView):
         current = None
         today = timezone.localtime(timezone.now()).date()
         for x in qs:
-            eventtime = x.first_eventtime
-            if eventtime and eventtime.start:
-                date = timezone.localtime(eventtime.start).date()
+            if x.eventtime and x.eventtime.start:
+                date = timezone.localtime(x.eventtime.start).date()
             else:
                 date = None
             if current is None or current['date'] != date:

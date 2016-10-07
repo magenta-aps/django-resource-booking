@@ -5,7 +5,9 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.db.models import Aggregate
+from django.db.models import Count
 from django.db.models import Q
+from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
@@ -103,7 +105,8 @@ class UserProfile(models.Model):
     organizationalunit = models.ForeignKey(
         OrganizationalUnit,
         null=True,
-        blank=True
+        blank=True,
+        on_delete=models.SET_NULL,
     )
 
     my_resources = models.ManyToManyField(
@@ -264,16 +267,33 @@ class UserProfile(models.Model):
 
         return qs
 
+    def get_resource(self):
+        role = self.get_role()
+        if role == TEACHER:
+            return booking.models.TeacherResource.objects.filter(
+                user=self.user
+            ).first()
+        elif role == HOST:
+            return booking.models.HostResource.objects.filter(
+                user=self.user
+            ).first()
+        else:
+            return None
+
     def is_available_as_teacher(self, from_datetime, to_datetime):
-        return not self.taught_visits.filter(
-            start_datetime__lt=to_datetime,
-            end_datetime__gt=from_datetime
+        res = self.get_resource()
+        if res:
+            return res.is_available_between(from_datetime, to_datetime)
+
+        return not self.user.taught_visits.filter(
+            eventtime__start__lt=to_datetime,
+            eventtime__end__gt=from_datetime
         ).exists()
 
     def can_be_teacher_for(self, visit):
         return self.is_available_as_teacher(
-            visit.start_datetime,
-            visit.end_datetime
+            visit.eventtime.start,
+            visit.eventtime.end
         )
 
     def requested_as_host_for_qs(self, exclude_accepted=False):
@@ -298,14 +318,14 @@ class UserProfile(models.Model):
         return qs
 
     def is_available_as_host(self, from_datetime, to_datetime):
-        return not self.hosted_visits.filter(
+        res = self.get_resource()
+        if res:
+            return res.is_available_between(from_datetime, to_datetime)
+
+        return not self.user.hosted_visits.filter(
             Q(
-                end_datetime__isnull=True,
-                start_datetime__lt=to_datetime,
-                start_datetime__gt=from_datetime
-            ) | Q(
-                start_datetime__lt=to_datetime,
-                end_datetime__gt=from_datetime
+                eventtime__start__lt=to_datetime,
+                eventtime__end__gt=from_datetime
             )
         ).exists()
 
@@ -316,8 +336,156 @@ class UserProfile(models.Model):
         )
 
     @property
+    def assigned_to_visits(self):
+        role = self.get_role()
+        if role == TEACHER:
+            return self.user.taught_visits.all()
+        elif role == HOST:
+            return self.user.hosted_visits.all()
+        else:
+            return booking.models.Visit.objects.none()
+
+    @property
+    def resource_for_visits(self):
+        res = self.get_resource()
+        if res:
+            return booking.models.Visit.objects.filter(
+                resources=res
+            )
+        else:
+            return booking.models.Visit.objects.none()
+
+    def all_assigned_visits(self):
+        qs = self.assigned_to_visits | self.resource_for_visits
+        return qs
+
+    @property
     def available_roles(self):
         return available_roles[self.get_role()]
+
+    @property
+    def can_be_assigned_to_qs(self):
+        resource = self.get_resource()
+        if resource:
+            qs1 = booking.models.Visit.objects.raw('''
+                SELECT DISTINCT
+                    "booking_visit"."id"
+                FROM
+                    "booking_visit"
+                    INNER JOIN "booking_eventtime" ON (
+                        "booking_visit"."id" = "booking_eventtime"."visit_id"
+                    )
+                    INNER JOIN "booking_product" ON (
+                        "booking_eventtime"."product_id" =
+                            "booking_product"."id"
+                    )
+                    INNER JOIN "booking_resourcerequirement" ON (
+                        "booking_product"."id" =
+                            "booking_resourcerequirement"."product_id"
+                    )
+                    INNER JOIN "booking_resourcepool" ON (
+                        "booking_resourcerequirement"."resource_pool_id" =
+                            "booking_resourcepool"."id"
+                    )
+                    INNER JOIN "booking_resourcepool_resources" ON (
+                        "booking_resourcepool"."id" =
+                        "booking_resourcepool_resources"."resourcepool_id"
+                    )
+                    LEFT OUTER JOIN "booking_visitresource" ON (
+                        "booking_visit"."id" =
+                            "booking_visitresource"."visit_id"
+                        AND
+                        "booking_visitresource"."resource_requirement_id" =
+                            "booking_resourcerequirement"."id"
+                    )
+                    LEFT OUTER JOIN "booking_visitresource" "vr2" ON (
+                        "booking_visit"."id" = "vr2"."visit_id"
+                        AND
+                        "vr2"."resource_requirement_id" =
+                            "booking_resourcerequirement"."id"
+                        AND
+                        "vr2"."resource_id" = %s
+                    )
+                WHERE (
+                    "booking_resourcepool_resources"."resource_id" = %s
+                    AND
+                    "vr2"."id" IS NULL
+                    AND
+                    "booking_eventtime"."start" > %s
+                )
+                GROUP BY
+                    "booking_visit"."id",
+                    "booking_resourcerequirement"."id"
+                HAVING
+                    COUNT("booking_visitresource"."id") <
+                        "booking_resourcerequirement"."required_amount"
+            ''', [resource.pk, resource.pk, timezone.now()])
+            # Turn it into a Django query
+            qs1 = booking.models.Visit.objects.filter(
+                pk__in=[x.pk for x in qs1],
+                is_multi_sub=False
+            )
+        else:
+            qs1 = booking.models.Visit.objects.none()
+
+        unit_qs = self.get_unit_queryset()
+
+        if self.is_teacher:
+            qs2 = booking.models.Visit.objects.annotate(
+                num_assigned=Count('teachers')
+            ).filter(
+                eventtime__product__time_mode=Product.TIME_MODE_SPECIFIC,
+                eventtime__start__gt=timezone.now(),
+                eventtime__product__organizationalunit=unit_qs,
+                num_assigned__lt=Coalesce(
+                    'override_needed_teachers',
+                    'eventtime__product__needed_teachers'
+                ),
+                is_multi_sub=False
+            ).exclude(
+                teachers=self.user
+            )
+        elif self.is_host:
+            qs2 = booking.models.Visit.objects.annotate(
+                num_assigned=Count('hosts')
+            ).filter(
+                eventtime__product__time_mode=Product.TIME_MODE_SPECIFIC,
+                eventtime__start__gt=timezone.now(),
+                eventtime__product__organizationalunit=unit_qs,
+                num_assigned__lt=Coalesce(
+                    'override_needed_hosts',
+                    'eventtime__product__needed_hosts'
+                ),
+                is_multi_sub=False
+            ).exclude(
+                hosts=self.user
+            )
+        else:
+            qs2 = booking.models.Visit.objects.none()
+
+        return qs1 | qs2
+
+    @property
+    def potentially_assigned_visits(self):
+        resource = self.get_resource()
+        if resource:
+            qs = booking.models.Visit.objects.filter(**{
+                ('eventtime__product__resourcerequirement__' +
+                 'resource_pool__resources'): resource
+            })
+        else:
+            qs = booking.models.Visit.objects.none()
+
+        if self.is_teacher:
+            qs = qs | booking.models.Visit.objects.filter(
+                eventtime__product__potentielle_undervisere=self.user
+            )
+        elif self.is_host:
+            qs = qs | booking.models.Visit.objects.filter(
+                eventtime__product__potentielle_vaerter=self.user
+            )
+
+        return qs
 
     def save(self, *args, **kwargs):
 
@@ -326,7 +494,7 @@ class UserProfile(models.Model):
         # Create a resource for the user
         if (
             self.is_teacher and
-            self.user.teacherresource_set.exists() and
+            not self.user.teacherresource_set.exists() and
             self.organizationalunit
         ):
             resource = booking.models.TeacherResource(

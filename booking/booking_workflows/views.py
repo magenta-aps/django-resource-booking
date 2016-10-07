@@ -32,6 +32,8 @@ from django.views.generic.base import ContextMixin
 from profile.models import TEACHER, HOST, EDIT_ROLES
 from itertools import chain
 
+import booking.models
+
 
 class VisitBreadcrumbMixin(ContextMixin):
     view_title = _(u'opdater')
@@ -451,6 +453,7 @@ class BecomeSomethingView(AutologgerMixin, VisitBreadcrumbMixin,
     roles = [HOST, TEACHER] + list(EDIT_ROLES)
     form_class = BecomeSomethingForm
     notify_mail_template_key = None
+    object = None
 
     ERROR_NONE_NEEDED = _(
         u"Det valgte besøg har ikke behov for flere personer i den " +
@@ -463,6 +466,16 @@ class BecomeSomethingView(AutologgerMixin, VisitBreadcrumbMixin,
         u"Du er allerede blevet tildelt den givne rolle"
     )
 
+    def get_form(self, *args, **kwargs):
+        form = super(BecomeSomethingView, self).get_form(*args, **kwargs)
+        if self.get_object().product.is_resource_controlled:
+            rr = form.fields['resourcerequirements']
+            rr.queryset = self.matching_requirements()
+            rr.label_from_instance = lambda x: x.resource_pool.name
+            if self.request.method == "GET":
+                rr.initial = [x[0] for x in rr.choices]
+        return form
+
     def needs_more(self):
         raise NotImplementedError
 
@@ -470,17 +483,33 @@ class BecomeSomethingView(AutologgerMixin, VisitBreadcrumbMixin,
         raise NotImplementedError
 
     def get_object(self, queryset=None):
-        res = self.model.objects.get(pk=self.kwargs.get("pk"))
+        if not self.object:
+            self.object = self.model.objects.get(pk=self.kwargs.get("pk"))
 
-        # Store state for autologger
-        self._old_state = self._as_state(res)
+            # Store state for autologger
+            self._old_state = self._as_state(self.object)
 
-        return res
+        return self.object
+
+    def matching_requirements(self):
+        user = self.request.user
+        resource = user.userprofile.get_resource()
+        if resource:
+            visit = self.get_object()
+            return booking.models.ResourceRequirement.objects.filter(
+                product__eventtime__visit=visit,
+                resource_pool__resources=resource,
+            ).exclude(
+                visitresource__resource=resource,
+                visitresource__visit=visit
+            )
+        else:
+            return booking.models.ResourceRequirements.objects.none()
 
     def get_context_data(self, **kwargs):
-        self.object = self.get_object()
+        obj = self.get_object()
         context = {}
-        context['object'] = self.object
+        context['object'] = obj
         context.update(kwargs)
         return super(BecomeSomethingView, self).get_context_data(**context)
 
@@ -493,15 +522,19 @@ class BecomeSomethingView(AutologgerMixin, VisitBreadcrumbMixin,
                 self.errors.append(self.ERROR_WRONG_ROLE)
 
             # Do the event need more of the given role?
-            if not self.needs_more():
-                self.errors.append(self.ERROR_NONE_NEEDED)
+            if self.object.product.is_resource_controlled:
+                if self.matching_requirements().count() == 0:
+                    self.errors.append(self.ERROR_NONE_NEEDED)
+            else:
+                if not self.needs_more():
+                    self.errors.append(self.ERROR_NONE_NEEDED)
 
-            # Is the current user already registered?
-            qs = getattr(self.object, self.m2m_attribute).filter(
-                pk=self.request.user.pk
-            )
-            if qs.exists():
-                self.errors.append(self.ERROR_ALREADY_REGISTERED)
+                # Is the current user already registered?
+                qs = getattr(self.object, self.m2m_attribute).filter(
+                    pk=self.request.user.pk
+                )
+                if qs.exists():
+                    self.errors.append(self.ERROR_ALREADY_REGISTERED)
 
         return len(self.errors) == 0
 
@@ -530,8 +563,18 @@ class BecomeSomethingView(AutologgerMixin, VisitBreadcrumbMixin,
                 self.object.save()
 
             elif request.POST.get("confirm"):
-                # Add user to the specified m2m relation
-                getattr(self.object, self.m2m_attribute).add(request.user)
+                if self.object.product.is_resource_controlled:
+                    resource = self.request.user.userprofile.get_resource()
+                    for x in form.cleaned_data['resourcerequirements']:
+                        vr = booking.models.VisitResource(
+                            visit=self.object,
+                            resource=resource,
+                            resource_requirement=x
+                        )
+                        vr.save()
+                else:
+                    # Add user to the specified m2m relation
+                    getattr(self.object, self.m2m_attribute).add(request.user)
 
                 # Notify the user about the association
                 if self.notify_mail_template_key:

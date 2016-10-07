@@ -228,7 +228,7 @@ class TimeDetailsView(DetailView):
         self.object = self.get_object()
 
         if(request.POST.get("confirm")):
-            self.object.make_visit(True)
+            self.object.make_visit()
             return redirect(self.get_success_url())
         else:
             # Do same thing as for get method
@@ -868,9 +868,12 @@ class CalendarView(LoginRequiredMixin, DetailView):
         unavailable = [x for x in calendar.unavailable_list(start_dt, end_dt)]
 
         for x in available + unavailable:
-            date = x.start.date()
+            date = x.start.astimezone(
+                timezone.get_current_timezone()
+            ).date()
             # Add event to all the days it spans
-            for y in range(0, (x.end - x.start).days + 1):
+            delta = x.end - x.start + datetime.timedelta(hours=24, seconds=-1)
+            for y in range(0, delta.days):
                 key = date.isoformat()
                 if key in events_by_date:
                     events_by_date[key].append(x.day_marker(date))
@@ -888,6 +891,9 @@ class CalendarView(LoginRequiredMixin, DetailView):
             ),
             unavailable=calendar.calendarevent_set.filter(
                 availability=booking_models.CalendarEvent.NOT_AVAILABLE
+            ),
+            booked_times=calendar.resource.booked_eventtimes(
+                start_dt, end_dt
             ),
             **kwargs
         )
@@ -908,9 +914,7 @@ class CalendarCreateView(LoginRequiredMixin, RedirectView):
                           {'verbose_name': queryset.model._meta.verbose_name})
 
         # Create empty calendar if one does not exist
-        print resource.calendar
         resource.make_calendar()
-        print resource.calendar
 
         return reverse('calendar', args=[resource.pk])
 
@@ -935,7 +939,7 @@ class CalendarDeleteView(LoginRequiredMixin, DeleteView):
         return reverse('resource-view', args=[self.resource.pk])
 
 
-class CalendarEventView(CreateView):
+class CalendarEventCreateView(CreateView):
     model = booking_models.CalendarEvent
     template_name = 'calendar/calendar_event.html'
 
@@ -948,11 +952,15 @@ class CalendarEventView(CreateView):
         'calendar'
     )
 
+    labels = {
+        'start': "Blahblah"
+    }
+
     def get_form(self, form_class=None):
         if form_class is None:
             form_class = self.get_form_class()
         kwargs = self.get_form_kwargs()
-        resource_pk = self.kwargs.get('pk', -1)
+        resource_pk = self.kwargs.get('res', -1)
         try:
             calendar = booking_models.Calendar.objects.get(
                 resource__pk=resource_pk
@@ -960,16 +968,81 @@ class CalendarEventView(CreateView):
         except:
             raise Http404
         kwargs['initial']['calendar'] = calendar.pk
+        today_at_midnight = timezone.make_aware(
+            timezone.datetime.combine(
+                timezone.now().date(),
+                datetime.time()
+            )
+        )
+        kwargs['initial']['start'] = today_at_midnight
+        kwargs['initial']['end'] = today_at_midnight + datetime.timedelta(
+            days=1
+        )
         form = form_class(**kwargs)
         return form
 
     def get_context_data(self, **kwargs):
-        return super(CalendarEventView, self).get_context_data(
+        return super(CalendarEventCreateView, self).get_context_data(
+            start_time="00:00",
+            end_time="24:00",
             **kwargs
         )
 
     def get_success_url(self):
-        return reverse('calendar', args=[self.kwargs.get('pk')])
+        return reverse('calendar', args=[self.kwargs.get('res')])
+
+
+class CalendarEventUpdateView(UpdateView):
+    model = booking_models.CalendarEvent
+    template_name = 'calendar/calendar_event.html'
+
+    fields = (
+        'title',
+        'start',
+        'end',
+        'recurrences',
+        'availability',
+        'calendar'
+    )
+
+    separate_days = False
+    start_str = ""
+    end_str = ""
+
+    def get_object(self, *args, **kwargs):
+        obj = super(CalendarEventUpdateView, self).get_object(*args, **kwargs)
+        tz = timezone.get_current_timezone()
+
+        start_datetime = obj.start.astimezone(tz)
+        end_datetime = obj.end.astimezone(tz)
+
+        self.start_str = '%02d:%02d' % (
+            start_datetime.hour, start_datetime.minute
+        )
+        self.end_str = '%02d:%02d' % (
+            end_datetime.hour, end_datetime.minute
+        )
+
+        tdelta = obj.end - obj.start
+        if self.end_str == "00:00" and tdelta.total_seconds() > 0:
+            self.end_str = "24:00"
+            obj.end = obj.end - datetime.timedelta(days=1)
+            self.separate_days = tdelta.total_seconds() > 24 * 60 * 60
+        else:
+            self.separate_days = start_datetime.date() != end_datetime.date()
+
+        return obj
+
+    def get_context_data(self, **kwargs):
+        return super(CalendarEventUpdateView, self).get_context_data(
+            separate_date=self.separate_days,
+            start_time=self.start_str,
+            end_time=self.end_str,
+            **kwargs
+        )
+
+    def get_success_url(self):
+        return reverse('calendar', args=[self.kwargs.get('res')])
 
 
 class CalendarEventDeleteView(DeleteView):

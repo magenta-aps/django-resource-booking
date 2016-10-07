@@ -112,11 +112,11 @@
             </div>
             {% endif %}
 
-            {% if form.rooms_needed or form.locality %}
+            {% if form.locality %}
             <div class="panel panel-default">
                 <div id="headingRooms" class="panel-heading" role="tab">
                     <h4 class="panel-title">
-                        <a class="" aria-controls="collapseRooms" aria-expanded="false" href="#collapseRooms" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Lokalitet og lokaler" %}</a><span class="caret"></span>
+                        <a class="" aria-controls="collapseRooms" aria-expanded="false" href="#collapseRooms" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Lokalitet" %}</a><span class="caret"></span>
                     </h4>
                 </div>
                 <div id="collapseRooms" class="panel-collapse collapse
@@ -124,25 +124,6 @@
                 " aria-labelledby="headingContact" role="tabpanel" aria-expanded="false" style="">
                     <div class="panel-body">
                         {% include 'common/fields/generic_field.html' with field=form.locality %}
-                        {% include 'product/fields/rooms.html' %}
-                    </div>
-                </div>
-            </div>
-            {% endif %}
-
-            {% if form.needed_hosts or form.needed_teachers %}
-            <div class="panel panel-default">
-                <div id="headingTeachersAndHosts" class="panel-heading" role="tab">
-                    <h4 class="panel-title">
-                        <a class="" aria-controls="collapseTeachersAndHosts" aria-expanded="false" href="#collapseTeachersAndHosts" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Værter og undervisere" %}</a><span class="caret"></span>
-                    </h4>
-                </div>
-                <div id="collapseTeachersAndHosts" class="panel-collapse collapse
-                {% if not object.pk or form.needed_hosts.errors or form.needed_teachers.errors %}in{% endif %}
-                " aria-labelledby="headingContact" role="tabpanel" aria-expanded="false" style="">
-                    <div class="panel-body">
-                    {% include 'common/fields/generic_field.html' with field=form.needed_hosts %}
-                    {% include 'common/fields/generic_field.html' with field=form.needed_teachers %}
                     </div>
                 </div>
             </div>

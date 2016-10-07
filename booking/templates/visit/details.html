@@ -107,6 +107,8 @@
                         <dd>
                             {% if object.multiproductvisit %}
                                 {{ object.date }}
+                            {% elif object.eventtime.start %}
+                                {{ object.eventtime.interval_display }}
                             {% else %}
                                 {% if object.start_datetime %}
                                     {{ object.start_datetime }}
@@ -122,22 +124,40 @@
                         {% if not object.multiproductvisit %}
                             <dt>{% trans 'Ressourcer' %}</dt>
                             <dd>
-                                {% if object.product.resourcerequirement_set.count %}
-                                    <ul class="list-unstyled" style="display:inline-block; margin-bottom:0">
-                                    {% for requirementdata in object.requirement_details %}
-                                        <li>{{ requirementdata.acquired }}/{{ requirementdata.required }} {{ requirementdata.name }}</li>
-                                    {% endfor %}
-                                    </ul>
-                                    {% if can_edit %}
-                                        <a href="{% url 'visit-resources-edit' object.pk %}" role="button" class="btn btn-primary btn-xs" style="vertical-align:top">{% trans 'Redigér' %}</a>
+                                {% if object.product.is_resource_controlled %}
+                                    {% if object.product.resourcerequirement_set.count %}
+                                        <ul class="list-unstyled" style="display:inline-block; margin-bottom:0">
+                                        {% for requirementdata in object.requirement_details %}
+                                            <li>{{ requirementdata.acquired }}/{{ requirementdata.required }} {{ requirementdata.name }}</li>
+                                        {% endfor %}
+                                        </ul>
+                                        {% if can_edit %}
+                                            <a href="{% url 'visit-resources-edit' object.pk %}" role="button" class="btn btn-primary btn-xs" style="vertical-align:top">{% trans 'Redigér' %}</a>
+                                        {% endif %}
+                                    {% else %}
+                                        {% trans 'Tilbuddet kræver ingen ressourcer' %}
                                     {% endif %}
+                                    <div>
+                                    {% if can_become_teacher %}
+                                        <a href="{% url 'become-teacher' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Bliv underviser for dette besøg' %}</a>
+                                        {% if teacher %}
+                                            <a href="{% url 'decline-teacher' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Jeg ønsker ikke at være underviser' %}</a>
+                                        {% endif %}
+                                    {% endif %}
+                                    {% if can_become_host %}
+                                        <a href="{% url 'become-host' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Bliv vært for dette besøg.' %}</a>
+                                        {% if host %}
+                                            <a href="{% url 'decline-host' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Jeg ønsker ikke at være vært' %}</a>
+                                        {% endif %}
+                                    {% endif %}
+                                    </div>
                                 {% else %}
-                                    {% trans 'Tilbuddet kræver ingen ressourcer' %}
+                                    {% trans 'Tilbuddet er ikke ressourcestyret' %}
                                 {% endif %}
                             </dd>
                         {% endif %}
 
-                        {% if not object.multiproductvisit %}
+                        {% if not object.product.is_resource_controlled and not object.multiproductvisit %}
                         <dt>{% trans 'Undervisere' %}</dt>
                         <dd>
                             {% blocktrans with found=object.teachers.all|length needed=object.total_required_teachers %}{{ found }}/{{ needed }} undervisere fundet{% endblocktrans %}
@@ -160,7 +180,7 @@
                         </dd>
                         {% endif %}
 
-                        {% if not object.multiproductvisit %}
+                        {% if not object.product.is_resource_controlled and not object.multiproductvisit %}
                         <dt>{% trans 'Værter' %}</dt>
                         <dd>
                             {% blocktrans with found=object.hosts.all|length needed=object.total_required_hosts %}{{ found }}/{{ needed }} værter fundet{% endblocktrans %}
@@ -183,7 +203,7 @@
                         </dd>
                         {% endif %}
 
-                        {% if not object.multiproductvisit %}
+                        {% if not object.product.is_resource_controlled and not object.multiproductvisit %}
                         <dt>{% trans 'Lokaler' %}</dt>
                         <dd>
                             {{ object.get_room_status_display }}

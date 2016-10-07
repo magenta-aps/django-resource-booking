@@ -130,7 +130,7 @@ class MainPageView(TemplateView):
                     'color': self.HEADING_GREEN,
                     'type': 'Product',
                     'title': _(u'Senest opdaterede tilbud'),
-                    'queryset': Product.get_latest_updated(),
+                    'queryset': Product.get_latest_updated(self.request.user),
                     'limit': 10,
                     'button': {
                         'text': _(u'Vis alle'),
@@ -726,13 +726,16 @@ class SearchView(BreadcrumbMixin, ListView):
                 # Filter out resource-controlled products that are
                 # resource-blocked.
                 res_controlled = Product.TIME_MODE_RESOURCE_CONTROLLED
-                res_blocked = booking_models.EventTime.RESOURCE_STATUS_BLOCKED
+
+                eventtime_cls = booking_models.EventTime
+
+                nonblocked = eventtime_cls.NONBLOCKED_RESOURCE_STATES
 
                 date_cond = date_cond & Q(
                     (~Q(time_mode=res_controlled)) |
                     Q(
-                        Q(time_mode=res_controlled) &
-                        (~Q(eventtime__resource_status=res_blocked))
+                        time_mode=res_controlled,
+                        eventtime__resource_status__in=nonblocked
                     )
                 )
 
@@ -759,8 +762,6 @@ class SearchView(BreadcrumbMixin, ListView):
                     date_cond
                 )
 
-                print qs.query
-
                 # Simplify, since the above conditions are slow when
                 # used for making facets.
                 qs = Product.objects.filter(pk__in=[x.pk for x in qs])
@@ -770,7 +771,6 @@ class SearchView(BreadcrumbMixin, ListView):
             )
 
             qs = qs.distinct()
-            print len(qs)
 
             self.base_queryset = qs
 
@@ -1116,7 +1116,7 @@ class ProductCustomListView(BreadcrumbMixin, ListView):
             if listtype == self.TYPE_LATEST_BOOKED:
                 return Product.get_latest_booked()
             elif listtype == self.TYPE_LATEST_UPDATED:
-                return Product.get_latest_updated()
+                return Product.get_latest_updated(self.request.user)
 
         except:
             pass
@@ -1509,8 +1509,6 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
 
             self.save_studymaterials()
 
-            self.save_rooms()
-
             self.save_subjects()
 
             self.add_to_my_resources()
@@ -1526,20 +1524,6 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
 
     def get_context_data(self, **kwargs):
         context = {}
-
-        if self.object and self.object.pk:
-            context['rooms'] = self.object.rooms.all()
-        else:
-            context['rooms'] = []
-
-        context['allrooms'] = [
-            {
-                'id': x.pk,
-                'locality_id': x.locality.pk if x.locality else None,
-                'name': x.name_with_locality
-            }
-            for x in Room.objects.all()
-        ]
 
         context['gymnasiefag_choices'] = Subject.gymnasiefag_qs()
         context['grundskolefag_choices'] = Subject.grundskolefag_qs()
@@ -1608,35 +1592,6 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
                                 except:
                                     pass
 
-    def save_rooms(self):
-        # This code is more or less the same as
-        # ChangeVisitRoomsView.save_rooms()
-        # If you update this you might have to update there as well.
-        existing_rooms = set([x.pk for x in self.object.rooms.all()])
-
-        new_rooms = self.request.POST.getlist("rooms")
-
-        for roomdata in new_rooms:
-            if roomdata.startswith("id:"):
-                # Existing rooms are identified by "id:<pk>"
-                try:
-                    room_pk = int(roomdata[3:])
-                    if room_pk in existing_rooms:
-                        existing_rooms.remove(room_pk)
-                    else:
-                        self.object.rooms.add(room_pk)
-                except Exception as e:
-                    print 'Problem adding room: %s' % e
-            elif roomdata.startswith("new:"):
-                # New rooms are identified by "new:<name-of-room>"
-                room = self.object.add_room_by_name(roomdata[4:])
-                if room.pk in existing_rooms:
-                    existing_rooms.remove(room.pk)
-
-        # Delete any rooms left in existing rooms
-        for x in existing_rooms:
-            self.object.rooms.remove(x)
-
     def get_success_url(self):
         try:
             return reverse('product-view', args=[self.object.id])
@@ -1675,7 +1630,11 @@ class SimpleRessourcesView(LoginRequiredMixin, BreadcrumbMixin,
                            RoleRequiredMixin, UpdateView):
     roles = EDIT_ROLES
     model = Product
-    fields = ['potentielle_vaerter', 'potentielle_undervisere']
+    fields = [
+        'locality',
+        'potentielle_vaerter', 'potentielle_undervisere',
+        'needed_hosts', 'needed_teachers', 'rooms_needed',
+    ]
     template_name = 'product/simple_ressources.html'
 
     def get_form(self, form_class=None):
@@ -1709,6 +1668,17 @@ class SimpleRessourcesView(LoginRequiredMixin, BreadcrumbMixin,
                     obj.email
                 )
 
+        if 'roomresponsible' in form.fields:
+            qs = form.fields['roomresponsible']._get_queryset()
+            form.fields['roomresponsible']._set_queryset(
+                qs.filter(organizationalunit=self.object.organizationalunit)
+            )
+            form.fields['roomresponsible'].label_from_instance = \
+                lambda obj: "%s <%s>" % (
+                    obj.get_full_name(),
+                    obj.email
+                )
+
         return form
 
     def get_breadcrumbs(self):
@@ -1719,6 +1689,62 @@ class SimpleRessourcesView(LoginRequiredMixin, BreadcrumbMixin,
             },
             {'text': _(u'Redigér ressourcer')}
         ]
+
+    def form_valid(self, form):
+        res = super(SimpleRessourcesView, self).form_valid(form)
+
+        self.save_rooms()
+
+        return res
+
+    def save_rooms(self):
+        # This code is more or less the same as
+        # ChangeVisitRoomsView.save_rooms()
+        # If you update this you might have to update there as well.
+        existing_rooms = set([x.pk for x in self.object.rooms.all()])
+
+        new_rooms = self.request.POST.getlist("rooms")
+
+        for roomdata in new_rooms:
+            if roomdata.startswith("id:"):
+                # Existing rooms are identified by "id:<pk>"
+                try:
+                    room_pk = int(roomdata[3:])
+                    if room_pk in existing_rooms:
+                        existing_rooms.remove(room_pk)
+                    else:
+                        self.object.rooms.add(room_pk)
+                except Exception as e:
+                    print 'Problem adding room: %s' % e
+            elif roomdata.startswith("new:"):
+                # New rooms are identified by "new:<name-of-room>"
+                room = self.object.add_room_by_name(roomdata[4:])
+                if room.pk in existing_rooms:
+                    existing_rooms.remove(room.pk)
+
+        # Delete any rooms left in existing rooms
+        for x in existing_rooms:
+            self.object.rooms.remove(x)
+
+    def get_context_data(self, **kwargs):
+        context = {}
+
+        if self.object and self.object.pk:
+            context['rooms'] = self.object.rooms.all()
+        else:
+            context['rooms'] = []
+
+        context['allrooms'] = [
+            {
+                'id': x.pk,
+                'locality_id': x.locality.pk if x.locality else None,
+                'name': x.name_with_locality
+            }
+            for x in Room.objects.all()
+        ]
+        context.update(kwargs)
+
+        return super(SimpleRessourcesView, self).get_context_data(**context)
 
 
 class ProductDetailView(BreadcrumbMixin, ProductBookingDetailView):
@@ -1905,7 +1931,7 @@ class VisitNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
                                     full_email(
                                         user.email,
                                         user.get_full_name())
-                    for user in visit.hosts.all()
+                    for user in visit.assigned_hosts.all()
                     if user.email is not None
                 }
             },
@@ -1918,7 +1944,7 @@ class VisitNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
                                     full_email(
                                         user.email,
                                         user.get_full_name())
-                    for user in visit.teachers.all()
+                    for user in visit.assigned_teachers.all()
                     if user.email is not None
                 }
             },
@@ -1931,10 +1957,10 @@ class VisitNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
                                     full_email(
                                         user.email,
                                         user.get_full_name())
-                    for user in product.potentielle_vaerter.all()
+                    for user in product.potential_hosts.all()
                     if user.email is not None and
                     user not in visit.hosts_rejected.all() and
-                    user not in visit.hosts.all()
+                    user not in visit.assigned_hosts.all()
                 } for product in products])
             },
             'potential_teachers': {
@@ -1946,10 +1972,10 @@ class VisitNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
                                     full_email(
                                         user.email,
                                         user.get_full_name())
-                    for user in product.potentielle_undervisere.all()
+                    for user in product.potential_teachers.all()
                     if user.email is not None and
                     user not in visit.teachers_rejected.all() and
-                    user not in visit.teachers.all()
+                    user not in visit.assigned_teachers.all()
                 } for product in products])
             }
         }
@@ -2015,7 +2041,7 @@ class BookingNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
                         "%s%s%s" % (self.RECIPIENT_USER,
                                     self.RECIPIENT_SEPARATOR,
                                     user.username):
-                        full_email(user.email, user.get_full_name())
+                            full_email(user.email, user.get_full_name())
                         for user in self.object.hosts.all()
                         if user.email is not None
                         }
@@ -2026,7 +2052,7 @@ class BookingNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
                         "%s%s%s" % (self.RECIPIENT_USER,
                                     self.RECIPIENT_SEPARATOR,
                                     user.username):
-                        full_email(user.email, user.get_full_name())
+                            full_email(user.email, user.get_full_name())
                         for user in self.object.teachers.all()
                         if user.email is not None
                         }
@@ -2570,8 +2596,10 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
 
         elif type == Product.STUDY_PROJECT:
             bookingform = StudyProjectBookingForm(data, product=self.product)
+
         else:
             bookingform = BookingForm(data)
+
         if bookingform is not None:
             if self.visit.multiproductvisit and 'tmp' in self.request.GET:
                 temp = MultiProductVisitTemp.objects.get(
@@ -2957,8 +2985,8 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
         user = self.request.user
 
         if hasattr(user, 'userprofile'):
-            context['can_edit'] = user.userprofile.can_edit(self.object)
-            context['can_notify'] = user.userprofile.can_notify(self.object)
+            # Add information about the users association with the visit
+            context.update(self.object.context_for_user(self.request.user))
 
         context['bookinglistform'] = self.get_bookinglist_form()
         context['waitinglistform'] = self.get_waitinglist_form()
