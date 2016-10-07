@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from booking.models import Visit, VisitAutosend
+from booking.models import Visit, VisitAutosend, MultiProductVisit
 from django import forms
 from django.forms import inlineformset_factory
 from django.utils.translation import ugettext_lazy as _
@@ -25,6 +25,18 @@ class ChangeVisitStatusForm(forms.ModelForm):
 
             self.fields['workflow_status'].widget.choices = choices
             self.fields['workflow_status'].label = _(u'Ny status')
+
+
+class ChangeVisitResponsibleForm(forms.ModelForm):
+    class Meta:
+        model = MultiProductVisit
+        fields = ['responsible']
+
+    def __init__(self, *args, **kwargs):
+        super(ChangeVisitResponsibleForm, self).__init__(*args, **kwargs)
+
+        self.fields['responsible'].queryset = \
+            kwargs['instance'].potential_responsible()
 
 
 class ChangeVisitTeachersForm(forms.ModelForm):

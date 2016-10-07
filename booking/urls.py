@@ -21,6 +21,7 @@ from booking.views import EmailTemplateDetailView, EmailTemplateDeleteView
 from booking.views import ChangeVisitEvalView
 from booking.views import ChangeVisitStatusView
 from booking.views import ChangeVisitStartTimeView
+from booking.views import ChangeVisitResponsibleView
 from booking.views import ChangeVisitTeachersView
 from booking.views import ChangeVisitHostsView
 from booking.views import ChangeVisitRoomsView
@@ -169,6 +170,9 @@ urlpatterns = patterns(
     url(r'^visit/(?P<visit_pk>[0-9]+)/change_starttime/?$',
         ChangeVisitStartTimeView.as_view(),
         name='change-visit-starttime'),
+    url(r'^visit/(?P<pk>[0-9]+)/change_responsible/?$',
+        ChangeVisitResponsibleView.as_view(),
+        name='change-visit-responsible'),
     url(r'^visit/(?P<pk>[0-9]+)/change_teachers/?$',
         ChangeVisitTeachersView.as_view(),
         name='change-visit-teachers'),

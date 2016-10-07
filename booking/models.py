@@ -3078,7 +3078,8 @@ class MultiProductVisit(Visit):
     responsible = models.ForeignKey(
         User,
         blank=True,
-        null=True
+        null=True,
+        verbose_name=_(u'Besøgsansvarlig')
     )
 
     @property
@@ -3090,7 +3091,15 @@ class MultiProductVisit(Visit):
 
     @property
     def products(self):
-        return [visit.eventtime.product for visit in self.subvisits]
+        return [visit.product for visit in self.subvisits if visit.product]
+
+    def potential_responsible(self):
+        units = OrganizationalUnit.objects.filter(
+            product__eventtime__visit__set=self.subvisits
+        )
+        return User.objects.filter(
+            userprofile__organizationalunit=units
+        )
 
     def planned_status_is_blocked(self):
         return True
@@ -3237,6 +3246,9 @@ class MultiProductVisitTemp(models.Model):
                 multi_priority=index,
                 is_multi_sub=True
             )
+            if index == 0:
+                mpv.responsible = product.tilbudsansvarlig
+        mpv.save()
         return mpv
 
     def has_products_in_different_locations(self):

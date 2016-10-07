@@ -11,6 +11,7 @@ from django.views.generic import UpdateView, FormView
 from booking.booking_workflows.forms import ChangeVisitStatusForm, \
     BecomeSomethingForm
 from booking.booking_workflows.forms import VisitAutosendFormSet
+from booking.booking_workflows.forms import ChangeVisitResponsibleForm
 from booking.booking_workflows.forms import ChangeVisitTeachersForm
 from booking.booking_workflows.forms import ChangeVisitHostsForm
 from booking.booking_workflows.forms import ChangeVisitRoomsForm
@@ -26,6 +27,7 @@ from booking.models import Locality
 from booking.models import LOGACTION_MANUAL_ENTRY
 from booking.models import log_action
 from booking.models import Room
+from booking.models import MultiProductVisit
 from booking.views import AutologgerMixin
 from booking.views import RoleRequiredMixin, EditorRequriedMixin
 from django.views.generic.base import ContextMixin
@@ -116,6 +118,13 @@ class ChangeVisitStatusView(AutologgerMixin, UpdateWithCancelView):
             # Booking is cancelled
             self.object.autosend(EmailTemplate.NOTIFY_ALL__BOOKING_CANCELED)
         return response
+
+
+class ChangeVisitResponsibleView(AutologgerMixin, UpdateWithCancelView):
+    model = MultiProductVisit
+    form_class = ChangeVisitResponsibleForm
+    template_name = "booking/workflow/change_responsible.html"
+    view_title = _(u'Redigér besøgsansvarlig')
 
 
 class ChangeVisitTeachersView(AutologgerMixin, UpdateWithCancelView):

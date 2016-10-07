@@ -128,6 +128,20 @@
                             </dd>
                         {% endif %}
 
+                        {% if object.multiproductvisit %}
+                            <dt>{% trans 'Ansvarlig' %}</dt>
+                            <dd>
+                                {% if object.responsible %}
+                                    {{ object.responsible }}
+                                {% else %}
+                                    {% trans 'Ikke tildelt' %}
+                                {% endif %}
+                                {% if can_edit %}
+                                    <a href="{% url 'change-visit-responsible' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
+                                {% endif %}
+                            </dd>
+                        {% endif %}
+
                         {% if not object.multiproductvisit %}
                             <dt>{% trans 'Ressourcer' %}</dt>
                             <dd>
