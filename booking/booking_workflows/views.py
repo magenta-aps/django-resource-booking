@@ -444,7 +444,7 @@ class ChangeVisitAutosendView(AutologgerMixin, UpdateWithCancelView):
                 for product in self.object.real.products
             )
         ))
-        if hasattr(self.object, 'product'):
+        if hasattr(self.object, 'product') and self.object.product is not None:
             context['organizationalunit'] = \
                 self.object.product.organizationalunit
         context['autosend_enable_days'] = EmailTemplate.enable_days
