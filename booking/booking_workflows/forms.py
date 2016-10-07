@@ -4,6 +4,8 @@ from django import forms
 from django.forms import inlineformset_factory
 from django.utils.translation import ugettext_lazy as _
 
+import booking.models
+
 
 class ChangeVisitStatusForm(forms.ModelForm):
 
@@ -106,6 +108,14 @@ class VisitAddCommentForm(forms.Form):
 
 
 class BecomeSomethingForm(forms.Form):
+
+    resourcerequirements = forms.ModelMultipleChoiceField(
+        booking.models.ResourceRequirement,
+        widget=forms.CheckboxSelectMultiple,
+        label=_(u'Opfyld behov for'),
+        required=False,
+    )
+
     comment = forms.CharField(
         widget=forms.Textarea,
         label=_(u'Kommentar'),

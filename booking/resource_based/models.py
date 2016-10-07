@@ -26,7 +26,8 @@ class EventTime(models.Model):
     visit = models.OneToOneField(
         "Visit",
         null=True,
-        blank=True
+        blank=True,
+        on_delete=models.SET_NULL,
     )
 
     # Whether the time is publicly bookable
@@ -44,6 +45,11 @@ class EventTime(models.Model):
         (RESOURCE_STATUS_BLOCKED, _(u"Blokeret af manglende ressourcer")),
         (RESOURCE_STATUS_ASSIGNED, _(u"Ressourcer tildelt")),
     )
+
+    NONBLOCKED_RESOURCE_STATES = [
+        x[0] for x in resource_status_choices
+        if x[0] != RESOURCE_STATUS_BLOCKED
+    ]
 
     resource_status = models.IntegerField(
         choices=resource_status_choices,
@@ -377,7 +383,7 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
             for y in x.between(from_dt, to_dt):
                 yield y
 
-        # Not available on times when we are booked
+        # Not available on times when we are booked as a resource
         if hasattr(self, 'resource'):
             for x in self.resource.booked_eventtimes(from_dt, to_dt):
                 yield CalendarEventInstance(
@@ -386,6 +392,15 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
                     available=False,
                     source=x.visit
                 )
+            if hasattr(self.resource, 'user'):
+                profile = self.resource.user.userprofile
+                for x in profile.assigned_to_visits.all():
+                    yield CalendarEventInstance(
+                        x.eventtime.start,
+                        x.eventtime.end,
+                        available=False,
+                        source=x
+                    )
 
     def is_available_between(self, from_dt, to_dt, exclude_sources=set([])):
         # Check if availability rules match

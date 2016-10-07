@@ -3,6 +3,8 @@ from django.core import validators
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMultiAlternatives
 from django.db import models
+from django.db.models import Count
+from django.db.models import F
 from django.db.models import Max
 from django.db.models import Sum
 from django.db.models import Q
@@ -146,7 +148,12 @@ class OrganizationalUnit(models.Model):
 
     name = models.CharField(max_length=100)
     type = models.ForeignKey(OrganizationalUnitType)
-    parent = models.ForeignKey('self', null=True, blank=True)
+    parent = models.ForeignKey(
+        'self',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
     contact = models.ForeignKey(
         User, null=True, blank=True,
         verbose_name=_(u'Kontaktperson'),
@@ -370,7 +377,8 @@ class Locality(models.Model):
         OrganizationalUnit,
         verbose_name=_(u'Enhed'),
         blank=True,
-        null=True
+        null=True,
+        on_delete=models.SET_NULL,
     )
 
     def __unicode__(self):
@@ -630,7 +638,8 @@ class EmailTemplate(models.Model):
         OrganizationalUnit,
         verbose_name=u'Enhed',
         null=True,
-        blank=True
+        blank=True,
+        on_delete=models.SET_NULL,
     )
 
     @property
@@ -1129,7 +1138,8 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         OrganizationalUnit,
         null=True,
         blank=False,
-        verbose_name=_('Enhed')
+        verbose_name=_('Enhed'),
+        on_delete=models.SET_NULL,
     )
     links = models.ManyToManyField(Link, blank=True, verbose_name=_('Links'))
     audience = models.IntegerField(choices=audience_choices,
@@ -1147,7 +1157,8 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         Locality,
         verbose_name=_(u'Lokalitet'),
         blank=True,
-        null=True
+        null=True,
+        on_delete=models.SET_NULL,
     )
 
     rooms = models.ManyToManyField(
@@ -1185,7 +1196,8 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         verbose_name=_(u'Tilbudsansvarlig'),
         related_name='tilbudsansvarlig_for_set',
         blank=True,
-        null=True
+        null=True,
+        on_delete=models.SET_NULL,
     )
 
     roomresponsible = models.ManyToManyField(
@@ -1275,7 +1287,8 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     statistics = models.ForeignKey(
         ObjectStatistics,
-        null=True
+        null=True,
+        on_delete=models.SET_NULL,
     )
 
     objects = SearchManager(
@@ -1604,14 +1617,34 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         else:
             return 'default'
 
+    @property
+    def potential_hosts(self):
+        if self.is_resource_controlled:
+            p = self
+            return User.objects.filter(
+                hostresource__resourcepool__resourcerequirement__product=p
+            )
+        else:
+            return self.potentielle_vaerter.all()
+
+    @property
+    def potential_teachers(self):
+        if self.is_resource_controlled:
+            p = self
+            return User.objects.filter(
+                teacherresource__resourcepool__resourcerequirement__product=p
+            )
+        else:
+            return self.potentielle_undervisere.all()
+
     def get_recipients(self, template_key):
         recipients = self.organizationalunit.get_recipients(template_key)
 
         if template_key in EmailTemplate.potential_hosts_keys:
-            recipients.extend(self.potentielle_vaerter.all())
+            recipients.extend(self.potential_hosts.all())
 
         if template_key in EmailTemplate.potential_teachers_keys:
-            recipients.extend(self.potentielle_undervisere.all())
+            recipients.extend(self.potential_teachers.all())
 
         if template_key in EmailTemplate.contact_person_keys:
             contacts = []
@@ -1651,19 +1684,57 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         return True
 
     @staticmethod
-    def get_latest_created():
-        return Product.objects.filter(statistics__isnull=False).\
+    def get_latest_created(user=None):
+        qs = Product.objects.filter(statistics__isnull=False).\
             order_by('-statistics__created_time')
 
-    @staticmethod
-    def get_latest_updated():
-        return Product.objects.filter(statistics__isnull=False).\
-            order_by('-statistics__updated_time')
+        if user and not user.is_authenticated():
+            return Product.filter_public_bookable(qs).distinct()
+        else:
+            return qs
 
     @staticmethod
-    def get_latest_displayed():
-        return Product.objects.filter(statistics__isnull=False).\
+    def get_latest_updated(user=None):
+        qs = Product.objects.filter(statistics__isnull=False).\
+            order_by('-statistics__updated_time')
+
+        if user and not user.is_authenticated():
+            return Product.filter_public_bookable(qs).distinct()
+        else:
+            return qs
+
+    @staticmethod
+    def get_latest_displayed(user=None):
+        qs = Product.objects.filter(statistics__isnull=False).\
             order_by('-statistics__visited_time')
+
+        if user and not user.is_authenticated():
+            return Product.filter_public_bookable(qs).distinct()
+        else:
+            return qs
+
+    @classmethod
+    def filter_public_bookable(cls, queryset):
+        nonblocked = EventTime.NONBLOCKED_RESOURCE_STATES
+        return queryset.filter(
+            Q(time_mode=cls.TIME_MODE_GUEST_SUGGESTED) |
+            Q(
+                # Only stuff that can be booked
+                eventtime__bookable=True,
+                # In the future
+                eventtime__start__gt=timezone.now(),
+                # Only include stuff with bookable states
+                eventtime__visit__workflow_status__in=Visit.BOOKABLE_STATES,
+            ) & Q(
+                # Either not resource controlled
+                (~Q(time_mode=Product.TIME_MODE_RESOURCE_CONTROLLED)) |
+                # Or resource-controlled with nonblocked eventtimes
+                Q(
+                    time_mode=Product.TIME_MODE_RESOURCE_CONTROLLED,
+                    eventtime__resource_status__in=nonblocked
+                )
+            )
+        ).filter(state=cls.ACTIVE)
 
     def ensure_statistics(self):
         if self.statistics is None:
@@ -1722,7 +1793,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         return self.time_mode == Product.TIME_MODE_RESOURCE_CONTROLLED
 
     @property
-    def is_time_guest_suggested(self):
+    def is_guest_time_suggested(self):
         return self.time_mode == Product.TIME_MODE_GUEST_SUGGESTED
 
     @property
@@ -1742,7 +1813,9 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     @staticmethod
     def get_latest_booked():
-        products = Product.objects.annotate(latest_booking=Max(
+        products = Product.objects.filter(
+            eventtime__visit__bookings__statistics__created_time__isnull=False
+        ).annotate(latest_booking=Max(
             'eventtime__visit__bookings__statistics__created_time'
         )).order_by("-latest_booking")
 
@@ -1825,7 +1898,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     deprecated_product = models.ForeignKey(
         Product,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True,
     )
@@ -1865,7 +1938,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         Locality,
         verbose_name=_(u'Lokalitet'),
         blank=True,
-        null=True
+        null=True,
+        on_delete=models.SET_NULL,
     )
 
     rooms = models.ManyToManyField(
@@ -1950,7 +2024,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     statistics = models.ForeignKey(
         ObjectStatistics,
-        null=True
+        null=True,
+        on_delete=models.SET_NULL,
     )
 
     resources = models.ManyToManyField(
@@ -2040,7 +2115,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     multi_master = models.ForeignKey(
         "MultiProductVisit",
         null=True,
-        blank=True
+        blank=True,
+        on_delete=models.SET_NULL,
     )
     multi_priority = models.IntegerField(
         default=0
@@ -2385,6 +2461,33 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             return self.eventtime.end
         else:
             return None
+
+    @classmethod
+    def needs_teachers_qs(cls):
+        req_type_key = "__".join([
+            "eventtime",
+            "product",
+            "resourcerequirement",
+            "resource_pool",
+            "resource_type"
+        ])
+        assigned_type_key = "__".join([
+            "visitresource",
+            "resource_requirement",
+            "resource_pool",
+            "resource_type"
+        ])
+        return cls.objects.filter(
+            **{req_type_key: ResourceType.RESOURCE_TYPE_TEACHER}
+        ).filter(
+            Q(**{assigned_type_key: ResourceType.RESOURCE_TYPE_TEACHER}) |
+            Q(visitresource__isnull=True)
+        ).annotate(
+            needed=Sum(
+                'eventtime__product__resourcerequirement__required_amount'
+            ),
+            assigned=Count('visitresource')
+        ).filter(needed__gt=F("assigned"))
 
     def __unicode__(self):
         if hasattr(self, 'eventtime'):
@@ -2823,6 +2926,59 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         else:
             return res
 
+    @property
+    def assigned_teachers(self):
+        if self.product.is_resource_controlled:
+            return User.objects.filter(
+                teacherresource__visitresource__visit=self
+            )
+        else:
+            return self.teachers.all()
+
+    @property
+    def assigned_hosts(self):
+        if self.product.is_resource_controlled:
+            return User.objects.filter(
+                hostresource__visitresource__visit=self
+            )
+        else:
+            return self.teachers.all()
+
+    def context_for_user(self, user):
+        profile = user.userprofile
+        context = {
+            'is_teacher': profile.is_teacher,
+            'is_host': profile.is_host,
+        }
+
+        context['is_potential_host'] = (
+            self.product.potential_hosts.filter(pk=user.pk).exists()
+        )
+        context['is_assigned_as_host'] = (
+            self.assigned_hosts.filter(pk=user.pk).exists()
+        )
+
+        context['can_become_host'] = (
+            context['is_potential_host'] and
+            not context['is_assigned_as_host']
+        )
+
+        context['is_potential_teacher'] = (
+            self.product.potential_teachers.filter(pk=user.pk).exists()
+        )
+        context['is_assigned_as_teacher'] = (
+            self.assigned_teachers.filter(pk=user.pk).exists()
+        )
+
+        context['can_become_teacher'] = (
+            context['is_potential_teacher'] and
+            not context['is_assigned_as_teacher']
+        )
+
+        context['can_edit'] = profile.can_edit(self)
+        context['can_notify'] = profile.can_notify(self)
+
+        return context
 
 Visit.add_override_property('duration')
 Visit.add_override_property('locality')
@@ -2925,7 +3081,8 @@ class VisitComment(models.Model):
     )
     author = models.ForeignKey(
         User,
-        null=True  # Users can be deleted, but we want to keep their comments
+        null=True,  # Users can be deleted, but we want to keep their comments
+        on_delete=models.SET_NULL,
     )
     deleted_user_name = models.CharField(
         max_length=30
@@ -3023,7 +3180,8 @@ class Room(models.Model):
         Locality,
         verbose_name=_(u'Lokalitet'),
         blank=True,
-        null=True
+        null=True,
+        on_delete=models.SET_NULL,
     )
 
     name = models.CharField(
@@ -3492,7 +3650,8 @@ class Booking(models.Model):
 
     statistics = models.ForeignKey(
         ObjectStatistics,
-        null=True
+        null=True,
+        on_delete=models.SET_NULL,
     )
 
     def get_visit_attr(self, attrname):

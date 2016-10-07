@@ -20,6 +20,17 @@
 
                 <p>{% blocktrans with object=object %}Ønsker du at blive underviser for besøget {{ object }}?{% endblocktrans %}</p>
 
+                {% if object.product.is_resource_controlled %}
+                <div class="row">
+                    <label class="col-sm-2 control-label {{ form.resourcerequirements.css_classes }}" for="{{ form.resourcerequirements.id_for_label }}">{{ form.resourcerequirements.label }}:</label>
+                    <div class="col-sm-6{% if form.resourcerequirements.errors %} has-error{% endif %}">
+                        {{ form.resourcerequirements }}
+                    </div>
+                    <div class="col-sm-3 help-block with-errors">
+                        {{ form.resourcerequirements.errors }}
+                    </div>
+                </div>
+                {% endif %}
                 <div class="row">
                     <label class="col-sm-2 control-label {{ form.comment.css_classes }}" for="{{ form.comment.id_for_label }}">{{ form.comment.label }}:</label>
                     <div class="col-sm-6{% if form.comment.errors %} has-error{% endif %}">

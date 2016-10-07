@@ -130,7 +130,7 @@ class MainPageView(TemplateView):
                     'color': self.HEADING_GREEN,
                     'type': 'Product',
                     'title': _(u'Senest opdaterede tilbud'),
-                    'queryset': Product.get_latest_updated(),
+                    'queryset': Product.get_latest_updated(self.request.user),
                     'limit': 10,
                     'button': {
                         'text': _(u'Vis alle'),
@@ -722,13 +722,16 @@ class SearchView(BreadcrumbMixin, ListView):
                 # Filter out resource-controlled products that are
                 # resource-blocked.
                 res_controlled = Product.TIME_MODE_RESOURCE_CONTROLLED
-                res_blocked = booking_models.EventTime.RESOURCE_STATUS_BLOCKED
+
+                eventtime_cls = booking_models.EventTime
+
+                nonblocked = eventtime_cls.NONBLOCKED_RESOURCE_STATES
 
                 date_cond = date_cond & Q(
                     (~Q(time_mode=res_controlled)) |
                     Q(
-                        Q(time_mode=res_controlled) &
-                        (~Q(eventtime__resource_status=res_blocked))
+                        time_mode=res_controlled,
+                        eventtime__resource_status__in=nonblocked
                     )
                 )
 
@@ -755,8 +758,6 @@ class SearchView(BreadcrumbMixin, ListView):
                     date_cond
                 )
 
-                print qs.query
-
                 # Simplify, since the above conditions are slow when
                 # used for making facets.
                 qs = Product.objects.filter(pk__in=[x.pk for x in qs])
@@ -766,7 +767,6 @@ class SearchView(BreadcrumbMixin, ListView):
             )
 
             qs = qs.distinct()
-            print len(qs)
 
             self.base_queryset = qs
 
@@ -1112,7 +1112,7 @@ class ProductCustomListView(BreadcrumbMixin, ListView):
             if listtype == self.TYPE_LATEST_BOOKED:
                 return Product.get_latest_booked()
             elif listtype == self.TYPE_LATEST_UPDATED:
-                return Product.get_latest_updated()
+                return Product.get_latest_updated(self.request.user)
 
         except:
             pass
@@ -1927,7 +1927,7 @@ class VisitNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
                                     full_email(
                                         user.email,
                                         user.get_full_name())
-                    for user in visit.hosts.all()
+                    for user in visit.assigned_hosts.all()
                     if user.email is not None
                 }
             },
@@ -1940,7 +1940,7 @@ class VisitNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
                                     full_email(
                                         user.email,
                                         user.get_full_name())
-                    for user in visit.teachers.all()
+                    for user in visit.assigned_teachers.all()
                     if user.email is not None
                 }
             },
@@ -1953,10 +1953,10 @@ class VisitNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
                                     full_email(
                                         user.email,
                                         user.get_full_name())
-                    for user in product.potentielle_vaerter.all()
+                    for user in product.potential_hosts.all()
                     if user.email is not None and
                     user not in visit.hosts_rejected.all() and
-                    user not in visit.hosts.all()
+                    user not in visit.assigned_hosts.all()
                 } for product in products])
             },
             'potential_teachers': {
@@ -1968,10 +1968,10 @@ class VisitNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
                                     full_email(
                                         user.email,
                                         user.get_full_name())
-                    for user in product.potentielle_undervisere.all()
+                    for user in product.potential_teachers.all()
                     if user.email is not None and
                     user not in visit.teachers_rejected.all() and
-                    user not in visit.teachers.all()
+                    user not in visit.assigned_teachers.all()
                 } for product in products])
             }
         }
@@ -2971,8 +2971,8 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
         user = self.request.user
 
         if hasattr(user, 'userprofile'):
-            context['can_edit'] = user.userprofile.can_edit(self.object)
-            context['can_notify'] = user.userprofile.can_notify(self.object)
+            # Add information about the users association with the visit
+            context.update(self.object.context_for_user(self.request.user))
 
         context['bookinglistform'] = self.get_bookinglist_form()
         context['waitinglistform'] = self.get_waitinglist_form()
