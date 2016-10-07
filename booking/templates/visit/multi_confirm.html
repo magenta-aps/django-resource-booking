@@ -40,16 +40,18 @@
             </p>
         {% endif %}
 
-        <label>{% trans 'Valgt dato' %}</label>
+        <label>{% trans 'Valgt dato:' %}</label>
         <p id="confirm-date">{{ object.date }}</p>
 
-        <label>{% trans 'Valgte tilbud' %}</label>
+        <label>{% trans 'Valgte tilbud:' %}</label>
         <ul id="confirm-product-list" class="list-group">
             {% for product in object.products.all %}
                 <li class="list-group-item">{{ product.title }}</li>
             {% endfor %}
         </ul>
 
+        <label>{% trans 'Mindste antal ønskede tilbud:' %}</label>
+        <p id="confirm-required-visits">{{ object.required_visits }}</p>
 
         <fieldset>
             <a class="btn btn-primary cancelbutton" href="{% url 'mpv-edit-products' object.id %}">{% trans "Tilbage" %}</a>

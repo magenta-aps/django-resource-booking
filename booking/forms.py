@@ -1146,7 +1146,7 @@ class MultiProductVisitTempDateForm(forms.ModelForm):
 class MultiProductVisitTempProductsForm(forms.ModelForm):
     class Meta:
         model = MultiProductVisitTemp
-        fields = ['products', 'notes']
+        fields = ['products', 'required_visits', 'notes']
         widgets = {
             'products': OrderedMultipleHiddenChooser(),
             'notes': Textarea(
@@ -1166,3 +1166,9 @@ class MultiProductVisitTempProductsForm(forms.ModelForm):
                 code='conflict'
             )
         return products
+
+    def clean(self):
+        super(MultiProductVisitTempProductsForm, self).clean()
+        products_selected = len(self.cleaned_data['products'])
+        if self.cleaned_data['required_visits'] > products_selected:
+            self.cleaned_data['required_visits'] = products_selected

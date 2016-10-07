@@ -2196,13 +2196,13 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     def planned_status_is_blocked(self):
 
-        if hasattr(self, 'multiproductvisit'):
-            needed_subs = 1
-            subs_planned = self.multiproductvisit.subvisits.filter(
+        if self.is_multiproductvisit:
+            multiproductvisit = self.multiproductvisit
+            subs_planned = multiproductvisit.subvisits.filter(
                 Q(workflow_status=Visit.WORKFLOW_STATUS_PLANNED) |
                 Q(workflow_status=Visit.WORKFLOW_STATUS_PLANNED_NO_BOOKING)
             ).count()
-            if subs_planned >= needed_subs:
+            if subs_planned >= multiproductvisit.required_visits:
                 return False
 
         # We have to have a chosen starttime before we are planned
@@ -3071,9 +3071,9 @@ class MultiProductVisit(Visit):
         blank=False,
         verbose_name=_(u'Dato')
     )
-    number_required = models.IntegerField(
+    required_visits = models.PositiveIntegerField(
         default=2,
-        verbose_name=_(u'Antal ønskede')
+        verbose_name=_(u'Antal ønskede besøg')
     )
     responsible = models.ForeignKey(
         User,
@@ -3212,14 +3212,15 @@ class MultiProductVisitTemp(models.Model):
         blank=True,
         related_name='foobar'
     )
-    number_required = models.IntegerField(
+    required_visits = models.PositiveIntegerField(
         default=2,
-        verbose_name=_(u'Antal ønskede')
+        verbose_name=_(u'Antal ønskede besøg')
     )
 
     def create_mpv(self):
         mpv = MultiProductVisit(
-            date=self.date
+            date=self.date,
+            required_visits=self.required_visits
         )
         mpv.save()
         mpv.ensure_statistics()

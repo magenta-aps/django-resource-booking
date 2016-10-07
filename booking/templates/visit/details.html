@@ -121,6 +121,13 @@
                             {% endif %}
                         </dd>
 
+                        {% if object.multiproductvisit %}
+                            <dt>{% trans 'Min. ønskede tilbud' %}</dt>
+                            <dd>
+                                {{ object.required_visits }}
+                            </dd>
+                        {% endif %}
+
                         {% if not object.multiproductvisit %}
                             <dt>{% trans 'Ressourcer' %}</dt>
                             <dd>

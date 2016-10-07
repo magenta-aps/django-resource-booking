@@ -64,6 +64,8 @@
             </li>
         </ul>
 
+        {% include 'common/fields/generic_field.html' with field=form.required_visits %}
+
         {% include 'common/fields/generic_field.html' with field=form.notes %}
 
         <fieldset>
