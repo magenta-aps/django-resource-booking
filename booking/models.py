@@ -2886,6 +2886,15 @@ class MultiProductVisit(Visit):
         blank=False,
         verbose_name=_(u'Dato')
     )
+    number_required = models.IntegerField(
+        default=2,
+        verbose_name=_(u'Antal ønskede')
+    )
+    responsible = models.ForeignKey(
+        User,
+        blank=True,
+        null=True
+    )
 
     @property
     def subvisits(self):
@@ -3017,6 +3026,10 @@ class MultiProductVisitTemp(models.Model):
         null=True,
         blank=True,
         related_name='foobar'
+    )
+    number_required = models.IntegerField(
+        default=2,
+        verbose_name=_(u'Antal ønskede')
     )
 
     def create_mpv(self):
