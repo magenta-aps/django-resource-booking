@@ -245,12 +245,13 @@ def merge_dicts(*dicts):
 
 
 def flatten(args):
-    for arg in args:
-        if type(arg) in (type(()), type([])):
-            for elem in arg:
-                yield flatten(elem)
-        else:
-            yield arg
+    flat = []
+    if type(args) in (type(()), type([])):
+        for arg in args:
+            flat.extend(flatten(arg))
+    else:
+        flat.append(args)
+    return flat
 
 
 def intersection(*lists):
@@ -275,7 +276,7 @@ def binary_or(*items):
     OR several integers together (handy when they vary in number)
     """
     base = 0
-    for item in flatten([items]):
+    for item in list(flatten([items])):
         try:
             base = base | item
         except:
@@ -283,7 +284,7 @@ def binary_or(*items):
     return base
 
 
-def binary_and(items):
+def binary_and(*items):
     """
     AND several integers together (handy when they vary in number)
     """

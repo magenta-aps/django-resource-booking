@@ -2971,14 +2971,18 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         ]
 
     @property
+    def is_multiproductvisit(self):
+        return hasattr(self, 'multiproductvisit')
+
+    @property
     def real(self):
-        if hasattr(self, 'multiproductvisit'):
+        if self.is_multiproductvisit:
             return self.multiproductvisit
         return self
 
     @property
     def products(self):
-        if hasattr(self, 'multiproductvisit'):
+        if self.is_multiproductvisit:
             return self.multiproductvisit.products
         return [self.product]
 
@@ -3019,24 +3023,32 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             'is_host': profile.is_host,
         }
 
-        context['is_potential_host'] = (
-            self.product.potential_hosts.filter(pk=user.pk).exists()
-        )
-        context['is_assigned_as_host'] = (
-            self.assigned_hosts.filter(pk=user.pk).exists()
-        )
+        if self.is_multiproductvisit:
+            context['is_potential_host'] = False
+            context['is_assigned_as_host'] = False
+        else:
+            context['is_potential_host'] = (
+                self.product.potential_hosts.filter(pk=user.pk).exists()
+            )
+            context['is_assigned_as_host'] = (
+                self.assigned_hosts.filter(pk=user.pk).exists()
+            )
 
         context['can_become_host'] = (
             context['is_potential_host'] and
             not context['is_assigned_as_host']
         )
 
-        context['is_potential_teacher'] = (
-            self.product.potential_teachers.filter(pk=user.pk).exists()
-        )
-        context['is_assigned_as_teacher'] = (
-            self.assigned_teachers.filter(pk=user.pk).exists()
-        )
+        if self.is_multiproductvisit:
+            context['is_potential_teacher'] = False
+            context['is_assigned_as_teacher'] = False
+        else:
+            context['is_potential_teacher'] = (
+                self.product.potential_teachers.filter(pk=user.pk).exists()
+            )
+            context['is_assigned_as_teacher'] = (
+                self.assigned_teachers.filter(pk=user.pk).exists()
+            )
 
         context['can_become_teacher'] = (
             context['is_potential_teacher'] and
