@@ -295,4 +295,3 @@ def binary_and(*items):
         except:
             pass
     return base
-

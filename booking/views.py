@@ -2041,7 +2041,7 @@ class BookingNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
                         "%s%s%s" % (self.RECIPIENT_USER,
                                     self.RECIPIENT_SEPARATOR,
                                     user.username):
-                            full_email(user.email, user.get_full_name())
+                        full_email(user.email, user.get_full_name())
                         for user in self.object.hosts.all()
                         if user.email is not None
                         }
@@ -2052,7 +2052,7 @@ class BookingNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
                         "%s%s%s" % (self.RECIPIENT_USER,
                                     self.RECIPIENT_SEPARATOR,
                                     user.username):
-                            full_email(user.email, user.get_full_name())
+                        full_email(user.email, user.get_full_name())
                         for user in self.object.teachers.all()
                         if user.email is not None
                         }

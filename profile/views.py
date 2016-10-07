@@ -234,7 +234,9 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     u"%(count)d besøg der mangler undervisere",
                     'count'
                 ),
-                'queryset': profile.can_be_assigned_to_qs.order_by(
+                'queryset': Visit.unit_filter(
+                    profile.can_be_assigned_to_qs, unit_qs
+                ).order_by(
                     'eventtime__start', 'eventtime__end'
                 )
             },
@@ -247,7 +249,10 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     'count'
                 ),
                 'queryset': self.sort_vo_queryset(
-                    profile.all_assigned_visits()
+                    Visit.unit_filter(
+                        profile.all_assigned_visits(),
+                        unit_qs
+                    )
                 )
             }
         ]
@@ -276,7 +281,9 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     u"%(count)d besøg der mangler værter",
                     'count',
                 ),
-                'queryset': profile.can_be_assigned_to_qs.order_by(
+                'queryset': Visit.unit_filter(
+                    profile.can_be_assigned_to_qs, unit_qs
+                ).order_by(
                     'eventtime__start', 'eventtime__end'
                 )
             },
@@ -289,7 +296,9 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     'count'
                 ),
                 'queryset': self.sort_vo_queryset(
-                    profile.all_assigned_visits()
+                    Visit.unit_filter(
+                        profile.all_assigned_visits(), unit_qs
+                    )
                 )
             }
         ]
