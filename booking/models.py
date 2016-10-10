@@ -1513,10 +1513,10 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             )
         elif self.maximum_number_of_visitors:
             return _(u"Max. %(visitors)d") % \
-                   {'visitors' : self.maximum_number_of_visitors}
+                {'visitors': self.maximum_number_of_visitors}
         elif self.minimum_number_of_visitors:
             return _(u"Min. %(visitors)d") % \
-                   {'visitors' : self.minimum_number_of_visitors}
+                {'visitors': self.minimum_number_of_visitors}
         else:
             return None
 
