@@ -1506,14 +1506,19 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             return "-"
 
     def num_of_participants_display(self):
-        if self.minimum_number_of_visitors:
-            return "%s-%s" % (
+        if self.minimum_number_of_visitors and self.maximum_number_of_visitors:
+            return "%d - %d" % (
                 self.minimum_number_of_visitors,
                 self.maximum_number_of_visitors
             )
         elif self.maximum_number_of_visitors:
-            return self.maximum_number_of_visitors
-        return None
+            return _(u"Max. %(visitors)d") % \
+                   {'visitors' : self.maximum_number_of_visitors}
+        elif self.minimum_number_of_visitors:
+            return _(u"Min. %(visitors)d") % \
+                   {'visitors' : self.minimum_number_of_visitors}
+        else:
+            return None
 
     def get_absolute_url(self):
         return reverse('product-view', args=[self.pk])
