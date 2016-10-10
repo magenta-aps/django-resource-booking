@@ -30,6 +30,7 @@ from booking.models import Room
 from booking.models import MultiProductVisit
 from booking.views import AutologgerMixin
 from booking.views import RoleRequiredMixin, EditorRequriedMixin
+from booking.views import VisitDetailView
 from django.views.generic.base import ContextMixin
 from profile.models import TEACHER, HOST, EDIT_ROLES
 from itertools import chain
@@ -41,18 +42,11 @@ class VisitBreadcrumbMixin(ContextMixin):
     view_title = _(u'opdater')
 
     def get_context_data(self, **kwargs):
-        context = {}
-        context['breadcrumbs'] = [
-            {
-                'url': reverse('visit-search'),
-                'text': _(u'Søg i besøg')
-            },
-            {
-                'url': reverse('visit-view', args=[self.object.pk]),
-                'text': self.object.id_display
-            },
-            {'text': self.view_title},
-        ]
+        breadcrumbs = VisitDetailView.build_breadcrumbs(self.object)
+        breadcrumbs.append({'text': self.view_title})
+        context = {
+            'breadcrumbs': breadcrumbs
+        }
         context.update(kwargs)
         return super(VisitBreadcrumbMixin, self).\
             get_context_data(**context)
@@ -336,7 +330,7 @@ class ChangeVisitEvalView(AutologgerMixin, UpdateWithCancelView):
     view_title = _(u'Redigér evalueringslink')
 
 
-class VisitAddLogEntryView(FormView):
+class VisitAddLogEntryView(VisitBreadcrumbMixin, FormView):
     model = Visit
     form_class = VisitAddLogEntryForm
     template_name = "booking/workflow/add_logentry.html"
@@ -360,25 +354,6 @@ class VisitAddLogEntryView(FormView):
             return super(VisitAddLogEntryView, self).post(
                 request, *args, **kwargs
             )
-
-    def get_context_data(self, **kwargs):
-        context = {}
-        context['breadcrumbs'] = [
-            {
-                'url': reverse('visit-search'),
-                'text': _(u'Søg i besøg')
-            },
-            {
-                'url': reverse('visit-view', args=[self.object.pk]),
-                'text': _(u'Besøg #%s') % self.object.pk
-            },
-            {'text': self.view_title},
-        ]
-        context.update(kwargs)
-        return super(VisitAddLogEntryView, self).get_context_data(
-            object=self.object,
-            **context
-        )
 
     def form_valid(self, form):
         log_action(

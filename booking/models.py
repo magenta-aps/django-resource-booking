@@ -1898,7 +1898,8 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         ).update(bookable=False)
 
     def __unicode__(self):
-        return u"#%s - %s" % (self.pk, self.title)
+        return _(u"Tilbud #%(pk)s - %(title)s") % \
+            {'pk': self.pk, 'title': self.title}
 
 
 class Visit(AvailabilityUpdaterMixin, models.Model):

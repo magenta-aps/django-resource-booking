@@ -631,10 +631,19 @@ class LoggedViewMixin(object):
 class BreadcrumbMixin(ContextMixin):
 
     def get_breadcrumbs(self):
+        try:
+            return self.build_breadcrumbs(*self.get_breadcrumb_args())
+        except:
+            return []
+
+    def get_breadcrumb_args(self):
         return []
 
     def get_context_data(self, **kwargs):
-        context = {'breadcrumbs': self.get_breadcrumbs()}
+        breadcrumbs = self.get_breadcrumbs()
+        if 'url' in breadcrumbs[-1]:
+            del breadcrumbs[-1]['url']
+        context = {'breadcrumbs': breadcrumbs}
         context.update(kwargs)
         return super(BreadcrumbMixin, self).get_context_data(**context)
 
@@ -1087,11 +1096,17 @@ class SearchView(BreadcrumbMixin, ListView):
         context.update(kwargs)
         return super(SearchView, self).get_context_data(**context)
 
-    def get_breadcrumbs(self):
-        return [
-            {'url': reverse('search'), 'text': _(u'Søgning')},
-            {'text': _(u'Søgeresultat')},
+    @staticmethod
+    def build_breadcrumbs(request=None):
+        breadcrumbs = [
+            {'url': reverse('search'), 'text': _(u'Søgning')}
         ]
+        if request and 'search' in request.GET:
+            breadcrumbs.append({
+                'url': request.GET.get("search", reverse('search')),
+                'text': _(u'Søgeresultat')
+            })
+        return breadcrumbs
 
     def get_paginate_by(self, queryset):
         size = self.request.GET.get("pagesize", 10)
@@ -1146,7 +1161,8 @@ class ProductCustomListView(BreadcrumbMixin, ListView):
             **context
         )
 
-    def get_breadcrumbs(self):
+    @staticmethod
+    def build_breadcrumbs():
         return [
             {'text': _(u'Tilbudsliste')}
         ]
@@ -1193,7 +1209,8 @@ class EditProductInitialView(LoginRequiredMixin, HasBackButtonMixin,
             self.get_context_data(form=form)
         )
 
-    def get_breadcrumbs(self):
+    @staticmethod
+    def build_breadcrumbs():
         return [
             {'text': _(u'Opret tilbud')}
         ]
@@ -1483,6 +1500,9 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
         )
         return existing_bookings_outside_bounds.exists()
 
+    def is_cloning(self):
+        return self.kwargs.get("clone", False)
+
     # Handle both forms, creating a Product and a number of StudyMaterials
     def post(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
@@ -1499,8 +1519,7 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
                       u'deltagerantal udenfor de angivne min-/max-grænser for '
                       u'deltagere!')
                 )
-        is_cloning = kwargs.get("clone", False)
-        self.set_object(pk, request, is_cloning)
+        self.set_object(pk, request, self.is_cloning())
         forms = self.get_forms()
 
         if forms['form'].is_valid():
@@ -1559,14 +1578,20 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
 
         return super(EditProductView, self).get_context_data(**context)
 
-    def get_breadcrumbs(self):
-        if self.object and self.object.pk:
-            return [
+    def get_breadcrumb_args(self):
+        return [self.object, self.request, self.is_cloning()]
+
+    @staticmethod
+    def build_breadcrumbs(product, request=None, cloning=False):
+        if product and product.pk:
+            return ProductDetailView.build_breadcrumbs(product, request) + [
                 {
-                    'url': reverse('product-view', args=[self.object.pk]),
-                    'text': self.object.title
-                },
-                {'text': _(u'Redigér')}
+                    'url': reverse(
+                        'product-clone' if cloning else 'product-edit',
+                        args=[product.pk]
+                    ),
+                    'text': _(u'Kopiér') if cloning else _(u'Redigér')
+                }
             ]
         else:
             return [
@@ -1684,13 +1709,18 @@ class SimpleRessourcesView(LoginRequiredMixin, BreadcrumbMixin,
 
         return form
 
-    def get_breadcrumbs(self):
-        return [
+    def get_breadcrumb_args(self):
+        return [self.object, self.request]
+
+    @staticmethod
+    def build_breadcrumbs(product, request=None):
+        return ProductDetailView.build_breadcrumbs(product, request) + [
             {
-                'url': reverse('product-view', args=[self.object.pk]),
-                'text': self.object.title
-            },
-            {'text': _(u'Redigér ressourcer')}
+                'url': reverse('product-simple-ressources', args=[
+                    product.id
+                ]),
+                'text': _(u'Redigér ressourcer')
+            }
         ]
 
     def form_valid(self, form):
@@ -1788,12 +1818,16 @@ class ProductDetailView(BreadcrumbMixin, ProductBookingDetailView):
 
         return super(ProductDetailView, self).get_context_data(**context)
 
-    def get_breadcrumbs(self):
-        return [
-            {'url': reverse('search'), 'text': _(u'Søgning')},
-            {'url': self.request.GET.get("search", reverse('search')),
-             'text': _(u'Søgeresultat')},
-            {'text': unicode(self.object)},
+    def get_breadcrumb_args(self):
+        return [self.object, self.request]
+
+    @staticmethod
+    def build_breadcrumbs(product, request=None):
+        return SearchView.build_breadcrumbs(request) + [
+            {
+                'text': unicode(product),
+                'url': reverse('product-view', args=[product.pk])
+            }
         ]
 
 
@@ -2004,13 +2038,13 @@ class VisitNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
         else:
             return reverse('visit-view', args=[self.object.id])
 
-    def get_breadcrumbs(self):
-        return [
-            {'url': reverse('search'), 'text': _(u'Søgning')},
-            {'url': reverse('search'), 'text': _(u'Søgeresultat')},
-            {'url': reverse('visit-view', args=[self.object.id]),
-             'text': _(u'Om tilbuddet')},
-            {'text': _(u'Send notifikation')},
+    def get_breadcrumb_args(self):
+        return [self.object]
+
+    @staticmethod
+    def build_breadcrumbs(visit):
+        return VisitDetailView.build_breadcrumbs(visit) + [
+            {'text': _(u'Send notifikation')}
         ]
 
 
@@ -2105,13 +2139,13 @@ class BookingNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
         else:
             return reverse('booking-view', args=[self.object.id])
 
-    def get_breadcrumbs(self):
-        return [
-            {'url': reverse('search'), 'text': _(u'Søgning')},
-            {'url': reverse('search'), 'text': _(u'Søgeresultat')},
-            {'url': reverse('booking-view', args=[self.object.id]),
-             'text': _(u'Detaljevisning')},
-            {'text': _(u'Send notifikation')},
+    def get_breadcrumb_args(self):
+        return [self.object]
+
+    @staticmethod
+    def build_breadcrumbs(booking):
+        return BookingDetailView.build_breadcrumbs(booking) + [
+            {'text': _(u'Send notifikation')}
         ]
 
 
@@ -2709,13 +2743,10 @@ class VisitListView(LoginRequiredMixin, BreadcrumbMixin, ListView):
             return None
         return size
 
-    def get_breadcrumbs(self):
-        return [
-            {
-                'url': reverse('visit-search'),
-                'text': _(u'Besøg')
-            },
-            {'text': _(u'Besøgsliste')},
+    @staticmethod
+    def build_breadcrumbs():
+        return VisitSearchView.build_breadcrumbs() + [
+            {'text': _(u'Besøgsliste')}
         ]
 
 
@@ -2910,12 +2941,25 @@ class VisitSearchView(VisitListView):
         )
 
     def get_breadcrumbs(self):
+        breadcrumbs = VisitSearchView.build_breadcrumbs()
+        form = self.get_form()
+        if len(form.cleaned_data):
+            breadcrumbs.append({
+                'text': _(u'Søgeresultat'),
+                'url': reverse('visit-search') + '?' + '&'.join([
+                    "%s=%s" % (key, unicode(value))
+                    for key, value in form.cleaned_data.iteritems()
+                ])
+            })
+        return breadcrumbs
+
+    @staticmethod
+    def build_breadcrumbs():
         return [
             {
                 'url': reverse('visit-search'),
-                'text': _(u'Besøg')
-            },
-            {'text': _(u'Søgeresultatliste')},
+                'text': _(u'Søg i besøg')
+            }
         ]
 
 
@@ -2950,26 +2994,17 @@ class BookingDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
 
         return super(BookingDetailView, self).get_context_data(**context)
 
-    def get_breadcrumbs(self):
-        breadcrumbs = [
-            {'url': reverse('search'), 'text': _(u'Søgning')}
-        ]
-        if self.object.visit.product:
-            breadcrumbs.append({
-                'url': reverse(
-                    'product-view',
-                    args=[self.object.visit.product.id]
-                ),
-                'text': self.object.visit.product.title
-            })
-        breadcrumbs.extend([
+    def get_breadcrumb_args(self):
+        return [self.object]
+
+    @staticmethod
+    def build_breadcrumbs(booking):
+        return VisitDetailView.build_breadcrumbs(booking.visit) + [
             {
-                'url': reverse('visit-view', args=[self.object.visit.id]),
-                'text': self.object.visit.id_display
-            },
-            {'text': self.object}
-        ])
-        return breadcrumbs
+                'url': reverse('booking-view', args=[booking.id]),
+                'text': booking
+            }
+        ]
 
 
 class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
@@ -3068,14 +3103,25 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
                         booking.dequeue()
         return self.get(request, *args, **kwargs)
 
-    def get_breadcrumbs(self):
-        return [
-            {
-                'url': reverse('visit-search'),
-                'text': _(u'Søg i besøg')
-            },
-            {'text': self.object.id_display},
-        ]
+    def get_breadcrumb_args(self):
+        return [self.object]
+
+    @staticmethod
+    def build_breadcrumbs(visit):
+        if visit.product:
+            breadcrumbs = ProductDetailView.build_breadcrumbs(visit.product)
+        else:
+            breadcrumbs = VisitSearchView.build_breadcrumbs()
+        if visit.is_multi_sub:
+            breadcrumbs.append({
+                'text': visit.multi_master.id_display,
+                'url': reverse('visit-view', args=[visit.multi_master.id])
+            })
+        breadcrumbs.append({
+            'text': visit.id_display,
+            'url': reverse('visit-view', args=[visit.id])
+        })
+        return breadcrumbs
 
 
 class EmailTemplateListView(LoginRequiredMixin, BreadcrumbMixin, ListView):
@@ -3104,9 +3150,13 @@ class EmailTemplateListView(LoginRequiredMixin, BreadcrumbMixin, ListView):
               if self.request.user.userprofile.can_edit(item)]
         return qs
 
-    def get_breadcrumbs(self):
+    @staticmethod
+    def build_breadcrumbs():
         return [
-            {'text': _(u'Emailskabelonliste')},
+            {
+                'url': reverse('emailtemplate-list'),
+                'text': _(u'Emailskabelonliste')
+            },
         ]
 
 
@@ -3133,12 +3183,12 @@ class EmailTemplateEditView(LoginRequiredMixin, UnitAccessRequiredMixin,
             self.get_context_data(form=form)
         )
 
+    def is_cloning(self):
+        return self.kwargs.get("clone", False)
+
     def post(self, request, *args, **kwargs):
-
         pk = kwargs.get("pk")
-        is_cloning = kwargs.get("clone", False)
-
-        if pk is None or is_cloning:
+        if pk is None or self.is_cloning():
             self.object = EmailTemplate()
         else:
             self.object = EmailTemplate.objects.get(pk=pk)
@@ -3172,22 +3222,26 @@ class EmailTemplateEditView(LoginRequiredMixin, UnitAccessRequiredMixin,
         args['user'] = self.request.user
         return args
 
-    def get_breadcrumbs(self):
-        breadcrumbs = [
-            {
-                'url': reverse('emailtemplate-list'),
-                'text': _(u'Emailskabelonliste')
-            }
-        ]
-        if self.object and self.object.id:
-            breadcrumbs.extend([
-                {'url': reverse('emailtemplate-view', args={self.object.id}),
-                 'text': _(u'Emailskabelon')},
-                {'text': _(u'Redigér')},
-            ])
+    def get_breadcrumb_args(self):
+        return [self.object, self.is_cloning()]
+
+    @staticmethod
+    def build_breadcrumbs(template, cloning=False):
+        if template:
+            return EmailTemplateDetailView.build_breadcrumbs(template) + [
+                {
+                    'url': reverse(
+                        'emailtemplate-clone' if cloning else
+                        'emailtemplate-edit',
+                        args=[template.id]
+                    ),
+                    'text': _(u'Kopiér') if cloning else _(u'Redigér')
+                },
+            ]
         else:
-            breadcrumbs.append({'text': _(u'Opret')})
-        return breadcrumbs
+            return EmailTemplateListView.build_breadcrumbs() + [
+                {'text': _(u'Opret')}
+            ]
 
 
 class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
@@ -3291,13 +3345,16 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
 
         return render(request, self.template_name, data)
 
-    def get_breadcrumbs(self):
-        return [
+    def get_breadcrumb_args(self):
+        return [self.object]
+
+    @staticmethod
+    def build_breadcrumbs(template):
+        return EmailTemplateListView.build_breadcrumbs() + [
             {
-                'url': reverse('emailtemplate-list'),
-                'text': _(u'Emailskabelonliste')
-            },
-            {'text': _(u'Emailskabelon')},
+                'url': reverse('emailtemplate-view', args=[template.id]),
+                'text': template.name
+            }
         ]
 
 
@@ -3307,13 +3364,16 @@ class EmailTemplateDeleteView(HasBackButtonMixin, LoginRequiredMixin,
     model = EmailTemplate
     success_url = reverse_lazy('emailtemplate-list')
 
-    def get_breadcrumbs(self):
-        return [
-            {'url': reverse('emailtemplate-list'),
-             'text': _(u'Emailskabelonliste')},
-            {'url': reverse('emailtemplate-view', args={self.object.id}),
-             'text': _(u'Emailskabelon')},
-            {'text': _(u'Slet')},
+    def get_breadcrumb_args(self):
+        return [self.object]
+
+    @staticmethod
+    def build_breadcrumbs(template):
+        return EmailTemplateDetailView.build_breadcrumbs(template) + [
+            {
+                'url': reverse('emailtemplate-delete', args=[template.id]),
+                'text': _(u'Slet')
+            }
         ]
 
 
@@ -3441,13 +3501,15 @@ class EvaluationOverviewView(LoginRequiredMixin, BreadcrumbMixin, ListView):
             **kwargs
         )
 
-    def get_breadcrumbs(self):
+    @staticmethod
+    def build_breadcrumbs():
         return [
             {
                 'url': reverse('evaluations'),
                 'text': _(u'Oversigt over evalueringer')
             }
         ]
+
 
 import booking_workflows.views  # noqa
 import_views(booking_workflows.views)
@@ -3523,34 +3585,18 @@ class BookingAcceptView(BreadcrumbMixin, FormView):
         context.update(kwargs)
         return super(BookingAcceptView, self).get_context_data(**context)
 
-    def get_breadcrumbs(self):
-        objectdisplay = _(u"Slettet tilmelding") if self.object_id \
-            else unicode(self.object)
-        return [
-            {'url': reverse('search'), 'text': _(u'Søgning')},
-            {
-                'url': reverse(
-                    'product-view',
-                    args=[self.object.visit.product.id]
-                ),
-                'text': self.object.visit.product.title
-            },
-            {
-                'url': reverse(
-                    'visit-view', args=[self.object.visit.id]
-                ),
-                'text': self.object.visit.date_display
-            },
-            {
-                'url': reverse('booking-view', args=[
-                    self.object_id if self.object_id else self.object.id
-                ]),
-                'text': objectdisplay
-            },
-            {
-                'text': _(u'Svar på ledig plads')
-            }
-        ]
+    def get_breadcrumb_args(self):
+        return [self.object, self.object_id]
+
+    @staticmethod
+    def build_breadcrumbs(booking, object_id=None):
+        breadcrumbs = BookingDetailView.build_breadcrumbs(booking)
+        if object_id:
+            breadcrumbs[-1]['text'] = _(u"Slettet tilmelding")
+        breadcrumbs.append({
+            'text': _(u'Svar på ledig plads')
+        })
+        return breadcrumbs
 
 
 class MultiProductVisitPromptView(BreadcrumbMixin, DetailView):
