@@ -1872,7 +1872,8 @@ class VisitNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
         self.object = Visit.objects.get(id=pk)
         self.get_template_key(request)
         if self.object.is_multi_sub and \
-            self.template_key in EmailTemplate.visit_manual_mpv_redirect_keys:
+                self.template_key in \
+                EmailTemplate.visit_manual_mpv_redirect_keys:
             self.object = self.object.multi_master
         elif self.object.is_multiproductvisit:
             self.object = self.object.multiproductvisit
