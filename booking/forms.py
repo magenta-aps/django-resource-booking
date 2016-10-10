@@ -648,6 +648,11 @@ class BookingForm(forms.ModelForm):
         choices=(),
     )
 
+    desired_time = forms.CharField(
+        widget=Textarea(attrs={'class': 'form-control input-sm'}),
+        required=False
+    )
+
     class Meta:
         model = Booking
         fields = ['eventtime', 'notes']
@@ -698,6 +703,15 @@ class BookingForm(forms.ModelForm):
 
             self.fields['eventtime'].choices = choices
             self.fields['eventtime'].required = True
+
+        else:
+            self.fields['desired_time'].required = True
+
+    def save(self, commit=True, *args, **kwargs):
+        booking = super(BookingForm, self).save(commit, *args, **kwargs)
+        if booking.visit:
+            booking.visit.desired_time = self.cleaned_data['desired_time']
+        return booking
 
 
 class BookerForm(forms.ModelForm):
@@ -872,16 +886,8 @@ class ClassBookingForm(BookingForm):
         labels = BookingForm.Meta.labels
         widgets = BookingForm.Meta.widgets
 
-    desired_time = forms.CharField(
-        widget=Textarea(attrs={'class': 'form-control input-sm'}),
-        required=False
-    )
-
     def __init__(self, data=None, product=None, *args, **kwargs):
         super(ClassBookingForm, self).__init__(data, product, *args, **kwargs)
-
-        if not self.scheduled:
-            self.fields['desired_time'].required = True
 
         if self.product is not None:
             for service in ['tour', 'catering', 'presentation', 'custom']:
@@ -897,6 +903,7 @@ class ClassBookingForm(BookingForm):
             if service not in data:
                 data[service] = False
                 setattr(booking, service, False)
+
         if commit:
             booking.save(*args, **kwargs)
         return booking

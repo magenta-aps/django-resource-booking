@@ -113,9 +113,7 @@
                 {% endif %}
 
                 <dt>{% trans 'Niveau:' %}</dt>
-                <dd>
-                    {{ object.booker.get_level_display }}
-                </dd>
+                <dd>{{ object.booker.get_level_display }}</dd>
 
                 <dt>{% trans 'Antal deltagere:' %}</dt>
                 <dd>{{ object.booker.attendee_count }}</dd>
