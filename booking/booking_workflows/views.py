@@ -175,7 +175,6 @@ class ChangeVisitTeachersView(AutologgerMixin, UpdateWithCancelView):
                 if teacher not in old_teachers
             ]
             if len(recipients) > 0:
-                print recipients
                 # Send a message to only these recipients
                 self.object.autosend(
                     EmailTemplate.NOTIFY_TEACHER__ASSOCIATED,

@@ -325,11 +325,14 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
     RECIPIENT_ROOMRESPONSIBLE = 'roomresponsible'
     RECIPIENT_SEPARATOR = ':'
 
-    def dispatch(self, request, *args, **kwargs):
+    def get_template_key(self, request):
         try:  # see if there's a template key defined in the URL params
             self.template_key = int(request.GET.get("template", None))
         except (ValueError, TypeError):
             pass
+
+    def dispatch(self, request, *args, **kwargs):
+        self.get_template_key(request)
         return super(EmailComposeView, self).dispatch(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
@@ -1867,6 +1870,12 @@ class VisitNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
         self.recipients = []
         pk = kwargs['pk']
         self.object = Visit.objects.get(id=pk)
+        self.get_template_key(request)
+        if self.object.is_multi_sub and \
+            self.template_key in EmailTemplate.visit_manual_mpv_redirect_keys:
+            self.object = self.object.multi_master
+        elif self.object.is_multiproductvisit:
+            self.object = self.object.multiproductvisit
 
         self.template_context['product'] = self.object.product
         self.template_context['visit'] = self.object
@@ -1879,7 +1888,7 @@ class VisitNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
         visit = self.object
         context = {}
         products = [self.object.product]
-        if self.object.multiproductvisit is not None:
+        if self.object.is_multiproductvisit:
             products = self.object.multiproductvisit.products
         context['recp'] = {
             'guests': {
@@ -2925,10 +2934,15 @@ class BookingDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
                 user.userprofile.can_notify(self.object):
             context['can_notify'] = True
 
+        # keyset = EmailTemplate.booking_manual_mpv_keys \
+        #     if self.object.visit.is_multiproductvisit \
+        #     else EmailTemplate.booking_manual_keys
+        keyset = EmailTemplate.booking_manual_keys
+
         context['emailtemplates'] = [
             (key, label)
             for (key, label) in EmailTemplate.key_choices
-            if key in EmailTemplate.booking_manual_keys
+            if key in keyset
         ]
 
         context.update(kwargs)
@@ -2975,10 +2989,15 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
 
         context['modal'] = VisitNotifyView.modal
 
+        keyset = EmailTemplate.visit_manual_mpv_keys \
+            if self.object.is_multiproductvisit \
+            else EmailTemplate.visit_manual_keys
+        # keyset = EmailTemplate.visit_manual_keys
+
         context['emailtemplates'] = [
             (key, label)
             for (key, label) in EmailTemplate.key_choices
-            if key in EmailTemplate.visit_manual_keys
+            if key in keyset
         ]
         context['emailtemplate_waitinglist'] = \
             EmailTemplate.NOTIFY_GUEST__SPOT_OPEN

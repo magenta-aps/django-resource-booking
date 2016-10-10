@@ -24,6 +24,7 @@ from django.template.base import Template, VariableNode
 from booking.mixins import AvailabilityUpdaterMixin
 from booking.utils import ClassProperty, full_email, CustomStorage, html2text
 from booking.utils import get_related_content_types, INFINITY, merge_dicts
+from booking.utils import flatten
 
 from resource_booking import settings
 
@@ -514,8 +515,17 @@ class EmailTemplate(models.Model):
         NOTIFY_GUEST__SPOT_OPEN
     ]
 
+    # Templates available for manual sending from mpvs
+    visit_manual_mpv_keys = [
+        NOTIFY_GUEST__GENERAL_MSG
+    ]
+
+    # Templates that redirect from sub to mpv
+    visit_manual_mpv_redirect_keys = visit_manual_mpv_keys
+
     # Templates available for manual sending from bookings
     booking_manual_keys = [
+        NOTIFY_GUEST__GENERAL_MSG,
         NOTIFY_GUEST__BOOKING_CREATED,
         NOTIFY_GUEST__BOOKING_CREATED_WAITING,
         NOTIFY_GUEST__GENERAL_MSG,
@@ -524,6 +534,9 @@ class EmailTemplate(models.Model):
         NOTITY_ALL__BOOKING_REMINDER,
         NOTIFY_GUEST_REMINDER
     ]
+
+    # Templates available for manual sending from mpv bookings
+    booking_manual_mpv_keys = booking_manual_keys
 
     # Templates that will be autosent to editors for the given unit
     editor_keys = [
@@ -3014,7 +3027,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 hostresource__visitresource__visit=self
             )
         else:
-            return self.teachers.all()
+            return self.hosts.all()
 
     def context_for_user(self, user):
         profile = user.userprofile
@@ -3106,18 +3119,46 @@ class MultiProductVisit(Visit):
 
     @property
     def total_required_teachers(self):
-        return 0
+        return sum(
+            subvisit.total_required_teachers for subvisit in self.subvisits
+        )
 
     @property
     def total_required_hosts(self):
-        return 0
+        return sum(
+            subvisit.total_required_hosts for subvisit in self.subvisits
+        )
+
+    @property
+    def assigned_teachers(self):
+        return User.objects.filter(
+            id__in=flatten([
+                [user.id for user in subvisit.assigned_teachers]
+                for subvisit in self.subvisits
+            ])
+        )
+
+    @property
+    def assigned_hosts(self):
+        return User.objects.filter(
+            id__in=flatten([
+                [user.id for user in subvisit.assigned_hosts]
+                for subvisit in self.subvisits
+            ])
+        )
 
     @property
     def needs_teachers(self):
+        for subvisit in self.subvisits:
+            if subvisit.needs_teachers:
+                return True
         return False
 
     @property
     def needs_room(self):
+        for subvisit in self.subvisits:
+            if subvisit.needs_room:
+                return True
         return False
 
     @property

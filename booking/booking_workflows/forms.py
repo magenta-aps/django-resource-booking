@@ -34,7 +34,6 @@ class ChangeVisitResponsibleForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ChangeVisitResponsibleForm, self).__init__(*args, **kwargs)
-
         self.fields['responsible'].queryset = \
             kwargs['instance'].potential_responsible()
 
@@ -52,9 +51,7 @@ class ChangeVisitTeachersForm(forms.ModelForm):
     )
 
     def __init__(self, *args, **kwargs):
-        super(ChangeVisitTeachersForm, self)\
-            .__init__(*args, **kwargs)
-
+        super(ChangeVisitTeachersForm, self).__init__(*args, **kwargs)
         self.fields['teachers'].queryset = \
             kwargs['instance'].product.potentielle_undervisere.all()
 
@@ -72,11 +69,7 @@ class ChangeVisitHostsForm(forms.ModelForm):
     )
 
     def __init__(self, *args, **kwargs):
-        super(ChangeVisitHostsForm, self).__init__(
-            *args,
-            **kwargs
-        )
-
+        super(ChangeVisitHostsForm, self).__init__(*args, **kwargs)
         self.fields['hosts'].queryset = \
             kwargs['instance'].product.potentielle_vaerter.all()
 
