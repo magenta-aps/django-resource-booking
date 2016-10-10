@@ -776,7 +776,6 @@ class BookerForm(forms.ModelForm):
 
         attendeecount_widget.attrs['min'] = 1
         if len(products) > 0:
-            print products
             attendeecount_widget.attrs['min'] = max([1] + [
                 product.minimum_number_of_visitors
                 for product in products if product.minimum_number_of_visitors

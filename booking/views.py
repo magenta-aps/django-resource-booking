@@ -2432,7 +2432,7 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
         forms = {}
         if self.product is not None:
             forms['bookerform'] = \
-                BookerForm(data, product=self.product,
+                BookerForm(data, products=[self.product],
                            language=self.request.LANGUAGE_CODE)
 
             type = self.product.type
