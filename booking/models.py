@@ -3191,16 +3191,18 @@ class MultiProductVisit(Visit):
 
     def get_autosend(self, template_key, follow_inherit=True,
                      include_disabled=False):
-        if follow_inherit and self.autosend_inherits(template_key):
-            for product in self.products:
-                autosend = product.get_autosend(template_key)
-                if autosend:
-                    return autosend
-            return None
-        else:
-            return super(MultiProductVisit, self).get_autosend(
-                template_key, follow_inherit, include_disabled
-            )
+        return None
+        # Disable all autosends
+        # if follow_inherit and self.autosend_inherits(template_key):
+        #     for product in self.products:
+        #         autosend = product.get_autosend(template_key)
+        #         if autosend:
+        #             return autosend
+        #     return None
+        # else:
+        #     return super(MultiProductVisit, self).get_autosend(
+        #         template_key, follow_inherit, include_disabled
+        #     )
 
     # Sends a message to defined recipients pertaining to the Visit
     def autosend(self, template_key, recipients=None,
