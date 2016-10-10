@@ -2264,6 +2264,11 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
         return result
 
+    def workflow_status_display(self):
+        for value, label in self.workflow_status_choices:
+            if value == self.workflow_status:
+                return label
+
     def get_subjects(self):
         if hasattr(self, 'teacherbooking'):
             return self.teacherbooking.subjects.all()
