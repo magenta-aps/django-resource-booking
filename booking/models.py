@@ -2628,10 +2628,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             return False
 
     def save(self, *args, **kwargs):
-
         self.update_endtime()
         self.update_last_workflow_change()
-
         super(Visit, self).save(*args, **kwargs)
 
     def get_absolute_url(self):
@@ -2724,7 +2722,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     # Sends a message to defined recipients pertaining to the Visit
     def autosend(self, template_key, recipients=None,
                  only_these_recipients=False):
-        if hasattr(self, 'multiproductvisit'):
+        if self.is_multiproductvisit:
             return self.multiproductvisit.autosend(
                 template_key, recipients, only_these_recipients
             )
