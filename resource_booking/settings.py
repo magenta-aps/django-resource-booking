@@ -87,12 +87,13 @@ STATICFILES_FINDERS = [
 
 # Django-npm config
 
+
 # Local thirdparty cache; holds all downloaded
 # dependencies in this folder under the root
-NPM_PREFIX_PATH = 'thirdparty'
+NPM_ROOT_PATH = 'thirdparty'
 
 # collectstatic will put dependencies in static/thirdparty/
-NPM_DESTINATION_PREFIX = 'thirdparty'
+NPM_STATIC_FILES_PREFIX = 'thirdparty'
 
 # Mapping for dependencies: Only the listed files from
 # each dependency will make it into static/
