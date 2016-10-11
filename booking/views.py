@@ -55,12 +55,14 @@ from booking.models import BookerResponseNonce
 from booking.models import MultiProductVisit
 from booking.models import MultiProductVisitTemp
 
-from booking.forms import ProductInitialForm, ProductForm, \
-    GuestEmailComposeForm, StudentForADayBookingForm, OtherProductForm, \
-    StudyProjectBookingForm, BookingGrundskoleSubjectLevelForm, BookingListForm
-from booking.forms import StudentForADayForm, InternshipForm, OpenHouseForm, \
-    TeacherProductForm, ClassProductForm, StudyProjectForm, AssignmentHelpForm, \
-    StudyMaterialForm
+from booking.forms import ProductInitialForm, ProductForm
+from booking.forms import GuestEmailComposeForm, StudentForADayBookingForm
+from booking.forms import OtherProductForm, StudyProjectBookingForm
+from booking.forms import BookingGrundskoleSubjectLevelForm, BookingListForm
+from booking.forms import StudentForADayForm, InternshipForm, OpenHouseForm
+from booking.forms import TeacherProductForm, ClassProductForm
+from booking.forms import StudyProjectForm, AssignmentHelpForm
+from booking.forms import StudyMaterialForm
 
 from booking.forms import BookingForm
 from booking.forms import ClassBookingForm, TeacherBookingForm
