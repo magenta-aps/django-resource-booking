@@ -3605,6 +3605,18 @@ class MultiProductVisitPromptView(BreadcrumbMixin, DetailView):
     model = Product
     template_name = "visit/multi_prompt.html"
 
+    def get_breadcrumb_args(self):
+        return [self.object]
+
+    @staticmethod
+    def build_breadcrumbs(product):
+        return ProductDetailView.build_breadcrumbs(product) + [
+            {
+                'url': reverse('product-book-notime', args=[product.id]),
+                'text': _(u'Vælg bestillingstype')
+            }
+        ]
+
 
 class MultiProductVisitTempDateView(BreadcrumbMixin, HasBackButtonMixin,
                                     ProcessFormView):
@@ -3633,10 +3645,37 @@ class MultiProductVisitTempCreateView(MultiProductVisitTempDateView,
                 pass
         return response
 
+    def get_breadcrumb_args(self):
+        try:
+            return [Product.objects.get(id=self.request.GET['base'])]
+        except:
+            return []
+
+    @staticmethod
+    def build_breadcrumbs(product=None):
+        breadcrumbs = ProductDetailView.build_breadcrumbs(product) \
+            if product is not None else []
+        breadcrumbs.append({
+            'url': reverse('mpv-create'),
+            'text': _(u'Vælg dato')
+        })
+        return breadcrumbs
+
 
 class MultiProductVisitTempUpdateView(MultiProductVisitTempDateView,
                                       UpdateView):
-    pass
+
+    def get_breadcrumb_args(self):
+        return [self.object]
+
+    @staticmethod
+    def build_breadcrumbs(mpv):
+        return ProductDetailView.build_breadcrumbs(mpv.baseproduct) + [
+            {
+                'url': reverse('mpv-edit-date', args=[mpv.id]),
+                'text': _(u'Vælg dato')
+            }
+        ]
 
 
 class MultiProductVisitTempProductsView(BreadcrumbMixin, UpdateView):
@@ -3688,6 +3727,18 @@ class MultiProductVisitTempProductsView(BreadcrumbMixin, UpdateView):
             return self.request.GET['next']
         return reverse('mpv-confirm', args=[self.object.id])
 
+    def get_breadcrumb_args(self):
+        return [self.object]
+
+    @staticmethod
+    def build_breadcrumbs(mpv):
+        return ProductDetailView.build_breadcrumbs(mpv.baseproduct) + [
+            {
+                'url': reverse('mpv-edit-products', args=[mpv.id]),
+                'text': _(u'Vælg tilbud')
+            }
+        ]
+
 
 class MultiProductVisitTempConfirmView(BreadcrumbMixin, DetailView):
     model = MultiProductVisitTemp
@@ -3701,3 +3752,15 @@ class MultiProductVisitTempConfirmView(BreadcrumbMixin, DetailView):
             reverse('visit-booking-create', args=[mpv.id]) +
             "?tmp=%d" % self.object.id
         )
+
+    def get_breadcrumb_args(self):
+        return [self.object]
+
+    @staticmethod
+    def build_breadcrumbs(mpv):
+        return ProductDetailView.build_breadcrumbs(mpv.baseproduct) + [
+            {
+                'url': reverse('mpv-confirm', args=[mpv.id]),
+                'text': _(u'Bekræft')
+            }
+        ]
