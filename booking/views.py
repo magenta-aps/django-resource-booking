@@ -641,7 +641,7 @@ class BreadcrumbMixin(ContextMixin):
 
     def get_context_data(self, **kwargs):
         breadcrumbs = self.get_breadcrumbs()
-        if 'url' in breadcrumbs[-1]:
+        if len(breadcrumbs) > 0 and 'url' in breadcrumbs[-1]:
             del breadcrumbs[-1]['url']
         context = {'breadcrumbs': breadcrumbs}
         context.update(kwargs)
