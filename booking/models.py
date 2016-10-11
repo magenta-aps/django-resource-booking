@@ -3316,8 +3316,8 @@ class PostCode(models.Model):
                     region = Region.objects.get(name=region_name)
                     regions[region_name] = region
                 except Region.DoesNotExist:
-                    print "Unknown region '%s'. May be a typo, please fix in " \
-                          "booking/data/postcodes.py" % region_name
+                    print "Unknown region '%s'. May be a typo, please fix in" \
+                          " booking/data/postcodes.py" % region_name
                     return
             try:
                 postcode = PostCode.objects.get(number=postcode_number)

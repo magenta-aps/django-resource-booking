@@ -606,7 +606,9 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
         if self.organizationalunits:
             context['organizationalunits'] = self.organizationalunits
             qs = Booking.objects\
-                .select_related('visit__productresource_ptr__organizationalunit') \
+                .select_related(
+                    'visit__productresource_ptr__organizationalunit'
+                ) \
                 .select_related('booker__school')\
                 .prefetch_related('bookinggymnasiesubjectlevel_set__subject') \
                 .prefetch_related('bookinggymnasiesubjectlevel_set__level') \
