@@ -41,8 +41,13 @@ import booking.models
 class VisitBreadcrumbMixin(ContextMixin):
     view_title = _(u'opdater')
 
+    def get_breadcrumb_args(self):
+        return [self.object]
+
     def get_context_data(self, **kwargs):
-        breadcrumbs = VisitDetailView.build_breadcrumbs(self.object)
+        breadcrumbs = VisitDetailView.build_breadcrumbs(
+            *self.get_breadcrumb_args()
+        )
         breadcrumbs.append({'text': self.view_title})
         context = {
             'breadcrumbs': breadcrumbs
@@ -92,6 +97,9 @@ class ChangeVisitStartTimeView(AutologgerMixin,
 
     def get_success_url(self):
         return reverse('visit-view', args=[self.object.visit.pk])
+
+    def get_breadcrumb_args(self):
+        return [self.object.visit]
 
 
 class ChangeVisitStatusView(AutologgerMixin, UpdateWithCancelView):
