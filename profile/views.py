@@ -615,7 +615,7 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
                 .prefetch_related('bookinggrundskolesubjectlevel_set__level') \
                 .filter(
                     visit__productresource_ptr__organizationalunit_id__in=self
-                        .organizationalunits
+                    .organizationalunits
                 )
             if from_date:
                 qs = qs.filter(visit__eventtime__start__gte=from_date)
