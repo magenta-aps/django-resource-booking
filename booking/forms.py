@@ -1161,6 +1161,7 @@ class MultiProductVisitTempProductsForm(forms.ModelForm):
         }
 
     def clean_products(self):
+        print "clean_products"
         products = self.cleaned_data['products']
         common_institution = binary_and([
             product.institution_level for product in products
@@ -1175,6 +1176,12 @@ class MultiProductVisitTempProductsForm(forms.ModelForm):
 
     def clean(self):
         super(MultiProductVisitTempProductsForm, self).clean()
-        products_selected = len(self.cleaned_data['products'])
+        if 'products' not in self.cleaned_data or \
+                len(self.cleaned_data['products']) == 0:
+            raise forms.ValidationError(
+                _(u"Der er ikke valgt nogen produkter")
+            )
+        products_selected = 0 if 'products' not in self.cleaned_data \
+            else len(self.cleaned_data['products'])
         if self.cleaned_data['required_visits'] > products_selected:
             self.cleaned_data['required_visits'] = products_selected
