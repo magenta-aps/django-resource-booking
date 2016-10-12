@@ -2608,7 +2608,7 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
         if 'bookerform' in forms:
             object.booker = forms['bookerform'].save()
         object.save()
-        return redirect(reverse('booking-view', args=[object.id]))
+        return redirect(reverse('product-view', args=[object.visit.products[0].id]))
 
     def form_invalid(self, forms):
         return self.render_to_response(self.get_context_data(**forms))
@@ -2647,11 +2647,15 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
             bookingform = BookingForm(data)
 
         if bookingform is not None:
-            if self.visit.multiproductvisit and 'tmp' in self.request.GET:
-                temp = MultiProductVisitTemp.objects.get(
-                    id=self.request.GET['tmp']
-                )
-                bookingform.initial['notes'] = temp.notes
+            if self.visit.multiproductvisit:
+                if 'tmp' in self.request.GET:
+                    temp = MultiProductVisitTemp.objects.get(
+                        id=self.request.GET['tmp']
+                    )
+                    bookingform.initial['notes'] = temp.notes
+                if 'desired_time' in bookingform.fields:
+                    del bookingform.fields['desired_time']
+
             forms['bookingform'] = bookingform
         return forms
 
