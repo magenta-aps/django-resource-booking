@@ -11,7 +11,9 @@
         {% if inherited %}
         var inherited = {{ inherited | jsonify }};
         {% endif %}
+        {% if template_keys %}
         var template_keys = {{ template_keys | jsonify }};
+        {% endif %}
     {% endautoescape %}
 
         $(function(){
@@ -135,8 +137,11 @@
                 var key = parseInt(templateSelect.val(), 10),
                     id = "missingtemplate";
                 if (window.template_keys && !isNaN(key) && $.inArray(key, window.template_keys) == -1) {
-                    var url = "{% url "emailtemplate-create" %}?key=" + key + "&organizationalunit={{ organizationalunit.id }}";
-                    addWarning(row, id, "{% trans "Der er ingen skabelon til denne hændelse!" %} <a href=\""+url+"\" target=\"_blank\">{% trans "Opret" %}</a>");
+                    var url;
+                    {% if organizationalunit %}
+                    url = "{% url "emailtemplate-create" %}?key=" + key + "&organizationalunit={{ organizationalunit.id }}";
+                    {% endif %}
+                    addWarning(row, id, "{% trans "Der er ingen skabelon til denne hændelse!" %}" + (url ? "<a href=\""+url+"\" target=\"_blank\">{% trans "Opret" %}</a>":""));
                 } else {
                     removeWarning(id);
                 }

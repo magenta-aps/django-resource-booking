@@ -23,7 +23,8 @@ from django.template.base import Template, VariableNode
 
 from booking.mixins import AvailabilityUpdaterMixin
 from booking.utils import ClassProperty, full_email, CustomStorage, html2text
-from booking.utils import get_related_content_types, INFINITY
+from booking.utils import get_related_content_types, INFINITY, merge_dicts
+from booking.utils import flatten
 
 from resource_booking import settings
 
@@ -264,7 +265,7 @@ class Subject(models.Model):
     type_choices = (
         (SUBJECT_TYPE_GYMNASIE, _(u'Gymnasie')),
         (SUBJECT_TYPE_GRUNDSKOLE, _(u'Grundskole')),
-        (SUBJECT_TYPE_BOTH, _(u'Begge')),
+        (SUBJECT_TYPE_BOTH, _(u'Både gymnasie og grundskole')),
     )
 
     name = models.CharField(max_length=256)
@@ -514,8 +515,17 @@ class EmailTemplate(models.Model):
         NOTIFY_GUEST__SPOT_OPEN
     ]
 
+    # Templates available for manual sending from mpvs
+    visit_manual_mpv_keys = [
+        NOTIFY_GUEST__GENERAL_MSG
+    ]
+
+    # Templates that redirect from sub to mpv
+    visit_manual_mpv_redirect_keys = visit_manual_mpv_keys
+
     # Templates available for manual sending from bookings
     booking_manual_keys = [
+        NOTIFY_GUEST__GENERAL_MSG,
         NOTIFY_GUEST__BOOKING_CREATED,
         NOTIFY_GUEST__BOOKING_CREATED_WAITING,
         NOTIFY_GUEST__GENERAL_MSG,
@@ -524,6 +534,9 @@ class EmailTemplate(models.Model):
         NOTITY_ALL__BOOKING_REMINDER,
         NOTIFY_GUEST_REMINDER
     ]
+
+    # Templates available for manual sending from mpv bookings
+    booking_manual_mpv_keys = booking_manual_keys
 
     # Templates that will be autosent to editors for the given unit
     editor_keys = [
@@ -748,7 +761,6 @@ class EmailTemplate(models.Model):
     def add_defaults_to_all():
         for product in Product.objects.all():
             for template_key in EmailTemplate.default:
-                print EmailTemplate.get_name(template_key)
                 if product.productautosend_set.filter(
                     template_key=template_key
                 ).count() == 0:
@@ -1494,14 +1506,19 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             return "-"
 
     def num_of_participants_display(self):
-        if self.minimum_number_of_visitors:
-            return "%s-%s" % (
+        if self.minimum_number_of_visitors and self.maximum_number_of_visitors:
+            return "%d - %d" % (
                 self.minimum_number_of_visitors,
                 self.maximum_number_of_visitors
             )
         elif self.maximum_number_of_visitors:
-            return self.maximum_number_of_visitors
-        return None
+            return _(u"Max. %(visitors)d") % \
+                {'visitors': self.maximum_number_of_visitors}
+        elif self.minimum_number_of_visitors:
+            return _(u"Min. %(visitors)d") % \
+                {'visitors': self.minimum_number_of_visitors}
+        else:
+            return None
 
     def get_absolute_url(self):
         return reverse('product-view', args=[self.pk])
@@ -1881,7 +1898,8 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         ).update(bookable=False)
 
     def __unicode__(self):
-        return u"#%s - %s" % (self.pk, self.title)
+        return _(u"Tilbud #%(pk)s - %(title)s") % \
+            {'pk': self.pk, 'title': self.title}
 
 
 class Visit(AvailabilityUpdaterMixin, models.Model):
@@ -2117,7 +2135,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         "MultiProductVisit",
         null=True,
         blank=True,
-        on_delete=models.SET_NULL,
+        related_name='subvisit',
+        on_delete=models.SET_NULL
     )
     multi_priority = models.IntegerField(
         default=0
@@ -2195,6 +2214,16 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         return self.workflow_status == being_planned
 
     def planned_status_is_blocked(self):
+
+        if self.is_multiproductvisit:
+            multiproductvisit = self.multiproductvisit
+            subs_planned = multiproductvisit.subvisits.filter(
+                Q(workflow_status=Visit.WORKFLOW_STATUS_PLANNED) |
+                Q(workflow_status=Visit.WORKFLOW_STATUS_PLANNED_NO_BOOKING)
+            ).count()
+            if subs_planned >= multiproductvisit.required_visits:
+                return False
+
         # We have to have a chosen starttime before we are planned
         if not hasattr(self, 'eventtime') or not self.eventtime.start:
             return True
@@ -2235,6 +2264,11 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 result.append(x)
 
         return result
+
+    def workflow_status_display(self):
+        for value, label in self.workflow_status_choices:
+            if value == self.workflow_status:
+                return label
 
     def get_subjects(self):
         if hasattr(self, 'teacherbooking'):
@@ -2277,9 +2311,13 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             x.update_availability()
 
     @property
+    def display_title(self):
+        return self.product.title
+
+    @property
     def display_value(self):
         if not hasattr(self, 'eventtime') or not self.eventtime.start:
-            return None
+            return _(u'ikke-fastlagt tidspunkt')
 
         start = timezone.localtime(self.eventtime.start)
         result = formats.date_format(start, "DATETIME_FORMAT")
@@ -2298,6 +2336,47 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 print e
 
         return result
+
+    @property
+    def id_display(self):
+        return _(u'Besøg #%d') % self.id
+
+    # Format date for basic display
+    @property
+    def date_display(self):
+        if hasattr(self, 'eventtime') and self.eventtime.start:
+            return formats.date_format(self.eventtime.start, "DATETIME_FORMAT")
+        else:
+            return _(u'ikke-fastlagt tidspunkt')
+
+    # Format date for display with context (e.g. "on [date] at [time]")
+    @property
+    def date_display_context(self):
+        if hasattr(self, 'eventtime') and self.eventtime.start:
+            return _("d. %s kl. %s") % (
+                formats.date_format(self.eventtime.start, "DATE_FORMAT"),
+                formats.date_format(self.eventtime.start, "TIME_FORMAT")
+            )
+        else:
+            return _(u'på ikke-fastlagt tidspunkt')
+
+    @property
+    def interval_display(self):
+        return self.eventtime.interval_display()
+
+    @property
+    def start_datetime(self):
+        if hasattr(self, 'eventtime'):
+            return self.eventtime.start
+        else:
+            return None
+
+    @property
+    def end_datetime(self):
+        if hasattr(self, 'eventtime'):
+            return self.eventtime.end
+        else:
+            return None
 
     @property
     def expired(self):
@@ -2397,12 +2476,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             return False
         return True
 
-    def date_display(self):
-        if hasattr(self, 'eventtime') and self.eventtime.start:
-            return self.eventtime.interval_display
-        else:
-            return _(u'på ikke-fastlagt tidspunkt')
-
     def get_bookings(self, include_waitinglist=False, include_regular=True):
         if include_regular:  # Include non-waitinglist bookings
             if include_waitinglist:
@@ -2448,20 +2521,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     def get_workflow_status_class(self):
         return self.status_to_class_map.get(self.workflow_status, 'default')
-
-    @property
-    def start_datetime(self):
-        if hasattr(self, 'eventtime'):
-            return self.eventtime.start
-        else:
-            return None
-
-    @property
-    def end_datetime(self):
-        if hasattr(self, 'eventtime'):
-            return self.eventtime.end
-        else:
-            return None
 
     @classmethod
     def needs_teachers_qs(cls):
@@ -2553,6 +2612,17 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             workflow_status=cls.WORKFLOW_STATUS_BEING_PLANNED,
         ).filter(**kwargs)
 
+    @staticmethod
+    def unit_filter(qs, unit_qs):
+        mpv_qs = MultiProductVisit.objects.filter(
+            subvisit__is_multi_sub=True,
+            subvisit__eventtime__product__organizationalunit=unit_qs
+        )
+        return qs.filter(
+            Q(eventtime__product__organizationalunit=unit_qs) |
+            Q(multiproductvisit=mpv_qs)
+        )
+
     # This is used from booking.signals.update_search_indexes
     def update_searchindex(self):
         if not self.pk:
@@ -2569,10 +2639,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             return False
 
     def save(self, *args, **kwargs):
-
         self.update_endtime()
         self.update_last_workflow_change()
-
         super(Visit, self).save(*args, **kwargs)
 
     def get_absolute_url(self):
@@ -2598,22 +2666,22 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         return recipients
 
     def create_inheriting_autosends(self):
-        product = self.product
-        if product:
-            for productautosend in product.productautosend_set.all():
-                if not self.get_autosend(
-                        productautosend.template_key,
-                        False,
-                        False
-                ):
-                    visitautosend = VisitAutosend(
-                        visit=self,
-                        inherit=True,
-                        template_key=productautosend.template_key,
-                        days=productautosend.days,
-                        enabled=productautosend.enabled
-                    )
-                    visitautosend.save()
+        products = self.products
+        if len(products):
+            for product in products:
+                if product:
+                    for productautosend in product.productautosend_set.all():
+                        if not self.get_autosend(
+                            productautosend.template_key, False, False
+                        ):
+                            visitautosend = VisitAutosend(
+                                visit=self,
+                                inherit=True,
+                                template_key=productautosend.template_key,
+                                days=productautosend.days,
+                                enabled=productautosend.enabled
+                            )
+                            visitautosend.save()
 
     def autosend_inherits(self, template_key):
         s = self.visitautosend_set.filter(
@@ -2659,11 +2727,16 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         return result
 
     def autosend_enabled(self, template_key):
-        return self.get_autosend(template_key, True) is not None
+        return self.real.get_autosend(template_key, True) is not None and \
+            not self.is_multi_sub
 
     # Sends a message to defined recipients pertaining to the Visit
     def autosend(self, template_key, recipients=None,
                  only_these_recipients=False):
+        if self.is_multiproductvisit:
+            return self.multiproductvisit.autosend(
+                template_key, recipients, only_these_recipients
+            )
         if self.autosend_enabled(template_key):
             product = self.product
             unit = product.organizationalunit
@@ -2768,7 +2841,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         return Visit.objects.filter(
             eventtime__start__year=date.year,
             eventtime__start__month=date.month,
-            eventtime__start__day=date.day
+            eventtime__start__day=date.day,
+            is_multi_sub=False
         ).order_by('eventtime__start')
 
     @staticmethod
@@ -2777,7 +2851,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         # Meaning they begin before the queried time and end after the time
         return Visit.objects.filter(
             eventtime__start__lte=time,
-            eventtime__end__gt=time
+            eventtime__end__gt=time,
+            is_multi_sub=False
         )
 
     @staticmethod
@@ -2794,7 +2869,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         # end of the day and ends after the beginning of the day
         return Visit.objects.filter(
             eventtime__start__lte=date + timedelta(days=1),
-            eventtime__end__gt=date
+            eventtime__end__gt=date,
+            is_multi_sub=False
         )
 
     @staticmethod
@@ -2804,7 +2880,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 Visit.WORKFLOW_STATUS_EXECUTED,
                 Visit.WORKFLOW_STATUS_EVALUATED],
             eventtime__start__isnull=False,
-            eventtime__end__lt=time
+            eventtime__end__lt=time,
+            is_multi_sub=False
         ).order_by('-eventtime__end')
 
     def ensure_statistics(self):
@@ -2916,6 +2993,22 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         ]
 
     @property
+    def is_multiproductvisit(self):
+        return hasattr(self, 'multiproductvisit')
+
+    @property
+    def real(self):
+        if self.is_multiproductvisit:
+            return self.multiproductvisit
+        return self
+
+    @property
+    def products(self):
+        if self.is_multiproductvisit:
+            return self.multiproductvisit.products
+        return [self.product]
+
+    @property
     def calendar_event_link(self):
         return reverse('visit-view', args=[self.pk])
 
@@ -2943,7 +3036,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 hostresource__visitresource__visit=self
             )
         else:
-            return self.teachers.all()
+            return self.hosts.all()
 
     def context_for_user(self, user):
         profile = user.userprofile
@@ -2952,24 +3045,32 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             'is_host': profile.is_host,
         }
 
-        context['is_potential_host'] = (
-            self.product.potential_hosts.filter(pk=user.pk).exists()
-        )
-        context['is_assigned_as_host'] = (
-            self.assigned_hosts.filter(pk=user.pk).exists()
-        )
+        if self.is_multiproductvisit:
+            context['is_potential_host'] = False
+            context['is_assigned_as_host'] = False
+        else:
+            context['is_potential_host'] = (
+                self.product.potential_hosts.filter(pk=user.pk).exists()
+            )
+            context['is_assigned_as_host'] = (
+                self.assigned_hosts.filter(pk=user.pk).exists()
+            )
 
         context['can_become_host'] = (
             context['is_potential_host'] and
             not context['is_assigned_as_host']
         )
 
-        context['is_potential_teacher'] = (
-            self.product.potential_teachers.filter(pk=user.pk).exists()
-        )
-        context['is_assigned_as_teacher'] = (
-            self.assigned_teachers.filter(pk=user.pk).exists()
-        )
+        if self.is_multiproductvisit:
+            context['is_potential_teacher'] = False
+            context['is_assigned_as_teacher'] = False
+        else:
+            context['is_potential_teacher'] = (
+                self.product.potential_teachers.filter(pk=user.pk).exists()
+            )
+            context['is_assigned_as_teacher'] = (
+                self.assigned_teachers.filter(pk=user.pk).exists()
+            )
 
         context['can_become_teacher'] = (
             context['is_potential_teacher'] and
@@ -2992,21 +3093,16 @@ class MultiProductVisit(Visit):
         blank=False,
         verbose_name=_(u'Dato')
     )
-
-    def planned_status_is_blocked(self):
-        return True
-
-    @property
-    def total_required_teachers(self):
-        return 0
-
-    @property
-    def total_required_hosts(self):
-        return 0
-
-    @property
-    def needs_room(self):
-        return False
+    required_visits = models.PositiveIntegerField(
+        default=2,
+        verbose_name=_(u'Antal ønskede besøg')
+    )
+    responsible = models.ForeignKey(
+        User,
+        blank=True,
+        null=True,
+        verbose_name=_(u'Besøgsansvarlig')
+    )
 
     @property
     def subvisits(self):
@@ -3017,47 +3113,141 @@ class MultiProductVisit(Visit):
 
     @property
     def products(self):
-        return [visit.eventtime.product for visit in self.subvisits]
+        return [visit.product for visit in self.subvisits if visit.product]
 
-    def update_subvisits(self, product_list):
+    def potential_responsible(self):
+        units = OrganizationalUnit.objects.filter(
+            product__eventtime__visit__set=self.subvisits
+        )
+        return User.objects.filter(
+            userprofile__organizationalunit=units
+        )
 
-        # Prune off products that are not in form input,
-        # or are represented more than once
-        # (we prune the extras, so one remains)
-        delete = []
-        spared = []
-        for visit in self.subvisits:
-            eventtime = visit.eventtime
-            product = eventtime.product
-            if product not in product_list or product in spared:
-                delete.append(eventtime)
-                delete.append(visit)
+    def planned_status_is_blocked(self):
+        return True
+
+    @property
+    def total_required_teachers(self):
+        return sum(
+            subvisit.total_required_teachers for subvisit in self.subvisits
+        )
+
+    @property
+    def total_required_hosts(self):
+        return sum(
+            subvisit.total_required_hosts for subvisit in self.subvisits
+        )
+
+    @property
+    def assigned_teachers(self):
+        return User.objects.filter(
+            id__in=flatten([
+                [user.id for user in subvisit.assigned_teachers]
+                for subvisit in self.subvisits
+            ])
+        )
+
+    @property
+    def assigned_hosts(self):
+        return User.objects.filter(
+            id__in=flatten([
+                [user.id for user in subvisit.assigned_hosts]
+                for subvisit in self.subvisits
+            ])
+        )
+
+    @property
+    def needs_teachers(self):
+        for subvisit in self.subvisits:
+            if subvisit.needs_teachers:
+                return True
+        return False
+
+    @property
+    def needs_room(self):
+        for subvisit in self.subvisits:
+            if subvisit.needs_room:
+                return True
+        return False
+
+    @property
+    def available_seats(self):
+        return 0
+
+    @property
+    def start_datetime(self):
+        return self.date
+
+    @property
+    def display_title(self):
+        return _(u'prioriteret liste af %d tilbud') % len(self.products)
+
+    @property
+    def date_display(self):
+        return formats.date_format(self.date, "DATE_FORMAT")
+
+    @property
+    def date_display_context(self):
+        return _("d. %s") % formats.date_format(self.date, "DATE_FORMAT")
+
+    @property
+    def interval_display(self):
+        return self.date_display
+
+    @property
+    def display_value(self):
+        return self.date_display
+
+    def get_autosend(self, template_key, follow_inherit=True,
+                     include_disabled=False):
+        return None
+        # Disable all autosends
+        # if follow_inherit and self.autosend_inherits(template_key):
+        #     for product in self.products:
+        #         autosend = product.get_autosend(template_key)
+        #         if autosend:
+        #             return autosend
+        #     return None
+        # else:
+        #     return super(MultiProductVisit, self).get_autosend(
+        #         template_key, follow_inherit, include_disabled
+        #     )
+
+    # Sends a message to defined recipients pertaining to the Visit
+    def autosend(self, template_key, recipients=None,
+                 only_these_recipients=False):
+        if self.autosend_enabled(template_key):
+            unit = None  # TODO: What should the unit be?
+            if recipients is None:
+                recipients = set()
             else:
-                spared.append(product)
-        for item in delete:
-            item.delete()
+                recipients = set(recipients)
+            if not only_these_recipients:
+                recipients.update(self.get_recipients(template_key))
 
-        # Create new visits for products we don't have yet
-        existing_products = self.products
-        for index, product in enumerate(product_list):
-            if product not in existing_products:
-                eventtime = EventTime(
-                    product=product,
-                    bookable=False,
-                    has_specific_time=False
-                )
-                eventtime.save()
-                eventtime.make_visit(
-                    product=product,
-                    multi_master=self,
-                    multi_priority=index,
-                    is_multi_sub=True
-                )
+            params = {'visit': self, 'products': self.products}
 
-        # Update priorities to match form input
-        for visit in self.subvisits:
-            visit.eventtime.multi_priority = \
-                product_list.index(visit.eventtime.product)
+            KUEmailMessage.send_email(
+                template_key,
+                params,
+                list(recipients),
+                self,
+                unit
+            )
+
+            if not only_these_recipients and \
+                    template_key in EmailTemplate.booker_keys:
+                for booking in self.bookings.all():
+                    KUEmailMessage.send_email(
+                        template_key,
+                        merge_dicts(params, {
+                            'booking': booking,
+                            'booker': booking.booker
+                        }),
+                        booking.booker,
+                        self,
+                        unit
+                    )
 
 
 class MultiProductVisitTemp(models.Model):
@@ -3073,12 +3263,28 @@ class MultiProductVisitTemp(models.Model):
     updated = models.DateTimeField(
         auto_now=True
     )
+    notes = models.TextField(
+        blank=True,
+        verbose_name=u'Bemærkninger'
+    )
+    baseproduct = models.ForeignKey(
+        Product,
+        null=True,
+        blank=True,
+        related_name='foobar'
+    )
+    required_visits = models.PositiveIntegerField(
+        default=2,
+        verbose_name=_(u'Antal ønskede besøg')
+    )
 
     def create_mpv(self):
         mpv = MultiProductVisit(
-            date=self.date
+            date=self.date,
+            required_visits=self.required_visits
         )
         mpv.save()
+        mpv.ensure_statistics()
         for index, product in enumerate(self.products.all()):
             eventtime = EventTime(
                 product=product,
@@ -3092,7 +3298,16 @@ class MultiProductVisitTemp(models.Model):
                 multi_priority=index,
                 is_multi_sub=True
             )
+            if index == 0:
+                mpv.responsible = product.tilbudsansvarlig
+        mpv.save()
         return mpv
+
+    def has_products_in_different_locations(self):
+        return len(
+            set([product.locality for product in self.products.all()])
+        ) > 1
+        # return Locality.objects.filter(product=self.products).count() > 1
 
 
 class VisitComment(models.Model):
@@ -3363,8 +3578,8 @@ class PostCode(models.Model):
                     region = Region.objects.get(name=region_name)
                     regions[region_name] = region
                 except Region.DoesNotExist:
-                    print "Unknown region '%s'. May be a typo, please fix in " \
-                          "booking/data/postcodes.py" % region_name
+                    print "Unknown region '%s'. May be a typo, please fix in" \
+                          " booking/data/postcodes.py" % region_name
                     return
             try:
                 postcode = PostCode.objects.get(number=postcode_number)

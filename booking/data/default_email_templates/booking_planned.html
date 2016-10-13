@@ -23,7 +23,7 @@
         <a href="{% full_url 'product-view' product.pk %}">Læs mere om tilbuddet her</a>.
     </p>
     <p>
-        På foKUs.ku.dk kan du se alle tilbud fra Københavns Universitet.
+        {% include 'booking/email/snippets/see_all.html' %}
     </p>
 
 {% elif recipient.user.userprofile.is_host %}

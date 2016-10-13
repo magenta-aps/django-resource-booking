@@ -12,7 +12,11 @@
 
     <div class="row titlebar hidden-print">
         <div class="col-sm-12 col-md-9">
-            <h1>{% blocktrans with producttitle=object.product.title on_date=object.date_display %}Planlægning af '{{ producttitle }}' {{ on_date }}{% endblocktrans %}</h1>
+            <h1>
+                {% blocktrans with title=object.display_title on_date=object.date_display_context %}
+                    Planlægning af {{ title }} {{ on_date }}
+                {% endblocktrans %}
+            </h1>
         </div>
         <div class="divider"></div>
     </div>
@@ -21,12 +25,34 @@
         <div class="col-sm-12 col-md-10 panel panel-default">
 
             <div class="col-xs-9">
-                <div>
-                    {% url 'product-view' object.product.id as producturl %}
-                    {% blocktrans with nr_bookers=object.nr_attendees producttitle=object.product.title %}
-                        {{ nr_bookers }} har tilmeldt sig denne instans af <a href="{{ producturl }}">{{ producttitle }}</a>
-                    {% endblocktrans %}
-                </div>
+                {% if object.multiproductvisit %}
+                    <div>
+                        {% trans 'Ønskede tilbud/underbesøg:' %}
+                        <ul>
+                            {% for visit in object.multiproductvisit.subvisits %}
+                                <li>
+                                    <a href="{% url 'product-view' visit.product.id %}">{{ visit.product.title }}</a>:
+                                    <a href="{% url 'visit-view' visit.id %}">{{ visit.id_display }}</a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% else %}
+                    {% if object.is_multi_sub %}
+                    <div>
+                        {% url 'visit-view' object.multi_master.id as masterurl %}
+                        {% blocktrans with master=object.multi_master %}
+                            Dette er et underbesøg under <a href="{{ masterurl }}">{{ master }}</a>
+                        {% endblocktrans %}
+                    </div>
+                    {% endif %}
+                    <div>
+                        {% url 'product-view' object.product.id as producturl %}
+                        {% blocktrans with nr_bookers=object.nr_attendees producttitle=object.product.title %}
+                            {{ nr_bookers }} har tilmeldt sig denne instans af <a href="{{ producturl }}">{{ producttitle }}</a>
+                        {% endblocktrans %}
+                    </div>
+                {% endif %}
 
                 {% if not object.start_datetime %}
                 <div class="divider"></div>
@@ -87,27 +113,58 @@
                     <dl class="dl-horizontal status">
                         <dt>{% trans 'Tidspunkt' %}</dt>
                         <dd>
-                            {% if object.eventtime.start %}
+                            {% if object.is_multiproductvisit %}
+                                {{ object.date }}
+                            {% elif object.eventtime.start %}
                                 {{ object.eventtime.interval_display }}
                             {% else %}
-                                {% trans 'Ikke angivet' %}
-                            {% endif %}
-                            {% if can_edit %}
-                                <a href="{% url 'change-visit-starttime' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
+                                {% if object.start_datetime %}
+                                    {{ object.start_datetime }}
+                                {% else %}
+                                    {% trans 'Ikke angivet' %}
+                                {% endif %}
+                                {% if can_edit %}
+                                    <a href="{% url 'change-visit-starttime' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
+                                {% endif %}
                             {% endif %}
                         </dd>
 
-                        <dt>{% trans 'Ressourcer' %}</dt>
-                        <dd>
-                            {% if object.product.is_resource_controlled %}
-                                {% if object.product.resourcerequirement_set.count %}
-                                    <ul class="list-unstyled" style="display:inline-block; margin-bottom:0">
-                                    {% for requirementdata in object.requirement_details %}
-                                        <li>{{ requirementdata.acquired }}/{{ requirementdata.required }} {{ requirementdata.name }}</li>
-                                    {% endfor %}
-                                    </ul>
-                                    {% if can_edit %}
-                                        <a href="{% url 'visit-resources-edit' object.pk %}" role="button" class="btn btn-primary btn-xs" style="vertical-align:top">{% trans 'Redigér' %}</a>
+                        {% if object.is_multiproductvisit %}
+                            <dt>{% trans 'Min. ønskede tilbud' %}</dt>
+                            <dd>
+                                {{ object.required_visits }}
+                            </dd>
+                        {% endif %}
+
+                        {% if object.is_multiproductvisit %}
+                            <dt>{% trans 'Ansvarlig' %}</dt>
+                            <dd>
+                                {% if object.responsible %}
+                                    {{ object.responsible }}
+                                {% else %}
+                                    {% trans 'Ikke tildelt' %}
+                                {% endif %}
+                                {% if can_edit %}
+                                    <a href="{% url 'change-visit-responsible' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
+                                {% endif %}
+                            </dd>
+                        {% endif %}
+
+                        {% if not object.is_multiproductvisit %}
+                            <dt>{% trans 'Ressourcer' %}</dt>
+                            <dd>
+                                {% if object.product.is_resource_controlled %}
+                                    {% if object.product.resourcerequirement_set.count %}
+                                        <ul class="list-unstyled" style="display:inline-block; margin-bottom:0">
+                                        {% for requirementdata in object.requirement_details %}
+                                            <li>{{ requirementdata.acquired }}/{{ requirementdata.required }} {{ requirementdata.name }}</li>
+                                        {% endfor %}
+                                        </ul>
+                                        {% if can_edit %}
+                                            <a href="{% url 'visit-resources-edit' object.pk %}" role="button" class="btn btn-primary btn-xs" style="vertical-align:top">{% trans 'Redigér' %}</a>
+                                        {% endif %}
+                                    {% else %}
+                                        {% trans 'Tilbuddet kræver ingen ressourcer' %}
                                     {% endif %}
                                     <div>
                                     {% if can_become_teacher %}
@@ -124,14 +181,12 @@
                                     {% endif %}
                                     </div>
                                 {% else %}
-                                    {% trans 'Tilbuddet kræver ingen ressourcer' %}
+                                    {% trans 'Tilbuddet er ikke ressourcestyret' %}
                                 {% endif %}
-                            {% else %}
-                                {% trans 'Tilbuddet er ikke ressourcestyret' %}
-                            {% endif %}
-                        </dd>
+                            </dd>
+                        {% endif %}
 
-                        {% if not object.product.is_resource_controlled %}
+                        {% if not object.product.is_resource_controlled and not object.is_multiproductvisit %}
                         <dt>{% trans 'Undervisere' %}</dt>
                         <dd>
                             {% blocktrans with found=object.teachers.all|length needed=object.total_required_teachers %}{{ found }}/{{ needed }} undervisere fundet{% endblocktrans %}
@@ -154,7 +209,7 @@
                         </dd>
                         {% endif %}
 
-                        {% if not object.product.is_resource_controlled %}
+                        {% if not object.product.is_resource_controlled and not object.is_multiproductvisit %}
                         <dt>{% trans 'Værter' %}</dt>
                         <dd>
                             {% blocktrans with found=object.hosts.all|length needed=object.total_required_hosts %}{{ found }}/{{ needed }} værter fundet{% endblocktrans %}
@@ -177,7 +232,7 @@
                         </dd>
                         {% endif %}
 
-                        {% if not object.product.is_resource_controlled %}
+                        {% if not object.product.is_resource_controlled and not object.is_multiproductvisit %}
                         <dt>{% trans 'Lokaler' %}</dt>
                         <dd>
                             {{ object.get_room_status_display }}
@@ -194,6 +249,7 @@
                         </dd>
                         {% endif %}
 
+                        {% if not object.is_multiproductvisit %}
                         <dt>{% trans 'Automatisk email' %}</dt>
                         <dd>
                             {{ object.get_autosend_display }}
@@ -201,6 +257,8 @@
                                 <a href="{% url 'change-visit-autosend' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
                             {% endif %}
                         </dd>
+                        {% endif %}
+
                         <dt>{% trans 'Status' %}</dt>
                         <dd>
                             {{ object.get_workflow_status_display }}
@@ -208,11 +266,15 @@
                                 <a href="{% url 'change-visit-status' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Skift status' %}</a>
                             {% endif %}
                         </dd>
+
+                        {% if not object.is_multiproductvisit %}
                         <dt>{% trans 'Antal på venteliste' %}</dt>
                         <dd>
                             {{ object.nr_waiting }}
                             <a href="#waitinglist" role="button" class="btn btn-primary btn-xs">{% trans 'Se liste' %}</a>
                         </dd>
+                        {% endif %}
+
                         <dt>{% trans 'Link til evaluering' %}</dt>
                         <dd>
                             {% if object.evaluation_link %}
@@ -224,6 +286,7 @@
                                 <a href="{% url 'change-visit-eval' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
                             {% endif %}
                         </dd>
+
                         <dt>{% trans 'Interne kommentarer' %}</dt>
                         <dd>
                             <pre>{{ object.comments }}</pre>
@@ -231,6 +294,7 @@
                                 <a href="{% url 'change-visit-comments' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
                             {% endif %}
                         </dd>
+
                         {% if can_edit and object.has_changes_after_planned %}
                         <dt>{% trans 'Nylige ændringer' %}</dt>
                         <dd>
@@ -260,6 +324,7 @@
         </div>
     </div>
 
+    {% if not object.is_multiproductvisit %}
     <div class="row waiting">
         <div class="col-sm-12 col-md-10">
             <div class="panel panel-default">
@@ -285,6 +350,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
 
     <div class="row activitylog">
         <div class="col-sm-12 col-md-10">

@@ -12,18 +12,20 @@
             </h3>
             <span class="badge badge-danger pull-right">{{ list.queryset|length }}</span>
         </div>
-        <div class="panel-body">
+        <div class="panel-body" data-list-item=".list-group-item">
 
             {% if list.type == 'Visit' %}
-                {% for visit in list.queryset %}
-                    {% if not list.limit or forloop.counter0 < list.limit %}
+                {% for visit in list.limited_qs|default:list.queryset %}
                     <div class="list-group-item clearfix">
                         <a href="{% url 'visit-view' visit.pk %}" title="{% trans 'Se arrangementets detaljer' %}">
-                            <h2 class="list-group-item-heading">{{ visit.product.title }}</h2>
+                            <h2 class="list-group-item-heading">
+                                {{ visit.display_title|capfirst }}
+                            </h2>
+
                             <div class="list-group-item-text">
                                 <ul>
                                     <li>
-                                        {% blocktrans with interval=visit.eventtime.interval_display %}Dato/tid: {{ interval }}{% endblocktrans %}
+                                        {% blocktrans with date=visit.real.interval_display %}Dato/tid: {{ date }}{% endblocktrans %}
                                     </li>
                                     <li>{% trans 'Antal tilmeldte:' %} {{ visit.nr_attendees }}</li>
                                 </ul>
@@ -33,12 +35,10 @@
                             <span class="label label-{{ visit.get_workflow_status_class }} pull-right">{{ visit.get_workflow_status_display }}</span>
                         </div>
                     </div>
-                    {% endif %}
                 {% endfor %}
 
             {% elif list.type == 'Product' %}
-                {% for res in list.queryset %}
-                    {% if not list.limit or forloop.counter0 < list.limit %}
+                {% for res in list.limited_qs|default:list.queryset %}
                     <div class="list-group-item clearfix">
                         <a href="{% url 'product-view' res.pk %}" title="{% trans 'Se tilbuddets detaljer og evt. tilmeldinger' %}">
                             <h2 class="list-group-item-heading">{{ res.title }}</h2>
@@ -59,7 +59,9 @@
                                             </span>
                                         </li>
                                     {% endif %}
+                                    {%if res.display_locality %}
                                     <li>{% trans 'Hvor:' %} {{ res.display_locality }}</li>
+                                    {% endif %}
                                     {% if item.price %}
                                         <li>
                                             {% trans 'Pris:' %}
@@ -79,7 +81,6 @@
                             <span class="label label-{{ res.get_state_class }} pull-right">{{ res.get_state_display }}</span>
                         </div>
                     </div>
-                    {% endif %}
                 {% endfor %}
             {% endif %}
 

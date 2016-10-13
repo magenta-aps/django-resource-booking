@@ -69,6 +69,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             ) % {'count': Visit.get_recently_held().count()},
             'queryset': Visit.get_recently_held(),
             'limit': 10,
+            'limited_qs': Visit.get_recently_held()[:10],
             'button': {
                 'text': _(u'Søg i alle'),
                 'link': reverse('visit-customlist') + "?type=%s" %
@@ -84,6 +85,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             ),
             'queryset': Visit.get_todays_visits(),
             'limit': 10,
+            'limited_qs': Visit.get_todays_visits()[:10],
             'button': {
                 'text': _(u'Søg i alle'),
                 'link': reverse('visit-customlist') + "?type=%s" %
@@ -142,7 +144,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             ).order_by("-statistics__created_time"),
         }
 
-        if len(visitlist['queryset']) > 10:
+        if visitlist['queryset'].count() > 10:
             visitlist['limited_qs'] = visitlist['queryset'][:10]
             visitlist['button'] = {
                 'text': _(u'Søg i alle'),
@@ -160,8 +162,11 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                 'count'
             ),
             'queryset': self.sort_vo_queryset(
-                Visit.being_planned_queryset(
-                    eventtime__product__organizationalunit=unit_qs
+                Visit.unit_filter(
+                    Visit.being_planned_queryset(
+                        is_multi_sub=False
+                    ),
+                    unit_qs
                 ).annotate(num_participants=(
                     Coalesce(Count("bookings__booker__pk"), 0) +
                     Coalesce(
@@ -172,7 +177,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                 # See also VisitSearchView.filter_by_participants
             )
         }
-        if len(unplanned['queryset']) > 10:
+        if unplanned['queryset'].count() > 10:
             unplanned['limited_qs'] = unplanned['queryset'][:10]
             unplanned['button'] = {
                 'text': _(u'Søg i alle'),
@@ -188,12 +193,15 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                 'count'
             ),
             'queryset': self.sort_vo_queryset(
-                Visit.planned_queryset(
-                    eventtime__product__organizationalunit=unit_qs
+                Visit.unit_filter(
+                    Visit.planned_queryset(
+                        is_multi_sub=False
+                    ),
+                    unit_qs
                 )
             )
         }
-        if len(planned['queryset']) > 10:
+        if planned['queryset'].count() > 10:
             planned['limited_qs'] = planned['queryset'][:10]
             planned['button'] = {
                 'text': _(u'Søg i alle'),
@@ -203,6 +211,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         return [visitlist, unplanned, planned]
 
     def lists_for_teachers(self):
+        unit_qs = self.request.user.userprofile.get_unit_queryset()
         profile = self.request.user.userprofile
 
         return [
@@ -225,7 +234,9 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     u"%(count)d besøg der mangler undervisere",
                     'count'
                 ),
-                'queryset': profile.can_be_assigned_to_qs.order_by(
+                'queryset': Visit.unit_filter(
+                    profile.can_be_assigned_to_qs, unit_qs
+                ).order_by(
                     'eventtime__start', 'eventtime__end'
                 )
             },
@@ -238,12 +249,16 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     'count'
                 ),
                 'queryset': self.sort_vo_queryset(
-                    profile.all_assigned_visits()
+                    Visit.unit_filter(
+                        profile.all_assigned_visits(),
+                        unit_qs
+                    )
                 )
             }
         ]
 
     def lists_for_hosts(self):
+        unit_qs = self.request.user.userprofile.get_unit_queryset()
         profile = self.request.user.userprofile
 
         return [
@@ -266,7 +281,9 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     u"%(count)d besøg der mangler værter",
                     'count',
                 ),
-                'queryset': profile.can_be_assigned_to_qs.order_by(
+                'queryset': Visit.unit_filter(
+                    profile.can_be_assigned_to_qs, unit_qs
+                ).order_by(
                     'eventtime__start', 'eventtime__end'
                 )
             },
@@ -279,7 +296,9 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     'count'
                 ),
                 'queryset': self.sort_vo_queryset(
-                    profile.all_assigned_visits()
+                    Visit.unit_filter(
+                        profile.all_assigned_visits(), unit_qs
+                    )
                 )
             }
         ]
@@ -588,7 +607,9 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
         if self.organizationalunits:
             context['organizationalunits'] = self.organizationalunits
             qs = Booking.objects\
-                .select_related('visit__productresource_ptr__organizationalunit') \
+                .select_related(
+                    'visit__productresource_ptr__organizationalunit'
+                ) \
                 .select_related('booker__school')\
                 .prefetch_related('bookinggymnasiesubjectlevel_set__subject') \
                 .prefetch_related('bookinggymnasiesubjectlevel_set__level') \
@@ -597,7 +618,7 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
                 .prefetch_related('bookinggrundskolesubjectlevel_set__level') \
                 .filter(
                     visit__productresource_ptr__organizationalunit_id__in=self
-                        .organizationalunits
+                    .organizationalunits
                 )
             if from_date:
                 qs = qs.filter(visit__eventtime__start__gte=from_date)

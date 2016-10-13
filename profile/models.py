@@ -422,7 +422,8 @@ class UserProfile(models.Model):
             ''', [resource.pk, resource.pk, timezone.now()])
             # Turn it into a Django query
             qs1 = booking.models.Visit.objects.filter(
-                pk__in=[x.pk for x in qs1]
+                pk__in=[x.pk for x in qs1],
+                is_multi_sub=False
             )
         else:
             qs1 = booking.models.Visit.objects.none()
@@ -439,7 +440,8 @@ class UserProfile(models.Model):
                 num_assigned__lt=Coalesce(
                     'override_needed_teachers',
                     'eventtime__product__needed_teachers'
-                )
+                ),
+                is_multi_sub=False
             ).exclude(
                 teachers=self.user
             )
@@ -453,7 +455,8 @@ class UserProfile(models.Model):
                 num_assigned__lt=Coalesce(
                     'override_needed_hosts',
                     'eventtime__product__needed_hosts'
-                )
+                ),
+                is_multi_sub=False
             ).exclude(
                 hosts=self.user
             )

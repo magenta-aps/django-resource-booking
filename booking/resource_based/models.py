@@ -310,7 +310,10 @@ class EventTime(models.Model):
         except:
             return
 
-        qs = visit_model.objects.filter(eventtime__isnull=True)
+        qs = visit_model.objects.filter(
+            eventtime__isnull=True,
+            deprecated_product__isnull=False
+        )
 
         for x in qs.order_by("deprecated_start_datetime",
                              "deprecated_end_datetime"):
@@ -328,8 +331,6 @@ class EventTime(models.Model):
                 obj.set_calculated_end_time()
 
             obj.has_specific_time = obj.calculated_has_specific_time()
-
-            print obj
             obj.save()
 
     @property

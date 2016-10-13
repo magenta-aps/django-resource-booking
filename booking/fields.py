@@ -72,6 +72,12 @@ class OrderedMultipleChoiceField(ExtensibleMultipleChoiceField):
                 return True
         return False
 
+    def prepare_value(self, data):
+        bof = super(OrderedMultipleChoiceField, self).prepare_value(data)
+        print "HURRA"
+        print bof
+        return bof
+
 
 class DisableFieldMixin(object):
     widget = SelectDisable

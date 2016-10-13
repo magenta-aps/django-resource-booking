@@ -21,6 +21,7 @@ from booking.views import EmailTemplateDetailView, EmailTemplateDeleteView
 from booking.views import ChangeVisitEvalView
 from booking.views import ChangeVisitStatusView
 from booking.views import ChangeVisitStartTimeView
+from booking.views import ChangeVisitResponsibleView
 from booking.views import ChangeVisitTeachersView
 from booking.views import ChangeVisitHostsView
 from booking.views import ChangeVisitRoomsView
@@ -37,6 +38,7 @@ from booking.views import VisitAddCommentView
 from booking.views import VisitDetailView
 from booking.views import VisitCustomListView
 from booking.views import EvaluationOverviewView
+from booking.views import VisitBookingCreateView
 from booking.views import MultiProductVisitPromptView
 from booking.views import MultiProductVisitTempCreateView
 from booking.views import MultiProductVisitTempUpdateView
@@ -141,21 +143,24 @@ urlpatterns = patterns(
         MultiProductVisitPromptView.as_view(),
         name='product-book-notime'),
 
-    url(r'^visit/(?P<pk>[0-9]+)/notify$',
+    url(r'^visit/(?P<pk>[0-9]+)/notify/?$',
         VisitNotifyView.as_view(),
         name='visit-notify'),
-    url(r'^visit/(?P<pk>[0-9]+)/notify/success$',
+    url(r'^visit/(?P<pk>[0-9]+)/notify/success/?$',
         EmailSuccessView.as_view(),
         name='visit-notify-success'),
 
-    url(r'^visit/(?P<pk>[0-9]+)$',
+    url(r'^visit/(?P<pk>[0-9]+)/?$',
         VisitDetailView.as_view(),
         name='visit-view'),
+    url(r'visit/(?P<visit>[0-9]+)/book/?$',
+        VisitBookingCreateView.as_view(),
+        name='visit-booking-create'),
 
     url(r'^booking/(?P<pk>[0-9]+)/?$',
         BookingDetailView.as_view(),
         name='booking-view'),
-    url(r'^booking/accept/(?P<token>[0-9a-f-]+)/?',
+    url(r'^booking/accept/(?P<token>[0-9a-f-]+)/?$',
         BookingAcceptView.as_view(),
         name='booking-accept-view'),
 
@@ -165,6 +170,9 @@ urlpatterns = patterns(
     url(r'^visit/(?P<visit_pk>[0-9]+)/change_starttime/?$',
         ChangeVisitStartTimeView.as_view(),
         name='change-visit-starttime'),
+    url(r'^visit/(?P<pk>[0-9]+)/change_responsible/?$',
+        ChangeVisitResponsibleView.as_view(),
+        name='change-visit-responsible'),
     url(r'^visit/(?P<pk>[0-9]+)/change_teachers/?$',
         ChangeVisitTeachersView.as_view(),
         name='change-visit-teachers'),
