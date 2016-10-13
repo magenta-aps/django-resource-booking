@@ -116,11 +116,11 @@ msgstr "hver %(items)s"
 
 #: booking/static/js/recurrence.js:1011
 msgid "occuring %(number)s time"
-msgstr "sker %(number) gang"
+msgstr "sker %(number)s gang"
 
 #: booking/static/js/recurrence.js:1012
 msgid "occuring %(number)s times"
-msgstr "sker %(number) gange"
+msgstr "sker %(number)s gange"
 
 #: booking/static/js/recurrence.js:1013
 msgid "until %(date)s"
