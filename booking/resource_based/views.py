@@ -1016,37 +1016,16 @@ class CalendarEventUpdateView(UpdateView):
         'calendar'
     )
 
-    separate_days = False
     start_str = ""
     end_str = ""
 
     def get_object(self, *args, **kwargs):
         obj = super(CalendarEventUpdateView, self).get_object(*args, **kwargs)
-        tz = timezone.get_current_timezone()
-
-        # start_datetime = obj.start.astimezone(tz)
-        # end_datetime = obj.end.astimezone(tz)
-        # 
-        # self.start_str = '%02d:%02d' % (
-        #     start_datetime.hour, start_datetime.minute
-        # )
-        # self.end_str = '%02d:%02d' % (
-        #     end_datetime.hour, end_datetime.minute
-        # )
-        # 
-        # tdelta = obj.end - obj.start
-        # if self.end_str == "00:00" and tdelta.total_seconds() > 0:
-        #     self.end_str = "24:00"
-        #     obj.end = obj.end - datetime.timedelta(days=1)
-        #     self.separate_days = tdelta.total_seconds() > 24 * 60 * 60
-        # else:
-        #     self.separate_days = start_datetime.date() != end_datetime.date()
 
         return obj
 
     def get_context_data(self, **kwargs):
         return super(CalendarEventUpdateView, self).get_context_data(
-            separate_date=self.separate_days,
             start_time=self.start_str,
             end_time=self.end_str,
             **kwargs
