@@ -47,7 +47,7 @@
             <p class="pull-right">
                 <a href="{% url 'resource-view' resource.id %}" role="button" class="btn btn-primary">Gå til ressource</a>
             </p>
-            <h2>Regler for tilgængelighed</h2>
+            <h2>Tilgængelige tider</h2>
             {% if not available %}
             <p>
                 (Ingen regler betyder aldrig tilgængelig)
@@ -63,7 +63,7 @@
                     </li>
                 {% endfor %}
             </ul>
-            <h2>Regler for utilgængelighed</h2>
+            <h2>Utilgængelige tider</h2>
             {% if unavailable %}
             <ul>
                 {% for event in unavailable %}

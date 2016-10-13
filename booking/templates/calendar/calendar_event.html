@@ -21,7 +21,11 @@
 {% block content %}
     <div class="divider"></div>
     <h1>
-        {% trans "Opret regel for kalender" %}
+        {% if object.pk %}
+        {% trans "Rediger tid i kalender" %}
+        {% else %}
+        {% trans "Opret tid i kalender" %}
+        {% endif %}
     </h1>
 
     <div class="divider"></div>
