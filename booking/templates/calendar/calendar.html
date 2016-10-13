@@ -93,7 +93,7 @@
             {% endif %}
             <div class="divider"></div>
             <p>
-                <a href="{% url 'calendar-event-create' resource.id %}" role="button" class="btn btn-primary btn-xs">Opret ny regel</a>
+                <a href="{% url 'calendar-event-create' resource.id %}" role="button" class="btn btn-primary btn-xs">{% trans 'Opret tid i kalender' %}</a>
             </p>
             <table class="ressource-kalender table table-bordered table-striped">
                 <thead>
