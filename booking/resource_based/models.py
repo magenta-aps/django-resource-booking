@@ -543,6 +543,8 @@ class CalendarEvent(AvailabilityUpdaterMixin, models.Model):
     )
     recurrences = RecurrenceField(
         verbose_name=_(u"Gentagelser"),
+        null=True,
+        blank=True,
     )
 
     @property

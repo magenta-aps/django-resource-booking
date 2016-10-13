@@ -967,24 +967,35 @@ class CalendarEventCreateView(CreateView):
             )
         except:
             raise Http404
-        kwargs['initial']['calendar'] = calendar.pk
-        today_at_midnight = timezone.make_aware(
-            timezone.datetime.combine(
-                timezone.now().date(),
-                datetime.time()
+
+        if self.request.method == "GET":
+            kwargs['initial']['calendar'] = calendar.pk
+
+            midnight = timezone.make_aware(
+                timezone.datetime.combine(
+                    timezone.now().date(),
+                    datetime.time()
+                )
             )
-        )
-        kwargs['initial']['start'] = today_at_midnight
-        kwargs['initial']['end'] = today_at_midnight + datetime.timedelta(
-            days=1
-        )
+
+            kwargs['initial']['start'] = midnight + datetime.timedelta(
+                hours=8
+            )
+            kwargs['initial']['end'] = midnight + datetime.timedelta(
+                hours=16
+            )
         form = form_class(**kwargs)
         return form
 
     def get_context_data(self, **kwargs):
+        time_choices = []
+        for x in range(0, 24):
+            time_choices.append("%02d:00" % x)
+            time_choices.append("%02d:30" % x)
+        time_choices.append("24:00")
         return super(CalendarEventCreateView, self).get_context_data(
-            start_time="00:00",
-            end_time="24:00",
+            time_choices=time_choices,
+            default_all_day=self.request.method == "GET",
             **kwargs
         )
 
@@ -1013,23 +1024,23 @@ class CalendarEventUpdateView(UpdateView):
         obj = super(CalendarEventUpdateView, self).get_object(*args, **kwargs)
         tz = timezone.get_current_timezone()
 
-        start_datetime = obj.start.astimezone(tz)
-        end_datetime = obj.end.astimezone(tz)
-
-        self.start_str = '%02d:%02d' % (
-            start_datetime.hour, start_datetime.minute
-        )
-        self.end_str = '%02d:%02d' % (
-            end_datetime.hour, end_datetime.minute
-        )
-
-        tdelta = obj.end - obj.start
-        if self.end_str == "00:00" and tdelta.total_seconds() > 0:
-            self.end_str = "24:00"
-            obj.end = obj.end - datetime.timedelta(days=1)
-            self.separate_days = tdelta.total_seconds() > 24 * 60 * 60
-        else:
-            self.separate_days = start_datetime.date() != end_datetime.date()
+        # start_datetime = obj.start.astimezone(tz)
+        # end_datetime = obj.end.astimezone(tz)
+        # 
+        # self.start_str = '%02d:%02d' % (
+        #     start_datetime.hour, start_datetime.minute
+        # )
+        # self.end_str = '%02d:%02d' % (
+        #     end_datetime.hour, end_datetime.minute
+        # )
+        # 
+        # tdelta = obj.end - obj.start
+        # if self.end_str == "00:00" and tdelta.total_seconds() > 0:
+        #     self.end_str = "24:00"
+        #     obj.end = obj.end - datetime.timedelta(days=1)
+        #     self.separate_days = tdelta.total_seconds() > 24 * 60 * 60
+        # else:
+        #     self.separate_days = start_datetime.date() != end_datetime.date()
 
         return obj
 
