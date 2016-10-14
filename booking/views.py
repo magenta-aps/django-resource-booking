@@ -772,10 +772,13 @@ class SearchView(BreadcrumbMixin, ListView):
             self.to_datetime = t_to or ""
 
             if len(date_cond):
-                # Bookings where the guest decides the time should always
-                # show up in results.
+                # Products where the guest decides the time and products
+                # without time managenment should always show up in results.
                 qs = qs.filter(
-                    Q(time_mode=Product.TIME_MODE_GUEST_SUGGESTED) |
+                    Q(time_mode__in=[
+                        Product.TIME_MODE_NONE,
+                        Product.TIME_MODE_GUEST_SUGGESTED,
+                    ]) |
                     # The actual date conditions
                     date_cond
                 )
@@ -882,7 +885,12 @@ class SearchView(BreadcrumbMixin, ListView):
         v = int(v)
 
         if v == AdminProductSearchForm.IS_VISIT:
-            self.filters["product__pk__isnull"] = False
+            self.filters["time_mode__in"] = [
+                x[0] for x in Product.time_mode_choices
+                if x[0] != Product.TIME_MODE_NONE
+            ]
+        else:
+            self.filters["time_mode"] = Product.TIME_MODE_NONE
 
     def filter_by_has_bookings(self, form):
         b = form.cleaned_data.get("b", "")
