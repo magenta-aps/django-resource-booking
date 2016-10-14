@@ -160,59 +160,36 @@
                                 {% endif %}
                             </dd>
 
-                            {% if request.user.userprofile.can_create %}
-                                <dt>{% trans 'Hvornår:' %}</dt>
-                                <dd>
-                                    {% if object.is_guest_time_suggested %}
-                                        ({% trans 'Gæster foreslår selv tidspunkter' %})
-                                    {% endif %}
-                                    <ul class="list-unstyled" id="dato">
-                                    {% if object.eventtime_set.all %}
-                                        {% for eventtime in object.eventtime_set.all %}
-                                            {% if eventtime.start %}
-                                                <li data-expired="{% if eventtime.expired %}true{% else %}false{% endif %}">
-                                                    <a href="{{ eventtime.visit_link }}">
-                                                        {{ eventtime.interval_display }}
-                                                        {% if eventtime.expired %}
-                                                            <br/>{% trans '(udløbet)' %}
-                                                        {% elif eventtime.visit.available_seats != None %}
-                                                            <br/>{% blocktrans with seats=eventtime.visit.available_seats %}({{ seats }} pladser tilbage){% endblocktrans %}
-                                                        {% endif %}
-                                                    </a>
-                                                </li>
-                                            {% else %}
-                                                <li >
-                                                    <a href="{{ eventtime.visit_link }}">Besøg #{{eventtime.visit.pk}} (uden tidspunkt)</a>
-                                                </li>
-                                            {% endif %}
-                                        {% endfor %}
+                            <dt>{% trans 'Hvornår:' %}</dt>
+                            <dd>
+                                {% if object.is_guest_time_suggested %}
+                                    {% if request.user.userprofile.can_create %}
+                                        {% trans 'Gæster foreslår selv tidspunkter' %}
                                     {% else %}
-                                        <li>{% trans 'Ingen tidspunkter angivet' %}</li>
+                                        {% trans 'Foreslå selv et tidspunkt' %}
                                     {% endif %}
+                                {% elif object.future_bookable_times %}
+                                    <ul class="list-unstyled" id="dato">
+                                    {% for eventtime in object.future_bookable_times reversed %}
+                                        <li>{{ eventtime.interval_display }}</li>
+                                    {% endfor %}
                                     </ul>
-                                    {% if object.uses_time_management %}
-                                    <div class="divider"></div>
+                                {% else %}
+                                    {% trans 'Der er i øjeblikket ikke nogen tidspunkter der er åbne for tilmelding på dette tilbud' %}
+                                {% endif %}
+                                {% if request.user.userprofile.can_create %}
+                                    <div>
+                                        {% blocktrans with nr_bookable=nr_bookable nr_unbookable=nr_unbookable nr_visits=nr_visits %}
+                                            ({{ nr_bookable }} tidspunkter der kan bookes,
+                                             {{ nr_unbookable}} tidspunkter der ikke kan bookes og
+                                             {{ nr_visits }} besøg)
+                                        {% endblocktrans %}
+                                    </div>
                                     <p>
                                         <a class="pull-right btn btn-primary btn-xs margin-bottom-10 margin-right-10" href="{% url 'manage-times' object.pk %}">{% trans 'Administrér tidspunkter' %}</a>
                                     </p>
-                                    {% endif %}
-                                </dd>
-                            {% else %}
-                                <dt>{% trans 'Hvornår:' %}</dt>
-                                <dd>
-                                    {% if object.is_guest_time_suggested %}
-                                        {% trans 'Foreslå selv et tidspunkt' %}
-                                    {% elif object.future_bookable_times %}
-                                        <ul class="list-unstyled" id="dato">
-                                        {% for eventtime in object.future_bookable_times reversed %}
-                                            <li>{{ eventtime.interval_display }}</li>
-                                        {% endfor %}
-                                        </ul>
-                                    {% else %}
-                                        {% trans 'Der er i øjeblikket ikke nogen tidspunkter der er åbne for tilmelding på dette tilbud' %}
-                                    {% endif %}
-                                </dd>
-                            {% endif %}
+                                {% endif %}
+                            </dd>
 
                             {% if object.duration and object.duration != '00:00' %}
                                 <dt>{% trans 'Varighed' %}:</dt>

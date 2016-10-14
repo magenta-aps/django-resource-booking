@@ -34,9 +34,12 @@
                     <thead>
                         <tr>
                             <th>&nbsp;</th>
-                            <th>Dato</th>
-                            <th>Antal tilmeldinger</th>
+                            <th>Tidspunkt</th>
+                            <th>Antal tilmeldinger / gæster</th>
                             <th>Værter/undervisere tildelt</th>
+                            {% if object.is_resource_controlled %}
+                            <th>Ressourcer</th>
+                            {% endif %}
                             <th>Besøg status</th>
                         </tr>
                     </thead>
@@ -48,14 +51,26 @@
                                 <input type="checkbox" name="selected_eventtimes" value="{{ eventtime.pk }}" />
                                 {% endif %}
                             </td>
-                            <td><a href="{% url 'edit-time' eventtime.product.pk eventtime.pk %}">{{ eventtime }}</a></td>
-                            <td>{{ eventtime.number_of_bookings|default:"0" }} ({{ eventtime.number_of_attendees|default:"0" }})</td>
-                            <td>{{ eventtime.number_of_teachers_and_hosts|default:"0" }}</td>
+                            <td><a href="{% url 'edit-time' eventtime.product.pk eventtime.pk %}">{{ eventtime.interval_display }}</a></td>
+                            <td>{{ eventtime.visit.booking_list|length }} / {{ eventtime.visit.nr_attendees|default:"0" }}</td>
+                            <td>{{ eventtime.visit.assigned_hosts|length }} / {{ eventtime.visit.assigned_teachers|length }}</td>
+                            {% if object.is_resource_controlled %}
+                            <td>
+                                {{ eventtime.resource_status_marker|safe }}
+                            </td>
+                            {% endif %}
                             <td>
                                 {% if eventtime.visit %}
-                                <a href="{% url 'visit-view' eventtime.visit.pk %}">{{ eventtime.visit.get_status_display }}</a>
+                                <a href="{% url 'visit-view' eventtime.visit.pk %}">
+                                    <span class="btn btn-{{ eventtime.visit.get_workflow_status_class }} btn-xs">
+                                        {{ eventtime.visit.get_workflow_status_display }}
+                                    </span>
+                                </a>
                                 {% else %}
-                                -
+                                <span class="btn btn-info btn-xs">{% trans 'Ikke oprettet' %}</span> -
+                                <a href="{{ eventtime.visit_link}}" class="btn btn-primary btn-xs">
+                                    {% trans 'Opret besøg' %}
+                                </a>
                                 {% endif %}
                             </td>
                         </tr>

@@ -45,6 +45,16 @@ class EventTime(models.Model):
         (RESOURCE_STATUS_BLOCKED, _(u"Blokeret af manglende ressourcer")),
         (RESOURCE_STATUS_ASSIGNED, _(u"Ressourcer tildelt")),
     )
+    resource_status_classes = {
+        RESOURCE_STATUS_AVAILABLE: 'primary',
+        RESOURCE_STATUS_BLOCKED: 'danger',
+        RESOURCE_STATUS_ASSIGNED: 'success'
+    }
+    short_resource_status_map = {
+        RESOURCE_STATUS_AVAILABLE: _('Ledige'),
+        RESOURCE_STATUS_BLOCKED: _('Blokeret'),
+        RESOURCE_STATUS_ASSIGNED: _('Tildelt')
+    }
 
     NONBLOCKED_RESOURCE_STATES = [
         x[0] for x in resource_status_choices
@@ -176,6 +186,29 @@ class EventTime(models.Model):
         if self.resource_status != result:
             self.resource_status = result
             self.save()
+
+    @property
+    def resource_status_class(self):
+        return EventTime.resource_status_classes[self.resource_status]
+
+    @property
+    def short_resource_status(self):
+        return EventTime.short_resource_status_map[self.resource_status]
+
+    @property
+    def resource_status_marker(self):
+        if self.visit:
+            link = reverse('visit-view', args=[self.visit.pk])
+        else:
+            link = reverse('resourcerequirement-list', args=[self.product.pk])
+
+        print "asdf"
+
+        return '<a href="%s" class="btn btn-%s btn-xs">%s</a>' % (
+            link,
+            self.resource_status_class,
+            self.short_resource_status
+        )
 
     @property
     def naive_start(self):

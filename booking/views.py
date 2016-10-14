@@ -1803,9 +1803,19 @@ class ProductDetailView(BreadcrumbMixin, ProductBookingDetailView):
 
         user = self.request.user
 
-        if (hasattr(user, 'userprofile') and
-                user.userprofile.can_edit(self.object)):
-            context['can_edit'] = True
+        if hasattr(user, 'userprofile'):
+            if user.userprofile.can_edit(self.object):
+                context['can_edit'] = True
+            if user.userprofile.can_create:
+                context['nr_bookable'] = len(
+                    self.object.future_bookable_times
+                )
+                context['nr_unbookable'] = len(
+                    self.object.eventtime_set.all()
+                ) - context['nr_bookable']
+                context['nr_visits'] = len(
+                    self.object.get_visits()
+                )
         else:
             context['can_edit'] = False
 
