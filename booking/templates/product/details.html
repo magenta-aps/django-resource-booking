@@ -237,34 +237,5 @@
 
     <script src="{% static 'js/custom.js' %}"></script>
     <script src="{% static "js/modalframe-host.js" %}"></script>
-    <script type="text/javascript">
-        <!--
-        // Show/hide multiple dates
-        if ($("#dato li").length > 6) {
-            var dato = $("#dato"),
-                showmore = "{% trans 'Vis flere datoer' %}",
-                showless = "{% trans 'Vis færre datoer' %}",
-                showexpired = "{% trans 'Vis udløbne datoer' %}",
-                surplus = dato.find('[data-expired="false"]').slice(6),
-                tohide = dato.find('[data-expired="true"]').add(surplus),
-                expandText = (surplus.length ? showmore : showexpired),
-                expanded = false;
-            tohide.hide();
-            dato.after("<a href=\"#\" class=\"showhide\">" + expandText + "</a>");
-
-            $(".showhide").click(function(e) {
-                e.preventDefault();
-                if (expanded) {
-                    tohide.hide(400);
-                    $(this).text(expandText);
-                } else {
-                    tohide.show(400);
-                    $(this).text(showless)
-                }
-                expanded = !expanded;
-            });
-        }
-        //-->
-    </script>
 
 {% endblock %}
