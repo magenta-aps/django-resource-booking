@@ -734,7 +734,11 @@ class SearchView(BreadcrumbMixin, ListView):
                 ok_states = Visit.BOOKABLE_STATES
                 date_cond = (
                     Q(eventtime__bookable=True) &
-                    Q(eventtime__visit__workflow_status__in=ok_states)
+                    Q(
+                        Q(eventtime__visit__isnull=True) |
+                        Q(eventtime__visit__workflow_status__in=ok_states)
+                    )
+
                 )
 
                 # Filter out resource-controlled products that are
