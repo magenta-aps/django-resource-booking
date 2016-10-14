@@ -31,6 +31,7 @@ MODEL_UNIT_FILTER_MAP = {
     'Room': 'locality__organizationalunit'
 }
 
+
 class KUBookingModelAdmin(admin.ModelAdmin):
     def has_module_permission(self, request):
         return request.user.userprofile.get_role() in EDIT_ROLES
@@ -143,8 +144,9 @@ class KUBookingRoomResponsibleAdmin(KUBookingModelAdmin):
     list_display = ['__unicode__', 'admin_delete_button']
 
 
-CUSTOM_ADMIN_CLASSES[booking_models.RoomResponsible] = \
-        KUBookingRoomResponsibleAdmin
+CUSTOM_ADMIN_CLASSES[booking_models.RoomResponsible] = (
+    KUBookingRoomResponsibleAdmin
+)
 
 
 def register_models(models, namespace=None):
