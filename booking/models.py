@@ -109,6 +109,17 @@ class RoomResponsible(models.Model):
 
     allow_null_unit_editing = True
 
+    def admin_delete_button(self):
+        return '<a href="%s" class="deletelink">%s</a>' % (
+            reverse(
+                'admin:booking_roomresponsible_delete',
+                args=[self.pk]
+            ),
+            _(u"Delete"),
+        )
+    admin_delete_button.allow_tags = True
+    admin_delete_button.short_description = _(u"Delete")
+
     def __unicode__(self):
         return self.name
 
