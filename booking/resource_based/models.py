@@ -202,8 +202,6 @@ class EventTime(models.Model):
         else:
             link = reverse('resourcerequirement-list', args=[self.product.pk])
 
-        print "asdf"
-
         return '<a href="%s" class="btn btn-%s btn-xs">%s</a>' % (
             link,
             self.resource_status_class,
