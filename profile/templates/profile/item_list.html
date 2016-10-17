@@ -43,10 +43,10 @@
                             <div class="pull-right">
                                 <ul class="list-unstyled">
                                     {% if visit.real.needs_teachers %}
-                                        <li>{% blocktrans count needed=visit.needed_teachers %}Mangler {{ needed }} underviser{% plural %}Mangler {{ needed }} undervisere{% endblocktrans %}</li>
+                                        <li>{% blocktrans count needed=visit.real.needed_teachers %}Mangler {{ needed }} underviser{% plural %}Mangler {{ needed }} undervisere{% endblocktrans %}</li>
                                     {% endif %}
                                     {% if visit.real.needs_hosts %}
-                                        <li>{% blocktrans count needed=visit.needed_hosts %}Mangler {{ needed }} vært{% plural %}Mangler {{ needed }} værter{% endblocktrans %}</li>
+                                        <li>{% blocktrans count needed=visit.real.needed_hosts %}Mangler {{ needed }} vært{% plural %}Mangler {{ needed }} værter{% endblocktrans %}</li>
                                     {% endif %}
                                     {% if visit.real.needs_room %}
                                         <li>{% blocktrans with count=1 %}Mangler lokale{% endblocktrans %}</li>
