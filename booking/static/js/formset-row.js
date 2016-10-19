@@ -6,9 +6,11 @@ $(function() {
             });
         },
         addRow: function(totalRowsEl, maxRowsEl, rowPrototype, container) {
+            console.log("totalRowsEl",totalRowsEl);
             totalRowsEl = $(totalRowsEl);
             maxRowsEl = $(maxRowsEl);
             var totalRows = parseInt(totalRowsEl.val(), 10);
+            console.log("totalRows",totalRows);
             var maxRows = parseInt(maxRowsEl.val(), 10);
 
             if (totalRows < maxRows) {
@@ -27,7 +29,8 @@ $(function() {
                     this.htmlFor = formset._replaceCounter(this.htmlFor, totalRows);
                 });
                 $(container).append(newRow);
-                totalRowsEl.val($(container).find(".autosend-row").length);
+                console.log("container",container);
+                totalRowsEl.val($(container).find(".row").length);
                 return newRow;
             }
         },
@@ -35,7 +38,7 @@ $(function() {
             row = $(row);
             totalRowsEl = $(totalRowsEl);
             row.remove();
-            totalRowsEl.val($(container).find(".autosend-row").length);
+            totalRowsEl.val($(container).find(".row").length);
         }
     };
 
