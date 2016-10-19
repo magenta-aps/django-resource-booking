@@ -176,7 +176,8 @@
             var removeRowEvent = function() {
                 formset.removeRow(
                     "#{{ form.management_form.TOTAL_FORMS.id_for_label }}",
-                    $(this).parents(".form-group")
+                    $(this).parents(".form-group"),
+                    $("#rowcontainer")
                 );
             };
 
