@@ -519,7 +519,6 @@ class EmailTemplate(models.Model):
 
     # Templates that will be autosent to editors for the given unit
     editor_keys = [
-        NOTIFY_EDITORS__BOOKING_CREATED,
         NOTIFY_HOST__HOSTROLE_IDLE,
         SYSTEM__EMAIL_REPLY,
     ]
@@ -552,7 +551,7 @@ class EmailTemplate(models.Model):
     potential_hosts_keys = [
         NOTIFY_HOST__REQ_HOST_VOLUNTEER
     ]
-    # Templates that will be sent to potential hosts
+    # Templates that will be sent to potential teachers
     potential_teachers_keys = [
         NOTIFY_HOST__REQ_TEACHER_VOLUNTEER
     ]
