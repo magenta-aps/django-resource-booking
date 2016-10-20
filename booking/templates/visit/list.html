@@ -1,0 +1,111 @@
+{% extends "index.html" %}
+{% load staticfiles %}
+{% load booking_tags %}
+{% load i18n %}
+
+{% block htmltitle %} - {% trans 'liste af besøg' %}{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div id="main" class="col-sm-12 col-md-12">
+
+            {% include 'common/breadcrumbrow.html' %}
+
+            <div class="divider"></div>
+
+            {% if not results %}
+                <p>{% trans 'Ingen besøg fundet.' %}</p>
+            {% else %}
+                <h2 class="bold">
+                    {% blocktrans with count=paginator.count %}{{ count }} besøg fundet{% endblocktrans %}
+                </h2>
+                <div class="divider"></div>
+                <ul class="media-list">
+                    {% for res in results %}
+                        <li class="media">
+                            <div class="media-body">
+                                <strong><a href="{% url 'visit-view' res.pk %}">{% trans 'Besøg' %} {{ res.pk }}</a></strong>
+                                <dl class="dl-horizontal">
+                                    <dt>{% trans 'Tilbud:' %}</dt>
+                                    <dd><a href="{% url 'product-view' res.product.pk %}">{{ res.product.title }}</a></dd>
+                                    <dt>{% trans 'Booket af:' %}</dt>
+                                    <dd>{% blocktrans with count=res.nr_attendees %}{{ count }} personer{% endblocktrans %}</dd>
+                                </dl>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-6 col-md-5 col-sm-offset-1 col-md-offset-3">
+            {% if paginator %}
+                <nav>
+                    <ul class="pager">
+
+                        {% if page_obj.has_previous %}
+                            <li>
+                                <a href="?{{ qstring }}&page={{ page_obj.previous_page_number }}&pagesize={{paginator.per_page}}" aria-label="{% trans 'Forrige' %}">
+                                    <span class="glyphicon glyphicon-chevron-left small" aria-hidden="true"></span>
+                                    {% trans 'Forrige' %}
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="disabled">
+                                <span>
+                                    <span class="glyphicon glyphicon-chevron-left small" aria-hidden="true"></span>
+                                    {% trans 'Forrige' %}
+                                </span>
+                            </li>
+                        {% endif %}
+                        
+                        {% if page_obj.has_next %}
+                            <li>
+                                <a href="?{{ qstring }}&page={{ page_obj.next_page_number }}&pagesize={{paginator.per_page}}" aria-label="{% trans 'Næste' %}">
+                                    {% trans 'Næste' %}
+                                    <span class="glyphicon glyphicon-chevron-right small" aria-hidden="true"></span>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="disabled">
+                                <span>
+                                    {% trans 'Næste' %}
+                                    <span class="glyphicon glyphicon-chevron-right small" aria-hidden="true"></span>
+                                </span>
+                            </li>
+                        {% endif %}
+                        
+                    </ul>
+                </nav>
+            {% endif %}
+        </div>
+        <div class="col-sm-4 col-md-3">
+            <div class="input-group input-group-sm search-list items-pr-side">
+                <span class="input-group-addon">Vis</span>
+                <div class="input-group-btn">
+                    <button type="button" class="btn btn-default">
+                        {% if request.GET.pagesize == "all" %}
+                            Vis alle
+                        {% else %}
+                            {{ paginator.per_page }}
+                        {% endif %}
+                    </button>
+                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> <span class="caret"></span> <span class="sr-only">Vis anrtal resultater pr. side</span> </button>
+                    <ul class="dropdown-menu">
+                        <li{% if request.GET.pagesize == "all" %} class="selected"{% endif %}><a href="?{{ qstring }}&pagesize=all">Vis alle</a></li>
+                        {% for size in pagesizes %}
+                            <li{% if size == paginator.per_page %} class="selected"{% endif %}><a href="?{{ qstring }}&pagesize={{size}}">{{size}}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <span class="input-group-addon"> pr. side</span>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+    <script src="{% static 'js/custom.js' %}"></script>
+{% endblock %}

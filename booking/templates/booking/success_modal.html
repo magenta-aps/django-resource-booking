@@ -10,11 +10,13 @@
 {% endblock %}
 
 {% block content %}
+    {% with success=True %}
     {% include 'booking/snippets/header.html' %}
+    {% endwith %}
 
     <div class="modal-body">
-        <p>{% trans "Tak for din tilmelding! Du hører fra os snarest." %}</p>
-        <p><a id="rebook" href="{% url 'visit-book' visit.id %}?modal=1">{% trans "Foretag ny tilmelding" %}</a></p>
+        <p>{% blocktrans with title=product.title %}Tak for din tilmelding til "{{ title }}". Du hører fra os snarest.{% endblocktrans%}</p>
+        <p><a id="rebook" href="{% url 'product-book' object.id %}?modal=1">{% trans "Foretag ny tilmelding" %}</a></p>
     </div>
 
     <div class="modal-footer">
@@ -29,7 +31,7 @@
 {% block extra_scripts %}
     <script type="text/javascript">
         <!--
-            $("#rebook").attr("href", "{% url 'visit-book' visit.id %}?modal=1" + document.location.hash);
+            $("#rebook").attr("href", "{% url 'product-book' object.id %}?modal=1" + document.location.hash);
         //-->
     </script>
 {% endblock %}

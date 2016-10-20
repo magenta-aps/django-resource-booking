@@ -63,13 +63,14 @@
         <div class="container">
             <ul class="list-inline">
                 <li><a href="{% url 'user_profile' %}">{% trans 'Min side' %}</a></li>
-                <li><a href="{% url 'search' %}">{% trans 'Tilbud' %}</a></li>
-                <li><a href="{% url 'visit-occ-search' %}">{% trans 'Besøg' %}</a></li>
+                {% if user.userprofile.is_administrator %}
                 <li><a href="{% url 'admin:index' %}">{% trans 'Avanceret' %}</a></li>
+                {% endif %}
                 {% if view.kwargs.can_be_embedded %}
                 <li><a href="{% url 'embedcodes' view.request.get_full_path|slice:"1:" %}">{% trans 'Indlejr side' %}</a></li>
                 {% endif %}
                 <li class="pull-right"><a href="{% url 'logout' %}">{% trans 'Log ud' %}</a></li>
+                <li class="pull-right">{% blocktrans with role=user.userprofile.user_role.name %}Du er logget ind som {{ role }}{% endblocktrans %}</li>
             </ul>
         </div>
         {% endif %}

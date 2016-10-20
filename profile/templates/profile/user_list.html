@@ -11,12 +11,29 @@
     <h1>{% trans 'Administrér brugere' %}</h1>
 
     <div class="divider"></div>
-    <div class="row">
-        <div class="col-sm-12" id="admin-input">
-            <a href="{% url 'user_create' %}" class="btn btn-primary btn-tiny">{% trans 'Opret ny bruger' %}</a>
-            <div class="divider"></div>
-            <h2>{% trans 'Filtrér brugerliste' %}</h2>
-            
+
+    <div id="admin-input">
+        <div class="row">
+
+            <div class="col-sm-4">
+                <a href="{% url 'user_create' %}" class="btn btn-primary btn-tiny">{% trans 'Opret ny bruger' %}</a>
+            </div>
+            {% if messages %}
+                <div class="col-sm-4 alert alert-success" role="alert">
+                    <ul>
+                        {% for message in messages %}
+                            <li {% if message.tags %}class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="divider"></div>
+        <h2>{% trans 'Filtrér brugerliste' %}</h2>
+
+        <div class="row">
+
             <form class="form-horizontal" name="filteruserlist" id="filteruserlist">
                 <div class="form-group">
                     <label class="col-sm-2 control-label">{% trans 'Enhed:' %}</label>
@@ -56,26 +73,33 @@
     <div class="row">
         <div class="col-sm-10 col-sm-offset-1">
             <ul class="list-unstyled">
-                {% for user in users %}
+                {% for otheruser in users %}
                 <li class="media">
                     <dl class="dl-horizontal">
                         <dt>{% trans 'Navn:' %}</dt>
                         <dd>
-                            {{ user }}
-                            <a href="{% url 'user_edit' user.pk %}">{% trans 'Redigér' %}</a>
+                            {% if otheruser.get_full_name %}
+                            {{ otheruser.get_full_name }} ({{ otheruser.username }})
+                            {% else %}
+                            "{{ otheruser.username }}"
+                            {% endif %}
+                            {% if user == otheruser or otheruser.userprofile.get_role in user.userprofile.available_roles %}
+                                <a href="{% url 'user_edit' otheruser.pk %}">{% trans 'Redigér' %}</a>
+                                <a href="{% url 'user_delete' otheruser.pk %}">{% trans 'Slet' %}</a>
+                            {% endif %}
                         </dd>
                         <dt>{% trans 'Email:' %}</dt>
-                        <dd>{{ user.email }}</dd>
+                        <dd>{{ otheruser.email }}</dd>
                         <dt>{% trans 'Enhed:' %}</dt>
-                        <dd>{{ user.userprofile.unit.name }}</dd>
+                        <dd>{{ otheruser.userprofile.organizationalunit.name }}</dd>
                         <dt>{% trans 'Rolle:' %}</dt>
-                        <dd>{{ user.userprofile.get_role_name }}</dd>
+                        <dd>{{ otheruser.userprofile.get_role_name }}</dd>
                     </dl>
                 </li>
                 {% endfor %}
             </ul>
         </div>
+        <div class="divider"></div>
     </div>
-    <div class="divider"></div>
 
 {% endblock %}

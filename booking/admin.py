@@ -4,20 +4,20 @@ from django.db.models import Q
 
 from . import models as booking_models
 from profile.models import COORDINATOR, FACULTY_EDITOR, EDIT_ROLES
+from booking.resource_based import models as resource_models
 
 EXCLUDE_MODELS = set([
-    booking_models.Resource,
     booking_models.GymnasieLevel,
 ])
 
 CLASSES_BY_ROLE = {}
 CLASSES_BY_ROLE[COORDINATOR] = set([
     booking_models.Locality,
-    booking_models.Person,
+    booking_models.Room,
 ])
 
 CLASSES_BY_ROLE[FACULTY_EDITOR] = set([
-    booking_models.Unit
+    booking_models.OrganizationalUnit
 ])
 
 # Faculty editors will always have access to the same things as
@@ -26,6 +26,10 @@ CLASSES_BY_ROLE[FACULTY_EDITOR].update(CLASSES_BY_ROLE[COORDINATOR])
 
 # Dict for registering custom admin classes for certain models
 CUSTOM_ADMIN_CLASSES = {}
+
+MODEL_UNIT_FILTER_MAP = {
+    'Room': 'locality__organizationalunit'
+}
 
 
 class KUBookingModelAdmin(admin.ModelAdmin):
@@ -37,7 +41,6 @@ class KUBookingModelAdmin(admin.ModelAdmin):
             return True
 
         role = request.user.userprofile.get_role()
-        print role
         if role in CLASSES_BY_ROLE:
             return self.model in CLASSES_BY_ROLE[role]
 
@@ -56,14 +59,22 @@ class KUBookingModelAdmin(admin.ModelAdmin):
             return qs
 
         # Filter anything that has a unit to the units the user has access to
-        if hasattr(self.model, 'unit'):
-            unit_qs = request.user.userprofile.get_unit_queryset()
-            if getattr(self.model, 'allow_null_unit_editing', False):
-                qs = qs.filter(Q(unit=None) | Q(unit=unit_qs))
-            else:
-                qs = qs.filter(unit=unit_qs)
+        model_name = self.model._meta.object_name
+        unit_filter_match = None
+        if hasattr(self.model, 'organizationalunit'):
+            unit_filter_match = 'organizationalunit'
+        elif model_name in MODEL_UNIT_FILTER_MAP:
+            unit_filter_match = MODEL_UNIT_FILTER_MAP[model_name]
 
-        print qs.query
+        if unit_filter_match is not None:
+            unit_qs = request.user.userprofile.get_unit_queryset()
+            match1 = {unit_filter_match: unit_qs}
+            if getattr(self.model, 'allow_null_unit_editing', False):
+                match2 = {unit_filter_match: None}
+                qs = qs.filter(Q(**match1) | Q(**match2))
+            else:
+                qs = qs.filter(**match1)
+
         return qs
 
     def get_form(self, request, obj=None, **kwargs):
@@ -74,14 +85,26 @@ class KUBookingModelAdmin(admin.ModelAdmin):
         if request.user.userprofile.is_administrator:
             return form
 
-        if hasattr(self.model, 'unit') and 'unit' in form.base_fields:
+        model_name = self.model._meta.object_name
+        if hasattr(self.model, 'organizationalunit') and 'organizationalunit' \
+                in form.base_fields:
             # Limit choices to the unit the user has access to
             unit_qs = request.user.userprofile.get_unit_queryset()
-            form.base_fields['unit'].queryset = unit_qs
+            form.base_fields['organizationalunit'].queryset = unit_qs
 
             if not getattr(self.model, 'allow_null_unit_editing', False):
                 # Do not allow selecting the blank option
-                form.base_fields['unit'].empty_label = None
+                form.base_fields['organizationalunit'].empty_label = None
+        elif model_name in MODEL_UNIT_FILTER_MAP:
+            match_str = MODEL_UNIT_FILTER_MAP[model_name]
+
+            (fieldname, match) = match_str.split("__", 1)
+
+            field = form.base_fields[fieldname]
+            unit_qs = request.user.userprofile.get_unit_queryset()
+            field.queryset = field.queryset.filter(
+                **{match: unit_qs}
+            )
 
         return form
 
@@ -114,24 +137,37 @@ class KUBookingUnitAdmin(KUBookingModelAdmin):
         return form
 
 
-CUSTOM_ADMIN_CLASSES[booking_models.Unit] = KUBookingUnitAdmin
+CUSTOM_ADMIN_CLASSES[booking_models.OrganizationalUnit] = KUBookingUnitAdmin
 
-# Register your models here.
-for name, value in booking_models.__dict__.iteritems():
-    # Skip stuff that is not classes
-    if not isinstance(value, type):
-        continue
 
-    # Skip stuff that is not models
-    if not issubclass(value, django_models.Model):
-        continue
+def register_models(models, namespace=None):
+    for name, value in models:
+        # Skip stuff that is not classes
+        if not isinstance(value, type):
+            continue
 
-    # Skip stuff that is not native to the booking.models module
-    if not value.__module__ == 'booking.models':
-        continue
+        # Skip stuff that is not models
+        if not issubclass(value, django_models.Model):
+            continue
 
-    if value in EXCLUDE_MODELS:
-        continue
+        if value._meta.abstract:
+            continue
 
-    cls = CUSTOM_ADMIN_CLASSES.get(value, KUBookingModelAdmin)
-    admin.site.register(value, cls)
+        # Skip stuff that is not native to the booking.models module
+        if namespace is not None and not value.__module__ == namespace:
+            continue
+
+        if value in EXCLUDE_MODELS:
+            continue
+
+        cls = CUSTOM_ADMIN_CLASSES.get(value, KUBookingModelAdmin)
+        admin.site.register(value, cls)
+
+register_models(
+    booking_models.__dict__.iteritems(),
+    'booking.models'
+)
+register_models(
+    resource_models.__dict__.iteritems(),
+    'booking.resource_based.models'
+)

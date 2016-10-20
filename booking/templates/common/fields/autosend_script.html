@@ -1,0 +1,231 @@
+{% load staticfiles %}
+{% load i18n %}
+{% load booking_tags %}
+{% if autosendformset %}
+<script type="text/javascript" src="{% static 'js/formset-row.js' %}"></script>
+
+<script type="text/javascript">
+    <!--
+
+    {% autoescape off %}
+        {% if inherited %}
+        var inherited = {{ inherited | jsonify }};
+        {% endif %}
+        var template_keys = {{ template_keys | jsonify }};
+    {% endautoescape %}
+
+        $(function(){
+            var totalFormsField = $("#{{ autosendformset.management_form.TOTAL_FORMS.id_for_label }}");
+            var rowList = $("#autosend-list");
+
+            // Enables/disables input elements and labels
+            var toggleEnabled = function(element, key, enable) {
+                if (element.length > 1) {
+                    element.each(function(){
+                        toggleEnabled($(this), key, enable);
+                    });
+                } else if (element.length === 1) {
+                    if (element.attr("type") !== "hidden") {
+                        var d = element.data("disable") || {};
+                        d[key] = !!enable;
+                        var doEnable = true;
+                        for (var k in d) {
+                            if (d[k] === false) {
+                                doEnable = false;
+                                break;
+                            }
+                        }
+                        if (doEnable) {
+                            element.removeAttr("disabled");
+                        } else {
+                            element.attr("disabled", "disabled");
+                        }
+
+                        var id = element.attr("id");
+                        if (id) {
+                            var keeperId = id + "_keeper";
+                            if (doEnable) {
+                                $("#" + keeperId).remove();
+                            } else if (element.attr("type") !== "checkbox") {
+                                var keeper = $("#"+keeperId);
+                                if (keeper.length == 0) {
+                                    keeper = $("<input>").attr({
+                                        type: 'hidden',
+                                        id: keeperId,
+                                        name: element.attr('name')
+                                    });
+                                }
+                                keeper.val(element.val());
+                                element.parent().append(keeper);
+                            }
+                            element.parents(".autosend-row").find("label[for='" + id + "']").toggleClass("deletion", !doEnable);
+                        }
+                        element.data("disable", d);
+                    }
+                }
+            };
+
+            // Enables/disables the days field depending on what's selected in the template_key
+            var toggleDays = function(row) {
+                var value = parseInt(row.find("[name$='-template_key']").val(), 10);
+                var daysInput = row.find("[name$='-days']");
+                var enabledKeys = {{ autosend_enable_days | jsonify }};
+                toggleEnabled(daysInput, "reminder", $.inArray(value, enabledKeys) != -1);
+            };
+
+            // Enables/disables the "enabled" field, and sets its value, depending on whether we inherit from a ProductAutosend
+            var toggleInherit = function(row) {
+                if (window.inherited) {
+                    var inheritField = row.find("[name$='-inherit']");
+                    var enabledField = row.find("[name$='-enabled']");
+                    var daysField = row.find("[name$='-days']");
+                    var template_key = row.find("[name$='-template_key']").val();
+                    var superObject = window.inherited[template_key];
+
+                    toggleEnabled(inheritField, "inherit2", !!superObject);
+                    if (!superObject) {
+                        inheritField.prop("checked", false);
+                    }
+
+                    if (inheritField.prop("checked")) {
+                        if (superObject) {
+                            enabledField.data("oldValue", enabledField.prop("checked"));
+                            enabledField.prop("checked", superObject.enabled);
+                            toggleEnabled(enabledField, "inherit", false);
+
+                            daysField.data("oldValue", daysField.val());
+                            daysField.val(superObject.days);
+                            toggleEnabled(daysField, "inherit", false);
+                        }
+                    } else {
+                        toggleEnabled(enabledField, "inherit", true);
+                        toggleEnabled(daysField, "inherit", true);
+                        enabledField.prop("checked", enabledField.data("oldValue"));
+                        daysField.val(daysField.data("oldValue"));
+                    }
+                }
+            };
+
+            var addWarning = function(row, id, warningText) {
+                var warning = $("li#"+id);
+                if (warning.length == 0) {
+                    var warningList = row.find(".warninglist");
+                    if (warningList.length == 0) {
+                        var templateSelect = row.find("[name$='-template_key']");
+                        warningList = $("<ul>").addClass("warninglist");
+                        templateSelect.before(warningList);
+                    }
+                    warning = $("<li>").attr({id: id});
+                    warningList.append(warning);
+                }
+                warning.html(warningText);
+            };
+
+            var removeWarning = function(id) {
+                var warning = $("li#"+id);
+                var parent = warning.parent();
+                warning.remove();
+                if (parent.children().length == 0) {
+                    parent.remove();
+                }
+            };
+
+            var checkTemplateExistence = function(row) {
+                var templateSelect = row.find("[name$='-template_key']");
+                var key = parseInt(templateSelect.val(), 10),
+                    id = "missingtemplate";
+                if (window.template_keys && !isNaN(key) && $.inArray(key, window.template_keys) == -1) {
+                    var url = "{% url "emailtemplate-create" %}?key=" + key + "&organizationalunit={{ organizationalunit.id }}";
+                    addWarning(row, id, "{% trans "Der er ingen skabelon til denne hændelse!" %} <a href=\""+url+"\" target=\"_blank\">{% trans "Opret" %}</a>");
+                } else {
+                    removeWarning(id);
+                }
+            };
+
+            // Updates existing rows (on load) and new rows (on add)
+            var fixRow = function(row) {
+                row.removeClass("rowPrototype");
+                var templateSelect = row.find("[name$='-template_key']");
+                templateSelect.change(function(){
+                    toggleDays(row);
+                    toggleInherit(row);
+                    disableAlreadySelected();
+                    checkTemplateExistence(row);
+                });
+                toggleDays(row);
+
+                var deleteField = row.find("[name$='-DELETE']");
+                deleteField.change(function(){
+                    toggleEnabled(row.find("input,select").not($(this)), "delete", !$(this).prop("checked"));
+                    if ($(this).prop("checked") && !row.find("[name$='-autosend_ptr']").val()) {
+                        formset.removeRow(totalFormsField, row, rowList);
+                        disableAlreadySelected();
+                    }
+                });
+                deleteField.prop("checked", false);
+                toggleEnabled(row.find("input,select").not(deleteField), "delete", !deleteField.prop("checked"));
+
+                var inheritField = row.find("[name$='-inherit']");
+                inheritField.change(function(){
+                    toggleInherit(row);
+                });
+                toggleInherit(row);
+                checkTemplateExistence(row);
+            };
+
+            // Disables template options that are selected in another row (so each template key can only be selected in one row)
+            var disableAlreadySelected = function() {
+                var selects = $("[name$='-template_key']").not(".rowPrototype *"),
+                    selected = {};
+                selects.each(function() {
+                    var value = $(this).val();
+                    if (value !== "") {
+                        selected[value] = true;
+                    }
+                });
+                selects.find("option").each(function(){
+                    if (selected[this.value] && !this.selected) {
+                        this.disabled = "disabled";
+                    } else {
+                        this.disabled = null;
+                    }
+                });
+            };
+
+            var container = $("<div style='display:none'></div>").appendTo($("body"));
+            var rowPrototype = $(".autosend-row").first().clone().addClass("rowPrototype");
+            container.append(rowPrototype);
+
+            $("#addAutosend").click(function(){
+                var row = formset.addRow(
+                        totalFormsField,
+                        $("#{{ autosendformset.management_form.MAX_NUM_FORMS.id_for_label }}"),
+                        rowPrototype,
+                        rowList
+                );
+                if (row) {
+                    fixRow(row);
+                    disableAlreadySelected();
+                }
+                return false;
+            });
+
+            // Delete extraneous rows
+            var empty = $();
+            $(".autosend-row").each(function(){
+                var select = $(this).find("select");
+                if (!select.val()) {
+                    empty = empty.add($(this));
+                }
+            });
+            formset.removeRow(totalFormsField, empty.not(empty.first()), rowList);
+
+            $(".autosend-row").not(".rowPrototype").each(function() {
+                fixRow($(this));
+            });
+            disableAlreadySelected();
+            totalFormsField.val(rowList.find(".autosend-row").length);
+        });
+    //-->
+</script>
+{% endif %}

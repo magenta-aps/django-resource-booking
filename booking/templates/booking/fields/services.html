@@ -1,0 +1,48 @@
+{% load i18n %}
+{% if bookingform.tour_desired %}
+    <div class="form-group">
+        <label class="col-sm-2 control-label" for="{{ bookingform.tour_desired.id_for_label }}">{% trans 'Rundvisning' %}</label>
+        <div class="col-sm-6{% if bookingform.tour_desired.errors %} has-error{% endif %}">
+            {{ bookingform.tour_desired }}
+        </div>
+        <div class="col-sm-3 help-block with-errors">
+            {{ bookingform.tour_desired.errors }}
+        </div>
+    </div>
+{% endif %}
+
+{% if bookingform.catering_desired %}
+    <div class="form-group">
+        <label class="col-sm-2 control-label" for="{{ bookingform.catering_desired.id_for_label }}">{% trans 'Forplejning' %}</label>
+        <div class="col-sm-6{% if bookingform.catering_desired.errors %} has-error{% endif %}">
+            {{ bookingform.catering_desired }}
+        </div>
+        <div class="col-sm-3 help-block with-errors">
+            {{ bookingform.catering_desired.errors }}
+        </div>
+    </div>
+{% endif %}
+
+{% if bookingform.presentation_desired %}
+    <div class="form-group">
+        <label class="col-sm-2 control-label" for="{{ bookingform.presentation_desired.id_for_label }}">{% trans 'Oplæg om uddannelse' %}</label>
+        <div class="col-sm-6{% if bookingform.presentation_desired.errors %} has-error{% endif %}">
+            {{ bookingform.presentation_desired }}
+        </div>
+        <div class="col-sm-3 help-block with-errors">
+            {{ bookingform.presentation_desired.errors }}
+        </div>
+    </div>
+{% endif %}
+
+{% if bookingform.custom_desired %}
+    <div class="form-group">
+        <label class="col-sm-2 control-label" for="{{ bookingform.custom_desired.id_for_label }}">{{ product.custom_name }}</label>
+        <div class="col-sm-6{% if bookingform.custom_desired.errors %} has-error{% endif %}">
+            {{ bookingform.custom_desired }}
+        </div>
+        <div class="col-sm-3 help-block with-errors">
+            {{ bookingform.custom_desired.errors }}
+        </div>
+    </div>
+{% endif %}

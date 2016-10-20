@@ -1,0 +1,25 @@
+{% load i18n %}
+{% if form.tilbudsansvarlig %}
+<div class="row form-group">
+    <div class="col-sm-2">
+        <label for="{{ form.contacts.id_for_label }}" class="control-label">{{ form.tilbudsansvarlig.label }}:</label>
+    </div>
+    <div class="col-sm-7">
+        {{ form.tilbudsansvarlig }}
+        <p>
+            {% trans 'Valg af tilbudsansvarlig gør tilbuddet personligt for den valgte ansvarlige' %}.<br />
+            {% trans 'Den tilbudsansvarlige vil også være den der modtager forespørgsler via formularen "Spørg om tilbud"' %}.
+            {% if form.instance.pk %}
+                {% trans 'Udryldes feltet ikke bruges i stedet brugeren der oprettede tilbuddet,'%}
+                "{{ form.instance.created_by.get_full_name }} &lt;{{ form.instance.created_by.email }}&gt;".
+            {% else %}
+                {% trans 'Udryldes feltet ikke bruges i stedet nuværende bruger,'%}
+                "{{ request.user.get_full_name }} &lt;{{ request.user.email }}&gt;".
+            {% endif %}
+        </p>
+    </div>
+    <div class="col-sm-3 with-errors">
+        {{ form.tilbudsansvarlig.errors }}
+    </div>
+</div>
+{% endif %}

@@ -1,0 +1,107 @@
+{% load i18n %}
+
+{% if hastime %}
+    <div class="row form-group">
+        <div class="col-sm-2">
+            <label class="control-label">{% trans 'Vælg datoer og tider' %}:</label>
+        </div>
+        <div class="col-sm-10 pre-scrollable">
+            <ul id="id_time" class="list-unstyled"></ul>
+            
+            {% if object and object.visit_set %}
+                <ul id="existing-recurrence-dates" class="list-unstyled" data-product-id="{{ object.id }}">
+                    {% for visit in object.visit_set.all %}
+                        {% if visit.is_booked %}
+                            <li class="date" data-date="{{ visit.start_datetime|date:'d-m-Y H:i' }} 1">
+                                <div><span class="glyphicon glyphicon-calendar"></span> {{ visit.start_datetime|date:'d-m-Y' }}</div>h
+                            </li>
+                        {% else %}
+                            <li class="date" data-date="{{ visit.start_datetime|date:'d-m-Y H:i' }}">
+                                <div><span class="glyphicon glyphicon-calendar"></span> {{ visit.start_datetime|date:'d-m-Y' }}</div>
+                                <div><span class="glyphicon glyphicon-time"></span> <input class="btn-add-time timepick" type="text" name="timepick" placeholder="{% trans 'Tilføj starttid' %}" value="{{ visit.start_datetime|date:'H:i' }}"></div>
+                                <button type="button" class="btn-rm-date"><span class="glyphicon glyphicon-remove"></span></button>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+                <input id="visits" name="visits" type="hidden">
+            {% endif %}
+            
+            <label class="btn btn-primary btn-sm" for="id_datepick">
+                <input id="id_datepick" type="text" name="datepick" class="datepicker">  {% trans 'Tilføj dato' %}
+            </label>
+            
+            
+            <!-- Button trigger modal -->
+            <button type="button" class="btn btn-default btn-sm" data-toggle="modal" data-target="#rruleModal">
+                {% trans 'Tilføj gentagne datoer' %}
+            </button>
+            
+            <div class="modify-datetime">
+                <label for="add-time-all" id="add-time-all-label">
+                    <span class="glyphicon glyphicon-time"></span> {% trans 'Sæt starttid for alle datoer' %}
+                </label>
+                <input id="add-time-all" class="add-time-all timepick" type="text">
+                
+                <button class="btn-rm-date-all btn btn-link btn-xs">
+                    <span class="glyphicon glyphicon-remove"></span>
+                    {% trans 'Fjern alle datoer' %}
+                </button>
+                <p><em>{% trans 'Bookede tider kan ikke ændres eller slettes' %}</em></p>
+            </div>
+            
+        </div>
+    </div>
+    
+    
+    <!-- RRule modal -->
+    <div class="modal fade" id="rruleModal" tabindex="-1" role="dialog" aria-labelledby="rruleModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="{% trans 'Luk' %}"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="rruleModalLabel">{% trans 'Tilføj gentagne datoer' %}</h4>
+                </div>
+                <div class="modal-body">
+                    
+                    <div id="rruleInput" class="form">
+                        <div class="form-group">
+                            <p><strong>{% trans 'Starter' %}:</strong></p>
+                            <label class="label-unstyled" for="input-start">{% trans 'På dato' %}</label>
+                            <input id="input-start" name="start" type="text" class="form-control" placeholder="{% trans 'Dato' %}">
+                        </div>
+                        <div class="form-group">
+                            <div class="checkbox" id="input-weekdays">
+                                <p><strong>{% trans 'Gentages ugentligt på' %}:</strong></p>
+                                <label><input id="input-weekdays-mon" type="checkbox" name="RRule.MO"> {% trans 'Mandage' %}</label>
+                                <label><input id="input-weekdays-tue" type="checkbox" name="RRule.TU"> {% trans 'Tirsdage' %}</label>
+                                <label><input id="input-weekdays-wed" type="checkbox" name="RRule.WE"> {% trans 'Onsdage' %}</label>
+                                <label><input id="input-weekdays-thu" type="checkbox" name="RRule.TH"> {% trans 'Torsdage' %}</label>
+                                <label><input id="input-weekdays-fri" type="checkbox" name="RRule.FR"> {% trans 'Fredage' %}</label>
+                                <label><input id="input-weekdays-sat" type="checkbox" name="RRule.SA"> {% trans 'Lørdage' %}</label>
+                                <label><input id="input-weekdays-sun" type="checkbox" name="RRule.SU"> {% trans 'Søndage' %}</label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <p><strong>{% trans 'Slutter' %}:</strong></p>
+                            <label class="label-unstyled" for="input-until">{% trans 'På dato' %}</label>
+                            <input id="input-until" name="until" type="text" class="form-control" placeholder="{% trans 'Dato' %}">
+                            <label class="label-unstyled" for="input-count">eller efter <input id="input-count" name="count" type="text" class="form-control" placeholder="0"> forekomster</label>
+                        </div>
+                    </div>
+                    <div id="rruleOutput">
+                        <p><strong>{% trans 'Dine udvalgte datoer' %}:</strong></p>
+                        <ul class="rrule-datelist list-unstyled">
+                        </ul>
+                        <p id="rrule-text"></p>
+                    </div>
+                    
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">{% trans 'Luk' %}</button>
+                    <button type="button" id="btn-add-rrule-dates" class="btn btn-primary">{% trans 'Tilføj disse datoer' %}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}

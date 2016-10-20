@@ -1,1 +1,1 @@
-Tilmelding til foKUs-tilbud "{{ visit.title }}"
+Tilmelding til foKUs-tilbud "{{ product.title }}"

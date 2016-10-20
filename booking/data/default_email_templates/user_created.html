@@ -1,4 +1,3 @@
-{% load booking_tags %}
 <p>Kære {{ recipient.get_full_name }}.</p>
 
 <p>
@@ -9,15 +8,7 @@
     <li>Password: {{ password }}</li>
 </ul>
 <p>
-    Du kan logge ind i systemet via WebSSO på følgende URL:<br />
-    <a href="{% full_url 'saml2_login' %}">{% full_url 'saml2_login' %}</a>.
-</p>
-<p>
-    Bemærk at dit WebSSO password ikke nødvendigvis er det samme som
-    ovenstående.
-</p>
-<p>
-    Du kan også logge ind i systemet med ovenstående brugernavn og password
+    Du kan logge ind i systemet med ovenstående brugernavn og password
     via følgende URL:<br />
     <a href="{% full_url 'standard_login' %}">{% full_url 'standard_login' %}</a>.
 </p>

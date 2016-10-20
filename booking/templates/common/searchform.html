@@ -13,4 +13,7 @@
             </button>
         </span>
     </div>
+    {% for x in hiddenrepeats %}
+        <input type="hidden" name="{{ x.name }}" value="{{ x.value }}" />
+    {% endfor %}
 </form>

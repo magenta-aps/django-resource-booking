@@ -1,0 +1,286 @@
+{% extends 'index.html' %}
+{% load staticfiles %}
+{% load timedelta %}
+{% load i18n %}
+{% load booking_tags %}
+
+{% block htmltitle %} - {{ object.title }}{% endblock %}
+
+{% block content %}
+
+    {% include 'common/breadcrumbrow.html' %}
+
+    <div class="row titlebar hidden-print">
+        <div class="col-sm-12 col-md-9"><h2>{% trans 'Om tilbuddet' %}</h2></div>
+        <div class="divider"></div>
+    </div>
+    {% if messages %}
+    <div class="col-sm-4 alert alert-info" role="alert">
+        <ul>
+            {% for message in messages %}
+            <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    <div class="row">
+        <div class="col-sm-12 col-md-8">
+            <div class="divider"></div>
+            <h2>{{ object.get_type_display }}</h2>
+            
+            {% if can_edit %}
+                <a class="pull-right btn btn-primary margin-bottom-10" href="{% url 'product-edit' object.pk %}">{% trans '+ Redigér' %}</a>
+            {% endif %}
+            {% if user.userprofile.can_create %}
+                <a class="pull-right btn btn-primary margin-bottom-10 margin-right-10" href="{% url 'product-clone' object.pk %}">{% trans 'Kopier tilbud' %}</a>
+            {% endif %}
+            {% if can_edit %}
+                {% if object.is_resource_controlled %}
+                    <a class="pull-right btn btn-primary margin-bottom-10 margin-right-10" href="{% url 'resourcerequirement-list' object.pk %}">{% trans 'Redigér ressourcebehov' %}</a>
+                {% else %}
+                    <a class="pull-right btn btn-primary margin-bottom-10 margin-right-10" href="{% url 'product-simple-ressources' object.pk %}">{% trans 'Redigér ressourcer' %}</a>
+                {% endif %}
+            {% endif %}
+            
+            <h1>{{ object.title }}</h1>
+            <div class="well">
+                {% autoescape off %}
+                {{ object.teaser }}
+                {% endautoescape %}
+            </div>
+            <div class="well">
+                <!-- Richtext editor start -->
+                {% autoescape off %}
+                {{ object.description }}
+                {% endautoescape %}
+                <!-- Richtext editor end -->
+            </div>
+            {% if object.studymaterial_set %}
+                <ul>
+                {% for material in object.studymaterial_set.all %}
+                    {% if material.file and material.file.size %}
+                    <li>
+                        <a target="_blank" href="{{ MEDIA_URL }}{{ material.file.url }}">{{ material.file.name | upload_name_strip_path }} ({{ material.file.size | filesizeformat }})</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                </ul>
+            {% endif %}
+            <div class="well order-buttons hidden-print">
+                {% if object.is_bookable %}
+                    {% if object.is_time_guest_suggested %}
+                        <a class="btn btn-default" href="{% url 'product-book-notime' object.id %}">
+                            {% trans 'Tilmeld' %}
+                            <span class="glyphicon glyphicon-chevron-right"></span>
+                        </a>
+                    {% else %}
+                        <a class="btn btn-default" data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'product-book' object.id %}?modal=1">
+                            {% trans 'Tilmeld' %}
+                            <span class="glyphicon glyphicon-chevron-right"></span>
+                        </a>
+                    {% endif %}
+                {% elif object.can_join_waitinglist %}
+                    <a class="btn btn-default" data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'product-book' object.id %}?modal=1">
+                        {% trans 'Skriv på venteliste' %}
+                        <span class="glyphicon glyphicon-chevron-right"></span>
+                    </a>
+                {% endif %}
+                {% if object.tilbudsansvarlig or object.created_by %}
+                    <a class="btn btn-default" data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'product-inquire' object.id %}?modal=1" >
+                        {% trans 'Spørg om tilbud' %}
+                        <span class="glyphicon glyphicon-question-sign"></span>
+                    </a>
+                {% endif %}
+            </div>
+            {% if object.is_bookable %}
+                <div class="disclaimer">{% trans 'Bemærk at din bestilling først er bindende, når du har modtaget en bekræftelse fra den ansvarlige arrangør fra Københavns Universitet.' %}</div>
+            {% endif %}
+            <div class="go-back">
+                {% if searchurl != "/search" %}
+                    <a href="#" class="btn btn-default" onclick="history.go(-1); return false;"><span class="glyphicon glyphicon-chevron-left"></span>{% trans 'Tilbage til søgeresultat' %}</a>
+                {% else %}
+                    <a href="{{ searchurl }}" class="btn btn-default"><span class="glyphicon glyphicon-chevron-left"></span> {% trans 'Søg i tilbud' %}</a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-4">
+            <form class="form-horizontal">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">{% trans 'Hvem, hvor og hvornår' %}</h3>
+                    </div>
+                    <div class="panel-body">
+                        <dl class="dl-horizontal">
+
+                            {% if object.get_audience_display %}
+                                <dt>{% trans 'Henvendt til'%}:</dt>
+                                <dd>{{ object.get_audience_display }}</dd>
+                            {% endif %}
+                            
+                            {% if object.resource_ptr.all_subjects  %}
+                                <dt>{% trans 'Fag/niveau' %}:</dt>
+                                <dd>
+                                    <ul class="type-offer list-inline">
+                                        {% for x in object.resource_ptr.all_subjects %}
+                                        <li>{{ x.display_value }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </dd>
+                            {% endif %}
+                            
+                            {% if object.num_of_participants_display %}
+                                <dt>{% trans 'Antal' %}:</dt>
+                                <dd>{{ object.num_of_participants_display }}</dd>
+                            {% endif %}
+                            
+                            {% if object.get_type_display %}
+                                <dt>{% trans 'Hvad' %}:</dt>
+                                <dd>{{ object.get_type_display }}</dd>
+                            {% endif %}
+                            
+                            {% if object.locality %}
+                                <dt>{% trans 'Hvor' %}:</dt>
+                                <dd>
+                                <a href="{{ object.locality.location_url }}" target="_blank">
+                                    {{ object.locality.name }}<br>
+                                    {{ object.locality.address_line }}<br>
+                                    {{ object.locality.zip_city }}
+                                </a>
+                                </dd>
+                            {% endif %}
+                            
+                            <dt>{% trans 'Arrangør' %}:</dt>
+                            <dd>
+                                {% if object.organizationalunit.url %}
+                                    <a href="{{ object.organizationalunit.url }}" target="_blank">
+                                {% endif %}
+                                <strong>{{ object.organizationalunit.name }}</strong>
+                                {% if object.organizationalunit.url %}
+                                    </a> <span class="glyphicon glyphicon-new-window"></span>
+                                {% endif %}
+                            </dd>
+
+                            {% if request.user.userprofile.can_create %}
+                                <dt>{% trans 'Hvornår:' %}</dt>
+                                <dd>
+                                    <ul class="list-unstyled" id="dato">
+                                    {% if object.eventtime_set.all %}
+                                        {% for eventtime in object.eventtime_set.all %}
+                                            {% if eventtime.start %}
+                                                <li data-expired="{% if eventtime.expired %}true{% else %}false{% endif %}">
+                                                    <a href="{{ eventtime.visit_link }}">
+                                                        {{ eventtime.interval_display }}
+                                                        {% if eventtime.expired %}
+                                                            <br/>{% trans '(udløbet)' %}
+                                                        {% elif eventtime.visit.available_seats != None %}
+                                                            <br/>{% blocktrans with seats=eventtime.visit.available_seats %}({{ seats }} pladser tilbage){% endblocktrans %}
+                                                        {% endif %}
+                                                    </a>
+                                                </li>
+                                            {% else %}
+                                                <li >
+                                                    <a href="{{ eventtime.visit_link }}">Besøg #{{eventtime.visit.pk}} (uden tidspunkt)</a>
+                                                </li>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% else %}
+                                        <li>{% trans 'Ingen tidspunkter angivet' %}</li>
+                                    {% endif %}
+                                    </ul>
+                                    {% if object.uses_time_management %}
+                                    <div class="divider"></div>
+                                    <p>
+                                        <a class="pull-right btn btn-primary btn-xs margin-bottom-10 margin-right-10" href="{% url 'manage-times' object.pk %}">{% trans 'Administrér tidspunkter' %}</a>
+                                    </p>
+                                    {% endif %}
+                                </dd>
+                            {% else %}
+                                {% if object.future_bookable_events %}
+                                <dt>{% trans 'Hvornår:' %}</dt>
+                                <dd>
+                                    <ul class="list-unstyled" id="dato">
+                                    {% for eventtime in object.future_bookable_events %}
+                                        <li>{{ eventtime.interval_display }}</li>
+                                    {% endfor %}
+                                    </ul>
+                                </dd>
+                                {% endif %}
+                            {% endif %}
+
+                            {% if object.duration and object.duration != '00:00' %}
+                                <dt>{% trans 'Varighed' %}:</dt>
+                                <dd>{{ object.duration|timedelta_i18n }}</dd>
+                            {% endif %}
+                            
+                            {% if object.price %}
+                                <dt>{% trans 'Pris' %}:</dt>
+                                <dd>{{ object.price }}</dd>
+                            {% endif %}
+
+                            {% if object.tour_available or object.catering_available or object.presentation_available or object.custom_available %}
+                                <dt>{% trans 'Mulighed for' %}:</dt>
+                                {% if object.tour_available %}
+                                    <dd>{% trans 'Rundvisning' %}</dd>
+                                {% endif %}
+                                {% if object.catering_available %}
+                                    <dd>{% trans 'Forplejning' %}</dd>
+                                {% endif %}
+                                {% if object.presentation_available %}
+                                    <dd>{% trans 'Oplæg om uddannelse' %}</dd>
+                                {% endif %}
+                                {% if object.custom_available %}
+                                    <dd>{{ object.custom_name }}</dd>
+                                {% endif %}
+                            {% endif %}
+                            
+                        </dl>
+                    </div>
+                </div>
+                {% if object.locality %}
+                    {% include 'common/map.html' with locality=object.locality %}
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    {% include 'common/modal_contact.html' %}
+    
+    {% include 'common/modal_framehost.html' %}
+
+{% endblock %}
+
+{% block extra_scripts %}
+
+    <script src="{% static 'js/custom.js' %}"></script>
+    <script src="{% static "js/modalframe-host.js" %}"></script>
+    <script type="text/javascript">
+        <!--
+        // Show/hide multiple dates
+        if ($("#dato li").length > 6) {
+            var dato = $("#dato"),
+                showmore = "{% trans 'Vis flere datoer' %}",
+                showless = "{% trans 'Vis færre datoer' %}",
+                showexpired = "{% trans 'Vis udløbne datoer' %}",
+                surplus = dato.find('[data-expired="false"]').slice(6),
+                tohide = dato.find('[data-expired="true"]').add(surplus),
+                expandText = (surplus.length ? showmore : showexpired),
+                expanded = false;
+            tohide.hide();
+            dato.after("<a href=\"#\" class=\"showhide\">" + expandText + "</a>");
+
+            $(".showhide").click(function(e) {
+                e.preventDefault();
+                if (expanded) {
+                    tohide.hide(400);
+                    $(this).text(expandText);
+                } else {
+                    tohide.show(400);
+                    $(this).text(showless)
+                }
+                expanded = !expanded;
+            });
+        }
+        //-->
+    </script>
+
+{% endblock %}

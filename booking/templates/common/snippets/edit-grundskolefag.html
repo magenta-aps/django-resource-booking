@@ -1,10 +1,11 @@
+{% load i18n %}
 <div class="col-sm-2">
-    <label for="grundskolefag-edit">Grundskolefag:</label>
+    <label for="grundskolefag-edit" class="control-label">{% trans 'Grundskolefag:' %}</label>
 </div>
 
 <div class="col-sm-10">
     <div>
-        <div id="grundskolefag-empty">Der er ikke valgt nogen fag</div>
+        <div id="grundskolefag-empty">{% trans 'Der er ikke valgt nogen fag' %}</div>
         <script type="text/template" id="grundskolefag-item-template">
             <li>
                 <input type="hidden" value="##submitvalue##" name="grundskolefag" />
@@ -24,18 +25,18 @@
     </div>
     <div id="grundskolefag-edit">
         <div class="fagedit-group">
-            <label for="grundskolefag-fag">Tilføj fag:</label>
+            <label for="grundskolefag-fag">{% trans 'Tilføj fag:' %}</label>
             <select name="grundskolefag-fag" id="grundskolefag-fag">
-                <option value="">-- Vælg grundskolefag --</option>
+                <option value="">-- {% trans 'Vælg grundskolefag' %} --</option>
                 {% for fag in grundskolefag_choices %}
                 <option value="{{fag.pk}}">{{fag.name}}</option>
                 {% endfor %}
             </select>
         </div>
         <div class="fagedit-group">
-            <label for="grundskolefag-minclass">Fra klassetrin:</label>
+            <label for="grundskolefag-minclass">{% trans 'Fra klassetrin:' %}</label>
             <select name="grundskolefag-minclass" id="grundskolefag-minclass">
-                <option value="" selected="selected">-- Vælg klassetrin --</option>
+                <option value="" selected="selected">-- {% trans 'Vælg klassetrin' %} --</option>
                 {% for trin in klassetrin_range %}
                 <option value="{{trin}}">{{trin}}</option>
                 {% endfor %}
@@ -43,16 +44,16 @@
             </select>
         </div>
         <div class="fagedit-group">
-            <label for="grundskolefag-maxclass">Til klassetrin:</label>
+            <label for="grundskolefag-maxclass">{% trans 'Til klassetrin:' %}</label>
             <select name="grundskolefag-maxclass" id="grundskolefag-maxclass">
-                <option value="">-- Vælg klassetrin --</option>
+                <option value="">-- {% trans 'Vælg klassetrin' %} --</option>
                 {% for trin in klassetrin_range %}
                 <option value="{{trin}}">{{trin}}</option>
                 {% endfor %}
                 <option value="10" selected="selected">10</option>
             </select>
         </div>
-        <input type="button" id="grundskolefag-add" value="Tilføj" />
+        <input type="button" id="grundskolefag-add" value="{% trans 'Tilføj' %}" />
     </div>
     
 </div>

@@ -1,0 +1,34 @@
+{% load i18n %}
+{% load booking_tags %}
+{% if fileformset %}
+<div class="row form-group">
+    <div class="col-sm-2">
+        <label class="control-label">{% trans "Vedhæftede filer:" %}</label>
+    </div>
+    <div class="col-sm-7">
+        {% if fileformset.studymaterials %}
+            <ul>
+                {% for material in fileformset.studymaterials %}
+                    {% if material.file and material.file.size %}
+                    <li>
+                        <a href="{{ MEDIA_URL }}{{ material.file.url }}">{{ material.file.name | upload_name_strip_path }} ({{ material.file.size | filesizeformat }})</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        {% endif %}
+        {{ fileformset.management_form }}
+        <div id="attachFileFields">
+            {% for fileform in fileformset %}
+                <div class="fileupload">
+                    {{ fileform.file }}
+                </div>
+            {% endfor %}
+        </div>
+        <a id="attachAddFileField">{% trans "Tilføj ny fil" %}</a>
+    </div>
+    <div class="col-sm-3 with-errors">
+        {{ fileformset.error }}
+    </div>
+</div>
+{% endif %}

@@ -1,13 +1,45 @@
-<p>Kære {{ recipient.get_full_name }}.</p>
+<p>Kære underviser.</p>
 
 <p>
-    Du anmodes om at være underviser for besøget
-    "{{ visit.title }}" på følgende dato: {{ besoeg.start_datetime }}.
+    En eller flere gæster har tilmeldt sig besøg
+    <a href="{% full_url 'visit-view' besoeg.pk %}?teacher=true">{{ product.title }}</a>{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date:'d.m.Y' }}
+    {% blocktrans with time=besoeg.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}{% endif %}.
+    Besøget afholdes på
+    <a href="{% full_url 'product-view' product.pk %}#mapinfo">{{ product.locality.full_address }}</a>.
+    Der er brug for en eller flere undervisere til afviklingen af tilbuddet.
+    Klik på linket og svar om du vil være underviser eller ej.
 </p>
 <p>
-    Hvis du ønsker at være underviser for dette besøg kan du klikke på
-    nedenstående link og melde dig selv til som underviser:
+    Vær opmærksom på, om der er forberedelsestid.
 </p>
 <p>
-    <a href="{% full_url 'visit-occ-view' besoeg.pk %}">{% full_url 'visit-occ-view' besoeg.pk %}</a>
+    <strong>Forberedelsestid</strong>: {{ product.preparation_time|default:"Ikke angivet" }}
+</p>
+{% if booking %}
+
+    {# Denne del bruges når mailen sendes i forbindelse med en tilmelding #}
+
+    <p>
+        Detaljer for tilmelding:
+    </p>
+    <p>
+        {% include 'booking/email/snippets/booking_info.html' with booking=booking booker=booking.booker %}
+    </p>
+
+{% else %}
+
+    {# Denne del bruges ved manuel udsendelse hvor der kan være flere tilmeldte #}
+
+    <p>
+        Detaljer for tilmeldte:
+    </p>
+
+    {% include 'booking/email/snippets/booking_list.html' %}
+
+{% endif %}
+
+<p>
+    Venlig hilsen<br />
+    <br />
+    Koordinator
 </p>

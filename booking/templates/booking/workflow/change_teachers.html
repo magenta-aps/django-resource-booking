@@ -1,5 +1,6 @@
 {% extends 'index.html' %}
 {% load staticfiles %}
+{% load booking_tags %}
 {% load i18n %}
 
 {% block htmltitle %} - {% blocktrans with object=object %}Redigér undervisere for {{ object }}{% endblocktrans %}{% endblock %}
@@ -13,22 +14,47 @@
         </div>
         <div class="divider"></div>
     </div>
-    <div class="row">
-        <div class="col-sm-12 col-md-8">
-            {% blocktrans with title=object.visit.title needed=object.visit.get_needed_teachers_display %}
-            Antal nødvendige undervisere angivet på "{{ title }}": {{ needed }}
-            {% endblocktrans %}
-        </div>
-    </div>
     <div class="divider"></div>
-    <div class="row">
-        <div class="col-sm-12 col-md-8">
-            <form name="changebookinteachersform" id="changebookinteachersform" action="{% url 'change-visit-occ-teachers' object.pk %}" method="post">
-                {% csrf_token %}
-                {{ form.as_p }}
-                <input class="btn btn-success btn-sm" type="submit" value="{% trans 'Opdater' %}" name="confirm" />
-                <input class="btn btn-danger btn-sm" type="submit" value="{% trans 'Annullér' %}" name="cancel" />
-            </form>
+    <form name="changebookingteachersform" id="changebookingteachersform" class="changebookingform" action="{% url 'change-visit-teachers' object.pk %}" method="post">
+        {% csrf_token %}
+
+        {% include 'common/fields/generic_field.html' with field=form.override_needed_teachers %}
+        <div class="row form-group">
+            <div class="col-sm-2"></div>
+            <div class="col-sm-7">
+                {% blocktrans with title=object.product.title needed=object.product.get_needed_teachers_display %}
+                Antal nødvendige undervisere angivet på "{{ title }}": {{ needed }}
+                {% endblocktrans %}
+            </div>
+            <div class="col-sm-3 with-errors"></div>
         </div>
-    </div>
+
+        {% trans "Vælg undervisere der er knyttet til dette tilbud:" as uv_helptext %}
+        {% include 'common/fields/userselect_with_availability_link.html' with field=form.teachers helptext=uv_helptext %}
+
+        {% if can_send_emails %}
+        {% include 'common/fields/boolean_field.html' with field=form.send_emails left_label="Udsendelse af e-mail:" %}
+        {% else %}
+        <div class="row form-group">
+            <div class="col-sm-2"><strong>Udsendelse af e-mail:</strong></div>
+            <div class="col-sm-7">
+                <p>
+                    {% blocktrans with inviteret_type="undervisere" template_name=email_template_name %}
+                        Det er i øjeblikket ikke muligt at udsende e-mails til {{ inviteret_type }} der tilknyttes dette besøg.
+                        Hvis du vil have muligheden for at udsende emails skal du tilføje automatisk e-mail udsendelse
+                        for "{{ template_name }}" til besøget.
+                    {% endblocktrans %}
+                </p>
+            </div>
+            <div class="col-sm-3 with-errors"></div>
+        </div>
+        {% endif %}
+
+        <input class="btn btn-success btn-sm" type="submit" value="{% trans 'Opdater' %}" name="confirm" />
+        <input class="btn btn-danger btn-sm" type="submit" value="{% trans 'Annullér' %}" name="cancel" />
+    </form>
+{% endblock %}
+
+{% block extra_scripts %}
+    {% include "booking/workflow/usercomments_script.html" with comments=comments fieldname="teachers" %}
 {% endblock %}

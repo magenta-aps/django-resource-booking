@@ -1,0 +1,32 @@
+{% extends "index.html" %}
+{% load i18n %}
+
+{% block htmltitle %} - {% blocktrans with name=object.user %}Rediger mulige tidspunkter for {{name}}{% endblocktrans %}{% endblock %}
+
+
+{% block content %}
+    <div class="divider"></div>
+
+    <h1>{% blocktrans with name=object.user %}Rediger mulige tidspunkter for {{name}}{% endblocktrans %}</h1>
+
+    <div class="divider"></div>
+
+    <div class="row">
+        <div class="col-sm-12">
+            <form name="updateteacheravailability"
+                  id="updateteacheravailability"
+                  action="{% url 'availability-edit' %}"
+                  method="post"
+            >
+                {% csrf_token %}
+                <fieldset class="form-group">
+                    {{ form}}
+                </fieldset>
+                <div>
+                <input class="btn btn-success btn-sm" type="submit" value="{% trans 'Opdater' %}" name="confirm" />
+                <input class="btn btn-danger btn-sm" type="submit" value="{% trans 'Annullér' %}" name="cancel" />
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

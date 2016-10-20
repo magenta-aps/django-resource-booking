@@ -82,6 +82,11 @@ strong,
     font-weight: bold;
 }
 
+pre {
+    font-family: 'noto_sansregular', verdana, sans-serif;
+    font-size: 12px;
+}
+
 .btn-default {
     background: rgb(250, 250, 250);
     background: -moz-linear-gradient(top, rgba(250, 250, 250, 1) 0%, rgba(230, 230, 230, 1) 100%);
@@ -122,6 +127,13 @@ strong,
 
 .container-fluid {
     padding: 0;
+}
+
+.tooltip-inner {
+    background-color: #fff;
+    color: #000;
+    border: 1px solid #000;
+    text-align: left;
 }
 
 .navbar-brand {
@@ -655,6 +667,27 @@ select,
     font-size: 11px!important;
 }
 
+.scroll-200 {
+    max-height: 200px;
+    overflow-y: scroll;
+}
+.scroll-300 {
+    max-height: 300px;
+    overflow-y: scroll;
+}
+.scroll-400 {
+    max-height: 400px;
+    overflow-y: scroll;
+}
+.scroll-500 {
+    max-height: 500px;
+    overflow-y: scroll;
+}
+.scroll-600 {
+    max-height: 600px;
+    overflow-y: scroll;
+}
+
 
 /*Backend specific styles start */
 
@@ -937,15 +970,19 @@ a.template-overridden:visited {
 
 /* > Admin-visit-search end */
 
-/* > Visitoccurrence-search start */
+/* > Visit-search start */
 
-#visitoccsearch .dl-horizontal dt {
+#visitsearch .dl-horizontal dt {
     white-space: normal;
 }
 
-/* > Visitoccurrence-search end */
+/* > Visit-search end */
 
 /* frontpage lists */
+
+.column-show-all {
+    float: right;
+}
 
 .listcontainer.eq-height [class*="col-"] .panel {
     border-color: #ccc;
@@ -991,6 +1028,10 @@ a.template-overridden:visited {
     padding-left: 0;
     color: #4A4949;
     list-style-type: none;
+}
+
+.listcontainer .list-group-item .label {
+    clear: both;
 }
 
 .listcontainer .panel.panel-bookings .panel-heading .panel-title {
@@ -1072,6 +1113,30 @@ a.template-overridden:visited {
 }
 
 /* nested menu dropdown end */
+
+.comments ul li {
+    border: 1px solid #ccc;
+    margin-bottom: 4px;
+    border-radius: 4px;
+    padding: 4px;
+}
+
+.changebookingform .comments {
+    display: inline-block;
+    margin-left: 30px;
+    margin-top: 5px;
+    vertical-align: top;
+}
+
+.changebookingform .comments ul {
+    list-style-position: inside;
+    padding-left: 0;
+}
+
+.changebookingform .comments ul li {
+    border: 0 none;
+    list-style-type: none;
+}
 
 /*Backend specific styles end */
 
@@ -1267,6 +1332,9 @@ body.lightbox {
     .form-horizontal .control-label {
         padding-top: 3px;
     }
+    #visitform .control-label {
+        width: 100%;
+    }
     footer {
         border-left: 1px solid #ccc;
         border-right: 1px solid #ccc;
@@ -1279,3 +1347,56 @@ body.lightbox {
         display: flex;
     }
 }
+
+/* Time interval selector START */
+.input-group.datefield .input-group-addon {
+    cursor: pointer;
+}
+.input-group.timeslider strong {
+    margin-left: 1em;
+    margin-right: 1em;
+}
+.input-group.timeslider.dslider .slider-selection,
+.input-group.timeslider.dslider .slider-tick.in-selection{
+	background: transparent;
+}
+/* Time interval selector END */
+
+
+/* MultiProductVisit START */
+#deselected-product-list li .movebutton,
+#deselected-product-list li .deselectbutton,
+#confirm-product-list li .movebutton,
+#confirm-product-list li .deselectbutton {
+    display: none;
+}
+#deselected-product-list,
+#selected-product-list,
+#confirm-product-list {
+    font-size: 1.5em;
+    list-style-type: none;
+}
+
+#selected-product-list li .movebutton {
+    cursor: move;
+}
+
+#selected-product-list li .selectbutton,
+#selected-product-list li .teaser,
+#confirm-product-list li .selectbutton,
+#confirm-product-list li .teaser {
+    display: none;
+}
+#selected-product-list li .title,
+#confirm-product-list li .title {
+    display: inline;
+    font-weight: normal;
+    margin: 0;
+    padding: 0;
+}
+
+#mpvform #deselected-product-list li#placeholder,
+#mpvform #drawhelp {
+    display: none
+}
+/* MultiProductVisit END */

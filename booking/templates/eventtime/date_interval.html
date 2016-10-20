@@ -1,0 +1,92 @@
+{% load i18n %}
+
+<div class="start-input">
+{{ start_field.as_hidden }}
+</div>
+<div class="end-input">
+{{ end_field.as_hidden }}
+</div>
+
+{% if specific_time_field %}
+<div class="specific-time">
+{% include 'common/fields/generic_field.html' with field=specific_time_field %}
+</div>
+{% endif %}
+
+{% if hide_date %}
+<div class="input-group datefield">
+    <input class="form-control inline start-date" type="hidden" name="start_date" id="{{ id_prefix }}start_date" value="{% now "SHORT_DATE_FORMAT" %}" />
+</div>
+{% else %}
+<div class="row form-group">
+    <div class="col-sm-2{% if start_field.errors %} has-error{% endif %}">
+        <label for="{{ id_prefix }}start_date" class="control-label">{% trans 'Dato' %}:</label>
+    </div>
+    <div class="col-sm-7">
+        <div class="form-inline">
+            <div class="input-group datefield">
+                <input class="form-control inline start-date" type="text" name="start_date" id="{{ id_prefix }}start_date" />
+                <span class="input-group-addon">
+                    <span class="glyphicon glyphicon-calendar"></span>
+                </span>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-3 with-errors">
+        {{ start_field.errors }}
+    </div>
+</div>
+{% endif %}
+
+<div class="row form-group time-inputs">
+    <div class="col-sm-2{% if field.errors %} has-error{% endif %}">
+        <label class="control-label">{% trans 'Tidspunkt' %}:</label>
+    </div>
+    <div class="col-sm-7">
+        {% if product and product.duration_in_minutes > 0 %}
+        <div class="input-group">
+            <label for="{{ id_prefix }}product_duration">
+                <input
+                    type="checkbox"
+                    name="product_duration"
+                    id="{{ id_prefix }}product_duration"
+                    class="product-duration"
+                    value="{{ product.duration_in_minutes }}"
+                    {% if use_product_duration %}
+                    checked="checked"
+                    {% endif %}
+                />
+                {% trans 'Brug varighed fra tilbud:' %}
+                {{ product.get_duration_display }}
+            </label>
+        </div>
+        {% endif %}
+        <div class="input-group timeslider dslider">
+            <div>
+                <input class="start-time" type="text" style="width: 45em" />
+            </div>
+        </div>
+        <div class="input-group timeslider">
+            <div>
+                <input class="form-control time-range" type="text" style="width: 45em" />
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-3 with-errors">
+    </div>
+</div>
+
+<div class="row form-group" {% if hide_output %}style="display: none"{% endif %}>
+    <div class="col-sm-2{% if field.errors %} has-error{% endif %}">
+        <label for="{{ id_prefix }}chosen_datetime" class="control-label">{% trans 'Valgt tidspunkt' %}:</label>
+    </div>
+    <div class="col-sm-7">
+        <div class="form-inline">
+            <p class="alert alert-info text-center">
+                <span id="{{ id_prefix }}chosen_datetime"
+                      class="time-interval-output"
+                      data-no-date-selected-text="{% trans '<Ingen dato angivet>' %}"></span>
+            </p>
+        </div>
+    </div>
+</div>

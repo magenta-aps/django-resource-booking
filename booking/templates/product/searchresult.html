@@ -1,0 +1,275 @@
+{% extends "index.html" %}
+{% load staticfiles %}
+{% load booking_tags %}
+{% load i18n %}
+
+{% block htmltitle %} - {% trans 'søg i tilbud' %}{% endblock %}
+
+{% block head %}
+    {% include 'common/resources/datepicker_style.html' %}
+{% endblock %}
+
+{% block content %}
+        <div class="row">
+        <div id="leftside" class="col-sm-6 col-md-3">
+            <button type="button" class="visible-xs btn btn-default" data-toggle="collapse" data-target="#filters" id="filter-btn">{% trans 'Filtrer søgeresultat' %} <span class="glyphicon glyphicon-chevron-down hidden-print"></span></button>
+            <div class="hidden-xs" id="filters">
+                <form class="" action="{% url 'search' %}" method="get" name="filter-search-results" id="filter-search-results">
+                {% if adminform %}
+                    {% for field in adminform %}
+                        {{ field.as_hidden }}
+                    {% endfor %}
+                {% else %}
+                    <input type="hidden" name="q" value="{{ request.GET.q }}" />
+                {% endif %}
+                <input type="hidden" name="pagesize" value="{{ paginator.per_page }}" />
+                    <div class="panel panel-sidebar">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">{% trans 'Afgræns din søgning' %}</h3>
+                        </div>
+                        <div class="panel-body">
+                            <h3 class="panel-title">{% trans 'Hvor er du fra?' %}</h3>
+                            <hr/>
+                            <div class="input-group">
+                                {% for c in institution_choices %}
+                                    <div class="checkbox">
+                                        <label class="control-label" for="institution-choice-{{c.value}}">
+                                            <input name="i" id="institution-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}>{{c.label}}
+                                            {% if c.hits %}
+                                                <span title="{{ c.hits }} resultater" class="type-hits">({{ c.hits }})</span>
+                                            {% endif %}
+                                        </label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <h3 class="panel-title">{% trans 'Hvem er du?' %}</h3>
+                            <hr/>
+                            <div class="input-group">
+                                {% for c in audience_choices %}
+                                    {% if c.value %}
+                                        <div class="checkbox">
+                                            <label class="control-label" for="audience-choice-{{c.value}}">
+                                                <input name="a" id="audience-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}>{{c.label}}
+                                                {% if c.hits %}
+                                                    <span title="{{ c.hits }} resultater" class="type-hits">({{ c.hits }})</span>
+                                                {% endif %}
+                                            </label>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            <h3 class="panel-title">{% trans 'Hvad søger du?' %}</h3>
+                            <hr/>
+                            <div class="input-group">
+                                {% for c in type_choices %}
+                                <div class="checkbox">
+                                    <label class="control-label" for="type-choice-{{c.value}}">
+                                        <input name="t" id="type-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}>{{c.label}}
+                                        {% if c.hits %}
+                                            <span title="{{ c.hits }} resultater" class="type-hits">({{ c.hits }})</span>
+                                        {% endif %}
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <div id="accordion" role="tablist" aria-multiselectable="true">
+                                <a role="button" title="Klik for at vælge gymnasiefag" data-toggle="collapse" data-parent="#accordion" href="#gymnasiefag" aria-expanded="false" aria-controls="gymnasiefag">
+                                    <h3 class="panel-title inline-block">{% trans 'Gymnasiefag' %}</h3>
+                                    <span class="caret"></span>
+                                </a>
+                                <hr/>
+                                <div id="gymnasiefag" class="panel-collapse {% if not gymnasie_selected %}collapse{% endif %}" role="tabpanel" aria-labelledby="headingOne">
+                                    <div class="input-group">
+                                    {% for c in gymnasie_choices %}
+                                    <div class="checkbox">
+                                        <label class="control-label" for="gymnasie-choice-{{c.value}}">
+                                            <input name="f" id="gymnasie-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}>{{c.label}}
+                                            {% if c.hits %}
+                                                <span title="{{ c.hits }} resultater" class="type-hits">({{ c.hits }})</span>
+                                            {% endif %}
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                </div>
+                                <a role="button" title="Klik for at vælge grundskolefag" class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#grundskolefag" aria-expanded="false" aria-controls="grundskolefag">
+                                    <h3 class="panel-title inline-block">{% trans 'Grundskolefag' %}</h3>
+                                    <span class="caret"></span>
+                                </a>
+                                <hr/>
+                                <div id="grundskolefag" class="panel-collapse {% if not grundskole_selected %}collapse{% endif %}" role="tabpanel" aria-labelledby="headingThree">
+                                    <div class="input-group">
+                                    {% for c in grundskole_choices %}
+                                    <div class="checkbox">
+                                        <label class="control-label" for="grundskole-choice-{{c.value}}">
+                                            <input name="g" id="grundskole-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}>{{c.label}}
+                                            {% if c.hits %}
+                                                <span title="{{ c.hits }} resultater" class="type-hits">({{ c.hits }})</span>
+                                            {% endif %}
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                </div>
+                                {% if not adminform %}
+                                <h3 class="panel-title inline-block">{% trans 'Vælg periode' %}</h3>
+                                <hr/>
+                                <div class="row input-daterange">
+                                    <div class="form-group clearfix">
+                                        <label class="col-sm-2 control-label">{% trans 'Fra:' %}</label>
+                                        <div class="col-sm-10">
+                                            <input type="text" name="from" class="form-control input-sm datepicker" placeholder="{% trans 'Klik og vælg dato' %}" value="{{ from_datetime|date:"d-m-Y" }}">
+                                        </div>
+                                    </div>
+                                    <div class="form-group clearfix">
+                                        <label class="col-sm-2 control-label">{% trans 'Til:' %}</label>
+                                        <div class="col-sm-10">
+                                            <input type="text" name="to" class="form-control input-sm datepicker" placeholder="{% trans 'Klik og vælg dato' %}" value="{{ to_datetime|date:"d-m-Y" }}">
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div id="main" class="col-sm-12 col-md-9">
+
+            {% include 'common/breadcrumbrow.html' %}
+
+            {% if user.userprofile.can_create %}
+                <a class="pull-right btn btn-primary" href="{% url 'product-create' %}?back={{ request.get_full_path | urlencode }}">{% trans '+ Opret tilbud' %}</a>
+            {% endif %}
+
+            <h1>{% trans 'Søgeresultat' %}</h1>
+
+            <div class="divider"></div>
+
+            {% if request.user.is_authenticated %}
+                {% include 'product/searchresult-adminform.html' with form=adminform %}
+            {% else %}
+                {% include 'common/searchform.html' %}
+            {% endif %}
+
+            <div class="divider"></div>
+
+            {% if not results %}
+                <p>{% trans 'Din søgning gav ikke noget resultat.' %}</p>
+            {% else %}
+            <h2 class="bold">{% blocktrans with count=paginator.count query=request.GET.q %}{{ count }} resultater matcher din søgning på "{{ query }}"{% endblocktrans %}</h2>
+
+            <div class="divider"></div>
+
+            <ul class="media-list">
+                {% for res in results %}
+                    {% include 'resource/../product/listitem.html' with item=res fullquery=fullquery %}
+               {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-6 col-md-5 col-sm-offset-1 col-md-offset-3">
+            {% if paginator %}
+            <nav>
+                <ul class="pager">
+                    {% if page_obj.has_previous %}
+                    <li>
+                        <a href="?{{ qstring }}&page={{ page_obj.previous_page_number }}&pagesize={{paginator.per_page}}">
+                            <span class="glyphicon glyphicon-chevron-left small" aria-hidden="true"></span>
+                            {% trans 'Forrige' %}
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="disabled">
+                        <span>
+                            <span class="glyphicon glyphicon-chevron-left small" aria-hidden="true"></span>
+                            {% trans 'Forrige' %}
+                        </span>
+                    </li>
+                    {% endif %}
+                    
+                    {% if page_obj.has_next %}
+                    <li>
+                        <a href="?{{ qstring }}&page={{ page_obj.next_page_number }}&pagesize={{paginator.per_page}}" aria-label="Næste">
+                            {% trans 'Næste' %}
+                            <span class="glyphicon glyphicon-chevron-right small" aria-hidden="true"></span>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="disabled">
+                        <span>
+                            {% trans 'Næste' %}
+                            <span class="glyphicon glyphicon-chevron-right small" aria-hidden="true"></span>
+                        </span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+        <div class="col-sm-4 col-md-3">
+            <div class="input-group input-group-sm search-list items-pr-side">
+                <span class="input-group-addon">Vis</span>
+                <div class="input-group-btn">
+                    <button type="button" class="btn btn-default">
+                        {% if request.GET.pagesize == "all" %}
+                            {% trans 'Vis alle' %}
+                        {% else %}
+                            {{ paginator.per_page }}
+                        {% endif %}
+                    </button>
+                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> <span class="caret"></span> <span class="sr-only">Vis anrtal resultater pr. side</span> </button>
+                    <ul class="dropdown-menu">
+                        <li{% if request.GET.pagesize == "all" %} class="selected"{% endif %}>
+                            <a href="?{{ qstring }}&pagesize=all">{% trans 'Vis alle' %}</a>
+                        </li>
+                        {% for size in pagesizes %}
+                        <li{% if size == paginator.per_page %} class="selected"{% endif %}>
+                            <a href="?{{ qstring }}&pagesize={{size}}">{{size}}</a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <span class="input-group-addon"> {% trans 'pr. side' %}</span>
+            </div>
+        </div>
+    </div>
+    
+{% endblock %}
+{% block footer %}
+        <div class="container">
+            <div class="row">
+                <footer>
+                    <div class="container">
+                        <div class="row footer-columns">
+                            <div class="col-sm-6 col-sm-offset-1 col-md-offset-3">
+                                <ul class="footerlinks">
+                                    <li><a href="http://kommunikation.ku.dk/">Kommunikation</a></li>
+                                    <li><a href="http://www.ku.dk/">Københavns Universitet</a></li>
+                                    <li>Nørregade 10, Postboks 2177</li>
+                                    <li>1017 København K</li>
+                                </ul>
+                            </div>
+                            <div class="col-sm-3">
+                                <ul class="footerlinks">
+                                    <li class="clearfix social-icons"><a target="_blank" class="footer-social" href="https://www.facebook.com/universitet"><span class="icon-circle"><i class="fa fa-facebook"></i></span></a><a target="_blank" class="footer-social" href="https://www.linkedin.com/edu/k%C3%B8benhavns-universitet-12012"><span class="icon-circle"><i class="fa fa-linkedin"></i></span></a><a target="_blank" class="footer-social" href="https://twitter.com/koebenhavns_uni"><span class="icon-circle"><i class="fa fa-twitter"></i></span></a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+            </div>
+        </div>
+    {% endblock %}
+
+{% block extra_scripts %}
+
+    {% include 'common/resources/datepicker_script.html' %}
+    <script src="{% static 'js/custom.js' %}"></script>
+    
+{% endblock %}

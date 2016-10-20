@@ -11,12 +11,16 @@ window.modal = {
     setHeight: function(height) {
         this.parent.setHeight(this.id, height);
     },
+    documentHeight: 0,
     updateHeight: function() {
         var height = 1;
         $(document.body).children().not("script").each(function(){
             height += $(this).outerHeight(true);
         });
-        this.setHeight(height);
+        if (height != this.documentHeight) {
+            this.documentHeight = height;
+            this.setHeight(height);
+        }
     }
 };
 (function(){
@@ -87,5 +91,7 @@ $(function(){
     if (firstFormPart.length) {
         show(firstFormPart);
     }
+
+    setInterval(modal.updateHeight.bind(modal), 500);
 
 });

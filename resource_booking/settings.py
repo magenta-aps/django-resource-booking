@@ -28,7 +28,7 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-DEFAULT_FROM_EMAIL = 'noreply@adm.ku.dk'
+DEFAULT_FROM_EMAIL = 'noreply@fokusku.dk'
 EMAIL_HOST = 'localhost'
 
 # Application definition
@@ -45,7 +45,7 @@ INSTALLED_APPS = (
     'recurrence',
     'timedelta',
     'tinymce',
-    'djangosaml2',
+    # 'djangosaml2',
     'django_cron',
 )
 
@@ -87,12 +87,13 @@ STATICFILES_FINDERS = [
 
 # Django-npm config
 
+
 # Local thirdparty cache; holds all downloaded
 # dependencies in this folder under the root
-NPM_PREFIX_PATH = 'thirdparty'
+NPM_ROOT_PATH = 'thirdparty'
 
 # collectstatic will put dependencies in static/thirdparty/
-NPM_DESTINATION_PREFIX = 'thirdparty'
+NPM_STATIC_FILES_PREFIX = 'thirdparty'
 
 # Mapping for dependencies: Only the listed files from
 # each dependency will make it into static/
@@ -126,9 +127,10 @@ TINYMCE_DEFAULT_CONFIG = {
     'custom_undo_redo_levels': 100,
     'theme_advanced_buttons1':
         'bold,italic,underline,|,justifyleft,justifycenter,justifyright,'
-        'justifyfull,|,formatselect,|,bullist,numlist,outdent,indent,|,undo,'
-        'redo,|,link,unlink,anchor,image,cleanup,help,code,|,hr,removeformat,'
-        'visualaid,charmap'
+        'justifyfull,|,formatselect,|,bullist,numlist,outdent,indent,|,'
+        'link,unlink,anchor,image,hr,removeformat',
+    'theme_advanced_buttons2':
+        'undo,redo,|,code,cleanup,visualaid,charmap,help'
 
 }
 TINYMCE_COMPRESSOR = True
@@ -207,12 +209,14 @@ PUBLIC_URL = "".join([
 ])
 
 # Include SAML setup if the local settings specify it:
-if USE_SAML:
-    from saml_settings import *  # noqa
-    if MAKE_SAML_LOGIN_DEFAULT:
-        AUTHENTICATION_BACKENDS.insert(1, 'djangosaml2.backends.Saml2Backend')
-    else:
-        AUTHENTICATION_BACKENDS.append('djangosaml2.backends.Saml2Backend')
+# if USE_SAML:
+#     from saml_settings import *  # noqa
+#     if MAKE_SAML_LOGIN_DEFAULT:
+#         AUTHENTICATION_BACKENDS.insert(
+#           1, 'djangosaml2.backends.Saml2Backend'
+#         )
+#     else:
+#         AUTHENTICATION_BACKENDS.append('djangosaml2.backends.Saml2Backend')
 
 CRON_CLASSES = [
     "booking.cron.ReminderJob",

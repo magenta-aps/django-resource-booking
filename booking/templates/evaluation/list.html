@@ -1,0 +1,92 @@
+{% extends "index.html" %}
+{% load staticfiles %}
+{% load booking_tags %}
+{% load i18n %}
+
+{% block htmltitle %} - {% trans 'overblik over evalueringer' %}{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div id="main" class="col-sm-12 col-md-12">
+
+            {% include 'common/breadcrumbrow.html' %}
+
+            <h1>Besøg med tilknyttede evalueringer</h1>
+
+            <div class="divider"></div>
+
+            <h2>Filtrér listen</h2>
+            <form name="evaluationoverviewform" id="evaluationoverviewform"
+                  action="{{ request.uri }}" method="get">
+                <div>
+                    {% include 'common/fields/generic_field.html' with field=form.organizationalunit %}
+                    <div class="row form-group">
+                        <div class="col-sm-2"></div>
+                        <div class="col-sm-7">
+                            <label for="{{ form.limit_to_personal.id_for_label }}" class="control-label">
+                                <input id="{{ form.limit_to_personal.id_for_label }}"
+                                       name="limit_to_personal"
+                                       type="checkbox"
+                                       {% if form.limit_to_personal.value %}
+                                       checked="checked"
+                                       {% endif %}
+                                >
+                                {{ form.limit_to_personal.label }}
+                            </label>
+                        </div>
+                        <div class="col-sm-3 with-errors">
+                            {{ form.limit_to_personal.errors }}
+                        </div>
+                    </div>
+                    <div class="row form-group">
+                        <div class="col-sm-2"></div>
+                        <div class="col-sm-7">
+                            <input type="submit" value="{% trans 'Opdater' %}" class="btn btn-primary" />
+                        </div>
+                        <div class="col-sm-3 with-errors"></div>
+                    </div>
+                </div>
+            </form>
+            <div class="divider"></div>
+
+            {% if not results %}
+                <p>{% trans 'Ingen besøg fundet.' %}</p>
+            {% else %}
+                <h2 class="bold">
+                    {% blocktrans with count=results|length %}{{ count }} besøg fundet{% endblocktrans %}
+                </h2>
+                <div class="divider"></div>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Tilbud-id</th>
+                            <th>Tilbud</th>
+                            <th>Besøg-id</th>
+                            <th>Besøgstidspunkt</th>
+                            <th>Link til evaluering</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                    {% for res in results %}
+                        <tr>
+                            <td><a href="{% url 'product-view' res.product.pk %}">#{{ res.product.pk }}</a></td>
+                            <td><a href="{% url 'product-view' res.product.pk %}">{{ res.product.title }}</a></td>
+                            <td><a href="{% url 'visit-view' res.pk %}">#{{ res.pk }}</a></td>
+                            <td><a href="{% url 'visit-view' res.pk %}">{{ res.display_value }}</a></td>
+                            <td><a href="{{ res.evaluation_link }}">{{ res.evaluation_link }}</a></td>
+                            <td><span class="label label-{{ res.get_workflow_status_class }}">{{ res.get_workflow_status_display }}</span></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+    <script src="{% static 'js/custom.js' %}"></script>
+{% endblock %}

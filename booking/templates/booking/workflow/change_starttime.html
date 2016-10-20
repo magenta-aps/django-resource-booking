@@ -2,10 +2,11 @@
 {% load staticfiles %}
 {% load i18n %}
 
-{% block htmltitle %} - {% blocktrans with object=object %}Redigér tidspunkt for {{ object }}{% endblocktrans %}{% endblock %}
+{% block htmltitle %} - {% blocktrans with object=object.product.title %}Redigér tidspunkt for {{ object }}{% endblocktrans %}{% endblock %}
 
 {% block head %}
-    {% include 'common/resources/datetime-picker_style.html' %}
+{% include 'common/resources/datepicker_style.html' %}
+<link rel="stylesheet" href="{% static 'css/bootstrap-slider.css' %}" />
 {% endblock %}
 
 {% block content %}
@@ -13,38 +14,32 @@
 
     <div class="row titlebar hidden-print">
         <div class="col-sm-12 col-md-9">
-            <h2>{% blocktrans with object=object %}Redigér tidspunkt for {{ object }}{% endblocktrans %}</h2>
+            <h2>{% blocktrans with object=object.product.title %}Redigér tidspunkt for {{ object }}{% endblocktrans %}</h2>
         </div>
-        <div class="divider"></div>
     </div>
+    <div class="divider"></div>
     <div class="row">
-        <div class="col-sm-12 col-md-8">
-            <form name="changebookinroomsform" id="changebookinroomsform" action="{% url 'change-visit-occ-starttime' object.pk %}" method="post">
+        <div class="col-md-12">
+            <div>
+                {{form.errors}}
+            </div>
+            <form action="{% url 'change-visit-starttime' object.visit.pk %}" id="update-time-form" method="POST">
                 {% csrf_token %}
-                {{ form }}
-                <div>
-                <input class="btn btn-success btn-sm" type="submit" value="{% trans 'Opdater' %}" name="confirm" />
-                <input class="btn btn-danger btn-sm" type="submit" value="{% trans 'Annullér' %}" name="cancel" />
-                </div>
+
+                {% include 'eventtime/date_interval.html' with product=product start_field=form.start end_field=form.end specific_time_field=form.has_specific_time %}
+
+                {% include 'common/fields/generic_field.html' with field=form.notes %}
+
+                <input class="btn btn-success" type="submit" value="{% trans  'Gem' %}" role="button" />
+                <a href="{% url 'visit-view' object.visit.pk %}" role="button" class="btn btn-danger">{% trans 'Annullér' %}</a>
             </form>
         </div>
     </div>
 {% endblock %}
 
 {% block extra_scripts %}
-    {% include 'common/resources/datetime-picker_script.html' %}
-    <script type="text/javascript"><!--
-        $(function(){
-            var dp = $("#id_start_datetime").datetimepicker({
-                language: 'da',
-                format: 'dd.mm.yyyy hh:ii:ss',
-                weekStart: 1,
-                todayHighlight: true,
-                startDate: 'Date',
-                clearBtn: true,
-                autoclose: true,
-                bootcssVer: 3
-            });
-        });
-    //--></script>
+{% include 'eventtime/date_interval_script.html' %}
+<script type="text/javascript"><!--
+KU.initialize_time_interval('#update-time-form');
+//--></script>
 {% endblock %}

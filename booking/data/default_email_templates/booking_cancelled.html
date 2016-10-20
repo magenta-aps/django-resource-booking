@@ -1,10 +1,50 @@
-{% load booking_tags %}
-<p>Kære {{ recipient.get_full_name }}.</p>
+<p>Kære alle</p>
+<p>
+    Besøg <a href="{% full_url 'product-view' product.pk %}">{{ product.title }}</a>{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date:'d.m.Y' }}
+    {% blocktrans with time=besoeg.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}{% endif %}.
+    på Københavns Universitet er desværre blevet aflyst.
+    Hvis du har spørgsmål til din tilmelding, kan du skrive til
+    {% include 'booking/email/snippets/contact_addresses.html' with product=product %}.
+</p>
+{% if recipient.guest %}
+
+    {# Denne del sendes til gæster #}
+
+    <p>
+        Detaljer for din tilmelding:
+    </p>
+    <p>
+        {% include 'booking/email/snippets/booking_info.html' with booking=booking booker=booking.booker %}
+    </p>
+
+    <p>
+        <a href="{% full_url 'product-view' product.pk %}">Læs mere om besøget her</a>.
+    </p>
+
+    <p>
+        På foKUs.ku.dk kan du se alle tilbud fra Københavns Universitet.
+    </p>
+
+{% else %}
+
+    {# Denne del sendes til alle andre #}
+
+    <p>
+        Detaljer for tilmelding(er):
+    </p>
+
+    {% include 'booking/email/snippets/booking_list.html' %}
+
+    <p>
+        <a href="{% full_url 'product-view' product.pk %}">Læs mere om besøget her</a>.
+    </p>
+
+{% endif %}
+
+{% include 'booking/email/snippets/reply_link.html' %}
 
 <p>
-    Besøget "{{ visit.title }}" d. {{ besoeg.start_datetime }} er blevet aflyst.
-</p>
-<p>
-    Du kan svare på denne besked via følgende URL:<br />
-    <a href="{% full_url 'reply-to-email' reply_nonce %}">{% full_url 'reply-to-email' reply_nonce %}</a>
+    Venlig hilsen<br />
+    <br />
+    {{ product.organizationalunit.name }}
 </p>

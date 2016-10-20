@@ -8,32 +8,18 @@ from django.db.models import Aggregate
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
-from booking.models import Unit, Resource
-import uuid
+
+import booking.models
+
+from booking.models import OrganizationalUnit, Product
+from booking.utils import get_related_content_types
 
 # User roles
+from profile.constants import TEACHER, HOST, COORDINATOR, ADMINISTRATOR
+from profile.constants import FACULTY_EDITOR, NONE
+from profile.constants import EDIT_ROLES, user_role_choices, available_roles
 
-TEACHER = 0
-HOST = 1
-COORDINATOR = 2
-ADMINISTRATOR = 3
-FACULTY_EDITOR = 4
-NONE = 5
-
-EDIT_ROLES = set([
-    ADMINISTRATOR,
-    FACULTY_EDITOR,
-    COORDINATOR
-])
-
-user_role_choices = (
-    (TEACHER, _(u"Underviser")),
-    (HOST, _(u"Vært")),
-    (COORDINATOR, _(u"Koordinator")),
-    (ADMINISTRATOR, _(u"Administrator")),
-    (FACULTY_EDITOR, _(u"Fakultetsredaktør")),
-    (NONE, _(u"Ingen"))
-)
+import uuid
 
 
 def get_none_role():
@@ -56,7 +42,7 @@ def get_public_web_user():
         user = User.objects.create_user("public_web_user")
         profile = UserProfile(
             user=user,
-            unit=None,
+            organizationalunit=None,
             user_role=get_none_role()
         )
         profile.save()
@@ -73,7 +59,11 @@ def role_to_text(role):
 
 
 class AbsDateDist(Aggregate):
-    template = 'ABS(EXTRACT(EPOCH FROM (%(expressions)s)))'
+    template = (
+        "ABS(EXTRACT(EPOCH FROM MAX(%(expressions)s)) - " +
+        "EXTRACT(EPOCH FROM STATEMENT_TIMESTAMP()))"
+    )
+    name = "AbsDateDist"
 
     def __init__(self, expression, **extra):
 
@@ -110,12 +100,28 @@ class UserProfile(models.Model):
     # Unit must always be specified for coordinators,
     # possibly also for teachers and hosts.
     # Unit is not needed for administrators.
-    unit = models.ForeignKey(Unit, null=True, blank=True)
+    organizationalunit = models.ForeignKey(
+        OrganizationalUnit,
+        null=True,
+        blank=True
+    )
 
     my_resources = models.ManyToManyField(
-        Resource,
+        Product,
         blank=True,
         verbose_name=_(u"Mine tilbud")
+    )
+
+    availability_text = models.TextField(
+        verbose_name=_(u"Mulige tidspunkter for vært/underviser"),
+        blank=True,
+        default=""
+    )
+
+    additional_information = models.TextField(
+        verbose_name=_(u"Yderligere information"),
+        blank=True,
+        default=""
     )
 
     def __unicode__(self):
@@ -165,11 +171,12 @@ class UserProfile(models.Model):
         if role == ADMINISTRATOR:
             return True
 
-        if not hasattr(item, "unit") or not item.unit:
+        if not hasattr(item, "organizationalunit") or not \
+                item.organizationalunit:
             return False
 
         if role in EDIT_ROLES:
-            qs = self.get_unit_queryset().filter(pk=item.unit.pk)
+            qs = self.get_unit_queryset().filter(pk=item.organizationalunit.pk)
             return len(qs) > 0
 
         return False
@@ -193,26 +200,27 @@ class UserProfile(models.Model):
         role = self.get_role()
 
         if role is None:
-            return Unit.objects.none()
+            return OrganizationalUnit.objects.none()
 
         if role == ADMINISTRATOR:
-            return Unit.objects.all()
+            return OrganizationalUnit.objects.all()
 
-        unit = self.unit
+        unit = self.organizationalunit
 
         if not unit:
-            return Unit.objects.none()
+            return OrganizationalUnit.objects.none()
 
-        # Faculty editos gets everything that has their unit as a parent
+        # Faculty editors gets everything that has their unit as a parent
         # as well as the unit itself
         if role == FACULTY_EDITOR:
-            return Unit.objects.filter(Q(parent=unit) | Q(pk=unit.pk))
+            return OrganizationalUnit.objects.filter(Q(parent=unit) |
+                                                     Q(pk=unit.pk))
 
         # Everyone else just get access to their own group
-        return Unit.objects.filter(pk=unit.pk)
+        return OrganizationalUnit.objects.filter(pk=unit.pk)
 
     def get_faculty(self):
-        unit = self.unit
+        unit = self.organizationalunit
 
         while unit and unit.type.name != "Fakultet":
             unit = unit.parent
@@ -230,13 +238,162 @@ class UserProfile(models.Model):
         if faculty:
             return User.objects.filter(
                 userprofile__user_role__role=FACULTY_EDITOR,
-                userprofile__unit=faculty
+                userprofile__organizationalunit=faculty
             )
         else:
             return User.objects.none()
 
+    def requested_as_teacher_for_qs(self, exclude_accepted=False):
+        bm = booking.models
+        cts = get_related_content_types(bm.Visit)
+        template_key = bm.EmailTemplate.NOTIFY_HOST__REQ_TEACHER_VOLUNTEER
 
-class EmailLoginEntry(models.Model):
+        mail_qs = bm.KUEmailRecipient.objects.filter(
+            user=self.user,
+            email_message__template_key=template_key,
+            email_message__content_type__in=cts,
+        )
+
+        if exclude_accepted:
+            accepted_qs = self.user.taught_visits.all()
+            mail_qs = mail_qs.exclude(email_message__object_id__in=accepted_qs)
+
+        qs = bm.Visit.objects.filter(
+            pk__in=mail_qs.values_list("email_message__object_id", flat=True)
+        )
+
+        return qs
+
+    def get_resource(self):
+        role = self.get_role()
+        if role == TEACHER:
+            return booking.models.TeacherResource.objects.filter(
+                user=self.user
+            ).first()
+        elif role == HOST:
+            return booking.models.HostResource.objects.filter(
+                user=self.user
+            ).first()
+        else:
+            return None
+
+    def is_available_as_teacher(self, from_datetime, to_datetime):
+        res = self.get_resource()
+        if res:
+            return res.is_available_between(from_datetime, to_datetime)
+
+        return not self.user.taught_visits.filter(
+            eventtime__start__lt=to_datetime,
+            eventtime__end__gt=from_datetime
+        ).exists()
+
+    def can_be_teacher_for(self, visit):
+        return self.is_available_as_teacher(
+            visit.eventtime.start,
+            visit.eventtime.end
+        )
+
+    def requested_as_host_for_qs(self, exclude_accepted=False):
+        bm = booking.models
+        cts = get_related_content_types(bm.Visit)
+        template_key = bm.EmailTemplate.NOTIFY_HOST__REQ_HOST_VOLUNTEER
+
+        mail_qs = bm.KUEmailRecipient.objects.filter(
+            user=self.user,
+            email_message__template_key=template_key,
+            email_message__content_type__in=cts,
+        )
+
+        if exclude_accepted:
+            accepted_qs = self.user.hosted_visits.all()
+            mail_qs = mail_qs.exclude(email_message__object_id__in=accepted_qs)
+
+        qs = bm.Visit.objects.filter(
+            pk__in=mail_qs.values_list("email_message__object_id", flat=True)
+        )
+
+        return qs
+
+    def is_available_as_host(self, from_datetime, to_datetime):
+        res = self.get_resource()
+        if res:
+            return res.is_available_between(from_datetime, to_datetime)
+
+        return not self.user.hosted_visits.filter(
+            Q(
+                eventtime__start__lt=to_datetime,
+                eventtime__end__gt=from_datetime
+            )
+        ).exists()
+
+    def can_be_host_for(self, visit):
+        return self.is_available_as_host(
+            visit.start_datetime,
+            visit.end_datetime
+        )
+
+    @property
+    def assigned_to_visits(self):
+        role = self.get_role()
+        if role == TEACHER:
+            return self.user.taught_visits.all()
+        elif role == HOST:
+            return self.user.hosted_visits.all()
+        else:
+            return booking.models.Visit.objects.none()
+
+    @property
+    def resource_for_visits(self):
+        res = self.get_resource()
+        if res:
+            return booking.models.Visit.objects.filter(
+                resources=res
+            )
+        else:
+            return booking.models.Visit.objects.none()
+
+    def all_assigned_visits(self):
+        qs = self.assigned_to_visits | self.resource_for_visits
+        return qs
+
+    @property
+    def available_roles(self):
+        return available_roles[self.get_role()]
+
+    def save(self, *args, **kwargs):
+
+        result = super(UserProfile, self).save(*args, **kwargs)
+
+        # Create a resource for the user
+        if (
+            self.is_teacher and
+            not self.user.teacherresource_set.exists() and
+            self.organizationalunit
+        ):
+            resource = booking.models.TeacherResource(
+                user=self.user,
+                organizationalunit=self.organizationalunit
+            )
+            resource.make_calendar()
+            resource.save()
+
+        # Create a resource for the user
+        if (
+            self.is_host and
+            not self.user.hostresource_set.exists() and
+            self.organizationalunit
+        ):
+            resource = booking.models.HostResource(
+                user=self.user,
+                organizationalunit=self.organizationalunit
+            )
+            resource.make_calendar()
+            resource.save()
+
+        return result
+
+
+class EmailLoginURL(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4)
     success_url = models.CharField(max_length=2024)
     user = models.ForeignKey(User)

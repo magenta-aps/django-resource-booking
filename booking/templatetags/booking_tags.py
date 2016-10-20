@@ -9,8 +9,8 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
 from timedelta.helpers import parse, nice_repr
-from booking.models import LOGACTION_DISPLAY_MAP
-from profile.models import EmailLoginEntry, UserProfile
+from booking.models import LOGACTION_DISPLAY_MAP, Guest, BookerResponseNonce
+from profile.models import EmailLoginURL, UserProfile
 import datetime
 import re
 import json
@@ -129,6 +129,26 @@ def replace(value, arg):
     return arg
 
 
+@register.filter
+def lt(a, b):
+    return a < b
+
+
+@register.filter
+def lte(a, b):
+    return a <= b
+
+
+@register.filter
+def gt(a, b):
+    return a > b
+
+
+@register.filter
+def gte(a, b):
+    return a >= b
+
+
 class FullURLNode(defaulttags.Node):
 
     TOKEN_USER_KEY = 'token_user'
@@ -138,6 +158,7 @@ class FullURLNode(defaulttags.Node):
 
     def __init__(self, url_node):
         # Grab any kwargs that we lay claim to
+        self.kwargs = {}
         for key in self.our_kwarg_keys:
             if key in url_node.kwargs:
                 self.kwargs[key] = url_node.kwargs.pop(key)
@@ -148,9 +169,9 @@ class FullURLNode(defaulttags.Node):
 
     def tokenize(self, url, context):
         # If a valid token_for arg is supplied, put a token on the url
-        if url is not None and url != '' and \
-                self.TOKEN_USER_KEY in self.kwargs:
-            user = self.kwargs[self.TOKEN_USER_KEY]
+        kwargs = self.kwargs
+        if url is not None and url != '' and self.TOKEN_USER_KEY in kwargs:
+            user = kwargs[self.TOKEN_USER_KEY]
             if isinstance(user, FilterExpression):
                 user = user.resolve(context)
             elif isinstance(user, basestring):
@@ -159,13 +180,19 @@ class FullURLNode(defaulttags.Node):
                 pass
             elif isinstance(user, UserProfile):
                 user = user.user
-            else:
-                user = None
 
             if isinstance(user, User):
-                entry = EmailLoginEntry.create_from_url(
+                entry = EmailLoginURL.create_from_url(
                     user,
                     url,
+                    expires_in=datetime.timedelta(hours=72)
+                )
+                return entry.as_url()
+
+            # Special hack for letting Bookers respond to mails
+            if isinstance(user, Guest):
+                entry = BookerResponseNonce.create(
+                    user,
                     expires_in=datetime.timedelta(hours=72)
                 )
                 return entry.as_url()

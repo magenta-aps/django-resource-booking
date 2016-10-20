@@ -1,9 +1,12 @@
 from django.db import models
 from django.utils import six
 from collections import defaultdict
-from django.forms.fields import MultipleChoiceField
+from django.forms.fields import ChoiceField, MultipleChoiceField
+from django.forms.widgets import CheckboxSelectMultiple, Select, SelectMultiple
 
-from .widgets import DurationWidget
+from .widgets import OrderedMultipleHiddenChooser
+from .widgets import CheckboxSelectMultipleDisable, DurationWidget
+from .widgets import SelectDisable, SelectMultipleDisable
 
 COLUMN_TYPES = defaultdict(lambda: "char(20)")
 COLUMN_TYPES["django.db.backends.postgresql_psycopg2"] = "interval"
@@ -52,3 +55,62 @@ class ExtensibleMultipleChoiceField(MultipleChoiceField):
     """
     def valid_value(self, value):
         return True
+
+
+class OrderedMultipleChoiceField(ExtensibleMultipleChoiceField):
+    widget = OrderedMultipleHiddenChooser
+
+    def has_changed(self, initial, data):
+        if super(OrderedMultipleChoiceField, self).has_changed(initial, data):
+            return True
+        if initial is None:
+            initial = []
+        if data is None:
+            data = []
+        for i, value in enumerate(initial):
+            if data[i] != initial[i]:
+                return True
+        return False
+
+
+class DisableFieldMixin(object):
+    widget = SelectDisable
+    _disabled_values = []
+
+    def __init__(self, disabled_values=[], *args, **kwargs):
+
+        if 'widget' in kwargs:
+            widget = kwargs['widget']
+            if isinstance(widget, Select) or issubclass(widget, Select):
+                self.widget = SelectDisable()
+            if isinstance(widget, SelectMultiple) or \
+                    issubclass(widget, SelectMultiple):
+                self.widget = SelectMultipleDisable()
+            if isinstance(widget, CheckboxSelectMultiple) or \
+                    issubclass(widget, CheckboxSelectMultiple):
+                self.widget = CheckboxSelectMultipleDisable()
+
+        super(DisableFieldMixin, self).__init__(*args, **kwargs)
+        self.disabled_values = disabled_values
+
+    def valid_value(self, value):
+        if value in self.disabled_values:
+            return False
+        return super(DisableFieldMixin, self).valid_value(value)
+
+    def _get_disabled_values(self):
+        return self._disabled_values
+
+    def _set_disabled_values(self, values):
+        if type(values) == list and hasattr(self.widget, 'disabled_values'):
+            self.widget.disabled_values = [unicode(value) for value in values]
+
+    disabled_values = property(_get_disabled_values, _set_disabled_values)
+
+
+class ChoiceDisableField(DisableFieldMixin, ChoiceField):
+    widget = SelectDisable
+
+
+class MultipleChoiceDisableField(DisableFieldMixin, MultipleChoiceField):
+    widget = SelectMultipleDisable

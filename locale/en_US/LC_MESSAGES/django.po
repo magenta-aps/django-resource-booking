@@ -2176,7 +2176,7 @@ msgstr ""
 
 #: booking/templates/resource/fields/contact.html:9
 msgid ""
-"Vælg modtagere af henvendelser indsendt via formularen \"Spørg om tilbud\""
+"Vælg modtager af henvendelser indsendt via formularen \"Spørg om tilbud\""
 msgstr ""
 
 #: booking/templates/resource/fields/duration.html:13

@@ -3,9 +3,9 @@
 
 <p>
     Der er ingen tildelte værter til besøget
-    {{ visit.title }} d. {{ besoeg.start_datetime }}
+    {{ product.title }} d. {{ besoeg.start_datetime }}
 </p>
 <p>
     Du kan gå til besøget via følgende link:<br/>
-    <a href="{% full_url 'visit-occ-view' besoeg.pk %}">{% full_url 'visit-occ-view' besoeg.pk %}</a>
+    <a href="{% full_url 'visit-view' besoeg.pk %}">{% full_url 'visit-view' besoeg.pk %}</a>
 </p>

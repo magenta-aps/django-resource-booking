@@ -4,8 +4,8 @@
 {% load booking_tags %}
 
 {% block htmltitle %} -
-    {% if template.unit %}
-        {% blocktrans with templatename=template.name unitname=template.unit.name %}
+    {% if template.organizationalunit %}
+        {% blocktrans with templatename=template.name unitname=template.organizationalunit.name %}
             Preview emailskabelon '{{ templatename }}' for {{ unitname }}
         {% endblocktrans %}
     {% else %}
@@ -29,16 +29,16 @@
                     Preview emailskabelon '{{ templatename }}'
                 {% endblocktrans %}
             </h1>
-            {% if template.unit %}
-                <dl class="dl-horizontal"><dt>{% trans 'Enhed:'%}</dt><dd>{{ template.unit.name }}</dd>
+            {% if template.organizationalunit %}
+                <dl class="dl-horizontal"><dt>{% trans 'Enhed:'%}</dt><dd>{{ template.organizationalunit.name }}</dd>
             {% else %}
                 {% trans 'Grundskabelon'%}
             {% endif %}
         </div>
         <div class="col-sm-6 text-right">
-            <a href="{% url 'emailtemplate-edit' template.id %}?back={{ thisurl | urlencode }}" class="btn btn-primary">{% trans "Rediger skabelon" %}</a>
-            <a href="{% url 'emailtemplate-clone' template.id %}?back={{ thisurl | urlencode }}" class="btn btn-primary">{% trans "Kopier skabelon" %}</a>
-            <a href="{% url 'emailtemplate-delete' template.id %}?back={{ thisurl | urlencode }}" class="btn btn-primary">{% trans "Slet skabelon" %}</a>
+            <a href="{% url 'emailtemplate-edit' template.id %}?back={{ request.get_full_path | urlencode }}" class="btn btn-primary">{% trans "Rediger skabelon" %}</a>
+            <a href="{% url 'emailtemplate-clone' template.id %}?back={{ request.get_full_path | urlencode }}" class="btn btn-primary">{% trans "Kopier skabelon" %}</a>
+            <a href="{% url 'emailtemplate-delete' template.id %}?back={{ request.get_full_path | urlencode }}" class="btn btn-primary">{% trans "Slet skabelon" %}</a>
         </div>
         </div>
     <div class="row">
@@ -63,10 +63,10 @@
 
                         <div class="row form-group">
                             <div class="col-sm-3">
-                                {% trans 'Nøgle' %}
+                                {% trans 'Variabel' %}
                             </div>
                             <div class="col-sm-3">
-                                {% trans 'Type' %}
+                                {% trans 'Datatype' %}
                             </div>
                             <div class="col-sm-3">
                                 {% trans 'Værdi' %}

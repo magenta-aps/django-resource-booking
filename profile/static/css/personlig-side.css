@@ -116,3 +116,11 @@
         width: 100%!important;
     }
 }
+
+#adminblock .glyphicon {
+    font-size: 1.2em;
+}
+
+#adminblock .tooltip {
+    width: 250px;
+}
