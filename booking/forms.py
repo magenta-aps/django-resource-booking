@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from booking.models import StudyMaterial, ProductAutosend, Booking
-from booking.models import BookingGrundskoleSubjectLevel
+from booking.models import Subject, BookingGrundskoleSubjectLevel
 from booking.models import Locality, OrganizationalUnitType, OrganizationalUnit
 from booking.models import Product
 from booking.models import Guest, Region, PostCode, School
@@ -706,6 +706,18 @@ class BookingForm(forms.ModelForm):
 
         else:
             self.fields['desired_time'].required = True
+
+        if product is not None and 'subjects' in self.fields and \
+                        product.institution_level != Subject.SUBJECT_TYPE_BOTH:
+            qs = None
+            if product.institution_level == Subject.SUBJECT_TYPE_GRUNDSKOLE:
+                qs = Subject.grundskolefag_qs()
+            elif product.institution_level == Subject.SUBJECT_TYPE_GYMNASIE:
+                qs = Subject.gymnasiefag_qs()
+            if qs:
+                self.fields['subjects'].choices = [
+                    (subject.id, subject.name) for subject in qs
+                ]
 
     def save(self, commit=True, *args, **kwargs):
         booking = super(BookingForm, self).save(commit, *args, **kwargs)
