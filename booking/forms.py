@@ -687,12 +687,16 @@ class BookingForm(forms.ModelForm):
                     choices.append((eventtime.pk, date))
                 elif available_seats > 0 or \
                         visit and visit.waiting_list_capacity > 0:
+                    if visit:
+                        capacity_text = \
+                            _("(%d pladser tilbage, "
+                              "%d ventelistepladser tilbage)") % \
+                            (available_seats, visit.waiting_list_capacity)
+                    else:
+                        capacity_text = _("(%d pladser tilbage)") % \
+                            available_seats
                     choices.append(
-                        (
-                            eventtime.pk,
-                            date + " " +
-                            _("(%d pladser tilbage)") % available_seats
-                        )
+                        (eventtime.pk, "%s %s" % (date, capacity_text))
                     )
 
             self.fields['eventtime'].choices = choices
