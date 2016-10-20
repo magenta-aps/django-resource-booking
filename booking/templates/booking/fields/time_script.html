@@ -1,13 +1,14 @@
 {% load booking_tags %}
 {% load i18n %}
 
-{% if bookerform.attendee_count and bookingform.visit %}
-    <script type="text/javascript">
+{% if bookerform.attendee_count and bookingform.eventtime %}
+    <script type="text/javascript" id="time_script">
         <!--
         (function(){
             {% autoescape off %}
                 // How many idle spots are available on each visit
                 var visitAvailable = {{ times_available | jsonify }},
+                    only_waitinglist = {{ only_waitinglist | jsonify }},
             {% endautoescape %}
             visitSelect = $("#{{ bookingform.eventtime.id_for_label }}"),
             attendeeField = $("#{{ bookerform.attendee_count.id_for_label }}"),
@@ -30,9 +31,11 @@
                 var updateAttendees = function() {
                     var visit = visitAvailable[visitSelect.val()];
                     if (visit !== null) {
-                        var doWaitingList = attendeeField.val() > visit.available && attendeeField.val() <= visit.waitinglist;
+                        var doWaitingList = only_waitinglist || (attendeeField.val() > visit.available && attendeeField.val() <= visit.waitinglist);
                         submitbutton.text(doWaitingList ? "{% trans 'Tilmeld til venteliste!' %}" : "{% trans 'Tilmeld!' %}");
-                        $("#waitinglist_warning").toggle(doWaitingList);
+                        if (!only_waitinglist) {
+                            $("#waitinglist_warning").toggle(doWaitingList);
+                        }
                     }
                 };
 
