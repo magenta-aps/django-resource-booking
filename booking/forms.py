@@ -708,7 +708,7 @@ class BookingForm(forms.ModelForm):
             self.fields['desired_time'].required = True
 
         if product is not None and 'subjects' in self.fields and \
-                        product.institution_level != Subject.SUBJECT_TYPE_BOTH:
+                product.institution_level != Subject.SUBJECT_TYPE_BOTH:
             qs = None
             if product.institution_level == Subject.SUBJECT_TYPE_GRUNDSKOLE:
                 qs = Subject.grundskolefag_qs()
