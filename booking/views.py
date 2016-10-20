@@ -2963,7 +2963,7 @@ class EmailTemplateListView(LoginRequiredMixin, BreadcrumbMixin, ListView):
 
 
 class EmailTemplateEditView(LoginRequiredMixin, UnitAccessRequiredMixin,
-                            BreadcrumbMixin, UpdateView, HasBackButtonMixin):
+                            BreadcrumbMixin, UpdateView, BackMixin):
     template_name = 'email/form.html'
     form_class = EmailTemplateForm
     model = EmailTemplate
@@ -3001,9 +3001,7 @@ class EmailTemplateEditView(LoginRequiredMixin, UnitAccessRequiredMixin,
         context.update(kwargs)
         if form.is_valid():
             self.object = form.save()
-            if 'back' in request.GET:
-                return redirect(request.GET['back'])
-            return redirect(reverse('emailtemplate-list'))
+            return self.redirect(reverse('emailtemplate-list'))
 
         return self.render_to_response(
             self.get_context_data(**context)
