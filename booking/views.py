@@ -2008,6 +2008,7 @@ class BookingNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
 
         self.template_context['product'] = self.object.visit.product
         self.template_context['visit'] = self.object.visit
+        self.template_context['besoeg'] = self.object.visit
         self.template_context['booking'] = self.object
         return super(BookingNotifyView, self).dispatch(
             request, *args, **kwargs
