@@ -2,12 +2,8 @@
 {% if modal %}
 <div class="modal-header">
     <button type="button" class="close" data-dismiss="modal" aria-label="{% trans "Close" %}"><span aria-hidden="true">&times;</span></button>
-    {% if not success %}
-    <h4 class="modal-title" id="overskrift">{% blocktrans with title=product.title %}Tilmeld dig tilbuddet "{{ title }}"{% endblocktrans %}</h4>
-    {% endif %}
+    {% include 'booking/snippets/header_text.html' %}
 </div>
 {% else %}
-    {% if not success %}
-    <h4 class="modal-title" id="overskrift">{% blocktrans with title=product.title %}Tilmeld dig tilbuddet "{{ title }}"{% endblocktrans %}</h4>
-    {% endif %}
+    {% include 'booking/snippets/header_text.html' %}
 {% endif %}

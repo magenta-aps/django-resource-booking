@@ -1781,9 +1781,14 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             return True
 
         # Time controlled products are only bookable if there's a valid
-        # bookable time in the future
-        if len(self.future_bookable_times) > 0:
-            return True
+        # bookable time in the future, and that time isn't fully booked
+        # if len(self.future_bookable_times) > 0:
+        #     return True
+        for eventtime in self.future_bookable_times:
+            if eventtime.visit is None:
+                return True
+            if eventtime.visit.is_bookable:
+                return True
 
         return False
 
@@ -2437,8 +2442,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     @property
     def is_bookable(self):
         # Can this visit be booked?
-        if not self.bookable:
-            return False
         if self.workflow_status not in self.BOOKABLE_STATES:
             return False
         if self.expired:
