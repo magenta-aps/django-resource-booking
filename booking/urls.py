@@ -156,6 +156,9 @@ urlpatterns = patterns(
     url(r'visit/(?P<visit>[0-9]+)/book/?$',
         VisitBookingCreateView.as_view(),
         name='visit-booking-create'),
+    url(r'^visit/(?P<pk>[0-9]+)/book/success$',
+        BookingSuccessView.as_view(modal=False),
+        name='visit-booking-success'),
 
     url(r'^booking/(?P<pk>[0-9]+)/?$',
         BookingDetailView.as_view(),
