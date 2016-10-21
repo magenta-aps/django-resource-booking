@@ -2569,7 +2569,6 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
                         'submitvalue': x.as_submitvalue(),
                         'description': x.display_value()
                     })
-
         return result
 
 
@@ -2636,7 +2635,10 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
             object.booker = forms['bookerform'].save()
         object.save()
         return redirect(
-            reverse('product-view', args=[object.visit.products[0].id])
+            reverse(
+                'visit-booking-success',
+                args=[object.visit.products[0].id]
+            )
         )
 
     def form_invalid(self, forms):
