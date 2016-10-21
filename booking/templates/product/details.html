@@ -85,7 +85,7 @@
                         <span class="glyphicon glyphicon-chevron-right"></span>
                     </a>
                 {% endif %}
-                {% if object.tilbudsansvarlig or object.created_by %}
+                {% if object.can_inquire %}
                     <a class="btn btn-default" data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'product-inquire' object.id %}?modal=1" >
                         {% trans 'Spørg om tilbud' %}
                         <span class="glyphicon glyphicon-question-sign"></span>

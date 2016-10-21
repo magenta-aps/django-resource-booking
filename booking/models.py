@@ -1338,6 +1338,13 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         TEACHER_EVENT, STUDY_PROJECT
     ]
 
+    askable_types = [
+        STUDENT_FOR_A_DAY, GROUP_VISIT,
+        TEACHER_EVENT, OTHER_OFFERS,
+        OPEN_HOUSE, ASSIGNMENT_HELP, STUDIEPRAKTIK,
+        STUDY_PROJECT
+    ]
+
     @ClassProperty
     def type_choices(self):
         return (x for x in
@@ -1834,6 +1841,11 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         return self.is_type_bookable and \
             self.state == Product.ACTIVE and \
             self.has_waitinglist_visit_spots
+
+    @property
+    def can_inquire(self):
+        return self.type in Product.askable_types and \
+            (self.tilbudsansvarlig or self.created_by)
 
     @property
     def duration_as_timedelta(self):
