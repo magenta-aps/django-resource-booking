@@ -2608,7 +2608,10 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
             object.booker = forms['bookerform'].save()
         object.save()
         return redirect(
-            reverse('visit-booking-success', args=[object.visit.products[0].id])
+            reverse(
+                'visit-booking-success',
+                args=[object.visit.products[0].id]
+            )
         )
 
     def form_invalid(self, forms):
