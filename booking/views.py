@@ -1354,7 +1354,7 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
             for fileform in fileformset:
                 try:
                     instance = StudyMaterial(
-                        resource=self.object,
+                        product=self.object,
                         file=self.request.FILES["%s-file" % fileform.prefix]
                     )
                     instance.save()
