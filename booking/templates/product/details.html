@@ -68,7 +68,7 @@
             {% endif %}
             <div class="well order-buttons hidden-print">
                 {% if object.is_bookable %}
-                    {% if object.is_time_guest_suggested %}
+                    {% if object.is_guest_time_suggested %}
                         <a class="btn btn-default" href="{% url 'product-book-notime' object.id %}">
                             {% trans 'Tilmeld' %}
                             <span class="glyphicon glyphicon-chevron-right"></span>
@@ -163,6 +163,9 @@
                             {% if request.user.userprofile.can_create %}
                                 <dt>{% trans 'Hvornår:' %}</dt>
                                 <dd>
+                                    {% if object.is_guest_time_suggested %}
+                                        ({% trans 'Gæster foreslår selv tidspunkter' %})
+                                    {% endif %}
                                     <ul class="list-unstyled" id="dato">
                                     {% if object.eventtime_set.all %}
                                         {% for eventtime in object.eventtime_set.all %}
@@ -195,16 +198,20 @@
                                     {% endif %}
                                 </dd>
                             {% else %}
-                                {% if object.future_bookable_events %}
                                 <dt>{% trans 'Hvornår:' %}</dt>
                                 <dd>
-                                    <ul class="list-unstyled" id="dato">
-                                    {% for eventtime in object.future_bookable_events %}
-                                        <li>{{ eventtime.interval_display }}</li>
-                                    {% endfor %}
-                                    </ul>
+                                    {% if object.is_guest_time_suggested %}
+                                        {% trans 'Foreslå selv et tidspunkt' %}
+                                    {% elif object.future_bookable_times %}
+                                        <ul class="list-unstyled" id="dato">
+                                        {% for eventtime in object.future_bookable_times reversed %}
+                                            <li>{{ eventtime.interval_display }}</li>
+                                        {% endfor %}
+                                        </ul>
+                                    {% else %}
+                                        {% trans 'Der er i øjeblikket ikke nogen tidspunkter der er åbne for tilmelding på dette tilbud' %}
+                                    {% endif %}
                                 </dd>
-                                {% endif %}
                             {% endif %}
 
                             {% if object.duration and object.duration != '00:00' %}

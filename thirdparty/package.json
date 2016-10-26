@@ -6,6 +6,7 @@
     "bootstrap-datetime-picker": "latest",
     "bootstrap-3-typeahead": "latest",
     "jquery-table-sort": "latest",
-    "pickadate": "3.5.6"
+    "pickadate": "3.5.6",
+    "sortablejs": "1.4.2"
   }
 }

@@ -14,16 +14,22 @@
     <div class="row">
         <div class="col-sm-12">
             <h2>{% trans "Mulige tidspunkter" %}</h2>
-            {% if object.availability_text %}
-            <p>
-                <p>{% blocktrans with name=object.user %}{{ name }} har angivet følgende mulige tidspunkter{% endblocktrans %}</p>
-                <pre>{{object.availability_text}}</pre>
-            </p>
+            {% if object.get_resource.calendar %}
+                <p>{% blocktrans with name=object.user %}{{ name }} bruger kalender til angivelse af tilgængelighed{% endblocktrans %}</p>
+                <a href="{% url 'calendar' object.get_resource.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Gå til kalender' %}</a>
+
             {% else %}
-            <p>{% blocktrans with name=object.user %}{{ name }} har ikke angivet mulige tidspunkter{% endblocktrans %}</p>
-            {% endif %}
-            {% if request.user.pk = object.user.pk %}
-                <a href="{% url 'availability-edit' %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
+                {% if object.availability_text %}
+                <p>
+                    <p>{% blocktrans with name=object.user %}{{ name }} har angivet følgende mulige tidspunkter{% endblocktrans %}</p>
+                    <pre>{{object.availability_text}}</pre>
+                </p>
+                {% else %}
+                <p>{% blocktrans with name=object.user %}{{ name }} har ikke angivet mulige tidspunkter{% endblocktrans %}</p>
+                {% endif %}
+                {% if request.user.pk = object.user.pk %}
+                    <a href="{% url 'availability-edit' %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
+                {% endif %}
             {% endif %}
 
             <div class="divider"></div>

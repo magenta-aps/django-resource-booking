@@ -5,10 +5,12 @@ from django.core.exceptions import SuspiciousFileOperation
 from django.core.files.storage import FileSystemStorage
 from subprocess import Popen, PIPE
 import os
+import sys
 
 import csv
 import codecs
 import cStringIO
+from itertools import chain
 
 
 class LogAction(object):
@@ -233,3 +235,63 @@ class UnicodeWriter:
     def writerows(self, rows):
         for row in rows:
             self.writerow(row)
+
+
+def merge_dicts(*dicts):
+    result = {}
+    for dict in dicts:
+        result.update(dict)
+    return result
+
+
+def flatten(args):
+    flat = []
+    if type(args) in (type(()), type([])):
+        for arg in args:
+            flat.extend(flatten(arg))
+    else:
+        flat.append(args)
+    return flat
+
+
+def intersection(*lists):
+    """
+    Given several lists, find the intersection between them all
+    """
+    common = set(lists[0])
+    for item in lists[1:]:
+        common = common.intersection(item)
+    return list(common)
+
+
+def union(*lists):
+    """
+    Given several lists, find the union of them all
+    """
+    return list(set(chain(*lists)))
+
+
+def binary_or(*items):
+    """
+    OR several integers together (handy when they vary in number)
+    """
+    base = 0
+    for item in list(flatten([items])):
+        try:
+            base = base | item
+        except:
+            pass
+    return base
+
+
+def binary_and(*items):
+    """
+    AND several integers together (handy when they vary in number)
+    """
+    base = sys.maxint
+    for item in flatten(items):
+        try:
+            base = base & item
+        except:
+            pass
+    return base

@@ -364,6 +364,11 @@ h3.media-heading {
     margin-top: 4px;
 }
 
+.media-body ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+
 .media-info {
     margin: 5px 0;
 }
@@ -670,22 +675,27 @@ select,
 .scroll-200 {
     max-height: 200px;
     overflow-y: scroll;
+    padding: 1px;
 }
 .scroll-300 {
     max-height: 300px;
     overflow-y: scroll;
+    padding: 1px;
 }
 .scroll-400 {
     max-height: 400px;
     overflow-y: scroll;
+    padding: 1px;
 }
 .scroll-500 {
     max-height: 500px;
     overflow-y: scroll;
+    padding: 1px;
 }
 .scroll-600 {
     max-height: 600px;
     overflow-y: scroll;
+    padding: 1px;
 }
 
 
@@ -1165,6 +1175,10 @@ body.lightbox {
     margin: 0;
 }
 
+#waitinglist_warning {
+    display: none;
+}
+
 @media screen and (max-width:768px) {
     html,
     body {
@@ -1398,5 +1412,9 @@ body.lightbox {
 #mpvform #deselected-product-list li#placeholder,
 #mpvform #drawhelp {
     display: none
+}
+
+#mpvform li .institution {
+    font-size: 0.75em;
 }
 /* MultiProductVisit END */

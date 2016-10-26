@@ -11,6 +11,7 @@ from django.views.generic import UpdateView, FormView
 from booking.booking_workflows.forms import ChangeVisitStatusForm, \
     BecomeSomethingForm
 from booking.booking_workflows.forms import VisitAutosendFormSet
+from booking.booking_workflows.forms import ChangeVisitResponsibleForm
 from booking.booking_workflows.forms import ChangeVisitTeachersForm
 from booking.booking_workflows.forms import ChangeVisitHostsForm
 from booking.booking_workflows.forms import ChangeVisitRoomsForm
@@ -26,10 +27,13 @@ from booking.models import Locality
 from booking.models import LOGACTION_MANUAL_ENTRY
 from booking.models import log_action
 from booking.models import Room
+from booking.models import MultiProductVisit
 from booking.views import AutologgerMixin
 from booking.views import RoleRequiredMixin, EditorRequriedMixin
+from booking.views import VisitDetailView
 from django.views.generic.base import ContextMixin
 from profile.models import TEACHER, HOST, EDIT_ROLES
+from itertools import chain
 
 import booking.models
 
@@ -37,19 +41,17 @@ import booking.models
 class VisitBreadcrumbMixin(ContextMixin):
     view_title = _(u'opdater')
 
+    def get_breadcrumb_args(self):
+        return [self.object]
+
     def get_context_data(self, **kwargs):
-        context = {}
-        context['breadcrumbs'] = [
-            {
-                'url': reverse('visit-search'),
-                'text': _(u'Søg i besøg')
-            },
-            {
-                'url': reverse('visit-view', args=[self.object.pk]),
-                'text': _(u'Besøg #%s') % self.object.pk
-            },
-            {'text': self.view_title},
-        ]
+        breadcrumbs = VisitDetailView.build_breadcrumbs(
+            *self.get_breadcrumb_args()
+        )
+        breadcrumbs.append({'text': self.view_title})
+        context = {
+            'breadcrumbs': breadcrumbs
+        }
         context.update(kwargs)
         return super(VisitBreadcrumbMixin, self).\
             get_context_data(**context)
@@ -96,6 +98,9 @@ class ChangeVisitStartTimeView(AutologgerMixin,
     def get_success_url(self):
         return reverse('visit-view', args=[self.object.visit.pk])
 
+    def get_breadcrumb_args(self):
+        return [self.object.visit]
+
 
 class ChangeVisitStatusView(AutologgerMixin, UpdateWithCancelView):
     model = Visit
@@ -115,6 +120,13 @@ class ChangeVisitStatusView(AutologgerMixin, UpdateWithCancelView):
             # Booking is cancelled
             self.object.autosend(EmailTemplate.NOTIFY_ALL__BOOKING_CANCELED)
         return response
+
+
+class ChangeVisitResponsibleView(AutologgerMixin, UpdateWithCancelView):
+    model = MultiProductVisit
+    form_class = ChangeVisitResponsibleForm
+    template_name = "booking/workflow/change_responsible.html"
+    view_title = _(u'Redigér besøgsansvarlig')
 
 
 class ChangeVisitTeachersView(AutologgerMixin, UpdateWithCancelView):
@@ -165,7 +177,6 @@ class ChangeVisitTeachersView(AutologgerMixin, UpdateWithCancelView):
                 if teacher not in old_teachers
             ]
             if len(recipients) > 0:
-                print recipients
                 # Send a message to only these recipients
                 self.object.autosend(
                     EmailTemplate.NOTIFY_TEACHER__ASSOCIATED,
@@ -327,7 +338,7 @@ class ChangeVisitEvalView(AutologgerMixin, UpdateWithCancelView):
     view_title = _(u'Redigér evalueringslink')
 
 
-class VisitAddLogEntryView(FormView):
+class VisitAddLogEntryView(VisitBreadcrumbMixin, FormView):
     model = Visit
     form_class = VisitAddLogEntryForm
     template_name = "booking/workflow/add_logentry.html"
@@ -351,25 +362,6 @@ class VisitAddLogEntryView(FormView):
             return super(VisitAddLogEntryView, self).post(
                 request, *args, **kwargs
             )
-
-    def get_context_data(self, **kwargs):
-        context = {}
-        context['breadcrumbs'] = [
-            {
-                'url': reverse('visit-search'),
-                'text': _(u'Søg i besøg')
-            },
-            {
-                'url': reverse('visit-view', args=[self.object.pk]),
-                'text': _(u'Besøg #%s') % self.object.pk
-            },
-            {'text': self.view_title},
-        ]
-        context.update(kwargs)
-        return super(VisitAddLogEntryView, self).get_context_data(
-            object=self.object,
-            **context
-        )
 
     def form_valid(self, form):
         log_action(
@@ -414,6 +406,7 @@ class ChangeVisitAutosendView(AutologgerMixin, UpdateWithCancelView):
 
     def get_context_data(self, **kwargs):
         context = {}
+
         context['inherited'] = {
             item.template_key:
             {
@@ -421,15 +414,21 @@ class ChangeVisitAutosendView(AutologgerMixin, UpdateWithCancelView):
                 'enabled': item.enabled,
                 'days': item.days
             }
-            for item in self.object.product.productautosend_set.all()
+            for item in chain.from_iterable(
+                product.productautosend_set.all()
+                for product in self.object.real.products
+            )
         }
         context['template_keys'] = list(set(
             template.key
-            for template in EmailTemplate.get_templates(
-                self.object.product.organizationalunit
+            for template in chain.from_iterable(
+                EmailTemplate.get_templates(product.organizationalunit)
+                for product in self.object.real.products
             )
         ))
-        context['organizationalunit'] = self.object.product.organizationalunit
+        if hasattr(self.object, 'product') and self.object.product is not None:
+            context['organizationalunit'] = \
+                self.object.product.organizationalunit
         context['autosend_enable_days'] = EmailTemplate.enable_days
         context.update(kwargs)
         return super(ChangeVisitAutosendView, self).\

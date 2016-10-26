@@ -28,38 +28,25 @@
         {{ form.non_field_errors }}
 
         {% csrf_token %}
+        {% if form.products.errors %}
+            <div>{{ form.products.errors }}</div>
+        {% endif %}
         {{ form.products }}
 
         <ul class="list-group" id="selected-product-list">
             {% for product in products %}
                 {% if product.id in form.products.value %}
-                    <li id="product_{{ product.id }}" class="list-group-item" data-product="{{ product.id }}">
-                        <span class="glyphicon glyphicon-move movebutton"></span>
-                        <a class="btn btn-primary pull-right selectbutton">{% trans 'Vælg' %}</a>
-                        <h2 class="title">{{ product.title }}</h2>
-                        <p class="teaser">{{ product.teaser }}</p>
-                        <a class="deselectbutton">
-                            <span class="glyphicon glyphicon-remove"></span>
-                        </a>
-                    </li>
+                    {% include 'visit/multi_product_item.html' with product=product %}
                 {% endif %}
             {% endfor %}
         </ul>
 
         <p id="drawhelp">{% trans 'Du kan trække i tilbuddene for at prioritere dem.' %}</p>
         <p>{% trans 'Vælg tilbud:' %}<br/>{% trans '(Listen er begrænset til tilbud uden faste tider der kan lade sig gøre den pågældende dag)' %}</p>
-        <ul class="list-group" id="deselected-product-list">
+        <ul class="list-group scroll-500" id="deselected-product-list">
             {% for product in products %}
                 {% if product.id not in form.products.value %}
-                    <li id="product_{{ product.id }}" class="list-group-item" data-product="{{ product.id }}">
-                        <span class="glyphicon glyphicon-move movebutton"></span>
-                        <a class="btn btn-primary pull-right selectbutton">{% trans 'Vælg' %}</a>
-                        <h2 class="title">{{ product.title }}</h2>
-                        <p class="teaser">{{ product.teaser }}</p>
-                        <a class="deselectbutton">
-                            <span class="glyphicon glyphicon-remove"></span>
-                        </a>
-                    </li>
+                    {% include 'visit/multi_product_item.html' with product=product %}
                 {% endif %}
             {% endfor %}
             <li id="placeholder" class="list-group-item">{% trans 'Ingen tilbud tilgængelige' %}</li>
@@ -77,6 +64,10 @@
             </li>
         </ul>
 
+        {% include 'common/fields/generic_field.html' with field=form.required_visits %}
+
+        {% include 'common/fields/generic_field.html' with field=form.notes %}
+
         <fieldset>
             <a class="btn btn-primary cancelbutton" href="{% url 'mpv-edit-date' object.id %}">{% trans "Tilbage" %}</a>
             <button class="btn btn-primary" type="submit">{% trans "Videre" %}</button>
@@ -90,7 +81,7 @@
 {% block extra_scripts %}
     {{ form.media }}
     {% include 'common/resources/datepicker_script.html' %}
-    <script src="//cdn.jsdelivr.net/sortable/1.4.2/Sortable.min.js"></script>
+    <script src="{% static 'thirdparty/sortablejs/Sortable.min.js' %}"></script>
     <script>
     <!--
         $(function() {
@@ -103,17 +94,18 @@
 
             var update = function() {
                 var anySelected = !!selectedList.children().not(placeholder).length;
-                placeholder.toggle(anySelected);
+                var anyDeSelected = !!deselectedList.children().not(placeholder).length;
+                placeholder.toggle(!anyDeSelected);
                 drawHelp.toggle(anySelected);
             };
 
             // Handle deselect clicks
             var deSelect = function() {
                 var id = $(this).parent().attr("data-product");
-                {% comment %} Disable the associated hidden input field {% endcomment %}
+                {# Disable the associated hidden input field #}
                 var inputField = $("input[name='{{ form.products.name }}'][value='"+id+"']");
                 inputField.attr("disabled", "disabled");
-                {% comment %} Move the <li> to the selected list {% endcomment %}
+                {# Move the <li> to the selected list #}
                 deselectedList.append(selectedList.find("li#product_"+id));
                 update();
             };
@@ -122,7 +114,7 @@
             // Handle select clicks
             var select = function() {
                 var id = $(this).parent().attr("data-product");
-                {% comment %} Enable the associated hidden input field, and move it to the bottom of the list of enabled input fields {% endcomment %}
+                {# Enable the associated hidden input field, and move it to the bottom of the list of enabled input fields #}
                 var inputField = $("input[name='{{ form.products.name }}'][value='"+id+"']");
                 var inputFields = $("input[name='{{ form.products.name }}'][disabled!='disabled']");
                 if (inputFields.length) {
@@ -131,12 +123,31 @@
                     inputField.insertBefore(inputField.parent().children().first());
                 }
                 inputField.removeAttr("disabled");
-                {% comment %} Move the <li> to the deselected list {% endcomment %}
+                {# Move the <li> to the deselected list #}
                 selectedList.append(deselectedList.find("li#product_"+id));
                 update();
             };
             $(".selectbutton").on('click', select);
             update();
+
+
+            Sortable.create(
+                selectedList.get(0),
+                {
+                    'handle': '.movebutton',
+                    'onSort': function(evt) {
+                        {# Move the associated hidden input field to the correct index #}
+                        var inputFields = $("input[name='{{ form.products.name }}'][disabled!='disabled']");
+                        var inputField = inputFields.filter("[value='"+$(evt.item).attr("data-product")+"']");
+                        if (evt.newIndex < inputFields.length-1) {
+                            var isBefore = inputFields.index(inputField) < evt.newIndex;
+                            inputField.insertBefore(inputFields[evt.newIndex + (isBefore ? 1 : 0)]);
+                        } else {
+                            inputField.insertAfter(inputFields[inputFields.length-1]);
+                        }
+                    }
+                }
+            );
         });
     //-->
     </script>
