@@ -39,28 +39,6 @@
                         <label class="col-sm-2 control-label" for="{{ form.subject.id_for_label }}">{% trans "Fag/Niveau (Gymnasium)" %}</label>
                         <div class="col-sm-4">
                             {{ form.subject }}
-                            {% if grundskolefag_available or gymnasiefag_available %}
-                                <p><strong>Bemærk: </strong>Dette tilbud er tiltænkt følgende klasseniveauer:</p>
-                                {% if grundskolefag_available %}
-                                    <ul id="grundskolefag-list">
-                                    {% for fag in grundskolefag_available %}
-                                        <li>
-                                            <span class="fag-description">{{ fag.description }} (Grundskole)</span>
-                                        </li>
-                                    {% endfor %}
-                                    </ul>
-
-                                {% endif %}
-                                {% if gymnasiefag_available %}
-                                    <ul id="gymnasiefag-list">
-                                    {% for fag in gymnasiefag_available %}
-                                        <li>
-                                            <span class="fag-description">{{ fag.description }} (Gymnasie)</span>
-                                        </li>
-                                    {% endfor %}
-                                    </ul>
-                                {% endif %}
-                            {% endif %}
                         </div>
                         <div class="col-sm-2">
                             {{ form.level }}
@@ -71,6 +49,32 @@
                     </div>
                 {% endfor %}
                 </div>
+                {% if grundskolefag_available or gymnasiefag_available %}
+                    <div class="col-sm-offset-2 col-sm-10">
+                    <p>
+                        <strong>{% trans 'Bemærk:' %}</strong>
+                        {% trans 'Dette tilbud er tiltænkt følgende klasseniveauer:' %}
+                    </p>
+                    {% if grundskolefag_available %}
+                        <ul id="grundskolefag-list">
+                            {% for fag in grundskolefag_available %}
+                                <li>
+                                    <span class="fag-description">{% blocktrans with fag=fag.description %}{{ fag }} (Grundskole){% endblocktrans %}</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                    {% if gymnasiefag_available %}
+                        <ul id="gymnasiefag-list">
+                            {% for fag in gymnasiefag_available %}
+                                <li>
+                                    <span class="fag-description">{% blocktrans with fag=fag.description %}{{ fag }} (Gymnasie){% endblocktrans %}</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                    </div>
+                {% endif %}
             {% endif %}
 
             {{ grundskolesubjectform.management_form }}
