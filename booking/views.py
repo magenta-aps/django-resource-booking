@@ -2638,7 +2638,7 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
             reverse(
                 'visit-booking-success',
                 args=[object.visit.products[0].id]
-            )
+            ) + "?modal=0"
         )
 
     def form_invalid(self, forms):

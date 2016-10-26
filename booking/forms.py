@@ -1177,7 +1177,6 @@ class MultiProductVisitTempProductsForm(forms.ModelForm):
         }
 
     def clean_products(self):
-        print "clean_products"
         products = self.cleaned_data['products']
         common_institution = binary_and([
             product.institution_level for product in products
