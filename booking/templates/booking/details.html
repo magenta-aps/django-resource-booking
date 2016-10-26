@@ -135,6 +135,20 @@
                     {% endif %}
                 {% endif %}
 
+                {% if object.bookinggymnasiesubjectlevel_set.count or object.bookinggrundskolesubjectlevel_set.count %}
+                    <dt>{% trans 'Fag:' %}</dt>
+                    {% for subject in object.bookinggymnasiesubjectlevel_set.all %}
+                        <dd>
+                            {{ subject.display_value }}
+                        </dd>
+                    {% endfor %}
+                    {% for subject in object.bookinggrundskolesubjectlevel_set.all %}
+                        <dd>
+                            {{ subject.display_value }}
+                        </dd>
+                    {% endfor %}
+                {% endif %}
+
             </dl>
 
             <div class="divider"></div>

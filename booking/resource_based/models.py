@@ -225,10 +225,7 @@ class EventTime(models.Model):
     @property
     def available_seats(self):
         if self.visit:
-            if self.visit.waiting_list_closed:
-                return 0
-            else:
-                return self.visit.available_seats
+            return self.visit.available_seats
         elif self.product:
             return self.product.maximum_number_of_visitors
         else:
