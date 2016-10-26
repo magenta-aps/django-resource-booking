@@ -949,38 +949,67 @@ class StudyProjectBookingForm(BookingForm):
         widgets = BookingForm.Meta.widgets
 
 
+class BookingSubjectLevelFormBase(forms.ModelForm):
+    class Meta:
+        fields = ('subject', 'level')
+        widgets = {
+            'subject': Select(
+                attrs={'class': 'form-control'}
+            ),
+            'level': Select(
+                attrs={'class': 'form-control'}
+            )
+        }
+
+    def get_queryset(self):
+        return Subject.objects.all()
+
+    def __init__(self, *args, **kwargs):
+        super(BookingSubjectLevelFormBase, self).__init__(*args, **kwargs)
+        # 16338: Put in a different name for each choice
+        self.fields['subject'].choices = [
+            (item.id, item.name) for item in self.get_queryset()
+        ]
+
+
+class BookingGymnasieSubjectLevelFormBase(BookingSubjectLevelFormBase):
+    class Meta:
+        model = BookingGymnasieSubjectLevel
+        fields = BookingSubjectLevelFormBase.Meta.fields
+        widgets = BookingSubjectLevelFormBase.Meta.widgets
+
+    def get_queryset(self):
+        return Subject.gymnasiefag_qs()
+
+
+class BookingGrundskoleSubjectLevelFormBase(BookingSubjectLevelFormBase):
+    class Meta:
+        model = BookingGrundskoleSubjectLevel
+        fields = BookingSubjectLevelFormBase.Meta.fields
+        widgets = BookingSubjectLevelFormBase.Meta.widgets
+
+    def get_queryset(self):
+        return Subject.grundskolefag_qs()
+
+
 BookingGymnasieSubjectLevelForm = \
-    inlineformset_factory(ClassBooking,
-                          BookingGymnasieSubjectLevel,
-                          fields=('subject', 'level'),
-                          can_delete=True,
-                          extra=1,
-                          widgets={
-                              'subject': Select(
-                                  attrs={'class': 'form-control'}
-                              ),
-                              'level': Select(
-                                  attrs={'class': 'form-control'}
-                              )
-                          }
-                          )
+    inlineformset_factory(
+        ClassBooking,
+        BookingGymnasieSubjectLevel,
+        form=BookingGymnasieSubjectLevelFormBase,
+        can_delete=True,
+        extra=1,
+    )
 
 
 BookingGrundskoleSubjectLevelForm = \
-    inlineformset_factory(ClassBooking,
-                          BookingGrundskoleSubjectLevel,
-                          fields=('subject', 'level'),
-                          can_delete=True,
-                          extra=1,
-                          widgets={
-                              'subject': Select(
-                                  attrs={'class': 'form-control'}
-                              ),
-                              'level': Select(
-                                  attrs={'class': 'form-control'}
-                              )
-                          }
-                          )
+    inlineformset_factory(
+        ClassBooking,
+        BookingGrundskoleSubjectLevel,
+        form=BookingGrundskoleSubjectLevelFormBase,
+        can_delete=True,
+        extra=1,
+    )
 
 
 class EmailTemplateForm(forms.ModelForm):
