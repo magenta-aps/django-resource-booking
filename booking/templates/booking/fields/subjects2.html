@@ -5,38 +5,14 @@
 {% if subjectform %}
     {{ subjectform.management_form }}
     {% if product.productgymnasiefag_set.count > 0 %}
-        <div id="gymnasiefag"class="rowcontainer">
+        <div id="gymnasiefag" class="rowcontainer">
             {% for form in subjectform %}
                 {{ form.id }}
                 <div class="form-group{% if forloop.first %} rowprototype{% endif %}">
                     <label class="col-sm-2 control-label" for="{{ form.subject.id_for_label }}">{% trans "Fag/Niveau (Gymnasium)" %}</label>
                     <div class="col-sm-4">
                         {{ form.subject }}
-                        {% if grundskolefag_available or gymnasiefag_available %}
-                            <p>
-                                <strong>{% trans 'Bemærk:' %}</strong>
-                                {% trans 'Dette tilbud er tiltænkt følgende klasseniveauer:' %}
-                            </p>
-                            {% if grundskolefag_available %}
-                                <ul id="grundskolefag-list">
-                                    {% for fag in grundskolefag_available %}
-                                        <li>
-                                            <span class="fag-description">{% blocktrans with description=fag.description %}{{ description }} (Grundskole){% endblocktrans %}</span>
-                                        </li>
-                                    {% endfor %}
-                                </ul>
 
-                            {% endif %}
-                            {% if gymnasiefag_available %}
-                                <ul id="gymnasiefag-list">
-                                    {% for fag in gymnasiefag_available %}
-                                        <li>
-                                            <span class="fag-description">{% blocktrans with description=fag.description %}{{ description }} (Gymnasie){% endblocktrans %}</span>
-                                        </li>
-                                    {% endfor %}
-                                </ul>
-                            {% endif %}
-                        {% endif %}
                     </div>
                     <div class="col-sm-2">
                         {{ form.level }}
@@ -69,6 +45,35 @@
                     </div>
                 </div>
             {% endfor %}
+        </div>
+    {% endif %}
+{% endif %}
+
+{% if subjectform or grundskolesubjectform %}
+    {% if grundskolefag_available or gymnasiefag_available %}
+        <div class="col-sm-offset-2 col-sm-10">
+            <p>
+                <strong>{% trans 'Bemærk:' %}</strong>
+                {% trans 'Dette tilbud er tiltænkt følgende klasseniveauer:' %}
+            </p>
+            {% if grundskolefag_available %}
+                <ul id="grundskolefag-list">
+                    {% for fag in grundskolefag_available %}
+                        <li>
+                            <span class="fag-description">{% blocktrans with description=fag.description %}{{ description }} (Grundskole){% endblocktrans %}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+            {% if gymnasiefag_available %}
+                <ul id="gymnasiefag-list">
+                    {% for fag in gymnasiefag_available %}
+                        <li>
+                            <span class="fag-description">{% blocktrans with description=fag.description %}{{ description }} (Gymnasie){% endblocktrans %}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
         </div>
     {% endif %}
 {% endif %}
