@@ -24,7 +24,7 @@
             {% include "booking/fields/location.html" %}
             {{ subjectform.management_form }}
             {% if product.productgymnasiefag_set.count > 0 %}
-                <div id="gymnasiefag"class="rowcontainer">
+                <div id="gymnasiefag" class="rowcontainer">
                 {% for form in subjectform %}
                     {{ form.id }}
                     <div class="form-group{% if forloop.first %} rowprototype{% endif %}">
