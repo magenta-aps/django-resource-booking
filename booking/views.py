@@ -2060,6 +2060,7 @@ class BookingNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
 
         self.template_context['product'] = self.object.visit.product
         self.template_context['visit'] = self.object.visit
+        self.template_context['besoeg'] = self.object.visit
         self.template_context['booking'] = self.object
         return super(BookingNotifyView, self).dispatch(
             request, *args, **kwargs
@@ -3171,7 +3172,7 @@ class EmailTemplateListView(LoginRequiredMixin, BreadcrumbMixin, ListView):
 
 
 class EmailTemplateEditView(LoginRequiredMixin, UnitAccessRequiredMixin,
-                            BreadcrumbMixin, UpdateView, HasBackButtonMixin):
+                            BreadcrumbMixin, UpdateView, BackMixin):
     template_name = 'email/form.html'
     form_class = EmailTemplateForm
     model = EmailTemplate
@@ -3209,7 +3210,7 @@ class EmailTemplateEditView(LoginRequiredMixin, UnitAccessRequiredMixin,
         context.update(kwargs)
         if form.is_valid():
             self.object = form.save()
-            return redirect(reverse('emailtemplate-list'))
+            return self.redirect(reverse('emailtemplate-list'))
 
         return self.render_to_response(
             self.get_context_data(**context)

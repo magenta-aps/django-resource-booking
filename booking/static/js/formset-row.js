@@ -27,7 +27,7 @@ $(function() {
                     this.htmlFor = formset._replaceCounter(this.htmlFor, totalRows);
                 });
                 $(container).append(newRow);
-                totalRowsEl.val($(container).find(".autosend-row").length);
+                totalRowsEl.val($(container).find(".row").length);
                 return newRow;
             }
         },
@@ -35,7 +35,7 @@ $(function() {
             row = $(row);
             totalRowsEl = $(totalRowsEl);
             row.remove();
-            totalRowsEl.val($(container).find(".autosend-row").length);
+            totalRowsEl.val($(container).find(".row").length);
         }
     };
 

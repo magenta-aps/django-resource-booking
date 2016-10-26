@@ -2749,7 +2749,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
             KUEmailMessage.send_email(
                 template_key,
-                {'visit': self, 'product': product},
+                {'visit': self, 'besoeg': self, 'product': product},
                 list(recipients),
                 self,
                 unit
@@ -2762,6 +2762,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                         template_key,
                         {
                             'visit': self,
+                            'besoeg': self,
                             'product': product,
                             'booking': booking,
                             'booker': booking.booker
@@ -3960,6 +3961,7 @@ class Booking(models.Model):
                     'product': product,
                     'booker': self.booker,
                     'besoeg': self.visit,
+                    'visit': self.visit,
                 },
                 list(recipients),
                 self.visit,
