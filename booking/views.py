@@ -2347,16 +2347,6 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
 
         forms = self.get_forms(request.POST)
 
-        # Hack: remove this form; we'll add it later when
-        # we have our booking object
-        hadSubjectForm = False
-        if 'subjectform' in forms:
-            del forms['subjectform']
-            hadSubjectForm = True
-        hadGrundskoleSubjectForm = False
-        if 'grundskolesubjectform' in forms:
-            del forms['grundskolesubjectform']
-            hadGrundskoleSubjectForm = True
         valid = True
         for (name, form) in forms.items():
             if not form.is_valid():
@@ -2424,6 +2414,12 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
 
             booking.save()
 
+            subjectform = forms.get('subjectform')
+            if subjectform:
+                subjectform.instance = booking
+                if subjectform.is_valid():
+                    subjectform.save()
+
             booking.ensure_statistics()
 
             # Trigger updating of search index
@@ -2446,22 +2442,6 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
             if booking.visit.needs_hosts:
                 booking.autosend(EmailTemplate.NOTIFY_HOST__REQ_HOST_VOLUNTEER)
 
-            # We can't fetch this form before we have
-            # a saved booking object to feed it, or we'll get an error
-            if hadSubjectForm:
-                subjectform = BookingGymnasieSubjectLevelForm(request.POST,
-                                                              instance=booking)
-                if subjectform.is_valid():
-                    subjectform.save()
-            if hadGrundskoleSubjectForm:
-                grundskolesubjectform = \
-                    BookingGrundskoleSubjectLevelForm(
-                        request.POST,
-                        instance=booking
-                    )
-                if grundskolesubjectform.is_valid():
-                    grundskolesubjectform.save()
-
             self.object = booking
             self.model = booking.__class__
 
@@ -2479,13 +2459,6 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
                     "?" + urllib.urlencode(params)
                 )
             )
-        else:
-            if hadSubjectForm:
-                forms['subjectform'] = \
-                    BookingGymnasieSubjectLevelForm(request.POST)
-            if hadGrundskoleSubjectForm:
-                forms['grundskolesubjectform'] = \
-                    BookingGrundskoleSubjectLevelForm(request.POST)
 
         return self.render_to_response(
             self.get_context_data(**forms)
@@ -2507,6 +2480,7 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
                 if self.product.productgymnasiefag_set.count() > 0:
                     forms['subjectform'] = \
                         BookingGymnasieSubjectLevelForm(data)
+
                 if self.product.productgrundskolefag_set.count() > 0:
                     forms['grundskolesubjectform'] = \
                         BookingGrundskoleSubjectLevelForm(data)
