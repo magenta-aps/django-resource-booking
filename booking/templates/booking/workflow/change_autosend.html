@@ -26,14 +26,34 @@
                 {% csrf_token %}
                 {% with autosendformset=form %}
                     {{ autosendformset.management_form }}
-                    <div id="autosend-list">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                            <th class="col-sm-4">{% trans 'Skabelon' %}</th>
+                            <th class="col-sm-2">{% trans 'Aktiv' %}</th>
+                            <th class="col-sm-4">{% trans 'Genbrug indstilling fra tilbud' %}</th>
+                            <th class="col-sm-2">{% trans 'Dage' %}</th>
+                        </tr>
+                        </thead>
+                    <tbody>
                         {% for autosendform in autosendformset %}
-                            <div class="autosend-row row">
-                                {{ autosendform }}
-                            </div>
+                            <tr class="autosend-row">
+                                <td>
+                                    {{ autosendform.label }}
+                                    {% for field in autosendform.hidden_fields %}
+                                        {{ field }}
+                                    {% endfor %}
+                                <td>{{ autosendform.enabled }}</td>
+                                <td>{{ autosendform.inherit }}</td>
+                                {% if autosendform.days.help_text %}
+                                    <td data-toggle="tooltip" data-placement="right" title="{{ autosendform.days.help_text }}">{{ autosendform.days }}</td>
+                                {% else %}
+                                    <td>{{ autosendform.days }}</td>
+                                {% endif %}
+                            </tr>
                         {% endfor %}
-                    </div>
-                    <a id="addAutosend">{% trans "Tilføj ny" %}</a>
+                    </tbody>
+                    </table>
                     <input class="btn btn-success btn-sm" type="submit" value="{% trans 'Opdater' %}" name="confirm" />
                     <input class="btn btn-danger btn-sm" type="submit" value="{% trans 'Annullér' %}" name="cancel" />
                 {% endwith %}
@@ -43,7 +63,12 @@
 {% endblock %}
 
 {% block extra_scripts %}
-    {% with autosendformset=form %}
-    {% include 'common/fields/autosend_script.html' %}
-    {% endwith %}
+{#    {% with autosendformset=form %}#}
+{#    {% include 'common/fields/autosend_script.html' %}#}
+{#    {% endwith %}#}
+    <script type="text/javascript">
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip();
+        })
+    </script>
 {% endblock %}

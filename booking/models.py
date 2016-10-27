@@ -602,6 +602,7 @@ class EmailTemplate(models.Model):
         NOTITY_ALL__BOOKING_REMINDER,
         NOTIFY_HOST__HOSTROLE_IDLE
     ]
+
     # Templates where the {{ booking }} variable makes sense
     enable_booking = [
         NOTIFY_GUEST__BOOKING_CREATED,
