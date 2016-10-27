@@ -180,7 +180,7 @@
     <script type="text/javascript" src="{% static 'js/formutil.js' %}"></script>
 
     {% include 'product/fields/studymaterials_script.html' %}
-    {% include 'common/fields/autosend_script.html' %}
+{#    {% include 'common/fields/autosend_script.html' %}#}
     {% include 'product/fields/institution_level_script.html' %}
     {% include 'product/fields/time_script.html' %}
 
@@ -206,5 +206,11 @@
 		});
 
     //--></script>
+
+    <script type="text/javascript">
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip({'container':$('body')});
+        })
+    </script>
     
 {% endblock %}

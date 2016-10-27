@@ -1524,6 +1524,12 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     def get_absolute_url(self):
         return reverse('product-view', args=[self.pk])
 
+    def get_autosends(self, include_disabled=False):
+        if include_disabled:
+            return self.productautosend_set.all()
+        else:
+            return self.productautosend_set.filter(enabled=True)
+
     def get_autosend(self, template_key):
         try:
             item = self.productautosend_set.filter(

@@ -15,7 +15,8 @@ from booking.utils import binary_or, binary_and
 from django import forms
 from django.db.models import Q
 from django.db.models.expressions import OrderBy
-from django.forms import CheckboxSelectMultiple, CheckboxInput
+from django.forms import CheckboxSelectMultiple, CheckboxInput, \
+    BaseInlineFormSet
 from django.forms import EmailInput
 from django.forms import formset_factory, inlineformset_factory
 from django.forms import TextInput, NumberInput, DateInput, Textarea, Select
@@ -615,27 +616,97 @@ class ProductStudyMaterialForm(ProductStudyMaterialFormBase):
         self.studymaterials = StudyMaterial.objects.filter(product=instance)
 
 
+
+class ProductAutosendForm(forms.ModelForm):
+    class Meta:
+        model = ProductAutosend
+        fields = ['template_key', 'enabled', 'days']
+        widgets = {
+            'template_key': forms.HiddenInput()
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(ProductAutosendForm, self).__init__(*args, **kwargs)
+
+        template_key = None
+        if 'instance' in kwargs:
+            template_key = kwargs['instance'].template_key
+        elif 'initial' in kwargs:
+            template_key = kwargs['initial']['template_key']
+        if template_key is not None and \
+                template_key not in EmailTemplate.enable_days:
+            self.fields['days'].widget = forms.HiddenInput()
+        elif template_key == EmailTemplate.NOTITY_ALL__BOOKING_REMINDER:
+            self.fields['days'].help_text = _(u'Notifikation vil blive afsendt'
+                                              u' dette antal dage før besøget')
+        elif template_key == EmailTemplate.NOTIFY_HOST__HOSTROLE_IDLE:
+            self.fields['days'].help_text = _(u'Notifikation vil blive afsendt'
+                                              u' dette antal dage efter første'
+                                              u' booking er foretaget')
+
+    def label(self):
+        return EmailTemplate.get_name(self.initial['template_key'])
+
+
 ProductAutosendFormSetBase = inlineformset_factory(
     Product,
     ProductAutosend,
-    fields=('template_key', 'enabled', 'days'),
-    can_delete=True,
-    min_num=1,
-    extra=len(EmailTemplate.default) - 1
+    form=ProductAutosendForm,
+    formset=BaseInlineFormSet,
+    extra=0,
+    max_num=len(EmailTemplate.key_choices),
+    can_delete=False,
+    can_order=False
 )
 
 
 class ProductAutosendFormSet(ProductAutosendFormSetBase):
+    def __init__(self, *args, **kwargs):
+        if 'instance' in kwargs:
+            autosends = kwargs['instance'].get_autosends(True)
+            if len(autosends) < len(EmailTemplate.key_choices):
+                initial = []
+                existing_keys = [
+                    autosend.template_key for autosend in autosends
+                ]
+                for key, label in EmailTemplate.key_choices:
+                    if key not in existing_keys:
+                        initial.append({
+                            'template_key': key,
+                            'enabled': False,
+                            'days': ''
+                        })
+                initial.sort(key=lambda choice: choice['template_key'])
+                print initial
+                kwargs['initial'] = initial
+                self.extra = len(initial)
+        super(ProductAutosendFormSet, self).__init__(*args, **kwargs)
 
-    def is_valid(self):
-        return True
 
-    def clean(self):
-        cleaned_forms = []
-        for form in self.forms:
-            if form.is_valid():
-                cleaned_forms.append(form)
-        self.forms = cleaned_forms
+#
+# ProductAutosendFormSetBase = inlineformset_factory(
+#     Product,
+#     ProductAutosend,
+#     fields=('template_key', 'enabled', 'days'),
+#     can_delete=True,
+#     min_num=1,
+#     extra=len(EmailTemplate.default) - 1
+# )
+#
+#
+# class ProductAutosendFormSet(ProductAutosendFormSetBase):
+#
+#     def is_valid(self):
+#         return True
+#
+#     def clean(self):
+#         cleaned_forms = []
+#         for form in self.forms:
+#             if form.is_valid():
+#                 cleaned_forms.append(form)
+#         self.forms = cleaned_forms
+
+
 
 
 class BookingForm(forms.ModelForm):
