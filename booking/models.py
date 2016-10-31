@@ -4052,6 +4052,10 @@ class Booking(models.Model):
             self.save()
             self.visit.normalize_waitinglist()
 
+    @property
+    def organizationalunit(self):
+        return self.visit.real.organizationalunit
+
 
 Booking.add_visit_attr('product')
 Booking.add_visit_attr('hosts')
