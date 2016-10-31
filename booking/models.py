@@ -3196,10 +3196,6 @@ class MultiProductVisit(Visit):
         return 0
 
     @property
-    def start_datetime(self):
-        return self.date_ref
-
-    @property
     def display_title(self):
         return _(u'prioriteret liste af %d tilbud') % len(self.products)
 
