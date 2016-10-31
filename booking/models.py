@@ -2362,7 +2362,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def interval_display(self):
-        return self.eventtime.interval_display()
+        return self.eventtime.interval_display
 
     @property
     def start_datetime(self):
@@ -3090,7 +3090,7 @@ Visit.add_override_property('locality')
 class MultiProductVisit(Visit):
 
     date = models.DateField(
-        null=False,
+        null=True,
         blank=False,
         verbose_name=_(u'Dato')
     )
@@ -3104,6 +3104,26 @@ class MultiProductVisit(Visit):
         null=True,
         verbose_name=_(u'Besøgsansvarlig')
     )
+
+    @property
+    def date_ref(self):
+        return self.eventtime.start.date()
+
+    def create_eventtime(self, date=None):
+        if date is None:
+            date = self.date
+        if date is not None:
+            if not hasattr(self, 'eventtime') or self.eventtime is None:
+                time = datetime(
+                    date.year, date.month, date.day,
+                    8, tzinfo=timezone.get_current_timezone()
+                )
+                EventTime(visit=self, start=time).save()
+
+    @staticmethod
+    def migrate_to_eventtime():
+        for mpv in MultiProductVisit.objects.all():
+            mpv.create_eventtime()
 
     @property
     def subvisits(self):
@@ -3177,7 +3197,7 @@ class MultiProductVisit(Visit):
 
     @property
     def start_datetime(self):
-        return self.date
+        return self.date_ref
 
     @property
     def display_title(self):
@@ -3185,11 +3205,11 @@ class MultiProductVisit(Visit):
 
     @property
     def date_display(self):
-        return formats.date_format(self.date, "DATE_FORMAT")
+        return formats.date_format(self.date_ref, "DATE_FORMAT")
 
     @property
     def date_display_context(self):
-        return _("d. %s") % formats.date_format(self.date, "DATE_FORMAT")
+        return _("d. %s") % formats.date_format(self.date_ref, "DATE_FORMAT")
 
     @property
     def interval_display(self):
@@ -3281,10 +3301,10 @@ class MultiProductVisitTemp(models.Model):
 
     def create_mpv(self):
         mpv = MultiProductVisit(
-            date=self.date,
             required_visits=self.required_visits
         )
         mpv.save()
+        mpv.create_eventtime(self.date)
         mpv.ensure_statistics()
         for index, product in enumerate(self.products.all()):
             eventtime = EventTime(

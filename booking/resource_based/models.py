@@ -21,7 +21,10 @@ class EventTime(models.Model):
         verbose_name_plural = _(u"tidspunkter")
         ordering = ['-start', '-end']
 
-    product = models.ForeignKey("Product")
+    product = models.ForeignKey(
+        "Product",
+        null=True
+    )
 
     visit = models.OneToOneField(
         "Visit",
