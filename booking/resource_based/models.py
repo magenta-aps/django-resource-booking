@@ -7,7 +7,7 @@ from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from recurrence.fields import RecurrenceField
 from booking.mixins import AvailabilityUpdaterMixin
-from booking.models import Room, Visit
+from booking.models import Room, Visit, EmailTemplate
 from profile.constants import TEACHER, HOST, NONE
 
 import datetime
@@ -1181,6 +1181,24 @@ class VisitResource(AvailabilityUpdaterMixin, models.Model):
         verbose_name=_(u"Ressourcebehov"),
         related_name='visitresource'
     )
+
+    def save(self, *args, **kwargs):
+        new = self.pk is None
+        super(VisitResource, self).save(*args, **kwargs)
+        if new:
+            resourcetype = self.resource.resource_type.id
+            if resourcetype == ResourceType.RESOURCE_TYPE_TEACHER:
+                self.visit.autosend(
+                    EmailTemplate.NOTIFY_TEACHER__ASSOCIATED,
+                    [self.resource.teacherresource.user],
+                    True
+                )
+            if resourcetype == ResourceType.RESOURCE_TYPE_HOST:
+                self.visit.autosend(
+                    EmailTemplate.NOTIFY_HOST__ASSOCIATED,
+                    [self.resource.hostresource.user],
+                    True
+                )
 
     @property
     def affected_eventtimes(self):

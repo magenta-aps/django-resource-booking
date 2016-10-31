@@ -612,6 +612,7 @@ class EmailTemplate(models.Model):
         NOTITY_ALL__BOOKING_REMINDER,
         NOTIFY_HOST__HOSTROLE_IDLE
     ]
+
     # Templates where the {{ booking }} variable makes sense
     enable_booking = [
         NOTIFY_GUEST__BOOKING_CREATED,
@@ -1539,6 +1540,12 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     def get_absolute_url(self):
         return reverse('product-view', args=[self.pk])
+
+    def get_autosends(self, include_disabled=False):
+        if include_disabled:
+            return self.productautosend_set.all()
+        else:
+            return self.productautosend_set.filter(enabled=True)
 
     def get_autosend(self, template_key):
         try:
@@ -2695,16 +2702,14 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         if len(products):
             for product in products:
                 if product:
-                    for productautosend in product.productautosend_set.all():
-                        if not self.get_autosend(
-                            productautosend.template_key, False, False
-                        ):
+                    for template_key, label in EmailTemplate.key_choices:
+                        if not self.get_autosend(template_key, False, False):
                             visitautosend = VisitAutosend(
                                 visit=self,
                                 inherit=True,
-                                template_key=productautosend.template_key,
-                                days=productautosend.days,
-                                enabled=productautosend.enabled
+                                template_key=template_key,
+                                days=None,
+                                enabled=False
                             )
                             visitautosend.save()
 
@@ -2717,8 +2722,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         if s.count() == 0:
             return True
 
-        # Return true if there is a rule specifying that inheritance is
-        # wanted
+        # Return true if there is a rule specifying that inheritance is wanted
         return s.filter(inherit=True).count() > 0
 
     def get_autosend(self, template_key, follow_inherit=True,
@@ -3401,6 +3405,10 @@ class Autosend(models.Model):
             self.get_name(),
             "enabled" if self.enabled else "disabled"
         )
+
+    @property
+    def days_relevant(self):
+        return self.template_key in EmailTemplate.enable_days
 
 
 class ProductAutosend(Autosend):

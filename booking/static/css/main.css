@@ -129,6 +129,10 @@ pre {
     padding: 0;
 }
 
+.tooltip {
+    width: 250px;
+}
+
 .tooltip-inner {
     background-color: #fff;
     color: #000;
