@@ -3219,6 +3219,12 @@ class MultiProductVisit(Visit):
     def display_value(self):
         return self.date_display
 
+    @property
+    def organizationalunit(self):
+        if self.subvisits.count() > 0:
+            return self.subvisits[0].organizationalunit
+        return None
+
     def get_autosend(self, template_key, follow_inherit=True,
                      include_disabled=False):
         return None
