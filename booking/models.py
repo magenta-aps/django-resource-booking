@@ -3224,10 +3224,6 @@ class MultiProductVisit(Visit):
         return 0
 
     @property
-    def start_datetime(self):
-        return self.date_ref
-
-    @property
     def display_title(self):
         return _(u'prioriteret liste af %d tilbud') % len(self.products)
 
@@ -3238,6 +3234,10 @@ class MultiProductVisit(Visit):
     @property
     def date_display_context(self):
         return _("d. %s") % formats.date_format(self.date_ref, "DATE_FORMAT")
+
+    @property
+    def start_datetime(self):
+        return self.date_display
 
     @property
     def interval_display(self):

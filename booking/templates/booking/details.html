@@ -27,7 +27,7 @@
                 <div class="panel-body">
                     {% url 'visit-view' object.visit.id as visiturl %}
                     {% if object.visit.multiproductvisit %}
-                        {% blocktrans with firstname=object.booker.firstname lastname=object.booker.lastname visitdate=object.visit.multiproductvisit.date %}
+                        {% blocktrans with firstname=object.booker.firstname lastname=object.booker.lastname visitdate=object.visit.multiproductvisit.date_display %}
                             <strong>{{ firstname }} {{ lastname }}</strong> har anmodet om deltagelse i en <a href="{{ visiturl }}">prioriteret liste</a> af tilbud den {{ visitdate }}:
                         {% endblocktrans %}
                         <ul>
@@ -79,9 +79,9 @@
 
             <dl class="dl-horizontal wide">
 
-                {% if object.visit.start_datetime %}
+                {% if object.visit.real.start_datetime %}
                     <dt>{% trans 'Tidspunkt:' %}</dt>
-                    <dd><a href="{% url 'visit-view' object.visit.id %}">{{ object.visit.start_datetime }}</a></dd>
+                    <dd><a href="{% url 'visit-view' object.visit.id %}">{{ object.visit.real.start_datetime }}</a></dd>
                 {% endif %}
 
                 <dt>{% trans 'Navn:' %}</dt>
