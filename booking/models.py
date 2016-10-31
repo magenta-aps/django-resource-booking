@@ -3212,6 +3212,10 @@ class MultiProductVisit(Visit):
         return _("d. %s") % formats.date_format(self.date_ref, "DATE_FORMAT")
 
     @property
+    def start_datetime(self):
+        return self.date_display
+
+    @property
     def interval_display(self):
         return self.date_display
 
