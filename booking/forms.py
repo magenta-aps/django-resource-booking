@@ -748,7 +748,6 @@ class BookingForm(forms.ModelForm):
 
             self.fields['eventtime'].choices = choices
             self.fields['eventtime'].required = True
-
         else:
             self.fields['desired_time'].required = True
 
