@@ -3298,6 +3298,16 @@ class MultiProductVisit(Visit):
                         unit
                     )
 
+    def __unicode__(self):
+        if hasattr(self, 'eventtime'):
+            return _(u'Besøg %s - Prioriteret liste af %d underbesøg - %s') % (
+                self.pk,
+                self.subvisits.count(),
+                unicode(self.eventtime.interval_display)
+            )
+        else:
+            return unicode(_(u'Besøg %s - uden tidspunkt') % self.pk)
+
 
 class MultiProductVisitTemp(models.Model):
     date = models.DateField(
