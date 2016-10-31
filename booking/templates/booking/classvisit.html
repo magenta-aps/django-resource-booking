@@ -17,101 +17,19 @@
 
         <form id="bookingform" class="form-horizontal clearfix" data-toggle="validator" role="form" novalidate="true" method="POST">
             {% csrf_token %}
-
             {{ bookerform.non_field_errors }}
             {% include "booking/fields/basedata.html" %}
             {% include "booking/fields/school.html" %}
             {% include "booking/fields/location.html" %}
-            {{ subjectform.management_form }}
-            {% if product.productgymnasiefag_set.count > 0 %}
-                <div id="gymnasiefag" class="rowcontainer">
-                {% for form in subjectform %}
-                    {{ form.id }}
-                    <div class="form-group{% if forloop.first %} rowprototype{% endif %}">
-                        <label class="col-sm-2 control-label" for="{{ form.subject.id_for_label }}">{% trans "Fag/Niveau (Gymnasium)" %}</label>
-                        <div class="col-sm-4">
-                            {{ form.subject }}
-                        </div>
-                        <div class="col-sm-2">
-                            {{ form.level }}
-                        </div>
-                        <div class="col-sm-2 rowadder">
-                            <a href="javascript:void()" id="addRow">{% trans "Tilføj ny" %}</a>
-                        </div>
-                    </div>
-                {% endfor %}
-                </div>
-                {% if grundskolefag_available or gymnasiefag_available %}
-                    <div class="col-sm-offset-2 col-sm-10">
-                        <p>
-                            <strong>{% trans 'Bemærk:' %}</strong>
-                            {% trans 'Dette tilbud er tiltænkt følgende klasseniveauer:' %}
-                        </p>
-                        {% if grundskolefag_available %}
-                            <ul id="grundskolefag-list">
-                                {% for fag in grundskolefag_available %}
-                                    <li>
-                                        <span class="fag-description">{% blocktrans with fag=fag.description %}{{ fag }} (Grundskole){% endblocktrans %}</span>
-                                    </li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-                        {% if gymnasiefag_available %}
-                            <ul id="gymnasiefag-list">
-                                {% for fag in gymnasiefag_available %}
-                                    <li>
-                                        <span class="fag-description">{% blocktrans with fag=fag.description %}{{ fag }} (Gymnasie){% endblocktrans %}</span>
-                                    </li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-                    </div>
-                {% endif %}
-            {% endif %}
-
-            {{ grundskolesubjectform.management_form }}
-            {% if product.productgrundskolefag_set.count > 0 %}
-                <div id="grundskolefag" class="rowcontainer">
-                {% for form in grundskolesubjectform %}
-                    {{ form.id }}
-                    <div class="form-group{% if forloop.first %} rowprototype{% endif %}">
-                        <label class="col-sm-2 control-label" for="{{ form.subject.id_for_label }}">{% trans "Fag/Niveau (Grundskole)" %}</label>
-                        <div class="col-sm-4">
-                            {{ form.subject }}
-                        </div>
-                        <div class="col-sm-2">
-                            {{ form.level }}
-                        </div>
-                        <div class="col-sm-2 rowadder">
-                            <a href="javascript:void()" id="addRow2">{% trans "Tilføj ny" %}</a>
-                        </div>
-                    </div>
-                {% endfor %}
-                </div>
-            {% endif %}
+            {% include "booking/fields/subjects2.html" %}
             {% include "booking/fields/time.html" %}
-
             {% include "booking/fields/attendees.html" %}
-
             {% include "booking/fields/services.html" %}
-
-            {% if bookingform.notes %}
-            <div class="form-group">
-                <label class="col-sm-2 control-label" for="{{ bookingform.notes.id_for_label }}">{% trans "Kommentarer" %}</label>
-                <div class="col-sm-6{% if bookingform.notes.errors %} has-error{% endif %}">
-                    {{ bookingform.notes }}
-                </div>
-                <div class="col-sm-3 help-block with-errors">
-                    {{ bookingform.notes.errors }}
-                </div>
-            </div>
-            {% endif %}
-
+            {% include "booking/fields/notes.html" %}
         </form>
 
     </div>
     {% include 'booking/snippets/footer.html' %}
-
 
 {% endblock %}
 
@@ -120,6 +38,7 @@
     {% include 'booking/fields/location_script.html' %}
     {% include 'booking/fields/school_script.html' %}
     {% include "booking/fields/time_script.html" %}
+    {% include 'booking/fields/subjects2_script.html' %}
 
     <script type="text/javascript"><!--
     $(function(){
@@ -136,47 +55,4 @@
     });
     //--></script>
 
-    <script type="text/javascript" src="{% static 'js/formset-row.js' %}"></script>
-    <script type="text/javascript"><!--
-        $(function(){
-
-            var extraGymRows = $("#gymnasiefag > div").not(":first");
-            var extraGrundRows = $("#grundskolefag > div").not(":first");
-
-            var mingleRow = function(row) {
-                row.removeAttr("id");
-                row.find("label").text(null);
-                var adder = row.find(".rowadder");
-                adder.addClass("rowremover");
-                adder.removeClass("rowadder");
-                adder.find("a").text('{% trans "Fjern" %}');
-                adder.find("a").click(removeRowEvent);
-            };
-
-            mingleRow(extraGymRows);
-            mingleRow(extraGrundRows);
-
-            $(".rowadder a").click(function(){
-                var newRow = formset.addRow(
-                        $("#{{ subjectform.management_form.TOTAL_FORMS.id_for_label }}"),
-                        $("#{{ subjectform.management_form.MAX_NUM_FORMS.id_for_label }}"),
-                        $(this).closest(".rowprototype"),
-                        $(this).closest(".rowcontainer")
-                );
-                mingleRow(newRow);
-                modal.updateHeight();
-                return false;
-            });
-
-            var removeRowEvent = function() {
-                formset.removeRow(
-                        "#{{ subjectform.management_form.TOTAL_FORMS.id_for_label }}",
-                        $(this).parents(".form-group")
-                );
-                modal.updateHeight();
-            };
-
-            $(".rowremover a").click(removeRowEvent);
-        });
-    //--></script>
 {% endblock %}

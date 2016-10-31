@@ -11,6 +11,7 @@ from booking.models import EmailTemplate
 from booking.models import Visit, MultiProductVisitTemp
 from booking.models import BLANK_LABEL, BLANK_OPTION
 from booking.widgets import OrderedMultipleHiddenChooser
+from booking.utils import binary_or, binary_and
 from django import forms
 from django.db.models import Q
 from django.db.models.expressions import OrderBy
@@ -647,9 +648,14 @@ class BookingForm(forms.ModelForm):
         choices=(),
     )
 
+    desired_time = forms.CharField(
+        widget=Textarea(attrs={'class': 'form-control input-sm'}),
+        required=False
+    )
+
     class Meta:
         model = Booking
-        fields = ()
+        fields = ['eventtime', 'notes']
         labels = {
             'eventtime': _(u"Tidspunkt")
         },
@@ -697,6 +703,8 @@ class BookingForm(forms.ModelForm):
 
             self.fields['eventtime'].choices = choices
             self.fields['eventtime'].required = True
+        else:
+            self.fields['desired_time'].required = True
 
         if product is not None and 'subjects' in self.fields and \
                 product.institution_level != Subject.SUBJECT_TYPE_BOTH:
@@ -709,6 +717,12 @@ class BookingForm(forms.ModelForm):
                 self.fields['subjects'].choices = [
                     (subject.id, subject.name) for subject in qs
                 ]
+
+    def save(self, commit=True, *args, **kwargs):
+        booking = super(BookingForm, self).save(commit, *args, **kwargs)
+        if booking.visit:
+            booking.visit.desired_time = self.cleaned_data['desired_time']
+        return booking
 
 
 class BookerForm(forms.ModelForm):
@@ -781,35 +795,45 @@ class BookerForm(forms.ModelForm):
         required=False
     )
 
-    def __init__(self, data=None, product=None, language='da', *args,
-                 **kwargs):
+    def __init__(self, data=None, products=[], language='da', *args, **kwargs):
         super(BookerForm, self).__init__(data, *args, **kwargs)
         attendeecount_widget = self.fields['attendee_count'].widget
 
-        attendeecount_widget.attrs['min'] = product.minimum_number_of_visitors
-        if product is not None:
-            if product.maximum_number_of_visitors is not None:
-                attendeecount_widget.attrs['max'] = \
-                    product.maximum_number_of_visitors
+        attendeecount_widget.attrs['min'] = 1
+        if len(products) > 0:
+            attendeecount_widget.attrs['min'] = max([1] + [
+                product.minimum_number_of_visitors
+                for product in products if product.minimum_number_of_visitors
+            ])
+            attendeecount_widget.attrs['max'] = min([10000] + [
+                product.maximum_number_of_visitors
+                for product in products if product.maximum_number_of_visitors
+            ])
+
+            # union or intersection?
+            level = binary_or(*[
+                product.institution_level for product in products
+            ])
 
             self.fields['school'].widget.attrs['data-institution-level'] = \
-                product.institution_level
-
-            available_level_choices = \
-                Guest.level_map[product.institution_level]
+                level
+            available_level_choices = Guest.level_map[level]
             self.fields['level'].choices = [(u'', BLANK_LABEL)] + [
                 (value, title)
                 for (value, title) in Guest.level_choices
                 if value in available_level_choices
-                ]
-            # Visit types where attendee count is mandatory
-            if product.type in [Product.GROUP_VISIT,
-                                Product.TEACHER_EVENT,
-                                Product.STUDY_PROJECT]:
-                self.fields['attendee_count'].required = True
-            # Class level is not mandatory for teacher events.
-            if product.type == Product.TEACHER_EVENT:
-                self.fields['level'].required = False
+            ]
+
+            for product in products:
+                # Visit types where attendee count is mandatory
+                if product.type in [
+                    Product.GROUP_VISIT, Product.TEACHER_EVENT,
+                    Product.STUDY_PROJECT
+                ]:
+                    self.fields['attendee_count'].required = True
+                # Class level is not mandatory for teacher events.
+                if product.type == Product.TEACHER_EVENT:
+                    self.fields['level'].required = False
 
         # Eventually we may want a prettier solution,
         # but for now this will have to do
@@ -873,16 +897,8 @@ class ClassBookingForm(BookingForm):
         labels = BookingForm.Meta.labels
         widgets = BookingForm.Meta.widgets
 
-    desired_time = forms.CharField(
-        widget=Textarea(attrs={'class': 'form-control input-sm'}),
-        required=False
-    )
-
     def __init__(self, data=None, product=None, *args, **kwargs):
         super(ClassBookingForm, self).__init__(data, product, *args, **kwargs)
-
-        if not self.scheduled:
-            self.fields['desired_time'].required = True
 
         if self.product is not None:
             for service in ['tour', 'catering', 'presentation', 'custom']:
@@ -898,6 +914,7 @@ class ClassBookingForm(BookingForm):
             if service not in data:
                 data[service] = False
                 setattr(booking, service, False)
+
         if commit:
             booking.save(*args, **kwargs)
         return booking
@@ -1154,7 +1171,7 @@ class EvaluationOverviewForm(forms.Form):
         ]
 
 
-class MutiProductVisitTempDateForm(forms.ModelForm):
+class MultiProductVisitTempDateForm(forms.ModelForm):
     class Meta:
         model = MultiProductVisitTemp
         fields = ['date']
@@ -1168,14 +1185,42 @@ class MutiProductVisitTempDateForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        super(MutiProductVisitTempDateForm, self).__init__(*args, **kwargs)
+        super(MultiProductVisitTempDateForm, self).__init__(*args, **kwargs)
         self.fields['date'].input_formats = ['%d-%m-%Y', '%d.%m.%Y']
 
 
-class MutiProductVisitTempProductsForm(forms.ModelForm):
+class MultiProductVisitTempProductsForm(forms.ModelForm):
     class Meta:
         model = MultiProductVisitTemp
-        fields = ['products']
+        fields = ['products', 'required_visits', 'notes']
         widgets = {
-            'products': OrderedMultipleHiddenChooser()
+            'products': OrderedMultipleHiddenChooser(),
+            'notes': Textarea(
+                attrs={'class': 'form-control input-sm'}
+            )
         }
+
+    def clean_products(self):
+        products = self.cleaned_data['products']
+        common_institution = binary_and([
+            product.institution_level for product in products
+        ])
+        if common_institution == 0:
+            raise forms.ValidationError(
+                _(u"Nogle af de valgte tilbud henvender sig kun til "
+                  u"folkeskoleklasser, og andre kun til gymnasieklasser"),
+                code='conflict'
+            )
+        return products
+
+    def clean(self):
+        super(MultiProductVisitTempProductsForm, self).clean()
+        if 'products' not in self.cleaned_data or \
+                len(self.cleaned_data['products']) == 0:
+            raise forms.ValidationError(
+                _(u"Der er ikke valgt nogen produkter")
+            )
+        products_selected = 0 if 'products' not in self.cleaned_data \
+            else len(self.cleaned_data['products'])
+        if self.cleaned_data['required_visits'] > products_selected:
+            self.cleaned_data['required_visits'] = products_selected

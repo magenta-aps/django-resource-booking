@@ -1,0 +1,72 @@
+{% load staticfiles %}
+{% load booking_tags %}
+{% load i18n %}
+
+<div class="panel-body">
+    <dl class="dl-horizontal">
+
+        {% if product.title %}
+            <dt>{% trans 'Titel:' %}</dt>
+            <dd><a href="{% url 'product-view' product.id %}">{{ product.title }}</a></dd>
+        {% endif %}
+
+        {% if product.get_audience_display %}
+            <dt>{% trans 'Henvendt til:' %}</dt>
+            <dd>{{ product.get_audience_display }}</dd>
+        {% endif %}
+
+        {% if product.resource_ptr.all_subjects  %}
+            <dt>{% trans 'Fag/niveau:' %}</dt>
+            <dd>
+                <ul class="type-offer list-inline">
+                    {% for x in product.resource_ptr.all_subjects %}
+                        <li>{{ x.display_value }}</li>
+                    {% endfor %}
+                </ul>
+            </dd>
+        {% endif %}
+
+        {% if product.num_of_participants_display %}
+            <dt>{% trans 'Antal:' %}</dt>
+            <dd>{{ product.num_of_participants_display }}</dd>
+        {% endif %}
+
+        {% if product.get_type_display %}
+            <dt>{% trans 'Hvad:' %}</dt>
+            <dd>{{ product.get_type_display }}</dd>
+        {% endif %}
+
+        {% if product.locality %}
+            <dt>{% trans 'Hvor:' %}</dt>
+            <dd>
+                {{ product.locality.name }},<br/>
+                {{ product.locality.address_line }},<br/>
+                {{ product.locality.zip_city }}
+            </dd>
+        {% endif %}
+
+        {% if product.organizationalunit.name %}
+            <dt>{% trans 'Arrangør:' %}</dt>
+            <dd>
+                {% if product.organizationalunit.url %}
+                    <a href="{{ product.organizationalunit.url }}" target="_blank">
+                {% endif %}
+                <strong>{{ product.organizationalunit.name }}</strong>
+                {% if product.organizationalunit.url %}
+                    </a> <span class="glyphicon glyphicon-new-window"></span>
+                {% endif %}
+            </dd>
+        {% endif %}
+
+        {% if product.duration and product.duration != '00:00' %}
+            <dt>{% trans 'Varighed:' %}</dt>
+            <dd>{{ product.duration|timedelta_i18n }}</dd>
+        {% endif %}
+
+        {% if product.price %}
+            <dt>{% trans 'Pris:' %}</dt>
+            <dd>{{ product.price }}</dd>
+        {% endif %}
+
+    </dl>
+</div>

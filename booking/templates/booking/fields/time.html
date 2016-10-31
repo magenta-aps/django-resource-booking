@@ -2,8 +2,8 @@
 {% if bookingform.scheduled %}
     {% if bookingform.eventtime %}
         <div class="form-group">
-            <label class="col-sm-2 control-label" for="{{ bookingform.visit.id_for_label }}">{{ bookingform.eventtime.label }}</label>
-            <div class="col-sm-6{% if bookingform.visit.errors %} has-error{% endif %}">
+            <label class="col-sm-2 control-label" for="{{ bookingform.eventtime.id_for_label }}">{{ bookingform.eventtime.label }}</label>
+            <div class="col-sm-6{% if bookingform.eventtime.errors %} has-error{% endif %}">
                 {{ bookingform.eventtime }}
             </div>
             <div class="col-sm-3 help-block with-errors">

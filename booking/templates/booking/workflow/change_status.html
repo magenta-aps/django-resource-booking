@@ -17,10 +17,21 @@
         <div class="col-sm-12 col-md-8">
             {% if object.planned_status_is_blocked %}
             <p>
-                {% blocktrans with text=object.PLANNED_STATUS_TEXT %}
-                Bemærk at det ikke er muligt at skifte til status '{{ text }}' med mindre der er blevet tildelt både starttidspunkt, undervisere, værter og lokaler.
-                {% endblocktrans %}
-                <a href="{% url 'visit-view' object.pk %}">{% trans 'Klik her for at vende tilbage og rette i tildelingerne' %}</a>.
+                {% if object.is_multiproductvisit %}
+                    {% blocktrans with text=object.PLANNED_STATUS_TEXT needed=object.multiproductvisit.required_visits %}
+                        Bemærk at det ikke er muligt at skifte til status '{{ text }}' før mindst {{ needed }} under-besøg har denne status.
+                    {% endblocktrans %}
+                    <ul>
+                        {% for subvisit in object.multiproductvisit.subvisits %}
+                            <li><a href="{% url 'visit-view' subvisit.pk %}">{{ subvisit.id_display }} - {{ subvisit.display_title }}</a>: <a href="{% url 'change-visit-status' subvisit.pk %}">{{ subvisit.workflow_status_display }}</a></li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    {% blocktrans with text=object.PLANNED_STATUS_TEXT %}
+                    Bemærk at det ikke er muligt at skifte til status '{{ text }}' med mindre der er blevet tildelt både starttidspunkt, undervisere, værter og lokaler.
+                    {% endblocktrans %}
+                    <a href="{% url 'visit-view' object.pk %}">{% trans 'Klik her for at vende tilbage og rette i tildelingerne' %}</a>.
+                {% endif %}
             </p>
             {% endif %}
             <form name="changebookinstatusform" id="changebookinstatusform" action="{% url 'change-visit-status' object.pk %}" method="post">
