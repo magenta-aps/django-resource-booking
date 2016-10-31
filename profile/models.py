@@ -166,7 +166,22 @@ class UserProfile(models.Model):
     def can_notify(self, item=None):
         # Return whether the user can send email notifications
         # (for the given item)
-        return self.get_role() in EDIT_ROLES
+        role = self.get_role()
+        if role == ADMINISTRATOR:
+            return True
+
+        if item is not None:
+            if not hasattr(item, "organizationalunit") \
+                    or not item.organizationalunit:
+                return False
+
+            if role in EDIT_ROLES:
+                qs = self.get_unit_queryset().filter(
+                    pk=item.organizationalunit.pk
+                )
+            return len(qs) > 0
+
+        return False
 
     def can_edit(self, item):
         role = self.get_role()

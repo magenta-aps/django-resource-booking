@@ -111,6 +111,12 @@
                     {% endif %}
 
                     <dl class="dl-horizontal status">
+
+                        {% if object.organizationalunit %}
+                            <dt>{% trans 'Enhed:' %}</dt>
+                            <dd>{{ object.organizationalunit.name }}</dd>
+                        {% endif %}
+
                         <dt>{% trans 'Tidspunkt' %}</dt>
                         <dd>
                             {% if object.eventtime.start %}
