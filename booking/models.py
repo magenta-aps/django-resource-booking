@@ -2217,7 +2217,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
         if self.is_multiproductvisit:
             multiproductvisit = self.multiproductvisit
-            subs_planned = multiproductvisit.subvisits.filter(
+            subs_planned = multiproductvisit.subvisits_unordered.filter(
                 Q(workflow_status=Visit.WORKFLOW_STATUS_PLANNED) |
                 Q(workflow_status=Visit.WORKFLOW_STATUS_PLANNED_NO_BOOKING)
             ).count()
@@ -3126,11 +3126,16 @@ class MultiProductVisit(Visit):
             mpv.create_eventtime()
 
     @property
-    def subvisits(self):
+    def subvisits_unordered(self):
+        # Faster than ordered, and often we don't need the ordering anyway
         return Visit.objects.filter(
             is_multi_sub=True,
             multi_master=self
-        ).order_by('multi_priority')
+        )
+
+    @property
+    def subvisits(self):
+        return self.subvisits_unordered.order_by('multi_priority')
 
     @property
     def products(self):
@@ -3138,7 +3143,7 @@ class MultiProductVisit(Visit):
 
     def potential_responsible(self):
         units = OrganizationalUnit.objects.filter(
-            product__eventtime__visit__set=self.subvisits
+            product__eventtime__visit__set=self.subvisits_unordered
         )
         return User.objects.filter(
             userprofile__organizationalunit=units
@@ -3150,13 +3155,15 @@ class MultiProductVisit(Visit):
     @property
     def total_required_teachers(self):
         return sum(
-            subvisit.total_required_teachers for subvisit in self.subvisits
+            subvisit.total_required_teachers
+            for subvisit in self.subvisits_unordered
         )
 
     @property
     def total_required_hosts(self):
         return sum(
-            subvisit.total_required_hosts for subvisit in self.subvisits
+            subvisit.total_required_hosts
+            for subvisit in self.subvisits_unordered
         )
 
     @property
@@ -3164,7 +3171,7 @@ class MultiProductVisit(Visit):
         return User.objects.filter(
             id__in=flatten([
                 [user.id for user in subvisit.assigned_teachers]
-                for subvisit in self.subvisits
+                for subvisit in self.subvisits_unordered
             ])
         )
 
@@ -3173,20 +3180,20 @@ class MultiProductVisit(Visit):
         return User.objects.filter(
             id__in=flatten([
                 [user.id for user in subvisit.assigned_hosts]
-                for subvisit in self.subvisits
+                for subvisit in self.subvisits_unordered
             ])
         )
 
     @property
     def needs_teachers(self):
-        for subvisit in self.subvisits:
+        for subvisit in self.subvisits_unordered:
             if subvisit.needs_teachers:
                 return True
         return False
 
     @property
     def needs_room(self):
-        for subvisit in self.subvisits:
+        for subvisit in self.subvisits_unordered:
             if subvisit.needs_room:
                 return True
         return False
@@ -3220,10 +3227,32 @@ class MultiProductVisit(Visit):
         return self.date_display
 
     @property
-    def organizationalunit(self):
-        if self.subvisits.count() > 0:
-            return self.subvisits[0].organizationalunit
+    def primary_visit(self):
+        # For the purposes of determining who can manage this visit,
+        # return the highest-priority non-cancelled visit with a unit
+        if self.subvisits_unordered.count() > 0:
+            active = self.subvisits.filter(workflow_status__in=[
+                Visit.WORKFLOW_STATUS_BEING_PLANNED,
+                Visit.WORKFLOW_STATUS_CONFIRMED,
+                Visit.WORKFLOW_STATUS_EVALUATED,
+                Visit.WORKFLOW_STATUS_EXECUTED,
+                Visit.WORKFLOW_STATUS_PLANNED,
+                Visit.WORKFLOW_STATUS_PLANNED_NO_BOOKING,
+                Visit.WORKFLOW_STATUS_REMINDED
+            ])
+            for visit in active:
+                if visit.organizationalunit is not None:
+                    return visit
+            return self.subvisits[0]
         return None
+
+    @property
+    def organizationalunit(self):
+        # For the purposes of determining who can manage this visit,
+        # return the unit of the highest-priority non-cancelled visit
+        primary_visit = self.primary_visit
+        if primary_visit:
+            return primary_visit.organizationalunit
 
     def get_autosend(self, template_key, follow_inherit=True,
                      include_disabled=False):
@@ -3280,7 +3309,7 @@ class MultiProductVisit(Visit):
         if hasattr(self, 'eventtime'):
             return _(u'Besøg %s - Prioriteret liste af %d underbesøg - %s') % (
                 self.pk,
-                self.subvisits.count(),
+                self.subvisits_unordered.count(),
                 unicode(self.eventtime.interval_display)
             )
         else:

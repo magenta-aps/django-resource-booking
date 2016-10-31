@@ -30,9 +30,9 @@
                         {% trans 'Ønskede tilbud/underbesøg:' %}
                         <ul>
                             {% for visit in object.multiproductvisit.subvisits %}
-                                <li>
-                                    <a href="{% url 'product-view' visit.product.id %}">{{ visit.product.title }}</a>:
-                                    <a href="{% url 'visit-view' visit.id %}">{{ visit.id_display }}</a>
+                                <li class="subvisit-status-{{ visit.workflow_status }}">
+                                    <a class="product-link" href="{% url 'product-view' visit.product.id %}">{{ visit.product.title }}</a>:
+                                    <a class="visit-link" href="{% url 'visit-view' visit.id %}">{{ visit.id_display }}</a>
                                 </li>
                             {% endfor %}
                         </ul>

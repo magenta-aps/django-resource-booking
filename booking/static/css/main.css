@@ -1417,4 +1417,11 @@ body.lightbox {
 #mpvform li .institution {
     font-size: 0.75em;
 }
+
+li.subvisit-status-1 a.visit-link,
+li.subvisit-status-7 a.visit-link,
+li.subvisit-status-8 a.visit-link {
+    text-decoration: line-through;
+}
+
 /* MultiProductVisit END */
