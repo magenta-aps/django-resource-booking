@@ -15,8 +15,7 @@ from booking.utils import binary_or, binary_and
 from django import forms
 from django.db.models import Q
 from django.db.models.expressions import OrderBy
-from django.forms import CheckboxSelectMultiple, CheckboxInput, \
-    BaseInlineFormSet
+from django.forms import CheckboxSelectMultiple, CheckboxInput
 from django.forms import EmailInput
 from django.forms import formset_factory, inlineformset_factory
 from django.forms import TextInput, NumberInput, DateInput, Textarea, Select
@@ -616,7 +615,6 @@ class ProductStudyMaterialForm(ProductStudyMaterialFormBase):
         self.studymaterials = StudyMaterial.objects.filter(product=instance)
 
 
-
 class ProductAutosendForm(forms.ModelForm):
     class Meta:
         model = ProductAutosend
@@ -652,7 +650,6 @@ ProductAutosendFormSetBase = inlineformset_factory(
     Product,
     ProductAutosend,
     form=ProductAutosendForm,
-    formset=BaseInlineFormSet,
     extra=0,
     max_num=len(EmailTemplate.key_choices),
     can_delete=False,
@@ -677,36 +674,9 @@ class ProductAutosendFormSet(ProductAutosendFormSetBase):
                             'days': ''
                         })
                 initial.sort(key=lambda choice: choice['template_key'])
-                print initial
                 kwargs['initial'] = initial
                 self.extra = len(initial)
         super(ProductAutosendFormSet, self).__init__(*args, **kwargs)
-
-
-#
-# ProductAutosendFormSetBase = inlineformset_factory(
-#     Product,
-#     ProductAutosend,
-#     fields=('template_key', 'enabled', 'days'),
-#     can_delete=True,
-#     min_num=1,
-#     extra=len(EmailTemplate.default) - 1
-# )
-#
-#
-# class ProductAutosendFormSet(ProductAutosendFormSetBase):
-#
-#     def is_valid(self):
-#         return True
-#
-#     def clean(self):
-#         cleaned_forms = []
-#         for form in self.forms:
-#             if form.is_valid():
-#                 cleaned_forms.append(form)
-#         self.forms = cleaned_forms
-
-
 
 
 class BookingForm(forms.ModelForm):

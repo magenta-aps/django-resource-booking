@@ -2,7 +2,7 @@
 from booking.models import Visit, VisitAutosend, MultiProductVisit
 from booking.models import EmailTemplate
 from django import forms
-from django.forms import inlineformset_factory, BaseInlineFormSet
+from django.forms import inlineformset_factory
 from django.utils.translation import ugettext_lazy as _
 
 import booking.models
@@ -137,7 +137,44 @@ class VisitAutosendForm(forms.ModelForm):
             'template_key': forms.HiddenInput()
         }
 
+    ACTIVITY_DISABLED = 0
+    ACTIVITY_ENABLED = 1
+    ACTIVITY_INHERIT = 2
+    active = forms.ChoiceField(
+        choices=[
+            (ACTIVITY_ENABLED, _(u'Aktiv')),
+            (ACTIVITY_INHERIT, _(u'Nedarv')),
+            (ACTIVITY_DISABLED, _(u'Inaktiv'))
+        ],
+        widget=forms.widgets.RadioSelect()
+    )
+
+    def clean(self):
+        activity = str(self.cleaned_data['active'])
+        self.cleaned_data['enabled'] = \
+            (activity == str(VisitAutosendForm.ACTIVITY_ENABLED))
+        self.cleaned_data['inherit'] = \
+            (activity == str(VisitAutosendForm.ACTIVITY_INHERIT))
+
+    def get_active_value(self, kwargs):
+        if 'instance' in kwargs:
+            if kwargs['instance'].inherit:
+                return VisitAutosendForm.ACTIVITY_INHERIT
+            if kwargs['instance'].enabled:
+                return VisitAutosendForm.ACTIVITY_ENABLED
+        elif 'initial' in kwargs:
+            if kwargs['initial']['inherit']:
+                return VisitAutosendForm.ACTIVITY_INHERIT
+            if kwargs['initial']['enabled']:
+                return VisitAutosendForm.ACTIVITY_ENABLED
+        else:
+            return VisitAutosendForm.ACTIVITY_DISABLED
+
     def __init__(self, *args, **kwargs):
+        if not 'initial' in kwargs:
+            kwargs['initial'] = {}
+        kwargs['initial'].update({'active': self.get_active_value(kwargs)})
+
         super(VisitAutosendForm, self).__init__(*args, **kwargs)
 
         template_key = None
@@ -156,15 +193,31 @@ class VisitAutosendForm(forms.ModelForm):
                                               u' dette antal dage efter første'
                                               u' booking er foretaget')
 
+    @property
+    def associated_visit(self):
+        if 'visit' in self.initial:
+            if isinstance(self.initial['visit'], Visit):
+                return self.initial['visit']
+            elif type(self.initial['visit']) == int:
+                return Visit.objects.get(id=self.initial['visit'])
+        elif self.instance:
+            return self.instance.visit
+
+    @property
+    def template_key(self):
+        return self.initial['template_key']
+
     def label(self):
-        return EmailTemplate.get_name(self.initial['template_key'])
+        return EmailTemplate.get_name(self.template_key)
+
+    def inherit_from(self):
+        return self.associated_visit.get_autosend(self.template_key)
 
 
 VisitAutosendFormSetBase = inlineformset_factory(
     Visit,
     VisitAutosend,
     form=VisitAutosendForm,
-    formset=BaseInlineFormSet,
     extra=0,
     max_num=len(EmailTemplate.key_choices),
     can_delete=False,
@@ -187,7 +240,8 @@ class VisitAutosendFormSet(VisitAutosendFormSetBase):
                             'template_key': key,
                             'enabled': False,
                             'inherit': False,
-                            'days': ''
+                            'days': '',
+                            'visit': kwargs['instance']
                         })
                 initial.sort(key=lambda choice: choice['template_key'])
                 kwargs['initial'] = initial

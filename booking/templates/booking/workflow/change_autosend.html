@@ -29,9 +29,11 @@
                     <table class="table table-striped">
                         <thead>
                             <tr>
-                            <th class="col-sm-4">{% trans 'Skabelon' %}</th>
-                            <th class="col-sm-2">{% trans 'Aktiv' %}</th>
-                            <th class="col-sm-4">{% trans 'Genbrug indstilling fra tilbud' %}</th>
+                            <th class="col-sm-5">{% trans 'Skabelon' %}</th>
+                            <th class="col-sm-1">{% trans 'Aktiv' %}</th>
+                            <th class="col-sm-1">{% trans 'Genbrug indstilling fra tilbud' %}</th>
+                            <th class="col-sm-1">{% trans 'Inaktiv' %}</th>
+                            <th class="col-sm-2">{% trans 'Tilbuddets indstilling' %}</th>
                             <th class="col-sm-2">{% trans 'Dage' %}</th>
                         </tr>
                         </thead>
@@ -43,8 +45,26 @@
                                         {% for field in autosendform.hidden_fields %}
                                             {{ field }}
                                         {% endfor %}
-                                    <td>{{ autosendform.enabled }}</td>
-                                    <td>{{ autosendform.inherit }}</td>
+                                    </td>
+                                    {% for radio in autosendform.active %}
+                                        <td>{{ radio.tag }}</td>
+                                    {% endfor %}
+                                    <td>
+                                        {% if autosendform.inherit_from.days_relevant and autosendform.inherit_from.days != None %}
+                                            {% if autosendform.inherit_from.enabled %}
+                                                {% trans 'Aktiv' %},
+                                            {% else %}
+                                                {% trans 'Inaktiv' %},
+                                            {% endif %}
+                                            {% blocktrans with days=autosendform.inherit_from.days %}{{ days }} dage{% endblocktrans %}
+                                        {% else %}
+                                            {% if autosendform.inherit_from.enabled %}
+                                                {% trans 'Aktiv' %}
+                                            {% else %}
+                                                {% trans 'Inaktiv' %}
+                                            {% endif %}
+                                        {% endif %}
+                                    </td>
                                     <td {% if autosendform.days.help_text %}data-toggle="tooltip" data-placement="right" title="{{ autosendform.days.help_text }}"{% endif %}>
                                         {{ autosendform.days }}
                                     </td>
