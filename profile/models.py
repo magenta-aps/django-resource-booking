@@ -179,7 +179,7 @@ class UserProfile(models.Model):
                 qs = self.get_unit_queryset().filter(
                     pk=item.organizationalunit.pk
                 )
-            return len(qs) > 0
+                return len(qs) > 0
 
         return False
 
