@@ -1151,6 +1151,7 @@ class VisitResource(AvailabilityUpdaterMixin, models.Model):
         verbose_name=_(u"Ressourcebehov"),
         related_name='visitresource'
     )
+
     def save(self, *args, **kwargs):
         new = self.pk is None
         super(VisitResource, self).save(*args, **kwargs)
@@ -1168,7 +1169,6 @@ class VisitResource(AvailabilityUpdaterMixin, models.Model):
                     [self.resource.hostresource.user],
                     True
                 )
-
 
     @property
     def affected_eventtimes(self):

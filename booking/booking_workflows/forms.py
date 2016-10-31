@@ -171,7 +171,7 @@ class VisitAutosendForm(forms.ModelForm):
             return VisitAutosendForm.ACTIVITY_DISABLED
 
     def __init__(self, *args, **kwargs):
-        if not 'initial' in kwargs:
+        if 'initial' not in kwargs:
             kwargs['initial'] = {}
         kwargs['initial'].update({'active': self.get_active_value(kwargs)})
 

@@ -3254,6 +3254,7 @@ class MultiProductVisit(Visit):
                         unit
                     )
 
+
 class MultiProductVisitTemp(models.Model):
     date = models.DateField(
         null=False,
