@@ -459,12 +459,14 @@ class BecomeSomethingView(AutologgerMixin, VisitBreadcrumbMixin,
 
     def get_form(self, *args, **kwargs):
         form = super(BecomeSomethingView, self).get_form(*args, **kwargs)
+        rr = form.fields['resourcerequirements']
         if self.get_object().product.is_resource_controlled:
-            rr = form.fields['resourcerequirements']
             rr.queryset = self.matching_requirements()
             rr.label_from_instance = lambda x: x.resource_pool.name
             if self.request.method == "GET":
                 rr.initial = [x[0] for x in rr.choices]
+        else:
+            rr.queryset = booking.models.ResourceRequirement.objects.none()
         return form
 
     def needs_more(self):
