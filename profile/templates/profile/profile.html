@@ -31,7 +31,7 @@
                 {% if request.user.userprofile.get_resource.calendar %}
                 <a href="{% url 'calendar' request.user.userprofile.get_resource.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér mulige undervisningstidspunkter' %}</a>
                 {% else %}
-                <a href="{% url 'availability-edit' request.user.userprofile.get_resource.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér mulige undervisningstidspunkter' %}</a>
+                <a href="{% url 'availability-edit' %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér mulige undervisningstidspunkter' %}</a>
                 {% endif %}
                 <a href="{% url 'availability' request.user.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Se dato-oversigt for undervisning' %}</a>
             </p>
