@@ -36,8 +36,14 @@
                 {% csrf_token %}
                 {{ form.non_field_errors }}
                 {{ form.calendar.as_hidden }}
-                {{ form.start.as_hidden }}
-                {{ form.end.as_hidden }}
+                <div style="display: none">
+                    {# We have to output these fields without .as_hidden to
+                       get the values internationalized, making it easy to
+                       re-use them for dato fields below.
+                    #}
+                    {{ form.start }}
+                    {{ form.end }}
+                </div>
 
                 {% include 'common/fields/generic_field.html' with field=form.title %}
 
