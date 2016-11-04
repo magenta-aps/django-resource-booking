@@ -76,9 +76,6 @@ urlpatterns = patterns(
     (r'^jsi18n/$', 'django.views.i18n.javascript_catalog', js_info_dict),
     url(r'^$', MainPageView.as_view(), name='index'),
 
-    # Djangosaml2
-    (r'^saml2/', include('djangosaml2.urls')),
-
     # Main search page
     url(r'^search', SearchView.as_view(), name='search'),
 

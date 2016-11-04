@@ -45,7 +45,6 @@ INSTALLED_APPS = (
     'recurrence',
     'timedelta',
     'tinymce',
-    # 'djangosaml2',
     'django_cron',
 )
 
