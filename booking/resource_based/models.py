@@ -745,7 +745,6 @@ class CalendarEvent(AvailabilityUpdaterMixin, models.Model):
                 self.pk
             ])
 
-
     @property
     def calender_event_title(self):
         return self.title
