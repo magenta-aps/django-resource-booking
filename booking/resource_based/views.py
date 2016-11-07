@@ -787,21 +787,57 @@ class VisitResourceEditView(FormView):
         return reverse('visit-view', args=[self.visit.id])
 
 
-class CalendarView(LoginRequiredMixin, DetailView):
-    template_name = 'calendar/calendar.html'
+class CalRelatedMixin(object):
+    rel_obj = None
 
-    def get_object(self, queryset=None):
-        queryset = booking_models.Calendar.objects.filter(
-            resource__pk=self.kwargs['pk']
+    def get_calendar(self):
+        rel_obj = self.get_calendar_rel_object()
+
+        if not rel_obj.calendar:
+            raise Http404(_("Ingen kalender fundet for %s") % rel_obj)
+
+        return rel_obj.calendar
+
+    def get_calendar_rel_object(self):
+        related_kwargs_name = self.kwargs.get('related_kwargs_name', 'pk')
+        related_model = self.kwargs.get(
+            'related_model', booking_models.Resource
         )
+        pk = self.kwargs.get(related_kwargs_name)
+        queryset = related_model.objects.filter(pk=pk)
         try:
             # Get the single item from the filtered queryset
-            obj = queryset.get()
+            self.rel_obj = queryset.get()
         except queryset.model.DoesNotExist:
             raise Http404(_("No %(verbose_name)s found matching the query") %
                           {'verbose_name': queryset.model._meta.verbose_name})
 
-        return obj
+        return self.rel_obj
+
+    def get_context_data(self, **kwargs):
+        prefix = self.kwargs.get('reverse_prefix', '')
+
+        return super(CalRelatedMixin, self).get_context_data(
+            reverses={
+                x.replace('-', '_'): prefix + x for x in (
+                    'calendar',
+                    'calendar-create',
+                    'calendar-delete',
+                    'calendar-event-create',
+                    'calendar-event-edit',
+                    'calendar-event-delete',
+                )
+            },
+            **kwargs
+        )
+
+
+class CalendarView(LoginRequiredMixin, CalRelatedMixin, DetailView):
+    template_name = 'calendar/calendar.html'
+    rel_model_class = booking_models.Resource
+
+    def get_object(self, queryset=None):
+        return self.get_calendar()
 
     def get_context_data(self, **kwargs):
         calendar = self.object
@@ -879,67 +915,67 @@ class CalendarView(LoginRequiredMixin, DetailView):
                     events_by_date[key].append(x.day_marker(date))
                 date = date + datetime.timedelta(days=1)
 
+        res = calendar.resource if hasattr(calendar, 'resource') else None
+        prod = calendar.product if hasattr(calendar, 'product') else None
+
+        if hasattr(calendar, 'resource'):
+            bt = calendar.resource.booked_eventtimes(start_dt, end_dt)
+        elif hasattr(calendar, 'product'):
+            bt = calendar.product.booked_eventtimes(start_dt, end_dt)
+        else:
+            bt = None
+
         return super(CalendarView, self).get_context_data(
             calendar=calendar,
-            resource=calendar.resource,
+            resource=res,
+            product=prod,
             month=first_of_the_month,
             next_month=first_of_the_month + datetime.timedelta(days=31),
             prev_month=first_of_the_month - datetime.timedelta(days=1),
             calendar_weeks=weeks,
             available=calendar.calendarevent_set.filter(
                 availability=booking_models.CalendarEvent.AVAILABLE
-            ),
+            ).order_by("start", "end"),
             unavailable=calendar.calendarevent_set.filter(
                 availability=booking_models.CalendarEvent.NOT_AVAILABLE
-            ),
-            booked_times=calendar.resource.booked_eventtimes(
-                start_dt, end_dt
-            ),
+            ).order_by("start", "end"),
+            booked_times=bt,
             **kwargs
         )
 
 
-class CalendarCreateView(LoginRequiredMixin, RedirectView):
+class CalendarCreateView(LoginRequiredMixin, CalRelatedMixin, RedirectView):
     permanent = False
 
     def get_redirect_url(self, *args, **kwargs):
-        queryset = booking_models.Resource.objects.filter(
-            pk=self.kwargs['pk']
-        )
-        try:
-            # Get the single item from the filtered queryset
-            resource = queryset.get()
-        except queryset.model.DoesNotExist:
-            raise Http404(_("No %(verbose_name)s found matching the query") %
-                          {'verbose_name': queryset.model._meta.verbose_name})
+        rel_obj = self.get_calendar_rel_object()
 
         # Create empty calendar if one does not exist
-        resource.make_calendar()
+        rel_obj.make_calendar()
 
-        return reverse('calendar', args=[resource.pk])
+        return reverse(
+            self.kwargs.get('reverse_prefix', '') + 'calendar',
+            args=[rel_obj.pk]
+        )
 
 
-class CalendarDeleteView(LoginRequiredMixin, DeleteView):
+class CalendarDeleteView(LoginRequiredMixin, CalRelatedMixin, DeleteView):
     template_name = 'calendar/delete.html'
 
     def get_object(self, queryset=None):
-        queryset = booking_models.Resource.objects.filter(
-            pk=self.kwargs['pk']
-        )
-        try:
-            # Get the single item from the filtered queryset
-            self.resource = queryset.get()
-        except queryset.model.DoesNotExist:
-            raise Http404(_("No %(verbose_name)s found matching the query") %
-                          {'verbose_name': queryset.model._meta.verbose_name})
-
-        return self.resource.calendar
+        rel_obj = self.get_calendar_rel_object()
+        return rel_obj.calendar
 
     def get_success_url(self):
-        return reverse('resource-view', args=[self.resource.pk])
+        if self.kwargs.get('reverse_prefix'):
+            reverse_name = 'product-view'
+        else:
+            reverse_name = 'resource-view'
+
+        return reverse(reverse_name, args=[self.rel_obj.pk])
 
 
-class CalendarEventCreateView(CreateView):
+class CalendarEventCreateView(LoginRequiredMixin, CalRelatedMixin, CreateView):
     model = booking_models.CalendarEvent
     template_name = 'calendar/calendar_event.html'
 
@@ -960,11 +996,8 @@ class CalendarEventCreateView(CreateView):
         if form_class is None:
             form_class = self.get_form_class()
         kwargs = self.get_form_kwargs()
-        resource_pk = self.kwargs.get('res', -1)
         try:
-            calendar = booking_models.Calendar.objects.get(
-                resource__pk=resource_pk
-            )
+            calendar = self.get_calendar()
         except:
             raise Http404
 
@@ -1000,10 +1033,13 @@ class CalendarEventCreateView(CreateView):
         )
 
     def get_success_url(self):
-        return reverse('calendar', args=[self.kwargs.get('res')])
+        return reverse(
+            self.kwargs.get('reverse_prefix', '') + 'calendar',
+            args=[self.rel_obj.pk]
+        )
 
 
-class CalendarEventUpdateView(UpdateView):
+class CalendarEventUpdateView(LoginRequiredMixin, CalRelatedMixin, UpdateView):
     model = booking_models.CalendarEvent
     template_name = 'calendar/calendar_event.html'
 
@@ -1020,9 +1056,9 @@ class CalendarEventUpdateView(UpdateView):
     end_str = ""
 
     def get_object(self, *args, **kwargs):
-        obj = super(CalendarEventUpdateView, self).get_object(*args, **kwargs)
+        self.rel_obj = self.get_calendar_rel_object()
 
-        return obj
+        return super(CalendarEventUpdateView, self).get_object(*args, **kwargs)
 
     def get_context_data(self, **kwargs):
         return super(CalendarEventUpdateView, self).get_context_data(
@@ -1032,13 +1068,23 @@ class CalendarEventUpdateView(UpdateView):
         )
 
     def get_success_url(self):
-        return reverse('calendar', args=[self.kwargs.get('res')])
+        return reverse(
+            self.kwargs.get('reverse_prefix', '') + 'calendar',
+            args=[self.rel_obj.pk]
+        )
 
 
-class CalendarEventDeleteView(DeleteView):
+class CalendarEventDeleteView(LoginRequiredMixin, CalRelatedMixin, DeleteView):
     model = booking_models.CalendarEvent
     template_name = 'calendar_event_confirm_delete.html'
 
+    def get_object(self, *args, **kwargs):
+        self.rel_obj = self.get_calendar_rel_object()
+
+        return super(CalendarEventDeleteView, self).get_object(*args, **kwargs)
+
     def get_success_url(self):
-        resource_pk = self.object.calendar.resource.pk
-        return '/resource/%d/calendar/' % resource_pk
+        return reverse(
+            self.kwargs.get('reverse_prefix', '') + 'calendar',
+            args=[self.rel_obj.pk]
+        )

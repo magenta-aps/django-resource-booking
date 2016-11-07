@@ -165,6 +165,13 @@
                                 {% if object.is_guest_time_suggested %}
                                     {% if request.user.userprofile.can_create %}
                                         {% trans 'Gæster foreslår selv tidspunkter' %}
+                                        <p>
+                                        {% if object.calendar %}
+                                            <a class="btn btn-primary btn-xs margin-bottom-10 margin-right-10" href="{% url 'product-calendar' object.pk %}">{% trans 'Administrér kalender' %}</a>
+                                        {% else %}
+                                            <a class="btn btn-primary btn-xs margin-bottom-10 margin-right-10" href="{% url 'product-calendar-create' object.pk %}">{% trans 'Opret kalender' %}</a>
+                                        {% endif %}
+                                        </p>
                                     {% else %}
                                         {% trans 'Foreslå selv et tidspunkt' %}
                                     {% endif %}

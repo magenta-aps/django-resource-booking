@@ -63,12 +63,21 @@ from booking.resource_based.views import ResourceRequirementDeleteView
 from booking.resource_based.views import VisitResourceEditView
 
 import booking.views
+import booking.models
 
 from django.views.generic import TemplateView
 
 js_info_dict = {
     'packages': ('recurrence', ),
 }
+
+calendarevent_kwargs = {'related_kwargs_name': 'res'}
+product_calendar_kwargs = {
+    'related_model': booking.models.Product,
+    'reverse_prefix': 'product-'
+}
+product_calendarevent_kwargs = product_calendar_kwargs.copy()
+product_calendarevent_kwargs['related_kwargs_name'] = 'prod'
 
 urlpatterns = patterns(
 
@@ -293,6 +302,7 @@ urlpatterns = patterns(
     url(r'^resource/(?P<pk>[0-9]+)/?$',
         ResourceDetailView.as_view(),
         name='resource-view'),
+
     url(r'^resource/(?P<pk>[0-9]+)/calendar/?$',
         booking.views.CalendarView.as_view(),
         name='calendar'),
@@ -304,13 +314,42 @@ urlpatterns = patterns(
         name='calendar-delete'),
     url(r'^resource/(?P<res>[0-9]+)/calendar/calendar-event/?$',
         booking.views.CalendarEventCreateView.as_view(),
+        calendarevent_kwargs,
         name='calendar-event-create'),
     url(r'^resource/(?P<res>[0-9]+)/calendar/edit-event/(?P<pk>[0-9]+)/?$',
         booking.views.CalendarEventUpdateView.as_view(),
+        calendarevent_kwargs,
         name='calendar-event-edit'),
-    url(r'^calendar-event/(?P<pk>[0-9]+)/delete/?$',
+    url(r'^resource/(?P<res>[0-9]+)/calendar/delete-event/(?P<pk>[0-9]+)/?$',
         booking.views.CalendarEventDeleteView.as_view(),
+        calendarevent_kwargs,
         name='calendar-event-delete'),
+
+    url(r'^product/(?P<pk>[0-9]+)/calendar/?$',
+        booking.views.CalendarView.as_view(),
+        product_calendar_kwargs,
+        name='product-calendar'),
+    url(r'^product/(?P<pk>[0-9]+)/calendar-create/?$',
+        booking.views.CalendarCreateView.as_view(),
+        product_calendar_kwargs,
+        name='product-calendar-create'),
+    url(r'^product/(?P<pk>[0-9]+)/delete_calendar/?$',
+        booking.views.CalendarDeleteView.as_view(),
+        product_calendar_kwargs,
+        name='product-calendar-delete'),
+    url(r'^product/(?P<prod>[0-9]+)/calendar/calendar-event/?$',
+        booking.views.CalendarEventCreateView.as_view(),
+        product_calendarevent_kwargs,
+        name='product-calendar-event-create'),
+    url(r'^product/(?P<prod>[0-9]+)/calendar/edit-event/(?P<pk>[0-9]+)/?$',
+        booking.views.CalendarEventUpdateView.as_view(),
+        product_calendarevent_kwargs,
+        name='product-calendar-event-edit'),
+    url(r'^product/(?P<prod>[0-9]+)/calendar/delete-event/(?P<pk>[0-9]+)/?$',
+        booking.views.CalendarEventDeleteView.as_view(),
+        product_calendarevent_kwargs,
+        name='product-calendar-event-delete'),
+
     url(r'^resource/?$',
         ResourceListView.as_view(),
         name='resource-list'),

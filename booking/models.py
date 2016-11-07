@@ -1315,6 +1315,13 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         on_delete=models.SET_NULL,
     )
 
+    calendar = models.OneToOneField(
+        'Calendar',
+        null=True,
+        default=None,
+        on_delete=models.SET_NULL,
+    )
+
     objects = SearchManager(
         fields=(
             'title',
@@ -1825,15 +1832,36 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             return None
 
     def is_bookable(self, start_time=None, end_time=None):
-        # TODO: Return whether the product is bookable
-        # within the specified time range
-        if end_time is None and isinstance(start_time, date):
-            start_time = datetime.combine(start_time, time())
-            end_time = start_time + timedelta(days=1)
 
-        return self.is_type_bookable and \
-            self.state == Product.ACTIVE and \
+        if not(
+            self.is_type_bookable and
+            self.state == Product.ACTIVE and
             self.has_bookable_visits
+        ):
+            return False
+
+        # Special case for calendar-controlled products where guest suggests
+        # a date
+        if self.time_mode == Product.TIME_MODE_GUEST_SUGGESTED:
+            # If no time was specified, we assume there is some time where
+            # the product is available:
+            if start_time is None:
+                return True
+
+            # If start_time is a date and there is no end_date assume
+            # midnight-to-midnight on the given date in the current timezone.
+            if end_time is None and isinstance(start_time, date):
+                # Start time is midnight
+                start_time = timezone.make_aware(
+                    datetime.combine(start_time, time())
+                )
+                end_time = start_time + timedelta(hours=24)
+
+            # Check if we has an available time in our calendar within the
+            # specified interval.
+            return self.has_available_calendar_time(start_time, end_time)
+
+        return True
 
     @property
     def is_resource_controlled(self):
@@ -1911,6 +1939,40 @@ class Product(AvailabilityUpdaterMixin, models.Model):
                 return _(u"%d timer og %d minutter") % (hours, mins)
         else:
             return ""
+
+    def make_calendar(self):
+        if not self.calendar:
+            cal = Calendar()
+            cal.save()
+            self.calendar = cal
+            self.save()
+
+    def has_available_calendar_time(self, from_dt, to_dt):
+        if self.calendar:
+            minutes = self.duration_in_minutes
+            # Fall back to one hour if no duration is specified
+            if minutes == 0:
+                minutes = 60
+            return self.calendar.has_available_time(
+                from_dt, to_dt, minutes
+            )
+        else:
+            return True
+
+    def booked_eventtimes(self, dt_from=None, dt_to=None):
+        qs = self.eventtime_set.filter(
+            visit__isnull=False,
+            start__isnull=False,
+            end__isnull=False,
+        ).exclude(
+            visit__workflow_status=Visit.WORKFLOW_STATUS_CANCELLED
+        )
+        if dt_from:
+            qs = qs.filter(end__gt=dt_from)
+        if dt_to:
+            qs = qs.filter(start__lt=dt_to)
+
+        return qs
 
     @classmethod
     # Migrate from old system where guest-suggest-time products was determined

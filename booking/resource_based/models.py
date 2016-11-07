@@ -406,14 +406,14 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
     def available_list(self, from_dt, to_dt):
         for x in self.calendarevent_set.filter(
             availability=CalendarEvent.AVAILABLE
-        ):
+        ).order_by("start", "end"):
             for y in x.between(from_dt, to_dt):
                 yield y
 
     def unavailable_list(self, from_dt, to_dt):
         for x in self.calendarevent_set.filter(
             availability=CalendarEvent.NOT_AVAILABLE
-        ):
+        ).order_by("start", "end"):
             for y in x.between(from_dt, to_dt):
                 yield y
 
@@ -435,6 +435,15 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
                         available=False,
                         source=x
                     )
+
+        if hasattr(self, 'product'):
+            for x in self.product.booked_eventtimes(from_dt, to_dt):
+                yield CalendarEventInstance(
+                    x.start,
+                    x.end,
+                    available=False,
+                    source=x.visit
+                )
 
     def is_available_between(self, from_dt, to_dt, exclude_sources=set([])):
         # Check if availability rules match
@@ -460,6 +469,39 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
             return False
 
         return True
+
+    def has_available_time(self, from_dt, to_dt, minutes):
+        needed = datetime.timedelta(minutes=minutes)
+
+        unavailables = sorted([
+            x for x in self.unavailable_list(from_dt, to_dt)
+        ], key=lambda x: x.start)
+
+        for available in self.available_list(from_dt, to_dt):
+            # The first available start is whatever is later of the start
+            # of the available interval and from_dt.
+            avail_start_time = max(available.start, from_dt)
+            avail_end_time = min(available.end, to_dt)
+
+            # For each unavailable marker, check if the interval between
+            # the last available start and the start of the unavailable period
+            # is enough. If it is not, move the last available start to the
+            # end of the unavailable interval, if that is later.
+            for unavailable in unavailables:
+                next_unavailable = min(unavailable.start, avail_end_time)
+                if next_unavailable - avail_start_time >= needed:
+                    return True
+                else:
+                    avail_start_time = max(unavailable.end, avail_start_time)
+
+            # Last possible end is whatever comes first of the available
+            # interval's end and to_dt. Compare this to the last available
+            # start time to see if we have enough time after the last
+            # unavailable marking.
+            if avail_end_time - avail_start_time >= needed:
+                return True
+
+        return False
 
     @property
     def affected_eventtimes(self):
@@ -692,10 +734,17 @@ class CalendarEvent(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def calendar_event_link(self):
-        return reverse('calendar-event-edit', args=[
-            self.calendar.resource.pk,
-            self.pk
-        ])
+        if hasattr(self.calendar, 'resource'):
+            return reverse('calendar-event-edit', args=[
+                self.calendar.resource.pk,
+                self.pk
+            ])
+        else:
+            return reverse('product-calendar-event-edit', args=[
+                self.calendar.product.pk,
+                self.pk
+            ])
+
 
     @property
     def calender_event_title(self):
