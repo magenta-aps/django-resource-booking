@@ -2647,7 +2647,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         if hasattr(self, 'eventtime'):
             return _(u'Besøg %s - %s - %s') % (
                 self.pk,
-                unicode(self.display_title),
+                unicode(self.real.display_title),
                 unicode(self.eventtime.interval_display)
             )
         else:
