@@ -1,1 +1,1 @@
-Du har accepteret en ledig plads på tilbuddet "{{ product.title }}"
+Du har accepteret en ledig plads på tilbuddet {{ product.title }}

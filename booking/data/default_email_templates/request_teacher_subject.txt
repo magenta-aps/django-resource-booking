@@ -1,1 +1,1 @@
-Anmodning om deltagelse som underviser for besøget "{{ product.title }}"
+Anmodning om deltagelse som underviser for besøget {{ visit.display_title }}
