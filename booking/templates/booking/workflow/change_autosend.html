@@ -39,6 +39,7 @@
                         </thead>
                         <tbody>
                             {% for autosendform in autosendformset %}
+                                {{ autosendform.errors }}
                                 <tr class="autosend-row">
                                     <td>
                                         {{ autosendform.label }}
@@ -52,16 +53,16 @@
                                     <td>
                                         {% if autosendform.inherit_from.days_relevant and autosendform.inherit_from.days != None %}
                                             {% if autosendform.inherit_from.enabled %}
-                                                {% trans 'Aktiv' %},
+                                                <span class="autosend-inherit-active">{% trans 'Aktiv' %}</span>,
                                             {% else %}
-                                                {% trans 'Inaktiv' %},
+                                                <span class="autosend-inherit-inactive">{% trans 'Inaktiv' %}</span>,
                                             {% endif %}
                                             {% blocktrans with days=autosendform.inherit_from.days %}{{ days }} dage{% endblocktrans %}
                                         {% else %}
                                             {% if autosendform.inherit_from.enabled %}
-                                                {% trans 'Aktiv' %}
+                                                <span class="autosend-inherit-active">{% trans 'Aktiv' %}</span>
                                             {% else %}
-                                                {% trans 'Inaktiv' %}
+                                                <span class="autosend-inherit-inactive">{% trans 'Inaktiv' %}</span>
                                             {% endif %}
                                         {% endif %}
                                     </td>
