@@ -36,8 +36,8 @@ from django.views.defaults import bad_request
 
 from profile.models import EDIT_ROLES
 from profile.models import role_to_text
-from booking.models import Product, Visit, StudyMaterial, \
-    ProductAutosend
+from booking.models import Product, Visit, StudyMaterial
+from booking.models import ProductAutosend
 from booking.models import KUEmailMessage
 from booking.models import Subject
 from booking.models import OrganizationalUnit

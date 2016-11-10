@@ -2760,20 +2760,16 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         return recipients
 
     def create_inheriting_autosends(self):
-        products = self.products
-        if len(products):
-            for product in products:
-                if product:
-                    for template_key, label in EmailTemplate.key_choices:
-                        if not self.get_autosend(template_key, False, False):
-                            visitautosend = VisitAutosend(
-                                visit=self,
-                                inherit=True,
-                                template_key=template_key,
-                                days=None,
-                                enabled=False
-                            )
-                            visitautosend.save()
+        for template_key, label in EmailTemplate.key_choices:
+            if not self.get_autosend(template_key, False, False):
+                visitautosend = VisitAutosend(
+                    visit=self,
+                    inherit=True,
+                    template_key=template_key,
+                    days=None,
+                    enabled=False
+                )
+                visitautosend.save()
 
     def autosend_inherits(self, template_key):
         s = self.visitautosend_set.filter(
