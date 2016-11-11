@@ -148,11 +148,11 @@ class EventTime(models.Model):
             for x in self.product.rooms.all():
                 visit.rooms.add(x)
 
-        visit.create_inheriting_autosends()
         visit.ensure_statistics()
 
         self.visit = visit
         self.save()
+        visit.create_inheriting_autosends()
 
         return visit
 
