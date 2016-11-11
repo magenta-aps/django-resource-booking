@@ -3406,12 +3406,12 @@ class EmailReplyView(DetailView):
                 self.form = EmailReplyForm(self.request.POST)
         return self.form
 
-    def get_visit(self):
+    def get_product(self):
         occ = None
 
         try:
             ct = ContentType.objects.get(pk=self.object.content_type_id)
-            if ct.model_class() == Visit:
+            if ct.model_class() == Product:
                 occ = ct.get_object_for_this_type(pk=self.object.object_id)
         except Exception as e:
             print "Error when getting email-reply object: %s" % e
@@ -3427,7 +3427,7 @@ class EmailReplyView(DetailView):
             {'text': _(u'Svar på e-mail')},
         ]
 
-        context['visit'] = self.get_visit()
+        context['product'] = self.get_product()
 
         return context
 
@@ -3437,20 +3437,19 @@ class EmailReplyView(DetailView):
             self.object = self.get_object()
             orig_message = self.object
             reply = form.cleaned_data.get('reply', "").strip()
-            visit = self.get_visit()
-            recipients = visit.product.organizationalunit.get_editors()
+            product = self.get_product()
+            recipients = product.organizationalunit.get_editors()
             KUEmailMessage.send_email(
                 EmailTemplate.SYSTEM__EMAIL_REPLY,
                 {
-                    'visit': visit,
-                    'product': visit.product,
+                    'product': product,
                     'orig_message': orig_message,
                     'reply': reply,
                     'log_message': _(u"Svar:") + "\n" + reply
                 },
                 recipients,
-                visit,
-                organizationalunit=visit.product.organizationalunit
+                product,
+                organizationalunit=product.organizationalunit
             )
             result_url = reverse(
                 'reply-to-email', args=[self.object.reply_nonce]

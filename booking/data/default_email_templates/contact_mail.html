@@ -6,6 +6,10 @@
     {{ body }}
 </p>
 <p>
+    Du kan svare på denne besked ved at gå ind på denne side:<br />
+    <a href="{% full_url 'reply-to-email' reply_nonce %}">{% full_url 'reply-to-email' reply_nonce %}</a>
+</p>
+<p>
     Tilbudet kan tilgås via adressen:<br />
     <a href="{% full_url 'product-view' product.pk %}">{% full_url 'product-view' product.pk %}</a>
 </p>
