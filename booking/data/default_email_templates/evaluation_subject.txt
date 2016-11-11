@@ -1,1 +1,1 @@
-Evaluering af besøg "{{ product.title }}"
+Evaluering af besøg "{{ visit.display_title }}"

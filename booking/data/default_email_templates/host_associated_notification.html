@@ -2,7 +2,7 @@
 
 <p>
     Du er nu sat på som vært til besøg
-    <a href="{% full_url 'visit-view' visit.pk %}">{{ product.title }}</a>{% if visit.start_datetime %} den {{ visit.start_datetime|date:'d.m.Y' }}
+    <a href="{% full_url 'visit-view' visit.pk %}">{{ visit.display_title }}</a>{% if visit.start_datetime %} den {{ visit.start_datetime|date:'d.m.Y' }}
     {% blocktrans with time=visit.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}{% endif %}.
     Besøget afholdes på
     <a href="{% full_url 'product-view' product.pk %}#mapinfo">{{ product.locality.full_address }}</a>.
