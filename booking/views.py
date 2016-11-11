@@ -3388,7 +3388,7 @@ class EmailTemplateDeleteView(HasBackButtonMixin, LoginRequiredMixin,
         ]
 
 
-class EmailReplyView(DetailView):
+class EmailReplyView(BreadcrumbMixin, DetailView):
     model = KUEmailMessage
     template_name = "email/reply.html"
     slug_field = 'reply_nonce'
@@ -3419,17 +3419,11 @@ class EmailReplyView(DetailView):
         return occ
 
     def get_context_data(self, **kwargs):
-        context = super(EmailReplyView, self).get_context_data(**kwargs)
-
+        context = {}
         context['form'] = self.get_form()
-
-        context['breadcrumbs'] = [
-            {'text': _(u'Svar på e-mail')},
-        ]
-
         context['product'] = self.get_product()
-
-        return context
+        context.update(kwargs)
+        return super(EmailReplyView, self).get_context_data(**context)
 
     def post(self, request, *args, **kwargs):
         form = self.get_form()
@@ -3457,6 +3451,17 @@ class EmailReplyView(DetailView):
             return redirect(result_url + '?thanks=1')
         else:
             return self.get(request, *args, **kwargs)
+
+    def get_breadcrumb_args(self):
+        return [self.get_product()]
+
+    @staticmethod
+    def build_breadcrumbs(product):
+        breadcrumbs = []
+        if product:
+            breadcrumbs = ProductDetailView.build_breadcrumbs(product)
+        breadcrumbs.append({'text': _(u'Svar på e-mail')})
+        return breadcrumbs
 
 
 class EvaluationOverviewView(LoginRequiredMixin, BreadcrumbMixin, ListView):
