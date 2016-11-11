@@ -18,31 +18,31 @@
     <div class="row form-group">
         <div class="col-sm-8">
             {% if request.GET.thanks %}
-            <p>
-                Tak for din henvendelse.
-            </p>
+                <p>
+                    {% trans 'Beskeden er afsendt.' %}
+                </p>
             {% elif product %}
-            <form name="reply-to-email-form" id="reply-to-email-form" method="post"
-                  action="{% url 'reply-to-email' object.reply_nonce %}">
-                {% csrf_token %}
-                <dl class="dl-horizontal">
-                    <dt>{% trans "Emne" %}</dt>
-                    <dd>{{ object.subject }}</dd>
-                    <dt>{% trans "Indhold" %}</dt>
-                    <dd><pre>{{ object.body.strip }}</pre></dd>
-                    <dt><label for="{{ form.reply.id_for_label }}">{{ form.reply.label }}</label></dt>
-                    <dd>
-                        {{ form.reply.errors }}
-                        {{ form.reply}}
-                    </dd>
-                    <dt></dt>
-                    <dd><input class="btn btn-primary" type="submit" value="{% trans 'Send svar' %}" /></dd>
-                </dl>
-            </form>
+                <form name="reply-to-email-form" id="reply-to-email-form" method="post"
+                      action="{% url 'reply-to-email' object.reply_nonce %}">
+                    {% csrf_token %}
+                    <dl class="dl-horizontal">
+                        <dt>{% trans "Emne" %}</dt>
+                        <dd>{{ object.subject }}</dd>
+                        <dt>{% trans "Indhold" %}</dt>
+                        <dd><pre>{{ object.body.strip }}</pre></dd>
+                        <dt><label for="{{ form.reply.id_for_label }}">{{ form.reply.label }}</label></dt>
+                        <dd>
+                            {{ form.reply.errors }}
+                            {{ form.reply}}
+                        </dd>
+                        <dt></dt>
+                        <dd><input class="btn btn-primary" type="submit" value="{% trans 'Send svar' %}" /></dd>
+                    </dl>
+                </form>
             {% else %}
-            <p>
-                {% trans 'Det er desværre ikke muligt at svare på den angivne e-mail' %}
-            </p>
+                <p>
+                    {% trans 'Det er desværre ikke muligt at svare på den angivne e-mail' %}
+                </p>
             {% endif %}
         </div>
     </div>
