@@ -4414,7 +4414,7 @@ class KUEmailMessage(models.Model):
             # If we know the visit and the guest we can find the
             # booking if it is missing.
             if 'booking' not in context and \
-               'bosoeg' in context and email['guest']:
+               'besoeg' in context and email['guest']:
                 context['booking'] = Booking.objects.filter(
                     visit=context['besoeg'],
                     booker=context['guest']
