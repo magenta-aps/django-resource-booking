@@ -566,6 +566,7 @@ class StudyProjectForm(ProductForm):
         model = Product
         fields = ('type', 'title', 'teaser', 'description', 'state',
                   'institution_level', 'topics', 'audience',
+                  'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'time_mode', 'locality',
                   'tilbudsansvarlig', 'organizationalunit',
                   'preparation_time', 'comment',
