@@ -21,7 +21,7 @@ from booking.booking_workflows.forms import VisitAddLogEntryForm
 from booking.booking_workflows.forms import VisitAddCommentForm
 from booking.booking_workflows.forms import ResetVisitChangesForm
 from booking.models import Visit
-from booking.models import EmailTemplate
+from booking.models import EmailTemplate, EmailTemplateType
 from booking.models import EventTime
 from booking.models import Locality
 from booking.models import LOGACTION_MANUAL_ENTRY
@@ -235,7 +235,7 @@ class ChangeVisitHostsView(AutologgerMixin, UpdateWithCancelView):
             if len(recipients) > 0:
                 # Send a message to only these recipients
                 self.object.autosend(
-                    EmailTemplate.visit_added_host_key,
+                    EmailTemplate.NOTIFY_HOST__ASSOCIATED,
                     recipients,
                     True
                 )
@@ -429,7 +429,9 @@ class ChangeVisitAutosendView(AutologgerMixin, UpdateWithCancelView):
         if hasattr(self.object, 'product') and self.object.product is not None:
             context['organizationalunit'] = \
                 self.object.product.organizationalunit
-        context['autosend_enable_days'] = EmailTemplate.enable_days
+        context['autosend_enable_days'] = EmailTemplateType.get_keys(
+            enable_days=True
+        )
         context.update(kwargs)
         return super(ChangeVisitAutosendView, self).\
             get_context_data(**context)
@@ -593,7 +595,7 @@ class BecomeTeacherView(BecomeSomethingView):
     m2m_attribute = "teachers"
     template_name = "booking/workflow/become_teacher.html"
     view_title = _(u'Tilmeld som underviser')
-    notify_mail_template_key = EmailTemplate.visit_added_teacher_key
+    notify_mail_template_key = EmailTemplate.NOTIFY_TEACHER__ASSOCIATED
 
     ERROR_NONE_NEEDED = _(u"Besøget har ikke brug for flere undervisere")
     ERROR_WRONG_ROLE = _(
@@ -614,7 +616,7 @@ class DeclineTeacherView(BecomeSomethingView):
     m2m_attribute = "teachers"
     template_name = "booking/workflow/decline_teacher.html"
     view_title = _(u'Tilmeld som underviser')
-    notify_mail_template_key = EmailTemplate.visit_added_teacher_key
+    notify_mail_template_key = EmailTemplate.NOTIFY_TEACHER__ASSOCIATED
 
     ERROR_NONE_NEEDED = _(u"Besøget har ikke brug for flere undervisere")
     ERROR_WRONG_ROLE = _(
@@ -635,7 +637,7 @@ class BecomeHostView(BecomeSomethingView):
     m2m_attribute = "hosts"
     template_name = "booking/workflow/become_host.html"
     view_title = _(u'Tilmeld som vært')
-    notify_mail_template_key = EmailTemplate.visit_added_host_key
+    notify_mail_template_key = EmailTemplate.NOTIFY_HOST__ASSOCIATED
 
     ERROR_NONE_NEEDED = _(u"Besøget har ikke brug for flere værter")
     ERROR_WRONG_ROLE = _(
@@ -656,7 +658,7 @@ class DeclineHostView(BecomeSomethingView):
     m2m_attribute = "hosts"
     template_name = "booking/workflow/decline_host.html"
     view_title = _(u'Tilmeld som vært')
-    notify_mail_template_key = EmailTemplate.visit_added_host_key
+    notify_mail_template_key = EmailTemplate.NOTIFY_HOST__ASSOCIATED
 
     ERROR_NONE_NEEDED = _(u"Besøget har ikke brug for flere værter")
     ERROR_WRONG_ROLE = _(

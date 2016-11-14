@@ -244,15 +244,16 @@ class OrganizationalUnit(models.Model):
         return [x for x in res]
 
     def get_recipients(self, template_key):
+        template_type = EmailTemplateType.get(template_key)
         recipients = []
 
-        if template_key in EmailTemplate.unit_hosts_keys:
+        if template_type.send_to_unit_hosts:
             recipients.extend(self.get_hosts())
 
-        if template_key in EmailTemplate.unit_teachers_keys:
+        if template_type.send_to_unit_teachers:
             recipients.extend(self.get_teachers())
 
-        if template_key in EmailTemplate.editor_keys:
+        if template_type.send_to_editors:
             recipients.extend(self.get_editors())
 
         return recipients
@@ -426,11 +427,7 @@ class Locality(models.Model):
                (self.address_line, self.zip_city)
 
 
-class EmailTemplate(models.Model):
-
-    # TODO: In a later phase we should refactor this into a set of
-    # statically defined instances with values determining the belongings
-    # of each template
+class EmailTemplateType(models.Model):
 
     NOTIFY_GUEST__BOOKING_CREATED = 1  # ticket 13806
     NOTIFY_EDITORS__BOOKING_CREATED = 2  # ticket 13807
@@ -455,7 +452,6 @@ class EmailTemplate(models.Model):
     NOTIFY_TEACHER__ASSOCIATED = 21  # Ticket 15701
     NOTIFY_ALL_EVALUATION = 22  # Ticket 15701
 
-    # Choice labels
     key_choices = [
         (NOTIFY_GUEST__BOOKING_CREATED,
          _(u'Besked til gæst ved booking af besøg')),
@@ -505,142 +501,217 @@ class EmailTemplate(models.Model):
     ]
 
     @staticmethod
+    def get(template_key):
+        if type(template_key) == int:
+            return EmailTemplateType.objects.get(key=template_key)
+        elif isinstance(template_key, EmailTemplateType):
+            return template_key
+        elif isinstance(template_key, EmailTemplate):
+            return template_key.type
+
+    @staticmethod
+    def get_name(template_key):
+        for key, label in EmailTemplateType.key_choices:
+            if key == template_key:
+                return label
+
+    key = models.IntegerField(
+        verbose_name=u'Type',
+        choices=key_choices,
+        default=1
+    )
+
+    # Template available for manual sending from visits
+    manual_sending_visit_enabled = models.BooleanField(default=False)
+
+    # Template available for manual sending from mpv bookings
+    manual_sending_mpv_enabled = models.BooleanField(default=False)
+
+    # Template will be autosent to editors for the given unit
+    manual_sending_booking_enabled = models.BooleanField(default=False)
+
+    # Template will be autosent to editors for the given unit
+    manual_sending_booking_mpv_enabled = models.BooleanField(default=False)
+
+    # Template will be autosent to editors for the given unit
+    send_to_editors = models.BooleanField(default=False)
+
+    # Template will be autosent to visit.tilbudsansvarlig
+    send_to_contactperson = models.BooleanField(default=False)
+
+    # Template will be autosent to booker
+    send_to_booker = models.BooleanField(default=False)
+
+    # Template will be autosent to all hosts in the unit
+    send_to_unit_hosts = models.BooleanField(default=False)
+
+    # Template will be autosent to all teachers in the unit
+    send_to_unit_teachers = models.BooleanField(default=False)
+
+    # Template will be sent to potential hosts
+    send_to_potential_hosts = models.BooleanField(default=False)
+
+    # Template will be sent to potential teachers
+    send_to_potential_teachers = models.BooleanField(default=False)
+
+    # Template will be autosent to hosts in the visit
+    send_to_visit_hosts = models.BooleanField(default=False)
+
+    # Template will be autosent to teachers in the visit
+    send_to_visit_teachers = models.BooleanField(default=False)
+
+    # Template will be autosent to hosts when they are added to a visit
+    send_to_visit_added_host = models.BooleanField(default=False)
+
+    # Template will be autosent to teachers when they are added to a visit
+    send_to_visit_added_teacher = models.BooleanField(default=False)
+
+    # Does the "days" field make sense?
+    enable_days = models.BooleanField(default=False)
+
+    # Does the {{ booking }} variable make sense
+    enable_booking = models.BooleanField(default=False)
+
+    avoid_already_assigned = models.BooleanField(default=False)
+
+    is_default = models.BooleanField(default=False)
+
+    @staticmethod
+    def set_default(key, **kwargs):
+        try:
+            template_type = EmailTemplateType.objects.get(key=key)
+        except EmailTemplateType.DoesNotExist:
+            template_type = EmailTemplateType(key=key)
+        for attr in template_type._meta.fields:
+            if attr.name in kwargs:
+                 setattr(template_type, attr.name, kwargs[attr.name])
+            elif isinstance(attr, models.BooleanField):
+                 setattr(template_type, attr.name, False)
+        #    if hasattr(template_type, arg):
+        #        setattr(template_type, arg)
+        template_type.save()
+        return template_type
+
+    @staticmethod
+    def set_defaults():
+        EmailTemplateType.set_default(EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED, manual_sending_visit_enabled=True, manual_sending_booking_enabled=True, manual_sending_booking_mpv_enabled=True, send_to_booker=True, enable_booking=True, is_default=True)
+        EmailTemplateType.set_default(EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED_WAITING, manual_sending_visit_enabled=True, manual_sending_booking_enabled=True, manual_sending_booking_mpv_enabled=True, send_to_booker=True, enable_booking=True)
+        EmailTemplateType.set_default(EmailTemplateType.NOTIFY_GUEST__GENERAL_MSG, manual_sending_visit_enabled=True, manual_sending_mpv_enabled=True, manual_sending_booking_enabled=True, manual_sending_booking_mpv_enabled=True, enable_booking=True)
+        EmailTemplateType.set_default(EmailTemplateType.NOTIFY_GUEST__SPOT_OPEN, manual_sending_visit_enabled=True, enable_booking=True)
+        EmailTemplateType.set_default(EmailTemplateType.NOTIFY_GUEST__SPOT_ACCEPTED, send_to_booker=True, enable_booking=True)
+        EmailTemplateType.set_default(EmailTemplateType.NOTIFY_GUEST__SPOT_REJECTED, send_to_booker=True, enable_booking=True)
+        EmailTemplateType.set_default(EmailTemplateType.NOTIFY_GUEST_REMINDER, manual_sending_visit_enabled=True, manual_sending_booking_enabled=True, manual_sending_booking_mpv_enabled=True)
+
+        EmailTemplateType.set_default(EmailTemplateType.NOTIFY_EDITORS__BOOKING_CREATED, send_to_contactperson=True, enable_booking=True, is_default=True)
+        EmailTemplateType.set_default(EmailTemplateType.NOTIFY_EDITORS__SPOT_REJECTED, send_to_contactperson=True, enable_booking=True)
+
+        EmailTemplateType.set_default(EmailTemplateType.NOTIFY_HOST__REQ_HOST_VOLUNTEER, manual_sending_visit_enabled=True, send_to_potential_hosts=True, enable_booking=True, avoid_already_assigned=True)
+        EmailTemplateType.set_default(EmailTemplateType.NOTIFY_HOST__REQ_TEACHER_VOLUNTEER, manual_sending_visit_enabled=True, send_to_potential_teachers=True, enable_booking=True, avoid_already_assigned=True)
+        EmailTemplateType.set_default(EmailTemplateType.NOTIFY_HOST__ASSOCIATED, manual_sending_visit_enabled=True, send_to_visit_added_host=True)
+        EmailTemplateType.set_default(EmailTemplateType.NOTIFY_TEACHER__ASSOCIATED, manual_sending_visit_enabled=True, send_to_visit_added_teacher=True)
+        EmailTemplateType.set_default(EmailTemplateType.NOTIFY_HOST__HOSTROLE_IDLE, send_to_editors=True, enable_days=True)
+        EmailTemplateType.set_default(EmailTemplateType.NOTIFY_HOST__REQ_ROOM, manual_sending_visit_enabled=True)
+
+        EmailTemplateType.set_default(EmailTemplateType.NOTIFY_ALL__BOOKING_CANCELED, manual_sending_visit_enabled=True, manual_sending_booking_enabled=True, manual_sending_booking_mpv_enabled=True, send_to_contactperson=True, send_to_booker=True, send_to_visit_hosts=True, send_to_visit_teachers=True, enable_booking=True)
+        EmailTemplateType.set_default(EmailTemplateType.NOTIFY_ALL__BOOKING_COMPLETE, manual_sending_visit_enabled=True, manual_sending_booking_enabled=True, manual_sending_booking_mpv_enabled=True, send_to_booker=True, send_to_visit_hosts=True, send_to_visit_teachers=True, enable_booking=True)
+        EmailTemplateType.set_default(EmailTemplateType.NOTITY_ALL__BOOKING_REMINDER, manual_sending_visit_enabled=True, manual_sending_booking_enabled=True, manual_sending_booking_mpv_enabled=True, send_to_contactperson=True, send_to_booker=True, send_to_visit_hosts=True, send_to_visit_teachers=True, enable_days=True)
+
+        EmailTemplateType.set_default(EmailTemplateType.NOTIFY_ALL_EVALUATION, manual_sending_visit_enabled=True)
+
+        EmailTemplateType.set_default(EmailTemplateType.SYSTEM__BASICMAIL_ENVELOPE)
+        EmailTemplateType.set_default(EmailTemplateType.SYSTEM__EMAIL_REPLY)
+        EmailTemplateType.set_default(EmailTemplateType.SYSTEM__USER_CREATED)
+
+    @staticmethod
+    def get_keys(**kwargs):
+        return [template_type.key for template_type in EmailTemplateType.objects.filter(**kwargs)]
+
+    @staticmethod
+    def get_choices(**kwargs):
+        keyset = EmailTemplateType.get_keys(**kwargs)
+
+        return [
+            (key, label)
+            for (key, label) in EmailTemplateType.key_choices
+            if key in keyset
+        ]
+
+    @staticmethod
+    def editor_keys():
+        return EmailTemplateType.get_keys(send_to_editors=True)
+
+    @staticmethod
+    def contact_person_keys():
+        return EmailTemplateType.get_keys(send_to_contactperson=True)
+
+    @staticmethod
+    def booker_keys():
+        return EmailTemplateType.get_keys(send_to_booker=True)
+
+    @staticmethod
+    def unit_hosts_keys():
+        return EmailTemplateType.get_keys(send_to_unit_hosts=True)
+
+    @staticmethod
+    def unit_teachers_keys():
+        return EmailTemplateType.get_keys(send_to_unit_teachers=True)
+
+    @staticmethod
+    def visit_hosts_keys():
+        return EmailTemplateType.get_keys(send_to_visit_hosts=True)
+
+    @staticmethod
+    def visit_teachers_keys():
+        return EmailTemplateType.get_keys(send_to_visit_teachers=True)
+
+    @staticmethod
+    def visit_added_host_keys():
+        return EmailTemplateType.get_keys(send_to_visit_added_host=True)
+
+    @staticmethod
+    def visit_added_teacher_keys():
+        return EmailTemplateType.get_keys(send_to_visit_added_teacher=True)
+
+
+
+
+class EmailTemplate(models.Model):
+
+    # TODO: In a later phase we should refactor this into a set of
+    # statically defined instances with values determining the belongings
+    # of each template
+
+    NOTIFY_GUEST__BOOKING_CREATED = 1  # ticket 13806
+    NOTIFY_EDITORS__BOOKING_CREATED = 2  # ticket 13807
+    NOTIFY_HOST__REQ_TEACHER_VOLUNTEER = 3  # ticket 13808
+    NOTIFY_HOST__REQ_HOST_VOLUNTEER = 4  # ticket 13809
+    NOTIFY_HOST__ASSOCIATED = 5  # ticket 13810
+    NOTIFY_HOST__REQ_ROOM = 6  # ticket 13811
+    NOTIFY_GUEST__GENERAL_MSG = 7  # ticket 13812
+    NOTIFY_ALL__BOOKING_COMPLETE = 8  # ticket 13813
+    NOTIFY_ALL__BOOKING_CANCELED = 9  # ticket 13814
+    NOTITY_ALL__BOOKING_REMINDER = 10  # ticket 13815
+    NOTIFY_HOST__HOSTROLE_IDLE = 11  # ticket 13805
+    SYSTEM__BASICMAIL_ENVELOPE = 12
+    SYSTEM__EMAIL_REPLY = 13
+    SYSTEM__USER_CREATED = 14
+    NOTIFY_GUEST_REMINDER = 15  # Ticket 15510
+    NOTIFY_GUEST__SPOT_OPEN = 16  # Ticket 13804
+    NOTIFY_GUEST__SPOT_ACCEPTED = 17  # Ticket 13804
+    NOTIFY_GUEST__SPOT_REJECTED = 18  # Ticket 13804
+    NOTIFY_EDITORS__SPOT_REJECTED = 19  # Ticket 13804
+    NOTIFY_GUEST__BOOKING_CREATED_WAITING = 20  # ticket 13804
+    NOTIFY_TEACHER__ASSOCIATED = 21  # Ticket 15701
+    NOTIFY_ALL_EVALUATION = 22  # Ticket 15701
+
+    # Choice labels
+    key_choices = EmailTemplateType.key_choices
+
+    @staticmethod
     def get_name(template_key):
         for key, label in EmailTemplate.key_choices:
             if key == template_key:
                 return label
-
-    # Templates available for manual sending from visits
-    visit_manual_keys = [
-        NOTIFY_GUEST__GENERAL_MSG,
-        NOTIFY_HOST__ASSOCIATED,
-        NOTIFY_TEACHER__ASSOCIATED,
-        NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
-        NOTIFY_HOST__REQ_HOST_VOLUNTEER,
-        NOTIFY_HOST__REQ_ROOM,
-        NOTIFY_ALL__BOOKING_COMPLETE,
-        NOTIFY_ALL__BOOKING_CANCELED,
-        NOTITY_ALL__BOOKING_REMINDER,
-        NOTIFY_ALL_EVALUATION,
-        NOTIFY_GUEST_REMINDER,
-        NOTIFY_GUEST__SPOT_OPEN
-    ]
-
-    # Templates available for manual sending from mpvs
-    visit_manual_mpv_keys = [
-        NOTIFY_GUEST__GENERAL_MSG
-    ]
-
-    # Templates that redirect from sub to mpv
-    visit_manual_mpv_redirect_keys = visit_manual_mpv_keys
-
-    # Templates available for manual sending from bookings
-    booking_manual_keys = [
-        NOTIFY_GUEST__GENERAL_MSG,
-        NOTIFY_GUEST__BOOKING_CREATED,
-        NOTIFY_GUEST__BOOKING_CREATED_WAITING,
-        NOTIFY_GUEST__GENERAL_MSG,
-        NOTIFY_ALL__BOOKING_COMPLETE,
-        NOTIFY_ALL__BOOKING_CANCELED,
-        NOTITY_ALL__BOOKING_REMINDER,
-        NOTIFY_GUEST_REMINDER
-    ]
-
-    # Templates available for manual sending from mpv bookings
-    booking_manual_mpv_keys = booking_manual_keys
-
-    # Templates that will be autosent to editors for the given unit
-    editor_keys = [
-        NOTIFY_HOST__HOSTROLE_IDLE,
-        SYSTEM__EMAIL_REPLY,
-    ]
-
-    # Templates that will be autosent to visit.tilbudsansvarlig
-    contact_person_keys = [
-        NOTIFY_EDITORS__BOOKING_CREATED,
-        NOTIFY_ALL__BOOKING_CANCELED,
-        NOTITY_ALL__BOOKING_REMINDER,
-        NOTIFY_EDITORS__SPOT_REJECTED
-    ]
-
-    # Templates that will be autosent to booker
-    booker_keys = [
-        NOTIFY_GUEST__BOOKING_CREATED,
-        NOTIFY_GUEST__BOOKING_CREATED_WAITING,
-        NOTIFY_ALL__BOOKING_COMPLETE,
-        NOTIFY_ALL__BOOKING_CANCELED,
-        NOTITY_ALL__BOOKING_REMINDER,
-        NOTIFY_GUEST__SPOT_ACCEPTED,
-        NOTIFY_GUEST__SPOT_REJECTED
-    ]
-    # Templates that will be autosent to all hosts in the unit
-    unit_hosts_keys = [
-    ]
-    # Templates that will be autosent to all teachers in the unit
-    unit_teachers_keys = [
-    ]
-    # Templates that will be sent to potential hosts
-    potential_hosts_keys = [
-        NOTIFY_HOST__REQ_HOST_VOLUNTEER
-    ]
-    # Templates that will be sent to potential teachers
-    potential_teachers_keys = [
-        NOTIFY_HOST__REQ_TEACHER_VOLUNTEER
-    ]
-    # Templates that will be autosent to hosts in the visit
-    visit_hosts_keys = [
-        NOTIFY_ALL__BOOKING_COMPLETE,
-        NOTIFY_ALL__BOOKING_CANCELED,
-        NOTITY_ALL__BOOKING_REMINDER
-    ]
-    # Templates that will be autosent to teachers in the visit
-    visit_teachers_keys = [
-        NOTIFY_ALL__BOOKING_COMPLETE,
-        NOTIFY_ALL__BOOKING_CANCELED,
-        NOTITY_ALL__BOOKING_REMINDER
-    ]
-    # Template that will be autosent to hosts
-    # when they are added to a visit
-    visit_added_host_key = NOTIFY_HOST__ASSOCIATED
-
-    # Template that will be autosent to teachers
-    # when they are added to a visit
-    visit_added_teacher_key = NOTIFY_TEACHER__ASSOCIATED
-
-    # Templates where the "days" field makes sense
-    enable_days = [
-        NOTITY_ALL__BOOKING_REMINDER,
-        NOTIFY_HOST__HOSTROLE_IDLE
-    ]
-
-    # Templates where the {{ booking }} variable makes sense
-    enable_booking = [
-        NOTIFY_GUEST__BOOKING_CREATED,
-        NOTIFY_GUEST__BOOKING_CREATED_WAITING,
-        NOTIFY_EDITORS__BOOKING_CREATED,
-        NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
-        NOTIFY_HOST__REQ_HOST_VOLUNTEER,
-        NOTIFY_GUEST__GENERAL_MSG,
-        NOTIFY_ALL__BOOKING_COMPLETE,
-        NOTIFY_ALL__BOOKING_CANCELED,
-        NOTITY_ALL__BOOKING_REMINDER,
-        NOTIFY_GUEST__SPOT_OPEN,
-        NOTIFY_GUEST__SPOT_ACCEPTED,
-        NOTIFY_GUEST__SPOT_REJECTED,
-        NOTIFY_EDITORS__SPOT_REJECTED
-    ]
-
-    # Templates where already assigned people will not receive mails
-    avoid_already_assigned = [
-        NOTIFY_HOST__REQ_HOST_VOLUNTEER,
-        NOTIFY_HOST__REQ_TEACHER_VOLUNTEER
-    ]
-
-    default = [
-        NOTIFY_GUEST__BOOKING_CREATED,
-        NOTIFY_EDITORS__BOOKING_CREATED,
-        NOTIFY_ALL__BOOKING_COMPLETE,
-    ]
 
     key = models.IntegerField(
         verbose_name=u'Type',
@@ -665,6 +736,10 @@ class EmailTemplate(models.Model):
         blank=True,
         on_delete=models.SET_NULL,
     )
+
+    @property
+    def type(self):
+        return EmailTemplateType.objects.get(key=self.key)
 
     @property
     def name(self):
@@ -771,7 +846,7 @@ class EmailTemplate(models.Model):
     @staticmethod
     def add_defaults_to_all():
         for product in Product.objects.all():
-            for template_key in EmailTemplate.default:
+            for template_key in EmailTemplateType.get_keys(is_default=True):
                 if product.productautosend_set.filter(
                     template_key=template_key
                 ).count() == 0:
@@ -1687,15 +1762,16 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             return self.potentielle_undervisere.all()
 
     def get_recipients(self, template_key):
+        template_type = EmailTemplateType.get(template_key)
         recipients = self.organizationalunit.get_recipients(template_key)
 
-        if template_key in EmailTemplate.potential_hosts_keys:
+        if template_type.send_to_potential_hosts:
             recipients.extend(self.potential_hosts.all())
 
-        if template_key in EmailTemplate.potential_teachers_keys:
+        if template_type.send_to_potential_teachers:
             recipients.extend(self.potential_teachers.all())
 
-        if template_key in EmailTemplate.contact_person_keys:
+        if template_type.send_to_contactperson:
             contacts = []
             if self.tilbudsansvarlig:
                 contacts.append(self.tilbudsansvarlig)
@@ -2741,16 +2817,17 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         return reverse('visit-view', args=[self.pk])
 
     def get_recipients(self, template_key):
+        template_type = EmailTemplateType.get(template_key)
         product = self.product
         if product:
             recipients = product.get_recipients(template_key)
         else:
             recipients = []
-        if template_key in EmailTemplate.visit_hosts_keys:
+        if template_type.send_to_visit_hosts:
             recipients.extend(self.hosts.all())
-        if template_key in EmailTemplate.visit_teachers_keys:
+        if template_type.send_to_visit_teachers:
             recipients.extend(self.teachers.all())
-        if template_key in EmailTemplate.avoid_already_assigned:
+        if template_type.avoid_already_assigned:
             for item in self.hosts.all():
                 if item in recipients:
                     recipients.remove(item)
@@ -2819,11 +2896,12 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     # Sends a message to defined recipients pertaining to the Visit
     def autosend(self, template_key, recipients=None,
                  only_these_recipients=False):
+        template_type = EmailTemplateType.get(template_key)
         if self.is_multiproductvisit:
             return self.multiproductvisit.autosend(
-                template_key, recipients, only_these_recipients
+                template_type.key, recipients, only_these_recipients
             )
-        if self.autosend_enabled(template_key):
+        if self.autosend_enabled(template_type.key):
             product = self.product
             unit = product.organizationalunit
             if recipients is None:
@@ -2831,21 +2909,23 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             else:
                 recipients = set(recipients)
             if not only_these_recipients:
-                recipients.update(self.get_recipients(template_key))
+                recipients.update(self.get_recipients(template_type.key))
+
+            print "Autosend template %s" % EmailTemplateType.get_name(template_key)
+            print "Recipients: %s" % unicode(recipients)
 
             KUEmailMessage.send_email(
-                template_key,
+                template_type.key,
                 {'visit': self, 'besoeg': self, 'product': product},
                 list(recipients),
                 self,
                 unit
             )
 
-            if not only_these_recipients and \
-                    template_key in EmailTemplate.booker_keys:
+            if not only_these_recipients and template_type.send_to_booker:
                 for booking in self.bookings.all():
                     KUEmailMessage.send_email(
-                        template_key,
+                        template_type.key,
                         {
                             'visit': self,
                             'besoeg': self,
@@ -3358,7 +3438,8 @@ class MultiProductVisit(Visit):
     # Sends a message to defined recipients pertaining to the Visit
     def autosend(self, template_key, recipients=None,
                  only_these_recipients=False):
-        if self.autosend_enabled(template_key):
+        template_type = EmailTemplateType.get(template_key)
+        if self.autosend_enabled(template_type.key):
             unit = None  # TODO: What should the unit be?
             if recipients is None:
                 recipients = set()
@@ -3370,18 +3451,17 @@ class MultiProductVisit(Visit):
             params = {'visit': self, 'products': self.products}
 
             KUEmailMessage.send_email(
-                template_key,
+                template_type.key,
                 params,
                 list(recipients),
                 self,
                 unit
             )
 
-            if not only_these_recipients and \
-                    template_key in EmailTemplate.booker_keys:
+            if not only_these_recipients and template_type.send_to_booker:
                 for booking in self.bookings.all():
                     KUEmailMessage.send_email(
-                        template_key,
+                        template_type.key,
                         merge_dicts(params, {
                             'booking': booking,
                             'booker': booking.booker
@@ -3518,6 +3598,10 @@ class Autosend(models.Model):
         default=True
     )
 
+    @property
+    def template_type(self):
+        return EmailTemplateType.get(self.template_key)
+
     def get_name(self):
         return unicode(EmailTemplate.get_name(self.template_key))
 
@@ -3530,7 +3614,7 @@ class Autosend(models.Model):
 
     @property
     def days_relevant(self):
-        return self.template_key in EmailTemplate.enable_days
+        return self.template_type.enable_days
 
 
 class ProductAutosend(Autosend):
@@ -4092,14 +4176,16 @@ class Booking(models.Model):
         return settings.PUBLIC_URL + self.get_absolute_url()
 
     def get_recipients(self, template_key):
+        template_type = EmailTemplateType.get(template_key)
         recipients = self.visit.get_recipients(template_key)
-        if template_key in EmailTemplate.booker_keys:
+        if template_type.send_to_booker:
             recipients.append(self.booker)
         return recipients
 
     def autosend(self, template_key, recipients=None,
                  only_these_recipients=False):
-        if self.visit.autosend_enabled(template_key):
+        template_type = EmailTemplateType.get(template_key)
+        if self.visit.autosend_enabled(template_type.key):
             product = self.visit.product
             unit = product.organizationalunit
             if recipients is None:

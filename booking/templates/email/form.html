@@ -271,36 +271,40 @@
             {% autoescape off %}
             var map = [
                 {
-                    'keys': {{ object.editor_keys | jsonify }},
+                    'keys': {{ object.type.editor_keys | jsonify }},
                     'label': "{% trans 'Redaktører på tilbuddet' %}"
                 },
                 {
-                    'keys': {{ object.contact_person_keys | jsonify }},
+                    'keys': {{ object.type.contact_person_keys | jsonify }},
                     'label': "{% trans 'Kontaktpersoner på tilbuddet' %}"
                 },
                 {
-                    'keys': {{ object.booker_keys | jsonify }},
+                    'keys': {{ object.type.booker_keys | jsonify }},
                     'label': "{% trans 'Booker af et besøg' %}"
                 },
                 {
-                    'keys': {{ object.unit_hosts_keys | jsonify }},
+                    'keys': {{ object.type.unit_hosts_keys | jsonify }},
                     'label': "{% trans 'Potentielle værter i enheden' %}"
                 },
                 {
-                    'keys': {{ object.unit_teachers_keys | jsonify }},
+                    'keys': {{ object.type.unit_teachers_keys | jsonify }},
                     'label': "{% trans 'Potentielle undervisere i enheden' %}"
                 },
                 {
-                    'keys': {{ object.visit_hosts_keys | jsonify }},
+                    'keys': {{ object.type.visit_hosts_keys | jsonify }},
                     'label': "{% trans 'Tildelte værter for besøget' %}"
                 },
                 {
-                    'keys': {{ object.visit_teachers_keys | jsonify }},
+                    'keys': {{ object.type.visit_teachers_keys | jsonify }},
                     'label': "{% trans 'Tildelte undervisere for besøget' %}"
                 },
                 {
-                    'keys': [{{ object.visit_added_host_key | jsonify }}],
+                    'keys': {{ object.type.visit_added_host_keys | jsonify }},
                     'label': "{% trans 'Værter som tildeles et besøg (når de tildeles)' %}"
+                },
+                {
+                    'keys': {{ object.type.visit_added_teacher_keys | jsonify }},
+                    'label': "{% trans 'Undervisere som tildeles et besøg (når de tildeles)' %}"
                 }
             ];
             {% endautoescape %}
@@ -324,7 +328,7 @@
                 }
             };
             {% autoescape off %}
-            var enable_booking = {{ object.enable_booking | jsonify }};
+            var enable_booking = {{ object.type.enable_booking | jsonify }};
             {% endautoescape %}
             var updateFields = function() {
                 var value = parseInt(keyselect.val(), 10),

@@ -46,7 +46,7 @@ from booking.models import Room
 from booking.models import PostCode, School
 from booking.models import Booking, Guest
 from booking.models import ProductGymnasieFag, ProductGrundskoleFag
-from booking.models import EmailTemplate
+from booking.models import EmailTemplateType, EmailTemplate
 from booking.models import log_action
 from booking.models import LOGACTION_CREATE, LOGACTION_CHANGE
 from booking.models import RoomResponsible
@@ -1467,11 +1467,8 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
                 initial = []
                 if not self.object or not self.object.pk:
                     initial = [
-                        {
-                            'template_key': item,
-                            'active': True
-                        }
-                        for item in EmailTemplate.default
+                        {'template_key': item, 'active': True}
+                        for item in EmailTemplateType.get_keys(is_default=True)
                     ]
                 forms['autosendformset'] = ProductAutosendFormSet(
                     None, instance=self.object, initial=initial
@@ -1580,7 +1577,9 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
             )
         )
         context['organizationalunit'] = self.object.organizationalunit
-        context['autosend_enable_days'] = EmailTemplate.enable_days
+        context['autosend_enable_days'] = EmailTemplateType.get_keys(
+            enable_days=True
+        )
 
         context['hastime'] = self.object.type in [
             Product.STUDENT_FOR_A_DAY, Product.STUDIEPRAKTIK,
@@ -1929,9 +1928,9 @@ class VisitNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
         pk = kwargs['pk']
         self.object = Visit.objects.get(id=pk)
         self.get_template_key(request)
+        template_type = EmailTemplateType.get(self.template_key)
         if self.object.is_multi_sub and \
-                self.template_key in \
-                EmailTemplate.visit_manual_mpv_redirect_keys:
+                template_type.manual_sending_mpv_enabled:
             self.object = self.object.multi_master
         elif self.object.is_multiproductvisit:
             self.object = self.object.multiproductvisit
@@ -2990,16 +2989,10 @@ class BookingDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
                 user.userprofile.can_notify(self.object):
             context['can_notify'] = True
 
-        # keyset = EmailTemplate.booking_manual_mpv_keys \
-        #     if self.object.visit.is_multiproductvisit \
-        #     else EmailTemplate.booking_manual_keys
-        keyset = EmailTemplate.booking_manual_keys
-
-        context['emailtemplates'] = [
-            (key, label)
-            for (key, label) in EmailTemplate.key_choices
-            if key in keyset
-        ]
+        if self.object.visit.is_multiproductvisit:
+            context['emailtemplates'] = EmailTemplateType.get_choices(manual_sending_booking_mpv_enabled=True)
+        else:
+            context['emailtemplates'] = EmailTemplateType.get_choices(manual_sending_booking_enabled=True)
 
         context.update(kwargs)
 
@@ -3036,16 +3029,11 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
 
         context['modal'] = VisitNotifyView.modal
 
-        keyset = EmailTemplate.visit_manual_mpv_keys \
-            if self.object.is_multiproductvisit \
-            else EmailTemplate.visit_manual_keys
-        # keyset = EmailTemplate.visit_manual_keys
+        if self.object.is_multiproductvisit:
+            context['emailtemplates'] = EmailTemplateType.get_choices(manual_sending_mpv_enabled=True)
+        else:
+            context['emailtemplates'] = EmailTemplateType.get_choices(manual_sending_visit_enabled=True)
 
-        context['emailtemplates'] = [
-            (key, label)
-            for (key, label) in EmailTemplate.key_choices
-            if key in keyset
-        ]
         context['emailtemplate_waitinglist'] = \
             EmailTemplate.NOTIFY_GUEST__SPOT_OPEN
         user = self.request.user

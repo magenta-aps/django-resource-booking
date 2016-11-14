@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from booking.models import StudyMaterial, ProductAutosend, Booking
+from booking.models import StudyMaterial, ProductAutosend, Booking, \
+    EmailTemplateType
 from booking.models import Subject, BookingGrundskoleSubjectLevel
 from booking.models import Locality, OrganizationalUnitType, OrganizationalUnit
 from booking.models import Product
@@ -631,16 +632,19 @@ class ProductAutosendForm(forms.ModelForm):
             template_key = kwargs['instance'].template_key
         elif 'initial' in kwargs:
             template_key = kwargs['initial']['template_key']
-        if template_key is not None and \
-                template_key not in EmailTemplate.enable_days:
-            self.fields['days'].widget = forms.HiddenInput()
-        elif template_key == EmailTemplate.NOTITY_ALL__BOOKING_REMINDER:
-            self.fields['days'].help_text = _(u'Notifikation vil blive afsendt'
-                                              u' dette antal dage før besøget')
-        elif template_key == EmailTemplate.NOTIFY_HOST__HOSTROLE_IDLE:
-            self.fields['days'].help_text = _(u'Notifikation vil blive afsendt'
-                                              u' dette antal dage efter første'
-                                              u' booking er foretaget')
+        if template_key is not None:
+            template_type = EmailTemplateType.get(template_key)
+            if not template_type.enable_days:
+                self.fields['days'].widget = forms.HiddenInput()
+            elif template_key == EmailTemplate.NOTITY_ALL__BOOKING_REMINDER:
+                self.fields['days'].help_text = _(u'Notifikation vil blive '
+                                                  u'afsendt dette antal dage '
+                                                  u'før besøget')
+            elif template_key == EmailTemplate.NOTIFY_HOST__HOSTROLE_IDLE:
+                self.fields['days'].help_text = _(u'Notifikation vil blive '
+                                                  u'afsendt dette antal dage '
+                                                  u'efter første booking er '
+                                                  u'foretaget')
 
     def label(self):
         return EmailTemplate.get_name(self.initial['template_key'])

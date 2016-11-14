@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from booking.models import Visit, VisitAutosend, MultiProductVisit
-from booking.models import EmailTemplate
+from booking.models import EmailTemplate, EmailTemplateType
 from django import forms
 from django.forms import inlineformset_factory
 from django.utils.translation import ugettext_lazy as _
@@ -183,16 +183,19 @@ class VisitAutosendForm(forms.ModelForm):
             template_key = kwargs['instance'].template_key
         elif 'initial' in kwargs:
             template_key = kwargs['initial']['template_key']
-        if template_key is not None and \
-                template_key not in EmailTemplate.enable_days:
-            self.fields['days'].widget = forms.HiddenInput()
-        elif template_key == EmailTemplate.NOTITY_ALL__BOOKING_REMINDER:
-            self.fields['days'].help_text = _(u'Notifikation vil blive afsendt'
-                                              u' dette antal dage før besøget')
-        elif template_key == EmailTemplate.NOTIFY_HOST__HOSTROLE_IDLE:
-            self.fields['days'].help_text = _(u'Notifikation vil blive afsendt'
-                                              u' dette antal dage efter første'
-                                              u' booking er foretaget')
+        if template_key is not None:
+            template_type = EmailTemplateType.get(template_key)
+            if not template_type.enable_days:
+                self.fields['days'].widget = forms.HiddenInput()
+            elif template_key == EmailTemplate.NOTITY_ALL__BOOKING_REMINDER:
+                self.fields['days'].help_text = _(u'Notifikation vil blive '
+                                                  u'afsendt dette antal dage '
+                                                  u'før besøget')
+            elif template_key == EmailTemplate.NOTIFY_HOST__HOSTROLE_IDLE:
+                self.fields['days'].help_text = _(u'Notifikation vil blive '
+                                                  u'afsendt dette antal dage '
+                                                  u'efter første booking '
+                                                  u'er foretaget')
 
     @property
     def associated_visit(self):
