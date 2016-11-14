@@ -1,1 +1,1 @@
-Anmodning om deltagelse som vært for besøget "{{ product.title }}"
+Anmodning om deltagelse som vært for besøget {{ visit.display_title }}

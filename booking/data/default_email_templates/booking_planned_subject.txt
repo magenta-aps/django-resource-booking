@@ -1,1 +1,1 @@
-Besøg "{{ product.title }}" færdigplanlagt
+Besøg {{ visit.display_title }} færdigplanlagt

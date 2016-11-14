@@ -1,1 +1,1 @@
-Besked om besøg "{{ product.title }}"
+Besked om besøg {{ visit.display_title }}

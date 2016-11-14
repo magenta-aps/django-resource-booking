@@ -976,6 +976,16 @@ a.template-overridden:visited {
     display: inline;
 }
 
+.autosend-inherit-active {
+    font-weight: bold;
+    color: #008000;
+}
+
+.autosend-inherit-inactive {
+    font-weight: bold;
+    color: #800000;
+}
+
 /* > Admin-visit-search start */
 
 #adminvisitsearch .dl-horizontal dt {

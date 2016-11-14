@@ -176,9 +176,9 @@ class FullURLNode(defaulttags.Node):
                 user = user.resolve(context)
             elif isinstance(user, basestring):
                 user = context.get(user)
-            if isinstance(user, User):
-                pass
-            elif isinstance(user, UserProfile):
+            if isinstance(user, dict) and 'user' in user:
+                user = user['user']
+            if isinstance(user, UserProfile):
                 user = user.user
 
             if isinstance(user, User):

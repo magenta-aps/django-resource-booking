@@ -36,8 +36,8 @@ from django.views.defaults import bad_request
 
 from profile.models import EDIT_ROLES
 from profile.models import role_to_text
-from booking.models import Product, Visit, StudyMaterial, \
-    ProductAutosend
+from booking.models import Product, Visit, StudyMaterial
+from booking.models import ProductAutosend
 from booking.models import KUEmailMessage
 from booking.models import Subject
 from booking.models import OrganizationalUnit
@@ -3387,7 +3387,7 @@ class EmailTemplateDeleteView(HasBackButtonMixin, LoginRequiredMixin,
         ]
 
 
-class EmailReplyView(DetailView):
+class EmailReplyView(BreadcrumbMixin, DetailView):
     model = KUEmailMessage
     template_name = "email/reply.html"
     slug_field = 'reply_nonce'
@@ -3405,12 +3405,12 @@ class EmailReplyView(DetailView):
                 self.form = EmailReplyForm(self.request.POST)
         return self.form
 
-    def get_visit(self):
+    def get_product(self):
         occ = None
 
         try:
             ct = ContentType.objects.get(pk=self.object.content_type_id)
-            if ct.model_class() == Visit:
+            if ct.model_class() == Product:
                 occ = ct.get_object_for_this_type(pk=self.object.object_id)
         except Exception as e:
             print "Error when getting email-reply object: %s" % e
@@ -3418,17 +3418,11 @@ class EmailReplyView(DetailView):
         return occ
 
     def get_context_data(self, **kwargs):
-        context = super(EmailReplyView, self).get_context_data(**kwargs)
-
+        context = {}
         context['form'] = self.get_form()
-
-        context['breadcrumbs'] = [
-            {'text': _(u'Svar på e-mail')},
-        ]
-
-        context['visit'] = self.get_visit()
-
-        return context
+        context['product'] = self.get_product()
+        context.update(kwargs)
+        return super(EmailReplyView, self).get_context_data(**context)
 
     def post(self, request, *args, **kwargs):
         form = self.get_form()
@@ -3436,20 +3430,19 @@ class EmailReplyView(DetailView):
             self.object = self.get_object()
             orig_message = self.object
             reply = form.cleaned_data.get('reply', "").strip()
-            visit = self.get_visit()
-            recipients = visit.product.organizationalunit.get_editors()
+            product = self.get_product()
+            recipients = product.organizationalunit.get_editors()
             KUEmailMessage.send_email(
                 EmailTemplate.SYSTEM__EMAIL_REPLY,
                 {
-                    'visit': visit,
-                    'product': visit.product,
+                    'product': product,
                     'orig_message': orig_message,
                     'reply': reply,
                     'log_message': _(u"Svar:") + "\n" + reply
                 },
                 recipients,
-                visit,
-                organizationalunit=visit.product.organizationalunit
+                product,
+                organizationalunit=product.organizationalunit
             )
             result_url = reverse(
                 'reply-to-email', args=[self.object.reply_nonce]
@@ -3457,6 +3450,17 @@ class EmailReplyView(DetailView):
             return redirect(result_url + '?thanks=1')
         else:
             return self.get(request, *args, **kwargs)
+
+    def get_breadcrumb_args(self):
+        return [self.get_product()]
+
+    @staticmethod
+    def build_breadcrumbs(product):
+        breadcrumbs = []
+        if product:
+            breadcrumbs = ProductDetailView.build_breadcrumbs(product)
+        breadcrumbs.append({'text': _(u'Svar på e-mail')})
+        return breadcrumbs
 
 
 class EvaluationOverviewView(LoginRequiredMixin, BreadcrumbMixin, ListView):

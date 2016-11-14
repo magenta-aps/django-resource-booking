@@ -162,18 +162,19 @@ class VisitAutosendForm(forms.ModelForm):
                 return VisitAutosendForm.ACTIVITY_INHERIT
             if kwargs['instance'].enabled:
                 return VisitAutosendForm.ACTIVITY_ENABLED
+            else:
+                return VisitAutosendForm.ACTIVITY_DISABLED
         elif 'initial' in kwargs:
             if kwargs['initial']['inherit']:
                 return VisitAutosendForm.ACTIVITY_INHERIT
             if kwargs['initial']['enabled']:
                 return VisitAutosendForm.ACTIVITY_ENABLED
-        else:
-            return VisitAutosendForm.ACTIVITY_DISABLED
+        return VisitAutosendForm.ACTIVITY_INHERIT
 
     def __init__(self, *args, **kwargs):
-        if 'initial' not in kwargs:
-            kwargs['initial'] = {}
-        kwargs['initial'].update({'active': self.get_active_value(kwargs)})
+        initial = kwargs.get('initial', {})
+        initial.update({'active': self.get_active_value(kwargs)})
+        kwargs['initial'] = initial
 
         super(VisitAutosendForm, self).__init__(*args, **kwargs)
 
@@ -196,10 +197,11 @@ class VisitAutosendForm(forms.ModelForm):
     @property
     def associated_visit(self):
         if 'visit' in self.initial:
-            if isinstance(self.initial['visit'], Visit):
-                return self.initial['visit']
-            elif type(self.initial['visit']) == int:
-                return Visit.objects.get(id=self.initial['visit'])
+            visit = self.initial['visit']
+            if type(visit) == int:
+                visit = Visit.objects.get(id=visit)
+            if isinstance(visit, Visit):
+                return visit
         elif self.instance:
             return self.instance.visit
 
@@ -211,7 +213,7 @@ class VisitAutosendForm(forms.ModelForm):
         return EmailTemplate.get_name(self.template_key)
 
     def inherit_from(self):
-        return self.associated_visit.get_autosend(self.template_key)
+        return self.associated_visit.product.get_autosend(self.template_key)
 
 
 VisitAutosendFormSetBase = inlineformset_factory(
@@ -241,7 +243,7 @@ class VisitAutosendFormSet(VisitAutosendFormSetBase):
                             'enabled': False,
                             'inherit': False,
                             'days': '',
-                            'visit': kwargs['instance']
+                            'visit': kwargs['instance'].pk
                         })
                 initial.sort(key=lambda choice: choice['template_key'])
                 kwargs['initial'] = initial

@@ -2651,7 +2651,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         if hasattr(self, 'eventtime'):
             return _(u'Besøg %s - %s - %s') % (
                 self.pk,
-                unicode(self.product.title),
+                unicode(self.real.display_title),
                 unicode(self.eventtime.interval_display)
             )
         else:
@@ -2764,20 +2764,16 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         return recipients
 
     def create_inheriting_autosends(self):
-        products = self.products
-        if len(products):
-            for product in products:
-                if product:
-                    for template_key, label in EmailTemplate.key_choices:
-                        if not self.get_autosend(template_key, False, False):
-                            visitautosend = VisitAutosend(
-                                visit=self,
-                                inherit=True,
-                                template_key=template_key,
-                                days=None,
-                                enabled=False
-                            )
-                            visitautosend.save()
+        for template_key, label in EmailTemplate.key_choices:
+            if not self.get_autosend(template_key, False, False):
+                visitautosend = VisitAutosend(
+                    visit=self,
+                    inherit=True,
+                    template_key=template_key,
+                    days=None,
+                    enabled=False
+                )
+                visitautosend.save()
 
     def autosend_inherits(self, template_key):
         s = self.visitautosend_set.filter(
@@ -4405,7 +4401,7 @@ class KUEmailMessage(models.Model):
                 else:
                     email['full'] = address
 
-                email['get_full_name'] = email['full']
+                email['get_full_name'] = email.get('name', email['full'])
 
                 emails[address] = email
 
@@ -4422,7 +4418,7 @@ class KUEmailMessage(models.Model):
             # If we know the visit and the guest we can find the
             # booking if it is missing.
             if 'booking' not in context and \
-               'bosoeg' in context and email['guest']:
+               'besoeg' in context and email['guest']:
                 context['booking'] = Booking.objects.filter(
                     visit=context['besoeg'],
                     booker=context['guest']
