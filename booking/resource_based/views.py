@@ -244,6 +244,11 @@ class ResourceCreateView(BackMixin, BreadcrumbMixin, FormView):
     form_class = ResourceTypeForm
     just_preserve_back = True
 
+    def get_form_kwargs(self):
+        kwargs = super(ResourceCreateView, self).get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
     def post(self, request, *args, **kwargs):
         form = self.get_form()
         context = {'form': form}

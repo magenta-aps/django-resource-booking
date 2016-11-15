@@ -54,13 +54,20 @@ class ResourceTypeForm(forms.Form):
         ],
         required=True
     )
-    unit = forms.ChoiceField(
+    unit = forms.ModelChoiceField(
         label=_(u'Enhed'),
-        choices=[
-            (x.id, x.name)
-            for x in OrganizationalUnit.objects.all()
-        ]
+        queryset=OrganizationalUnit.objects.all(),
     )
+
+    def __init__(self, **kwargs):
+        user = kwargs.pop("user")
+        kwargs['initial']['unit'] = user.userprofile.organizationalunit.pk
+
+        res = super(ResourceTypeForm, self).__init__(**kwargs)
+
+        self['unit'].field.queryset = user.userprofile.get_unit_queryset()
+
+        return res
 
 
 class EditResourceForm(forms.ModelForm):
