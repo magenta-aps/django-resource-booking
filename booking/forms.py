@@ -320,9 +320,10 @@ class ProductForm(forms.ModelForm):
 
             'price': NumberInput(attrs={'class': 'form-control input-sm'}),
             'type': Select(attrs={'class': 'form-control input-sm'}),
-            'preparation_time': Textarea(
-                attrs={'class': 'form-control input-sm'}
-            ),
+            'preparation_time': TextInput(attrs={
+                'class': 'titlefield form-control input-sm',
+                'rows': 1, 'size': 62
+            }),
             'comment': Textarea(attrs={'class': 'form-control input-sm'}),
             'institution_level': Select(
                 attrs={'class': 'form-control input-sm'}
