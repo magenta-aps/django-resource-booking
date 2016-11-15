@@ -20,13 +20,6 @@ class UserCreateForm(UserCreationForm):
         queryset=OrganizationalUnit.objects.all(),
         label=_(u'Enhed')
     )
-    availability_text = forms.CharField(
-        widget=forms.Textarea,
-        required=False,
-        label=UserProfile._meta.get_field_by_name(
-            'availability_text'
-        )[0].verbose_name
-    )
     additional_information = forms.CharField(
         widget=forms.Textarea,
         required=False,
@@ -68,7 +61,6 @@ class UserCreateForm(UserCreationForm):
             self.initial.update({
                 'role': up.user_role,
                 'organizationalunit': up.organizationalunit,
-                'availability_text': up.availability_text,
                 'additional_information': up.additional_information
             })
 

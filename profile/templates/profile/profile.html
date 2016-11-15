@@ -31,17 +31,23 @@
                 {% if request.user.userprofile.get_resource.calendar %}
                 <a href="{% url 'calendar' request.user.userprofile.get_resource.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér mulige undervisningstidspunkter' %}</a>
                 {% else %}
-                <a href="{% url 'availability-edit' %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér mulige undervisningstidspunkter' %}</a>
+                <a href="{% url 'calendar-create' request.user.userprofile.get_resource.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Opret kalender' %}</a>
                 {% endif %}
-                <a href="{% url 'availability' request.user.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Se dato-oversigt for undervisning' %}</a>
+                <a href="{% url 'availability' request.user.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Se datoer for besøg' %}</a>
+                <a href="{% url 'user_edit' request.user.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Opdater profil' %}</a>
             </p>
             {% elif request.user.userprofile.is_host %}
             <p>
                 {% blocktrans %}Som vært har du mulighed for at angive hvornår du kan deltage i besøg{% endblocktrans %}.<br />
             </p>
             <p>
-                <a href="{% url 'availability-edit' %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér mulige tidspunkter' %}</a>
-                <a href="{% url 'availability' request.user.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Se dato-oversigt for besøg' %}</a>
+                {% if request.user.userprofile.get_resource.calendar %}
+                <a href="{% url 'calendar' request.user.userprofile.get_resource.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér mulige tidspunkter' %}</a>
+                {% else %}
+                <a href="{% url 'calendar-create' request.user.userprofile.get_resource.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Opret kalender' %}</a>
+                {% endif %}
+                <a href="{% url 'availability' request.user.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Se datoer for besøg' %}</a>
+                <a href="{% url 'user_edit' request.user.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Opdater profil' %}</a>
             </p>
             {% endif %}
             <div class="divider"></div>

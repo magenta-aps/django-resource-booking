@@ -405,7 +405,6 @@ class CreateUserView(FormView, UpdateView):
             unit = OrganizationalUnit.objects.get(pk=unit_id)
 
             cd = form.cleaned_data
-            avail_txt = cd['availability_text']
             add_info = cd['additional_information']
 
             # Create
@@ -414,7 +413,6 @@ class CreateUserView(FormView, UpdateView):
                     user=user,
                     user_role=user_role,
                     organizationalunit=unit,
-                    availability_text=avail_txt,
                     additional_information=add_info,
                 )
             else:
@@ -424,7 +422,6 @@ class CreateUserView(FormView, UpdateView):
                 user_profile.user_role = user_role
                 user_profile.organizationalunit = unit
                 cd = form.cleaned_data
-                user_profile.availability_text = avail_txt
                 user_profile.additional_information = add_info
 
             user_profile.save()
@@ -914,41 +911,3 @@ class AvailabilityView(LoginRequiredMixin, DetailView):
             })
 
         return dates
-
-
-class AvailabilityEditView(LoginRequiredMixin, UpdateView):
-    model = UserProfile
-    template_name = 'profile/availability_edit.html'
-    fields = ['availability_text']
-
-    def get_object(self, queryset=None):
-        user = self.request.user
-        if user.userprofile and (user.userprofile.is_teacher or
-                                 user.userprofile.is_host):
-            return user.userprofile
-        else:
-            raise Http404("Only teachers or hosts can edit availability")
-
-    def get_form(self, form_class=None):
-        form = super(AvailabilityEditView, self).get_form(form_class)
-
-        for f in form.fields.values():
-            css = f.widget.attrs.get("class")
-            if css:
-                f.widget.attrs['class'] = css + ' form-control'
-            else:
-                f.widget.attrs['class'] = 'form-control'
-
-        return form
-
-    def post(self, request, *args, **kwargs):
-        if "cancel" in request.POST:
-            self.object = self.get_object()
-            return redirect(self.get_success_url())
-        else:
-            return super(AvailabilityEditView, self).post(
-                request, *args, **kwargs
-            )
-
-    def get_success_url(self):
-        return reverse('user_profile')
