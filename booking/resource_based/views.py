@@ -255,7 +255,7 @@ class ResourceCreateView(BackMixin, BreadcrumbMixin, FormView):
         context.update(kwargs)
         if form.is_valid():
             typeId = int(form.cleaned_data['type'])
-            unitId = int(form.cleaned_data['unit'])
+            unitId = int(form.cleaned_data['unit'].pk)
 
             return self.redirect(reverse(
                 'resource-create-type',
@@ -451,7 +451,7 @@ class ResourcePoolCreateView(BackMixin, BreadcrumbMixin, FormView):
         context.update(kwargs)
         if form.is_valid():
             typeId = int(form.cleaned_data['type'])
-            unitId = int(form.cleaned_data['unit'])
+            unitId = int(form.cleaned_data['unit'].pk)
 
             return self.redirect(
                 reverse(
