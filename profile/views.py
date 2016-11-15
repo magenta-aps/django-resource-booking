@@ -59,6 +59,15 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         context['lists'].extend(self.lists_by_role())
         context['thisurl'] = reverse('user_profile')
 
+        unit_qs = self.request.user.userprofile.get_unit_queryset()
+
+        today_qs = Visit.get_todays_visits().filter(
+            eventtime__product__organizationalunit=unit_qs
+        )
+        recent_qs = Visit.get_recently_held().filter(
+            eventtime__product__organizationalunit=unit_qs
+        )
+
         context['lists'].extend([{
             'color': self.HEADING_GREEN,
             'type': 'Visit',
@@ -66,10 +75,10 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                 u'%(count)d senest afviklet besøg',
                 u'%(count)d seneste afviklede besøg',
                 'count'
-            ) % {'count': Visit.get_recently_held().count()},
-            'queryset': Visit.get_recently_held(),
+            ) % {'count': recent_qs.count()},
+            'queryset': recent_qs,
             'limit': 10,
-            'limited_qs': Visit.get_recently_held()[:10],
+            'limited_qs': recent_qs[:10],
             'button': {
                 'text': _(u'Søg i alle'),
                 'link': reverse('visit-customlist') + "?type=%s" %
@@ -82,10 +91,10 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                 u'%(count)d dagens besøg',
                 u'%(count)d dagens besøg',
                 'count'
-            ),
-            'queryset': Visit.get_todays_visits(),
+            ) % {'count': today_qs.count()},
+            'queryset': today_qs,
             'limit': 10,
-            'limited_qs': Visit.get_todays_visits()[:10],
+            'limited_qs': today_qs[:10],
             'button': {
                 'text': _(u'Søg i alle'),
                 'link': reverse('visit-customlist') + "?type=%s" %
