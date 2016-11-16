@@ -3060,18 +3060,12 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
             booking.id: booking.booker.attendee_count
             for booking in self.object.waiting_list
         }
-        context['teacher'] = False
-        teacher = self.request.GET.getlist('teacher', None)
-        if teacher is not None:
-            for item in teacher:
-                if item.lower() == 'true':
-                    context['teacher'] = True
-        context['host'] = False
-        host = self.request.GET.getlist('host', None)
-        if host is not None:
-            for item in host:
-                if item.lower() == 'true':
-                    context['host'] = True
+        usertype = self.kwargs.get('usertype')
+        if isinstance(usertype, basestring):
+            usertype = usertype.lower()
+
+        context['teacher'] = usertype == 'teacher'
+        context['host'] = usertype == 'host'
 
         context.update(kwargs)
 
