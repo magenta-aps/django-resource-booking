@@ -156,7 +156,7 @@ urlpatterns = patterns(
         EmailSuccessView.as_view(),
         name='visit-notify-success'),
 
-    url(r'^visit/(?P<pk>[0-9]+)/?$',
+    url(r'^visit/(?P<pk>[0-9]+)/(?P<usertype>[a-z]+)?/?$',
         VisitDetailView.as_view(),
         name='visit-view'),
     url(r'visit/(?P<visit>[0-9]+)/book/?$',
