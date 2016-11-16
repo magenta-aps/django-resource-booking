@@ -584,9 +584,9 @@ class EmailTemplateType(models.Model):
             template_type = EmailTemplateType(key=key)
         for attr in template_type._meta.fields:
             if attr.name in kwargs:
-                 setattr(template_type, attr.name, kwargs[attr.name])
+                setattr(template_type, attr.name, kwargs[attr.name])
             elif isinstance(attr, models.BooleanField):
-                 setattr(template_type, attr.name, False)
+                setattr(template_type, attr.name, False)
         #    if hasattr(template_type, arg):
         #        setattr(template_type, arg)
         template_type.save()
@@ -594,37 +594,169 @@ class EmailTemplateType(models.Model):
 
     @staticmethod
     def set_defaults():
-        EmailTemplateType.set_default(EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED, manual_sending_visit_enabled=True, manual_sending_booking_enabled=True, manual_sending_booking_mpv_enabled=True, send_to_booker=True, enable_booking=True, is_default=True)
-        EmailTemplateType.set_default(EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED_WAITING, manual_sending_visit_enabled=True, manual_sending_booking_enabled=True, manual_sending_booking_mpv_enabled=True, send_to_booker=True, enable_booking=True)
-        EmailTemplateType.set_default(EmailTemplateType.NOTIFY_GUEST__GENERAL_MSG, manual_sending_visit_enabled=True, manual_sending_mpv_enabled=True, manual_sending_booking_enabled=True, manual_sending_booking_mpv_enabled=True, enable_booking=True)
-        EmailTemplateType.set_default(EmailTemplateType.NOTIFY_GUEST__SPOT_OPEN, manual_sending_visit_enabled=True, enable_booking=True)
-        EmailTemplateType.set_default(EmailTemplateType.NOTIFY_GUEST__SPOT_ACCEPTED, send_to_booker=True, enable_booking=True)
-        EmailTemplateType.set_default(EmailTemplateType.NOTIFY_GUEST__SPOT_REJECTED, send_to_booker=True, enable_booking=True)
-        EmailTemplateType.set_default(EmailTemplateType.NOTIFY_GUEST_REMINDER, manual_sending_visit_enabled=True, manual_sending_booking_enabled=True, manual_sending_booking_mpv_enabled=True)
+        EmailTemplateType.set_default(
+            EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED,
+            manual_sending_visit_enabled=True,
+            manual_sending_booking_enabled=True,
+            manual_sending_booking_mpv_enabled=True,
+            send_to_booker=True,
+            enable_booking=True,
+            is_default=True
+        )
 
-        EmailTemplateType.set_default(EmailTemplateType.NOTIFY_EDITORS__BOOKING_CREATED, send_to_contactperson=True, enable_booking=True, is_default=True)
-        EmailTemplateType.set_default(EmailTemplateType.NOTIFY_EDITORS__SPOT_REJECTED, send_to_contactperson=True, enable_booking=True)
+        EmailTemplateType.set_default(
+            EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED_WAITING,
+            manual_sending_visit_enabled=True,
+            manual_sending_booking_enabled=True,
+            manual_sending_booking_mpv_enabled=True,
+            send_to_booker=True,
+            enable_booking=True
+        )
 
-        EmailTemplateType.set_default(EmailTemplateType.NOTIFY_HOST__REQ_HOST_VOLUNTEER, manual_sending_visit_enabled=True, send_to_potential_hosts=True, enable_booking=True, avoid_already_assigned=True)
-        EmailTemplateType.set_default(EmailTemplateType.NOTIFY_HOST__REQ_TEACHER_VOLUNTEER, manual_sending_visit_enabled=True, send_to_potential_teachers=True, enable_booking=True, avoid_already_assigned=True)
-        EmailTemplateType.set_default(EmailTemplateType.NOTIFY_HOST__ASSOCIATED, manual_sending_visit_enabled=True, send_to_visit_added_host=True)
-        EmailTemplateType.set_default(EmailTemplateType.NOTIFY_TEACHER__ASSOCIATED, manual_sending_visit_enabled=True, send_to_visit_added_teacher=True)
-        EmailTemplateType.set_default(EmailTemplateType.NOTIFY_HOST__HOSTROLE_IDLE, send_to_editors=True, enable_days=True)
-        EmailTemplateType.set_default(EmailTemplateType.NOTIFY_HOST__REQ_ROOM, manual_sending_visit_enabled=True)
+        EmailTemplateType.set_default(
+            EmailTemplateType.NOTIFY_GUEST__GENERAL_MSG,
+            manual_sending_visit_enabled=True,
+            manual_sending_mpv_enabled=True,
+            manual_sending_booking_enabled=True,
+            manual_sending_booking_mpv_enabled=True,
+            enable_booking=True
+        )
 
-        EmailTemplateType.set_default(EmailTemplateType.NOTIFY_ALL__BOOKING_CANCELED, manual_sending_visit_enabled=True, manual_sending_booking_enabled=True, manual_sending_booking_mpv_enabled=True, send_to_contactperson=True, send_to_booker=True, send_to_visit_hosts=True, send_to_visit_teachers=True, enable_booking=True)
-        EmailTemplateType.set_default(EmailTemplateType.NOTIFY_ALL__BOOKING_COMPLETE, manual_sending_visit_enabled=True, manual_sending_booking_enabled=True, manual_sending_booking_mpv_enabled=True, send_to_booker=True, send_to_visit_hosts=True, send_to_visit_teachers=True, enable_booking=True)
-        EmailTemplateType.set_default(EmailTemplateType.NOTITY_ALL__BOOKING_REMINDER, manual_sending_visit_enabled=True, manual_sending_booking_enabled=True, manual_sending_booking_mpv_enabled=True, send_to_contactperson=True, send_to_booker=True, send_to_visit_hosts=True, send_to_visit_teachers=True, enable_days=True)
+        EmailTemplateType.set_default(
+            EmailTemplateType.NOTIFY_GUEST__SPOT_OPEN,
+            manual_sending_visit_enabled=True,
+            enable_booking=True
+        )
 
-        EmailTemplateType.set_default(EmailTemplateType.NOTIFY_ALL_EVALUATION, manual_sending_visit_enabled=True)
+        EmailTemplateType.set_default(
+            EmailTemplateType.NOTIFY_GUEST__SPOT_ACCEPTED,
+            send_to_booker=True,
+            enable_booking=True
+        )
 
-        EmailTemplateType.set_default(EmailTemplateType.SYSTEM__BASICMAIL_ENVELOPE)
-        EmailTemplateType.set_default(EmailTemplateType.SYSTEM__EMAIL_REPLY)
-        EmailTemplateType.set_default(EmailTemplateType.SYSTEM__USER_CREATED)
+        EmailTemplateType.set_default(
+            EmailTemplateType.NOTIFY_GUEST__SPOT_REJECTED,
+            send_to_booker=True,
+            enable_booking=True
+        )
+
+        EmailTemplateType.set_default(
+            EmailTemplateType.NOTIFY_GUEST_REMINDER,
+            manual_sending_visit_enabled=True,
+            manual_sending_booking_enabled=True,
+            manual_sending_booking_mpv_enabled=True
+        )
+
+        EmailTemplateType.set_default(
+            EmailTemplateType.NOTIFY_EDITORS__BOOKING_CREATED,
+            send_to_contactperson=True,
+            enable_booking=True,
+            is_default=True
+        )
+
+        EmailTemplateType.set_default(
+            EmailTemplateType.NOTIFY_EDITORS__SPOT_REJECTED,
+            send_to_contactperson=True,
+            enable_booking=True
+        )
+
+        EmailTemplateType.set_default(
+            EmailTemplateType.NOTIFY_HOST__REQ_HOST_VOLUNTEER,
+            manual_sending_visit_enabled=True,
+            send_to_potential_hosts=True,
+            enable_booking=True,
+            avoid_already_assigned=True
+        )
+
+        EmailTemplateType.set_default(
+            EmailTemplateType.NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
+            manual_sending_visit_enabled=True,
+            send_to_potential_teachers=True,
+            enable_booking=True,
+            avoid_already_assigned=True
+        )
+
+        EmailTemplateType.set_default(
+            EmailTemplateType.NOTIFY_HOST__ASSOCIATED,
+            manual_sending_visit_enabled=True,
+            send_to_visit_added_host=True
+        )
+
+        EmailTemplateType.set_default(
+            EmailTemplateType.NOTIFY_TEACHER__ASSOCIATED,
+            manual_sending_visit_enabled=True,
+            send_to_visit_added_teacher=True
+        )
+
+        EmailTemplateType.set_default(
+            EmailTemplateType.NOTIFY_HOST__HOSTROLE_IDLE,
+            send_to_editors=True,
+            enable_days=True
+        )
+
+        EmailTemplateType.set_default(
+            EmailTemplateType.NOTIFY_HOST__REQ_ROOM,
+            manual_sending_visit_enabled=True
+        )
+
+        EmailTemplateType.set_default(
+            EmailTemplateType.NOTIFY_ALL__BOOKING_CANCELED,
+            manual_sending_visit_enabled=True,
+            manual_sending_booking_enabled=True,
+            manual_sending_booking_mpv_enabled=True,
+            send_to_contactperson=True,
+            send_to_booker=True,
+            send_to_visit_hosts=True,
+            send_to_visit_teachers=True,
+            enable_booking=True
+        )
+
+        EmailTemplateType.set_default(
+            EmailTemplateType.NOTIFY_ALL__BOOKING_COMPLETE,
+            manual_sending_visit_enabled=True,
+            manual_sending_booking_enabled=True,
+            manual_sending_booking_mpv_enabled=True,
+            send_to_booker=True,
+            send_to_visit_hosts=True,
+            send_to_visit_teachers=True,
+            enable_booking=True
+        )
+
+        EmailTemplateType.set_default(
+            EmailTemplateType.NOTITY_ALL__BOOKING_REMINDER,
+            manual_sending_visit_enabled=True,
+            manual_sending_booking_enabled=True,
+            manual_sending_booking_mpv_enabled=True,
+            send_to_contactperson=True,
+            send_to_booker=True,
+            send_to_visit_hosts=True,
+            send_to_visit_teachers=True,
+            enable_days=True
+        )
+
+        EmailTemplateType.set_default(
+            EmailTemplateType.NOTIFY_ALL_EVALUATION,
+            manual_sending_visit_enabled=True
+        )
+
+        EmailTemplateType.set_default(
+            EmailTemplateType.SYSTEM__BASICMAIL_ENVELOPE
+        )
+
+        EmailTemplateType.set_default(
+            EmailTemplateType.SYSTEM__EMAIL_REPLY
+        )
+
+        EmailTemplateType.set_default(
+            EmailTemplateType.SYSTEM__USER_CREATED
+        )
 
     @staticmethod
     def get_keys(**kwargs):
-        return [template_type.key for template_type in EmailTemplateType.objects.filter(**kwargs)]
+        return [
+            template_type.key
+            for template_type in EmailTemplateType.objects.filter(**kwargs)
+        ]
 
     @staticmethod
     def get_choices(**kwargs):
@@ -672,50 +804,31 @@ class EmailTemplateType(models.Model):
     def visit_added_teacher_keys():
         return EmailTemplateType.get_keys(send_to_visit_added_teacher=True)
 
-
+    @staticmethod
+    def add_defaults_to_all():
+        for product in Product.objects.all():
+            for template_key in EmailTemplateType.get_keys(is_default=True):
+                if product.productautosend_set.filter(
+                        template_key=template_key
+                ).count() == 0:
+                    print "    create autosends for product %d" % product.id
+                    autosend = ProductAutosend(
+                        template_key=template_key,
+                        product=product,
+                        enabled=True
+                    )
+                    autosend.save()
+                    for visit in product.visit_set.all():
+                        print "        creating inheriting autosends for " \
+                              "visit %d" % visit.id
+                        visit.create_inheriting_autosends()
 
 
 class EmailTemplate(models.Model):
 
-    # TODO: In a later phase we should refactor this into a set of
-    # statically defined instances with values determining the belongings
-    # of each template
-
-    NOTIFY_GUEST__BOOKING_CREATED = 1  # ticket 13806
-    NOTIFY_EDITORS__BOOKING_CREATED = 2  # ticket 13807
-    NOTIFY_HOST__REQ_TEACHER_VOLUNTEER = 3  # ticket 13808
-    NOTIFY_HOST__REQ_HOST_VOLUNTEER = 4  # ticket 13809
-    NOTIFY_HOST__ASSOCIATED = 5  # ticket 13810
-    NOTIFY_HOST__REQ_ROOM = 6  # ticket 13811
-    NOTIFY_GUEST__GENERAL_MSG = 7  # ticket 13812
-    NOTIFY_ALL__BOOKING_COMPLETE = 8  # ticket 13813
-    NOTIFY_ALL__BOOKING_CANCELED = 9  # ticket 13814
-    NOTITY_ALL__BOOKING_REMINDER = 10  # ticket 13815
-    NOTIFY_HOST__HOSTROLE_IDLE = 11  # ticket 13805
-    SYSTEM__BASICMAIL_ENVELOPE = 12
-    SYSTEM__EMAIL_REPLY = 13
-    SYSTEM__USER_CREATED = 14
-    NOTIFY_GUEST_REMINDER = 15  # Ticket 15510
-    NOTIFY_GUEST__SPOT_OPEN = 16  # Ticket 13804
-    NOTIFY_GUEST__SPOT_ACCEPTED = 17  # Ticket 13804
-    NOTIFY_GUEST__SPOT_REJECTED = 18  # Ticket 13804
-    NOTIFY_EDITORS__SPOT_REJECTED = 19  # Ticket 13804
-    NOTIFY_GUEST__BOOKING_CREATED_WAITING = 20  # ticket 13804
-    NOTIFY_TEACHER__ASSOCIATED = 21  # Ticket 15701
-    NOTIFY_ALL_EVALUATION = 22  # Ticket 15701
-
-    # Choice labels
-    key_choices = EmailTemplateType.key_choices
-
-    @staticmethod
-    def get_name(template_key):
-        for key, label in EmailTemplate.key_choices:
-            if key == template_key:
-                return label
-
     key = models.IntegerField(
         verbose_name=u'Type',
-        choices=key_choices,
+        choices=EmailTemplateType.key_choices,
         default=1
     )
 
@@ -743,7 +856,7 @@ class EmailTemplate(models.Model):
 
     @property
     def name(self):
-        return EmailTemplate.get_name(self.key)
+        return EmailTemplateType.get_name(self.key)
 
     def expand_subject(self, context, keep_placeholders=False):
         return self._expand(self.subject, context, keep_placeholders)
@@ -842,25 +955,6 @@ class EmailTemplate(models.Model):
                 if isinstance(node, VariableNode):
                     variables.append(unicode(node.filter_expression))
         return variables
-
-    @staticmethod
-    def add_defaults_to_all():
-        for product in Product.objects.all():
-            for template_key in EmailTemplateType.get_keys(is_default=True):
-                if product.productautosend_set.filter(
-                    template_key=template_key
-                ).count() == 0:
-                    print "    create autosends for product %d" % product.id
-                    autosend = ProductAutosend(
-                        template_key=template_key,
-                        product=product,
-                        enabled=True
-                    )
-                    autosend.save()
-                    for visit in product.visit_set.all():
-                        print "        creating inheriting autosends for " \
-                              "visit %d" % visit.id
-                        visit.create_inheriting_autosends()
 
 
 class ObjectStatistics(models.Model):
@@ -2720,6 +2814,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         ).filter(needed__gt=F("assigned"))
 
     def __unicode__(self):
+        if self.is_multiproductvisit:
+            return self.multiproductvisit.__unicode__()
         if hasattr(self, 'eventtime'):
             return _(u'Besøg %s - %s - %s') % (
                 self.pk,
@@ -2837,7 +2933,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         return recipients
 
     def create_inheriting_autosends(self):
-        for template_key, label in EmailTemplate.key_choices:
+        for template_key, label in EmailTemplateType.key_choices:
             if not self.get_autosend(template_key, False, False):
                 visitautosend = VisitAutosend(
                     visit=self,
@@ -2910,9 +3006,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 recipients = set(recipients)
             if not only_these_recipients:
                 recipients.update(self.get_recipients(template_type.key))
-
-            print "Autosend template %s" % EmailTemplateType.get_name(template_key)
-            print "Recipients: %s" % unicode(recipients)
 
             KUEmailMessage.send_email(
                 template_type.key,
@@ -3583,7 +3676,7 @@ class VisitComment(models.Model):
 
 class Autosend(models.Model):
     template_key = models.IntegerField(
-        choices=EmailTemplate.key_choices,
+        choices=EmailTemplateType.key_choices,
         verbose_name=_(u'Skabelon'),
         blank=False,
         null=False
@@ -3603,7 +3696,7 @@ class Autosend(models.Model):
         return EmailTemplateType.get(self.template_key)
 
     def get_name(self):
-        return unicode(EmailTemplate.get_name(self.template_key))
+        return unicode(EmailTemplateType.get_name(self.template_key))
 
     def __unicode__(self):
         return "[%d] %s (%s)" % (
@@ -4388,7 +4481,7 @@ class KUEmailMessage(models.Model):
     )
     template_key = models.IntegerField(
         verbose_name=u'Template key',
-        choices=EmailTemplate.key_choices,
+        choices=EmailTemplateType.key_choices,
         default=None,
         null=True,
         blank=True

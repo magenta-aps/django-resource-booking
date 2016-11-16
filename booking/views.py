@@ -1875,7 +1875,7 @@ class ProductInquireView(FormMixin, HasBackButtonMixin, ModalMixin,
         form = self.get_form()
         if form.is_valid():
             template = EmailTemplate.get_template(
-                EmailTemplate.SYSTEM__BASICMAIL_ENVELOPE,
+                EmailTemplateType.SYSTEM__BASICMAIL_ENVELOPE,
                 None
             )
             if template is None:
@@ -2426,20 +2426,24 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
 
             if put_in_waitinglist:
                 booking.autosend(
-                    EmailTemplate.NOTIFY_GUEST__BOOKING_CREATED_WAITING
+                    EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED_WAITING
                 )
             else:
-                booking.autosend(EmailTemplate.NOTIFY_GUEST__BOOKING_CREATED)
+                booking.autosend(
+                    EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED
+                )
 
-            booking.autosend(EmailTemplate.NOTIFY_EDITORS__BOOKING_CREATED)
+            booking.autosend(EmailTemplateType.NOTIFY_EDITORS__BOOKING_CREATED)
 
             if booking.visit.needs_teachers:
                 booking.autosend(
-                    EmailTemplate.NOTIFY_HOST__REQ_TEACHER_VOLUNTEER
+                    EmailTemplateType.NOTIFY_HOST__REQ_TEACHER_VOLUNTEER
                 )
 
             if booking.visit.needs_hosts:
-                booking.autosend(EmailTemplate.NOTIFY_HOST__REQ_HOST_VOLUNTEER)
+                booking.autosend(
+                    EmailTemplateType.NOTIFY_HOST__REQ_HOST_VOLUNTEER
+                )
 
             self.object = booking
             self.model = booking.__class__
@@ -2990,9 +2994,13 @@ class BookingDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
             context['can_notify'] = True
 
         if self.object.visit.is_multiproductvisit:
-            context['emailtemplates'] = EmailTemplateType.get_choices(manual_sending_booking_mpv_enabled=True)
+            context['emailtemplates'] = EmailTemplateType.get_choices(
+                manual_sending_booking_mpv_enabled=True
+            )
         else:
-            context['emailtemplates'] = EmailTemplateType.get_choices(manual_sending_booking_enabled=True)
+            context['emailtemplates'] = EmailTemplateType.get_choices(
+                manual_sending_booking_enabled=True
+            )
 
         context.update(kwargs)
 
@@ -3030,12 +3038,16 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
         context['modal'] = VisitNotifyView.modal
 
         if self.object.is_multiproductvisit:
-            context['emailtemplates'] = EmailTemplateType.get_choices(manual_sending_mpv_enabled=True)
+            context['emailtemplates'] = EmailTemplateType.get_choices(
+                manual_sending_mpv_enabled=True
+            )
         else:
-            context['emailtemplates'] = EmailTemplateType.get_choices(manual_sending_visit_enabled=True)
+            context['emailtemplates'] = EmailTemplateType.get_choices(
+                manual_sending_visit_enabled=True
+            )
 
         context['emailtemplate_waitinglist'] = \
-            EmailTemplate.NOTIFY_GUEST__SPOT_OPEN
+            EmailTemplateType.NOTIFY_GUEST__SPOT_OPEN
         user = self.request.user
 
         if hasattr(user, 'userprofile'):
@@ -3428,7 +3440,7 @@ class EmailReplyView(DetailView):
             visit = self.get_visit()
             recipients = visit.product.organizationalunit.get_editors()
             KUEmailMessage.send_email(
-                EmailTemplate.SYSTEM__EMAIL_REPLY,
+                EmailTemplateType.SYSTEM__EMAIL_REPLY,
                 {
                     'visit': visit,
                     'product': visit.product,
@@ -3557,12 +3569,14 @@ class BookingAcceptView(BreadcrumbMixin, FormView):
                     self.object.dequeue()
                     self.dequeued = True
                     self.object.autosend(
-                        EmailTemplate.NOTIFY_GUEST__SPOT_ACCEPTED
+                        EmailTemplateType.NOTIFY_GUEST__SPOT_ACCEPTED
                     )
             elif self.answer == 'no':
-                self.object.autosend(EmailTemplate.NOTIFY_GUEST__SPOT_REJECTED)
                 self.object.autosend(
-                    EmailTemplate.NOTIFY_EDITORS__SPOT_REJECTED
+                    EmailTemplateType.NOTIFY_GUEST__SPOT_REJECTED
+                )
+                self.object.autosend(
+                    EmailTemplateType.NOTIFY_EDITORS__SPOT_REJECTED
                 )
                 self.object_id = self.object.id
                 self.object.delete()
