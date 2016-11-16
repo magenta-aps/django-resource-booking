@@ -2130,7 +2130,7 @@ class BookingNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
                     'items': merge_dicts(*[{
                         "%s%s%d" % (self.RECIPIENT_USER,
                                     self.RECIPIENT_SEPARATOR, user.id):
-                                        user.get_full_email()
+                        full_email(user.email, user.get_full_name())
                         for user in [
                             product.tilbudsansvarlig
                         ] if user

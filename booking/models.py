@@ -4593,10 +4593,10 @@ class KUEmailMessage(models.Model):
             # If we know the visit and the guest we can find the
             # booking if it is missing.
             if 'booking' not in context and \
-               'besoeg' in context and email['guest']:
+               'besoeg' in context and 'guest' in email:
                 context['booking'] = Booking.objects.filter(
                     visit=context['besoeg'],
-                    booker=context['guest']
+                    booker=email['guest']
                 ).first()
 
             subject = template.expand_subject(ctx)
