@@ -2610,6 +2610,32 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
         if 'bookerform' in forms:
             object.booker = forms['bookerform'].save()
         object.save()
+
+        object.autosend(
+            EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED
+        )
+
+        object.autosend(
+            EmailTemplateType.NOTIFY_EDITORS__BOOKING_CREATED
+        )
+
+        if self.visit.is_multiproductvisit:
+            visits = self.visit.multiproductvisit.subvisits_unordered
+        else:
+            visits = [self.visit]
+
+        for visit in visits:
+            print visit
+            if visit.needs_teachers:
+                visit.autosend(
+                    EmailTemplateType.NOTIFY_HOST__REQ_TEACHER_VOLUNTEER
+                )
+
+            if visit.needs_hosts:
+                visit.autosend(
+                    EmailTemplateType.NOTIFY_HOST__REQ_HOST_VOLUNTEER
+                )
+
         return redirect(
             reverse(
                 'visit-booking-success',
