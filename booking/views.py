@@ -2625,7 +2625,6 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
             visits = [self.visit]
 
         for visit in visits:
-            print visit
             if visit.needs_teachers:
                 visit.autosend(
                     EmailTemplateType.NOTIFY_HOST__REQ_TEACHER_VOLUNTEER
