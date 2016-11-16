@@ -7,7 +7,7 @@ from booking.models import Product
 from booking.models import Guest, Region, PostCode, School
 from booking.models import ClassBooking, TeacherBooking, \
     BookingGymnasieSubjectLevel
-from booking.models import EmailTemplate
+from booking.models import EmailTemplate, EmailTemplateType
 from booking.models import Visit, MultiProductVisitTemp
 from booking.models import BLANK_LABEL, BLANK_OPTION
 from booking.widgets import OrderedMultipleHiddenChooser
@@ -632,19 +632,23 @@ class ProductAutosendForm(forms.ModelForm):
             template_key = kwargs['instance'].template_key
         elif 'initial' in kwargs:
             template_key = kwargs['initial']['template_key']
-        if template_key is not None and \
-                template_key not in EmailTemplate.enable_days:
-            self.fields['days'].widget = forms.HiddenInput()
-        elif template_key == EmailTemplate.NOTITY_ALL__BOOKING_REMINDER:
-            self.fields['days'].help_text = _(u'Notifikation vil blive afsendt'
-                                              u' dette antal dage før besøget')
-        elif template_key == EmailTemplate.NOTIFY_HOST__HOSTROLE_IDLE:
-            self.fields['days'].help_text = _(u'Notifikation vil blive afsendt'
-                                              u' dette antal dage efter første'
-                                              u' booking er foretaget')
+        if template_key is not None:
+            template_type = EmailTemplateType.get(template_key)
+            if not template_type.enable_days:
+                self.fields['days'].widget = forms.HiddenInput()
+            elif template_key == \
+                    EmailTemplateType.NOTITY_ALL__BOOKING_REMINDER:
+                self.fields['days'].help_text = _(u'Notifikation vil blive '
+                                                  u'afsendt dette antal dage '
+                                                  u'før besøget')
+            elif template_key == EmailTemplateType.NOTIFY_HOST__HOSTROLE_IDLE:
+                self.fields['days'].help_text = _(u'Notifikation vil blive '
+                                                  u'afsendt dette antal dage '
+                                                  u'efter første booking er '
+                                                  u'foretaget')
 
     def label(self):
-        return EmailTemplate.get_name(self.initial['template_key'])
+        return EmailTemplateType.get_name(self.initial['template_key'])
 
 
 ProductAutosendFormSetBase = inlineformset_factory(
@@ -652,7 +656,7 @@ ProductAutosendFormSetBase = inlineformset_factory(
     ProductAutosend,
     form=ProductAutosendForm,
     extra=0,
-    max_num=len(EmailTemplate.key_choices),
+    max_num=len(EmailTemplateType.key_choices),
     can_delete=False,
     can_order=False
 )
@@ -662,12 +666,12 @@ class ProductAutosendFormSet(ProductAutosendFormSetBase):
     def __init__(self, *args, **kwargs):
         if 'instance' in kwargs:
             autosends = kwargs['instance'].get_autosends(True)
-            if len(autosends) < len(EmailTemplate.key_choices):
+            if len(autosends) < len(EmailTemplateType.key_choices):
                 initial = []
                 existing_keys = [
                     autosend.template_key for autosend in autosends
                 ]
-                for key, label in EmailTemplate.key_choices:
+                for key, label in EmailTemplateType.key_choices:
                     if key not in existing_keys:
                         initial.append({
                             'template_key': key,

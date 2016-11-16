@@ -46,7 +46,7 @@ from booking.models import Room
 from booking.models import PostCode, School
 from booking.models import Booking, Guest
 from booking.models import ProductGymnasieFag, ProductGrundskoleFag
-from booking.models import EmailTemplate
+from booking.models import EmailTemplateType, EmailTemplate
 from booking.models import log_action
 from booking.models import LOGACTION_CREATE, LOGACTION_CHANGE
 from booking.models import RoomResponsible
@@ -1466,11 +1466,8 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
                 initial = []
                 if not self.object or not self.object.pk:
                     initial = [
-                        {
-                            'template_key': item,
-                            'active': True
-                        }
-                        for item in EmailTemplate.default
+                        {'template_key': item, 'active': True}
+                        for item in EmailTemplateType.get_keys(is_default=True)
                     ]
                 forms['autosendformset'] = ProductAutosendFormSet(
                     None, instance=self.object, initial=initial
@@ -1579,7 +1576,9 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
             )
         )
         context['organizationalunit'] = self.object.organizationalunit
-        context['autosend_enable_days'] = EmailTemplate.enable_days
+        context['autosend_enable_days'] = EmailTemplateType.get_keys(
+            enable_days=True
+        )
 
         context['hastime'] = self.object.type in [
             Product.STUDENT_FOR_A_DAY, Product.STUDIEPRAKTIK,
@@ -1875,7 +1874,7 @@ class ProductInquireView(FormMixin, HasBackButtonMixin, ModalMixin,
         form = self.get_form()
         if form.is_valid():
             template = EmailTemplate.get_template(
-                EmailTemplate.SYSTEM__BASICMAIL_ENVELOPE,
+                EmailTemplateType.SYSTEM__BASICMAIL_ENVELOPE,
                 None
             )
             if template is None:
@@ -1928,9 +1927,9 @@ class VisitNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
         pk = kwargs['pk']
         self.object = Visit.objects.get(id=pk)
         self.get_template_key(request)
+        template_type = EmailTemplateType.get(self.template_key)
         if self.object.is_multi_sub and \
-                self.template_key in \
-                EmailTemplate.visit_manual_mpv_redirect_keys:
+                template_type.manual_sending_mpv_enabled:
             self.object = self.object.multi_master
         elif self.object.is_multiproductvisit:
             self.object = self.object.multiproductvisit
@@ -2130,7 +2129,7 @@ class BookingNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
                     'items': merge_dicts(*[{
                         "%s%s%d" % (self.RECIPIENT_USER,
                                     self.RECIPIENT_SEPARATOR, user.id):
-                                        user.get_full_email()
+                        full_email(user.email, user.get_full_name())
                         for user in [
                             product.tilbudsansvarlig
                         ] if user
@@ -2426,20 +2425,24 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
 
             if put_in_waitinglist:
                 booking.autosend(
-                    EmailTemplate.NOTIFY_GUEST__BOOKING_CREATED_WAITING
+                    EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED_WAITING
                 )
             else:
-                booking.autosend(EmailTemplate.NOTIFY_GUEST__BOOKING_CREATED)
+                booking.autosend(
+                    EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED
+                )
 
-            booking.autosend(EmailTemplate.NOTIFY_EDITORS__BOOKING_CREATED)
+            booking.autosend(EmailTemplateType.NOTIFY_EDITORS__BOOKING_CREATED)
 
             if booking.visit.needs_teachers:
                 booking.autosend(
-                    EmailTemplate.NOTIFY_HOST__REQ_TEACHER_VOLUNTEER
+                    EmailTemplateType.NOTIFY_HOST__REQ_TEACHER_VOLUNTEER
                 )
 
             if booking.visit.needs_hosts:
-                booking.autosend(EmailTemplate.NOTIFY_HOST__REQ_HOST_VOLUNTEER)
+                booking.autosend(
+                    EmailTemplateType.NOTIFY_HOST__REQ_HOST_VOLUNTEER
+                )
 
             self.object = booking
             self.model = booking.__class__
@@ -2989,16 +2992,14 @@ class BookingDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
                 user.userprofile.can_notify(self.object):
             context['can_notify'] = True
 
-        # keyset = EmailTemplate.booking_manual_mpv_keys \
-        #     if self.object.visit.is_multiproductvisit \
-        #     else EmailTemplate.booking_manual_keys
-        keyset = EmailTemplate.booking_manual_keys
-
-        context['emailtemplates'] = [
-            (key, label)
-            for (key, label) in EmailTemplate.key_choices
-            if key in keyset
-        ]
+        if self.object.visit.is_multiproductvisit:
+            context['emailtemplates'] = EmailTemplateType.get_choices(
+                manual_sending_booking_mpv_enabled=True
+            )
+        else:
+            context['emailtemplates'] = EmailTemplateType.get_choices(
+                manual_sending_booking_enabled=True
+            )
 
         context.update(kwargs)
 
@@ -3035,18 +3036,17 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
 
         context['modal'] = VisitNotifyView.modal
 
-        keyset = EmailTemplate.visit_manual_mpv_keys \
-            if self.object.is_multiproductvisit \
-            else EmailTemplate.visit_manual_keys
-        # keyset = EmailTemplate.visit_manual_keys
+        if self.object.is_multiproductvisit:
+            context['emailtemplates'] = EmailTemplateType.get_choices(
+                manual_sending_mpv_enabled=True
+            )
+        else:
+            context['emailtemplates'] = EmailTemplateType.get_choices(
+                manual_sending_visit_enabled=True
+            )
 
-        context['emailtemplates'] = [
-            (key, label)
-            for (key, label) in EmailTemplate.key_choices
-            if key in keyset
-        ]
         context['emailtemplate_waitinglist'] = \
-            EmailTemplate.NOTIFY_GUEST__SPOT_OPEN
+            EmailTemplateType.NOTIFY_GUEST__SPOT_OPEN
         user = self.request.user
 
         if hasattr(user, 'userprofile'):
@@ -3433,7 +3433,7 @@ class EmailReplyView(BreadcrumbMixin, DetailView):
             product = self.get_product()
             recipients = product.organizationalunit.get_editors()
             KUEmailMessage.send_email(
-                EmailTemplate.SYSTEM__EMAIL_REPLY,
+                EmailTemplateType.SYSTEM__EMAIL_REPLY,
                 {
                     'product': product,
                     'orig_message': orig_message,
@@ -3572,12 +3572,14 @@ class BookingAcceptView(BreadcrumbMixin, FormView):
                     self.object.dequeue()
                     self.dequeued = True
                     self.object.autosend(
-                        EmailTemplate.NOTIFY_GUEST__SPOT_ACCEPTED
+                        EmailTemplateType.NOTIFY_GUEST__SPOT_ACCEPTED
                     )
             elif self.answer == 'no':
-                self.object.autosend(EmailTemplate.NOTIFY_GUEST__SPOT_REJECTED)
                 self.object.autosend(
-                    EmailTemplate.NOTIFY_EDITORS__SPOT_REJECTED
+                    EmailTemplateType.NOTIFY_GUEST__SPOT_REJECTED
+                )
+                self.object.autosend(
+                    EmailTemplateType.NOTIFY_EDITORS__SPOT_REJECTED
                 )
                 self.object_id = self.object.id
                 self.object.delete()

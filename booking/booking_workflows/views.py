@@ -21,7 +21,7 @@ from booking.booking_workflows.forms import VisitAddLogEntryForm
 from booking.booking_workflows.forms import VisitAddCommentForm
 from booking.booking_workflows.forms import ResetVisitChangesForm
 from booking.models import Visit
-from booking.models import EmailTemplate
+from booking.models import EmailTemplate, EmailTemplateType
 from booking.models import EventTime
 from booking.models import Locality
 from booking.models import LOGACTION_MANUAL_ENTRY
@@ -115,10 +115,14 @@ class ChangeVisitStatusView(AutologgerMixin, UpdateWithCancelView):
         status = form.cleaned_data['workflow_status']
         if status == Visit.WORKFLOW_STATUS_PLANNED:
             # Booking is planned
-            self.object.autosend(EmailTemplate.NOTIFY_ALL__BOOKING_COMPLETE)
+            self.object.autosend(
+                EmailTemplateType.NOTIFY_ALL__BOOKING_COMPLETE
+            )
         if status == Visit.WORKFLOW_STATUS_CANCELLED:
             # Booking is cancelled
-            self.object.autosend(EmailTemplate.NOTIFY_ALL__BOOKING_CANCELED)
+            self.object.autosend(
+                EmailTemplateType.NOTIFY_ALL__BOOKING_CANCELED
+            )
         return response
 
 
@@ -151,10 +155,10 @@ class ChangeVisitTeachersView(AutologgerMixin, UpdateWithCancelView):
             for user in self.get_form().base_fields['teachers'].queryset.all()
         }
         context['can_send_emails'] = self.object.autosend_enabled(
-            EmailTemplate.NOTIFY_TEACHER__ASSOCIATED
+            EmailTemplateType.NOTIFY_TEACHER__ASSOCIATED
         )
-        context['email_template_name'] = EmailTemplate.get_name(
-            EmailTemplate.NOTIFY_TEACHER__ASSOCIATED
+        context['email_template_name'] = EmailTemplateType.get_name(
+            EmailTemplateType.NOTIFY_TEACHER__ASSOCIATED
         )
         context.update(kwargs)
         return super(ChangeVisitTeachersView, self).\
@@ -179,7 +183,7 @@ class ChangeVisitTeachersView(AutologgerMixin, UpdateWithCancelView):
             if len(recipients) > 0:
                 # Send a message to only these recipients
                 self.object.autosend(
-                    EmailTemplate.NOTIFY_TEACHER__ASSOCIATED,
+                    EmailTemplateType.NOTIFY_TEACHER__ASSOCIATED,
                     recipients,
                     True
                 )
@@ -209,10 +213,10 @@ class ChangeVisitHostsView(AutologgerMixin, UpdateWithCancelView):
             for user in self.get_form().base_fields['hosts'].queryset.all()
             }
         context['can_send_emails'] = self.object.autosend_enabled(
-            EmailTemplate.NOTIFY_HOST__ASSOCIATED
+            EmailTemplateType.NOTIFY_HOST__ASSOCIATED
         )
-        context['email_template_name'] = EmailTemplate.get_name(
-            EmailTemplate.NOTIFY_HOST__ASSOCIATED
+        context['email_template_name'] = EmailTemplateType.get_name(
+            EmailTemplateType.NOTIFY_HOST__ASSOCIATED
         )
         context.update(kwargs)
         return super(ChangeVisitHostsView, self).\
@@ -235,7 +239,7 @@ class ChangeVisitHostsView(AutologgerMixin, UpdateWithCancelView):
             if len(recipients) > 0:
                 # Send a message to only these recipients
                 self.object.autosend(
-                    EmailTemplate.visit_added_host_key,
+                    EmailTemplateType.NOTIFY_HOST__ASSOCIATED,
                     recipients,
                     True
                 )
@@ -363,6 +367,11 @@ class VisitAddLogEntryView(VisitBreadcrumbMixin, FormView):
                 request, *args, **kwargs
             )
 
+    def get_context_data(self, **kwargs):
+        context = {'object': self.object}
+        context.update(kwargs)
+        return super(VisitAddLogEntryView, self).get_context_data(**context)
+
     def form_valid(self, form):
         log_action(
             self.request.user,
@@ -429,7 +438,9 @@ class ChangeVisitAutosendView(AutologgerMixin, UpdateWithCancelView):
         if hasattr(self.object, 'product') and self.object.product is not None:
             context['organizationalunit'] = \
                 self.object.product.organizationalunit
-        context['autosend_enable_days'] = EmailTemplate.enable_days
+        context['autosend_enable_days'] = EmailTemplateType.get_keys(
+            enable_days=True
+        )
         context.update(kwargs)
         return super(ChangeVisitAutosendView, self).\
             get_context_data(**context)
@@ -593,7 +604,7 @@ class BecomeTeacherView(BecomeSomethingView):
     m2m_attribute = "teachers"
     template_name = "booking/workflow/become_teacher.html"
     view_title = _(u'Tilmeld som underviser')
-    notify_mail_template_key = EmailTemplate.visit_added_teacher_key
+    notify_mail_template_key = EmailTemplateType.NOTIFY_TEACHER__ASSOCIATED
 
     ERROR_NONE_NEEDED = _(u"Besøget har ikke brug for flere undervisere")
     ERROR_WRONG_ROLE = _(
@@ -614,7 +625,7 @@ class DeclineTeacherView(BecomeSomethingView):
     m2m_attribute = "teachers"
     template_name = "booking/workflow/decline_teacher.html"
     view_title = _(u'Tilmeld som underviser')
-    notify_mail_template_key = EmailTemplate.visit_added_teacher_key
+    notify_mail_template_key = EmailTemplateType.NOTIFY_TEACHER__ASSOCIATED
 
     ERROR_NONE_NEEDED = _(u"Besøget har ikke brug for flere undervisere")
     ERROR_WRONG_ROLE = _(
@@ -635,7 +646,7 @@ class BecomeHostView(BecomeSomethingView):
     m2m_attribute = "hosts"
     template_name = "booking/workflow/become_host.html"
     view_title = _(u'Tilmeld som vært')
-    notify_mail_template_key = EmailTemplate.visit_added_host_key
+    notify_mail_template_key = EmailTemplateType.NOTIFY_HOST__ASSOCIATED
 
     ERROR_NONE_NEEDED = _(u"Besøget har ikke brug for flere værter")
     ERROR_WRONG_ROLE = _(
@@ -656,7 +667,7 @@ class DeclineHostView(BecomeSomethingView):
     m2m_attribute = "hosts"
     template_name = "booking/workflow/decline_host.html"
     view_title = _(u'Tilmeld som vært')
-    notify_mail_template_key = EmailTemplate.visit_added_host_key
+    notify_mail_template_key = EmailTemplateType.NOTIFY_HOST__ASSOCIATED
 
     ERROR_NONE_NEEDED = _(u"Besøget har ikke brug for flere værter")
     ERROR_WRONG_ROLE = _(
