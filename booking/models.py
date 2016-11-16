@@ -4596,10 +4596,10 @@ class KUEmailMessage(models.Model):
 
             # If we know the visit and the guest we can find the
             # booking if it is missing.
-            if 'booking' not in context and \
-               'besoeg' in context and 'guest' in email:
-                context['booking'] = Booking.objects.filter(
-                    visit=context['besoeg'],
+            if 'booking' not in ctx and \
+               'besoeg' in ctx and 'guest' in email:
+                ctx['booking'] = Booking.objects.filter(
+                    visit=ctx['besoeg'],
                     booker=email['guest']
                 ).first()
 
@@ -4607,6 +4607,7 @@ class KUEmailMessage(models.Model):
             subject = subject.replace('\n', '')
 
             body = template.expand_body(ctx, encapsulate=True).strip()
+
             if body.startswith("<!DOCTYPE"):
                 htmlbody = body
                 textbody = html2text(htmlbody)
