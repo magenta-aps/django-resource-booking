@@ -367,6 +367,11 @@ class VisitAddLogEntryView(VisitBreadcrumbMixin, FormView):
                 request, *args, **kwargs
             )
 
+    def get_context_data(self, **kwargs):
+        context = {'object': self.object}
+        context.update(kwargs)
+        return super(VisitAddLogEntryView, self).get_context_data(**context)
+
     def form_valid(self, form):
         log_action(
             self.request.user,
