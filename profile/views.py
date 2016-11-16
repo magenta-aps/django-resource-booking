@@ -2,7 +2,7 @@
 from datetime import datetime
 
 from booking.models import OrganizationalUnit, Product, Visit, Booking
-from booking.models import EmailTemplate, KUEmailMessage
+from booking.models import EmailTemplateType, KUEmailMessage
 from booking.models import VisitComment
 from booking.utils import UnicodeWriter
 from django.contrib import messages
@@ -430,7 +430,7 @@ class CreateUserView(FormView, UpdateView):
             if not pk:
                 try:
                     KUEmailMessage.send_email(
-                        EmailTemplate.SYSTEM__USER_CREATED,
+                        EmailTemplateType.SYSTEM__USER_CREATED,
                         {
                             'user': user,
                             'password': form.cleaned_data['password1'],

@@ -1,6 +1,6 @@
 from datetime import timedelta, date, datetime
 
-from booking.models import VisitAutosend, EmailTemplate, Visit
+from booking.models import VisitAutosend, EmailTemplateType, Visit
 from booking.models import MultiProductVisitTemp
 from django_cron import CronJobBase, Schedule
 
@@ -16,7 +16,7 @@ class ReminderJob(CronJobBase):
         print "Beginning ReminderJob (sends reminder emails)"
         autosends = list(VisitAutosend.objects.filter(
             enabled=True,
-            template_key=EmailTemplate.NOTITY_ALL__BOOKING_REMINDER,
+            template_key=EmailTemplateType.NOTITY_ALL__BOOKING_REMINDER,
             days__isnull=False,
             inherit=False
         ).all())
@@ -24,7 +24,7 @@ class ReminderJob(CronJobBase):
 
         inheriting_autosends = list(VisitAutosend.objects.filter(
             inherit=True,
-            template_key=EmailTemplate.NOTITY_ALL__BOOKING_REMINDER,
+            template_key=EmailTemplateType.NOTITY_ALL__BOOKING_REMINDER,
         ).all())
 
         extra = []
@@ -55,7 +55,7 @@ class ReminderJob(CronJobBase):
                     if reminderday == today:
                         print "    That's today; send reminder now"
                         autosend.visit.autosend(
-                            EmailTemplate.NOTITY_ALL__BOOKING_REMINDER
+                            EmailTemplateType.NOTITY_ALL__BOOKING_REMINDER
                         )
                     else:
                         print "    That's not today. Not sending reminder"
@@ -74,7 +74,7 @@ class IdleHostroleJob(CronJobBase):
 
         autosends = list(VisitAutosend.objects.filter(
             enabled=True,
-            template_key=EmailTemplate.NOTIFY_HOST__HOSTROLE_IDLE,
+            template_key=EmailTemplateType.NOTIFY_HOST__HOSTROLE_IDLE,
             days__isnull=False,
             inherit=False,
             visit__hosts=None,
@@ -85,7 +85,7 @@ class IdleHostroleJob(CronJobBase):
 
         inheriting_autosends = list(VisitAutosend.objects.filter(
             inherit=True,
-            template_key=EmailTemplate.NOTIFY_HOST__HOSTROLE_IDLE,
+            template_key=EmailTemplateType.NOTIFY_HOST__HOSTROLE_IDLE,
             visit__hosts=None,
             visit__host_status=Visit.STATUS_NOT_ASSIGNED,
             visit__bookings__isnull=False
@@ -122,7 +122,7 @@ class IdleHostroleJob(CronJobBase):
                         print "    That's today; send alert now"
                         try:
                             autosend.visit.autosend(
-                                EmailTemplate.NOTIFY_HOST__HOSTROLE_IDLE
+                                EmailTemplateType.NOTIFY_HOST__HOSTROLE_IDLE
                             )
                         except Exception as e:
                             print e
