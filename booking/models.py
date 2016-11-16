@@ -3517,6 +3517,17 @@ class MultiProductVisit(Visit):
         if primary_visit:
             return primary_visit.organizationalunit
 
+    def autosend_enabled(self, template_key):
+        if template_key in [
+            EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED,
+            EmailTemplateType.NOTIFY_EDITORS__BOOKING_CREATED
+        ]:
+            return True
+        else:
+            return super(MultiProductVisit, self).autosend_enabled(
+                template_key
+            )
+
     def get_autosend(self, template_key, follow_inherit=True,
                      include_disabled=False):
         return None
