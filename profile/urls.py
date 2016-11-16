@@ -5,7 +5,6 @@ from profile.views import ProfileView, CreateUserView, UnitListView
 from profile.views import DeleteUserView, UserListView, StatisticsView
 from profile.views import EmailLoginView
 from profile.views import EditMyProductsView
-from profile.views import AvailabilityEditView
 from profile.views import AvailabilityView
 
 urlpatterns = patterns(
@@ -54,7 +53,4 @@ urlpatterns = patterns(
     url(r'^availability/(?P<user_pk>[0-9]+)/?$',
         AvailabilityView.as_view(),
         name='availability'),
-    url(r'^availability/edit/?$',
-        AvailabilityEditView.as_view(),
-        name='availability-edit'),
 )

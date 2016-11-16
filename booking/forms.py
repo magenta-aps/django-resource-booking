@@ -320,9 +320,10 @@ class ProductForm(forms.ModelForm):
 
             'price': NumberInput(attrs={'class': 'form-control input-sm'}),
             'type': Select(attrs={'class': 'form-control input-sm'}),
-            'preparation_time': Textarea(
-                attrs={'class': 'form-control input-sm'}
-            ),
+            'preparation_time': TextInput(attrs={
+                'class': 'titlefield form-control input-sm',
+                'rows': 1, 'size': 62
+            }),
             'comment': Textarea(attrs={'class': 'form-control input-sm'}),
             'institution_level': Select(
                 attrs={'class': 'form-control input-sm'}
@@ -566,6 +567,7 @@ class StudyProjectForm(ProductForm):
         model = Product
         fields = ('type', 'title', 'teaser', 'description', 'state',
                   'institution_level', 'topics', 'audience',
+                  'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'time_mode', 'locality',
                   'tilbudsansvarlig', 'organizationalunit',
                   'preparation_time', 'comment',

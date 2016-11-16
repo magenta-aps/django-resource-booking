@@ -26,21 +26,45 @@
                         </ul>
                     </li>
                 {% endif %}
-                {% if item.num_visits %}
-                    <li>
-                        <strong>{% trans 'Hvornår:' %}</strong>
-                        <span class="type-offer">
-                            {% if item.num_visits == 1 %}
-                                {% blocktrans with date=item.first_visit|date:"d.m.Y" time=item.first_visit|time:"H.i" %}
-                                    {{ date }} kl. {{ time }}
+                {% if item.is_time_controlled %}
+                    {% if item.is_guest_time_suggested %}
+                        <li>
+                            <strong>{% trans 'Hvornår:' %}</strong>
+                            <span class="type-offer">
+                            {% if request.user.is_authenticated %}
+                                {% trans 'Gæsten foreslår selv et tidspunkt' %},
+                                {% blocktrans with count=item.eventtime_count date=item.first_eventtime|date:"d.m.Y" time=item.first_eventtime|time:"H.i" %}
+                                    {{ count }} registrerede tidspunkter, første gang {{ date }} kl. {{ time }}
                                 {% endblocktrans %}
                             {% else %}
-                                {% blocktrans with count=item.num_visits date=item.first_visit|date:"d.m.Y" time=item.first_visit|time:"H.i" %}
-                                    {{ count }} mulige tidspunkter, første gang {{ date }} kl. {{ time }}
-                                {% endblocktrans %}
+                                {% trans 'Foreslå selv et tidspunkt' %}
                             {% endif %}
-                        </span>
-                    </li>
+                            </span>
+                        </li>
+                    {% elif item.eventtime_count %}
+                        <li>
+                            <strong>{% trans 'Hvornår:' %}</strong>
+                            <span class="type-offer">
+                                {% with count=item.eventtime_count first_starttime=item.first_eventtime %}
+                                    {% if count == 1 %}
+                                        {% blocktrans with date=first_starttime|date:"d.m.Y" time=first_starttime|time:"H.i" %}
+                                            {{ date }} kl. {{ time }}
+                                        {% endblocktrans %}
+                                    {% else %}
+                                        {% if request.user.is_authenticated %}
+                                        {% blocktrans with count=count date=first_starttime|date:"d.m.Y" time=first_starttime|time:"H.i" %}
+                                            {{ count }} tidspunkter, første gang {{ date }} kl. {{ time }}
+                                        {% endblocktrans %}
+                                        {% else %}
+                                        {% blocktrans with count=count date=first_starttime|date:"d.m.Y" time=first_starttime|time:"H.i" %}
+                                            {{ count }} mulige tidspunkter, første gang {{ date }} kl. {{ time }}
+                                        {% endblocktrans %}
+                                        {% endif %}
+                                    {% endif %}
+                                {% endwith %}
+                            </span>
+                        </li>
+                    {% endif %}
                 {% endif %}
                 <li>
                     <strong>{% trans 'Hvor:' %}</strong>

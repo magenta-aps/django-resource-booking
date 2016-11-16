@@ -80,7 +80,7 @@
                                         <li><a href="{% url 'product-view' product.pk %}">#{{ product.pk }} {{ product.title }}</a></li>
                                     {% endfor %}
                                     </ul>
-                                {% else %}
+                                {% elif res.product %}
                                     <a href="{% url 'product-view' res.product.pk %}">#{{ res.product.pk }} {{ res.product.title }}</a>
                                 {% endif %}
                             </dd>

@@ -19,7 +19,7 @@ class EventTime(models.Model):
     class Meta:
         verbose_name = _(u"tidspunkt")
         verbose_name_plural = _(u"tidspunkter")
-        ordering = ['-start', '-end']
+        ordering = ['start', 'end']
 
     product = models.ForeignKey(
         "Product",

@@ -59,6 +59,15 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         context['lists'].extend(self.lists_by_role())
         context['thisurl'] = reverse('user_profile')
 
+        unit_qs = self.request.user.userprofile.get_unit_queryset()
+
+        today_qs = Visit.get_todays_visits().filter(
+            eventtime__product__organizationalunit=unit_qs
+        )
+        recent_qs = Visit.get_recently_held().filter(
+            eventtime__product__organizationalunit=unit_qs
+        )
+
         context['lists'].extend([{
             'color': self.HEADING_GREEN,
             'type': 'Visit',
@@ -66,10 +75,10 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                 u'%(count)d senest afviklet besøg',
                 u'%(count)d seneste afviklede besøg',
                 'count'
-            ) % {'count': Visit.get_recently_held().count()},
-            'queryset': Visit.get_recently_held(),
+            ) % {'count': recent_qs.count()},
+            'queryset': recent_qs,
             'limit': 10,
-            'limited_qs': Visit.get_recently_held()[:10],
+            'limited_qs': recent_qs[:10],
             'button': {
                 'text': _(u'Søg i alle'),
                 'link': reverse('visit-customlist') + "?type=%s" %
@@ -82,10 +91,10 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                 u'%(count)d dagens besøg',
                 u'%(count)d dagens besøg',
                 'count'
-            ),
-            'queryset': Visit.get_todays_visits(),
+            ) % {'count': today_qs.count()},
+            'queryset': today_qs,
             'limit': 10,
-            'limited_qs': Visit.get_todays_visits()[:10],
+            'limited_qs': today_qs[:10],
             'button': {
                 'text': _(u'Søg i alle'),
                 'link': reverse('visit-customlist') + "?type=%s" %
@@ -396,7 +405,6 @@ class CreateUserView(FormView, UpdateView):
             unit = OrganizationalUnit.objects.get(pk=unit_id)
 
             cd = form.cleaned_data
-            avail_txt = cd['availability_text']
             add_info = cd['additional_information']
 
             # Create
@@ -405,7 +413,6 @@ class CreateUserView(FormView, UpdateView):
                     user=user,
                     user_role=user_role,
                     organizationalunit=unit,
-                    availability_text=avail_txt,
                     additional_information=add_info,
                 )
             else:
@@ -415,7 +422,6 @@ class CreateUserView(FormView, UpdateView):
                 user_profile.user_role = user_role
                 user_profile.organizationalunit = unit
                 cd = form.cleaned_data
-                user_profile.availability_text = avail_txt
                 user_profile.additional_information = add_info
 
             user_profile.save()
@@ -905,41 +911,3 @@ class AvailabilityView(LoginRequiredMixin, DetailView):
             })
 
         return dates
-
-
-class AvailabilityEditView(LoginRequiredMixin, UpdateView):
-    model = UserProfile
-    template_name = 'profile/availability_edit.html'
-    fields = ['availability_text']
-
-    def get_object(self, queryset=None):
-        user = self.request.user
-        if user.userprofile and (user.userprofile.is_teacher or
-                                 user.userprofile.is_host):
-            return user.userprofile
-        else:
-            raise Http404("Only teachers or hosts can edit availability")
-
-    def get_form(self, form_class=None):
-        form = super(AvailabilityEditView, self).get_form(form_class)
-
-        for f in form.fields.values():
-            css = f.widget.attrs.get("class")
-            if css:
-                f.widget.attrs['class'] = css + ' form-control'
-            else:
-                f.widget.attrs['class'] = 'form-control'
-
-        return form
-
-    def post(self, request, *args, **kwargs):
-        if "cancel" in request.POST:
-            self.object = self.get_object()
-            return redirect(self.get_success_url())
-        else:
-            return super(AvailabilityEditView, self).post(
-                request, *args, **kwargs
-            )
-
-    def get_success_url(self):
-        return reverse('user_profile')

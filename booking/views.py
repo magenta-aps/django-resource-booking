@@ -661,6 +661,7 @@ class SearchView(BreadcrumbMixin, ListView):
     from_datetime = None
     to_datetime = None
     admin_form = None
+    facet_queryset = None
 
     boolean_choice = (
         (1, _(u'Ja')),
@@ -725,71 +726,59 @@ class SearchView(BreadcrumbMixin, ListView):
             t_from = self.get_date_from_request("from")
             t_to = self.get_date_from_request("to")
 
-            if not self.request.user.is_authenticated():
-                # Force searching by start date if none is specified
+            is_public = not self.request.user.is_authenticated()
+
+            if t_from:
+                date_cond = date_cond & Q(eventtime__start__gt=t_from)
+
+            if t_to:
+                date_cond = date_cond & Q(eventtime__start__lte=t_to)
+
+            if is_public:
+                # Public searches are always from todays date and onward
                 if t_from is None:
                     t_from = timezone.now()
+                    date_cond = date_cond & Q(eventtime__start__gt=t_from)
 
                 # Public users only want to search within bookable dates
                 ok_states = Visit.BOOKABLE_STATES
-                date_cond = (
+                in_bookable_state = (
                     Q(eventtime__bookable=True) &
                     Q(
                         Q(eventtime__visit__isnull=True) |
                         Q(eventtime__visit__workflow_status__in=ok_states)
                     )
-
                 )
 
-                # Filter out resource-controlled products that are
-                # resource-blocked.
                 res_controlled = Product.TIME_MODE_RESOURCE_CONTROLLED
-
                 eventtime_cls = booking_models.EventTime
-
                 nonblocked = eventtime_cls.NONBLOCKED_RESOURCE_STATES
-
-                date_cond = date_cond & Q(
+                not_resource_blocked = (
                     (~Q(time_mode=res_controlled)) |
                     Q(
                         time_mode=res_controlled,
                         eventtime__resource_status__in=nonblocked
                     )
                 )
-
-            if t_from:
-                date_cond = (
-                    date_cond &
-                    Q(eventtime__start__gt=t_from)
+                always_bookable = Q(
+                    time_mode__in=[
+                        Product.TIME_MODE_NONE,
+                        Product.TIME_MODE_GUEST_SUGGESTED,
+                    ]
                 )
-
-            if t_to:
-                date_cond = date_cond & Q(
-                    Q(eventtime__start__lte=t_to)
+                qs = qs.filter(
+                    (in_bookable_state & not_resource_blocked & date_cond) |
+                    always_bookable
                 )
+            else:
+                # Need this for search for products with/without bookings
+                qs = qs.annotate(
+                    num_bookings=Count('eventtime__visit__bookings')
+                )
+                qs = qs.filter(date_cond)
 
             self.from_datetime = t_from or ""
             self.to_datetime = t_to or ""
-
-            if len(date_cond):
-                # Products where the guest decides the time and products
-                # without time managenment should always show up in results.
-                qs = qs.filter(
-                    Q(time_mode__in=[
-                        Product.TIME_MODE_NONE,
-                        Product.TIME_MODE_GUEST_SUGGESTED,
-                    ]) |
-                    # The actual date conditions
-                    date_cond
-                )
-
-                # Simplify, since the above conditions are slow when
-                # used for making facets.
-                qs = Product.objects.filter(pk__in=[x.pk for x in qs])
-
-            qs = qs.annotate(
-                num_bookings=Count('eventtime__visit__bookings'),
-            )
 
             qs = qs.distinct()
 
@@ -798,10 +787,11 @@ class SearchView(BreadcrumbMixin, ListView):
         return self.base_queryset
 
     def annotate(self, qs):
-        return qs.annotate(
-            num_visits=Count('eventtime__visit__pk', distinct=True),
-            first_visit=Min('eventtime__start')
+        qs = qs.annotate(
+            eventtime_count=Count('eventtime__visit__pk', distinct=True),
+            first_eventtime=Min('eventtime__start')
         )
+        return qs
 
     def get_filters(self):
         if self.filters is None:
@@ -926,6 +916,15 @@ class SearchView(BreadcrumbMixin, ListView):
         else:
             self.filters["organizationalunit__pk"] = u
 
+    def get_facet_queryset(self):
+        if not self.facet_queryset:
+            self.facet_queryset = Product.objects.filter(
+                pk__in=[x.pk for x in self.get_base_queryset()]
+            ).annotate(
+                num_bookings=Count('eventtime__visit__bookings')
+            )
+        return self.facet_queryset
+
     def get_queryset(self):
         filters = self.get_filters()
         qs = self.get_base_queryset().filter(**filters)
@@ -944,11 +943,11 @@ class SearchView(BreadcrumbMixin, ListView):
             if not k.startswith(facet_field):
                 new_filters[k] = v
 
-        base_qs = self.get_base_queryset().filter(**new_filters)
+        facet_qs = Product.objects.filter(
+            pk__in=self.get_facet_queryset().filter(**new_filters)
+        )
 
-        qs = Product.objects.filter(
-            pk__in=base_qs
-        ).values(facet_field).annotate(hits=Count("pk"))
+        qs = facet_qs.values(facet_field).annotate(hits=Count("pk"))
 
         for item in qs:
             hits[item[facet_field]] = item["hits"]

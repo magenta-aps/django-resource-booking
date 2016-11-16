@@ -244,13 +244,18 @@ class ResourceCreateView(BackMixin, BreadcrumbMixin, FormView):
     form_class = ResourceTypeForm
     just_preserve_back = True
 
+    def get_form_kwargs(self):
+        kwargs = super(ResourceCreateView, self).get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
     def post(self, request, *args, **kwargs):
         form = self.get_form()
         context = {'form': form}
         context.update(kwargs)
         if form.is_valid():
             typeId = int(form.cleaned_data['type'])
-            unitId = int(form.cleaned_data['unit'])
+            unitId = int(form.cleaned_data['unit'].pk)
 
             return self.redirect(reverse(
                 'resource-create-type',
@@ -303,12 +308,13 @@ class ResourceListView(BreadcrumbMixin, ListView):
         return "resources"
 
     def get_queryset(self):
+        unit_qs = self.request.user.userprofile.get_unit_queryset()
         return chain(
-            ItemResource.objects.all(),
-            RoomResource.objects.all(),
-            TeacherResource.objects.all(),
-            HostResource.objects.all(),
-            VehicleResource.objects.all()
+            ItemResource.objects.filter(organizationalunit=unit_qs),
+            RoomResource.objects.filter(organizationalunit=unit_qs),
+            TeacherResource.objects.filter(organizationalunit=unit_qs),
+            HostResource.objects.filter(organizationalunit=unit_qs),
+            VehicleResource.objects.filter(organizationalunit=unit_qs)
         )
 
     def get_breadcrumbs(self):
@@ -434,13 +440,18 @@ class ResourcePoolCreateView(BackMixin, BreadcrumbMixin, FormView):
     form_class = ResourcePoolTypeForm
     just_preserve_back = True
 
+    def get_form_kwargs(self):
+        kwargs = super(ResourcePoolCreateView, self).get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
     def post(self, request, *args, **kwargs):
         form = self.get_form()
         context = {'form': form}
         context.update(kwargs)
         if form.is_valid():
             typeId = int(form.cleaned_data['type'])
-            unitId = int(form.cleaned_data['unit'])
+            unitId = int(form.cleaned_data['unit'].pk)
 
             return self.redirect(
                 reverse(
@@ -480,6 +491,11 @@ class ResourcePoolDetailView(BreadcrumbMixin, DetailView):
 class ResourcePoolListView(BreadcrumbMixin, ListView):
     model = ResourcePool
     template_name = "resourcepool/list.html"
+
+    def get_queryset(self):
+        qs = super(ResourcePoolListView, self).get_queryset()
+        unit_qs = self.request.user.userprofile.get_unit_queryset()
+        return qs.filter(organizationalunit=unit_qs)
 
     def get_context_object_name(self, queryset):
         return "resourcepools"
