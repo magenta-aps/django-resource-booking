@@ -1,0 +1,6 @@
+{% if visit.start_datetime %}
+    den {{ visit.start_datetime|date:'d.m.Y' }}
+    {% if visit.start_datetime|time:"H.i" %}
+        kl. {{ visit.start_datetime|time:"H.i" }}
+    {% endif %}
+{% endif %}

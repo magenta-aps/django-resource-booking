@@ -6,10 +6,11 @@
 
     <p>
         Vi glæder os til at se dig til
-        <a href="{% full_url 'product-view' product.pk %}">{{ visit.display_title }}</a>{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date:'d.m.Y' }}{% blocktrans with time=besoeg.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}{% endif %}
+        <a href="{% full_url 'product-view' product.pk %}">{{ visit.display_title }}</a>
+        {% if visit.start_datetime %} den {{ visit.start_datetime|date:'d.m.Y' }} kl. {{ visit.start_datetime|time:"H.i" }}{% endif %}
         på Københavns Universitet:
-        <a href="{% full_url 'product-view' product.pk %}#mapinfo">{{ product.locality.full_address }}</a>.
-        {% include 'booking/email/snippets/contact_addresses.html' with product=product %}
+        {% include 'booking/email/snippets/product_maplink.html' %}.
+        {% include 'booking/email/snippets/contact_addresses.html' with product=product vedr=1 %}
     </p>
     <p>
         Detaljer for din tilmelding:
@@ -37,7 +38,7 @@
         Dette er en påmindelse om at besøget
         <a href="{% full_url 'product-view' product.pk %}">{{ product.title }}</a>
         afholdes{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date:'d.m.Y' }}
-        {% blocktrans with time=besoeg.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}{% endif %} på Københavns Universitet:
+        kl. {{ visit.start_datetime|time:"H.i" }}{% endif %} på Københavns Universitet:
         <a href="{% full_url 'product-view' product.pk %}#mapinfo">{{ product.locality.full_address }}</a>.
     </p>
     <p>
@@ -49,8 +50,4 @@
 
 {% include 'booking/email/snippets/reply_link.html' %}
 
-<p>
-    Venlig hilsen<br />
-    <br />
-    {{ product.organizationalunit.name }}
-</p>
+{% include 'booking/email/snippets/regards.html' with unit=product.organizationalunit %}

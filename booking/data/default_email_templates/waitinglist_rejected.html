@@ -2,11 +2,6 @@
 
 <p>Du har afvist at deltage i besøget {{ visit.display_title }} den {{ besoeg.display_value }}. Din tilmelding er blevet slettet.</p>
 
-<p>
-    På <a href="http://fokusku.dk">foKUs.ku.dk</a> kan du se alle tilbud fra Københavns Universitet.
-</p>
-<p>
-    Venlig hilsen<br />
-    <br />
-    {{ product.organizationalunit }}
-</p>
+{% include 'booking/email/snippets/see_all.html' %}
+
+{% include 'booking/email/snippets/regards.html' with unit=product.organizationalunit %}

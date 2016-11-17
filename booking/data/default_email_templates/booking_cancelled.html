@@ -1,9 +1,7 @@
-<p>Kære alle</p>
+<p>Kære {{ recipient.get_full_name }}</p>
 <p>
-    Besøg <a href="{% full_url 'product-view' product.pk %}">{{ product.title }}</a>{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date:'d.m.Y' }}
-    {% blocktrans with time=besoeg.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}{% endif %}.
-    på Københavns Universitet er desværre blevet aflyst.
-    {% include 'booking/email/snippets/contact_addresses.html' with product=product %}.
+    Besøg <a href="{% full_url 'product-view' product.pk %}">{{ product.title }}</a>{% include 'booking/email/snippets/visit_time.html' %}.
+    på Københavns Universitet er desværre blevet aflyst. Vi beklager.
 </p>
 {% if recipient.guest %}
 
@@ -20,9 +18,7 @@
         <a href="{% full_url 'product-view' product.pk %}">Læs mere om besøget her</a>.
     </p>
 
-    <p>
-        {% include 'booking/email/snippets/see_all.html' %}
-    </p>
+    {% include 'booking/email/snippets/see_all.html' %}
 
 {% else %}
 
@@ -42,8 +38,4 @@
 
 {% include 'booking/email/snippets/reply_link.html' %}
 
-<p>
-    Venlig hilsen<br />
-    <br />
-    {{ product.organizationalunit.name }}
-</p>
+{% include 'booking/email/snippets/regards.html' with unit=product.organizationalunit %}

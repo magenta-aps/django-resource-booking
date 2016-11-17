@@ -11,11 +11,7 @@
 <p>
     <a href="{% full_url 'product-view' product.pk %}">Læs mere om tilbuddet her</a>.
 </p>
-<p>
-    På <a href="http://fokusku.dk">foKUs.ku.dk</a> kan du se alle tilbud fra Københavns Universitet.
-</p>
-<p>
-    Venlig hilsen<br />
-    <br />
-    {{ product.organizationalunit }}
-</p>
+
+{% include 'booking/email/snippets/see_all.html' %}
+
+{% include 'booking/email/snippets/regards.html' with unit=product.organizationalunit %}
