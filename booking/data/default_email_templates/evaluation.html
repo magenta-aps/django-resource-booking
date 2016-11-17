@@ -3,20 +3,14 @@
 <p>
     Vi vil sætte stor pris på, hvis du vil tage dig tid til at evaluere besøg
     <a href="{% full_url 'product-view' product.pk %}">{{ product.title }}</a>
-    der blev gennemført {% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date:'d.m.Y' }}
-    {% blocktrans with time=besoeg.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}{% endif %} på Københavns Universitet.
-    <br />
+    der blev gennemført {% include 'booking/email/snippets/visit_time.html' %} på Københavns Universitet.
     Evaluér her
-    <a href="{{ besoeg.evaluation_link }}">{{ besoeg.evaluation_link }}</a>.
+    <a href="{{ visit.evaluation_link }}">{{ visit.evaluation_link }}</a>.
 </p>
 <p>
     På forhånd tak for hjælpen!
 </p>
-<p>
-    {% include 'booking/email/snippets/see_all.html' %}
-</p>
-<p>
-    Venlig hilsen<br />
-    <br />
-    {{ product.organizationalunit.name }}
-</p>
+
+{% include 'booking/email/snippets/see_all.html' %}
+
+{% include 'booking/email/snippets/regards.html' with unit=product.organizationalunit %}

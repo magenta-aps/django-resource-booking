@@ -1,9 +1,8 @@
-<p>Kære underviser.</p>
+<p>Kære {{ recipient.get_full_name }}.</p>
 
 <p>
     En eller flere gæster har tilmeldt sig besøg
-    <a href="{% full_url 'visit-view' besoeg.pk token_user=recipient %}?teacher=true">{{ visit.display_title }}</a>{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date:'d.m.Y' }}
-    {% blocktrans with time=besoeg.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}{% endif %}.
+    <a href="{% full_url 'visit-view' visit.pk 'teacher' token_user=recipient %}">{{ visit.display_title }}</a>{% include 'booking/email/snippets/visit_time.html' %}.
     Besøget afholdes på
     <a href="{% full_url 'product-view' product.pk token_user=recipient %}#mapinfo">{{ product.locality.full_address }}</a>.
     Der er brug for en eller flere undervisere til afviklingen af tilbuddet.
@@ -33,13 +32,12 @@
     <p>
         Detaljer for tilmeldte:
     </p>
-
-    {% include 'booking/email/snippets/booking_list.html' %}
-
+    <p>
+        <strong>Forberedelsestid</strong>: {{ product.preparation_time|default:"Ingen" }}
+    </p>
+    <p>
+        {% include 'booking/email/snippets/booking_list.html' %}
+    </p>
 {% endif %}
 
-<p>
-    Venlig hilsen<br />
-    <br />
-    Koordinator
-</p>
+{% include 'booking/email/snippets/regards.html' with unit=product.organizationalunit %}

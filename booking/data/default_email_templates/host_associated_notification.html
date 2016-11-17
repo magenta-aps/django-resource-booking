@@ -1,27 +1,22 @@
-<p>Kære vært.</p>
+<p>Kære {{ recipient.get_full_name }}.</p>
 
 <p>
     Du er nu sat på som vært til besøg
-    <a href="{% full_url 'visit-view' visit.pk %}">{{ visit.display_title }}</a>{% if visit.start_datetime %} den {{ visit.start_datetime|date:'d.m.Y' }}
-    {% blocktrans with time=visit.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}{% endif %}.
+    {% include 'booking/email/snippets/visit_link.html' %}{% include 'booking/email/snippets/visit_time.html' %}.
     Besøget afholdes på
-    <a href="{% full_url 'product-view' product.pk %}#mapinfo">{{ product.locality.full_address }}</a>.
+    {% include 'booking/email/snippets/product_maplink.html' %}.
 </p>
 <p>
     Vær opmærksom på, om der er forberedelsestid.
 </p>
 <p>
-    <strong>Forberedelsestid</strong>: {{ product.preparation_time|default:"Ikke angivet" }}
+    Detaljer for tilmelding:
 </p>
-
 <p>
-    Detaljer for tilmeldte:
+    {% include 'booking/email/snippets/preparation.html' %}
 </p>
-
-{% include 'booking/email/snippets/booking_list.html' %}
-
 <p>
-    Venlig hilsen<br />
-    <br />
-    Koordinator
+    {% include 'booking/email/snippets/booking_list.html' %}
 </p>
+{% include 'booking/email/snippets/regards.html' with unit=product.organizationalunit %}
+

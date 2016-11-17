@@ -1,8 +1,10 @@
 <p>Kære {{ recipient.get_full_name }}.</p>
 
 <p>
-    Der er nu plads på besøg {{ product.title }} {% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date:'d.m.Y' }}
-    {% blocktrans with time=besoeg.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}{% endif %} på Københavns Universitet: <a href="{% full_url 'product-view' product.pk %}#mapinfo">{{ product.locality.full_address }}</a>.
+    Der er nu plads på besøg {{ product.title }}
+    {% include 'booking/email/snippets/visit_time.html' %}
+    på Københavns Universitet:
+    {% include 'booking/email/snippets/product_maplink.html' %}.
     Hvis du ønsker at deltage i besøget, skal du klikke <a href="{% full_url 'booking-accept-view' booking.id token_user=booking.booker %}">her</a> og svare ja eller nej til at deltage.
     Pladserne bliver fordelt efter først-til-mølle-princippet.
 </p>
@@ -18,11 +20,7 @@
 <p>
     <a href="{% full_url 'product-view' product.pk %}">Læs mere om tilbuddet her</a>.
 </p>
-<p>
-    På <a href="http://fokusku.dk">foKUs.ku.dk</a> kan du se alle tilbud fra Københavns Universitet.
-</p>
-<p>
-    Venlig hilsen<br />
-    <br />
-    {{ product.organizationalunit }}
-</p>
+
+{% include 'booking/email/snippets/see_all.html' %}
+
+{% include 'booking/email/snippets/regards.html' with unit=product.organizationalunit %}

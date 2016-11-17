@@ -2,18 +2,14 @@
 
 <p>
     En eller flere gæster har tilmeldt sig besøg
-    <a href="{% full_url 'visit-view' besoeg.pk token_user=recipient %}?host=true">{{ visit.display_title }}</a>{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date:'d.m.Y' }}
-    {% blocktrans with time=besoeg.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}{% endif %}.
+    <a href="{% full_url 'visit-view' visit.pk 'host' token_user=recipient %}">{{ visit.display_title }}</a>{% include 'booking/email/snippets/visit_time.html' %}.
     Besøget afholdes på
-    <a href="{% full_url 'product-view' product.pk token_user=recipient %}#mapinfo">{{ product.locality.full_address }}</a>.
+    {% include 'booking/email/snippets/product_maplink.html' %}.
     Der er brug for en eller flere værter til afviklingen af tilbuddet.
     Klik på linket og svar om du vil være vært eller ej.
 </p>
 <p>
     Vær opmærksom på, om der er forberedelsestid.
-</p>
-<p>
-    <strong>Forberedelsestid</strong>: {{ product.preparation_time|default:"Ikke angivet" }}
 </p>
 {% if booking %}
 
@@ -21,6 +17,9 @@
 
     <p>
         Detaljer for tilmelding:
+    </p>
+    <p>
+        <strong>Forberedelsestid: </strong>{{ product.preparation_time|default:'Ingen' }}
     </p>
     <p>
         {% include 'booking/email/snippets/booking_info.html' with booking=booking booker=booking.booker %}
@@ -33,13 +32,12 @@
     <p>
         Detaljer for tilmeldte:
     </p>
-
-    {% include 'booking/email/snippets/booking_list.html' %}
-
+    <p>
+        {% include 'booking/email/snippets/preparation.html' %}
+    </p>
+    <p>
+        {% include 'booking/email/snippets/booking_list.html' %}
+    </p>
 {% endif %}
 
-<p>
-    Venlig hilsen<br />
-    <br />
-    Koordinator
-</p>
+{% include 'booking/email/snippets/regards.html' with unit=product.organizationalunit %}

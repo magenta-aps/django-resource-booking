@@ -1,6 +1,4 @@
-{% if product.contact_users|length > 1 %}
-en af følgende kontaktpersoner:
+{% if product.inquire_user %}
+Hvis du har spørgsmål {% if vedr %}vedrørende{% else %}til{% endif %} din tilmelding, kan du skrive til
+<a href="mailto:{{ product.inquire_user.email }}">{% if product.inquire_user.get_full_name %}{{ product.inquire_user.get_full_name }}{% else %}{{ product.inquire_user.username }}{% endif %}</a>.
 {% endif %}
-{% for x in product.contact_users %}
-<a href="mailto:{{ x.email }}">{% if x.get_full_name %}{{ x.get_full_name }}{% else %}{{ x.username }}{% endif %}</a>{% if forloop.last %}.{% else %}, {% endif %}
-{% endfor %}
