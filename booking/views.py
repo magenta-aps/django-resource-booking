@@ -2619,22 +2619,6 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
             EmailTemplateType.NOTIFY_EDITORS__BOOKING_CREATED
         )
 
-        if self.visit.is_multiproductvisit:
-            visits = self.visit.multiproductvisit.subvisits_unordered
-        else:
-            visits = [self.visit]
-
-        for visit in visits:
-            if visit.needs_teachers:
-                visit.autosend(
-                    EmailTemplateType.NOTIFY_HOST__REQ_TEACHER_VOLUNTEER
-                )
-
-            if visit.needs_hosts:
-                visit.autosend(
-                    EmailTemplateType.NOTIFY_HOST__REQ_HOST_VOLUNTEER
-                )
-
         return redirect(
             reverse(
                 'visit-booking-success',
