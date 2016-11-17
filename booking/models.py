@@ -1867,10 +1867,8 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
         if template_type.send_to_contactperson:
             contacts = []
-            if self.tilbudsansvarlig:
-                contacts.append(self.tilbudsansvarlig)
-            elif self.created_by:
-                contacts.append(self.created_by)
+            if self.inquire_user:
+                contacts.append(self.inquire_user)
             recipients.extend(contacts)
 
         return recipients
@@ -2052,9 +2050,12 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             self.has_waitinglist_visit_spots
 
     @property
+    def inquire_user(self):
+        return self.tilbudsansvarlig or self.created_by
+
+    @property
     def can_inquire(self):
-        return self.type in Product.askable_types and \
-            (self.tilbudsansvarlig or self.created_by)
+        return self.type in Product.askable_types and self.inquire_user
 
     @property
     def duration_as_timedelta(self):
@@ -3479,7 +3480,7 @@ class MultiProductVisit(Visit):
 
     @property
     def start_datetime(self):
-        return self.date_display
+        return self.date_ref
 
     @property
     def interval_display(self):
@@ -4293,9 +4294,11 @@ class Booking(models.Model):
     def autosend(self, template_key, recipients=None,
                  only_these_recipients=False):
         template_type = EmailTemplateType.get(template_key)
-        if self.visit.autosend_enabled(template_type.key):
-            product = self.visit.product
-            unit = product.organizationalunit
+        visit = self.visit.real
+
+        if visit.autosend_enabled(template_type.key):
+            product = visit.product
+            unit = visit.organizationalunit
             if recipients is None:
                 recipients = set()
             else:
@@ -4309,8 +4312,8 @@ class Booking(models.Model):
                     'booking': self,
                     'product': product,
                     'booker': self.booker,
-                    'besoeg': self.visit,
-                    'visit': self.visit,
+                    'besoeg': visit,
+                    'visit': visit,
                 },
                 list(recipients),
                 self.visit,
