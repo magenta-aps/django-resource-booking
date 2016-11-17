@@ -629,9 +629,9 @@ class ProductAutosendForm(forms.ModelForm):
         super(ProductAutosendForm, self).__init__(*args, **kwargs)
 
         template_key = None
-        if 'instance' in kwargs:
+        if kwargs.get('instance'):
             template_key = kwargs['instance'].template_key
-        elif 'initial' in kwargs:
+        elif kwargs.get('initial'):
             template_key = kwargs['initial']['template_key']
         if template_key is not None:
             template_type = EmailTemplateType.get(template_key)
