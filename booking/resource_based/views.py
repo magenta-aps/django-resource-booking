@@ -36,8 +36,31 @@ class ManageTimesView(DetailView):
 class CreateTimeView(CreateView):
     model = booking_models.EventTime
     template_name = 'eventtime/create.html'
+    _product = None
 
     fields = ('product', 'has_specific_time', 'start', 'end', 'notes')
+
+    def get_product(self):
+        if not self._product:
+            try:
+                self._product = booking_models.Product.objects.get(
+                    pk=self.kwargs.get('product_pk', -1)
+                )
+            except:
+                raise Http404
+        return self._product
+
+    def today_at_8_00(self):
+        dt = timezone.datetime.combine(
+            timezone.now().date(), datetime.time(8)
+        )
+        return timezone.make_aware(dt)
+
+    def today_at_16_00(self):
+        dt = timezone.datetime.combine(
+            timezone.now().date(), datetime.time(16)
+        )
+        return timezone.make_aware(dt)
 
     def get_form(self, form_class=None):
         """
@@ -49,6 +72,21 @@ class CreateTimeView(CreateView):
 
         kwargs['initial']['product'] = self.kwargs.get('product_pk', -1)
 
+        if 'start' not in kwargs['initial']:
+            kwargs['initial']['start'] = self.today_at_8_00()
+
+        if 'end' not in kwargs['initial']:
+            duration = self.get_product().duration_in_minutes
+
+            if duration > 0:
+                end = kwargs['initial']['start'] + datetime.timedelta(
+                    minutes=duration
+                )
+            else:
+                end = self.today_at_16_00()
+
+            kwargs['initial']['end'] = end
+
         form = form_class(**kwargs)
 
         form.fields['has_specific_time'].coerce = lambda x: x == 'True'
@@ -56,16 +94,17 @@ class CreateTimeView(CreateView):
         return form
 
     def get_context_data(self, **kwargs):
-        try:
-            product = booking_models.Product.objects.get(
-                pk=self.kwargs.get('product_pk', -1)
-            )
-        except:
-            raise Http404
+        if self.request.method == "GET":
+            if self.get_product().duration_in_minutes > 0:
+                time_mode = "use_duration"
+            else:
+                time_mode = "time_and_date"
+        else:
+            time_mode = self.request.POST.get("time_mode")
 
         return super(CreateTimeView, self).get_context_data(
-            product=product,
-            use_product_duration=True,
+            product=self.get_product(),
+            time_mode_value=time_mode,
             **kwargs
         )
 
@@ -91,10 +130,32 @@ class CreateTimesFromRulesView(FormView):
 
         return self.product
 
+    def get_form_kwargs(self):
+        kwargs = super(CreateTimesFromRulesView, self).get_form_kwargs()
+
+        if self.request.method == "GET":
+            # Calculate end time from duration in minutes
+            if self.get_product().duration_in_minutes > 0:
+                # Duration is 8 am plus duration from product
+                total_minutes = 8 * 60 + self.get_product().duration_in_minutes
+
+                # Wrap if more than 24 hours
+                if total_minutes > 24 * 60:
+                    kwargs['initial']['extra_days'] = int(
+                        total_minutes / (24 * 60)
+                    )
+                    total_minutes = total_minutes % (24 * 60)
+
+                kwargs['initial']['end_time'] = '%02d:%02d' % (
+                    int(total_minutes / 60),
+                    total_minutes % 60
+                )
+
+        return kwargs
+
     def get_context_data(self, **kwargs):
         return super(CreateTimesFromRulesView, self).get_context_data(
             product=self.get_product(),
-            use_product_duration=True,
             **kwargs
         )
 
@@ -111,9 +172,15 @@ class CreateTimesFromRulesView(FormView):
 
         for dstr in dates:
             (start, end) = cls.parse_human_readable_interval(dstr)
-            has_specific_time = True
-            if (end - start).total_seconds() >= 24 * 60 * 60:
+
+            if (
+                start.hour == 0 and start.minute == 0 and
+                end.hour == 0 and end.minute == 0
+            ):
                 has_specific_time = False
+            else:
+                has_specific_time = True
+
             d = cls(
                 product=product,
                 start=start,
@@ -147,9 +214,18 @@ class EditTimeView(UpdateView):
         return form
 
     def get_context_data(self, **kwargs):
+        time_mode = self.request.POST.get("has_specific_time")
+        if not time_mode:
+            if not self.object.has_specific_time:
+                time_mode = "full_days"
+            elif self.object.duration_matches_product:
+                time_mode = "use_duration"
+            else:
+                time_mode = "time_and_date"
+
         return super(EditTimeView, self).get_context_data(
             product=self.object.product,
-            use_product_duration=self.object.duration_matches_product,
+            time_mode_value=time_mode,
             **kwargs
         )
 
