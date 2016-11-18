@@ -19,9 +19,12 @@
 {% else %}
 
     {# Denne besked sendes til kontaktpersoner (uden login) der er angivet på tilbuddet #}
-
-    En eller flere gæster har tilmeldt sig besøget
-    <a href="{% full_url 'product-view' product.pk %}">{{ visit.display_title }}</a>{% if visit.start_datetime %} den {{ visit.start_datetime|date:'d.m.Y' }} kl. {{ visit.start_datetime|time:"H.i" }}{% endif %}.
+    {% if visit.is_multiproductvisit %}
+        En eller flere gæster har tilmeldt sig
+    {% else %}
+        En eller flere gæster har tilmeldt sig besøget
+    {% endif %}
+    <a href="{% full_url 'product-view' product.pk %}">{{ visit.display_title }}</a>{% include 'booking/email/snippets/visit_time.html' %}.
     {% if not visit.is_multiproductvisit %}
         Besøget afholdes på denne lokalitet: {% include 'booking/email/snippets/product_maplink.html' %}.
     {% endif %}
