@@ -4,8 +4,11 @@
 {% if recipient.user %}
 
     {# Denne besked sendes til brugere der login i systemet (koordinatorer) #}
-
-    En eller flere gæster har tilmeldt sig besøget
+    {% if visit.is_multiproductvisit %}
+        En eller flere gæster har tilmeldt sig
+    {% else %}
+        En eller flere gæster har tilmeldt sig besøget
+    {% endif %}
     {% include 'booking/email/snippets/visit_link.html' %}{% include 'booking/email/snippets/visit_time.html' %}.
     {% if not visit.is_multiproductvisit %}
         Besøget afholdes på denne lokalitet:
