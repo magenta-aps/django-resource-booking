@@ -2,13 +2,19 @@
 
 {% if visit.start_datetime %}
 <p>
-    Du har tilmeldt dig besøg {{ visit.display_title }}
-    {% include 'booking/email/snippets/visit_time.html' %}
-    på Københavns Universitet{% if visit.locality %}:
-    {% include 'booking/email/snippets/product_maplink.html' %}{% endif %}.
     {% if visit.is_multiproductvisit %}
+        Du har oprettet ønske om deltagelse i {{ visit.real.subvisits_unordered.count }} tilbud på Københavns Universitet den {{ visit.start_datetime|date:'d.m.Y' }}:
+        <ul>
+        {% for product in visit.real.products %}
+            <li><a href="{% full_url 'product-view' product.pk %}">{{ product.title }}</a></li>
+        {% endfor %}
+        </ul>
         {% include 'booking/email/snippets/contact_addresses.html' with product=visit.real.primary_visit.product %}
     {% else %}
+        Du har tilmeldt dig besøg {{ visit.display_title }}
+        {% include 'booking/email/snippets/visit_time.html' %}
+        på Københavns Universitet{% if visit.locality %}:
+        {% include 'booking/email/snippets/product_maplink.html' %}{% endif %}.
         {% include 'booking/email/snippets/contact_addresses.html' with product=product %}
     {% endif %}
 </p>
