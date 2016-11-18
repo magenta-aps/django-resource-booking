@@ -2920,6 +2920,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def get_recipients(self, template_key):
         template_type = EmailTemplateType.get(template_key)
         product = self.product
+        if self.is_multiproductvisit and self.multiproductvisit.primary_visit:
+            product = self.multiproductvisit.primary_visit.product
         if product:
             recipients = product.get_recipients(template_key)
         else:
@@ -4295,7 +4297,6 @@ class Booking(models.Model):
                  only_these_recipients=False):
         template_type = EmailTemplateType.get(template_key)
         visit = self.visit.real
-
         if visit.autosend_enabled(template_type.key):
             product = visit.product
             unit = visit.organizationalunit
