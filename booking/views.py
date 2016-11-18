@@ -3701,22 +3701,26 @@ class MultiProductVisitTempProductsView(BreadcrumbMixin, UpdateView):
     model = MultiProductVisitTemp
     template_name = "visit/multi_products.html"
     _available_products = None
+    products_key = 'new_products'
 
     def get_form(self):
         form = super(MultiProductVisitTempProductsView, self).get_form()
-        form.fields['products'].choices = [
+        form.fields[self.products_key].choices = [
             (product.id, product.title)
             for product in self.available_products
         ]
-        form.initial['products'] = [
-            product for product in self.object.products.all()
+        form.initial[self.products_key] = [
+            product for product in self.object.products
             if product in self.available_products
         ]
         return form
 
     def get_context_data(self, **kwargs):
         context = {}
-        context['products'] = self.available_products
+        context['available_products'] = {
+            product.id: product
+            for product in self.available_products
+        }
         context.update(kwargs)
         return super(MultiProductVisitTempProductsView, self).get_context_data(
             **context
