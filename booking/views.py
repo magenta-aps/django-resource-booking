@@ -732,7 +732,9 @@ class SearchView(BreadcrumbMixin, ListView):
                 date_cond = date_cond & Q(eventtime__start__gt=t_from)
 
             if t_to:
-                date_cond = date_cond & Q(eventtime__start__lte=t_to)
+                # End datetime is midnight of the next day
+                next_midnight = t_to + timedelta(hours=24)
+                date_cond = date_cond & Q(eventtime__start__lte=next_midnight)
 
             if is_public:
                 # Public searches are always from todays date and onward
