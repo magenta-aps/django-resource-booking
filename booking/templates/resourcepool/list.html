@@ -11,9 +11,14 @@
 {% block content %}
 
     {% include 'common/breadcrumbrow.html' %}
-    <div class="divider"></div>
-
-    <h1>{% trans 'Ressourcegrupper' %}</h1>
+    <div class="clearfix">
+        <h1 class="pull-left">{% trans 'Ressourcegrupper' %}</h1>    
+        <a href="{% url 'resourcepool-create' %}?back={{ request.get_full_path | urlencode }}" role="button" class="btn btn-primary pull-right">
+            <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+            {% trans 'Opret ny ressourcegruppe' %}
+        </a>
+    </div>
+    
     <hr/>
 
     <p>
@@ -33,10 +38,6 @@
     <div class="row">
         <div class="col-md-12">
             <div>
-                <a href="{% url 'resourcepool-create' %}?back={{ request.get_full_path | urlencode }}" role="button" class="btn btn-default">
-                    <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
-                    {% trans 'Opret ny ressourcegruppe' %}
-                </a>
                 <a href="{% url 'resource-list' %}" role="button" class="btn btn-default pull-right">{% trans 'Administrér ressourcer' %}</a>
             </div>
 

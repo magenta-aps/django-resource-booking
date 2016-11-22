@@ -19,24 +19,19 @@
 
     {% include 'common/breadcrumbrow.html' %}
 
-    <div class="divider"></div>
-    <div class="row form-group">
-        <div class="col-sm-8">
-            <h1>
-                {% if object.pk %}
-                    {% blocktrans with templatename=object.name %}
-                        Rediger emailskabelon '{{ templatename }}'
-                    {% endblocktrans %}
-                {% else %}
-                    {% trans "Ny emailskabelon" %}
-                {% endif %}
-            </h1>
-        </div>
+    <div class="clearfix">
+        <h1 class="pull-left">
+            {% if object.pk %}
+                {% blocktrans with templatename=object.name %}
+                    Rediger emailskabelon '{{ templatename }}'
+                {% endblocktrans %}
+            {% else %}
+                {% trans "Ny emailskabelon" %}
+            {% endif %}
+        </h1>
         {% if object.pk %}
-            <div class="col-sm-4 text-right">
-                <!--a href="{% url 'emailtemplate-view' object.pk %}" class="btn btn-default">{% trans "Preview skabelon" %}</a-->
-                <a href="{% url 'emailtemplate-delete' object.pk %}?back={{ request.get_full_path | urlencode }}" class="btn btn-danger">{% trans "Slet skabelon" %}</a>
-            </div>
+            <!--a href="{% url 'emailtemplate-view' object.pk %}" class="btn btn-default">{% trans "Preview skabelon" %}</a-->
+            <a href="{% url 'emailtemplate-delete' object.pk %}?back={{ request.get_full_path | urlencode }}" class="btn btn-danger pull-right">{% trans "Slet skabelon" %}</a>
         {% endif %}
     </div>
     <hr/>
@@ -54,7 +49,7 @@
 
                         <div class="row form-group">
                             <div class="col-sm-2"></div>
-                            <div class="col-sm-10">
+                            <div class="col-sm-5">
                                 {% blocktrans %}
                                     Når en emailskabelon skal findes til et givet formål (f.eks. når en booking foretages), søges efter en skabelon med den rette type. Først søges efter skabeloner associeret med det relevante institut, derefter skabeloner associeret med det relevante fakultet, og sidst efter skabeloner uden enhed tilknyttet. Den først fundne af disse skabeloner vil blive anvendt til udsendelse af email.
                                 {% endblocktrans %}
@@ -62,20 +57,20 @@
                         </div>
 
                         <div class="row form-group">
-                            <div>
-                                {{ form.key.errors }}
-                            </div>
                             <div class="col-sm-2">
                                 <label class="{{ form.key.css_classes }}" for="{{ form.key.id_for_label }}">{{ form.key.label }}:</label>
                             </div>
-                            <div class="col-sm-10">
+                            <div class="col-sm-5">
                                 {{ form.key }}
+                            </div>
+                            <div class="col-sm-5">
+                                {{ form.key.errors }}
                             </div>
                         </div>
 
                         <div class="row form-group">
                             <div class="col-sm-2"></div>
-                            <div id="key_info" class="col-sm-10" style="display: none">
+                            <div id="key_info" class="col-sm-5" style="display: none">
                                 <span id="key_dosend">{% trans 'Automatisk udsendelse til:' %}</span>
                                 <span id="key_dontsend">{% trans 'Ingen automatisk udsendelse' %}</span>
                                 <ul></ul>
@@ -83,20 +78,20 @@
                         </div>
 
                         <div class="row form-group">
-                            <div>
-                                {{ form.organizationalunit.errors }}
-                            </div>
                             <div class="col-sm-2">
                                 <label class="{{ form.organizationalunit.css_classes }}" for="{{ form.organizationalunit.id_for_label }}">{{ form.organizationalunit.label }}:</label>
                             </div>
-                            <div class="col-sm-10">
+                            <div class="col-sm-5">
                                 {{ form.organizationalunit }}
+                            </div>
+                            <div class="col-sm-5">
+                                {{ form.organizationalunit.errors }}
                             </div>
                         </div>
 
                         <div class="row form-group">
                             <div class="col-sm-2"></div>
-                            <div class="col-sm-10">
+                            <div class="col-sm-5">
                                 {% blocktrans %}
                                     Skabelon-systemet anvender <a href="https://docs.djangoproject.com/en/1.9/ref/templates/language/" target="_blank">Djangos skabelonmodel</a>. Det betyder, at der udover almindelig tekst og HTML-kode kan indsættes felter, som udfyldes med værdier fra Bookinger, Besøg og Tilbud ud fra den sammenhæng beskeden skal udsendes i.
                                 {% endblocktrans %}
@@ -105,9 +100,9 @@
 
                         <div class="row form-group">
                             <div class="col-sm-2"></div>
-                            <div class="col-sm-10">
+                            <div class="col-sm-5">
                                 <div id="fieldinsert" class="dropdown">
-                                    <a role="button" data-toggle="dropdown" class="btn btn-default disabled" data-target="#" href="#">
+                                    <a role="button" data-toggle="dropdown" class="btn btn-default pull-right disabled" data-target="#" href="#">
                                         {% trans 'Indsæt felt' %} <span class="caret"></span>
                                     </a>
                                     <ul class="dropdown-menu multi-level" role="menu" aria-labelledby="dropdownMenu">
@@ -118,35 +113,35 @@
                         </div>
 
                         <div class="row form-group">
-                            <div>
-                                {{ form.subject.errors }}
-                            </div>
                             <div class="col-sm-2">
                                 <label class="{{ form.subject.css_classes }}" for="{{ form.subject.id_for_label }}">{{ form.subject.label }}:</label>
                             </div>
-                            <div class="col-sm-10">
+                            <div class="col-sm-5">
                                 {{ form.subject }}
+                            </div>
+                            <div class="col-sm-5">
+                                {{ form.subject.errors }}
                             </div>
                         </div>
 
                         <div class="row form-group">
-                            <div>
-                                {{ form.body.errors }}
-                            </div>
                             <div class="col-sm-2">
                                 <label class="{{ form.body.css_classes }}" for="{{ form.body.id_for_label }}">{{ form.body.label }}:</label>
                             </div>
-                            <div class="col-sm-10">
+                            <div class="col-sm-5">
                                 {{ form.body }}
+                            </div>
+                            <div class="col-sm-5">
+                                {{ form.body.errors }}
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-
-
+        
         {% include 'common/save_cancel.html' %}
+        
         <div class="divider"></div>
     </form>
 

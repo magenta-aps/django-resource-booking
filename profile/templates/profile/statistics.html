@@ -9,31 +9,35 @@
 
 <div class="divider"></div>
 
-<h1>{{ organizationalunit.name }}</h1>
+<h1>{{ organizationalunit.name }} - Statistik</h1>
 
-<div class="divider"></div>
-
-<h2>Statistik</h2>
-
-<form action="{% url 'statistics' %}" method="get">
-    <div class="divider"></div>
-    <div class="form-group">
-        {{ form.organizationalunits.errors }}
-        <label class="control-label" for="{{ form.organizationalunit.id_units}}">{% trans 'Enheder:' %}</label>
-        {{ form.units }}
+<form class="clearfix" action="{% url 'statistics' %}" method="get">
+    <div class="form-group row">
+        <label class="col-sm-2 control-label" for="{{ form.organizationalunit.id_units}}">{% trans 'Enheder:' %}</label>
+        <div class="col-sm-5">
+            {{ form.units }}
+        </div>
+        <div class="col-sm-5">
+            {{ form.organizationalunits.errors }}
+        </div>
     </div>
-    <div class="form-group">
-        {{ form.from_date.errors }}
-        <label class="control-label" for="{{ form.from_date.id_from_date}}">{% trans 'Fra:' %}</label>
-        {{ form.from_date }}
+    <div class="form-group row">
+        <div class="col-sm-3 col-sm-offset-2">
+            <label class="control-label" for="{{ form.from_date.id_from_date}}">{% trans 'Fra:' %}</label>
+            {{ form.from_date }}
+        </div>
+        <div class="col-sm-3">
+            <label class="control-label" for="{{ form.to_date.id_to_date}}">{% trans 'Til:' %}</label>
+            {{ form.to_date }}
+        </div>
+        <div class="col-sm-4">
+            {{ form.from_date.errors }}
+            {{ form.to_date.errors }}
+        </div>
     </div>
-    <div class="form-group">
-        {{ form.to_date.errors }}
-        <label class="control-label" for="{{ form.to_date.id_to_date}}">{% trans 'Til:' %}</label>
-        {{ form.to_date }}
-    </div>
+    <hr>
     <div>
-        <input type="submit" value="{% trans 'Hent data' %}" class="btn btn-default formpartbutton"/>
+        <input type="submit" value="{% trans 'Hent data' %}" class="btn btn-primary formpartbutton pull-right">
     </div>
 </form>
 

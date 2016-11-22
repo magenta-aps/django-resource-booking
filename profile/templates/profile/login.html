@@ -4,6 +4,7 @@
 <form method="POST">
      {% csrf_token %}
      {{form.as_p}}
-     <input type="Submit" value="Log ind" name="Submit" />
+     <hr>
+     <input type="Submit" class="btn btn-primary pull-right" value="Log ind" name="Submit">
 </form>
 {% endblock %}

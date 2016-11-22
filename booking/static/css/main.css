@@ -72,6 +72,7 @@ strong, .bold {
 }
 
 textarea {
+    width: 100%;
     max-width: 100%;
 }
 
@@ -93,6 +94,10 @@ textarea {
     background-color: #fff;
     border: 1px solid #999;
     margin-right: 5px;
+}
+
+.form-horizontal .control-label {
+    text-align: left;
 }
 
 .inline-block {
@@ -1150,7 +1155,6 @@ a.template-overridden, a.template-overridden:hover, a.template-overridden:active
 /* Userlist */
 
 .userlist-label {
-    text-align: right;
     font-weight: bold;
 }
 
