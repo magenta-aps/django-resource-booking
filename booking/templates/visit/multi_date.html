@@ -21,13 +21,13 @@
 
         <p class="btn-group">
             {% if object and object.id %}
-                <a class="btn btn-primary active" href="#" role="button">{% trans 'Vælg dato' %}</a>
-                <button class="btn btn-primary" type="submit" formaction="?next={% url 'mpv-edit-products' object.id %}" role="button">{% trans 'Vælg tilbud' %}</button>
-                <button class="btn btn-primary" type="submit" formaction="?next={% url 'mpv-confirm' object.id %}" role="button">{% trans 'Bekræft' %}</button>
+                <a class="btn btn-default active" href="#" role="button">{% trans 'Vælg dato' %}</a>
+                <button class="btn btn-default" type="submit" formaction="?next={% url 'mpv-edit-products' object.id %}" role="button">{% trans 'Vælg tilbud' %}</button>
+                <button class="btn btn-default" type="submit" formaction="?next={% url 'mpv-confirm' object.id %}" role="button">{% trans 'Bekræft' %}</button>
             {% else %}
-                <a class="btn btn-primary active" href="#" role="button">{% trans 'Vælg dato' %}</a>
-                <a class="btn btn-primary disabled" href="" role="button">{% trans 'Vælg tilbud' %}</a>
-                <a class="btn btn-primary disabled" href="" role="button">{% trans 'Bekræft' %}</a>
+                <a class="btn btn-default active" href="#" role="button">{% trans 'Vælg dato' %}</a>
+                <a class="btn btn-default disabled" href="" role="button">{% trans 'Vælg tilbud' %}</a>
+                <a class="btn btn-default disabled" href="" role="button">{% trans 'Bekræft' %}</a>
             {% endif %}
         </p>
 
@@ -37,8 +37,8 @@
         {% include 'common/fields/generic_field.html' with field=form.date %}
 
         <fieldset>
-            <a class="btn btn-primary cancelbutton" href="{% if object %}{% url 'product-book-notime' object.id %}{% elif oncancel %}{{ oncancel }}{% else %}javascript:history.back(){% endif %}">{% trans "Annullér bestilling" %}</a>
-            <button class="btn btn-primary" type="submit">{% trans "Videre" %}</button>
+            <a class="btn btn-default cancelbutton" href="{% if object %}{% url 'product-book-notime' object.id %}{% elif oncancel %}{{ oncancel }}{% else %}javascript:history.back(){% endif %}">{% trans "Annullér bestilling" %}</a>
+            <button class="btn btn-default" type="submit">{% trans "Videre" %}</button>
         </fieldset>
         <div class="divider"></div>
 

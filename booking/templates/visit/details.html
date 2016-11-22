@@ -68,7 +68,7 @@
             <div class="col-xs-3">
                 {% if can_notify %}
                     <div class="pull-right dropdown">
-                        <button class="btn btn-primary dropdown-toggle" type="button" id="sendNotification" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <button class="btn btn-default dropdown-toggle" type="button" id="sendNotification" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             {% trans 'Send besked' %}
                             <span class="caret"/>
                         </button>
@@ -128,7 +128,7 @@
                                     {% trans 'Ikke angivet' %}
                                 {% endif %}
                                 {% if can_edit %}
-                                    <a href="{% url 'change-visit-starttime' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
+                                    <a href="{% url 'change-visit-starttime' object.pk %}" role="button" class="btn btn-default btn-xs">{% trans 'Redigér' %}</a>
                                 {% endif %}
                             {% endif %}
                         </dd>
@@ -149,7 +149,7 @@
                                     {% trans 'Ikke tildelt' %}
                                 {% endif %}
                                 {% if can_edit %}
-                                    <a href="{% url 'change-visit-responsible' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
+                                    <a href="{% url 'change-visit-responsible' object.pk %}" role="button" class="btn btn-default btn-xs">{% trans 'Redigér' %}</a>
                                 {% endif %}
                             </dd>
                         {% endif %}
@@ -165,22 +165,22 @@
                                         {% endfor %}
                                         </ul>
                                         {% if can_edit %}
-                                            <a href="{% url 'visit-resources-edit' object.pk %}" role="button" class="btn btn-primary btn-xs" style="vertical-align:top">{% trans 'Redigér' %}</a>
+                                            <a href="{% url 'visit-resources-edit' object.pk %}" role="button" class="btn btn-default btn-xs" style="vertical-align:top">{% trans 'Redigér' %}</a>
                                         {% endif %}
                                     {% else %}
                                         {% trans 'Tilbuddet kræver ingen ressourcer' %}
                                     {% endif %}
                                     <div>
                                     {% if can_become_teacher %}
-                                        <a href="{% url 'become-teacher' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Bliv underviser for dette besøg' %}</a>
+                                        <a href="{% url 'become-teacher' object.pk %}" role="button" class="btn btn-default btn-xs">{% trans 'Bliv underviser for dette besøg' %}</a>
                                         {% if teacher %}
-                                            <a href="{% url 'decline-teacher' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Jeg ønsker ikke at være underviser' %}</a>
+                                            <a href="{% url 'decline-teacher' object.pk %}" role="button" class="btn btn-default btn-xs">{% trans 'Jeg ønsker ikke at være underviser' %}</a>
                                         {% endif %}
                                     {% endif %}
                                     {% if can_become_host %}
-                                        <a href="{% url 'become-host' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Bliv vært for dette besøg.' %}</a>
+                                        <a href="{% url 'become-host' object.pk %}" role="button" class="btn btn-default btn-xs">{% trans 'Bliv vært for dette besøg.' %}</a>
                                         {% if host %}
-                                            <a href="{% url 'decline-host' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Jeg ønsker ikke at være vært' %}</a>
+                                            <a href="{% url 'decline-host' object.pk %}" role="button" class="btn btn-default btn-xs">{% trans 'Jeg ønsker ikke at være vært' %}</a>
                                         {% endif %}
                                     {% endif %}
                                     </div>
@@ -195,19 +195,19 @@
                         <dd>
                             {% blocktrans with found=object.teachers.all|length needed=object.total_required_teachers %}{{ found }}/{{ needed }} undervisere fundet{% endblocktrans %}
                             {% if can_edit %}
-                                <a href="{% url 'change-visit-teachers' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
+                                <a href="{% url 'change-visit-teachers' object.pk %}" role="button" class="btn btn-default btn-xs">{% trans 'Redigér' %}</a>
                             {% elif request.user.userprofile.is_teacher %}
                                 {% if object.needs_teachers %}
                                     {% if request.user in object.teachers.all %}
                                         (allerede underviser for dette besøg)
                                     {% else %}
-                                        <a href="{% url 'become-teacher' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Bliv underviser for dette besøg' %}</a>
+                                        <a href="{% url 'become-teacher' object.pk %}" role="button" class="btn btn-default btn-xs">{% trans 'Bliv underviser for dette besøg' %}</a>
                                         {% if teacher %}
-                                            <a href="{% url 'decline-teacher' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Jeg ønsker ikke at være underviser' %}</a>
+                                            <a href="{% url 'decline-teacher' object.pk %}" role="button" class="btn btn-default btn-xs">{% trans 'Jeg ønsker ikke at være underviser' %}</a>
                                         {% endif %}
                                     {% endif %}
                                 {% else %}
-                                    <button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#teachers-found" >{% trans 'Alle fundet' %}</button>
+                                    <button type="button" class="btn btn-default btn-xs" data-toggle="modal" data-target="#teachers-found" >{% trans 'Alle fundet' %}</button>
                                 {% endif %}
                             {% endif %}
                         </dd>
@@ -218,19 +218,19 @@
                         <dd>
                             {% blocktrans with found=object.hosts.all|length needed=object.total_required_hosts %}{{ found }}/{{ needed }} værter fundet{% endblocktrans %}
                             {% if can_edit %}
-                                <a href="{% url 'change-visit-hosts' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
+                                <a href="{% url 'change-visit-hosts' object.pk %}" role="button" class="btn btn-default btn-xs">{% trans 'Redigér' %}</a>
                             {% elif request.user.userprofile.is_host %}
                                 {% if object.needs_hosts %}
                                     {% if request.user in object.hosts.all %}
                                         {% trans '(allerede vært for dette besøg)' %}
                                     {% else %}
-                                        <a href="{% url 'become-host' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Bliv vært for dette besøg.' %}</a>
+                                        <a href="{% url 'become-host' object.pk %}" role="button" class="btn btn-default btn-xs">{% trans 'Bliv vært for dette besøg.' %}</a>
                                         {% if host %}
-                                            <a href="{% url 'decline-host' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Jeg ønsker ikke at være vært' %}</a>
+                                            <a href="{% url 'decline-host' object.pk %}" role="button" class="btn btn-default btn-xs">{% trans 'Jeg ønsker ikke at være vært' %}</a>
                                         {% endif %}
                                     {% endif %}
                                 {% else %}
-                                    <button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#hosts-found" >{% trans 'Alle fundet' %}</button>
+                                    <button type="button" class="btn btn-default btn-xs" data-toggle="modal" data-target="#hosts-found" >{% trans 'Alle fundet' %}</button>
                                 {% endif %}
                             {% endif %}
                         </dd>
@@ -248,7 +248,7 @@
                             </ul>
                             {% endif %}
                             {% if can_edit %}
-                                <a href="{% url 'change-visit-rooms' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
+                                <a href="{% url 'change-visit-rooms' object.pk %}" role="button" class="btn btn-default btn-xs">{% trans 'Redigér' %}</a>
                             {% endif %}
                         </dd>
                         {% endif %}
@@ -258,7 +258,7 @@
                         <dd>
                             {{ object.get_autosend_display }}
                             {% if can_edit %}
-                                <a href="{% url 'change-visit-autosend' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
+                                <a href="{% url 'change-visit-autosend' object.pk %}" role="button" class="btn btn-default btn-xs">{% trans 'Redigér' %}</a>
                             {% endif %}
                         </dd>
                         {% endif %}
@@ -267,7 +267,7 @@
                         <dd>
                             {{ object.get_workflow_status_display }}
                             {% if can_edit %}
-                                <a href="{% url 'change-visit-status' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Skift status' %}</a>
+                                <a href="{% url 'change-visit-status' object.pk %}" role="button" class="btn btn-default btn-xs">{% trans 'Skift status' %}</a>
                             {% endif %}
                         </dd>
 
@@ -275,7 +275,7 @@
                         <dt>{% trans 'Antal på venteliste' %}</dt>
                         <dd>
                             {{ object.nr_waiting }}
-                            <a href="#waitinglist" role="button" class="btn btn-primary btn-xs">{% trans 'Se liste' %}</a>
+                            <a href="#waitinglist" role="button" class="btn btn-default btn-xs">{% trans 'Se liste' %}</a>
                         </dd>
                         {% endif %}
 
@@ -287,7 +287,7 @@
                             {% trans 'Ikke angivet' %}
                             {% endif %}
                             {% if can_edit %}
-                                <a href="{% url 'change-visit-eval' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
+                                <a href="{% url 'change-visit-eval' object.pk %}" role="button" class="btn btn-default btn-xs">{% trans 'Redigér' %}</a>
                             {% endif %}
                         </dd>
 
@@ -295,7 +295,7 @@
                         <dd>
                             <pre>{{ object.comments }}</pre>
                             {% if can_edit %}
-                                <a href="{% url 'change-visit-comments' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
+                                <a href="{% url 'change-visit-comments' object.pk %}" role="button" class="btn btn-default btn-xs">{% trans 'Redigér' %}</a>
                             {% endif %}
                         </dd>
 
@@ -304,7 +304,7 @@
                         <dd>
                             <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
                             {% trans 'Dette besøg er markeret som havende nylige ændringer' %}.<br />
-                            <a href="{% url 'visit-reset-changes-marker' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Klik her for at fjerne markeringen' %}</a>
+                            <a href="{% url 'visit-reset-changes-marker' object.pk %}" role="button" class="btn btn-default btn-xs">{% trans 'Klik her for at fjerne markeringen' %}</a>
                         </dd>
                         {% endif %}
                     </dl>
@@ -364,7 +364,7 @@
                     <h2>{% trans 'Aktivitetslog' %}</h2>
 
                     <div>
-                        <a href="{% url 'visit-add-logentry' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Tilføj ny log-post' %}</a>&nbsp;
+                        <a href="{% url 'visit-add-logentry' object.pk %}" role="button" class="btn btn-default btn-xs">{% trans 'Tilføj ny log-post' %}</a>&nbsp;
                     </div>
                     <div class="divider"></div>
                     <ul class="list-unstyled scroll-400">
@@ -396,7 +396,7 @@
                     <h2>{% trans 'Kommentarer' %}</h2>
 
                     <div>
-                        <a href="{% url 'visit-add-comment' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Tilføj ny kommentar' %}</a>&nbsp;
+                        <a href="{% url 'visit-add-comment' object.pk %}" role="button" class="btn btn-default btn-xs">{% trans 'Tilføj ny kommentar' %}</a>&nbsp;
                     </div>
                     <div class="divider"></div>
                     <ul class="list-unstyled scroll-400">

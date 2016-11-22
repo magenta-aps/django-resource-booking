@@ -46,9 +46,9 @@
         <div class="col-md-12">
             <p class="pull-right">
                 {% if object.resource %}
-                <a href="{% url 'resource-view' object.resource.id %}" role="button" class="btn btn-primary">Gå til ressource</a>
+                <a href="{% url 'resource-view' object.resource.id %}" role="button" class="btn btn-default">Gå til ressource</a>
                 {% elif object.product %}
-                <a href="{% url 'product-view' object.product.id %}" role="button" class="btn btn-primary">Gå til tilbud</a>
+                <a href="{% url 'product-view' object.product.id %}" role="button" class="btn btn-default">Gå til tilbud</a>
                 {% endif %}
             </p>
             <h2>Tilgængelige tider</h2>
@@ -97,7 +97,7 @@
             {% endif %}
             <div class="divider"></div>
             <p>
-                <a href="{% url reverses.calendar_event_create view.rel_obj.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Opret tid i kalender' %}</a>
+                <a href="{% url reverses.calendar_event_create view.rel_obj.pk %}" role="button" class="btn btn-default btn-xs">{% trans 'Opret tid i kalender' %}</a>
             </p>
             <table class="ressource-kalender table table-bordered table-striped">
                 <thead>

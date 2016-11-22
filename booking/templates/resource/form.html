@@ -30,11 +30,11 @@
                     <div class="col-sm-7">
                         {{ object.resource_type }}
                         {% if object.resource_type.id == ResourceType.RESOURCE_TYPE_HOST %}
-                            <a href="{% url 'user_edit' object.user.pk %}" class="btn btn-primary btn-xs" role="button">{% trans 'Gå til redigering af vært' %}</a>
+                            <a href="{% url 'user_edit' object.user.pk %}" class="btn btn-default btn-xs" role="button">{% trans 'Gå til redigering af vært' %}</a>
                         {% elif object.resource_type.id == ResourceType.RESOURCE_TYPE_TEACHER %}
-                            <a href="{% url 'user_edit' object.user.pk %}" class="btn btn-primary btn-xs" role="button">{% trans 'Gå til redigering af underviser' %}</a>
+                            <a href="{% url 'user_edit' object.user.pk %}" class="btn btn-default btn-xs" role="button">{% trans 'Gå til redigering af underviser' %}</a>
                         {% elif object.resource_type.id == ResourceType.RESOURCE_TYPE_ROOM %}
-                            <a href="{% url 'admin:booking_room_change' object.room.pk %}" class="btn btn-primary btn-xs" role="button">{% trans 'Gå til redigering af lokale' %}</a>
+                            <a href="{% url 'admin:booking_room_change' object.room.pk %}" class="btn btn-default btn-xs" role="button">{% trans 'Gå til redigering af lokale' %}</a>
                         {% endif %}
                     </div>
                 </div>

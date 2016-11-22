@@ -13,9 +13,9 @@
 
     <div class="pull-right">
         {% if object.can_delete %}
-            <a href="{% url 'resource-delete' object.id %}?back={% url 'resource-view' object.id %}" class="btn btn-primary" role="button">{% trans 'Slet ressourcen' %}</a>
+            <a href="{% url 'resource-delete' object.id %}?back={% url 'resource-view' object.id %}" class="btn btn-default" role="button">{% trans 'Slet ressourcen' %}</a>
         {% endif %}
-        <a href="{% url 'resource-edit' object.id %}?back={% url 'resource-view' object.id %}" role="button" class="btn btn-primary" role="button">{% trans 'Redigér' %}</a>
+        <a href="{% url 'resource-edit' object.id %}?back={% url 'resource-view' object.id %}" role="button" class="btn btn-default" role="button">{% trans 'Redigér' %}</a>
     </div>
 
     <div class="divider"></div>
@@ -50,7 +50,7 @@
 
     <div>
         {% if object.calendar %}
-            <a href="{% url 'calendar' object.id %}" class="btn btn-primary" role="button">{% trans 'Rediger kalender for denne ressource' %}</a>
+            <a href="{% url 'calendar' object.id %}" class="btn btn-default" role="button">{% trans 'Rediger kalender for denne ressource' %}</a>
         {% else %}
             <p>
             {% blocktrans %}
@@ -58,7 +58,7 @@
                 Hvis du ønsker at styre tilgængeligheden af ressourcen via en kalender kan du klikke på knappen for at oprette en kalender for ressourcen.
             {% endblocktrans %}
             </p>
-            <a href="{% url 'calendar-create' object.id %}" class="btn btn-primary" role="button">{% trans 'Opret kalender for ressourcen' %}</a>
+            <a href="{% url 'calendar-create' object.id %}" class="btn btn-default" role="button">{% trans 'Opret kalender for ressourcen' %}</a>
         {% endif %}
     </div>
 

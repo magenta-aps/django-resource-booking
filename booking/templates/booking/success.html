@@ -19,9 +19,9 @@
             {% trans "Bemærk venligst at aftalen først er bindende, når du har modtaget en bekræftelse<br />fra den arrangør på Københavns Universitet, der er ansvarlig for besøget." %}
         </p>
         {% if back %}
-            <a href="{{ back }}" class="btn btn-primary">{% trans "OK" %}</a>
+            <a href="{{ back }}" class="btn btn-default">{% trans "OK" %}</a>
         {% else %}
-            <a href="{% url 'product-view' object.id %}" class="btn btn-primary">{% trans "OK" %}</a>
+            <a href="{% url 'product-view' object.id %}" class="btn btn-default">{% trans "OK" %}</a>
         {% endif %}
     </div>
 

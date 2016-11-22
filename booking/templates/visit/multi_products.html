@@ -20,9 +20,9 @@
     <form id="mpvform" action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
 
         <p class="btn-group">
-            <button class="btn btn-primary" type="submit" formaction="?next={% url 'mpv-edit-date' object.id %}" role="button">{% trans 'Vælg dato' %}</button>
-            <a class="btn btn-primary active" href="#" role="button">{% trans 'Vælg tilbud' %}</a>
-            <button class="btn btn-primary" type="submit" formaction="?next={% url 'mpv-confirm' object.id %}" role="button">{% trans 'Bekræft' %}</button>
+            <button class="btn btn-default" type="submit" formaction="?next={% url 'mpv-edit-date' object.id %}" role="button">{% trans 'Vælg dato' %}</button>
+            <a class="btn btn-default active" href="#" role="button">{% trans 'Vælg tilbud' %}</a>
+            <button class="btn btn-default" type="submit" formaction="?next={% url 'mpv-confirm' object.id %}" role="button">{% trans 'Bekræft' %}</button>
         </p>
 
         {{ form.non_field_errors }}
@@ -55,7 +55,7 @@
         <ul style="display:none">
             <li id="product_prototype" class="list-group-item">
                 <span class="glyphicon glyphicon-move movebutton"></span>
-                <a class="btn btn-primary pull-right selectbutton">{% trans 'Vælg' %}</a>
+                <a class="btn btn-default pull-right selectbutton">{% trans 'Vælg' %}</a>
                 <h2 class="title"></h2>
                 <p class="teaser"></p>
                 <a class="deselectbutton">
@@ -69,8 +69,8 @@
         {% include 'common/fields/generic_field.html' with field=form.notes %}
 
         <fieldset>
-            <a class="btn btn-primary cancelbutton" href="{% url 'mpv-edit-date' object.id %}">{% trans "Tilbage" %}</a>
-            <button class="btn btn-primary" type="submit">{% trans "Videre" %}</button>
+            <a class="btn btn-default cancelbutton" href="{% url 'mpv-edit-date' object.id %}">{% trans "Tilbage" %}</a>
+            <button class="btn btn-default" type="submit">{% trans "Videre" %}</button>
         </fieldset>
         <div class="divider"></div>
 
