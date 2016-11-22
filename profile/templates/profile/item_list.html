@@ -1,7 +1,6 @@
 {% load i18n %}
 {% load booking_tags %}
 <div class="col-sm-6">
-PROFILE ITEM_LIS
     <div class="panel panel-bookings">
         <div class="panel-heading {{ list.color }}">
             <h3 class="panel-title">
@@ -78,7 +77,7 @@ PROFILE ITEM_LIS
                                         {{ res.get_type_display }}
                                     </li>
 
-                                    {% if item.is_guest_time_suggested %}
+                                    {% if res.is_guest_time_suggested %}
                                         <li>
                                             {% trans 'Dato/tid:' %}
                                             {% trans 'Foreslå selv tidspunkt' %}
@@ -105,10 +104,10 @@ PROFILE ITEM_LIS
                                         </li>
                                     {% endif %}
 
-                                    {% if item.price %}
+                                    {% if res.price %}
                                         <li>
                                             {% trans 'Pris:' %}
-                                            <span class="type-offer">{{ item.price }}</span>
+                                            <span class="type-offer">{{ res.price }}</span>
                                         </li>
                                     {% endif %}
                                 </ul>
