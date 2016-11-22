@@ -1,5 +1,9 @@
 {% load i18n %}
-<fieldset>
-    <button class="btn btn-default" type="submit">{% trans "Fortsæt" %}</button>
-    <a class="btn btn-default cancelbutton" href="{% if oncancel %}{{ oncancel }}{% else %}javascript:history.back(){% endif %}">{% trans "Annullér" %}</a>
-</fieldset>
+<div>
+    <a class="btn btn-default pull-left formpartbutton"
+       href="{% if oncancel %}{{ oncancel }}{% else %}javascript:history.back(){% endif %}"
+       data-dismiss="modal">
+        {% trans "Annullér" %}
+    </a>
+    <button class="btn btn-primary pull-right formpartbutton" type="submit">{% trans "Fortsæt" %}</button>
+</div>

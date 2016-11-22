@@ -18,7 +18,10 @@
     <hr/>
 
     <div>
-        <a href="{% url 'resourcerequirement-create' product.id %}?back={{ request.get_full_path | urlencode }}" role="button" class="btn btn-default">{% trans 'Opret nyt ressourcebehov' %}</a>
+        <a href="{% url 'resourcerequirement-create' product.id %}?back={{ request.get_full_path | urlencode }}" role="button" class="btn btn-default">
+            <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+            {% trans 'Opret nyt ressourcebehov' %}
+        </a>
         <a href="{% url 'resourcepool-list' %}" role="button" class="btn btn-default pull-right">{% trans 'Administrér ressourcegrupper' %}</a>
     </div>
 
@@ -50,7 +53,7 @@
                 <td>
                     <a href="{% url 'resourcerequirement-edit' resourcerequirement.product.id resourcerequirement.id %}?back={{ request.get_full_path | urlencode }}" role="button" class="btn btn-default btn-xs">{% trans 'Redigér' %}</a>
                     {% if resourcerequirement.can_delete %}
-                    <a href="{% url 'resourcerequirement-delete' resourcerequirement.product.id resourcerequirement.id %}?back={{ request.get_full_path | urlencode }}" role="button" class="btn btn-default btn-xs">{% trans 'Slet' %}</a>
+                    <a href="{% url 'resourcerequirement-delete' resourcerequirement.product.id resourcerequirement.id %}?back={{ request.get_full_path | urlencode }}" role="button" class="btn btn-danger btn-xs">{% trans 'Slet' %}</a>
                     {% endif %}
                 </td>
             </tr>

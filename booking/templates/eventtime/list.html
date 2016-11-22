@@ -25,9 +25,15 @@
             <form action="{% url 'delete-times' product.pk %}" method="post">
                 {% csrf_token %}
                 <div>
-                    <input type="submit" role="button" class="btn btn-default" value="{% trans 'Slet markerede' %}">
-                    <a href="{% url 'create-time' product.pk %}" role="button" class="btn btn-default">{% trans 'Opret nyt tidspunkt' %}</a>
-                    <a href="{% url 'times-from-rules' product.pk %}" role="button" class="btn btn-default pull-right">{% trans 'Opret nye tidspunkter ud fra regler' %}</a>
+                    <input type="submit" role="button" class="btn btn-danger" value="{% trans 'Slet markerede' %}">
+                    <a href="{% url 'create-time' product.pk %}" role="button" class="btn btn-default">
+                        <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                        {% trans 'Opret nyt tidspunkt' %}
+                    </a>
+                    <a href="{% url 'times-from-rules' product.pk %}" role="button" class="btn btn-default pull-right">
+                        <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                        {% trans 'Opret nye tidspunkter ud fra regler' %}
+                    </a>
                 </div>
                 {% if object.eventtime_set.all %}
                 <table class="table table-striped table-hover">
@@ -69,6 +75,7 @@
                                 {% else %}
                                 <span class="btn btn-info btn-xs">{% trans 'Ikke oprettet' %}</span> -
                                 <a href="{{ eventtime.visit_link}}" class="btn btn-default btn-xs">
+                                    <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
                                     {% trans 'Opret besøg' %}
                                 </a>
                                 {% endif %}

@@ -38,7 +38,7 @@
 
         <fieldset>
             <a class="btn btn-default cancelbutton" href="{% if object %}{% url 'product-book-notime' object.id %}{% elif oncancel %}{{ oncancel }}{% else %}javascript:history.back(){% endif %}">{% trans "Annullér bestilling" %}</a>
-            <button class="btn btn-default" type="submit">{% trans "Videre" %}</button>
+            <button class="btn btn-primary" type="submit">{% trans "Videre" %}</button>
         </fieldset>
         <div class="divider"></div>
 

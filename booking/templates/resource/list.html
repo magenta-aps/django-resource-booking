@@ -26,7 +26,10 @@
     <div class="row">
         <div class="col-md-12">
             <div>
-                <a href="{% url 'resource-create' %}?back={{ request.get_full_path | urlencode }}" role="button" class="btn btn-default">{% trans 'Opret ny ressource' %}</a>
+                <a href="{% url 'resource-create' %}?back={{ request.get_full_path | urlencode }}" role="button" class="btn btn-primary">
+                    <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                    {% trans 'Opret ny ressource' %}
+                </a>
                 <a href="{% url 'resourcepool-list' %}" role="button" class="btn btn-default pull-right">{% trans 'Administrér ressourcegrupper' %}</a>
             </div>
 
@@ -62,10 +65,13 @@
                             {% if resource.calendar %}
                             <a href="{% url 'calendar' resource.pk %}" role="button" class="btn btn-default btn-xs">{% trans 'Kalender' %}</a>
                             {% else %}
-                            <a href="{% url 'calendar-create' resource.pk %}" role="button" class="btn btn-default btn-xs">{% trans 'Opret kalender' %}</a>
+                            <a href="{% url 'calendar-create' resource.pk %}" role="button" class="btn btn-default btn-xs">
+                                <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                                {% trans 'Opret kalender' %}
+                            </a>
                             {% endif %}
                             {% if resource.can_delete %}
-                            <a href="{% url 'resource-delete' resource.id %}?back={{ request.get_full_path | urlencode }}" role="button" class="btn btn-default btn-xs">{% trans 'Slet' %}</a>
+                            <a href="{% url 'resource-delete' resource.id %}?back={{ request.get_full_path | urlencode }}" role="button" class="btn btn-danger btn-xs">{% trans 'Slet' %}</a>
                             {% endif %}
                         </td>
                     </tr>

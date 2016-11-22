@@ -29,7 +29,7 @@
             <h2>{{ object.get_type_display }}</h2>
             
             {% if can_edit %}
-                <a class="pull-right btn btn-default margin-bottom-10" href="{% url 'product-edit' object.pk %}">{% trans '+ Redigér' %}</a>
+                <a class="pull-right btn btn-default margin-bottom-10" href="{% url 'product-edit' object.pk %}">{% trans 'Redigér' %}</a>
             {% endif %}
             {% if user.userprofile.can_create %}
                 <a class="pull-right btn btn-default margin-bottom-10 margin-right-10" href="{% url 'product-clone' object.pk %}">{% trans 'Kopier tilbud' %}</a>
@@ -69,18 +69,18 @@
             <div class="well order-buttons hidden-print">
                 {% if object.is_bookable %}
                     {% if object.is_guest_time_suggested %}
-                        <a class="btn btn-default" href="{% url 'product-book-notime' object.id %}">
+                        <a class="btn btn-primary" href="{% url 'product-book-notime' object.id %}">
                             {% trans 'Tilmeld' %}
                             <span class="glyphicon glyphicon-chevron-right"></span>
                         </a>
                     {% else %}
-                        <a class="btn btn-default" data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'product-book' object.id %}?modal=1">
+                        <a class="btn btn-primary" data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'product-book' object.id %}?modal=1">
                             {% trans 'Tilmeld' %}
                             <span class="glyphicon glyphicon-chevron-right"></span>
                         </a>
                     {% endif %}
                 {% elif object.can_join_waitinglist %}
-                    <a class="btn btn-default" data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'product-book' object.id %}?modal=1">
+                    <a class="btn btn-primary" data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'product-book' object.id %}?modal=1">
                         {% trans 'Skriv på venteliste' %}
                         <span class="glyphicon glyphicon-chevron-right"></span>
                     </a>

@@ -97,7 +97,10 @@
             {% endif %}
             <div class="divider"></div>
             <p>
-                <a href="{% url reverses.calendar_event_create view.rel_obj.pk %}" role="button" class="btn btn-default btn-xs">{% trans 'Opret tid i kalender' %}</a>
+                <a href="{% url reverses.calendar_event_create view.rel_obj.pk %}" role="button" class="btn btn-default btn-xs">
+                    <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                    {% trans 'Opret tid i kalender' %}
+                </a>
             </p>
             <table class="ressource-kalender table table-bordered table-striped">
                 <thead>
@@ -144,7 +147,7 @@
     </div>
     <div class="row">
         <div class="col-md-12">
-            <a href="{% url reverses.calendar_delete view.rel_obj.pk %}" role="button" class="btn btn-danger pull-right" />{% trans 'Slet denne kalender' %}</a>
+            <a href="{% url reverses.calendar_delete view.rel_obj.pk %}" role="button" class="btn btn-danger pull-right">{% trans 'Slet denne kalender' %}</a>
         </div>
     </div>
     <div class="divider"></div>

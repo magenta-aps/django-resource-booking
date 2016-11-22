@@ -25,7 +25,7 @@
 
     <fieldset>
         <a class="btn btn-default" href="{% url 'product-view' object.id %}">{% trans "Tilbage" %}</a>
-        <a class="btn btn-default" href="{% url 'product-book' object.id %}">{% trans "Bestil med ønske om tidspunkt" %}</a>
+        <a class="btn btn-primary" href="{% url 'product-book' object.id %}">{% trans "Bestil med ønske om tidspunkt" %}</a>
         <a class="btn btn-default" href="{% url 'mpv-create' %}?back={{ request.get_full_path | urlencode }}&base={{ object.id }}">{% trans "Bestil flere arrangementer på den samme dag" %}</a>
     </fieldset>
     <div class="divider"></div>
