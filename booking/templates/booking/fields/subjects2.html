@@ -9,7 +9,9 @@
             {% for form in subjectform %}
                 {{ form.id }}
                 <div class="form-group{% if forloop.first %} rowprototype{% endif %}">
-                    <label class="col-sm-2 control-label" for="{{ form.subject.id_for_label }}">{% trans "Fag/Niveau (Gymnasium)" %}</label>
+                    <div class="col-sm-2">
+                        <label class="control-label" for="{{ form.subject.id_for_label }}">{% trans "Fag/Niveau (Gymnasium)" %}</label>
+                        </div>
                     <div class="col-sm-4">
                         {{ form.subject }}
 
@@ -33,7 +35,9 @@
             {% for form in grundskolesubjectform %}
                 {{ form.id }}
                 <div class="form-group{% if forloop.first %} rowprototype{% endif %}">
-                    <label class="col-sm-2 control-label" for="{{ form.subject.id_for_label }}">{% trans "Fag/Niveau (Grundskole)" %}</label>
+                    <div class="col-sm-2">
+                        <label class="control-label" for="{{ form.subject.id_for_label }}">{% trans "Fag/Niveau (Grundskole)" %}</label>
+                    </div>
                     <div class="col-sm-4">
                         {{ form.subject }}
                     </div>
