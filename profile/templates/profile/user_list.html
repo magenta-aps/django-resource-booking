@@ -8,18 +8,23 @@
 {% block content %}
     {% include 'common/breadcrumbrow.html' %}
 
-    <h1>{% trans 'Administrér brugere' %}</h1>
-
-    <div class="divider"></div>
+    <div class="row">
+        <div class="col-sm-5 col-sm-offset-2">
+            <h1>{% trans 'Administrér brugere' %}</h1>        
+        </div>
+    </div>
 
     <div id="admin-input">
         <div class="row">
 
-            <div class="col-sm-4">
-                <a href="{% url 'user_create' %}" class="btn btn-primary btn-tiny">{% trans 'Opret ny bruger' %}</a>
+            <div class="col-sm-5 col-sm-offset-2">
+                <a href="{% url 'user_create' %}" class="btn btn-default btn-tiny">
+                    <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                    {% trans 'Opret ny bruger' %}
+                </a>
             </div>
             {% if messages %}
-                <div class="col-sm-4 alert alert-success" role="alert">
+                <div class="col-sm-5 col-sm-offset-2 alert-success" role="alert">
                     <ul>
                         {% for message in messages %}
                             <li {% if message.tags %}class="{{ message.tags }}"{% endif %}>{{ message }}</li>
@@ -28,13 +33,15 @@
                 </div>
             {% endif %}
         </div>
-
+        
         <div class="divider"></div>
-        <h2>{% trans 'Filtrér brugerliste' %}</h2>
 
         <div class="row">
-
-            <form class="form-horizontal" name="filteruserlist" id="filteruserlist">
+            <h2 class="col-sm-5 col-sm-offset-2">{% trans 'Filtrér brugerliste' %}</h2>
+        </div>
+        
+        <div>
+            <form class="form-horizontal clearfix" name="filteruserlist" id="filteruserlist">
                 <div class="form-group">
                     <label class="col-sm-2 control-label">{% trans 'Enhed:' %}</label>
                     <div class="col-sm-5">
@@ -60,24 +67,24 @@
                 <div class="form-group">
                     <label class="col-sm-2 control-label">{% trans 'Søg i navn:' %}</label>
                     <div class="col-sm-5">
-                        <input type="text" name="q" value="{{ request.GET.q }}" />
+                        <input type="text" name="q" value="{{ request.GET.q }}">
                     </div>
                 </div>
                 <div class="col-sm-2 col-sm-offset-2 padleft5">
-                    <input class="btn btn-primary" type="submit" value="Søg" />
+                    <input class="btn btn-primary" type="submit" value="Søg">
                 </div>
             </form>
         </div>
     </div>
     <div class="divider"></div>
-    <div class="row">
-        <div class="col-sm-10 col-sm-offset-1">
+    <div>
+        <div>
             <ul class="list-unstyled">
                 {% for otheruser in users %}
                 <li class="media">
-                    <dl class="dl-horizontal">
-                        <dt>{% trans 'Navn:' %}</dt>
-                        <dd>
+                    <div class=" row">
+                        <div class="col-sm-2 userlist-label">{% trans 'Navn:' %}</div>
+                        <div class="col-sm-5">
                             {% if otheruser.get_full_name %}
                             {{ otheruser.get_full_name }} ({{ otheruser.username }})
                             {% else %}
@@ -87,14 +94,20 @@
                                 <a href="{% url 'user_edit' otheruser.pk %}">{% trans 'Redigér' %}</a>
                                 <a href="{% url 'user_delete' otheruser.pk %}">{% trans 'Slet' %}</a>
                             {% endif %}
-                        </dd>
-                        <dt>{% trans 'Email:' %}</dt>
-                        <dd>{{ otheruser.email }}</dd>
-                        <dt>{% trans 'Enhed:' %}</dt>
-                        <dd>{{ otheruser.userprofile.organizationalunit.name }}</dd>
-                        <dt>{% trans 'Rolle:' %}</dt>
-                        <dd>{{ otheruser.userprofile.get_role_name }}</dd>
-                    </dl>
+                        </div>
+                    </div>
+                    <div class=" row">
+                        <div class="col-sm-2 userlist-label">{% trans 'Email:' %}</div>
+                        <div class="col-sm-5">{{ otheruser.email }}</div>
+                    </div>
+                    <div class=" row">
+                        <div class="col-sm-2 userlist-label">{% trans 'Enhed:' %}</div>
+                        <div class="col-sm-5">{{ otheruser.userprofile.organizationalunit.name }}</div>
+                    </div>
+                    <div class=" row">
+                        <div class="col-sm-2 userlist-label">{% trans 'Rolle:' %}</div>
+                        <div class="col-sm-5">{{ otheruser.userprofile.get_role_name }}</div>
+                    </div>
                 </li>
                 {% endfor %}
             </ul>
