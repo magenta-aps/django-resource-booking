@@ -1,6 +1,7 @@
 {% load i18n %}
 {% load booking_tags %}
 <div class="col-sm-6">
+BOOKING ITEM_LIST
     <div class="panel panel-bookings">
         <div class="panel-heading {{ list.color }}">
             <h3 class="panel-title">
@@ -25,7 +26,7 @@
                             <div class="list-group-item-text">
                                 <ul>
                                     <li>
-                                        {% blocktrans with date=visit.real.interval_display %}Dato/tid: {{ date }}{% endblocktrans %}
+                                        {% blocktrans with date=visit.real.display_value %}Dato/tid: {{ date }}{% endblocktrans %}
                                     </li>
                                     <li>{% trans 'Antal tilmeldte:' %} {{ visit.real.nr_attendees }}</li>
                                 </ul>
