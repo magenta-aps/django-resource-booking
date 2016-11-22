@@ -1359,7 +1359,6 @@ body.lightbox {
     }
     .form-horizontal .control-label {
         padding-top: 3px;
-        width: 100%;
     }
     #visitform .control-label {
         width: 100%;
@@ -1375,6 +1374,10 @@ body.lightbox {
         display: -ms-flexbox;
         display: flex;
     }
+}
+
+div.col-sm-2 label {
+    width: 100%;
 }
 
 /* Time interval selector START */
