@@ -1359,6 +1359,7 @@ body.lightbox {
     }
     .form-horizontal .control-label {
         padding-top: 3px;
+        width: 100%;
     }
     #visitform .control-label {
         width: 100%;
