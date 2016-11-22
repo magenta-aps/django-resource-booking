@@ -7,9 +7,9 @@
     </div>
     <div class="col-sm-7{% if field.errors %} has-error{% endif %}">
         <div class="checkbox">
-            <label for="{{ field.id_for_label }}" class="control-label">
+            <label for="{{ field.id_for_label }}" class="control-label {% if field.field.required %}required{% endif %}">
                 {{ field }}
-                {{ field.label }}{% if field.field.required %}*{% endif %}
+                {{ field.label }}
             </label>
         </div>
     </div>
