@@ -17,9 +17,9 @@
             {% if list.type == 'Visit' %}
                 {% for visit in list.limited_qs|default:list.queryset %}
                     <div class="list-group-item clearfix">
-                        <a href="{% url 'visit-view' visit.pk %}" title="{% trans 'Se arrangementets detaljer' %}">
+                        <a href="{% url 'visit-view' visit.real.pk %}" title="{% trans 'Se arrangementets detaljer' %}">
                             <h2 class="list-group-item-heading">
-                                {{ visit.display_title|capfirst }}
+                                {{ visit.real.display_title|capfirst }}
                             </h2>
 
                             <div class="list-group-item-text">
@@ -27,7 +27,7 @@
                                     <li>
                                         {% blocktrans with date=visit.real.interval_display %}Dato/tid: {{ date }}{% endblocktrans %}
                                     </li>
-                                    <li>{% trans 'Antal tilmeldte:' %} {{ visit.nr_attendees }}</li>
+                                    <li>{% trans 'Antal tilmeldte:' %} {{ visit.real.nr_attendees }}</li>
                                 </ul>
                             </div>
                         </a>
@@ -44,24 +44,38 @@
                             <h2 class="list-group-item-heading">{{ res.title }}</h2>
                             <div class="list-group-item-text">
                                 <ul>
-                                    <li>{% trans 'Type:' %} {{ res.get_type_display }}</li>
-                                    {% if res.get_visits|length %}
+                                    <li>
+                                        {% trans 'Type:' %}
+                                        {{ res.get_type_display }}
+                                    </li>
+
+                                    {% if item.is_guest_time_suggested %}
                                         <li>
                                             {% trans 'Dato/tid:' %}
-                                            <span class="type-offer">
-                                                {% if res.get_visits|length == 1 %}
-                                                    {{ visit.eventtime.interval_display }}
-                                                {% else %}
-                                                    {% blocktrans with count=res.get_visits|length interval=res.first_visit.eventtime.interval_display %}
-                                                        {{ count }} mulige tidspunkter, første gang {{ interval }}
-                                                    {% endblocktrans %}
-                                                {% endif %}
-                                            </span>
+                                            {% trans 'Foreslå selv tidspunkt' %}
+                                        </li>
+                                    {% else %}
+                                        <li>
+                                            {% trans 'Dato/tid:' %}
+                                            {% if res.future_bookable_times|length == 0 %}
+                                                {% trans 'Alt optaget' %}
+                                            {% elif res.future_bookable_times|length == 1 %}
+                                                {{ res.future_bookable_times.first.interval_display }}
+                                            {% else %}
+                                                {% blocktrans with count=res.future_bookable_times|length interval=res.future_bookable_times.first.interval_display %}
+                                                    {{ count }} mulige tidspunkter, første gang {{ interval }}
+                                                {% endblocktrans %}
+                                            {% endif %}
                                         </li>
                                     {% endif %}
-                                    {%if res.display_locality %}
-                                    <li>{% trans 'Hvor:' %} {{ res.display_locality }}</li>
+
+                                    {% if res.display_locality %}
+                                        <li>
+                                            {% trans 'Hvor:' %}
+                                            {{ res.display_locality }}
+                                        </li>
                                     {% endif %}
+
                                     {% if item.price %}
                                         <li>
                                             {% trans 'Pris:' %}
