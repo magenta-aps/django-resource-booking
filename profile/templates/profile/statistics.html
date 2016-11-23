@@ -14,10 +14,10 @@
 <form class="clearfix" action="{% url 'statistics' %}" method="get">
     <div class="form-group row">
         <label class="col-sm-2 control-label" for="{{ form.organizationalunit.id_units}}">{% trans 'Enheder:' %}</label>
-        <div class="col-sm-5">
+        <div class="col-sm-6">
             {{ form.units }}
         </div>
-        <div class="col-sm-5">
+        <div class="col-sm-4">
             {{ form.organizationalunits.errors }}
         </div>
     </div>
@@ -35,9 +35,10 @@
             {{ form.to_date.errors }}
         </div>
     </div>
-    <hr>
-    <div>
-        <input type="submit" value="{% trans 'Hent data' %}" class="btn btn-primary formpartbutton pull-right">
+    <div class="row">
+        <div class="col-sm-6 col-sm-offset-2">
+            <input type="submit" value="{% trans 'Hent data' %}" class="btn btn-primary formpartbutton pull-right">
+        </div>
     </div>
 </form>
 
