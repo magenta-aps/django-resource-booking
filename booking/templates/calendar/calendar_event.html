@@ -54,18 +54,21 @@
                         <label for="id_start_date">{% trans 'Dato/tid' %}:</label>
                     </div>
                     <div class="col-sm-7 form-inline">
-                        {% with starttime=form.start.value|stringformat:"s"|slice:"11:16" endtime=form.end.value|stringformat:"s"|slice:"11:16" %}
+                        {% with starttime=form.start.value|stringformat:"s"|slice:"11:16" endtime=form.end.value|stringformat:"s"|slice:"11:16" startdate=form.start.value|stringformat:"s"|slice:"10" enddate=form.end.value|stringformat:"s"|slice:"10" %}
                         <div class="input-daterange" style="margin-top: 0;">
-                            <input class="form-control input-sm rangepicker" id="id_start_date" name="start_date" type="text" value="{{ form.start.value|stringformat:"s"|slice:"10" }}" size="10">
+
+                            <input class="form-control input-sm rangepicker" id="id_start_date" name="start_date" type="text" value="{{ startdate }}" size="10">
                             <div class="input-group clockpicker"{% if default_all_day or starttime == "00:00" and endtime == "00:00" %} style="display: none"{% endif %}>
-                                <input class="form-control input-sm" id="id_start_time" name="start_time" type="text" value="{{ starttime|date:"j.m.Y H:i" }}" size="5">
+                                <input class="form-control input-sm" id="id_start_time" name="start_time" type="text" value="{{ starttime }}" size="5">
                                 <span class="input-group-addon" data-toggle="dropdown"><span class="glyphicon glyphicon-time"></span></span>
                             </div>
+
                             <div class="input-group clockpicker"{% if default_all_day or starttime == "00:00" and endtime == "00:00" %} style="display: none"{% endif %}>
-                                <input class="form-control input-sm" id="id_end_time" name="end_time" type="text" value="{{ endtime|date:"j.m.Y H:i" }}" size="5">
+                                <input class="form-control input-sm" id="id_end_time" name="end_time" type="text" value="{{ endtime }}" size="5">
                                 <span class="input-group-addon" data-toggle="dropdown"><span class="glyphicon glyphicon-time"></span></span>
                             </div>
-                            <input class="form-control input-sm rangepicker" id="id_end_date" name="end_date" type="text" value="{{ form.end.value|stringformat:"s"|slice:"10" }}" size="10">
+                            <input class="form-control input-sm rangepicker" id="id_end_date" name="end_date" type="text" value="{{ enddate }}" size="10">
+
                         </div>
                         <div>
                             <label for="id_all_day" class="form-inline">
@@ -135,14 +138,24 @@
 
     <script type="text/javascript">
     $(function(){
+        var start = $('#{{ form.start.id_for_label }}'),
+            end = $('#{{ form.end.id_for_label }}'),
+            startDate = $('#id_start_date'),
+            endDate = $('#id_end_date'),
+            startTime = $('#id_start_time'),
+            endTime = $('#id_end_time'),
+            allDay = $('#id_all_day');
 
-        function build_date(date_field_selector, time_value) {
-            var date_val = $(date_field_selector).first().val(),
-                date_parts = date_val.substr(0, 10).split(/[. -]/),
+        var startValue = "{{ form.start.value|date:"d.m.Y H:i" }}",
+            endValue = "{{ form.end.value|date:"d.m.Y H:i" }}";
+
+
+        function build_date(date_string, time_value) {
+            var date_parts = date_string.substr(0, 10).split(/[. -]/),
                 time_parts = time_value.split(/[:]/);
 
-            if(date_parts[0].length != 4) {
-                date_parts = date_parts.reverse()
+            if (date_parts[0].length != 4) {
+                date_parts = date_parts.reverse();
             }
 
             var date = new Date(
@@ -162,24 +175,21 @@
                 zero_pad(date.getHours()),
                 zero_pad(date.getMinutes()),
                 "00"
-            ].join(":")
+            ].join(":");
         }
 
         function set_control_values() {
-            $('#id_start_date').val($('#id_start').val().substr(0, 10));
-            if ($('#id_all_day').is(":checked")) {
-                var end_val = $('#id_end').val(),
-                    end_date_val = end_val.substr(0, 10),
-                    end_time_val = end_val.substr(11, 5);
+            startDate.val(startValue.substr(0, 10));
+            if (allDay.is(":checked")) {
+                var end_date_val = endValue.substr(0, 10),
+                    end_time_val = endValue.substr(11, 5);
                 if (end_time_val === "00:00") {
-                    $('#id_end_date').val(
-                        build_date('#id_end', '-24:00').substr(0, 10)
-                    );
+                    endDate.val(build_date(endValue, '-24:00').substr(0, 10));
                 } else {
-                    $('#id_end_date').val(end_date_val);
+                    endDate.val(end_date_val);
                 }
             } else {
-                $('#id_end_date').val($('#id_end').val().substr(0, 10));
+                endDate.val(endValue.substr(0, 10));
             }
         }
         set_control_values();
@@ -204,15 +214,15 @@
         }
 
         function update_dates() {
-            if($('#id_all_day').is(":checked")) {
-                $('#id_start').val(build_date('#id_start_date', "00:00"));
-                $('#id_end').val(build_date('#id_end_date', "24:00"));
+            if(allDay.is(":checked")) {
+                start.val(build_date(startDate.val(), "00:00"));
+                end.val(build_date(endDate.val(), "24:00"));
             } else {
-                $('#id_start').val(
-                    build_date('#id_start_date', $('#id_start_time').val())
+                start.val(
+                    build_date(startDate.val(), startTime.val())
                 );
-                $('#id_end').val(
-                    build_date('#id_end_date', $('#id_end_time').val())
+                end.val(
+                    build_date(endDate.val(), endTime.val())
                 );
             }
         }
@@ -223,8 +233,8 @@
             'afterDone': update_dates
         });
 
-        $('#id_start_date').change(update_dates);
-        $('#id_end_date').change(update_dates);
+        startDate.change(update_dates);
+        endDate.change(update_dates);
 
         $('#id_enable_recurrences').on('change', function() {
             var recurrencesField = $('#id_recurrences');
@@ -249,7 +259,7 @@
             }
         });
 
-        $('#id_all_day').on("change", function() {
+        allDay.on("change", function() {
             $('div.input-group.clockpicker').toggle(!$(this).is(":checked"));
             update_dates();
         });
