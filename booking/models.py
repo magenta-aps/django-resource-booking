@@ -18,7 +18,7 @@ from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.utils import formats
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ugettext_lazy as _, ungettext_lazy as __
 from django.template.base import Template, VariableNode
 
 from booking.mixins import AvailabilityUpdaterMixin
@@ -3470,7 +3470,16 @@ class MultiProductVisit(Visit):
 
     @property
     def display_title(self):
-        return _(u'prioriteret liste af %d tilbud') % len(self.products)
+        # return _(u'prioriteret liste af %d tilbud') % len(self.products)
+        count = len(self.subvisits_unordered)
+        return __(
+            "%(title)s, %(count)d prioritet",
+            "%(title)s, %(count)d prioriteter",
+            count
+        ) % {
+            'title': self.primary_visit.display_title,
+            'count': count
+        }
 
     @property
     def date_display(self):
