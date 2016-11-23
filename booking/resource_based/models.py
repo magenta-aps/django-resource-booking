@@ -1170,7 +1170,7 @@ class ResourceRequirement(AvailabilityUpdaterMixin, models.Model):
     product = models.ForeignKey("Product")
     resource_pool = models.ForeignKey(
         ResourcePool,
-        verbose_name=_(u"Ressourcepulje")
+        verbose_name=_(u"Ressourcegruppe")
     )
     required_amount = models.IntegerField(
         verbose_name=_(u"Påkrævet antal")
