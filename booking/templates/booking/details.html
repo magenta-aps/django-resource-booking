@@ -96,10 +96,12 @@
                 <dt>{% trans 'Skole:' %}</dt>
                 <dd>{{ object.booker.school.name }}, {{ object.booker.school.postcode.number }} {{ object.booker.school.postcode.city }}</dd>
 
-                <dt>{% trans 'Retning:' %}</dt>
-                <dd>
-                    {{ object.booker.get_line_display }}
-                </dd>
+                {% if object.booker.line %}
+                    <dt>{% trans 'Retning:' %}</dt>
+                    <dd>
+                        {{ object.booker.get_line_display }}
+                    </dd>
+                {% endif %}
 
                 {% if object.bookinggymnasiesubjectlevel_set.count or object.bookinggrundskolesubjectlevel_set.count %}
                     <dt>{% trans 'Fag:' %}</dt>
@@ -116,14 +118,14 @@
                 {% endif %}
 
                 {% if object.get_subjects %}
-                <dt>{% trans 'Fag:' %}</dt>
-                <dd>
-                    <ul class="list-unstyled">
-                        {% for fag in object.get_subjects %}
-                        <li>{{ fag }}</li>
-                        {% endfor %}
-                    </ul>
-                </dd>
+                    <dt>{% trans 'Fag:' %}</dt>
+                    <dd>
+                        <ul class="list-unstyled">
+                            {% for fag in object.get_subjects %}
+                            <li>{{ fag }}</li>
+                            {% endfor %}
+                        </ul>
+                    </dd>
                 {% endif %}
 
                 <dt>{% trans 'Niveau:' %}</dt>
