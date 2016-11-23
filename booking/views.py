@@ -2345,20 +2345,37 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
 
         forms = self.get_forms(request.POST)
 
+
+        # We must disregard one of the school subject forms, depending on
+        # which school is selected
+        forms['bookerform'].full_clean()
+        school_type = forms['bookerform'].schooltype
+
+        dep = {
+            School.GYMNASIE: 'gymnasiesubjectform',
+            School.ELEMENTARY_SCHOOL: 'grundskolesubjectform'
+        }
+        exclude = [value for key, value in dep.items() if school_type != key]
+        relevant_forms = {
+            name: forms[name] for name in forms if name not in exclude
+        }
+
         valid = True
-        for (name, form) in forms.items():
+        for (name, form) in relevant_forms.items():
+            form.full_clean()
             if not form.is_valid():
                 valid = False
 
         if valid:
-            if 'bookingform' in forms:
-                booking = forms['bookingform'].save(commit=False)
+            if 'bookingform' in relevant_forms:
+                booking = relevant_forms['bookingform'].save(commit=False)
+                eventtime_pk = relevant_forms['bookingform'].cleaned_data.get(
+                    'eventtime', ''
+                )
             else:
                 booking = self.object
+                eventtime_pk = None
 
-            eventtime_pk = forms['bookingform'].cleaned_data.get(
-                'eventtime', ''
-            )
             if eventtime_pk:
                 eventtime = self.product.eventtime_set.filter(
                     pk=eventtime_pk
@@ -2381,10 +2398,10 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
 
             available_seats = booking.visit.available_seats
 
-            if 'bookerform' in forms:
-                booking.booker = forms['bookerform'].save()
+            if 'bookerform' in relevant_forms:
+                booking.booker = relevant_forms['bookerform'].save()
 
-            booking = forms['bookingform'].save()
+            booking = relevant_forms['bookingform'].save()
 
             put_in_waitinglist = False
 
@@ -2412,11 +2429,12 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
 
             booking.save()
 
-            subjectform = forms.get('subjectform')
-            if subjectform:
-                subjectform.instance = booking
-                if subjectform.is_valid():
-                    subjectform.save()
+            for formname in ['gymnasiesubjectform', 'grundskolesubjectform']:
+                subjectform = relevant_forms.get(formname)
+                if subjectform:
+                    subjectform.instance = booking
+                    if subjectform.is_valid():
+                        subjectform.save()
 
             booking.ensure_statistics()
 
@@ -2480,7 +2498,7 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
                     product=self.product
                 )
                 if self.product.productgymnasiefag_set.count() > 0:
-                    forms['subjectform'] = \
+                    forms['gymnasiesubjectform'] = \
                         BookingGymnasieSubjectLevelForm(data)
 
                 if self.product.productgrundskolefag_set.count() > 0:
