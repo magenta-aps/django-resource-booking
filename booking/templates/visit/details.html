@@ -272,7 +272,7 @@
                             {% endif %}
                         </dd>
 
-                        {% if not object.is_multiproductvisit %}
+                        {% if not object.is_multiproductvisit and not object.is_multi_sub %}
                         <dt>{% trans 'Antal på venteliste' %}</dt>
                         <dd>
                             {{ object.nr_waiting }}
@@ -331,7 +331,7 @@
     </div>
     {% endif %}
 
-    {% if not object.is_multiproductvisit %}
+    {% if not object.is_multiproductvisit and not object.is_multi_sub %}
     <div class="row waiting">
         <div class="col-sm-12 col-md-10">
             <div class="panel panel-default">
