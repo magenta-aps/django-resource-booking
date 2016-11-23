@@ -58,11 +58,11 @@
                         <div class="input-daterange" style="margin-top: 0;">
                             <input class="form-control input-sm rangepicker" id="id_start_date" name="start_date" type="text" value="{{ form.start.value|stringformat:"s"|slice:"10" }}" size="10">
                             <div class="input-group clockpicker"{% if default_all_day or starttime == "00:00" and endtime == "00:00" %} style="display: none"{% endif %}>
-                                <input class="form-control input-sm" id="id_start_time" name="start_time" type="text" value="{{ starttime }}" size="5">
+                                <input class="form-control input-sm" id="id_start_time" name="start_time" type="text" value="{{ starttime|date:"j.m.Y H:i" }}" size="5">
                                 <span class="input-group-addon" data-toggle="dropdown"><span class="glyphicon glyphicon-time"></span></span>
                             </div>
                             <div class="input-group clockpicker"{% if default_all_day or starttime == "00:00" and endtime == "00:00" %} style="display: none"{% endif %}>
-                                <input class="form-control input-sm" id="id_end_time" name="end_time" type="text" value="{{ endtime }}" size="5">
+                                <input class="form-control input-sm" id="id_end_time" name="end_time" type="text" value="{{ endtime|date:"j.m.Y H:i" }}" size="5">
                                 <span class="input-group-addon" data-toggle="dropdown"><span class="glyphicon glyphicon-time"></span></span>
                             </div>
                             <input class="form-control input-sm rangepicker" id="id_end_date" name="end_date" type="text" value="{{ form.end.value|stringformat:"s"|slice:"10" }}" size="10">
@@ -152,7 +152,7 @@
                 time_parts[0],
                 time_parts[1],
                 0
-            )
+            );
 
             return [
                 zero_pad(date.getDate()),
@@ -168,10 +168,10 @@
         function set_control_values() {
             $('#id_start_date').val($('#id_start').val().substr(0, 10));
             if ($('#id_all_day').is(":checked")) {
-                var end_val = $('#id_end').val()
-                    end_date_val = end_val.substr(0, 10)
+                var end_val = $('#id_end').val(),
+                    end_date_val = end_val.substr(0, 10),
                     end_time_val = end_val.substr(11, 5);
-                if(end_time_val === "00:00") {
+                if (end_time_val === "00:00") {
                     $('#id_end_date').val(
                         build_date('#id_end', '-24:00').substr(0, 10)
                     );
@@ -196,16 +196,17 @@
         });
 
         function zero_pad(int_val) {
-            if(int_val < 10)
+            if (int_val < 10) {
                 return "0" + int_val;
-            else
+            } else {
                 return int_val;
+            }
         }
 
         function update_dates() {
             if($('#id_all_day').is(":checked")) {
-                $('#id_start').val(build_date('#id_start_date', "00:00"))
-                $('#id_end').val(build_date('#id_end_date', "24:00"))
+                $('#id_start').val(build_date('#id_start_date', "00:00"));
+                $('#id_end').val(build_date('#id_end_date', "24:00"));
             } else {
                 $('#id_start').val(
                     build_date('#id_start_date', $('#id_start_time').val())
@@ -226,32 +227,30 @@
         $('#id_end_date').change(update_dates);
 
         $('#id_enable_recurrences').on('change', function() {
-            if($(this).is(":checked")) {
-                $('#recurrence_field_container').show();
-                $('#id_recurrences').val(
+            var recurrencesField = $('#id_recurrences');
+            var recurrenceFieldContainer = $('#recurrence_field_container');
+            if ($(this).is(":checked")) {
+                recurrenceFieldContainer.show();
+                recurrencesField.val(
                     $(this).attr('data-last-value') || ''
                 );
-                $rec_widget = $('#id_recurrences').parent();
-                if($rec_widget.find('div.panel').length < 1) {
+                $rec_widget = recurrencesField.parent();
+                if ($rec_widget.find('div.panel').length < 1) {
                     $rec_widget.find('.add-button.add-rule').last().trigger(
                         'click'
-                    )
+                    );
                 }
             } else {
-                $('#recurrence_field_container').hide();
+                recurrenceFieldContainer.hide();
                 $(this).attr(
-                    'data-last-value', $('#id_recurrences').val() || ''
-                )
-                $('#id_recurrences').val('');
+                    'data-last-value', recurrencesField.val() || ''
+                );
+                recurrencesField.val('');
             }
         });
 
         $('#id_all_day').on("change", function() {
-            if($(this).is(":checked")) {
-                $('div.input-group.clockpicker').hide();
-            } else {
-                $('div.input-group.clockpicker').show();
-            }
+            $('div.input-group.clockpicker').toggle(!$(this).is(":checked"));
             update_dates();
         });
         update_dates();
