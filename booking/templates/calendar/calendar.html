@@ -46,35 +46,35 @@
         <div class="col-md-12">
             <p class="pull-right">
                 {% if object.resource %}
-                <a href="{% url 'resource-view' object.resource.id %}" role="button" class="btn btn-primary">Gå til ressource</a>
+                <a href="{% url 'resource-view' object.resource.id %}" role="button" class="btn btn-primary">{% trans 'Gå til ressource' %}</a>
                 {% elif object.product %}
-                <a href="{% url 'product-view' object.product.id %}" role="button" class="btn btn-primary">Gå til tilbud</a>
+                <a href="{% url 'product-view' object.product.id %}" role="button" class="btn btn-primary">{% trans 'Gå til tilbud' %}</a>
                 {% endif %}
             </p>
-            <h2>Tilgængelige tider</h2>
+            <h2>{% trans 'Tilgængelige tider' %}</h2>
             {% if not available %}
             <p>
-                (Ingen regler betyder aldrig tilgængelig)
+                {% trans '(Ingen regler betyder aldrig tilgængelig)' %}
             </p>
             {% endif %}
             <ul>
                 {% for event in available %}
                     <li>
-                        <a href="{% url reverses.calendar_event_edit view.rel_obj.pk event.pk %}">{{ event.title }}</a>
+                        <a href="{% url 'reverses.calendar_event_edit' view.rel_obj.pk event.pk %}">{{ event.title }}</a>
                         {{ event.interval_display }}
                         {% if event.recurrences %}{% trans "(med gentagelser)" %}{% endif %}
-                        <a href="{% url reverses.calendar_event_delete view.rel_obj.pk event.pk %}"><span class="glyphicon glyphicon-remove"></span></a>
+                        <a href="{% url 'reverses.calendar_event_delete' view.rel_obj.pk event.pk %}"><span class="glyphicon glyphicon-remove"></span></a>
                     </li>
                 {% endfor %}
             </ul>
-            <h2>Utilgængelige tider</h2>
+            <h2>{% trans 'Utilgængelige tider' %}</h2>
             {% if unavailable %}
             <ul>
                 {% for event in unavailable %}
                     <li>
-                        <a href="{% url reverses.calendar_event_edit view.rel_obj.pk event.pk %}">{{ event.title }}</a>
+                        <a href="{% url 'reverses.calendar_event_edit' view.rel_obj.pk event.pk %}">{{ event.title }}</a>
                         {{ event.interval_display }}
-                        <a href="{% url reverses.calendar_event_delete view.rel_obj.pk event.pk %}"><span class="glyphicon glyphicon-remove"></span></a>
+                        <a href="{% url 'reverses.calendar_event_delete' view.rel_obj.pk event.pk %}"><span class="glyphicon glyphicon-remove"></span></a>
                     </li>
                 {% endfor %}
             </ul>
@@ -83,7 +83,7 @@
                     {% trans 'Ingen regler for utilgængelighed' %}
                 </p>
             {% endif%}
-            <h2>Besøgsreservationer</h2>
+            <h2>{% trans 'Besøgsreservationer' %}</h2>
             {% if booked_times %}
             <ul>
                 {% for eventtime in booked_times %}
@@ -97,7 +97,7 @@
             {% endif %}
             <div class="divider"></div>
             <p>
-                <a href="{% url reverses.calendar_event_create view.rel_obj.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Opret tid i kalender' %}</a>
+                <a href="{% url 'reverses.calendar_event_create' view.rel_obj.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Opret tid i kalender' %}</a>
             </p>
             <table class="ressource-kalender table table-bordered table-striped">
                 <thead>
@@ -144,7 +144,7 @@
     </div>
     <div class="row">
         <div class="col-md-12">
-            <a href="{% url reverses.calendar_delete view.rel_obj.pk %}" role="button" class="btn btn-danger pull-right" />{% trans 'Slet denne kalender' %}</a>
+            <a href="{% url 'reverses.calendar_delete' view.rel_obj.pk %}" role="button" class="btn btn-danger pull-right">{% trans 'Slet denne kalender' %}</a>
         </div>
     </div>
     <div class="divider"></div>
