@@ -3413,10 +3413,7 @@ class EmailReplyView(BreadcrumbMixin, DetailView):
     def get_form(self):
         if self.form is None:
             if self.request.method == "GET":
-                org_lines = re.split(r'\r?\n', self.object.body.strip() + "\n")
-                self.form = EmailReplyForm({
-                    'reply': "\n\n" + "\n".join(["> " + x for x in org_lines])
-                })
+                self.form = EmailReplyForm()
             else:
                 self.form = EmailReplyForm(self.request.POST)
         return self.form
