@@ -1,5 +1,7 @@
 {% load i18n %}
 {% include 'common/fields/generic_field.html' with field=form.resourcepools %}
-<p>
-    {% trans 'Vær opmærksom på at fjernelse af en ressource fra en gruppe kan medføre at der er tilbud der ikke lade sig gøre.' %}
-</p>
+<div class="row">
+    <p class="col-sm-5 col-sm-offset-2">
+        {% trans 'Vær opmærksom på at fjernelse af en ressource fra en gruppe kan medføre at der er tilbud der ikke lade sig gøre.' %}
+    </p>
+</div>

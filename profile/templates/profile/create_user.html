@@ -131,11 +131,11 @@
                 {{ form.additional_information.as_hidden }}
                 {% endif %}
                 <div class="row">
-                    <div class="col-sm-2 col-sm-offset-2">
-                        <input class="btn btn-primary" type="submit" value="Gem" name="submit" />
+                    <div class="col-sm-5 col-sm-offset-2">
+                        <input class="btn btn-primary pull-right" type="submit" value="Gem" name="submit">        
                     </div>
                     {% if messages %}
-                        <div class="col-sm-4 alert alert-success" role="alert">
+                        <div class="col-sm-5 col-sm-offset-2 alert alert-success" role="alert">
                             <ul>
                                 {% for message in messages %}
                                 <li {% if message.tags %}class="{{ message.tags }}"{% endif %}>{{ message }}</li>

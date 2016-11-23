@@ -10,73 +10,19 @@
 
 {% block content %}
 
-<div class="divider"></div>
-    <h1>{% trans 'Velkommen' %} {{user.username}}</h1>
-    
-    <div class="divider"></div>
-    
-    <div class="row">
-        <div class="col-sm-12">
-            <h2>{% trans 'Personlig side' %}</h2>
-            <p>{% trans 'Du er logget ind som' %} {{user.userprofile.user_role.name}}.</p>
-            {% if user.userprofile.organizationalunit.name %}
-                <p>{% trans 'Din enhed' %}: {{ user.userprofile.organizationalunit.name }}</p>
-            {% endif %}
-            <p>{% trans 'På denne side kan du se en oversigt over dine tilbud, hvilke der har tilmeldinger, og hvilke der er under planlægning.' %}</p>
-            {% if request.user.userprofile.is_teacher %}
-            <p>
-                {% blocktrans %}Som underviser har du mulighed for at angive hvornår du kan undervise{% endblocktrans %}.<br />
-            </p>
-            <p>
-                {% if request.user.userprofile.get_resource.calendar %}
-                <a href="{% url 'calendar' request.user.userprofile.get_resource.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér mulige undervisningstidspunkter' %}</a>
-                {% else %}
-                <a href="{% url 'calendar-create' request.user.userprofile.get_resource.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Opret kalender' %}</a>
-                {% endif %}
-                <a href="{% url 'availability' request.user.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Se datoer for besøg' %}</a>
-                <a href="{% url 'user_edit' request.user.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Opdater profil' %}</a>
-            </p>
-            {% elif request.user.userprofile.is_host %}
-            <p>
-                {% blocktrans %}Som vært har du mulighed for at angive hvornår du kan deltage i besøg{% endblocktrans %}.<br />
-            </p>
-            <p>
-                {% if request.user.userprofile.get_resource.calendar %}
-                <a href="{% url 'calendar' request.user.userprofile.get_resource.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér mulige tidspunkter' %}</a>
-                {% else %}
-                <a href="{% url 'calendar-create' request.user.userprofile.get_resource.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Opret kalender' %}</a>
-                {% endif %}
-                <a href="{% url 'availability' request.user.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Se datoer for besøg' %}</a>
-                <a href="{% url 'user_edit' request.user.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Opdater profil' %}</a>
-            </p>
-            {% endif %}
-            <div class="divider"></div>
+    <div class="clearfix" style="margin: 2em 0 1em;">
+        <div class="pull-left">
+            <h1>{% trans 'Velkommen' %} {{user.username}}</h1>
+            <p class="text-muted">{% trans 'Du er logget ind som' %} {{user.userprofile.user_role.name}} {% if user.userprofile.organizationalunit.name %}fra {{ user.userprofile.organizationalunit.name }}{% endif %}</p>
         </div>
-        <div class="col-sm-3">
-            <div class="list-group admin-links">
-                {% if request.user.userprofile.can_create %}
-                    <a class="list-group-item" href="{% url 'search' %}" style="float: left">
-                        <h4 class="list-group-item-heading">{% trans 'Søg i tilbud' %}</h4>
-                        <p class="list-group-item-text">{% trans 'Søg i tilbud der ligger i systemet.' %}</p>
-                    </a>
-                {% endif %}
-            </div>
-        </div>
-        <div class="col-sm-3">
-            <div class="list-group admin-links">
-                {% if request.user.userprofile.can_create %}
-                    <a class="list-group-item" href="{% url 'visit-search' %}" style="float: left">
-                        <h4 class="list-group-item-heading">{% trans 'Søg i besøg' %}</h4>
-                        <p class="list-group-item-text">{% trans 'Søg i besøg der ligger i systemet.' %}</p>
-                    </a>
-                {% endif %}
-            </div>
-        </div>
-        <div class="col-sm-6">
+        <div class="pull-right">
             {% if request.user.userprofile.can_create %}
                 <div class="text-right">
-                    <a href="{% url 'product-create' %}?back={{ request.get_full_path | urlencode }}" class="btn btn-primary margin-bottom-5">{% trans '+ Opret tilbud' %}</a>
-                    <a href="#adminblock" class="btn btn-primary margin-bottom-5" role="button" data-toggle="collapse" aria-expanded="false" aria-controls="adminblock">{% trans 'Administration' %} <span class="glyphicon glyphicon-cog"></span> </a>
+                    <a href="{% url 'product-create' %}?back={{ request.get_full_path | urlencode }}" class="btn btn-primary margin-bottom-5">
+                        <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                        {% trans 'Opret tilbud' %}
+                    </a>
+                    <a href="#adminblock" class="btn btn-default margin-bottom-5" role="button" data-toggle="collapse" aria-expanded="false" aria-controls="adminblock">{% trans 'Administration' %} <span class="glyphicon glyphicon-cog"></span> </a>
                 </div>
                 <div class="collapse list-group admin-links" id="adminblock">
                     <a class="list-group-item" href="{% url 'user_list' %}">
@@ -150,12 +96,71 @@
                         </a>
                     {% endif %}
                 </div>
+            {% endif %}        
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-sm-12">
+            {% if request.user.userprofile.is_teacher %}
+            <p>
+                {% blocktrans %}Som underviser har du mulighed for at angive hvornår du kan undervise{% endblocktrans %}.<br />
+            </p>
+            <p>
+                {% if request.user.userprofile.get_resource.calendar %}
+                <a href="{% url 'calendar' request.user.userprofile.get_resource.pk %}" role="button" class="btn btn-default btn-xs">{% trans 'Redigér mulige undervisningstidspunkter' %}</a>
+                {% else %}
+                <a href="{% url 'calendar-create' request.user.userprofile.get_resource.pk %}" role="button" class="btn btn-default btn-xs">
+                    <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                    {% trans 'Opret kalender' %}
+                </a>
+                {% endif %}
+                <a href="{% url 'availability' request.user.pk %}" role="button" class="btn btn-default btn-xs">{% trans 'Se datoer for besøg' %}</a>
+                <a href="{% url 'user_edit' request.user.pk %}" role="button" class="btn btn-default btn-xs">{% trans 'Opdater profil' %}</a>
+            </p>
+            {% elif request.user.userprofile.is_host %}
+            <p>
+                {% blocktrans %}Som vært har du mulighed for at angive hvornår du kan deltage i besøg{% endblocktrans %}.<br />
+            </p>
+            <p>
+                {% if request.user.userprofile.get_resource.calendar %}
+                <a href="{% url 'calendar' request.user.userprofile.get_resource.pk %}" role="button" class="btn btn-default btn-xs">{% trans 'Redigér mulige tidspunkter' %}</a>
+                {% else %}
+                <a href="{% url 'calendar-create' request.user.userprofile.get_resource.pk %}" role="button" class="btn btn-default btn-xs">
+                    <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                    {% trans 'Opret kalender' %}
+                </a>
+                {% endif %}
+                <a href="{% url 'availability' request.user.pk %}" role="button" class="btn btn-default btn-xs">{% trans 'Se datoer for besøg' %}</a>
+                <a href="{% url 'user_edit' request.user.pk %}" role="button" class="btn btn-default btn-xs">{% trans 'Opdater profil' %}</a>
+            </p>
             {% endif %}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-3">
+            <div class="list-group admin-links">
+                {% if request.user.userprofile.can_create %}
+                    <a class="list-group-item" href="{% url 'search' %}">
+                        <h4 class="list-group-item-heading">{% trans 'Søg i tilbud' %}</h4>
+                        <p class="list-group-item-text">{% trans 'Søg i tilbud der ligger i systemet.' %}</p>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-sm-3">
+            <div class="list-group admin-links">
+                {% if request.user.userprofile.can_create %}
+                    <a class="list-group-item" href="{% url 'visit-search' %}">
+                        <h4 class="list-group-item-heading">{% trans 'Søg i besøg' %}</h4>
+                        <p class="list-group-item-text">{% trans 'Søg i besøg der ligger i systemet.' %}</p>
+                    </a>
+                {% endif %}
+            </div>
         </div>
     </div>
 
     {% if not "slået fra indtil videre, genindføres måske i en senere fase" %}
-    <div class="divider"></div>
     <h2>{% trans 'Søg i tilbud og tilmeldinger' %}</h2>
     <div class="row">
         <div class="col-sm-12">
@@ -167,7 +172,7 @@
                                 <label class="control-label" for="pref-search">{% trans 'Fritekstsøgning fx. ID-nummer, skole, navn:' %}</label>
                                 <input type="text" class="form-control input-sm" id="pref-search" placeholder="{% trans 'Indtast søgeord eller ID-nummer...' %}">
                                 <span class="input-group-btn">
-                                    <button class="btn btn-default btn-sm" type="button">{% trans 'Søg' %}</button>
+                                    <button class="btn btn-primary btn-sm" type="button">{% trans 'Søg' %}</button>
                                 </span>
                             </div>
                             <div class="input-group">
@@ -201,8 +206,6 @@
         </div>
     </div>
     {% endif %}
-
-    <div class="divider"></div>
 
     {% for list in lists %}
         {% cycle True False False as beginRow silent %}

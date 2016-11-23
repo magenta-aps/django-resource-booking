@@ -27,13 +27,14 @@
                 <input id="visits" name="visits" type="hidden">
             {% endif %}
             
-            <label class="btn btn-primary btn-sm" for="id_datepick">
-                <input id="id_datepick" type="text" name="datepick" class="datepicker">  {% trans 'Tilføj dato' %}
+            <label class="btn btn-default btn-sm" for="id_datepick">
+                <input id="id_datepick" type="text" name="datepick" class="datepicker"> <span class="glyphicon glyphicon-plus" aria-hidden="true"></span> {% trans 'Tilføj dato' %}
             </label>
             
             
             <!-- Button trigger modal -->
             <button type="button" class="btn btn-default btn-sm" data-toggle="modal" data-target="#rruleModal">
+                <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
                 {% trans 'Tilføj gentagne datoer' %}
             </button>
             
@@ -43,7 +44,7 @@
                 </label>
                 <input id="add-time-all" class="add-time-all timepick" type="text">
                 
-                <button class="btn-rm-date-all btn btn-link btn-xs">
+                <button class="btn-rm-date-all btn btn-danger btn-xs">
                     <span class="glyphicon glyphicon-remove"></span>
                     {% trans 'Fjern alle datoer' %}
                 </button>

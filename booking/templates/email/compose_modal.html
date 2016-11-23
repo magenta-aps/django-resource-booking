@@ -8,140 +8,127 @@
 {% endblock %}
 
 {% block content %}
-    <div class="divider"></div>
-    <div class="row form-group">
-        <div class="col-sm-8">
-            <h1>{% trans "Send email" %}</h1>
-            <h2>{{ object.title }}</h2>
-        </div>
-    </div>
-    <hr/>
+    
     <form action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data" autocomplete="off" id="emailform">
-        {% csrf_token %}
-
-        {{ form.non_field_errors }}
-
-        <div id="accordion" class="panel-group" aria-multiselectable="true" role="tablist">
-
-            <div class="panel panel-default">
-                <div class="panel-body">
-                    {% if form.name != None %}
-                        <div class="row form-group">
-                            <div>
-                                {{ form.name.errors }}
-                            </div>
-                            <div class="col-sm-2">
-                                <label class="{{ form.name.css_classes }}" for="{{ form.name.id_for_label }}">{{ form.name.label }}:</label>
-                            </div>
-                            <div class="col-sm-10">
-                                {{ form.name }}
-                            </div>
-                        </div>
-                    {% endif %}
-
-                    {% if form.email != None %}
-                        <div class="row form-group">
-                            <div>
-                                {{ form.email.errors }}
-                            </div>
-                            <div class="col-sm-2">
-                                <label class="{{ form.email.css_classes }}" for="{{ form.email.id_for_label }}">{{ form.email.label }}:</label>
-                            </div>
-                            <div class="col-sm-10">
-                                {{ form.email }}
-                            </div>
-                        </div>
-                    {% endif %}
-
-                    {% if form.phone != None %}
-                        <div class="row form-group">
-                            <div>
-                                {{ form.phone.errors }}
-                            </div>
-                            <div class="col-sm-2">
-                                <label class="{{ form.phone.css_classes }}" for="{{ form.phone.id_for_label }}">{{ form.phone.label }}:</label>
-                            </div>
-                            <div class="col-sm-10">
-                                {{ form.phone }}
-                            </div>
-                        </div>
-                    {% endif %}
-
-                    {% if form.recipients != None %}
-                        <div class="row form-group">
-                            <div>
-                                {{ form.recipients.errors }}
-                            </div>
-                            <div class="col-sm-2">
-                                <label class="{{ form.recipients.css_classes }}" for="{{ form.recipients.id_for_label }}">{{ form.recipients.label }}:</label>
-                            </div>
-                            <div id="recipients" class="col-sm-10">
-                                {% if recp %}
-                                    <div id="recipient-groups">{% trans 'Tilføj:' %}&nbsp;</div>
-                                {% endif %}
-                                <div id="recipient-list" class="email-recipients">
-                                    {{ form.recipients }}
+    
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="{% trans "Close" %}"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">{% trans "Send e-mail" %}: {{ object.title }}</h4>
+        </div>
+    
+        <div class="modal-body">
+        
+            {% csrf_token %}
+    
+            {{ form.non_field_errors }}
+    
+                        {% if form.name != None %}
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label {{ form.name.css_classes }}" for="{{ form.name.id_for_label }}">{{ form.name.label }}:</label>
+                                <div class="col-sm-6">
+                                    {{ form.name }}
+                                </div>
+                                <div class="col-sm-3 help-block with-errors">
+                                    {{ form.name.errors }}
                                 </div>
                             </div>
-                        </div>
-                    {% endif %}
-
-                    {% if form.subject != None %}
-                        <div class="row form-group">
-                            <div>
-                                {{ form.subject.errors }}
+                        {% endif %}
+    
+                        {% if form.email != None %}
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label {{ form.email.css_classes }}" for="{{ form.email.id_for_label }}">{{ form.email.label }}:</label>
+                                <div class="col-sm-6">
+                                    {{ form.email }}
+                                </div>
+                                <div class="col-sm-3 help-block with-errors">
+                                    {{ form.email.errors }}
+                                </div>
                             </div>
-                            <div class="col-sm-2">
-                                <label class="{{ form.subject.css_classes }}" for="{{ form.subject.id_for_label }}">{{ form.subject.label }}:</label>
+                        {% endif %}
+    
+                        {% if form.phone != None %}
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label {{ form.phone.css_classes }}" for="{{ form.phone.id_for_label }}">{{ form.phone.label }}:</label>
+                                <div class="col-sm-6">
+                                    {{ form.phone }}
+                                </div>
+                                <div class="col-sm-3 help-block with-errors">
+                                    {{ form.phone.errors }}
+                                </div>
                             </div>
-                            <div class="col-sm-10">
-                                {{ form.subject }}
+                        {% endif %}
+    
+                        {% if form.recipients != None %}
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label {{ form.recipients.css_classes }}" for="{{ form.recipients.id_for_label }}">{{ form.recipients.label }}:</label>
+                                <div id="recipients" class="col-sm-6">
+                                    {% if recp %}
+                                        <div id="recipient-groups">{% trans 'Tilføj:' %}&nbsp;</div>
+                                    {% endif %}
+                                    <div id="recipient-list" class="email-recipients">
+                                        {{ form.recipients }}
+                                    </div>
+                                </div>
+                                    
+                                <div class="col-sm-3 help-block with-errors">
+                                    {{ form.recipients.errors }}
+                                </div>
+                            </div>
+                            
+                        {% endif %}
+    
+                        {% if form.subject != None %}
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label {{ form.subject.css_classes }}" for="{{ form.subject.id_for_label }}">{{ form.subject.label }}:</label>
+                                <div class="col-sm-6">
+                                    {{ form.subject }}
+                                </div>
+                                <div class="col-sm-3 help-block with-errors">
+                                    {{ form.subject.errors }}
+                                </div>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label {{ form.body.css_classes }}" for="{{ form.body.id_for_label }}">{{ form.body.label }}:</label>
+                            <div class="col-sm-6">
+                                {{ form.body }}
+                            </div>
+                            <div class="col-sm-3 help-block with-errors">
+                                {{ form.body.errors }}
                             </div>
                         </div>
-                    {% endif %}
-
-                    <div class="row form-group">
-                        <div>
-                            {{ form.body.errors }}
-                        </div>
-                        <div class="col-sm-2">
-                            <label class="{{ form.body.css_classes }}" for="{{ form.body.id_for_label }}">{{ form.body.label }}:</label>
-                        </div>
-                        <div class="col-sm-10">
-                            {{ form.body }}
-                        </div>
+    
+                        {% if template_key %}
+                            <input type="hidden" name="template" value="{{ template_key }}">
+                            
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">{% trans 'Skabeloner:' %}</label>
+                                <div class="col-sm-6">
+                                    {% if templates %}
+                                        {% for template in templates reversed %}
+                                            <a href="{% url 'emailtemplate-view' template.id %}" target="_blank" class="
+                                            {% if forloop.last %}template-selected{% else %}template-overridden{% endif %}
+                                            ">{% if template.organizationalunit %}{{ template.organizationalunit.name }}{% else %}{% trans 'Rodskabelon' %}{% endif %}</a>
+                                            {% if not forloop.last %} &gt; {% endif %}
+                                        {% endfor %}
+                                    {% else %}
+                                        {% trans 'Ingen skabeloner fundet' %}
+                                        <a href="{% url 'emailtemplate-create' %}?organizationalunit={{ template_unit.id }}&key={{ template_key }}" target="_blank">{% trans 'Opret skabelon' %}</a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endif %}
                     </div>
-
-                    {% if template_key %}
-                        <input type="hidden" name="template" value="{{ template_key }}" />
-                        <div class="row form-group">
-                            <div class="col-sm-2">
-                                <label>{% trans 'Skabeloner:' %}</label>
-                            </div>
-                            <div class="col-sm-10">
-                                {% if templates %}
-                                    {% for template in templates reversed %}
-                                        <a href="{% url 'emailtemplate-view' template.id %}" target="_blank" class="
-                                        {% if forloop.last %}template-selected{% else %}template-overridden{% endif %}
-                                        ">{% if template.organizationalunit %}{{ template.organizationalunit.name }}{% else %}{% trans 'Rodskabelon' %}{% endif %}</a>
-                                        {% if not forloop.last %} &gt; {% endif %}
-                                    {% endfor %}
-                                {% else %}
-                                    {% trans 'Ingen skabeloner fundet' %}
-                                    <a href="{% url 'emailtemplate-create' %}?organizationalunit={{ template_unit.id }}&key={{ template_key }}" target="_blank">{% trans 'Opret skabelon' %}</a>
-                                {% endif %}
-                            </div>
-                        </div>
-                    {% endif %}
                 </div>
             </div>
         </div>
 
-
-        {% include 'common/send_cancel.html' %}
-        <div class="divider"></div>
+        <div class="modal-footer">
+            {% include 'common/send_cancel.html' %}
+        </div>
+        
     </form>
-
 
 {% endblock %}
 
