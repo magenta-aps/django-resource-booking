@@ -45,13 +45,14 @@
                             Dette er et underbesøg under <a href="{{ masterurl }}">{{ master }}</a>
                         {% endblocktrans %}
                     </div>
-                    {% endif %}
+                    {% else %}
                     <div>
                         {% url 'product-view' object.product.id as producturl %}
                         {% blocktrans with nr_bookers=object.nr_attendees producttitle=object.product.title %}
                             {{ nr_bookers }} har tilmeldt sig denne instans af <a href="{{ producturl }}">{{ producttitle }}</a>
                         {% endblocktrans %}
                     </div>
+                    {% endif %}
                 {% endif %}
 
                 {% if not object.start_datetime %}
@@ -313,7 +314,8 @@
             </div>
         </div>
     </div>
-    
+
+    {% if not object.is_multi_sub %}
     <div class="row attendees">
         <div class="col-sm-12 col-md-10">
             <div class="panel panel-default">
@@ -327,6 +329,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
 
     {% if not object.is_multiproductvisit %}
     <div class="row waiting">
