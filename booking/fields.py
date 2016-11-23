@@ -3,6 +3,7 @@ from django.utils import six
 from collections import defaultdict
 from django.forms.fields import ChoiceField, MultipleChoiceField
 from django.forms.widgets import CheckboxSelectMultiple, Select, SelectMultiple
+from django.forms.models import ModelMultipleChoiceField
 
 from .widgets import OrderedMultipleHiddenChooser
 from .widgets import CheckboxSelectMultipleDisable, DurationWidget
@@ -72,12 +73,6 @@ class OrderedMultipleChoiceField(ExtensibleMultipleChoiceField):
                 return True
         return False
 
-    def prepare_value(self, data):
-        bof = super(OrderedMultipleChoiceField, self).prepare_value(data)
-        print "HURRA"
-        print bof
-        return bof
-
 
 class DisableFieldMixin(object):
     widget = SelectDisable
@@ -120,3 +115,16 @@ class ChoiceDisableField(DisableFieldMixin, ChoiceField):
 
 class MultipleChoiceDisableField(DisableFieldMixin, MultipleChoiceField):
     widget = SelectMultipleDisable
+
+
+class OrderedModelMultipleChoiceField(ModelMultipleChoiceField):
+    def _check_values(self, value):
+        items = super(OrderedModelMultipleChoiceField, self)._check_values(
+            value
+        )
+        key = self.to_field_name or 'pk'
+        map = {
+            getattr(item, key): item
+            for item in items
+        }
+        return [map[v] for v in value]

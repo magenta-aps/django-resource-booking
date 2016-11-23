@@ -45,7 +45,7 @@
 
         <label>{% trans 'Valgte tilbud:' %}</label>
         <ul id="confirm-product-list" class="list-group">
-            {% for product in object.products.all %}
+            {% for product in object.products %}
                 <li class="list-group-item">{{ product.title }}</li>
             {% endfor %}
         </ul>
