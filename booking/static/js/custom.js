@@ -1,9 +1,8 @@
 //Search-list.html start:
 $('.collapse').on('show.bs.collapse', function() {
-    $(this).parent().find(".caret").addClass("caret-up");
-});
-$('.collapse').on('hide.bs.collapse', function() {
-    $(this).parent().find(".caret").removeClass("caret-up");
+    $(this).parent().find(".caret").removeClass("caret").addClass("caret-up");
+}).on('hide.bs.collapse', function() {
+    $(this).parent().find(".caret-up").removeClass("caret-up").addClass("caret");
 });
 $('#filters').on('show.bs.collapse', function() {
     $(this).prev().find(".glyphicon").toggleClass("glyphicon-chevron-down glyphicon-chevron-up");
