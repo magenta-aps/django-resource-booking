@@ -8,7 +8,8 @@ from booking.models import Guest, Region, PostCode, School
 from booking.models import ClassBooking, TeacherBooking, \
     BookingGymnasieSubjectLevel
 from booking.models import EmailTemplate, EmailTemplateType
-from booking.models import Visit, MultiProductVisitTemp
+from booking.models import Visit
+from booking.models import MultiProductVisitTemp, MultiProductVisitTempProduct
 from booking.models import BLANK_LABEL, BLANK_OPTION
 from booking.widgets import OrderedMultipleHiddenChooser
 from booking.utils import binary_or, binary_and
@@ -23,6 +24,7 @@ from django.forms import HiddenInput
 from django.utils.translation import ugettext_lazy as _
 from tinymce.widgets import TinyMCE
 from .fields import ExtensibleMultipleChoiceField
+from .fields import OrderedModelMultipleChoiceField
 
 
 class AdminProductSearchForm(forms.Form):
@@ -1241,18 +1243,25 @@ class MultiProductVisitTempDateForm(forms.ModelForm):
 
 
 class MultiProductVisitTempProductsForm(forms.ModelForm):
+
+    products_key = 'new_products'
+
+    new_products = OrderedModelMultipleChoiceField(
+        queryset=Product.objects.all(),
+        widget=OrderedMultipleHiddenChooser()
+    )
+
     class Meta:
         model = MultiProductVisitTemp
-        fields = ['products', 'required_visits', 'notes']
+        fields = ['required_visits', 'notes']
         widgets = {
-            'products': OrderedMultipleHiddenChooser(),
             'notes': Textarea(
                 attrs={'class': 'form-control input-sm'}
             )
         }
 
-    def clean_products(self):
-        products = self.cleaned_data['products']
+    def clean_new_products(self):
+        products = self.cleaned_data[self.products_key]
         common_institution = binary_and([
             product.institution_level for product in products
         ])
@@ -1266,12 +1275,24 @@ class MultiProductVisitTempProductsForm(forms.ModelForm):
 
     def clean(self):
         super(MultiProductVisitTempProductsForm, self).clean()
-        if 'products' not in self.cleaned_data or \
-                len(self.cleaned_data['products']) == 0:
+        if self.products_key not in self.cleaned_data or \
+                len(self.cleaned_data[self.products_key]) == 0:
             raise forms.ValidationError(
                 _(u"Der er ikke valgt nogen produkter")
             )
-        products_selected = 0 if 'products' not in self.cleaned_data \
-            else len(self.cleaned_data['products'])
+        products_selected = 0 if self.products_key not in self.cleaned_data \
+            else len(self.cleaned_data[self.products_key])
         if self.cleaned_data['required_visits'] > products_selected:
             self.cleaned_data['required_visits'] = products_selected
+
+    def save(self, commit=True):
+        mvpt = super(MultiProductVisitTempProductsForm, self).save(commit)
+        MultiProductVisitTempProduct.objects.filter(
+            multiproductvisittemp=mvpt
+        ).delete()
+        for index, product in enumerate(self.cleaned_data[self.products_key]):
+            relation = MultiProductVisitTempProduct(
+                product=product, multiproductvisittemp=mvpt, index=index
+            )
+            relation.save()
+        return mvpt

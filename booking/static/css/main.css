@@ -1423,3 +1423,71 @@ body.lightbox {
         display: flex;
     }
 }
+
+div.col-sm-2 label {
+    width: 100%;
+}
+
+/* Time interval selector START */
+.input-group.datefield .input-group-addon {
+    cursor: pointer;
+}
+.input-group.timeslider strong {
+    margin-left: 1em;
+    margin-right: 1em;
+}
+.input-group.timeslider.dslider .slider-selection,
+.input-group.timeslider.dslider .slider-tick.in-selection{
+	background: transparent;
+}
+/* Time interval selector END */
+
+
+/* MultiProductVisit START */
+#deselected-product-list li .movebutton,
+#deselected-product-list li .deselectbutton,
+#confirm-product-list li .movebutton,
+#confirm-product-list li .deselectbutton {
+    display: none;
+}
+#deselected-product-list,
+#selected-product-list,
+#confirm-product-list {
+    font-size: 1.5em;
+    list-style-type: none;
+}
+
+#selected-product-list li .movebutton {
+    cursor: move;
+}
+
+#selected-product-list li .selectbutton,
+#selected-product-list li .teaser,
+#confirm-product-list li .selectbutton,
+#confirm-product-list li .teaser {
+    display: none;
+}
+#selected-product-list li .title,
+#confirm-product-list li .title {
+    display: inline;
+    font-weight: normal;
+    margin: 0;
+    padding: 0;
+}
+
+#mpvform #deselected-product-list li#placeholder,
+#mpvform #drawhelp {
+    display: none
+}
+
+#mpvform li .institution {
+    font-size: 0.75em;
+}
+
+li.subvisit-status-1 a.visit-link,
+li.subvisit-status-7 a.visit-link,
+li.subvisit-status-8 a.visit-link {
+    text-decoration: line-through;
+}
+
+/* MultiProductVisit END */

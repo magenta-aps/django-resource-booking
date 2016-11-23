@@ -2920,6 +2920,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def get_recipients(self, template_key):
         template_type = EmailTemplateType.get(template_key)
         product = self.product
+        if self.is_multiproductvisit and self.multiproductvisit.primary_visit:
+            product = self.multiproductvisit.primary_visit.product
         if product:
             recipients = product.get_recipients(template_key)
         else:
@@ -3591,15 +3593,40 @@ class MultiProductVisit(Visit):
             return unicode(_(u'Besøg %s - uden tidspunkt') % self.pk)
 
 
+class MultiProductVisitTempProduct(models.Model):
+    product = models.ForeignKey(Product, related_name='prod')
+    multiproductvisittemp = models.ForeignKey('MultiProductVisitTemp')
+    index = models.IntegerField()
+
+
 class MultiProductVisitTemp(models.Model):
     date = models.DateField(
         null=False,
         blank=False,
         verbose_name=_(u'Dato')
     )
-    products = models.ManyToManyField(
+    # Migration won't let us redefine this existing field,
+    # so rename it and create another. We'll delete it later.
+    deprecated_products = models.ManyToManyField(
         Product,
         blank=True
+    )
+
+    @property
+    def products(self):
+        return [
+            relation.product
+            for relation in
+            MultiProductVisitTempProduct.objects.filter(
+                multiproductvisittemp=self
+            ).order_by('index')
+        ]
+
+    new_products = models.ManyToManyField(
+        Product,
+        blank=True,
+        through=MultiProductVisitTempProduct,
+        related_name='products1'
     )
     updated = models.DateTimeField(
         auto_now=True
@@ -3626,7 +3653,7 @@ class MultiProductVisitTemp(models.Model):
         mpv.save()
         mpv.create_eventtime(self.date)
         mpv.ensure_statistics()
-        for index, product in enumerate(self.products.all()):
+        for index, product in enumerate(self.products):
             eventtime = EventTime(
                 product=product,
                 bookable=False,
@@ -3646,9 +3673,9 @@ class MultiProductVisitTemp(models.Model):
 
     def has_products_in_different_locations(self):
         return len(
-            set([product.locality for product in self.products.all()])
+            set([product.locality for product in self.new_products.all()])
         ) > 1
-        # return Locality.objects.filter(product=self.products).count() > 1
+        # return Locality.objects.filter(product=self.new_products).count() > 1
 
 
 class VisitComment(models.Model):
@@ -4295,7 +4322,6 @@ class Booking(models.Model):
                  only_these_recipients=False):
         template_type = EmailTemplateType.get(template_key)
         visit = self.visit.real
-
         if visit.autosend_enabled(template_type.key):
             product = visit.product
             unit = visit.organizationalunit
