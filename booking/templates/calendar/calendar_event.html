@@ -54,15 +54,16 @@
                         <label for="id_start_date">{% trans 'Dato/tid' %}:</label>
                     </div>
                     <div class="col-sm-7 form-inline">
+                        {% timezone "Europe/Copenhagen" %}
                         {% with starttime=form.start.value|stringformat:"s"|slice:"11:16" endtime=form.end.value|stringformat:"s"|slice:"11:16" %}
                         <div class="input-daterange" style="margin-top: 0;">
                             <input class="form-control input-sm rangepicker" id="id_start_date" name="start_date" type="text" value="{{ form.start.value|stringformat:"s"|slice:"10" }}" size="10">
                             <div class="input-group clockpicker"{% if default_all_day or starttime == "00:00" and endtime == "00:00" %} style="display: none"{% endif %}>
-                                <input class="form-control input-sm" id="id_start_time" name="start_time" type="text" value="{{ starttime }}" size="5">
+                                <input class="form-control input-sm" id="id_start_time" name="start_time" type="text" value="{{ starttime|date:"j.m.Y H:i" }}" size="5">
                                 <span class="input-group-addon" data-toggle="dropdown"><span class="glyphicon glyphicon-time"></span></span>
                             </div>
                             <div class="input-group clockpicker"{% if default_all_day or starttime == "00:00" and endtime == "00:00" %} style="display: none"{% endif %}>
-                                <input class="form-control input-sm" id="id_end_time" name="end_time" type="text" value="{{ endtime }}" size="5">
+                                <input class="form-control input-sm" id="id_end_time" name="end_time" type="text" value="{{ endtime|date:"j.m.Y H:i" }}" size="5">
                                 <span class="input-group-addon" data-toggle="dropdown"><span class="glyphicon glyphicon-time"></span></span>
                             </div>
                             <input class="form-control input-sm rangepicker" id="id_end_date" name="end_date" type="text" value="{{ form.end.value|stringformat:"s"|slice:"10" }}" size="10">
@@ -74,6 +75,7 @@
                             </label>
                         </div>
                         {% endwith %}
+                        {% endtimezone %}
                     </div>
                     <div class="col-sm-3 with-errors">
                     </div>
