@@ -825,6 +825,9 @@ class BookerForm(forms.ModelForm):
                    'autocomplete': 'off'}
         )
     )
+    school_type = forms.IntegerField(
+        widget=HiddenInput()
+    )
     postcode = forms.IntegerField(
         widget=NumberInput(
             attrs={'class': 'form-control input-sm',
@@ -924,8 +927,27 @@ class BookerForm(forms.ModelForm):
                 _(u"Indtast den samme email-adresse i begge felter")
             )
             self.add_error('repeatemail', error)
+        return cleaned_data
 
-    def save(self):
+    def _clean_fields(self):
+        self.update_school_dependents()
+        return super(BookerForm, self)._clean_fields()
+
+    def update_school_dependents(self):
+        field = self.fields['school']
+        value = field.widget.value_from_datadict(
+            self.data, self.files, self.add_prefix('school')
+        )
+        school = field.clean(value)
+        try:
+            self.schooltype = School.objects.get(name__iexact=school).type
+        except:
+            pass
+        if self.schooltype is not None:
+            if self.schooltype != School.ELEMENTARY_SCHOOL:
+                self.fields['level'].required = False
+
+    def save(self, commit=True):
         booker = super(BookerForm, self).save(commit=False)
         data = self.cleaned_data
         schoolname = data.get('school')
@@ -999,7 +1021,7 @@ class StudyProjectBookingForm(BookingForm):
 
 class BookingSubjectLevelFormBase(forms.ModelForm):
     class Meta:
-        fields = ('subject', 'level')
+        fields = ['subject', 'level']
         widgets = {
             'subject': Select(
                 attrs={'class': 'form-control'}
@@ -1021,6 +1043,7 @@ class BookingSubjectLevelFormBase(forms.ModelForm):
 
 
 class BookingGymnasieSubjectLevelFormBase(BookingSubjectLevelFormBase):
+
     class Meta:
         model = BookingGymnasieSubjectLevel
         fields = BookingSubjectLevelFormBase.Meta.fields
@@ -1031,6 +1054,7 @@ class BookingGymnasieSubjectLevelFormBase(BookingSubjectLevelFormBase):
 
 
 class BookingGrundskoleSubjectLevelFormBase(BookingSubjectLevelFormBase):
+
     class Meta:
         model = BookingGrundskoleSubjectLevel
         fields = BookingSubjectLevelFormBase.Meta.fields

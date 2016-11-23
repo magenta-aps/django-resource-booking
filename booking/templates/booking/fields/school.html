@@ -22,6 +22,10 @@
 </div>
 {% endif %}
 
+{% if bookerform.school_type %}
+    {{ bookerform.school_type }}
+{% endif %}
+
 {% if bookerform.line and product.institution_level != 2 %}
 <div class="form-group institution_level_dependent" data-display-value="1">
     <div class="col-sm-2">
@@ -37,7 +41,7 @@
 {% endif %}
 
 {% if bookerform.level and not no_level_field %}
-<div class="form-group">
+<div class="form-group institution_level_dependent" data-display-value="2">
     <div class="col-sm-2">
         <label class="control-label {{ bookerform.level.css_classes }}" for="{{ bookerform.level.id_for_label }}">
             {% if bookerform.fields.level.required %}
