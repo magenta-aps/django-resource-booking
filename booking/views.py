@@ -2345,7 +2345,6 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
 
         forms = self.get_forms(request.POST)
 
-
         # We must disregard one of the school subject forms, depending on
         # which school is selected
         forms['bookerform'].full_clean()
