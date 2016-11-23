@@ -23,7 +23,7 @@
             <div class="col-sm-2"></div>
             <div class="col-sm-7">
                 {% blocktrans with title=object.product.title needed=object.product.get_needed_teachers_display %}
-                Antal nødvendige undervisere angivet på "{{ title }}": {{ needed }}
+                    Antal nødvendige undervisere angivet på "{{ title }}": {{ needed }}
                 {% endblocktrans %}
             </div>
             <div class="col-sm-3 with-errors"></div>
@@ -33,25 +33,28 @@
         {% include 'common/fields/userselect_with_availability_link.html' with field=form.teachers helptext=uv_helptext %}
 
         {% if can_send_emails %}
-        {% include 'common/fields/boolean_field.html' with field=form.send_emails left_label="Udsendelse af e-mail:" %}
+            {% include 'common/fields/boolean_field.html' with field=form.send_emails left_label="Udsendelse af e-mail:" %}
         {% else %}
-        <div class="row form-group">
-            <div class="col-sm-2"><strong>Udsendelse af e-mail:</strong></div>
-            <div class="col-sm-7">
-                <p>
-                    {% blocktrans with inviteret_type="undervisere" template_name=email_template_name %}
-                        Det er i øjeblikket ikke muligt at udsende e-mails til {{ inviteret_type }} der tilknyttes dette besøg.
-                        Hvis du vil have muligheden for at udsende emails skal du tilføje automatisk e-mail udsendelse
-                        for "{{ template_name }}" til besøget.
-                    {% endblocktrans %}
-                </p>
+            <div class="row form-group">
+                <div class="col-sm-2"><strong>Udsendelse af e-mail:</strong></div>
+                <div class="col-sm-7">
+                    <p>
+                        {% blocktrans with inviteret_type="undervisere" template_name=email_template_name %}
+                            Det er i øjeblikket ikke muligt at udsende e-mails til {{ inviteret_type }} der tilknyttes dette besøg.
+                            Hvis du vil have muligheden for at udsende emails skal du tilføje automatisk e-mail udsendelse
+                            for "{{ template_name }}" til besøget.
+                        {% endblocktrans %}
+                    </p>
+                </div>
+                <div class="col-sm-3 with-errors"></div>
             </div>
-            <div class="col-sm-3 with-errors"></div>
-        </div>
         {% endif %}
-
-        <input class="btn btn-success btn-sm" type="submit" value="{% trans 'Opdater' %}" name="confirm" />
-        <input class="btn btn-danger btn-sm" type="submit" value="{% trans 'Annullér' %}" name="cancel" />
+        <div class="clearfix">
+            <hr>
+            <input class="btn btn-default pull-left" type="submit" value="{% trans 'Annullér' %}" name="cancel">
+            <input class="btn btn-primary pull-right" type="submit" value="{% trans 'Opdater' %}" name="confirm">
+        </div>
+        
     </form>
 {% endblock %}
 

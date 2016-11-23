@@ -1,10 +1,17 @@
 {% extends "index.html" %}
 
 {% block content %}
+<div class="divider"></div>
 <form method="POST">
-     {% csrf_token %}
-     {{form.as_p}}
-     <hr>
-     <input type="Submit" class="btn btn-primary pull-right" value="Log ind" name="Submit">
+     <div class="row">
+          <div class="col-sm-2 col-sm-offset-5 login-form">
+               {% csrf_token %}
+               {{form.as_p}}
+          </div>
+     </div>
+     <div class="col-sm-2 col-sm-offset-5 clearfix">
+          <input type="Submit" class="btn btn-primary" value="Log ind" name="Submit">
+     </div>
 </form>
+<div class="divider"></div>
 {% endblock %}

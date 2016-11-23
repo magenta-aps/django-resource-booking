@@ -17,43 +17,96 @@
             {% include 'common/breadcrumbrow.html' %}
 
             <div class="divider"></div>
+            
             <form class="clearfix" role="søg" action={% url 'visit-search' %}>
-                <h2>{% trans 'Filtrér søgning' %}</h2>
-                <dl class="dl-horizontal">
-                    <dt><label for="{{ form.q.id_for_label }}">{{ form.q.label }}</label></dt>
-                    <dd>{{ form.q }}</dd>
-
-                    <dt>{{ form.s.label }}</dt>
-                    <dd>{{ form.s }}</dd>
-
-                    <dt>{{ form.t.label }}</dt>
-                    <dd>{{ form.t }}</dd>
-
-                    <dt>{{ form.u.label }}</dt>
-                    <dd>{{ form.u }}</dd>
-
-                    <dt>{{ form.w.label }}</dt>
-                    <dd>{{ form.w }}</dd>
-
-                    <dt>{{ form.p_min.label }}</dt>
-                    <dd>{{ form.p_min }}</dd>
-
-                    <dt>{{ form.p_max.label }}</dt>
-                    <dd>{{ form.p_max }}</dd>
-
-                    <dt>{{ form.from_date.label }}</dt>
-                    <dd>{{ form.from_date }}</dd>
-
-                    <dt>{{ form.to_date.label }}</dt>
-                    <dd>{{ form.to_date }}</dd>
-
-                    <dt></dt>
-                    <dd><input class="btn btn-primary" type="submit" value="{% trans 'Opdater' %}" name="go"></dd>
-                </dl>
+                <div class="row">
+                    <h2 class="col-sm-6 col-sm-offset-2">{% trans 'Filtrér søgning' %}</h2>
+                    <div class="col-sm-4">
+                        {{form.errors}}
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-sm-2">
+                        <label for="{{ form.q.id_for_label }}">{{ form.q.label }}</label>
+                    </div>
+                    <div class="col-sm-6">
+                        {{ form.q }}
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-sm-2">
+                        <label for="{{ form.q.id_for_label }}">{{ form.q.label }}</label>
+                    </div>
+                    <div class="col-sm-6">
+                        {{ form.q }}
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-sm-2">
+                        <label for="{{ form.s.id_for_label }}">{{ form.s.label }}</label>
+                    </div>
+                    <div class="col-sm-6">
+                        {{ form.s }}
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-sm-2">
+                        <label for="{{ form.t.id_for_label }}">{{ form.t.label }}</label>
+                    </div>
+                    <div class="col-sm-6">
+                        {{ form.t }}
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-sm-2">
+                        <label for="{{ form.u.id_for_label }}">{{ form.u.label }}</label>
+                    </div>
+                    <div class="col-sm-6">
+                        {{ form.u }}
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-sm-2">
+                        <label for="{{ form.w.id_for_label }}">{{ form.w.label }}</label>
+                    </div>
+                    <div class="col-sm-6">
+                        {{ form.w }}
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-sm-2">
+                        <label for="{{ form.w.id_for_label }}">{{ form.w.label }}</label>
+                    </div>
+                    <div class="col-sm-6">
+                        {{ form.w }}
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-sm-3 col-sm-offset-2">
+                        <label for="{{ form.p_min.id_for_label }}">{{ form.p_min.label }}</label>
+                        {{ form.p_min }}
+                    </div>
+                    <div class="col-sm-3">
+                        <label for="{{ form.p_max.id_for_label }}">{{ form.p_max.label }}</label>
+                        {{ form.p_max }}
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-sm-3 col-sm-offset-2">
+                        <label for="{{ form.from_date.id_for_label }}">{{ form.from_date.label }}</label>
+                        {{ form.from_date }}
+                    </div>
+                    <div class="col-sm-3">
+                        <label for="{{ form.to_date.id_for_label }}">{{ form.to_date.label }}</label>
+                        {{ form.to_date }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-6 col-sm-offset-2">
+                        <input class="btn btn-primary pull-right" type="submit" value="{% trans 'Opdater' %}" name="go">
+                    </div>
+                </div>
             </form>
-            <div>
-                {{form.errors}}
-            </div>
             <div class="divider"></div>
             <h1>{% trans 'Søgeresultat' %}</h1>
             {% if not results %}

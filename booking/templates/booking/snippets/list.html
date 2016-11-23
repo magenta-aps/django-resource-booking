@@ -53,10 +53,12 @@
                     </a>
                     <div class="pull-right">
                         {% if listname == 'waiting' %}
-                        <button type="button" data-toggle="modal" data-target="#modalhost" class="btn btn-default btn-xs"
+                        <button type="button"
+                                data-toggle="modal"
+                                data-target="#modalhost"
+                                class="btn btn-default btn-xs"
                                 data-modal-href="{% url 'booking-notify' booking.id %}?template={{ emailtemplate_waitinglist }}&recipients=booking:{{ booking.id }}&nogroups=1"
-                                {% if booking.booker.attendee_count > object.available_seats %}disabled="disabled" title="{% trans 'Der er ikke plads nok på ventelisten' %}"{% endif %}
-                        >
+                                {% if booking.booker.attendee_count > object.available_seats %}disabled="disabled" title="{% trans 'Der er ikke plads nok på ventelisten' %}"{% endif %}>
                             {% trans 'Send venteliste-mail' %}
                         </button>
                         {% endif %}
@@ -66,12 +68,12 @@
                     </div>
                 </div>
             {% endfor %}
-            <button type="submit" name="action" value="delete" class="btn btn-danger btn-xs pull-right">{% trans 'Slet valgte' %}</button>
+            <button type="submit" name="action" value="delete" class="btn btn-danger pull-right" style="margin-left: 0.5em;">{% trans 'Slet valgte' %}</button>
             {% if object.product.do_create_waiting_list %}
                 {% if listname == 'booking' %}
-                    <button type="submit" name="action" value="enqueue" class="btn btn-default btn-xs pull-right">{% trans 'Flyt valgte til venteliste' %}</button>
+                    <button type="submit" name="action" value="enqueue" class="btn btn-default pull-right" style="margin-left: 0.5em;">{% trans 'Flyt valgte til venteliste' %}</button>
                 {% elif listname == 'waiting' %}
-                    <button type="submit" name="action" value="dequeue" class="btn btn-default btn-xs pull-right">{% trans 'Tilmeld valgte' %}</button>
+                    <button type="submit" name="action" value="dequeue" class="btn btn-default pull-right" style="margin-left: 0.5em;">{% trans 'Tilmeld valgte' %}</button>
                 {% endif %}
             {% endif %}
         </form>

@@ -392,6 +392,15 @@ textarea {
     text-decoration: none;
 }
 
+a[data-toggle="collapse"] {
+    display: block;
+}
+
+a[data-toggle="collapse"] .caret {
+    display: inline-block;
+    margin: 0.5em 0.5em 0;
+}
+
 li.media {
     margin-top: 0;
     padding: 15px 10px;
@@ -592,6 +601,11 @@ a>.caret, a>.caret:focus, a>.caret:active {
     padding-left: 0;
 }
 
+.row-border {
+    border-top: solid 1px #eee;
+    padding: 0.5em 0;
+}
+
 .go-back {
     margin-bottom: 20px;
     padding-top: 20px;
@@ -756,6 +770,23 @@ ul.footerlinks .footerlist-header {
 
 
 /*Backend specific styles start */
+
+.login-form label {
+    display: block;
+}
+
+.login-form input[type="text"],
+.login-form input[type="password"]{
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.scroll-400 {
+    height: 400px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
 
 .edit-btn {
     margin-bottom: 10px;
