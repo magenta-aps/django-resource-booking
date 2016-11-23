@@ -1927,7 +1927,7 @@ class VisitNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
         pk = kwargs['pk']
         self.object = Visit.objects.get(id=pk)
         self.get_template_key(request)
-        template_type = EmailTemplateType.get(self.template_key)
+        # template_type = EmailTemplateType.get(self.template_key)
         # if self.object.is_multi_sub and \
         #         template_type.manual_sending_mpv_enabled:
         #     self.object = self.object.multi_master
