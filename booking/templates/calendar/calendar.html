@@ -35,23 +35,25 @@
 
 
 {% block content %}
-    <div class="divider"></div>
-    <h1>
-        {% trans "Kalender" %}
-    </h1>
 
     <div class="divider"></div>
+    
+    <div class="row">
+        <h1 class="col-sm-6">
+            {% trans "Kalender" %}
+        </h1>
+        <p class="col-sm-6" style="text-align: right;">
+            {% if object.resource %}
+            <a href="{% url 'resource-view' object.resource.id %}" role="button" class="btn btn-primary">{% trans 'Gå til ressource' %}</a>
+            {% elif object.product %}
+            <a href="{% url 'product-view' object.product.id %}" role="button" class="btn btn-primary">{% trans 'Gå til tilbud' %}</a>
+            {% endif %}
+        </p>
+    </div>
 
     <div class="row">
         <div class="col-md-12">
-            <p class="pull-right">
-                {% if object.resource %}
-                <a href="{% url 'resource-view' object.resource.id %}" role="button" class="btn btn-primary">{% trans 'Gå til ressource' %}</a>
-                {% elif object.product %}
-                <a href="{% url 'product-view' object.product.id %}" role="button" class="btn btn-primary">{% trans 'Gå til tilbud' %}</a>
-                {% endif %}
-            </p>
-            <h2>{% trans 'Tilgængelige tider' %}</h2>
+            <h2>Tilgængelige tider</h2>
             {% if not available %}
             <p>
                 {% trans '(Ingen regler betyder aldrig tilgængelig)' %}
@@ -96,9 +98,7 @@
                 </p>
             {% endif %}
             <div class="divider"></div>
-            <p>
-                <a href="{% url reverses.calendar_event_create view.rel_obj.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Opret tid i kalender' %}</a>
-            </p>
+            
             <table class="ressource-kalender table table-bordered table-striped">
                 <thead>
                     <tr>

@@ -16,7 +16,7 @@
         <p>{% trans 'Er du sikker på at du vil slette denne kalenderbegivenhed?' %}</p>
         <div class="divider"></div>
         <button type="submit" class="btn btn-primary">{% trans 'Ja' %}</button>
-        <a class="btn btn-primary" href="{% if oncancel %}{{ oncancel }}{% else %}javascript:history.back(){% endif %}">{% trans 'Nej' %}</a>
+        <a class="btn btn-default" href="{% if oncancel %}{{ oncancel }}{% else %}javascript:history.back(){% endif %}">{% trans 'Nej' %}</a>
     </form>
 
 {% endblock %}

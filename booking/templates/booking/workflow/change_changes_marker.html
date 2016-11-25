@@ -19,8 +19,12 @@
                 {% csrf_token %}
                 {{ form }}
                 <p>{% trans 'Ønsker du at nulstille ændringsmarkøren for dette besøg?' %}</p>
-                <input class="btn btn-success btn-sm" type="submit" value="{% trans 'Nulstil' %}" name="confirm" />
-                <input class="btn btn-danger btn-sm" type="submit" value="{% trans 'Annullér' %}" name="cancel" />
+                
+                <div class="clearfix">
+                    <hr>
+                    <input class="btn btn-default pull-left" type="submit" value="{% trans 'Annullér' %}" name="cancel">
+                    <input class="btn btn-primary pull-right" type="submit" value="{% trans 'Nulstil' %}" name="confirm">
+                </div>
             </form>
         </div>
     </div>

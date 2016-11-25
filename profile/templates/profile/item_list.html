@@ -36,13 +36,15 @@
                                 </ul>
                             </div>
                         </a>
-                        <div class="tools">
-                            <a class="new-signups pull-left" title="{% trans 'Antal tilmeldinger' %}" href="{% url 'visit-view' visit.real.pk %}">
-                                {% trans 'Tilmeldinger' %}
-                                <span class="no-of-new-signups">({{ visit.real.bookings.count }})</span>
-                            </a>
-                            <div class="pull-right">
-                                <ul class="list-unstyled">
+                        <div class="tools row">
+                            <div class="col-sm-6">
+                                <a class="new-signups pull-left" title="{% trans 'Antal tilmeldinger' %}" href="{% url 'visit-view' visit.real.pk %}">
+                                    {% trans 'Tilmeldinger' %}
+                                    <span class="no-of-new-signups">({{ visit.real.bookings.count }})</span>
+                                </a>
+                            </div>
+                            <div class="col-sm-6">
+                                <ul class="list-unstyled needs-attention">
                                     {% if visit.real.needs_teachers %}
                                         <li>{% blocktrans count needed=visit.real.needed_teachers %}Mangler {{ needed }} underviser{% plural %}Mangler {{ needed }} undervisere{% endblocktrans %}</li>
                                     {% endif %}
@@ -52,16 +54,18 @@
                                     {% if visit.real.needs_room %}
                                         <li>{% blocktrans with count=1 %}Mangler lokale{% endblocktrans %}</li>
                                     {% endif %}
-                                    {% if visit.real.comments %}
-                                        <li>{% trans 'Kommentar:' %} {{ visit.real.comments }}</li>
-                                    {% endif %}
                                     {% if visit.real.nr_waiting > 0 %}
                                         <li>{% trans 'Antal på venteliste:' %} {{ visit.real.nr_waiting }}</li>
                                     {% endif %}
                                 </ul>
                             </div>
-                            <span class="label label-{{ visit.real.get_workflow_status_class }} pull-right">{{ visit.real.get_workflow_status_display }}</span>
                         </div>
+                        {% if visit.real.comments %}
+                            <p class="status-comment">{% trans 'Kommentar:' %} {{ visit.real.comments }}</p>
+                        {% endif %}
+                        {% if list.color != 'alert-danger' %}
+                            <p><span class="label label-{{ visit.real.get_workflow_status_class }} pull-right">{{ visit.real.get_workflow_status_display }}</span></p>
+                        {% endif %}
                     </div>
                 {% endfor %}
 

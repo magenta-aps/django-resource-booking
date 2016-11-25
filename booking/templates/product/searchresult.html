@@ -141,7 +141,10 @@
             {% include 'common/breadcrumbrow.html' %}
 
             {% if user.userprofile.can_create %}
-                <a class="pull-right btn btn-primary" href="{% url 'product-create' %}?back={{ request.get_full_path | urlencode }}">{% trans '+ Opret tilbud' %}</a>
+                <a class="pull-right btn btn-default" href="{% url 'product-create' %}?back={{ request.get_full_path | urlencode }}">
+                    <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                    {% trans 'Opret tilbud' %}
+                </a>
             {% endif %}
 
             <h1>{% trans 'Søgeresultat' %}</h1>

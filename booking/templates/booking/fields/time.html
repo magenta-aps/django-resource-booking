@@ -16,9 +16,7 @@
 {% else %}
     {% if bookingform.desired_time %}
         <div class="form-group">
-            <div class="col-sm-2">
-                <label class="control-label" for="{{ bookingform.desired_time.id_for_label }}">{% trans "Ønsket tidspunkt*" %}</label>
-            </div>
+            <label class="col-sm-2 control-label required" for="{{ bookingform.desired_time.id_for_label }}">{% trans "Ønsket tidspunkt" %}</label>
             <div class="col-sm-6{% if bookingform.desired_time.errors %} has-error{% endif %}">
                 {{ bookingform.desired_time }}
             </div>
