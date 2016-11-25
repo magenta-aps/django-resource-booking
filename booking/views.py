@@ -3390,25 +3390,21 @@ class EmailReplyView(BreadcrumbMixin, DetailView):
     def get_form(self):
         if self.form is None:
             if self.request.method == "GET":
-                org_lines = re.split(r'\r?\n', self.object.body.strip() + "\n")
-                self.form = EmailReplyForm({
-                    'reply': "\n\n" + "\n".join(["> " + x for x in org_lines])
-                })
+                self.form = EmailReplyForm()
             else:
                 self.form = EmailReplyForm(self.request.POST)
         return self.form
 
     def get_product(self):
-        occ = None
-
         try:
             ct = ContentType.objects.get(pk=self.object.content_type_id)
             if ct.model_class() == Product:
-                occ = ct.get_object_for_this_type(pk=self.object.object_id)
+                return ct.get_object_for_this_type(pk=self.object.object_id)
+            elif ct.model_class() == Visit:
+                visit = ct.get_object_for_this_type(pk=self.object.object_id)
+                return visit.product
         except Exception as e:
             print "Error when getting email-reply object: %s" % e
-
-        return occ
 
     def get_context_data(self, **kwargs):
         context = {}
