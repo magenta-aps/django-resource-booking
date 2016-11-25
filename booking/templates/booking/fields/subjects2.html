@@ -2,11 +2,11 @@
 {% load staticfiles %}
 {% load booking_tags %}
 
-{% if subjectform %}
-    {{ subjectform.management_form }}
+{% if gymnasiesubjectform %}
+    {{ gymnasiesubjectform.management_form }}
     {% if product.productgymnasiefag_set.count > 0 %}
-        <div id="gymnasiefag" class="rowcontainer">
-            {% for form in subjectform %}
+        <div id="gymnasiefag" class="rowcontainer institution_level_dependent" data-display-value="1">
+            {% for form in gymnasiesubjectform %}
                 {{ form.id }}
                 <div class="form-group{% if forloop.first %} rowprototype{% endif %}">
                     <div class="col-sm-2">
@@ -14,7 +14,6 @@
                         </div>
                     <div class="col-sm-4">
                         {{ form.subject }}
-
                     </div>
                     <div class="col-sm-2">
                         {{ form.level }}
@@ -31,7 +30,7 @@
 {% if grundskolesubjectform %}
     {{ grundskolesubjectform.management_form }}
     {% if product.productgrundskolefag_set.count > 0 %}
-        <div id="grundskolefag" class="rowcontainer">
+        <div id="grundskolefag" class="rowcontainer institution_level_dependent" data-display-value="2">
             {% for form in grundskolesubjectform %}
                 {{ form.id }}
                 <div class="form-group{% if forloop.first %} rowprototype{% endif %}">
@@ -53,7 +52,7 @@
     {% endif %}
 {% endif %}
 
-{% if subjectform or grundskolesubjectform %}
+{% if gymnasiesubjectform or grundskolesubjectform %}
     {% if grundskolefag_available or gymnasiefag_available %}
         <div class="col-sm-offset-2 col-sm-10">
             <p>

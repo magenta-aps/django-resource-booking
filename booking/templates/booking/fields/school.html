@@ -20,6 +20,10 @@
 </div>
 {% endif %}
 
+{% if bookerform.school_type %}
+    {{ bookerform.school_type }}
+{% endif %}
+
 {% if bookerform.line and product.institution_level != 2 %}
 <div class="form-group institution_level_dependent" data-display-value="1">
     <div class="col-sm-2">
@@ -35,10 +39,12 @@
 {% endif %}
 
 {% if bookerform.level and not no_level_field %}
-<div class="form-group">
-    <label class="col-sm-2 control-label {% if bookerform.fields.level.required %}required{% endif %}{{ bookerform.level.css_classes }}" for="{{ bookerform.level.id_for_label }}">
-        {% trans "Klasse" %}
-    </label>
+<div class="form-group institution_level_dependent" data-display-value="2">
+    <div class="col-sm-2">
+        <label class="control-label {% if bookerform.fields.level.required %}required{% endif %}{{ bookerform.level.css_classes }}" for="{{ bookerform.level.id_for_label }}">
+            {% trans "Klasse" %}
+        </label>
+    </div>
     <div class="col-sm-6{% if bookerform.level.errors %} has-error{% endif %}">
         {{ bookerform.level }}
     </div>

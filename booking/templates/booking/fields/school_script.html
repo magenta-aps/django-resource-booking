@@ -11,6 +11,27 @@
         var schoolField = $("#id_school");
         var levelSelect = $("#{{ bookerform.level.id_for_label }}");
 
+        var updateSchoolType = function(schoolType) {
+            $("#{{ bookerform.school_type.id_for_label }}").val(schoolType);
+
+            // Show/hide the dependents
+            $(".institution_level_dependent").each(function(){
+                var $this = $(this);
+                $this.toggle(!!($this.attr("data-display-value") & schoolType));
+            });
+
+            // Update the level selector options
+            var showOptions = $(levelSelect.find("option[value='']"));
+            var showValues = levelMap[schoolType];
+            for (var i=0; i<showValues.length; i++) {
+                showOptions = showOptions.add(levelSelect.find("option[value="+showValues[i]+"]"));
+            }
+            var hideOptions = levelSelect.find("option").not(showOptions);
+            showOptions.show();
+            hideOptions.hide();
+            hideOptions.filter(":selected").removeAttr("selected");
+        };
+
         schoolField.typeahead({
             items: 12,
             source: function (query, process) {
@@ -42,26 +63,18 @@
                 }
 
                 if (selected.type) {
-                    // Show/hide the dependents
-                    $(".institution_level_dependent").each(function(){
-                        var $this = $(this);
-                        $this.toggle(!!($this.attr("data-display-value") & selected.type));
-                    });
-
-                    // Update the level selector options
-                    var showOptions = $(levelSelect.find("option[value='']"));
-                    var showValues = levelMap[selected.type];
-                    for (var i=0; i<showValues.length; i++) {
-                        showOptions = showOptions.add(levelSelect.find("option[value="+showValues[i]+"]"));
-                    }
-                    var hideOptions = levelSelect.find("option").not(showOptions);
-                    showOptions.show();
-                    hideOptions.hide();
-                    hideOptions.filter(":selected").removeAttr("selected");
+                    updateSchoolType(selected.type);
                 }
                 return selected.name;
             }
         });
+
+        {% if bookerform.school_type %}
+            var schoolType = $("#{{ bookerform.school_type.id_for_label }}").val();
+            if (schoolType) {
+                updateSchoolType(schoolType);
+            }
+        {% endif %}
     });
 
     //-->
