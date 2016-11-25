@@ -2443,12 +2443,14 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
 
             booking.autosend(EmailTemplateType.NOTIFY_EDITORS__BOOKING_CREATED)
 
-            if booking.visit.needs_teachers:
+            if booking.visit.needs_teachers or \
+                    booking.visit.product.is_resource_controlled:
                 booking.autosend(
                     EmailTemplateType.NOTIFY_HOST__REQ_TEACHER_VOLUNTEER
                 )
 
-            if booking.visit.needs_hosts:
+            if booking.visit.needs_hosts or \
+                    booking.visit.product.is_resource_controlled:
                 booking.autosend(
                     EmailTemplateType.NOTIFY_HOST__REQ_HOST_VOLUNTEER
                 )
