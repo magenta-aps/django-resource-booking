@@ -40,7 +40,14 @@
 </p>
 {% endif %}
 <p>
-    <a href="{% full_url 'product-view' product.pk %}">Læs mere om tilbuddet her</a>.
+    {% if visit.is_multiproductvisit %}
+        Læs mere om de ønskede tilbud her:
+        {% for product in visit.real.products %}
+            <a href="{% full_url 'product-view' product.pk %}">{{ product.title }}</a>{% if forloop.last %}.{% else %},{% endif %}
+        {% endfor %}
+    {% else %}
+        <a href="{% full_url 'product-view' product.pk %}">Læs mere om tilbuddet her</a>.
+    {% endif %}
 </p>
 {% include 'booking/email/snippets/reply_link.html' %}
 
