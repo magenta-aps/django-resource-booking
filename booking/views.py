@@ -1948,16 +1948,6 @@ class VisitNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
         if self.object.is_multiproductvisit:
             products = self.object.multiproductvisit.products
         context['recp'] = {
-            'guests': {
-                'label': _(u'Alle gæster'),
-                'items': {
-                    "%s%s%d" % (self.RECIPIENT_BOOKER,
-                                self.RECIPIENT_SEPARATOR,
-                                booking.booker.id):
-                                    booking.booker.get_full_email()
-                    for booking in visit.bookings.all()
-                    }
-            },
             'guests_accepted': {
                 'label': _(u'Deltagende gæster'),
                 'items': {
