@@ -2,8 +2,9 @@
 {% load staticfiles %}
 {% load booking_tags %}
 
-{% if subjectform %}
-    {{ subjectform.management_form }}
+{% if gymnasiesubjectform %}
+    <div class="subjectform" id="gymnasiesubjectform">
+    {{ gymnasiesubjectform.management_form }}
     {% if product.productgymnasiefag_set.count > 0 %}
         <div id="gymnasiefag" class="rowcontainer">
             {% for form in subjectform %}
@@ -19,16 +20,26 @@
                     <div class="col-sm-2">
                         {{ form.level }}
                     </div>
-                    <div class="col-sm-2 rowadder">
-                        <a href="javascript:void()" id="addRow">{% trans "Tilføj ny" %}</a>
+                    <div class="col-sm-1 rowadder">
+                        <button type="button" id="addRow" class="btn action">{% trans "Tilføj ny" %}</button>
                     </div>
+                    {% if form.errors %}
+                        <div class="col-sm-3 with-errors">
+                            {{ form.subject.errors }}
+                            {% if form.level.errors and form.level.errors != form.subject.errors %}
+                                {{ form.level.errors }}
+                            {% endif %}
+                        </div>
+                    {% endif %}
                 </div>
             {% endfor %}
         </div>
     {% endif %}
+    </div>
 {% endif %}
 
 {% if grundskolesubjectform %}
+    <div class="subjectform" id="grundskolesubjectform">
     {{ grundskolesubjectform.management_form }}
     {% if product.productgrundskolefag_set.count > 0 %}
         <div id="grundskolefag" class="rowcontainer">
@@ -38,19 +49,28 @@
                     <div class="col-sm-2">
                         <label class="control-label" for="{{ form.subject.id_for_label }}">{% trans "Fag/Niveau (Grundskole)" %}</label>
                     </div>
-                    <div class="col-sm-4">
+                    <div class="col-sm-4{% if form.subject.errors %} has-error{% endif %}">
                         {{ form.subject }}
                     </div>
-                    <div class="col-sm-2">
+                    <div class="col-sm-2{% if form.level.errors %} has-error{% endif %}">
                         {{ form.level }}
                     </div>
-                    <div class="col-sm-2 rowadder">
-                        <a href="javascript:void()" id="addRow2">{% trans "Tilføj ny" %}</a>
+                    <div class="col-sm-1 rowadder">
+                        <button type="button" id="addRow2" class="btn action">{% trans "Tilføj ny" %}</button>
                     </div>
+                    {% if form.errors %}
+                        <div class="col-sm-3 with-errors">
+                            {{ form.subject.errors }}
+                            {% if form.level.errors and form.level.errors != form.subject.errors %}
+                                {{ form.level.errors }}
+                            {% endif %}
+                        </div>
+                    {% endif %}
                 </div>
             {% endfor %}
         </div>
     {% endif %}
+    </div>
 {% endif %}
 
 {% if subjectform or grundskolesubjectform %}

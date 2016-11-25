@@ -925,7 +925,22 @@ class BookerForm(forms.ModelForm):
             )
             self.add_error('repeatemail', error)
 
-    def save(self):
+    def update_school_dependents(self):
+        field = self.fields['school']
+        value = field.widget.value_from_datadict(
+            self.data, self.files, self.add_prefix('school')
+        )
+        self.schooltype = None
+        try:
+            school = field.clean(value)
+            self.schooltype = School.objects.get(name__iexact=school).type
+        except:
+            pass
+        if self.schooltype is not None:
+            if self.schooltype != School.ELEMENTARY_SCHOOL:
+                self.fields['level'].required = False
+
+    def save(self, commit=True):
         booker = super(BookerForm, self).save(commit=False)
         data = self.cleaned_data
         schoolname = data.get('school')
@@ -1046,7 +1061,8 @@ BookingGymnasieSubjectLevelForm = \
         BookingGymnasieSubjectLevel,
         form=BookingGymnasieSubjectLevelFormBase,
         can_delete=True,
-        extra=1,
+        extra=0,
+        min_num=1
     )
 
 
@@ -1056,7 +1072,8 @@ BookingGrundskoleSubjectLevelForm = \
         BookingGrundskoleSubjectLevel,
         form=BookingGrundskoleSubjectLevelFormBase,
         can_delete=True,
-        extra=1,
+        extra=0,
+        min_num=1
     )
 
 
