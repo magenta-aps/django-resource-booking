@@ -1037,7 +1037,7 @@ class BookingSubjectLevelFormBase(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(BookingSubjectLevelFormBase, self).__init__(*args, **kwargs)
         # 16338: Put in a different name for each choice
-        self.fields['subject'].choices = [
+        self.fields['subject'].choices = [(None, BLANK_LABEL)] + [
             (item.id, item.name) for item in self.get_queryset()
         ]
 
