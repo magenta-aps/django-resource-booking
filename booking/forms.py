@@ -798,7 +798,7 @@ class BookerForm(forms.ModelForm):
             ),
             'email': EmailInput(
                 attrs={'class': 'form-control input-sm',
-                       'placeholder': _(u'Email')}
+                       'placeholder': _(u'E-mail')}
             ),
             'phone': TextInput(
                 attrs={'class': 'form-control input-sm',
@@ -819,7 +819,7 @@ class BookerForm(forms.ModelForm):
     repeatemail = forms.CharField(
         widget=TextInput(
             attrs={'class': 'form-control input-sm',
-                   'placeholder': _(u'Gentag email')}
+                   'placeholder': _(u'Gentag e-mail')}
         )
     )
     school = forms.CharField(
@@ -876,6 +876,8 @@ class BookerForm(forms.ModelForm):
 
             self.fields['school'].widget.attrs['data-institution-level'] = \
                 level
+            if level in [School.ELEMENTARY_SCHOOL, School.GYMNASIE]:
+                self.initial['school_type'] = level
             available_level_choices = Guest.level_map[level]
             self.fields['level'].choices = [(u'', BLANK_LABEL)] + [
                 (value, title)
@@ -927,7 +929,7 @@ class BookerForm(forms.ModelForm):
         if email is not None and repeatemail is not None \
                 and email != repeatemail:
             error = forms.ValidationError(
-                _(u"Indtast den samme email-adresse i begge felter")
+                _(u"Indtast den samme e-mail i begge felter")
             )
             self.add_error('repeatemail', error)
         return cleaned_data
@@ -1187,11 +1189,11 @@ class GuestEmailComposeForm(BaseEmailComposeForm):
     )
 
     email = forms.EmailField(
-        label=_(u'Email'),
+        label=_(u'E-mail'),
         widget=EmailInput(
             attrs={
                 'class': 'form-control input-sm',
-                'placeholder': _(u'Din email-adresse')
+                'placeholder': _(u'Din e-mail')
             }
         )
     )

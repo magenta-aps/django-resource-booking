@@ -4,11 +4,8 @@
 {% block htmltitle %} - {% blocktrans with name=object.user role=object.get_role_name %}Information om {{ role|lower }} {{ name }}{% endblocktrans %}{% endblock %}
 
 {% block content %}
-    <div class="divider"></div>
 
     <h1>{% blocktrans with name=object.user role=object.get_role_name %}Information om {{ role|lower }} {{ name }}{% endblocktrans %}</h1>
-
-    <div class="divider"></div>
 
     <div class="row">
         <div class="col-sm-12">

@@ -1,7 +1,7 @@
 {% if field %}
 <div class="row form-group">
     <div class="col-sm-2{% if field.errors %} has-error{% endif %}{% if label_classes %} {{ label_classes }}{% endif %}">
-        <label for="{{ field.id_for_label }}" class="control-label">{{ field.label }}{% if field.field.required %}*{% endif %}:</label>
+        <label for="{{ field.id_for_label }}" class="control-label {% if field.field.required %}required{% endif %}">{{ field.label }}:</label>
         {% if field.help_text %}
             <span class="help-block">{{ field.help_text }}</span>
         {% endif %}
