@@ -938,8 +938,10 @@ class BookerForm(forms.ModelForm):
         value = field.widget.value_from_datadict(
             self.data, self.files, self.add_prefix('school')
         )
-        school = field.clean(value)
+
+        self.schooltype = None
         try:
+            school = field.clean(value)
             self.schooltype = School.objects.get(name__iexact=school).type
         except:
             pass
@@ -1070,7 +1072,8 @@ BookingGymnasieSubjectLevelForm = \
         BookingGymnasieSubjectLevel,
         form=BookingGymnasieSubjectLevelFormBase,
         can_delete=True,
-        extra=1,
+        extra=0,
+        min_num=1
     )
 
 
@@ -1080,7 +1083,8 @@ BookingGrundskoleSubjectLevelForm = \
         BookingGrundskoleSubjectLevel,
         form=BookingGrundskoleSubjectLevelFormBase,
         can_delete=True,
-        extra=1,
+        extra=0,
+        min_num=1
     )
 
 

@@ -35,8 +35,10 @@
                         <tr>
                             <th>&nbsp;</th>
                             <th>Tidspunkt</th>
-                            <th>Antal tilmeldinger / gæster</th>
-                            <th>Værter/undervisere tildelt</th>
+                            <th>Tilmeldinger</th>
+                            <th>Gæster</th>
+                            <th>Værter tildelt</th>
+                            <th>Undervisere tildelt</th>
                             {% if object.is_resource_controlled %}
                             <th>Ressourcer</th>
                             {% endif %}
@@ -52,8 +54,10 @@
                                 {% endif %}
                             </td>
                             <td><a href="{% url 'edit-time' eventtime.product.pk eventtime.pk %}">{{ eventtime.interval_display }}</a></td>
-                            <td>{{ eventtime.visit.booking_list|length }} / {{ eventtime.visit.nr_attendees|default:"0" }}</td>
-                            <td>{{ eventtime.visit.assigned_hosts|length }} / {{ eventtime.visit.assigned_teachers|length }}</td>
+                            <td>{{ eventtime.visit.booking_list|length }}</td>
+                            <td>{{ eventtime.visit.nr_attendees|default:"0" }}</td>
+                            <td>{{ eventtime.visit.assigned_hosts|length }}</td>
+                            <td>{{ eventtime.visit.assigned_teachers|length }}</td>
                             {% if object.is_resource_controlled %}
                             <td>
                                 {{ eventtime.resource_status_marker|safe }}
