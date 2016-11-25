@@ -695,6 +695,9 @@ class BookingForm(forms.ModelForm):
         required=False,
         label=_(u"Tidspunkt"),
         choices=(),
+        widget=Select(attrs={
+            'class': 'form-control'
+        })
     )
 
     desired_time = forms.CharField(
@@ -725,7 +728,7 @@ class BookingForm(forms.ModelForm):
             product.time_mode != Product.TIME_MODE_GUEST_SUGGESTED
         )
         if self.scheduled:
-            choices = [(BLANK_LABEL, None)]
+            choices = [(None, BLANK_LABEL)]
             qs = product.future_bookable_times.order_by('start', 'end')
             for eventtime in qs:
                 date = eventtime.interval_display
