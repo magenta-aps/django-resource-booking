@@ -873,6 +873,8 @@ class BookerForm(forms.ModelForm):
 
             self.fields['school'].widget.attrs['data-institution-level'] = \
                 level
+            if level in [School.ELEMENTARY_SCHOOL, School.GYMNASIE]:
+                self.initial['school_type'] = level
             available_level_choices = Guest.level_map[level]
             self.fields['level'].choices = [(u'', BLANK_LABEL)] + [
                 (value, title)
