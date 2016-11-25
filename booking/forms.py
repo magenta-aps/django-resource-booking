@@ -725,7 +725,7 @@ class BookingForm(forms.ModelForm):
             product.time_mode != Product.TIME_MODE_GUEST_SUGGESTED
         )
         if self.scheduled:
-            choices = []
+            choices = [(BLANK_LABEL, None)]
             qs = product.future_bookable_times.order_by('start', 'end')
             for eventtime in qs:
                 date = eventtime.interval_display
