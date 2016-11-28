@@ -527,6 +527,9 @@ class EmailTemplateType(models.Model):
     # Template available for manual sending from mpv bookings
     manual_sending_mpv_enabled = models.BooleanField(default=False)
 
+    # Template available for manual sending from mpv bookings
+    manual_sending_mpv_sub_enabled = models.BooleanField(default=False)
+
     # Template will be autosent to editors for the given unit
     manual_sending_booking_enabled = models.BooleanField(default=False)
 
@@ -663,6 +666,7 @@ class EmailTemplateType(models.Model):
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_HOST__REQ_HOST_VOLUNTEER,
             manual_sending_visit_enabled=True,
+            manual_sending_mpv_sub_enabled=True,
             send_to_potential_hosts=True,
             enable_booking=True,
             avoid_already_assigned=True
@@ -671,6 +675,7 @@ class EmailTemplateType(models.Model):
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
             manual_sending_visit_enabled=True,
+            manual_sending_mpv_sub_enabled=True,
             send_to_potential_teachers=True,
             enable_booking=True,
             avoid_already_assigned=True
@@ -696,7 +701,8 @@ class EmailTemplateType(models.Model):
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_HOST__REQ_ROOM,
-            manual_sending_visit_enabled=True
+            manual_sending_visit_enabled=True,
+            manual_sending_mpv_sub_enabled=True
         )
 
         EmailTemplateType.set_default(

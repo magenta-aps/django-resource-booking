@@ -1927,11 +1927,11 @@ class VisitNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
         pk = kwargs['pk']
         self.object = Visit.objects.get(id=pk)
         self.get_template_key(request)
-        template_type = EmailTemplateType.get(self.template_key)
-        if self.object.is_multi_sub and \
-                template_type.manual_sending_mpv_enabled:
-            self.object = self.object.multi_master
-        elif self.object.is_multiproductvisit:
+        # template_type = EmailTemplateType.get(self.template_key)
+        # if self.object.is_multi_sub and \
+        #         template_type.manual_sending_mpv_enabled:
+        #     self.object = self.object.multi_master
+        if self.object.is_multiproductvisit:
             self.object = self.object.multiproductvisit
 
         self.template_context['product'] = self.object.product
@@ -3057,6 +3057,10 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
         if self.object.is_multiproductvisit:
             context['emailtemplates'] = EmailTemplateType.get_choices(
                 manual_sending_mpv_enabled=True
+            )
+        elif self.object.is_multi_sub:
+            context['emailtemplates'] = EmailTemplateType.get_choices(
+                manual_sending_mpv_sub_enabled=True
             )
         else:
             context['emailtemplates'] = EmailTemplateType.get_choices(
