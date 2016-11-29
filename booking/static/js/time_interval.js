@@ -51,6 +51,18 @@ var KU = KU || {};
             ].join(":");
         }
 
+        function iso_datetime(jsdate) {
+            return [
+                jsdate.getFullYear(),
+                zero_pad(jsdate.getMonth() + 1),
+                zero_pad(jsdate.getDate())
+            ].join("-") + " " + [
+                zero_pad(jsdate.getHours()),
+                zero_pad(jsdate.getMinutes()),
+                "00"
+            ].join(":");
+        }
+
         function update_widgets() {
             var from = text_to_jsdate($start.val()),
                 from_txt = format_datetime(from),
@@ -138,8 +150,8 @@ var KU = KU || {};
                 }
             }
 
-            $start.val(format_datetime(from));
-            $end.val(format_datetime(to));
+            $start.val(iso_datetime(from));
+            $end.val(iso_datetime(to));
             update_widgets();
 
             if(update_callback) {

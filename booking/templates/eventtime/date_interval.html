@@ -1,6 +1,9 @@
+{% load tz %}
 {% load i18n %}
+{% load l10n %}
 
 
+{% timezone "Europe/Copenhagen" %}
 <div class="row form-group time-inputs">
     <div class="col-sm-2{% if field.errors %} has-error{% endif %}">
         <label class="control-label">
@@ -11,8 +14,10 @@
     </div>
     <div class="col-sm-7 form-inline">
         <div style="display: none">
+            {% localize off %}
             <div class="start-input">{{ start_field }}</div>
             <div class="end-input">{{ end_field }}</div>
+            {% endlocalize %}
         </div>
         <div class="specific-time-input">{{ specific_time_field.as_hidden }}</div>
         <div class="form-inline">
@@ -32,19 +37,31 @@
             </select>
         </div>
         <div class="input-daterange" style="margin-top: 0;">
-            <input class="form-control input-sm rangepicker" id="id_start_date" name="start_date" type="text" value="" size="10">
+            <input class="form-control input-sm rangepicker" id="id_start_date" name="start_date" type="text" value="{{ start_field.value|date:"d.m.Y" }}" size="10">
             <div class="input-group clockpicker">
-                <input class="form-control input-sm" id="id_start_time" name="start_time" type="text" value="" size="5">
+                <input class="form-control input-sm" id="id_start_time" name="start_time" type="text" value="{{ start_field.value|date:"H:i" }}" size="5">
                 <span class="input-group-addon" data-toggle="dropdown"><span class="glyphicon glyphicon-time"></span></span>
             </div>
             <div class="input-group clockpicker">
-                <input class="form-control input-sm" id="id_end_time" name="end_time" type="text" value="" size="5">
+                <input class="form-control input-sm" id="id_end_time" name="end_time" type="text" value="{{ end_field.value|date:"H:i" }}" size="5">
                 <span class="input-group-addon" data-toggle="dropdown"><span class="glyphicon glyphicon-time"></span></span>
             </div>
-            <input class="form-control input-sm rangepicker" id="id_end_date" name="end_date" type="text" value="" size="10">
+            <input class="form-control input-sm rangepicker" id="id_end_date" name="end_date" type="text" value="{{ end_field.value|date:"d.m.Y" }}" size="10">
         </div>
     </div>
     <div class="col-sm-3 with-errors">
+        {% if start_field.errors %}
+        <div>
+            {% trans 'Startidspunkt' %}:
+            {{ start_field.errors }}
+        </div>
+        {% endif %}
+        {% if end_field.errors %}
+        <div>
+            {% trans 'Sluttidspunkt' %}:
+            {{ end_field.errors }}
+        </div>
+        {% endif %}
     </div>
 </div>
 
@@ -62,3 +79,4 @@
         </div>
     </div>
 </div>
+{% endtimezone %}
