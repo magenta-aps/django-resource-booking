@@ -2,13 +2,13 @@
 {% if autosendformset %}
 <div class="row form-group">
     <div class="col-sm-2">
-        <label for="{{ autosendformset.id_for_label }}">{% trans 'Automatiske emails' %}:</label>
+        <label for="{{ autosendformset.id_for_label }}">{% trans 'Automatiske e-mails' %}:</label>
     </div>
     <div class="col-sm-7">
         {% url 'emailtemplate-list' as template_list_url %}
         <p>
             {% blocktrans %}
-                Indstil for hvilke situationer der skal afsendes email automatisk. Skabeloner til email-afsendelse kan redigeres på <a href="{{ template_list_url }}" target="_blank">Skabelon-listen</a>.
+                Indstil for hvilke situationer der skal afsendes e-mail automatisk. Skabeloner til e-mail-afsendelse kan redigeres på <a href="{{ template_list_url }}" target="_blank">Skabelon-listen</a>.
             {% endblocktrans %}
         </p>
         {{ autosendformset.management_form }}

@@ -23,7 +23,6 @@
 
     <div class="row overview">
         <div class="col-sm-12 col-md-10 panel panel-default">
-
             <div class="col-xs-9">
                 {% if object.multiproductvisit %}
                     <div>
@@ -45,24 +44,25 @@
                             Dette er et underbesøg under <a href="{{ masterurl }}">{{ master }}</a>
                         {% endblocktrans %}
                     </div>
-                    {% endif %}
+                    {% else %}
                     <div>
                         {% url 'product-view' object.product.id as producturl %}
                         {% blocktrans with nr_bookers=object.nr_attendees producttitle=object.product.title %}
                             {{ nr_bookers }} har tilmeldt sig denne instans af <a href="{{ producturl }}">{{ producttitle }}</a>
                         {% endblocktrans %}
                     </div>
-                {% endif %}
-
-                {% if not object.start_datetime %}
-                <div class="divider"></div>
-                <div>
-                    {% trans 'Der er endnu ikke et fastlagt et tidspunkt for dette besøg.' %}
-                    {% if object.desired_time %}
-                        {% trans 'Gæsten har ønsket følgende tidspunkt:' %}
-                        <pre class="desired-time">{{ object.desired_time }}</pre>
                     {% endif %}
-                </div>
+                {% endif %}
+    
+                {% if not object.start_datetime %}
+                    <div class="divider"></div>
+                    <div>
+                        {% trans 'Der er endnu ikke et fastlagt et tidspunkt for dette besøg.' %}
+                        {% if object.desired_time %}
+                            {% trans 'Gæsten har ønsket følgende tidspunkt:' %}
+                            <pre class="desired-time">{{ object.desired_time }}</pre>
+                        {% endif %}
+                    </div>
                 {% endif %}
             </div>
             <div class="col-xs-3">
@@ -99,221 +99,311 @@
         <div class="col-sm-12 col-md-10">
             <div class="panel panel-default">
                 <div class="panel-body">
-
+                    
                     <h2>{% trans 'Statusoverblik' %}</h2>
 
                     {% if not object.can_assign_resources %}
-                        <p>
-                            {% blocktrans with text=object.BEING_PLANNED_STATUS_TEXT %}
-                            Det er ikke længere muligt at tildele ressourcer til dette besøg. Hvis du ønsker at rette i de tildelte ressourcer skal du ændre status til '{{ text }}'.
-                            {% endblocktrans %}
-                        </p>
+                        <div class="row">
+                            <p class="col-sm-8">
+                                {% blocktrans with text=object.BEING_PLANNED_STATUS_TEXT %}
+                                Det er ikke længere muligt at tildele ressourcer til dette besøg. Hvis du ønsker at rette i de tildelte ressourcer skal du ændre status til '{{ text }}'.
+                                {% endblocktrans %}
+                            </p>
+                        </div>
                     {% endif %}
 
-                    <dl class="dl-horizontal status">
-
-                        {% if object.organizationalunit %}
-                            <dt>{% trans 'Enhed:' %}</dt>
-                            <dd>{{ object.organizationalunit.name }}</dd>
-                        {% endif %}
-
-                        <dt>{% trans 'Tidspunkt' %}</dt>
-                        <dd>
-                            {% if object.eventtime.start %}
-                                {{ object.eventtime.interval_display }}
-                            {% else %}
+                    {% if object.organizationalunit %}
+                    <div class="row row-border">
+                        <strong class="col-sm-2">{% trans 'Enhed:' %}</strong>
+                        <div class="col-sm-6">{{ object.organizationalunit.name }}</div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="row row-border">
+                        <strong class="col-sm-2">{% trans 'Tidspunkt' %}</strong>
+                        {% if object.eventtime.start %}
+                            <div class="col-sm-6">{{ object.eventtime.interval_display }}</div>
+                        {% else %}
+                            <div class="col-sm-6">
                                 {% if object.start_datetime %}
                                     {{ object.start_datetime }}
                                 {% else %}
                                     {% trans 'Ikke angivet' %}
                                 {% endif %}
-                                {% if can_edit %}
-                                    <a href="{% url 'change-visit-starttime' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
-                                {% endif %}
+                            </div>
+                            {% if can_edit %}
+                                <div class="col-sm-4">
+                                    <a href="{% url 'change-visit-starttime' object.pk %}" role="button" class="btn btn-default pull-right">{% trans 'Redigér' %}</a>
+                                </div>
                             {% endif %}
-                        </dd>
-
-                        {% if object.is_multiproductvisit %}
-                            <dt>{% trans 'Min. ønskede tilbud' %}</dt>
-                            <dd>
-                                {{ object.required_visits }}
-                            </dd>
                         {% endif %}
+                    </div>
 
-                        {% if object.is_multiproductvisit %}
-                            <dt>{% trans 'Ansvarlig' %}</dt>
-                            <dd>
+                    {% if object.is_multiproductvisit %}
+                        <div class="row row-border">
+                            <strong class="col-sm-2">
+                                {% trans 'Min. ønskede tilbud' %}
+                            </strong>
+                            <div class="col-sm-6">
+                                {{ object.required_visits }}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {% if object.is_multiproductvisit %}
+                        <div class="row row-border">
+                            <strong class="col-sm-2">
+                                {% trans 'Ansvarlig' %}
+                            </strong>
+                            <div class="col-sm-6">
                                 {% if object.responsible %}
                                     {{ object.responsible }}
                                 {% else %}
                                     {% trans 'Ikke tildelt' %}
                                 {% endif %}
-                                {% if can_edit %}
-                                    <a href="{% url 'change-visit-responsible' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
-                                {% endif %}
-                            </dd>
-                        {% endif %}
-
-                        {% if not object.is_multiproductvisit %}
-                            <dt>{% trans 'Ressourcer' %}</dt>
-                            <dd>
-                                {% if object.product.is_resource_controlled %}
-                                    {% if object.product.resourcerequirement_set.count %}
+                            </div>
+                            {% if can_edit %}
+                                <div class="col-sm-4">
+                                    <a href="{% url 'change-visit-responsible' object.pk %}" role="button" class="btn btn-default pull-right">{% trans 'Redigér' %}</a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                    
+                    {% if not object.is_multiproductvisit %}
+                        <div class="row row-border">
+                            <strong class="col-sm-2">
+                                {% trans 'Ressourcer' %}
+                            </strong>
+                            {% if object.product.is_resource_controlled %}
+                                {% if object.product.resourcerequirement_set.count %}
+                                    <div class="col-sm-6">
                                         <ul class="list-unstyled" style="display:inline-block; margin-bottom:0">
                                         {% for requirementdata in object.requirement_details %}
                                             <li>{{ requirementdata.acquired }}/{{ requirementdata.required }} {{ requirementdata.name }}</li>
                                         {% endfor %}
                                         </ul>
                                         {% if can_edit %}
-                                            <a href="{% url 'visit-resources-edit' object.pk %}" role="button" class="btn btn-primary btn-xs" style="vertical-align:top">{% trans 'Redigér' %}</a>
+                                            <a href="{% url 'visit-resources-edit' object.pk %}" role="button" class="btn btn-default pull-right" style="vertical-align:top">{% trans 'Redigér' %}</a>
                                         {% endif %}
-                                    {% else %}
-                                        {% trans 'Tilbuddet kræver ingen ressourcer' %}
-                                    {% endif %}
-                                    <div>
-                                    {% if can_become_teacher %}
-                                        <a href="{% url 'become-teacher' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Bliv underviser for dette besøg' %}</a>
-                                        {% if teacher %}
-                                            <a href="{% url 'decline-teacher' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Jeg ønsker ikke at være underviser' %}</a>
-                                        {% endif %}
-                                    {% endif %}
-                                    {% if can_become_host %}
-                                        <a href="{% url 'become-host' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Bliv vært for dette besøg.' %}</a>
-                                        {% if host %}
-                                            <a href="{% url 'decline-host' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Jeg ønsker ikke at være vært' %}</a>
-                                        {% endif %}
-                                    {% endif %}
                                     </div>
                                 {% else %}
-                                    {% trans 'Tilbuddet er ikke ressourcestyret' %}
+                                    <div class="col-sm-6">
+                                        {% trans 'Tilbuddet kræver ingen ressourcer' %}
+                                    </div>
                                 {% endif %}
-                            </dd>
-                        {% endif %}
+                                <div class="col-sm-4">
+                                {% if can_become_teacher %}
+                                    <a href="{% url 'become-teacher' object.pk %}" role="button" class="btn btn-default pull-right">{% trans 'Bliv underviser for dette besøg' %}</a>
+                                    {% if teacher %}
+                                        <a href="{% url 'decline-teacher' object.pk %}" role="button" class="btn btn-default pull-right">{% trans 'Jeg ønsker ikke at være underviser' %}</a>
+                                    {% endif %}
+                                {% endif %}
+                                {% if can_become_host %}
+                                    <a href="{% url 'become-host' object.pk %}" role="button" class="btn btn-default pull-right">{% trans 'Bliv vært for dette besøg.' %}</a>
+                                    {% if host %}
+                                        <a href="{% url 'decline-host' object.pk %}" role="button" class="btn btn-default pull-right">{% trans 'Jeg ønsker ikke at være vært' %}</a>
+                                    {% endif %}
+                                {% endif %}
+                                </div>
+                            {% else %}
+                                <div class="col-sm-6">
+                                    {% trans 'Tilbuddet er ikke ressourcestyret' %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
 
-                        {% if not object.product.is_resource_controlled and not object.is_multiproductvisit %}
-                        <dt>{% trans 'Undervisere' %}</dt>
-                        <dd>
-                            {% blocktrans with found=object.teachers.all|length needed=object.total_required_teachers %}{{ found }}/{{ needed }} undervisere fundet{% endblocktrans %}
+                    {% if not object.product.is_resource_controlled and not object.is_multiproductvisit %}
+                        <div class="row row-border">
+                            <strong class="col-sm-2">
+                                {% trans 'Undervisere' %}
+                            </strong>
+                            <div class="col-sm-6">
+                                {% blocktrans with found=object.teachers.all|length needed=object.total_required_teachers %}{{ found }}/{{ needed }} undervisere fundet{% endblocktrans %}
+                            </div>
                             {% if can_edit %}
-                                <a href="{% url 'change-visit-teachers' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
+                                <div class="col-sm-4">
+                                    <a href="{% url 'change-visit-teachers' object.pk %}" role="button" class="btn btn-default pull-right">{% trans 'Redigér' %}</a>
+                                </div>
                             {% elif request.user.userprofile.is_teacher %}
+                                <div class="col-sm-4">
                                 {% if object.needs_teachers %}
                                     {% if request.user in object.teachers.all %}
                                         (allerede underviser for dette besøg)
                                     {% else %}
-                                        <a href="{% url 'become-teacher' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Bliv underviser for dette besøg' %}</a>
+                                        <a href="{% url 'become-teacher' object.pk %}" role="button" class="btn btn-default pull-right">{% trans 'Bliv underviser for dette besøg' %}</a>
                                         {% if teacher %}
-                                            <a href="{% url 'decline-teacher' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Jeg ønsker ikke at være underviser' %}</a>
+                                            <a href="{% url 'decline-teacher' object.pk %}" role="button" class="btn btn-default pull-right">{% trans 'Jeg ønsker ikke at være underviser' %}</a>
                                         {% endif %}
                                     {% endif %}
                                 {% else %}
-                                    <button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#teachers-found" >{% trans 'Alle fundet' %}</button>
+                                    <button type="button" class="btn btn-default" data-toggle="modal" data-target="#teachers-found" >{% trans 'Alle fundet' %}</button>
                                 {% endif %}
+                                </div>
                             {% endif %}
-                        </dd>
-                        {% endif %}
-
-                        {% if not object.product.is_resource_controlled and not object.is_multiproductvisit %}
-                        <dt>{% trans 'Værter' %}</dt>
-                        <dd>
-                            {% blocktrans with found=object.hosts.all|length needed=object.total_required_hosts %}{{ found }}/{{ needed }} værter fundet{% endblocktrans %}
+                        </div>
+                    {% endif %}
+                        
+                    {% if not object.product.is_resource_controlled and not object.is_multiproductvisit %}
+                        <div class="row row-border">
+                            <strong class="col-sm-2">
+                                {% trans 'Værter' %}
+                            </strong>
+                            <div class="col-sm-6">
+                                {% blocktrans with found=object.hosts.all|length needed=object.total_required_hosts %}{{ found }}/{{ needed }} værter fundet{% endblocktrans %}
+                            </div>
                             {% if can_edit %}
-                                <a href="{% url 'change-visit-hosts' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
+                                <div class="col-sm-4">
+                                    <a href="{% url 'change-visit-hosts' object.pk %}" role="button" class="btn btn-default pull-right">{% trans 'Redigér' %}</a>
+                                </div>
                             {% elif request.user.userprofile.is_host %}
-                                {% if object.needs_hosts %}
-                                    {% if request.user in object.hosts.all %}
-                                        {% trans '(allerede vært for dette besøg)' %}
-                                    {% else %}
-                                        <a href="{% url 'become-host' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Bliv vært for dette besøg.' %}</a>
-                                        {% if host %}
-                                            <a href="{% url 'decline-host' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Jeg ønsker ikke at være vært' %}</a>
+                                <div class="col-sm-4">
+                                    {% if object.needs_hosts %}
+                                        {% if request.user in object.hosts.all %}
+                                            {% trans '(allerede vært for dette besøg)' %}
+                                        {% else %}
+                                            <a href="{% url 'become-host' object.pk %}" role="button" class="btn btn-default pull-right">{% trans 'Bliv vært for dette besøg.' %}</a>
+                                            {% if host %}
+                                                <a href="{% url 'decline-host' object.pk %}" role="button" class="btn btn-default pull-right">{% trans 'Jeg ønsker ikke at være vært' %}</a>
+                                            {% endif %}
                                         {% endif %}
+                                    {% else %}
+                                        <button type="button" class="btn btn-default pull-right" data-toggle="modal" data-target="#hosts-found" >{% trans 'Alle fundet' %}</button>
                                     {% endif %}
-                                {% else %}
-                                    <button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#hosts-found" >{% trans 'Alle fundet' %}</button>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    {% if not object.product.is_resource_controlled and not object.is_multiproductvisit %}
+                        <div class="row row-border">
+                            <strong class="col-sm-2">
+                                {% trans 'Lokaler' %}
+                            </strong>
+                            <div class="col-sm-6">
+                                {{ object.get_room_status_display }}
+                                {% if object.rooms.all %}
+                                <ul>
+                                {% for room in object.rooms.all %}
+                                    <li>{{ room.name_with_locality }}</li>
+                                {% endfor %}
+                                </ul>
                                 {% endif %}
-                            {% endif %}
-                        </dd>
-                        {% endif %}
-
-                        {% if not object.product.is_resource_controlled and not object.is_multiproductvisit %}
-                        <dt>{% trans 'Lokaler' %}</dt>
-                        <dd>
-                            {{ object.get_room_status_display }}
-                            {% if object.rooms.all %}
-                            <ul>
-                            {% for room in object.rooms.all %}
-                                <li>{{ room.name_with_locality }}</li>
-                            {% endfor %}
-                            </ul>
-                            {% endif %}
+                            </div>
                             {% if can_edit %}
-                                <a href="{% url 'change-visit-rooms' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
+                                <div class="col-sm-4">
+                                    <a href="{% url 'change-visit-rooms' object.pk %}" role="button" class="btn btn-default pull-right">{% trans 'Redigér' %}</a>
+                                </div>
                             {% endif %}
-                        </dd>
-                        {% endif %}
+                        </div>
+                    {% endif %}
 
-                        {% if not object.is_multiproductvisit %}
-                        <dt>{% trans 'Automatisk email' %}</dt>
-                        <dd>
-                            {{ object.get_autosend_display }}
+                    {% if not object.is_multiproductvisit %}
+                        <div class="row row-border">
+                            <strong class="col-sm-2">
+                                {% trans 'Automatisk e-mail' %}
+                            </strong>
+                            <div class="col-sm-6">
+                                {{ object.get_autosend_display }}
+                            </div>    
                             {% if can_edit %}
-                                <a href="{% url 'change-visit-autosend' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
+                                <div class="col-sm-4">
+                                    <a href="{% url 'change-visit-autosend' object.pk %}" role="button" class="btn btn-default pull-right">{% trans 'Redigér' %}</a>
+                                </div>
                             {% endif %}
-                        </dd>
-                        {% endif %}
+                        </div>
+                    {% endif %}
 
-                        <dt>{% trans 'Status' %}</dt>
-                        <dd>
+                    <div class="row row-border">
+                        <strong class="col-sm-2">
+                            {% trans 'Status' %}
+                        </strong>
+                        <div class="col-sm-6">
                             {{ object.get_workflow_status_display }}
                             {% if can_edit %}
                                 <a href="{% url 'change-visit-status' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Skift status' %}</a>
                             {% endif %}
                         </dd>
 
-                        {% if not object.is_multiproductvisit %}
+                        {% if not object.is_multiproductvisit and not object.is_multi_sub %}
                         <dt>{% trans 'Antal på venteliste' %}</dt>
                         <dd>
                             {{ object.nr_waiting }}
                             <a href="#waitinglist" role="button" class="btn btn-primary btn-xs">{% trans 'Se liste' %}</a>
                         </dd>
                         {% endif %}
+                    </div>
 
-                        <dt>{% trans 'Link til evaluering' %}</dt>
-                        <dd>
+                    {% if not object.is_multiproductvisit %}
+                        <div class="row row-border">
+                            <strong class="col-sm-2">
+                                {% trans 'Antal på venteliste' %}
+                            </strong>
+                            <div class="col-sm-6">
+                                {{ object.nr_waiting }}
+                            </div>    
+                            {% if can_edit %}
+                                <div class="col-sm-4">
+                                    <a href="#waitinglist" role="button" class="btn btn-default pull-right">{% trans 'Se liste' %}</a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                    
+                    <div class="row row-border">
+                        <strong class="col-sm-2">
+                            {% trans 'Link til evaluering' %}
+                        </strong>
+                        <div class="col-sm-6">
                             {% if object.evaluation_link %}
-                            <a href="{{ object.evaluation_link }}">{{ object.evaluation_link }}</a>
+                                <a href="{{ object.evaluation_link }}">{{ object.evaluation_link }}</a>
                             {% else %}
-                            {% trans 'Ikke angivet' %}
+                                {% trans 'Ikke angivet' %}
                             {% endif %}
-                            {% if can_edit %}
-                                <a href="{% url 'change-visit-eval' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
-                            {% endif %}
-                        </dd>
-
-                        <dt>{% trans 'Interne kommentarer' %}</dt>
-                        <dd>
-                            <pre>{{ object.comments }}</pre>
-                            {% if can_edit %}
-                                <a href="{% url 'change-visit-comments' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
-                            {% endif %}
-                        </dd>
-
-                        {% if can_edit and object.has_changes_after_planned %}
-                        <dt>{% trans 'Nylige ændringer' %}</dt>
-                        <dd>
-                            <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
-                            {% trans 'Dette besøg er markeret som havende nylige ændringer' %}.<br />
-                            <a href="{% url 'visit-reset-changes-marker' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Klik her for at fjerne markeringen' %}</a>
-                        </dd>
+                        </div>    
+                        {% if can_edit %}
+                            <div class="col-sm-4">
+                                <a href="{% url 'change-visit-eval' object.pk %}" role="button" class="btn btn-default pull-right">{% trans 'Redigér' %}</a>
+                            </div>
                         {% endif %}
-                    </dl>
+                    </div>
 
+                    <div class="row row-border">
+                        <strong class="col-sm-2">
+                            {% trans 'Interne kommentarer' %}
+                        </strong>
+                        <div class="col-sm-6">
+                            <pre>{{ object.comments }}</pre>
+                        </div>    
+                        {% if can_edit %}
+                            <div class="col-sm-4">
+                                <a href="{% url 'change-visit-comments' object.pk %}" role="button" class="btn btn-default pull-right">{% trans 'Redigér' %}</a>
+                            </div>
+                        {% endif %}
+                    </div>
+                
+                    {% if can_edit and object.has_changes_after_planned %}
+                        <div class="row row-border">
+                            <strong class="col-sm-2">
+                                {% trans 'Nylige ændringer' %}
+                            </strong>
+                            <div class="col-sm-6">
+                                <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                                {% trans 'Dette besøg er markeret som havende nylige ændringer' %}.
+                            </div>    
+                            <div class="col-sm-4">
+                                <a href="{% url 'visit-reset-changes-marker' object.pk %}" role="button" class="btn btn-default pull-right">{% trans 'Klik her for at fjerne markeringen' %}</a>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
                 </div>
             </div>
         </div>
     </div>
-    
+
+    {% if not object.is_multi_sub %}
     <div class="row attendees">
         <div class="col-sm-12 col-md-10">
             <div class="panel panel-default">
@@ -327,8 +417,9 @@
             </div>
         </div>
     </div>
+    {% endif %}
 
-    {% if not object.is_multiproductvisit %}
+    {% if not object.is_multiproductvisit and not object.is_multi_sub %}
     <div class="row waiting">
         <div class="col-sm-12 col-md-10">
             <div class="panel panel-default">
@@ -360,13 +451,13 @@
         <div class="col-sm-12 col-md-10">
             <div class="panel panel-default">
                 <div class="panel-body">
-
                     <h2>{% trans 'Aktivitetslog' %}</h2>
-
-                    <div>
-                        <a href="{% url 'visit-add-logentry' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Tilføj ny log-post' %}</a>&nbsp;
+                    <div class="clearfix">
+                        <a href="{% url 'visit-add-logentry' object.pk %}" role="button" class="btn btn-default pull-right">
+                            <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                            {% trans 'Tilføj ny log-post' %}
+                        </a>
                     </div>
-                    <div class="divider"></div>
                     <ul class="list-unstyled scroll-400">
                         {% for entry in log_entries %}
                             <li>
@@ -392,13 +483,13 @@
         <div class="col-sm-12 col-md-10">
             <div class="panel panel-default">
                 <div class="panel-body">
-
                     <h2>{% trans 'Kommentarer' %}</h2>
-
-                    <div>
-                        <a href="{% url 'visit-add-comment' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Tilføj ny kommentar' %}</a>&nbsp;
+                    <div class="clearfix">
+                        <a href="{% url 'visit-add-comment' object.pk %}" role="button" class="btn btn-default pull-right">
+                            <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                            {% trans 'Tilføj ny kommentar' %}
+                        </a>
                     </div>
-                    <div class="divider"></div>
                     <ul class="list-unstyled scroll-400">
                         {% for comment in object.visitcomment_set.all %}
                             <li>

@@ -1,7 +1,9 @@
 {% load i18n %}
 {% if bookingform.tour_desired %}
     <div class="form-group">
-        <label class="col-sm-2 control-label" for="{{ bookingform.tour_desired.id_for_label }}">{% trans 'Rundvisning ønskes' %}</label>
+        <div class="col-sm-2">
+            <label class="control-label" for="{{ bookingform.tour_desired.id_for_label }}">{% trans 'Rundvisning ønskes' %}</label>
+        </div>
         <div class="col-sm-6{% if bookingform.tour_desired.errors %} has-error{% endif %}">
             {{ bookingform.tour_desired }}
         </div>
@@ -13,7 +15,9 @@
 
 {% if bookingform.catering_desired %}
     <div class="form-group">
-        <label class="col-sm-2 control-label" for="{{ bookingform.catering_desired.id_for_label }}">{% trans 'Forplejning ønskes' %}</label>
+        <div class="col-sm-2">
+            <label class="control-label" for="{{ bookingform.catering_desired.id_for_label }}">{% trans 'Forplejning ønskes' %}</label>
+        </div>
         <div class="col-sm-6{% if bookingform.catering_desired.errors %} has-error{% endif %}">
             {{ bookingform.catering_desired }}
         </div>
@@ -25,7 +29,9 @@
 
 {% if bookingform.presentation_desired %}
     <div class="form-group">
-        <label class="col-sm-2 control-label" for="{{ bookingform.presentation_desired.id_for_label }}">{% trans 'Oplæg om uddannelse ønskes' %}</label>
+        <div class="col-sm-2">
+            <label class="control-label" for="{{ bookingform.presentation_desired.id_for_label }}">{% trans 'Oplæg om uddannelse ønskes' %}</label>
+        </div>
         <div class="col-sm-6{% if bookingform.presentation_desired.errors %} has-error{% endif %}">
             {{ bookingform.presentation_desired }}
         </div>
@@ -37,7 +43,9 @@
 
 {% if bookingform.custom_desired %}
     <div class="form-group">
-        <label class="col-sm-2 control-label" for="{{ bookingform.custom_desired.id_for_label }}">{% blocktrans with service=product.custom_name %}{{ service }} ønskes{% endblocktrans %}</label>
+        <div class="col-sm-2">
+            <label class="control-label" for="{{ bookingform.custom_desired.id_for_label }}">{% blocktrans with service=product.custom_name %}{{ service }} ønskes{% endblocktrans %}</label>
+        </div>
         <div class="col-sm-6{% if bookingform.custom_desired.errors %} has-error{% endif %}">
             {{ bookingform.custom_desired }}
         </div>

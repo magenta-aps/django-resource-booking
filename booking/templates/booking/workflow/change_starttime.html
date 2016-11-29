@@ -29,9 +29,13 @@
                 {% include 'eventtime/date_interval.html' with product=product start_field=form.start end_field=form.end specific_time_field=form.has_specific_time %}
 
                 {% include 'common/fields/generic_field.html' with field=form.notes %}
+                
+                <div class="clearfix">
+                    <hr>
+                    <input class="btn btn-primary pull-right" type="submit" value="{% trans  'Gem' %}" role="button">
+                    <a href="{% url 'visit-view' object.visit.pk %}" role="button" class="btn btn-default pull-left">{% trans 'Annullér' %}</a>
+                </div>
 
-                <input class="btn btn-success" type="submit" value="{% trans  'Gem' %}" role="button" />
-                <a href="{% url 'visit-view' object.visit.pk %}" role="button" class="btn btn-danger">{% trans 'Annullér' %}</a>
             </form>
         </div>
     </div>

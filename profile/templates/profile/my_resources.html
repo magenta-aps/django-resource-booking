@@ -6,17 +6,12 @@
 
     <h1>{% trans "Ret i 'Mine tilbud'" %}</h1>
 
-    <div class="divider"></div>
-
-    <div class="row">
-        <div class="col-sm-12">
-            <form name="editmyresourcesform" id="editmyresourcesform"
-                action="{% url 'my-resources' %}" method="post">
-                {% csrf_token %}
-                {{ form }}
-                <input class="btn btn-success btn-sm" type="submit" value="Opdatér" name="confirm" />
-                <input class="btn btn-danger btn-sm" type="submit" value="Annullér" name="cancel" />
-            </form>
-        </div>
-    </div>
+    <form name="editmyresourcesform" id="editmyresourcesform"
+        action="{% url 'my-resources' %}" method="post">
+        {% csrf_token %}
+        {{ form }}
+        <hr>
+        <input class="btn btn-default pull-left" type="submit" value="Annullér" name="cancel">
+        <input class="btn btn-primary pull-right" type="submit" value="Opdatér" name="confirm">
+    </form>
 {% endblock %}

@@ -2,13 +2,19 @@
 
 {% if visit.start_datetime %}
 <p>
-    Du har tilmeldt dig besøg {{ visit.display_title }}
-    {% include 'booking/email/snippets/visit_time.html' %}
-    på Københavns Universitet{% if visit.locality %}:
-    {% include 'booking/email/snippets/product_maplink.html' %}{% endif %}.
     {% if visit.is_multiproductvisit %}
+        Du har oprettet ønske om deltagelse i {{ visit.real.subvisits_unordered.count }} tilbud på Københavns Universitet den {{ visit.start_datetime|date:'d.m.Y' }}:
+        <ul>
+        {% for product in visit.real.products %}
+            <li><a href="{% full_url 'product-view' product.pk %}">{{ product.title }}</a></li>
+        {% endfor %}
+        </ul>
         {% include 'booking/email/snippets/contact_addresses.html' with product=visit.real.primary_visit.product %}
     {% else %}
+        Du har tilmeldt dig besøg {{ visit.display_title }}
+        {% include 'booking/email/snippets/visit_time.html' %}
+        på Københavns Universitet{% if visit.locality %}:
+        {% include 'booking/email/snippets/product_maplink.html' %}{% endif %}.
         {% include 'booking/email/snippets/contact_addresses.html' with product=product %}
     {% endif %}
 </p>
@@ -17,6 +23,9 @@
 </p>
 <p>
 {% include 'booking/email/snippets/booking_info.html' with booking=booking booker=booking.booker %}
+</p>
+<p>
+    Vi gør, hvad vi kan for at opfylde dine ønsker til oplæg, du hører nærmere, når et program for dagen er klar.
 </p>
 <p>
     Vi glæder os til at se dig!
@@ -40,7 +49,14 @@
 </p>
 {% endif %}
 <p>
-    <a href="{% full_url 'product-view' product.pk %}">Læs mere om tilbuddet her</a>.
+    {% if visit.is_multiproductvisit %}
+        Læs mere om de ønskede tilbud her:
+        {% for product in visit.real.products %}
+            <a href="{% full_url 'product-view' product.pk %}">{{ product.title }}</a>{% if forloop.last %}.{% else %},{% endif %}
+        {% endfor %}
+    {% else %}
+        <a href="{% full_url 'product-view' product.pk %}">Læs mere om tilbuddet her</a>.
+    {% endif %}
 </p>
 {% include 'booking/email/snippets/reply_link.html' %}
 

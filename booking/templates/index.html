@@ -60,9 +60,9 @@
         </nav>
 
         {% if user.is_authenticated %}
-        <div class="container">
+        <div class="container personal-bar">
             <ul class="list-inline">
-                <li><a href="{% url 'user_profile' %}">{% trans 'Min side' %}</a></li>
+                <li class="home"><a href="{% url 'user_profile' %}">{% trans 'Min side' %}</a></li>
                 {% if user.userprofile.is_administrator %}
                 <li><a href="{% url 'admin:index' %}">{% trans 'Avanceret' %}</a></li>
                 {% endif %}
@@ -112,6 +112,15 @@
         
     {% block content %}
     {% endblock %}
+    
+        <a title="Print"
+           href="#"
+           onclick="window.print();return false"
+           aria-hidden="true"
+           class="glyphicon glyphicon-print print-icon pull-right"
+           style="margin: 1em;">
+            <span class="sr-only">{% trans 'Print' %}</span>
+        </a>
     
     </div>
         

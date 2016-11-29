@@ -18,7 +18,7 @@ from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.utils import formats
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ugettext_lazy as _, ungettext_lazy as __
 from django.template.base import Template, VariableNode
 
 from booking.mixins import AvailabilityUpdaterMixin
@@ -527,6 +527,9 @@ class EmailTemplateType(models.Model):
     # Template available for manual sending from mpv bookings
     manual_sending_mpv_enabled = models.BooleanField(default=False)
 
+    # Template available for manual sending from mpv bookings
+    manual_sending_mpv_sub_enabled = models.BooleanField(default=False)
+
     # Template will be autosent to editors for the given unit
     manual_sending_booking_enabled = models.BooleanField(default=False)
 
@@ -663,6 +666,7 @@ class EmailTemplateType(models.Model):
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_HOST__REQ_HOST_VOLUNTEER,
             manual_sending_visit_enabled=True,
+            manual_sending_mpv_sub_enabled=True,
             send_to_potential_hosts=True,
             enable_booking=True,
             avoid_already_assigned=True
@@ -671,6 +675,7 @@ class EmailTemplateType(models.Model):
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
             manual_sending_visit_enabled=True,
+            manual_sending_mpv_sub_enabled=True,
             send_to_potential_teachers=True,
             enable_booking=True,
             avoid_already_assigned=True
@@ -696,7 +701,8 @@ class EmailTemplateType(models.Model):
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_HOST__REQ_ROOM,
-            manual_sending_visit_enabled=True
+            manual_sending_visit_enabled=True,
+            manual_sending_mpv_sub_enabled=True
         )
 
         EmailTemplateType.set_default(
@@ -833,7 +839,7 @@ class EmailTemplate(models.Model):
     )
 
     subject = models.CharField(
-        max_length=77,
+        max_length=65584,
         verbose_name=u'Emne'
     )
 
@@ -2943,6 +2949,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def get_recipients(self, template_key):
         template_type = EmailTemplateType.get(template_key)
         product = self.product
+        if self.is_multiproductvisit and self.multiproductvisit.primary_visit:
+            product = self.multiproductvisit.primary_visit.product
         if product:
             recipients = product.get_recipients(template_key)
         else:
@@ -3491,7 +3499,16 @@ class MultiProductVisit(Visit):
 
     @property
     def display_title(self):
-        return _(u'prioriteret liste af %d tilbud') % len(self.products)
+        # return _(u'prioriteret liste af %d tilbud') % len(self.products)
+        count = len(self.subvisits_unordered)
+        return __(
+            "%(title)s, %(count)d prioritet",
+            "%(title)s, %(count)d prioriteter",
+            count
+        ) % {
+            'title': self.primary_visit.display_title,
+            'count': count
+        }
 
     @property
     def date_display(self):
@@ -3614,15 +3631,40 @@ class MultiProductVisit(Visit):
             return unicode(_(u'Besøg %s - uden tidspunkt') % self.pk)
 
 
+class MultiProductVisitTempProduct(models.Model):
+    product = models.ForeignKey(Product, related_name='prod')
+    multiproductvisittemp = models.ForeignKey('MultiProductVisitTemp')
+    index = models.IntegerField()
+
+
 class MultiProductVisitTemp(models.Model):
     date = models.DateField(
         null=False,
         blank=False,
         verbose_name=_(u'Dato')
     )
-    products = models.ManyToManyField(
+    # Migration won't let us redefine this existing field,
+    # so rename it and create another. We'll delete it later.
+    deprecated_products = models.ManyToManyField(
         Product,
         blank=True
+    )
+
+    @property
+    def products(self):
+        return [
+            relation.product
+            for relation in
+            MultiProductVisitTempProduct.objects.filter(
+                multiproductvisittemp=self
+            ).order_by('index')
+        ]
+
+    new_products = models.ManyToManyField(
+        Product,
+        blank=True,
+        through=MultiProductVisitTempProduct,
+        related_name='products1'
     )
     updated = models.DateTimeField(
         auto_now=True
@@ -3649,7 +3691,7 @@ class MultiProductVisitTemp(models.Model):
         mpv.save()
         mpv.create_eventtime(self.date)
         mpv.ensure_statistics()
-        for index, product in enumerate(self.products.all()):
+        for index, product in enumerate(self.products):
             eventtime = EventTime(
                 product=product,
                 bookable=False,
@@ -3669,9 +3711,9 @@ class MultiProductVisitTemp(models.Model):
 
     def has_products_in_different_locations(self):
         return len(
-            set([product.locality for product in self.products.all()])
+            set([product.locality for product in self.new_products.all()])
         ) > 1
-        # return Locality.objects.filter(product=self.products).count() > 1
+        # return Locality.objects.filter(product=self.new_products).count() > 1
 
 
 class VisitComment(models.Model):
@@ -4318,7 +4360,6 @@ class Booking(models.Model):
                  only_these_recipients=False):
         template_type = EmailTemplateType.get(template_key)
         visit = self.visit.real
-
         if visit.autosend_enabled(template_type.key):
             product = visit.product
             unit = visit.organizationalunit

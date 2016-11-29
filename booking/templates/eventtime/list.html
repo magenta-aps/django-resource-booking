@@ -25,9 +25,15 @@
             <form action="{% url 'delete-times' product.pk %}" method="post">
                 {% csrf_token %}
                 <div>
-                    <input type="submit" role="button" class="btn btn-primary" value="{% trans 'Slet markerede' %}">
-                    <a href="{% url 'create-time' product.pk %}" role="button" class="btn btn-primary">{% trans 'Opret nyt tidspunkt' %}</a>
-                    <a href="{% url 'times-from-rules' product.pk %}" role="button" class="btn btn-primary pull-right">{% trans 'Opret nye tidspunkter ud fra regler' %}</a>
+                    <input type="submit" role="button" class="btn btn-danger" value="{% trans 'Slet markerede' %}">
+                    <a href="{% url 'create-time' product.pk %}" role="button" class="btn btn-default">
+                        <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                        {% trans 'Opret nyt tidspunkt' %}
+                    </a>
+                    <a href="{% url 'times-from-rules' product.pk %}" role="button" class="btn btn-default pull-right">
+                        <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                        {% trans 'Opret nye tidspunkter ud fra regler' %}
+                    </a>
                 </div>
                 {% if object.eventtime_set.all %}
                 <table class="table table-striped table-hover">
@@ -35,8 +41,10 @@
                         <tr>
                             <th>&nbsp;</th>
                             <th>Tidspunkt</th>
-                            <th>Antal tilmeldinger / gæster</th>
-                            <th>Værter/undervisere tildelt</th>
+                            <th>Tilmeldinger</th>
+                            <th>Gæster</th>
+                            <th>Værter tildelt</th>
+                            <th>Undervisere tildelt</th>
                             {% if object.is_resource_controlled %}
                             <th>Ressourcer</th>
                             {% endif %}
@@ -52,8 +60,10 @@
                                 {% endif %}
                             </td>
                             <td><a href="{% url 'edit-time' eventtime.product.pk eventtime.pk %}">{{ eventtime.interval_display }}</a></td>
-                            <td>{{ eventtime.visit.booking_list|length }} / {{ eventtime.visit.nr_attendees|default:"0" }}</td>
-                            <td>{{ eventtime.visit.assigned_hosts|length }} / {{ eventtime.visit.assigned_teachers|length }}</td>
+                            <td>{{ eventtime.visit.booking_list|length }}</td>
+                            <td>{{ eventtime.visit.nr_attendees|default:"0" }}</td>
+                            <td>{{ eventtime.visit.assigned_hosts|length }}</td>
+                            <td>{{ eventtime.visit.assigned_teachers|length }}</td>
                             {% if object.is_resource_controlled %}
                             <td>
                                 {{ eventtime.resource_status_marker|safe }}
@@ -68,7 +78,8 @@
                                 </a>
                                 {% else %}
                                 <span class="btn btn-info btn-xs">{% trans 'Ikke oprettet' %}</span> -
-                                <a href="{{ eventtime.visit_link}}" class="btn btn-primary btn-xs">
+                                <a href="{{ eventtime.visit_link}}" class="btn btn-default btn-xs">
+                                    <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
                                     {% trans 'Opret besøg' %}
                                 </a>
                                 {% endif %}

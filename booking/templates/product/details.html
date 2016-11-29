@@ -29,16 +29,16 @@
             <h2>{{ object.get_type_display }}</h2>
             
             {% if can_edit %}
-                <a class="pull-right btn btn-primary margin-bottom-10" href="{% url 'product-edit' object.pk %}">{% trans '+ Redigér' %}</a>
+                <a class="pull-right btn btn-default margin-bottom-10" href="{% url 'product-edit' object.pk %}">{% trans 'Redigér' %}</a>
             {% endif %}
             {% if user.userprofile.can_create %}
-                <a class="pull-right btn btn-primary margin-bottom-10 margin-right-10" href="{% url 'product-clone' object.pk %}">{% trans 'Kopier tilbud' %}</a>
+                <a class="pull-right btn btn-default margin-bottom-10 margin-right-10" href="{% url 'product-clone' object.pk %}">{% trans 'Kopier tilbud' %}</a>
             {% endif %}
             {% if can_edit %}
                 {% if object.is_resource_controlled %}
-                    <a class="pull-right btn btn-primary margin-bottom-10 margin-right-10" href="{% url 'resourcerequirement-list' object.pk %}">{% trans 'Redigér ressourcebehov' %}</a>
+                    <a class="pull-right btn btn-default margin-bottom-10 margin-right-10" href="{% url 'resourcerequirement-list' object.pk %}">{% trans 'Redigér ressourcebehov' %}</a>
                 {% else %}
-                    <a class="pull-right btn btn-primary margin-bottom-10 margin-right-10" href="{% url 'product-simple-ressources' object.pk %}">{% trans 'Redigér ressourcer' %}</a>
+                    <a class="pull-right btn btn-default margin-bottom-10 margin-right-10" href="{% url 'product-simple-ressources' object.pk %}">{% trans 'Redigér ressourcer' %}</a>
                 {% endif %}
             {% endif %}
             
@@ -69,21 +69,25 @@
             <div class="well order-buttons hidden-print">
                 {% if object.is_bookable %}
                     {% if object.is_guest_time_suggested %}
-                        <a class="btn btn-default" href="{% url 'product-book-notime' object.id %}">
+                        <a class="btn btn-primary" href="{% url 'product-book-notime' object.id %}">
                             {% trans 'Tilmeld' %}
                             <span class="glyphicon glyphicon-chevron-right"></span>
                         </a>
                     {% else %}
-                        <a class="btn btn-default" data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'product-book' object.id %}?modal=1">
+                        <a class="btn btn-primary" data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'product-book' object.id %}?modal=1">
                             {% trans 'Tilmeld' %}
                             <span class="glyphicon glyphicon-chevron-right"></span>
                         </a>
                     {% endif %}
                 {% elif object.can_join_waitinglist %}
-                    <a class="btn btn-default" data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'product-book' object.id %}?modal=1">
+                    <a class="btn btn-primary" data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'product-book' object.id %}?modal=1">
                         {% trans 'Skriv på venteliste' %}
                         <span class="glyphicon glyphicon-chevron-right"></span>
                     </a>
+                {% else %}
+                    <!-- is_type_bookable: {{ object.is_type_bookable }} -->
+                    <!-- state: {{ object.self.state }} -->
+                    <!-- has_bookable_visits: {{ object.has_bookable_visits }} -->
                 {% endif %}
                 {% if object.can_inquire %}
                     <a class="btn btn-default" data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'product-inquire' object.id %}?modal=1" >
@@ -167,9 +171,9 @@
                                         {% trans 'Gæster foreslår selv tidspunkter' %}
                                         <p>
                                         {% if object.calendar %}
-                                            <a class="btn btn-primary btn-xs margin-bottom-10 margin-right-10" href="{% url 'product-calendar' object.pk %}">{% trans 'Administrér kalender' %}</a>
+                                            <a class="btn btn-default btn-xs margin-bottom-10 margin-right-10" href="{% url 'product-calendar' object.pk %}">{% trans 'Administrér kalender' %}</a>
                                         {% else %}
-                                            <a class="btn btn-primary btn-xs margin-bottom-10 margin-right-10" href="{% url 'product-calendar-create' object.pk %}">{% trans 'Opret kalender' %}</a>
+                                            <a class="btn btn-default btn-xs margin-bottom-10 margin-right-10" href="{% url 'product-calendar-create' object.pk %}">{% trans 'Opret kalender' %}</a>
                                         {% endif %}
                                         </p>
                                     {% else %}
@@ -185,8 +189,8 @@
                                             <li class="hidden default-hidden">{{ eventtime.interval_display }}</li>
                                         {% endfor %}
                                         <li>
-                                            <span id="show_all_times" class="btn btn-primary btn-xs pull-right">{% trans 'Vis alle' %} ({{object.future_bookable_times.count}})</span>
-                                            <span id="hide_extra_times" class="btn btn-primary btn-xs pull-right hidden">{% trans 'Skjul ekstra' %}</span>
+                                            <span id="show_all_times" class="btn btn-default btn-xs pull-right">{% trans 'Vis alle' %} ({{object.future_bookable_times.count}})</span>
+                                            <span id="hide_extra_times" class="btn btn-default btn-xs pull-right hidden">{% trans 'Skjul ekstra' %}</span>
                                         </li>
                                     {% endif %}
                                     </ul>
@@ -205,7 +209,7 @@
                                     </div>
                                     <hr />
                                     <p>
-                                        <a class="pull-right btn btn-primary btn-xs margin-bottom-10 margin-right-10" href="{% url 'manage-times' object.pk %}">{% trans 'Administrér tidspunkter' %}</a>
+                                        <a class="pull-right btn btn-default btn-xs margin-bottom-10 margin-right-10" href="{% url 'manage-times' object.pk %}">{% trans 'Administrér tidspunkter' %}</a>
                                     </p>
                                 {% endif %}
                             </dd>

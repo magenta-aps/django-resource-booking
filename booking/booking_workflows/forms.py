@@ -46,7 +46,7 @@ class ChangeVisitTeachersForm(forms.ModelForm):
         widgets = {'teachers': forms.CheckboxSelectMultiple()}
 
     send_emails = forms.BooleanField(
-        label=_(u"Udsend emails til nye undervisere der tilknyttes"),
+        label=_(u"Udsend e-mails til nye undervisere der tilknyttes"),
         initial=True,
         required=False
     )
@@ -64,7 +64,7 @@ class ChangeVisitHostsForm(forms.ModelForm):
         widgets = {'hosts': forms.CheckboxSelectMultiple()}
 
     send_emails = forms.BooleanField(
-        label=_(u"Udsend emails til nye værter der tilknyttes"),
+        label=_(u"Udsend e-mails til nye værter der tilknyttes"),
         initial=True,
         required=False
     )

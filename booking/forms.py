@@ -8,7 +8,8 @@ from booking.models import Guest, Region, PostCode, School
 from booking.models import ClassBooking, TeacherBooking, \
     BookingGymnasieSubjectLevel
 from booking.models import EmailTemplate, EmailTemplateType
-from booking.models import Visit, MultiProductVisitTemp
+from booking.models import Visit
+from booking.models import MultiProductVisitTemp, MultiProductVisitTempProduct
 from booking.models import BLANK_LABEL, BLANK_OPTION
 from booking.widgets import OrderedMultipleHiddenChooser
 from booking.utils import binary_or, binary_and
@@ -23,6 +24,7 @@ from django.forms import HiddenInput
 from django.utils.translation import ugettext_lazy as _
 from tinymce.widgets import TinyMCE
 from .fields import ExtensibleMultipleChoiceField
+from .fields import OrderedModelMultipleChoiceField
 
 
 class AdminProductSearchForm(forms.Form):
@@ -693,6 +695,9 @@ class BookingForm(forms.ModelForm):
         required=False,
         label=_(u"Tidspunkt"),
         choices=(),
+        widget=Select(attrs={
+            'class': 'form-control'
+        })
     )
 
     desired_time = forms.CharField(
@@ -723,7 +728,7 @@ class BookingForm(forms.ModelForm):
             product.time_mode != Product.TIME_MODE_GUEST_SUGGESTED
         )
         if self.scheduled:
-            choices = []
+            choices = [(None, BLANK_LABEL)]
             qs = product.future_bookable_times.order_by('start', 'end')
             for eventtime in qs:
                 date = eventtime.interval_display
@@ -793,7 +798,7 @@ class BookerForm(forms.ModelForm):
             ),
             'email': EmailInput(
                 attrs={'class': 'form-control input-sm',
-                       'placeholder': _(u'Email')}
+                       'placeholder': _(u'E-mail')}
             ),
             'phone': TextInput(
                 attrs={'class': 'form-control input-sm',
@@ -814,7 +819,7 @@ class BookerForm(forms.ModelForm):
     repeatemail = forms.CharField(
         widget=TextInput(
             attrs={'class': 'form-control input-sm',
-                   'placeholder': _(u'Gentag email')}
+                   'placeholder': _(u'Gentag e-mail')}
         )
     )
     school = forms.CharField(
@@ -822,6 +827,9 @@ class BookerForm(forms.ModelForm):
             attrs={'class': 'form-control input-sm',
                    'autocomplete': 'off'}
         )
+    )
+    school_type = forms.IntegerField(
+        widget=HiddenInput()
     )
     postcode = forms.IntegerField(
         widget=NumberInput(
@@ -868,6 +876,8 @@ class BookerForm(forms.ModelForm):
 
             self.fields['school'].widget.attrs['data-institution-level'] = \
                 level
+            if level in [School.ELEMENTARY_SCHOOL, School.GYMNASIE]:
+                self.initial['school_type'] = level
             available_level_choices = Guest.level_map[level]
             self.fields['level'].choices = [(u'', BLANK_LABEL)] + [
                 (value, title)
@@ -919,11 +929,32 @@ class BookerForm(forms.ModelForm):
         if email is not None and repeatemail is not None \
                 and email != repeatemail:
             error = forms.ValidationError(
-                _(u"Indtast den samme email-adresse i begge felter")
+                _(u"Indtast den samme e-mail i begge felter")
             )
             self.add_error('repeatemail', error)
+        return cleaned_data
 
-    def save(self):
+    def _clean_fields(self):
+        self.update_school_dependents()
+        return super(BookerForm, self)._clean_fields()
+
+    def update_school_dependents(self):
+        field = self.fields['school']
+        value = field.widget.value_from_datadict(
+            self.data, self.files, self.add_prefix('school')
+        )
+
+        self.schooltype = None
+        try:
+            school = field.clean(value)
+            self.schooltype = School.objects.get(name__iexact=school).type
+        except:
+            pass
+        if self.schooltype is not None:
+            if self.schooltype != School.ELEMENTARY_SCHOOL:
+                self.fields['level'].required = False
+
+    def save(self, commit=True):
         booker = super(BookerForm, self).save(commit=False)
         data = self.cleaned_data
         schoolname = data.get('school')
@@ -997,7 +1028,7 @@ class StudyProjectBookingForm(BookingForm):
 
 class BookingSubjectLevelFormBase(forms.ModelForm):
     class Meta:
-        fields = ('subject', 'level')
+        fields = ['subject', 'level']
         widgets = {
             'subject': Select(
                 attrs={'class': 'form-control'}
@@ -1013,12 +1044,13 @@ class BookingSubjectLevelFormBase(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(BookingSubjectLevelFormBase, self).__init__(*args, **kwargs)
         # 16338: Put in a different name for each choice
-        self.fields['subject'].choices = [
+        self.fields['subject'].choices = [(None, BLANK_LABEL)] + [
             (item.id, item.name) for item in self.get_queryset()
         ]
 
 
 class BookingGymnasieSubjectLevelFormBase(BookingSubjectLevelFormBase):
+
     class Meta:
         model = BookingGymnasieSubjectLevel
         fields = BookingSubjectLevelFormBase.Meta.fields
@@ -1029,6 +1061,7 @@ class BookingGymnasieSubjectLevelFormBase(BookingSubjectLevelFormBase):
 
 
 class BookingGrundskoleSubjectLevelFormBase(BookingSubjectLevelFormBase):
+
     class Meta:
         model = BookingGrundskoleSubjectLevel
         fields = BookingSubjectLevelFormBase.Meta.fields
@@ -1044,7 +1077,8 @@ BookingGymnasieSubjectLevelForm = \
         BookingGymnasieSubjectLevel,
         form=BookingGymnasieSubjectLevelFormBase,
         can_delete=True,
-        extra=1,
+        extra=0,
+        min_num=1
     )
 
 
@@ -1054,7 +1088,8 @@ BookingGrundskoleSubjectLevelForm = \
         BookingGrundskoleSubjectLevel,
         form=BookingGrundskoleSubjectLevelFormBase,
         can_delete=True,
-        extra=1,
+        extra=0,
+        min_num=1
     )
 
 
@@ -1154,11 +1189,11 @@ class GuestEmailComposeForm(BaseEmailComposeForm):
     )
 
     email = forms.EmailField(
-        label=_(u'Email'),
+        label=_(u'E-mail'),
         widget=EmailInput(
             attrs={
                 'class': 'form-control input-sm',
-                'placeholder': _(u'Din email-adresse')
+                'placeholder': _(u'Din e-mail')
             }
         )
     )
@@ -1241,18 +1276,25 @@ class MultiProductVisitTempDateForm(forms.ModelForm):
 
 
 class MultiProductVisitTempProductsForm(forms.ModelForm):
+
+    products_key = 'new_products'
+
+    new_products = OrderedModelMultipleChoiceField(
+        queryset=Product.objects.all(),
+        widget=OrderedMultipleHiddenChooser()
+    )
+
     class Meta:
         model = MultiProductVisitTemp
-        fields = ['products', 'required_visits', 'notes']
+        fields = ['required_visits', 'notes']
         widgets = {
-            'products': OrderedMultipleHiddenChooser(),
             'notes': Textarea(
                 attrs={'class': 'form-control input-sm'}
             )
         }
 
-    def clean_products(self):
-        products = self.cleaned_data['products']
+    def clean_new_products(self):
+        products = self.cleaned_data[self.products_key]
         common_institution = binary_and([
             product.institution_level for product in products
         ])
@@ -1266,12 +1308,24 @@ class MultiProductVisitTempProductsForm(forms.ModelForm):
 
     def clean(self):
         super(MultiProductVisitTempProductsForm, self).clean()
-        if 'products' not in self.cleaned_data or \
-                len(self.cleaned_data['products']) == 0:
+        if self.products_key not in self.cleaned_data or \
+                len(self.cleaned_data[self.products_key]) == 0:
             raise forms.ValidationError(
                 _(u"Der er ikke valgt nogen produkter")
             )
-        products_selected = 0 if 'products' not in self.cleaned_data \
-            else len(self.cleaned_data['products'])
+        products_selected = 0 if self.products_key not in self.cleaned_data \
+            else len(self.cleaned_data[self.products_key])
         if self.cleaned_data['required_visits'] > products_selected:
             self.cleaned_data['required_visits'] = products_selected
+
+    def save(self, commit=True):
+        mvpt = super(MultiProductVisitTempProductsForm, self).save(commit)
+        MultiProductVisitTempProduct.objects.filter(
+            multiproductvisittemp=mvpt
+        ).delete()
+        for index, product in enumerate(self.cleaned_data[self.products_key]):
+            relation = MultiProductVisitTempProduct(
+                product=product, multiproductvisittemp=mvpt, index=index
+            )
+            relation.save()
+        return mvpt

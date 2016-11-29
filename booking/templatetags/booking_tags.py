@@ -145,6 +145,11 @@ def gt(a, b):
 
 
 @register.filter
+def get(dictionary, key):
+    return dictionary[key]
+
+
+@register.filter
 def gte(a, b):
     return a >= b
 

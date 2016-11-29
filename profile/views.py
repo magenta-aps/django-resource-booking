@@ -542,8 +542,8 @@ class UserListView(EditorRequriedMixin, ListView):
         q = self.request.GET.get("q", None)
         if q:
             qs = qs.filter(
-                Q(username__contains=q) | Q(first_name__contains=q) |
-                Q(last_name__contains=q)
+                Q(username__icontains=q) | Q(first_name__icontains=q) |
+                Q(last_name__icontains=q)
             )
 
         return qs.order_by('first_name', 'last_name', 'username')

@@ -2,13 +2,13 @@
 
 {% if bookerform.school %}
 <div class="form-group">
-    <label class="col-sm-2 control-label {{ bookerform.school.css_classes }}" for="{{ bookerform.school.id_for_label }}">
+    <label class="col-sm-2 control-label required {{ bookerform.school.css_classes }}" for="{{ bookerform.school.id_for_label }}">
         {% if product.institution_level == 1 %}
-            {% trans "Gymnasium*" %}
+            {% trans "Gymnasium" %}
         {% elif product.institution_level == 2 %}
-            {% trans "Grundskole*" %}
+            {% trans "Grundskole" %}
         {% else %}
-            {% trans "Skole*" %}
+            {% trans "Skole" %}
         {% endif %}
     </label>
     <div class="col-sm-6{% if bookerform.school.errors %} has-error{% endif %}">
@@ -20,9 +20,15 @@
 </div>
 {% endif %}
 
+{% if bookerform.school_type %}
+    {{ bookerform.school_type }}
+{% endif %}
+
 {% if bookerform.line and product.institution_level != 2 %}
 <div class="form-group institution_level_dependent" data-display-value="1">
-    <label class="col-sm-2 control-label {{ bookerform.line.css_classes }}" for="{{ bookerform.line.id_for_label }}">{% trans "Gymnasieretning" %}</label>
+    <div class="col-sm-2">
+        <label class="control-label {{ bookerform.line.css_classes }}" for="{{ bookerform.line.id_for_label }}">{% trans "Gymnasieretning" %}</label>
+    </div>
     <div class="col-sm-6{% if bookerform.line.errors %} has-error{% endif %}">
         {{ bookerform.line }}
     </div>
@@ -33,14 +39,12 @@
 {% endif %}
 
 {% if bookerform.level and not no_level_field %}
-<div class="form-group">
-    <label class="col-sm-2 control-label {{ bookerform.level.css_classes }}" for="{{ bookerform.level.id_for_label }}">
-        {% if bookerform.fields.level.required %}
-            {% trans "Klasse*" %}
-        {% else %}
+<div class="form-group institution_level_dependent" data-display-value="2">
+    <div class="col-sm-2">
+        <label class="control-label {% if bookerform.fields.level.required %}required{% endif %}{{ bookerform.level.css_classes }}" for="{{ bookerform.level.id_for_label }}">
             {% trans "Klasse" %}
-        {% endif %}
-    </label>
+        </label>
+    </div>
     <div class="col-sm-6{% if bookerform.level.errors %} has-error{% endif %}">
         {{ bookerform.level }}
     </div>
