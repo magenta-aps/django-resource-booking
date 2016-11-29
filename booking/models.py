@@ -839,7 +839,7 @@ class EmailTemplate(models.Model):
     )
 
     subject = models.CharField(
-        max_length=77,
+        max_length=65584,
         verbose_name=u'Emne'
     )
 

@@ -1,13 +1,40 @@
 {% load staticfiles %}
 {% load i18n %}
-{% if subjectform %}
+{% if gymnasiesubjectform or grundskolesubjectform %}
 <script type="text/javascript" src="{% static 'js/formset-row.js' %}"></script>
 <script type="text/javascript" id="subjects2_script">
     <!--
     $(function(){
 
-        var extraGymRows = $("#gymnasiefag > div").not(":first");
-        var extraGrundRows = $("#grundskolefag > div").not(":first");
+        var forms = {};
+        {% if gymnasiesubjectform %}
+            forms['gymnasiesubjectform'] = {
+                'total': $('#{{ gymnasiesubjectform.management_form.TOTAL_FORMS.id_for_label }}'),
+                'max': $('#{{ gymnasiesubjectform.management_form.MAX_NUM_FORMS.id_for_label }}')
+            };
+        {% endif %}
+        {% if grundskolesubjectform %}
+            forms['grundskolesubjectform'] = {
+                'total': $('#{{ grundskolesubjectform.management_form.TOTAL_FORMS.id_for_label }}'),
+                'max': $('#{{ grundskolesubjectform.management_form.MAX_NUM_FORMS.id_for_label }}')
+            };
+        {% endif %}
+        var total = function(element) {
+            element = $(element);
+            var form = element.hasClass('subjectform') ? element : element.closest('.subjectform');
+            var id = form.attr('id');
+            if (id in forms) {
+                return forms[id]['total'];
+            }
+        };
+        var max = function(element) {
+            element = $(element);
+            var form = element.hasClass('subjectform') ? element : element.closest('.subjectform');
+            var id = form.attr('id');
+            if (id in forms) {
+                return forms[id]['max'];
+            }
+        };
 
         var mingleRow = function(row) {
             row.removeAttr("id");
@@ -15,34 +42,49 @@
             var adder = row.find(".rowadder");
             adder.addClass("rowremover");
             adder.removeClass("rowadder");
-            adder.find("a").text('{% trans "Fjern" %}');
-            adder.find("a").click(removeRowEvent);
+            var button = adder.find('.action');
+            button.text('{% trans "Fjern" %}');
+            button.click(removeRow);
+            row.find(".with-errors").remove();
         };
 
-        mingleRow(extraGymRows);
-        mingleRow(extraGrundRows);
+        var removeRow = function() {
+            formset.removeRow(
+                total(this),
+                $(this).parents(".form-group")
+            );
+            if (window.modal) {
+                modal.updateHeight();
+            }
+        };
 
-        $(".rowadder a").click(function(){
+        var addRow = function(){
             var newRow = formset.addRow(
-                    $("#{{ subjectform.management_form.TOTAL_FORMS.id_for_label }}"),
-                    $("#{{ subjectform.management_form.MAX_NUM_FORMS.id_for_label }}"),
-                    $(this).closest(".rowprototype"),
-                    $(this).closest(".rowcontainer")
+                total(this),
+                max(this),
+                $(this).closest(".rowprototype"),
+                $(this).closest(".rowcontainer")
             );
             mingleRow(newRow);
-            modal.updateHeight();
+            if (window.modal) {
+                modal.updateHeight();
+            }
             return false;
-        });
-
-        var removeRowEvent = function() {
-            formset.removeRow(
-                    "#{{ subjectform.management_form.TOTAL_FORMS.id_for_label }}",
-                    $(this).parents(".form-group")
-            );
-            modal.updateHeight();
         };
 
-        $(".rowremover a").click(removeRowEvent);
+        {% if gymnasiesubjectform %}
+            mingleRow($("#gymnasiefag > div").not(":first"));
+            $("#gymnasiesubjectform .rowadder .action").click(addRow);
+            $("#gymnasiesubjectform .rowremover .action").click(removeRow);
+        {% endif %}
+
+        {% if grundskolesubjectform %}
+            mingleRow($("#grundskolefag > div").not(":first"));
+            $("#grundskolesubjectform .rowadder .action").click(addRow);
+            $("#grundskolesubjectform .rowremover .action").click(removeRow);
+        {% endif %}
+
+
     });
     //-->
 </script>
