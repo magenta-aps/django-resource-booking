@@ -943,7 +943,6 @@ class BookerForm(forms.ModelForm):
         value = field.widget.value_from_datadict(
             self.data, self.files, self.add_prefix('school')
         )
-
         self.schooltype = None
         try:
             school = field.clean(value)
