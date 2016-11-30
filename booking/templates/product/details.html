@@ -84,6 +84,10 @@
                         {% trans 'Skriv på venteliste' %}
                         <span class="glyphicon glyphicon-chevron-right"></span>
                     </a>
+                {% else %}
+                    <!-- is_type_bookable: {{ object.is_type_bookable }} -->
+                    <!-- state: {{ object.self.state }} -->
+                    <!-- has_bookable_visits: {{ object.has_bookable_visits }} -->
                 {% endif %}
                 {% if object.can_inquire %}
                     <a class="btn btn-default" data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'product-inquire' object.id %}?modal=1" >

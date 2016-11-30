@@ -695,6 +695,9 @@ class BookingForm(forms.ModelForm):
         required=False,
         label=_(u"Tidspunkt"),
         choices=(),
+        widget=Select(attrs={
+            'class': 'form-control'
+        })
     )
 
     desired_time = forms.CharField(
@@ -725,7 +728,7 @@ class BookingForm(forms.ModelForm):
             product.time_mode != Product.TIME_MODE_GUEST_SUGGESTED
         )
         if self.scheduled:
-            choices = []
+            choices = [(None, BLANK_LABEL)]
             qs = product.future_bookable_times.order_by('start', 'end')
             for eventtime in qs:
                 date = eventtime.interval_display
@@ -940,8 +943,9 @@ class BookerForm(forms.ModelForm):
         value = field.widget.value_from_datadict(
             self.data, self.files, self.add_prefix('school')
         )
-        school = field.clean(value)
+        self.schooltype = None
         try:
+            school = field.clean(value)
             self.schooltype = School.objects.get(name__iexact=school).type
         except:
             pass
@@ -1072,7 +1076,8 @@ BookingGymnasieSubjectLevelForm = \
         BookingGymnasieSubjectLevel,
         form=BookingGymnasieSubjectLevelFormBase,
         can_delete=True,
-        extra=1,
+        extra=0,
+        min_num=1
     )
 
 
@@ -1082,7 +1087,8 @@ BookingGrundskoleSubjectLevelForm = \
         BookingGrundskoleSubjectLevel,
         form=BookingGrundskoleSubjectLevelFormBase,
         can_delete=True,
-        extra=1,
+        extra=0,
+        min_num=1
     )
 
 
