@@ -2072,6 +2072,29 @@ class Product(AvailabilityUpdaterMixin, models.Model):
                 minutes=int(minutes)
             )
 
+    @property
+    def duration_display(self):
+        if not self.duration:
+            return ""
+        (hours, minutes) = self.duration.split(":")
+        try:
+            hours = int(hours)
+            minutes = int(minutes)
+            parts = []
+            if hours == 1:
+                parts.append(_(u"1 time"))
+            elif hours > 1:
+                parts.append(_(u"%s timer") % hours)
+            if minutes == 1:
+                parts.append(_(u"1 minut"))
+            else:
+                parts.append(_(u"%s minutter") % minutes)
+
+            return _(u" og ").join([unicode(x) for x in parts])
+        except Exception as e:
+            print e
+            return ""
+
     @staticmethod
     def get_latest_booked():
         products = Product.objects.filter(

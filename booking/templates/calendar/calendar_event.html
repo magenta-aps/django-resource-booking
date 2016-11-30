@@ -1,6 +1,7 @@
 {% extends 'index.html' %}
 {% load tz %}
 {% load i18n %}
+{% load l10n %}
 {% load staticfiles %}
 {% load booking_tags %}
 
@@ -33,17 +34,16 @@
 
     <div class="row">
         <div class="col-md-12">
+        {% timezone "Europe/Copenhagen" %}
             <form method="POST" class="post-form">
                 {% csrf_token %}
                 {{ form.non_field_errors }}
                 {{ form.calendar.as_hidden }}
-                <div style="display: none">
-                    {# We have to output these fields without .as_hidden to
-                       get the values internationalized, making it easy to
-                       re-use them for dato fields below.
-                    #}
+                <div id="timestamps" style="display: none">
+                    {% localize off %}
                     {{ form.start }}
                     {{ form.end }}
+                    {% endlocalize %}
                 </div>
 
                 {% include 'common/fields/generic_field.html' with field=form.title %}
@@ -55,7 +55,7 @@
                         <label for="id_start_date">{% trans 'Dato/tid' %}:</label>
                     </div>
                     <div class="col-sm-7 form-inline">
-                        {% with starttime=form.start.value|stringformat:"s"|slice:"11:16" endtime=form.end.value|stringformat:"s"|slice:"11:16" startdate=form.start.value|stringformat:"s"|slice:"10" enddate=form.end.value|stringformat:"s"|slice:"10" %}
+                        {% with starttime=form.start.value|date:"H:i" endtime=form.end.value|date:"H:i" startdate=form.start.value|date:"d.m.Y" enddate=form.end.value|date:"d.m.Y" %}
                         <div class="input-daterange" style="margin-top: 0;">
 
                             <input class="form-control input-sm rangepicker" id="id_start_date" name="start_date" type="text" value="{{ startdate }}" size="10">
@@ -80,6 +80,18 @@
                         {% endwith %}
                     </div>
                     <div class="col-sm-3 with-errors">
+                        {% if form.start.errors %}
+                        <div>
+                            {% trans 'Startidspunkt' %}:
+                            {{ form.start.errors }}
+                        </div>
+                        {% endif %}
+                        {% if form.end.errors %}
+                        <div>
+                            {% trans 'Sluttidspunkt' %}:
+                            {{ form.end.errors }}
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -127,6 +139,7 @@
                 </div>
 
             </form>
+        {% endtimezone %}
         </div>
     </div>
     <div class="divider"></div>
@@ -139,7 +152,8 @@
 
     <script type="text/javascript">
     $(function(){
-        var start = $('#{{ form.start.id_for_label }}'),
+        var $timestamps = $('#timestamps'),
+            start = $('#{{ form.start.id_for_label }}'),
             end = $('#{{ form.end.id_for_label }}'),
             startDate = $('#id_start_date'),
             endDate = $('#id_end_date'),
@@ -147,13 +161,7 @@
             endTime = $('#id_end_time'),
             allDay = $('#id_all_day');
 
-        {% timezone "Europe/Copenhagen" %}
-        var startValue = "{{ form.start.value|date:"d.m.Y H:i" }}",
-            endValue = "{{ form.end.value|date:"d.m.Y H:i" }}";
-        {% endtimezone %}
-
-
-        function build_date(date_string, time_value) {
+        function parse_date(date_string, time_value) {
             var date_parts = date_string.substr(0, 10).split(/[. -]/),
                 time_parts = time_value.split(/[:]/);
 
@@ -161,14 +169,18 @@
                 date_parts = date_parts.reverse();
             }
 
-            var date = new Date(
+            return new Date(
                 date_parts[0],
                 date_parts[1] - 1,
                 date_parts[2],
-                time_parts[0],
-                time_parts[1],
+                time_parts[0] || 0,
+                time_parts[1] || 0,
                 0
             );
+        }
+
+        function build_date(date_string, time_value) {
+            var date = parse_date(date_string, time_value);
 
             return [
                 zero_pad(date.getDate()),
@@ -181,8 +193,27 @@
             ].join(":");
         }
 
+        function format_iso(date_string, time_value) {
+            var date = parse_date(date_string, time_value);
+
+            return [
+                date.getFullYear(),
+                zero_pad(date.getMonth() + 1),
+                zero_pad(date.getDate())
+            ].join("-") + " " + [
+                zero_pad(date.getHours()),
+                zero_pad(date.getMinutes()),
+                "00"
+            ].join(":");
+        }
+
         function set_control_values() {
-            startDate.val(startValue.substr(0, 10));
+            var startValue = start.val(),
+                endValue = end.val();
+
+            startValue = build_date(startValue, startValue.substr(11, 5));
+            endValue = build_date(endValue, endValue.substr(11, 5));
+
             if (allDay.is(":checked")) {
                 var end_date_val = endValue.substr(0, 10),
                     end_time_val = endValue.substr(11, 5);
@@ -218,14 +249,14 @@
 
         function update_dates() {
             if(allDay.is(":checked")) {
-                start.val(build_date(startDate.val(), "00:00"));
-                end.val(build_date(endDate.val(), "24:00"));
+                start.val(format_iso(startDate.val(), "00:00"));
+                end.val(format_iso(endDate.val(), "24:00"));
             } else {
                 start.val(
-                    build_date(startDate.val(), startTime.val())
+                    format_iso(startDate.val(), startTime.val())
                 );
                 end.val(
-                    build_date(endDate.val(), endTime.val())
+                    format_iso(endDate.val(), endTime.val())
                 );
             }
         }

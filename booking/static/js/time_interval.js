@@ -1,69 +1,17 @@
 var KU = KU || {};
 (function() {
-    var MINUTES_PER_STEP = 5,
-        STEPS_PER_HOUR = 60 / MINUTES_PER_STEP,
-        STEPS_IN_DAY = 24 * STEPS_PER_HOUR,
-        START_AT_0800 = STEPS_PER_HOUR * 8,
-        END_AT_1600 = STEPS_PER_HOUR * 16,
-        DEFAULT_LABELS = ["00:00", "24:00"],
-        DEFAULT_TICKS = [0, STEPS_IN_DAY]
-        ;
-
     KU.initialize_time_interval = function(root_id, update_callback) {
         var $root = $(root_id),
-            $duration = $root.find('input.product-duration'),
             $output = $root.find('span.time-interval-output'),
-            $start_date = $root.find('input.start-date'),
-            $start_time = $root.find('input.start-time'),
-            $time_range = $root.find('input.time-range'),
-            $specific_time = $root.find('.specific-time select').first(),
-            $start_input = $root.find('div.start-input input').first(),
-            $end_input = $root.find('div.end-input input').first(),
-
-            duration_in_minutes = $duration.val() ?
-                                  $duration.val() :
-                                  0,
-            duration_in_steps = Math.floor(
-                                    duration_in_minutes / MINUTES_PER_STEP
-                                ),
-            interval_values = [0, 0],
-            display_values = ["-", "-"],
-            time_string = '',
-            initial_start_time = START_AT_0800,
-            initial_end_time = END_AT_1600
+            $start_date = $root.find('input[name=start_date]'),
+            $start_time = $root.find('input[name=start_time]'),
+            $end_date = $root.find('input[name=end_date]'),
+            $end_time = $root.find('input[name=end_time]'),
+            $time_mode = $root.find('select.time-mode').first(),
+            $start = $root.find('div.start-input input').first(),
+            $end = $root.find('div.end-input input').first(),
+            $specific = $root.find('div.specific-time-input input').first()
             ;
-
-        function use_specific_time() {
-            // No dropdown means no option to disable times, so always use
-            // specific
-            if(!$specific_time.length)
-                return true;
-
-            var val = $specific_time.val() || 'false';
-            return val.toLowerCase() != 'false';
-        }
-
-        function hhmm_to_steps(hhmm) {
-            var parts = hhmm.split(/:/);
-            return parseInt(parts[0] * STEPS_PER_HOUR) +
-                   parseInt(parts[1] / MINUTES_PER_STEP);
-        }
-
-        if($start_input.val()) {
-            var parts = $start_input.val().split(/ /),
-                date_parts = parts[0].split(/[\/.-]/);
-            // If year is first part of date value, reverse the values
-            if(date_parts[0].length == 4)
-                date_parts = date_parts.reverse();
-            $start_date.val(date_parts.join("."));
-            if(use_specific_time()) {
-                initial_start_time = hhmm_to_steps(parts[1]);
-                if($end_input.val()) {
-                    parts = $end_input.val().split(/ /);
-                    initial_end_time = hhmm_to_steps(parts[1]);
-                }
-            }
-        }
 
         function zero_pad(int_val) {
             if(int_val < 10)
@@ -72,30 +20,75 @@ var KU = KU || {};
                 return int_val;
         }
 
-        function display_time_value(val) {
-            var hrs = Math.floor(val / STEPS_PER_HOUR),
-                mins = (val % STEPS_PER_HOUR) * MINUTES_PER_STEP;
+        function text_to_jsdate(text_value) {
+            var date_parts = text_value.substr(0, 10).split(/[. -]/),
+                time_text = text_value.substr(11) || '',
+                time_parts = time_text.split(/[:]/);
 
-            return zero_pad(hrs) + ":" + zero_pad(mins);
+            if(date_parts[0].length != 4) {
+                date_parts = date_parts.reverse();
+            }
+
+            return new Date(
+                date_parts[0],
+                date_parts[1] - 1,
+                date_parts[2],
+                time_parts[0] || 0,
+                time_parts[1] || 0,
+                time_parts[2] || 0
+            );
         }
 
-        function update_time_values(from, to) {
-            if(!from || !to)
-                return;
-            interval_values = [from, to];
-            display_values = [
-                display_time_value(from),
-                display_time_value(to)
-            ];
-            time_string = display_values.join(" - ");
+        function format_datetime(jsdate) {
+            return [
+                zero_pad(jsdate.getDate()),
+                zero_pad(jsdate.getMonth() + 1),
+                jsdate.getFullYear()
+            ].join(".") + " " + [
+                zero_pad(jsdate.getHours()),
+                zero_pad(jsdate.getMinutes()),
+                "00"
+            ].join(":");
+        }
+
+        function iso_datetime(jsdate) {
+            return [
+                jsdate.getFullYear(),
+                zero_pad(jsdate.getMonth() + 1),
+                zero_pad(jsdate.getDate())
+            ].join("-") + " " + [
+                zero_pad(jsdate.getHours()),
+                zero_pad(jsdate.getMinutes()),
+                "00"
+            ].join(":");
+        }
+
+        function update_widgets() {
+            var from = text_to_jsdate($start.val()),
+                from_txt = format_datetime(from),
+                to = text_to_jsdate($end.val()),
+                to_txt = format_datetime(to)
+                ;
+
+            // If we're using full days we want the widgets to use one day
+            // earlier.
+            if($time_mode.val() == "full_days") {
+                $specific.val("");
+                if(from_txt.substr(0, 10) != to_txt.substr(0, 10)) {
+                    to.setTime(to.getTime() - 24 * 60 * 60 * 1000);
+                    to_txt = format_datetime(to);
+                }
+            } else {
+                $specific.val("True");
+            }
+
+            $start_date.val(from_txt.substr(0, 10));
+            $start_time.val(from_txt.substr(11, 5));
+            $end_date.val(to_txt.substr(0, 10));
+            $end_time.val(to_txt.substr(11, 5));
         }
 
         function next_day(date_val) {
-            var parts = date_val.split(/[.\/-]/);
-            var date = new Date();
-            date.setFullYear(parts[2]);
-            date.setMonth(parts[1] - 1);
-            date.setDate(parts[0]);
 
             // Add 24 hours
             date.setTime(date.getTime() + 24 * 60 * 60 * 1000);
@@ -107,129 +100,102 @@ var KU = KU || {};
             ].join(".");
         }
 
-        function update_interval_output() {
-            var date_val = $start_date.val(),
-                time_values, from, to;
+        function update_datetimes() {
+            var start_date_val = $start_date.val() || '',
+                time_mode_val = $time_mode.val() || '',
+                duration_in_min = $time_mode.attr('data-duration-in-minutes'),
+                from, to, from_txt, to_txt;
 
-            // Output only the date, if that is selected
-            if($specific_time.length) {
-                if(!use_specific_time()) {
-                    if(date_val) {
-                        $start_input.val(date_val + " 00:00:00");
-                        $end_input.val(next_day(date_val) + " 00:00:00");
-                    } else {
-                        $start_input.val('');
-                        $end_input.val('');
-                        date_val = $output.attr('data-no-date-selected-text');
-                    }
-                    $output.text(date_val);
-                    if(update_callback)
-                        update_callback();
-                    return;
-                }
-            }
-            if(!time_string) {
-                if ($duration.is(":checked")) {
-                    time_values = [
-                        $start_time.slider('getValue'),
-                        $start_time.slider('getValue') + duration_in_steps
-                    ];
+            if(!start_date_val) {
+                $start.val('');
+                $end.val('');
+                $output.text($output.attr('data-no-date-selected-text'));
+            } else if(time_mode_val == 'full_days') {
+                from = text_to_jsdate(start_date_val);
+                to = text_to_jsdate($end_date.val());
+
+                from_txt = format_datetime(from).substr(0, 10);
+                to_txt = format_datetime(to).substr(0, 10);
+
+                if(from_txt != to_txt) {
+                    $output.text(from_txt + " - " + to_txt);
                 } else {
-                    time_values = $time_range.slider('getValue');
+                    $output.text(from_txt);
                 }
 
-                update_time_values(time_values[0], time_values[1]);
+                // The end-time we want to save is midnight of the next day
+                to.setTime(to.getTime() + 24 * 60 * 60 * 1000);
+            } else if(time_mode_val == 'use_duration') {
+                from = text_to_jsdate(start_date_val + " " + $start_time.val());
+                to = new Date(from.getTime());
+                to.setTime(to.getTime() + duration_in_min * 60 * 1000);
+                $output.text(
+                    format_datetime(from).substr(0, 16) +
+                    " - " +
+                    format_datetime(to).substr(11, 5)
+                );
+            } else if(time_mode_val == 'time_and_date') {
+                from = text_to_jsdate(
+                    start_date_val + " " + $start_time.val()
+                );
+                to = text_to_jsdate($end_date.val() + " " + $end_time.val());
+
+                from_txt = format_datetime(from).substr(0, 16);
+                to_txt = format_datetime(to).substr(0, 16);
+
+                if(from_txt.substr(0, 10) === to_txt.substr(0, 10)) {
+                    $output.text(from_txt + " - " + to_txt.substr(11));
+                } else {
+                    $output.text(from_txt + " - " + to_txt);
+                }
             }
 
-            if(date_val) {
-                $start_input.val(date_val + " " + display_values[0] + ":00");
-                $end_input.val(date_val + " " + display_values[1] + ":00");
-            } else {
-                $start_input.val('');
-                $end_input.val('');
-                date_val = $output.attr('data-no-date-selected-text');
-            }
+            $start.val(iso_datetime(from));
+            $end.val(iso_datetime(to));
+            update_widgets();
 
-            $output.text(date_val + " " + time_string);
-            if(update_callback)
+            if(update_callback) {
                 update_callback();
+            }
         }
 
-        
-        $start_time.slider({
-            min: 0,
-            max: STEPS_IN_DAY - duration_in_steps,
-            ticks: [0, STEPS_IN_DAY - duration_in_steps],
-            ticks_labels: [
-                DEFAULT_LABELS[0],
-                display_time_value(STEPS_IN_DAY - duration_in_steps)
-            ],
-            value: initial_start_time,
-            formatter: function(value) {
-                update_time_values(value, value + duration_in_steps);
-                update_interval_output();
-                return time_string;
-            }
-        });
-
-        $time_range.slider({
-            min: 0,
-            max: STEPS_IN_DAY,
-            value: [initial_start_time, initial_end_time],
-            ticks: DEFAULT_TICKS,
-            ticks_labels: DEFAULT_LABELS,
-            formatter: function(values) {
-                update_time_values(values[0], values[1]);
-                update_interval_output();
-                return time_string;
-            }
-        });
-
-        $duration.on("change", function() {
-            if($(this).is(":checked")) {
-                $start_time.parents('.timeslider').first().show();
-                $time_range.parents('.timeslider').first().hide();
-            } else {
-                $start_time.parents('.timeslider').first().hide();
-                $time_range.parents('.timeslider').first().show();
-            }
-            // Force update of displayed interval
-            time_string = '';
-            update_interval_output();
-        });
-
-        if($duration.length) {
-            $duration.trigger("change");
-        } else {
-            $start_time.parents('.timeslider').first().hide();
-            $time_range.parents('.timeslider').first().show();
-        }
-
-        $specific_time.on("change", function() {
-            if(use_specific_time()) {
-                $root.find('div.time-inputs').first().show();
-            } else {
-                $root.find('div.time-inputs').first().hide();
-            }
-            update_interval_output();
-        }).trigger("change");
-
-        $root.find('.input-group.datefield input').datepicker({
+        $root.find('.input-daterange').datepicker({
             language: 'da',
             format: 'dd.mm.yyyy',
             weekStart: 1,
             calendarWeeks: true,
             todayHighlight: true,
-            startDate: 'Date',
             clearBtn: true,
             autoclose: true,
-        }).on('changeDate', update_interval_output);
+            inputs: $('.input-daterange .rangepicker')
+        }).on('changeDate', update_datetimes);
 
-        $root.find('.input-group.datefield .input-group-addon').on(
-            'click',
-            function() {
-                $(this).parent().find('input').datepicker('show');
+        $('.clockpicker').clockpicker({
+            'donetext': "Opdater",
+            'autoclose': true,
+            'afterDone': update_datetimes
+        });
+
+        $time_mode.on("change", function() {
+            var val = $(this).val(),
+                $time_widgets = $root.find('div.input-group.clockpicker');
+            if(val == 'full_days') {
+                $time_widgets.hide();
+                $end_date.removeAttr('disabled');
+                $end_time.removeAttr('disabled');
+            } else if(val == 'use_duration') {
+                $time_widgets.show();
+                $end_date.attr('disabled', 'disabled');
+                $end_time.attr('disabled', 'disabled');
+            } else if(val == 'time_and_date') {
+                $time_widgets.show();
+                $end_date.removeAttr('disabled');
+                $end_time.removeAttr('disabled');
             }
-        );
+            update_datetimes();
+        });
+
+        update_widgets();
+        $time_mode.trigger("change");
     };
 })(KU);
