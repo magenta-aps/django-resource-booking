@@ -925,6 +925,12 @@ class BookerForm(forms.ModelForm):
                 raise forms.ValidationError(_(u'Ukendt postnummer'))
         return postcode
 
+    def clean_school(self):
+        school = self.cleaned_data.get('school')
+        if School.objects.filter(name=school).count() == 0:
+            raise forms.ValidationError(_(u'Ukendt skole'))
+        return school
+
     def clean(self):
         cleaned_data = super(BookerForm, self).clean()
         email = cleaned_data.get("email")
