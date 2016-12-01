@@ -164,6 +164,7 @@
                                 {% endif %}
                             </dd>
 
+                            {% if object.time_mode != view.model.TIME_MODE_NONE %}
                             <dt>{% trans 'Hvornår:' %}</dt>
                             <dd>
                                 {% if object.is_guest_time_suggested %}
@@ -213,6 +214,7 @@
                                     </p>
                                 {% endif %}
                             </dd>
+                            {% endif %}
 
                             {% if object.duration and object.duration != '00:00' %}
                                 <dt>{% trans 'Varighed' %}:</dt>
