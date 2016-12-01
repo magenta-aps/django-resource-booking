@@ -860,14 +860,22 @@ class BookerForm(forms.ModelForm):
 
         attendeecount_widget.attrs['min'] = 1
         if len(products) > 0:
-            attendeecount_widget.attrs['min'] = max([1] + [
+
+            min_visitors = [
                 product.minimum_number_of_visitors
-                for product in products if product.minimum_number_of_visitors
-            ])
-            attendeecount_widget.attrs['max'] = min([10000] + [
+                for product in products
+                if product.minimum_number_of_visitors
+            ]
+            if len(min_visitors) > 0:
+                attendeecount_widget.attrs['min'] = min(min_visitors)
+
+            max_visitors = [
                 product.maximum_number_of_visitors
-                for product in products if product.maximum_number_of_visitors
-            ])
+                for product in products
+                if product.maximum_number_of_visitors
+            ]
+            if len(max_visitors) > 0:
+                attendeecount_widget.attrs['max'] = max(max_visitors)
 
             # union or intersection?
             level = binary_or(*[

@@ -6,7 +6,7 @@
         {{ bookerform.attendee_count }}
     </div>
     <div class="col-sm-3 help-block with-errors">
-        <ul class="list-unstyled" id="waitinglist_warning">
+        <ul class="list-unstyled" id="waitinglist_warning" style="display:none">
             <li>{% trans 'Der er ikke nok ledige pladser, men du kan skrive dig på venteliste i stedet' %}</li>
         </ul>
         {{ bookerform.attendee_count.errors }}
