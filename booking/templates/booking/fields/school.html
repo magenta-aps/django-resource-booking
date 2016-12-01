@@ -13,6 +13,8 @@
     </label>
     <div class="col-sm-6{% if bookerform.school.errors %} has-error{% endif %}">
         {{ bookerform.school }}
+        <br/>
+        {% trans 'Hvis din skole eller dit gymnasium ikke kommer frem på listen, kontakt da <a href="mailto:support@fokus.dk">support@fokus.dk</a> for at få hjælp til tilmelding.' %}
     </div>
     <div class="col-sm-3 help-block with-errors">
         {{ bookerform.school.errors }}

@@ -6,7 +6,7 @@
     Besøget afholdes på
     <a href="{% full_url 'product-view' product.pk token_user=recipient %}#mapinfo">{{ product.locality.full_address }}</a>.
     Der er brug for en eller flere undervisere til afviklingen af tilbuddet.
-    Klik på linket og svar om du vil være underviser eller ej.
+    Klik <a href="{% full_url 'visit-view' visit.pk 'teacher' token_user=recipient %}">her</a> og svar hvis du vil være underviser.
 </p>
 <p>
     Vær opmærksom på, om der er forberedelsestid.

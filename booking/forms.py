@@ -860,14 +860,22 @@ class BookerForm(forms.ModelForm):
 
         attendeecount_widget.attrs['min'] = 1
         if len(products) > 0:
-            attendeecount_widget.attrs['min'] = max([1] + [
+
+            min_visitors = [
                 product.minimum_number_of_visitors
-                for product in products if product.minimum_number_of_visitors
-            ])
-            attendeecount_widget.attrs['max'] = min([10000] + [
+                for product in products
+                if product.minimum_number_of_visitors
+            ]
+            if len(min_visitors) > 0:
+                attendeecount_widget.attrs['min'] = min(min_visitors)
+
+            max_visitors = [
                 product.maximum_number_of_visitors
-                for product in products if product.maximum_number_of_visitors
-            ])
+                for product in products
+                if product.maximum_number_of_visitors
+            ]
+            if len(max_visitors) > 0:
+                attendeecount_widget.attrs['max'] = max(max_visitors)
 
             # union or intersection?
             level = binary_or(*[
@@ -917,6 +925,16 @@ class BookerForm(forms.ModelForm):
                 raise forms.ValidationError(_(u'Ukendt postnummer'))
         return postcode
 
+    def clean_school(self):
+        school = self.cleaned_data.get('school')
+        if School.objects.filter(name=school).count() == 0:
+            raise forms.ValidationError(
+                _(u'Du har ikke valgt skole/gymnasium fra listen. Du skal '
+                  u'vælge skole/gymnasium fra listen for at kunne '
+                  u'tilmelde dig.')
+            )
+        return school
+
     def clean(self):
         cleaned_data = super(BookerForm, self).clean()
         email = cleaned_data.get("email")
@@ -943,7 +961,6 @@ class BookerForm(forms.ModelForm):
         value = field.widget.value_from_datadict(
             self.data, self.files, self.add_prefix('school')
         )
-
         self.schooltype = None
         try:
             school = field.clean(value)
