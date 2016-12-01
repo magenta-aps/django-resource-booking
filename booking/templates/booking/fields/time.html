@@ -8,7 +8,7 @@
             <div class="col-sm-6{% if bookingform.eventtime.errors %} has-error{% endif %}">
                 {{ bookingform.eventtime }}
             </div>
-            <div class="col-sm-3 help-block with-errors">
+            <div class="col-sm-4 help-block with-errors">
                 {{ bookingform.eventtime.errors }}
             </div>
         </div>
@@ -24,7 +24,7 @@
                 <br/>
                 {% trans 'Du har her mulighed for at angive nogle tidspunker, hvor du ønsker at deltage i tilbuddet, det kan være specifikke datoer, uger eller tidspunkter på dagen. Vi gør, hvad vi kan for at opfylde dine ønsker, og du hører fra os, så snart vi ved, om det kan lade sig gøre.' %}
             </div>
-            <div class="col-sm-3 help-block with-errors">
+            <div class="col-sm-4 help-block with-errors">
                 {{ bookingform.desired_time.errors }}
             </div>
         </div>
