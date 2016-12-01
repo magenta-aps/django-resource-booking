@@ -21,11 +21,13 @@
             </div>
             <div class="col-sm-6{% if bookingform.desired_time.errors %} has-error{% endif %}">
                 {{ bookingform.desired_time }}
-                <br/>
-                {% trans 'Du har her mulighed for at angive nogle tidspunker, hvor du ønsker at deltage i tilbuddet, det kan være specifikke datoer, uger eller tidspunkter på dagen. Vi gør, hvad vi kan for at opfylde dine ønsker, og du hører fra os, så snart vi ved, om det kan lade sig gøre.' %}
             </div>
             <div class="col-sm-3 help-block with-errors">
-                {{ bookingform.desired_time.errors }}
+                {% if bookingform.desired_time.errors %}
+                    {{ bookingform.desired_time.errors }}
+                {% else %}
+                    {% trans 'Du har her mulighed for at angive nogle tidspunker, hvor du ønsker at deltage i tilbuddet, det kan være specifikke datoer, uger eller tidspunkter på dagen. Vi gør, hvad vi kan for at opfylde dine ønsker, og du hører fra os, så snart vi ved, om det kan lade sig gøre.' %}
+                {% endif %}
             </div>
         </div>
     {% endif %}
