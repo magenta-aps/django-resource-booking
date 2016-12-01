@@ -12,7 +12,9 @@
     </div>
     <div class="col-sm-4 help-block with-errors">
         {{ bookerform.postcode.errors }}
-        {{ bookerform.city.errors }}
+        {% if bookerform.city.errors and bookerform.city.errors != bookerform.postcode.errors %}
+            {{ bookerform.city.errors }}
+        {% endif %}
     </div>
 </div>
 {% endif %}
