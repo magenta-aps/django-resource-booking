@@ -21,7 +21,8 @@ from booking.resource_based.models import TeacherResource, HostResource
 from booking.resource_based.models import VehicleResource
 from booking.resource_based.models import ResourcePool
 from booking.resource_based.models import ResourceRequirement
-from booking.views import BackMixin, BreadcrumbMixin, LoginRequiredMixin
+from booking.views import BackMixin, BreadcrumbMixin
+from booking.views import LoginRequiredMixin, EditorRequriedMixin
 from itertools import chain
 
 import booking.models as booking_models
@@ -315,7 +316,8 @@ class TimeDetailsView(DetailView):
         return reverse('visit-view', args=[self.object.visit.pk])
 
 
-class ResourceCreateView(BackMixin, BreadcrumbMixin, FormView):
+class ResourceCreateView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
+                         FormView):
     template_name = "resource/typeform.html"
     form_class = ResourceTypeForm
     just_preserve_back = True
@@ -349,7 +351,7 @@ class ResourceCreateView(BackMixin, BreadcrumbMixin, FormView):
         ]
 
 
-class ResourceDetailView(BreadcrumbMixin, TemplateView):
+class ResourceDetailView(BreadcrumbMixin, EditorRequriedMixin, TemplateView):
     template_name = "resource/details.html"
 
     def dispatch(self, request, *args, **kwargs):
@@ -376,7 +378,7 @@ class ResourceDetailView(BreadcrumbMixin, TemplateView):
         return super(ResourceDetailView, self).get_context_data(**context)
 
 
-class ResourceListView(BreadcrumbMixin, ListView):
+class ResourceListView(BreadcrumbMixin, EditorRequriedMixin, ListView):
     model = Resource
     template_name = "resource/list.html"
 
@@ -399,7 +401,8 @@ class ResourceListView(BreadcrumbMixin, ListView):
         ]
 
 
-class ResourceUpdateView(BackMixin, BreadcrumbMixin, UpdateView):
+class ResourceUpdateView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
+                         UpdateView):
     template_name = "resource/form.html"
     object = None
 
@@ -492,7 +495,8 @@ class ResourceUpdateView(BackMixin, BreadcrumbMixin, UpdateView):
             self.object.created_by = self.request.user
 
 
-class ResourceDeleteView(BackMixin, BreadcrumbMixin, DeleteView):
+class ResourceDeleteView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
+                         DeleteView):
     success_url = reverse_lazy('resource-list')
     back_on_success = False
 
@@ -511,7 +515,8 @@ class ResourceDeleteView(BackMixin, BreadcrumbMixin, DeleteView):
         ]
 
 
-class ResourcePoolCreateView(BackMixin, BreadcrumbMixin, FormView):
+class ResourcePoolCreateView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
+                             FormView):
     template_name = "resourcepool/typeform.html"
     form_class = ResourcePoolTypeForm
     just_preserve_back = True
@@ -550,7 +555,7 @@ class ResourcePoolCreateView(BackMixin, BreadcrumbMixin, FormView):
         ]
 
 
-class ResourcePoolDetailView(BreadcrumbMixin, DetailView):
+class ResourcePoolDetailView(BreadcrumbMixin, EditorRequriedMixin, DetailView):
     template_name = "resourcepool/details.html"
     model = ResourcePool
 
@@ -564,7 +569,7 @@ class ResourcePoolDetailView(BreadcrumbMixin, DetailView):
         ]
 
 
-class ResourcePoolListView(BreadcrumbMixin, ListView):
+class ResourcePoolListView(BreadcrumbMixin, EditorRequriedMixin, ListView):
     model = ResourcePool
     template_name = "resourcepool/list.html"
 
@@ -582,7 +587,8 @@ class ResourcePoolListView(BreadcrumbMixin, ListView):
         ]
 
 
-class ResourcePoolUpdateView(BackMixin, BreadcrumbMixin, UpdateView):
+class ResourcePoolUpdateView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
+                             UpdateView):
     template_name = "resourcepool/form.html"
     object = None
     form_class = EditResourcePoolForm
@@ -668,7 +674,8 @@ class ResourcePoolUpdateView(BackMixin, BreadcrumbMixin, UpdateView):
             self.object.created_by = self.request.user
 
 
-class ResourcePoolDeleteView(BackMixin, BreadcrumbMixin, DeleteView):
+class ResourcePoolDeleteView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
+                             DeleteView):
     success_url = reverse_lazy('resourcepool-list')
     model = ResourcePool
     back_on_success = False
@@ -698,7 +705,8 @@ class ResourcePoolDeleteView(BackMixin, BreadcrumbMixin, DeleteView):
         ]
 
 
-class ResourceRequirementCreateView(BackMixin, BreadcrumbMixin, CreateView):
+class ResourceRequirementCreateView(BackMixin, BreadcrumbMixin,
+                                    EditorRequriedMixin, CreateView):
     model = ResourceRequirement
     form_class = EditResourceRequirementForm
 
@@ -738,7 +746,8 @@ class ResourceRequirementCreateView(BackMixin, BreadcrumbMixin, CreateView):
         ]
 
 
-class ResourceRequirementUpdateView(BackMixin, BreadcrumbMixin, UpdateView):
+class ResourceRequirementUpdateView(BackMixin, BreadcrumbMixin,
+                                    EditorRequriedMixin, UpdateView):
     model = ResourceRequirement
     form_class = EditResourceRequirementForm
 
@@ -771,7 +780,8 @@ class ResourceRequirementUpdateView(BackMixin, BreadcrumbMixin, UpdateView):
         ]
 
 
-class ResourceRequirementListView(BreadcrumbMixin, ListView):
+class ResourceRequirementListView(BreadcrumbMixin, EditorRequriedMixin,
+                                  ListView):
     model = ResourceRequirement
     template_name = "resourcerequirement/list.html"
 
@@ -810,7 +820,8 @@ class ResourceRequirementListView(BreadcrumbMixin, ListView):
         ]
 
 
-class ResourceRequirementDeleteView(BackMixin, BreadcrumbMixin, DeleteView):
+class ResourceRequirementDeleteView(BackMixin, BreadcrumbMixin,
+                                    EditorRequriedMixin, DeleteView):
     model = ResourceRequirement
     success_url = reverse_lazy('resourcerequirement-list')
     back_on_success = False
@@ -839,7 +850,7 @@ class ResourceRequirementDeleteView(BackMixin, BreadcrumbMixin, DeleteView):
         ]
 
 
-class VisitResourceEditView(FormView):
+class VisitResourceEditView(EditorRequriedMixin, FormView):
     template_name = "visit/resources.html"
     form_class = EditVisitResourcesForm
 
