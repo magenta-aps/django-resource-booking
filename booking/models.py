@@ -258,6 +258,16 @@ class OrganizationalUnit(models.Model):
 
         return recipients
 
+    @classmethod
+    def root_unit_id(cls):
+        unit = cls.objects.filter(
+            type__name=u"Københavns Universitet"
+        ).first()
+        if unit:
+            return unit.pk
+        else:
+            return ""
+
 
 # Master data related to bookable resources start here
 class Subject(models.Model):
