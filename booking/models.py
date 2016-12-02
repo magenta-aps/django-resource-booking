@@ -3352,7 +3352,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         context['can_become_host'] = (
             context['is_potential_host'] and
             not context['is_assigned_as_host'] and
-            not self.needs_hosts
+            self.needs_hosts
         )
 
         if self.is_multiproductvisit:
@@ -3370,7 +3370,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         context['can_become_teacher'] = (
             context['is_potential_teacher'] and
             not context['is_assigned_as_teacher'] and
-            not self.needs_teachers
+            self.needs_teachers
         )
 
         context['can_edit'] = profile.can_edit(self)
