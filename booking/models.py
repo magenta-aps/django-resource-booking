@@ -1889,6 +1889,16 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
         return recipients
 
+    # Returns best guess for who is responsible for visits for this product.
+    def get_responsible_persons(self):
+        if self.tilbudsansvarlig:
+            return [self.tilbudsansvarlig]
+
+        if self.created_by:
+            return [self.created_by]
+
+        return self.organizationalunit.get_editors()
+
     def get_view_url(self):
         return reverse('product-view', args=[self.pk])
 
@@ -2416,6 +2426,12 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     )
 
     last_workflow_update = models.DateTimeField(default=timezone.now)
+    needs_attention_since = models.DateTimeField(
+        blank=True,
+        null=True,
+        default=None,
+        verbose_name=_(u'Behov for opmærksomhed siden')
+    )
 
     comments = models.TextField(
         blank=True,
@@ -2796,6 +2812,17 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                     order_by("waitinglist_spot")
             else:
                 return self.bookings.none()
+
+    def set_needs_attention(self, since=None):
+        if since is None:
+            since = timezone.now()
+
+        if not (
+            self.needs_attention_since and
+            self.needs_attention_since >= since
+        ):
+            self.needs_attention_since = since
+            self.save()
 
     @property
     def booking_list(self):
