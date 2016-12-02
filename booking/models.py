@@ -2669,7 +2669,20 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def needs_teachers(self):
-        return self.needed_teachers > 0
+        if self.product.is_resource_controlled:
+            teacher_requirements = self.product.resourcerequirement_set.filter(
+                resource_pool__resource_type_id= \
+                    ResourceType.RESOURCE_TYPE_TEACHER
+            )
+            for requirement in teacher_requirements:
+                teacher_resources = self.visitresource.filter(
+                    resource_requirement=requirement
+                )
+                if teacher_resources.count() < requirement.required_amount:
+                    return True
+            return False
+        else:
+            return self.needed_teachers > 0
 
     @property
     def total_required_hosts(self):
@@ -2684,7 +2697,19 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def needs_hosts(self):
-        return self.needed_hosts > 0
+        if self.product.is_resource_controlled:
+            host_requirements = self.product.resourcerequirement_set.filter(
+                resource_pool__resource_type_id=ResourceType.RESOURCE_TYPE_HOST
+            )
+            for requirement in host_requirements:
+                host_resources = self.visitresource.filter(
+                    resource_requirement=requirement
+                )
+                if host_resources.count() < requirement.required_amount:
+                    return True
+            return False
+        else:
+            return self.needed_hosts > 0
 
     @property
     def needs_room(self):
@@ -3305,7 +3330,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         else:
             return self.hosts.all()
 
-    def context_for_user(self, user):
+    def context_for_user(self, user, request_usertype=None):
         profile = user.userprofile
         context = {
             'is_teacher': profile.is_teacher,
@@ -3322,10 +3347,12 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             context['is_assigned_as_host'] = (
                 self.assigned_hosts.filter(pk=user.pk).exists()
             )
+            context['needs_hosts'] = self.needs_hosts
 
         context['can_become_host'] = (
             context['is_potential_host'] and
-            not context['is_assigned_as_host']
+            not context['is_assigned_as_host'] and
+            not self.needs_hosts
         )
 
         if self.is_multiproductvisit:
@@ -3338,10 +3365,12 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             context['is_assigned_as_teacher'] = (
                 self.assigned_teachers.filter(pk=user.pk).exists()
             )
+            context['needs_teachers'] = self.needs_teachers
 
         context['can_become_teacher'] = (
             context['is_potential_teacher'] and
-            not context['is_assigned_as_teacher']
+            not context['is_assigned_as_teacher'] and
+            not self.needs_teachers
         )
 
         context['can_edit'] = profile.can_edit(self)
@@ -3454,6 +3483,13 @@ class MultiProductVisit(Visit):
     def needs_teachers(self):
         for subvisit in self.subvisits_unordered:
             if subvisit.needs_teachers:
+                return True
+        return False
+
+    @property
+    def needs_hosts(self):
+        for subvisit in self.subvisits_unordered:
+            if subvisit.needs_hosts:
                 return True
         return False
 
