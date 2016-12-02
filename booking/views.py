@@ -2384,6 +2384,12 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
             # If the chosen eventtime does not have a visit, create it now
             if not eventtime.visit:
                 eventtime.make_visit()
+                log_action(
+                    self.request.user,
+                    eventtime.visit,
+                    LOGACTION_CREATE,
+                    _(u'Besøg oprettet')
+                )
 
             booking.visit = eventtime.visit
 
@@ -2428,6 +2434,9 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
                         subjectform.save()
 
             booking.ensure_statistics()
+
+            # Flag attention requirement on visit
+            booking.visit.needs_attention_since = timezone.now()
 
             # Trigger updating of search index
             booking.visit.save()
@@ -3412,6 +3421,7 @@ class EmailReplyView(BreadcrumbMixin, DetailView):
     slug_field = 'reply_nonce'
     slug_url_kwarg = 'reply_nonce'
     form = None
+    original_object = None
 
     def get_form(self):
         if self.form is None:
@@ -3421,16 +3431,26 @@ class EmailReplyView(BreadcrumbMixin, DetailView):
                 self.form = EmailReplyForm(self.request.POST)
         return self.form
 
+    def get_original_object(self):
+        if self.original_object is None:
+            try:
+                ct = ContentType.objects.get(pk=self.object.content_type_id)
+                self.original_object = ct.get_object_for_this_type(
+                    pk=self.object.object_id
+                )
+            except Exception as e:
+                print "Error when getting email-reply object: %s" % e
+
+        return self.original_object
+
     def get_product(self):
-        try:
-            ct = ContentType.objects.get(pk=self.object.content_type_id)
-            if ct.model_class() == Product:
-                return ct.get_object_for_this_type(pk=self.object.object_id)
-            elif ct.model_class() == Visit:
-                visit = ct.get_object_for_this_type(pk=self.object.object_id)
-                return visit.product
-        except Exception as e:
-            print "Error when getting email-reply object: %s" % e
+        orig_obj = self.get_original_object()
+        if type(orig_obj) == Visit:
+            return orig_obj.product
+        elif type(orig_obj) == Product:
+            return orig_obj
+
+        return None
 
     def get_context_data(self, **kwargs):
         context = {}
@@ -3443,25 +3463,36 @@ class EmailReplyView(BreadcrumbMixin, DetailView):
         form = self.get_form()
         if form.is_valid():
             self.object = self.get_object()
+            orig_obj = self.get_original_object()
             orig_message = self.object
+            visit = orig_obj if type(orig_obj) == Visit else None
             reply = form.cleaned_data.get('reply', "").strip()
             product = self.get_product()
-            recipients = product.organizationalunit.get_editors()
+
+            recipients = product.get_responsible_persons()
+
             KUEmailMessage.send_email(
                 EmailTemplateType.SYSTEM__EMAIL_REPLY,
                 {
+                    'visit': visit,
                     'product': product,
+                    'orig_object': orig_obj,
                     'orig_message': orig_message,
                     'reply': reply,
                     'log_message': _(u"Svar:") + "\n" + reply
                 },
                 recipients,
-                product,
+                orig_obj,
                 organizationalunit=product.organizationalunit
             )
             result_url = reverse(
                 'reply-to-email', args=[self.object.reply_nonce]
             )
+
+            # Mark visit as needing attention
+            if visit:
+                visit.set_needs_attention()
+
             return redirect(result_url + '?thanks=1')
         else:
             return self.get(request, *args, **kwargs)
