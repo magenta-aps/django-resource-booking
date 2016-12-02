@@ -118,11 +118,30 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         context.update(**kwargs)
         return super(ProfileView, self).get_context_data(**context)
 
+    datediff_sql = """
+        LEAST(
+            ABS(
+                EXTRACT(
+                    EPOCH FROM
+                    (
+                        "booking_visit"."needs_attention_since" -
+                        STATEMENT_TIMESTAMP()
+                    )
+                )
+            ),
+            ABS(
+                EXTRACT(
+                    EPOCH FROM
+                    "booking_eventtime"."start"  - STATEMENT_TIMESTAMP()
+                )
+            )
+        )
+    """
+
     def sort_vo_queryset(self, qs):
-        qs = qs.annotate(
-            datediff=AbsDateDist(F('eventtime__start'))
+        return qs.extra(
+            select={'datediff': self.datediff_sql}
         ).order_by('datediff')
-        return qs
 
     def lists_by_role(self):
         role = self.request.user.userprofile.get_role()
