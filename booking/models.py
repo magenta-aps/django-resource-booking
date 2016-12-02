@@ -2670,9 +2670,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     @property
     def needs_teachers(self):
         if self.product.is_resource_controlled:
+            teacher_type = ResourceType.RESOURCE_TYPE_TEACHER
             teacher_requirements = self.product.resourcerequirement_set.filter(
-                resource_pool__resource_type_id= \
-                    ResourceType.RESOURCE_TYPE_TEACHER
+                resource_pool__resource_type_id=teacher_type
             )
             for requirement in teacher_requirements:
                 teacher_resources = self.visitresource.filter(
