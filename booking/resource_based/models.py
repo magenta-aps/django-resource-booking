@@ -135,6 +135,10 @@ class EventTime(models.Model):
 
         visit_model = EventTime.visit.field.related_model
 
+        # Flag newly created visits as needing attention
+        if "needs_attention_since" not in kwargs:
+            kwargs['needs_attention_since'] = timezone.now()
+
         visit = visit_model(**kwargs)
 
         # If the product specifies no rooms are needed, set this on the
@@ -163,7 +167,7 @@ class EventTime(models.Model):
         result = None
 
         for req in self.product.resourcerequirement_set.all():
-            if self.visit:
+            if hasattr(self, 'visit'):
                 assigned = self.visit.visitresource.filter(
                     resource_requirement=req
                 ).count()
