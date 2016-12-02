@@ -6,7 +6,6 @@ from booking.models import EmailTemplateType, KUEmailMessage
 from booking.models import VisitComment
 from booking.utils import UnicodeWriter
 from django.contrib import messages
-from django.db.models import F
 from django.db.models import Q
 from django.db.models.aggregates import Count, Sum
 from django.db.models.functions import Coalesce
@@ -28,7 +27,6 @@ from booking.views import LoginRequiredMixin, AccessDenied
 from booking.views import EditorRequriedMixin, VisitCustomListView
 from django.views.generic.list import ListView
 from profile.forms import UserCreateForm, EditMyProductsForm, StatisticsForm
-from profile.models import AbsDateDist
 from profile.models import EmailLoginURL
 from profile.models import UserProfile, UserRole, EDIT_ROLES, NONE
 from profile.models import HOST, TEACHER
