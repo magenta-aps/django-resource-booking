@@ -306,6 +306,14 @@ class TimeDetailsView(DetailView):
 
         if(request.POST.get("confirm")):
             self.object.make_visit()
+
+            booking_models.log_action(
+                self.request.user,
+                self.object.visit,
+                booking_models.LOGACTION_CREATE,
+                _(u'Besøg oprettet')
+            )
+
             return redirect(self.get_success_url())
         else:
             # Do same thing as for get method
