@@ -490,6 +490,8 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
         # Not available on times when we are booked as a resource
         if hasattr(self, 'resource'):
             for x in self.resource.booked_eventtimes(from_dt, to_dt):
+                if not x.start or not x.end:
+                    continue
                 yield CalendarEventInstance(
                     x.start,
                     x.end,
@@ -499,6 +501,8 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
             if hasattr(self.resource, 'user'):
                 profile = self.resource.user.userprofile
                 for x in profile.assigned_to_visits.all():
+                    if not x.eventtime.start or not x.eventtime.end:
+                        continue
                     yield CalendarEventInstance(
                         x.eventtime.start,
                         x.eventtime.end,
@@ -508,6 +512,8 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
 
         if hasattr(self, 'product'):
             for x in self.product.booked_eventtimes(from_dt, to_dt):
+                if not x.start or not x.end:
+                    continue
                 yield CalendarEventInstance(
                     x.start,
                     x.end,
