@@ -183,9 +183,6 @@
                                             <li>{{ requirementdata.acquired }}/{{ requirementdata.required }} {{ requirementdata.name }}</li>
                                         {% endfor %}
                                         </ul>
-                                        {% if can_edit %}
-                                            <a href="{% url 'visit-resources-edit' object.pk %}" role="button" class="btn btn-default pull-right" style="vertical-align:top">{% trans 'Redigér' %}</a>
-                                        {% endif %}
                                     </div>
                                 {% else %}
                                     <div class="col-sm-6">
@@ -193,6 +190,9 @@
                                     </div>
                                 {% endif %}
                                 <div class="col-sm-4">
+                                {% if object.product.resourcerequirement_set.count and can_edit %}
+                                    <a href="{% url 'visit-resources-edit' object.pk %}" role="button" class="btn btn-default pull-right" style="vertical-align:top">{% trans 'Redigér' %}</a>
+                                {% endif %}
                                 {% if can_become_teacher %}
                                     <a href="{% url 'become-teacher' object.pk %}" role="button" class="btn btn-default pull-right">{% trans 'Bliv underviser for dette besøg' %}</a>
                                     {% if teacher %}
@@ -321,21 +321,15 @@
                         </strong>
                         <div class="col-sm-6">
                             {{ object.get_workflow_status_display }}
-                            {% if can_edit %}
-                                <a href="{% url 'change-visit-status' object.pk %}" role="button" class="btn btn-primary btn-xs">{% trans 'Skift status' %}</a>
-                            {% endif %}
-                        </dd>
-
-                        {% if not object.is_multiproductvisit and not object.is_multi_sub %}
-                        <dt>{% trans 'Antal på venteliste' %}</dt>
-                        <dd>
-                            {{ object.nr_waiting }}
-                            <a href="#waitinglist" role="button" class="btn btn-primary btn-xs">{% trans 'Se liste' %}</a>
-                        </dd>
+                        </div>
+                        {% if can_edit %}
+                        <div class="col-sm-4">
+                            <a href="{% url 'change-visit-status' object.pk %}" role="button" class="btn btn-default pull-right">{% trans 'Skift status' %}</a>
+                        </div>
                         {% endif %}
                     </div>
 
-                    {% if not object.is_multiproductvisit %}
+                    {% if not object.is_multiproductvisit and not object.is_multi_sub %}
                         <div class="row row-border">
                             <strong class="col-sm-2">
                                 {% trans 'Antal på venteliste' %}
