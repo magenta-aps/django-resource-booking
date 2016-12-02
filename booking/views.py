@@ -3074,9 +3074,15 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
             EmailTemplateType.NOTIFY_GUEST__SPOT_OPEN
         user = self.request.user
 
+        usertype = self.kwargs.get('usertype')
+        if isinstance(usertype, basestring):
+            usertype = usertype.lower()
+
         if hasattr(user, 'userprofile'):
             # Add information about the users association with the visit
-            context.update(self.object.context_for_user(self.request.user))
+            context.update(self.object.context_for_user(
+                self.request.user, usertype
+            ))
 
         context['bookinglistform'] = self.get_bookinglist_form()
         context['waitinglistform'] = self.get_waitinglist_form()
@@ -3084,9 +3090,6 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
             booking.id: booking.booker.attendee_count
             for booking in self.object.waiting_list
         }
-        usertype = self.kwargs.get('usertype')
-        if isinstance(usertype, basestring):
-            usertype = usertype.lower()
 
         context['teacher'] = usertype == 'teacher'
         context['host'] = usertype == 'host'
@@ -3116,6 +3119,7 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
         action = request.POST['action']
         listname = request.POST['listname']
 
+        form = None
         if listname == 'booking':
             form = self.get_bookinglist_form(**request.POST)
         elif listname == 'waiting':
