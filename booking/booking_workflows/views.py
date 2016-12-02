@@ -564,7 +564,9 @@ class BecomeSomethingView(AutologgerMixin, VisitBreadcrumbMixin,
                     self.object.hosts_rejected.add(request.user)
                 if isinstance(self, DeclineTeacherView):
                     self.object.teachers_rejected.add(request.user)
-                self.object.save()
+
+                # Mark visit as needing attention - also saves the visit
+                self.object.set_needs_attention()
 
             elif request.POST.get("confirm"):
                 if self.object.product.is_resource_controlled:
@@ -587,6 +589,9 @@ class BecomeSomethingView(AutologgerMixin, VisitBreadcrumbMixin,
                         [request.user],
                         True
                     )
+
+                # Mark visit as needing attention
+                self.object.set_needs_attention()
 
             self._log_changes()
 
