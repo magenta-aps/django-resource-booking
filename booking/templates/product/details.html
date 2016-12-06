@@ -115,11 +115,6 @@
                     </div>
                     <div class="panel-body">
                         <dl class="dl-horizontal">
-
-                            {% if object.get_audience_display %}
-                                <dt>{% trans 'Henvendt til'%}:</dt>
-                                <dd>{{ object.get_audience_display }}</dd>
-                            {% endif %}
                             
                             {% if object.resource_ptr.all_subjects  %}
                                 <dt>{% trans 'Fag/niveau' %}:</dt>

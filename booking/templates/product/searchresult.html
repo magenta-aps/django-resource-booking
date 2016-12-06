@@ -42,22 +42,6 @@
                                     </div>
                                 {% endfor %}
                             </div>
-                            <h3 class="panel-title">{% trans 'Hvem er du?' %}</h3>
-                            <hr/>
-                            <div class="input-group">
-                                {% for c in audience_choices %}
-                                    {% if c.value %}
-                                        <div class="checkbox">
-                                            <label class="control-label" for="audience-choice-{{c.value}}">
-                                                <input name="a" id="audience-choice-{{c.value}}" type="checkbox" value="{{c.value}}" {{c.selected}}>{{c.label}}
-                                                {% if c.hits %}
-                                                    <span title="{{ c.hits }} resultater" class="type-hits">({{ c.hits }})</span>
-                                                {% endif %}
-                                            </label>
-                                        </div>
-                                    {% endif %}
-                                {% endfor %}
-                            </div>
                             <h3 class="panel-title">{% trans 'Hvad søger du?' %}</h3>
                             <hr/>
                             <div class="input-group">

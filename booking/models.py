@@ -1277,22 +1277,6 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         (STUDY_MATERIAL, _(u"Undervisningsmateriale"))
     )
 
-    # Target audience choice - student or teacher.
-    AUDIENCE_TEACHER = 2**0
-    AUDIENCE_STUDENT = 2**1
-    AUDIENCE_ALL = AUDIENCE_TEACHER | AUDIENCE_STUDENT
-
-    audience_choices = (
-        (None, "---------"),
-        (AUDIENCE_TEACHER, _(u'Lærer')),
-        (AUDIENCE_STUDENT, _(u'Elev')),
-        (AUDIENCE_ALL, _(u'Alle'))
-    )
-
-    audience_choices_without_none = [
-        x for x in audience_choices if x[0] is not None
-    ]
-
     # Institution choice - primary or secondary school.
     PRIMARY = 0
     SECONDARY = 1
@@ -1351,11 +1335,6 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         on_delete=models.SET_NULL,
     )
     links = models.ManyToManyField(Link, blank=True, verbose_name=_('Links'))
-    audience = models.IntegerField(choices=audience_choices,
-                                   verbose_name=_(u'Målgruppe'),
-                                   default=None,
-                                   blank=False,
-                                   null=True)
 
     institution_level = models.IntegerField(choices=institution_choices,
                                             verbose_name=_(u'Institution'),
@@ -1787,9 +1766,6 @@ class Product(AvailabilityUpdaterMixin, models.Model):
                 texts.append(l.name)
             if l.description:
                 texts.append(l.description)
-
-        # Display-value for audience
-        texts.append(self.get_audience_display() or "")
 
         # Display-value for institution_level
         texts.append(self.get_institution_level_display() or "")
