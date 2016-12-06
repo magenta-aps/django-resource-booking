@@ -2436,9 +2436,13 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
                 booking.autosend(
                     EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED_WAITING
                 )
-            else:
+            elif booking.visit.product.uses_time_management:
                 booking.autosend(
                     EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED
+                )
+            else:
+                booking.autosend(
+                    EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED_UNTIMED
                 )
 
             booking.autosend(EmailTemplateType.NOTIFY_EDITORS__BOOKING_CREATED)
@@ -2624,7 +2628,7 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
         object.save()
 
         object.autosend(
-            EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED
+            EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED_UNTIMED
         )
 
         object.autosend(
