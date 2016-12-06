@@ -10,11 +10,6 @@
             <dd><a href="{% url 'product-view' product.id %}">{{ product.title }}</a></dd>
         {% endif %}
 
-        {% if product.get_audience_display %}
-            <dt>{% trans 'Henvendt til:' %}</dt>
-            <dd>{{ product.get_audience_display }}</dd>
-        {% endif %}
-
         {% if product.resource_ptr.all_subjects  %}
             <dt>{% trans 'Fag/niveau:' %}</dt>
             <dd>
