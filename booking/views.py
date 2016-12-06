@@ -2288,15 +2288,17 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
 
     def get_context_data(self, **kwargs):
         available_times = {}
-
-        only_waitinglist = True
-        for eventtime in self.product.future_times:
-            if eventtime.available_seats > 0:
-                only_waitinglist = False
-            available_times[str(eventtime.pk)] = {
-                'available': eventtime.available_seats,
-                'waitinglist': eventtime.waiting_list_capacity
-            }
+        if self.product and self.product.is_guest_time_suggested:
+            only_waitinglist = False
+        else:
+            only_waitinglist = True
+            for eventtime in self.product.future_times:
+                if eventtime.available_seats > 0:
+                    only_waitinglist = False
+                available_times[str(eventtime.pk)] = {
+                    'available': eventtime.available_seats,
+                    'waitinglist': eventtime.waiting_list_capacity
+                }
 
         context = {
             'product': self.product,
