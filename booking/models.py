@@ -3658,7 +3658,7 @@ class MultiProductVisitTemp(models.Model):
     )
 
     @property
-    def products(self):
+    def products_ordered(self):
         return [
             relation.product
             for relation in
@@ -3698,7 +3698,7 @@ class MultiProductVisitTemp(models.Model):
         mpv.save()
         mpv.create_eventtime(self.date)
         mpv.ensure_statistics()
-        for index, product in enumerate(self.products):
+        for index, product in enumerate(self.products_ordered):
             eventtime = EventTime(
                 product=product,
                 bookable=False,
