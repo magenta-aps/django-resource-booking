@@ -3239,6 +3239,8 @@ class EmailTemplateEditView(LoginRequiredMixin, UnitAccessRequiredMixin,
         context.update(kwargs)
         if form.is_valid():
             self.object = form.save()
+            self.object.type = EmailTemplateType.get(self.object.key)
+            self.object.save()
             return self.redirect(reverse('emailtemplate-list'))
 
         return self.render_to_response(
