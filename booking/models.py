@@ -524,6 +524,10 @@ class EmailTemplateType(models.Model):
         default=1
     )
 
+    @property
+    def name(self):
+        return EmailTemplateType.get_name(self.key)
+
     # Template available for manual sending from visits
     manual_sending_visit_enabled = models.BooleanField(default=False)
 
@@ -869,13 +873,14 @@ class EmailTemplate(models.Model):
         on_delete=models.SET_NULL,
     )
 
-    @property
-    def type(self):
-        return EmailTemplateType.objects.get(key=self.key)
+    type = models.ForeignKey(
+        EmailTemplateType,
+        null=True
+    )
 
     @property
     def name(self):
-        return EmailTemplateType.get_name(self.key)
+        return self.type.name
 
     def expand_subject(self, context, keep_placeholders=False):
         return self._expand(self.subject, context, keep_placeholders)
@@ -974,6 +979,12 @@ class EmailTemplate(models.Model):
                 if isinstance(node, VariableNode):
                     variables.append(unicode(node.filter_expression))
         return variables
+
+    @staticmethod
+    def migrate():
+        for emailtemplate in EmailTemplate.objects.all():
+            emailtemplate.type = EmailTemplateType.get(emailtemplate.key)
+            emailtemplate.save()
 
 
 class ObjectStatistics(models.Model):
