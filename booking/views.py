@@ -1626,7 +1626,10 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
                             if data.get('DELETE'):
                                 ProductAutosend.objects.filter(
                                     product=data['product'],
-                                    template_key=data['template_key']
+                                    template_key=data['template_key'],
+                                    template_type=EmailTemplateType.get(
+                                        data['template_key']
+                                    )
                                 ).delete()
                             else:
                                 try:

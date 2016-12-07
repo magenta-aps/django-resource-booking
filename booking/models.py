@@ -1754,6 +1754,8 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             return self.productautosend_set.filter(enabled=True)
 
     def get_autosend(self, template_type):
+        if type(template_type) == int:
+            template_type = EmailTemplateType.get(template_type)
         try:
             item = self.productautosend_set.filter(
                 template_type=template_type, enabled=True)[0]
@@ -3024,6 +3026,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     def get_autosend(self, template_type, follow_inherit=True,
                      include_disabled=False):
+        if type(template_type) == int:
+            template_type = EmailTemplateType.get(template_type)
         if follow_inherit and self.autosend_inherits(template_type):
             return self.product.get_autosend(template_type)
         else:
@@ -3819,6 +3823,10 @@ class Autosend(models.Model):
         EmailTemplateType,
         null=True
     )
+
+    def save(self, *args, **kwargs):
+        self.template_type = EmailTemplateType.get(self.template_key)
+        super(Autosend, self).save(*args, **kwargs)
 
     def get_name(self):
         return unicode(self.template_type.name)
