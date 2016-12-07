@@ -931,12 +931,14 @@ class EmailTemplate(models.Model):
         return rendered
 
     @staticmethod
-    def get_template(template_key, unit, include_overridden=False):
+    def get_template(template_type, unit, include_overridden=False):
+        if type(template_type) == int:
+            template_type = EmailTemplateType.get(template_type)
         templates = []
         while unit is not None and (include_overridden or len(templates) == 0):
             try:
                 templates.append(EmailTemplate.objects.filter(
-                    key=template_key,
+                    type=template_type,
                     organizationalunit=unit
                 ).all()[0])
             except:
@@ -946,7 +948,7 @@ class EmailTemplate(models.Model):
             try:
                 templates.append(
                     EmailTemplate.objects.filter(
-                        key=template_key,
+                        type=template_type,
                         organizationalunit__isnull=True)[0]
                 )
             except:
@@ -3079,7 +3081,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 recipients.update(self.get_recipients(template_type.key))
 
             KUEmailMessage.send_email(
-                template_type.key,
+                template_type,
                 {'visit': self, 'besoeg': self, 'product': product},
                 list(recipients),
                 self,
@@ -3089,7 +3091,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             if not only_these_recipients and template_type.send_to_booker:
                 for booking in self.bookings.all():
                     KUEmailMessage.send_email(
-                        template_type.key,
+                        template_type,
                         {
                             'visit': self,
                             'besoeg': self,
@@ -3647,7 +3649,7 @@ class MultiProductVisit(Visit):
             params = {'visit': self, 'products': self.products}
 
             KUEmailMessage.send_email(
-                template_type.key,
+                template_type,
                 params,
                 list(recipients),
                 self,
@@ -3657,7 +3659,7 @@ class MultiProductVisit(Visit):
             if not only_these_recipients and template_type.send_to_booker:
                 for booking in self.bookings.all():
                     KUEmailMessage.send_email(
-                        template_type.key,
+                        template_type,
                         merge_dicts(params, {
                             'booking': booking,
                             'booker': booking.booker
@@ -4431,7 +4433,7 @@ class Booking(models.Model):
                 recipients.update(self.get_recipients(template_key))
 
             KUEmailMessage.send_email(
-                template_key,
+                template_type,
                 {
                     'booking': self,
                     'product': product,
@@ -4657,12 +4659,12 @@ class KUEmailMessage(models.Model):
     @staticmethod
     def send_email(template, context, recipients, instance, unit=None,
                    **kwargs):
-        if isinstance(template, int):
-            template_key = template
-            template = EmailTemplate.get_template(template_key, unit)
+        if isinstance(template, EmailTemplateType):
+            key = template.key
+            template = EmailTemplate.get_template(template, unit)
             if template is None:
                 raise Exception(
-                    u"Template with name %s does not exist!" % template_key
+                    u"Template with key %s does not exist!" % key
                 )
         if not isinstance(template, EmailTemplate):
             raise Exception(

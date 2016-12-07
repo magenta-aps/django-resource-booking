@@ -3461,7 +3461,7 @@ class EmailReplyView(BreadcrumbMixin, DetailView):
             product = self.get_product()
             recipients = product.organizationalunit.get_editors()
             KUEmailMessage.send_email(
-                EmailTemplateType.SYSTEM__EMAIL_REPLY,
+                EmailTemplateType.get(EmailTemplateType.SYSTEM__EMAIL_REPLY),
                 {
                     'product': product,
                     'orig_message': orig_message,
