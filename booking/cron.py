@@ -55,7 +55,9 @@ class ReminderJob(CronJobBase):
                     if reminderday == today:
                         print "    That's today; send reminder now"
                         autosend.visit.autosend(
-                            EmailTemplateType.NOTITY_ALL__BOOKING_REMINDER
+                            EmailTemplateType.get(
+                                EmailTemplateType.NOTITY_ALL__BOOKING_REMINDER
+                            )
                         )
                     else:
                         print "    That's not today. Not sending reminder"
@@ -122,7 +124,9 @@ class IdleHostroleJob(CronJobBase):
                         print "    That's today; send alert now"
                         try:
                             autosend.visit.autosend(
-                                EmailTemplateType.NOTIFY_HOST__HOSTROLE_IDLE
+                                EmailTemplateType.get(
+                                    EmailTemplateType.NOTIFY_HOST__HOSTROLE_IDLE
+                                )
                             )
                         except Exception as e:
                             print e

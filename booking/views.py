@@ -2437,29 +2437,43 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
 
             if put_in_waitinglist:
                 booking.autosend(
-                    EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED_WAITING
+                    EmailTemplateType.get(
+                        EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED_WAITING
+                    )
                 )
             elif booking.visit.product.uses_time_management:
                 booking.autosend(
-                    EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED
+                    EmailTemplateType.get(
+                        EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED
+                    )
                 )
             else:
                 booking.autosend(
-                    EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED_UNTIMED
+                    EmailTemplateType.get(
+                        EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED_UNTIMED
+                    )
                 )
 
-            booking.autosend(EmailTemplateType.NOTIFY_EDITORS__BOOKING_CREATED)
+            booking.autosend(
+                EmailTemplateType.get(
+                    EmailTemplateType.NOTIFY_EDITORS__BOOKING_CREATED
+                )
+            )
 
             if booking.visit.needs_teachers or \
                     booking.visit.product.is_resource_controlled:
                 booking.autosend(
-                    EmailTemplateType.NOTIFY_HOST__REQ_TEACHER_VOLUNTEER
+                    EmailTemplateType.get(
+                        EmailTemplateType.NOTIFY_HOST__REQ_TEACHER_VOLUNTEER
+                    )
                 )
 
             if booking.visit.needs_hosts or \
                     booking.visit.product.is_resource_controlled:
                 booking.autosend(
-                    EmailTemplateType.NOTIFY_HOST__REQ_HOST_VOLUNTEER
+                    EmailTemplateType.get(
+                        EmailTemplateType.NOTIFY_HOST__REQ_HOST_VOLUNTEER
+                    )
                 )
 
             self.object = booking
@@ -2631,11 +2645,15 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
         object.save()
 
         object.autosend(
-            EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED_UNTIMED
+            EmailTemplateType.get(
+                EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED_UNTIMED
+            )
         )
 
         object.autosend(
-            EmailTemplateType.NOTIFY_EDITORS__BOOKING_CREATED
+            EmailTemplateType.get(
+                EmailTemplateType.NOTIFY_EDITORS__BOOKING_CREATED
+            )
         )
 
         return redirect(
@@ -3600,14 +3618,20 @@ class BookingAcceptView(BreadcrumbMixin, FormView):
                     self.object.dequeue()
                     self.dequeued = True
                     self.object.autosend(
-                        EmailTemplateType.NOTIFY_GUEST__SPOT_ACCEPTED
+                        EmailTemplateType.get(
+                            EmailTemplateType.NOTIFY_GUEST__SPOT_ACCEPTED
+                        )
                     )
             elif self.answer == 'no':
                 self.object.autosend(
-                    EmailTemplateType.NOTIFY_GUEST__SPOT_REJECTED
+                    EmailTemplateType.get(
+                        EmailTemplateType.NOTIFY_GUEST__SPOT_REJECTED
+                    )
                 )
                 self.object.autosend(
-                    EmailTemplateType.NOTIFY_EDITORS__SPOT_REJECTED
+                    EmailTemplateType.get(
+                        EmailTemplateType.NOTIFY_EDITORS__SPOT_REJECTED
+                    )
                 )
                 self.object_id = self.object.id
                 self.object.delete()

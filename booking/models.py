@@ -3066,7 +3066,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             template_type = EmailTemplateType.get(template_type)
         if self.is_multiproductvisit:
             return self.multiproductvisit.autosend(
-                template_type.key, recipients, only_these_recipients
+                template_type, recipients, only_these_recipients
             )
         if self.autosend_enabled(template_type):
             product = self.product
@@ -3632,9 +3632,8 @@ class MultiProductVisit(Visit):
         #     )
 
     # Sends a message to defined recipients pertaining to the Visit
-    def autosend(self, template_key, recipients=None,
+    def autosend(self, template_type, recipients=None,
                  only_these_recipients=False):
-        template_type = EmailTemplateType.get(template_key)
         if self.autosend_enabled(template_type):
             unit = None  # TODO: What should the unit be?
             if recipients is None:
@@ -3642,7 +3641,7 @@ class MultiProductVisit(Visit):
             else:
                 recipients = set(recipients)
             if not only_these_recipients:
-                recipients.update(self.get_recipients(template_key))
+                recipients.update(self.get_recipients(template_type.key))
 
             params = {'visit': self, 'products': self.products}
 
@@ -4416,9 +4415,8 @@ class Booking(models.Model):
             recipients.append(self.booker)
         return recipients
 
-    def autosend(self, template_key, recipients=None,
+    def autosend(self, template_type, recipients=None,
                  only_these_recipients=False):
-        template_type = EmailTemplateType.get(template_key)
         visit = self.visit.real
         if visit.autosend_enabled(template_type):
             product = visit.product
@@ -4428,7 +4426,7 @@ class Booking(models.Model):
             else:
                 recipients = set(recipients)
             if not only_these_recipients:
-                recipients.update(self.get_recipients(template_key))
+                recipients.update(self.get_recipients(template_type.key))
 
             KUEmailMessage.send_email(
                 template_type,
