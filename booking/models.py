@@ -3692,15 +3692,9 @@ class MultiProductVisitTemp(models.Model):
         blank=False,
         verbose_name=_(u'Dato')
     )
-    # Migration won't let us redefine this existing field,
-    # so rename it and create another. We'll delete it later.
-    deprecated_products = models.ManyToManyField(
-        Product,
-        blank=True
-    )
 
     @property
-    def products(self):
+    def products_ordered(self):
         return [
             relation.product
             for relation in
@@ -3709,11 +3703,11 @@ class MultiProductVisitTemp(models.Model):
             ).order_by('index')
         ]
 
-    new_products = models.ManyToManyField(
+    products = models.ManyToManyField(
         Product,
         blank=True,
         through=MultiProductVisitTempProduct,
-        related_name='products1'
+        related_name='products'
     )
     updated = models.DateTimeField(
         auto_now=True
@@ -3740,7 +3734,7 @@ class MultiProductVisitTemp(models.Model):
         mpv.save()
         mpv.create_eventtime(self.date)
         mpv.ensure_statistics()
-        for index, product in enumerate(self.products):
+        for index, product in enumerate(self.products_ordered):
             eventtime = EventTime(
                 product=product,
                 bookable=False,
@@ -3760,9 +3754,9 @@ class MultiProductVisitTemp(models.Model):
 
     def has_products_in_different_locations(self):
         return len(
-            set([product.locality for product in self.new_products.all()])
+            set([product.locality for product in self.products.all()])
         ) > 1
-        # return Locality.objects.filter(product=self.new_products).count() > 1
+        # return Locality.objects.filter(product=self.products).count() > 1
 
 
 class VisitComment(models.Model):
