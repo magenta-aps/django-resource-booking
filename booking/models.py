@@ -3810,12 +3810,13 @@ class Autosend(models.Model):
         default=True
     )
 
-    @property
-    def template_type(self):
-        return EmailTemplateType.get(self.template_key)
+    template_type = models.ForeignKey(
+        EmailTemplateType,
+        null=True
+    )
 
     def get_name(self):
-        return unicode(EmailTemplateType.get_name(self.template_key))
+        return unicode(self.template_type.name)
 
     def __unicode__(self):
         return "[%d] %s (%s)" % (
@@ -3827,6 +3828,14 @@ class Autosend(models.Model):
     @property
     def days_relevant(self):
         return self.template_type.enable_days
+
+    @staticmethod
+    def migrate():
+        for autosend in Autosend.objects.all():
+            autosend.template_type = EmailTemplateType.get(
+                autosend.template_key
+            )
+            autosend.save()
 
 
 class ProductAutosend(Autosend):
