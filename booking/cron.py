@@ -125,7 +125,8 @@ class IdleHostroleJob(CronJobBase):
                         try:
                             autosend.visit.autosend(
                                 EmailTemplateType.get(
-                                    EmailTemplateType.NOTIFY_HOST__HOSTROLE_IDLE
+                                    EmailTemplateType.
+                                    NOTIFY_HOST__HOSTROLE_IDLE
                                 )
                             )
                         except Exception as e:
