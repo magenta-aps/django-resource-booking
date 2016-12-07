@@ -1284,9 +1284,9 @@ class MultiProductVisitTempDateForm(forms.ModelForm):
 
 class MultiProductVisitTempProductsForm(forms.ModelForm):
 
-    products_key = 'new_products'
+    products_key = 'products'
 
-    new_products = OrderedModelMultipleChoiceField(
+    products = OrderedModelMultipleChoiceField(
         queryset=Product.objects.all(),
         widget=OrderedMultipleHiddenChooser()
     )
@@ -1300,7 +1300,7 @@ class MultiProductVisitTempProductsForm(forms.ModelForm):
             )
         }
 
-    def clean_new_products(self):
+    def clean_products(self):
         products = self.cleaned_data[self.products_key]
         common_institution = binary_and([
             product.institution_level for product in products

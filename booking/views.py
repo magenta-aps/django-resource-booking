@@ -3717,7 +3717,7 @@ class MultiProductVisitTempProductsView(BreadcrumbMixin, UpdateView):
     model = MultiProductVisitTemp
     template_name = "visit/multi_products.html"
     _available_products = None
-    products_key = 'new_products'
+    products_key = 'products'
 
     def get_form(self):
         form = super(MultiProductVisitTempProductsView, self).get_form()
