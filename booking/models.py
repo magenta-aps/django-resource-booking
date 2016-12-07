@@ -1766,8 +1766,6 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             return None
 
     def autosend_enabled(self, template_type):
-        if type(template_type) == int:
-            template_type = EmailTemplateType.get(template_type)
         return self.get_autosend(template_type) is not None
 
     # This is used from booking.signals.update_search_indexes
@@ -3070,7 +3068,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             return self.multiproductvisit.autosend(
                 template_type.key, recipients, only_these_recipients
             )
-        if self.autosend_enabled(template_type.key):
+        if self.autosend_enabled(template_type):
             product = self.product
             unit = product.organizationalunit
             if recipients is None:
@@ -3606,8 +3604,8 @@ class MultiProductVisit(Visit):
         if primary_visit:
             return primary_visit.organizationalunit
 
-    def autosend_enabled(self, template_key):
-        if template_key in [
+    def autosend_enabled(self, template_type):
+        if template_type.key in [
             EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED,
             EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED_UNTIMED,
             EmailTemplateType.NOTIFY_EDITORS__BOOKING_CREATED
@@ -3615,7 +3613,7 @@ class MultiProductVisit(Visit):
             return True
         else:
             return super(MultiProductVisit, self).autosend_enabled(
-                template_key
+                template_type
             )
 
     def get_autosend(self, template_type, follow_inherit=True,
@@ -3637,7 +3635,7 @@ class MultiProductVisit(Visit):
     def autosend(self, template_key, recipients=None,
                  only_these_recipients=False):
         template_type = EmailTemplateType.get(template_key)
-        if self.autosend_enabled(template_type.key):
+        if self.autosend_enabled(template_type):
             unit = None  # TODO: What should the unit be?
             if recipients is None:
                 recipients = set()
@@ -4422,7 +4420,7 @@ class Booking(models.Model):
                  only_these_recipients=False):
         template_type = EmailTemplateType.get(template_key)
         visit = self.visit.real
-        if visit.autosend_enabled(template_type.key):
+        if visit.autosend_enabled(template_type):
             product = visit.product
             unit = visit.organizationalunit
             if recipients is None:

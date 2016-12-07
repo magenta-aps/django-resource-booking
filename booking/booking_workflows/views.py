@@ -155,11 +155,11 @@ class ChangeVisitTeachersView(AutologgerMixin, UpdateWithCancelView):
             for user in self.get_form().base_fields['teachers'].queryset.all()
         }
         context['can_send_emails'] = self.object.autosend_enabled(
-            EmailTemplateType.NOTIFY_TEACHER__ASSOCIATED
+            EmailTemplateType.get(EmailTemplateType.NOTIFY_TEACHER__ASSOCIATED)
         )
-        context['email_template_name'] = EmailTemplateType.get_name(
+        context['email_template_name'] = EmailTemplateType.get(
             EmailTemplateType.NOTIFY_TEACHER__ASSOCIATED
-        )
+        ).name
         context.update(kwargs)
         return super(ChangeVisitTeachersView, self).\
             get_context_data(**context)
@@ -213,7 +213,7 @@ class ChangeVisitHostsView(AutologgerMixin, UpdateWithCancelView):
             for user in self.get_form().base_fields['hosts'].queryset.all()
             }
         context['can_send_emails'] = self.object.autosend_enabled(
-            EmailTemplateType.NOTIFY_HOST__ASSOCIATED
+            EmailTemplateType.get(EmailTemplateType.NOTIFY_HOST__ASSOCIATED)
         )
         context['email_template_name'] = EmailTemplateType.get_name(
             EmailTemplateType.NOTIFY_HOST__ASSOCIATED
