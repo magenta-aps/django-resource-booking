@@ -829,13 +829,16 @@ class EmailTemplateType(models.Model):
     @staticmethod
     def add_defaults_to_all():
         for product in Product.objects.all():
-            for template_key in EmailTemplateType.get_keys(is_default=True):
+            for template_type in EmailTemplateType.objects.filter(
+                is_default=True
+            ):
                 if product.productautosend_set.filter(
-                        template_key=template_key
+                    template_type=template_type
                 ).count() == 0:
                     print "    create autosends for product %d" % product.id
                     autosend = ProductAutosend(
-                        template_key=template_key,
+                        template_key=template_type.key,
+                        template_type=template_type,
                         product=product,
                         enabled=True
                     )
