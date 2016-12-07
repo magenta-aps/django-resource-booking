@@ -243,8 +243,7 @@ class OrganizationalUnit(models.Model):
         )
         return [x for x in res]
 
-    def get_recipients(self, template_key):
-        template_type = EmailTemplateType.get(template_key)
+    def get_recipients(self, template_type):
         recipients = []
 
         if template_type.send_to_unit_hosts:
@@ -1889,9 +1888,8 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         else:
             return self.potentielle_undervisere.all()
 
-    def get_recipients(self, template_key):
-        template_type = EmailTemplateType.get(template_key)
-        recipients = self.organizationalunit.get_recipients(template_key)
+    def get_recipients(self, template_type):
+        recipients = self.organizationalunit.get_recipients(template_type)
 
         if template_type.send_to_potential_hosts:
             recipients.extend(self.potential_hosts.all())
@@ -2976,13 +2974,12 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def get_absolute_url(self):
         return reverse('visit-view', args=[self.pk])
 
-    def get_recipients(self, template_key):
-        template_type = EmailTemplateType.get(template_key)
+    def get_recipients(self, template_type):
         product = self.product
         if self.is_multiproductvisit and self.multiproductvisit.primary_visit:
             product = self.multiproductvisit.primary_visit.product
         if product:
-            recipients = product.get_recipients(template_key)
+            recipients = product.get_recipients(template_type)
         else:
             recipients = []
         if template_type.send_to_visit_hosts:
@@ -3076,7 +3073,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             else:
                 recipients = set(recipients)
             if not only_these_recipients:
-                recipients.update(self.get_recipients(template_type.key))
+                recipients.update(self.get_recipients(template_type))
 
             KUEmailMessage.send_email(
                 template_type,
@@ -3641,7 +3638,7 @@ class MultiProductVisit(Visit):
             else:
                 recipients = set(recipients)
             if not only_these_recipients:
-                recipients.update(self.get_recipients(template_type.key))
+                recipients.update(self.get_recipients(template_type))
 
             params = {'visit': self, 'products': self.products}
 
@@ -4408,9 +4405,8 @@ class Booking(models.Model):
     def get_url(self):
         return settings.PUBLIC_URL + self.get_absolute_url()
 
-    def get_recipients(self, template_key):
-        template_type = EmailTemplateType.get(template_key)
-        recipients = self.visit.get_recipients(template_key)
+    def get_recipients(self, template_type):
+        recipients = self.visit.get_recipients(template_type)
         if template_type.send_to_booker:
             recipients.append(self.booker)
         return recipients
@@ -4426,7 +4422,7 @@ class Booking(models.Model):
             else:
                 recipients = set(recipients)
             if not only_these_recipients:
-                recipients.update(self.get_recipients(template_type.key))
+                recipients.update(self.get_recipients(template_type))
 
             KUEmailMessage.send_email(
                 template_type,
