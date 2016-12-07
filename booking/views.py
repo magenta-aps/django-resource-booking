@@ -3726,7 +3726,7 @@ class MultiProductVisitTempProductsView(BreadcrumbMixin, UpdateView):
             for product in self.available_products
         ]
         form.initial[self.products_key] = [
-            product for product in self.object.products
+            product for product in self.object.products_ordered
             if product in self.available_products
         ]
         return form
