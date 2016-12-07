@@ -1753,16 +1753,18 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         else:
             return self.productautosend_set.filter(enabled=True)
 
-    def get_autosend(self, template_key):
+    def get_autosend(self, template_type):
         try:
             item = self.productautosend_set.filter(
-                template_key=template_key, enabled=True)[0]
+                template_type=template_type, enabled=True)[0]
             return item
         except:
             return None
 
-    def autosend_enabled(self, template_key):
-        return self.get_autosend(template_key) is not None
+    def autosend_enabled(self, template_type):
+        if type(template_type) == int:
+            template_type = EmailTemplateType.get(template_type)
+        return self.get_autosend(template_type) is not None
 
     # This is used from booking.signals.update_search_indexes
     def update_searchindex(self):
@@ -2996,19 +2998,21 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     def create_inheriting_autosends(self):
         for template_key, label in EmailTemplateType.key_choices:
-            if not self.get_autosend(template_key, False, False):
+            template_type = EmailTemplateType.get(template_key)
+            if not self.get_autosend(template_type, False, False):
                 visitautosend = VisitAutosend(
                     visit=self,
                     inherit=True,
                     template_key=template_key,
+                    template_type=template_type,
                     days=None,
                     enabled=False
                 )
                 visitautosend.save()
 
-    def autosend_inherits(self, template_key):
+    def autosend_inherits(self, template_type):
         s = self.visitautosend_set.filter(
-            template_key=template_key
+            template_type=template_type
         )
 
         # If no rule specified, always inherit
@@ -3018,14 +3022,14 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         # Return true if there is a rule specifying that inheritance is wanted
         return s.filter(inherit=True).count() > 0
 
-    def get_autosend(self, template_key, follow_inherit=True,
+    def get_autosend(self, template_type, follow_inherit=True,
                      include_disabled=False):
-        if follow_inherit and self.autosend_inherits(template_key):
-            return self.product.get_autosend(template_key)
+        if follow_inherit and self.autosend_inherits(template_type):
+            return self.product.get_autosend(template_type)
         else:
             try:
                 query = self.visitautosend_set.filter(
-                    template_key=template_key)
+                    template_type=template_type)
                 if not include_disabled:
                     query = query.filter(enabled=True)
                 return query[0]
@@ -3048,13 +3052,14 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                         result.add(autosend)
         return result
 
-    def autosend_enabled(self, template_key):
-        return self.real.get_autosend(template_key, True) is not None
+    def autosend_enabled(self, template_type):
+        return self.real.get_autosend(template_type, True) is not None
 
     # Sends a message to defined recipients pertaining to the Visit
-    def autosend(self, template_key, recipients=None,
+    def autosend(self, template_type, recipients=None,
                  only_these_recipients=False):
-        template_type = EmailTemplateType.get(template_key)
+        if type(template_type) == int:
+            template_type = EmailTemplateType.get(template_type)
         if self.is_multiproductvisit:
             return self.multiproductvisit.autosend(
                 template_type.key, recipients, only_these_recipients
@@ -3607,7 +3612,7 @@ class MultiProductVisit(Visit):
                 template_key
             )
 
-    def get_autosend(self, template_key, follow_inherit=True,
+    def get_autosend(self, template_type, follow_inherit=True,
                      include_disabled=False):
         return None
         # Disable all autosends
@@ -3864,7 +3869,7 @@ class VisitAutosend(Autosend):
 
     def get_inherited(self):
         if self.inherit:
-            return self.visit.get_autosend(self.template_key)
+            return self.visit.get_autosend(self.template_type)
 
     def __unicode__(self):
         return "%s on %s" % (
