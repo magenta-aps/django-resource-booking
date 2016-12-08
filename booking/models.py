@@ -531,6 +531,9 @@ class EmailTemplateType(models.Model):
     def name(self):
         return self.name_da
 
+    def __unicode__(self):
+        return self.name
+
     # Template available for manual sending from visits
     manual_sending_visit_enabled = models.BooleanField(default=False)
 
@@ -839,7 +842,7 @@ class EmailTemplateType(models.Model):
     def get_choices(**kwargs):
         types = EmailTemplateType.objects.filter(**kwargs)
         return [
-            (type.key, type.name) for type in types
+            (type.id, type.name) for type in types
         ]
 
     @staticmethod
@@ -903,10 +906,15 @@ class EmailTemplateType(models.Model):
 
 class EmailTemplate(models.Model):
 
-    key = models.IntegerField(
+    deprecated_key = models.IntegerField(
         verbose_name=u'Type',
         choices=EmailTemplateType.key_choices,
         default=1
+    )
+
+    type = models.ForeignKey(
+        EmailTemplateType,
+        null=True
     )
 
     subject = models.CharField(
@@ -927,10 +935,6 @@ class EmailTemplate(models.Model):
         on_delete=models.SET_NULL,
     )
 
-    type = models.ForeignKey(
-        EmailTemplateType,
-        null=True
-    )
 
     @property
     def name(self):
@@ -991,20 +995,23 @@ class EmailTemplate(models.Model):
         templates = []
         while unit is not None and (include_overridden or len(templates) == 0):
             try:
-                templates.append(EmailTemplate.objects.filter(
+                template = EmailTemplate.objects.filter(
                     type=template_type,
                     organizationalunit=unit
-                ).all()[0])
+                ).first()
+                if template is not None:
+                    templates.append(template)
             except:
                 pass
             unit = unit.parent
         if include_overridden or len(templates) == 0:
             try:
-                templates.append(
-                    EmailTemplate.objects.filter(
-                        type=template_type,
-                        organizationalunit__isnull=True)[0]
-                )
+                template = EmailTemplate.objects.filter(
+                    type=template_type,
+                    organizationalunit__isnull=True
+                ).first()
+                if template is not None:
+                    templates.append(template)
             except:
                 pass
         if include_overridden:
@@ -1039,7 +1046,9 @@ class EmailTemplate(models.Model):
     @staticmethod
     def migrate():
         for emailtemplate in EmailTemplate.objects.all():
-            emailtemplate.type = EmailTemplateType.get(emailtemplate.key)
+            emailtemplate.type = EmailTemplateType.get(
+                emailtemplate.deprecated_key
+            )
             emailtemplate.save()
 
 
@@ -4837,7 +4846,7 @@ class KUEmailMessage(models.Model):
                 instance,
                 LOGACTION_MAIL_SENT,
                 "\n".join([unicode(x) for x in [
-                    _(u"Template: ") + template.get_key_display(),
+                    _(u"Template: ") + template.type.name,
                     _(u"Modtagere: ") + ", ".join(
                         [x['full'] for x in emails.values()]
                     ),

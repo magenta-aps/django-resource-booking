@@ -317,7 +317,7 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
     template_name = 'email/compose.html'
     form_class = EmailComposeForm
     recipients = []
-    template_key = None
+    template_type = None
     template_context = {}
     modal = True
 
@@ -327,14 +327,16 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
     RECIPIENT_ROOMRESPONSIBLE = 'roomresponsible'
     RECIPIENT_SEPARATOR = ':'
 
-    def get_template_key(self, request):
+    def get_template_type(self, request):
         try:  # see if there's a template key defined in the URL params
-            self.template_key = int(request.GET.get("template", None))
-        except (ValueError, TypeError):
+            self.template_type = EmailTemplateType.objects.get(
+                id=int(request.GET.get("template", None))
+            )
+        except:
             pass
 
     def dispatch(self, request, *args, **kwargs):
-        self.get_template_key(request)
+        self.get_template_type(request)
         return super(EmailComposeView, self).dispatch(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
@@ -365,16 +367,18 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
                 body=data['body']
             )
             try:
-                template.key = int(request.POST.get("template", None))
-                template.type = EmailTemplateType.get(template.key)
+                typeid = int(request.POST.get("template", None))
+                template.type = EmailTemplateType.objects.get(id=typeid)
+                template.deprecated_key = template.type.key
             except (ValueError, TypeError):
                 pass
             context = self.template_context
             recipients = self.lookup_recipients(
                 form.cleaned_data['recipients']
             )
-            KUEmailMessage.send_email(template, context, recipients,
-                                      self.object)
+            KUEmailMessage.send_email(
+                template, context, recipients, self.object
+            )
             return super(EmailComposeView, self).form_valid(form)
 
         return self.render_to_response(
@@ -383,9 +387,9 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
 
     def get_initial(self):
         initial = super(EmailComposeView, self).get_initial()
-        if self.template_key is not None:
+        if self.template_type is not None:
             template = \
-                EmailTemplate.get_template(self.template_key, self.get_unit())
+                EmailTemplate.get_template(self.template_type, self.get_unit())
             if template is not None:
                 initial['subject'] = template.subject
                 initial['body'] = template.body
@@ -394,10 +398,13 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = {}
-        context['templates'] = EmailTemplate.get_template(self.template_key,
-                                                          self.get_unit(),
-                                                          True)
-        context['template_key'] = self.template_key
+        print self.template_type
+        print self.get_unit()
+        context['templates'] = EmailTemplate.get_template(
+            self.template_type, self.get_unit(), True
+        )
+        print context['templates']
+        context['template_type'] = self.template_type.id
         context['template_unit'] = self.get_unit()
         context['modal'] = self.modal
         context.update(kwargs)
@@ -1573,7 +1580,7 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
 
         context['template_keys'] = list(
             set(
-                template.key
+                template.deprecated_key
                 for template in EmailTemplate.get_templates(
                     self.object.organizationalunit
                 )
@@ -1934,7 +1941,7 @@ class VisitNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
         self.recipients = []
         pk = kwargs['pk']
         self.object = Visit.objects.get(id=pk)
-        self.get_template_key(request)
+        self.get_template_type(request)
         # template_type = EmailTemplateType.get(self.template_key)
         # if self.object.is_multi_sub and \
         #         template_type.manual_sending_mpv_enabled:
@@ -3197,7 +3204,7 @@ class EmailTemplateListView(LoginRequiredMixin, BreadcrumbMixin, ListView):
             for j in xrange(i, len(self.object_list)):
                 objectB = self.object_list[j]
                 if objectA != objectB \
-                        and objectA.key == objectB.key \
+                        and objectA.type == objectB.type \
                         and objectA.organizationalunit == \
                         objectB.organizationalunit:
                     context['duplicates'].extend([objectA, objectB])
@@ -3235,8 +3242,8 @@ class EmailTemplateEditView(LoginRequiredMixin, UnitAccessRequiredMixin,
             self.object = EmailTemplate.objects.get(pk=pk)
             self.check_item(self.object)
         form = self.get_form()
-        if 'key' in request.GET:
-            form.initial['key'] = request.GET['key']
+        if 'type' in request.GET:
+            form.initial['type'] = request.GET['type']
         if 'organizationalunit' in request.GET:
             form.initial['organizationalunit'] = \
                 request.GET['organizationalunit']
@@ -3260,7 +3267,7 @@ class EmailTemplateEditView(LoginRequiredMixin, UnitAccessRequiredMixin,
         context.update(kwargs)
         if form.is_valid():
             self.object = form.save()
-            self.object.type = EmailTemplateType.get(self.object.key)
+            self.object.deprecated_key = self.object.type.key
             self.object.save()
             return self.redirect(reverse('emailtemplate-list'))
 

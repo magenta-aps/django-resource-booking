@@ -437,7 +437,7 @@ class ChangeVisitAutosendView(AutologgerMixin, UpdateWithCancelView):
             )
         }
         context['template_keys'] = list(set(
-            template.key
+            template.deprecated_key
             for template in chain.from_iterable(
                 EmailTemplate.get_templates(product.organizationalunit)
                 for product in self.object.real.products
