@@ -1468,8 +1468,8 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
                 initial = []
                 if not self.object or not self.object.pk:
                     initial = [
-                        {'template_key': item, 'active': True}
-                        for item in EmailTemplateType.get_keys(is_default=True)
+                        {'template_type': type, 'active': True}
+                        for type in EmailTemplateType.objects.filter(is_default=True)
                     ]
                 forms['autosendformset'] = ProductAutosendFormSet(
                     None, instance=self.object, initial=initial

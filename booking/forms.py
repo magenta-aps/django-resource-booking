@@ -622,36 +622,38 @@ class ProductStudyMaterialForm(ProductStudyMaterialFormBase):
 class ProductAutosendForm(forms.ModelForm):
     class Meta:
         model = ProductAutosend
-        fields = ['template_key', 'enabled', 'days']
+        fields = ['template_type', 'enabled', 'days']
         widgets = {
-            'template_key': forms.HiddenInput()
+            'template_type': forms.HiddenInput()
         }
 
     def __init__(self, *args, **kwargs):
         super(ProductAutosendForm, self).__init__(*args, **kwargs)
-
-        template_key = None
+        template_type = None
         if kwargs.get('instance'):
-            template_key = kwargs['instance'].template_key
+            template_type = kwargs['instance'].template_type
         elif kwargs.get('initial'):
-            template_key = kwargs['initial']['template_key']
-        if template_key is not None:
-            template_type = EmailTemplateType.get(template_key)
+            template_type = kwargs['initial']['template_type']
+        if template_type is not None:
             if not template_type.enable_days:
                 self.fields['days'].widget = forms.HiddenInput()
-            elif template_key == \
+            elif template_type.key == \
                     EmailTemplateType.NOTITY_ALL__BOOKING_REMINDER:
                 self.fields['days'].help_text = _(u'Notifikation vil blive '
                                                   u'afsendt dette antal dage '
                                                   u'før besøget')
-            elif template_key == EmailTemplateType.NOTIFY_HOST__HOSTROLE_IDLE:
+            elif template_type.key == \
+                    EmailTemplateType.NOTIFY_HOST__HOSTROLE_IDLE:
                 self.fields['days'].help_text = _(u'Notifikation vil blive '
                                                   u'afsendt dette antal dage '
                                                   u'efter første booking er '
                                                   u'foretaget')
 
     def label(self):
-        return EmailTemplateType.get_name(self.initial['template_key'])
+        template_type = self.fields['template_type'].to_python(
+            self.initial['template_type']
+        )
+        return template_type.name
 
 
 ProductAutosendFormSetBase = inlineformset_factory(
@@ -675,13 +677,15 @@ class ProductAutosendFormSet(ProductAutosendFormSetBase):
                     autosend.template_key for autosend in autosends
                 ]
                 for key, label in EmailTemplateType.key_choices:
+                    type = EmailTemplateType.get(key)
                     if key not in existing_keys:
                         initial.append({
-                            'template_key': key,
+                            'template_type': type,
                             'enabled': False,
                             'days': ''
                         })
-                initial.sort(key=lambda choice: choice['template_key'])
+                initial.sort(key=lambda choice: choice['template_type'].key)
+                print initial
                 kwargs['initial'] = initial
                 self.extra = len(initial)
         super(ProductAutosendFormSet, self).__init__(*args, **kwargs)
