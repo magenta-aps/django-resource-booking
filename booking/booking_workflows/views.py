@@ -425,9 +425,9 @@ class ChangeVisitAutosendView(AutologgerMixin, UpdateWithCancelView):
         context = {}
 
         context['inherited'] = {
-            item.template_key:
+            item.deprecated_template_key:
             {
-                'template_key': item.template_key,
+                'template_key': item.deprecated_template_key,
                 'enabled': item.enabled,
                 'days': item.days
             }

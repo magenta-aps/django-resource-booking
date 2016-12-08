@@ -385,8 +385,7 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
         initial = super(EmailComposeView, self).get_initial()
         if self.template_key is not None:
             template = \
-                EmailTemplate.get_template(self.template_key,
-                                           self.get_unit())
+                EmailTemplate.get_template(self.template_key, self.get_unit())
             if template is not None:
                 initial['subject'] = template.subject
                 initial['body'] = template.body
@@ -1627,11 +1626,12 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
                         data = autosendform.cleaned_data
                         if len(data) > 0:
                             if data.get('DELETE'):
+                                template_key = data['template_key']
                                 ProductAutosend.objects.filter(
                                     product=data['product'],
-                                    template_key=data['template_key'],
+                                    deprecated_template_key=template_key,
                                     template_type=EmailTemplateType.get(
-                                        data['template_key']
+                                        template_key
                                     )
                                 ).delete()
                             else:

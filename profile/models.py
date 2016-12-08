@@ -258,11 +258,13 @@ class UserProfile(models.Model):
     def requested_as_teacher_for_qs(self, exclude_accepted=False):
         bm = booking.models
         cts = get_related_content_types(bm.Visit)
-        template_key = bm.EmailTemplateType.NOTIFY_HOST__REQ_TEACHER_VOLUNTEER
+        template_type = bm.EmailTemplateType.get(
+            bm.EmailTemplateType.NOTIFY_HOST__REQ_TEACHER_VOLUNTEER
+        )
 
         mail_qs = bm.KUEmailRecipient.objects.filter(
             user=self.user,
-            email_message__template_key=template_key,
+            email_message__template_type=template_type,
             email_message__content_type__in=cts,
         )
 
@@ -308,11 +310,13 @@ class UserProfile(models.Model):
     def requested_as_host_for_qs(self, exclude_accepted=False):
         bm = booking.models
         cts = get_related_content_types(bm.Visit)
-        template_key = bm.EmailTemplateType.NOTIFY_HOST__REQ_HOST_VOLUNTEER
+        template_type = bm.EmailTemplateType.get(
+            bm.EmailTemplateType.NOTIFY_HOST__REQ_HOST_VOLUNTEER
+        )
 
         mail_qs = bm.KUEmailRecipient.objects.filter(
             user=self.user,
-            email_message__template_key=template_key,
+            email_message__template_type=template_type,
             email_message__content_type__in=cts,
         )
 

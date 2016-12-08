@@ -889,7 +889,7 @@ class EmailTemplateType(models.Model):
                 ).count() == 0:
                     print "    create autosends for product %d" % product.id
                     autosend = ProductAutosend(
-                        template_key=template_type.key,
+                        deprecated_template_key=template_type.key,
                         template_type=template_type,
                         product=product,
                         enabled=True
@@ -3058,7 +3058,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 visitautosend = VisitAutosend(
                     visit=self,
                     inherit=True,
-                    template_key=template_type.key,
+                    deprecated_template_key=template_type.key,
                     template_type=template_type,
                     days=None,
                     enabled=False
@@ -3855,7 +3855,7 @@ class VisitComment(models.Model):
 
 
 class Autosend(models.Model):
-    template_key = models.IntegerField(
+    deprecated_template_key = models.IntegerField(
         choices=EmailTemplateType.key_choices,
         verbose_name=_(u'Skabelon'),
         blank=False,
@@ -3877,7 +3877,9 @@ class Autosend(models.Model):
     )
 
     def save(self, *args, **kwargs):
-        self.template_type = EmailTemplateType.get(self.template_key)
+        self.template_type = EmailTemplateType.get(
+            self.deprecated_template_key
+        )
         super(Autosend, self).save(*args, **kwargs)
 
     def get_name(self):
@@ -3898,7 +3900,7 @@ class Autosend(models.Model):
     def migrate():
         for autosend in Autosend.objects.all():
             autosend.template_type = EmailTemplateType.get(
-                autosend.template_key
+                autosend.deprecated_template_key
             )
             autosend.save()
 
@@ -4671,7 +4673,7 @@ class KUEmailMessage(models.Model):
         null=True,
         default=None
     )
-    template_key = models.IntegerField(
+    deprecated_template_key = models.IntegerField(
         verbose_name=u'Template key',
         choices=EmailTemplateType.key_choices,
         default=None,
@@ -4697,6 +4699,7 @@ class KUEmailMessage(models.Model):
         :return: None
         """
         ctype = ContentType.objects.get_for_model(instance)
+        template_key = None if template_type is None else template_type.key
         ku_email_message = KUEmailMessage(
             subject=email_message.subject,
             body=email_message.body,
@@ -4706,7 +4709,7 @@ class KUEmailMessage(models.Model):
             object_id=instance.id,
             reply_nonce=reply_nonce,
             template_type=template_type,
-            template_key=None if template_type is None else template_type.key,
+            deprecated_template_key=template_key
         )
         ku_email_message.save()
 
@@ -4851,8 +4854,10 @@ class KUEmailMessage(models.Model):
     @staticmethod
     def migrate():
         for email in KUEmailMessage.objects.all():
-            if email.template_key is not None:
-                email.template_type = EmailTemplateType.get(email.template_key)
+            if email.deprecated_template_key is not None:
+                email.template_type = EmailTemplateType.get(
+                    email.deprecated_template_key
+                )
                 email.save()
 
 
