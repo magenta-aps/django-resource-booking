@@ -3717,7 +3717,7 @@ class MultiProductVisitTempProductsView(BreadcrumbMixin, UpdateView):
     model = MultiProductVisitTemp
     template_name = "visit/multi_products.html"
     _available_products = None
-    products_key = 'new_products'
+    products_key = 'products'
 
     def get_form(self):
         form = super(MultiProductVisitTempProductsView, self).get_form()
@@ -3726,7 +3726,7 @@ class MultiProductVisitTempProductsView(BreadcrumbMixin, UpdateView):
             for product in self.available_products
         ]
         form.initial[self.products_key] = [
-            product for product in self.object.products
+            product for product in self.object.products_ordered
             if product in self.available_products
         ]
         return form
