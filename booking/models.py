@@ -2622,7 +2622,10 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     @property
     def date_display(self):
         if hasattr(self, 'eventtime') and self.eventtime.start:
-            return formats.date_format(self.eventtime.start, "DATETIME_FORMAT")
+            return formats.date_format(
+                self.eventtime.naive_start,
+                "DATETIME_FORMAT"
+            )
         else:
             return _(u'ikke-fastlagt tidspunkt')
 
@@ -2631,8 +2634,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def date_display_context(self):
         if hasattr(self, 'eventtime') and self.eventtime.start:
             return _("d. %s kl. %s") % (
-                formats.date_format(self.eventtime.start, "DATE_FORMAT"),
-                formats.date_format(self.eventtime.start, "TIME_FORMAT")
+                formats.date_format(self.eventtime.naive_start, "DATE_FORMAT"),
+                formats.date_format(self.eventtime.naive_start, "TIME_FORMAT")
             )
         else:
             return _(u'på ikke-fastlagt tidspunkt')
