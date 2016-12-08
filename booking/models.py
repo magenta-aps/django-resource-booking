@@ -4625,10 +4625,17 @@ class KUEmailMessage(models.Model):
         null=True,
         blank=True
     )
+    template_type = models.ForeignKey(
+        EmailTemplateType,
+        verbose_name=u'Template type',
+        default=None,
+        null=True,
+        blank=True
+    )
 
     @staticmethod
     def save_email(email_message, instance,
-                   reply_nonce=None, htmlbody=None, template_key=None):
+                   reply_nonce=None, htmlbody=None, template_type=None):
         """
         :param email_message: An instance of
         django.core.mail.message.EmailMessage
@@ -4645,7 +4652,8 @@ class KUEmailMessage(models.Model):
             content_type=ctype,
             object_id=instance.id,
             reply_nonce=reply_nonce,
-            template_key=template_key
+            template_type=template_type,
+            template_key=None if template_type is None else template_type.key,
         )
         ku_email_message.save()
 
@@ -4760,9 +4768,13 @@ class KUEmailMessage(models.Model):
                 message.attach_alternative(htmlbody, 'text/html')
             message.send()
 
+            print template
+            print template.id
+            print template.key
+            print template.type
             msg_obj = KUEmailMessage.save_email(
                 message, instance, reply_nonce=nonce,
-                template_key=template.key
+                template_type=template.type
             )
             KUEmailRecipient.register(msg_obj, email)
 
@@ -4786,6 +4798,13 @@ class KUEmailMessage(models.Model):
         if full:
             url = settings.PUBLIC_URL + url
         return url
+
+    @staticmethod
+    def migrate():
+        for email in KUEmailMessage.objects.all():
+            if email.template_key is not None:
+                email.template_type = EmailTemplateType.get(email.template_key)
+                email.save()
 
 
 class KUEmailRecipient(models.Model):

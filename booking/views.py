@@ -366,6 +366,7 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
             )
             try:
                 template.key = int(request.POST.get("template", None))
+                template.type = EmailTemplateType.get(template.key)
             except (ValueError, TypeError):
                 pass
             context = self.template_context
