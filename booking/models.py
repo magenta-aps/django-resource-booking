@@ -839,12 +839,9 @@ class EmailTemplateType(models.Model):
 
     @staticmethod
     def get_choices(**kwargs):
-        keyset = EmailTemplateType.get_keys(**kwargs)
-
+        types = EmailTemplateType.objects.filter(**kwargs)
         return [
-            (key, label)
-            for (key, label) in EmailTemplateType.key_choices
-            if key in keyset
+            (type.key, type.name) for type in types
         ]
 
     @staticmethod
@@ -3056,13 +3053,14 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         return recipients
 
     def create_inheriting_autosends(self):
-        for template_key, label in EmailTemplateType.key_choices:
-            template_type = EmailTemplateType.get(template_key)
+        for template_type in EmailTemplateType.objects.filter(
+            enable_autosend=True
+        ):
             if not self.get_autosend(template_type, False, False):
                 visitautosend = VisitAutosend(
                     visit=self,
                     inherit=True,
-                    template_key=template_key,
+                    template_key=template_type.key,
                     template_type=template_type,
                     days=None,
                     enabled=False
@@ -4825,10 +4823,6 @@ class KUEmailMessage(models.Model):
                 message.attach_alternative(htmlbody, 'text/html')
             message.send()
 
-            print template
-            print template.id
-            print template.key
-            print template.type
             msg_obj = KUEmailMessage.save_email(
                 message, instance, reply_nonce=nonce,
                 template_type=template.type

@@ -668,7 +668,7 @@ ProductAutosendFormSetBase = inlineformset_factory(
     ProductAutosend,
     form=ProductAutosendForm,
     extra=0,
-    max_num=len(EmailTemplateType.key_choices),
+    max_num=EmailTemplateType.objects.filter(enable_autosend=True).count(),
     can_delete=False,
     can_order=False
 )
@@ -679,13 +679,15 @@ class ProductAutosendFormSet(ProductAutosendFormSetBase):
         initial = kwargs.get('initial', [])
         if 'instance' in kwargs:
             autosends = kwargs['instance'].get_autosends(True)
-            if len(autosends) < len(EmailTemplateType.key_choices):
+            all_autosends = EmailTemplateType.objects.filter(
+                enable_autosend=True
+            )
+            if len(autosends) < all_autosends.count():
                 initial = []
                 existing_types = [
                     autosend.template_type for autosend in autosends
                 ]
-                for key, label in EmailTemplateType.key_choices:
-                    type = EmailTemplateType.get(key)
+                for type in all_autosends:
                     if type not in existing_types:
                         initial.append({
                             'template_type': type,
