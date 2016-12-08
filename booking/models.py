@@ -523,9 +523,15 @@ class EmailTemplateType(models.Model):
         default=1
     )
 
+    name_da = models.CharField(
+        verbose_name=u'Navn',
+        max_length=1024,
+        null=True
+    )
+
     @property
     def name(self):
-        return EmailTemplateType.get_name(self.key)
+        return self.name_da
 
     # Template available for manual sending from visits
     manual_sending_visit_enabled = models.BooleanField(default=False)
@@ -605,6 +611,7 @@ class EmailTemplateType(models.Model):
     def set_defaults():
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED,
+            name_da=u'Besked til gæst ved booking af besøg (med fast tid)',
             manual_sending_visit_enabled=True,
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
@@ -615,6 +622,8 @@ class EmailTemplateType(models.Model):
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED_UNTIMED,
+            name_da=u'Besked til gæst ved booking af besøg '
+                    u'(besøg uden fast tid)',
             manual_sending_visit_enabled=True,
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
@@ -625,6 +634,7 @@ class EmailTemplateType(models.Model):
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED_WAITING,
+            name_da=u'Besked til gæster har tilmeldt sig venteliste',
             manual_sending_visit_enabled=True,
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
@@ -634,6 +644,7 @@ class EmailTemplateType(models.Model):
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__GENERAL_MSG,
+            name_da=u'Generel besked til gæst(er)',
             manual_sending_visit_enabled=True,
             manual_sending_mpv_enabled=True,
             manual_sending_booking_enabled=True,
@@ -643,24 +654,28 @@ class EmailTemplateType(models.Model):
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__SPOT_OPEN,
+            name_da=u'Besked til gæst, der får tilbudt plads venteliste',
             manual_sending_visit_enabled=True,
             enable_booking=True
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__SPOT_ACCEPTED,
+            name_da=u'Besked til gæst ved accept af plads (fra venteliste)',
             send_to_booker=True,
             enable_booking=True
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__SPOT_REJECTED,
+            name_da=u'Besked til gæst ved afvisning af plads (fra venteliste)',
             send_to_booker=True,
             enable_booking=True
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST_REMINDER,
+            name_da=u'Reminder til gæst',
             manual_sending_visit_enabled=True,
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True
@@ -668,6 +683,7 @@ class EmailTemplateType(models.Model):
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_EDITORS__BOOKING_CREATED,
+            name_da=u'Besked til koordinator, når gæst har tilmeldt sig besøg',
             send_to_contactperson=True,
             enable_booking=True,
             is_default=True
@@ -675,12 +691,15 @@ class EmailTemplateType(models.Model):
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_EDITORS__SPOT_REJECTED,
+            name_da=u'Besked til koordinatorer ved afvisning '
+                    u'af plads (fra venteliste)',
             send_to_contactperson=True,
             enable_booking=True
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_HOST__REQ_HOST_VOLUNTEER,
+            name_da=u'Besked til vært, når en gæst har lavet en tilmelding',
             manual_sending_visit_enabled=True,
             manual_sending_mpv_sub_enabled=True,
             send_to_potential_hosts=True,
@@ -690,6 +709,8 @@ class EmailTemplateType(models.Model):
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
+            name_da=u'Besked til underviser, når en gæst '
+                    u'har lavet en tilmelding',
             manual_sending_visit_enabled=True,
             manual_sending_mpv_sub_enabled=True,
             send_to_potential_teachers=True,
@@ -699,30 +720,36 @@ class EmailTemplateType(models.Model):
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_HOST__ASSOCIATED,
+            name_da=u'Bekræftelsesmail til vært',
             manual_sending_visit_enabled=True,
             send_to_visit_added_host=True
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_TEACHER__ASSOCIATED,
+            name_da=u'Bekræftelsesmail til underviser',
             manual_sending_visit_enabled=True,
             send_to_visit_added_teacher=True
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_HOST__HOSTROLE_IDLE,
+            name_da=u'Notifikation til koordinatorer om '
+                    u'ledig værtsrolle på besøg',
             send_to_editors=True,
             enable_days=True
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_HOST__REQ_ROOM,
+            name_da=u'Besked til lokaleansvarlig',
             manual_sending_visit_enabled=True,
             manual_sending_mpv_sub_enabled=True
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_ALL__BOOKING_CANCELED,
+            name_da=u'Besked til alle ved aflysning',
             manual_sending_visit_enabled=True,
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
@@ -735,6 +762,7 @@ class EmailTemplateType(models.Model):
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_ALL__BOOKING_COMPLETE,
+            name_da=u'Besked om færdigplanlagt besøg til alle involverede',
             manual_sending_visit_enabled=True,
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
@@ -746,6 +774,7 @@ class EmailTemplateType(models.Model):
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTITY_ALL__BOOKING_REMINDER,
+            name_da=u'Reminder om besøg til alle involverede',
             manual_sending_visit_enabled=True,
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
@@ -758,19 +787,23 @@ class EmailTemplateType(models.Model):
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_ALL_EVALUATION,
+            name_da=u'Besked til alle om evaluering',
             manual_sending_visit_enabled=True
         )
 
         EmailTemplateType.set_default(
-            EmailTemplateType.SYSTEM__BASICMAIL_ENVELOPE
+            EmailTemplateType.SYSTEM__BASICMAIL_ENVELOPE,
+            name_da=u'Forespørgsel fra bruger via kontaktformular',
         )
 
         EmailTemplateType.set_default(
-            EmailTemplateType.SYSTEM__EMAIL_REPLY
+            EmailTemplateType.SYSTEM__EMAIL_REPLY,
+            name_da=u'Svar på e-mail fra systemet'
         )
 
         EmailTemplateType.set_default(
-            EmailTemplateType.SYSTEM__USER_CREATED
+            EmailTemplateType.SYSTEM__USER_CREATED,
+            name_da=u'Besked til bruger ved brugeroprettelse'
         )
 
     @staticmethod
