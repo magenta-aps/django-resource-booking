@@ -676,6 +676,7 @@ ProductAutosendFormSetBase = inlineformset_factory(
 
 class ProductAutosendFormSet(ProductAutosendFormSetBase):
     def __init__(self, *args, **kwargs):
+        initial = kwargs.get('initial', [])
         if 'instance' in kwargs:
             autosends = kwargs['instance'].get_autosends(True)
             if len(autosends) < len(EmailTemplateType.key_choices):
@@ -691,10 +692,11 @@ class ProductAutosendFormSet(ProductAutosendFormSetBase):
                             'enabled': False,
                             'days': ''
                         })
-                initial.sort(key=lambda choice: choice['template_type'].key)
-                kwargs['initial'] = initial
                 self.extra = len(initial)
         super(ProductAutosendFormSet, self).__init__(*args, **kwargs)
+        if len(initial) > 0:
+            initial.sort(key=lambda choice: choice['template_type'].key)
+            self.initial = initial
 
 
 class BookingForm(forms.ModelForm):
