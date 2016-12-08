@@ -935,7 +935,6 @@ class EmailTemplate(models.Model):
         on_delete=models.SET_NULL,
     )
 
-
     @property
     def name(self):
         return self.type.name
