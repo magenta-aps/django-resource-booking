@@ -651,9 +651,13 @@ class ProductAutosendForm(forms.ModelForm):
 
     @property
     def template_type(self):
-        return self.fields['template_type'].to_python(
-            self.initial['template_type']
-        )
+        value = self.initial['template_type']
+        if isinstance(value, EmailTemplateType):
+            return value
+        if type(value) == int:
+            return self.fields['template_type'].to_python(
+                value
+            )
 
     def label(self):
         return self.template_type.name
@@ -688,7 +692,6 @@ class ProductAutosendFormSet(ProductAutosendFormSetBase):
                             'days': ''
                         })
                 initial.sort(key=lambda choice: choice['template_type'].key)
-                print initial
                 kwargs['initial'] = initial
                 self.extra = len(initial)
         super(ProductAutosendFormSet, self).__init__(*args, **kwargs)

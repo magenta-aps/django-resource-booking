@@ -211,9 +211,13 @@ class VisitAutosendForm(forms.ModelForm):
 
     @property
     def template_type(self):
-        return self.fields['template_type'].to_python(
-            self.initial['template_type']
-        )
+        value = self.initial['template_type']
+        if isinstance(value, EmailTemplateType):
+            return value
+        if type(value) == int:
+            return self.fields['template_type'].to_python(
+                value
+            )
 
     def label(self):
         return self.template_type.name
