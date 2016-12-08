@@ -132,9 +132,9 @@ class BecomeSomethingForm(forms.Form):
 class VisitAutosendForm(forms.ModelForm):
     class Meta:
         model = VisitAutosend
-        fields = ['template_key', 'enabled', 'inherit', 'days']
+        fields = ['template_type', 'enabled', 'inherit', 'days']
         widgets = {
-            'template_key': forms.HiddenInput()
+            'template_type': forms.HiddenInput()
         }
 
     ACTIVITY_DISABLED = 0
@@ -178,21 +178,21 @@ class VisitAutosendForm(forms.ModelForm):
 
         super(VisitAutosendForm, self).__init__(*args, **kwargs)
 
-        template_key = None
+        template_type = None
         if 'instance' in kwargs:
-            template_key = kwargs['instance'].template_key
+            template_type = kwargs['instance'].template_type
         elif 'initial' in kwargs:
-            template_key = kwargs['initial']['template_key']
-        if template_key is not None:
-            template_type = EmailTemplateType.get(template_key)
+            template_type = kwargs['initial']['template_type']
+        if template_type is not None:
             if not template_type.enable_days:
                 self.fields['days'].widget = forms.HiddenInput()
-            elif template_key == \
+            elif template_type.key == \
                     EmailTemplateType.NOTITY_ALL__BOOKING_REMINDER:
                 self.fields['days'].help_text = _(u'Notifikation vil blive '
                                                   u'afsendt dette antal dage '
                                                   u'før besøget')
-            elif template_key == EmailTemplateType.NOTIFY_HOST__HOSTROLE_IDLE:
+            elif template_type.key == \
+                    EmailTemplateType.NOTIFY_HOST__HOSTROLE_IDLE:
                 self.fields['days'].help_text = _(u'Notifikation vil blive '
                                                   u'afsendt dette antal dage '
                                                   u'efter første booking '
@@ -210,14 +210,16 @@ class VisitAutosendForm(forms.ModelForm):
             return self.instance.visit
 
     @property
-    def template_key(self):
-        return self.initial['template_key']
+    def template_type(self):
+        return self.fields['template_type'].to_python(
+            self.initial['template_type']
+        )
 
     def label(self):
-        return EmailTemplateType.get_name(self.template_key)
+        return self.template_type.name
 
     def inherit_from(self):
-        return self.associated_visit.product.get_autosend(self.template_key)
+        return self.associated_visit.product.get_autosend(self.template_type)
 
 
 VisitAutosendFormSetBase = inlineformset_factory(

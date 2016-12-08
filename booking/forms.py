@@ -649,11 +649,14 @@ class ProductAutosendForm(forms.ModelForm):
                                                   u'efter første booking er '
                                                   u'foretaget')
 
-    def label(self):
-        template_type = self.fields['template_type'].to_python(
+    @property
+    def template_type(self):
+        return self.fields['template_type'].to_python(
             self.initial['template_type']
         )
-        return template_type.name
+
+    def label(self):
+        return self.template_type.name
 
 
 ProductAutosendFormSetBase = inlineformset_factory(
