@@ -513,9 +513,7 @@ class EmailTemplateType(models.Model):
 
     @staticmethod
     def get_name(template_key):
-        for key, label in EmailTemplateType.key_choices:
-            if key == template_key:
-                return label
+        return EmailTemplate.get(template_key).name
 
     key = models.IntegerField(
         verbose_name=u'Type',
