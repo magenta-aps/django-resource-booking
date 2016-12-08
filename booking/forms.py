@@ -681,12 +681,12 @@ class ProductAutosendFormSet(ProductAutosendFormSetBase):
             autosends = kwargs['instance'].get_autosends(True)
             if len(autosends) < len(EmailTemplateType.key_choices):
                 initial = []
-                existing_keys = [
-                    autosend.template_key for autosend in autosends
+                existing_types = [
+                    autosend.template_type for autosend in autosends
                 ]
                 for key, label in EmailTemplateType.key_choices:
                     type = EmailTemplateType.get(key)
-                    if key not in existing_keys:
+                    if type not in existing_types:
                         initial.append({
                             'template_type': type,
                             'enabled': False,
