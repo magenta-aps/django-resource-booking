@@ -313,18 +313,24 @@ class ResourceListView(BreadcrumbMixin, EditorRequriedMixin, ListView):
     def get_queryset(self):
         unit_qs = self.request.user.userprofile.get_unit_queryset()
         return chain(
-            ItemResource.objects.filter(organizationalunit=unit_qs).
-                order_by('name'),
-            RoomResource.objects.filter(organizationalunit=unit_qs).
-                order_by('room__name'),
-            TeacherResource.objects.filter(organizationalunit=unit_qs).
-                order_by('user__first_name', 'user__last_name'),
-            HostResource.objects.filter(organizationalunit=unit_qs).
-                order_by('user__first_name', 'user__last_name'),
-            VehicleResource.objects.filter(organizationalunit=unit_qs).
-                order_by('name'),
-            CustomResource.objects.filter(organizationalunit=unit_qs).
-                order_by('name')
+            ItemResource.objects.filter(
+                organizationalunit=unit_qs
+            ).order_by('name'),
+            RoomResource.objects.filter(
+                organizationalunit=unit_qs
+            ).order_by('room__name'),
+            TeacherResource.objects.filter(
+                organizationalunit=unit_qs
+            ).order_by('user__first_name', 'user__last_name'),
+            HostResource.objects.filter(
+                organizationalunit=unit_qs
+            ).order_by('user__first_name', 'user__last_name'),
+            VehicleResource.objects.filter(
+                organizationalunit=unit_qs
+            ).order_by('name'),
+            CustomResource.objects.filter(
+                organizationalunit=unit_qs
+            ).order_by('name')
         )
 
     def get_breadcrumbs(self):
