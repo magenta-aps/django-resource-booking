@@ -4,7 +4,7 @@ libapache2-mod-wsgi
 libffi-dev
 npm
 postgresql
-postgresql-server-dev-9.3
+postgresql-server-dev-9.5
 python-dev
 python-virtualenv
 npm
