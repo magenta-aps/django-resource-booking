@@ -88,7 +88,6 @@
                         {% include 'product/fields/subjects.html' %}
                         {% include 'common/fields/generic_field.html' with field=form.minimum_number_of_visitors %}
                         {% include 'common/fields/generic_field.html' with field=form.maximum_number_of_visitors %}
-                        {% include 'product/fields/waiting_list.html' %}
                     </div>
                 </div>
             </div>
@@ -107,6 +106,7 @@
                     <div class="panel-body">
                         {% include 'common/fields/generic_field.html' with field=form.time_mode %}
                         {% include 'common/fields/generic_field.html' with field=form.duration %}
+                        {% include 'product/fields/waiting_list.html' %}
                     </div>
                 </div>
             </div>
@@ -183,6 +183,7 @@
 {#    {% include 'common/fields/autosend_script.html' %}#}
     {% include 'product/fields/institution_level_script.html' %}
     {% include 'product/fields/time_script.html' %}
+    {% include 'product/fields/waitinglist_script.html' %}
 
     <script type="text/javascript"><!--
 

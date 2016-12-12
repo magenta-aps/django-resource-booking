@@ -1588,6 +1588,10 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
             Product.STUDY_PROJECT, Product.OTHER_OFFERS
         ]
 
+        context['disable_waitinglist_on_timemode_values'] = [
+            Product.TIME_MODE_GUEST_SUGGESTED
+        ]
+
         context.update(kwargs)
 
         return super(EditProductView, self).get_context_data(**context)
