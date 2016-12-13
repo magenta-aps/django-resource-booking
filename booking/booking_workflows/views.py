@@ -565,6 +565,8 @@ class BecomeSomethingView(AutologgerMixin, VisitBreadcrumbMixin,
                 if isinstance(self, DeclineTeacherView):
                     self.object.teachers_rejected.add(request.user)
 
+                self.object.resource_declines()
+
                 # Mark visit as needing attention - also saves the visit
                 self.object.set_needs_attention()
 
@@ -589,6 +591,7 @@ class BecomeSomethingView(AutologgerMixin, VisitBreadcrumbMixin,
                         [request.user],
                         True
                     )
+                self.object.resource_accepts()
 
                 # Mark visit as needing attention
                 self.object.set_needs_attention()

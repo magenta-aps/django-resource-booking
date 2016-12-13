@@ -474,6 +474,16 @@ class EventTime(models.Model):
 
         return " ".join([unicode(x) for x in parts])
 
+    def on_start(self):
+        print "eventtime %d starts" % self.id
+        if self.visit:
+            self.visit.on_starttime()
+
+    def on_end(self):
+        print "eventtime %d ends" % self.id
+        if self.visit:
+            self.visit.on_endtime()
+
 
 class Calendar(AvailabilityUpdaterMixin, models.Model):
 

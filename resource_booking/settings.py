@@ -220,5 +220,7 @@ PUBLIC_URL = "".join([
 
 CRON_CLASSES = [
     "booking.cron.ReminderJob",
-    "booking.cron.IdleHostroleJob"
+    "booking.cron.IdleHostroleJob",
+    "booking.cron.RemoveOldMvpJob",
+    "booking.cron.NotifyEventTimeJob"
 ]

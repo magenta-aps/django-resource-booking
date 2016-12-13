@@ -2478,14 +2478,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             WORKFLOW_STATUS_CANCELLED,
         ],
         WORKFLOW_STATUS_PLANNED: [
-            WORKFLOW_STATUS_BEING_PLANNED,
-            WORKFLOW_STATUS_PLANNED_NO_BOOKING,
-            WORKFLOW_STATUS_CONFIRMED,
             WORKFLOW_STATUS_CANCELLED,
         ],
         WORKFLOW_STATUS_PLANNED_NO_BOOKING: [
-            WORKFLOW_STATUS_PLANNED,
-            WORKFLOW_STATUS_CONFIRMED,
             WORKFLOW_STATUS_CANCELLED,
         ],
         WORKFLOW_STATUS_CONFIRMED: [
@@ -2501,7 +2496,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         ],
         WORKFLOW_STATUS_EXECUTED: [
             WORKFLOW_STATUS_EVALUATED,
-            WORKFLOW_STATUS_CANCELLED
+            WORKFLOW_STATUS_NOSHOW
         ],
         WORKFLOW_STATUS_EVALUATED: [
             WORKFLOW_STATUS_BEING_PLANNED,
@@ -2624,6 +2619,30 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def update_availability(self):
         for x in self.affected_eventtimes:
             x.update_availability()
+
+    def resource_accepts(self):
+        if self.workflow_status == self.WORKFLOW_STATUS_BEING_PLANNED and \
+                not self.planned_status_is_blocked():
+            self.workflow_status = self.WORKFLOW_STATUS_PLANNED
+            self.save()
+
+    def resource_declines(self):
+        if self.workflow_status == self.WORKFLOW_STATUS_BEING_PLANNED:
+            self.workflow_status = self.WORKFLOW_STATUS_REJECTED
+            self.save()
+
+    def on_starttime(self):
+        pass
+
+    def on_endtime(self):
+        if self.workflow_status in [
+            self.WORKFLOW_STATUS_PLANNED,
+            self.WORKFLOW_STATUS_PLANNED_NO_BOOKING,
+            self.WORKFLOW_STATUS_CONFIRMED,
+            self.WORKFLOW_STATUS_REMINDED
+        ]:
+            self.workflow_status = self.WORKFLOW_STATUS_EXECUTED
+            self.save()
 
     @property
     def display_title(self):
