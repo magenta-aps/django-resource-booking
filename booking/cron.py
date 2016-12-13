@@ -2,7 +2,9 @@ from datetime import timedelta, date, datetime
 
 from booking.models import VisitAutosend, EmailTemplateType, Visit
 from booking.models import MultiProductVisitTemp
+from booking.models import EventTime
 from django_cron import CronJobBase, Schedule
+from django.utils import timezone
 
 
 class ReminderJob(CronJobBase):
@@ -142,4 +144,23 @@ class RemoveOldMvpJob(CronJobBase):
         MultiProductVisitTemp.objects.filter(
             updated__lt=datetime.now()-timedelta(days=1)
         ).delete()
+        print "CRON job complete"
+
+
+class NotifyEventTimeJob(CronJobBase):
+    RUN_EVERY_MINS = 1
+    schedule = Schedule(run_every_mins=RUN_EVERY_MINS)
+    code = 'kubooking.notifyeventtime'
+
+    def do(self):
+        print "---------------------------------------------------------------"
+        print "Beginning NotifyEventTimeJob (notifies EventTimes that " \
+              "they're starting/ending)"
+        now = timezone.now().replace(second=0, microsecond=0)
+        next = now + timedelta(minutes=1)
+        for eventtime in EventTime.objects.filter(
+                start__gte=now, start__lt=next):
+            eventtime.on_start()
+        for eventtime in EventTime.objects.filter(end__gte=now, end__lt=next):
+            eventtime.on_end()
         print "CRON job complete"

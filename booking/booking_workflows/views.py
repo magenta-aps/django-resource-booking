@@ -565,6 +565,7 @@ class BecomeSomethingView(AutologgerMixin, VisitBreadcrumbMixin,
                 if isinstance(self, DeclineTeacherView):
                     self.object.teachers_rejected.add(request.user)
                 self.object.save()
+                self.object.resource_declines()
 
             elif request.POST.get("confirm"):
                 if self.object.product.is_resource_controlled:
@@ -587,6 +588,7 @@ class BecomeSomethingView(AutologgerMixin, VisitBreadcrumbMixin,
                         [request.user],
                         True
                     )
+                self.object.resource_accepts()
 
             self._log_changes()
 
