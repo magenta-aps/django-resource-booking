@@ -517,7 +517,6 @@ class EmailTemplateType(models.Model):
 
     key = models.IntegerField(
         verbose_name=u'Type',
-        choices=key_choices,
         default=1
     )
 
@@ -902,6 +901,13 @@ class EmailTemplateType(models.Model):
                         print "        creating inheriting autosends for " \
                               "visit %d" % visit.id
                         visit.create_inheriting_autosends()
+
+    @staticmethod
+    def migrate():
+        EmailTemplateType.set_defaults()
+        EmailTemplate.migrate()
+        Autosend.migrate()
+        KUEmailMessage.migrate()
 
 
 class EmailTemplate(models.Model):
