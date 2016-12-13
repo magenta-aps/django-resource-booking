@@ -1658,19 +1658,25 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def bookable_times(self):
-        max_attendees = self.maximum_number_of_visitors + \
-                        (self.waiting_list_length or 0)
-        return self.eventtime_set.annotate(
-            Sum('visit__bookings__booker__attendee_count')
-        ).filter(
+        qs = self.eventtime_set.filter(
             Q(bookable=True) &
             (
                 Q(visit__isnull=True) |
                 Q(visit__workflow_status__in=Visit.BOOKABLE_STATES)
             ) &
-            (~Q(resource_status=EventTime.RESOURCE_STATUS_BLOCKED)) &
-            Q(visit__bookings__booker__attendee_count__sum__lt=max_attendees)
+            (~Q(resource_status=EventTime.RESOURCE_STATUS_BLOCKED))
         )
+        if self.maximum_number_of_visitors is not None:
+            max_attendees = self.maximum_number_of_visitors + \
+                            (self.waiting_list_length or 0)
+            qs = qs.annotate(
+                Sum('visit__bookings__booker__attendee_count')
+            ).filter(
+                Q(visit__isnull=True) |
+                Q(visit__bookings__booker__attendee_count__sum__lt=
+                  max_attendees)
+            )
+        return qs
 
     @property
     def future_times(self):

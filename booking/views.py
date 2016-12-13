@@ -1147,7 +1147,7 @@ class ProductCustomListView(BreadcrumbMixin, ListView):
             listtype = self.request.GET.get("type", "")
 
             if listtype == self.TYPE_LATEST_BOOKED:
-                return Product.get_latest_booked()
+                return Product.get_latest_booked(self.request.user)
             elif listtype == self.TYPE_LATEST_UPDATED:
                 return Product.get_latest_updated(self.request.user)
 
