@@ -1667,14 +1667,13 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             (~Q(resource_status=EventTime.RESOURCE_STATUS_BLOCKED))
         )
         if self.maximum_number_of_visitors is not None:
-            max_attendees = self.maximum_number_of_visitors + \
-                            (self.waiting_list_length or 0)
+            max = self.maximum_number_of_visitors + \
+                  (self.waiting_list_length or 0)
             qs = qs.annotate(
                 Sum('visit__bookings__booker__attendee_count')
             ).filter(
                 Q(visit__isnull=True) |
-                Q(visit__bookings__booker__attendee_count__sum__lt=
-                  max_attendees)
+                Q(visit__bookings__booker__attendee_count__sum__lt=max)
             )
         return qs
 
