@@ -143,7 +143,7 @@ class MainPageView(TemplateView):
                     'color': self.HEADING_BLUE,
                     'type': 'Product',
                     'title': _(u'Senest bookede tilbud'),
-                    'queryset': Product.get_latest_booked(),
+                    'queryset': Product.get_latest_booked(self.request.user),
                     'limit': 10,
                     'button': {
                         'text': _(u'Vis alle'),
