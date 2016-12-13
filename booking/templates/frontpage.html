@@ -1,0 +1,58 @@
+{% extends "index.html" %}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-sm-12 col-md-6">
+            <div class="divider"></div>
+            <h1>{% trans 'Søg efter tilbud' %}</h1>
+            <div class="divider"></div>
+            <form action="{% url 'search' %}" {% if view.kwargs.embed %}target="_blank"{% endif %}>
+                <h2 class="control-label">{% trans 'Tilbud rettet mod:' %}</h2>
+                <div class="input-group">
+                    <label class="checkbox-inline control-label" for="institution-choice-1">
+                        <input
+                                name="i" id="institution-choice-1"
+                                type="checkbox" value="1"
+                                {% for k, v in request.GET.lists %}{% if k == "i" and "1" in v %}checked="checked"{% endif %}{% endfor %}
+                        >{% trans 'Gymnasie' %}
+                    </label>
+                    <label class="checkbox-inline control-label" for="institution-choice-2">
+                        <input
+                                name="i" id="institution-choice-2"
+                                type="checkbox" value="2"
+                                {% for k, v in request.GET.lists %}{% if k == "i" and "2" in v %}checked="checked"{% endif %}{% endfor %}
+                        >{% trans 'Grundskole' %}
+                    </label>
+                </div>
+                <div class="divider"></div>
+                <div class="input-group">
+                    <label class="sr-only" for="searchBox">{% trans 'Søg efter tilbud' %}</label>
+                    <input type="text" class="form-control" id="searchBox" placeholder="{% trans 'Indtast et eller flere søgeord...' %}" name="q">
+                    <span class="input-group-btn">
+                        <button class="btn btn-primary" type="submit">{% trans 'Søg' %}  <span class="glyphicon glyphicon-search" aria-hidden="true"></span></button>
+                    </span>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if not view.kwargs.embed %}
+    <hr/>
+    <div>
+        {% for list in lists %}
+            {% cycle True False False as beginRow silent %}
+            {% cycle False False True as endRow silent %}
+            {% if beginRow or forloop.first %}
+                <div class="row eq-height listcontainer">
+            {% endif %}
+            {% include 'common/item_list.html' with list=list %}
+            {% if endRow or forloop.last %}
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+
+{% endblock %}

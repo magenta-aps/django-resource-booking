@@ -1,0 +1,1 @@
+Der er en ledig plads på besøget {{ visit.display_title }}.

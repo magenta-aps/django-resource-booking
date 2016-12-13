@@ -1,0 +1,20 @@
+{% load staticfiles %}
+{% if fileformset %}
+<script type="text/javascript" src="{% static 'js/formset-row.js' %}"></script>
+
+<script type="text/javascript">
+    <!--
+        $(function(){
+            $("#attachAddFileField").click(function(){
+                formset.addRow(
+                        $("#{{ fileformset.management_form.TOTAL_FORMS.id_for_label }}"),
+                        $("#{{ fileformset.management_form.MAX_NUM_FORMS.id_for_label }}"),
+                        $(".fileupload").first(),
+                        $("#attachFileFields")
+                );
+                return false;
+            });
+        });
+    //-->
+</script>
+{% endif %}

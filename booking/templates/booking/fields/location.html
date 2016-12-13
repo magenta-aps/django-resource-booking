@@ -1,0 +1,34 @@
+{% load i18n %}
+{% if bookerform.postcode or bookerform.city %}
+<div class="form-group">
+    <div class="col-sm-2">
+        <label class="control-label required {{ bookerform.postcode.css_classes }}" for="{{ bookerform.postcode.id_for_label }}">{% trans "Postnr. og by" %}</label>
+    </div>
+    <div class="col-sm-2{% if bookerform.postcode.errors %} has-error{% endif %}">
+        {{ bookerform.postcode }}
+    </div>
+    <div class="col-sm-4{% if bookerform.city.errors %} has-error{% endif %}">
+        {{ bookerform.city }}
+    </div>
+    <div class="col-sm-4 help-block with-errors">
+        {{ bookerform.postcode.errors }}
+        {% if bookerform.city.errors and bookerform.city.errors != bookerform.postcode.errors %}
+            {{ bookerform.city.errors }}
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+{% if bookerform.region %}
+<div class="form-group">
+    <div class="col-sm-2">
+        <label class="control-label required {{ bookerform.region.css_classes }}" for="{{ bookerform.region.id_for_label }}">{% trans "Region" %}</label>
+    </div>
+    <div class="col-sm-6{% if bookerform.region.errors %} has-error{% endif %}">
+        {{ bookerform.region }}
+    </div>
+    <div class="col-sm-4 help-block with-errors">
+        {{ bookerform.region.errors }}
+    </div>
+</div>
+{% endif %}

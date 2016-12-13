@@ -1,0 +1,42 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load booking_tags %}
+
+{% block htmltitle %} - {% blocktrans with visit=visit %}Redigér ressourcer for besøget "{{ visit }}"{% endblocktrans %}{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+
+    {% include 'common/breadcrumbrow.html' %}
+    <div class="divider"></div>
+
+    <h1>{% blocktrans with visit=visit %}Redigér ressourcer for besøget "{{ visit }}"{% endblocktrans %}</h1>
+    <hr/>
+
+    <form id="resourceform" action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
+
+        {% csrf_token %}
+        {{ form.management_form }}
+        {{ form.non_field_errors }}
+
+        <div class="panel panel-default">
+            <div class="panel-body">
+                {% for subform in form %}
+                    {% include 'common/fields/generic_field.html' with field=subform.resources field_classes='scroll-300' %}
+                {% endfor %}
+            </div>
+        </div>
+
+        {% include 'common/continue_cancel.html' %}
+        <div class="divider"></div>
+
+    </form>
+
+{% endblock %}
+
+{% block extra_scripts %}
+    {{ form.media }}
+{% endblock %}

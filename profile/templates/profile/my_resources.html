@@ -1,0 +1,17 @@
+{% extends "index.html" %}
+{% load i18n %}
+
+{% block content %}
+    <div class="divider"></div>
+
+    <h1>{% trans "Ret i 'Mine tilbud'" %}</h1>
+
+    <form name="editmyresourcesform" id="editmyresourcesform"
+        action="{% url 'my-resources' %}" method="post">
+        {% csrf_token %}
+        {{ form }}
+        <hr>
+        <input class="btn btn-default pull-left" type="submit" value="Annullér" name="cancel">
+        <input class="btn btn-primary pull-right" type="submit" value="Opdatér" name="confirm">
+    </form>
+{% endblock %}

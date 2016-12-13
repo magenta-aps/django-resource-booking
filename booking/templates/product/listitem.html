@@ -1,0 +1,80 @@
+{% load i18n %}
+{% load booking_tags %}
+<li class="media">
+    <div class="media-body">
+        <div class="small">{{ item.get_type_display }}</div>
+        <h3 class="media-heading">
+            <a href="{{item.get_view_url}}{% if fullquery %}?search={{ fullquery | urlencode }}{% endif %}">{{ item.title }}</a>
+        </h3>
+        <p>
+            {% if request.GET.q %}
+                {{ item.teaser|highlight:request.GET.q }}
+            {% else %}
+                {{ item.teaser }}
+            {% endif %}
+            &hellip;
+        </p>
+        <div class="media-info">
+            <ul class="info-list list-inline">
+                {% if item.all_subjects %}
+                    <li>
+                        <strong>{% trans 'Fag/niveau:' %}</strong>
+                        <ul class="type-offer list-inline">
+                            {% for x in item.all_subjects %}
+                                <li>{{ x.display_value }}</li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                {% endif %}
+                {% if item.is_time_controlled %}
+                    {% if item.is_guest_time_suggested %}
+                        <li>
+                            <strong>{% trans 'Hvornår:' %}</strong>
+                            <span class="type-offer">
+                            {% if request.user.is_authenticated %}
+                                {% trans 'Gæsten foreslår selv et tidspunkt' %},
+                                {% blocktrans with count=item.eventtime_count date=item.first_eventtime|date:"d.m.Y" time=item.first_eventtime|time:"H.i" %}
+                                    {{ count }} registrerede tidspunkter, første gang {{ date }} kl. {{ time }}
+                                {% endblocktrans %}
+                            {% else %}
+                                {% trans 'Foreslå selv et tidspunkt' %}
+                            {% endif %}
+                            </span>
+                        </li>
+                    {% elif item.eventtime_count %}
+                        <li>
+                            <strong>{% trans 'Hvornår:' %}</strong>
+                            <span class="type-offer">
+                                {% with count=item.eventtime_count first_starttime=item.first_eventtime %}
+                                    {% if count == 1 %}
+                                        {% blocktrans with date=first_starttime|date:"d.m.Y" time=first_starttime|time:"H.i" %}
+                                            {{ date }} kl. {{ time }}
+                                        {% endblocktrans %}
+                                    {% else %}
+                                        {% if request.user.is_authenticated %}
+                                        {% blocktrans with count=count date=first_starttime|date:"d.m.Y" time=first_starttime|time:"H.i" %}
+                                            {{ count }} tidspunkter, første gang {{ date }} kl. {{ time }}
+                                        {% endblocktrans %}
+                                        {% else %}
+                                        {% blocktrans with count=count date=first_starttime|date:"d.m.Y" time=first_starttime|time:"H.i" %}
+                                            {{ count }} mulige tidspunkter, første gang {{ date }} kl. {{ time }}
+                                        {% endblocktrans %}
+                                        {% endif %}
+                                    {% endif %}
+                                {% endwith %}
+                            </span>
+                        </li>
+                    {% endif %}
+                {% endif %}
+                <li>
+                    <strong>{% trans 'Hvor:' %}</strong>
+                    <span class="type-offer">{{ item.display_locality }}</span>
+                </li>
+                <li>
+                    <strong>{% trans 'Pris:' %}</strong>
+                    <span class="type-offer">{{ item.price }}</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+</li>

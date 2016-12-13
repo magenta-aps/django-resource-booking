@@ -1,0 +1,49 @@
+{% extends 'index.html' %}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block htmltitle %} - {% blocktrans with object=object.product.title %}Redigér tidspunkt for {{ object }}{% endblocktrans %}{% endblock %}
+
+{% block head %}
+{% include 'common/resources/datepicker_style.html' %}
+<link rel="stylesheet" href="{% static 'css/bootstrap-slider.css' %}" />
+{% endblock %}
+
+{% block content %}
+    {% include 'common/breadcrumbrow.html' %}
+
+    <div class="row titlebar hidden-print">
+        <div class="col-sm-12 col-md-9">
+            <h2>{% blocktrans with object=object.product.title %}Redigér tidspunkt for {{ object }}{% endblocktrans %}</h2>
+        </div>
+    </div>
+    <div class="divider"></div>
+    <div class="row">
+        <div class="col-md-12">
+            <div>
+                {{form.errors}}
+            </div>
+            <form action="{% url 'change-visit-starttime' object.visit.pk %}" id="update-time-form" method="POST">
+                {% csrf_token %}
+
+                {% include 'eventtime/date_interval.html' with product=product start_field=form.start end_field=form.end specific_time_field=form.has_specific_time %}
+
+                {% include 'common/fields/generic_field.html' with field=form.notes %}
+                
+                <div class="clearfix">
+                    <hr>
+                    <input class="btn btn-primary pull-right" type="submit" value="{% trans  'Gem' %}" role="button">
+                    <a href="{% url 'visit-view' object.visit.pk %}" role="button" class="btn btn-default pull-left">{% trans 'Annullér' %}</a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_scripts %}
+{% include 'eventtime/date_interval_script.html' %}
+<script type="text/javascript"><!--
+KU.initialize_time_interval('#update-time-form');
+//--></script>
+{% endblock %}

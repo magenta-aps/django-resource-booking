@@ -1,0 +1,16 @@
+<p>Kære {{ recipient.get_full_name }}.</p>
+
+<p>
+    Vi vil sætte stor pris på, hvis du vil tage dig tid til at evaluere besøg
+    <a href="{% full_url 'product-view' product.pk %}">{{ product.title }}</a>
+    der blev gennemført {% include 'booking/email/snippets/visit_time.html' %} på Københavns Universitet.
+    Evaluér her
+    <a href="{{ visit.evaluation_link }}">{{ visit.evaluation_link }}</a>.
+</p>
+<p>
+    På forhånd tak for hjælpen!
+</p>
+
+{% include 'booking/email/snippets/see_all.html' %}
+
+{% include 'booking/email/snippets/regards.html' with unit=product.organizationalunit %}

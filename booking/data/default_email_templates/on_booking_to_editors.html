@@ -1,0 +1,46 @@
+<p>Kære {{ recipient.get_full_name }}.</p>
+
+<p>
+{% if recipient.user %}
+
+    {# Denne besked sendes til brugere der login i systemet (koordinatorer) #}
+    {% if visit.is_multiproductvisit %}
+        En eller flere gæster har tilmeldt sig
+    {% else %}
+        En eller flere gæster har tilmeldt sig besøget
+    {% endif %}
+    {% include 'booking/email/snippets/visit_link.html' %}{% include 'booking/email/snippets/visit_time.html' %}.
+    {% if not visit.is_multiproductvisit %}
+        Besøget afholdes på denne lokalitet:
+        {% include 'booking/email/snippets/product_maplink.html' %}.
+    {% endif %}
+
+    {% if recipient.user == visit.inquire_user %}
+        Du er anført som ansvarlig for besøget.
+    {% endif %}
+
+{% else %}
+
+    {# Denne besked sendes til kontaktpersoner (uden login) der er angivet på tilbuddet #}
+    {% if visit.is_multiproductvisit %}
+        En eller flere gæster har tilmeldt sig
+    {% else %}
+        En eller flere gæster har tilmeldt sig besøget
+    {% endif %}
+    <a href="{% full_url 'product-view' product.pk %}">{{ visit.display_title }}</a>{% include 'booking/email/snippets/visit_time.html' %}.
+    {% if not visit.is_multiproductvisit %}
+        Besøget afholdes på denne lokalitet: {% include 'booking/email/snippets/product_maplink.html' %}.
+    {% endif %}
+    Du er anført som kontaktperson for besøget.
+
+{% endif %}
+</p>
+<p>
+    Detaljer for tilmelding:
+</p>
+<p>
+    {% include 'booking/email/snippets/booking_info.html' with booking=booking booker=booking.booker %}
+</p>
+{% include 'booking/email/snippets/reply_link.html' %}
+
+{% include 'booking/email/snippets/regards.html' with unit=visit.organizationalunit %}

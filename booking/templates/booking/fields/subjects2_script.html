@@ -1,0 +1,91 @@
+{% load staticfiles %}
+{% load i18n %}
+{% if gymnasiesubjectform or grundskolesubjectform %}
+<script type="text/javascript" src="{% static 'js/formset-row.js' %}"></script>
+<script type="text/javascript" id="subjects2_script">
+    <!--
+    $(function(){
+
+        var forms = {};
+        {% if gymnasiesubjectform %}
+            forms['gymnasiesubjectform'] = {
+                'total': $('#{{ gymnasiesubjectform.management_form.TOTAL_FORMS.id_for_label }}'),
+                'max': $('#{{ gymnasiesubjectform.management_form.MAX_NUM_FORMS.id_for_label }}')
+            };
+        {% endif %}
+        {% if grundskolesubjectform %}
+            forms['grundskolesubjectform'] = {
+                'total': $('#{{ grundskolesubjectform.management_form.TOTAL_FORMS.id_for_label }}'),
+                'max': $('#{{ grundskolesubjectform.management_form.MAX_NUM_FORMS.id_for_label }}')
+            };
+        {% endif %}
+        var total = function(element) {
+            element = $(element);
+            var form = element.hasClass('subjectform') ? element : element.closest('.subjectform');
+            var id = form.attr('id');
+            if (id in forms) {
+                return forms[id]['total'];
+            }
+        };
+        var max = function(element) {
+            element = $(element);
+            var form = element.hasClass('subjectform') ? element : element.closest('.subjectform');
+            var id = form.attr('id');
+            if (id in forms) {
+                return forms[id]['max'];
+            }
+        };
+
+        var mingleRow = function(row) {
+            row.removeAttr("id");
+            row.find("label").text(null);
+            var adder = row.find(".rowadder");
+            adder.addClass("rowremover");
+            adder.removeClass("rowadder");
+            var button = adder.find('.action');
+            button.text('{% trans "Fjern" %}');
+            button.click(removeRow);
+            row.find(".with-errors").remove();
+        };
+
+        var removeRow = function() {
+            formset.removeRow(
+                total(this),
+                $(this).parents(".form-group")
+            );
+            if (window.modal) {
+                modal.updateHeight();
+            }
+        };
+
+        var addRow = function(){
+            var newRow = formset.addRow(
+                total(this),
+                max(this),
+                $(this).closest(".rowprototype"),
+                $(this).closest(".rowcontainer")
+            );
+            mingleRow(newRow);
+            if (window.modal) {
+                modal.updateHeight();
+            }
+            return false;
+        };
+
+        {% if gymnasiesubjectform %}
+            mingleRow($("#gymnasiefag > div").not(":first"));
+            $("#gymnasiesubjectform .rowadder .action").click(addRow);
+            $("#gymnasiesubjectform .rowremover .action").click(removeRow);
+        {% endif %}
+
+        {% if grundskolesubjectform %}
+            mingleRow($("#grundskolefag > div").not(":first"));
+            $("#grundskolesubjectform .rowadder .action").click(addRow);
+            $("#grundskolesubjectform .rowremover .action").click(removeRow);
+        {% endif %}
+
+
+    });
+    //-->
+</script>
+{% endif %}

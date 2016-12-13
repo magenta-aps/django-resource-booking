@@ -1,0 +1,1 @@
+Forespørgsel fra bruger på tilbud {{ product.title }}

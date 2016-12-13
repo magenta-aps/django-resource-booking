@@ -1,0 +1,84 @@
+{% extends 'index.html' %}
+{% load staticfiles %}
+{% load booking_tags %}
+{% load i18n %}
+{% load booking_tags %}
+
+{% block htmltitle %} - {{ object.visit.product.title }} - {{ object.visit.date_display }} - {% blocktrans with id=object.id %}Booking #{{ id }}{% endblocktrans %}{% endblock %}
+
+{% block content %}
+
+{% include 'common/breadcrumbrow.html' %}
+
+<div class="row titlebar hidden-print">
+    <div class="col-sm-12 col-md-9">
+        <h1>
+            {% if object and object.id %}
+                {% blocktrans with id=object.id %}Booking #{{ id }}{% endblocktrans %}
+            {% elif object_id %}
+                {% blocktrans with id=object_id %}Booking #{{ id }}{% endblocktrans %}
+            {% else %}
+                {% trans 'Booking' %}
+            {% endif %}
+        </h1>
+    </div>
+    <div class="divider"></div>
+</div>
+<div class="row">
+    <div class="col-sm-12 col-md-8">
+
+        <div class="panel panel-default">
+            <div class="panel-body">
+                {% url 'product-view' object.visit.product.id as producturl %}
+                {% url 'visit-view' object.visit.id as visiturl %}
+                {% blocktrans with firstname=object.booker.firstname lastname=object.booker.lastname producttitle=object.product.title visittime=object.visit.start_datetime %}
+                    <strong>{{ firstname }} {{ lastname }}</strong> har tilmeldt sig <a href="{{ producturl }}">{{ producttitle }}</a> med afvikling <a href="{{ visiturl }}">{{ visittime }}</a>
+                {% endblocktrans %}
+            </div>
+
+            <div class="panel-body">
+                {% if request.method == 'GET' %}
+                    {% if not object.is_waiting %}
+                        {% trans 'Du er allerede tilmeldt besøget' %}
+                    {% elif not object.can_dequeue %}
+                        {% trans 'Du kan ikke tilmelde dig besøget, fordi der ikke er ledige pladser nok. Nogen må have snuppet de ledige pladser for næsen af dig.' %}
+                    {% else %}
+                        {% trans 'Du står på venteliste, men der er blevet pladser ledige til dig.' %}
+                    {% endif %}
+                {% elif request.method == 'POST' %}
+                    {% if answer == 'yes' %}
+                        {% trans 'Du er nu tilmeldt besøget. Vi ses.' %}
+                    {% elif answer == 'no' %}
+                        {% trans 'Du har svaret nej tak til at deltage.' %}
+                    {% elif dequeued == False %}
+                        {% trans 'Vi kunne ikke tilmelde dig besøget, fordi der ikke er ledige pladser nok. Nogen må have snuppet pladsen for næsen af dig.' %}
+                    {% endif %}
+                {% endif %}
+            </div>
+
+            {% if form and object.is_waiting and object.can_dequeue %}
+                <div class="panel-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="row">
+                            <label class="col-sm-2 control-label {{ form.comment.css_classes }}" for="{{ form.comment.id_for_label }}">{{ form.comment.label }}:</label>
+                            <div class="col-sm-6{% if form.comment.errors %} has-error{% endif %}">
+                                {{ form.comment }}
+                            </div>
+                            <div class="col-sm-3 help-block with-errors">
+                                {{ form.comment.errors }}
+                            </div>
+                        </div>
+                        <hr/>
+                        <p>{% trans 'Ønsker du at deltage i besøget?' %}</p>
+                        <p>
+                            <button name="answer" class="btn btn-success btn-sm" value="yes">{% trans 'Ja' %}</button>
+                            <button name="answer" class="btn btn-success btn-sm" value="no">{% trans 'Nej' %}</button>
+                        </p>
+                    </form>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

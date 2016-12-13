@@ -1,134 +1,251 @@
 {% extends "index.html" %}
+{% load staticfiles %}
+{% load i18n %}
 
 {% block head %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/morris.js/0.5.1/morris.css">
-<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet">
 <link rel="stylesheet" href="/static/css/personlig-side.css">
 {% endblock %}
 
+{% block htmltitle %} - {% trans 'personlig side' %}{% endblock %}
+
 {% block content %}
 
-
-<div class="container">
-        <div class="divider"></div>
-        <div class="row">
-            <div class="col-sm-12">
-                <h1 class="dotted-underlined">Personlig side</h1>
-                <p>Her kan du se en oversigt over dine tilbud, hvilke der er bookede, og hvilke der kræver handling.</p>
+    <div class="clearfix" style="margin: 2em 0 1em;">
+        <div class="pull-left">
+            <h1>{% trans 'Velkommen' %} {{user.username}}</h1>
+            <p class="text-muted">{% trans 'Du er logget ind som' %} {{user.userprofile.user_role.name}} {% if user.userprofile.organizationalunit.name %}fra {{ user.userprofile.organizationalunit.name }}{% endif %}</p>
+        </div>
+        <div class="pull-right">
+            {% if request.user.userprofile.can_create %}
+                <div class="text-right">
+                    <a href="{% url 'product-create' %}?back={{ request.get_full_path | urlencode }}" class="btn btn-primary margin-bottom-5">
+                        <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                        {% trans 'Opret tilbud' %}
+                    </a>
+                    <a href="#adminblock" class="btn btn-default margin-bottom-5" role="button" data-toggle="collapse" aria-expanded="false" aria-controls="adminblock">{% trans 'Administration' %} <span class="glyphicon glyphicon-cog"></span> </a>
+                </div>
+                <div class="collapse list-group admin-links" id="adminblock">
+                    <a class="list-group-item" href="{% url 'user_list' %}">
+                        <h4 class="list-group-item-heading">
+                            {% trans 'Administrér brugere' %}
+                            <span class="glyphicon glyphicon-question-sign pull-right" data-toggle="tooltip" data-placement="right" title="{% trans 'Brugere er personer der har en adgang til backend i dette bookingmodul. Her kan du oprette, slette og redigere brugere.' %}"></span>
+                        </h4>
+                    </a>
+                    <a class="list-group-item" href="{% url 'emailtemplate-list' %}">
+                        <h4 class="list-group-item-heading">
+                            {% trans 'Administrér emailskabeloner' %}
+                            <span class="glyphicon glyphicon-question-sign pull-right" data-toggle="tooltip" data-placement="right" title="{% trans 'Opret og redigér overordnede e-mails.' %}"></span>
+                        </h4>
+                    </a>
+                    <a class="list-group-item" href="{% url 'admin:booking_locality_changelist' %}">
+                        <h4 class="list-group-item-heading">
+                            {% trans 'Administrér lokaliteter' %}
+                            <span class="glyphicon glyphicon-question-sign pull-right" data-toggle="tooltip" data-placement="right" title="{% trans 'En lokalitet er en fysisk adresse, fx det sted hvor et besøg skal afholdes, her kan du redigere lokaliteter.' %}"></span>
+                        </h4>
+                    </a>
+                    <a class="list-group-item" href="{% url 'admin:booking_room_changelist' %}">
+                        <h4 class="list-group-item-heading">
+                            {% trans 'Administrér lokaler' %}
+                            <span class="glyphicon glyphicon-question-sign pull-right" data-toggle="tooltip" data-placement="right" title="{% trans 'Et lokale er et fysisk lokale placeret på en lokalitet, her kan du redigere lokaler.' %}"></span>
+                        </h4>
+                    </a>
+                    <a class="list-group-item" href="{% url 'admin:booking_roomresponsible_changelist' %}">
+                        <h4 class="list-group-item-heading">
+                            {% trans 'Administrér lokaleansvarlige' %}
+                            <span class="glyphicon glyphicon-question-sign pull-right" data-toggle="tooltip" data-placement="right" title="{% trans 'Lokaleansvarlige er personer eller mailbokse der kan kontaktes for booking af lokaler.' %}"></span>
+                        </h4>
+                    </a>
+                    {% if request.user.userprofile.can_edit_units %}
+                        <a class="list-group-item" href="{% url 'admin:booking_organizationalunit_changelist' %}">
+                            <h4 class="list-group-item-heading">
+                                {% trans 'Administrér enheder' %}
+                                <span class="glyphicon glyphicon-question-sign pull-right" data-toggle="tooltip" data-placement="right" title="{% trans 'En enhed er et administrativt område fx et fakultet eller institut, her kan du redigere enheder.' %}"></span>
+                            </h4>
+                        </a>
+                    {% endif %}
+                    <a class="list-group-item" href="{% url 'resource-list' %}">
+                        <h4 class="list-group-item-heading">
+                            {% trans 'Administrér ressourcer' %}
+                            <span class="glyphicon glyphicon-question-sign pull-right" data-toggle="tooltip" data-placement="right" title="{% trans 'Opret og redigér ressourcer som kan tildeles besøg.' %}"></span>
+                        </h4>
+                    </a>
+                    <a class="list-group-item" href="{% url 'resourcepool-list' %}">
+                        <h4 class="list-group-item-heading">
+                            {% trans 'Administrér ressourcegrupper' %}
+                            <span class="glyphicon glyphicon-question-sign pull-right" data-toggle="tooltip" data-placement="right" title="{% trans 'Opret og redigér ressourcegrupper som tilbud kan behøve.' %}"></span>
+                        </h4>
+                    </a>
+                    <a class="list-group-item" href="{% url 'evaluations' %}">
+                        <h4 class="list-group-item-heading">
+                            {% trans 'Overblik over evalueringer' %}
+                            <span class="glyphicon glyphicon-question-sign pull-right" data-toggle="tooltip" data-placement="right" title="{% trans 'Her kan du se et overblik over besøg med tilknyttede evalueringer.' %}"></span>
+                        </h4>
+                    </a>
+                    <a class="list-group-item" href="{% url 'statistics' %}">
+                        <h4 class="list-group-item-heading">
+                            {% trans 'Statistik' %}
+                            <span class="glyphicon glyphicon-question-sign pull-right" data-toggle="tooltip" data-placement="right" title="{% trans 'Her kan du som administrator eller koordinator se statistik over tilmeldinger under de enheder, som du har rettigheder til at administrere.' %}"></span>
+                        </h4>
+                    </a>
+                    {% if not "disabled by: not yet implemented" %}
+                        <a class="list-group-item" href="{% url 'user_list' %}">
+                            <h4 class="list-group-item-heading">
+                                {% trans 'Statistik' %}
+                                <span class="glyphicon glyphicon-question-sign pull-right" data-toggle="tooltip" data-placement="right" title="{% trans 'Her har du adgang til at trække statistik på tilbud og tilmeldinger.' %}"></span>
+                            </h4>
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}        
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-sm-12">
+            {% if request.user.userprofile.is_teacher %}
+            <p>
+                {% blocktrans %}Som underviser har du mulighed for at angive hvornår du kan undervise{% endblocktrans %}.<br />
+            </p>
+            <p>
+                {% if request.user.userprofile.get_resource.calendar %}
+                <a href="{% url 'calendar' request.user.userprofile.get_resource.pk %}" role="button" class="btn btn-default btn-xs">{% trans 'Redigér mulige undervisningstidspunkter' %}</a>
+                {% else %}
+                <a href="{% url 'calendar-create' request.user.userprofile.get_resource.pk %}" role="button" class="btn btn-default btn-xs">
+                    <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                    {% trans 'Opret kalender' %}
+                </a>
+                {% endif %}
+                <a href="{% url 'availability' request.user.pk %}" role="button" class="btn btn-default btn-xs">{% trans 'Se datoer for besøg' %}</a>
+                <a href="{% url 'user_edit' request.user.pk %}" role="button" class="btn btn-default btn-xs">{% trans 'Opdater profil' %}</a>
+            </p>
+            {% elif request.user.userprofile.is_host %}
+            <p>
+                {% blocktrans %}Som vært har du mulighed for at angive hvornår du kan deltage i besøg{% endblocktrans %}.<br />
+            </p>
+            <p>
+                {% if request.user.userprofile.get_resource.calendar %}
+                <a href="{% url 'calendar' request.user.userprofile.get_resource.pk %}" role="button" class="btn btn-default btn-xs">{% trans 'Redigér mulige tidspunkter' %}</a>
+                {% else %}
+                <a href="{% url 'calendar-create' request.user.userprofile.get_resource.pk %}" role="button" class="btn btn-default btn-xs">
+                    <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                    {% trans 'Opret kalender' %}
+                </a>
+                {% endif %}
+                <a href="{% url 'availability' request.user.pk %}" role="button" class="btn btn-default btn-xs">{% trans 'Se datoer for besøg' %}</a>
+                <a href="{% url 'user_edit' request.user.pk %}" role="button" class="btn btn-default btn-xs">{% trans 'Opdater profil' %}</a>
+            </p>
+            {% endif %}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-3">
+            <div class="list-group admin-links">
+                {% if request.user.userprofile.can_create %}
+                    <a class="list-group-item" href="{% url 'search' %}">
+                        <h4 class="list-group-item-heading">{% trans 'Søg i tilbud' %}</h4>
+                        <p class="list-group-item-text">{% trans 'Søg i tilbud der ligger i systemet.' %}</p>
+                    </a>
+                {% endif %}
             </div>
         </div>
-        <div class="divider"></div>
-        <div class="row">
-            <div class="col-sm-4">
-                <div class="panel panel-primary">
-                    <div class="panel-heading">
-                        <div class="row">
-                            <div class="col-xs-3">
-                                <i class="fa fa-suitcase fa-5x"></i>
-                            </div>
-                            <div class="col-xs-9 text-right">
-                                <div class="huge">24</div>
-                                <div>Dine tilbud i alt</div>
-                            </div>
-                        </div>
-                    </div>
-                    <a href="#">
-                        <div class="panel-footer">
-                            <span class="pull-left">Se detaljer</span>
-                            <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
-                            <div class="clearfix"></div>
-                        </div>
+        <div class="col-sm-3">
+            <div class="list-group admin-links">
+                {% if request.user.userprofile.can_create %}
+                    <a class="list-group-item" href="{% url 'visit-search' %}">
+                        <h4 class="list-group-item-heading">{% trans 'Søg i besøg' %}</h4>
+                        <p class="list-group-item-text">{% trans 'Søg i besøg der ligger i systemet.' %}</p>
                     </a>
-                </div>
-            </div>
-            <div class="col-sm-4">
-                <div class="panel panel-yellow">
-                    <div class="panel-heading">
-                        <div class="row">
-                            <div class="col-xs-3">
-                                <i class="fa fa-exclamation-circle fa-5x"></i>
-                            </div>
-                            <div class="col-xs-9 text-right">
-                                <div class="huge">12</div>
-                                <div>Tilbud afventer din behandling</div>
-                            </div>
-                        </div>
-                    </div>
-                    <a href="#">
-                        <div class="panel-footer">
-                            <span class="pull-left">Se detaljer</span>
-                            <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
-                            <div class="clearfix"></div>
-                        </div>
-                    </a>
-                </div>
-            </div>
-            <div class="col-sm-4">
-                <div class="panel panel-green">
-                    <div class="panel-heading">
-                        <div class="row">
-                            <div class="col-xs-3">
-                                <i class="fa fa-shopping-cart fa-5x"></i>
-                            </div>
-                            <div class="col-xs-9 text-right">
-                                <div class="huge">12</div>
-                                <div>Tilbud med tilmeldinger</div>
-                            </div>
-                        </div>
-                    </div>
-                    <a href="#">
-                        <div class="panel-footer">
-                            <span class="pull-left">Se detaljer</span>
-                            <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
-                            <div class="clearfix"></div>
-                        </div>
-                    </a>
-                </div>
-            </div>
-            <div class="col-sm-6">
-                <div class="panel panel-primary">
-                    <div class="panel-heading">
-                        <i class="fa fa-database fa-fw"></i> Detaljer om mine tilbud
-                    </div>
-                    <div class="panel-body">
-                        <div class="list-group">
-                            <a href="#" class="list-group-item">
-                                    Alle mine tilbud
-                                    <span class="badge pull-right">24</span>
-                                </a>
-                            <a href="#" class="list-group-item">
-                                    Antal bookings
-                                    <span class="badge pull-right">12</span>
-                                </a>
-                            <a href="#" class="list-group-item">
-                                    Forespørgsel sendt
-                                    <span class="badge pull-right">6</span>
-                                </a>
-                            <a href="#" class="list-group-item">
-                                    Afventer svar fra tilbudsafholderen
-                                    <span class="badge pull-right">6</span>
-                                </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-6">
-            <div class="panel panel-primary">
-                    <div class="panel-heading">
-                        <i class="fa fa-bar-chart fa-fw"></i> Grafisk oversigt
-                    </div>
-                    <div class="panel-body">
-                <div id="chart"></div>
-                </div>
-                </div>
+                {% endif %}
             </div>
         </div>
     </div>
 
-<ul>
-    <li> Du er logget ind som {{user.username}}</li>
-    <li> Du er logget ind som <font
-            color="red">{{user.userprofile.user_role.name}}</font></li>
-</ul>
+    {% if not "slået fra indtil videre, genindføres måske i en senere fase" %}
+    <h2>{% trans 'Søg i tilbud og tilmeldinger' %}</h2>
+    <div class="row">
+        <div class="col-sm-12">
+            <div id="filter-panel" class="filter-panel">
+                <div class="panel panel-default search-offers">
+                    <div class="panel-body">
+                        <form class="form-inline" role="form">
+                            <div class="input-group">
+                                <label class="control-label" for="pref-search">{% trans 'Fritekstsøgning fx. ID-nummer, skole, navn:' %}</label>
+                                <input type="text" class="form-control input-sm" id="pref-search" placeholder="{% trans 'Indtast søgeord eller ID-nummer...' %}">
+                                <span class="input-group-btn">
+                                    <button class="btn btn-primary btn-sm" type="button">{% trans 'Søg' %}</button>
+                                </span>
+                            </div>
+                            <div class="input-group">
+                                <label class="control-label" for="pref-filters">{% trans 'Vælg søgefilter:' %}</label>
+                                <select id="pref-filters" class="form-control input-sm">
+                                    <option value="2">------------</option>
+                                    <option value="2">{% trans 'Dagens tilbud' %}</option>
+                                    <option value="2">{% trans '7 dage frem' %}</option>
+                                    <option value="2">{% trans 'Mine tilbud' %}</option>
+                                    <option value="2">{% trans 'Mine 10 senest oprettede tilbud' %}</option>
+                                    <option value="2">{% trans 'Enhedens tilbud' %}</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label class="control-label" for="pref-orderby">{% trans 'Filtrér på status:' %}</label>
+                                <select id="pref-orderby" class="form-control input-sm">
+                                    <option value="">------------</option>
+                                    <option value="2">{% trans 'Publicerede' %}</option>
+                                    <option value="2">{% trans 'Ikke publicerede' %}</option>
+                                    <option value="2">{% trans 'Kladder' %}</option>
+                                    <option value="2">{% trans 'Afventer' %}</option>
+                                    <option value="2">{% trans 'Planlagte' %}</option>
+                                    <option value="2">{% trans 'Afviklede' %}</option>
+                                    <option value="2">{% trans 'Aflyst' %}</option>
+                                </select>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
+    {% for list in lists %}
+        {% cycle True False False as beginRow silent %}
+        {% cycle False False True as endRow silent %}
+        {% if beginRow or forloop.first %}
+            <div class="row eq-height listcontainer">
+        {% endif %}
+        {% include 'profile/item_list.html' with list=list %}
+        {% if endRow or forloop.last %}
+            </div>
+        {% endif %}
+    {% endfor %}
+    
+    <!-- Modal delete booking -->
+    <div class="modal fade deleteBooking" tabindex="-1" role="dialog" aria-labelledby="SletBooking">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="SletBooking">{% trans 'Er du sikker?' %}</h4>
+          </div>
+          <div class="modal-body">
+           <p>{% trans 'Du er ved at slette tilmeldingen "Magnetisme og elektroner". Hvis du vil fortsætte og slette denne tilmelding, klik på knappen "Slet denne tilmelding".' %}</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">{% trans 'Annullér' %}</button>
+            <button type="button" class="btn btn-primary">{% trans 'Slet denne tilmelding' %}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Modal delete booking end -->
+    
+{% endblock %}
+
+{% block extra_scripts %}
+    <script src="{% static 'js/pager.js' %}"></script>
+    <script type="text/javascript">
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip();
+        })
+    </script>
 {% endblock %}

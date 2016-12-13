@@ -9,6 +9,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.8/ref/settings/
 """
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+
 import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -26,6 +27,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+DEFAULT_FROM_EMAIL = 'noreply@fokusku.dk'
+EMAIL_HOST = 'localhost'
 
 # Application definition
 
@@ -38,13 +42,15 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'booking',
     'profile',
+    'recurrence',
     'timedelta',
     'tinymce',
-    'djangosaml2'
+    'django_cron',
 )
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -59,7 +65,7 @@ ROOT_URLCONF = 'resource_booking.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'override_templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -80,12 +86,13 @@ STATICFILES_FINDERS = [
 
 # Django-npm config
 
+
 # Local thirdparty cache; holds all downloaded
 # dependencies in this folder under the root
-NPM_PREFIX_PATH = 'thirdparty'
+NPM_ROOT_PATH = 'thirdparty'
 
 # collectstatic will put dependencies in static/thirdparty/
-NPM_DESTINATION_PREFIX = 'thirdparty'
+NPM_STATIC_FILES_PREFIX = 'thirdparty'
 
 # Mapping for dependencies: Only the listed files from
 # each dependency will make it into static/
@@ -93,9 +100,22 @@ NPM_FILE_PATTERNS = {
     'jquery': ['dist/jquery.min.js'],
     'bootstrap': ['dist/css/bootstrap.min.css',
                   'dist/fonts/*', 'dist/js/bootstrap.min.js'],
+    'bootstrap-datepicker': ['dist/js/bootstrap-datepicker.min.js',
+                             'dist/locales/bootstrap-datepicker.da.min.js',
+                             'dist/css/bootstrap-datepicker.min.css'],
     'bootstrap-datetime-picker': ['js/bootstrap-datetimepicker.min.js',
                                   'js/locales/bootstrap-datetimepicker.da.js',
-                                  'css/bootstrap-datetimepicker.min.css']
+                                  'css/bootstrap-datetimepicker.min.css'],
+    'bootstrap-3-typeahead': ['bootstrap3-typeahead.min.js'],
+    'jquery-table-sort': ['jquery.table_sort.min.js'],
+    'pickadate': ['lib/compressed/picker.js',
+                  'lib/compressed/picker.date.js',
+                  'lib/compressed/picker.time.js',
+                  'lib/compressed/themes/default.css',
+                  'lib/compressed/themes/default.time.css'
+                  ],
+    'rrule': ['lib/rrule.js'],
+    'sortablejs': ['Sortable.min.js']
 }
 
 # Django-tinymce config
@@ -105,6 +125,13 @@ TINYMCE_DEFAULT_CONFIG = {
     'theme': "advanced",
     'cleanup_on_startup': True,
     'custom_undo_redo_levels': 100,
+    'theme_advanced_buttons1':
+        'bold,italic,underline,|,justifyleft,justifycenter,justifyright,'
+        'justifyfull,|,formatselect,|,bullist,numlist,outdent,indent,|,'
+        'link,unlink,anchor,image,hr,removeformat',
+    'theme_advanced_buttons2':
+        'undo,redo,|,code,cleanup,visualaid,charmap,help'
+
 }
 TINYMCE_COMPRESSOR = True
 TINYMCE_JS_ROOT = '/static/thirdparty/tinymce'
@@ -130,7 +157,7 @@ DATABASES = {
 
 LANGUAGE_CODE = 'da-dk'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Copenhagen'
 
 USE_I18N = True
 
@@ -160,7 +187,14 @@ USE_SAML = False
 MAKE_SAML_LOGIN_DEFAULT = False
 # Setup the default login backend so we can override it after loading local
 # saml settings
-AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.ModelBackend']
+AUTHENTICATION_BACKENDS = [
+    'profile.auth.backends.EmailLoginBackend',
+    'django.contrib.auth.backends.ModelBackend'
+]
+
+PUBLIC_URL_PROTOCOL = 'http'
+PUBLIC_URL_HOSTNAME = 'fokusku.dk'
+PUBLIC_URL_PORT = None
 
 local_settings_file = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
@@ -169,10 +203,24 @@ local_settings_file = os.path.join(
 if os.path.exists(local_settings_file):
     from local_settings import *  # noqa
 
+PUBLIC_URL = "".join([
+    PUBLIC_URL_PROTOCOL, "://",
+    ":".join([str(x) for x in (PUBLIC_URL_HOSTNAME, PUBLIC_URL_PORT) if x])
+])
+
 # Include SAML setup if the local settings specify it:
-if USE_SAML:
-    from saml_settings import *  # noqa
-    if MAKE_SAML_LOGIN_DEFAULT:
-        AUTHENTICATION_BACKENDS.insert(0, 'djangosaml2.backends.Saml2Backend')
-    else:
-        AUTHENTICATION_BACKENDS.append('djangosaml2.backends.Saml2Backend')
+# if USE_SAML:
+#     from saml_settings import *  # noqa
+#     if MAKE_SAML_LOGIN_DEFAULT:
+#         AUTHENTICATION_BACKENDS.insert(
+#           1, 'djangosaml2.backends.Saml2Backend'
+#         )
+#     else:
+#         AUTHENTICATION_BACKENDS.append('djangosaml2.backends.Saml2Backend')
+
+CRON_CLASSES = [
+    "booking.cron.ReminderJob",
+    "booking.cron.IdleHostroleJob",
+    "booking.cron.RemoveOldMvpJob",
+    "booking.cron.NotifyEventTimeJob"
+]

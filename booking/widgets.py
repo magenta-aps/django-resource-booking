@@ -1,9 +1,14 @@
-from django.forms.widgets import MultiWidget, NumberInput, Select
-from datetime import timedelta
+from django.forms.utils import flatatt
+from django.forms import widgets
 from django.utils.safestring import mark_safe
+from django.utils.encoding import force_text
+from django.utils.html import format_html
+
+from itertools import chain
+from datetime import timedelta
 
 
-class DurationWidget(MultiWidget):
+class DurationWidget(widgets.MultiWidget):
 
     def __init__(self, attrs=None,
                  day_type='number', day_attrs={'min': 0},
@@ -29,7 +34,7 @@ class DurationWidget(MultiWidget):
     @staticmethod
     def _getwidget(type, attrs, choices):
         if type == 'number':
-            return NumberInput(attrs=attrs)
+            return widgets.NumberInput(attrs=attrs)
         elif type == 'select':
             parsed_choices = []
             for choice in choices:
@@ -37,7 +42,7 @@ class DurationWidget(MultiWidget):
                     parsed_choices.append((choice, unicode(choice)))
                 elif isinstance(choice, tuple):
                     parsed_choices.append(choice)
-            return Select(attrs=attrs, choices=parsed_choices)
+            return widgets.Select(attrs=attrs, choices=parsed_choices)
         else:
             raise TypeError("type must be either 'number' " +
                             "or 'select', not '%s'" % type)
@@ -96,3 +101,153 @@ class DurationWidget(MultiWidget):
         out += rendered_widgets[2]
 
         return out
+
+
+class OrderedMultipleHiddenChooser(widgets.MultipleHiddenInput):
+
+    # Take the extracted value list and attempt to map them to choices
+    # A bug in Django has them as unicodes instead of integers
+    # when the form is bound with submitted data
+    def value_from_datadict(self, data, files, name):
+        value = super(OrderedMultipleHiddenChooser, self).value_from_datadict(
+            data, files, name
+        )
+        choice_map = {
+            choice[0]: choice[1]
+            for choice in self.choices
+        }
+        coerced_value = []
+        for v in value:
+            if int(v) in choice_map:
+                coerced_value.append(int(v))
+            elif unicode(v) in choice_map:
+                coerced_value.append(unicode(v))
+            else:
+                coerced_value.append(v)
+        return coerced_value
+
+    def render(self, name, value, attrs=None, choices=()):
+        if value is None:
+            value = []
+
+        final_attrs = self.build_attrs(attrs, type=self.input_type, name=name)
+        id_ = final_attrs.get('id', None)
+        selected_elements = [None]*len(value)
+        unselected_elements = []
+        for i, choice in enumerate(chain(self.choices, choices)):
+            v, label = choice
+            input_attrs = dict(value=force_text(v), **final_attrs)
+            selected = v in value
+
+            if not selected:
+                input_attrs['disabled'] = 'disabled'
+            if id_:
+                input_attrs['id'] = '%s_%s' % (id_, i)
+
+            element = format_html('<input{} />', flatatt(input_attrs))
+            if selected:
+                try:
+                    index = value.index(v)
+                    selected_elements[index] = element
+                except ValueError:
+                    pass
+            else:
+                unselected_elements.append(element)
+
+        prototype_attrs = dict(disabled='disabled', **final_attrs)
+        del prototype_attrs['id']
+        prototype_attrs['data-prototype'] = 1
+        unselected_elements.append(
+            format_html('<input{} />', flatatt(prototype_attrs))
+        )
+
+        return mark_safe(
+            '\n'.join(
+                [e for e in selected_elements if e is not None] +
+                unselected_elements
+            )
+        )
+
+
+class DisabledChoiceMixin(object):
+    disabled_values = []
+
+    def render_option(self, selected_choices, option_value, option_label):
+        if option_value is None:
+            option_value = ''
+        option_value = force_text(option_value)
+        if option_value in selected_choices:
+            selected_html = mark_safe(' selected="selected"')
+            if not self.allow_multiple_selected:
+                # Only allow for a single selection.
+                selected_choices.remove(option_value)
+        else:
+            selected_html = ''
+        if option_value in self.disabled_values:
+            disabled_html = mark_safe(' disabled="disabled"')
+        else:
+            disabled_html = ''
+        return format_html('<option value="{}"{}{}>{}</option>',
+                           option_value,
+                           selected_html,
+                           disabled_html,
+                           force_text(option_label))
+
+
+# A Select widget that may have disabled options
+class SelectDisable(DisabledChoiceMixin, widgets.Select):
+    pass
+
+
+# A SelectMultiple widget that may have disabled options
+class SelectMultipleDisable(DisabledChoiceMixin, widgets.SelectMultiple):
+    pass
+
+
+# Renderer class for choicefields that may have disabled options
+class DisabledChoiceFieldRenderer(widgets.ChoiceFieldRenderer):
+    disabled_values = []
+    real_choice_input_class = None
+
+    def __init__(self, *args, **kwargs):
+        if 'disabled_values' in kwargs:
+            values = kwargs.pop('disabled_values')
+            if type(values) == set:
+                values = list(values)
+            elif type(values) != list:
+                values = [values]
+            self.disabled_values = [unicode(x) for x in values]
+        super(DisabledChoiceFieldRenderer, self).__init__(*args, **kwargs)
+
+    # Overriding an attribute on the superclass that is a class reference
+    # replacing it with a regular function that returns an instance
+    def choice_input_class(self, name, value, attrs, choice, index):
+        (choice_value, choice_label) = choice
+        if unicode(choice_value) in self.disabled_values:
+            attrs['disabled'] = "disabled"
+        return self.real_choice_input_class(name, value, attrs, choice, index)
+
+
+class DisabledRadioFieldRenderer(DisabledChoiceFieldRenderer):
+    real_choice_input_class = widgets.RadioChoiceInput
+
+
+class DisabledCheckboxFieldRenderer(DisabledChoiceFieldRenderer):
+    real_choice_input_class = widgets.CheckboxChoiceInput
+
+
+# A CheckboxSelectMultiple widget that may have disabled options
+class CheckboxSelectMultipleDisable(DisabledChoiceMixin,
+                                    widgets.CheckboxSelectMultiple):
+    renderer = DisabledCheckboxFieldRenderer
+    disabled_values = []
+
+    def get_renderer(self, name, value, attrs=None, choices=()):
+        if value is None:
+            value = self._empty_value
+        final_attrs = self.build_attrs(attrs)
+        choices = list(chain(self.choices, choices))
+        return self.renderer(
+            name, value, final_attrs, choices,
+            disabled_values=self.disabled_values
+        )

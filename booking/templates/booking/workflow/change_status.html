@@ -1,0 +1,48 @@
+{% extends 'index.html' %}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block htmltitle %} - {% blocktrans with object=object %}Skift status for {{ object }}{% endblocktrans %}{% endblock %}
+
+{% block content %}
+    {% include 'common/breadcrumbrow.html' %}
+
+    <div class="row titlebar hidden-print">
+        <div class="col-sm-12 col-md-9">
+            <h2>{% blocktrans with object=object %}Skift status for {{ object }}{% endblocktrans %}</h2>
+        </div>
+        <div class="divider"></div>
+    </div>
+    <div class="row">
+        <div class="col-sm-12 col-md-8">
+            {% if object.planned_status_is_blocked %}
+            <p>
+                {% if object.is_multiproductvisit %}
+                    {% blocktrans with text=object.PLANNED_STATUS_TEXT needed=object.multiproductvisit.required_visits %}
+                        Bemærk at det ikke er muligt at skifte til status '{{ text }}' før mindst {{ needed }} under-besøg har denne status.
+                    {% endblocktrans %}
+                    <ul>
+                        {% for subvisit in object.multiproductvisit.subvisits %}
+                            <li><a href="{% url 'visit-view' subvisit.pk %}">{{ subvisit.id_display }} - {{ subvisit.display_title }}</a>: <a href="{% url 'change-visit-status' subvisit.pk %}">{{ subvisit.workflow_status_display }}</a></li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    {% blocktrans with text=object.PLANNED_STATUS_TEXT %}
+                    Bemærk at det ikke er muligt at skifte til status '{{ text }}' med mindre der er blevet tildelt både starttidspunkt, undervisere, værter og lokaler.
+                    {% endblocktrans %}
+                    <a href="{% url 'visit-view' object.pk %}">{% trans 'Klik her for at vende tilbage og rette i tildelingerne' %}</a>.
+                {% endif %}
+            </p>
+            {% endif %}
+            <form name="changebookinstatusform" id="changebookinstatusform" action="{% url 'change-visit-status' object.pk %}" method="post">
+                {% csrf_token %}
+                {{ form }}
+                <div class="clearfix">
+                    <hr>
+                    <input class="btn btn-default pull-left" type="submit" value="{% trans 'Annullér' %}" name="cancel">
+                    <input class="btn btn-primary pull-right" type="submit" value="{% trans 'Skift status' %}" name="confirm">
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

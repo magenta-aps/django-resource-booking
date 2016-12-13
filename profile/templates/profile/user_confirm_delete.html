@@ -1,0 +1,14 @@
+{% extends "index.html" %}
+
+{% block content %}
+
+<p>Ønsker du virkelig at slette?</p>
+
+<form action="" method="post">{% csrf_token %}
+    {{ form.as_p }}
+    <hr>
+    <a class="btn btn-default pull-left" href="javascript:history.go(-1)">Nej</a>
+    <input class="btn btn-primary pull-right" type="submit" value="Ja">
+</form>
+
+{% endblock %}

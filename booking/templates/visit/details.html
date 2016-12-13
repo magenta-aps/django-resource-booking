@@ -1,138 +1,605 @@
 {% extends 'index.html' %}
+{% load staticfiles %}
 {% load timedelta %}
+{% load i18n %}
+{% load booking_tags %}
+
+{% block htmltitle %} - {{ object.product.title }} - {{ object.date_display }}{% endblock %}
 
 {% block content %}
 
-    <div class="row">
-        <div class="col-sm-8">
-            <ol class="breadcrumb hidden-xs">
-                <li>Du er her: </li>
-                <li><a href="http://fokus.ku.dk/">Søgning</a></li>
-                <li><a href="#">Søgeresultatliste</a></li>
-                <li class="active"><a href="{% url 'index' %}">Detaljevisning</a></li>
-            </ol>
-        </div>
-        <div class="col-sm-4 text-right small-icons hidden-print">
-            <a title="E-mail" href="#" class="glyphicon glyphicon-envelope print-icon" aria-hidden="true"><span class="sr-only">Send via e-mail</span></a>
-            <a title="Print" href="#" onclick="window.print();return false" aria-hidden="true" class="glyphicon glyphicon-print print-icon"><span class="sr-only">Print</span></a>
-                <!--AddThis Button BEGIN -->
-                        <script type="text/javascript">
-                        <!--
-                        var addthis_config = {
-                                ui_click: 'true',
-                                services_compact: 'facebook,twitter,blogger,digg,reddit,gmail,google,linkedin,myspace,delicious,favorites',
-                                services_exclude: 'email,print',
-                                ui_header_color: '#ffffff',
-                                ui_header_background: '#666666',
-                                ui_cobrand: 'www.ku.dk'
-                            }
-                            // -->
-                        </script>
-                <a href="https://www.addthis.com/bookmark.php?v=250&amp;pub=copenhagenuni" class="addthis_button_compact">
-                <img src="/static/img/shareknap_dk.gif" width="28" height="12" alt="Bookmark and Share" style="border:0" /></a>
-                <script type="text/javascript" src="https://s7.addthis.com/js/250/addthis_widget.js#pub=copenhagenuni"></script>
-                <!-- AddThis Button END -->
-        </div>
-    </div>
+    {% include 'common/breadcrumbrow.html' %}
+
     <div class="row titlebar hidden-print">
-        <div class="col-sm-12 col-md-9"><h2>Om tilbuddet</h2></div>
+        <div class="col-sm-12 col-md-9">
+            <h1>
+                {% blocktrans with title=object.display_title on_date=object.date_display_context %}
+                    Planlægning af {{ title }} {{ on_date }}
+                {% endblocktrans %}
+            </h1>
+        </div>
         <div class="divider"></div>
     </div>
-    <div class="row">
-        <div class="col-sm-12 col-md-8">
-            <form class="clearfix search-list" role="søg" action={% url 'search' %}>
-                <div class="input-group">
-                    <label class="sr-only" for="searchBox">Søg efter tilbud</label>
-                    <input type="text" class="form-control" id="searchBox" placeholder="Søg efter tilbud - indtast et eller flere søgeord..." name="q" value="{{ request.GET.q }}">
-                    <span class="input-group-btn">
-                    <button class="btn btn-default" id="search" type="submit"><span class="hidden-xs">Søg</span> <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
-                    </button>
-                    </span>
-                </div>
-            </form>
-        
-            <h2>Her skal "hvad" vises</h2>
-            
-            {% if user.is_authenticated %}
-                <a class="pull-right" href="/visit/{{ object.id }}/edit">Redigér</a>
-            {% endif %}
-            
-            <h1>{{ object.title }}</h1>
-            <div class="well">
-                {% autoescape off %}
-                {{ object.teaser }}
-                {% endautoescape %}
+
+    <div class="row overview">
+        <div class="col-sm-12 col-md-10 panel panel-default">
+            <div class="col-xs-9">
+                {% if object.multiproductvisit %}
+                    <div>
+                        {% trans 'Ønskede tilbud/underbesøg:' %}
+                        <ul>
+                            {% for visit in object.multiproductvisit.subvisits %}
+                                <li class="subvisit-status-{{ visit.workflow_status }}">
+                                    <a class="product-link" href="{% url 'product-view' visit.product.id %}">{{ visit.product.title }}</a>:
+                                    <a class="visit-link" href="{% url 'visit-view' visit.id %}">{{ visit.id_display }}</a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% else %}
+                    {% if object.is_multi_sub %}
+                    <div>
+                        {% url 'visit-view' object.multi_master.id as masterurl %}
+                        {% blocktrans with master=object.multi_master %}
+                            Dette er et underbesøg under <a href="{{ masterurl }}">{{ master }}</a>
+                        {% endblocktrans %}
+                    </div>
+                    {% else %}
+                    <div>
+                        {% url 'product-view' object.product.id as producturl %}
+                        {% blocktrans with nr_bookers=object.nr_attendees producttitle=object.product.title %}
+                            {{ nr_bookers }} har tilmeldt sig denne instans af <a href="{{ producturl }}">{{ producttitle }}</a>
+                        {% endblocktrans %}
+                    </div>
+                    {% endif %}
+                {% endif %}
+    
+                {% if not object.start_datetime %}
+                    <div class="divider"></div>
+                    <div>
+                        {% trans 'Der er endnu ikke et fastlagt et tidspunkt for dette besøg.' %}
+                        {% if object.desired_time %}
+                            {% trans 'Gæsten har ønsket følgende tidspunkt:' %}
+                            <pre class="desired-time">{{ object.desired_time }}</pre>
+                        {% endif %}
+                    </div>
+                {% endif %}
             </div>
-            <div class="well">
-                <!-- Richtext editor start -->
-                {% autoescape off %}
-                {{ object.description }}
-                {% endautoescape %}
-                <!-- Richtext editor end -->
+            <div class="col-xs-3">
+                {% if can_notify %}
+                    <div class="pull-right dropdown">
+                        <button class="btn btn-primary dropdown-toggle" type="button" id="sendNotification" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            {% trans 'Send besked' %}
+                            <span class="caret"/>
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="sendNotification">
+                            <li><a data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'visit-notify' object.pk %}">{% trans 'Ingen skabelon' %}</a></li>
+                            {% if emailtemplates %}
+                                <li role="separator" class="divider"></li>
+                                {% for id, label in emailtemplates %}
+                                    <li>
+                                        {% if modal %}
+                                            <a data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'visit-notify' object.pk %}?template={{ id }}">{{ label }}</a>
+                                        {% else %}
+                                            <a href="{% url 'visit-notify' object.pk %}?template={{ id }}&back={{ request.get_full_path | urlencode }}">{{ label }}</a>
+                                        {% endif %}
+                                    </li>
+                                {% endfor %}
+                            {% endif %}
+                            <li role="separator" class="divider"></li>
+                            <li><a href="{% url 'emailtemplate-list' %}" target="_blank">{% trans 'Redigér skabeloner' %}</a></li>
+                        </ul>
+                    </div>
+                {% endif %}
             </div>
-            <div class="well order-buttons hidden-print">
-                <!-- Display according to business logic -->
-                <i>Buttons display according to business logic.</i>
-                <br />
-                <button type="button" class="btn btn-default">Book dette tilbud
-                    <span class="glyphicon glyphicon-chevron-right"></span>
-                </button>
-                <br/><i>Buttons display according to business logic.</i>
-                <!-- Display according to business logic -->
-            </div>
-            <div class="disclaimer">Bemærk at din bestilling først er bindende, når du har modtaget en bekræftelse fra den ansvarlige arrangør fra Københavns Universitet.</div>
-            <div class="go-back">
-            <a href="#" class="btn btn-default "><span class="glyphicon glyphicon-chevron-left"></span> Tilbage til søgeresultat</a>
-        </div>
-        </div>
-        <div class="col-sm-6 col-md-4">
-            <form class="form-horizontal">
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <h3 class="panel-title">Hvem, hvor og hvornår</h3>
-                    </div>
-                    <div class="panel-body">
-                        <dl class="dl-horizontal">
-                            <dt>Henvendt til:</dt>
-                            <dd>{{ object.get_audience_display }}</dd>
-                            <dt>Fag/niveau:</dt>
-                            <dd>{{ object.get_level_display }}</dd>
-                            <dt>Max antal:</dt>
-                            <dd>{{ object.maximum_number_of_visitors }}</dd>
-                            <dt>Hvad:</dt>
-                            <dd>{{ object.get_type_display }}</dd>
-                            <dt>Hvor:</dt>
-                            <dd>{{ object.unit.name }}, {{ object.locality.name }}, {{ object.locality.address_line }}, {{ object.locality.zip_city }}</dd>
-                            <dt>Arrangør:</dt>
-                            <dd></dd>
-                            <dt>Hvornår:</dt>
-                            <dd>
-                            <select class="form-control input-sm">
-                                <option>Vælg dato</option>
-                                <option>{{ object.time }}</option>
-                                <option>26. marts 2016</option>
-                                <option>16. november 2016</option>
-                                <option>30. debember 2016</option>
-                            </select></dd>
-                            <dt>Varighed:</dt>
-                            <dd>{{ object.duration|timedelta }}</dd>
-                            <dt>Pris:</dt>
-                            <dd>{{ object.price }}</dd>
-                        </dl>
-                    </div>
-                </div>
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <h3 class="panel-title">Kort</h3>
-                    </div>
-                    <div class="panel-body google-maps-container">
-                        <div class="google-maps">
-                            <iframe src='https://maps.google.com/maps?q=Bülowsvej 17, 1870 Frederiksberg C&amp;z=14&amp;output=embed&amp;iwloc=0&amp;sensor=false' width='450' height='450' frameborder='0' style='border:0' allowfullscreen></iframe>
-                        </div>
-                    </div>
-                </div>
-            </form>
         </div>
     </div>
 
+    <div class="row status">
+        <div class="col-sm-12 col-md-10">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    
+                    <h2>{% trans 'Statusoverblik' %}</h2>
+
+                    {% if not object.can_assign_resources %}
+                        <div class="row">
+                            <p class="col-sm-8">
+                                {% blocktrans with text=object.BEING_PLANNED_STATUS_TEXT %}
+                                Det er ikke længere muligt at tildele ressourcer til dette besøg. Hvis du ønsker at rette i de tildelte ressourcer skal du ændre status til '{{ text }}'.
+                                {% endblocktrans %}
+                            </p>
+                        </div>
+                    {% endif %}
+
+                    {% if object.organizationalunit %}
+                    <div class="row row-border">
+                        <strong class="col-sm-2">{% trans 'Enhed:' %}</strong>
+                        <div class="col-sm-6">{{ object.organizationalunit.name }}</div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="row row-border">
+                        <strong class="col-sm-2">{% trans 'Tidspunkt' %}</strong>
+                        {% if object.eventtime.start %}
+                            <div class="col-sm-6">{{ object.eventtime.interval_display }}</div>
+                        {% else %}
+                            <div class="col-sm-6">
+                                {% if object.start_datetime %}
+                                    {{ object.start_datetime }}
+                                {% else %}
+                                    {% trans 'Ikke angivet' %}
+                                {% endif %}
+                            </div>
+                            {% if can_edit %}
+                                <div class="col-sm-4">
+                                    <a href="{% url 'change-visit-starttime' object.pk %}" role="button" class="btn btn-default pull-right">{% trans 'Redigér' %}</a>
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+
+                    {% if object.is_multiproductvisit %}
+                        <div class="row row-border">
+                            <strong class="col-sm-2">
+                                {% trans 'Min. ønskede tilbud' %}
+                            </strong>
+                            <div class="col-sm-6">
+                                {{ object.required_visits }}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {% if object.is_multiproductvisit %}
+                        <div class="row row-border">
+                            <strong class="col-sm-2">
+                                {% trans 'Ansvarlig' %}
+                            </strong>
+                            <div class="col-sm-6">
+                                {% if object.responsible %}
+                                    {{ object.responsible }}
+                                {% else %}
+                                    {% trans 'Ikke tildelt' %}
+                                {% endif %}
+                            </div>
+                            {% if can_edit %}
+                                <div class="col-sm-4">
+                                    <a href="{% url 'change-visit-responsible' object.pk %}" role="button" class="btn btn-default pull-right">{% trans 'Redigér' %}</a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                    
+                    {% if not object.is_multiproductvisit %}
+                        <div class="row row-border">
+                            <strong class="col-sm-2">
+                                {% trans 'Ressourcer' %}
+                            </strong>
+                            {% if object.product.is_resource_controlled %}
+                                {% if object.product.resourcerequirement_set.count %}
+                                    <div class="col-sm-6">
+                                        <ul class="list-unstyled" style="display:inline-block; margin-bottom:0">
+                                        {% for requirementdata in object.requirement_details %}
+                                            <li>{{ requirementdata.acquired }}/{{ requirementdata.required }} {{ requirementdata.name }}</li>
+                                        {% endfor %}
+                                        </ul>
+                                    </div>
+                                {% else %}
+                                    <div class="col-sm-6">
+                                        {% trans 'Tilbuddet kræver ingen ressourcer' %}
+                                    </div>
+                                {% endif %}
+                                <div class="col-sm-4">
+
+                                {% if object.product.resourcerequirement_set.count and can_edit %}
+                                    <a href="{% url 'visit-resources-edit' object.pk %}" role="button" class="btn btn-default pull-right" style="vertical-align:top">{% trans 'Redigér' %}</a>
+                                {% endif %}
+                                {% if is_potential_teacher %}
+                                    {% if can_become_teacher %}
+                                        <a href="{% url 'become-teacher' object.pk %}" role="button" class="btn btn-default pull-right">{% trans 'Bliv underviser for dette besøg' %}</a>
+                                        {% if teacher %}
+                                            <a href="{% url 'decline-teacher' object.pk %}" role="button" class="btn btn-default pull-right">{% trans 'Jeg ønsker ikke at være underviser' %}</a>
+                                        {% endif %}
+                                    {% elif is_assigned_as_teacher %}
+                                        {% trans '(allerede underviser for dette besøg)' %}
+                                    {% elif not needs_teachers %}
+                                        <button type="button" class="btn btn-default pull-right" data-toggle="modal" data-target="#teachers-found" >{% trans 'Alle fundet' %}</button>
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if is_potential_host %}
+                                    {% if can_become_host %}
+                                        <a href="{% url 'become-host' object.pk %}" role="button" class="btn btn-default pull-right">{% trans 'Bliv vært for dette besøg.' %}</a>
+                                        {% if host %}
+                                            <a href="{% url 'decline-host' object.pk %}" role="button" class="btn btn-default pull-right">{% trans 'Jeg ønsker ikke at være vært' %}</a>
+                                        {% endif %}
+                                    {% elif is_assigned_as_host %}
+                                        {% trans '(allerede vært for dette besøg)' %}
+                                    {% elif not needs_hosts %}
+                                        <button type="button" class="btn btn-default pull-right" data-toggle="modal" data-target="#hosts-found" >{% trans 'Alle fundet' %}</button>
+                                    {% endif %}
+                                {% endif %}
+                                </div>
+                            {% else %}
+                                <div class="col-sm-6">
+                                    {% trans 'Tilbuddet er ikke ressourcestyret' %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    {% if not object.product.is_resource_controlled and not object.is_multiproductvisit %}
+                        <div class="row row-border">
+                            <strong class="col-sm-2">
+                                {% trans 'Undervisere' %}
+                            </strong>
+                            <div class="col-sm-6">
+                                {% blocktrans with found=object.teachers.all|length needed=object.total_required_teachers %}{{ found }}/{{ needed }} undervisere fundet{% endblocktrans %}
+                            </div>
+                            {% if can_edit %}
+                                <div class="col-sm-4">
+                                    <a href="{% url 'change-visit-teachers' object.pk %}" role="button" class="btn btn-default pull-right">{% trans 'Redigér' %}</a>
+                                </div>
+                            {% elif request.user.userprofile.is_teacher %}
+                                <div class="col-sm-4">
+                                {% if object.needs_teachers %}
+                                    {% if request.user in object.teachers.all %}
+                                        {% trans '(allerede underviser for dette besøg)' %}
+                                    {% else %}
+                                        <a href="{% url 'become-teacher' object.pk %}" role="button" class="btn btn-default pull-right">{% trans 'Bliv underviser for dette besøg' %}</a>
+                                        {% if teacher %}
+                                            <a href="{% url 'decline-teacher' object.pk %}" role="button" class="btn btn-default pull-right">{% trans 'Jeg ønsker ikke at være underviser' %}</a>
+                                        {% endif %}
+                                    {% endif %}
+                                {% else %}
+                                    <button type="button" class="btn btn-default" data-toggle="modal" data-target="#teachers-found" >{% trans 'Alle fundet' %}</button>
+                                {% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                        
+                    {% if not object.product.is_resource_controlled and not object.is_multiproductvisit %}
+                        <div class="row row-border">
+                            <strong class="col-sm-2">
+                                {% trans 'Værter' %}
+                            </strong>
+                            <div class="col-sm-6">
+                                {% blocktrans with found=object.hosts.all|length needed=object.total_required_hosts %}{{ found }}/{{ needed }} værter fundet{% endblocktrans %}
+                            </div>
+                            {% if can_edit %}
+                                <div class="col-sm-4">
+                                    <a href="{% url 'change-visit-hosts' object.pk %}" role="button" class="btn btn-default pull-right">{% trans 'Redigér' %}</a>
+                                </div>
+                            {% elif request.user.userprofile.is_host %}
+                                <div class="col-sm-4">
+                                    {% if object.needs_hosts %}
+                                        {% if request.user in object.hosts.all %}
+                                            {% trans '(allerede vært for dette besøg)' %}
+                                        {% else %}
+                                            <a href="{% url 'become-host' object.pk %}" role="button" class="btn btn-default pull-right">{% trans 'Bliv vært for dette besøg.' %}</a>
+                                            {% if host %}
+                                                <a href="{% url 'decline-host' object.pk %}" role="button" class="btn btn-default pull-right">{% trans 'Jeg ønsker ikke at være vært' %}</a>
+                                            {% endif %}
+                                        {% endif %}
+                                    {% else %}
+                                        <button type="button" class="btn btn-default pull-right" data-toggle="modal" data-target="#hosts-found" >{% trans 'Alle fundet' %}</button>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    {% if not object.product.is_resource_controlled and not object.is_multiproductvisit %}
+                        <div class="row row-border">
+                            <strong class="col-sm-2">
+                                {% trans 'Lokaler' %}
+                            </strong>
+                            <div class="col-sm-6">
+                                {{ object.get_room_status_display }}
+                                {% if object.rooms.all %}
+                                <ul>
+                                {% for room in object.rooms.all %}
+                                    <li>{{ room.name_with_locality }}</li>
+                                {% endfor %}
+                                </ul>
+                                {% endif %}
+                            </div>
+                            {% if can_edit %}
+                                <div class="col-sm-4">
+                                    <a href="{% url 'change-visit-rooms' object.pk %}" role="button" class="btn btn-default pull-right">{% trans 'Redigér' %}</a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    {% if not object.is_multiproductvisit %}
+                        <div class="row row-border">
+                            <strong class="col-sm-2">
+                                {% trans 'Automatisk e-mail' %}
+                            </strong>
+                            <div class="col-sm-6">
+                                {{ object.get_autosend_display }}
+                            </div>    
+                            {% if can_edit %}
+                                <div class="col-sm-4">
+                                    <a href="{% url 'change-visit-autosend' object.pk %}" role="button" class="btn btn-default pull-right">{% trans 'Redigér' %}</a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    <div class="row row-border">
+                        <strong class="col-sm-2">
+                            {% trans 'Status' %}
+                        </strong>
+                        <div class="col-sm-6">
+                            {{ object.get_workflow_status_display }}
+                        </div>
+                        {% if can_edit %}
+                        <div class="col-sm-4">
+                            <a href="{% url 'change-visit-status' object.pk %}" role="button" class="btn btn-default pull-right">{% trans 'Skift status' %}</a>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    {% if not object.is_multiproductvisit and not object.is_multi_sub %}
+                        <div class="row row-border">
+                            <strong class="col-sm-2">
+                                {% trans 'Antal på venteliste' %}
+                            </strong>
+                            <div class="col-sm-6">
+                                {{ object.nr_waiting }}
+                            </div>    
+                            {% if can_edit %}
+                                <div class="col-sm-4">
+                                    <a href="#waitinglist" role="button" class="btn btn-default pull-right">{% trans 'Se liste' %}</a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                    
+                    <div class="row row-border">
+                        <strong class="col-sm-2">
+                            {% trans 'Link til evaluering' %}
+                        </strong>
+                        <div class="col-sm-6">
+                            {% if object.evaluation_link %}
+                                <a href="{{ object.evaluation_link }}">{{ object.evaluation_link }}</a>
+                            {% else %}
+                                {% trans 'Ikke angivet' %}
+                            {% endif %}
+                        </div>    
+                        {% if can_edit %}
+                            <div class="col-sm-4">
+                                <a href="{% url 'change-visit-eval' object.pk %}" role="button" class="btn btn-default pull-right">{% trans 'Redigér' %}</a>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row row-border">
+                        <strong class="col-sm-2">
+                            {% trans 'Interne kommentarer' %}
+                        </strong>
+                        <div class="col-sm-6">
+                            <pre>{{ object.comments }}</pre>
+                        </div>    
+                        {% if can_edit %}
+                            <div class="col-sm-4">
+                                <a href="{% url 'change-visit-comments' object.pk %}" role="button" class="btn btn-default pull-right">{% trans 'Redigér' %}</a>
+                            </div>
+                        {% endif %}
+                    </div>
+                
+                    {% if can_edit and object.has_changes_after_planned %}
+                        <div class="row row-border">
+                            <strong class="col-sm-2">
+                                {% trans 'Nylige ændringer' %}
+                            </strong>
+                            <div class="col-sm-6">
+                                <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                                {% trans 'Dette besøg er markeret som havende nylige ændringer' %}.
+                            </div>    
+                            <div class="col-sm-4">
+                                <a href="{% url 'visit-reset-changes-marker' object.pk %}" role="button" class="btn btn-default pull-right">{% trans 'Klik her for at fjerne markeringen' %}</a>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if not object.is_multi_sub %}
+    <div class="row attendees">
+        <div class="col-sm-12 col-md-10">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <h2>
+                        {% trans 'Tilmeldte' %}
+                        ({{ object.nr_attendees }}{% if object.product.maximum_number_of_visitors %}/{{ object.product.maximum_number_of_visitors }}{% endif %})
+                    </h2>
+                    {% include "booking/snippets/list.html" with list=object.booking_list form=bookinglistform listname='booking' %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if not object.is_multiproductvisit and not object.is_multi_sub %}
+    <div class="row waiting">
+        <div class="col-sm-12 col-md-10">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <a name="waitinglist"></a>
+                    <h2>
+                        {% trans 'Venteliste' %}
+                        ({{ object.nr_waiting }}{% if object.product.waiting_list_length %}/{{ object.product.waiting_list_length }}{% endif %})
+                    </h2>
+                    {% if object.waiting_list_closing_time %}
+                        {% if object.waiting_list_closed %}
+                            {% blocktrans with time=object.waiting_list_closing_time %}
+                                Ventelisten lukkede {{ time }}.
+                            {% endblocktrans %}
+                        {% else %}
+                            {% blocktrans with time=object.waiting_list_closing_time %}
+                                Ventelisten lukker {{ time }}.
+                            {% endblocktrans %}
+                        {% endif %}
+                    {% endif %}
+                    {% include "booking/snippets/list.html" with list=object.waiting_list form=waitinglistform listname='waiting' %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row activitylog">
+        <div class="col-sm-12 col-md-10">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <h2>{% trans 'Aktivitetslog' %}</h2>
+                    <div class="clearfix">
+                        <a href="{% url 'visit-add-logentry' object.pk %}" role="button" class="btn btn-default pull-right">
+                            <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                            {% trans 'Tilføj ny log-post' %}
+                        </a>
+                    </div>
+                    <ul class="list-unstyled scroll-400">
+                        {% for entry in log_entries %}
+                            <li>
+                                <dl class="dl-horizontal">
+                                    <dt>{% trans 'Hvem:' %}</dt>
+                                    <dd>{% if entry.user.get_full_name %}{{ entry.user.get_full_name }}{% else %}{{ entry.user }}{% endif %}</dd>
+                                    <dt>{% trans 'Hvad:' %}</dt>
+                                    <dd>{{ entry.action_flag|logaction_type_display }}</dd>
+                                    <dt>{% trans 'Hvornår' %}:</dt>
+                                    <dd>{{ entry.action_time }}</dd>
+                                    <dt>{% trans 'Besked:' %}</dt>
+                                    <dd><pre>{{ entry.change_message }}</pre></dd>
+                                </dl>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row comments">
+        <div class="col-sm-12 col-md-10">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <h2>{% trans 'Kommentarer' %}</h2>
+                    <div class="clearfix">
+                        <a href="{% url 'visit-add-comment' object.pk %}" role="button" class="btn btn-default pull-right">
+                            <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                            {% trans 'Tilføj ny kommentar' %}
+                        </a>
+                    </div>
+                    <ul class="list-unstyled scroll-400">
+                        {% for comment in object.visitcomment_set.all %}
+                            <li>
+                                <dl class="dl-horizontal">
+                                    <dt>{% trans 'Hvem:' %}</dt>
+                                    <dd>
+                                        {% if comment.author.get_full_name %}
+                                            {{ comment.author.get_full_name }}
+                                        {% elif comment.author %}
+                                            {{ comment.author }}
+                                        {% elif comment.deleted_user_name %}
+                                            {{ comment.deleted_user_name }}
+                                        {% endif %}
+                                    </dd>
+                                    <dt>{% trans 'Hvornår' %}:</dt>
+                                    <dd>{{ comment.time }}</dd>
+                                    <dt>{% trans 'Kommentar:' %}</dt>
+                                    <dd>{{ comment.text }}</dd>
+                                </dl>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-12 col-md-10">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                        <div class="go-back">
+                            <a href="{% url 'visit-search' %}" class="btn btn-default">
+                                <span class="glyphicon glyphicon-chevron-left"></span>
+                                {% trans 'Søg i besøg' %}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% include 'common/modal_contact.html' %}
+    {% include 'common/modal_framehost.html' %}
+    {% include 'common/modal_teachers_found.html' %}
+    {% include 'common/modal_hosts_found.html' %}
+
+{% endblock %}
+
+{% block extra_scripts %}
+    <script src="{% static 'js/custom.js' %}"></script>
+    <script src="{% static "js/modalframe-host.js" %}"></script>
+    <script type="text/javascript">
+        <!--
+        $(function(){
+            {% autoescape off %}
+                var waitingAttendees = {{ waitingattendees | jsonify }},
+                    availableSeats = {{ object.available_seats | jsonify }};
+            {% endautoescape %}
+            var dequeueButton = $("button[name='action'][value='dequeue']");
+            if (dequeueButton.length) {
+                var update = function() {
+                    var selectedAttendees = 0;
+                    $(".listcontainer.waiting input[type='checkbox']:checked").each(function(){
+                        selectedAttendees += waitingAttendees[this.value];
+                    });
+                    if (selectedAttendees > availableSeats) {
+                        dequeueButton.enable(false, "listFull");
+                        dequeueButton.attr("title",
+                            "{% trans 'Der er kun {available} pladser tilbage. Du har valgt {selected} deltagere.' %}"
+                            .replace("{available}", availableSeats)
+                            .replace("{selected}", selectedAttendees)
+                        );
+                    } else {
+                        dequeueButton.enable(true, "listFull");
+                        dequeueButton.removeAttr("title");
+                    }
+                };
+                $(".listcontainer.waiting input[type='checkbox']").change(update);
+                update();
+            }
+        });
+
+        $(function(){
+            $("form").each(function(){
+                var form = $(this);
+                var button = form.find("button[name='action']");
+                var update = function() {
+                    button.enable(form.find("input[type='checkbox']:checked").length, "selectionPresent");
+                };
+                form.find("input[type='checkbox']").change(update);
+                update();
+            });
+        });
+
+        $(function(){
+            $(".listcontainer form button[name='action'][value='delete']").click(function(){
+                return window.confirm("{% trans 'Er du sikke på at du vil slette disse tilmeldinger?' %}");
+            });
+        });
+
+        //-->
+    </script>
 {% endblock %}

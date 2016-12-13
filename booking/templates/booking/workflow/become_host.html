@@ -1,0 +1,78 @@
+{% extends 'index.html' %}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block htmltitle %} - {% blocktrans with object=object %}Bliv vært for {{ object }}{% endblocktrans %}{% endblock %}
+
+{% block content %}
+    {% include 'common/breadcrumbrow.html' %}
+
+    <div class="row titlebar hidden-print">
+        <div class="col-sm-12 col-md-9">
+            <h2>{% blocktrans with object=object %}Bliv vært for {{ object }}{% endblocktrans %}</h2>
+        </div>
+        <div class="divider"></div>
+    </div>
+    {% if view.is_valid %}
+        {% if request.method == "GET" %}
+            <form name="becomehostform" id="becomehostform" action="{% url 'become-host' object.pk %}" method="post">
+                {% csrf_token %}
+
+                <p>{% blocktrans with object=object %}Ønsker du at blive vært for besøget {{ object }}?{% endblocktrans %}</p>
+
+                {% if object.product.is_resource_controlled %}
+                    <div class="row">
+                        <label class="col-sm-2 control-label {{ form.resourcerequirements.css_classes }}" for="{{ form.resourcerequirements.id_for_label }}">{{ form.resourcerequirements.label }}:</label>
+                        <div class="col-sm-6{% if form.resourcerequirements.errors %} has-error{% endif %}">
+                            {{ form.resourcerequirements }}
+                        </div>
+                        <div class="col-sm-3 help-block with-errors">
+                            {{ form.resourcerequirements.errors }}
+                        </div>
+                    </div>
+                {% endif %}
+                <div class="row">
+                    <label class="col-sm-2 control-label {{ form.comment.css_classes }}" for="{{ form.comment.id_for_label }}">{{ form.comment.label }}:</label>
+                    <div class="col-sm-6{% if form.comment.errors %} has-error{% endif %}">
+                        {{ form.comment }}
+                    </div>
+                    <div class="col-sm-3 help-block with-errors">
+                        {{ form.comment.errors }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12 clearfix">
+                        <input class="btn btn-primary pull-right" type="submit" value="{% trans 'Bliv vært' %}" name="confirm">
+                    </div>
+                </div>
+            </form>
+        {% else %}
+            <div class="row">
+                <div class="col-sm-12 col-md-8">
+                    <p>
+                        {% blocktrans with object=object %}Du er nu blevet sat som vært for besøget {{ object }}.{% endblocktrans %}
+                    </p>
+                    <p>
+                        <a href="{% url 'visit-view' object.pk %}">{% trans 'Klik her for at vende tilbage til besøget' %}</a>
+                    </p>
+                </div>
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="row">
+            <div class="col-sm-12 col-md-8">
+                <p>
+                    {% trans 'Det er ikke muligt at blive vært for besøget på grund af følgende:' %}
+                <ul>
+                    {% for error in view.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+                </p>
+                <p>
+                    <a href="{% url 'visit-view' object.pk %}">{% trans 'Klik her for at vende tilbage til besøget' %}</a>
+                </p>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,9 @@
+{% load i18n %}
+{% if modal %}
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-label="{% trans "Close" %}"><span aria-hidden="true">&times;</span></button>
+    {% include 'booking/snippets/header_text.html' %}
+</div>
+{% else %}
+    {% include 'booking/snippets/header_text.html' %}
+{% endif %}

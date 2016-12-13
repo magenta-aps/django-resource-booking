@@ -1,0 +1,82 @@
+{% load tz %}
+{% load i18n %}
+{% load l10n %}
+
+
+{% timezone "Europe/Copenhagen" %}
+<div class="row form-group time-inputs">
+    <div class="col-sm-2{% if field.errors %} has-error{% endif %}">
+        <label class="control-label">
+            {% with label=override_label|default:'Dato og tidspunkt' %}
+            {% trans label %}:
+            {% endwith %}
+        </label>
+    </div>
+    <div class="col-sm-7 form-inline">
+        <div style="display: none">
+            {% localize off %}
+            <div class="start-input">{{ start_field }}</div>
+            <div class="end-input">{{ end_field }}</div>
+            {% endlocalize %}
+        </div>
+        <div class="specific-time-input">{{ specific_time_field.as_hidden }}</div>
+        <div class="form-inline">
+            <label for="id_time_mode" class="sr-only">{% trans 'Tidspunkt' %}</label>
+            <select id="id_time_mode" name="time_mode" data-duration-in-minutes="{{ product.duration_in_minutes }}" class="form-control input-sm time-mode">
+                <option value="full_days"{%if time_mode_value == "full_days"%} selected="selected"{%endif%}>
+                    {% trans 'Angiv hele dage' %}
+                </option>
+                {% if product and product.duration_in_minutes > 0 %}
+                <option value="use_duration"{%if time_mode_value == "use_duration"%} selected="selected"{%endif%}>
+                    {% trans 'Brug varighed fra tilbud:' %} {{ product.get_duration_display }}
+                </option>
+                {% endif %}
+                <option value="time_and_date"{%if time_mode_value == "time_and_date"%} selected="selected"{%endif%}>
+                    {% trans 'Angiv både starttidspunkt og sluttidspunkt' %}
+                </option>
+            </select>
+        </div>
+        <div class="input-daterange" style="margin-top: 0;">
+            <input class="form-control input-sm rangepicker" id="id_start_date" name="start_date" type="text" value="{{ start_field.value|date:"d.m.Y" }}" size="10">
+            <div class="input-group clockpicker">
+                <input class="form-control input-sm" id="id_start_time" name="start_time" type="text" value="{{ start_field.value|date:"H:i" }}" size="5">
+                <span class="input-group-addon" data-toggle="dropdown"><span class="glyphicon glyphicon-time"></span></span>
+            </div>
+            <div class="input-group clockpicker">
+                <input class="form-control input-sm" id="id_end_time" name="end_time" type="text" value="{{ end_field.value|date:"H:i" }}" size="5">
+                <span class="input-group-addon" data-toggle="dropdown"><span class="glyphicon glyphicon-time"></span></span>
+            </div>
+            <input class="form-control input-sm rangepicker" id="id_end_date" name="end_date" type="text" value="{{ end_field.value|date:"d.m.Y" }}" size="10">
+        </div>
+    </div>
+    <div class="col-sm-3 with-errors">
+        {% if start_field.errors %}
+        <div>
+            {% trans 'Startidspunkt' %}:
+            {{ start_field.errors }}
+        </div>
+        {% endif %}
+        {% if end_field.errors %}
+        <div>
+            {% trans 'Sluttidspunkt' %}:
+            {{ end_field.errors }}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row form-group" {% if hide_output %}style="display: none"{% endif %}>
+    <div class="col-sm-2{% if field.errors %} has-error{% endif %}">
+        <label for="{{ id_prefix }}chosen_datetime" class="control-label">{% trans 'Valgt tidspunkt' %}:</label>
+    </div>
+    <div class="col-sm-7">
+        <div class="form-inline">
+            <p class="alert alert-info text-center">
+                <span id="{{ id_prefix }}chosen_datetime"
+                      class="time-interval-output"
+                      data-no-date-selected-text="{% trans '<Ingen dato angivet>' %}"></span>
+            </p>
+        </div>
+    </div>
+</div>
+{% endtimezone %}

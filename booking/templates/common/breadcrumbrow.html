@@ -1,0 +1,17 @@
+{% load i18n %}
+{% if not view.kwargs.embed %}
+<div class="row">
+    <div class="col-sm-12">
+        <ol class="breadcrumb hidden-xs">
+            <li>{% trans 'Du er her:' %}</li>
+            {% for breadcrumb in breadcrumbs %}
+                {% if not forloop.last %}
+                    <li><a href="{{ breadcrumb.url }}">{{ breadcrumb.text }}</a></li>
+                {% else %}
+                    <li class="active">{{ breadcrumb.text }}</li>
+                {% endif %}
+            {% endfor %}
+        </ol>
+    </div>
+</div>
+{% endif %}

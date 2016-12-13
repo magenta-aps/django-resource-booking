@@ -1,0 +1,29 @@
+{% extends 'index.html' %}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block htmltitle %} - {% blocktrans with object=object %}tilføj log-post til {{ object }}{% endblocktrans %}{% endblock %}
+
+{% block content %}
+    {% include 'common/breadcrumbrow.html' %}
+
+    <div class="row titlebar hidden-print">
+        <div class="col-sm-12 col-md-9">
+            <h2>{% blocktrans with object=object %}Tilføj log-post til {{ object }}{% endblocktrans %}</h2>
+        </div>
+        <div class="divider"></div>
+    </div>
+    <div class="row">
+        <div class="col-sm-12 col-md-8">
+            <form name="changebookinroomsform" id="changebookinroomsform" action="{% url 'visit-add-logentry' object.pk %}" method="post">
+                {% csrf_token %}
+                {{ form }}
+                <div class="clearfix">
+                    <hr>
+                    <input class="btn btn-default pull-left" type="submit" value="{% trans 'Annullér' %}" name="cancel">
+                    <input class="btn btn-primary pull-right" type="submit" value="{% trans 'Opdater' %}" name="confirm">
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

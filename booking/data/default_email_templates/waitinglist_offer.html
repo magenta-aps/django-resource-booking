@@ -1,0 +1,25 @@
+<p>Kære {{ recipient.get_full_name }}.</p>
+
+<p>
+    Der er nu plads på besøg {{ product.title }}
+    {% include 'booking/email/snippets/visit_time.html' %}
+    på Københavns Universitet:
+    {% include 'booking/email/snippets/product_maplink.html' %}.
+    Hvis du ønsker at deltage i besøget, skal du klikke <a href="{% full_url 'booking-accept-view' booking.id token_user=booking.booker %}">her</a> og svare ja eller nej til at deltage.
+    Pladserne bliver fordelt efter først-til-mølle-princippet.
+</p>
+<p>
+    {% include 'booking/email/snippets/contact_addresses.html' with product=product %}
+</p>
+<p>Detaljer for din tilmelding:</p>
+<p>
+    {% include 'booking/email/snippets/booking_info.html' with booking=booking booker=booking.booker %}
+</p>
+<p>Vi håber at se dig!</p>
+<p>
+    <a href="{% full_url 'product-view' product.pk %}">Læs mere om tilbuddet her</a>.
+</p>
+
+{% include 'booking/email/snippets/see_all.html' %}
+
+{% include 'booking/email/snippets/regards.html' with unit=product.organizationalunit %}

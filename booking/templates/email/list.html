@@ -1,0 +1,86 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load staticfiles %}
+
+{% block htmltitle %} - {% trans 'emailskabeloner' %}{% endblock %}
+
+{% block content %}
+
+    {% include 'common/breadcrumbrow.html' %}
+
+    <div class="divider"></div>
+    <div class="row form-group">
+        <div class="col-sm-8">
+            <h1>{% trans "Emailskabeloner" %}</h1>
+        </div>
+        <div class="col-sm-4 text-right">
+            <a href="{% url 'emailtemplate-create' %}" class="btn btn-primary">
+                <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                {% trans "Opret skabelon" %}
+            </a>
+        </div>
+    </div>
+    <hr/>
+
+    <p>
+        {% blocktrans %}
+        Når man ønsker at afsende en email fra systemet, (manuelt eller
+        automatisk), tager systemet udgangspunkt i den skabelon, som er
+        relevant i den enkelte situation og for den enhed, som står bag
+        besøget. Hvis der ikke allerede findes en skabelon for enheden,
+        anvender systemet i stedet en skabelon for en overordnet enhed
+        (f.eks. instituttets fakultet). Hvis der heller ikke findes en
+        skabelon dér, anvender systemet den generelle grundskabelon. Det
+        er også muligt selv at formulere indholdet i en email, hvis
+        man ønsker en anden tekst end den, der står i grundskabelonen.
+        {% endblocktrans %}
+    </p>
+
+    {% if duplicates %}
+        <p class="text-warning">{% trans 'Advarsel: der er flere skabeloner med samme Type og Enhed. Kun én af disse vil komme i betragtning' %}</p>
+    {% endif %}
+
+    <table class="table table-striped sortable" data-sort-columns="0 1">
+        <thead>
+            <tr>
+                <th class="col-sm-3 sort">
+                    {% trans 'Type' %}
+                </th>
+                <th class="col-sm-4 sort">
+                    {% trans 'Enhed' %}
+                </th>
+                <th class="col-sm-5">
+                    {% trans 'Handlinger' %}
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for object in object_list %}
+                <tr class="{% if object in duplicates %}warning{% endif %}">
+                    <td class="col-sm-3">
+                        {{ object.get_key_display }}
+                    </td>
+                    <td class="col-sm-4">
+                        {% if object.organizationalunit %}
+                            {{ object.organizationalunit.name }}
+                        {% else %}
+                            {% trans 'Grundskabelon' %}
+                        {% endif %}
+                    </td>
+                    <td class="col-sm-5">
+                        <a href="{% url 'emailtemplate-view' object.id %}">{% trans 'Preview' %}</a>
+                        <a href="{% url 'emailtemplate-edit' object.id %}?back={{ request.get_full_path | urlencode }}">{% trans 'Redigér' %}</a>
+                        <a href="{% url 'emailtemplate-clone' object.id %}?back={{ request.get_full_path | urlencode }}">{% trans 'Kopiér' %}</a>
+                        <a href="{% url 'emailtemplate-delete' object.id %}?back={{ request.get_full_path | urlencode }}">{% trans 'Slet' %}</a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+
+    </table>
+
+{% endblock %}
+{% block extra_scripts %}
+    <script type="text/javascript" src="{% static 'thirdparty/jquery-table-sort/jquery.table_sort.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/sort-table.js' %}"></script>
+{% endblock %}

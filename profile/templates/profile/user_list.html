@@ -1,0 +1,118 @@
+{% extends "index.html" %}
+{% load i18n %}
+
+{% block htmltitle %} -
+    {% trans 'administrér brugere' %}
+{% endblock %}
+
+{% block content %}
+    {% include 'common/breadcrumbrow.html' %}
+
+    <div class="row">
+        <div class="col-sm-5 col-sm-offset-2">
+            <h1>{% trans 'Administrér brugere' %}</h1>        
+        </div>
+    </div>
+
+    <div id="admin-input">
+        <div class="row">
+
+            <div class="col-sm-5 col-sm-offset-2">
+                <a href="{% url 'user_create' %}" class="btn btn-default btn-tiny">
+                    <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                    {% trans 'Opret ny bruger' %}
+                </a>
+            </div>
+            {% if messages %}
+                <div class="col-sm-5 col-sm-offset-2 alert-success" role="alert">
+                    <ul>
+                        {% for message in messages %}
+                            <li {% if message.tags %}class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="divider"></div>
+
+        <div class="row">
+            <h2 class="col-sm-5 col-sm-offset-2">{% trans 'Filtrér brugerliste' %}</h2>
+        </div>
+        
+        <div>
+            <form class="form-horizontal clearfix" name="filteruserlist" id="filteruserlist">
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">{% trans 'Enhed:' %}</label>
+                    <div class="col-sm-5">
+                        <select name="unit">
+                            <option value="">-- {% trans 'Vælg enhed' %} --</option>
+                            {% for val, name in possible_units %}
+                            <option value="{{ val }}"{% if selected_unit == val %}selected=" selected"{% endif %}>{{ name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">{% trans 'Rolle:' %}</label>
+                    <div class="col-sm-5">
+                        <select name="role">
+                            <option value="">-- {% trans 'Vælg rolle' %} --</option>
+                            {% for val, name in possible_roles %}
+                            <option value="{{ val }}"{% if selected_role == val %}selected=" selected"{% endif %}>{{ name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">{% trans 'Søg i navn:' %}</label>
+                    <div class="col-sm-5">
+                        <input type="text" name="q" value="{{ request.GET.q }}">
+                    </div>
+                </div>
+                <div class="col-sm-2 col-sm-offset-2 padleft5">
+                    <input class="btn btn-primary" type="submit" value="Søg">
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="divider"></div>
+    <div>
+        <div>
+            <ul class="list-unstyled">
+                {% for otheruser in users %}
+                <li class="media">
+                    <div class=" row">
+                        <div class="col-sm-2 userlist-label">{% trans 'Navn:' %}</div>
+                        <div class="col-sm-5">
+                            {% if otheruser.get_full_name %}
+                            {{ otheruser.get_full_name }} ({{ otheruser.username }})
+                            {% else %}
+                            "{{ otheruser.username }}"
+                            {% endif %}
+                            {% if user == otheruser or otheruser.userprofile.get_role in user.userprofile.available_roles %}
+                                <a href="{% url 'user_edit' otheruser.pk %}">{% trans 'Redigér' %}</a>
+                                <a href="{% url 'user_delete' otheruser.pk %}">{% trans 'Slet' %}</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class=" row">
+                        <div class="col-sm-2 userlist-label">{% trans 'Email:' %}</div>
+                        <div class="col-sm-5">{{ otheruser.email }}</div>
+                    </div>
+                    <div class=" row">
+                        <div class="col-sm-2 userlist-label">{% trans 'Enhed:' %}</div>
+                        <div class="col-sm-5">{{ otheruser.userprofile.organizationalunit.name }}</div>
+                    </div>
+                    <div class=" row">
+                        <div class="col-sm-2 userlist-label">{% trans 'Rolle:' %}</div>
+                        <div class="col-sm-5">{{ otheruser.userprofile.get_role_name }}</div>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="divider"></div>
+    </div>
+
+{% endblock %}

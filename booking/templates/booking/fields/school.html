@@ -1,0 +1,61 @@
+{% load i18n %}
+
+{% if bookerform.school %}
+<div class="form-group">
+    <div class="col-sm-2">
+        <label class="control-label required {{ bookerform.school.css_classes }}" for="{{ bookerform.school.id_for_label }}">
+            {% if product.institution_level == 1 %}
+                {% trans "Gymnasium" %}
+            {% elif product.institution_level == 2 %}
+                {% trans "Grundskole" %}
+            {% else %}
+                {% trans "Skole" %}
+            {% endif %}
+        </label>
+    </div>
+    <div class="col-sm-6{% if bookerform.school.errors %} has-error{% endif %}">
+        {{ bookerform.school }}
+    </div>
+    <div class="col-sm-4 help-block with-errors">
+        {% if bookerform.school.errors %}
+            {{ bookerform.school.errors }}
+        {% else %}
+            {% trans 'Hvis din skole eller dit gymnasium ikke kommer frem på listen, kontakt da <a href="mailto:support@fokus.dk">support@fokus.dk</a> for at få hjælp til tilmelding.' %}
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+{% if bookerform.school_type %}
+    {{ bookerform.school_type }}
+{% endif %}
+
+{% if bookerform.line and product.institution_level != 2 %}
+<div class="form-group institution_level_dependent" data-display-value="1">
+    <div class="col-sm-2">
+        <label class="control-label {{ bookerform.line.css_classes }}" for="{{ bookerform.line.id_for_label }}">{% trans "Gymnasieretning" %}</label>
+    </div>
+    <div class="col-sm-6{% if bookerform.line.errors %} has-error{% endif %}">
+        {{ bookerform.line }}
+    </div>
+    <div class="col-sm-4 help-block with-errors">
+        {{ bookerform.line.errors }}
+    </div>
+</div>
+{% endif %}
+
+{% if bookerform.level and not no_level_field %}
+<div class="form-group institution_level_dependent" data-display-value="2">
+    <div class="col-sm-2">
+        <label class="control-label {% if bookerform.fields.level.required %}required{% endif %}{{ bookerform.level.css_classes }}" for="{{ bookerform.level.id_for_label }}">
+            {% trans "Klasse" %}
+        </label>
+    </div>
+    <div class="col-sm-6{% if bookerform.level.errors %} has-error{% endif %}">
+        {{ bookerform.level }}
+    </div>
+    <div class="col-sm-4 help-block with-errors">
+        {{ bookerform.level.errors }}
+    </div>
+</div>
+{% endif %}

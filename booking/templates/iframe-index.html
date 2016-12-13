@@ -1,4 +1,5 @@
 {% load staticfiles %}
+{% load i18n %}
 <!DOCTYPE html>
 <html lang="da">
     <head>
@@ -7,12 +8,13 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
-        <title>foKUs{% block htmltitle %} - søg i tilbud{% endblock %}</title>
+        <title>foKUs{% block htmltitle %} - {% trans 'søg i tilbud' %}{% endblock %}</title>
     
         <!-- Bootstrap -->
         <link href="{% static 'thirdparty/bootstrap/dist/css/bootstrap.min.css' %}" rel="stylesheet">
-        <link href="{% static 'css/main.css' %}" rel="stylesheet">    
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.5.0/css/bootstrap-datepicker.min.css" rel="stylesheet">
+
+        <!-- Our own stylesheet -->
+        <link href="{% static 'css/main.css' %}" rel="stylesheet">
         <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet">
             
         <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
@@ -28,26 +30,39 @@
             
     </head>
     <body>
-        
+
+        {% block header %}{% endblock %}
+
+        {% block content %}
         <div class="container-fluid container-iframe">
             <h1>Søg i tilbud</h1>
             <form action="{% url 'search' %}">
                 <div class="input-group">
                     <label class="sr-only" for="searchBox">Søg efter tilbud</label>
-                    <input type="text" class="form-control" id="searchBox" placeholder="Indtast et eller flere søgeord..." name="q">
+                    <input type="text" class="form-control" id="searchBox" placeholder="{% trans 'Indtast et eller flere søgeord...' %}" name="q">
                     <span class="input-group-btn">
-                        <button class="btn btn-default" type="submit">Søg  <span class="glyphicon glyphicon-search" aria-hidden="true"></span></button>
+                        <button class="btn btn-primary" type="submit">
+                            {% trans 'Søg' %}
+                            <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                        </button>
                     </span>
                 </div>
             </form>
-            <hr>
+            <hr/>
         </div>
-        
+        {% endblock %}
+
+        {% block footer %}
+        {% endblock %}
 
         <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+        <script src="{% static 'thirdparty/jquery/dist/jquery.min.js' %}"></script>
+
         <!-- Include all compiled plugins (below), or include individual files as needed -->
         <script src="{% static 'thirdparty/bootstrap/dist/js/bootstrap.min.js' %}"></script>
+        <script src="{% static 'js/validator.js' %}"></script>
+        <script src="{% static 'js/modalframe-guest.js' %}"></script>
         {% block extra_scripts %}{% endblock %}
+
     </body>
 </html>

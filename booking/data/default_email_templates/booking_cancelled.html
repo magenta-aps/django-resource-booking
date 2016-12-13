@@ -1,0 +1,41 @@
+<p>Kære {{ recipient.get_full_name }}</p>
+<p>
+    Besøg <a href="{% full_url 'product-view' product.pk %}">{{ product.title }}</a>{% include 'booking/email/snippets/visit_time.html' %}.
+    på Københavns Universitet er desværre blevet aflyst. Vi beklager.
+</p>
+{% if recipient.guest %}
+
+    {# Denne del sendes til gæster #}
+
+    <p>
+        Detaljer for din tilmelding:
+    </p>
+    <p>
+        {% include 'booking/email/snippets/booking_info.html' with booking=booking booker=booking.booker %}
+    </p>
+
+    <p>
+        <a href="{% full_url 'product-view' product.pk %}">Læs mere om besøget her</a>.
+    </p>
+
+    {% include 'booking/email/snippets/see_all.html' %}
+
+{% else %}
+
+    {# Denne del sendes til alle andre #}
+
+    <p>
+        Detaljer for tilmelding(er):
+    </p>
+
+    {% include 'booking/email/snippets/booking_list.html' %}
+
+    <p>
+        <a href="{% full_url 'product-view' product.pk %}">Læs mere om besøget her</a>.
+    </p>
+
+{% endif %}
+
+{% include 'booking/email/snippets/reply_link.html' %}
+
+{% include 'booking/email/snippets/regards.html' with unit=product.organizationalunit %}

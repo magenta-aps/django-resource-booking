@@ -1,0 +1,54 @@
+{% load i18n %}
+{% if bookerform.firstname or bookerform.lastname %}
+<div class="form-group">
+    <div class="col-sm-2">
+        <label class="control-label required {{ bookerform.firstname.css_classes }}" for="{{ bookerform.firstname.id_for_label }}">{% trans "For- og efternavn" %}</label>
+    </div>
+    <div class="col-sm-3{% if bookerform.firstname.errors %} has-error{% endif %}">
+        {{ bookerform.firstname }}
+    </div>
+    <div class="col-sm-3{% if bookerform.lastname.errors %} has-error{% endif %}">
+        {{ bookerform.lastname }}
+    </div>
+    <div class="col-sm-4 help-block with-errors">
+        {{ bookerform.firstname.errors }}
+        {% if bookerform.lastname.errors and bookerform.lastname.errors != bookerform.firstname.errors %}
+            {{ bookerform.lastname.errors }}
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+{% if bookerform.email %}
+<div class="form-group">
+    <div class="col-sm-2">
+        <label class="control-label required {{ bookerform.email.css_classes }}" for="{{ bookerform.email.id_for_label }}">{% trans "Email" %}</label>
+    </div>
+    <div class="col-sm-3{% if bookerform.email.errors %} has-error{% endif %}">
+        {{ bookerform.email }}
+    </div>
+    <div class="col-sm-3{% if bookerform.repeatemail.errors %} has-error{% endif %}">
+        {{ bookerform.repeatemail }}
+    </div>
+    <div class="col-sm-4 help-block with-errors">
+        {{ bookerform.email.errors }}
+        {% if bookerform.repeatemail.errors and bookerform.repeatemail.errors != bookerform.email.errors %}
+            {{ bookerform.repeatemail.errors }}
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+{% if bookerform.phone %}
+<div class="form-group">
+    <div class="col-sm-2">
+        <label class="control-label required {{ bookerform.phone.css_classes }}" for="{{ bookerform.phone.id_for_label }}">{% trans "Telefonnummer" %}</label>
+    </div>
+    <div class="col-sm-6{% if bookerform.phone.errors %} has-error{% endif %}">
+        {{ bookerform.phone }}
+    </div>
+    <div class="col-sm-4 help-block with-errors">
+        {{ bookerform.phone.errors }}
+    </div>
+</div>
+{% endif %}

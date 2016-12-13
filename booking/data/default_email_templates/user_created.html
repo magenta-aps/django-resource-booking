@@ -1,0 +1,14 @@
+<p>Kære {{ recipient.get_full_name }}.</p>
+
+<p>
+    Du har fået oprettet en bruger på fokusku.dk med følgende oplysninger:
+</p>
+<ul>
+    <li>Brugernavn: {{ user.username }}</li>
+    <li>Password: {{ password }}</li>
+</ul>
+<p>
+    Du kan logge ind i systemet med ovenstående brugernavn og password
+    via følgende URL:<br />
+    <a href="{% full_url 'standard_login' %}">{% full_url 'standard_login' %}</a>.
+</p>

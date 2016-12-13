@@ -25,10 +25,12 @@ designed for the University of Copenhagen.""",
           'flake8==2.5.0',
           'psycopg2',
           'djorm-ext-pgfulltext==0.10',
-          'django-npm',
+          'django-npm==1.0.0',
           'django-timedeltafield',
+          'django-recurrence',
           'django-tinymce==2.0.4',
-          'djangosaml2==0.13.0'
+          'djangosaml2==0.13.0',
+          'django-cron==0.4.6'
       ],
       entry_points="""
       # -*- Entry points: -*-

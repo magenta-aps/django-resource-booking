@@ -1,0 +1,5 @@
+{% if visit.is_multiproductvisit %}
+Tilmelding til liste af foKUs-tilbud
+{% else %}
+Tilmelding til foKUs-tilbud #{{ product.pk }} {{ product.title }}
+{% endif %}

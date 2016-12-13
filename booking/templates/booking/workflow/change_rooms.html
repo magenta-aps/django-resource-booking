@@ -1,0 +1,46 @@
+{% extends 'index.html' %}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block htmltitle %} - {% blocktrans with object=object %}Redigér lokaler for {{ object }}{% endblocktrans %}{% endblock %}
+
+{% block content %}
+    {% include 'common/breadcrumbrow.html' %}
+
+    <div class="row titlebar hidden-print">
+        <div class="col-sm-12 col-md-9">
+            <h2>{% blocktrans with object=object %}Redigér lokaler for {{ object }}{% endblocktrans %}</h2>
+        </div>
+        <div class="divider"></div>
+    </div>
+    <div class="row">
+        <div class="col-sm-12">
+            <form name="changebookinroomsform" id="changebookinroomsform" action="{% url 'change-visit-rooms' object.pk %}" method="post">
+                {% csrf_token %}
+                {% include 'common/fields/generic_field.html' with field=form.room_status %}
+                <div class="row form-group">
+                    <div class="col-sm-2">
+                        <label class="" for="id_locality">Lokalitet for eksisterende lokaler:</label>
+                    </div>
+                    <div class="col-sm-10">
+                        <select class="form-control input-sm" id="id_locality" name="locality">
+                        {% for id, name, selected in locality_choices %}
+                        <option value="{{ id }}"{% if selected %} selected="selected"{% endif %}>{{ name }}</option>
+                        {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                {% include 'common/fields/rooms-control.html' %}
+                <div class="clearfix">
+                    <hr>
+                    <input class="btn btn-default pull-left" type="submit" value="{% trans 'Annullér' %}" name="cancel">
+                    <input class="btn btn-primary pull-right" type="submit" value="{% trans 'Opdater' %}" name="confirm">
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script type="text/javascript" src="{% static 'js/formutil.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% load i18n %}
+<div class="panel panel-default" id="{{ map_id|default:'mapinfo' }}">
+    <a class="panel-heading"
+       role="button"
+       data-toggle="collapse"
+       href="#mapContainer"
+       aria-expanded="false"
+       aria-controls="collapseExample"
+       style="display: block;">
+        <h3 class="panel-title">{% trans 'Se kort' %}</h3>
+    </a>
+    <div class="panel-body google-maps-container collapse" id="mapContainer">
+        <div class="google-maps">
+            <iframe src='https://maps.google.com/maps?q={{ locality.address_line }}, {{ locality.zip_city }}&amp;z=14&amp;output=embed&amp;iwloc=0&amp;sensor=false' width='450' height='450' frameborder='0' style='border:0' allowfullscreen></iframe>
+        </div>
+    </div>
+</div>

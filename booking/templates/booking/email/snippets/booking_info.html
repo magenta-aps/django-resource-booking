@@ -1,0 +1,9 @@
+<strong>Navn</strong>: {{ booker.get_full_name }}<br />
+<strong>E-mail</strong>: {{ booker.email|default:"Ikke angivet" }}<br />
+<strong>Telefonnummer</strong>: {{ booker.phone|default:"Ikke angivet" }}<br />
+<strong>Gymnasium/skole</strong>: {{ booker.school|default:"Ikke angivet" }}<br />
+<strong>Klasse</strong>: {{ booker.get_level_display|default:"Ikke angivet" }}<br />
+<strong>Postnummer</strong>: {{ booker.school.postcode.number|default:"Ikke angivet" }}<br />
+<strong>By</strong>: {{ booker.school.postcode.city|default:"Ikke angivet" }}<br />
+<strong>Region</strong>: {{ booker.school.postcode.region|default:"Ikke angivet" }}<br />
+<strong>Antal deltagere</strong>: {{ booker.attendee_count|default:"0" }}

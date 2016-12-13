@@ -1,0 +1,389 @@
+{% load staticfiles %}
+{% load i18n %}
+{% include 'common/resources/datepicker_script.html' %}
+{% include 'common/resources/timepicker_script.html' %}
+
+<script src="{% static 'js/rrule.js' %}"></script>{% comment %} TODO: Get this lib from NPM {% endcomment %}
+<!--script src="{% static 'thirdparty/rrule/lib/rrule.js' %}"></script-->
+
+<script type="text/javascript">
+    jQuery.extend(jQuery.fn.pickadate.defaults, {
+        monthsFull: [ 'januar', 'februar', 'marts', 'april', 'maj', 'juni', 'juli', 'august', 'september', 'oktober', 'november', 'december' ],
+        monthsShort: [ 'jan', 'feb', 'mar', 'apr', 'maj', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec' ],
+        weekdaysFull: [ 'søndag', 'mandag', 'tirsdag', 'onsdag', 'torsdag', 'fredag', 'lørdag' ],
+        weekdaysShort: [ 'søn', 'man', 'tir', 'ons', 'tor', 'fre', 'lør' ],
+        today: 'i dag',
+        clear: 'slet',
+        close: 'luk',
+        firstDay: 1,
+        format: 'd. mmmm yyyy',
+        formatSubmit: 'yyyy/mm/dd'
+    });
+
+    jQuery.extend( jQuery.fn.pickatime.defaults, {
+        clear: 'slet'
+    });
+</script>
+
+<script type="text/javascript"><!--
+    $(function(){
+        
+        var currentDatesEl = $("#existing-recurrence-dates");
+        var currentDates = [];
+        
+        // Push exsisting dates written out in html into currentDates for processing
+        currentDatesEl.find('li').each(function() {
+            var dateparts = $(this).attr('data-date').split(/[^0-9]/i);
+            var d = new Date();
+            d.setDate(dateparts[0]);
+            d.setMonth(dateparts[1] - 1);
+            d.setFullYear(dateparts[2]);
+            d.setHours(dateparts[3]);
+            d.setMinutes(dateparts[4]);
+            var dobject = {
+                date: d,
+                istimeset: true,
+                isbooked: false,
+                isupdated: false
+            };
+            if (dateparts[5] === '1') {
+                dobject.isbooked = true;
+            }
+            currentDates.push(dobject);
+            UpdateDateList();
+        });
+        
+        
+        function getFormattedPartTime(partTime){
+            if ( partTime < 10 )
+               return "0" + partTime;
+            return partTime;
+        }
+        
+        
+        // Adding a date using Bootstrap datepicker 
+        
+        var datepick = $('#id_datepick').datepicker({
+            language: 'da',
+            format: 'dd-mm-yyyy',
+            weekStart: 1,
+            calendarWeeks: true,
+            todayHighlight: true,
+            startDate: 'Date',
+            clearBtn: false,
+            autoclose: true
+        });
+        
+        datepick.on('changeDate', function(ev){
+            var dateparts = $(this).val().split('-');
+            var d = new Date();
+            d.setDate(dateparts[0]);
+            d.setMonth(dateparts[1] - 1);
+            d.setFullYear(dateparts[2]);
+            currentDates.push({
+                date: d,
+                istimeset: false,
+                isbooked: false,
+                isupdated: true
+            });
+            UpdateDateList();
+        });
+        
+        
+        // Refresh avilable dates list
+        
+        function UpdateDateList() {
+            
+            
+            // Sort the existing list items by date
+            
+            currentDates.sort( function(a,b){ return a.date > b.date } );
+            
+            
+            // Display date entry in list
+            
+            currentDatesEl.html('');
+            for (var d in currentDates) {
+                var t = currentDates[d];
+                var datedate = getFormattedPartTime(t.date.getDate()) + '-' + getFormattedPartTime(t.date.getMonth() + 1) + '-' + t.date.getFullYear();
+                var datetime = '';
+                var upd = '';
+                if (t.istimeset) {
+                    if (t.isbooked) {
+                        datetime = getFormattedPartTime(t.date.getHours()) + ':' + getFormattedPartTime(t.date.getMinutes());
+                    } else {
+                        datetime = ' value="' + getFormattedPartTime(t.date.getHours()) + ':' + getFormattedPartTime(t.date.getMinutes()) + '"';
+                    }
+                }
+                if (t.isupdated) {
+                    upd = ' date-new';
+                    t.isupdated = false;
+                }
+                if (t.isbooked) {
+                    currentDatesEl.append('<li class="date' + upd + '" id="' + d + '" data-date="' + datedate + '"><div><span class="glyphicon glyphicon-calendar"></span> ' + datedate + '</div><div><span class="glyphicon glyphicon-time"></span> ' + datetime + '</div></li>');
+                } else {
+                    currentDatesEl.append('<li class="date' + upd + '" id="' + d + '" data-date="' + datedate + '"><div><span class="glyphicon glyphicon-calendar"></span> ' + datedate + '</div><div><span class="glyphicon glyphicon-time"></span> <input class="btn-add-time timepick" type="text" name="timepick" placeholder="Tilføj tid"' + datetime + '></div><button type="button" class="btn-rm-date"><span class="glyphicon glyphicon-remove"></span></button></li>');
+                }
+                
+            }
+            
+            
+            // Update hidden input field
+            
+            var arr = [];
+            for (var d in currentDates) {
+                var dt = currentDates[d];
+                var datetime = getFormattedPartTime(dt.date.getDate()) + '-' + getFormattedPartTime(dt.date.getMonth() + 1) + '-' + dt.date.getFullYear();
+                if (dt.istimeset) {
+                    datetime = datetime + ' ' + getFormattedPartTime(dt.date.getHours()) + ':' + getFormattedPartTime(dt.date.getMinutes())
+                }
+                arr.push(datetime);
+            }
+            $("#visits").val(arr);
+            
+            
+            // Check if it's relevant to show bulk manipulation buttons
+            if (currentDates.length > 0) {
+                $('.modify-datetime').addClass('modify-datetime-show');
+            
+                
+                // Update dates list manipulations buttons
+        
+                currentDatesEl.find('li').each(function() {
+                    
+                    var elID = parseInt( $(this).attr('id') );
+                    var el = $(this);
+                    
+                    // Remove date-time
+                    el.find('.btn-rm-date').on('click', function(ev) { 
+                        ev.preventDefault();
+                        el.detach();
+                        currentDates.splice(elID, 1);
+                        UpdateDateList();
+                    });
+                    
+                    // Adding/updating time using Pickadate.js
+                    el.find('.btn-add-time').on('click', function(ev) { 
+                        ev.preventDefault();
+                        var tinput = $(this);
+                        // Picker will automatically open if the element already has browser focus (which it does because we clicked it)
+                        var timepick = tinput.pickatime({
+                            format: 'H:i',
+                            clear: 'Nulstil',
+                            container: el,
+                            onClose: function() {
+                                if (tinput.val() != '') {
+                                    var tparts = tinput.val().split(':');
+                                    currentDates[elID].date.setHours(tparts[0]);
+                                    currentDates[elID].date.setMinutes(tparts[1]);
+                                    currentDates[elID].istimeset = true;
+                                    currentDates[elID].isupdated = true;
+                                } else {
+                                    currentDates[elID].istimeset = false;
+                                }
+                                UpdateDateList();
+                            }
+                        });
+                    });
+                });
+                
+            } else {
+                $('.modify-datetime').removeClass('modify-datetime-show');
+            }
+        }
+        
+        
+        // Setting time for all available dates
+
+        var timepickEl = $('.add-time-all');
+        var timepickall = timepickEl.pickatime({
+            format: 'H:i',
+            clear: "{% trans 'Nulstil' %}",
+            onClose: function() {
+                function checkIfDateBooked(date) {
+                    return (date.isbooked === true);
+                }
+                var id, currentDate;
+                if (timepickEl.val() != '') {
+                    var tparts = timepickEl.val().split(':');
+                    for (id in currentDates) {
+                        if (currentDates.hasOwnProperty(id)) {
+                            currentDate = currentDates[id];
+                            if (!checkIfDateBooked(currentDate)) {
+                                currentDate.date.setHours(tparts[0]);
+                                currentDate.date.setMinutes(tparts[1]);
+                                currentDate.istimeset = true;
+                                currentDate.isupdated = true;
+                            }
+                        }
+                    }
+                } else {
+                    for (id in currentDates) {
+                        if (currentDates.hasOwnProperty(id)) {
+                            currentDate = currentDates[id];
+                            if (!checkIfDateBooked(currentDate)) {
+                                currentDate.istimeset = false;
+                            }
+                        }
+                    }
+                }
+                timepickEl.val('');
+                UpdateDateList();
+            }
+        });
+        
+        
+        // Remove all available dates
+        
+        $('.btn-rm-date-all').on('click', function(ev) {
+            ev.preventDefault();
+            function checkIsBooked(currentDate) {
+                return currentDate.isbooked;
+            }
+            currentDates = currentDates.filter(checkIsBooked);
+            currentDatesEl.html('');
+            UpdateDateList();
+        });
+        
+        
+        
+        // =============================================================================
+        // Adding several dates using RRule.js
+        // =============================================================================
+         
+        var modalEl = $('#rruleModal');
+            
+        var rule = new RRule({
+            freq: RRule.WEEKLY,
+            interval: 1,
+            count: 10,
+            wkst: RRule.MO
+        });
+
+        var rrdatepickStart = $('#input-start').datepicker({
+            language: 'da',
+            format: 'dd-mm-yyyy',
+            weekStart: 1,
+            calendarWeeks: true,
+            todayHighlight: true,
+            startDate: 'Date',
+            clearBtn: false,
+            autoclose: true
+        });
+
+        var rrdatepick = $('#input-until').datepicker({
+            language: 'da',
+            format: 'dd-mm-yyyy',
+            weekStart: 1,
+            calendarWeeks: true,
+            todayHighlight: true,
+            startDate: 'Date',
+            clearBtn: false,
+            autoclose: true
+        });
+        
+        
+        // RRule update
+        
+        var updateRRDates = function() {
+            rule = new RRule(rule.options);
+            var outputEl = $('.rrule-datelist');
+            outputEl.html('');
+            for (var d in rule.all()) {
+                outputEl.append('<li>' + rule.all()[d].toLocaleDateString() + '</li>');
+            }
+        };
+        
+        updateRRDates();
+        
+        
+        // RRule input methods
+
+        rrdatepickStart.datepicker().on('hide', function(ev) {
+            if ($(this).val() != '') {
+                var dparts = $(this).val().split('-');
+                var d = new Date();
+                d.setDate(dparts[0]);
+                d.setMonth(parseInt(dparts[1]) - 1);
+                d.setFullYear(dparts[2]);
+                rule.options.dtstart = d;
+                updateRRDates();
+            } else {
+                return false;
+            }
+        });
+
+        rrdatepick.datepicker().on('hide', function(ev) {
+            if ($(this).val() != '') {
+                var dparts = $(this).val().split('-');
+                var d = new Date();
+                d.setDate(dparts[0]);
+                d.setMonth(parseInt(dparts[1]) - 1);
+                d.setFullYear(dparts[2]);
+                rule.options.until = d;
+                $('#input-count').val('');
+                rule.options.count = undefined;
+                updateRRDates();
+            } else {
+                return false;  
+            }
+        });
+        
+        $('#input-weekdays input').on('change', function(ev) {
+            rule.options.byweekday = [];
+            $('#input-weekdays input:checked').each(function(){
+                console.log();
+                switch ($(this).attr('name')) {
+                    case 'RRule.MO':
+                        rule.options.byweekday.push(RRule.MO);
+                        break;
+                    case 'RRule.TU':
+                        rule.options.byweekday.push(RRule.TU);
+                        break;
+                    case 'RRule.WE':
+                        rule.options.byweekday.push(RRule.WE);
+                        break;
+                    case 'RRule.TH':
+                        rule.options.byweekday.push(RRule.TH);
+                        break;
+                    case 'RRule.FR':
+                        rule.options.byweekday.push(RRule.FR);
+                        break;
+                    case 'RRule.SA':
+                        rule.options.byweekday.push(RRule.SA);
+                        break;
+                    case 'RRule.SU':
+                        rule.options.byweekday.push(RRule.SU);
+                        break;
+                    default:
+                        console.log('Improbable weekday');
+                }
+            });
+            updateRRDates();
+        });
+        
+        $('#input-count').on('keyup', function(ev) {
+            if ( /^[^0]/.test($(this).val()) ) {
+                rule.options.count = $(this).val();
+                $('#input-until').val('');
+                rule.options.until = undefined;
+                updateRRDates();
+            }
+        });
+    
+        $('#btn-add-rrule-dates').on('click', function(ev) {
+            ev.preventDefault();
+            for (var i in rule.all()) {
+                currentDates.push({
+                    date: rule.all()[i],
+                    istimeset: false,
+                    isbooked: false,
+                    isupdated: true
+                });
+            }
+            UpdateDateList();
+            modalEl.modal('hide');
+        });
+    });
+    
+//--></script>

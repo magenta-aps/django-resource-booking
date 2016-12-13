@@ -1,0 +1,15 @@
+{% load booking_tags %}
+{% for key, value in map.items %}
+    {% with path|dotjoin:key.0 as subpath %}
+        {% if value == True %}
+            <li><a href="javascript:{{ function }}('{{ subpath }}')">{{ key.1 }}</a></li>
+        {% else %}
+            <li class="dropdown-submenu" data-target="menu_{{ subpath|replace:".,_" }}">
+                <a tabindex="-1" href="javascript:void()">{{ key.1 }}</a>
+                <ul class="dropdown-menu" id="menu_{{ subpath|replace:".,_" }}">
+                    {% include 'email/modelfieldselect.html' with map=value path=subpath function=function only %}
+                </ul>
+            </li>
+        {% endif %}
+    {% endwith %}
+{% endfor %}

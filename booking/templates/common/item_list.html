@@ -1,0 +1,109 @@
+{% load i18n %}
+{% load booking_tags %}
+<div class="col-sm-6">
+    <div class="panel panel-bookings">
+        <div class="panel-heading {{ list.color }}">
+            <h3 class="panel-title">
+                {% if list.title.link %}
+                    <a href="{{ list.title.link }}">{{ list.title.text }}</a>
+                {% else %}
+                    {{ list.title }}
+                {% endif %}
+            </h3>
+            <span class="badge badge-danger pull-right">{{ list.queryset|length }}</span>
+        </div>
+        <div class="panel-body" data-list-item=".list-group-item">
+
+            {% if list.type == 'Visit' %}
+                {% for visit in list.limited_qs|default:list.queryset %}
+                    <div class="list-group-item clearfix">
+                        <a href="{% url 'visit-view' visit.real.pk %}" title="{% trans 'Se arrangementets detaljer' %}">
+                            <h2 class="list-group-item-heading">
+                                {{ visit.real.display_title|capfirst }}
+                            </h2>
+
+                            <div class="list-group-item-text">
+                                <ul>
+                                    <li>
+                                        {% blocktrans with date=visit.real.display_value %}Dato/tid: {{ date }}{% endblocktrans %}
+                                    </li>
+                                    <li>{% trans 'Antal tilmeldte:' %} {{ visit.real.nr_attendees }}</li>
+                                </ul>
+                            </div>
+                        </a>
+                        <div class="tools">
+                            <span class="label label-{{ visit.get_workflow_status_class }} pull-right">{{ visit.get_workflow_status_display }}</span>
+                        </div>
+                    </div>
+                {% endfor %}
+
+            {% elif list.type == 'Product' %}
+                {% for res in list.limited_qs|default:list.queryset %}
+                    <div class="list-group-item clearfix">
+                        <a href="{% url 'product-view' res.pk %}" title="{% trans 'Se tilbuddets detaljer og evt. tilmeldinger' %}">
+                            <h2 class="list-group-item-heading">{{ res.title }}</h2>
+                            <div class="list-group-item-text">
+                                <ul>
+                                    <li>
+                                        {% trans 'Type:' %}
+                                        {{ res.get_type_display }}
+                                    </li>
+
+                                    {% if res.is_guest_time_suggested %}
+                                        <li>
+                                            {% trans 'Dato/tid:' %}
+                                            {% trans 'Foreslå selv tidspunkt' %}
+                                        </li>
+                                    {% else %}
+                                        <li>
+                                            {% trans 'Dato/tid:' %}
+                                            {% if res.future_bookable_times|length == 0 %}
+                                                {% trans 'Alt optaget' %}
+                                            {% elif res.future_bookable_times|length == 1 %}
+                                                {{ res.future_bookable_times.first.interval_display }}
+                                            {% else %}
+                                                {% blocktrans with count=res.future_bookable_times|length interval=res.future_bookable_times.first.interval_display %}
+                                                    {{ count }} mulige tidspunkter, første gang {{ interval }}
+                                                {% endblocktrans %}
+                                            {% endif %}
+                                        </li>
+                                    {% endif %}
+
+                                    {% if res.display_locality %}
+                                        <li>
+                                            {% trans 'Hvor:' %}
+                                            {{ res.display_locality }}
+                                        </li>
+                                    {% endif %}
+
+                                    {% if res.price %}
+                                        <li>
+                                            {% trans 'Pris:' %}
+                                            <span class="type-offer">{{ res.price }}</span>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                        </a>
+                        <div class="tools">
+                            {% if user.userprofile.has_edit_role %}
+                                <span class="edit-tools pull-left">
+                                    <a href="{% url 'product-edit' res.pk %}">{% trans 'Rediger' %}</a> |
+                                    <a href="{% url 'product-clone' res.pk %}">{% trans 'Kopiér' %}</a>
+                                </span>
+                            {% endif %}
+                            <span class="label label-{{ res.get_state_class }} pull-right">{{ res.get_state_display }}</span>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {% if list.button %}
+                <a href="{{ list.button.link }}">
+                    <span class="label label-primary pull-right">{{ list.button.text }}</span>
+                </a>
+            {% endif %}
+
+        </div>
+    </div>
+</div>

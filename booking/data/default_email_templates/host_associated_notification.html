@@ -1,0 +1,22 @@
+<p>Kære {{ recipient.get_full_name }}.</p>
+
+<p>
+    Du er nu sat på som vært til besøg
+    {% include 'booking/email/snippets/visit_link.html' %}{% include 'booking/email/snippets/visit_time.html' %}.
+    Besøget afholdes på
+    {% include 'booking/email/snippets/product_maplink.html' %}.
+</p>
+<p>
+    Vær opmærksom på, om der er forberedelsestid.
+</p>
+<p>
+    Detaljer for tilmelding:
+</p>
+<p>
+    {% include 'booking/email/snippets/preparation.html' %}
+</p>
+<p>
+    {% include 'booking/email/snippets/booking_list.html' %}
+</p>
+{% include 'booking/email/snippets/regards.html' with unit=product.organizationalunit %}
+

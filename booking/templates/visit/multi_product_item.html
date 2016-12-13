@@ -1,0 +1,11 @@
+{% load i18n %}
+<li id="product_{{ product.id }}" class="list-group-item" data-product="{{ product.id }}">
+    <span class="glyphicon glyphicon-move movebutton"></span>
+    <a class="btn btn-default pull-right selectbutton">{% trans 'Vælg' %}</a>
+    <a class="deselectbutton pull-right">
+        <span class="glyphicon glyphicon-remove"></span>
+    </a>
+    <h2 class="title">{{ product.title }}</h2>
+    <p class="teaser">{{ product.teaser }}</p>
+    <p class="institution">{% blocktrans with institution_level=product.get_institution_level_display|lower %}Henvendt til {{ institution_level }}{% endblocktrans %}</p>
+</li>

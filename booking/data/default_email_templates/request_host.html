@@ -1,0 +1,43 @@
+<p>Kære {{ recipient.get_full_name }}.</p>
+
+<p>
+    En eller flere gæster har tilmeldt sig besøg
+    <a href="{% full_url 'visit-view' visit.pk 'host' token_user=recipient %}">{{ visit.display_title }}</a>{% include 'booking/email/snippets/visit_time.html' %}.
+    Besøget afholdes på
+    {% include 'booking/email/snippets/product_maplink.html' %}.
+    Der er brug for en eller flere værter til afviklingen af tilbuddet.
+    Klik <a href="{% full_url 'visit-view' visit.pk 'host' token_user=recipient %}">her</a> og svar hvis du vil være vært.
+</p>
+<p>
+    Vær opmærksom på, om der er forberedelsestid.
+</p>
+{% if booking %}
+
+    {# Denne del bruges når mailen sendes i forbindelse med en tilmelding #}
+
+    <p>
+        Detaljer for tilmelding:
+    </p>
+    <p>
+        <strong>Forberedelsestid: </strong>{{ product.preparation_time|default:'Ingen' }}
+    </p>
+    <p>
+        {% include 'booking/email/snippets/booking_info.html' with booking=booking booker=booking.booker %}
+    </p>
+
+{% else %}
+
+    {# Denne del bruges ved manuel udsendelse hvor der kan være flere tilmeldte #}
+
+    <p>
+        Detaljer for tilmeldte:
+    </p>
+    <p>
+        {% include 'booking/email/snippets/preparation.html' %}
+    </p>
+    <p>
+        {% include 'booking/email/snippets/booking_list.html' %}
+    </p>
+{% endif %}
+
+{% include 'booking/email/snippets/regards.html' with unit=product.organizationalunit %}

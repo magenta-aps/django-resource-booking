@@ -1,0 +1,48 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load booking_tags %}
+
+{% block htmltitle %} - {% trans "Rediger tidspunkt for" %} '{{ product.title }}'{% endblock %}
+
+{% block head %}
+{% include 'common/resources/datepicker_style.html' %}
+<link href="{% static 'css/bootstrap-clockpicker.css' %}" type="text/css" media="all" rel="stylesheet"  />
+{% endblock %}
+
+
+{% block content %}
+    <div class="divider"></div>
+    <h1>
+        {% trans "Rediger tidspunkt for" %}
+        '<a href="{% url 'product-view' product.pk %}">{{ product.title }}</a>'
+    </h1>
+
+    <div class="divider"></div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div>
+                {{form.errors}}
+            </div>
+            <form action="{% url 'edit-time' product.pk object.pk %}" id="create-time-form" method="POST">
+                {% csrf_token %}
+                {{ form.product.as_hidden }}
+
+                {% include 'eventtime/date_interval.html' with product=product start_field=form.start end_field=form.end specific_time_field=form.has_specific_time %}
+
+                {% include 'common/fields/generic_field.html' with field=form.notes %}
+                <input class="btn btn-success" type="submit" value="{% trans  'Gem' %}" role="button" />
+                <a href="{% url 'manage-times' product.pk %}" role="button" class="btn btn-danger">{% trans 'Annullér' %}</a>
+            </form>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+{% include 'eventtime/date_interval_script.html' %}
+<script type="text/javascript"><!--
+KU.initialize_time_interval('#create-time-form');
+//--></script>
+{% endblock %}

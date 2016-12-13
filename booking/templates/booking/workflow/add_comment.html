@@ -1,0 +1,36 @@
+{% extends 'index.html' %}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block htmltitle %} - {% blocktrans with object=object %}tilføj kommentar til {{ object }}{% endblocktrans %}{% endblock %}
+
+{% block content %}
+    {% include 'common/breadcrumbrow.html' %}
+
+    <div class="row titlebar hidden-print">
+        <div class="col-sm-12 col-md-9">
+            <h2>{% blocktrans with object=object %}Tilføj kommentar til {{ object }}{% endblocktrans %}</h2>
+        </div>
+        <div class="divider"></div>
+    </div>
+    <div class="row">
+        <div class="col-sm-12 col-md-8">
+            <form name="addvisitcommentform" id="addvisitcommentform" action="{% url 'visit-add-comment' object.pk %}" method="post">
+                {% csrf_token %}
+                <div class="row form-group">
+                    <div class="col-sm-2">
+                        <label for="{{ form.new_comment.id_for_label }}">{{ form.new_comment.label }}:</label>
+                    </div>
+                    <div class="col-sm-7">
+                        {{ form.new_comment }}
+                    </div>
+                    <div class="col-sm-3 with-errors">
+                        {{ form.new_comment.errors }}
+                    </div>
+                </div>
+                <hr>
+                {% include 'common/save_cancel.html' %}
+            </form>
+        </div>
+    </div>
+{% endblock %}

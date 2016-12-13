@@ -1,0 +1,9 @@
+<ul>
+{% for x in visit.bookings.all %}
+    <li>
+    {% include 'booking/email/snippets/booking_info.html' with booking=x booker=x.booker %}
+    </li>
+{% empty %}
+    <li>Ingen tilmeldte</li>
+{% endfor %}
+</ul>

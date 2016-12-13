@@ -1,0 +1,95 @@
+{% extends 'index.html' %}
+{% load staticfiles %}
+{% load i18n %}
+{% load booking_tags %}
+
+{% block htmltitle %} - {% blocktrans %}Redigér autosend for {{ object }}{% endblocktrans %}{% endblock %}
+
+{% block content %}
+    {% include 'common/breadcrumbrow.html' %}
+
+    <div class="row titlebar hidden-print">
+        <div class="col-sm-12 col-md-9">
+            <h2>{% blocktrans %}Redigér autosend for {{ object }}{% endblocktrans %}</h2>
+        </div>
+        <div class="divider"></div>
+    </div>
+    <div class="row">
+        <div class="col-sm-12">
+            {% url 'emailtemplate-list' as template_list_url %}
+            <p>
+                {% blocktrans %}
+                    Indstil for hvilke situationer der skal afsendes email automatisk. Skabeloner til email-afsendelse kan redigeres på <a href="{{ template_list_url }}" target="_blank">Skabelon-listen</a>.
+                {% endblocktrans %}
+            </p>
+            <form name="changebookingautosendform" id="changebookingautosendform" action="{% url 'change-visit-autosend' object.pk %}" method="post">
+                {% csrf_token %}
+                {% with autosendformset=form %}
+                    {{ autosendformset.management_form }}
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                            <th class="col-sm-5">{% trans 'Skabelon' %}</th>
+                            <th class="col-sm-1">{% trans 'Aktiv' %}</th>
+                            <th class="col-sm-1">{% trans 'Genbrug indstilling fra tilbud' %}</th>
+                            <th class="col-sm-1">{% trans 'Inaktiv' %}</th>
+                            <th class="col-sm-2">{% trans 'Tilbuddets indstilling' %}</th>
+                            <th class="col-sm-2">{% trans 'Dage' %}</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                            {% for autosendform in autosendformset %}
+                                <tr class="autosend-row">
+                                    <td>
+                                        {{ autosendform.label }}
+                                        {% for field in autosendform.hidden_fields %}
+                                            {{ field }}
+                                        {% endfor %}
+                                    </td>
+                                    {% for radio in autosendform.active %}
+                                        <td>{{ radio.tag }}</td>
+                                    {% endfor %}
+                                    <td>
+                                        {% if autosendform.inherit_from.days_relevant and autosendform.inherit_from.days != None %}
+                                            {% if autosendform.inherit_from.enabled %}
+                                                <span class="autosend-inherit-active">{% trans 'Aktiv' %}</span>,
+                                            {% else %}
+                                                <span class="autosend-inherit-inactive">{% trans 'Inaktiv' %}</span>,
+                                            {% endif %}
+                                            {% blocktrans with days=autosendform.inherit_from.days %}{{ days }} dage{% endblocktrans %}
+                                        {% else %}
+                                            {% if autosendform.inherit_from.enabled %}
+                                                <span class="autosend-inherit-active">{% trans 'Aktiv' %}</span>
+                                            {% else %}
+                                                <span class="autosend-inherit-inactive">{% trans 'Inaktiv' %}</span>
+                                            {% endif %}
+                                        {% endif %}
+                                    </td>
+                                    <td {% if autosendform.days.help_text %}data-toggle="tooltip" data-placement="right" title="{{ autosendform.days.help_text }}"{% endif %}>
+                                        {{ autosendform.days }}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <div class="clearfix">
+                        <hr>
+                        <input class="btn btn-default pull-left" type="submit" value="{% trans 'Annullér' %}" name="cancel">
+                        <input class="btn btn-primary pull-right" type="submit" value="{% trans 'Opdater' %}" name="confirm">
+                    </div>
+                {% endwith %}
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_scripts %}
+{#    {% with autosendformset=form %}#}
+{#    {% include 'common/fields/autosend_script.html' %}#}
+{#    {% endwith %}#}
+    <script type="text/javascript">
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip({'container':$('body')});
+        })
+    </script>
+{% endblock %}

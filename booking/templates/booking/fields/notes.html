@@ -1,0 +1,14 @@
+{% load i18n %}
+{% if bookingform.notes %}
+<div class="form-group">
+    <div class="col-sm-2">
+        <label class="control-label {{ bookingform.notes.css_classes }}" for="{{ bookingform.notes.id_for_label }}">{% trans "Kommentarer" %}</label>
+    </div>
+    <div class="col-sm-6{% if bookingform.notes.errors %} has-error{% endif %}">
+        {{ bookingform.notes }}
+    </div>
+    <div class="col-sm-4 help-block with-errors">
+        {{ bookingform.notes.errors }}
+    </div>
+</div>
+{% endif %}

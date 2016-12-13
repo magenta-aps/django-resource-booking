@@ -1,0 +1,70 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load booking_tags %}
+
+{% block htmltitle %} - {% trans "ressourcebehov" %}{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+
+    {% include 'common/breadcrumbrow.html' %}
+    <div class="divider"></div>
+
+    <h1>{% blocktrans with productname=product.title %}Ressourcebehov for '{{ productname }}'{% endblocktrans %}</h1>
+    <p>{% blocktrans with unitname=product.organizationalunit.name %}Enhed: {{ unitname }}{% endblocktrans %}</p>
+    <hr/>
+
+    <div>
+        <a href="{% url 'resourcerequirement-create' product.id %}?back={{ request.get_full_path | urlencode }}" role="button" class="btn btn-default">
+            <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+            {% trans 'Opret nyt ressourcebehov' %}
+        </a>
+        <a href="{% url 'resourcepool-list' %}" role="button" class="btn btn-default pull-right">{% trans 'Administrér ressourcegrupper' %}</a>
+    </div>
+
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>{% trans 'Ressourcegruppe' %}</th>
+                <th>{% trans 'Type' %}</th>
+                <th>{% trans 'Antal nødvendige' %}</th>
+                <th>{% trans 'Antal tilgængelige' %}</th>
+                <th>{% trans 'Handling' %}</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for resourcerequirement in resourcerequirements.all %}
+            <tr>
+                <td>
+                    <a href="{% url 'resourcepool-view' resourcerequirement.resource_pool.id %}">{{ resourcerequirement.resource_pool.name }}</a>
+                </td>
+                <td>
+                    {{ resourcerequirement.resource_pool.resource_type.name }}
+                </td>
+                <td {% if resourcerequirement.required_amount|gt:resourcerequirement.resource_pool.resources.count %}class="text-danger"{% endif %}>
+                    {{ resourcerequirement.required_amount }}
+                </td>
+                <td>
+                    {{ resourcerequirement.resource_pool.resources.count }}
+                </td>
+                <td>
+                    <a href="{% url 'resourcerequirement-edit' resourcerequirement.product.id resourcerequirement.id %}?back={{ request.get_full_path | urlencode }}" role="button" class="btn btn-default btn-xs">{% trans 'Redigér' %}</a>
+                    {% if resourcerequirement.can_delete %}
+                    <a href="{% url 'resourcerequirement-delete' resourcerequirement.product.id resourcerequirement.id %}?back={{ request.get_full_path | urlencode }}" role="button" class="btn btn-danger btn-xs">{% trans 'Slet' %}</a>
+                    {% endif %}
+                </td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="6">
+                    {% trans 'Ingen ressourcebehov' %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+{% endblock %}

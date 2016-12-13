@@ -1,0 +1,342 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load booking_tags %}
+
+{% block htmltitle %} -
+    {% if object.pk %}
+        {% blocktrans with templatename=object.name %}
+            Rediger emailskabelon '{{ templatename }}'
+        {% endblocktrans %}
+    {% else %}
+        {% trans "Ny emailskabelon" %}
+    {% endif %}
+{% endblock %}
+
+{% block head %}{% endblock %}
+
+{% block content %}
+
+    {% include 'common/breadcrumbrow.html' %}
+
+    <div class="clearfix">
+        <h1 class="pull-left">
+            {% if object.pk %}
+                {% blocktrans with templatename=object.name %}
+                    Rediger emailskabelon '{{ templatename }}'
+                {% endblocktrans %}
+            {% else %}
+                {% trans "Ny emailskabelon" %}
+            {% endif %}
+        </h1>
+        {% if object.pk %}
+            <!--a href="{% url 'emailtemplate-view' object.pk %}" class="btn btn-default">{% trans "Preview skabelon" %}</a-->
+            <a href="{% url 'emailtemplate-delete' object.pk %}?back={{ request.get_full_path | urlencode }}" class="btn btn-danger pull-right">{% trans "Slet skabelon" %}</a>
+        {% endif %}
+    </div>
+    <hr/>
+    <form action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        {{ form.non_field_errors }}
+
+        <div id="accordion" class="panel-group" aria-multiselectable="true" role="tablist">
+
+            <div class="panel panel-default">
+
+                <div class="" aria-labelledby="headingCategory" role="tabpanel" aria-expanded="true" style="">
+                    <div class="panel-body">
+
+                        <div class="row form-group">
+                            <div class="col-sm-2"></div>
+                            <div class="col-sm-5">
+                                {% blocktrans %}
+                                    Når en emailskabelon skal findes til et givet formål (f.eks. når en booking foretages), søges efter en skabelon med den rette type. Først søges efter skabeloner associeret med det relevante institut, derefter skabeloner associeret med det relevante fakultet, og sidst efter skabeloner uden enhed tilknyttet. Den først fundne af disse skabeloner vil blive anvendt til udsendelse af email.
+                                {% endblocktrans %}
+                            </div>
+                        </div>
+
+                        <div class="row form-group">
+                            <div class="col-sm-2">
+                                <label class="{{ form.key.css_classes }}" for="{{ form.key.id_for_label }}">{{ form.key.label }}:</label>
+                            </div>
+                            <div class="col-sm-5">
+                                {{ form.key }}
+                            </div>
+                            <div class="col-sm-5">
+                                {{ form.key.errors }}
+                            </div>
+                        </div>
+
+                        <div class="row form-group">
+                            <div class="col-sm-2"></div>
+                            <div id="key_info" class="col-sm-5" style="display: none">
+                                <span id="key_dosend">{% trans 'Automatisk udsendelse til:' %}</span>
+                                <span id="key_dontsend">{% trans 'Ingen automatisk udsendelse' %}</span>
+                                <ul></ul>
+                            </div>
+                        </div>
+
+                        <div class="row form-group">
+                            <div class="col-sm-2">
+                                <label class="{{ form.organizationalunit.css_classes }}" for="{{ form.organizationalunit.id_for_label }}">{{ form.organizationalunit.label }}:</label>
+                            </div>
+                            <div class="col-sm-5">
+                                {{ form.organizationalunit }}
+                            </div>
+                            <div class="col-sm-5">
+                                {{ form.organizationalunit.errors }}
+                            </div>
+                        </div>
+
+                        <div class="row form-group">
+                            <div class="col-sm-2"></div>
+                            <div class="col-sm-5">
+                                {% blocktrans %}
+                                    Skabelon-systemet anvender <a href="https://docs.djangoproject.com/en/1.9/ref/templates/language/" target="_blank">Djangos skabelonmodel</a>. Det betyder, at der udover almindelig tekst og HTML-kode kan indsættes felter, som udfyldes med værdier fra Bookinger, Besøg og Tilbud ud fra den sammenhæng beskeden skal udsendes i.
+                                {% endblocktrans %}
+                            </div>
+                        </div>
+
+                        <div class="row form-group">
+                            <div class="col-sm-2"></div>
+                            <div class="col-sm-5">
+                                <div id="fieldinsert" class="dropdown">
+                                    <a role="button" data-toggle="dropdown" class="btn btn-default pull-right disabled" data-target="#" href="#">
+                                        {% trans 'Indsæt felt' %} <span class="caret"></span>
+                                    </a>
+                                    <ul class="dropdown-menu multi-level" role="menu" aria-labelledby="dropdownMenu">
+                                        {% include 'email/modelfieldselect.html' with map=modelmap path="" function="insertField" only %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row form-group">
+                            <div class="col-sm-2">
+                                <label class="{{ form.subject.css_classes }}" for="{{ form.subject.id_for_label }}">{{ form.subject.label }}:</label>
+                            </div>
+                            <div class="col-sm-5">
+                                {{ form.subject }}
+                            </div>
+                            <div class="col-sm-5">
+                                {{ form.subject.errors }}
+                            </div>
+                        </div>
+
+                        <div class="row form-group">
+                            <div class="col-sm-2">
+                                <label class="{{ form.body.css_classes }}" for="{{ form.body.id_for_label }}">{{ form.body.label }}:</label>
+                            </div>
+                            <div class="col-sm-5">
+                                {{ form.body }}
+                            </div>
+                            <div class="col-sm-5">
+                                {{ form.body.errors }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {% include 'common/save_cancel.html' %}
+        
+        <div class="divider"></div>
+    </form>
+
+
+{% endblock %}
+
+{% block extra_scripts %}
+    {{ form.media }}
+    <script type="text/javascript">
+
+        function getSelectionStart(o) {
+            if (o.createTextRange) {
+                var r = document.selection.createRange().duplicate();
+                r.moveEnd('character', o.value.length);
+                if (r.text == '') return o.value.length;
+                return o.value.lastIndexOf(r.text);
+            } else {
+                return o.selectionStart;
+            }
+        };
+
+        function getSelectionEnd(o) {
+            if (o.createTextRange) {
+                var r = document.selection.createRange().duplicate();
+                r.moveStart('character', -o.value.length);
+                return r.text.length;
+            } else {
+                return o.selectionEnd;
+            }
+        };
+
+        $(function(){
+
+            var menuContainer = $("<div>").css({position:"absolute",top:0,left:0});
+            $("body").append(menuContainer);
+
+            menuContainer.append($(".dropdown-menu li ul"));
+
+            var openMenu = function(event) {
+                var $this = $(this);
+                closeMenu.call($this.parent().children("li").not($this));
+                if (!$this.hasClass("disabled")) {
+                    $this.addClass("open");
+                    var menu = $("#" + $this.attr("data-target"));
+                    var pageOffset = $this.offsetParent().offset();
+                    menu.css({
+                        position: "absolute",
+                        top: $this.position().top + pageOffset.top,
+                        left: $this.position().left + pageOffset.left + $this.width()
+                    });
+                    menu.show();
+                }
+            };
+
+            var closeMenu = function(event) {
+                var $this = $(this);
+                $this.removeClass("open");
+                for (var i=0; i<$this.length; i++) {
+                    var menu = $("#" + $($this.get(i)).attr("data-target") + ":visible");
+                    if (menu && menu.length) {
+                        menu.hide();
+                        menu.find("li").each(closeMenu);
+                    }
+                }
+            };
+
+            $(".dropdown-menu li").on('mouseover', openMenu);
+            $('.dropdown').on('hide.bs.dropdown', function () {
+                $(this).find(".dropdown-submenu").removeClass("open");
+                closeMenu.call($(this).find(".dropdown-submenu"));
+            });
+
+            var subjectField = $("#{{ form.subject.id_for_label }}");
+            var bodyField = $("#{{ form.body.id_for_label }}");
+            var dropdownbutton = $("#fieldinsert > [role=button]");
+            var currentFocus;
+
+            var focus = function(target) {
+                dropdownbutton.removeClass("disabled")
+                if (target) {
+                    currentFocus = target;
+                }
+            };
+            var blur = function() {
+                dropdownbutton.addClass("disabled")
+            };
+
+            subjectField.on("focus", focus.bind(null, subjectField));
+            subjectField.on("blur", blur);
+            bodyField.on("focus", focus.bind(null, bodyField));
+            bodyField.on("blur", blur);
+
+            /*setTimeout(function(){
+                var editor = tinymce.getInstanceById("{{ form.body.id_for_label }}");
+                var body = $(editor.contentDocument).find("body");
+                body.on("focus", focus.bind(null, bodyField));
+                body.on("blur", blur);
+            },0);*/
+
+            dropdownbutton.on("focus", function() {
+                focus();
+            });
+
+            window.insertField = function(field) {
+                var insertion = "\{\{ "+field+" \}\}";
+                if (currentFocus == subjectField) {
+                    var input = subjectField.get(0);
+                    var start = getSelectionStart(input);
+                    var end = getSelectionEnd(input);
+                    subjectField.val(input.value.substring(0, start) + insertion + input.value.substring(end));
+                } else if (currentFocus == bodyField) {
+                    //tinymce.get(bodyField.attr("id")).execCommand('mceInsertContent',false, insertion);
+                    var input = bodyField.get(0);
+                    var start = getSelectionStart(input);
+                    var end = getSelectionEnd(input);
+                    bodyField.val(input.value.substring(0, start) + insertion + input.value.substring(end));
+                }
+            }
+        });
+
+        $(function(){
+            {% autoescape off %}
+            var map = [
+                {
+                    'keys': {{ object.type.editor_keys | jsonify }},
+                    'label': "{% trans 'Redaktører på tilbuddet' %}"
+                },
+                {
+                    'keys': {{ object.type.contact_person_keys | jsonify }},
+                    'label': "{% trans 'Kontaktpersoner på tilbuddet' %}"
+                },
+                {
+                    'keys': {{ object.type.booker_keys | jsonify }},
+                    'label': "{% trans 'Booker af et besøg' %}"
+                },
+                {
+                    'keys': {{ object.type.unit_hosts_keys | jsonify }},
+                    'label': "{% trans 'Potentielle værter i enheden' %}"
+                },
+                {
+                    'keys': {{ object.type.unit_teachers_keys | jsonify }},
+                    'label': "{% trans 'Potentielle undervisere i enheden' %}"
+                },
+                {
+                    'keys': {{ object.type.visit_hosts_keys | jsonify }},
+                    'label': "{% trans 'Tildelte værter for besøget' %}"
+                },
+                {
+                    'keys': {{ object.type.visit_teachers_keys | jsonify }},
+                    'label': "{% trans 'Tildelte undervisere for besøget' %}"
+                },
+                {
+                    'keys': {{ object.type.visit_added_host_keys | jsonify }},
+                    'label': "{% trans 'Værter som tildeles et besøg (når de tildeles)' %}"
+                },
+                {
+                    'keys': {{ object.type.visit_added_teacher_keys | jsonify }},
+                    'label': "{% trans 'Undervisere som tildeles et besøg (når de tildeles)' %}"
+                }
+            ];
+            {% endautoescape %}
+            var keyselect = $("#{{ form.key.id_for_label }}"),
+                info = $("#key_info"),
+                info_list = info.find("ul");
+            var updateInfo = function(){
+                var value = parseInt(keyselect.val(), 10);
+                if (value) {
+                    info_list.empty();
+                    var found;
+                    for (var i=0; i<map.length; i++) {
+                        if ($.inArray(value, map[i].keys) != -1) {
+                            info_list.append("<li>" + map[i].label + "</li>");
+                            found = true;
+                        }
+                    }
+                    $("#key_dosend").toggle(!!found);
+                    $("#key_dontsend").toggle(!found);
+                    info.show();
+                }
+            };
+            {% autoescape off %}
+            var enable_booking = {{ object.type.enable_booking | jsonify }};
+            {% endautoescape %}
+            var updateFields = function() {
+                var value = parseInt(keyselect.val(), 10),
+                    bookingField = $("[data-target='menu_booking']"),
+                    enabled = ($.inArray(value, enable_booking) != -1);
+                bookingField.toggleClass("disabled", !enabled);
+            };
+
+            keyselect.change(updateInfo);
+            updateInfo();
+            keyselect.change(updateFields);
+            updateFields();
+        });
+
+    </script>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends 'lightbox-index.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load booking_tags %}
+
+{% block head %}
+{% endblock %}
+
+{% block header %}
+{% endblock %}
+
+{% block content %}
+    {% with success=True %}
+    {% include 'booking/snippets/header.html' %}
+    {% endwith %}
+
+    <div class="modal-body">
+        <p>{% blocktrans with title=product.title %}Tak for din tilmelding til "{{ title }}". Du hører fra os snarest.{% endblocktrans%}</p>
+        <p><a id="rebook" href="{% url 'product-book' object.id %}?modal=1">{% trans "Foretag ny tilmelding" %}</a></p>
+    </div>
+
+    <div class="modal-footer">
+        <p class="text-center">
+            {% trans "Bemærk venligst at aftalen først er bindende, når du har modtaget en bekræftelse<br />fra den arrangør på Københavns Universitet, der er ansvarlig for besøget." %}
+        </p>
+        <button type="button" class="btn btn-primary" data-dismiss="modal">{% trans "OK" %}</button>
+    </div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+    <script type="text/javascript">
+        <!--
+            $("#rebook").attr("href", "{% url 'product-book' object.id %}?modal=1" + document.location.hash);
+        //-->
+    </script>
+{% endblock %}

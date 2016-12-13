@@ -1,0 +1,1 @@
+Påmindelse om besøg på KU: {{ visit.display_title }}

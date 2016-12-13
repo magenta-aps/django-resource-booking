@@ -1,0 +1,46 @@
+{% extends 'lightbox-index.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load booking_tags %}
+
+{% block head %}
+{% endblock %}
+
+{% block header %}
+{% endblock %}
+
+{% block content %}
+
+    {% include 'booking/snippets/header.html' %}
+    <div class="modal-body">
+        <p>{% trans "Udfyld venligst nedenstående formular for at tilmelde dig et tilbud. Felter markeret med * er obligatoriske." %}</p>
+        <div class="divider"></div>
+
+        <form id="bookingform" class="form-horizontal clearfix" data-toggle="validator" role="form" novalidate="true" method="POST">
+            {% csrf_token %}
+            {{ bookerform.non_field_errors }}
+            {% include "booking/fields/basedata.html" %}
+            {% include "booking/fields/subjects.html" %}
+            {% include "booking/fields/school.html" %}
+            {% include "booking/fields/time.html" %}
+            {% include "booking/fields/attendees.html" %}
+            {% include "booking/fields/notes.html" %}
+        </form>
+    </div>
+    {% include 'booking/snippets/footer.html' %}
+
+{% endblock %}
+
+{% block extra_scripts %}
+
+    {% include 'booking/fields/school_script.html' %}
+    {% include "booking/fields/time_script.html" %}
+
+    <script type="text/javascript">
+        $(function(){
+            $("#submitbutton").click(function(){
+                $("#bookingform").submit();
+            });
+        });
+    </script>
+{% endblock %}

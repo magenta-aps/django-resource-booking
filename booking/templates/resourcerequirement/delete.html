@@ -1,0 +1,33 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load staticfiles %}
+
+{% block htmltitle %} - {% trans 'slet ressourcebehov' %}{% endblock %}
+
+{% block content %}
+
+    {% include 'common/breadcrumbrow.html' %}
+    <div class="divider"></div>
+
+    <h1>{% trans 'Slet ressourcebehov' %}</h1>
+    <hr/>
+
+    <form action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <p>{% trans 'Er du sikker på at du vil slette dette ressourcebehov?' %}</p>
+        <dl class="dl-horizontal wide">
+            <dt>{% trans 'Type' %}</dt>
+            <dd>{{ object.resource_pool.resource_type }}</dd>
+            <dt>{% trans 'Ressourcegruppe' %}</dt>
+            <dd>{{ object.resource_pool.name }}</dd>
+            <dt>{% trans 'Antal nødvendige' %}</dt>
+            <dd>{{ object.required_amount }}</dd>
+        </dl>
+
+        <div class="divider"></div>
+        <button type="submit" class="btn btn-primary">{% trans 'Ja' %}</button>
+        <a class="btn btn-default" href="{% if oncancel %}{{ oncancel }}{% else %}javascript:history.back(){% endif %}">{% trans 'Nej' %}</a>
+        <div class="divider"></div>
+    </form>
+
+{% endblock %}

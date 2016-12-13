@@ -1,0 +1,11 @@
+{% load booking_tags %}
+<p>Kære {{ recipient.get_full_name }}.</p>
+
+<p>
+    Der er ingen tildelte værter til besøget
+    {% include 'booking/email/snippets/visit_link.html' %}{% include 'booking/email/snippets/visit_time.html' %}
+</p>
+<p>
+    Du kan gå til besøget via følgende link:<br/>
+    <a href="{% full_url 'visit-view' besoeg.pk %}">{% full_url 'visit-view' besoeg.pk %}</a>
+</p>

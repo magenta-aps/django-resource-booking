@@ -1,0 +1,53 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load booking_tags %}
+
+{% block htmltitle %} - {% trans "Opret besøg for tidspunkt for" %} '{{ object.product.title }}'{% endblock %}
+
+{% block head %}
+{% include 'common/resources/datepicker_style.html' %}
+<link rel="stylesheet" href="{% static 'css/bootstrap-slider.css' %}" />
+{% endblock %}
+
+
+{% block content %}
+    <div class="divider"></div>
+    <h1>
+        {% trans "Opret besøg for tidspunkt for" %}
+        '<a href="{% url 'product-view' object.product.pk %}">{{ object.product.title }}</a>'
+    </h1>
+
+    <div class="divider"></div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div>
+                {{form.errors}}
+            </div>
+            <p>
+                {% blocktrans with interval=object.interval_display product_title=object.product.title %}
+                Der er endnu ikke oprettet noget besøg på tidspunktet
+                {{ interval }} for tilbuddet '{{ product_title }}'. Det er
+                nødvendigt at oprette et besøg før der kan knyttes ressourcer
+                til det givne tidspunkt. Klik på knappen nedenfor for at
+                oprette et besøg for tidspunktet.
+                {% endblocktrans %}
+            </p>
+            <form action="{% url 'time-view' object.product.pk object.pk %}" id="create-time-form" method="POST">
+                {% csrf_token %}
+                <input class="btn btn-success" type="submit" value="{% trans  'Opret besøg' %}" role="button" name="confirm" />
+                <a href="{% url 'manage-times' object.product.pk %}" role="button" class="btn btn-danger">{% trans 'Annullér' %}</a>
+            </form>
+        </div>
+    </div>
+
+    </div>
+{% endblock %}
+
+{% block extra_scripts %}
+{% include 'eventtime/date_interval_script.html' %}
+<script type="text/javascript"><!--
+KU.initialize_time_interval('#create-time-form');
+//--></script>
+{% endblock %}

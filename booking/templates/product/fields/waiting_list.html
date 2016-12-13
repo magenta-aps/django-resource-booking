@@ -1,0 +1,50 @@
+{% load i18n %}
+{% if form.do_create_waiting_list %}
+    <div class="row form-group">
+        <div class="col-sm-2">
+            <label for="{{ form.do_create_waiting_list.id_for_label }}" class="control-label">{{ form.do_create_waiting_list.label }}:</label>
+        </div>
+        <div class="col-sm-1">
+            {{ form.do_create_waiting_list }}
+        </div>
+
+        <div class="col-sm-2">
+            <label for="{{ form.waiting_list_length.id_for_label }}" class="control-label waitinglist-dependent">{{ form.waiting_list_length.label }}:</label>
+        </div>
+        <div class="col-sm-1">
+            {{ form.waiting_list_length }}
+        </div>
+
+        <div class="col-sm-3 with-errors">
+            {{ form.do_create_waiting_list.errors }}
+            {{ form.waiting_list_length.errors }}
+        </div>
+
+    </div>
+
+    <div class="row form-group">
+        <div class="col-sm-2">
+            <label for="{{ form.waiting_list_deadline_days.id_for_label }}" class="control-label waitinglist-dependent">{% trans 'Lukning af venteliste:' %}</label>
+        </div>
+
+        <div class="col-sm-1">
+            {{ form.waiting_list_deadline_days }}
+        </div>
+        <div class="col-sm-2">
+            <span class="waitinglist-dependent">{% trans 'dage inden besøg' %}</span>
+        </div>
+
+        <div class="col-sm-1">
+            {{ form.waiting_list_deadline_hours }}
+        </div>
+        <div class="col-sm-2">
+            <span class="waitinglist-dependent">{% trans 'timer inden besøg' %}</span>
+        </div>
+
+        <div class="col-sm-3 with-errors">
+            {{ form.waiting_list_deadline_days.errors }}
+            {{ form.waiting_list_deadline_hours.errors }}
+        </div>
+
+    </div>
+{% endif %}

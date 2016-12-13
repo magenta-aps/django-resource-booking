@@ -1,0 +1,103 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load booking_tags %}
+
+{% block htmltitle %} - {% if object.pk %}{% trans "rediger tilbud" %}{% else %}{% trans "opret tilbud" %}{% endif %}{% endblock %}
+
+{% block content %}
+    {% include 'common/breadcrumbrow.html' %}
+    <div class="divider"></div>
+    <div class="row form-group">
+        <div class="col-sm-8">
+            <h1>
+                {% trans 'Rediger ressourcer for'%}
+                "{{ object.title }}"
+                ({{ object.get_type_display }})
+            </h1>
+        </div>
+    </div>
+    <hr/>
+    <form id="productform" action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data" autocomplete="off">
+        {% csrf_token %}
+
+        {{ form.non_field_errors }}
+
+        <div id="accordion" class="panel-group" aria-multiselectable="true" role="tablist">
+            <div class="panel panel-default">
+                <div id="headingTeachersAndHosts" class="panel-heading" role="tab">
+                    <h4 class="panel-title">
+                        <a class="" aria-controls="collapseTeachersAndHosts" aria-expanded="false" href="#collapseTeachersAndHosts" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Værter og undervisere" %}<span class="caret pull-right"></span></a>
+                    </h4>
+                </div>
+                <div id="collapseTeachersAndHosts" class="panel-collapse collapse in" aria-labelledby="headingContact" role="tabpanel" aria-expanded="false" style="">
+                    <div class="panel-body">
+                    {% trans "Vælg værter der skal kunne kontaktes for afvikling af dette tilbud" as vaerter_helptext %}
+                    {% include 'common/fields/userselect_with_availability_link.html' with field=form.potentielle_vaerter helptext=vaerter_helptext %}
+                    {% include 'common/fields/generic_field.html' with field=form.needed_hosts %}
+                    {% trans "Vælg undervisere der skal kunne kontaktes for afvikling af dette tilbud" as uv_helptext %}
+                    {% include 'common/fields/userselect_with_availability_link.html' with field=form.potentielle_undervisere helptext=uv_helptext %}
+                    {% include 'common/fields/generic_field.html' with field=form.needed_teachers %}
+                    </div>
+                </div>
+            </div>
+            {% if form.rooms_needed %}
+            <div class="panel panel-default">
+                <div id="headingRooms" class="panel-heading" role="tab">
+                    <h4 class="panel-title">
+                        <a class="" aria-controls="collapseRooms" aria-expanded="false" href="#collapseRooms" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Lokaler" %}<span class="caret pull-right"></span></a>
+                    </h4>
+                </div>
+                <div id="collapseRooms" class="panel-collapse collapse in" aria-labelledby="headingContact" role="tabpanel" aria-expanded="false" style="">
+                    <div class="panel-body">
+                        <div style="display: none">
+                        {% include 'common/fields/generic_field.html' with field=form.locality %}
+                        </div>
+                        {% include 'product/fields/rooms.html' %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        {% include 'common/save_cancel.html' %}
+        <div class="divider"></div>
+    </form>
+
+{% endblock %}
+
+{% block extra_scripts %}
+
+    {{ form.media }}
+    {% include 'common/resources/datetime-picker_script.html' %}
+    <script type="text/javascript" src="{% static 'js/formutil.js' %}"></script>
+
+    {% include 'product/fields/studymaterials_script.html' %}
+    {% include 'common/fields/autosend_script.html' %}
+    {% include 'product/fields/institution_level_script.html' %}
+    {% include 'product/fields/time_script.html' %}
+
+    <script type="text/javascript"><!--
+
+		$(function() {
+		    // Toggle arrows
+		    $('.collapse').on('show.bs.collapse', function() {
+		        $(this).prev().find(".caret").addClass("caret-up");
+		    });
+		    $('.collapse').on('hide.bs.collapse', function() {
+		        $(this).prev().find(".caret").removeClass("caret-up");
+		    });
+		    $('.closeall').click(function(){
+		        $('.panel-collapse.in').collapse('hide');
+		    });
+		    $('.openall').click(function(){
+		        $('.panel-collapse:not(".in")').collapse('show');
+		    });
+
+            // Select duration
+		    $('#id_duration option[value="' + $('#id_duration').data('selected') + '"]').attr('selected', true);
+		});
+
+    //--></script>
+
+{% endblock %}

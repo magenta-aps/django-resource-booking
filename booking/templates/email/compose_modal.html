@@ -1,0 +1,230 @@
+{% extends 'lightbox-index.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load booking_tags %}
+
+{% block head %}
+
+{% endblock %}
+
+{% block content %}
+    
+    <form action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data" autocomplete="off" id="emailform">
+    
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="{% trans "Close" %}"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">{% trans "Send e-mail" %}: {{ object.title }}</h4>
+        </div>
+    
+        <div class="modal-body">
+        
+            {% csrf_token %}
+    
+            {{ form.non_field_errors }}
+    
+                        {% if form.name != None %}
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label {{ form.name.css_classes }}" for="{{ form.name.id_for_label }}">{{ form.name.label }}:</label>
+                                <div class="col-sm-6">
+                                    {{ form.name }}
+                                </div>
+                                <div class="col-sm-3 help-block with-errors">
+                                    {{ form.name.errors }}
+                                </div>
+                            </div>
+                        {% endif %}
+    
+                        {% if form.email != None %}
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label {{ form.email.css_classes }}" for="{{ form.email.id_for_label }}">{{ form.email.label }}:</label>
+                                <div class="col-sm-6">
+                                    {{ form.email }}
+                                </div>
+                                <div class="col-sm-3 help-block with-errors">
+                                    {{ form.email.errors }}
+                                </div>
+                            </div>
+                        {% endif %}
+    
+                        {% if form.phone != None %}
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label {{ form.phone.css_classes }}" for="{{ form.phone.id_for_label }}">{{ form.phone.label }}:</label>
+                                <div class="col-sm-6">
+                                    {{ form.phone }}
+                                </div>
+                                <div class="col-sm-3 help-block with-errors">
+                                    {{ form.phone.errors }}
+                                </div>
+                            </div>
+                        {% endif %}
+    
+                        {% if form.recipients != None %}
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label {{ form.recipients.css_classes }}" for="{{ form.recipients.id_for_label }}">{{ form.recipients.label }}:</label>
+                                <div id="recipients" class="col-sm-6">
+                                    {% if recp %}
+                                        <div id="recipient-groups">{% trans 'Tilføj:' %}&nbsp;</div>
+                                    {% endif %}
+                                    <div id="recipient-list" class="email-recipients">
+                                        {{ form.recipients }}
+                                    </div>
+                                </div>
+                                    
+                                <div class="col-sm-3 help-block with-errors">
+                                    {{ form.recipients.errors }}
+                                </div>
+                            </div>
+                            
+                        {% endif %}
+    
+                        {% if form.subject != None %}
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label {{ form.subject.css_classes }}" for="{{ form.subject.id_for_label }}">{{ form.subject.label }}:</label>
+                                <div class="col-sm-6">
+                                    {{ form.subject }}
+                                </div>
+                                <div class="col-sm-3 help-block with-errors">
+                                    {{ form.subject.errors }}
+                                </div>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label {{ form.body.css_classes }}" for="{{ form.body.id_for_label }}">{{ form.body.label }}:</label>
+                            <div class="col-sm-6">
+                                {{ form.body }}
+                            </div>
+                            <div class="col-sm-3 help-block with-errors">
+                                {{ form.body.errors }}
+                            </div>
+                        </div>
+    
+                        {% if template_key %}
+                            <input type="hidden" name="template" value="{{ template_key }}">
+                            
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">{% trans 'Skabeloner:' %}</label>
+                                <div class="col-sm-6">
+                                    {% if templates %}
+                                        {% for template in templates reversed %}
+                                            <a href="{% url 'emailtemplate-view' template.id %}" target="_blank" class="
+                                            {% if forloop.last %}template-selected{% else %}template-overridden{% endif %}
+                                            ">{% if template.organizationalunit %}{{ template.organizationalunit.name }}{% else %}{% trans 'Rodskabelon' %}{% endif %}</a>
+                                            {% if not forloop.last %} &gt; {% endif %}
+                                        {% endfor %}
+                                    {% else %}
+                                        {% trans 'Ingen skabeloner fundet' %}
+                                        <a href="{% url 'emailtemplate-create' %}?organizationalunit={{ template_unit.id }}&key={{ template_key }}" target="_blank">{% trans 'Opret skabelon' %}</a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            {% include 'common/send_cancel.html' %}
+        </div>
+        
+    </form>
+
+{% endblock %}
+
+{% block extra_scripts %}
+    {{ form.media }}
+
+    {% if recp %}
+    <script type="text/javascript">
+        {% autoescape off %}
+            <!--
+            var recipients = {{ recp | jsonify }};
+            var groupContainer = $("#recipient-groups");
+            var recipientContainer = $("#recipient-list > ul");
+            var emailRegex = /^([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$/;
+            var customPrefix = "custom:";
+
+            var addRecipient = function(value, text) {
+                if (recipientContainer.find("input[value='"+value+"']").length == 0) {
+                    var li = $("<li>"),
+                        label = $("<label>"),
+                        box = $("<input>");
+                    li.append(label);
+                    label.text(text);
+                    label.prepend(box);
+                    box.attr({
+                        'type':'checkbox',
+                        'name':'{{ form.recipients.name }}',
+                        'id':'{{ form.recipients.name }}_' + value,
+                        'checked':'checked',
+                        'value':value
+                    });
+                    recipientContainer.append(li);
+                    modal.updateHeight();
+                }
+            };
+
+            var addGroup = function(groupName) {
+                var items = recipients[groupName]['items'];
+                for (var id in items) {
+                    addRecipient(id, items[id]);
+                }
+            };
+
+            for (var groupName in recipients) {
+                var group = recipients[groupName];
+                var label = group['label'];
+                var button = $("<button>");
+                button.text(label);
+                button.attr({type:"button"});
+                groupContainer.append(button);
+                button.click(addGroup.bind(null, groupName));
+            }
+
+            var custom = $("<input>");
+            custom.attr({type:'email', placeholder:'{% trans 'Indtast email-adresse' %}'});
+            groupContainer.append(custom);
+            custom.keydown(function(event){
+                if (event.keyCode == 13) {
+                    try {
+                        var address = this.value;
+                        if (emailRegex.test(address)) {
+                            addRecipient(customPrefix + address, address);
+                        }
+                    } catch (e) {}
+                    event.preventDefault();
+                    return false;
+                }
+            });
+
+            $("form#emailform").submit(function(){
+                var address = custom.val();
+                if (emailRegex.test(address)) {
+                    addRecipient(customPrefix + address, address);
+                }
+            });
+
+            var clear = $("<button>");
+            clear.attr({type:"button"});
+            clear.text("{% trans 'Ryd' %}");
+            groupContainer.append(clear);
+            clear.click(function(){
+                recipientContainer.empty();
+                modal.updateHeight();
+            });
+            //-->
+        {% endautoescape %}
+    </script>
+    {% endif %}
+
+    <script type="text/javascript">
+        <!--
+        $(".cancelbutton").click(function(event){
+            modal.close();
+            event.preventDefault();
+            return false;
+        });
+        -->
+    </script>
+{% endblock %}

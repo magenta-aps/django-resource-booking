@@ -1,0 +1,209 @@
+{% extends 'index.html' %}
+{% load staticfiles %}
+{% load booking_tags %}
+{% load i18n %}
+
+{% block htmltitle %} -
+    {% if not object.visit.is_multi_product_visit %}
+        {{ object.visit.product.title }} - {{ object.visit.date_display }} -
+    {% endif %}
+    {% blocktrans with id=object.id %}Booking #{{ id }}{% endblocktrans %}
+{% endblock %}
+
+{% block content %}
+
+    {% include 'common/breadcrumbrow.html' %}
+
+    <div class="row titlebar hidden-print">
+        <div class="col-sm-12 col-md-9">
+            <h1>{% blocktrans with id=object.id %}Booking #{{ id }}{% endblocktrans %}</h1>
+        </div>
+        <div class="divider"></div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-12 col-md-8">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    {% url 'visit-view' object.visit.id as visiturl %}
+                    {% if object.visit.multiproductvisit %}
+                        {% blocktrans with firstname=object.booker.firstname lastname=object.booker.lastname visitdate=object.visit.multiproductvisit.date_display %}
+                            <strong>{{ firstname }} {{ lastname }}</strong> har anmodet om deltagelse i en <a href="{{ visiturl }}">prioriteret liste</a> af tilbud den {{ visitdate }}:
+                        {% endblocktrans %}
+                        <ul>
+                        {% for product in object.visit.multiproductvisit.products %}
+                            <li><a href="{% url 'product-view' product.id %}">{{ product.title }}</a></li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        {% url 'product-view' object.visit.product.id as producturl %}
+                        {% blocktrans with firstname=object.booker.firstname lastname=object.booker.lastname producttitle=object.product.title visittime=object.visit.date_display_context %}
+                            <strong>{{ firstname }} {{ lastname }}</strong> har tilmeldt sig <a href="{{ producturl }}">{{ producttitle }}</a> med afvikling <a href="{{ visiturl }}">{{ visittime }}</a>
+                        {% endblocktrans %}
+                        {% if object.is_waiting %}
+                            <br/>
+                            {% blocktrans with spot=object.waitinglist_spot %}Står på venteliste som nr {{ spot }}{% endblocktrans %}
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if can_notify %}
+                <div class="pull-right dropdown">
+                    <button class="btn btn-primary dropdown-toggle" type="button" id="sendNotification" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        {% trans 'Send besked' %}
+                        <span class="caret"/>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="sendNotification">
+                        <li><a data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'booking-notify' object.pk %}">{% trans 'Ingen skabelon' %}</a></li>
+                        {% if emailtemplates %}
+                            <li role="separator" class="divider"></li>
+                            {% for id, label in emailtemplates %}
+                                <li>
+                                    {% if modal %}
+                                        <a data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'booking-notify' object.pk %}?template={{ id }}">{{ label }}</a>
+                                    {% else %}
+                                        <a href="{% url 'booking-notify' object.pk %}?template={{ id }}&back={{ request.get_full_path | urlencode }}">{{ label }}</a>
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                        {% endif %}
+                        <li role="separator" class="divider"></li>
+                        <li><a href="{% url 'emailtemplate-list' %}" target="_blank">{% trans 'Redigér skabeloner' %}</a></li>
+                    </ul>
+                </div>
+            {% endif %}
+
+
+            <h2>{% trans 'Information om tilmeldingen' %}</h2>
+
+            <dl class="dl-horizontal wide">
+
+                {% if object.visit.real.start_datetime %}
+                    <dt>{% trans 'Tidspunkt:' %}</dt>
+                    <dd><a href="{% url 'visit-view' object.visit.id %}">{{ object.visit.real.start_datetime }}</a></dd>
+                {% endif %}
+
+                <dt>{% trans 'Navn:' %}</dt>
+                <dd>{{ object.booker.firstname }} {{ object.booker.lastname }}</dd>
+
+                <dt>{% trans 'Email:' %}</dt>
+                <dd>{{ object.booker.email }}</dd>
+
+                <dt>{% trans 'Telefon:' %}</dt>
+                <dd>{{ object.booker.phone }}</dd>
+
+                <dt>{% trans 'Skole:' %}</dt>
+                <dd>{{ object.booker.school.name }}, {{ object.booker.school.postcode.number }} {{ object.booker.school.postcode.city }}</dd>
+
+                {% if object.booker.line %}
+                    <dt>{% trans 'Retning:' %}</dt>
+                    <dd>
+                        {{ object.booker.get_line_display }}
+                    </dd>
+                {% endif %}
+
+                {% if object.bookinggymnasiesubjectlevel_set.count or object.bookinggrundskolesubjectlevel_set.count %}
+                    <dt>{% trans 'Fag:' %}</dt>
+                    {% for subject in object.bookinggymnasiesubjectlevel_set.all %}
+                        <dd>
+                            {{ subject.display_value }}
+                        </dd>
+                    {% endfor %}
+                    {% for subject in object.bookinggrundskolesubjectlevel_set.all %}
+                        <dd>
+                            {{ subject.display_value }}
+                        </dd>
+                    {% endfor %}
+                {% endif %}
+
+                {% if object.get_subjects %}
+                    <dt>{% trans 'Fag:' %}</dt>
+                    <dd>
+                        <ul class="list-unstyled">
+                            {% for fag in object.get_subjects %}
+                            <li>{{ fag }}</li>
+                            {% endfor %}
+                        </ul>
+                    </dd>
+                {% endif %}
+
+                <dt>{% trans 'Niveau:' %}</dt>
+                <dd>{{ object.booker.get_level_display }}</dd>
+
+                <dt>{% trans 'Antal deltagere:' %}</dt>
+                <dd>{{ object.booker.attendee_count }}</dd>
+
+                <dt>{% trans 'Kommentar:' %}</dt>
+                <dd>{{ object.notes }}</dd>
+
+                {% if object.classbooking %}
+                    <dt>{% trans 'Rundvisning:' %}</dt>
+                    <dd>{{ object.classbooking.tour_desired | yesno }}</dd>
+                {% endif %}
+
+                {% if object.classbooking %}
+                    <dt>{% trans 'Forplejning:' %}</dt>
+                    <dd>{{ object.classbooking.catering_desired | yesno }}</dd>
+                {% endif %}
+
+                {% if object.classbooking %}
+                    <dt>{% trans 'Oplæg om uddannelse:' %}</dt>
+                    <dd>{{ object.classbooking.presentation_desired | yesno }}</dd>
+                {% endif %}
+
+                {% if object.classbooking and object.product.custom_available and object.product.custom_name %}
+                    <dt>{{ object.product.custom_name }}</dt>
+                    <dd>{{ object.classbooking.custom_desired | yesno }}</dd>
+                {% endif %}
+
+                {% if object.teacherbooking %}
+                    {% if object.teacherbooking.subjects %}
+                        <dt>{% trans 'Fag:' %}</dt>
+                        {% for subject in object.teacherbooking.subjects.all %}
+                            <dd>
+                                {{ subject }}
+                            </dd>
+                        {% endfor %}
+                    {% endif %}
+                {% endif %}
+            </dl>
+
+            <div class="divider"></div>
+
+            <div class="go-back">
+                <a href="{% url 'visit-search' %}" class="btn btn-default"><span class="glyphicon glyphicon-chevron-left"></span> {% trans 'Søg i besøg' %}</a>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-4">
+            <form class="form-horizontal">
+                <div class="panel panel-default">
+                    {% if object.visit.multiproductvisit %}
+                        {% for product in object.visit.multiproductvisit.products %}
+                            <div class="panel-heading">
+                                <h3 class="panel-title">{% blocktrans with title=product.title %}Detaljer om tilbuddet '{{ title }}'{% endblocktrans %}</h3>
+                            </div>
+                            {% include 'product/rightbox.html' with product=product %}
+                        {% endfor %}
+                    {% else %}
+                        <div class="panel-heading">
+                            <h3 class="panel-title">{% trans 'Detaljer om tilbuddet' %}</h3>
+                        </div>
+                        {% include 'product/rightbox.html' with product=object.product %}
+                    {% endif %}
+                </div>
+
+                {% include 'common/map.html' with locality=object.product.locality %}
+            </form>
+        </div>
+    </div>
+
+    {% include 'common/modal_contact.html' %}
+    {% include 'common/modal_framehost.html' %}
+
+{% endblock %}
+
+{% block extra_scripts %}
+    <script src="{% static 'js/custom.js' %}"></script>
+    <script src="{% static "js/modalframe-host.js" %}"></script>
+{% endblock %}
