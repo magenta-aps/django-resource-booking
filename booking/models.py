@@ -2078,14 +2078,17 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             )
 
     @staticmethod
-    def get_latest_booked():
-        products = Product.objects.filter(
+    def get_latest_booked(user=None):
+        qs = Product.objects.filter(
             eventtime__visit__bookings__statistics__created_time__isnull=False
         ).annotate(latest_booking=Max(
             'eventtime__visit__bookings__statistics__created_time'
         )).order_by("-latest_booking")
 
-        return list(products)
+        if user and not user.is_authenticated():
+            return Product.filter_public_bookable(qs).distinct()
+        else:
+            return qs
 
     @property
     def room_responsible_users(self):
