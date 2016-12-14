@@ -914,7 +914,6 @@ class EmailTemplate(models.Model):
 
     deprecated_key = models.IntegerField(
         verbose_name=u'Type',
-        choices=EmailTemplateType.key_choices,
         default=1
     )
 
@@ -3870,7 +3869,6 @@ class VisitComment(models.Model):
 
 class Autosend(models.Model):
     deprecated_template_key = models.IntegerField(
-        choices=EmailTemplateType.key_choices,
         verbose_name=_(u'Skabelon'),
         blank=False,
         null=False
@@ -4689,7 +4687,6 @@ class KUEmailMessage(models.Model):
     )
     deprecated_template_key = models.IntegerField(
         verbose_name=u'Template key',
-        choices=EmailTemplateType.key_choices,
         default=None,
         null=True,
         blank=True
