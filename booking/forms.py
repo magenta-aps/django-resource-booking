@@ -25,7 +25,7 @@ from django.utils.translation import ugettext_lazy as _
 from tinymce.widgets import TinyMCE
 from .fields import ExtensibleMultipleChoiceField
 from .fields import OrderedModelMultipleChoiceField
-import traceback
+
 
 class AdminProductSearchForm(forms.Form):
 
@@ -651,23 +651,13 @@ class ProductAutosendForm(forms.ModelForm):
         template_type = None
         try:
             template_type = self.instance.template_type
-            # if template_type:
-            #     print "got from instance %d: %d" % (self.instance.id, template_type.id)
-            #     if len(self.initial):
-            #         print "initial also exists: %s" % unicode(self.initial)
         except:
             pass
         if template_type is None:
             try:
                 template_type = self.initial['template_type']
-                # if template_type:
-                #     print "got from initial: %d" % template_type.id
             except:
                 pass
-        if template_type is None:
-            print "Didn't get it"
-            print self.instance.id
-            print self.initial
 
         if isinstance(template_type, EmailTemplateType):
             return template_type
@@ -677,14 +667,11 @@ class ProductAutosendForm(forms.ModelForm):
             )
 
     def label(self):
-        try:
-            return self.template_type.name
-        except:
-            return "foo"
-        # return self.template_type.name
+        return self.template_type.name
 
     def has_changed(self):
-        return (self.instance.pk is None) or super(ProductAutosendForm, self).has_changed()
+        return (self.instance.pk is None) or \
+               super(ProductAutosendForm, self).has_changed()
 
 
 ProductAutosendFormSetBase = inlineformset_factory(
