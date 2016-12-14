@@ -1627,25 +1627,7 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
                 self.request.POST, instance=self.object
             )
             if autosendformset.is_valid():
-                # Update autosend
-                for autosendform in autosendformset:
-                    if autosendform.is_valid():
-                        data = autosendform.cleaned_data
-                        if len(data) > 0:
-                            if data.get('DELETE'):
-                                template_key = data['template_key']
-                                ProductAutosend.objects.filter(
-                                    product=data['product'],
-                                    deprecated_template_key=template_key,
-                                    template_type=EmailTemplateType.get(
-                                        template_key
-                                    )
-                                ).delete()
-                            else:
-                                try:
-                                    autosendform.save()
-                                except:
-                                    pass
+                autosendformset.save()
 
     def get_success_url(self):
         try:

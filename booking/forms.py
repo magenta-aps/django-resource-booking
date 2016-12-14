@@ -25,7 +25,7 @@ from django.utils.translation import ugettext_lazy as _
 from tinymce.widgets import TinyMCE
 from .fields import ExtensibleMultipleChoiceField
 from .fields import OrderedModelMultipleChoiceField
-
+import traceback
 
 class AdminProductSearchForm(forms.Form):
 
@@ -629,11 +629,8 @@ class ProductAutosendForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ProductAutosendForm, self).__init__(*args, **kwargs)
-        template_type = None
-        if kwargs.get('instance'):
-            template_type = kwargs['instance'].template_type
-        elif kwargs.get('initial'):
-            template_type = kwargs['initial']['template_type']
+
+        template_type = self.template_type
         if template_type is not None:
             if not template_type.enable_days:
                 self.fields['days'].widget = forms.HiddenInput()
@@ -651,16 +648,43 @@ class ProductAutosendForm(forms.ModelForm):
 
     @property
     def template_type(self):
-        value = self.initial['template_type']
-        if isinstance(value, EmailTemplateType):
-            return value
-        if type(value) == int:
+        template_type = None
+        try:
+            template_type = self.instance.template_type
+            # if template_type:
+            #     print "got from instance %d: %d" % (self.instance.id, template_type.id)
+            #     if len(self.initial):
+            #         print "initial also exists: %s" % unicode(self.initial)
+        except:
+            pass
+        if template_type is None:
+            try:
+                template_type = self.initial['template_type']
+                # if template_type:
+                #     print "got from initial: %d" % template_type.id
+            except:
+                pass
+        if template_type is None:
+            print "Didn't get it"
+            print self.instance.id
+            print self.initial
+
+        if isinstance(template_type, EmailTemplateType):
+            return template_type
+        if type(template_type) == int:
             return self.fields['template_type'].to_python(
-                value
+                template_type
             )
 
     def label(self):
-        return self.template_type.name
+        try:
+            return self.template_type.name
+        except:
+            return "foo"
+        # return self.template_type.name
+
+    def has_changed(self):
+        return (self.instance.pk is None) or super(ProductAutosendForm, self).has_changed()
 
 
 ProductAutosendFormSetBase = inlineformset_factory(
@@ -687,6 +711,7 @@ class ProductAutosendFormSet(ProductAutosendFormSetBase):
                 existing_types = [
                     autosend.template_type for autosend in autosends
                 ]
+                print existing_types
                 for type in all_autosends:
                     if type not in existing_types:
                         initial.append({
@@ -698,7 +723,19 @@ class ProductAutosendFormSet(ProductAutosendFormSetBase):
         super(ProductAutosendFormSet, self).__init__(*args, **kwargs)
         if len(initial) > 0:
             initial.sort(key=lambda choice: choice['template_type'].key)
-            self.initial = initial
+            self.initial = [{} for x in existing_types] + initial
+
+    def save_new_objects(self, commit=True):
+        self.new_objects = []
+        for form in self.forms:
+            if form.instance and form.instance.pk:
+                continue
+            if self.can_delete and self._should_delete_form(form):
+                continue
+            self.new_objects.append(self.save_new(form, commit=commit))
+            if not commit:
+                self.saved_forms.append(form)
+        return self.new_objects
 
 
 class BookingForm(forms.ModelForm):

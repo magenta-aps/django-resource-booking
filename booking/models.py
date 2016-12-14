@@ -3889,9 +3889,7 @@ class Autosend(models.Model):
     )
 
     def save(self, *args, **kwargs):
-        self.template_type = EmailTemplateType.get(
-            self.deprecated_template_key
-        )
+        self.deprecated_template_key = self.template_type.key
         super(Autosend, self).save(*args, **kwargs)
 
     def get_name(self):
