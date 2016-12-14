@@ -424,18 +424,6 @@ class ChangeVisitAutosendView(AutologgerMixin, UpdateWithCancelView):
     def get_context_data(self, **kwargs):
         context = {}
 
-        context['inherited'] = {
-            item.deprecated_template_key:
-            {
-                'template_key': item.deprecated_template_key,
-                'enabled': item.enabled,
-                'days': item.days
-            }
-            for item in chain.from_iterable(
-                product.productautosend_set.all()
-                for product in self.object.real.products
-            )
-        }
         context['template_keys'] = list(set(
             template.deprecated_key
             for template in chain.from_iterable(
