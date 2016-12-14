@@ -421,26 +421,6 @@ class ChangeVisitAutosendView(AutologgerMixin, UpdateWithCancelView):
     def get_success_url(self):
         return reverse('visit-view', args=[self.object.pk])
 
-    def get_context_data(self, **kwargs):
-        context = {}
-
-        context['template_keys'] = list(set(
-            template.deprecated_key
-            for template in chain.from_iterable(
-                EmailTemplate.get_templates(product.organizationalunit)
-                for product in self.object.real.products
-            )
-        ))
-        if hasattr(self.object, 'product') and self.object.product is not None:
-            context['organizationalunit'] = \
-                self.object.product.organizationalunit
-        context['autosend_enable_days'] = EmailTemplateType.get_keys(
-            enable_days=True
-        )
-        context.update(kwargs)
-        return super(ChangeVisitAutosendView, self).\
-            get_context_data(**context)
-
 
 class BecomeSomethingView(AutologgerMixin, VisitBreadcrumbMixin,
                           RoleRequiredMixin, FormView):
