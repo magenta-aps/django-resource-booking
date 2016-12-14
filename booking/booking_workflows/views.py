@@ -21,7 +21,7 @@ from booking.booking_workflows.forms import VisitAddLogEntryForm
 from booking.booking_workflows.forms import VisitAddCommentForm
 from booking.booking_workflows.forms import ResetVisitChangesForm
 from booking.models import Visit
-from booking.models import EmailTemplate, EmailTemplateType
+from booking.models import EmailTemplateType
 from booking.models import EventTime
 from booking.models import Locality
 from booking.models import LOGACTION_MANUAL_ENTRY
@@ -33,7 +33,6 @@ from booking.views import RoleRequiredMixin, EditorRequriedMixin
 from booking.views import VisitDetailView
 from django.views.generic.base import ContextMixin
 from profile.models import TEACHER, HOST, EDIT_ROLES
-from itertools import chain
 
 import booking.models
 
