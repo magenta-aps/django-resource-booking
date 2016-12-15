@@ -669,8 +669,10 @@ class ProductAutosendForm(forms.ModelForm):
         return self.template_type.name
 
     def has_changed(self):
-        return (self.instance.pk is None) or \
-               super(ProductAutosendForm, self).has_changed()
+        return (
+            (self.instance.pk is None) or
+            super(ProductAutosendForm, self).has_changed()
+        )
 
 
 ProductAutosendFormSetBase = inlineformset_factory(
