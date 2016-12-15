@@ -2972,6 +2972,10 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     def get_autosend(self, template_key, follow_inherit=True,
                      include_disabled=False):
+        if self.is_multiproductvisit:
+            return self.multiproductvisit.get_autosend(
+                template_key, follow_inherit, include_disabled
+            )
         if follow_inherit and self.autosend_inherits(template_key):
             return self.product.get_autosend(template_key)
         else:
