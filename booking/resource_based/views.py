@@ -598,7 +598,9 @@ class ResourcePoolListView(BreadcrumbMixin, EditorRequriedMixin, ListView):
     def get_queryset(self):
         qs = super(ResourcePoolListView, self).get_queryset()
         unit_qs = self.request.user.userprofile.get_unit_queryset()
-        return qs.filter(organizationalunit=unit_qs)
+        return qs.filter(organizationalunit=unit_qs).order_by(
+            'resource_type__name', 'name'
+        )
 
     def get_context_object_name(self, queryset):
         return "resourcepools"
