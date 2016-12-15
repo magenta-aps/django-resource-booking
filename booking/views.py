@@ -800,7 +800,6 @@ class SearchView(BreadcrumbMixin, ListView):
             self.filters = {}
 
             for filter_method in (
-                self.filter_by_audience,
                 self.filter_by_institution,
                 self.filter_by_type,
                 self.filter_by_gymnasiefag,
@@ -821,14 +820,6 @@ class SearchView(BreadcrumbMixin, ListView):
     def filter_for_public_view(self):
         # Public users can only see active resources
         self.filters["state__in"] = [Product.ACTIVE]
-
-    def filter_by_audience(self):
-        # Audience will always include a search for resources marked for
-        # all audiences.
-        a = [x for x in self.request.GET.getlist("a")]
-        if a:
-            a.append(Product.AUDIENCE_ALL)
-            self.filters["audience__in"] = a
 
     def filter_by_institution(self):
         i = [x for x in self.request.GET.getlist("i")]
@@ -1013,13 +1004,6 @@ class SearchView(BreadcrumbMixin, ListView):
         context["qstring"] = qdict.urlencode()
 
         context['pagesizes'] = [5, 10, 15, 20]
-
-        context["audience_choices"] = self.make_facet(
-            "audience",
-            self.model.audience_choices_without_none,
-            self.request.GET.getlist("a"),
-            add_to_all=[Product.AUDIENCE_ALL]
-        )
 
         context["institution_choices"] = self.make_facet(
             "institution_level",
