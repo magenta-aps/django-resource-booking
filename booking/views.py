@@ -2427,43 +2427,31 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
 
             if put_in_waitinglist:
                 booking.autosend(
-                    EmailTemplateType.get(
-                        EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED_WAITING
-                    )
+                    EmailTemplateType.notify_guest__booking_created_waiting
                 )
             elif booking.visit.product.uses_time_management:
                 booking.autosend(
-                    EmailTemplateType.get(
-                        EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED
-                    )
+                    EmailTemplateType.notify_guest__booking_created
                 )
             else:
                 booking.autosend(
-                    EmailTemplateType.get(
-                        EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED_UNTIMED
-                    )
+                    EmailTemplateType.notify_guest__booking_created_untimed
                 )
 
             booking.autosend(
-                EmailTemplateType.get(
-                    EmailTemplateType.NOTIFY_EDITORS__BOOKING_CREATED
-                )
+                EmailTemplateType.notify_editors__booking_created
             )
 
             if booking.visit.needs_teachers or \
                     booking.visit.product.is_resource_controlled:
                 booking.autosend(
-                    EmailTemplateType.get(
-                        EmailTemplateType.NOTIFY_HOST__REQ_TEACHER_VOLUNTEER
-                    )
+                    EmailTemplateType.notify_host__req_teacher_volunteer
                 )
 
             if booking.visit.needs_hosts or \
                     booking.visit.product.is_resource_controlled:
                 booking.autosend(
-                    EmailTemplateType.get(
-                        EmailTemplateType.NOTIFY_HOST__REQ_HOST_VOLUNTEER
-                    )
+                    EmailTemplateType.notify_host__req_host_volunteer
                 )
 
             self.object = booking
@@ -2635,16 +2623,10 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
         object.save()
 
         object.autosend(
-            EmailTemplateType.get(
-                EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED_UNTIMED
-            )
+            EmailTemplateType.notify_guest__booking_created_untimed
         )
 
-        object.autosend(
-            EmailTemplateType.get(
-                EmailTemplateType.NOTIFY_EDITORS__BOOKING_CREATED
-            )
-        )
+        object.autosend(EmailTemplateType.notify_editors__booking_created)
 
         return redirect(
             reverse(
@@ -3484,7 +3466,7 @@ class EmailReplyView(BreadcrumbMixin, DetailView):
             recipients = product.get_responsible_persons()
 
             KUEmailMessage.send_email(
-                EmailTemplateType.get(EmailTemplateType.SYSTEM__EMAIL_REPLY),
+                EmailTemplateType.system__email_reply,
                 {
                     'visit': visit,
                     'product': product,
@@ -3630,20 +3612,14 @@ class BookingAcceptView(BreadcrumbMixin, FormView):
                     self.object.dequeue()
                     self.dequeued = True
                     self.object.autosend(
-                        EmailTemplateType.get(
-                            EmailTemplateType.NOTIFY_GUEST__SPOT_ACCEPTED
-                        )
+                        EmailTemplateType.notify_guest__spot_accepted
                     )
             elif self.answer == 'no':
                 self.object.autosend(
-                    EmailTemplateType.get(
-                        EmailTemplateType.NOTIFY_GUEST__SPOT_REJECTED
-                    )
+                    EmailTemplateType.notify_guest__spot_rejected
                 )
                 self.object.autosend(
-                    EmailTemplateType.get(
-                        EmailTemplateType.NOTIFY_EDITORS__SPOT_REJECTED
-                    )
+                    EmailTemplateType.notify_editors__spot_rejected
                 )
                 self.object_id = self.object.id
                 self.object.delete()

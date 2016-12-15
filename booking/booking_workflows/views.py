@@ -115,16 +115,12 @@ class ChangeVisitStatusView(AutologgerMixin, UpdateWithCancelView):
         if status == Visit.WORKFLOW_STATUS_PLANNED:
             # Booking is planned
             self.object.autosend(
-                EmailTemplateType.get(
-                    EmailTemplateType.NOTIFY_ALL__BOOKING_COMPLETE
-                )
+                EmailTemplateType.notify_all__booking_complete
             )
         if status == Visit.WORKFLOW_STATUS_CANCELLED:
             # Booking is cancelled
             self.object.autosend(
-                EmailTemplateType.get(
-                    EmailTemplateType.NOTIFY_ALL__BOOKING_CANCELED
-                )
+                EmailTemplateType.notify_all__booking_canceled
             )
         return response
 
@@ -158,11 +154,10 @@ class ChangeVisitTeachersView(AutologgerMixin, UpdateWithCancelView):
             for user in self.get_form().base_fields['teachers'].queryset.all()
         }
         context['can_send_emails'] = self.object.autosend_enabled(
-            EmailTemplateType.get(EmailTemplateType.NOTIFY_TEACHER__ASSOCIATED)
+            EmailTemplateType.notify_teacher__associated
         )
-        context['email_template_name'] = EmailTemplateType.get(
-            EmailTemplateType.NOTIFY_TEACHER__ASSOCIATED
-        ).name
+        context['email_template_name'] = \
+            EmailTemplateType.notify_teacher__associated.name
         context.update(kwargs)
         return super(ChangeVisitTeachersView, self).\
             get_context_data(**context)
@@ -186,9 +181,7 @@ class ChangeVisitTeachersView(AutologgerMixin, UpdateWithCancelView):
             if len(recipients) > 0:
                 # Send a message to only these recipients
                 self.object.autosend(
-                    EmailTemplateType.get(
-                        EmailTemplateType.NOTIFY_TEACHER__ASSOCIATED
-                    ),
+                    EmailTemplateType.notify_teacher__associated,
                     recipients,
                     True
                 )
@@ -218,11 +211,10 @@ class ChangeVisitHostsView(AutologgerMixin, UpdateWithCancelView):
             for user in self.get_form().base_fields['hosts'].queryset.all()
             }
         context['can_send_emails'] = self.object.autosend_enabled(
-            EmailTemplateType.get(EmailTemplateType.NOTIFY_HOST__ASSOCIATED)
+            EmailTemplateType.notify_host__associated
         )
-        context['email_template_name'] = EmailTemplateType.get(
-            EmailTemplateType.NOTIFY_HOST__ASSOCIATED
-        ).name
+        context['email_template_name'] = \
+            EmailTemplateType.notify_host__associated.name
         context.update(kwargs)
         return super(ChangeVisitHostsView, self).\
             get_context_data(**context)
@@ -244,9 +236,7 @@ class ChangeVisitHostsView(AutologgerMixin, UpdateWithCancelView):
             if len(recipients) > 0:
                 # Send a message to only these recipients
                 self.object.autosend(
-                    EmailTemplateType.get(
-                        EmailTemplateType.NOTIFY_HOST__ASSOCIATED
-                    ),
+                    EmailTemplateType.notify_host__associated,
                     recipients,
                     True
                 )
@@ -587,9 +577,7 @@ class BecomeTeacherView(BecomeSomethingView):
     m2m_attribute = "teachers"
     template_name = "booking/workflow/become_teacher.html"
     view_title = _(u'Tilmeld som underviser')
-    notify_mail_template_type = EmailTemplateType.get(
-        EmailTemplateType.NOTIFY_TEACHER__ASSOCIATED
-    )
+    notify_mail_template_type = EmailTemplateType.notify_teacher__associated
 
     ERROR_NONE_NEEDED = _(u"Besøget har ikke brug for flere undervisere")
     ERROR_WRONG_ROLE = _(
@@ -610,9 +598,7 @@ class DeclineTeacherView(BecomeSomethingView):
     m2m_attribute = "teachers"
     template_name = "booking/workflow/decline_teacher.html"
     view_title = _(u'Tilmeld som underviser')
-    notify_mail_template_type = EmailTemplateType.get(
-        EmailTemplateType.NOTIFY_TEACHER__ASSOCIATED
-    )
+    notify_mail_template_type = EmailTemplateType.notify_teacher__associated
 
     ERROR_NONE_NEEDED = _(u"Besøget har ikke brug for flere undervisere")
     ERROR_WRONG_ROLE = _(
@@ -633,9 +619,7 @@ class BecomeHostView(BecomeSomethingView):
     m2m_attribute = "hosts"
     template_name = "booking/workflow/become_host.html"
     view_title = _(u'Tilmeld som vært')
-    notify_mail_template_type = EmailTemplateType.get(
-        EmailTemplateType.NOTIFY_HOST__ASSOCIATED
-    )
+    notify_mail_template_type = EmailTemplateType.notify_host__associated
 
     ERROR_NONE_NEEDED = _(u"Besøget har ikke brug for flere værter")
     ERROR_WRONG_ROLE = _(
@@ -656,9 +640,7 @@ class DeclineHostView(BecomeSomethingView):
     m2m_attribute = "hosts"
     template_name = "booking/workflow/decline_host.html"
     view_title = _(u'Tilmeld som vært')
-    notify_mail_template_type = EmailTemplateType.get(
-        EmailTemplateType.NOTIFY_HOST__ASSOCIATED
-    )
+    notify_mail_template_type = EmailTemplateType.notify_host__associated
 
     ERROR_NONE_NEEDED = _(u"Besøget har ikke brug for flere værter")
     ERROR_WRONG_ROLE = _(
