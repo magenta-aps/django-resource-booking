@@ -368,7 +368,7 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
             try:
                 typeid = int(request.POST.get("template", None))
                 template.type = EmailTemplateType.objects.get(id=typeid)
-                template.deprecated_key = template.type.key
+                template.key = template.type.key
             except (ValueError, TypeError):
                 pass
             context = self.template_context
@@ -1563,7 +1563,7 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
 
         context['template_keys'] = list(
             set(
-                template.deprecated_key
+                template.key
                 for template in EmailTemplate.get_templates(
                     self.object.organizationalunit
                 )
@@ -3247,7 +3247,7 @@ class EmailTemplateEditView(LoginRequiredMixin, UnitAccessRequiredMixin,
         context.update(kwargs)
         if form.is_valid():
             self.object = form.save()
-            self.object.deprecated_key = self.object.type.key
+            self.object.key = self.object.type.key
             self.object.save()
             return self.redirect(reverse('emailtemplate-list'))
 
