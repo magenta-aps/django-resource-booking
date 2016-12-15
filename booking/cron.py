@@ -74,20 +74,21 @@ class ReminderJob(KuCronJob):
                 if autosend is not None:
                     print "Autosend %d for Visit %d:" % \
                         (autosend.id, autosend.visit.id)
-                    print "    Visit starts on %s" % \
-                        unicode(autosend.visit.start_datetime.date())
-                    reminderday = autosend.visit.\
-                        start_datetime.date() - \
-                        timedelta(autosend.days)
-                    print "    Autosend specifies to send %d " \
-                          "days prior, on %s" % (autosend.days, reminderday)
-                    if reminderday == today:
-                        print "    That's today; send reminder now"
-                        autosend.visit.autosend(
-                            EmailTemplateType.notity_all__booking_reminder
-                        )
+                    start = autosend.visit.eventtime.start
+                    if start is not None:
+                        print "    Visit starts on %s" % unicode(start)
+                        reminderday = start.date() - timedelta(autosend.days)
+                        print "    Autosend specifies to send %d days prior," \
+                              " on %s" % (autosend.days, reminderday)
+                        if reminderday == today:
+                            print "    That's today; send reminder now"
+                            autosend.visit.autosend(
+                                EmailTemplateType.notity_all__booking_reminder
+                            )
+                        else:
+                            print "    That's not today. Not sending reminder"
                     else:
-                        print "    That's not today. Not sending reminder"
+                        print "    Visit has no start date"
 
 
 class IdleHostroleJob(KuCronJob):
