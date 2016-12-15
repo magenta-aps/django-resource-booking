@@ -1,4 +1,4 @@
-from datetime import timedelta, date, datetime
+from datetime import timedelta, date
 
 from booking.models import VisitAutosend, EmailTemplateType, Visit
 from booking.models import MultiProductVisitTemp
@@ -155,7 +155,7 @@ class RemoveOldMvpJob(CronJobBase):
         print "---------------------------------------------------------------"
         print "Beginning RemoveOldMvpJob (deletes obsolete mvp temps)"
         MultiProductVisitTemp.objects.filter(
-            updated__lt=datetime.now()-timedelta(days=1)
+            updated__lt=timezone.now()-timedelta(days=1)
         ).delete()
         print "CRON job complete"
 
