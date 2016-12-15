@@ -841,7 +841,7 @@ class EmailTemplateType(models.Model):
                 ).count() == 0:
                     print "    create autosends for product %d" % product.id
                     autosend = ProductAutosend(
-                        deprecated_template_key=template_type.key,
+                        template_key=template_type.key,
                         template_type=template_type,
                         product=product,
                         enabled=True
@@ -862,7 +862,7 @@ class EmailTemplateType(models.Model):
 
 class EmailTemplate(models.Model):
 
-    deprecated_key = models.IntegerField(
+    key = models.IntegerField(
         verbose_name=u'Type',
         default=1
     )
@@ -1001,7 +1001,7 @@ class EmailTemplate(models.Model):
     def migrate():
         for emailtemplate in EmailTemplate.objects.all():
             emailtemplate.type = EmailTemplateType.get(
-                emailtemplate.deprecated_key
+                emailtemplate.key
             )
             emailtemplate.save()
 
@@ -3021,7 +3021,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 visitautosend = VisitAutosend(
                     visit=self,
                     inherit=True,
-                    deprecated_template_key=template_type.key,
+                    template_key=template_type.key,
                     template_type=template_type,
                     days=None,
                     enabled=False
@@ -3818,7 +3818,7 @@ class VisitComment(models.Model):
 
 
 class Autosend(models.Model):
-    deprecated_template_key = models.IntegerField(
+    template_key = models.IntegerField(
         verbose_name=_(u'Skabelon'),
         blank=False,
         null=False
@@ -3839,7 +3839,7 @@ class Autosend(models.Model):
     )
 
     def save(self, *args, **kwargs):
-        self.deprecated_template_key = self.template_type.key
+        self.template_key = self.template_type.key
         super(Autosend, self).save(*args, **kwargs)
 
     def get_name(self):
@@ -3860,7 +3860,7 @@ class Autosend(models.Model):
     def migrate():
         for autosend in Autosend.objects.all():
             autosend.template_type = EmailTemplateType.get(
-                autosend.deprecated_template_key
+                autosend.template_key
             )
             autosend.save()
 
@@ -4633,7 +4633,7 @@ class KUEmailMessage(models.Model):
         null=True,
         default=None
     )
-    deprecated_template_key = models.IntegerField(
+    template_key = models.IntegerField(
         verbose_name=u'Template key',
         default=None,
         null=True,
@@ -4668,7 +4668,7 @@ class KUEmailMessage(models.Model):
             object_id=instance.id,
             reply_nonce=reply_nonce,
             template_type=template_type,
-            deprecated_template_key=template_key
+            template_key=template_key
         )
         ku_email_message.save()
 
@@ -4813,9 +4813,9 @@ class KUEmailMessage(models.Model):
     @staticmethod
     def migrate():
         for email in KUEmailMessage.objects.all():
-            if email.deprecated_template_key is not None:
+            if email.template_key is not None:
                 email.template_type = EmailTemplateType.get(
-                    email.deprecated_template_key
+                    email.template_key
                 )
                 email.save()
 
