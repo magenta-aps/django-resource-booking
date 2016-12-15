@@ -72,7 +72,7 @@
             </div>
             {% endif %}
 
-            {% if form.audience or form.institution_level or form.level or form.class_level_min or form.class_level_max or form.minimum_number_of_visitors or form.maximum_number_of_visitors or form.subjects %}
+            {% if form.institution_level or form.level or form.class_level_min or form.class_level_max or form.minimum_number_of_visitors or form.maximum_number_of_visitors or form.subjects %}
             <div class="panel panel-default">
                 <div id="headingAudience" class="panel-heading" role="tab">
                     <h4 class="panel-title">
@@ -80,10 +80,9 @@
                     </h4>
                 </div>
                 <div id="collapseAudience" class="panel-collapse collapse
-                    {% if not object.pk or form.audience.errors or form.institution_level.errors or form.level.errors or form.class_level_min.errors or form.class_level_max.errors or form.minimum_number_of_visitors.errors or form.maximum_number_of_visitors.errors or form.subjects.errors %}in{% endif %}
+                    {% if not object.pk or form.institution_level.errors or form.level.errors or form.class_level_min.errors or form.class_level_max.errors or form.minimum_number_of_visitors.errors or form.maximum_number_of_visitors.errors or form.subjects.errors %}in{% endif %}
                     " aria-labelledby="headingAudience" role="tabpanel" aria-expanded="true" style="">
                     <div class="panel-body">
-                        {% include 'common/fields/generic_field.html' with field=form.audience %}
                         {% include 'common/fields/generic_field.html' with field=form.institution_level %}
                         {% include 'product/fields/subjects.html' %}
                         {% include 'common/fields/generic_field.html' with field=form.minimum_number_of_visitors %}

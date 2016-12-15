@@ -806,7 +806,6 @@ class SearchView(BreadcrumbMixin, ListView):
             self.filters = {}
 
             for filter_method in (
-                self.filter_by_audience,
                 self.filter_by_institution,
                 self.filter_by_type,
                 self.filter_by_gymnasiefag,
@@ -827,14 +826,6 @@ class SearchView(BreadcrumbMixin, ListView):
     def filter_for_public_view(self):
         # Public users can only see active resources
         self.filters["state__in"] = [Product.ACTIVE]
-
-    def filter_by_audience(self):
-        # Audience will always include a search for resources marked for
-        # all audiences.
-        a = [x for x in self.request.GET.getlist("a")]
-        if a:
-            a.append(Product.AUDIENCE_ALL)
-            self.filters["audience__in"] = a
 
     def filter_by_institution(self):
         i = [x for x in self.request.GET.getlist("i")]
@@ -1019,13 +1010,6 @@ class SearchView(BreadcrumbMixin, ListView):
         context["qstring"] = qdict.urlencode()
 
         context['pagesizes'] = [5, 10, 15, 20]
-
-        context["audience_choices"] = self.make_facet(
-            "audience",
-            self.model.audience_choices_without_none,
-            self.request.GET.getlist("a"),
-            add_to_all=[Product.AUDIENCE_ALL]
-        )
 
         context["institution_choices"] = self.make_facet(
             "institution_level",
@@ -2282,15 +2266,17 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
 
     def get_context_data(self, **kwargs):
         available_times = {}
-
-        only_waitinglist = True
-        for eventtime in self.product.future_times:
-            if eventtime.available_seats > 0:
-                only_waitinglist = False
-            available_times[str(eventtime.pk)] = {
-                'available': eventtime.available_seats,
-                'waitinglist': eventtime.waiting_list_capacity
-            }
+        if self.product and self.product.is_guest_time_suggested:
+            only_waitinglist = False
+        else:
+            only_waitinglist = True
+            for eventtime in self.product.future_times:
+                if eventtime.available_seats > 0:
+                    only_waitinglist = False
+                available_times[str(eventtime.pk)] = {
+                    'available': eventtime.available_seats,
+                    'waitinglist': eventtime.waiting_list_capacity
+                }
 
         context = {
             'product': self.product,
@@ -3717,7 +3703,7 @@ class MultiProductVisitTempProductsView(BreadcrumbMixin, UpdateView):
     model = MultiProductVisitTemp
     template_name = "visit/multi_products.html"
     _available_products = None
-    products_key = 'new_products'
+    products_key = 'products'
 
     def get_form(self):
         form = super(MultiProductVisitTempProductsView, self).get_form()
@@ -3726,7 +3712,7 @@ class MultiProductVisitTempProductsView(BreadcrumbMixin, UpdateView):
             for product in self.available_products
         ]
         form.initial[self.products_key] = [
-            product for product in self.object.products
+            product for product in self.object.products_ordered
             if product in self.available_products
         ]
         return form

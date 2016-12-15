@@ -290,7 +290,7 @@ class ProductForm(forms.ModelForm):
         model = Product
         fields = ('title', 'teaser', 'description', 'price', 'state',
                   'type', 'tags',
-                  'institution_level', 'topics', 'audience',
+                  'institution_level', 'topics',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'do_create_waiting_list', 'waiting_list_length',
                   'waiting_list_deadline_days', 'waiting_list_deadline_hours',
@@ -367,7 +367,6 @@ class ProductForm(forms.ModelForm):
             'organizationalunit': Select(
                 attrs={'class': 'form-control input-sm'}
             ),
-            'audience': Select(attrs={'class': 'form-control input-sm'}),
             'tags': CheckboxSelectMultiple(),
             'roomresponsible': CheckboxSelectMultiple,
         }
@@ -499,7 +498,7 @@ class StudentForADayForm(ProductForm):
     class Meta:
         model = Product
         fields = ('type', 'title', 'teaser', 'description', 'state',
-                  'institution_level', 'topics', 'audience',
+                  'institution_level', 'topics',
                   'time_mode', 'duration', 'locality',
                   'tilbudsansvarlig', 'organizationalunit',
                   'preparation_time', 'comment',
@@ -511,7 +510,7 @@ class InternshipForm(ProductForm):
     class Meta:
         model = Product
         fields = ('type', 'title', 'teaser', 'description', 'state',
-                  'institution_level', 'topics', 'audience',
+                  'institution_level', 'topics',
                   'time_mode', 'locality',
                   'tilbudsansvarlig', 'organizationalunit',
                   'preparation_time', 'comment',
@@ -523,7 +522,7 @@ class OpenHouseForm(ProductForm):
     class Meta:
         model = Product
         fields = ('type', 'title', 'teaser', 'description', 'state',
-                  'institution_level', 'topics', 'audience',
+                  'institution_level', 'topics',
                   'time_mode', 'locality',
                   'tilbudsansvarlig', 'organizationalunit',
                   'preparation_time', 'comment',
@@ -535,7 +534,7 @@ class TeacherProductForm(ProductForm):
     class Meta:
         model = Product
         fields = ('type', 'title', 'teaser', 'description', 'price', 'state',
-                  'institution_level', 'topics', 'audience',
+                  'institution_level', 'topics',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'do_create_waiting_list', 'waiting_list_length',
                   'waiting_list_deadline_days', 'waiting_list_deadline_hours',
@@ -550,7 +549,7 @@ class ClassProductForm(ProductForm):
     class Meta:
         model = Product
         fields = ('type', 'title', 'teaser', 'description', 'price', 'state',
-                  'institution_level', 'topics', 'audience',
+                  'institution_level', 'topics',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'do_create_waiting_list', 'waiting_list_length',
                   'waiting_list_deadline_days', 'waiting_list_deadline_hours',
@@ -568,7 +567,7 @@ class StudyProjectForm(ProductForm):
     class Meta:
         model = Product
         fields = ('type', 'title', 'teaser', 'description', 'state',
-                  'institution_level', 'topics', 'audience',
+                  'institution_level', 'topics',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'time_mode', 'locality',
                   'tilbudsansvarlig', 'organizationalunit',
@@ -581,7 +580,7 @@ class AssignmentHelpForm(ProductForm):
     class Meta:
         model = Product
         fields = ('type', 'title', 'teaser', 'description', 'state',
-                  'institution_level', 'topics', 'audience',
+                  'institution_level', 'topics',
                   'tilbudsansvarlig', 'organizationalunit',
                   'comment',
                   )
@@ -592,7 +591,7 @@ class StudyMaterialForm(ProductForm):
     class Meta:
         model = Product
         fields = ('type', 'title', 'teaser', 'description', 'price', 'state',
-                  'institution_level', 'topics', 'audience',
+                  'institution_level', 'topics',
                   'tilbudsansvarlig', 'organizationalunit',
                   'comment'
                   )
@@ -1322,9 +1321,9 @@ class MultiProductVisitTempDateForm(forms.ModelForm):
 
 class MultiProductVisitTempProductsForm(forms.ModelForm):
 
-    products_key = 'new_products'
+    products_key = 'products'
 
-    new_products = OrderedModelMultipleChoiceField(
+    products = OrderedModelMultipleChoiceField(
         queryset=Product.objects.all(),
         widget=OrderedMultipleHiddenChooser()
     )
@@ -1338,7 +1337,7 @@ class MultiProductVisitTempProductsForm(forms.ModelForm):
             )
         }
 
-    def clean_new_products(self):
+    def clean_products(self):
         products = self.cleaned_data[self.products_key]
         common_institution = binary_and([
             product.institution_level for product in products

@@ -1331,22 +1331,6 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         (STUDY_MATERIAL, _(u"Undervisningsmateriale"))
     )
 
-    # Target audience choice - student or teacher.
-    AUDIENCE_TEACHER = 2**0
-    AUDIENCE_STUDENT = 2**1
-    AUDIENCE_ALL = AUDIENCE_TEACHER | AUDIENCE_STUDENT
-
-    audience_choices = (
-        (None, "---------"),
-        (AUDIENCE_TEACHER, _(u'Lærer')),
-        (AUDIENCE_STUDENT, _(u'Elev')),
-        (AUDIENCE_ALL, _(u'Alle'))
-    )
-
-    audience_choices_without_none = [
-        x for x in audience_choices if x[0] is not None
-    ]
-
     # Institution choice - primary or secondary school.
     PRIMARY = 0
     SECONDARY = 1
@@ -1405,11 +1389,6 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         on_delete=models.SET_NULL,
     )
     links = models.ManyToManyField(Link, blank=True, verbose_name=_('Links'))
-    audience = models.IntegerField(choices=audience_choices,
-                                   verbose_name=_(u'Målgruppe'),
-                                   default=None,
-                                   blank=False,
-                                   null=True)
 
     institution_level = models.IntegerField(choices=institution_choices,
                                             verbose_name=_(u'Institution'),
@@ -1843,9 +1822,6 @@ class Product(AvailabilityUpdaterMixin, models.Model):
                 texts.append(l.name)
             if l.description:
                 texts.append(l.description)
-
-        # Display-value for audience
-        texts.append(self.get_audience_display() or "")
 
         # Display-value for institution_level
         texts.append(self.get_institution_level_display() or "")
@@ -2768,6 +2744,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def needs_hosts(self):
+        if self.is_multiproductvisit:
+            return self.multiproductvisit.needs_hosts
         if self.product.is_resource_controlled:
             host_requirements = self.product.resourcerequirement_set.filter(
                 resource_pool__resource_type_id=ResourceType.RESOURCE_TYPE_HOST
@@ -3063,6 +3041,10 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     def get_autosend(self, template_type, follow_inherit=True,
                      include_disabled=False):
+        if self.is_multiproductvisit:
+            return self.multiproductvisit.get_autosend(
+                template_type, follow_inherit, include_disabled
+            )
         if type(template_type) == int:
             template_type = EmailTemplateType.get(template_type)
         if follow_inherit and self.autosend_inherits(template_type):
@@ -3726,15 +3708,9 @@ class MultiProductVisitTemp(models.Model):
         blank=False,
         verbose_name=_(u'Dato')
     )
-    # Migration won't let us redefine this existing field,
-    # so rename it and create another. We'll delete it later.
-    deprecated_products = models.ManyToManyField(
-        Product,
-        blank=True
-    )
 
     @property
-    def products(self):
+    def products_ordered(self):
         return [
             relation.product
             for relation in
@@ -3743,11 +3719,11 @@ class MultiProductVisitTemp(models.Model):
             ).order_by('index')
         ]
 
-    new_products = models.ManyToManyField(
+    products = models.ManyToManyField(
         Product,
         blank=True,
         through=MultiProductVisitTempProduct,
-        related_name='products1'
+        related_name='products'
     )
     updated = models.DateTimeField(
         auto_now=True
@@ -3774,7 +3750,7 @@ class MultiProductVisitTemp(models.Model):
         mpv.save()
         mpv.create_eventtime(self.date)
         mpv.ensure_statistics()
-        for index, product in enumerate(self.products):
+        for index, product in enumerate(self.products_ordered):
             eventtime = EventTime(
                 product=product,
                 bookable=False,
@@ -3794,9 +3770,9 @@ class MultiProductVisitTemp(models.Model):
 
     def has_products_in_different_locations(self):
         return len(
-            set([product.locality for product in self.new_products.all()])
+            set([product.locality for product in self.products.all()])
         ) > 1
-        # return Locality.objects.filter(product=self.new_products).count() > 1
+        # return Locality.objects.filter(product=self.products).count() > 1
 
 
 class VisitComment(models.Model):
