@@ -3,6 +3,7 @@ from datetime import timedelta, date
 from booking.models import VisitAutosend, EmailTemplateType, Visit
 from booking.models import MultiProductVisitTemp, EventTime
 from django_cron import CronJobBase, Schedule
+from django.db.models import Count
 from django.utils import timezone
 
 import traceback
@@ -102,6 +103,16 @@ class IdleHostroleJob(KuCronJob):
 
     def run(self):
 
+        visit_qs = Visit.objects.annotate(
+            num_bookings=Count('bookings'),
+        ).filter(
+            num_bookings__gt=0,
+            workflow_status=Visit.WORKFLOW_STATUS_BEING_PLANNED
+        )
+        visits_needing_hosts = [
+            visit for visit in visit_qs if visit.needs_hosts
+        ]
+
         autosends = list(VisitAutosend.objects.filter(
             enabled=True,
             template_type=EmailTemplateType.get(
@@ -109,9 +120,7 @@ class IdleHostroleJob(KuCronJob):
             ),
             days__isnull=False,
             inherit=False,
-            visit__hosts=None,
-            visit__host_status=Visit.STATUS_NOT_ASSIGNED,
-            visit__bookings__isnull=False
+            visit__in=visits_needing_hosts
         ).all())
         print "Found %d enabled autosends" % len(autosends)
 
@@ -120,15 +129,15 @@ class IdleHostroleJob(KuCronJob):
             template_type=EmailTemplateType.get(
                 EmailTemplateType.NOTIFY_HOST__HOSTROLE_IDLE
             ),
-            visit__hosts=None,
-            visit__host_status=Visit.STATUS_NOT_ASSIGNED,
-            visit__bookings__isnull=False
+            visit__in=visits_needing_hosts
         ).all())
 
         extra = []
         for autosend in inheriting_autosends:
             inherited = autosend.get_inherited()
-            if inherited.enabled and inherited.days is not None:
+            if inherited is not None and \
+                    inherited.enabled and \
+                    inherited.days is not None:
                 autosend.days = inherited.days
                 autosend.enabled = inherited.enabled
                 extra.append(autosend)

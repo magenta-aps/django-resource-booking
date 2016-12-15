@@ -2723,6 +2723,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def needs_hosts(self):
+        if self.is_multiproductvisit:
+            return self.multiproductvisit.needs_hosts
         if self.product.is_resource_controlled:
             host_requirements = self.product.resourcerequirement_set.filter(
                 resource_pool__resource_type_id=ResourceType.RESOURCE_TYPE_HOST
