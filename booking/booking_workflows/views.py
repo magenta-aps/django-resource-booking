@@ -220,9 +220,9 @@ class ChangeVisitHostsView(AutologgerMixin, UpdateWithCancelView):
         context['can_send_emails'] = self.object.autosend_enabled(
             EmailTemplateType.get(EmailTemplateType.NOTIFY_HOST__ASSOCIATED)
         )
-        context['email_template_name'] = EmailTemplateType.get_name(
+        context['email_template_name'] = EmailTemplateType.get(
             EmailTemplateType.NOTIFY_HOST__ASSOCIATED
-        )
+        ).name
         context.update(kwargs)
         return super(ChangeVisitHostsView, self).\
             get_context_data(**context)
