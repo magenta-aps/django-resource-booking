@@ -447,7 +447,9 @@ class CreateUserView(FormView, UpdateView):
             if not pk:
                 try:
                     KUEmailMessage.send_email(
-                        EmailTemplateType.SYSTEM__USER_CREATED,
+                        EmailTemplateType.get(
+                            EmailTemplateType.SYSTEM__USER_CREATED
+                        ),
                         {
                             'user': user,
                             'password': form.cleaned_data['password1'],

@@ -1330,13 +1330,17 @@ class VisitResource(AvailabilityUpdaterMixin, models.Model):
             resourcetype = self.resource.resource_type.id
             if resourcetype == ResourceType.RESOURCE_TYPE_TEACHER:
                 self.visit.autosend(
-                    EmailTemplateType.NOTIFY_TEACHER__ASSOCIATED,
+                    EmailTemplateType.get(
+                        EmailTemplateType.NOTIFY_TEACHER__ASSOCIATED
+                    ),
                     [self.resource.teacherresource.user],
                     True
                 )
             if resourcetype == ResourceType.RESOURCE_TYPE_HOST:
                 self.visit.autosend(
-                    EmailTemplateType.NOTIFY_HOST__ASSOCIATED,
+                    EmailTemplateType.get(
+                        EmailTemplateType.NOTIFY_HOST__ASSOCIATED
+                    ),
                     [self.resource.hostresource.user],
                     True
                 )
