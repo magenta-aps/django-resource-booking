@@ -90,6 +90,8 @@ class ReminderJob(KuCronJob):
                             )
                         else:
                             print "    That's not today. Not sending reminder"
+                    else:
+                        print "    Visit has no start date"
 
 
 class IdleHostroleJob(KuCronJob):
