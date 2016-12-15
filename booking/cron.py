@@ -6,16 +6,40 @@ from booking.models import EventTime
 from django_cron import CronJobBase, Schedule
 from django.utils import timezone
 
+import traceback
 
-class ReminderJob(CronJobBase):
+
+class KuCronJob(CronJobBase):
+
+    description = "base KU cron job"
+
+    def run(self):
+        pass
+
+    def do(self):
+        print "---------------------------------------------------------------"
+        print "[%s] Beginning %s (%s)" % (
+            unicode(timezone.now()),
+            self.__class__.__name__,
+            self.description
+        )
+        try:
+            self.run()
+            print "CRON job complete"
+        except:
+            print traceback.format_exc()
+            print "CRON job failed"
+            raise
+
+
+class ReminderJob(KuCronJob):
     RUN_AT_TIMES = ['01:00']
 
     schedule = Schedule(run_at_times=RUN_AT_TIMES)
     code = 'kubooking.reminders'
+    description = "sends reminder emails"
 
-    def do(self):
-        print "---------------------------------------------------------------"
-        print "Beginning ReminderJob (sends reminder emails)"
+    def run(self):
         autosends = list(VisitAutosend.objects.filter(
             enabled=True,
             template_type=EmailTemplateType.get(
@@ -70,15 +94,13 @@ class ReminderJob(CronJobBase):
         print "CRON job complete"
 
 
-class IdleHostroleJob(CronJobBase):
+class IdleHostroleJob(KuCronJob):
     RUN_AT_TIMES = ['01:00']
     schedule = Schedule(run_at_times=RUN_AT_TIMES)
     code = 'kubooking.idlehost'
+    description = "sends notification emails regarding idle host roles"
 
-    def do(self):
-        print "---------------------------------------------------------------"
-        print "Beginning IdleHostroleJob (sends notification emails " \
-              "regarding idle host roles)"
+    def run(self):
 
         autosends = list(VisitAutosend.objects.filter(
             enabled=True,
@@ -143,32 +165,27 @@ class IdleHostroleJob(CronJobBase):
                             print e
                     else:
                         print "    That's not today. Not sending alert"
-        print "CRON job complete"
 
 
-class RemoveOldMvpJob(CronJobBase):
+class RemoveOldMvpJob(KuCronJob):
     RUN_AT_TIMES = ['01:00']
     schedule = Schedule(run_at_times=RUN_AT_TIMES)
     code = 'kubooking.removempv'
+    description = "deletes obsolete mvp temps"
 
-    def do(self):
-        print "---------------------------------------------------------------"
-        print "Beginning RemoveOldMvpJob (deletes obsolete mvp temps)"
+    def run(self):
         MultiProductVisitTemp.objects.filter(
             updated__lt=timezone.now()-timedelta(days=1)
         ).delete()
-        print "CRON job complete"
 
 
-class NotifyEventTimeJob(CronJobBase):
+class NotifyEventTimeJob(KuCronJob):
     RUN_EVERY_MINS = 1
     schedule = Schedule(run_every_mins=RUN_EVERY_MINS)
     code = 'kubooking.notifyeventtime'
+    description = "notifies EventTimes that they're starting/ending"
 
-    def do(self):
-        print "---------------------------------------------------------------"
-        print "Beginning NotifyEventTimeJob (notifies EventTimes that " \
-              "they're starting/ending)"
+    def run(self):
         start = timezone.now().replace(second=0, microsecond=0)
         next = start + timedelta(minutes=1)
 
@@ -185,4 +202,3 @@ class NotifyEventTimeJob(CronJobBase):
                 end__lt=next
         ):
             eventtime.on_end()
-        print "CRON job complete"
