@@ -3,7 +3,6 @@
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 LOGFILE="$DIR/cron.log"
 
-pushd "$DIR" > /dev/null
+cd "$DIR"
 source python-env/bin/activate
-python manage.py runcrons >> "$LOGFILE"
-popd > /dev/null
+exec python manage.py runcrons >> "$LOGFILE"

@@ -46,12 +46,19 @@ echo '******************************************'
 python "$DIR/setup.py" develop # &>>  ${DIR}/install.log
 
 
-# Install Python package, including dependencies
+# Install Git hooks
 echo '********************'
 echo 'Installing git hooks'
 echo '********************'
 
 ln -sf $DIR/tools/git-hooks/* "$DIR/.git/hooks/"
+
+# Install cron entry
+echo '*********************'
+echo 'Installing cron entry'
+echo '*********************'
+
+sudo echo "1 * * * * www-data $DIR/runcron" > /etc/cron.d/django-resource-booking
 
 echo ''
 echo '**********************'
