@@ -8,6 +8,8 @@ from django.db.models import F
 from django.db.models import Max
 from django.db.models import Sum
 from django.db.models import Q
+from django.db.models.base import ModelBase
+from django.utils import six
 from django.template.context import make_context
 from django.utils import timezone
 from djorm_pgfulltext.models import SearchManager
@@ -436,7 +438,23 @@ class Locality(models.Model):
                (self.address_line, self.zip_city)
 
 
-class EmailTemplateType(models.Model):
+class EmailTemplateTypeMeta(ModelBase):
+    # Hack to allow lookups on EmailTemplateType.<lowercase keyname>
+    def __getattr__(self, name):
+        if name[0:2] != '__':
+            upper = name.upper()
+            if name != upper and hasattr(self, upper):
+                value = getattr(self, name.upper())
+                if type(value) == int:
+                    try:
+                        return self.objects.get(key=value)
+                    except:
+                        pass
+
+
+class EmailTemplateType(
+    six.with_metaclass(EmailTemplateTypeMeta, models.Model)
+):
 
     NOTIFY_GUEST__BOOKING_CREATED = 1  # ticket 13806
     NOTIFY_EDITORS__BOOKING_CREATED = 2  # ticket 13807
@@ -868,6 +886,9 @@ class EmailTemplateType(models.Model):
         EmailTemplate.migrate()
         Autosend.migrate()
         KUEmailMessage.migrate()
+
+
+EmailTemplateType.set_defaults()
 
 
 class EmailTemplate(models.Model):
