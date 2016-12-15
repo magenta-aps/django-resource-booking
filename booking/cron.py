@@ -156,11 +156,20 @@ class NotifyEventTimeJob(CronJobBase):
         print "---------------------------------------------------------------"
         print "Beginning NotifyEventTimeJob (notifies EventTimes that " \
               "they're starting/ending)"
-        now = timezone.now().replace(second=0, microsecond=0)
-        next = now + timedelta(minutes=1)
+        start = timezone.now().replace(second=0, microsecond=0)
+        next = start + timedelta(minutes=1)
+
         for eventtime in EventTime.objects.filter(
-                start__gte=now, start__lt=next):
+                has_notified_start=False,
+                start__gte=start,
+                start__lt=next
+        ):
             eventtime.on_start()
-        for eventtime in EventTime.objects.filter(end__gte=now, end__lt=next):
+
+        for eventtime in EventTime.objects.filter(
+                has_notified_end=False,
+                end__gte=start,
+                end__lt=next
+        ):
             eventtime.on_end()
         print "CRON job complete"
