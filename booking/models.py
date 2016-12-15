@@ -463,7 +463,7 @@ class EmailTemplateType(models.Model):
 
     @staticmethod
     def get_name(template_key):
-        return EmailTemplate.get(template_key).name
+        return EmailTemplateType.get(template_key).name
 
     key = models.IntegerField(
         verbose_name=u'Type',
