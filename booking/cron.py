@@ -41,7 +41,9 @@ class ReminderJob(KuCronJob):
     def run(self):
         autosends = list(VisitAutosend.objects.filter(
             enabled=True,
-            template_key=EmailTemplateType.NOTITY_ALL__BOOKING_REMINDER,
+            template_type=EmailTemplateType.get(
+                EmailTemplateType.NOTITY_ALL__BOOKING_REMINDER
+            ),
             days__isnull=False,
             inherit=False
         ).all())
@@ -49,7 +51,9 @@ class ReminderJob(KuCronJob):
 
         inheriting_autosends = list(VisitAutosend.objects.filter(
             inherit=True,
-            template_key=EmailTemplateType.NOTITY_ALL__BOOKING_REMINDER,
+            template_type=EmailTemplateType.get(
+                EmailTemplateType.NOTITY_ALL__BOOKING_REMINDER
+            ),
         ).all())
 
         extra = []
@@ -82,7 +86,9 @@ class ReminderJob(KuCronJob):
                     if reminderday == today:
                         print "    That's today; send reminder now"
                         autosend.visit.autosend(
-                            EmailTemplateType.NOTITY_ALL__BOOKING_REMINDER
+                            EmailTemplateType.get(
+                                EmailTemplateType.NOTITY_ALL__BOOKING_REMINDER
+                            )
                         )
                     else:
                         print "    That's not today. Not sending reminder"
@@ -98,7 +104,9 @@ class IdleHostroleJob(KuCronJob):
 
         autosends = list(VisitAutosend.objects.filter(
             enabled=True,
-            template_key=EmailTemplateType.NOTIFY_HOST__HOSTROLE_IDLE,
+            template_type=EmailTemplateType.get(
+                EmailTemplateType.NOTIFY_HOST__HOSTROLE_IDLE
+            ),
             days__isnull=False,
             inherit=False,
             visit__hosts=None,
@@ -109,7 +117,9 @@ class IdleHostroleJob(KuCronJob):
 
         inheriting_autosends = list(VisitAutosend.objects.filter(
             inherit=True,
-            template_key=EmailTemplateType.NOTIFY_HOST__HOSTROLE_IDLE,
+            template_type=EmailTemplateType.get(
+                EmailTemplateType.NOTIFY_HOST__HOSTROLE_IDLE
+            ),
             visit__hosts=None,
             visit__host_status=Visit.STATUS_NOT_ASSIGNED,
             visit__bookings__isnull=False
@@ -146,7 +156,10 @@ class IdleHostroleJob(KuCronJob):
                         print "    That's today; send alert now"
                         try:
                             autosend.visit.autosend(
-                                EmailTemplateType.NOTIFY_HOST__HOSTROLE_IDLE
+                                EmailTemplateType.get(
+                                    EmailTemplateType.
+                                    NOTIFY_HOST__HOSTROLE_IDLE
+                                )
                             )
                         except Exception as e:
                             print e

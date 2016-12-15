@@ -10,6 +10,7 @@ DIR = os.path.dirname(__file__)
 
 IMPORT_MAP = {
     EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED: 'on_booking_to_booker',
+    EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED_UNTIMED: 'on_booking_to_booker_untimed',
     EmailTemplateType.NOTIFY_EDITORS__BOOKING_CREATED: 'on_booking_to_editors',
     EmailTemplateType.NOTIFY_HOST__REQ_TEACHER_VOLUNTEER: 'request_teacher',
     EmailTemplateType.NOTIFY_HOST__REQ_HOST_VOLUNTEER: 'request_host',
