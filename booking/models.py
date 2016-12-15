@@ -452,56 +452,6 @@ class EmailTemplateType(models.Model):
     NOTIFY_ALL_EVALUATION = 22  # Ticket 15701
     NOTIFY_GUEST__BOOKING_CREATED_UNTIMED = 23  # Ticket 16914
 
-    key_choices = [
-        (NOTIFY_GUEST__BOOKING_CREATED,
-         _(u'Besked til gæst ved booking af besøg (med fast tid)')),
-        (NOTIFY_GUEST__BOOKING_CREATED_UNTIMED,
-         _(u'Besked til gæst ved booking af besøg (besøg uden fast tid)')),
-        (NOTIFY_GUEST__BOOKING_CREATED_WAITING,
-         _(u'Besked til gæster har tilmeldt sig venteliste')),
-        (NOTIFY_GUEST__GENERAL_MSG,
-         _(u'Generel besked til gæst(er)')),
-        (NOTIFY_GUEST_REMINDER,
-         _(u'Reminder til gæst')),
-        (NOTIFY_GUEST__SPOT_OPEN,
-         _(u'Besked til gæst, der får tilbudt plads venteliste')),
-        (NOTIFY_GUEST__SPOT_ACCEPTED,
-         _(u'Besked til gæst ved accept af plads (fra venteliste)')),
-        (NOTIFY_GUEST__SPOT_REJECTED,
-         _(u'Besked til gæst ved afvisning af plads (fra venteliste)')),
-        (NOTIFY_EDITORS__SPOT_REJECTED,
-         _(u'Besked til koordinatorer ved afvisning '
-           u'af plads (fra venteliste)')),
-        (NOTIFY_EDITORS__BOOKING_CREATED,
-         _(u'Besked til koordinator, når gæst har tilmeldt sig besøg')),
-        (NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
-         _(u'Besked til underviser, når en gæst har lavet en tilmelding')),
-        (NOTIFY_HOST__REQ_HOST_VOLUNTEER,
-         _(u'Besked til vært, når en gæst har lavet en tilmelding')),
-        (NOTIFY_HOST__ASSOCIATED,
-         _(u'Bekræftelsesmail til vært')),
-        (NOTIFY_TEACHER__ASSOCIATED,
-         _(u'Bekræftelsesmail til underviser')),
-        (NOTIFY_HOST__REQ_ROOM,
-         _(u'Besked til lokaleansvarlig')),
-        (NOTIFY_ALL__BOOKING_COMPLETE,
-         _(u'Besked om færdigplanlagt besøg til alle involverede')),
-        (NOTIFY_ALL__BOOKING_CANCELED,
-         _(u'Besked til alle ved aflysning')),
-        (NOTITY_ALL__BOOKING_REMINDER,
-         _(u'Reminder om besøg til alle involverede')),
-        (NOTIFY_ALL_EVALUATION,
-         _(u'Besked til alle om evaluering')),
-        (NOTIFY_HOST__HOSTROLE_IDLE,
-         _(u'Notifikation til koordinatorer om ledig værtsrolle på besøg')),
-        (SYSTEM__BASICMAIL_ENVELOPE,
-         _(u'Forespørgsel fra bruger via kontaktformular')),
-        (SYSTEM__EMAIL_REPLY,
-         _(u'Svar på e-mail fra systemet')),
-        (SYSTEM__USER_CREATED,
-         _(u'Besked til bruger ved brugeroprettelse')),
-    ]
-
     @staticmethod
     def get(template_key):
         if type(template_key) == int:
