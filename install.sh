@@ -58,7 +58,7 @@ echo '*********************'
 echo 'Installing cron entry'
 echo '*********************'
 
-sudo echo "1 * * * * www-data $DIR/runcron" > /etc/cron.d/django-resource-booking
+echo "1 * * * * www-data $DIR/runcron" | sudo tee /etc/cron.d/django-resource-booking
 
 echo ''
 echo '**********************'
