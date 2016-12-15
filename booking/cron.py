@@ -60,7 +60,9 @@ class ReminderJob(KuCronJob):
         extra = []
         for autosend in inheriting_autosends:
             inherited = autosend.get_inherited()
-            if inherited.enabled and inherited.days is not None:
+            if inherited is not None and \
+                    inherited.enabled and \
+                    inherited.days is not None:
                 autosend.days = inherited.days
                 autosend.enabled = inherited.enabled
                 extra.append(autosend)
@@ -91,7 +93,6 @@ class ReminderJob(KuCronJob):
                         )
                     else:
                         print "    That's not today. Not sending reminder"
-        print "CRON job complete"
 
 
 class IdleHostroleJob(KuCronJob):

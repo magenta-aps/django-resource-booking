@@ -3113,6 +3113,10 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     def get_autosend(self, template_type, follow_inherit=True,
                      include_disabled=False):
+        if self.is_multiproductvisit:
+            return self.multiproductvisit.get_autosend(
+                template_type, follow_inherit, include_disabled
+            )
         if type(template_type) == int:
             template_type = EmailTemplateType.get(template_type)
         if follow_inherit and self.autosend_inherits(template_type):
