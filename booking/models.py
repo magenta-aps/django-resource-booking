@@ -591,7 +591,7 @@ class EmailTemplateType(
     def set_defaults():
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED,
-            name_da=u'Besked til gæst ved booking af besøg (med fast tid)',
+            name_da=u'Besked til gæst ved tilmelding (med fast tid)',
             manual_sending_visit_enabled=True,
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
@@ -603,8 +603,7 @@ class EmailTemplateType(
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED_UNTIMED,
-            name_da=u'Besked til gæst ved booking af besøg '
-                    u'(besøg uden fast tid)',
+            name_da=u'Besked til gæst ved tilmelding (besøg uden fast tid)',
             manual_sending_visit_enabled=True,
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
@@ -616,7 +615,7 @@ class EmailTemplateType(
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED_WAITING,
-            name_da=u'Besked til gæster har tilmeldt sig venteliste',
+            name_da=u'Besked til gæster der har tilmeldt sig venteliste',
             manual_sending_visit_enabled=True,
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
@@ -638,7 +637,8 @@ class EmailTemplateType(
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__SPOT_OPEN,
-            name_da=u'Besked til gæst, der får tilbudt plads venteliste',
+            name_da=u'Mail til gæst fra venteliste, '
+                    u'der får tilbudt plads på besøget',
             manual_sending_visit_enabled=True,
             enable_booking=True,
             enable_autosend=True
