@@ -3578,9 +3578,6 @@ class BookingAcceptView(BreadcrumbMixin, FormView):
                     self.dequeued = True
             elif self.answer == 'no':
                 self.object.autosend(
-                    EmailTemplateType.notify_guest__spot_rejected
-                )
-                self.object.autosend(
                     EmailTemplateType.notify_editors__spot_rejected
                 )
                 self.object_id = self.object.id
