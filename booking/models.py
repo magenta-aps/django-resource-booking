@@ -2457,7 +2457,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             WORKFLOW_STATUS_NOSHOW,
         ],
         WORKFLOW_STATUS_EXECUTED: [
-            WORKFLOW_STATUS_EVALUATED,
             WORKFLOW_STATUS_NOSHOW
         ],
         WORKFLOW_STATUS_EVALUATED: [
