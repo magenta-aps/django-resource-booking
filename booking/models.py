@@ -462,6 +462,7 @@ class EmailTemplateType(
     SYSTEM__USER_CREATED = 14
     NOTIFY_GUEST_REMINDER = 15  # Ticket 15510
     NOTIFY_GUEST__SPOT_OPEN = 16  # Ticket 13804
+    NOTIFY_GUEST__SPOT_ACCEPTED = 17  # Ticket 13804
     NOTIFY_GUEST__SPOT_REJECTED = 18  # Ticket 13804
     NOTIFY_EDITORS__SPOT_REJECTED = 19  # Ticket 13804
     NOTIFY_GUEST__BOOKING_CREATED_WAITING = 20  # ticket 13804
@@ -629,6 +630,14 @@ class EmailTemplateType(
             name_da=u'Mail til gæst fra venteliste, '
                     u'der får tilbudt plads på besøget',
             manual_sending_visit_enabled=True,
+            enable_booking=True,
+            enable_autosend=True
+        )
+
+        EmailTemplateType.set_default(
+            EmailTemplateType.NOTIFY_GUEST__SPOT_ACCEPTED,
+            name_da=u'Besked til gæst ved accept af plads (fra venteliste)',
+            send_to_booker=True,
             enable_booking=True,
             enable_autosend=True
         )

@@ -30,6 +30,7 @@ IMPORT_MAP = {
     EmailTemplateType.SYSTEM__USER_CREATED: 'user_created',
     EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED_WAITING: 'waitinglist_joined',
     EmailTemplateType.NOTIFY_GUEST__SPOT_OPEN: 'waitinglist_offer',
+    EmailTemplateType.NOTIFY_GUEST__SPOT_ACCEPTED: 'waitinglist_accepted',
     EmailTemplateType.NOTIFY_GUEST__SPOT_REJECTED: 'waitinglist_rejected',
     EmailTemplateType.NOTIFY_EDITORS__SPOT_REJECTED:
         'waitinglist_rejected_coordinator'
