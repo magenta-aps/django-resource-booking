@@ -1,1 +1,0 @@
-{{ booking.booker.get_name }} har afvist en ledig plads
