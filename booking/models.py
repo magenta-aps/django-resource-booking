@@ -755,7 +755,7 @@ class EmailTemplateType(
 
         EmailTemplateType.set_default(
             EmailTemplateType.SYSTEM__BASICMAIL_ENVELOPE,
-            name_da=u'Forespørgsel fra bruger via kontaktformular',
+            name_da=u'Besked til tilbudsansvarlig',
             enable_autosend=False
         )
 
