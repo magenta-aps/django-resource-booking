@@ -462,6 +462,7 @@ class EmailTemplateType(
     SYSTEM__USER_CREATED = 14
     NOTIFY_GUEST_REMINDER = 15  # Ticket 15510
     NOTIFY_GUEST__SPOT_OPEN = 16  # Ticket 13804
+    NOTIFY_EDITORS__SPOT_REJECTED = 19  # Ticket 13804
     NOTIFY_GUEST__BOOKING_CREATED_WAITING = 20  # ticket 13804
     NOTIFY_TEACHER__ASSOCIATED = 21  # Ticket 15701
     NOTIFY_ALL_EVALUATION = 22  # Ticket 15701
@@ -646,6 +647,15 @@ class EmailTemplateType(
             send_to_contactperson=True,
             enable_booking=True,
             is_default=True,
+            enable_autosend=True
+        )
+
+        EmailTemplateType.set_default(
+            EmailTemplateType.NOTIFY_EDITORS__SPOT_REJECTED,
+            name_da=u'Besked til koordinatorer ved afvisning '
+                    u'af plads (fra venteliste)',
+            send_to_contactperson=True,
+            enable_booking=True,
             enable_autosend=True
         )
 
