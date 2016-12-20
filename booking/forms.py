@@ -22,7 +22,7 @@ from django.forms import formset_factory, inlineformset_factory
 from django.forms import TextInput, NumberInput, DateInput, Textarea, Select
 from django.forms import HiddenInput
 from django.utils.translation import ugettext_lazy as _
-from ckeditor_uploader.widgets import CKEditorUploadingWidget
+from tinymce.widgets import TinyMCE
 from .fields import ExtensibleMultipleChoiceField
 from .fields import OrderedModelMultipleChoiceField
 
@@ -314,7 +314,7 @@ class ProductForm(forms.ModelForm):
                     'maxlength': 210
                 }
             ),
-            'description': CKEditorUploadingWidget(),
+            'description': TinyMCE(),
             'custom_name': TextInput(attrs={
                 'class': 'titlefield form-control input-sm',
                 'rows': 1, 'size': 62
@@ -1157,6 +1157,7 @@ class EmailTemplateForm(forms.ModelForm):
         widgets = {
             'subject': TextInput(attrs={'class': 'form-control'}),
             'body': Textarea(attrs={'rows': 10, 'cols': 90}),
+            # 'body': TinyMCE(attrs={'rows': 10, 'cols': 90}),
         }
 
     def __init__(self, user, *args, **kwargs):
@@ -1204,11 +1205,11 @@ EmailTemplatePreviewContextForm = formset_factory(
 
 
 class BaseEmailComposeForm(forms.Form):
-
     required_css_class = 'required'
 
     body = forms.CharField(
         max_length=65584,
+        # widget=TinyMCE(attrs={'rows': 10, 'cols': 90}),
         widget=Textarea(attrs={'rows': 10, 'cols': 90}),
         label=_(u'Tekst')
     )
