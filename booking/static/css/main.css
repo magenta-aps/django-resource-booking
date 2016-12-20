@@ -1491,3 +1491,7 @@ li.subvisit-status-8 a.visit-link {
 }
 
 /* MultiProductVisit END */
+
+.cke_dialog_ui_file .cke_dialog_ui_input_file {
+    height: 2.5em;
+}
