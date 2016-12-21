@@ -8,6 +8,8 @@ from django.db.models import F
 from django.db.models import Max
 from django.db.models import Sum
 from django.db.models import Q
+from django.db.models.base import ModelBase
+from django.utils import six
 from django.template.context import make_context
 from django.utils import timezone
 from djorm_pgfulltext.models import SearchManager
@@ -243,8 +245,7 @@ class OrganizationalUnit(models.Model):
         )
         return [x for x in res]
 
-    def get_recipients(self, template_key):
-        template_type = EmailTemplateType.get(template_key)
+    def get_recipients(self, template_type):
         recipients = []
 
         if template_type.send_to_unit_hosts:
@@ -437,7 +438,23 @@ class Locality(models.Model):
                (self.address_line, self.zip_city)
 
 
-class EmailTemplateType(models.Model):
+class EmailTemplateTypeMeta(ModelBase):
+    # Hack to allow lookups on EmailTemplateType.<lowercase keyname>
+    def __getattr__(self, name):
+        if name[0:2] != '__':
+            upper = name.upper()
+            if name != upper and hasattr(self, upper):
+                value = getattr(self, name.upper())
+                if type(value) == int:
+                    try:
+                        return self.objects.get(key=value)
+                    except:
+                        pass
+
+
+class EmailTemplateType(
+    six.with_metaclass(EmailTemplateTypeMeta, models.Model)
+):
 
     NOTIFY_GUEST__BOOKING_CREATED = 1  # ticket 13806
     NOTIFY_EDITORS__BOOKING_CREATED = 2  # ticket 13807
@@ -461,54 +478,7 @@ class EmailTemplateType(models.Model):
     NOTIFY_GUEST__BOOKING_CREATED_WAITING = 20  # ticket 13804
     NOTIFY_TEACHER__ASSOCIATED = 21  # Ticket 15701
     NOTIFY_ALL_EVALUATION = 22  # Ticket 15701
-
-    key_choices = [
-        (NOTIFY_GUEST__BOOKING_CREATED,
-         _(u'Besked til gæst ved booking af besøg')),
-        (NOTIFY_GUEST__BOOKING_CREATED_WAITING,
-         _(u'Besked til gæst ved tilmelding på venteliste')),
-        (NOTIFY_GUEST__GENERAL_MSG,
-         _(u'Generel besked til gæst(er)')),
-        (NOTIFY_GUEST_REMINDER,
-         _(u'Reminder til gæst')),
-        (NOTIFY_GUEST__SPOT_OPEN,
-         _(u'Mail til gæst fra venteliste, der får tilbudt plads på besøget')),
-        (NOTIFY_GUEST__SPOT_ACCEPTED,
-         _(u'Besked til gæst ved accept af plads (fra venteliste)')),
-        (NOTIFY_GUEST__SPOT_REJECTED,
-         _(u'Besked til gæst ved afvisning af plads (fra venteliste)')),
-        (NOTIFY_EDITORS__SPOT_REJECTED,
-         _(u'Besked til koordinatorer ved afvisning '
-           u'af plads (fra venteliste)')),
-        (NOTIFY_EDITORS__BOOKING_CREATED,
-         _(u'Besked til koordinatorer ved booking af besøg')),
-        (NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
-         _(u'Anmodning om deltagelse i besøg til undervisere')),
-        (NOTIFY_HOST__REQ_HOST_VOLUNTEER,
-         _(u'Anmodning om deltagelse i besøg til værter')),
-        (NOTIFY_HOST__ASSOCIATED,
-         _(u'Notifikation til vært om tilknytning til besøg')),
-        (NOTIFY_TEACHER__ASSOCIATED,
-         _(u'Notifikation til underviser om tilknytning til besøg')),
-        (NOTIFY_HOST__REQ_ROOM,
-         _(u'Anmodning til lokaleansvarlig om lokale')),
-        (NOTIFY_ALL__BOOKING_COMPLETE,
-         _(u'Besked om færdigplanlagt besøg til alle involverede')),
-        (NOTIFY_ALL__BOOKING_CANCELED,
-         _(u'Besked om aflyst besøg til alle involverede')),
-        (NOTITY_ALL__BOOKING_REMINDER,
-         _(u'Reminder om besøg til alle involverede')),
-        (NOTIFY_ALL_EVALUATION,
-         _(u'Besked til alle om evaluering')),
-        (NOTIFY_HOST__HOSTROLE_IDLE,
-         _(u'Notifikation til koordinatorer om ledig værtsrolle på besøg')),
-        (SYSTEM__BASICMAIL_ENVELOPE,
-         _(u'Forespørgsel fra bruger via kontaktformular')),
-        (SYSTEM__EMAIL_REPLY,
-         _(u'Svar på e-mail fra systemet')),
-        (SYSTEM__USER_CREATED,
-         _(u'Besked til bruger ved brugeroprettelse')),
-    ]
+    NOTIFY_GUEST__BOOKING_CREATED_UNTIMED = 23  # Ticket 16914
 
     @staticmethod
     def get(template_key):
@@ -521,15 +491,25 @@ class EmailTemplateType(models.Model):
 
     @staticmethod
     def get_name(template_key):
-        for key, label in EmailTemplateType.key_choices:
-            if key == template_key:
-                return label
+        return EmailTemplateType.get(template_key).name
 
     key = models.IntegerField(
         verbose_name=u'Type',
-        choices=key_choices,
         default=1
     )
+
+    name_da = models.CharField(
+        verbose_name=u'Navn',
+        max_length=1024,
+        null=True
+    )
+
+    @property
+    def name(self):
+        return self.name_da
+
+    def __unicode__(self):
+        return self.name
 
     # Template available for manual sending from visits
     manual_sending_visit_enabled = models.BooleanField(default=False)
@@ -589,6 +569,8 @@ class EmailTemplateType(models.Model):
 
     is_default = models.BooleanField(default=False)
 
+    enable_autosend = models.BooleanField(default=False)
+
     @staticmethod
     def set_default(key, **kwargs):
         try:
@@ -609,114 +591,161 @@ class EmailTemplateType(models.Model):
     def set_defaults():
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED,
+            name_da=u'Besked til gæst ved booking af besøg (med fast tid)',
             manual_sending_visit_enabled=True,
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
             send_to_booker=True,
             enable_booking=True,
-            is_default=True
+            is_default=True,
+            enable_autosend=True
+        )
+
+        EmailTemplateType.set_default(
+            EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED_UNTIMED,
+            name_da=u'Besked til gæst ved booking af besøg '
+                    u'(besøg uden fast tid)',
+            manual_sending_visit_enabled=True,
+            manual_sending_booking_enabled=True,
+            manual_sending_booking_mpv_enabled=True,
+            send_to_booker=True,
+            enable_booking=True,
+            is_default=True,
+            enable_autosend=True
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED_WAITING,
+            name_da=u'Besked til gæster har tilmeldt sig venteliste',
             manual_sending_visit_enabled=True,
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
             send_to_booker=True,
-            enable_booking=True
+            enable_booking=True,
+            enable_autosend=True
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__GENERAL_MSG,
+            name_da=u'Generel besked til gæst(er)',
             manual_sending_visit_enabled=True,
             manual_sending_mpv_enabled=True,
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
-            enable_booking=True
+            enable_booking=True,
+            enable_autosend=True
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__SPOT_OPEN,
+            name_da=u'Besked til gæst, der får tilbudt plads venteliste',
             manual_sending_visit_enabled=True,
-            enable_booking=True
+            enable_booking=True,
+            enable_autosend=True
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__SPOT_ACCEPTED,
+            name_da=u'Besked til gæst ved accept af plads (fra venteliste)',
             send_to_booker=True,
-            enable_booking=True
+            enable_booking=True,
+            enable_autosend=True
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__SPOT_REJECTED,
+            name_da=u'Besked til gæst ved afvisning af plads (fra venteliste)',
             send_to_booker=True,
-            enable_booking=True
+            enable_booking=True,
+            enable_autosend=True
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST_REMINDER,
+            name_da=u'Reminder til gæst',
             manual_sending_visit_enabled=True,
             manual_sending_booking_enabled=True,
-            manual_sending_booking_mpv_enabled=True
+            manual_sending_booking_mpv_enabled=True,
+            enable_autosend=True
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_EDITORS__BOOKING_CREATED,
+            name_da=u'Besked til koordinator, når gæst har tilmeldt sig besøg',
             send_to_contactperson=True,
             enable_booking=True,
-            is_default=True
+            is_default=True,
+            enable_autosend=True
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_EDITORS__SPOT_REJECTED,
+            name_da=u'Besked til koordinatorer ved afvisning '
+                    u'af plads (fra venteliste)',
             send_to_contactperson=True,
-            enable_booking=True
+            enable_booking=True,
+            enable_autosend=True
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_HOST__REQ_HOST_VOLUNTEER,
+            name_da=u'Besked til vært, når en gæst har lavet en tilmelding',
             manual_sending_visit_enabled=True,
             manual_sending_mpv_sub_enabled=True,
             send_to_potential_hosts=True,
             enable_booking=True,
-            avoid_already_assigned=True
+            avoid_already_assigned=True,
+            enable_autosend=True
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_HOST__REQ_TEACHER_VOLUNTEER,
+            name_da=u'Besked til underviser, når en gæst '
+                    u'har lavet en tilmelding',
             manual_sending_visit_enabled=True,
             manual_sending_mpv_sub_enabled=True,
             send_to_potential_teachers=True,
             enable_booking=True,
-            avoid_already_assigned=True
+            avoid_already_assigned=True,
+            enable_autosend=True
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_HOST__ASSOCIATED,
+            name_da=u'Bekræftelsesmail til vært',
             manual_sending_visit_enabled=True,
-            send_to_visit_added_host=True
+            send_to_visit_added_host=True,
+            enable_autosend=True
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_TEACHER__ASSOCIATED,
+            name_da=u'Bekræftelsesmail til underviser',
             manual_sending_visit_enabled=True,
-            send_to_visit_added_teacher=True
+            send_to_visit_added_teacher=True,
+            enable_autosend=True
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_HOST__HOSTROLE_IDLE,
+            name_da=u'Notifikation til koordinatorer om '
+                    u'ledig værtsrolle på besøg',
             send_to_editors=True,
-            enable_days=True
+            enable_days=True,
+            enable_autosend=True
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_HOST__REQ_ROOM,
+            name_da=u'Besked til lokaleansvarlig',
             manual_sending_visit_enabled=True,
-            manual_sending_mpv_sub_enabled=True
+            manual_sending_mpv_sub_enabled=True,
+            enable_autosend=True
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_ALL__BOOKING_CANCELED,
+            name_da=u'Besked til alle ved aflysning',
             manual_sending_visit_enabled=True,
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
@@ -724,22 +753,26 @@ class EmailTemplateType(models.Model):
             send_to_booker=True,
             send_to_visit_hosts=True,
             send_to_visit_teachers=True,
-            enable_booking=True
+            enable_booking=True,
+            enable_autosend=True
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_ALL__BOOKING_COMPLETE,
+            name_da=u'Besked om færdigplanlagt besøg til alle involverede',
             manual_sending_visit_enabled=True,
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
             send_to_booker=True,
             send_to_visit_hosts=True,
             send_to_visit_teachers=True,
-            enable_booking=True
+            enable_booking=True,
+            enable_autosend=True
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTITY_ALL__BOOKING_REMINDER,
+            name_da=u'Reminder om besøg til alle involverede',
             manual_sending_visit_enabled=True,
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
@@ -747,24 +780,32 @@ class EmailTemplateType(models.Model):
             send_to_booker=True,
             send_to_visit_hosts=True,
             send_to_visit_teachers=True,
-            enable_days=True
+            enable_days=True,
+            enable_autosend=True
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_ALL_EVALUATION,
-            manual_sending_visit_enabled=True
+            name_da=u'Besked til alle om evaluering',
+            manual_sending_visit_enabled=True,
+            enable_autosend=True
         )
 
         EmailTemplateType.set_default(
-            EmailTemplateType.SYSTEM__BASICMAIL_ENVELOPE
+            EmailTemplateType.SYSTEM__BASICMAIL_ENVELOPE,
+            name_da=u'Forespørgsel fra bruger via kontaktformular',
+            enable_autosend=False
         )
 
         EmailTemplateType.set_default(
-            EmailTemplateType.SYSTEM__EMAIL_REPLY
+            EmailTemplateType.SYSTEM__EMAIL_REPLY,
+            name_da=u'Svar på e-mail fra systemet',
+            enable_autosend=False
         )
 
         EmailTemplateType.set_default(
-            EmailTemplateType.SYSTEM__USER_CREATED
+            EmailTemplateType.SYSTEM__USER_CREATED,
+            name_da=u'Besked til bruger ved brugeroprettelse'
         )
 
     @staticmethod
@@ -776,12 +817,9 @@ class EmailTemplateType(models.Model):
 
     @staticmethod
     def get_choices(**kwargs):
-        keyset = EmailTemplateType.get_keys(**kwargs)
-
+        types = EmailTemplateType.objects.filter(**kwargs)
         return [
-            (key, label)
-            for (key, label) in EmailTemplateType.key_choices
-            if key in keyset
+            (type.id, type.name) for type in types
         ]
 
     @staticmethod
@@ -823,13 +861,16 @@ class EmailTemplateType(models.Model):
     @staticmethod
     def add_defaults_to_all():
         for product in Product.objects.all():
-            for template_key in EmailTemplateType.get_keys(is_default=True):
+            for template_type in EmailTemplateType.objects.filter(
+                is_default=True
+            ):
                 if product.productautosend_set.filter(
-                        template_key=template_key
+                    template_type=template_type
                 ).count() == 0:
                     print "    create autosends for product %d" % product.id
                     autosend = ProductAutosend(
-                        template_key=template_key,
+                        template_key=template_type.key,
+                        template_type=template_type,
                         product=product,
                         enabled=True
                     )
@@ -839,13 +880,27 @@ class EmailTemplateType(models.Model):
                               "visit %d" % visit.id
                         visit.create_inheriting_autosends()
 
+    @staticmethod
+    def migrate():
+        EmailTemplateType.set_defaults()
+        EmailTemplate.migrate()
+        Autosend.migrate()
+        KUEmailMessage.migrate()
+
+
+EmailTemplateType.set_defaults()
+
 
 class EmailTemplate(models.Model):
 
     key = models.IntegerField(
         verbose_name=u'Type',
-        choices=EmailTemplateType.key_choices,
         default=1
+    )
+
+    type = models.ForeignKey(
+        EmailTemplateType,
+        null=True
     )
 
     subject = models.CharField(
@@ -867,12 +922,8 @@ class EmailTemplate(models.Model):
     )
 
     @property
-    def type(self):
-        return EmailTemplateType.objects.get(key=self.key)
-
-    @property
     def name(self):
-        return EmailTemplateType.get_name(self.key)
+        return self.type.name
 
     def expand_subject(self, context, keep_placeholders=False):
         return self._expand(self.subject, context, keep_placeholders)
@@ -923,24 +974,29 @@ class EmailTemplate(models.Model):
         return rendered
 
     @staticmethod
-    def get_template(template_key, unit, include_overridden=False):
+    def get_template(template_type, unit, include_overridden=False):
+        if type(template_type) == int:
+            template_type = EmailTemplateType.get(template_type)
         templates = []
         while unit is not None and (include_overridden or len(templates) == 0):
             try:
-                templates.append(EmailTemplate.objects.filter(
-                    key=template_key,
+                template = EmailTemplate.objects.filter(
+                    type=template_type,
                     organizationalunit=unit
-                ).all()[0])
+                ).first()
+                if template is not None:
+                    templates.append(template)
             except:
                 pass
             unit = unit.parent
         if include_overridden or len(templates) == 0:
             try:
-                templates.append(
-                    EmailTemplate.objects.filter(
-                        key=template_key,
-                        organizationalunit__isnull=True)[0]
-                )
+                template = EmailTemplate.objects.filter(
+                    type=template_type,
+                    organizationalunit__isnull=True
+                ).first()
+                if template is not None:
+                    templates.append(template)
             except:
                 pass
         if include_overridden:
@@ -971,6 +1027,14 @@ class EmailTemplate(models.Model):
                 if isinstance(node, VariableNode):
                     variables.append(unicode(node.filter_expression))
         return variables
+
+    @staticmethod
+    def migrate():
+        for emailtemplate in EmailTemplate.objects.all():
+            emailtemplate.type = EmailTemplateType.get(
+                emailtemplate.key
+            )
+            emailtemplate.save()
 
 
 class ObjectStatistics(models.Model):
@@ -1728,16 +1792,18 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         else:
             return self.productautosend_set.filter(enabled=True)
 
-    def get_autosend(self, template_key):
+    def get_autosend(self, template_type):
+        if type(template_type) == int:
+            template_type = EmailTemplateType.get(template_type)
         try:
             item = self.productautosend_set.filter(
-                template_key=template_key, enabled=True)[0]
+                template_type=template_type, enabled=True)[0]
             return item
         except:
             return None
 
-    def autosend_enabled(self, template_key):
-        return self.get_autosend(template_key) is not None
+    def autosend_enabled(self, template_type):
+        return self.get_autosend(template_type) is not None
 
     # This is used from booking.signals.update_search_indexes
     def update_searchindex(self):
@@ -1857,9 +1923,8 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         else:
             return self.potentielle_undervisere.all()
 
-    def get_recipients(self, template_key):
-        template_type = EmailTemplateType.get(template_key)
-        recipients = self.organizationalunit.get_recipients(template_key)
+    def get_recipients(self, template_type):
+        recipients = self.organizationalunit.get_recipients(template_type)
 
         if template_type.send_to_potential_hosts:
             recipients.extend(self.potential_hosts.all())
@@ -2763,6 +2828,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def needs_hosts(self):
+        if self.is_multiproductvisit:
+            return self.multiproductvisit.needs_hosts
         if self.product.is_resource_controlled:
             host_requirements = self.product.resourcerequirement_set.filter(
                 resource_pool__resource_type_id=ResourceType.RESOURCE_TYPE_HOST
@@ -3019,13 +3086,12 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def get_absolute_url(self):
         return reverse('visit-view', args=[self.pk])
 
-    def get_recipients(self, template_key):
-        template_type = EmailTemplateType.get(template_key)
+    def get_recipients(self, template_type):
         product = self.product
         if self.is_multiproductvisit and self.multiproductvisit.primary_visit:
             product = self.multiproductvisit.primary_visit.product
         if product:
-            recipients = product.get_recipients(template_key)
+            recipients = product.get_recipients(template_type)
         else:
             recipients = []
         if template_type.send_to_visit_hosts:
@@ -3042,20 +3108,23 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         return recipients
 
     def create_inheriting_autosends(self):
-        for template_key, label in EmailTemplateType.key_choices:
-            if not self.get_autosend(template_key, False, False):
+        for template_type in EmailTemplateType.objects.filter(
+            enable_autosend=True
+        ):
+            if not self.get_autosend(template_type, False, False):
                 visitautosend = VisitAutosend(
                     visit=self,
                     inherit=True,
-                    template_key=template_key,
+                    template_key=template_type.key,
+                    template_type=template_type,
                     days=None,
                     enabled=False
                 )
                 visitautosend.save()
 
-    def autosend_inherits(self, template_key):
+    def autosend_inherits(self, template_type):
         s = self.visitautosend_set.filter(
-            template_key=template_key
+            template_type=template_type
         )
 
         # If no rule specified, always inherit
@@ -3065,14 +3134,20 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         # Return true if there is a rule specifying that inheritance is wanted
         return s.filter(inherit=True).count() > 0
 
-    def get_autosend(self, template_key, follow_inherit=True,
+    def get_autosend(self, template_type, follow_inherit=True,
                      include_disabled=False):
-        if follow_inherit and self.autosend_inherits(template_key):
-            return self.product.get_autosend(template_key)
+        if self.is_multiproductvisit:
+            return self.multiproductvisit.get_autosend(
+                template_type, follow_inherit, include_disabled
+            )
+        if type(template_type) == int:
+            template_type = EmailTemplateType.get(template_type)
+        if follow_inherit and self.autosend_inherits(template_type):
+            return self.product.get_autosend(template_type)
         else:
             try:
                 query = self.visitautosend_set.filter(
-                    template_key=template_key)
+                    template_type=template_type)
                 if not include_disabled:
                     query = query.filter(enabled=True)
                 return query[0]
@@ -3095,18 +3170,19 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                         result.add(autosend)
         return result
 
-    def autosend_enabled(self, template_key):
-        return self.real.get_autosend(template_key, True) is not None
+    def autosend_enabled(self, template_type):
+        return self.real.get_autosend(template_type, True) is not None
 
     # Sends a message to defined recipients pertaining to the Visit
-    def autosend(self, template_key, recipients=None,
+    def autosend(self, template_type, recipients=None,
                  only_these_recipients=False):
-        template_type = EmailTemplateType.get(template_key)
+        if type(template_type) == int:
+            template_type = EmailTemplateType.get(template_type)
         if self.is_multiproductvisit:
             return self.multiproductvisit.autosend(
-                template_type.key, recipients, only_these_recipients
+                template_type, recipients, only_these_recipients
             )
-        if self.autosend_enabled(template_type.key):
+        if self.autosend_enabled(template_type):
             product = self.product
             unit = product.organizationalunit
             if recipients is None:
@@ -3114,10 +3190,10 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             else:
                 recipients = set(recipients)
             if not only_these_recipients:
-                recipients.update(self.get_recipients(template_type.key))
+                recipients.update(self.get_recipients(template_type))
 
             KUEmailMessage.send_email(
-                template_type.key,
+                template_type,
                 {'visit': self, 'besoeg': self, 'product': product},
                 list(recipients),
                 self,
@@ -3127,7 +3203,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             if not only_these_recipients and template_type.send_to_booker:
                 for booking in self.bookings.all():
                     KUEmailMessage.send_email(
-                        template_type.key,
+                        template_type,
                         {
                             'visit': self,
                             'besoeg': self,
@@ -3642,18 +3718,19 @@ class MultiProductVisit(Visit):
         if primary_visit:
             return primary_visit.organizationalunit
 
-    def autosend_enabled(self, template_key):
-        if template_key in [
+    def autosend_enabled(self, template_type):
+        if template_type.key in [
             EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED,
+            EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED_UNTIMED,
             EmailTemplateType.NOTIFY_EDITORS__BOOKING_CREATED
         ]:
             return True
         else:
             return super(MultiProductVisit, self).autosend_enabled(
-                template_key
+                template_type
             )
 
-    def get_autosend(self, template_key, follow_inherit=True,
+    def get_autosend(self, template_type, follow_inherit=True,
                      include_disabled=False):
         return None
         # Disable all autosends
@@ -3669,22 +3746,21 @@ class MultiProductVisit(Visit):
         #     )
 
     # Sends a message to defined recipients pertaining to the Visit
-    def autosend(self, template_key, recipients=None,
+    def autosend(self, template_type, recipients=None,
                  only_these_recipients=False):
-        template_type = EmailTemplateType.get(template_key)
-        if self.autosend_enabled(template_type.key):
+        if self.autosend_enabled(template_type):
             unit = None  # TODO: What should the unit be?
             if recipients is None:
                 recipients = set()
             else:
                 recipients = set(recipients)
             if not only_these_recipients:
-                recipients.update(self.get_recipients(template_key))
+                recipients.update(self.get_recipients(template_type))
 
             params = {'visit': self, 'products': self.products}
 
             KUEmailMessage.send_email(
-                template_type.key,
+                template_type,
                 params,
                 list(recipients),
                 self,
@@ -3694,7 +3770,7 @@ class MultiProductVisit(Visit):
             if not only_these_recipients and template_type.send_to_booker:
                 for booking in self.bookings.all():
                     KUEmailMessage.send_email(
-                        template_type.key,
+                        template_type,
                         merge_dicts(params, {
                             'booking': booking,
                             'booker': booking.booker
@@ -3835,7 +3911,6 @@ class VisitComment(models.Model):
 
 class Autosend(models.Model):
     template_key = models.IntegerField(
-        choices=EmailTemplateType.key_choices,
         verbose_name=_(u'Skabelon'),
         blank=False,
         null=False
@@ -3850,12 +3925,17 @@ class Autosend(models.Model):
         default=True
     )
 
-    @property
-    def template_type(self):
-        return EmailTemplateType.get(self.template_key)
+    template_type = models.ForeignKey(
+        EmailTemplateType,
+        null=True
+    )
+
+    def save(self, *args, **kwargs):
+        self.template_key = self.template_type.key
+        super(Autosend, self).save(*args, **kwargs)
 
     def get_name(self):
-        return unicode(EmailTemplateType.get_name(self.template_key))
+        return unicode(self.template_type.name)
 
     def __unicode__(self):
         return "[%d] %s (%s)" % (
@@ -3867,6 +3947,14 @@ class Autosend(models.Model):
     @property
     def days_relevant(self):
         return self.template_type.enable_days
+
+    @staticmethod
+    def migrate():
+        for autosend in Autosend.objects.all():
+            autosend.template_type = EmailTemplateType.get(
+                autosend.template_key
+            )
+            autosend.save()
 
 
 class ProductAutosend(Autosend):
@@ -3895,7 +3983,7 @@ class VisitAutosend(Autosend):
 
     def get_inherited(self):
         if self.inherit:
-            return self.visit.get_autosend(self.template_key)
+            return self.visit.get_autosend(self.template_type)
 
     def __unicode__(self):
         return "%s on %s" % (
@@ -4427,18 +4515,16 @@ class Booking(models.Model):
     def get_url(self):
         return settings.PUBLIC_URL + self.get_absolute_url()
 
-    def get_recipients(self, template_key):
-        template_type = EmailTemplateType.get(template_key)
-        recipients = self.visit.get_recipients(template_key)
+    def get_recipients(self, template_type):
+        recipients = self.visit.get_recipients(template_type)
         if template_type.send_to_booker:
             recipients.append(self.booker)
         return recipients
 
-    def autosend(self, template_key, recipients=None,
+    def autosend(self, template_type, recipients=None,
                  only_these_recipients=False):
-        template_type = EmailTemplateType.get(template_key)
         visit = self.visit.real
-        if visit.autosend_enabled(template_type.key):
+        if visit.autosend_enabled(template_type):
             product = visit.product
             unit = visit.organizationalunit
             if recipients is None:
@@ -4446,10 +4532,10 @@ class Booking(models.Model):
             else:
                 recipients = set(recipients)
             if not only_these_recipients:
-                recipients.update(self.get_recipients(template_key))
+                recipients.update(self.get_recipients(template_type))
 
             KUEmailMessage.send_email(
-                template_key,
+                template_type,
                 {
                     'booking': self,
                     'product': product,
@@ -4641,7 +4727,13 @@ class KUEmailMessage(models.Model):
     )
     template_key = models.IntegerField(
         verbose_name=u'Template key',
-        choices=EmailTemplateType.key_choices,
+        default=None,
+        null=True,
+        blank=True
+    )
+    template_type = models.ForeignKey(
+        EmailTemplateType,
+        verbose_name=u'Template type',
         default=None,
         null=True,
         blank=True
@@ -4649,7 +4741,7 @@ class KUEmailMessage(models.Model):
 
     @staticmethod
     def save_email(email_message, instance,
-                   reply_nonce=None, htmlbody=None, template_key=None):
+                   reply_nonce=None, htmlbody=None, template_type=None):
         """
         :param email_message: An instance of
         django.core.mail.message.EmailMessage
@@ -4658,6 +4750,7 @@ class KUEmailMessage(models.Model):
         :return: None
         """
         ctype = ContentType.objects.get_for_model(instance)
+        template_key = None if template_type is None else template_type.key
         ku_email_message = KUEmailMessage(
             subject=email_message.subject,
             body=email_message.body,
@@ -4666,6 +4759,7 @@ class KUEmailMessage(models.Model):
             content_type=ctype,
             object_id=instance.id,
             reply_nonce=reply_nonce,
+            template_type=template_type,
             template_key=template_key
         )
         ku_email_message.save()
@@ -4675,12 +4769,12 @@ class KUEmailMessage(models.Model):
     @staticmethod
     def send_email(template, context, recipients, instance, unit=None,
                    **kwargs):
-        if isinstance(template, int):
-            template_key = template
-            template = EmailTemplate.get_template(template_key, unit)
+        if isinstance(template, EmailTemplateType):
+            key = template.key
+            template = EmailTemplate.get_template(template, unit)
             if template is None:
                 raise Exception(
-                    u"Template with name %s does not exist!" % template_key
+                    u"Template with key %s does not exist!" % key
                 )
         if not isinstance(template, EmailTemplate):
             raise Exception(
@@ -4783,7 +4877,7 @@ class KUEmailMessage(models.Model):
 
             msg_obj = KUEmailMessage.save_email(
                 message, instance, reply_nonce=nonce,
-                template_key=template.key
+                template_type=template.type
             )
             KUEmailRecipient.register(msg_obj, email)
 
@@ -4794,7 +4888,7 @@ class KUEmailMessage(models.Model):
                 instance,
                 LOGACTION_MAIL_SENT,
                 "\n".join([unicode(x) for x in [
-                    _(u"Template: ") + template.get_key_display(),
+                    _(u"Template: ") + template.type.name,
                     _(u"Modtagere: ") + ", ".join(
                         [x['full'] for x in emails.values()]
                     ),
@@ -4807,6 +4901,15 @@ class KUEmailMessage(models.Model):
         if full:
             url = settings.PUBLIC_URL + url
         return url
+
+    @staticmethod
+    def migrate():
+        for email in KUEmailMessage.objects.all():
+            if email.template_key is not None:
+                email.template_type = EmailTemplateType.get(
+                    email.template_key
+                )
+                email.save()
 
 
 class KUEmailRecipient(models.Model):
