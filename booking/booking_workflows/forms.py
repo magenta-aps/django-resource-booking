@@ -259,7 +259,7 @@ class VisitAutosendFormSet(VisitAutosendFormSetBase):
                         initial.append({
                             'template_type': type,
                             'enabled': False,
-                            'inherit': False,
+                            'inherit': True,
                             'days': '',
                             'visit': kwargs['instance'].pk
                         })

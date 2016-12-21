@@ -889,9 +889,10 @@ class EmailTemplateType(
             for template_type in EmailTemplateType.objects.filter(
                 is_default=True
             ):
-                if product.productautosend_set.filter(
+                qs = product.productautosend_set.filter(
                     template_type=template_type
-                ).count() == 0:
+                )
+                if qs.count() == 0:
                     print "    create autosends for product %d" % product.id
                     autosend = ProductAutosend(
                         template_key=template_type.key,
@@ -900,10 +901,15 @@ class EmailTemplateType(
                         enabled=True
                     )
                     autosend.save()
-                    for visit in product.visit_set.all():
-                        print "        creating inheriting autosends for " \
-                              "visit %d" % visit.id
-                        visit.create_inheriting_autosends()
+                elif qs.count() > 1:
+                    print "    removing extraneous autosends " \
+                          "for product %d" % product.id
+                    for extra in qs[1:]:
+                        extra.delete()
+            for visit in product.visit_set.all():
+                print "    creating inheriting autosends for " \
+                      "visit %d" % visit.id
+                visit.create_inheriting_autosends()
 
     @staticmethod
     def migrate():
