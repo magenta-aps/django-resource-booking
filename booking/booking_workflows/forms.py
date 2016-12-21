@@ -242,7 +242,7 @@ class VisitAutosendFormSet(VisitAutosendFormSetBase):
         if 'instance' in kwargs:
             autosends = kwargs['instance'].get_autosends(False, True, False)
             all_autosends = EmailTemplateType.objects.filter(
-                enable_autosend=True
+                enable_autosend=True, form_show=True
             )
             if len(autosends) < all_autosends.count():
                 initial = []

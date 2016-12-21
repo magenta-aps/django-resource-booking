@@ -1615,6 +1615,18 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
             )
             if autosendformset.is_valid():
                 autosendformset.save()
+        for template_type in EmailTemplateType.objects.filter(
+            enable_autosend=True,
+            form_show=False
+        ):
+            self.object.productautosend_set.get_or_create(
+                template_type=template_type,
+                defaults={
+                    'template_key': template_type.key,
+                    'product': self.object,
+                    'enabled': template_type.is_default
+                }
+            )
 
     def get_success_url(self):
         try:

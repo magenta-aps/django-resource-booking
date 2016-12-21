@@ -571,6 +571,8 @@ class EmailTemplateType(
 
     enable_autosend = models.BooleanField(default=False)
 
+    form_show = models.BooleanField(default=False)
+
     @staticmethod
     def set_default(key, **kwargs):
         try:
@@ -598,7 +600,8 @@ class EmailTemplateType(
             send_to_booker=True,
             enable_booking=True,
             is_default=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True
         )
 
         EmailTemplateType.set_default(
@@ -610,7 +613,8 @@ class EmailTemplateType(
             send_to_booker=True,
             enable_booking=True,
             is_default=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True
         )
 
         EmailTemplateType.set_default(
@@ -621,7 +625,8 @@ class EmailTemplateType(
             manual_sending_booking_mpv_enabled=True,
             send_to_booker=True,
             enable_booking=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True
         )
 
         EmailTemplateType.set_default(
@@ -632,7 +637,8 @@ class EmailTemplateType(
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
             enable_booking=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True
         )
 
         EmailTemplateType.set_default(
@@ -641,7 +647,8 @@ class EmailTemplateType(
                     u'der får tilbudt plads på besøget',
             manual_sending_visit_enabled=True,
             enable_booking=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True
         )
 
         EmailTemplateType.set_default(
@@ -649,7 +656,8 @@ class EmailTemplateType(
             name_da=u'Besked til gæst ved accept af plads (fra venteliste)',
             send_to_booker=True,
             enable_booking=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=False
         )
 
         EmailTemplateType.set_default(
@@ -657,7 +665,7 @@ class EmailTemplateType(
             name_da=u'Besked til gæst ved afvisning af plads (fra venteliste)',
             send_to_booker=True,
             enable_booking=True,
-            enable_autosend=True
+            enable_autosend=False
         )
 
         EmailTemplateType.set_default(
@@ -666,7 +674,8 @@ class EmailTemplateType(
             manual_sending_visit_enabled=True,
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True
         )
 
         EmailTemplateType.set_default(
@@ -675,7 +684,8 @@ class EmailTemplateType(
             send_to_contactperson=True,
             enable_booking=True,
             is_default=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True
         )
 
         EmailTemplateType.set_default(
@@ -684,7 +694,8 @@ class EmailTemplateType(
                     u'af plads (fra venteliste)',
             send_to_contactperson=True,
             enable_booking=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=False
         )
 
         EmailTemplateType.set_default(
@@ -695,7 +706,8 @@ class EmailTemplateType(
             send_to_potential_hosts=True,
             enable_booking=True,
             avoid_already_assigned=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True
         )
 
         EmailTemplateType.set_default(
@@ -707,7 +719,8 @@ class EmailTemplateType(
             send_to_potential_teachers=True,
             enable_booking=True,
             avoid_already_assigned=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True
         )
 
         EmailTemplateType.set_default(
@@ -715,7 +728,8 @@ class EmailTemplateType(
             name_da=u'Bekræftelsesmail til vært',
             manual_sending_visit_enabled=True,
             send_to_visit_added_host=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True
         )
 
         EmailTemplateType.set_default(
@@ -723,7 +737,8 @@ class EmailTemplateType(
             name_da=u'Bekræftelsesmail til underviser',
             manual_sending_visit_enabled=True,
             send_to_visit_added_teacher=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True
         )
 
         EmailTemplateType.set_default(
@@ -732,7 +747,8 @@ class EmailTemplateType(
                     u'ledig værtsrolle på besøg',
             send_to_editors=True,
             enable_days=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True
         )
 
         EmailTemplateType.set_default(
@@ -740,7 +756,8 @@ class EmailTemplateType(
             name_da=u'Besked til lokaleansvarlig',
             manual_sending_visit_enabled=True,
             manual_sending_mpv_sub_enabled=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True
         )
 
         EmailTemplateType.set_default(
@@ -754,7 +771,8 @@ class EmailTemplateType(
             send_to_visit_hosts=True,
             send_to_visit_teachers=True,
             enable_booking=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True
         )
 
         EmailTemplateType.set_default(
@@ -767,7 +785,8 @@ class EmailTemplateType(
             send_to_visit_hosts=True,
             send_to_visit_teachers=True,
             enable_booking=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True
         )
 
         EmailTemplateType.set_default(
@@ -781,31 +800,36 @@ class EmailTemplateType(
             send_to_visit_hosts=True,
             send_to_visit_teachers=True,
             enable_days=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_ALL_EVALUATION,
             name_da=u'Besked til alle om evaluering',
             manual_sending_visit_enabled=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.SYSTEM__BASICMAIL_ENVELOPE,
-            name_da=u'Forespørgsel fra bruger via kontaktformular',
-            enable_autosend=False
+            name_da=u'Besked til tilbudsansvarlig',
+            enable_autosend=False,
+            form_show=False
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.SYSTEM__EMAIL_REPLY,
             name_da=u'Svar på e-mail fra systemet',
-            enable_autosend=False
+            enable_autosend=False,
+            form_show=False
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.SYSTEM__USER_CREATED,
-            name_da=u'Besked til bruger ved brugeroprettelse'
+            name_da=u'Besked til bruger ved brugeroprettelse',
+            form_show=False
         )
 
     @staticmethod
@@ -886,9 +910,6 @@ class EmailTemplateType(
         EmailTemplate.migrate()
         Autosend.migrate()
         KUEmailMessage.migrate()
-
-
-EmailTemplateType.set_defaults()
 
 
 class EmailTemplate(models.Model):
