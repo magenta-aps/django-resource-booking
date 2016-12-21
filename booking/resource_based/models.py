@@ -1040,6 +1040,15 @@ class Resource(AvailabilityUpdaterMixin, models.Model):
         else:
             return EventTime.objects.none()
 
+    def save(self, *args, **kwargs):
+        is_creating = self.pk is None
+
+        super(Resource, self).save(*args, **kwargs)
+
+        # Auto-create a calendar along with the resource
+        if is_creating:
+            self.make_calendar()
+
 
 class UserResource(Resource):
     class Meta:
