@@ -210,6 +210,7 @@ class NotifyEventTimeJob(KuCronJob):
                     start__gte=start,
                     start__lt=end
             ):
+                print "Notifying EventTime %d (starting)" % eventtime.id
                 eventtime.on_start()
 
             for eventtime in EventTime.objects.filter(
@@ -217,4 +218,5 @@ class NotifyEventTimeJob(KuCronJob):
                     end__gte=start,
                     end__lt=end
             ):
+                print "Notifying EventTime %d (ending)" % eventtime.id
                 eventtime.on_end()
