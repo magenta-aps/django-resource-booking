@@ -2627,10 +2627,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 not self.planned_status_is_blocked():
             self.workflow_status = self.WORKFLOW_STATUS_PLANNED
             self.save()
-        # elif self.workflow_status != self.WORKFLOW_STATUS_BEING_PLANNED:
-        #     print "status is %s" % self.workflow_status_display()
-        # elif self.planned_status_is_blocked():
-        #     print "status is blocked"
 
     def resource_accepts(self):
         self.resources_updated()
