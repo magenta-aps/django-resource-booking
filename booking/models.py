@@ -709,7 +709,8 @@ class EmailTemplateType(
             send_to_potential_teachers=True,
             enable_booking=True,
             avoid_already_assigned=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True
         )
 
         EmailTemplateType.set_default(
@@ -804,7 +805,7 @@ class EmailTemplateType(
         EmailTemplateType.set_default(
             EmailTemplateType.SYSTEM__BASICMAIL_ENVELOPE,
             name_da=u'Besked til tilbudsansvarlig',
-            enable_autosend=False
+            enable_autosend=False,
             form_show=False
         )
 
@@ -899,9 +900,6 @@ class EmailTemplateType(
         EmailTemplate.migrate()
         Autosend.migrate()
         KUEmailMessage.migrate()
-
-
-EmailTemplateType.set_defaults()
 
 
 class EmailTemplate(models.Model):
