@@ -171,7 +171,7 @@ class ChangeVisitTeachersView(AutologgerMixin, UpdateWithCancelView):
             ChangeVisitTeachersView, self
         ).form_valid(form)
 
-        self.object.resource_added()
+        self.object.resources_updated()
 
         if form.cleaned_data.get('send_emails', False):
             new_teachers = self.object.teachers.all()
@@ -228,7 +228,7 @@ class ChangeVisitHostsView(AutologgerMixin, UpdateWithCancelView):
 
         response = super(ChangeVisitHostsView, self).form_valid(form)
 
-        self.object.resource_added()
+        self.object.resources_updated()
 
         if form.cleaned_data.get('send_emails', False):
             new_hosts = self.object.hosts.all()
@@ -298,7 +298,7 @@ class ChangeVisitRoomsView(AutologgerMixin, UpdateWithCancelView):
 
         self.save_rooms()
         result = super(ChangeVisitRoomsView, self).form_valid(form)
-        self.object.resource_added()
+        self.object.resources_updated()
         return result
 
     def save_rooms(self):

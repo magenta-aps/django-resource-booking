@@ -2622,7 +2622,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         for x in self.affected_eventtimes:
             x.update_availability()
 
-    def resource_added(self):
+    def resources_updated(self):
         if self.workflow_status == self.WORKFLOW_STATUS_BEING_PLANNED and \
                 not self.planned_status_is_blocked():
             self.workflow_status = self.WORKFLOW_STATUS_PLANNED
@@ -2633,7 +2633,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         #     print "status is blocked"
 
     def resource_accepts(self):
-        self.resource_added()
+        self.resources_updated()
 
     def resource_declines(self):
         if self.workflow_status == self.WORKFLOW_STATUS_BEING_PLANNED:
