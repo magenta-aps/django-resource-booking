@@ -691,14 +691,20 @@ class ProductAutosendFormSet(ProductAutosendFormSetBase):
         initial = kwargs.get('initial', [])
         existing_types = []
         if 'instance' in kwargs:
-            autosends = kwargs['instance'].get_autosends(True)
+            instance = kwargs['instance']
+            product_autosends = instance.get_autosends(True).filter(
+                template_type__enable_autosend=True,
+                template_type__form_show=True
+            )
             all_autosends = EmailTemplateType.objects.filter(
                 enable_autosend=True, form_show=True
             )
-            if len(autosends) < all_autosends.count():
+            kwargs['queryset'] = product_autosends
+
+            if product_autosends.count() < all_autosends.count():
                 initial = []
                 existing_types = [
-                    autosend.template_type for autosend in autosends
+                    autosend.template_type for autosend in product_autosends
                 ]
                 for type in all_autosends:
                     if type not in existing_types:

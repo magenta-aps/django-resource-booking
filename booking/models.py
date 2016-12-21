@@ -655,7 +655,8 @@ class EmailTemplateType(
             name_da=u'Besked til gæst ved afvisning af plads (fra venteliste)',
             send_to_booker=True,
             enable_booking=True,
-            enable_autosend=False
+            enable_autosend=False,
+            form_show=False
         )
 
         EmailTemplateType.set_default(
