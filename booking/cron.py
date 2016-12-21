@@ -1,15 +1,9 @@
 from datetime import timedelta, date
 
 from booking.models import VisitAutosend, EmailTemplateType, Visit
-<<<<<<< HEAD
-from booking.models import MultiProductVisitTemp
-from booking.models import EventTime
-from django_cron import CronJobBase, Schedule
-=======
 from booking.models import MultiProductVisitTemp, EventTime
 from django_cron import CronJobBase, Schedule
 from django.db.models import Count
->>>>>>> develop
 from django.utils import timezone
 
 import traceback
@@ -185,25 +179,29 @@ class RemoveOldMvpJob(KuCronJob):
 
 
 class NotifyEventTimeJob(KuCronJob):
-    RUN_EVERY_MINS = 1
-    schedule = Schedule(run_every_mins=RUN_EVERY_MINS)
+    schedule = Schedule(run_every_mins=1)
     code = 'kubooking.notifyeventtime'
     description = "notifies EventTimes that they're starting/ending"
 
     def run(self):
-        start = timezone.now().replace(second=0, microsecond=0)
-        next = start + timedelta(minutes=1)
+        prev = self.get_prev_success_cron()
+        if prev:
+            start = prev.start_time
+            end = timezone.now().replace(second=0, microsecond=0)
+            print "Notifying eventtimes between %s and %s" % (
+                unicode(start), unicode(end)
+            )
 
-        for eventtime in EventTime.objects.filter(
-                has_notified_start=False,
-                start__gte=start,
-                start__lt=next
-        ):
-            eventtime.on_start()
+            for eventtime in EventTime.objects.filter(
+                    has_notified_start=False,
+                    start__gte=start,
+                    start__lt=end
+            ):
+                eventtime.on_start()
 
-        for eventtime in EventTime.objects.filter(
-                has_notified_end=False,
-                end__gte=start,
-                end__lt=next
-        ):
-            eventtime.on_end()
+            for eventtime in EventTime.objects.filter(
+                    has_notified_end=False,
+                    end__gte=start,
+                    end__lt=end
+            ):
+                eventtime.on_end()
