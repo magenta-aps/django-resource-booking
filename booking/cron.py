@@ -1,8 +1,7 @@
 from datetime import timedelta, date
 
 from booking.models import VisitAutosend, EmailTemplateType, Visit
-from booking.models import MultiProductVisitTemp
-from booking.models import EventTime
+from booking.models import MultiProductVisitTemp, EventTime
 from django_cron import CronJobBase, Schedule
 from django.db.models import Count
 from django.utils import timezone
