@@ -695,28 +695,29 @@ class ProductAutosendFormSet(ProductAutosendFormSetBase):
             all_types = EmailTemplateType.objects.filter(
                 enable_autosend=True, form_show=True
             )
+            b = [type.id for type in all_types]
+            b.sort()
             product_autosends = instance.get_autosends(True).filter(
                 template_type__in=all_types
             )
+            a = [autosend.template_type.id for autosend in product_autosends]
+            a.sort()
             kwargs['queryset'] = product_autosends
 
-            if product_autosends.count() < all_types.count():
-                initial = []
-                existing_types = [
-                    autosend.template_type for autosend in product_autosends
-                ]
-                for type in all_types:
-                    if type not in existing_types:
-                        initial.append({
-                            'template_type': type,
-                            'enabled': False,
-                            'days': ''
-                        })
-                self.extra = len(initial)
+            initial = []
+            existing_types = [
+                autosend.template_type for autosend in product_autosends
+            ]
+            for type in all_types:
+                if type not in existing_types:
+                    initial.append({
+                        'template_type': type,
+                        'enabled': type.is_default,
+                        'days': ''
+                    })
+            self.extra = len(initial)
+            kwargs['initial'] = initial
         super(ProductAutosendFormSet, self).__init__(*args, **kwargs)
-        if len(initial) > 0:
-            initial.sort(key=lambda choice: choice['template_type'].key)
-            self.initial = [{} for x in existing_types] + initial
 
     def save_new_objects(self, commit=True):
         self.new_objects = []
