@@ -28,13 +28,13 @@
         {{ form.non_field_errors }}
 
         {% csrf_token %}
-        {% if form.new_products.errors %}
-            <div>{{ form.new_products.errors }}</div>
+        {% if form.products.errors %}
+            <div>{{ form.products.errors }}</div>
         {% endif %}
-        {{ form.new_products }}
+        {{ form.products }}
 
         <ul class="list-group" id="selected-product-list">
-            {% for productid in form.new_products.value %}
+            {% for productid in form.products.value %}
                 {% if productid in available_products %}
                     {% include 'visit/multi_product_item.html' with product=available_products|get:productid %}
                 {% endif %}
@@ -45,7 +45,7 @@
         <p>{% trans 'Vælg tilbud:' %}<br/>{% trans '(Listen er begrænset til tilbud uden faste tider der kan lade sig gøre den pågældende dag)' %}</p>
         <ul class="list-group scroll-500" id="deselected-product-list">
             {% for productid,product in available_products.items %}
-                {% if product.id not in form.new_products.value %}
+                {% if product.id not in form.products.value %}
                     {% include 'visit/multi_product_item.html' with product=product %}
                 {% endif %}
             {% endfor %}
@@ -89,7 +89,7 @@
             var dateSelect = $("[name='{{ form.date.name }}']");
             var selectedList = $("#selected-product-list");
             var deselectedList = $("#deselected-product-list");
-            var inputPrototype = $("[name='{{ form.new_products.name }}'][data-prototype]");
+            var inputPrototype = $("[name='{{ form.products.name }}'][data-prototype]");
             var placeholder = deselectedList.find("#placeholder");
             var drawHelp = $("#drawhelp");
 
@@ -104,7 +104,7 @@
             var deSelect = function() {
                 var id = $(this).parent().attr("data-product");
                 {# Disable the associated hidden input field #}
-                var inputField = $("input[name='{{ form.new_products.name }}'][value='"+id+"']");
+                var inputField = $("input[name='{{ form.products.name }}'][value='"+id+"']");
                 inputField.attr("disabled", "disabled");
                 {# Move the <li> to the selected list #}
                 deselectedList.append(selectedList.find("li#product_"+id));
@@ -116,8 +116,8 @@
             var select = function() {
                 var id = $(this).parent().attr("data-product");
                 {# Enable the associated hidden input field, and move it to the bottom of the list of enabled input fields #}
-                var inputField = $("input[name='{{ form.new_products.name }}'][value='"+id+"']");
-                var inputFields = $("input[name='{{ form.new_products.name }}'][disabled!='disabled']");
+                var inputField = $("input[name='{{ form.products.name }}'][value='"+id+"']");
+                var inputFields = $("input[name='{{ form.products.name }}'][disabled!='disabled']");
                 if (inputFields.length) {
                     inputField.insertAfter(inputFields[inputFields.length - 1]);
                 } else {
@@ -138,7 +138,7 @@
                     'handle': '.movebutton',
                     'onSort': function(evt) {
                         {# Move the associated hidden input field to the correct index #}
-                        var inputFields = $("input[name='{{ form.new_products.name }}'][disabled!='disabled']");
+                        var inputFields = $("input[name='{{ form.products.name }}'][disabled!='disabled']");
                         var inputField = inputFields.filter("[value='"+$(evt.item).attr("data-product")+"']");
                         if (evt.newIndex < inputFields.length-1) {
                             var isBefore = inputFields.index(inputField) < evt.newIndex;
