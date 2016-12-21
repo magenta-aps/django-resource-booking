@@ -892,14 +892,14 @@ class EmailTemplateType(
                     )
                     autosend.save()
                 elif qs.count() > 1:
-                    print "    removing extraneous autosends for product %d" % product.id
+                    print "    removing extraneous autosends " \
+                          "for product %d" % product.id
                     for extra in qs[1:]:
                         extra.delete()
             for visit in product.visit_set.all():
                 print "    creating inheriting autosends for " \
                       "visit %d" % visit.id
                 visit.create_inheriting_autosends()
-
 
     @staticmethod
     def migrate():
