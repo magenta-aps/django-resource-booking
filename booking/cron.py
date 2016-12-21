@@ -3,6 +3,7 @@ from datetime import timedelta, date
 from booking.models import VisitAutosend, EmailTemplateType, Visit
 from booking.models import MultiProductVisitTemp, EventTime
 from django_cron import CronJobBase, Schedule
+from django_cron.models import CronJobLog
 from django.db.models import Count
 from django.utils import timezone
 
@@ -12,6 +13,7 @@ import traceback
 class KuCronJob(CronJobBase):
 
     description = "base KU cron job"
+    code = None
 
     def run(self):
         pass
@@ -30,6 +32,16 @@ class KuCronJob(CronJobBase):
             print traceback.format_exc()
             print "CRON job failed"
             raise
+
+    def get_last_run(self):
+        try:
+            return CronJobLog.objects.filter(
+                code=self.code,
+                is_success=True,
+                ran_at_time__isnull=True
+            ).latest('start_time')
+        except CronJobLog.DoesNotExist:
+            pass
 
 
 class ReminderJob(KuCronJob):
@@ -179,15 +191,15 @@ class RemoveOldMvpJob(KuCronJob):
 
 
 class NotifyEventTimeJob(KuCronJob):
-    schedule = Schedule(run_every_mins=1)
+    schedule = Schedule(run_every_mins=0)
     code = 'kubooking.notifyeventtime'
     description = "notifies EventTimes that they're starting/ending"
 
     def run(self):
-        prev = self.get_prev_success_cron()
+        prev = self.get_last_run()
         if prev:
             start = prev.start_time
-            end = timezone.now().replace(second=0, microsecond=0)
+            end = timezone.now()
             print "Notifying eventtimes between %s and %s" % (
                 unicode(start), unicode(end)
             )
