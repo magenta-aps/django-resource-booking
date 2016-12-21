@@ -161,6 +161,7 @@ class EventTime(models.Model):
         self.visit = visit
         self.save()
         visit.create_inheriting_autosends()
+        visit.resources_updated()
 
         return visit
 
