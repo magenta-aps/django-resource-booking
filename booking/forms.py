@@ -290,7 +290,7 @@ class ProductForm(forms.ModelForm):
         model = Product
         fields = ('title', 'teaser', 'description', 'price', 'state',
                   'type', 'tags',
-                  'institution_level', 'topics', 'audience',
+                  'institution_level', 'topics',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'do_create_waiting_list', 'waiting_list_length',
                   'waiting_list_deadline_days', 'waiting_list_deadline_hours',
@@ -367,7 +367,6 @@ class ProductForm(forms.ModelForm):
             'organizationalunit': Select(
                 attrs={'class': 'form-control input-sm'}
             ),
-            'audience': Select(attrs={'class': 'form-control input-sm'}),
             'tags': CheckboxSelectMultiple(),
             'roomresponsible': CheckboxSelectMultiple,
         }
@@ -499,7 +498,7 @@ class StudentForADayForm(ProductForm):
     class Meta:
         model = Product
         fields = ('type', 'title', 'teaser', 'description', 'state',
-                  'institution_level', 'topics', 'audience',
+                  'institution_level', 'topics',
                   'time_mode', 'duration', 'locality',
                   'tilbudsansvarlig', 'organizationalunit',
                   'preparation_time', 'comment',
@@ -511,7 +510,7 @@ class InternshipForm(ProductForm):
     class Meta:
         model = Product
         fields = ('type', 'title', 'teaser', 'description', 'state',
-                  'institution_level', 'topics', 'audience',
+                  'institution_level', 'topics',
                   'time_mode', 'locality',
                   'tilbudsansvarlig', 'organizationalunit',
                   'preparation_time', 'comment',
@@ -523,7 +522,7 @@ class OpenHouseForm(ProductForm):
     class Meta:
         model = Product
         fields = ('type', 'title', 'teaser', 'description', 'state',
-                  'institution_level', 'topics', 'audience',
+                  'institution_level', 'topics',
                   'time_mode', 'locality',
                   'tilbudsansvarlig', 'organizationalunit',
                   'preparation_time', 'comment',
@@ -535,7 +534,7 @@ class TeacherProductForm(ProductForm):
     class Meta:
         model = Product
         fields = ('type', 'title', 'teaser', 'description', 'price', 'state',
-                  'institution_level', 'topics', 'audience',
+                  'institution_level', 'topics',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'do_create_waiting_list', 'waiting_list_length',
                   'waiting_list_deadline_days', 'waiting_list_deadline_hours',
@@ -550,7 +549,7 @@ class ClassProductForm(ProductForm):
     class Meta:
         model = Product
         fields = ('type', 'title', 'teaser', 'description', 'price', 'state',
-                  'institution_level', 'topics', 'audience',
+                  'institution_level', 'topics',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'do_create_waiting_list', 'waiting_list_length',
                   'waiting_list_deadline_days', 'waiting_list_deadline_hours',
@@ -568,7 +567,7 @@ class StudyProjectForm(ProductForm):
     class Meta:
         model = Product
         fields = ('type', 'title', 'teaser', 'description', 'state',
-                  'institution_level', 'topics', 'audience',
+                  'institution_level', 'topics',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'time_mode', 'locality',
                   'tilbudsansvarlig', 'organizationalunit',
@@ -581,7 +580,7 @@ class AssignmentHelpForm(ProductForm):
     class Meta:
         model = Product
         fields = ('type', 'title', 'teaser', 'description', 'state',
-                  'institution_level', 'topics', 'audience',
+                  'institution_level', 'topics',
                   'tilbudsansvarlig', 'organizationalunit',
                   'comment',
                   )
@@ -592,7 +591,7 @@ class StudyMaterialForm(ProductForm):
     class Meta:
         model = Product
         fields = ('type', 'title', 'teaser', 'description', 'price', 'state',
-                  'institution_level', 'topics', 'audience',
+                  'institution_level', 'topics',
                   'tilbudsansvarlig', 'organizationalunit',
                   'comment'
                   )
@@ -622,36 +621,56 @@ class ProductStudyMaterialForm(ProductStudyMaterialFormBase):
 class ProductAutosendForm(forms.ModelForm):
     class Meta:
         model = ProductAutosend
-        fields = ['template_key', 'enabled', 'days']
+        fields = ['template_type', 'enabled', 'days']
         widgets = {
-            'template_key': forms.HiddenInput()
+            'template_type': forms.HiddenInput()
         }
 
     def __init__(self, *args, **kwargs):
         super(ProductAutosendForm, self).__init__(*args, **kwargs)
 
-        template_key = None
-        if kwargs.get('instance'):
-            template_key = kwargs['instance'].template_key
-        elif kwargs.get('initial'):
-            template_key = kwargs['initial']['template_key']
-        if template_key is not None:
-            template_type = EmailTemplateType.get(template_key)
+        template_type = self.template_type
+        if template_type is not None:
             if not template_type.enable_days:
                 self.fields['days'].widget = forms.HiddenInput()
-            elif template_key == \
+            elif template_type.key == \
                     EmailTemplateType.NOTITY_ALL__BOOKING_REMINDER:
                 self.fields['days'].help_text = _(u'Notifikation vil blive '
                                                   u'afsendt dette antal dage '
                                                   u'før besøget')
-            elif template_key == EmailTemplateType.NOTIFY_HOST__HOSTROLE_IDLE:
+            elif template_type.key == \
+                    EmailTemplateType.NOTIFY_HOST__HOSTROLE_IDLE:
                 self.fields['days'].help_text = _(u'Notifikation vil blive '
                                                   u'afsendt dette antal dage '
                                                   u'efter første booking er '
                                                   u'foretaget')
 
+    @property
+    def template_type(self):
+        template_type = None
+        try:
+            template_type = self.instance.template_type
+        except:
+            pass
+        if template_type is None:
+            try:
+                template_type = self.initial['template_type']
+            except:
+                pass
+
+        if isinstance(template_type, EmailTemplateType):
+            return template_type
+        if type(template_type) == int:
+            return self.fields['template_type'].to_python(
+                template_type
+            )
+
     def label(self):
-        return EmailTemplateType.get_name(self.initial['template_key'])
+        return self.template_type.name
+
+    def has_changed(self):
+        return (self.instance.pk is None) or \
+               super(ProductAutosendForm, self).has_changed()
 
 
 ProductAutosendFormSetBase = inlineformset_factory(
@@ -659,7 +678,7 @@ ProductAutosendFormSetBase = inlineformset_factory(
     ProductAutosend,
     form=ProductAutosendForm,
     extra=0,
-    max_num=len(EmailTemplateType.key_choices),
+    max_num=EmailTemplateType.objects.filter(enable_autosend=True).count(),
     can_delete=False,
     can_order=False
 )
@@ -667,24 +686,42 @@ ProductAutosendFormSetBase = inlineformset_factory(
 
 class ProductAutosendFormSet(ProductAutosendFormSetBase):
     def __init__(self, *args, **kwargs):
+        initial = kwargs.get('initial', [])
         if 'instance' in kwargs:
             autosends = kwargs['instance'].get_autosends(True)
-            if len(autosends) < len(EmailTemplateType.key_choices):
+            all_autosends = EmailTemplateType.objects.filter(
+                enable_autosend=True
+            )
+            if len(autosends) < all_autosends.count():
                 initial = []
-                existing_keys = [
-                    autosend.template_key for autosend in autosends
+                existing_types = [
+                    autosend.template_type for autosend in autosends
                 ]
-                for key, label in EmailTemplateType.key_choices:
-                    if key not in existing_keys:
+                print existing_types
+                for type in all_autosends:
+                    if type not in existing_types:
                         initial.append({
-                            'template_key': key,
+                            'template_type': type,
                             'enabled': False,
                             'days': ''
                         })
-                initial.sort(key=lambda choice: choice['template_key'])
-                kwargs['initial'] = initial
                 self.extra = len(initial)
         super(ProductAutosendFormSet, self).__init__(*args, **kwargs)
+        if len(initial) > 0:
+            initial.sort(key=lambda choice: choice['template_type'].key)
+            self.initial = [{} for x in existing_types] + initial
+
+    def save_new_objects(self, commit=True):
+        self.new_objects = []
+        for form in self.forms:
+            if form.instance and form.instance.pk:
+                continue
+            if self.can_delete and self._should_delete_form(form):
+                continue
+            self.new_objects.append(self.save_new(form, commit=commit))
+            if not commit:
+                self.saved_forms.append(form)
+        return self.new_objects
 
 
 class BookingForm(forms.ModelForm):
@@ -1115,7 +1152,7 @@ class EmailTemplateForm(forms.ModelForm):
 
     class Meta:
         model = EmailTemplate
-        fields = ('key', 'subject', 'body', 'organizationalunit')
+        fields = ('type', 'subject', 'body', 'organizationalunit')
         widgets = {
             'subject': TextInput(attrs={'class': 'form-control'}),
             'body': Textarea(attrs={'rows': 10, 'cols': 90}),
@@ -1295,9 +1332,9 @@ class MultiProductVisitTempDateForm(forms.ModelForm):
 
 class MultiProductVisitTempProductsForm(forms.ModelForm):
 
-    products_key = 'new_products'
+    products_key = 'products'
 
-    new_products = OrderedModelMultipleChoiceField(
+    products = OrderedModelMultipleChoiceField(
         queryset=Product.objects.all(),
         widget=OrderedMultipleHiddenChooser()
     )
@@ -1311,7 +1348,7 @@ class MultiProductVisitTempProductsForm(forms.ModelForm):
             )
         }
 
-    def clean_new_products(self):
+    def clean_products(self):
         products = self.cleaned_data[self.products_key]
         common_institution = binary_and([
             product.institution_level for product in products
