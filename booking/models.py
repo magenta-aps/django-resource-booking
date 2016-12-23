@@ -2637,9 +2637,13 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             self.save()
 
     def on_starttime(self):
-        pass
+        if self.eventtime.start is not None and self.eventtime.end is None:
+            self.on_expire()
 
     def on_endtime(self):
+        self.on_expire()
+
+    def on_expire(self):
         if self.workflow_status in [
             self.WORKFLOW_STATUS_BEING_PLANNED,
             self.WORKFLOW_STATUS_PLANNED,
