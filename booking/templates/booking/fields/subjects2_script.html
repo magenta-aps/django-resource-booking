@@ -46,6 +46,9 @@
             button.text('{% trans "Fjern" %}');
             button.click(removeRow);
             row.find(".with-errors").remove();
+            {% if bookerform.level and not no_level_field %}
+                row.find("input.subjectlevel").val($("#{{ bookerform.level.id_for_label }}").val());
+            {% endif %}
         };
 
         var removeRow = function() {
@@ -86,6 +89,14 @@
 
 
     });
+
+    {% if bookerform.level and not no_level_field %}
+    $(function(){
+        $("#{{ bookerform.level.id_for_label }}").change(function(){
+            $("input.subjectlevel").val(this.value);
+        });
+    });
+    {% endif %}
     //-->
 </script>
 {% endif %}
