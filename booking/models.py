@@ -2637,8 +2637,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             self.save()
 
     def on_starttime(self):
-        if self.eventtime.start is not None and self.eventtime.end is None:
-            self.on_expire()
+        if self.eventtime is not None:
+            if self.eventtime.start is not None and self.eventtime.end is None:
+                self.on_expire()
 
     def on_endtime(self):
         self.on_expire()
