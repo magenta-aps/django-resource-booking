@@ -2641,6 +2641,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     def on_endtime(self):
         if self.workflow_status in [
+            self.WORKFLOW_STATUS_BEING_PLANNED,
             self.WORKFLOW_STATUS_PLANNED,
             self.WORKFLOW_STATUS_PLANNED_NO_BOOKING,
             self.WORKFLOW_STATUS_CONFIRMED,
