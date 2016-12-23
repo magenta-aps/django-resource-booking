@@ -74,6 +74,8 @@
             var schoolType = $("#{{ bookerform.school_type.id_for_label }}").val();
             if (schoolType) {
                 updateSchoolType(schoolType);
+            } else {
+                updateSchoolType({{ product.institution_level }});
             }
         {% endif %}
     });
