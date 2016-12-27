@@ -13,7 +13,7 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
-from django.core.urlresolvers import reverse, reverse_lazy, resolve, get_resolver, get_urlconf
+from django.core.urlresolvers import reverse, reverse_lazy
 from django.utils.translation.trans_real import get_languages
 from django.db.models import Count
 from django.db.models import Min
