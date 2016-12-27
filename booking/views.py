@@ -14,6 +14,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse, reverse_lazy
+from django.utils.translation.trans_real import get_languages
 from django.db.models import Count
 from django.db.models import Min
 from django.db.models import Q
@@ -2720,8 +2721,14 @@ class EmbedcodesView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = {}
+        base_url = kwargs['embed_url']
 
-        embed_url = 'embed/' + kwargs['embed_url']
+        for language in get_languages():
+            if base_url.startswith("%s/" % language):
+                base_url = base_url[len(language)+1:]
+                break
+
+        embed_url = 'embed/' + base_url
 
         # We only want to test the part before ? (or its encoded value, %3F):
         test_url = embed_url.split('?', 1)[0]
@@ -2735,6 +2742,7 @@ class EmbedcodesView(TemplateView):
                 break
 
         context['can_embed'] = can_embed
+        context['base_url'] = base_url
         context['full_url'] = self.request.build_absolute_uri('/' + embed_url)
 
         context['breadcrumbs'] = [
@@ -2744,7 +2752,7 @@ class EmbedcodesView(TemplateView):
             },
             {
                 'url': self.request.path,
-                'text': '/' + kwargs['embed_url']
+                'text': '/' + base_url
             }
         ]
 
