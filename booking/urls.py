@@ -1,6 +1,7 @@
 from django.conf.urls import patterns, url, include
 from django.conf.urls.static import static
 from django.conf import settings
+from django.views.decorators.clickjacking import xframe_options_exempt
 
 from .views import MainPageView, VisitNotifyView
 
@@ -417,7 +418,7 @@ for x in urlpatterns:
         embedpatterns.append(
             url(
                 '^(?P<embed>embed/)' + x.regex.pattern[1:],
-                x._callback,
+                xframe_options_exempt(x._callback),
                 name=x.name + '-embed'
             )
         )
