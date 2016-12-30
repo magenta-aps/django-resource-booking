@@ -246,7 +246,7 @@ class VisitAutosendFormSet(VisitAutosendFormSetBase):
             )
             visit_autosends = instance.visitautosend_set.filter(
                 template_type__in=all_types
-            )
+            ).order_by('template_type__ordering')
             kwargs['queryset'] = visit_autosends
 
             if visit_autosends.count() < all_types.count():
@@ -263,7 +263,9 @@ class VisitAutosendFormSet(VisitAutosendFormSetBase):
                             'days': '',
                             'visit': kwargs['instance'].pk
                         })
-                initial.sort(key=lambda choice: choice['template_type'].key)
+                initial.sort(
+                    key=lambda choice: choice['template_type'].ordering
+                )
                 kwargs['initial'] = initial
                 self.extra = len(initial)
         super(VisitAutosendFormSet, self).__init__(*args, **kwargs)
