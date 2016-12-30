@@ -701,7 +701,7 @@ class ProductAutosendFormSet(ProductAutosendFormSetBase):
             b.sort()
             product_autosends = instance.get_autosends(True).filter(
                 template_type__in=all_types
-            )
+            ).order_by('template_type__ordering')
             a = [autosend.template_type.id for autosend in product_autosends]
             a.sort()
             kwargs['queryset'] = product_autosends

@@ -504,6 +504,10 @@ class EmailTemplateType(
         null=True
     )
 
+    ordering = models.IntegerField(
+        verbose_name=u'Sortering'
+    )
+
     @property
     def name(self):
         return self.name_da
@@ -601,7 +605,8 @@ class EmailTemplateType(
             enable_booking=True,
             is_default=True,
             enable_autosend=True,
-            form_show=True
+            form_show=True,
+            ordering=1
         )
 
         EmailTemplateType.set_default(
@@ -614,7 +619,8 @@ class EmailTemplateType(
             enable_booking=True,
             is_default=True,
             enable_autosend=True,
-            form_show=True
+            form_show=True,
+            ordering=2
         )
 
         EmailTemplateType.set_default(
@@ -626,7 +632,8 @@ class EmailTemplateType(
             send_to_booker=True,
             enable_booking=True,
             enable_autosend=True,
-            form_show=True
+            form_show=True,
+            ordering=3
         )
 
         EmailTemplateType.set_default(
@@ -638,7 +645,8 @@ class EmailTemplateType(
             manual_sending_booking_mpv_enabled=True,
             enable_booking=True,
             enable_autosend=True,
-            form_show=True
+            form_show=True,
+            ordering=4
         )
 
         EmailTemplateType.set_default(
@@ -648,7 +656,8 @@ class EmailTemplateType(
             manual_sending_visit_enabled=True,
             enable_booking=True,
             enable_autosend=True,
-            form_show=True
+            form_show=True,
+            ordering=5
         )
 
         EmailTemplateType.set_default(
@@ -657,7 +666,8 @@ class EmailTemplateType(
             send_to_booker=True,
             enable_booking=True,
             enable_autosend=True,
-            form_show=False
+            form_show=False,
+            ordering=6
         )
 
         EmailTemplateType.set_default(
@@ -666,7 +676,8 @@ class EmailTemplateType(
             send_to_booker=True,
             enable_booking=True,
             enable_autosend=False,
-            form_show=False
+            form_show=False,
+            ordering=7
         )
 
         EmailTemplateType.set_default(
@@ -676,7 +687,8 @@ class EmailTemplateType(
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
             enable_autosend=True,
-            form_show=True
+            form_show=True,
+            ordering=8
         )
 
         EmailTemplateType.set_default(
@@ -686,7 +698,8 @@ class EmailTemplateType(
             enable_booking=True,
             is_default=True,
             enable_autosend=True,
-            form_show=True
+            form_show=True,
+            ordering=9
         )
 
         EmailTemplateType.set_default(
@@ -696,7 +709,8 @@ class EmailTemplateType(
             send_to_contactperson=True,
             enable_booking=True,
             enable_autosend=True,
-            form_show=False
+            form_show=False,
+            ordering=10
         )
 
         EmailTemplateType.set_default(
@@ -708,7 +722,8 @@ class EmailTemplateType(
             enable_booking=True,
             avoid_already_assigned=True,
             enable_autosend=True,
-            form_show=True
+            form_show=True,
+            ordering=11
         )
 
         EmailTemplateType.set_default(
@@ -721,7 +736,8 @@ class EmailTemplateType(
             enable_booking=True,
             avoid_already_assigned=True,
             enable_autosend=True,
-            form_show=True
+            form_show=True,
+            ordering=12
         )
 
         EmailTemplateType.set_default(
@@ -730,7 +746,8 @@ class EmailTemplateType(
             manual_sending_visit_enabled=True,
             send_to_visit_added_host=True,
             enable_autosend=True,
-            form_show=True
+            form_show=True,
+            ordering=13
         )
 
         EmailTemplateType.set_default(
@@ -739,7 +756,8 @@ class EmailTemplateType(
             manual_sending_visit_enabled=True,
             send_to_visit_added_teacher=True,
             enable_autosend=True,
-            form_show=True
+            form_show=True,
+            ordering=14
         )
 
         EmailTemplateType.set_default(
@@ -749,7 +767,8 @@ class EmailTemplateType(
             send_to_editors=True,
             enable_days=True,
             enable_autosend=True,
-            form_show=True
+            form_show=True,
+            ordering=15
         )
 
         EmailTemplateType.set_default(
@@ -758,7 +777,8 @@ class EmailTemplateType(
             manual_sending_visit_enabled=True,
             manual_sending_mpv_sub_enabled=True,
             enable_autosend=True,
-            form_show=True
+            form_show=True,
+            ordering=16
         )
 
         EmailTemplateType.set_default(
@@ -773,7 +793,8 @@ class EmailTemplateType(
             send_to_visit_teachers=True,
             enable_booking=True,
             enable_autosend=True,
-            form_show=True
+            form_show=True,
+            ordering=17
         )
 
         EmailTemplateType.set_default(
@@ -787,7 +808,8 @@ class EmailTemplateType(
             send_to_visit_teachers=True,
             enable_booking=True,
             enable_autosend=True,
-            form_show=True
+            form_show=True,
+            ordering=18
         )
 
         EmailTemplateType.set_default(
@@ -802,7 +824,8 @@ class EmailTemplateType(
             send_to_visit_teachers=True,
             enable_days=True,
             enable_autosend=True,
-            form_show=True
+            form_show=True,
+            ordering=19
         )
 
         EmailTemplateType.set_default(
@@ -810,27 +833,31 @@ class EmailTemplateType(
             name_da=u'Besked til alle om evaluering',
             manual_sending_visit_enabled=True,
             enable_autosend=True,
-            form_show=True
+            form_show=True,
+            ordering=20
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.SYSTEM__BASICMAIL_ENVELOPE,
             name_da=u'Besked til tilbudsansvarlig',
             enable_autosend=False,
-            form_show=False
+            form_show=False,
+            ordering=21
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.SYSTEM__EMAIL_REPLY,
             name_da=u'Svar på e-mail fra systemet',
             enable_autosend=False,
-            form_show=False
+            form_show=False,
+            ordering=22
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.SYSTEM__USER_CREATED,
             name_da=u'Besked til bruger ved brugeroprettelse',
-            form_show=False
+            form_show=False,
+            ordering=23
         )
 
     @staticmethod
