@@ -505,7 +505,8 @@ class EmailTemplateType(
     )
 
     ordering = models.IntegerField(
-        verbose_name=u'Sortering'
+        verbose_name=u'Sortering',
+        default=0
     )
 
     @property
