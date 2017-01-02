@@ -1,0 +1,72 @@
+{% extends "admin/change_form.html" %}
+{% block admin_change_form_document_ready %}
+{{ block.super }}
+<script
+    type="text/javascript"
+    id="org_unit_custom_script"
+    data-root-unit-id="{{ opts.model.root_unit_id }}"
+    data-pk="{{ original.pk }}"
+><!--
+(function($) {
+    var $script = $('#org_unit_custom_script'),
+        $type_select = $('#id_type'),
+        $parent_select = $('#id_parent'),
+        root_unit_id = $script.attr('data-root-unit-id'),
+        pk = $script.attr('data-pk');
+
+    function hide($option) {
+        var $parent = $option.parent();
+        if(!$parent.is("span.hidden")) {
+            var $span = $('<span class="hidden"></span>');
+            $span.insertBefore($option);
+            $span.append($option);
+        }
+    }
+
+    function show($option) {
+        var $parent = $option.parent();
+        if($parent.is("span.hidden")) {
+            $option.insertBefore($parent);
+            $parent.remove();
+        }
+    }
+    $type_select.on("change", function() {
+        var selectedText = $(this).find("option:selected").first().text(),
+            $options = $parent_select.find("option");
+
+        // Institut must have a Fakultet parent
+        if(selectedText == "Institut") {
+            $options.each(function() {
+                var $this = $(this);
+                if(!$this.val() || $this.text().match(/Fakultet/)) {
+                    show($this);
+                } else {
+                    hide($this);
+                }
+            });
+        // Fakultet must have the root as parent
+        } else if(selectedText == "Fakultet") {
+            $options.each(function() {
+                var $this = $(this);
+                if($this.text().match(/Fakultet/)) {
+                    hide($this);
+                } else {
+                    show($this);
+                }
+            });
+            $parent_select.get(0).selectedIndex = 1;
+        // Any other choice (no type or root) can not have a parent
+        } else {
+            $options.each(function() {
+                var $this = $(this);
+                if($this.val()) {
+                    hide($this);
+                } else {
+                    show($this);
+                }
+            });
+        }
+    }).trigger("change");
+})(django.jQuery);
+//--></script>
+{% endblock %}

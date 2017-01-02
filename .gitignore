@@ -24,3 +24,5 @@ python-env
 /static/
 *.swp
 /thirdparty/node_modules/
+cron.log
+

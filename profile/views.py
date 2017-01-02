@@ -6,7 +6,6 @@ from booking.models import EmailTemplateType, KUEmailMessage
 from booking.models import VisitComment
 from booking.utils import UnicodeWriter
 from django.contrib import messages
-from django.db.models import F
 from django.db.models import Q
 from django.db.models.aggregates import Count, Sum
 from django.db.models.functions import Coalesce
@@ -28,7 +27,6 @@ from booking.views import LoginRequiredMixin, AccessDenied
 from booking.views import EditorRequriedMixin, VisitCustomListView
 from django.views.generic.list import ListView
 from profile.forms import UserCreateForm, EditMyProductsForm, StatisticsForm
-from profile.models import AbsDateDist
 from profile.models import EmailLoginURL
 from profile.models import UserProfile, UserRole, EDIT_ROLES, NONE
 from profile.models import HOST, TEACHER
@@ -118,11 +116,30 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         context.update(**kwargs)
         return super(ProfileView, self).get_context_data(**context)
 
+    datediff_sql = """
+        LEAST(
+            ABS(
+                EXTRACT(
+                    EPOCH FROM
+                    (
+                        "booking_visit"."needs_attention_since" -
+                        STATEMENT_TIMESTAMP()
+                    )
+                )
+            ),
+            ABS(
+                EXTRACT(
+                    EPOCH FROM
+                    "booking_eventtime"."start"  - STATEMENT_TIMESTAMP()
+                )
+            )
+        )
+    """
+
     def sort_vo_queryset(self, qs):
-        qs = qs.annotate(
-            datediff=AbsDateDist(F('eventtime__start'))
+        return qs.extra(
+            select={'datediff': self.datediff_sql}
         ).order_by('datediff')
-        return qs
 
     def lists_by_role(self):
         role = self.request.user.userprofile.get_role()
@@ -430,7 +447,7 @@ class CreateUserView(FormView, UpdateView):
             if not pk:
                 try:
                     KUEmailMessage.send_email(
-                        EmailTemplateType.SYSTEM__USER_CREATED,
+                        EmailTemplateType.system__user_created,
                         {
                             'user': user,
                             'password': form.cleaned_data['password1'],
@@ -542,8 +559,8 @@ class UserListView(EditorRequriedMixin, ListView):
         q = self.request.GET.get("q", None)
         if q:
             qs = qs.filter(
-                Q(username__contains=q) | Q(first_name__contains=q) |
-                Q(last_name__contains=q)
+                Q(username__icontains=q) | Q(first_name__icontains=q) |
+                Q(last_name__icontains=q)
             )
 
         return qs.order_by('first_name', 'last_name', 'username')

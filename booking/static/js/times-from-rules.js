@@ -1,4 +1,8 @@
-$(function(){
+$(function($){
+    var $start_time = $('#id_start_time'),
+        $end_time = $('#id_end_time'),
+        $extra_days = $('#id_extra_days');
+
     var currentDates = [];
 
     function pad(number) {
@@ -48,7 +52,7 @@ $(function(){
         calendarWeeks: true,
         todayHighlight: true,
         startDate: 'Date',
-        clearBtn: false,
+        clearBtn: true,
         autoclose: true
     });
 
@@ -64,6 +68,31 @@ $(function(){
 
         return d;
     }
+
+    function format_time(d) {
+        return [pad(d.getUTCHours()), pad(d.getUTCMinutes())].join(":");
+    }
+
+    function format_date(d) {
+        return [
+            pad(d.getUTCDate()),
+            pad(d.getUTCMonth() + 1),
+            d.getUTCFullYear()
+        ].join(".");
+    }
+
+    function format_interval(d1, d2) {
+        var datestr1 = format_date(d1),
+            datestr2 = format_date(d2);
+        if(datestr1 == datestr2) {
+            return datestr1 + " " + format_time(d1) + " - " + format_time(d2);
+        } else {
+            return datestr1 + " " + format_time(d1) +
+                   " - " +
+                   datestr2 + " " + format_time(d2);
+        }
+    }
+
 
     var weekday_map = {
         'RRule.MO': RRule.MO,
@@ -123,17 +152,26 @@ $(function(){
             delete options.byweekday;
         }
 
-        var $start = $('#interval_widgets .start-input input').first(),
-            $end = $('#interval_widgets .end-input input').first(),
-            $specific_time = $(
-                '#interval_widgets .specific-time select'
-            ).first(),
-            start_time = $start.val().substr(11, 5),
-            end_time = $end.val().substr(11, 5),
-            time_str = $specific_time.val().toLowerCase() !== 'false' ?
-                       [start_time, end_time].join(" - ") :
-                       ''
+        var start_hhmm = ($start_time.val() || '00:00').split(":"),
+            end_hhmm = ($end_time.val() || '00:00').split(":"),
+            start_offset = (
+                parseInt(start_hhmm[0]) * 60 + parseInt(start_hhmm[1])
+            ),
+            end_offset = (
+                parseInt(end_hhmm[0]) * 60 + parseInt(end_hhmm[1])
+            ),
+            extra_days = parseInt($extra_days.val() || 0)
             ;
+
+        // If end offset was less than start offset we've wrapped around
+        // midnight.
+        if(end_offset < start_offset) {
+            end_offset += 24 * 60;
+        }
+
+        if(extra_days > 0) {
+            end_offset += extra_days * 24 * 60;
+        }
 
         rule = new RRule(options);
         var outputEl = $('.rrule-datelist');
@@ -141,16 +179,10 @@ $(function(){
         if(rule.options.count || rule.options.until) {
             list = rule.all();
             for (var i=0; i<list.length; i++) {
-                var r = list[i];
-
-                value_str = [
-                    pad(r.getUTCDate()),
-                    pad(r.getUTCMonth() + 1),
-                    r.getUTCFullYear()
-                ].join(".");
-                if(time_str) {
-                    value_str = value_str + " " + time_str;
-                }
+                var time = list[i].getTime(),
+                    d1 = new Date(time + start_offset * 60 * 1000),
+                    d2 = new Date(time + end_offset * 60 * 1000),
+                    value_str = format_interval(d1, d2);
 
                 outputEl.append([
                     '<li>',
@@ -160,14 +192,34 @@ $(function(){
                 ].join(""));
             }
         }
+
+        return true;
     };
 
     updateRRDates();
 
     // RRule input methods
     rrdatepickStart.datepicker().on('hide', updateRRDates);
-    rrdatepick.datepicker().on('hide', updateRRDates);
+    rrdatepick.datepicker().on('hide', function() {
+        if($(this).val()) {
+            $('#input-count').val('');
+        }
+        updateRRDates();
+    });
     $('#input-weekdays input').on('change', updateRRDates);
     $('#input-frequency').on('change', updateRRDates);
-    $('#input-count').on('keyup', updateRRDates);
+    $('#input-count').on('keyup', function() {
+        if($(this).val()) {
+            rrdatepick.val('');
+        }
+        updateRRDates();
+    });
+
+    $('.clockpicker').clockpicker({
+        'donetext': "Opdater",
+        'autoclose': true,
+        'afterDone': updateRRDates
+    });
+
+    $extra_days.on("change", updateRRDates);
 });

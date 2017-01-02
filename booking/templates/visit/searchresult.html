@@ -74,14 +74,6 @@
                     </div>
                 </div>
                 <div class="form-group row">
-                    <div class="col-sm-2">
-                        <label for="{{ form.w.id_for_label }}">{{ form.w.label }}</label>
-                    </div>
-                    <div class="col-sm-6">
-                        {{ form.w }}
-                    </div>
-                </div>
-                <div class="form-group row">
                     <div class="col-sm-3 col-sm-offset-2">
                         <label for="{{ form.p_min.id_for_label }}">{{ form.p_min.label }}</label>
                         {{ form.p_min }}
@@ -142,7 +134,24 @@
                                 {{ res.real.interval_display }}
                             </dd>
                             <dt>{% trans 'Booket af:' %}</dt>
-                            <dd>{% blocktrans with count=res.nr_attendees %}{{ count }} personer{% endblocktrans %}</dd>
+                            <dd>
+                                <ul class="list-unstyled">
+                                    {% for booking in res.booking_list %}
+                                        <li>
+                                            {% blocktrans with schoolname=booking.booker.school.name participants=booking.booker.attendee_count %}
+                                                {{ schoolname }} ({{ participants }} personer)
+                                            {% endblocktrans %}
+                                        </li>
+                                    {% endfor %}
+                                    {% if res.booking_list|length > 1 %}
+                                        <li>
+                                            {% blocktrans with total=res.nr_attendees %}
+                                                Total: {{ total }} personer
+                                            {% endblocktrans %}
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </dd>
                         </dl>
                     </div>
                 </li>

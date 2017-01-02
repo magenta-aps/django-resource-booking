@@ -1,4 +1,5 @@
 {% extends 'index.html' %}
+{% load tz %}
 {% load i18n %}
 {% load staticfiles %}
 {% load booking_tags %}
@@ -7,11 +8,12 @@
 
 {% block head %}
 {% include 'common/resources/datepicker_style.html' %}
-<link rel="stylesheet" href="{% static 'css/bootstrap-slider.css' %}" />
+<link href="{% static 'css/bootstrap-clockpicker.css' %}" type="text/css" media="all" rel="stylesheet"  />
 {% endblock %}
 
 
 {% block content %}
+    {% timezone "Europe/Copenhagen" %}
     <div class="divider"></div>
     <h1>
         {% trans "Opret tidspunkter for" %}
@@ -30,7 +32,43 @@
                     <label for="input-start">{% trans 'Startdato' %}:</label>
                 </div>
                 <div class="col-sm-7">
-                    <input id="input-start" name="start" type="text" class="form-control" placeholder="{% trans 'Dato' %}" value="{% now "SHORT_DATE_FORMAT" %}">
+                    <input id="input-start" name="start" type="text" class="form-control" placeholder="{% trans 'Dato' %}" value="{% now "d.m.Y" %}">
+                </div>
+                <div class="col-sm-3 with-errors">
+                </div>
+            </div>
+
+            <div class="row form-group time-inputs">
+                <div class="col-sm-2">
+                    <label for="input-start">{% trans 'Tidspunkt og varighed' %}:</label>
+                </div>
+                <div class="col-sm-7 form-inline">
+                    <div class="input-daterange" style="margin-top: 0;">
+
+                        <label for="{{ form.start_time.id_for_label }}">{% trans 'Fra' %}:</label>
+                        <div class="input-group clockpicker">
+                            <input class="form-control input-sm" id="{{ form.start_time.id_for_label }}" name="{{ form.start_time.name }}" type="text" value="{{ form.start_time.value }}" size="5">
+                            <span class="input-group-addon" data-toggle="dropdown"><span class="glyphicon glyphicon-time"></span></span>
+                        </div>
+
+                        <label for="{{ form.end_time.id_for_label }}">{% trans 'til' %}:</label>
+                        <div class="input-group clockpicker">
+                            <input class="form-control input-sm" id="{{ form.end_time.id_for_label }}" name="{{ form.end_time.name }}" type="text" value="{{ form.end_time.value }}" size="5">
+                            <span class="input-group-addon" data-toggle="dropdown"><span class="glyphicon glyphicon-time"></span></span>
+                        </div>
+                        {% trans 'plus' %}
+                        {{ form.extra_days }}
+                        <label for="{{ form.extra_days.id_for_label }}">{% trans 'hele dage' %}.</label>
+
+
+                    </div>
+                    {% if product.duration_in_minutes %}
+                    <div>
+                        {% blocktrans with durationspec=product.duration_display %}
+                        Tilbuddets varighed er angivet til {{ durationspec }}.
+                        {% endblocktrans %}
+                    </div>
+                    {% endif %}
                 </div>
                 <div class="col-sm-3 with-errors">
                 </div>
@@ -73,10 +111,8 @@
                     <label class="label-unstyled" for="input-count">eller efter <input id="input-count" name="count" type="text" class="form-control" placeholder="0" value="1"> forekomster</label>
                 </div>
             </div>
-            <div id="interval_widgets">
-                {% include 'eventtime/date_interval.html' with product=product start_field=form.start end_field=form.end specific_time_field=form.has_specific_time hide_date="True" hide_output="True" %}
-            </div>
-            <div id="rruleOutput">
+
+           <div id="rruleOutput">
                 <div class="row form-group">
                     <div class="col-sm-2">
                         <p><strong>{% trans 'Valgte datoer/tidspunkter' %}:</strong></p>
@@ -95,18 +131,9 @@
             </div>
         </form>
     </div>
+    {% endtimezone %}
 {% endblock %}
 
 {% block extra_scripts %}
 {% include 'eventtime/create_from_rules_script.html' %}
-{% include 'eventtime/date_interval_script.html' %}
-<script type="text/javascript"><!--
-(function() {
-    var $trigger_elem = $('#input-frequency');
-    KU.initialize_time_interval(
-        '#interval_widgets',
-        function() { console.log("heph2y"); $trigger_elem.trigger("change"); }
-    );
-})();
-//--></script>
 {% endblock %}

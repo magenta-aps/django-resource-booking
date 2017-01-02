@@ -1,4 +1,5 @@
 {% load i18n %}
+{% load booking_tags %}
 <div class="col-sm-6">
     <div class="panel panel-bookings">
         <div class="panel-heading {{ list.color }}">
@@ -75,29 +76,42 @@
                             <h2 class="list-group-item-heading">{{ res.title }}</h2>
                             <div class="list-group-item-text">
                                 <ul>
-                                    <li>{% trans 'Type:' %} {{ res.get_type_display }}</li>
-                                    {% if res.get_visits|length %}
+                                    <li>
+                                        {% trans 'Type:' %}
+                                        {{ res.get_type_display }}
+                                    </li>
+
+                                    {% if res.is_guest_time_suggested %}
                                         <li>
                                             {% trans 'Dato/tid:' %}
-                                            <span class="type-offer">
-                                                {% if res.get_visits|length == 1 %}
-                                                    {{ res.first_visit.start_datetime|date:"d.m.Y" }}
-                                                    {% blocktrans with time=res.first_visit.start_datetime|time:"H.i" %} kl. {{ time }}{% endblocktrans %}
-                                                {% else %}
-                                                    {% blocktrans with count=res.get_visits|length date=res.first_visit.start_datetime|date:"d.m.Y" time=res.first_visit.start_datetime|time:"H.i" %}
-                                                        {{ count }} mulige tidspunkter, første gang {{ date }} kl. {{ time }}
-                                                    {% endblocktrans %}
-                                                {% endif %}
-                                            </span>
+                                            {% trans 'Foreslå selv tidspunkt' %}
+                                        </li>
+                                    {% else %}
+                                        <li>
+                                            {% trans 'Dato/tid:' %}
+                                            {% if res.future_bookable_times|length == 0 %}
+                                                {% trans 'Alt optaget' %}
+                                            {% elif res.future_bookable_times|length == 1 %}
+                                                {{ res.future_bookable_times.first.interval_display }}
+                                            {% else %}
+                                                {% blocktrans with count=res.future_bookable_times|length interval=res.future_bookable_times.first.interval_display %}
+                                                    {{ count }} mulige tidspunkter, første gang {{ interval }}
+                                                {% endblocktrans %}
+                                            {% endif %}
                                         </li>
                                     {% endif %}
-                                    {%if res.display_locality %}
-                                        <li>{% trans 'Hvor:' %} {{ res.display_locality }}</li>
+
+                                    {% if res.display_locality %}
+                                        <li>
+                                            {% trans 'Hvor:' %}
+                                            {{ res.display_locality }}
+                                        </li>
                                     {% endif %}
-                                    {% if item.price %}
+
+                                    {% if res.price %}
                                         <li>
                                             {% trans 'Pris:' %}
-                                            <span class="type-offer">{{ item.price }}</span>
+                                            <span class="type-offer">{{ res.price }}</span>
                                         </li>
                                     {% endif %}
                                 </ul>
