@@ -12,7 +12,7 @@
 
 {% block content %}
     {% include 'common/breadcrumbrow.html' %}
-    <div class="divider"></div>
+    
     <div class="row form-group">
         <div class="col-sm-8">
             <h1>{{ object.get_type_display }}</h1>
@@ -174,7 +174,7 @@
 {% endblock %}
 
 {% block extra_scripts %}
-    
+
     {{ form.media }}
     {% include 'common/resources/datetime-picker_script.html' %}
     <script type="text/javascript" src="{% static 'js/formutil.js' %}"></script>
@@ -212,5 +212,5 @@
             $('[data-toggle="tooltip"]').tooltip({'container':$('body')});
         })
     </script>
-    
+
 {% endblock %}
