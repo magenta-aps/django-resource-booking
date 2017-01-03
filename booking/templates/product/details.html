@@ -27,7 +27,7 @@
         <div class="col-sm-12 col-md-8">
             <div class="divider"></div>
             <h2>{{ object.get_type_display }}</h2>
-            
+
             {% if can_edit %}
                 <a class="pull-right btn btn-default margin-bottom-10" href="{% url 'product-edit' object.pk %}">{% trans 'Redigér' %}</a>
             {% endif %}
@@ -41,7 +41,7 @@
                     <a class="pull-right btn btn-default margin-bottom-10 margin-right-10" href="{% url 'product-simple-ressources' object.pk %}">{% trans 'Redigér ressourcer' %}</a>
                 {% endif %}
             {% endif %}
-            
+
             <h1>{{ object.title }}</h1>
             <div class="well">
                 {% autoescape off %}
@@ -115,7 +115,13 @@
                     </div>
                     <div class="panel-body">
                         <dl class="dl-horizontal">
-                            
+
+                            <!-- Is the following IF still useful? -->
+                            {% if object.get_audience_display %}
+                                <dt>{% trans 'Henvendt til'%}:</dt>
+                                <dd>{{ object.get_audience_display }}</dd>
+                            {% endif %}
+
                             {% if object.resource_ptr.all_subjects  %}
                                 <dt>{% trans 'Fag/niveau' %}:</dt>
                                 <dd>
@@ -126,17 +132,17 @@
                                     </ul>
                                 </dd>
                             {% endif %}
-                            
+
                             {% if object.num_of_participants_display %}
                                 <dt>{% trans 'Antal' %}:</dt>
                                 <dd>{{ object.num_of_participants_display }}</dd>
                             {% endif %}
-                            
+
                             {% if object.get_type_display %}
                                 <dt>{% trans 'Hvad' %}:</dt>
                                 <dd>{{ object.get_type_display }}</dd>
                             {% endif %}
-                            
+
                             {% if object.locality %}
                                 <dt>{% trans 'Hvor' %}:</dt>
                                 <dd>
@@ -147,13 +153,13 @@
                                 </a>
                                 </dd>
                             {% endif %}
-                            
+
                             <dt>{% trans 'Arrangør' %}:</dt>
                             <dd>
                                 {% if object.organizationalunit.url %}
                                     <a href="{{ object.organizationalunit.url }}" target="_blank">
                                 {% endif %}
-                                <strong>{{ object.organizationalunit.name }}</strong>
+                                {{ object.organizationalunit.name }}
                                 {% if object.organizationalunit.url %}
                                     </a> <span class="glyphicon glyphicon-new-window"></span>
                                 {% endif %}
@@ -215,7 +221,7 @@
                                 <dt>{% trans 'Varighed' %}:</dt>
                                 <dd>{{ object.duration|timedelta_i18n }}</dd>
                             {% endif %}
-                            
+
                             {% if object.price %}
                                 <dt>{% trans 'Pris' %}:</dt>
                                 <dd>{{ object.price }}</dd>
@@ -236,7 +242,7 @@
                                     <dd>{{ object.custom_name }}</dd>
                                 {% endif %}
                             {% endif %}
-                            
+
                         </dl>
                     </div>
                 </div>
@@ -248,7 +254,7 @@
     </div>
 
     {% include 'common/modal_contact.html' %}
-    
+
     {% include 'common/modal_framehost.html' %}
 
 {% endblock %}
