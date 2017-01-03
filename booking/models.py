@@ -905,29 +905,52 @@ class EmailTemplateType(
     def add_defaults_to_all():
         for product in Product.objects.all():
             for template_type in EmailTemplateType.objects.filter(
-                is_default=True
+                enable_autosend=True
             ):
                 qs = product.productautosend_set.filter(
                     template_type=template_type
                 )
                 if qs.count() == 0:
-                    print "    create autosends for product %d" % product.id
+                    print "    create autosend type %d for product %d" % \
+                          (template_type.key, product.id)
                     autosend = ProductAutosend(
                         template_key=template_type.key,
                         template_type=template_type,
                         product=product,
-                        enabled=True
+                        enabled=template_type.is_default
                     )
                     autosend.save()
                 elif qs.count() > 1:
-                    print "    removing extraneous autosends " \
-                          "for product %d" % product.id
+                    print "    removing extraneous autosend %d " \
+                          "for product %d" % (template_type.key, product.id)
                     for extra in qs[1:]:
                         extra.delete()
-            for visit in product.visit_set.all():
-                print "    creating inheriting autosends for " \
-                      "visit %d" % visit.id
-                visit.create_inheriting_autosends()
+
+        for visit in Visit.objects.all():
+            if not visit.is_multiproductvisit:
+                for template_type in EmailTemplateType.objects.filter(
+                    enable_autosend=True
+                ):
+                    qs = visit.visitautosend_set.filter(
+                        template_type=template_type
+                    )
+                    if qs.count() == 0:
+                        print "    creating autosend type %d for visit %d" % \
+                              (template_type.key, visit.id)
+                        visitautosend = VisitAutosend(
+                            visit=visit,
+                            inherit=True,
+                            template_key=template_type.key,
+                            template_type=template_type,
+                            days=None,
+                            enabled=False
+                        )
+                        visitautosend.save()
+                    elif qs.count() > 1:
+                        print "    removing extraneous autosend %d " \
+                              "for visit %d" % (template_type.key, visit.id)
+                    for extra in qs[1:]:
+                        extra.delete()
 
     @staticmethod
     def migrate():
