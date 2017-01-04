@@ -2920,6 +2920,10 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         if since is None:
             since = timezone.now()
 
+        # Also mark parent as needing attention
+        if self.is_multi_sub:
+            self.multi_master.set_needs_attention(since=since)
+
         if not (
             self.needs_attention_since and
             self.needs_attention_since >= since
@@ -3842,6 +3846,7 @@ class MultiProductVisitTemp(models.Model):
         mpv = MultiProductVisit(
             required_visits=self.required_visits
         )
+        mpv.needs_attention_since = timezone.now()
         mpv.save()
         mpv.create_eventtime(self.date)
         mpv.ensure_statistics()
