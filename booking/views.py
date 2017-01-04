@@ -772,6 +772,7 @@ class SearchView(BreadcrumbMixin, ListView):
                     time_mode__in=[
                         Product.TIME_MODE_NONE,
                         Product.TIME_MODE_GUEST_SUGGESTED,
+                        Product.TIME_MODE_NO_BOOKING,
                     ]
                 )
                 qs = qs.filter(
@@ -1574,11 +1575,12 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
             enable_days=True
         )
 
-        context['hastime'] = self.object.type in [
-            Product.STUDENT_FOR_A_DAY, Product.STUDIEPRAKTIK,
-            Product.OPEN_HOUSE, Product.TEACHER_EVENT, Product.GROUP_VISIT,
-            Product.STUDY_PROJECT, Product.OTHER_OFFERS
-        ]
+        time_modes = self.object.available_time_modes
+        if len(time_modes) == 1:
+            context['hidden_time_mode'] = True
+            context['hastime'] = False
+        elif len(time_modes) > 1:
+            context['hastime'] = True
 
         context['disable_waitinglist_on_timemode_values'] = [
             Product.TIME_MODE_GUEST_SUGGESTED

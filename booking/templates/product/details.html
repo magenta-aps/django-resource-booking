@@ -175,22 +175,10 @@
                                     {% else %}
                                         {% trans 'Foreslå selv et tidspunkt' %}
                                     {% endif %}
+                                {% elif object.time_mode == view.model.TIME_MODE_NO_BOOKING %}
+                                    {% include 'product/details-eventtime-list.html' with eventtime_list=object.future_times %}
                                 {% elif object.future_bookable_times %}
-                                    <ul class="list-unstyled" id="dato">
-                                    {% for eventtime in object.future_bookable_times|slice:":10" %}
-                                        <li>{{ eventtime.interval_display }}</li>
-                                    {% endfor %}
-                                    {% if object.future_bookable_times.count > 10 %}
-                                        {% for eventtime in object.future_bookable_times|slice:"10:" %}
-                                            <li class="hidden default-hidden">{{ eventtime.interval_display }}</li>
-                                        {% endfor %}
-                                        <li>
-                                            <span id="show_all_times" class="btn btn-default btn-xs pull-right">{% trans 'Vis alle' %} ({{object.future_bookable_times.count}})</span>
-                                            <span id="hide_extra_times" class="btn btn-default btn-xs pull-right hidden">{% trans 'Skjul ekstra' %}</span>
-                                        </li>
-                                    {% endif %}
-                                    </ul>
-                                    <div class="clearfix"></div>
+                                    {% include 'product/details-eventtime-list.html' with eventtime_list=object.future_bookable_times %}
                                 {% else %}
                                     {% trans 'Der er i øjeblikket ikke nogen tidspunkter der er åbne for tilmelding på dette tilbud' %}
                                 {% endif %}
@@ -203,10 +191,12 @@
                                             {{ nr_visits }} besøg
                                         {% endblocktrans %}
                                     </div>
+                                    {% if object.has_time_management %}
                                     <hr />
                                     <p>
                                         <a class="pull-right btn btn-default btn-xs margin-bottom-10 margin-right-10" href="{% url 'manage-times' object.pk %}">{% trans 'Administrér tidspunkter' %}</a>
                                     </p>
+                                    {% endif %}
                                 {% endif %}
                             </dd>
                             {% endif %}
