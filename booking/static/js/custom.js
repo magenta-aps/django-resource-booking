@@ -46,16 +46,6 @@ $("#reset-btn").click(function() {
     $("form").trigger("submit")
 });
 
-// Automatically submit the search form whenever the filters are changed
-$(function() {
-    $('#filter-search-results input[type=checkbox]').on('change', function() {
-        $(this.form).trigger("submit")
-    });
-    $('#filter-search-results input.datepicker').on('changeDate', function() {
-        $(this.form).trigger("submit")
-    });
-});
-
 // Move child items to a destination (handy when django just doesn't let you put elements where they should be
 // Usage: put items in a container and add attributes: <div data-move="input" data-target="#move_{data-attr}" data-attr="value"><input type="checkbox" value="hey"></div>
 // Also add or modify a recipient container: <div id="move_hey"></div>
