@@ -3048,8 +3048,13 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     @classmethod
     def planned_queryset(cls, **kwargs):
-        return cls.objects.exclude(
-            workflow_status=cls.WORKFLOW_STATUS_BEING_PLANNED,
+        return cls.objects.filter(
+            workflow_status__in=[
+                cls.WORKFLOW_STATUS_PLANNED,
+                cls.WORKFLOW_STATUS_PLANNED_NO_BOOKING,
+                cls.WORKFLOW_STATUS_CONFIRMED,
+                cls.WORKFLOW_STATUS_REMINDED
+            ],
         ).filter(**kwargs)
 
     @staticmethod
