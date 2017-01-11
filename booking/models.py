@@ -2959,24 +2959,28 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def needed_teachers(self):
-        return self.total_required_teachers - self.teachers.count()
-
-    @property
-    def needs_teachers(self):
-        if self.product.is_resource_controlled:
+        if self.is_multiproductvisit:
+            return self.multiproductvisit.needed_teachers
+        elif self.product.is_resource_controlled:
             teacher_type = ResourceType.RESOURCE_TYPE_TEACHER
             teacher_requirements = self.product.resourcerequirement_set.filter(
                 resource_pool__resource_type_id=teacher_type
             )
+            total_missing = 0
             for requirement in teacher_requirements:
                 teacher_resources = self.visitresource.filter(
                     resource_requirement=requirement
                 )
                 if teacher_resources.count() < requirement.required_amount:
-                    return True
-            return False
+                    total_missing += \
+                        requirement.required_amount - teacher_resources.count()
+            return total_missing
         else:
-            return self.needed_teachers > 0
+            return self.total_required_teachers - self.teachers.count()
+
+    @property
+    def needs_teachers(self):
+        return self.needed_teachers > 0
 
     @property
     def total_required_hosts(self):
@@ -2987,25 +2991,28 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def needed_hosts(self):
-        return self.total_required_hosts - self.hosts.count()
-
-    @property
-    def needs_hosts(self):
         if self.is_multiproductvisit:
-            return self.multiproductvisit.needs_hosts
-        if self.product.is_resource_controlled:
+            return self.multiproductvisit.needed_hosts
+        elif self.product.is_resource_controlled:
+            host_type = ResourceType.RESOURCE_TYPE_HOST
             host_requirements = self.product.resourcerequirement_set.filter(
-                resource_pool__resource_type_id=ResourceType.RESOURCE_TYPE_HOST
+                resource_pool__resource_type_id=host_type
             )
+            total_missing = 0
             for requirement in host_requirements:
                 host_resources = self.visitresource.filter(
                     resource_requirement=requirement
                 )
                 if host_resources.count() < requirement.required_amount:
-                    return True
-            return False
+                    total_missing += \
+                        requirement.required_amount - host_resources.count()
+            return total_missing
         else:
-            return self.needed_hosts > 0
+            return self.total_required_hosts - self.hosts.count()
+
+    @property
+    def needs_hosts(self):
+        return self.needed_hosts > 0
 
     @property
     def needs_room(self):
@@ -3805,18 +3812,18 @@ class MultiProductVisit(Visit):
         )
 
     @property
-    def needs_teachers(self):
+    def needed_teachers(self):
+        needed = 0
         for subvisit in self.subvisits_unordered:
-            if subvisit.needs_teachers:
-                return True
-        return False
+            needed += subvisit.needed_teachers
+        return needed
 
     @property
-    def needs_hosts(self):
+    def needed_hosts(self):
+        needed = 0
         for subvisit in self.subvisits_unordered:
-            if subvisit.needs_hosts:
-                return True
-        return False
+            needed += subvisit.needed_hosts
+        return needed
 
     @property
     def needs_room(self):
