@@ -2596,8 +2596,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 Q(workflow_status=Visit.WORKFLOW_STATUS_PLANNED) |
                 Q(workflow_status=Visit.WORKFLOW_STATUS_PLANNED_NO_BOOKING)
             ).count()
-            if subs_planned >= multiproductvisit.required_visits:
-                return False
+            if subs_planned < multiproductvisit.required_visits:
+                return True
 
         # We have to have a chosen starttime before we are planned
         if not hasattr(self, 'eventtime') or not self.eventtime.start:
@@ -2608,17 +2608,15 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         if ws_planned not in (x[0] for x in self.possible_status_choices()):
             return False
 
-        if self.product.time_mode == Product.TIME_MODE_RESOURCE_CONTROLLED:
-            for x in self.product.resourcerequirement_set.all():
-                if not x.is_fullfilled_for(self):
-                    return True
+        for product in self.products:
+            if product.time_mode == Product.TIME_MODE_RESOURCE_CONTROLLED:
+                for x in product.resourcerequirement_set.all():
+                    if not x.is_fullfilled_for(self):
+                        return True
         else:
             # Correct number of hosts/teachers must be assigned
-            if self.needed_hosts > 0 or self.needed_teachers > 0:
-                return True
-
             # Room assignment must be resolved
-            if self.room_status == Visit.STATUS_NOT_ASSIGNED:
+            if self.needs_hosts or self.needs_teachers or self.needs_room:
                 return True
 
         return False
