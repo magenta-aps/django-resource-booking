@@ -27,7 +27,7 @@
                         <label for="{{ field.id_for_label }}" class="control-label">{% trans 'Type:' %}</label>
                     </div>
                     <div class="col-sm-7">
-                        {{ object.resource_type }}
+                        {{ object.resource_type.name }}
                         {% if object.resource_type.id == ResourceType.RESOURCE_TYPE_HOST %}
                             <a href="{% url 'user_edit' object.user.pk %}" class="btn btn-default btn-xs" role="button">{% trans 'Gå til redigering af vært' %}</a>
                         {% elif object.resource_type.id == ResourceType.RESOURCE_TYPE_TEACHER %}
