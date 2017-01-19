@@ -269,7 +269,10 @@ class EditVisitResourceForm(forms.Form):
         self.visit = visit
         self.resource_requirement = resource_requirement
         resourcefield = self.fields['resources']
-        resourcefield.label = resource_requirement.resource_pool.name
+        resourcefield.label = \
+            resource_requirement.resource_pool.resource_type.plural or \
+            resource_requirement.resource_pool.resource_type.name
+        resourcefield.label_suffix = resource_requirement.resource_pool.name
         resourcefield.help_text = __(
             u"%(count)d nødvendig",
             u"%(count)d nødvendige",
