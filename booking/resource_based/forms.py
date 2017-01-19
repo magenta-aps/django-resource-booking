@@ -63,13 +63,12 @@ class ResourceTypeForm(forms.Form):
 
     def __init__(self, **kwargs):
         user = kwargs.pop("user")
-        kwargs['initial']['unit'] = user.userprofile.organizationalunit.pk
-
-        res = super(ResourceTypeForm, self).__init__(**kwargs)
-
+        try:
+            kwargs['initial']['unit'] = user.userprofile.organizationalunit.pk
+        except AttributeError:
+            pass
+        super(ResourceTypeForm, self).__init__(**kwargs)
         self['unit'].field.queryset = user.userprofile.get_unit_queryset()
-
-        return res
 
 
 class EditResourceForm(forms.ModelForm):
@@ -190,13 +189,12 @@ class ResourcePoolTypeForm(forms.Form):
 
     def __init__(self, **kwargs):
         user = kwargs.pop("user")
-        kwargs['initial']['unit'] = user.userprofile.organizationalunit.pk
-
-        res = super(ResourcePoolTypeForm, self).__init__(**kwargs)
-
+        try:
+            kwargs['initial']['unit'] = user.userprofile.organizationalunit.pk
+        except AttributeError:
+            pass
+        super(ResourcePoolTypeForm, self).__init__(**kwargs)
         self['unit'].field.queryset = user.userprofile.get_unit_queryset()
-
-        return res
 
 
 class EditResourcePoolForm(forms.ModelForm):
