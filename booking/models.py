@@ -2866,7 +2866,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         if self.is_multiproductvisit:
             return self.multiproductvisit.needs_hosts
         elif self.product.is_resource_controlled:
-            host_type = ResourceType.RESOURCE_TYPE_HOST
             host_requirements = self.product.resourcerequirement_set.filter(
                 resource_pool__resource_type_id=ResourceType.RESOURCE_TYPE_HOST
             )
@@ -3673,11 +3672,11 @@ class MultiProductVisit(Visit):
         )
 
     @property
-    def needs_teachers(self):
+    def needed_teachers(self):
+        needed = 0
         for subvisit in self.subvisits_unordered:
-            if subvisit.needs_teachers:
-                return True
-        return False
+            needed += subvisit.needed_teachers
+        return needed
 
     @property
     def needs_teachers(self):
@@ -3690,9 +3689,8 @@ class MultiProductVisit(Visit):
     def needed_hosts(self):
         needed = 0
         for subvisit in self.subvisits_unordered:
-            if subvisit.needs_hosts:
-                return True
-        return False
+            needed += subvisit.needed_hosts
+        return needed
 
     @property
     def needs_hosts(self):
