@@ -1853,6 +1853,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             x for x in Product.time_mode_choices if x[0] in available_set
         )
 
+    @property
     def total_required_hosts(self):
         if self.is_resource_controlled:
             return self.resourcerequirement_set.filter(
@@ -1873,6 +1874,17 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             )['total_required'] or 0
         else:
             return int(self.needed_teachers)
+
+    @property
+    def total_required_rooms(self):
+        if self.is_resource_controlled:
+            return self.resourcerequirement_set.filter(
+                resource_pool__resource_type=ResourceType.RESOURCE_TYPE_ROOM
+            ).aggregate(
+                total_required=Sum('required_amount')
+            )['total_required'] or 0
+        else:
+            return 1
 
     @property
     def bookable_times(self):
@@ -2969,42 +2981,42 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             return "expired"
         return ""
 
+    def resources_required(self, resource_type):
+        missing = 0
+        for requirement in self.product.resourcerequirement_set.filter(
+            resource_pool__resource_type_id=resource_type
+        ):
+            resources = self.visitresource.filter(
+                resource_requirement=requirement
+            )
+            if resources.count() < requirement.required_amount:
+                missing += (requirement.required_amount - resources.count())
+        return missing
+
     @property
     def total_required_teachers(self):
         if self.override_needed_teachers is not None:
             return self.override_needed_teachers
-
         return self.product.total_required_teachers
 
     @property
     def needed_teachers(self):
         if self.is_multiproductvisit:
             return self.multiproductvisit.needed_teachers
-        return self.total_required_teachers - self.assigned_teachers.count()
+        elif self.product.is_resource_controlled:
+            return self.resources_required(ResourceType.RESOURCE_TYPE_TEACHER)
+        else:
+            return self.total_required_teachers - \
+                   self.assigned_teachers.count()
 
     @property
     def needs_teachers(self):
-        if self.is_multiproductvisit:
-            return self.multiproductvisit.needs_teachers
-        elif self.product.is_resource_controlled:
-            teacher_type = ResourceType.RESOURCE_TYPE_TEACHER
-            teacher_requirements = self.product.resourcerequirement_set.filter(
-                resource_pool__resource_type_id=teacher_type
-            )
-            total_missing = 0
-            for requirement in teacher_requirements:
-                teacher_resources = self.visitresource.filter(
-                    resource_requirement=requirement
-                )
-                if teacher_resources.count() < requirement.required_amount:
-                    total_missing += \
-                        requirement.required_amount - teacher_resources.count()
-            return total_missing
-        else:
-            return self.total_required_teachers - self.teachers.count()
+        return self.needed_teachers > 0
 
     @property
     def assigned_teachers(self):
+        if self.is_multiproductvisit:
+            return self.multiproductvisit.assigned_teachers
         if self.product.is_resource_controlled:
             return User.objects.filter(
                 teacherresource__visitresource__visit=self
@@ -3016,36 +3028,25 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def total_required_hosts(self):
         if self.override_needed_hosts is not None:
             return self.override_needed_hosts
-
         return self.product.total_required_hosts
 
     @property
     def needed_hosts(self):
-        return self.total_required_hosts - self.assigned_hosts.count()
+        if self.is_multiproductvisit:
+            return self.multiproductvisit.needed_hosts
+        elif self.product.is_resource_controlled:
+            return self.resources_required(ResourceType.RESOURCE_TYPE_HOST)
+        else:
+            return self.total_required_hosts - self.assigned_hosts.count()
 
     @property
     def needs_hosts(self):
-        if self.is_multiproductvisit:
-            return self.multiproductvisit.needs_hosts
-        elif self.product.is_resource_controlled:
-            host_type = ResourceType.RESOURCE_TYPE_HOST
-            host_requirements = self.product.resourcerequirement_set.filter(
-                resource_pool__resource_type_id=host_type
-            )
-            total_missing = 0
-            for requirement in host_requirements:
-                host_resources = self.visitresource.filter(
-                    resource_requirement=requirement
-                )
-                if host_resources.count() < requirement.required_amount:
-                    total_missing += \
-                        requirement.required_amount - host_resources.count()
-            return total_missing
-        else:
-            return self.total_required_hosts - self.hosts.count()
+        return self.needed_hosts > 0
 
     @property
     def assigned_hosts(self):
+        if self.is_multiproductvisit:
+            return self.multiproductvisit.assigned_hosts
         if self.product.is_resource_controlled:
             return User.objects.filter(
                 hostresource__visitresource__visit=self
@@ -3054,8 +3055,23 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             return self.hosts.all()
 
     @property
+    def total_required_rooms(self):
+        if self.override_needed_hosts is not None:
+            return self.override_needed_hosts
+        return self.product.total_required_rooms
+
+    @property
+    def needed_rooms(self):
+        if self.is_multiproductvisit:
+            return self.multiproductvisit.needed_rooms
+        elif self.product.is_resource_controlled:
+            return self.resources_required(ResourceType.RESOURCE_TYPE_ROOM)
+        else:
+            return 1 if self.room_status == self.STATUS_NOT_ASSIGNED else 0
+
+    @property
     def needs_room(self):
-        return self.room_status == self.STATUS_NOT_ASSIGNED
+        return self.needed_rooms > 0
 
     @property
     def is_booked(self):
@@ -3821,19 +3837,33 @@ class MultiProductVisit(Visit):
         )
 
     @property
-    def total_required_hosts(self):
-        return sum(
-            subvisit.total_required_hosts
-            for subvisit in self.subvisits_unordered
-        )
-
-    @property
     def assigned_teachers(self):
         return User.objects.filter(
             id__in=flatten([
                 [user.id for user in subvisit.assigned_teachers]
                 for subvisit in self.subvisits_unordered
             ])
+        )
+
+    @property
+    def needed_teachers(self):
+        return sum(
+            subvisit.needed_teachers
+            for subvisit in self.subvisits_unordered
+        )
+
+    @property
+    def needs_teachers(self):
+        for subvisit in self.subvisits_unordered:
+            if subvisit.needs_teachers:
+                return True
+        return False
+
+    @property
+    def total_required_hosts(self):
+        return sum(
+            subvisit.total_required_hosts
+            for subvisit in self.subvisits_unordered
         )
 
     @property
@@ -3846,25 +3876,11 @@ class MultiProductVisit(Visit):
         )
 
     @property
-    def needed_teachers(self):
-        needed = 0
-        for subvisit in self.subvisits_unordered:
-            needed += subvisit.needed_teachers
-        return needed
-
-    @property
-    def needs_teachers(self):
-        for subvisit in self.subvisits_unordered:
-            if subvisit.needs_teachers:
-                return True
-        return False
-
-    @property
     def needed_hosts(self):
-        needed = 0
-        for subvisit in self.subvisits_unordered:
-            needed += subvisit.needed_hosts
-        return needed
+        return sum(
+            subvisit.needed_hosts
+            for subvisit in self.subvisits_unordered
+        )
 
     @property
     def needs_hosts(self):
@@ -3872,6 +3888,20 @@ class MultiProductVisit(Visit):
             if subvisit.needs_hosts:
                 return True
         return False
+
+    @property
+    def total_required_rooms(self):
+        return sum(
+            subvisit.total_required_rooms
+            for subvisit in self.subvisits_unordered
+        )
+
+    @property
+    def needed_rooms(self):
+        return sum(
+            subvisit.needed_rooms
+            for subvisit in self.subvisits_unordered
+        )
 
     @property
     def needs_room(self):
