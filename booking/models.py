@@ -3855,8 +3855,9 @@ class MultiProductVisit(Visit):
     @property
     def needs_teachers(self):
         for subvisit in self.subvisits_unordered:
-            needed += subvisit.needed_teachers
-        return needed
+            if subvisit.needs_teachers:
+                return True
+        return False
 
     @property
     def needed_hosts(self):
@@ -3868,8 +3869,9 @@ class MultiProductVisit(Visit):
     @property
     def needs_hosts(self):
         for subvisit in self.subvisits_unordered:
-            needed += subvisit.needed_hosts
-        return needed
+            if subvisit.needs_hosts:
+                return True
+        return False
 
     @property
     def needs_room(self):
