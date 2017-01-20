@@ -2845,11 +2845,23 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         elif self.product.is_resource_controlled:
             return self.resources_required(ResourceType.RESOURCE_TYPE_TEACHER)
         else:
-            return self.total_required_teachers - self.assigned_teachers.count()
+            return self.total_required_teachers - \
+                   self.assigned_teachers.count()
 
     @property
     def needs_teachers(self):
         return self.needed_teachers > 0
+
+    @property
+    def assigned_teachers(self):
+        if self.is_multiproductvisit:
+            return self.multiproductvisit.assigned_teachers
+        if self.product.is_resource_controlled:
+            return User.objects.filter(
+                teacherresource__visitresource__visit=self
+            )
+        else:
+            return self.teachers.all()
 
     @property
     def total_required_hosts(self):
@@ -2872,6 +2884,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def assigned_hosts(self):
+        if self.is_multiproductvisit:
+            return self.multiproductvisit.assigned_hosts
         if self.product.is_resource_controlled:
             return User.objects.filter(
                 hostresource__visitresource__visit=self
@@ -3514,24 +3528,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             return '%s - %s' % (res, self.product.title)
         else:
             return res
-
-    @property
-    def assigned_teachers(self):
-        if self.product.is_resource_controlled:
-            return User.objects.filter(
-                teacherresource__visitresource__visit=self
-            )
-        else:
-            return self.teachers.all()
-
-    @property
-    def assigned_hosts(self):
-        if self.product.is_resource_controlled:
-            return User.objects.filter(
-                hostresource__visitresource__visit=self
-            )
-        else:
-            return self.hosts.all()
 
     def context_for_user(self, user, request_usertype=None):
         profile = user.userprofile
