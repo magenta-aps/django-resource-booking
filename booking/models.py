@@ -3680,9 +3680,6 @@ class MultiProductVisit(Visit):
         return False
 
     @property
-<<<<<<< Updated upstream
-    def needs_hosts(self):
-=======
     def needs_teachers(self):
         for subvisit in self.subvisits_unordered:
             if subvisit.needs_teachers:
@@ -3692,7 +3689,6 @@ class MultiProductVisit(Visit):
     @property
     def needed_hosts(self):
         needed = 0
->>>>>>> Stashed changes
         for subvisit in self.subvisits_unordered:
             if subvisit.needs_hosts:
                 return True
