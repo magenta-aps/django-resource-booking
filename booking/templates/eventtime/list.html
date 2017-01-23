@@ -26,17 +26,18 @@
                 {% csrf_token %}
                 <div>
                     <input type="submit" role="button" class="btn btn-danger" value="{% trans 'Slet markerede' %}">
-                    <a href="{% url 'create-time' product.pk %}" role="button" class="btn btn-default">
+                    <a href="{% url 'create-time' product.pk %}" role="button" class="btn btn-primary">
                         <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
                         {% trans 'Opret nyt tidspunkt' %}
                     </a>
-                    <a href="{% url 'times-from-rules' product.pk %}" role="button" class="btn btn-default pull-right">
+                    <a href="{% url 'times-from-rules' product.pk %}" role="button" class="btn btn-primary pull-right">
                         <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
                         {% trans 'Opret nye tidspunkter ud fra regler' %}
                     </a>
                 </div>
                 {% if object.eventtime_set.all %}
-                <table class="table table-striped table-hover">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
                     <thead>
                         <tr>
                             <th>&nbsp;</th>
@@ -78,7 +79,7 @@
                                 </a>
                                 {% else %}
                                 <span class="btn btn-info btn-xs">{% trans 'Ikke oprettet' %}</span> -
-                                <a href="{{ eventtime.visit_link}}" class="btn btn-default btn-xs">
+                                <a href="{{ eventtime.visit_link}}" class="btn btn-primary btn-xs">
                                     <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
                                     {% trans 'Opret besøg' %}
                                 </a>
@@ -88,6 +89,7 @@
                     {% endfor %}
                     </tbody>
                 </table>
+                </div>
                 {% else %}
                 <p>
                     {% trans 'Der er ikke defineret nogen tidspunkter' %}

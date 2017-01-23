@@ -99,6 +99,8 @@
                     </div>
                 </div>
             </form>
+            <div class="row">
+                <div class="col-sm-8 col-sm-offset-2">
             <div class="divider"></div>
             <h1>{% trans 'Søgeresultat' %}</h1>
             {% if not results %}
@@ -111,6 +113,10 @@
                 {% endif %}
             </h2>
             <div class="divider"></div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-8 col-sm-offset-2">
             <ul class="media-list">
             {% for res in results %}
                 <li class="media">
@@ -158,6 +164,8 @@
                {% endfor %}
             </ul>
             {% endif %}
+        </div>
+    </div>
         </div>
     </div>
     <div class="row">
@@ -231,6 +239,5 @@
 {% block extra_scripts %}
 
     {% include 'common/resources/datepicker_script.html' %}
-    <script src="{% static 'js/custom.js' %}"></script>
 
 {% endblock %}

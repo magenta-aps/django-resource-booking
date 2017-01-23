@@ -37,7 +37,7 @@
 {% block content %}
 
     <div class="divider"></div>
-    
+
     <div class="row">
         <h1 class="col-sm-6">
             {% trans "Kalender" %}
@@ -49,7 +49,7 @@
             <a href="{% url 'product-view' object.product.id %}" role="button" class="btn btn-primary">{% trans 'Gå til tilbud' %}</a>
             {% endif %}
             <br/>
-            <a href="{% url reverses.calendar_event_create view.rel_obj.pk %}" role="button" class="btn btn-default" style="margin-top: 0.5em;">
+            <a href="{% url reverses.calendar_event_create view.rel_obj.pk %}" role="button" class="btn btn-primary margin-top-10">
                 <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
                 {% trans 'Opret tid i kalender' %}
             </a>
@@ -103,7 +103,7 @@
                 </p>
             {% endif %}
             <div class="divider"></div>
-            
+
             <table class="ressource-kalender table table-bordered table-striped">
                 <thead>
                     <tr>
