@@ -11,10 +11,8 @@
 {% block content %}
 
     {% include 'common/breadcrumbrow.html' %}
-    <div class="divider"></div>
 
     <h1>{% if object.pk %}{% trans "Redigér ressourcegruppe" %}{% else %}{% trans "Opret ressourcegruppe" %}{% endif %}</h1>
-    <hr/>
 
     <form id="resourceform" action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
 
