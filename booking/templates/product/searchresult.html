@@ -12,7 +12,7 @@
 {% block content %}
         <div class="row">
         <div id="leftside" class="col-sm-6 col-md-3">
-            <button type="button" class="visible-xs btn btn-default" data-toggle="collapse" data-target="#filters" id="filter-btn">{% trans 'Filtrer søgeresultat' %} <span class="glyphicon glyphicon-chevron-down hidden-print"></span></button>
+            <button type="button" class="visible-xs btn btn-primary" data-toggle="collapse" data-target="#filters" id="filter-btn">{% trans 'Filtrer søgeresultat' %} <span class="glyphicon glyphicon-chevron-down hidden-print"></span></button>
             <div class="hidden-xs" id="filters">
                 <form class="" action="{% url 'search' %}" method="get" name="filter-search-results" id="filter-search-results">
                 {% if adminform %}
@@ -125,7 +125,7 @@
             {% include 'common/breadcrumbrow.html' %}
 
             {% if user.userprofile.can_create %}
-                <a class="pull-right btn btn-default" href="{% url 'product-create' %}?back={{ request.get_full_path | urlencode }}">
+                <a class="pull-right btn btn-primary" href="{% url 'product-create' %}?back={{ request.get_full_path | urlencode }}">
                     <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
                     {% trans 'Opret tilbud' %}
                 </a>

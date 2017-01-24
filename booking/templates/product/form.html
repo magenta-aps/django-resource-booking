@@ -12,7 +12,7 @@
 
 {% block content %}
     {% include 'common/breadcrumbrow.html' %}
-    
+
     <div class="row form-group">
         <div class="col-sm-8">
             <h1>{{ object.get_type_display }}</h1>
@@ -21,7 +21,7 @@
             <a href="#" class="btn btn-default btn-sm openall">{% trans "Åben alle felter" %}</a> <a href="#" class="btn btn-default btn-sm closeall">{% trans "Luk alle felter" %}</a>
         </div>
     </div>
-    <hr/>
+
     <form id="productform" action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data" autocomplete="off">
         {% csrf_token %}
 
@@ -36,7 +36,7 @@
             <div class="panel panel-default">
                 <div id="headingCategory" class="panel-heading" role="tab">
                     <h4 class="panel-title">
-                        <a class="" aria-controls="collapseTitel" aria-expanded="false" href="#collapseTitel" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Grunddata" %}<span class="caret pull-right"></span></a>
+                        <a class="" aria-controls="collapseTitel" aria-expanded="false" href="#collapseTitel" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Grunddata" %}<span class="caret"></span></a>
                     </h4>
                 </div>
                 <div id="collapseTitel" class="panel-collapse collapse
@@ -54,7 +54,7 @@
             <div class="panel panel-default">
                 <div id="headingDescription" class="panel-heading" role="tab">
                     <h4 class="panel-title">
-                        <a aria-controls="collapseDescription" aria-expanded="false" href="#collapseDescription" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Beskrivelse" %}<span class="caret pull-right"></span></a>
+                        <a aria-controls="collapseDescription" aria-expanded="false" href="#collapseDescription" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Beskrivelse" %}<span class="caret"></span></a>
                     </h4>
                 </div>
                 <div id="collapseDescription" class="panel-collapse collapse
@@ -76,7 +76,7 @@
             <div class="panel panel-default">
                 <div id="headingAudience" class="panel-heading" role="tab">
                     <h4 class="panel-title">
-                        <a class="" aria-controls="collapseAudience" aria-expanded="false" href="#collapseAudience" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Målgruppe" %}<span class="caret pull-right"></span></a>
+                        <a class="" aria-controls="collapseAudience" aria-expanded="false" href="#collapseAudience" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Målgruppe" %}<span class="caret"></span></a>
                     </h4>
                 </div>
                 <div id="collapseAudience" class="panel-collapse collapse
@@ -95,7 +95,7 @@
             <div class="panel panel-default">
                 <div id="headingTimeDuration" class="panel-heading" role="tab">
                     <h4 class="panel-title">
-                        <a class="" aria-controls="collapseTimeDuration" aria-expanded="false" href="#collapseTimeDuration" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Tidspunkt og varighed" %}<span class="caret pull-right"></span></a>
+                        <a class="" aria-controls="collapseTimeDuration" aria-expanded="false" href="#collapseTimeDuration" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Tidspunkt og varighed" %}<span class="caret"></span></a>
                     </h4>
                 </div>
                 <div id="collapseTimeDuration" class="panel-collapse collapse
@@ -113,7 +113,7 @@
             <div class="panel panel-default">
                 <div id="headingRooms" class="panel-heading" role="tab">
                     <h4 class="panel-title">
-                        <a class="" aria-controls="collapseRooms" aria-expanded="false" href="#collapseRooms" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Lokalitet" %}<span class="caret pull-right"></span></a>
+                        <a class="" aria-controls="collapseRooms" aria-expanded="false" href="#collapseRooms" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Lokalitet" %}<span class="caret"></span></a>
                     </h4>
                 </div>
                 <div id="collapseRooms" class="panel-collapse collapse
@@ -130,7 +130,7 @@
             <div class="panel panel-default">
                 <div id="headingContact" class="panel-heading" role="tab">
                     <h4 class="panel-title">
-                        <a class="" aria-controls="collapseContact" aria-expanded="false" href="#collapseContact" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Kontaktinformation" %}<span class="caret pull-right"></span></a>
+                        <a class="" aria-controls="collapseContact" aria-expanded="false" href="#collapseContact" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Kontaktinformation" %}<span class="caret"></span></a>
                     </h4>
                 </div>
                 <div id="collapseContact" class="panel-collapse collapse
@@ -148,7 +148,7 @@
             <div class="panel panel-default">
                 <div id="headingInternal" class="panel-heading" role="tab">
                     <h4 class="panel-title">
-                        <a class="" aria-controls="collapseInternal" aria-expanded="true" href="#collapseInternal" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Interne oplysninger" %}<span class="caret pull-right"></span></a>
+                        <a class="" aria-controls="collapseInternal" aria-expanded="true" href="#collapseInternal" data-parent="#accordion" data-toggle="collapse" role="button">{% trans "Interne oplysninger" %}<span class="caret"></span></a>
                     </h4>
                 </div>
                 <div id="collapseInternal" class="panel-collapse collapse
