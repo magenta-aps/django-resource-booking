@@ -2775,7 +2775,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         being_planned = Visit.WORKFLOW_STATUS_BEING_PLANNED
         return self.workflow_status == being_planned
 
-    def planned_status_is_blocked(self):
+    def planned_status_is_blocked(self, skip_planned_check=False):
 
         if self.is_multiproductvisit:
             multiproductvisit = self.multiproductvisit
@@ -2791,8 +2791,10 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             return True
 
         # It's not blocked if we can't choose it
-        ws_planned = Visit.WORKFLOW_STATUS_PLANNED
-        if ws_planned not in (x[0] for x in self.possible_status_choices()):
+        if not skip_planned_check and \
+                Visit.WORKFLOW_STATUS_PLANNED not in (
+                    x[0] for x in self.possible_status_choices()
+                ):
             return False
 
         for product in self.products:
@@ -2872,8 +2874,12 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     def resources_updated(self):
         if self.workflow_status == self.WORKFLOW_STATUS_BEING_PLANNED and \
-                not self.planned_status_is_blocked():
+                not self.planned_status_is_blocked(True):
             self.workflow_status = self.WORKFLOW_STATUS_PLANNED
+            self.save()
+        elif self.workflow_status == self.WORKFLOW_STATUS_PLANNED and \
+                self.planned_status_is_blocked(True):
+            self.workflow_status = self.WORKFLOW_STATUS_BEING_PLANNED
             self.save()
 
     def resource_accepts(self):
