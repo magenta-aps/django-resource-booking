@@ -2643,18 +2643,19 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 ):
             return False
 
-        if self.product.time_mode == Product.TIME_MODE_RESOURCE_CONTROLLED:
-            for x in self.product.resourcerequirement_set.all():
-                if not x.is_fullfilled_for(self):
-                    return True
-        else:
-            # Correct number of hosts/teachers must be assigned
-            if self.needed_hosts > 0 or self.needed_teachers > 0:
-                return True
+        for product in self.products:
+            if product.is_resource_controlled:
+                for x in product.resourcerequirement_set.all():
+                    if not x.is_fullfilled_for(self):
+                        return True
 
-            # Room assignment must be resolved
-            if self.room_status == Visit.STATUS_NOT_ASSIGNED:
-                return True
+        # Correct number of hosts/teachers must be assigned
+        if self.needed_hosts > 0 or self.needed_teachers > 0:
+            return True
+
+        # Room assignment must be resolved
+        if self.room_status == Visit.STATUS_NOT_ASSIGNED:
+            return True
 
         return False
 
