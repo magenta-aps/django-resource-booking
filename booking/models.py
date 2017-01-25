@@ -2798,15 +2798,18 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             return False
 
         for product in self.products:
-            if product.time_mode == Product.TIME_MODE_RESOURCE_CONTROLLED:
+            if product.is_resource_controlled:
                 for x in product.resourcerequirement_set.all():
                     if not x.is_fullfilled_for(self):
                         return True
-        else:
-            # Correct number of hosts/teachers must be assigned
-            # Room assignment must be resolved
-            if self.needs_hosts or self.needs_teachers or self.needs_room:
-                return True
+
+        # Correct number of hosts/teachers must be assigned
+        if self.needed_hosts > 0 or self.needed_teachers > 0:
+            return True
+
+        # Room assignment must be resolved
+        if self.room_status == Visit.STATUS_NOT_ASSIGNED:
+            return True
 
         return False
 
@@ -2877,8 +2880,10 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 not self.planned_status_is_blocked(True):
             self.workflow_status = self.WORKFLOW_STATUS_PLANNED
             self.save()
-        elif self.workflow_status == self.WORKFLOW_STATUS_PLANNED and \
-                self.planned_status_is_blocked(True):
+        elif self.workflow_status in [
+                    self.WORKFLOW_STATUS_PLANNED,
+                    self.WORKFLOW_STATUS_PLANNED_NO_BOOKING
+                ] and self.planned_status_is_blocked(True):
             self.workflow_status = self.WORKFLOW_STATUS_BEING_PLANNED
             self.save()
 
