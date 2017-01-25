@@ -2726,8 +2726,10 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 not self.planned_status_is_blocked(True):
             self.workflow_status = self.WORKFLOW_STATUS_PLANNED
             self.save()
-        elif self.workflow_status == self.WORKFLOW_STATUS_PLANNED and \
-                self.planned_status_is_blocked(True):
+        elif self.workflow_status in [
+                    self.WORKFLOW_STATUS_PLANNED,
+                    self.WORKFLOW_STATUS_PLANNED_NO_BOOKING
+                ] and self.planned_status_is_blocked(True):
             self.workflow_status = self.WORKFLOW_STATUS_BEING_PLANNED
             self.save()
 
