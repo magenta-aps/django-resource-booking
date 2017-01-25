@@ -2803,13 +2803,15 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                     if not x.is_fullfilled_for(self):
                         return True
 
-        # Correct number of hosts/teachers must be assigned
-        if self.needed_hosts > 0 or self.needed_teachers > 0:
-            return True
+        if not self.is_multiproductvisit and \
+                not self.product.is_resource_controlled:
+            # Correct number of hosts/teachers must be assigned
+            if self.needed_hosts > 0 or self.needed_teachers > 0:
+                return True
 
-        # Room assignment must be resolved
-        if self.room_status == Visit.STATUS_NOT_ASSIGNED:
-            return True
+            # Room assignment must be resolved
+            if self.room_status == Visit.STATUS_NOT_ASSIGNED:
+                return True
 
         return False
 
