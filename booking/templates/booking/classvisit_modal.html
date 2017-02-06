@@ -21,14 +21,21 @@
         <form id="bookingform" class="form-horizontal clearfix" data-toggle="validator" role="form" novalidate="true" method="POST">
             {% csrf_token %}
 
-            <div id="part1" class="formpart" data-prevbutton="cancelbutton"  data-nextbutton="nextbutton" data-next="part2" {% if bookerform.errors or not bookingform.errors %} data-first="true"{% endif %}>
+            {% if bookerform.firstname.errors or bookerform.lastname.errors or bookerform.school.errors or bookerform.line.errors or bookerform.level.errors or bookerform.postcode.errors or bookerform.city.errors or bookerform.region.errors %}
+                {% setvar "part1" as errorlocation %}
+            {% elif bookingform.errors or gymnasiesubjectform.errors or grundskolesubjectform.errors %}
+                {% setvar "part2" as errorlocation %}
+            {% endif %}
+
+            <div id="part1" class="formpart" data-prevbutton="cancelbutton"  data-nextbutton="nextbutton" data-next="part2" {% if errorlocation == "part1" %}data-first="true"{% endif %}>
                 {{ bookerform.non_field_errors }}
                 {% include "booking/fields/basedata.html" %}
                 {% include "booking/fields/school.html" %}
                 {% include "booking/fields/location.html" %}
             </div>
 
-            <div id="part2" class="formpart" data-prevbutton="previousbutton" data-nextbutton="submitbutton" data-prev="part1"{% if bookingform.errors and not bookerform.errors %} data-first="true"{% endif %}>
+            <div id="part2" class="formpart" data-prevbutton="previousbutton" data-nextbutton="submitbutton" data-prev="part1" {% if errorlocation == "part2" %}data-first="true"{% endif %}>
+                {{ bookingform.non_field_errors }}
                 {% include "booking/fields/subjects2.html" %}
                 {% include "booking/fields/time.html" %}
                 {% include "booking/fields/attendees.html" %}

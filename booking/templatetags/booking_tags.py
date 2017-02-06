@@ -2,7 +2,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.serializers import serialize
 from django.db.models.query import QuerySet
-from django.template import defaulttags
+from django.template import defaulttags, Node, TemplateSyntaxError
 from django.template.base import FilterExpression
 from django.template.defaultfilters import register
 from django.utils.safestring import mark_safe
@@ -243,3 +243,38 @@ class FullURLNode(defaulttags.Node):
 def full_url(parser, token):
     url_node = defaulttags.url(parser, token)
     return FullURLNode(url_node)
+
+
+@register.tag
+def setvar(parser, token):
+    # Sets a variable in a template. Use only when you really need it
+    try:
+        # Splitting by None == splitting by spaces.
+        tag_name, arg = token.contents.split(None, 1)
+    except ValueError:
+        raise TemplateSyntaxError(
+            "%r tag requires arguments" % token.contents.split()[0]
+        )
+
+    m = re.search(r'(.*?) as (\w+)', arg)
+    if not m:
+        raise TemplateSyntaxError("%r tag had invalid arguments" % tag_name)
+
+    new_val, var_name = m.groups()
+    if not (new_val[0] == new_val[-1] and new_val[0] in ('"', "'")):
+        raise TemplateSyntaxError(
+            "%r tag's argument should be in quotes" % tag_name
+        )
+
+    return SetVarNode(new_val[1:-1], var_name)
+
+
+class SetVarNode(Node):
+
+    def __init__(self, new_val, var_name):
+        self.new_val = new_val
+        self.var_name = var_name
+
+    def render(self, context):
+        context[self.var_name] = self.new_val
+        return ''
