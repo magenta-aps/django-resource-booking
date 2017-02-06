@@ -9,7 +9,6 @@ window.modal = {
         this.parent.close(this.id);
     },
     setHeight: function(height) {
-        console.log("guest modal setHeight",height);
         this.parent.setHeight(this.id, height);
     },
     documentHeight: 0,
