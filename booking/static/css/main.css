@@ -737,8 +737,12 @@ a>.caret, a>.caret:focus, a>.caret:active {
     transform: rotate(135deg);
 }
 
+.modal-header {
+    overflow: hidden;
+}
+
 .modal-header, .modal-body {
-    padding: 15px;
+    padding: 20px;
 }
 
 .modal-content {
