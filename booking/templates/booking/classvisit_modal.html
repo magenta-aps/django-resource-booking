@@ -27,7 +27,7 @@
                 {% setvar "part2" as errorlocation %}
             {% endif %}
 
-            <div id="part1" class="formpart" data-prevbutton="cancelbutton"  data-nextbutton="nextbutton" data-next="part2" {% if errorlocation == "part1" %}data-first="true"{% endif %}>
+            <div id="part1" class="formpart" data-prevbutton="cancelbutton"  data-nextbutton="nextbutton" data-next="part2" {% if not errorlocation or errorlocation == "part1"%}data-first="true"{% endif %}>
                 {{ bookerform.non_field_errors }}
                 {% include "booking/fields/basedata.html" %}
                 {% include "booking/fields/school.html" %}
