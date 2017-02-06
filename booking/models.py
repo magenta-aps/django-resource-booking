@@ -1476,7 +1476,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     time_mode_choices = (
         (TIME_MODE_NONE,
-         _(u"Tilbuddet har ingen tidspunkter")),
+         _(u"Tilbuddet har ingen tidspunkter og ingen tilmelding")),
         (TIME_MODE_RESOURCE_CONTROLLED,
          _(u"Tilbuddets tidspunkter styres af ressourcer")),
         (TIME_MODE_SPECIFIC,
