@@ -738,7 +738,7 @@ a>.caret, a>.caret:focus, a>.caret:active {
 }
 
 .modal-header {
-    overflow: hidden;
+    min-height: unset;
 }
 
 .modal-header, .modal-body {
