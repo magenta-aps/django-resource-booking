@@ -9,11 +9,12 @@ window.modal = {
         this.parent.close(this.id);
     },
     setHeight: function(height) {
+        console.log("guest modal setHeight",height);
         this.parent.setHeight(this.id, height);
     },
     documentHeight: 0,
     updateHeight: function() {
-        var height = 1;
+        var height = 0;
         $(document.body).children().not("script").each(function(){
             height += $(this).outerHeight(true);
         });
@@ -92,6 +93,7 @@ $(function(){
         show(firstFormPart);
     }
 
-    setInterval(modal.updateHeight.bind(modal), 500);
-
+    // setInterval(modal.updateHeight.bind(modal), 500);
+    $(document).resize(modal.updateHeight.bind(modal));
+    $("input,select").change(modal.updateHeight.bind(modal));
 });
