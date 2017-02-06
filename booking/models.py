@@ -4403,6 +4403,28 @@ class Guest(models.Model):
         verbose_name=u'Niveau'
     )
 
+    grundskole_level_conversion = {
+        f0: GrundskoleLevel.f0,
+        f1: GrundskoleLevel.f1,
+        f2: GrundskoleLevel.f2,
+        f3: GrundskoleLevel.f3,
+        f4: GrundskoleLevel.f4,
+        f5: GrundskoleLevel.f5,
+        f6: GrundskoleLevel.f6,
+        f7: GrundskoleLevel.f7,
+        f8: GrundskoleLevel.f8,
+        f9: GrundskoleLevel.f9,
+        f10: GrundskoleLevel.f10
+    }
+
+    @staticmethod
+    def grundskole_level_map():
+        return {
+            thisref: GrundskoleLevel.objects.get(level=grundskoleref).id
+            for thisref, grundskoleref in Guest.grundskole_level_conversion.iteritems()
+        }
+
+
     school = models.ForeignKey(
         School,
         null=True,

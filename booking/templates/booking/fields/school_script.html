@@ -12,6 +12,7 @@
         var levelSelect = $("#{{ bookerform.level.id_for_label }}");
 
         var updateSchoolType = function(schoolType) {
+            schoolType = parseInt(schoolType, 10);
             $("#{{ bookerform.school_type.id_for_label }}").val(schoolType);
 
             // Show/hide the dependents
@@ -21,7 +22,7 @@
             });
 
             // Update the level selector options
-            var showOptions = $(levelSelect.find("option[value='']"));
+            var showOptions = levelSelect.find("option[value='']");
             var showValues = levelMap[schoolType];
             for (var i=0; i<showValues.length; i++) {
                 showOptions = showOptions.add(levelSelect.find("option[value="+showValues[i]+"]"));

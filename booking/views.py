@@ -50,6 +50,7 @@ from booking.models import log_action
 from booking.models import LOGACTION_CREATE, LOGACTION_CHANGE
 from booking.models import RoomResponsible
 from booking.models import BookerResponseNonce
+from booking.models import GrundskoleLevel
 
 from booking.models import MultiProductVisit
 from booking.models import MultiProductVisitTemp
@@ -2290,7 +2291,8 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
             'times_available': available_times,
             'only_waitinglist': only_waitinglist,
             'gymnasiefag_available': self.gymnasiefag_available(),
-            'grundskolefag_available': self.grundskolefag_available()
+            'grundskolefag_available': self.grundskolefag_available(),
+            'grundskole_level_conversion': Guest.grundskole_level_map()
         }
         context.update(kwargs)
         return super(BookingView, self).get_context_data(**context)
