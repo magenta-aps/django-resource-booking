@@ -738,7 +738,7 @@ a>.caret, a>.caret:focus, a>.caret:active {
 }
 
 .modal-header, .modal-body {
-    padding: 20px;
+    padding: 15px;
 }
 
 .modal-content {
