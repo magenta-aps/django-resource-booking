@@ -2305,7 +2305,8 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
             'times_available': available_times,
             'only_waitinglist': only_waitinglist,
             'gymnasiefag_available': self.gymnasiefag_available(),
-            'grundskolefag_available': self.grundskolefag_available()
+            'grundskolefag_available': self.grundskolefag_available(),
+            'grundskole_level_conversion': Guest.grundskole_level_map()
         }
         context.update(kwargs)
         return super(BookingView, self).get_context_data(**context)
