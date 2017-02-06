@@ -50,7 +50,6 @@ from booking.models import log_action
 from booking.models import LOGACTION_CREATE, LOGACTION_CHANGE
 from booking.models import RoomResponsible
 from booking.models import BookerResponseNonce
-from booking.models import GrundskoleLevel
 
 from booking.models import MultiProductVisit
 from booking.models import MultiProductVisitTemp

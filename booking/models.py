@@ -4421,9 +4421,9 @@ class Guest(models.Model):
     def grundskole_level_map():
         return {
             thisref: GrundskoleLevel.objects.get(level=grundskoleref).id
-            for thisref, grundskoleref in Guest.grundskole_level_conversion.iteritems()
+            for thisref, grundskoleref
+            in Guest.grundskole_level_conversion.iteritems()
         }
-
 
     school = models.ForeignKey(
         School,
