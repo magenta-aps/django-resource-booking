@@ -177,38 +177,38 @@
                             <strong class="col-sm-2">
                                 {{ requirementdata.type.plural }}:
                             </strong>
-                                <div class="col-sm-6">
-                                    {% blocktrans with found=requirementdata.acquired needed=requirementdata.required type=requirementdata.type.plural|lower %}{{ found }}/{{ needed }} {{ type }} fundet{% endblocktrans %}
-                                </div>
-                                <div class="col-sm-2">
-                                    {% if can_edit %}
-                                        <a href="{% url 'visit-resources-edit' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right" style="vertical-align:top">{% trans 'Redigér' %}</a>
+                            <div class="col-sm-6">
+                                {% blocktrans with found=requirementdata.acquired needed=requirementdata.required type=requirementdata.type.plural|lower %}{{ found }}/{{ needed }} {{ type }} fundet{% endblocktrans %}
+                            </div>
+                            <div class="col-sm-2">
+                                {% if can_edit %}
+                                    <a href="{% url 'visit-resources-edit' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right" style="vertical-align:top">{% trans 'Redigér' %}</a>
 
-                                    {% elif requirementdata.is_host and is_potential_host %}
-                                        {% if can_become_host %}
-                                            <a href="{% url 'become-host' object.pk %}" role="button" class="btn btn-default btn-xs pull-right">{% trans 'Bliv vært for dette besøg.' %}</a>
-                                            {% if host %}
-                                                <a href="{% url 'decline-host' object.pk %}" role="button" class="btn btn-default btn-xs pull-right">{% trans 'Jeg ønsker ikke at være vært' %}</a>
-                                            {% endif %}
-                                        {% elif is_assigned_as_host %}
-                                            {% trans '(allerede vært for dette besøg)' %}
-                                        {% elif not needs_hosts %}
-                                            <button type="button" class="btn btn-default btn-xs pull-right" data-toggle="modal" data-target="#hosts-found" >{% trans 'Alle fundet' %}</button>
+                                {% elif requirementdata.is_host and is_potential_host %}
+                                    {% if can_become_host %}
+                                        <a href="{% url 'become-host' object.pk %}" role="button" class="btn btn-default btn-xs pull-right">{% trans 'Bliv vært for dette besøg.' %}</a>
+                                        {% if host %}
+                                            <a href="{% url 'decline-host' object.pk %}" role="button" class="btn btn-default btn-xs pull-right">{% trans 'Jeg ønsker ikke at være vært' %}</a>
                                         {% endif %}
-
-                                    {% elif requirementdata.is_teacher and is_potential_teacher %}
-                                        {% if can_become_teacher %}
-                                            <a href="{% url 'become-teacher' object.pk %}" role="button" class="btn btn-default btn-xs pull-right">{% trans 'Bliv underviser for dette besøg' %}</a>
-                                            {% if teacher %}
-                                                <a href="{% url 'decline-teacher' object.pk %}" role="button" class="btn btn-default btn-xs pull-right">{% trans 'Jeg ønsker ikke at være underviser' %}</a>
-                                            {% endif %}
-                                        {% elif is_assigned_as_teacher %}
-                                            {% trans '(allerede underviser for dette besøg)' %}
-                                        {% elif not needs_teachers %}
-                                            <button type="button" class="btn btn-default btn-xs pull-right" data-toggle="modal" data-target="#teachers-found" >{% trans 'Alle fundet' %}</button>
-                                        {% endif %}
+                                    {% elif is_assigned_as_host %}
+                                        {% trans '(allerede vært for dette besøg)' %}
+                                    {% elif not needs_hosts %}
+                                        <button type="button" class="btn btn-default btn-xs pull-right" data-toggle="modal" data-target="#hosts-found" >{% trans 'Alle fundet' %}</button>
                                     {% endif %}
-                                </div>
+
+                                {% elif requirementdata.is_teacher and is_potential_teacher %}
+                                    {% if can_become_teacher %}
+                                        <a href="{% url 'become-teacher' object.pk %}" role="button" class="btn btn-default btn-xs pull-right">{% trans 'Bliv underviser for dette besøg' %}</a>
+                                        {% if teacher %}
+                                            <a href="{% url 'decline-teacher' object.pk %}" role="button" class="btn btn-default btn-xs pull-right">{% trans 'Jeg ønsker ikke at være underviser' %}</a>
+                                        {% endif %}
+                                    {% elif is_assigned_as_teacher %}
+                                        {% trans '(allerede underviser for dette besøg)' %}
+                                    {% elif not needs_teachers %}
+                                        <button type="button" class="btn btn-default btn-xs pull-right" data-toggle="modal" data-target="#teachers-found" >{% trans 'Alle fundet' %}</button>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
                         </div>
                         {% endfor %}
                     {% endif %}
