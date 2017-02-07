@@ -6,8 +6,8 @@
 {% block htmltitle %} - {% trans "Opret tidspunkt for" %} '{{ product.title }}'{% endblock %}
 
 {% block head %}
-{% include 'common/resources/datepicker_style.html' %}
-<link href="{% static 'css/bootstrap-clockpicker.css' %}" type="text/css" media="all" rel="stylesheet"  />
+    {% include 'common/resources/datepicker_style.html' %}
+    {% include 'common/resources/clockpicker_style.html' %}
 {% endblock %}
 
 
