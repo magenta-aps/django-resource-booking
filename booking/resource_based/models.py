@@ -528,12 +528,13 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
                 for x in profile.assigned_to_visits.all():
                     if not x.eventtime.start or not x.eventtime.end:
                         continue
-                    yield CalendarEventInstance(
-                        x.eventtime.start,
-                        x.eventtime.end,
-                        available=False,
-                        source=x
-                    )
+                    if x.eventtime.start < to_dt and x.eventtime.end > from_dt:
+                        yield CalendarEventInstance(
+                            x.eventtime.start,
+                            x.eventtime.end,
+                            available=False,
+                            source=x
+                        )
 
         if hasattr(self, 'product'):
             for x in self.product.booked_eventtimes(from_dt, to_dt):
