@@ -27,11 +27,9 @@
             </div>
             <p>
                 {% blocktrans with interval=object.interval_display product_title=object.product.title %}
-                Der er endnu ikke oprettet noget besøg på tidspunktet
-                {{ interval }} for tilbuddet '{{ product_title }}'. Det er
-                nødvendigt at oprette et besøg før der kan knyttes ressourcer
-                til det givne tidspunkt. Klik på knappen nedenfor for at
-                oprette et besøg for tidspunktet.
+                    Der er endnu ikke oprettet noget besøg på tidspunktet {{ interval }} for tilbuddet '{{ product_title }}'.
+                    Det er nødvendigt at oprette et besøg før der kan knyttes ressourcer til det givne tidspunkt.
+                    Klik på knappen nedenfor for at oprette et besøg for tidspunktet.
                 {% endblocktrans %}
             </p>
             <form action="{% url 'time-view' object.product.pk object.pk %}" id="create-time-form" method="POST">
