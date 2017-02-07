@@ -793,24 +793,42 @@ class BookingForm(forms.ModelForm):
                 product = eventtime.product
 
                 if visit:
-                    available_seats = eventtime.visit.available_seats
+                    available_seats = visit.available_seats
+                    waitinglist_capacity = visit.waiting_list_capacity
+                    bookings = visit.bookings.count
                 else:
                     available_seats = product.maximum_number_of_visitors
+                    waitinglist_capacity = 0
+                    bookings = 0
 
+                capacity_text = None
                 if available_seats is None:
                     choices.append((eventtime.pk, date))
-                elif available_seats > 0 or \
-                        visit and visit.waiting_list_capacity > 0:
-                    if visit:
-                        capacity_text = \
-                            _("(%d pladser tilbage, "
-                              "%d ventelistepladser tilbage)") % \
-                            (available_seats, visit.waiting_list_capacity)
+                else:
+                    if bookings == 0:
+                        # There are no bookings at all - yet
+                        capacity_text = "%d pladser" % available_seats
+                    elif available_seats > 0:
+                        if waitinglist_capacity > 0:
+                            # There's some room on both
+                            # regular and waiting list
+                            capacity_text = _("%d ledige pladser + "
+                                              "venteliste") % available_seats
+                        else:
+                            # There's only regular seats
+                            capacity_text = _("%d ledige pladser") % \
+                                            available_seats
                     else:
-                        capacity_text = _("(%d pladser tilbage)") % \
-                            available_seats
+                        if waitinglist_capacity > 0:
+                            # There's only waitinglist seats
+                            capacity_text = _("venteliste (%d pladser)") % \
+                                            waitinglist_capacity
+                        else:
+                            # There's no room at all
+                            continue
+
                     choices.append(
-                        (eventtime.pk, "%s %s" % (date, capacity_text))
+                        (eventtime.pk, "%s - %s" % (date, capacity_text))
                     )
 
             self.fields['eventtime'].choices = choices
