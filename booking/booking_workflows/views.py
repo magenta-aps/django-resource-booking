@@ -88,9 +88,17 @@ class ChangeVisitStartTimeView(AutologgerMixin,
         return form
 
     def get_context_data(self, **kwargs):
+        if not self.object.has_specific_time:
+            time_mode = "full_days"
+        elif self.object.duration_matches_product:
+            time_mode = "use_duration"
+        else:
+            time_mode = "time_and_date"
+
         return super(ChangeVisitStartTimeView, self).get_context_data(
             product=self.object.product,
             use_product_duration=self.object.duration_matches_product,
+            time_mode_value=time_mode,
             **kwargs
         )
 
