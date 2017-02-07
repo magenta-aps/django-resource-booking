@@ -181,8 +181,8 @@
                                     {% blocktrans with found=requirementdata.acquired needed=requirementdata.required type=requirementdata.type.plural|lower %}{{ found }}/{{ needed }} {{ type }} fundet{% endblocktrans %}
                                 </div>
                                 <div class="col-sm-2">
-                                    {% if requirementdata.required > 0 and can_edit %}
-                                        <a href="{% url 'visit-resources-edit' object.pk %}" role="button" class="btn btn-default btn-xs pull-right" style="vertical-align:top">{% trans 'Redigér' %}</a>
+                                    {% if can_edit %}
+                                        <a href="{% url 'visit-resources-edit' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right" style="vertical-align:top">{% trans 'Redigér' %}</a>
 
                                     {% elif requirementdata.is_host and is_potential_host %}
                                         {% if can_become_host %}
@@ -218,33 +218,27 @@
                             <strong class="col-sm-2">
                                 {% trans 'Undervisere' %}
                             </strong>
-                            {% if object.total_required_teachers %}
-                                <div class="col-sm-6">
-                                {% blocktrans with found=object.assigned_teachers|length needed=object.total_required_teachers %}{{ found }}/{{ needed }} undervisere fundet{% endblocktrans %}
+                            <div class="col-sm-6">
+                            {% blocktrans with found=object.assigned_teachers|length needed=object.total_required_teachers %}{{ found }}/{{ needed }} undervisere fundet{% endblocktrans %}
+                            </div>
+                            {% if can_edit %}
+                                <div class="col-sm-2">
+                                    <a href="{% if object.product.is_resource_controlled %}{% url 'visit-resources-edit' object.pk %}{% else %}{% url 'change-visit-teachers' object.pk %}{% endif %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Redigér' %}</a>
                                 </div>
-                                {% if can_edit %}
-                                    <div class="col-sm-2">
-                                        <a href="{% if object.product.is_resource_controlled %}{% url 'visit-resources-edit' object.pk %}{% else %}{% url 'change-visit-teachers' object.pk %}{% endif %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Redigér' %}</a>
-                                    </div>
-                                {% elif request.user.userprofile.is_teacher %}
-                                    <div class="col-sm-2">
-                                    {% if object.needs_teachers %}
-                                        {% if request.user in object.teachers.all %}
-                                            {% trans '(allerede underviser for dette besøg)' %}
-                                        {% else %}
-                                            <a href="{% url 'become-teacher' object.pk %}" role="button" class="btn btn-default btn-xs pull-right">{% trans 'Bliv underviser for dette besøg' %}</a>
-                                            {% if teacher %}
-                                                <a href="{% url 'decline-teacher' object.pk %}" role="button" class="btn btn-default btn-xs pull-right">{% trans 'Jeg ønsker ikke at være underviser' %}</a>
-                                            {% endif %}
-                                        {% endif %}
+                            {% elif request.user.userprofile.is_teacher %}
+                                <div class="col-sm-2">
+                                {% if object.needs_teachers %}
+                                    {% if request.user in object.teachers.all %}
+                                        {% trans '(allerede underviser for dette besøg)' %}
                                     {% else %}
-                                        <button type="button" class="btn btn-default" data-toggle="modal" data-target="#teachers-found" >{% trans 'Alle fundet' %}</button>
+                                        <a href="{% url 'become-teacher' object.pk %}" role="button" class="btn btn-default btn-xs pull-right">{% trans 'Bliv underviser for dette besøg' %}</a>
+                                        {% if teacher %}
+                                            <a href="{% url 'decline-teacher' object.pk %}" role="button" class="btn btn-default btn-xs pull-right">{% trans 'Jeg ønsker ikke at være underviser' %}</a>
+                                        {% endif %}
                                     {% endif %}
-                                    </div>
+                                {% else %}
+                                    <button type="button" class="btn btn-default btn-xs pull-right" data-toggle="modal" data-target="#teachers-found" >{% trans 'Alle fundet' %}</button>
                                 {% endif %}
-                            {% else %}
-                                <div class="col-sm-6">
-                                    {% trans 'Tilbuddet kræver ingen undervisere' %}
                                 </div>
                             {% endif %}
                         </div>
@@ -258,27 +252,25 @@
                             <div class="col-sm-6">
                                 {% blocktrans with found=object.assigned_hosts|length needed=object.total_required_hosts %}{{ found }}/{{ needed }} værter fundet{% endblocktrans %}
                             </div>
-                            {% if object.total_required_hosts > 0 %}
-                                {% if can_edit %}
-                                    <div class="col-sm-2">
-                                        <a href="{% if object.product.is_resource_controlled %}{% url 'visit-resources-edit' object.pk %}{% else %}{% url 'change-visit-hosts' object.pk %}{% endif %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Redigér' %}</a>
-                                    </div>
-                                {% elif request.user.userprofile.is_host %}
-                                    <div class="col-sm-2">
-                                        {% if object.needs_hosts %}
-                                            {% if request.user in object.hosts.all %}
-                                                {% trans '(allerede vært for dette besøg)' %}
-                                            {% else %}
-                                                <a href="{% url 'become-host' object.pk %}" role="button" class="btn btn-default btn-xs pull-right">{% trans 'Bliv vært for dette besøg.' %}</a>
-                                                {% if host %}
-                                                    <a href="{% url 'decline-host' object.pk %}" role="button" class="btn btn-default btn-xs pull-right">{% trans 'Jeg ønsker ikke at være vært' %}</a>
-                                                {% endif %}
-                                            {% endif %}
+                            {% if can_edit %}
+                                <div class="col-sm-2">
+                                    <a href="{% if object.product.is_resource_controlled %}{% url 'visit-resources-edit' object.pk %}{% else %}{% url 'change-visit-hosts' object.pk %}{% endif %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Redigér' %}</a>
+                                </div>
+                            {% elif request.user.userprofile.is_host %}
+                                <div class="col-sm-2">
+                                    {% if object.needs_hosts %}
+                                        {% if request.user in object.hosts.all %}
+                                            {% trans '(allerede vært for dette besøg)' %}
                                         {% else %}
-                                            <button type="button" class="btn btn-default pull-right" data-toggle="modal" data-target="#hosts-found" >{% trans 'Alle fundet' %}</button>
+                                            <a href="{% url 'become-host' object.pk %}" role="button" class="btn btn-default btn-xs pull-right">{% trans 'Bliv vært for dette besøg.' %}</a>
+                                            {% if host %}
+                                                <a href="{% url 'decline-host' object.pk %}" role="button" class="btn btn-default btn-xs pull-right">{% trans 'Jeg ønsker ikke at være vært' %}</a>
+                                            {% endif %}
                                         {% endif %}
-                                    </div>
-                                {% endif %}
+                                    {% else %}
+                                        <button type="button" class="btn btn-default btn-xs pull-right" data-toggle="modal" data-target="#hosts-found" >{% trans 'Alle fundet' %}</button>
+                                    {% endif %}
+                                </div>
                             {% endif %}
                         </div>
                     {% endif %}
