@@ -6,8 +6,8 @@
 {% block htmltitle %} - {% trans "Opret besøg for tidspunkt for" %} '{{ object.product.title }}'{% endblock %}
 
 {% block head %}
-{% include 'common/resources/datepicker_style.html' %}
-<link rel="stylesheet" href="{% static 'css/bootstrap-slider.css' %}" />
+    {% include 'eventtime/date_interval_style.html' %}
+    <link rel="stylesheet" href="{% static 'css/bootstrap-slider.css' %}" />
 {% endblock %}
 
 

@@ -89,7 +89,7 @@ STATICFILES_FINDERS = [
 
 # Local thirdparty cache; holds all downloaded
 # dependencies in this folder under the root
-NPM_ROOT_PATH = 'thirdparty'
+NPM_ROOT_PATH = BASE_DIR + '/thirdparty'
 
 # collectstatic will put dependencies in static/thirdparty/
 NPM_STATIC_FILES_PREFIX = 'thirdparty'
@@ -115,7 +115,9 @@ NPM_FILE_PATTERNS = {
                   'lib/compressed/themes/default.time.css'
                   ],
     'rrule': ['lib/rrule.js'],
-    'sortablejs': ['Sortable.min.js']
+    'sortablejs': ['Sortable.min.js'],
+    'clockpicker': ['dist/bootstrap-clockpicker.min.css',
+                    'dist/bootstrap-clockpicker.min.js']
 }
 
 # Django-tinymce config

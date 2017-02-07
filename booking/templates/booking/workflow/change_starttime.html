@@ -5,8 +5,8 @@
 {% block htmltitle %} - {% blocktrans with object=object.product.title %}Redigér tidspunkt for {{ object }}{% endblocktrans %}{% endblock %}
 
 {% block head %}
-{% include 'common/resources/datepicker_style.html' %}
-<link rel="stylesheet" href="{% static 'css/bootstrap-slider.css' %}" />
+    {% include 'eventtime/date_interval_style.html' %}
+    <link rel="stylesheet" href="{% static 'css/bootstrap-slider.css' %}" />
 {% endblock %}
 
 {% block content %}
