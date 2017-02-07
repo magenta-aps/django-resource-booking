@@ -125,14 +125,14 @@
                     <div class="col-sm-2">
                     </div>
                     <div class="col-sm-7">
-                        <button class="btn btn-success" role="button" type="submit">
+                        <button class="btn btn-primary" role="button" type="submit">
                             {% if object.pk %}
                                 {% trans 'Gem' %}
                             {% else %}
                                 {% trans 'Opret' %}
                             {% endif %}
                         </button>
-                        <a class="btn btn-danger" href="{% url reverses.calendar view.rel_obj.pk %}">{% trans 'Annullér' %}</a>
+                        <a class="btn btn-default" href="{% url reverses.calendar view.rel_obj.pk %}">{% trans 'Annullér' %}</a>
                     </div>
                     <div class="col-sm-3 with-errors">
                     </div>

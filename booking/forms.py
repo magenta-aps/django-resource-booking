@@ -670,7 +670,7 @@ class ProductAutosendForm(forms.ModelForm):
 
     def has_changed(self):
         return (self.instance.pk is None) or \
-               super(ProductAutosendForm, self).has_changed()
+            super(ProductAutosendForm, self).has_changed()
 
 
 ProductAutosendFormSetBase = inlineformset_factory(

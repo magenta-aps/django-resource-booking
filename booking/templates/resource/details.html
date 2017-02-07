@@ -9,7 +9,6 @@
 {% block content %}
 
     {% include 'common/breadcrumbrow.html' %}
-    <div class="divider"></div>
 
     <div class="clearfix">
         <h1 class="pull-left">{{ object.get_name }}</h1>
@@ -20,7 +19,7 @@
             {% endif %}
         </div>
     </div>
-    
+
     <hr>
 
     <dl class="dl-horizontal">
@@ -50,7 +49,7 @@
 
     <div>
         {% if object.calendar %}
-            <a href="{% url 'calendar' object.id %}" class="btn btn-default" role="button">{% trans 'Rediger kalender for denne ressource' %}</a>
+            <a href="{% url 'calendar' object.id %}" class="btn btn-primary" role="button">{% trans 'Rediger kalender for denne ressource' %}</a>
         {% else %}
             <p>
             {% blocktrans %}
@@ -58,7 +57,7 @@
                 Hvis du ønsker at styre tilgængeligheden af ressourcen via en kalender kan du klikke på knappen for at oprette en kalender for ressourcen.
             {% endblocktrans %}
             </p>
-            <a href="{% url 'calendar-create' object.id %}" class="btn btn-default" role="button">
+            <a href="{% url 'calendar-create' object.id %}" class="btn btn-primary" role="button">
                 <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
                 {% trans 'Opret kalender for ressourcen' %}
             </a>

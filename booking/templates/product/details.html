@@ -11,8 +11,7 @@
     {% include 'common/breadcrumbrow.html' %}
 
     <div class="row titlebar hidden-print">
-        <div class="col-sm-12 col-md-9"><h2>{% trans 'Om tilbuddet' %}</h2></div>
-        <div class="divider"></div>
+        <div class="col-sm-12 col-md-8"><h2>{{ object.get_type_display }}</h2></div>
     </div>
     {% if messages %}
     <div class="col-sm-4 alert alert-info" role="alert">
@@ -25,23 +24,21 @@
     {% endif %}
     <div class="row">
         <div class="col-sm-12 col-md-8">
-            <div class="divider"></div>
-            <h2>{{ object.get_type_display }}</h2>
-            
+
             {% if can_edit %}
-                <a class="pull-right btn btn-default margin-bottom-10" href="{% url 'product-edit' object.pk %}">{% trans 'Redigér' %}</a>
+                <a class="pull-right btn btn-primary margin-bottom-10" href="{% url 'product-edit' object.pk %}">{% trans 'Redigér' %}</a>
             {% endif %}
             {% if user.userprofile.can_create %}
-                <a class="pull-right btn btn-default margin-bottom-10 margin-right-10" href="{% url 'product-clone' object.pk %}">{% trans 'Kopier tilbud' %}</a>
+                <a class="pull-right btn btn-primary margin-bottom-10 margin-right-10" href="{% url 'product-clone' object.pk %}">{% trans 'Kopier tilbud' %}</a>
             {% endif %}
             {% if can_edit %}
                 {% if object.is_resource_controlled %}
-                    <a class="pull-right btn btn-default margin-bottom-10 margin-right-10" href="{% url 'resourcerequirement-list' object.pk %}">{% trans 'Redigér ressourcebehov' %}</a>
+                    <a class="pull-right btn btn-primary margin-bottom-10 margin-right-10" href="{% url 'resourcerequirement-list' object.pk %}">{% trans 'Redigér ressourcebehov' %}</a>
                 {% else %}
-                    <a class="pull-right btn btn-default margin-bottom-10 margin-right-10" href="{% url 'product-simple-ressources' object.pk %}">{% trans 'Redigér ressourcer' %}</a>
+                    <a class="pull-right btn btn-primary margin-bottom-10 margin-right-10" href="{% url 'product-simple-ressources' object.pk %}">{% trans 'Redigér ressourcer' %}</a>
                 {% endif %}
             {% endif %}
-            
+
             <h1>{{ object.title }}</h1>
             <div class="well">
                 {% autoescape off %}
@@ -90,7 +87,7 @@
                     <!-- has_bookable_visits: {{ object.has_bookable_visits }} -->
                 {% endif %}
                 {% if object.can_inquire %}
-                    <a class="btn btn-default" data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'product-inquire' object.id %}?modal=1" >
+                    <a class="btn btn-primary" data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'product-inquire' object.id %}?modal=1" >
                         {% trans 'Spørg om tilbud' %}
                         <span class="glyphicon glyphicon-question-sign"></span>
                     </a>
@@ -115,7 +112,13 @@
                     </div>
                     <div class="panel-body">
                         <dl class="dl-horizontal">
-                            
+
+                            <!-- Is the following IF still useful? -->
+                            {% if object.get_audience_display %}
+                                <dt>{% trans 'Henvendt til'%}:</dt>
+                                <dd>{{ object.get_audience_display }}</dd>
+                            {% endif %}
+
                             {% if object.resource_ptr.all_subjects  %}
                                 <dt>{% trans 'Fag/niveau' %}:</dt>
                                 <dd>
@@ -126,17 +129,17 @@
                                     </ul>
                                 </dd>
                             {% endif %}
-                            
+
                             {% if object.num_of_participants_display %}
                                 <dt>{% trans 'Antal' %}:</dt>
                                 <dd>{{ object.num_of_participants_display }}</dd>
                             {% endif %}
-                            
+
                             {% if object.get_type_display %}
                                 <dt>{% trans 'Hvad' %}:</dt>
                                 <dd>{{ object.get_type_display }}</dd>
                             {% endif %}
-                            
+
                             {% if object.locality %}
                                 <dt>{% trans 'Hvor' %}:</dt>
                                 <dd>
@@ -147,13 +150,13 @@
                                 </a>
                                 </dd>
                             {% endif %}
-                            
+
                             <dt>{% trans 'Arrangør' %}:</dt>
                             <dd>
                                 {% if object.organizationalunit.url %}
                                     <a href="{{ object.organizationalunit.url }}" target="_blank">
                                 {% endif %}
-                                <strong>{{ object.organizationalunit.name }}</strong>
+                                {{ object.organizationalunit.name }}
                                 {% if object.organizationalunit.url %}
                                     </a> <span class="glyphicon glyphicon-new-window"></span>
                                 {% endif %}
@@ -167,9 +170,9 @@
                                         {% trans 'Gæster foreslår selv tidspunkter' %}
                                         <p>
                                         {% if object.calendar %}
-                                            <a class="btn btn-default btn-xs margin-bottom-10 margin-right-10" href="{% url 'product-calendar' object.pk %}">{% trans 'Administrér kalender' %}</a>
+                                            <a class="btn btn-primary btn-xs margin-bottom-10 margin-right-10" href="{% url 'product-calendar' object.pk %}">{% trans 'Administrér kalender' %}</a>
                                         {% else %}
-                                            <a class="btn btn-default btn-xs margin-bottom-10 margin-right-10" href="{% url 'product-calendar-create' object.pk %}">{% trans 'Opret kalender' %}</a>
+                                            <a class="btn btn-primary btn-xs margin-bottom-10 margin-right-10" href="{% url 'product-calendar-create' object.pk %}">{% trans 'Opret kalender' %}</a>
                                         {% endif %}
                                         </p>
                                     {% else %}
@@ -205,7 +208,7 @@
                                     </div>
                                     <hr />
                                     <p>
-                                        <a class="pull-right btn btn-default btn-xs margin-bottom-10 margin-right-10" href="{% url 'manage-times' object.pk %}">{% trans 'Administrér tidspunkter' %}</a>
+                                        <a class="pull-right btn btn-primary btn-xs margin-bottom-10 margin-right-10" href="{% url 'manage-times' object.pk %}">{% trans 'Administrér tidspunkter' %}</a>
                                     </p>
                                 {% endif %}
                             </dd>
@@ -215,7 +218,7 @@
                                 <dt>{% trans 'Varighed' %}:</dt>
                                 <dd>{{ object.duration|timedelta_i18n }}</dd>
                             {% endif %}
-                            
+
                             {% if object.price %}
                                 <dt>{% trans 'Pris' %}:</dt>
                                 <dd>{{ object.price }}</dd>
@@ -236,7 +239,7 @@
                                     <dd>{{ object.custom_name }}</dd>
                                 {% endif %}
                             {% endif %}
-                            
+
                         </dl>
                     </div>
                 </div>
@@ -248,19 +251,17 @@
     </div>
 
     {% include 'common/modal_contact.html' %}
-    
+
     {% include 'common/modal_framehost.html' %}
 
 {% endblock %}
 
 {% block extra_scripts %}
 
-    <script src="{% static 'js/custom.js' %}"></script>
     <script src="{% static "js/modalframe-host.js" %}"></script>
     <script type="text/javascript"><!--
         (function($) {
             $('#show_all_times').on('click', function() {
-                console.log("asdf");
                 console.log($('#dato li.default-hidden'));
                 $('#dato li.default-hidden').removeClass("hidden");
                 $('#show_all_times').addClass("hidden");;

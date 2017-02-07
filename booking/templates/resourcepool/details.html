@@ -9,17 +9,15 @@
 {% block content %}
 
     {% include 'common/breadcrumbrow.html' %}
-    <div class="divider"></div>
 
     <div class="pull-right">
         {% if object.can_delete %}
         <a href="{% url 'resourcepool-delete' object.id %}?back={% url 'resourcepool-view' object.id %}" class="btn btn-danger" role="button">{% trans 'Slet ressourcegruppen' %}</a>
         {% endif %}
-        <a href="{% url 'resourcepool-edit' object.id %}?back={% url 'resourcepool-view' object.id %}" role="button" class="btn btn-default" role="button">{% trans 'Redigér' %}</a>
+        <a href="{% url 'resourcepool-edit' object.id %}?back={% url 'resourcepool-view' object.id %}" role="button" class="btn btn-primary" role="button">{% trans 'Redigér' %}</a>
     </div>
 
     <h1>{{ object.name }}</h1>
-    <hr/>
 
     <dl class="dl-horizontal">
         <dt>{% trans 'Type' %}</dt>

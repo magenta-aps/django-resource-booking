@@ -3,16 +3,15 @@
 <!DOCTYPE html>
 <html lang="da">
     <head>
-        
+
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
         <title>foKUs{% block htmltitle %} - {% trans 'søg i tilbud' %}{% endblock %}</title>
-    
+
         <!-- 3rd party stylesheets -->
         <link href="{% static 'thirdparty/bootstrap/dist/css/bootstrap.min.css' %}" rel="stylesheet">
-        <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet">
 
         <!-- Our own stylesheet -->
         <link href="{% static 'css/main.css' %}" rel="stylesheet">
@@ -29,7 +28,7 @@
 
         <script type="text/javascript" src="/jsi18n/"></script>
         <link href="{% static 'img/favicon.ico' %}" rel="shortcut icon">
-            
+
     </head>
     <body class="{% if view.kwargs.embed %}embedded{% endif %}">
 
@@ -107,57 +106,123 @@
         </div>
     {% endblock %}
     {% endif %}
-        
+
     <div class="container grey-sides content-container">
-        
+
     {% block content %}
     {% endblock %}
-    
-        <a title="Print"
-           href="#"
-           onclick="window.print();return false"
-           aria-hidden="true"
-           class="glyphicon glyphicon-print print-icon pull-right"
-           style="margin: 1em;">
-            <span class="sr-only">{% trans 'Print' %}</span>
-        </a>
-    
+
     </div>
-        
+
     {% if not view.kwargs.embed %}
     {% block footer %}
-    <div class="container">
-        <div class="row">
-            <footer>
-                <div class="container">
-                    <div class="row footer-columns">
-                        <div class="col-sm-4 col-sm-offset-0">
-                            <ul class="footerlinks">
-                                <li><a href="http://kommunikation.ku.dk/">{% trans 'Kommunikation' %}</a></li>
-                                <li><a href="http://www.ku.dk/">{% trans 'Københavns Universitet' %}</a></li>
-                                <li>Nørregade 10, Postboks 2177</li>
-                                <li>1017 København K</li>
-                            </ul>
-                        </div>
-                        <div class="col-sm-4 col-sm-offset-4">
-                            <ul class="footerlinks">
-                                <li class="clearfix social-icons"><a target="_blank" class="footer-social" href="https://www.facebook.com/universitet"><span class="icon-circle"><i class="fa fa-facebook"></i></span></a><a target="_blank" class="footer-social" href="https://www.linkedin.com/edu/k%C3%B8benhavns-universitet-12012"><span class="icon-circle"><i class="fa fa-linkedin"></i></span></a><a target="_blank" class="footer-social" href="https://twitter.com/koebenhavns_uni"><span class="icon-circle"><i class="fa fa-twitter"></i></span></a></li>
-                            </ul>
-                        </div>
-                    </div>
+    <footer id="footer">
+      <div class="container-fluid globalfooter">
+        <div class="container">
+          <div class="row footercontent" role="menubar">
+            <div class="col-xs-3 footercolumn">
+              <h3 data-heading="toggle" class="footer-heading hidden-xs">Københavns Universitet</h3>
+              <h3 data-heading="toggle" class="footer-heading visible-xs-block">Organisation</h3>
+              <ul class="footerlinks" role="menu">
+                <li role="menuitem"><a href="http://velkommen.ku.dk/organisation/ledelse">Ledelse</a></li>
+                <li role="menuitem"><a href="http://velkommen.ku.dk/organisation/administration">Administration</a></li>
+                <li role="menuitem"><a href="http://velkommen.ku.dk/organisation/fakulteter">Fakulteter</a></li>
+                <li role="menuitem"><a href="http://velkommen.ku.dk/organisation/institutter">Institutter</a></li>
+                <li role="menuitem"><a href="http://forskning.ku.dk/centre">Forskningscentre</a></li>
+                <li role="menuitem"><a href="http://vetschool.ku.dk/om/VetOmDyrehospitaler">Dyrehospitaler</a></li>
+                <li role="menuitem"><a href="http://odont.ku.dk/for_patienter">Tandlægeskolen</a></li>
+                <li role="menuitem"><a href="http://kubis.ku.dk">Biblioteker</a></li>
+                <li role="menuitem"><a href="http://velkommen.ku.dk/besoeg/museer">Museer</a></li>
+              </ul>
+            </div>
+            <div class="col-xs-3 footercolumn">
+              <h3 data-heading="toggle" class="footer-heading">Kontakt</h3>
+              <ul class="footerlinks" role="menu">
+                <li role="menuitem"><a href="http://findvej.ku.dk">Find vej</a></li>
+                <li role="menuitem"><a href="http://ku.dk/vejviser">Find en medarbejder</a></li>
+                <li role="menuitem"><a href="http://velkommen.ku.dk/kontakt">Kontakt KU</a></li>
+              </ul>
+              <h3 data-heading="toggle" class="footer-heading">Services</h3>
+              <ul class="footerlinks" role="menu">
+                <li role="menuitem"><a href="http://nyheder.ku.dk/presseservice">Presseservice</a></li>
+                <li role="menuitem"><a href="http://designguide.ku.dk">Designguide</a></li>
+                <li role="menuitem"><a href="http://ku-shop.dk">Merchandise</a></li>
+                <li role="menuitem"><a href="http://it.ku.dk/kontakt/support_KU">IT-support</a></li>
+                <li role="menuitem"><a href="http://oko.ku.dk">CVR, EAN og bankoplysninger</a></li>
+              </ul>
+            </div>
+            <div class="col-xs-3 footercolumn">
+              <h3 data-heading="toggle" class="footer-heading">For studerende og ansatte</h3>
+              <ul class="footerlinks" role="menu">
+                <li role="menuitem"><a class="padlock" href="http://intranet.ku.dk">KUnet</a></li>
+              </ul>
+              <h3 data-heading="toggle" class="footer-heading">Job og karriere</h3>
+              <ul class="footerlinks" role="menu">
+                <li role="menuitem"><a href="http://jobportal.ku.dk">Jobportalen</a></li>
+                <li role="menuitem"><a href="http://mangfoldighed.ku.dk">Mangfoldighed</a></li>
+                <li role="menuitem"><a href="http://alumni.ku.dk">Alumne</a></li>
+              </ul>
+              <h3 data-heading="toggle" class="footer-heading">Nødsituationer</h3>
+              <ul class="footerlinks">
+                <li role="menuitem"><a href="http://akut.ku.dk">KU's sikkerhedsberedskab</a></li>
+              </ul>
+            </div>
+            <div class="col-xs-3 footercolumn">
+              <h3 data-heading="toggle" class="footer-heading">Web</h3>
+              <ul class="footerlinks" role="menu">
+                <li role="menuitem"><a href="http://velkommen.ku.dk/om-webstedet">Om websitet</a></li>
+                <li role="menuitem"><a href="http://velkommen.ku.dk/om-webstedet/cookie-og-privatlivspolitik">Cookies og privatlivspolitik</a></li>
+                <li role="menuitem"><a href="http://informationssikkerhed.ku.dk">Informationssikkerhed</a></li>
+                <li><a href="http://velkommen.ku.dk/indeks">A-Å-indeks</a></li>
+              </ul>
+              <div class="social-items">
+                <h3 data-heading="open" class="footer-heading">Mød KU på</h3>
+                <div class="social-item">
+                  <a target="_blank" href="https://www.facebook.com/universitet" class="social-icon facebook" title="Facebook"></a>
                 </div>
-            </footer>
+                <div class="social-item">
+                  <a target="_blank" href="https://www.linkedin.com/edu/k%C3%B8benhavns-universitet-12012" class="social-icon linkedin" title="LinkedIn"></a>
+                </div>
+                <div class="social-item">
+                  <a target="_blank" href="http://velkommen.ku.dk/apps" class="social-icon app" title="KU Apps"></a>
+                </div>
+                <div class="social-item">
+                  <a target="_blank" href="http://nyheder.ku.dk/rss/" class="social-icon rss" title="RSS"></a>
+                </div>
+                <div class="social-item">
+                  <a target="_blank" href="https://twitter.com/koebenhavns_uni" class="social-icon twitter" title="Twitter"></a>
+                </div>
+                <div class="social-item">
+                  <a target="_blank" href="https://www.youtube.com/user/CopenhagenUniversity" class="social-icon youtube" title="YouTube"></a>
+                </div>
+                <div class="social-item">
+                  <a target="_blank" href="http://www.futurity.org/university/university-of-copenhagen" class="social-icon futurity" title="futurity"></a>
+                </div>
+                <div class="social-item">
+                  <a target="_blank" href="http://theconversation.com/institutions/university-of-copenhagen" class="social-icon the_conversation" title="The Conversation"></a>
+                </div>
+                <div class="social-item">
+                  <a target="_blank" href="https://www.coursera.org/ucph" class="social-icon coursera" title="Coursera"></a>
+                </div>
+                <div class="social-item">
+                  <a target="_blank" href="http://video.ku.dk" class="social-icon ku_video" title="KU Videoportal"></a>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-    </div>
+      </div>
+    </footer>
 {% endblock %}
     {% endif %}
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="{% static 'thirdparty/jquery/dist/jquery.min.js' %}"></script>
-    
+
     <!-- Include all compiled plugins (below), or include individual files as needed -->
     <script src="{% static 'thirdparty/bootstrap/dist/js/bootstrap.min.js' %}"></script>
     <script src="{% static 'js/validator.js' %}"></script>
+    <script src="{% static 'js/custom.js' %}"></script>
     {% block extra_scripts %}{% endblock %}
 
     </body>
