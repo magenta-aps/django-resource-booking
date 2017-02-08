@@ -397,12 +397,9 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = {}
-        print self.template_type
-        print self.get_unit()
         context['templates'] = EmailTemplate.get_template(
             self.template_type, self.get_unit(), True
         )
-        print context['templates']
         context['template_type'] = self.template_type.id
         context['template_unit'] = self.get_unit()
         context['modal'] = self.modal
@@ -3067,7 +3064,7 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
             )
 
         context['emailtemplate_waitinglist'] = \
-            EmailTemplateType.NOTIFY_GUEST__SPOT_OPEN
+            EmailTemplateType.notify_guest__spot_open.id
         user = self.request.user
 
         usertype = self.kwargs.get('usertype')

@@ -657,6 +657,7 @@ class EmailTemplateType(
             send_to_booker=True,
             enable_booking=True,
             enable_autosend=True,
+            is_default=True,
             form_show=False,
             ordering=6
         )
@@ -700,6 +701,7 @@ class EmailTemplateType(
             send_to_contactperson=True,
             enable_booking=True,
             enable_autosend=True,
+            is_default=True,
             form_show=False,
             ordering=10
         )
