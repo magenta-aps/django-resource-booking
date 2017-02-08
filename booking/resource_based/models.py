@@ -166,24 +166,28 @@ class EventTime(models.Model):
 
         result = None
 
-        for req in self.product.resourcerequirement_set.all():
-            if hasattr(self, 'visit'):
-                assigned = self.visit.visitresource.filter(
-                    resource_requirement=req
-                ).count()
-            else:
-                assigned = 0
+        if self.product is not None:
+            for req in self.product.resourcerequirement_set.all():
+                if hasattr(self, 'visit') and self.visit is not None:
+                    assigned = self.visit.visitresource.filter(
+                        resource_requirement=req
+                    ).count()
+                else:
+                    assigned = 0
 
-            if req.required_amount == assigned:
-                continue
-            else:
-                fully_assigned = False
+                if req.required_amount == assigned:
+                    continue
+                else:
+                    fully_assigned = False
 
-            if self.start and self.end and not req.has_free_resources_between(
-                self.start, self.end, req.required_amount - assigned
-            ):
-                result = EventTime.RESOURCE_STATUS_BLOCKED
-                break
+                if self.start and self.end and \
+                        not req.has_free_resources_between(
+                            self.start,
+                            self.end,
+                            req.required_amount - assigned
+                        ):
+                    result = EventTime.RESOURCE_STATUS_BLOCKED
+                    break
 
         if result is None:
             if fully_assigned:
