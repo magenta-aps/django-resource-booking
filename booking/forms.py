@@ -807,7 +807,7 @@ class BookingForm(forms.ModelForm):
                 else:
                     if bookings == 0:
                         # There are no bookings at all - yet
-                        capacity_text = "%d pladser" % available_seats
+                        capacity_text = "%d ledige pladser" % available_seats
                     elif available_seats > 0:
                         if waitinglist_capacity > 0:
                             # There's some room on both
