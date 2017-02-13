@@ -896,8 +896,12 @@ class BookerForm(forms.ModelForm):
         attendeecount_widget = self.fields['attendee_count'].widget
 
         attendeecount_widget.attrs['min'] = 1
-        if len(products) > 0:
+        attendeecount_widget.attrs['data-validation-number-min-message'] = \
+            _(u"Der der kræves mindst %d deltagere på det besøg du har valgt.")
+        attendeecount_widget.attrs['data-validation-number-max-message'] = \
+            _(u"Der er max plads til %d deltagere på det besøg du har valgt.")
 
+        if len(products) > 0:
             min_visitors = [
                 product.minimum_number_of_visitors
                 for product in products
