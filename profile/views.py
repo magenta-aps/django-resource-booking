@@ -53,6 +53,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = {'lists': []}
+        limit = 10
 
         context['lists'].extend(self.lists_by_role())
         context['thisurl'] = reverse('user_profile')
@@ -75,8 +76,8 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                 'count'
             ) % {'count': recent_qs.count()},
             'queryset': recent_qs,
-            'limit': 10,
-            'limited_qs': recent_qs[:10],
+            'limit': limit,
+            'limited_qs': recent_qs[:limit],
             'button': {
                 'text': _(u'Søg i alle'),
                 'link': reverse('visit-customlist') + "?type=%s" %
@@ -91,8 +92,8 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                 'count'
             ) % {'count': today_qs.count()},
             'queryset': today_qs,
-            'limit': 10,
-            'limited_qs': today_qs[:10],
+            'limit': limit,
+            'limited_qs': today_qs[:limit],
             'button': {
                 'text': _(u'Søg i alle'),
                 'link': reverse('visit-customlist') + "?type=%s" %
@@ -152,7 +153,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         else:
             return []
 
-    def lists_for_editors(self):
+    def lists_for_editors(self, limit=10):
         visitlist = {
             'color': self.HEADING_BLUE,
             'type': 'Product',
@@ -168,10 +169,11 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                 organizationalunit=self.request.user
                 .userprofile.get_unit_queryset()
             ).order_by("-statistics__created_time"),
+            'limit': limit
         }
 
-        if visitlist['queryset'].count() > 10:
-            visitlist['limited_qs'] = visitlist['queryset'][:10]
+        if visitlist['queryset'].count() > limit:
+            visitlist['limited_qs'] = visitlist['queryset'][:limit]
             visitlist['button'] = {
                 'text': _(u'Søg i alle'),
                 'link': reverse('search') + '?u=-3'
@@ -201,10 +203,11 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     )
                 )).filter(num_participants__gte=1)
                 # See also VisitSearchView.filter_by_participants
-            )
+            ),
+            'limit': limit
         }
-        if unplanned['queryset'].count() > 10:
-            unplanned['limited_qs'] = unplanned['queryset'][:10]
+        if unplanned['queryset'].count() > limit:
+            unplanned['limited_qs'] = unplanned['queryset'][:limit]
             unplanned['button'] = {
                 'text': _(u'Søg i alle'),
                 'link': reverse('visit-search') + '?u=-3&w=-1&go=1&p_min=1'
@@ -225,10 +228,11 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     ),
                     unit_qs
                 )
-            )
+            ),
+            'limit': limit
         }
-        if planned['queryset'].count() > 10:
-            planned['limited_qs'] = planned['queryset'][:10]
+        if planned['queryset'].count() > limit:
+            planned['limited_qs'] = planned['queryset'][:limit]
             planned['button'] = {
                 'text': _(u'Søg i alle'),
                 'link': reverse('visit-search') + '?u=-3&w=-2&go=1'
@@ -236,7 +240,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
 
         return [visitlist, unplanned, planned]
 
-    def lists_for_teachers(self):
+    def lists_for_teachers(self, limit=10):
         unit_qs = self.request.user.userprofile.get_unit_queryset()
         profile = self.request.user.userprofile
 
@@ -251,6 +255,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                 'queryset': Product.objects.filter(
                     eventtime__visit=profile.potentially_assigned_visits
                 ).distinct().order_by("title"),
+                'limit': limit
             },
             {
                 'color': self.HEADING_RED,
@@ -264,7 +269,8 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     profile.can_be_assigned_to_qs, unit_qs
                 ).order_by(
                     'eventtime__start', 'eventtime__end'
-                )
+                ),
+                'limit': limit
             },
             {
                 'color': self.HEADING_GREEN,
@@ -279,11 +285,12 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                         profile.all_assigned_visits(),
                         unit_qs
                     )
-                )
+                ),
+                'limit': limit
             }
         ]
 
-    def lists_for_hosts(self):
+    def lists_for_hosts(self, limit=10):
         unit_qs = self.request.user.userprofile.get_unit_queryset()
         profile = self.request.user.userprofile
 
@@ -298,6 +305,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                 'queryset': Product.objects.filter(
                     eventtime__visit=profile.potentially_assigned_visits
                 ).distinct().order_by("title"),
+                'limit': limit
             },
             {
                 'color': self.HEADING_RED,
@@ -311,7 +319,8 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     profile.can_be_assigned_to_qs, unit_qs
                 ).order_by(
                     'eventtime__start', 'eventtime__end'
-                )
+                ),
+                'limit': limit
             },
             {
                 'color': self.HEADING_GREEN,
@@ -325,7 +334,8 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                     Visit.unit_filter(
                         profile.all_assigned_visits(), unit_qs
                     )
-                )
+                ),
+                'limit': limit
             }
         ]
 

@@ -1171,6 +1171,16 @@ a.template-overridden, a.template-overridden:hover, a.template-overridden:active
 }
 
 
+.list-outside-limit {
+    display: none;
+}
+
+.list-within-limit,
+.list-outside-limit {
+    margin-bottom: 10px;
+}
+
+
 /* frontpage lists end */
 
 
