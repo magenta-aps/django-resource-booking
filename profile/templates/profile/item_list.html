@@ -14,10 +14,18 @@
                 <a href="{{ list.button.link }}" class="column-show-all">{{ list.button.text }}</a>
             {% endif %}
         </div>
-        <div class="panel-body" data-list-item=".list-group-item">
+        <div class="panel-body list" data-list-item=".list-group-item">
 
             {% if list.type == 'Visit' %}
-                {% for visit in list.limited_qs|default:list.queryset %}
+                <div class="list-within-limit">
+
+                {% for visit in list.queryset %}
+
+                    {% if forloop.counter0 == list.limit %}
+                        </div>
+                        <div class="list-outside-limit">
+                    {% endif %}
+
                     <div class="list-group-item clearfix">
                         <a href="{% url 'visit-view' visit.real.pk %}" title="{% trans 'Se arrangementets detaljer' %}">
                             <h2 class="list-group-item-heading">
@@ -31,7 +39,7 @@
                                     </li>
                                     <li>{% trans 'Antal tilmeldte:' %} {{ visit.real.nr_attendees }}</li>
                                     {% if request.user.userprofile.has_edit_role and visit.real.has_changes_after_planned %}
-                                    <li><span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span> {% trans 'Nylige ændringer'%}</li>
+                                    <li><span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span> {% trans 'Nylige ændringer' %}</li>
                                     {% endif %}
                                 </ul>
                             </div>
@@ -68,10 +76,19 @@
                         {% endif %}
                     </div>
                 {% endfor %}
+                </div>
 
             {% elif list.type == 'Product' %}
-                {% for res in list.limited_qs|default:list.queryset %}
-                    <div class="list-group-item clearfix">
+
+                <div class="list-within-limit">
+                {% for res in list.queryset %}
+                    {% if forloop.counter0 == list.limit %}
+                        </div>
+                        <div class="list-outside-limit">
+                    {% endif %}
+
+                        <div class="list-group-item clearfix">
+
                         <a href="{% url 'product-view' res.pk %}" title="{% trans 'Se tilbuddets detaljer og evt. tilmeldinger' %}">
                             <h2 class="list-group-item-heading">{{ res.title }}</h2>
                             <div class="list-group-item-text">
@@ -128,6 +145,13 @@
                         </div>
                     </div>
                 {% endfor %}
+                </div>
+            {% endif %}
+
+            {% if list.queryset.count > list.limit %}
+                <button class="btn btn-primary reveal-link label label-primary pull-right" data-text-reveal="{% blocktrans with count=list.queryset.count %}Vis alle ({{ count }}){% endblocktrans %}" data-text-unreveal="{% trans 'Skjul' %}">
+                    {% blocktrans with count=list.queryset.count %}Vis alle ({{ count }}){% endblocktrans %}
+                </button>
             {% endif %}
         </div>
     </div>
