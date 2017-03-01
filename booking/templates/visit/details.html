@@ -398,13 +398,14 @@
                             </strong>
                             <div class="col-sm-8">
                                 {% if object.evaluation %}
-                                    {% trans '' %}
+                                    {{ object.evaluation.url }}
                                 {% else %}
                                     {% trans 'Ingen evaluering oprettet' %}
                                 {% endif %}
                             </div>
                             <div class="col-sm-2">
                                 {% if object.evaluation %}
+                                    <a href="{% url 'visit-evaluation-view' object.pk object.evaluation.id %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Vis evaluering' %}</a>
                                 {% else %}
                                     <a href="{% url 'visit-evaluation-create' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Opret evaluering' %}</a>
                                 {% endif %}
