@@ -1,0 +1,84 @@
+{% extends 'index.html' %}
+{% load staticfiles %}
+{% load timedelta %}
+{% load i18n %}
+{% load booking_tags %}
+
+{% block htmltitle %} - {{ object.product.title }} - {{ object.date_display }}{% endblock %}
+
+{% block content %}
+
+    {% include 'common/breadcrumbrow.html' %}
+
+    <div class="row titlebar hidden-print">
+        <div class="col-sm-12 col-md-9">
+            <h1>
+                {% url 'visit-view' object.visit.pk as visit_url %}
+                {% blocktrans with title=object.visit.display_title on_date=object.visit.date_display_context %}
+                    Evaluering af <a href="{{ visit_url }}">{{ title }} {{ on_date }}</a>
+                {% endblocktrans %}
+            </h1>
+        </div>
+        <div class="divider"></div>
+    </div>
+
+    <div class="pull-right">
+        <a class="btn btn-primary dropdown-toggle" href="{% url 'visit-evaluation-edit' object.visit.pk object.id %}">
+            {% trans 'Rediger evaluering' %}
+        </a>
+    </div>
+
+    <div class="row status">
+        <div class="col-sm-12 col-md-10">
+            <div class="panel panel-default">
+                <div class="panel-body">
+
+                    <div class="row row-border">
+                        <strong class="col-sm-2">
+                            {% trans 'URL' %}
+                        </strong>
+                        <div class="col-sm-8">
+                            {{ object.url }}
+                        </div>
+                    </div>
+
+                    <div class="row row-border">
+                        <strong class="col-sm-2">
+                            {% trans 'Deltagere' %}
+                        </strong>
+                        <div class="col-sm-8">
+                            <table class="table">
+                                <thead>
+                                <tr>
+                                    <th>{% trans 'Navn' %}</th>
+                                    <th>{% trans 'Email' %}</th>
+                                    <th>{% trans 'Status' %}</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for participant in object.evaluationguest_set.all %}
+                                    <tr>
+                                    <td>{{ participant.guest.get_name }}</td>
+                                    <td>{{ participant.guest.get_email }}</td>
+                                    <td>{{ participant.status }}</td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                    <td colspan="3">{% trans 'Ingen deltagere' %}</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock %}
+
+{% block extra_scripts %}
+{% endblock %}

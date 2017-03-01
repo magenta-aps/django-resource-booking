@@ -391,6 +391,29 @@
                         </div>
                     {% endif %}
 
+                    {% if can_edit %}
+                        <div class="row row-border">
+                            <strong class="col-sm-2">
+                                {% trans 'Evaluering' %}
+                            </strong>
+                            <div class="col-sm-8">
+                                {% if object.evaluation %}
+                                    {% trans '' %}
+                                {% else %}
+                                    {% trans 'Ingen evaluering oprettet' %}
+                                {% endif %}
+                            </div>
+                            <div class="col-sm-2">
+                                {% if object.evaluation %}
+                                {% else %}
+                                    <a href="{% url 'visit-evaluation-create' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Opret evaluering' %}</a>
+                                {% endif %}
+                            </div>
+                        </div>
+
+
+                    {% endif %}
+
                 </div>
             </div>
         </div>

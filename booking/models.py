@@ -5259,6 +5259,50 @@ class BookerResponseNonce(models.Model):
         return cls.objects.create(**attrs)
 
 
+class Evaluation(models.Model):
+    url = models.CharField(
+        max_length=1024,
+        verbose_name=u'Evaluerings-URL'
+    )
+    visit = models.OneToOneField(
+        Visit,
+        null=False,
+        blank=False
+    )
+
+
+class EvaluationGuest(models.Model):
+    evaluation = models.ForeignKey(
+        Evaluation,
+        null=False,
+        blank=False
+    )
+    guest = models.ForeignKey(
+        Guest,
+        null=False,
+        blank=False
+    )
+    STATUS_NO_PARTICIPATION = 0
+    STATUS_NOT_SENT = 1
+    STATUS_FIRST_SENT = 2
+    STATUS_SECOND_SENT = 3
+    STATUS_LINK_CLICKED = 4
+    status_choices = [
+        (STATUS_NO_PARTICIPATION, _(u'Modtager ikke evaluering')),
+        (STATUS_NOT_SENT, _(u'Ikke afholdt / ikke afsendt')),
+        (STATUS_FIRST_SENT, _(u'Sendt første gang')),
+        (STATUS_SECOND_SENT, _(u'Sendt anden gang')),
+        (STATUS_LINK_CLICKED, _(u'Har klikket på link'))
+    ]
+    status = models.SmallIntegerField(
+        choices=status_choices,
+        verbose_name=u'status'
+    )
+    shortlink_id = models.CharField(
+        max_length=16
+    )
+
+
 from booking.resource_based import models as rb_models  # noqa
 
 EventTime = rb_models.EventTime
