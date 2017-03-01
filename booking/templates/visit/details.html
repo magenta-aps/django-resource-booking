@@ -116,16 +116,16 @@
                     {% if object.organizationalunit %}
                     <div class="row row-border">
                         <strong class="col-sm-2">{% trans 'Enhed:' %}</strong>
-                        <div class="col-sm-6">{{ object.organizationalunit.name }}</div>
+                        <div class="col-sm-8">{{ object.organizationalunit.name }}</div>
                     </div>
                     {% endif %}
 
                     <div class="row row-border">
                         <strong class="col-sm-2">{% trans 'Tidspunkt' %}</strong>
                         {% if object.eventtime.start %}
-                            <div class="col-sm-6">{{ object.eventtime.interval_display }}</div>
+                            <div class="col-sm-8">{{ object.eventtime.interval_display }}</div>
                         {% else %}
-                            <div class="col-sm-6">
+                            <div class="col-sm-8">
                                 {% if object.start_datetime %}
                                     {{ object.start_datetime }}
                                 {% else %}
@@ -133,7 +133,7 @@
                                 {% endif %}
                             </div>
                             {% if can_edit %}
-                                <div class="col-sm-4">
+                                <div class="col-sm-2">
                                     <a href="{% url 'change-visit-starttime' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Redigér' %}</a>
                                 </div>
                             {% endif %}
@@ -156,7 +156,7 @@
                             <strong class="col-sm-2">
                                 {% trans 'Ansvarlig' %}
                             </strong>
-                            <div class="col-sm-6">
+                            <div class="col-sm-8">
                                 {% if object.responsible %}
                                     {{ object.responsible }}
                                 {% else %}
@@ -164,7 +164,7 @@
                                 {% endif %}
                             </div>
                             {% if can_edit %}
-                                <div class="col-sm-4">
+                                <div class="col-sm-2">
                                     <a href="{% url 'change-visit-responsible' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Redigér' %}</a>
                                 </div>
                             {% endif %}
@@ -177,10 +177,10 @@
                             <strong class="col-sm-2">
                                 {{ requirementdata.type.plural }}:
                             </strong>
-                            <div class="col-sm-6">
+                            <div class="col-sm-8">
                                 {% blocktrans with found=requirementdata.acquired needed=requirementdata.required type=requirementdata.type.plural|lower %}{{ found }}/{{ needed }} {{ type }} fundet{% endblocktrans %}
                             </div>
-                            <div class="col-sm-4">
+                            <div class="col-sm-2">
                                 {% if can_edit %}
                                     <a href="{% url 'visit-resources-edit' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right" style="vertical-align:top">{% trans 'Redigér' %}</a>
 
@@ -218,15 +218,15 @@
                             <strong class="col-sm-2">
                                 {% trans 'Undervisere' %}
                             </strong>
-                            <div class="col-sm-6">
+                            <div class="col-sm-8">
                             {% blocktrans with found=object.assigned_teachers|length needed=object.total_required_teachers %}{{ found }}/{{ needed }} undervisere fundet{% endblocktrans %}
                             </div>
                             {% if can_edit %}
-                                <div class="col-sm-4">
+                                <div class="col-sm-2">
                                     <a href="{% if object.product.is_resource_controlled %}{% url 'visit-resources-edit' object.pk %}{% else %}{% url 'change-visit-teachers' object.pk %}{% endif %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Redigér' %}</a>
                                 </div>
                             {% elif request.user.userprofile.is_teacher %}
-                                <div class="col-sm-4">
+                                <div class="col-sm-2">
                                 {% if object.needs_teachers %}
                                     {% if request.user in object.teachers.all %}
                                         {% trans '(allerede underviser for dette besøg)' %}
@@ -249,15 +249,15 @@
                             <strong class="col-sm-2">
                                 {% trans 'Værter' %}
                             </strong>
-                            <div class="col-sm-6">
+                            <div class="col-sm-8">
                                 {% blocktrans with found=object.assigned_hosts|length needed=object.total_required_hosts %}{{ found }}/{{ needed }} værter fundet{% endblocktrans %}
                             </div>
                             {% if can_edit %}
-                                <div class="col-sm-4">
+                                <div class="col-sm-2">
                                     <a href="{% if object.product.is_resource_controlled %}{% url 'visit-resources-edit' object.pk %}{% else %}{% url 'change-visit-hosts' object.pk %}{% endif %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Redigér' %}</a>
                                 </div>
                             {% elif request.user.userprofile.is_host %}
-                                <div class="col-sm-4">
+                                <div class="col-sm-2">
                                     {% if object.needs_hosts %}
                                         {% if request.user in object.hosts.all %}
                                             {% trans '(allerede vært for dette besøg)' %}
@@ -280,7 +280,7 @@
                             <strong class="col-sm-2">
                                 {% trans 'Lokaler' %}
                             </strong>
-                            <div class="col-sm-6">
+                            <div class="col-sm-8">
                                 {{ object.get_room_status_display }}
                                 {% if object.rooms.all %}
                                 <ul>
@@ -291,7 +291,7 @@
                                 {% endif %}
                             </div>
                             {% if can_edit %}
-                                <div class="col-sm-4">
+                                <div class="col-sm-2">
                                     <a href="{% url 'change-visit-rooms' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Redigér' %}</a>
                                 </div>
                             {% endif %}
@@ -303,11 +303,11 @@
                             <strong class="col-sm-2">
                                 {% trans 'Automatisk e-mail' %}
                             </strong>
-                            <div class="col-sm-6">
+                            <div class="col-sm-8">
                                 {{ object.get_autosend_display }}
                             </div>
                             {% if can_edit %}
-                                <div class="col-sm-4">
+                                <div class="col-sm-2">
                                     <a href="{% url 'change-visit-autosend' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Redigér' %}</a>
                                 </div>
                             {% endif %}
@@ -318,11 +318,11 @@
                         <strong class="col-sm-2">
                             {% trans 'Status' %}
                         </strong>
-                        <div class="col-sm-6">
+                        <div class="col-sm-8">
                             {{ object.get_workflow_status_display }}
                         </div>
                         {% if can_edit %}
-                        <div class="col-sm-4">
+                        <div class="col-sm-2">
                             <a href="{% url 'change-visit-status' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Skift status' %}</a>
                         </div>
                         {% endif %}
@@ -333,11 +333,11 @@
                             <strong class="col-sm-2">
                                 {% trans 'Antal på venteliste' %}
                             </strong>
-                            <div class="col-sm-6">
+                            <div class="col-sm-8">
                                 {{ object.nr_waiting }}
                             </div>
                             {% if can_edit %}
-                                <div class="col-sm-4">
+                                <div class="col-sm-2">
                                     <a href="#waitinglist" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Se liste' %}</a>
                                 </div>
                             {% endif %}
@@ -348,7 +348,7 @@
                         <strong class="col-sm-2">
                             {% trans 'Link til evaluering' %}
                         </strong>
-                        <div class="col-sm-6">
+                        <div class="col-sm-8">
                             {% if object.evaluation_link %}
                                 <a href="{{ object.evaluation_link }}">{{ object.evaluation_link }}</a>
                             {% else %}
@@ -356,7 +356,7 @@
                             {% endif %}
                         </div>
                         {% if can_edit %}
-                            <div class="col-sm-4">
+                            <div class="col-sm-2">
                                 <a href="{% url 'change-visit-eval' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Redigér' %}</a>
                             </div>
                         {% endif %}
@@ -366,11 +366,11 @@
                         <strong class="col-sm-2">
                             {% trans 'Interne kommentarer' %}
                         </strong>
-                        <div class="col-sm-6">
+                        <div class="col-sm-8">
                             <pre>{{ object.comments }}</pre>
                         </div>
                         {% if can_edit %}
-                            <div class="col-sm-4">
+                            <div class="col-sm-2">
                                 <a href="{% url 'change-visit-comments' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Redigér' %}</a>
                             </div>
                         {% endif %}
@@ -381,11 +381,11 @@
                             <strong class="col-sm-2">
                                 {% trans 'Nylige ændringer' %}
                             </strong>
-                            <div class="col-sm-6">
+                            <div class="col-sm-8">
                                 <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
                                 {% trans 'Dette besøg er markeret som havende nylige ændringer' %}.
                             </div>
-                            <div class="col-sm-4">
+                            <div class="col-sm-2">
                                 <a href="{% url 'visit-reset-changes-marker' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Klik her for at fjerne markeringen' %}</a>
                             </div>
                         </div>
