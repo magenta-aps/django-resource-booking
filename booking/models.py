@@ -9,6 +9,7 @@ from django.db.models import Max
 from django.db.models import Sum
 from django.db.models import Q
 from django.db.models.base import ModelBase
+from django.db.models.functions import Coalesce
 from django.utils import six
 from django.template.context import make_context
 from django.utils import timezone
@@ -1902,10 +1903,13 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             max = (self.maximum_number_of_visitors +
                    (self.waiting_list_length or 0))
             qs = qs.annotate(
-                Sum('visit__bookings__booker__attendee_count')
+                attendees=Coalesce(
+                    Sum('visit__bookings__booker__attendee_count'),
+                    0
+                )
             ).filter(
                 Q(visit__isnull=True) |
-                Q(visit__bookings__booker__attendee_count__sum__lt=max)
+                Q(attendees__lt=max)
             )
         return qs
 
