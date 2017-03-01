@@ -10,6 +10,7 @@ from booking.models import ClassBooking, TeacherBooking, \
 from booking.models import EmailTemplate, EmailTemplateType
 from booking.models import Visit
 from booking.models import MultiProductVisitTemp, MultiProductVisitTempProduct
+from booking.models import Evaluation
 from booking.models import BLANK_LABEL, BLANK_OPTION
 from booking.widgets import OrderedMultipleHiddenChooser
 from booking.utils import binary_or, binary_and
@@ -17,6 +18,7 @@ from django import forms
 from django.db.models import Q
 from django.db.models.expressions import OrderBy
 from django.forms import CheckboxSelectMultiple, CheckboxInput
+from django.forms import ModelMultipleChoiceField
 from django.forms import EmailInput
 from django.forms import formset_factory, inlineformset_factory
 from django.forms import TextInput, NumberInput, DateInput, Textarea, Select
@@ -1383,3 +1385,24 @@ class MultiProductVisitTempProductsForm(forms.ModelForm):
             )
             relation.save()
         return mvpt
+
+
+class EvaluationForm(forms.ModelForm):
+
+    class Meta:
+        model = Evaluation
+        fields = ['url']
+
+    nonparticipating_guests = ModelMultipleChoiceField(
+        queryset=Guest.objects.all(),
+        required=False
+    )
+
+    def __init__(self, visit, *args, **kwargs):
+        self.instance = kwargs.get('instance')
+        self.visit = visit
+        super(EvaluationForm, self).__init__(*args, **kwargs)
+
+    def save(self, commit=True):
+        self.instance.visit = self.visit
+        return super(EvaluationForm, self).save(commit)

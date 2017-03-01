@@ -50,9 +50,9 @@ from booking.models import log_action
 from booking.models import LOGACTION_CREATE, LOGACTION_CHANGE
 from booking.models import RoomResponsible
 from booking.models import BookerResponseNonce
-
 from booking.models import MultiProductVisit
 from booking.models import MultiProductVisitTemp
+from booking.models import Evaluation
 
 from booking.forms import ProductInitialForm, ProductForm
 from booking.forms import GuestEmailComposeForm, StudentForADayBookingForm
@@ -78,6 +78,7 @@ from booking.forms import VisitSearchForm
 from booking.forms import AcceptBookingForm
 from booking.forms import MultiProductVisitTempDateForm
 from booking.forms import MultiProductVisitTempProductsForm
+from booking.forms import EvaluationForm
 
 from booking.utils import full_email, get_model_field_map
 from booking.utils import get_related_content_types, merge_dicts
@@ -3822,3 +3823,25 @@ class MultiProductVisitTempConfirmView(BreadcrumbMixin, DetailView):
                 'text': _(u'Bekræft')
             }
         ]
+
+
+class EvaluationEditView(UpdateView):
+
+    form_class = EvaluationForm
+    template_name = "evaluation/form.html"
+    model = Evaluation
+
+    def get_object(self, queryset=None):
+        if 'pk' in self.kwargs:
+            return super(EvaluationEditView, self).get_object(queryset)
+
+    def get_form_kwargs(self):
+        kwargs = super(EvaluationEditView, self).get_form_kwargs()
+        kwargs['visit'] = Visit.objects.get(id=self.kwargs.get('visit'))
+        return kwargs
+
+
+class EvaluationDetailView(DetailView):
+
+    template_name = "evaluation/details.html"
+    model = Evaluation
