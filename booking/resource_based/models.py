@@ -839,6 +839,21 @@ class CalendarEvent(AvailabilityUpdaterMixin, models.Model):
     def calender_event_title(self):
         return self.title
 
+    @staticmethod
+    def get_events(availability, start=None, end=None):
+        if availability in [
+            CalendarEvent.AVAILABLE, CalendarEvent.NOT_AVAILABLE
+        ]:
+            qs = CalendarEvent.objects.filter(
+                availability=availability
+            )
+            if start is not None:
+                qs = qs.filter(end__gte=start)
+            if end is not None:
+                qs = qs.filter(start__lte=end)
+            return qs
+        return CalendarEvent.objects.none()
+
     def __unicode__(self):
         return ", ".join(unicode(x) for x in [
             self.title,

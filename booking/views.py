@@ -50,6 +50,7 @@ from booking.models import log_action
 from booking.models import LOGACTION_CREATE, LOGACTION_CHANGE
 from booking.models import RoomResponsible
 from booking.models import BookerResponseNonce
+from booking.models import CalendarEvent
 
 from booking.models import MultiProductVisit
 from booking.models import MultiProductVisitTemp
@@ -725,6 +726,8 @@ class SearchView(BreadcrumbMixin, ListView):
         if self.base_queryset is None:
             searchexpression = self.request.GET.get("q", "")
 
+            needs_no_eventtime = Q(time_mode=Product.TIME_MODE_GUEST_SUGGESTED)
+
             qs = self.model.objects.search(searchexpression)
 
             date_cond = Q()
@@ -735,12 +738,30 @@ class SearchView(BreadcrumbMixin, ListView):
             is_public = not self.request.user.is_authenticated()
 
             if t_from:
-                date_cond = date_cond & Q(eventtime__start__gt=t_from)
+                date_cond &= Q(
+                    needs_no_eventtime |
+                    Q(eventtime__start__gt=t_from)
+                )
 
             if t_to:
                 # End datetime is midnight of the next day
                 next_midnight = t_to + timedelta(hours=24)
-                date_cond = date_cond & Q(eventtime__start__lte=next_midnight)
+                date_cond &= Q(
+                    needs_no_eventtime |
+                    Q(eventtime__start__lte=next_midnight)
+                )
+
+            date_cond &= Q(
+                Q(calendar__isnull=True) |
+                Q(
+                    Q(calendar__calendarevent__in=CalendarEvent.get_events(
+                        CalendarEvent.AVAILABLE, t_from, t_to
+                    )) &
+                    ~Q(calendar__calendarevent__in=CalendarEvent.get_events(
+                        CalendarEvent.NOT_AVAILABLE, t_from, t_to
+                    ))
+                )
+            )
 
             if is_public:
                 # Public searches are always from todays date and onward
@@ -771,7 +792,7 @@ class SearchView(BreadcrumbMixin, ListView):
                 always_bookable = Q(
                     time_mode__in=[
                         Product.TIME_MODE_NONE,
-                        Product.TIME_MODE_GUEST_SUGGESTED,
+                        Product.TIME_MODE_NO_BOOKING,
                     ]
                 )
                 qs = qs.filter(
