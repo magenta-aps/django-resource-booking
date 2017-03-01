@@ -180,7 +180,7 @@
                             <div class="col-sm-6">
                                 {% blocktrans with found=requirementdata.acquired needed=requirementdata.required type=requirementdata.type.plural|lower %}{{ found }}/{{ needed }} {{ type }} fundet{% endblocktrans %}
                             </div>
-                            <div class="col-sm-2">
+                            <div class="col-sm-4">
                                 {% if can_edit %}
                                     <a href="{% url 'visit-resources-edit' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right" style="vertical-align:top">{% trans 'Redigér' %}</a>
 
@@ -222,7 +222,7 @@
                             {% blocktrans with found=object.assigned_teachers|length needed=object.total_required_teachers %}{{ found }}/{{ needed }} undervisere fundet{% endblocktrans %}
                             </div>
                             {% if can_edit %}
-                                <div class="col-sm-2">
+                                <div class="col-sm-4">
                                     <a href="{% if object.product.is_resource_controlled %}{% url 'visit-resources-edit' object.pk %}{% else %}{% url 'change-visit-teachers' object.pk %}{% endif %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Redigér' %}</a>
                                 </div>
                             {% elif request.user.userprofile.is_teacher %}
@@ -253,7 +253,7 @@
                                 {% blocktrans with found=object.assigned_hosts|length needed=object.total_required_hosts %}{{ found }}/{{ needed }} værter fundet{% endblocktrans %}
                             </div>
                             {% if can_edit %}
-                                <div class="col-sm-2">
+                                <div class="col-sm-4">
                                     <a href="{% if object.product.is_resource_controlled %}{% url 'visit-resources-edit' object.pk %}{% else %}{% url 'change-visit-hosts' object.pk %}{% endif %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Redigér' %}</a>
                                 </div>
                             {% elif request.user.userprofile.is_host %}
