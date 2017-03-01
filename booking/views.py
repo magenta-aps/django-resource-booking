@@ -756,8 +756,8 @@ class SearchView(BreadcrumbMixin, ListView):
                 Q(
                     Q(calendar__calendarevent__in=CalendarEvent.get_events(
                         CalendarEvent.AVAILABLE, t_from, t_to
-                    )) &
-                    ~Q(calendar__calendarevent__in=CalendarEvent.get_events(
+                    )) & ~
+                    Q(calendar__calendarevent__in=CalendarEvent.get_events(
                         CalendarEvent.NOT_AVAILABLE, t_from, t_to
                     ))
                 )
