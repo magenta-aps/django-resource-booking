@@ -3841,8 +3841,11 @@ class EvaluationEditView(UpdateView):
         return kwargs
 
     def get_success_url(self):
-        return reverse('visit-evaluation-view', args=[self.object.visit.id, self.object.id])
-
+        return reverse(
+            'visit-evaluation-view', args=[
+                self.object.visit.id, self.object.id
+            ]
+        )
 
 
 class EvaluationDetailView(DetailView):
