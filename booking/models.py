@@ -5074,6 +5074,11 @@ class EvaluationGuest(models.Model):
     def shortlink(self):
         return "http://localhost:8000/l/%s" % self.shortlink_id
 
+    @property
+    def status_display(self):
+        for status, label in self.status_choices:
+            if status == self.status:
+                return label
 
 from booking.resource_based import models as rb_models  # noqa
 
