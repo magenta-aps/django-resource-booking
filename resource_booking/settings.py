@@ -222,5 +222,6 @@ CRON_CLASSES = [
     "booking.cron.ReminderJob",
     "booking.cron.IdleHostroleJob",
     "booking.cron.RemoveOldMvpJob",
-    "booking.cron.NotifyEventTimeJob"
+    "booking.cron.NotifyEventTimeJob",
+    "booking.cron.EvaluationReminderJob"
 ]
