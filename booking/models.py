@@ -479,6 +479,8 @@ class EmailTemplateType(
     NOTIFY_TEACHER__ASSOCIATED = 21  # Ticket 15701
     NOTIFY_ALL_EVALUATION = 22  # Ticket 15701
     NOTIFY_GUEST__BOOKING_CREATED_UNTIMED = 23  # Ticket 16914
+    NOTIFY_GUEST__EVALUATION_FIRST = 24 # Ticket 13819
+    NOTIFY_GUEST__EVALUATION_SECOND = 25 # Ticket 13819
 
     @staticmethod
     def get(template_key):
@@ -806,6 +808,29 @@ class EmailTemplateType(
         EmailTemplateType.set_default(
             EmailTemplateType.SYSTEM__USER_CREATED,
             name_da=u'Besked til bruger ved brugeroprettelse'
+        )
+
+        EmailTemplateType.set_default(
+            EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST,
+            name_da=u'Besked til bruger angående evaluering (første besked)',
+            form_show=True,
+            send_to_booker=True,
+            enable_autosend=True,
+            enable_booking=True,
+            is_default=True,
+            ordering=24
+        )
+
+        EmailTemplateType.set_default(
+            EmailTemplateType.NOTIFY_GUEST__EVALUATION_SECOND,
+            name_da=u'Besked til bruger angående evaluering (anden besked)',
+            form_show=True,
+            send_to_booker=True,
+            enable_autosend=True,
+            enable_booking=True,
+            enable_days=True,
+            is_default=True,
+            ordering=25
         )
 
     @staticmethod
@@ -2664,6 +2689,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         if last_workflow_status is None or \
                 last_workflow_status != self.workflow_status:
             self.last_workflow_update = timezone.now()
+            if self.workflow_status == self.WORKFLOW_STATUS_EXECUTED:
+                if self.evaluation is not None:
+                    self.evaluation.send_first_notification()
 
     @property
     # QuerySet that finds EventTimes that will be affected by resource changes
@@ -4523,6 +4551,7 @@ class Booking(models.Model):
 
     def autosend(self, template_type, recipients=None,
                  only_these_recipients=False):
+
         visit = self.visit.real
         if visit.autosend_enabled(template_type):
             product = visit.product
@@ -4975,6 +5004,15 @@ class Evaluation(models.Model):
         through='EvaluationGuest'
     )
 
+    def send_first_notification(self):
+        for evalguest in self.evaluationguest_set.all():
+            for booking in evalguest.guest.booking_set.filter(
+                    visit=self.visit
+            ):
+                booking.autosend(
+                    EmailTemplateType.notify_guest__evaluation_first
+                )
+
 
 class EvaluationGuest(models.Model):
     evaluation = models.ForeignKey(
@@ -4982,7 +5020,7 @@ class EvaluationGuest(models.Model):
         null=False,
         blank=False
     )
-    guest = models.ForeignKey(
+    guest = models.OneToOneField(
         Guest,
         null=False,
         blank=False
@@ -5006,6 +5044,10 @@ class EvaluationGuest(models.Model):
     shortlink_id = models.CharField(
         max_length=16
     )
+
+    @property
+    def shortlink(self):
+        return "http://localhost:8000/l/%s" % self.shortlink_id
 
 
 from booking.resource_based import models as rb_models  # noqa
