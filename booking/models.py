@@ -479,8 +479,8 @@ class EmailTemplateType(
     NOTIFY_TEACHER__ASSOCIATED = 21  # Ticket 15701
     NOTIFY_ALL_EVALUATION = 22  # Ticket 15701
     NOTIFY_GUEST__BOOKING_CREATED_UNTIMED = 23  # Ticket 16914
-    NOTIFY_GUEST__EVALUATION_FIRST = 24 # Ticket 13819
-    NOTIFY_GUEST__EVALUATION_SECOND = 25 # Ticket 13819
+    NOTIFY_GUEST__EVALUATION_FIRST = 24  # Ticket 13819
+    NOTIFY_GUEST__EVALUATION_SECOND = 25  # Ticket 13819
 
     @staticmethod
     def get(template_key):
@@ -5022,7 +5022,7 @@ class Evaluation(models.Model):
                     if sent:
                         evalguest.status = new_status
                         evalguest.save()
-                except e:
+                except Exception as e:
                     print e
 
     def send_first_notification(self):

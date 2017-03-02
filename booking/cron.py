@@ -1,7 +1,6 @@
 from datetime import timedelta, date
 
-from booking.models import VisitAutosend, EmailTemplateType, Visit, \
-    EvaluationGuest
+from booking.models import VisitAutosend, EmailTemplateType, Visit
 from booking.models import MultiProductVisitTemp, EventTime
 from django_cron import CronJobBase, Schedule
 from django.db.models import Count
@@ -144,33 +143,31 @@ class IdleHostroleJob(KuCronJob):
                 print "Today is: %s" % unicode(today)
 
                 for autosend in autosends:
-                    if autosend is not None:
-                        print "Autosend %d for Visit %d:" % \
-                              (autosend.id, autosend.visit.id)
-                        first_booking = autosend.visit.\
-                            bookings.earliest('statistics__created_time')
-                        print "    Visit has its first booking on %s" % \
-                              unicode(
-                                  first_booking.statistics.created_time.date()
-                              )
+                    if autosend is None:
+                        continue
+                    print "Autosend %d for Visit %d:" % \
+                          (autosend.id, autosend.visit.id)
+                    first_booking = autosend.visit.\
+                        bookings.earliest('statistics__created_time')
+                    print "    Visit has its first booking on %s" % \
+                          unicode(
+                              first_booking.statistics.created_time.date()
+                          )
 
-                        alertday = first_booking.statistics.created_time.\
-                                       date() + timedelta(autosend.days)
-                        print "    Autosend specifies to send %d days after " \
-                              "first booking, on %s" % (
-                            autosend.days, alertday
-                        )
-                        if alertday == today:
-                            print "    That's today; send alert now"
-                            try:
-                                autosend.visit.autosend(
-                                    EmailTemplateType.
-                                        notify_host__hostrole_idle
-                                )
-                            except Exception as e:
-                                print e
-                        else:
-                            print "    That's not today. Not sending alert"
+                    alertday = first_booking.statistics.created_time.\
+                        date() + timedelta(autosend.days)
+                    print "    Autosend specifies to send %d days after " \
+                          "first booking, on %s" % (autosend.days, alertday)
+                    if alertday == today:
+                        print "    That's today; send alert now"
+                        try:
+                            autosend.visit.autosend(
+                                EmailTemplateType.notify_host__hostrole_idle
+                            )
+                        except Exception as e:
+                            print e
+                    else:
+                        print "    That's not today. Not sending alert"
         finally:
             for autosend in autosends:
                 autosend.refresh_from_db()
@@ -257,7 +254,8 @@ class EvaluationReminderJob(KuCronJob):
                           (autosend.id, visit.id)
                     print "    Visit ends on %s" % \
                           unicode(visit.end_datetime.date())
-                    alertday = visit.end_datetime.date() + timedelta(autosend.days)
+                    alertday = visit.end_datetime.date() + \
+                        timedelta(autosend.days)
                     print "    Autosend specifies to send %d days after " \
                           "completion, on %s" % (autosend.days, alertday)
                     if alertday == today:
