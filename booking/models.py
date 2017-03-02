@@ -4576,6 +4576,8 @@ class Booking(models.Model):
                 self.visit,
                 organizationalunit=unit
             )
+            return True
+        return False
 
     def as_searchtext(self):
         return " ".join([unicode(x) for x in [
@@ -5004,14 +5006,37 @@ class Evaluation(models.Model):
         through='EvaluationGuest'
     )
 
-    def send_first_notification(self):
-        for evalguest in self.evaluationguest_set.all():
+    def send_notification(self, template_type, new_status, filter=None):
+        qs = self.evaluationguest_set.all()
+        if filter is not None:
+            qs = qs.filter(**filter)
+        for evalguest in qs:
             for booking in evalguest.guest.booking_set.filter(
-                    visit=self.visit
+                visit=self.visit
             ):
-                booking.autosend(
-                    EmailTemplateType.notify_guest__evaluation_first
-                )
+                # There really should be only one here
+                try:
+                    sent = booking.autosend(
+                        template_type
+                    )
+                    if sent:
+                        evalguest.status = new_status
+                        evalguest.save()
+                except e:
+                    print e
+
+    def send_first_notification(self):
+        self.send_notification(
+            EmailTemplateType.notify_guest__evaluation_first,
+            EvaluationGuest.STATUS_FIRST_SENT
+        )
+
+    def send_second_notification(self):
+        self.send_notification(
+            EmailTemplateType.notify_guest__evaluation_second,
+            EvaluationGuest.STATUS_SECOND_SENT,
+            {'status': EvaluationGuest.STATUS_FIRST_SENT}
+        )
 
 
 class EvaluationGuest(models.Model):
