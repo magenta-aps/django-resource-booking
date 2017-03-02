@@ -33,7 +33,9 @@ IMPORT_MAP = {
     EmailTemplateType.NOTIFY_GUEST__SPOT_ACCEPTED: 'waitinglist_accepted',
     EmailTemplateType.NOTIFY_GUEST__SPOT_REJECTED: 'waitinglist_rejected',
     EmailTemplateType.NOTIFY_EDITORS__SPOT_REJECTED:
-        'waitinglist_rejected_coordinator'
+        'waitinglist_rejected_coordinator',
+    EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST: 'evaluation1',
+    EmailTemplateType.NOTIFY_GUEST__EVALUATION_SECOND: 'evaluation2',
 }
 
 

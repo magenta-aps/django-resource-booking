@@ -149,21 +149,25 @@ class IdleHostroleJob(KuCronJob):
         print "Found %d enabled inheriting autosends" % len(extra)
         autosends.extend(extra)
 
-        if len(autosends) > 0:
-            today = date.today()
-            print "Today is: %s" % unicode(today)
+        try:
+            if len(autosends) > 0:
+                today = date.today()
+                print "Today is: %s" % unicode(today)
 
-            for autosend in autosends:
-                if autosend is not None:
+                for autosend in autosends:
+                    if autosend is None:
+                        continue
                     print "Autosend %d for Visit %d:" % \
                           (autosend.id, autosend.visit.id)
                     first_booking = autosend.visit.\
                         bookings.earliest('statistics__created_time')
                     print "    Visit has its first booking on %s" % \
-                          unicode(first_booking.statistics.created_time.date())
+                          unicode(
+                              first_booking.statistics.created_time.date()
+                          )
 
-                    alertday = first_booking.statistics.created_time.date() + \
-                        timedelta(autosend.days)
+                    alertday = first_booking.statistics.created_time.\
+                        date() + timedelta(autosend.days)
                     print "    Autosend specifies to send %d days after " \
                           "first booking, on %s" % (autosend.days, alertday)
                     if alertday == today:
@@ -176,6 +180,9 @@ class IdleHostroleJob(KuCronJob):
                             print e
                     else:
                         print "    That's not today. Not sending alert"
+        finally:
+            for autosend in autosends:
+                autosend.refresh_from_db()
 
 
 class RemoveOldMvpJob(KuCronJob):
@@ -219,3 +226,61 @@ class NotifyEventTimeJob(KuCronJob):
             ):
                 print "Notifying EventTime %d (ending)" % eventtime.id
                 eventtime.on_end()
+
+
+class EvaluationReminderJob(KuCronJob):
+    RUN_AT_TIMES = ['02:00']
+    schedule = Schedule(run_at_times=RUN_AT_TIMES)
+    code = 'kubooking.evaluationreminder'
+    description = "sends evaluation reminder emails"
+
+    def run(self):
+        emailtemplate = EmailTemplateType.notify_guest__evaluation_second
+        filter = {
+            'template_type': emailtemplate,
+        }
+
+        autosends = list(VisitAutosend.objects.filter(
+            inherit=False,
+            enabled=True,
+            days__isnull=False,
+        ).filter(**filter).all())
+        print "Found %d enabled autosends" % len(autosends)
+
+        inheriting_autosends = list(VisitAutosend.objects.filter(
+            inherit=True,
+        ).filter(**filter).all())
+
+        extra = []
+        for autosend in inheriting_autosends:
+            inherited = autosend.get_inherited()
+            if inherited is not None and inherited.enabled and \
+                    (inherited.days is not None or autosend.days is not None):
+                autosend.days = autosend.days or inherited.days
+                autosend.enabled = inherited.enabled
+                extra.append(autosend)
+        print "Found %d enabled inheriting autosends" % len(extra)
+        autosends.extend(extra)
+
+        try:
+            if len(autosends):
+                today = date.today()
+                print "Today is: %s" % unicode(today)
+                for autosend in autosends:
+                    visit = autosend.visit
+                    print "Autosend %d for Visit %d:" % \
+                          (autosend.id, visit.id)
+                    print "    Visit ends on %s" % \
+                          unicode(visit.end_datetime.date())
+                    alertday = visit.end_datetime.date() + \
+                        timedelta(autosend.days)
+                    print "    Autosend specifies to send %d days after " \
+                          "completion, on %s" % (autosend.days, alertday)
+                    if alertday == today:
+                        print "    That's today; sending messages now"
+                        visit.evaluation.send_second_notification()
+                    else:
+                        print "    That's not today. Not sending messages"
+        finally:
+            for autosend in autosends:
+                autosend.refresh_from_db()
