@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from booking.models import StudyMaterial, ProductAutosend, Booking
+from booking.models import StudyMaterial, ProductAutosend, Booking, \
+    EvaluationGuest
 from booking.models import Subject, BookingGrundskoleSubjectLevel
 from booking.models import Locality, OrganizationalUnitType, OrganizationalUnit
 from booking.models import Product
@@ -1401,8 +1402,40 @@ class EvaluationForm(forms.ModelForm):
     def __init__(self, visit, *args, **kwargs):
         self.instance = kwargs.get('instance')
         self.visit = visit
+        kwargs['initial']['nonparticipating_guests'] = [
+            evaluationguest.guest
+            for evaluationguest in self.instance.evaluationguest_set.filter(
+                status=EvaluationGuest.STATUS_NO_PARTICIPATION
+            )
+        ]
         super(EvaluationForm, self).__init__(*args, **kwargs)
+        self.fields['nonparticipating_guests'].queryset = Guest.objects.filter(
+            booking__in=self.visit.booking_list
+        )
+
+    def get_queryset(self):
+        return Evaluation.objects.filter(visit=self.visit)
 
     def save(self, commit=True):
         self.instance.visit = self.visit
+        existing_guests = {
+            evalguest.guest: evalguest
+            for evalguest in self.instance.evaluationguest_set.all()
+        }
+        for booking in self.visit.booking_list:
+            guest = booking.booker
+            status = EvaluationGuest.STATUS_NO_PARTICIPATION
+            if guest not in self.cleaned_data['nonparticipating_guests']:
+                status = EvaluationGuest.STATUS_NOT_SENT
+            if guest in existing_guests:
+                guestlink = existing_guests[guest]
+                guestlink.status = status
+            else:
+                guestlink = EvaluationGuest(
+                    evaluation=self.instance,
+                    guest=guest,
+                    status=status
+                )
+            guestlink.save()
+
         return super(EvaluationForm, self).save(commit)

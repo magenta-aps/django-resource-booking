@@ -3840,6 +3840,10 @@ class EvaluationEditView(UpdateView):
         kwargs['visit'] = Visit.objects.get(id=self.kwargs.get('visit'))
         return kwargs
 
+    def get_success_url(self):
+        return reverse('visit-evaluation-view', args=[self.object.visit.id, self.object.id])
+
+
 
 class EvaluationDetailView(DetailView):
 
