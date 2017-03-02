@@ -5269,6 +5269,10 @@ class Evaluation(models.Model):
         null=False,
         blank=False
     )
+    guests = models.ManyToManyField(
+        Guest,
+        through='EvaluationGuest'
+    )
 
 
 class EvaluationGuest(models.Model):
