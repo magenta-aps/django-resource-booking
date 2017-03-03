@@ -45,8 +45,8 @@ from booking.views import MultiProductVisitTempCreateView
 from booking.views import MultiProductVisitTempUpdateView
 from booking.views import MultiProductVisitTempProductsView
 from booking.views import MultiProductVisitTempConfirmView
-from booking.views import EvaluationEditView
-from booking.views import EvaluationDetailView
+from booking.views import EvaluationEditView, EvaluationDetailView
+from booking.views import EvaluationRedirectView
 
 from booking.resource_based.views import ResourceCreateView, ResourceDetailView
 from booking.resource_based.views import ResourceListView, ResourceUpdateView
@@ -410,7 +410,10 @@ urlpatterns = patterns(
         name='visit-evaluation-edit'),
     url(r'^visit/(?P<visit>[0-9]+)/evaluation/(?P<pk>[0-9]+)/?$',
         EvaluationDetailView.as_view(),
-        name='visit-evaluation-view')
+        name='visit-evaluation-view'),
+    url(r'^e/(?P<linkid>[a-zA-Z0-9]+)$',
+        EvaluationRedirectView.as_view(),
+        name='visit-evaluation-redirect')
 
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

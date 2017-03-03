@@ -13,6 +13,7 @@ from django.db.models.functions import Coalesce
 from django.utils import six
 from django.template.context import make_context
 from django.utils import timezone
+from django.utils.crypto import get_random_string
 from djorm_pgfulltext.models import SearchManager
 from djorm_pgfulltext.fields import VectorField
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -5366,12 +5367,46 @@ class EvaluationGuest(models.Model):
         verbose_name=u'status'
     )
     shortlink_id = models.CharField(
-        max_length=16
+        max_length=16,
     )
 
     @property
     def shortlink(self):
         return "http://localhost:8000/l/%s" % self.shortlink_id
+
+    @property
+    def status_display(self):
+        for status, label in self.status_choices:
+            if status == self.status:
+                return label
+
+    def save(self, *args, **kwargs):
+        if self.shortlink_id is None or len(self.shortlink_id) == 0:
+            self.shortlink_id = ''.join(get_random_string(length=13))
+        return super(EvaluationGuest, self).save(*args, **kwargs)
+
+    @property
+    def url(self):
+        template = Template(
+            "{% load booking_tags %}"+
+            "{% load i18n %}"+
+            "{% language 'da' %}\n" +
+            unicode(self.evaluation.url) +
+            "{% endlanguage %}\n"
+        )
+        context = make_context({
+            'evaluation': self.evaluation,
+            'guest': self.guest
+        })
+
+        rendered = template.render(context)
+        return rendered
+
+        # return self.evaluation.url
+
+    def link_clicked(self):
+        self.status = self.STATUS_LINK_CLICKED
+        self.save()
 
 
 from booking.resource_based import models as rb_models  # noqa
