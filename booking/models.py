@@ -5088,7 +5088,22 @@ class EvaluationGuest(models.Model):
 
     @property
     def url(self):
-        return self.evaluation.url
+        template = Template(
+            "{% load booking_tags %}"+
+            "{% load i18n %}"+
+            "{% language 'da' %}\n" +
+            unicode(self.evaluation.url) +
+            "{% endlanguage %}\n"
+        )
+        context = make_context({
+            'evaluation': self.evaluation,
+            'guest': self.guest
+        })
+
+        rendered = template.render(context)
+        return rendered
+
+        # return self.evaluation.url
 
     def link_clicked(self):
         self.status = self.STATUS_LINK_CLICKED

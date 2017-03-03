@@ -1396,7 +1396,8 @@ class EvaluationForm(forms.ModelForm):
 
     nonparticipating_guests = ModelMultipleChoiceField(
         queryset=Guest.objects.all(),
-        required=False
+        required=False,
+        label=_(u'Deltagere uden spørgeskema')
     )
 
     def __init__(self, visit, *args, **kwargs):
