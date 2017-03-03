@@ -1442,3 +1442,33 @@ class EvaluationForm(forms.ModelForm):
                 )
             evalguest.save()
         return self.instance
+
+
+class EvaluationStatisticsForm(forms.Form):
+
+    from_date = forms.DateField(
+        label=_(u'Dato fra'),
+        input_formats=['%d-%m-%Y'],
+        required=False,
+        widget=forms.DateInput(
+            attrs={
+                'class': 'form-control input-sm datepicker datepicker-admin'
+            }
+        )
+    )
+
+    to_date = forms.DateField(
+        label=_(u'Dato til'),
+        input_formats=['%d-%m-%Y'],
+        required=False,
+        widget=forms.DateInput(
+            attrs={
+                'class': 'form-control input-sm datepicker datepicker-admin'
+            }
+        )
+    )
+
+    unit = forms.ModelChoiceField(
+        label=_(u'Enhed'),
+        queryset=OrganizationalUnit.objects.all()
+    )
