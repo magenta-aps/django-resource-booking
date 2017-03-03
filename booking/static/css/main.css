@@ -1797,3 +1797,16 @@ body.lightbox {
         appearance: none;
     }
 }
+
+.text-top {
+    vertical-align: top !important;
+}
+
+.table-bordered > thead > tr > td,
+.table-bordered > thead > tr > th {
+    border-bottom-width: 1px;
+}
+
+.table-bordered > thead {
+    border-bottom-width: 1px;
+}

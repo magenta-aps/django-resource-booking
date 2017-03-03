@@ -3870,3 +3870,17 @@ class EvaluationRedirectView(RedirectView):
             raise Http404
         evalguest.link_clicked()
         return url
+
+
+class EvaluationStatisticsView(TemplateView):
+
+    template_name = "evaluation/statistics.html"
+
+    def get_context_data(self, **kwargs):
+        context = {
+            'visits': Visit.objects.filter(evaluation__isnull=False)
+        }
+        context.update(kwargs)
+        return super(EvaluationStatisticsView, self).get_context_data(
+            **context
+        )

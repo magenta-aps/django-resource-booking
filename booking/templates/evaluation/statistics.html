@@ -1,0 +1,59 @@
+{% extends "index.html" %}
+{% load staticfiles %}
+{% load booking_tags %}
+{% load i18n %}
+
+{% block htmltitle %} - {% trans 'statistik over evalueringer' %}{% endblock %}
+
+{% block content %}
+
+    {% include 'common/breadcrumbrow.html' %}
+
+    <h1>{% trans "Statistik over evalueringer" %}</h1>
+
+    <form id="evaluationstatisicsform" action="" class="form-horizontal clearfix" method="get">
+        {% csrf_token %}
+    </form>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th rowspan="2" class="text-center text-top">{% trans 'Tilbud' %}</th>
+                <th rowspan="2" class="text-center text-top">{% trans 'Dato' %}</th>
+                <th colspan="5" class="text-center">{% trans 'Status' %}</th>
+            </tr>
+        <tr>
+            <th class="text-center">{% trans 'Ikke deltagende' %}</th>
+            <th class="text-center">{% trans 'Ikke afholdt' %}</th>
+            <th class="text-center">{% trans 'Sendt første gang' %}</th>
+            <th class="text-center">{% trans 'Sendt anden gang' %}</th>
+            <th class="text-center">{% trans 'Har klikket på link' %}</th>
+        </tr>
+        </thead>
+        <tbody>
+            {% for visit in visits %}
+                <tr>
+                    <td>
+                        {% if visit.is_multiproductvisit %}
+                        {{ visit.display_title }}
+                        {% else %}
+                        <a href="{% url 'product-view' visit.product.id %}">{{ visit.display_title }}</a>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'visit-view' visit.id %}">{{ visit.date_display }}</a>
+                    </td>
+                    <td>{{ visit.evaluation.no_participation_count }}</td>
+                    <td>{{ visit.evaluation.not_sent_count }}</td>
+                    <td>{{ visit.evaluation.first_sent_count }}</td>
+                    <td>{{ visit.evaluation.second_sent_count }}</td>
+                    <td>{{ visit.evaluation.link_clicked_count }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+{% endblock %}
+
+{% block extra_scripts %}
+{% endblock %}
