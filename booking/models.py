@@ -5338,6 +5338,24 @@ class Evaluation(models.Model):
             {'status': EvaluationGuest.STATUS_FIRST_SENT}
         )
 
+    def status_count(self, status):
+        return self.evaluationguest_set.filter(status=status).count()
+
+    def no_participation_count(self):
+        return self.status_count(EvaluationGuest.STATUS_NO_PARTICIPATION)
+
+    def not_sent_count(self):
+        return self.status_count(EvaluationGuest.STATUS_NOT_SENT)
+
+    def first_sent_count(self):
+        return self.status_count(EvaluationGuest.STATUS_FIRST_SENT)
+
+    def second_sent_count(self):
+        return self.status_count(EvaluationGuest.STATUS_SECOND_SENT)
+
+    def link_clicked_count(self):
+        return self.status_count(EvaluationGuest.STATUS_LINK_CLICKED)
+
 
 class EvaluationGuest(models.Model):
     evaluation = models.ForeignKey(
@@ -5388,8 +5406,8 @@ class EvaluationGuest(models.Model):
     @property
     def url(self):
         template = Template(
-            "{% load booking_tags %}"+
-            "{% load i18n %}"+
+            "{% load booking_tags %}" +
+            "{% load i18n %}" +
             "{% language 'da' %}\n" +
             unicode(self.evaluation.url) +
             "{% endlanguage %}\n"

@@ -80,7 +80,7 @@ from booking.forms import VisitSearchForm
 from booking.forms import AcceptBookingForm
 from booking.forms import MultiProductVisitTempDateForm
 from booking.forms import MultiProductVisitTempProductsForm
-from booking.forms import EvaluationForm
+from booking.forms import EvaluationForm, EvaluationStatisticsForm
 
 from booking.utils import full_email, get_model_field_map
 from booking.utils import get_related_content_types, merge_dicts
@@ -3909,3 +3909,43 @@ class EvaluationRedirectView(RedirectView):
             raise Http404
         evalguest.link_clicked()
         return url
+
+
+class EvaluationStatisticsView(TemplateView):
+
+    template_name = "evaluation/statistics.html"
+
+    def get_form(self):
+        return EvaluationStatisticsForm(self.request.GET)
+
+    def get_context_data(self, **kwargs):
+        form = self.get_form()
+        form.full_clean()
+        data = form.clean()
+        has_filter = False
+        queryset = Visit.objects.filter(evaluation__isnull=False)
+
+        unit = data.get("unit")
+        if unit is not None:
+            queryset = Visit.unit_filter(queryset, unit)
+            has_filter = True
+
+        from_date = data.get('from_date')
+        if from_date is not None:
+            queryset = queryset.filter(eventtime__start__gte=from_date)
+            has_filter = True
+
+        to_date = data.get('to_date')
+        if to_date is not None:
+            queryset = queryset.filter(eventtime__start__lte=to_date)
+            has_filter = True
+
+        context = {
+            'has_filter': has_filter,
+            'visits': queryset,
+            'form': form
+        }
+        context.update(kwargs)
+        return super(EvaluationStatisticsView, self).get_context_data(
+            **context
+        )

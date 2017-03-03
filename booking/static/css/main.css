@@ -405,10 +405,38 @@ blockquote {
     position: relative;
 }
 
-#productform .panel .panel-title a .caret {
+#productform .panel .panel-title a .caret,
+#productform .panel .panel-title a .caret-up {
     position: absolute;
     right: 10px;
     top: 40%;
+}
+
+#productform .panel .panel-title a .caret-up {
+     position: absolute;
+     right: 10px;
+     top: 40%;
+ }
+
+.panel.panel-sidebar .panel-body a .caret-up {
+    color: initial;
+    margin-left: 5px;
+    display: inline-block;
+    width: 0;
+    height: 0;
+}
+
+a>.caret,
+a>.caret-up,
+a>.caret:focus,
+a>.caret-up:focus,
+a>.caret:active,
+a>.caret-up:active {
+    color: #252525;
+    outline: none;
+}
+
+.caret {
     -webkit-transform: rotate(270deg);
     -moz-transform: rotate(270deg);
     -ms-transform: rotate(270deg);
@@ -416,29 +444,7 @@ blockquote {
     transform: rotate(270deg);
 }
 
-#productform .panel .panel-title a .caret-up {
-    position: absolute;
-    right: 10px;
-    top: 40%;
-    display: inline-block;
-    width: 0;
-    height: 0;
-    margin-left: 2px;
-    vertical-align: middle;
-    border-top: 4px dashed;
-    border-top: 4px solid\9;
-    border-right: 4px solid transparent;
-    border-left: 4px solid transparent;
-    -webkit-transform: rotate(360deg);
-    -moz-transform: rotate(360deg);
-    -ms-transform: rotate(360deg);
-    -o-transform: rotate(360deg);
-    transform: rotate(360deg);
-}
-
-.panel.panel-sidebar .panel-body a .caret-up {
-    color: initial;
-    margin-left: 5px;
+.caret-up {
     display: inline-block;
     width: 0;
     height: 0;
@@ -657,11 +663,6 @@ hr {
     background-color: #f1f1f1;
     border: 1px solid #ddd;
     color: #333;
-}
-
-a>.caret, a>.caret:focus, a>.caret:active {
-    color: #252525;
-    outline: none;
 }
 
 .input-daterange {
@@ -1868,4 +1869,17 @@ body.lightbox {
         -moz-appearance: none;
         appearance: none;
     }
+}
+
+.text-top {
+    vertical-align: top !important;
+}
+
+.table-bordered > thead > tr > td,
+.table-bordered > thead > tr > th {
+    border-bottom-width: 1px;
+}
+
+.table-bordered > thead {
+    border-bottom-width: 1px;
 }
