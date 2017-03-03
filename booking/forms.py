@@ -1405,7 +1405,8 @@ class EvaluationForm(forms.ModelForm):
         if self.instance:
             kwargs['initial']['nonparticipating_guests'] = [
                 evaluationguest.guest
-                for evaluationguest in self.instance.evaluationguest_set.filter(
+                for evaluationguest
+                in self.instance.evaluationguest_set.filter(
                     status=EvaluationGuest.STATUS_NO_PARTICIPATION
                 )
             ]
