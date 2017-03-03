@@ -29,7 +29,7 @@ from django.utils.decorators import method_decorator
 from django.utils.http import urlquote
 from django.utils.translation import ugettext as _
 from django.views.generic import View, TemplateView, ListView, DetailView
-from django.views.generic.base import ContextMixin
+from django.views.generic.base import ContextMixin, RedirectView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.edit import FormMixin, FormView, ProcessFormView
 from django.views.defaults import bad_request
@@ -52,7 +52,7 @@ from booking.models import RoomResponsible
 from booking.models import BookerResponseNonce
 from booking.models import MultiProductVisit
 from booking.models import MultiProductVisitTemp
-from booking.models import Evaluation
+from booking.models import Evaluation, EvaluationGuest
 
 from booking.forms import ProductInitialForm, ProductForm
 from booking.forms import GuestEmailComposeForm, StudentForADayBookingForm
@@ -3852,3 +3852,21 @@ class EvaluationDetailView(DetailView):
 
     template_name = "evaluation/details.html"
     model = Evaluation
+
+
+class EvaluationRedirectView(RedirectView):
+
+    permanent = False
+
+    def get_redirect_url(self, *args, **kwargs):
+        try:
+            evalguest = EvaluationGuest.objects.get(
+                shortlink_id=kwargs['linkid']
+            )
+        except:
+            raise Http404
+        url = evalguest.url
+        if url is None:
+            raise Http404
+        evalguest.link_clicked()
+        return url

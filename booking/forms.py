@@ -1402,12 +1402,13 @@ class EvaluationForm(forms.ModelForm):
     def __init__(self, visit, *args, **kwargs):
         self.instance = kwargs.get('instance')
         self.visit = visit
-        kwargs['initial']['nonparticipating_guests'] = [
-            evaluationguest.guest
-            for evaluationguest in self.instance.evaluationguest_set.filter(
-                status=EvaluationGuest.STATUS_NO_PARTICIPATION
-            )
-        ]
+        if self.instance:
+            kwargs['initial']['nonparticipating_guests'] = [
+                evaluationguest.guest
+                for evaluationguest in self.instance.evaluationguest_set.filter(
+                    status=EvaluationGuest.STATUS_NO_PARTICIPATION
+                )
+            ]
         super(EvaluationForm, self).__init__(*args, **kwargs)
         self.fields['nonparticipating_guests'].queryset = Guest.objects.filter(
             booking__in=self.visit.booking_list
@@ -1418,6 +1419,7 @@ class EvaluationForm(forms.ModelForm):
 
     def save(self, commit=True):
         self.instance.visit = self.visit
+        super(EvaluationForm, self).save(commit)
         existing_guests = {
             evalguest.guest: evalguest
             for evalguest in self.instance.evaluationguest_set.all()
@@ -1428,14 +1430,13 @@ class EvaluationForm(forms.ModelForm):
             if guest not in self.cleaned_data['nonparticipating_guests']:
                 status = EvaluationGuest.STATUS_NOT_SENT
             if guest in existing_guests:
-                guestlink = existing_guests[guest]
-                guestlink.status = status
+                evalguest = existing_guests[guest]
+                evalguest.status = status
             else:
-                guestlink = EvaluationGuest(
+                evalguest = EvaluationGuest(
                     evaluation=self.instance,
                     guest=guest,
                     status=status
                 )
-            guestlink.save()
-
-        return super(EvaluationForm, self).save(commit)
+            evalguest.save()
+        return self.instance

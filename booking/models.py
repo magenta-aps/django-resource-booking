@@ -12,6 +12,7 @@ from django.db.models.base import ModelBase
 from django.utils import six
 from django.template.context import make_context
 from django.utils import timezone
+from django.utils.crypto import get_random_string
 from djorm_pgfulltext.models import SearchManager
 from djorm_pgfulltext.fields import VectorField
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -5067,7 +5068,7 @@ class EvaluationGuest(models.Model):
         verbose_name=u'status'
     )
     shortlink_id = models.CharField(
-        max_length=16
+        max_length=16,
     )
 
     @property
@@ -5079,6 +5080,20 @@ class EvaluationGuest(models.Model):
         for status, label in self.status_choices:
             if status == self.status:
                 return label
+
+    def save(self, *args, **kwargs):
+        if self.shortlink_id is None or len(self.shortlink_id) == 0:
+            self.shortlink_id = ''.join(get_random_string(length=13))
+        return super(EvaluationGuest, self).save(*args, **kwargs)
+
+    @property
+    def url(self):
+        return self.evaluation.url
+
+    def link_clicked(self):
+        self.status = self.STATUS_LINK_CLICKED
+        self.save()
+
 
 from booking.resource_based import models as rb_models  # noqa
 
