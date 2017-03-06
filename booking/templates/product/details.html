@@ -1,5 +1,4 @@
 {% extends 'index.html' %}
-{% load staticfiles %}
 {% load timedelta %}
 {% load i18n %}
 {% load booking_tags %}
@@ -252,14 +251,13 @@
     <script type="text/javascript"><!--
         (function($) {
             $('#show_all_times').on('click', function() {
-                console.log($('#dato li.default-hidden'));
                 $('#dato li.default-hidden').removeClass("hidden");
-                $('#show_all_times').addClass("hidden");;
+                $('#show_all_times').addClass("hidden");
                 $('#hide_extra_times').removeClass("hidden");
             });
             $('#hide_extra_times').on('click', function() {
                 $('#dato li.default-hidden').addClass("hidden");
-                $('#show_all_times').removeClass("hidden");;
+                $('#show_all_times').removeClass("hidden");
                 $('#hide_extra_times').addClass("hidden");
             });
         })(jQuery);

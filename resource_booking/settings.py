@@ -47,7 +47,8 @@ INSTALLED_APPS = (
     'tinymce',
     'django_cron',
     'ckeditor',
-    'ckeditor_uploader'
+    'ckeditor_uploader',
+    'macros'
 )
 
 MIDDLEWARE_CLASSES = (
