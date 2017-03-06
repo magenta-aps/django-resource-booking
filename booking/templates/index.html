@@ -32,13 +32,12 @@
                 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
             <![endif]-->
 
-            <script type="text/javascript" src="/jsi18n/"></script>
+            <script type="text/javascript" src="/jsi18n"></script>
             <link href="{% static 'img/favicon.ico' %}" rel="shortcut icon"/>
         {% endif %}
             
     </head>
     <body class="{% if view.kwargs.embed %}embedded{% endif %}">
-
     {% if view.kwargs.embed %}
         <!-- 3rd party stylesheets -->
         <link href="{% static 'thirdparty/bootstrap/dist/css/bootstrap.min.css' %}" rel="stylesheet"/>
@@ -57,7 +56,7 @@
             <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
         <![endif]-->
 
-        <script type="text/javascript" src="/jsi18n/"></script>
+        <script type="text/javascript" src="{% full_url 'django.views.i18n.javascript_catalog' %}"></script>
         <link href="{% static 'img/favicon.ico' %}" rel="shortcut icon"/>
     {% endif %}
 
