@@ -3,7 +3,7 @@ from django.conf.urls.static import static
 from django.conf import settings
 from django.views.decorators.clickjacking import xframe_options_exempt
 
-from .views import MainPageView, VisitNotifyView
+from booking.views import MainPageView, VisitNotifyView
 
 from booking.views import PostcodeView, SchoolView, ProductInquireView
 from booking.views import RrulestrView

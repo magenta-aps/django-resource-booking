@@ -5,6 +5,7 @@ from django.db.models.query import QuerySet
 from django.template import defaulttags
 from django.template.base import FilterExpression
 from django.template.defaultfilters import register
+from django.templatetags.static import StaticNode
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
@@ -243,3 +244,25 @@ class FullURLNode(defaulttags.Node):
 def full_url(parser, token):
     url_node = defaulttags.url(parser, token)
     return FullURLNode(url_node)
+
+
+class CustomStaticNode(StaticNode):
+
+    def prefix(self, url):
+        return settings.PUBLIC_URL + url
+
+    def render(self, context):
+        result = super(CustomStaticNode, self).render(context)
+        # If the view args has 'embed' set, we are in an embedded page
+        if context['view'].kwargs.get('embed'):
+            # prefix the url
+            if self.varname is None:
+                return self.prefix(result)
+            context[self.varname] = self.prefix(context[self.varname])
+        return result
+
+
+# Override the usual 'static' tag with our own
+@register.tag('static')
+def do_static(parser, token):
+    return CustomStaticNode.handle_token(parser, token)
