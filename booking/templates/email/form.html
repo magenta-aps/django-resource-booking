@@ -32,7 +32,7 @@
             <a href="{% url 'emailtemplate-delete' object.pk %}?back={{ request.get_full_path | urlencode }}" class="btn btn-danger pull-right">{% trans "Slet skabelon" %}</a>
         {% endif %}
     </div>
-    <hr/>
+
     <form action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
         {% csrf_token %}
 
@@ -137,9 +137,9 @@
                 </div>
             </div>
         </div>
-        
+
         {% include 'common/save_cancel.html' %}
-        
+
         <div class="divider"></div>
     </form>
 

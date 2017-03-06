@@ -11,15 +11,14 @@
 
     <div class="clearfix">
         <h1 class="pull-left">{% trans 'Ressourcer' %}</h1>
+        <a href="{% url 'resourcepool-list' %}" role="button" class="btn btn-primary pull-right margin-left-10 margin-bottom-5-mobile">{% trans 'Administrér ressourcegrupper' %}</a>
         <a href="{% url 'resource-create' %}?back={{ request.get_full_path | urlencode }}" role="button" class="btn btn-primary pull-right">
             <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
             {% trans 'Opret ny ressource' %}
         </a>
     </div>
-    
-    <hr>
 
-    <p>
+    <p class="margin-top-10 double-columns">
         {% blocktrans %}
             Ressourcer er enkelte objekter, personer eller lokaler som kan anvendes under et besøg, og som kun kan anvendes af ét besøg ad gangen.
             Under planlægningen af et besøg udvælges de specifikke ressourcer, med henblik på at reservere disse til besøget.
@@ -28,10 +27,8 @@
 
     <div class="row">
         <div class="col-md-12">
-            <div>
-                <a href="{% url 'resourcepool-list' %}" role="button" class="btn btn-default pull-right">{% trans 'Administrér ressourcegrupper' %}</a>
-            </div>
 
+            <div class="table-responsive">
             <table class="table table-striped table-hover">
                 <thead>
                     <tr>
@@ -61,15 +58,15 @@
                         </td>
                         <td>
                             {% if resource.calendar %}
-                                <a href="{% url 'calendar' resource.pk %}" role="button" class="btn btn-default btn-xs">{% trans 'Kalender' %}</a>
+                                <a href="{% url 'calendar' resource.pk %}" role="button" class="btn btn-default btn-xs margin-bottom-5">{% trans 'Kalender' %}</a>
                             {% else %}
-                                <a href="{% url 'calendar-create' resource.pk %}" role="button" class="btn btn-default btn-xs">
+                                <a href="{% url 'calendar-create' resource.pk %}" role="button" class="btn btn-primary btn-xs margin-bottom-5">
                                     <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
                                     {% trans 'Opret kalender' %}
                                 </a>
                             {% endif %}
                             <br>
-                            <a href="{% url 'resource-edit' resource.id %}?back={{ request.get_full_path | urlencode }}" role="button" class="btn btn-default btn-xs">{% trans 'Redigér' %}</a>
+                            <a href="{% url 'resource-edit' resource.id %}?back={{ request.get_full_path | urlencode }}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
                             {% if resource.can_delete %}
                                 <a href="{% url 'resource-delete' resource.id %}?back={{ request.get_full_path | urlencode }}" role="button" class="btn btn-danger btn-xs">{% trans 'Slet' %}</a>
                             {% endif %}
@@ -84,6 +81,7 @@
                 {% endfor %}
                 </tbody>
             </table>
+        </div>
             <p>
                 (Undervisere og lokaler kan ikke slettes herfra)
             </p>

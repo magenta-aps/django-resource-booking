@@ -1,14 +1,22 @@
 {% extends "index.html" %}
 
-{% block content %}
 
-<p>Ønsker du virkelig at slette?</p>
+{% block content %}
+{% include 'common/breadcrumbrow.html' %}
+
+<div class="row">
+    <div class="col-sm-5">
+        <h1>Slet bruger</h1>
+        <p>Ønsker du virkelig at slette?</p>
+    </div>
+</div>
+
 
 <form action="" method="post">{% csrf_token %}
     {{ form.as_p }}
     <hr>
-    <a class="btn btn-default pull-left" href="javascript:history.go(-1)">Nej</a>
-    <input class="btn btn-primary pull-right" type="submit" value="Ja">
+    <a class="btn btn-default" href="javascript:history.go(-1)"><span class="glyphicon glyphicon-chevron-left"></span> Nej</a>
+    <input class="btn btn-danger" type="submit" value="Ja slet">
 </form>
 
 {% endblock %}
