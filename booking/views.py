@@ -30,7 +30,7 @@ from django.utils.http import urlquote
 from django.utils.translation import ugettext as _
 from django.views.generic import View, TemplateView, ListView, DetailView
 from django.views.generic.base import ContextMixin
-from django.views.generic.edit import CreateView, UpdateView, DeleteView, \
+from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.edit import FormMixin, ModelFormMixin
 from django.views.generic.edit import FormView, ProcessFormView
 from django.views.defaults import bad_request
