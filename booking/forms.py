@@ -20,7 +20,7 @@ from django.db.models import Q
 from django.db.models.expressions import OrderBy
 from django.forms import CheckboxSelectMultiple, CheckboxInput
 from django.forms import ModelMultipleChoiceField
-from django.forms import EmailInput
+from django.forms import EmailInput, URLInput
 from django.forms import formset_factory, inlineformset_factory
 from django.forms import TextInput, NumberInput, DateInput, Textarea, Select
 from django.forms import HiddenInput
@@ -1393,6 +1393,9 @@ class EvaluationForm(forms.ModelForm):
     class Meta:
         model = Evaluation
         fields = ['url']
+        widgets = {'url': URLInput(attrs={
+            'class': 'form-control input-sm',
+        })}
 
     nonparticipating_guests = ModelMultipleChoiceField(
         queryset=Guest.objects.all(),
