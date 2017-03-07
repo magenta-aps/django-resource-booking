@@ -52,7 +52,7 @@ from booking.models import RoomResponsible
 from booking.models import BookerResponseNonce
 
 from booking.models import MultiProductVisit
-from booking.models import MultiProductVisitTemp
+from booking.models import MultiProductVisitTemp, MultiProductVisitTempProduct
 
 from booking.forms import ProductInitialForm, ProductForm
 from booking.forms import GuestEmailComposeForm, StudentForADayBookingForm
@@ -3695,6 +3695,13 @@ class MultiProductVisitTempCreateView(MultiProductVisitTempDateView,
                     id=self.request.GET['base']
                 )
                 self.object.save()
+                relation = MultiProductVisitTempProduct(
+                    product=self.object.baseproduct,
+                    multiproductvisittemp=self.object,
+                    index=0
+                )
+                relation.save()
+
             except:
                 pass
         return response
