@@ -32,7 +32,8 @@ from django.utils.translation import ugettext as _
 from django.views.generic import View, TemplateView, ListView, DetailView
 from django.views.generic.base import ContextMixin, RedirectView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
-from django.views.generic.edit import FormMixin, FormView, ProcessFormView
+from django.views.generic.edit import FormMixin, ModelFormMixin
+from django.views.generic.edit import FormView, ProcessFormView
 from django.views.defaults import bad_request
 
 from profile.models import EDIT_ROLES
@@ -3713,10 +3714,18 @@ class MultiProductVisitPromptView(BreadcrumbMixin, DetailView):
 
 
 class MultiProductVisitTempDateView(BreadcrumbMixin, HasBackButtonMixin,
-                                    ProcessFormView):
+                                    ModelFormMixin, ProcessFormView):
     form_class = MultiProductVisitTempDateForm
     model = MultiProductVisitTemp
     template_name = "visit/multi_date.html"
+
+    def get_form_kwargs(self):
+        kwargs = super(MultiProductVisitTempDateView, self).get_form_kwargs()
+        if 'base' in self.request.GET:
+            kwargs['initial'] = {'baseproduct': Product.objects.get(
+                id=self.request.GET['base']
+            )}
+        return kwargs
 
     def get_success_url(self):
         if 'next' in self.request.GET:
