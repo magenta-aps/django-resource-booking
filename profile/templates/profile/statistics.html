@@ -62,6 +62,7 @@
                     <th>{% trans 'Antal deltagere' %}</th>
                     <th>{% trans 'Oplæg om uddannelser' %}</th>
                     <th>{% trans 'Rundvisning' %}</th>
+                    <th>{% trans 'Andet' %}</th>
                     <th>{% trans 'Region' %}</th>
                     <th>{% trans 'Skole' %}</th>
                     <th>{% trans 'Postnummer og by' %}</th>
@@ -92,21 +93,10 @@
                             {{ bookingsubjectlevel.subject }}/{{ bookingsubjectlevel.level }},
                         {% endfor %}
                     </td>
-                    <td>{{ booking.booker.attendee_count }}</td>
-                    <td>
-                        {% if booking.classbooking.presentation_desired %}
-                            Ja
-                        {% else %}
-                            Nej
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if booking.classbooking.tour_desired %}
-                            Ja
-                        {% else %}
-                            Nej
-                        {% endif %}
-                    </td>
+                    <td>{{ booking.booker.attendee_count|default:"0" }}</td>
+                    <td>{{ booking.classbooking.presentation_desired|yesno|capfirst }}</td>
+                    <td>{{ booking.classbooking.tour_desired|yesno|capfirst }}</td>
+                    <td>{{ booking.classbooking.custom_desired|yesno|capfirst }}</td>
                     <td>{{ booking.booker.school.postcode.region.name }}</td>
                     <td>{{ booking.booker.school.name }} ({{ booking.booker.school.get_type_display }})</td>
                     <td>{{ booking.booker.school.postcode.number }} {{ booking.booker.school.postcode.city }}</td>
