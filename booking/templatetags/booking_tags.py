@@ -289,7 +289,7 @@ class CustomStaticNode(StaticNode):
     def render(self, context):
         result = super(CustomStaticNode, self).render(context)
         # If the view args has 'embed' set, we are in an embedded page
-        if context['view'].kwargs.get('embed'):
+        if 'view' in context and context['view'].kwargs.get('embed'):
             # prefix the url
             if self.varname is None:
                 return self.prefix(result)
