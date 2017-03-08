@@ -764,6 +764,7 @@ class SearchView(BreadcrumbMixin, ListView):
             )
 
             if is_public:
+                print "public search"
                 # Public searches are always from todays date and onward
                 if t_from is None:
                     t_from = timezone.now()
@@ -772,10 +773,13 @@ class SearchView(BreadcrumbMixin, ListView):
                 # Public users only want to search within bookable dates
                 ok_states = Visit.BOOKABLE_STATES
                 in_bookable_state = (
-                    Q(eventtime__bookable=True) &
+                    needs_no_eventtime |
                     Q(
-                        Q(eventtime__visit__isnull=True) |
-                        Q(eventtime__visit__workflow_status__in=ok_states)
+                        Q(eventtime__bookable=True) &
+                        Q(
+                            Q(eventtime__visit__isnull=True) |
+                            Q(eventtime__visit__workflow_status__in=ok_states)
+                        )
                     )
                 )
 
@@ -800,6 +804,7 @@ class SearchView(BreadcrumbMixin, ListView):
                     always_bookable
                 )
             else:
+                print "admin search"
                 # Need this for search for products with/without bookings
                 qs = qs.annotate(
                     num_bookings=Count('eventtime__visit__bookings')
