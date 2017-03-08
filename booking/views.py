@@ -751,19 +751,20 @@ class SearchView(BreadcrumbMixin, ListView):
                     Q(eventtime__start__lte=next_midnight)
                 )
 
-            date_cond &= Q(
-                Q(calendar__isnull=True) |
-                Q(
-                    Q(calendar__calendarevent__in=CalendarEvent.get_events(
-                        CalendarEvent.AVAILABLE, t_from, t_to
-                    )) & ~
-                    Q(calendar__calendarevent__in=CalendarEvent.get_events(
-                        CalendarEvent.NOT_AVAILABLE, t_from, t_to
-                    ))
-                )
-            )
-
             if is_public:
+
+                date_cond &= Q(
+                    Q(calendar__isnull=True) |
+                    Q(
+                        Q(calendar__calendarevent__in=CalendarEvent.get_events(
+                            CalendarEvent.AVAILABLE, t_from, t_to
+                        )) & ~
+                        Q(calendar__calendarevent__in=CalendarEvent.get_events(
+                            CalendarEvent.NOT_AVAILABLE, t_from, t_to
+                        ))
+                    )
+                )
+
                 # Public searches are always from todays date and onward
                 if t_from is None:
                     t_from = timezone.now()
