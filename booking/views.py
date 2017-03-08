@@ -767,7 +767,9 @@ class SearchView(BreadcrumbMixin, ListView):
                 # Public searches are always from todays date and onward
                 if t_from is None:
                     t_from = timezone.now()
-                    date_cond = date_cond & Q(eventtime__start__gt=t_from)
+                    date_cond &= Q(
+                        needs_no_eventtime | Q(eventtime__start__gt=t_from)
+                    )
 
                 # Public users only want to search within bookable dates
                 ok_states = Visit.BOOKABLE_STATES
