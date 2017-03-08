@@ -1393,8 +1393,9 @@ class EvaluationForm(forms.ModelForm):
     class Meta:
         model = Evaluation
         fields = ['url']
-        widgets = {'url': URLInput(attrs={
+        widgets = {'url': TextInput(attrs={
             'class': 'form-control input-sm',
+            'readonly': 'readonly'
         })}
 
     nonparticipating_guests = ModelMultipleChoiceField(
