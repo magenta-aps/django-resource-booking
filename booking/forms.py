@@ -20,7 +20,7 @@ from django.db.models import Q
 from django.db.models.expressions import OrderBy
 from django.forms import CheckboxSelectMultiple, CheckboxInput
 from django.forms import ModelMultipleChoiceField
-from django.forms import EmailInput, URLInput
+from django.forms import EmailInput
 from django.forms import formset_factory, inlineformset_factory
 from django.forms import TextInput, NumberInput, DateInput, Textarea, Select
 from django.forms import HiddenInput
