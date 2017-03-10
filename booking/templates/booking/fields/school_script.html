@@ -32,6 +32,17 @@
             hideOptions.filter(":selected").removeAttr("selected");
         };
 
+        var updateSchool = function(school) {
+            if (school.postcode && postcode.length) {
+                // Update the postcode field
+                postcode.val(school.postcode.number);
+                postcode.change();
+            }
+            if (school.type) {
+                updateSchoolType(school.type);
+            }
+        };
+
         schoolField.typeahead({
             items: 12,
             source: function (query, process) {
@@ -56,17 +67,32 @@
                 return item.name;
             },
             updater: function (selected) {
-                if (selected.postcode && postcode.length) {
-                    // Update the postcode field
-                    postcode.val(selected.postcode.number);
-                    postcode.change();
-                }
-
-                if (selected.type) {
-                    updateSchoolType(selected.type);
-                }
+                updateSchool(selected);
                 return selected.name;
             }
+        });
+
+        schoolField.change(function() {
+            var schoolName = schoolField.val().trim();
+            $.ajax({
+                url: "{% url 'school' %}",
+                data: {
+                    q: schoolField.val(),
+                    t: schoolField.attr("data-institution-level")
+                },
+                dataType: "json",
+                complete: function (response) {
+                    if (response && response.status === 200) {
+                        var schools = response.responseJSON.schools;
+                        for (var i=0; i<schools.length; i++) {
+                            var school = schools[i];
+                            if (school.name.trim().toLowerCase() === schoolName.toLowerCase()) {
+                                updateSchool(school);
+                            }
+                        }
+                    }
+                }.bind(this)
+            });
         });
 
         {% if bookerform.school_type %}
