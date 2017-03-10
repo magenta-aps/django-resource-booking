@@ -3835,6 +3835,11 @@ class EvaluationEditView(BreadcrumbMixin, UpdateView):
         if 'pk' in self.kwargs:
             return super(EvaluationEditView, self).get_object(queryset)
 
+    def get_visit(self):
+        if self.object:
+            return self.object.visit
+        return Visit.objects.get(id=self.kwargs.get('visit'))
+
     def get_form_kwargs(self):
         kwargs = super(EvaluationEditView, self).get_form_kwargs()
         kwargs['visit'] = Visit.objects.get(id=self.kwargs.get('visit'))
@@ -3848,13 +3853,20 @@ class EvaluationEditView(BreadcrumbMixin, UpdateView):
         )
 
     def get_breadcrumb_args(self):
-        return [self.object]
+        return [self.object, self.get_visit()]
 
     @staticmethod
-    def build_breadcrumbs(visit):
-        return EvaluationDetailView.build_breadcrumbs(visit) + [
-            {'text': _(u'Rediger')}
-        ]
+    def build_breadcrumbs(evaluation, visit=None):
+        if visit is None:
+            visit = evaluation.visit
+        if evaluation is None:
+            return VisitDetailView.build_breadcrumbs(visit) + [
+                {'text': _(u'Opret evaluering')}
+            ]
+        else:
+            return EvaluationDetailView.build_breadcrumbs(evaluation) + [
+                {'text': _(u'Rediger')}
+            ]
 
 
 class EvaluationDetailView(BreadcrumbMixin, DetailView):
