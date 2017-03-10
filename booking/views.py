@@ -3886,7 +3886,7 @@ class MultiProductVisitTempConfirmView(BreadcrumbMixin, DetailView):
         ]
 
 
-class EvaluationEditView(UpdateView):
+class EvaluationEditView(BreadcrumbMixin, UpdateView):
 
     form_class = EvaluationForm
     template_name = "evaluation/form.html"
@@ -3908,11 +3908,35 @@ class EvaluationEditView(UpdateView):
             ]
         )
 
+    def get_breadcrumb_args(self):
+        return [self.object]
 
-class EvaluationDetailView(DetailView):
+    @staticmethod
+    def build_breadcrumbs(visit):
+        return EvaluationDetailView.build_breadcrumbs(visit) + [
+            {'text': _(u'Rediger')}
+        ]
+
+
+class EvaluationDetailView(BreadcrumbMixin, DetailView):
 
     template_name = "evaluation/details.html"
     model = Evaluation
+
+    def get_breadcrumb_args(self):
+        return [self.object]
+
+    @staticmethod
+    def build_breadcrumbs(evaluation):
+        return VisitDetailView.build_breadcrumbs(evaluation.visit) + [
+            {
+                'text': _(u'Evaluering'),
+                'url': reverse(
+                    'visit-evaluation-view',
+                    args=[evaluation.visit.id, evaluation.id]
+                )
+            }
+        ]
 
 
 class EvaluationRedirectView(RedirectView):
