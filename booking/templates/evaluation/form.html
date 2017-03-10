@@ -187,18 +187,20 @@
             for (var l=0; l<extraParams.length; l++) {
                 var extraParam = extraParams[l].trim();
                 if (extraParam.length > 0) {
+                    var item = {};
                     var s = extraParam.split("=", 2);
-                    if (s.length === 2) {
-                        params.push({
-                            'key': s[0].trim(),
-                            'value': s[1].trim()
-                        });
+                    if (s.length >= 1) {
+                        item['key'] = s[0].trim();
                     }
+                    if (s.length === 2) {
+                        item['value'] = s[1].trim()
+                    }
+                    params.push(item);
                 }
             }
             var resultParams = [];
             for (var m=0; m<params.length; m++) {
-                var value = params[m]['value'];
+                var value = params[m]['value'] || "";
                 if (tagStart.test(value)) {
                     value = value.replace(/[}\s]*$/, " }}");
                 }
