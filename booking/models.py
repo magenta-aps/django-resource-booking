@@ -5115,7 +5115,8 @@ class EvaluationGuest(models.Model):
         )
         context = make_context({
             'evaluation': self.evaluation,
-            'guest': self.guest
+            'guest': self.guest,
+            'visit': self.evaluation.visit
         })
 
         rendered = template.render(context)
