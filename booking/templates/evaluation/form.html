@@ -77,7 +77,7 @@
                 'label': '{% trans "Gymnasielærere" %}',
                 'keys': ['tname', 'email', 'bd', 'ofn1', 'ofn2', 'ofv1', 'ofv2', 'agn', 'agv', 'rgn', 'opl', 'rv', 'kt']
             }
-        ]
+        ];
         {% verbatim %}
         var formDefinition = [
             {'key': 'key'},
@@ -161,8 +161,8 @@
                 elements = elements.add($("#enable_"+keys[i]));
             }
             var checkboxes = fieldContainer.find("input[type=checkbox]");
-            checkboxes.filter(elements).attr("checked", "checked");
-            checkboxes.not(elements).removeAttr("checked");
+            checkboxes.prop("checked", false);
+            checkboxes.filter(elements).prop("checked", true);
             updateUrl();
         };
         presetSelector.on("change", updateSelect);
