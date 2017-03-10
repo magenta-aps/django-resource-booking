@@ -726,9 +726,17 @@ class SearchView(BreadcrumbMixin, ListView):
         if self.base_queryset is None:
             searchexpression = self.request.GET.get("q", "")
 
-            needs_no_eventtime = Q(time_mode=Product.TIME_MODE_GUEST_SUGGESTED)
+            if searchexpression:
+                # qs = self.model.objects.search(searchexpression)
+                qs = self.model.objects.filter(
+                    Q(title__icontains=searchexpression) |
+                    Q(teaser__icontains=searchexpression) |
+                    Q(description__icontains=searchexpression)
+                )
+            else:
+                qs = self.model.objects.all()
 
-            qs = self.model.objects.search(searchexpression)
+            needs_no_eventtime = Q(time_mode=Product.TIME_MODE_GUEST_SUGGESTED)
 
             date_cond = Q()
 
