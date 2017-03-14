@@ -19,8 +19,6 @@
         </div>
     </div>
 
-    <hr>
-
     <dl class="dl-horizontal">
         <dt>{% trans 'Type' %}</dt>
         <dd>{{ object.resource_type }}</dd>
@@ -56,6 +54,7 @@
                 Hvis du ønsker at styre tilgængeligheden af ressourcen via en kalender kan du klikke på knappen for at oprette en kalender for ressourcen.
             {% endblocktrans %}
             </p>
+            <div class="divider"></div>
             <a href="{% url 'calendar-create' object.id %}" class="btn btn-primary" role="button">
                 <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
                 {% trans 'Opret kalender for ressourcen' %}

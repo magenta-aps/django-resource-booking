@@ -10,7 +10,7 @@
     {% include 'common/breadcrumbrow.html' %}
 
     <div class="row titlebar hidden-print">
-        <div class="col-sm-12 col-md-9">
+        <div class="col-sm-12 col-md-9 col-md-offset-2">
             <h1>
                 {% blocktrans with title=object.display_title on_date=object.date_display_context %}
                     Planlægning af {{ title }} {{ on_date }}
@@ -21,8 +21,9 @@
     </div>
 
     <div class="row overview">
-        <div class="col-sm-12 col-md-10 panel panel-default">
-            <div class="col-xs-9">
+        <div class="col-sm-12 col-md-10 col-md-offset-2 panel panel-default">
+          <div class="row">
+            <div class="col-xs-12 col-sm-8">
                 {% if object.multiproductvisit %}
                     <div>
                         {% trans 'Ønskede tilbud/underbesøg:' %}
@@ -64,9 +65,9 @@
                     </div>
                 {% endif %}
             </div>
-            <div class="col-xs-3">
+            <div class="col-xs-12 col-sm-4">
                 {% if can_notify %}
-                    <div class="pull-right dropdown">
+                    <div class="pull-right dropdown margin-top-10-mobile">
                         <button class="btn btn-primary dropdown-toggle" type="button" id="sendNotification" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             {% trans 'Send besked' %}
                             <span class="caret"/>
@@ -91,19 +92,19 @@
                     </div>
                 {% endif %}
             </div>
+          </div>
         </div>
     </div>
 
     <div class="row status">
-        <div class="col-sm-12 col-md-10">
+        <div class="col-sm-12 col-md-10 col-md-offset-2">
+            {% with left_class="col-sm-3" center_class="col-sm-6" right_class="col-sm-3" %}
             <div class="panel panel-default">
                 <div class="panel-body">
-
                     <h2>{% trans 'Statusoverblik' %}</h2>
-
                     {% if not object.can_assign_resources %}
                         <div class="row">
-                            <p class="col-sm-8">
+                            <p class="{{ center_class }}">
                                 {% blocktrans with text=object.BEING_PLANNED_STATUS_TEXT %}
                                     Dette er et færdigplanlagt besøg, og statussen bør derfor ændres til '{{ text }}' inden ændringer i ressourcerne foretages.
                                     Vær opmærksom på at en ændring i de tildelte ressourcegrupper også medfører ændringer i det færdigplanlagte besøg.
@@ -114,17 +115,17 @@
 
                     {% if object.organizationalunit %}
                     <div class="row row-border">
-                        <strong class="col-sm-2">{% trans 'Enhed:' %}</strong>
-                        <div class="col-sm-8">{{ object.organizationalunit.name }}</div>
+                        <strong class="{{ left_class }}">{% trans 'Enhed:' %}</strong>
+                        <div class="{{ center_class }}">{{ object.organizationalunit.name }}</div>
                     </div>
                     {% endif %}
 
                     <div class="row row-border">
-                        <strong class="col-sm-2">{% trans 'Tidspunkt' %}</strong>
+                        <strong class="{{ left_class }}">{% trans 'Tidspunkt' %}</strong>
                         {% if object.eventtime.start %}
-                            <div class="col-sm-8">{{ object.eventtime.interval_display }}</div>
+                            <div class="{{ center_class }}">{{ object.eventtime.interval_display }}</div>
                         {% else %}
-                            <div class="col-sm-8">
+                            <div class="{{ center_class }}">
                                 {% if object.start_datetime %}
                                     {{ object.start_datetime }}
                                 {% else %}
@@ -132,7 +133,7 @@
                                 {% endif %}
                             </div>
                             {% if can_edit %}
-                                <div class="col-sm-2">
+                                <div class="{{ right_class }}">
                                     <a href="{% url 'change-visit-starttime' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Redigér' %}</a>
                                 </div>
                             {% endif %}
@@ -141,10 +142,10 @@
 
                     {% if object.is_multiproductvisit %}
                         <div class="row row-border">
-                            <strong class="col-sm-2">
+                            <strong class="{{ left_class }}">
                                 {% trans 'Min. ønskede tilbud' %}
                             </strong>
-                            <div class="col-sm-2">
+                            <div class="{{ center_class }}">
                                 {{ object.required_visits }}
                             </div>
                         </div>
@@ -152,10 +153,10 @@
 
                     {% if object.is_multiproductvisit %}
                         <div class="row row-border">
-                            <strong class="col-sm-2">
+                            <strong class="{{ left_class }}">
                                 {% trans 'Ansvarlig' %}
                             </strong>
-                            <div class="col-sm-8">
+                            <div class="{{ center_class }}">
                                 {% if object.responsible %}
                                     {{ object.responsible }}
                                 {% else %}
@@ -163,7 +164,7 @@
                                 {% endif %}
                             </div>
                             {% if can_edit %}
-                                <div class="col-sm-2">
+                                <div class="{{ right_class }}">
                                     <a href="{% url 'change-visit-responsible' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Redigér' %}</a>
                                 </div>
                             {% endif %}
@@ -173,13 +174,13 @@
                     {% if not object.is_multiproductvisit and object.product.is_resource_controlled %}
                         {% for requirementdata in object.requirement_details %}
                         <div class="row row-border">
-                            <strong class="col-sm-2">
+                            <strong class="{{ left_class }}">
                                 {{ requirementdata.type.plural }}:
                             </strong>
-                            <div class="col-sm-8">
+                            <div class="{{ center_class }}">
                                 {% blocktrans with found=requirementdata.acquired needed=requirementdata.required type=requirementdata.type.plural|lower %}{{ found }}/{{ needed }} {{ type }} fundet{% endblocktrans %}
                             </div>
-                            <div class="col-sm-2">
+                            <div class="{{ right_class }}">
                                 {% if can_edit %}
                                     <a href="{% url 'visit-resources-edit' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right" style="vertical-align:top">{% trans 'Redigér' %}</a>
 
@@ -214,18 +215,18 @@
 
                     {% if not object.product.is_resource_controlled and not object.is_multiproductvisit %}
                         <div class="row row-border">
-                            <strong class="col-sm-2">
+                            <strong class="{{ left_class }}">
                                 {% trans 'Undervisere' %}
                             </strong>
-                            <div class="col-sm-8">
+                            <div class="{{ center_class }}">
                             {% blocktrans with found=object.assigned_teachers|length needed=object.total_required_teachers %}{{ found }}/{{ needed }} undervisere fundet{% endblocktrans %}
                             </div>
                             {% if can_edit %}
-                                <div class="col-sm-2">
+                                <div class="{{ right_class }}">
                                     <a href="{% if object.product.is_resource_controlled %}{% url 'visit-resources-edit' object.pk %}{% else %}{% url 'change-visit-teachers' object.pk %}{% endif %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Redigér' %}</a>
                                 </div>
                             {% elif request.user.userprofile.is_teacher %}
-                                <div class="col-sm-2">
+                                <div class="{{ right_class }}">
                                 {% if object.needs_teachers %}
                                     {% if request.user in object.teachers.all %}
                                         {% trans '(allerede underviser for dette besøg)' %}
@@ -245,18 +246,18 @@
 
                     {% if not object.product.is_resource_controlled and not object.is_multiproductvisit %}
                         <div class="row row-border">
-                            <strong class="col-sm-2">
+                            <strong class="{{ left_class }}">
                                 {% trans 'Værter' %}
                             </strong>
-                            <div class="col-sm-8">
+                            <div class="{{ center_class }}">
                                 {% blocktrans with found=object.assigned_hosts|length needed=object.total_required_hosts %}{{ found }}/{{ needed }} værter fundet{% endblocktrans %}
                             </div>
                             {% if can_edit %}
-                                <div class="col-sm-2">
+                                <div class="{{ right_class }}">
                                     <a href="{% if object.product.is_resource_controlled %}{% url 'visit-resources-edit' object.pk %}{% else %}{% url 'change-visit-hosts' object.pk %}{% endif %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Redigér' %}</a>
                                 </div>
                             {% elif request.user.userprofile.is_host %}
-                                <div class="col-sm-2">
+                                <div class="{{ right_class }}">
                                     {% if object.needs_hosts %}
                                         {% if request.user in object.hosts.all %}
                                             {% trans '(allerede vært for dette besøg)' %}
@@ -276,10 +277,10 @@
 
                     {% if not object.product.is_resource_controlled and not object.is_multiproductvisit %}
                         <div class="row row-border">
-                            <strong class="col-sm-2">
+                            <strong class="{{ left_class }}">
                                 {% trans 'Lokaler' %}
                             </strong>
-                            <div class="col-sm-8">
+                            <div class="{{ center_class }}">
                                 {{ object.get_room_status_display }}
                                 {% if object.rooms.all %}
                                 <ul>
@@ -290,7 +291,7 @@
                                 {% endif %}
                             </div>
                             {% if can_edit %}
-                                <div class="col-sm-2">
+                                <div class="{{ right_class }}">
                                     <a href="{% url 'change-visit-rooms' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Redigér' %}</a>
                                 </div>
                             {% endif %}
@@ -299,14 +300,14 @@
 
                     {% if not object.is_multiproductvisit %}
                         <div class="row row-border">
-                            <strong class="col-sm-2">
+                            <strong class="{{ left_class }}">
                                 {% trans 'Automatisk e-mail' %}
                             </strong>
-                            <div class="col-sm-8">
+                            <div class="{{ center_class }}">
                                 {{ object.get_autosend_display }}
                             </div>
                             {% if can_edit %}
-                                <div class="col-sm-2">
+                                <div class="{{ right_class }}">
                                     <a href="{% url 'change-visit-autosend' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Redigér' %}</a>
                                 </div>
                             {% endif %}
@@ -314,14 +315,14 @@
                     {% endif %}
 
                     <div class="row row-border">
-                        <strong class="col-sm-2">
+                        <strong class="{{ left_class }}">
                             {% trans 'Status' %}
                         </strong>
-                        <div class="col-sm-8">
+                        <div class="{{ center_class }}">
                             {{ object.get_workflow_status_display }}
                         </div>
                         {% if can_edit %}
-                        <div class="col-sm-2">
+                        <div class="{{ right_class }}">
                             <a href="{% url 'change-visit-status' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Skift status' %}</a>
                         </div>
                         {% endif %}
@@ -329,14 +330,14 @@
 
                     {% if not object.is_multiproductvisit and not object.is_multi_sub %}
                         <div class="row row-border">
-                            <strong class="col-sm-2">
+                            <strong class="{{ left_class }}">
                                 {% trans 'Antal på venteliste' %}
                             </strong>
-                            <div class="col-sm-8">
+                            <div class="{{ center_class }}">
                                 {{ object.nr_waiting }}
                             </div>
                             {% if can_edit %}
-                                <div class="col-sm-2">
+                                <div class="{{ right_class }}">
                                     <a href="#waitinglist" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Se liste' %}</a>
                                 </div>
                             {% endif %}
@@ -344,10 +345,10 @@
                     {% endif %}
 
                     <div class="row row-border">
-                        <strong class="col-sm-2">
+                        <strong class="{{ left_class }}">
                             {% trans 'Link til evaluering' %}
                         </strong>
-                        <div class="col-sm-8">
+                        <div class="{{ center_class }}">
                             {% if object.evaluation_link %}
                                 <a href="{{ object.evaluation_link }}">{{ object.evaluation_link }}</a>
                             {% else %}
@@ -355,21 +356,21 @@
                             {% endif %}
                         </div>
                         {% if can_edit %}
-                            <div class="col-sm-2">
+                            <div class="{{ right_class }}">
                                 <a href="{% url 'change-visit-eval' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Redigér' %}</a>
                             </div>
                         {% endif %}
                     </div>
 
                     <div class="row row-border">
-                        <strong class="col-sm-2">
+                        <strong class="{{ left_class }}">
                             {% trans 'Interne kommentarer' %}
                         </strong>
-                        <div class="col-sm-8">
+                        <div class="{{ center_class }}">
                             <pre>{{ object.comments }}</pre>
                         </div>
                         {% if can_edit %}
-                            <div class="col-sm-2">
+                            <div class="{{ right_class }}">
                                 <a href="{% url 'change-visit-comments' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Redigér' %}</a>
                             </div>
                         {% endif %}
@@ -377,14 +378,14 @@
 
                     {% if can_edit and object.has_changes_after_planned %}
                         <div class="row row-border">
-                            <strong class="col-sm-2">
+                            <strong class="{{ left_class }}">
                                 {% trans 'Nylige ændringer' %}
                             </strong>
-                            <div class="col-sm-8">
+                            <div class="{{ center_class }}">
                                 <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
                                 {% trans 'Dette besøg er markeret som havende nylige ændringer' %}.
                             </div>
-                            <div class="col-sm-2">
+                            <div class="{{ right_class }}">
                                 <a href="{% url 'visit-reset-changes-marker' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Klik her for at fjerne markeringen' %}</a>
                             </div>
                         </div>
@@ -392,17 +393,17 @@
 
                     {% if can_edit %}
                         <div class="row row-border">
-                            <strong class="col-sm-2">
+                            <strong class="{{ left_class }}">
                                 {% trans 'Evaluering' %}
                             </strong>
-                            <div class="col-sm-8">
+                            <div class="{{ center_class }}">
                                 {% if object.evaluation %}
                                     {{ object.evaluation.url }}
                                 {% else %}
                                     {% trans 'Ingen evaluering oprettet' %}
                                 {% endif %}
                             </div>
-                            <div class="col-sm-2">
+                            <div class="{{ right_class }}">
                                 {% if object.evaluation %}
                                     <a href="{% url 'visit-evaluation-view' object.pk object.evaluation.id %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Vis evaluering' %}</a>
                                 {% else %}
@@ -416,12 +417,13 @@
 
                 </div>
             </div>
+            {% endwith %}
         </div>
     </div>
 
     {% if not object.is_multi_sub %}
     <div class="row attendees">
-        <div class="col-sm-12 col-md-10">
+        <div class="col-sm-12 col-md-10 col-md-offset-2">
             <div class="panel panel-default">
                 <div class="panel-body">
                     <h2>
@@ -437,7 +439,7 @@
 
     {% if not object.is_multiproductvisit and not object.is_multi_sub %}
     <div class="row waiting">
-        <div class="col-sm-12 col-md-10">
+        <div class="col-sm-12 col-md-10 col-md-offset-2">
             <div class="panel panel-default">
                 <div class="panel-body">
                     <a name="waitinglist"></a>
@@ -464,7 +466,7 @@
     {% endif %}
 
     <div class="row activitylog">
-        <div class="col-sm-12 col-md-10">
+        <div class="col-sm-12 col-md-10 col-md-offset-2">
             <div class="panel panel-default">
                 <div class="panel-body">
                     <h2>{% trans 'Aktivitetslog' %}</h2>
@@ -496,7 +498,7 @@
     </div>
 
     <div class="row comments">
-        <div class="col-sm-12 col-md-10">
+        <div class="col-sm-12 col-md-10 col-md-offset-2">
             <div class="panel panel-default">
                 <div class="panel-body">
                     <h2>{% trans 'Kommentarer' %}</h2>
@@ -534,7 +536,7 @@
     </div>
 
     <div class="row">
-        <div class="col-sm-12 col-md-10">
+        <div class="col-sm-12 col-md-10 col-md-offset-2">
             <div class="panel panel-default">
                 <div class="panel-body">
                         <div class="go-back">
