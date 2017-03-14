@@ -724,15 +724,15 @@ class SearchView(BreadcrumbMixin, ListView):
 
     def get_base_queryset(self):
         if self.base_queryset is None:
-            searchexpression = self.request.GET.get("q", "")
+            searchexpression = self.request.GET.get("q", "").strip()
 
             if searchexpression:
-                # qs = self.model.objects.search(searchexpression)
-                qs = self.model.objects.filter(
-                    Q(title__icontains=searchexpression) |
-                    Q(teaser__icontains=searchexpression) |
-                    Q(description__icontains=searchexpression)
+                # We run a raw query on individual words, ANDed together
+                # and with a wildcard at the end of each word
+                searchexpression = " & ".join(
+                    ["%s:*" % x for x in searchexpression.split()]
                 )
+                qs = self.model.objects.search(searchexpression, raw=True)
             else:
                 qs = self.model.objects.all()
 
