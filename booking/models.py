@@ -2795,6 +2795,22 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         return self.room_status == self.STATUS_NOT_ASSIGNED
 
     @property
+    def needed_items(self):
+        if self.is_multiproductvisit:
+            return self.multiproductvisit.needed_items
+        if self.product.is_resource_controlled:
+            return self.resources_required(ResourceType.RESOURCE_TYPE_ITEM)
+        return 0
+
+    @property
+    def needed_vehicles(self):
+        if self.is_multiproductvisit:
+            return self.multiproductvisit.needed_vehicles
+        if self.product.is_resource_controlled:
+            return self.resources_required(ResourceType.RESOURCE_TYPE_VEHICLE)
+        return 0
+
+    @property
     def is_booked(self):
         """Has this Visit instance been booked yet?"""
         return len(self.bookings.all()) > 0
@@ -3587,6 +3603,20 @@ class MultiProductVisit(Visit):
             if subvisit.needs_room:
                 return True
         return False
+
+    @property
+    def needed_items(self):
+        return sum(
+            subvisit.needed_items
+            for subvisit in self.subvisits_unordered
+        )
+
+    @property
+    def needed_vehicles(self):
+        return sum(
+            subvisit.needed_vehicles
+            for subvisit in self.subvisits_unordered
+        )
 
     @property
     def available_seats(self):
