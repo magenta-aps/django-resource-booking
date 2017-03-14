@@ -96,7 +96,13 @@
                     <td>{{ booking.booker.attendee_count|default:"0" }}</td>
                     <td>{{ booking.classbooking.presentation_desired|yesno|capfirst }}</td>
                     <td>{{ booking.classbooking.tour_desired|yesno|capfirst }}</td>
-                    <td>{{ booking.classbooking.custom_desired|yesno|capfirst }}</td>
+                    <td>
+                        {% if booking.classbooking.custom_desired %}
+                            {{ booking.visit.product.custom_name }}
+                        {% else %}
+                            {% trans 'Nej' %}
+                        {% endif %}
+                    </td>
                     <td>{{ booking.booker.school.postcode.region.name }}</td>
                     <td>{{ booking.booker.school.name }} ({{ booking.booker.school.get_type_display }})</td>
                     <td>{{ booking.booker.school.postcode.number }} {{ booking.booker.school.postcode.city }}</td>
