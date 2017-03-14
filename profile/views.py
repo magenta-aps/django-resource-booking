@@ -719,7 +719,7 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
                 if booking.classbooking.tour_desired:
                     tour_desired = yes
                 if booking.classbooking.custom_desired:
-                    custom_desired = yes
+                    custom_desired = booking.visit.product.custom_name
 
             writer.writerow([
                 booking.visit.product.resource_ptr.organizationalunit.name,
