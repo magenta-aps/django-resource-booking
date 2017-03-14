@@ -54,7 +54,6 @@ $(function($){
         autoclose: true
     });
 
-
     function datestr_to_date(datestr) {
         var d = new Date(),
             dparts = datestr.split(/[\/.-]/);
@@ -104,11 +103,25 @@ $(function($){
 
     var freq_map = {
         "weekly": [RRule.WEEKLY, 1],
-        "montly": [RRule.MONTHLY, 1],
+        "monthly": [RRule.MONTHLY, 1],
         "trimonthly": [RRule.MONTHLY, 3],
         "halfyearly": [RRule.MONTHLY, 6],
         "yearly": [RRule.YEARLY, 1]
     };
+
+    // When frequency is updated, enable or disable the weekday checkboxes
+    // since they are only relevant when "weekly" is selected
+    var updateFrequency = function() {
+        var value = $("#input-frequency").val(),
+            enable_weekdays = (freq_map[value][0] === RRule.WEEKLY),
+            props = {disabled: !enable_weekdays};
+        if (!enable_weekdays) {
+            props['checked'] = false;
+        }
+        $("#input-weekdays input[type=checkbox]").prop(props);
+    };
+    $("#input-frequency").change(updateFrequency);
+    updateFrequency();
 
     // RRule update
     var updateRRDates = function() {
@@ -135,17 +148,20 @@ $(function($){
 
         if (freq_val) {
             var mapped = freq_map[freq_val];
-            if(mapped) {
+            if (mapped) {
                 options.freq = mapped[0];
                 options.interval = mapped[1];
             }
         }
 
-        $('#input-weekdays input:checked').each(function() {
-            var val = weekday_map[$(this).attr('name')];
-            if(val)
-                options.byweekday.push(val);
-        });
+        if (options.freq === RRule.WEEKLY) {
+            $('#input-weekdays input:checked').each(function () {
+                var val = weekday_map[$(this).attr('name')];
+                if (val) {
+                    options.byweekday.push(val);
+                }
+            });
+        }
         if (options.byweekday.length === 0) {
             delete options.byweekday;
         }
@@ -179,13 +195,15 @@ $(function($){
                 var time = list[i].getTime(),
                     d1 = new Date(time);
                     d2 = new Date(time);
-                d1.setHours(start_hours, start_minutes - d1.getTimezoneOffset());
-                d2.setHours(end_hours, end_minutes - d2.getTimezoneOffset());
+                d1.setHours(start_hours);
+                d1.setMinutes(start_minutes - d1.getTimezoneOffset());
+                d2.setHours(end_hours);
+                d2.setMinutes(end_minutes - d2.getTimezoneOffset());
                 var value_str = format_interval(d1, d2);
 
                 outputEl.append([
                     '<li>',
-                    '  <input type="hidden" name="selecteddate" value="' + value_str + '" />',
+                      '<input type="hidden" name="selecteddate" value="' + value_str + '" />',
                        value_str,
                     '</li>'
                 ].join(""));
