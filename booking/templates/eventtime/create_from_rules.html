@@ -44,22 +44,20 @@
                 <div class="col-sm-7 form-inline">
                     <div class="input-daterange" style="margin-top: 0;">
 
-                        <label for="{{ form.start_time.id_for_label }}">{% trans 'Fra' %}:</label>
+                        <label for="{{ form.start_time.id_for_label }}">{% trans 'Fra:' %}</label>
                         <div class="input-group clockpicker">
                             <input class="form-control input-sm" id="{{ form.start_time.id_for_label }}" name="{{ form.start_time.name }}" type="text" value="{{ form.start_time.value }}" size="5">
                             <span class="input-group-addon" data-toggle="dropdown"><span class="glyphicon glyphicon-time"></span></span>
                         </div>
 
-                        <label for="{{ form.end_time.id_for_label }}">{% trans 'til' %}:</label>
+                        <label for="{{ form.end_time.id_for_label }}">{% trans 'til:' %}</label>
                         <div class="input-group clockpicker">
                             <input class="form-control input-sm" id="{{ form.end_time.id_for_label }}" name="{{ form.end_time.name }}" type="text" value="{{ form.end_time.value }}" size="5">
                             <span class="input-group-addon" data-toggle="dropdown"><span class="glyphicon glyphicon-time"></span></span>
                         </div>
                         {% trans 'plus' %}
                         {{ form.extra_days }}
-                        <label for="{{ form.extra_days.id_for_label }}">{% trans 'hele dage' %}.</label>
-
-
+                        <label for="{{ form.extra_days.id_for_label }}">{% trans 'hele dage.' %}</label>
                     </div>
                     {% if product.duration_in_minutes %}
                     <div>
@@ -75,7 +73,7 @@
 
             <div class="row form-group">
                 <div class="col-sm-2">
-                    <label for="input-frequency">{% trans 'Gentagelse' %}:</label>
+                    <label for="input-frequency">{% trans 'Gentagelse:' %}</label>
                 </div>
                 <div class="col-sm-7 checkbox" id="input-weekdays">
                     <p>
@@ -102,19 +100,23 @@
 
             <div class="row form-group">
                 <div class="col-sm-2">
-                    <label for="input-until">{% trans 'Sluttidspunkt' %}:</label>
+                    <label for="input-until">{% trans 'Sluttidspunkt:' %}</label>
                 </div>
                 <div class="col-sm-7 checkbox">
                     {% trans 'På dato' %}
                     <input id="input-until" name="until" type="text" class="form-control" placeholder="{% trans 'Dato' %}">
-                    <label class="label-unstyled" for="input-count">eller efter <input id="input-count" name="count" type="text" class="form-control" placeholder="0" value="1"> forekomster</label>
+                    <label class="label-unstyled" for="input-count">
+                        {% blocktrans with box='<input id="input-count" name="count" type="text" class="form-control" placeholder="0" value="1">' %}
+                        eller efter {{ box }} forekomster
+                        {% endblocktrans %}
+                    </label>
                 </div>
             </div>
 
            <div id="rruleOutput">
                 <div class="row form-group">
                     <div class="col-sm-2">
-                        <p><strong>{% trans 'Valgte datoer/tidspunkter' %}:</strong></p>
+                        <p><strong>{% trans 'Valgte datoer/tidspunkter:' %}</strong></p>
                     </div>
                     <div class="col-sm-7 checkbox" id="input-weekdays">
                         <ul class="rrule-datelist list-unstyled">
