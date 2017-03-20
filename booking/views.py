@@ -1876,8 +1876,10 @@ class ProductInquireView(FormMixin, HasBackButtonMixin, ModalMixin,
             else:
                 recipients.extend(self.object.organizationalunit.get_editors())
             KUEmailMessage.send_email(
-                template, context, recipients,
-                self.object, original_from_email=form.cleaned_data['email']
+                template, context, recipients, self.object,
+                original_from_email=full_email(
+                    form.cleaned_data['email'], form.cleaned_data['name']
+                )
             )
             return super(ProductInquireView, self).form_valid(form)
 
