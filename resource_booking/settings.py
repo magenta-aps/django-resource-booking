@@ -120,7 +120,11 @@ NPM_FILE_PATTERNS = {
     'rrule': ['lib/rrule.js'],
     'sortablejs': ['Sortable.min.js'],
     'clockpicker': ['dist/bootstrap-clockpicker.min.css',
-                    'dist/bootstrap-clockpicker.min.js']
+                    'dist/bootstrap-clockpicker.min.js'],
+    'datatables.net': ['js/jquery.dataTables.js'],
+    'datatables.net-dt': ['css/jquery.dataTables.css', 'images/*'],
+    'datatables.net-responsive': ['js/dataTables.responsive.js'],
+    'datatables.net-responsive-dt': ['css/responsive.dataTables.css'],
 }
 
 # Django-tinymce config
