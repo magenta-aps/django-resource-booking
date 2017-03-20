@@ -46,6 +46,7 @@ INSTALLED_APPS = (
     'timedelta',
     'tinymce',
     'django_cron',
+    'macros'
 )
 
 MIDDLEWARE_CLASSES = (

@@ -697,7 +697,6 @@ class ProductAutosendFormSet(ProductAutosendFormSetBase):
                 existing_types = [
                     autosend.template_type for autosend in autosends
                 ]
-                print existing_types
                 for type in all_autosends:
                     if type not in existing_types:
                         initial.append({
