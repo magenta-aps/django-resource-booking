@@ -12,15 +12,19 @@
     <div class="row titlebar hidden-print">
         <div class="col-sm-12 col-md-8"><h2>{{ object.get_type_display }}</h2></div>
     </div>
+
     {% if messages %}
-    <div class="col-sm-4 alert alert-info" role="alert">
-        <ul>
-            {% for message in messages %}
-            <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-            {% endfor %}
-        </ul>
-    </div>
+        <div class="row">
+            <div class="col-sm-4 alert alert-info" role="alert">
+                <ul>
+                    {% for message in messages %}
+                    <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
     {% endif %}
+
     <div class="row">
         <div class="col-sm-12 col-md-7">
             <div class="offer-actions">
