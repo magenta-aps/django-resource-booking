@@ -1769,7 +1769,8 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             return Product.time_mode_choices
 
         available_set = Product.time_mode_choice_map.get(self.type)
-        if Product.TIME_MODE_RESOURCE_CONTROLLED in available_set and True: # TODO: replace True with check for SNM
+        if Product.TIME_MODE_RESOURCE_CONTROLLED in available_set and True:
+            # TODO: replace True with check for SNM
             available_set.add(Product.TIME_MODE_RESOURCE_CONTROLLED_AUTOASSIGN)
 
         return tuple(
