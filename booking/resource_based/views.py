@@ -10,7 +10,7 @@ from django.views.generic import RedirectView
 from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic.edit import FormView, DeleteView
 
-from django.forms import Select
+from django.forms.widgets import TextInput
 from booking.models import OrganizationalUnit, Product
 from booking.resource_based.forms import ResourceTypeForm, EditResourceForm
 from booking.resource_based.forms import ResourcePoolTypeForm
@@ -1122,7 +1122,7 @@ class CalendarEventCreateView(LoginRequiredMixin, CalRelatedMixin, CreateView):
     }
 
     widgets = {
-        'title': Select(attrs={'class': 'form-control input-sm'})
+        'title': TextInput(attrs={'class': 'form-control input-sm'})
     }
 
     def get_form(self, form_class=None):
