@@ -751,6 +751,14 @@ class ResourceRequirementCreateView(BackMixin, BreadcrumbMixin,
         kwargs['initial']['required_amount'] = 1
         return kwargs
 
+    def get_context_data(self, **kwargs):
+        context = {}
+        context['product'] = self.product
+        context.update(kwargs)
+        return super(ResourceRequirementCreateView, self).get_context_data(
+            **context
+        )
+
     def form_valid(self, form):
         self.object = form.save()
         return self.redirect(
@@ -784,6 +792,14 @@ class ResourceRequirementUpdateView(BackMixin, BreadcrumbMixin,
         kwargs = super(ResourceRequirementUpdateView, self).get_form_kwargs()
         kwargs['product'] = self.object.product
         return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = {}
+        context['product'] = self.object.product
+        context.update(kwargs)
+        return super(ResourceRequirementUpdateView, self).get_context_data(
+            **context
+        )
 
     def form_valid(self, form):
         self.object = form.save()

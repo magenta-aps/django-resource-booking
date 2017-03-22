@@ -226,12 +226,14 @@ class EditResourcePoolForm(forms.ModelForm):
 
 
 class EditResourceRequirementForm(forms.ModelForm):
+
     class Meta:
         model = ResourceRequirement
         fields = ['resource_pool', 'required_amount']
         widgets = {
             'required_amount': NumberInput(attrs={
-                'min': 1
+                'min': 1,
+                'class': 'form-control input-sm'
             })
         }
 
