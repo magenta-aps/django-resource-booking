@@ -758,13 +758,16 @@ class SearchView(BreadcrumbMixin, ListView):
                     )
                 )
 
-                res_controlled = Product.TIME_MODE_RESOURCE_CONTROLLED
+                res_controlled = [
+                    Product.TIME_MODE_RESOURCE_CONTROLLED,
+                    Product.TIME_MODE_RESOURCE_CONTROLLED_AUTOASSIGN
+                ]
                 eventtime_cls = booking_models.EventTime
                 nonblocked = eventtime_cls.NONBLOCKED_RESOURCE_STATES
                 not_resource_blocked = (
-                    (~Q(time_mode=res_controlled)) |
+                    (~Q(time_mode__in=res_controlled)) |
                     Q(
-                        time_mode=res_controlled,
+                        time_mode__in=res_controlled,
                         eventtime__resource_status__in=nonblocked
                     )
                 )
