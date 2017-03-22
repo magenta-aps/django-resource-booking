@@ -282,7 +282,7 @@ class EventTime(models.Model):
             return self.visit.available_seats
         elif self.product:
             max = self.product.maximum_number_of_visitors
-            if max is None: # No limit set
+            if max is None:  # No limit set
                 return sys.maxint
             return max
         else:
