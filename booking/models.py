@@ -40,6 +40,7 @@ from profile.constants import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
 
 import math
 import uuid
+import sys
 
 BLANK_LABEL = '---------'
 BLANK_OPTION = (None, BLANK_LABEL,)
@@ -3261,8 +3262,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     @property
     def available_seats(self):
         limit = self.product.maximum_number_of_visitors
-        if limit is not None:
-            return max(limit - self.nr_attendees, 0)
+        if limit is None:
+            return sys.maxint
+        return max(limit - self.nr_attendees, 0)
 
     def get_workflow_status_class(self):
         return self.status_to_class_map.get(self.workflow_status, 'default')
@@ -3837,6 +3839,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         context['can_notify'] = profile.can_notify(self)
 
         return context
+
 
 Visit.add_override_property('duration')
 Visit.add_override_property('locality')
