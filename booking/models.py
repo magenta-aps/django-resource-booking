@@ -1532,6 +1532,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     TIME_MODE_SPECIFIC = 3
     TIME_MODE_GUEST_SUGGESTED = 4
     TIME_MODE_NO_BOOKING = 5
+    TIME_MODE_RESOURCE_CONTROLLED_AUTOASSIGN = 6
 
     time_mode_choice_map = {
         STUDENT_FOR_A_DAY: set((
@@ -1587,6 +1588,9 @@ class Product(AvailabilityUpdaterMixin, models.Model):
          _(u"Tilbuddet har ingen tidspunkter og ingen tilmelding")),
         (TIME_MODE_RESOURCE_CONTROLLED,
          _(u"Tilbuddets tidspunkter styres af ressourcer")),
+        (TIME_MODE_RESOURCE_CONTROLLED_AUTOASSIGN,
+         _(u"Tilbuddets tidspunkter styres af ressourcer,"
+           u" med automatisk tildeling")),
         (TIME_MODE_SPECIFIC,
          _(u"Tilbuddet har faste tidspunkter")),
         (TIME_MODE_NO_BOOKING,
@@ -1877,6 +1881,8 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             return Product.time_mode_choices
 
         available_set = Product.time_mode_choice_map.get(self.type)
+        if Product.TIME_MODE_RESOURCE_CONTROLLED in available_set and True: # TODO: replace True with check for SNM
+            available_set.add(Product.TIME_MODE_RESOURCE_CONTROLLED_AUTOASSIGN)
 
         return tuple(
             x for x in Product.time_mode_choices if x[0] in available_set
@@ -2219,6 +2225,10 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     @classmethod
     def filter_public_bookable(cls, queryset):
         nonblocked = EventTime.NONBLOCKED_RESOURCE_STATES
+        resource_controlled = [
+            Product.TIME_MODE_RESOURCE_CONTROLLED,
+            Product.TIME_MODE_RESOURCE_CONTROLLED_AUTOASSIGN
+        ]
         return queryset.filter(
             Q(time_mode=cls.TIME_MODE_GUEST_SUGGESTED) |
             Q(
@@ -2230,10 +2240,10 @@ class Product(AvailabilityUpdaterMixin, models.Model):
                 eventtime__visit__workflow_status__in=Visit.BOOKABLE_STATES,
             ) & Q(
                 # Either not resource controlled
-                (~Q(time_mode=Product.TIME_MODE_RESOURCE_CONTROLLED)) |
+                (~Q(time_mode__in=resource_controlled)) |
                 # Or resource-controlled with nonblocked eventtimes
                 Q(
-                    time_mode=Product.TIME_MODE_RESOURCE_CONTROLLED,
+                    time_mode__in=resource_controlled,
                     eventtime__resource_status__in=nonblocked
                 )
             )
@@ -2324,7 +2334,10 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def is_resource_controlled(self):
-        return self.time_mode == Product.TIME_MODE_RESOURCE_CONTROLLED
+        return self.time_mode in [
+            Product.TIME_MODE_RESOURCE_CONTROLLED,
+            Product.TIME_MODE_RESOURCE_CONTROLLED_AUTOASSIGN
+        ]
 
     @property
     def is_guest_time_suggested(self):
@@ -2407,6 +2420,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     def uses_time_management(self):
         return self.time_mode is not None and self.time_mode in (
             Product.TIME_MODE_RESOURCE_CONTROLLED,
+            Product.TIME_MODE_RESOURCE_CONTROLLED_AUTOASSIGN,
             Product.TIME_MODE_SPECIFIC,
         )
 
