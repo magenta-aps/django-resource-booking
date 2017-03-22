@@ -3840,6 +3840,37 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
         return context
 
+    def autoassign_resources(self):
+        if self.is_multiproductvisit:
+            self.multiproductvisit.autoassign_resources()
+        if self.product.time_mode == \
+                Product.TIME_MODE_RESOURCE_CONTROLLED_AUTOASSIGN:
+            for requirement in self.product.resourcerequirement_set.all():
+                assigned = self.resources.filter(
+                    visitresource__resource_requirement=requirement
+                )
+                extra_needed = requirement.required_amount - assigned.count()
+                if extra_needed > 0:
+                    eligible = requirement.resource_pool.resources.exclude(
+                        id__in=[resource.id for resource in assigned]
+                    ).order_by('?')
+                    found = []
+                    for resource in eligible:
+                        if resource.available_for_visit(self):
+                            found.append(resource)
+                            if len(found) >= extra_needed:
+                                break
+                    if len(found) < extra_needed:
+                        # requirement cannot be fulfilled;
+                        # not enough available resources
+                        pass
+                    for resource in found:
+                        VisitResource(
+                            visit=self,
+                            resource=resource,
+                            resource_requirement=requirement
+                        ).save()
+
 
 Visit.add_override_property('duration')
 Visit.add_override_property('locality')
@@ -4132,6 +4163,10 @@ class MultiProductVisit(Visit):
                         unit
                     )
 
+    def autoassign_resources(self):
+        for visit in self.subvisits_unordered:
+            visit.autoassign_resources()
+
     def __unicode__(self):
         if hasattr(self, 'eventtime'):
             return _(u'Besøg %s - Prioriteret liste af %d underbesøg - %s') % (
@@ -4213,6 +4248,7 @@ class MultiProductVisitTemp(models.Model):
             )
             if index == 0:
                 mpv.responsible = product.tilbudsansvarlig
+        mpv.autoassign_resources()
         mpv.save()
         return mpv
 

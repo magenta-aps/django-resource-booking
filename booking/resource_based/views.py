@@ -9,6 +9,8 @@ from django.views.generic import TemplateView, ListView, DetailView
 from django.views.generic import RedirectView
 from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic.edit import FormView, DeleteView
+
+from django.forms.widgets import TextInput
 from booking.models import OrganizationalUnit, Product
 from booking.resource_based.forms import ResourceTypeForm, EditResourceForm
 from booking.resource_based.forms import ResourcePoolTypeForm
@@ -1126,6 +1128,10 @@ class CalendarEventCreateView(LoginRequiredMixin, CalRelatedMixin, CreateView):
         'start': "Blahblah"
     }
 
+    widgets = {
+        'title': TextInput(attrs={'class': 'form-control input-sm'})
+    }
+
     def get_form(self, form_class=None):
         if form_class is None:
             form_class = self.get_form_class()
@@ -1152,6 +1158,9 @@ class CalendarEventCreateView(LoginRequiredMixin, CalRelatedMixin, CreateView):
                 hours=16
             )
         form = form_class(**kwargs)
+        for fieldname, widget in self.widgets.iteritems():
+            form.fields[fieldname].widget = widget
+
         return form
 
     def get_context_data(self, **kwargs):
