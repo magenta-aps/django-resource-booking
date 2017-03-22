@@ -283,7 +283,8 @@ class OrganizationalUnitForm(forms.ModelForm):
 
 class ProductInitialForm(forms.Form):
     type = forms.ChoiceField(
-        choices=Product.resource_type_choices
+        choices=Product.resource_type_choices,
+        widget=Select(attrs={'class': 'form-control'})
     )
 
 
