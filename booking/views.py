@@ -2425,6 +2425,8 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
             # Flag attention requirement on visit
             booking.visit.needs_attention_since = timezone.now()
 
+            booking.visit.autoassign_resources()
+
             # Trigger updating of search index
             booking.visit.save()
 
