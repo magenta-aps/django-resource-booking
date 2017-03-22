@@ -29,6 +29,15 @@
 
     </form>
 
+    {% if product.are_resources_autoassigned %}
+        <h2>{% trans 'Påvirkede besøg' %}</h2>
+        <ul>
+        {% for eventtime in product.booked_eventtimes %}
+            <li><a href="{% url 'visit-view' eventtime.visit.id %}">{{ eventtime.visit }}</a></li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+
 {% endblock %}
 
 {% block extra_scripts %}
