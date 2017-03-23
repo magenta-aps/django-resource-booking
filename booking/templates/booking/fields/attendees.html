@@ -2,7 +2,7 @@
 {% if bookerform.attendee_count %}
 <div class="form-group">
     <div class="col-sm-2">
-        <label class="control-label required {{ bookerform.attendee_count.css_classes }}" for="{{ bookerform.attendee_count.id_for_label }}">{% trans "Antal deltagere" %}</label>
+        <label class="control-label required nowrap {{ bookerform.attendee_count.css_classes }}" for="{{ bookerform.attendee_count.id_for_label }}">{% trans "Antal deltagere" %}</label>
     </div>
     <div class="col-sm-6{% if bookerform.attendee_count.errors %} has-error{% endif %}">
         {{ bookerform.attendee_count }}

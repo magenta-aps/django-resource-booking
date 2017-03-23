@@ -2056,3 +2056,7 @@ body.lightbox {
     border-radius: 4px;
     padding: 4px;
 }
+
+.nowrap {
+    white-space: nowrap;
+}
