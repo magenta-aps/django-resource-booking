@@ -774,7 +774,7 @@ class ResourceRequirementConfirmMixin(object):
                     'eventtime': eventtime,
                     'assigned_count': self.get_assigned_count(eventtime.visit),
                     'available': eventtime.visit.
-                        resources_available_for_autoassign(resource_pool)
+                    resources_available_for_autoassign(resource_pool)
                 } for eventtime in self.product.booked_eventtimes()
             ]
         }

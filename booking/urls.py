@@ -45,8 +45,7 @@ from booking.views import MultiProductVisitTempUpdateView
 from booking.views import MultiProductVisitTempProductsView
 from booking.views import MultiProductVisitTempConfirmView
 
-from booking.resource_based.views import ResourceCreateView, ResourceDetailView, \
-    ResourceRequirementCreateConfirmView, ResourceRequirementUpdateConfirmView
+from booking.resource_based.views import ResourceCreateView, ResourceDetailView
 from booking.resource_based.views import ResourceListView, ResourceUpdateView
 from booking.resource_based.views import ResourceDeleteView
 
@@ -57,7 +56,9 @@ from booking.resource_based.views import ResourcePoolUpdateView
 from booking.resource_based.views import ResourcePoolDeleteView
 
 from booking.resource_based.views import ResourceRequirementCreateView
+from booking.resource_based.views import ResourceRequirementCreateConfirmView
 from booking.resource_based.views import ResourceRequirementUpdateView
+from booking.resource_based.views import ResourceRequirementUpdateConfirmView
 from booking.resource_based.views import ResourceRequirementListView
 from booking.resource_based.views import ResourceRequirementDeleteView
 
