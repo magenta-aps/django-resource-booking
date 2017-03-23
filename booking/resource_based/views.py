@@ -10,7 +10,7 @@ from django.views.generic import RedirectView
 from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic.edit import FormView, DeleteView
 
-from django.forms.widgets import TextInput
+from django.forms.widgets import TextInput, HiddenInput
 from booking.models import OrganizationalUnit, Product
 from booking.resource_based.forms import ResourceTypeForm, EditResourceForm
 from booking.resource_based.forms import ResourcePoolTypeForm
@@ -737,13 +737,71 @@ class ResourcePoolDeleteView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
         ]
 
 
+class ResourceRequirementConfirmMixin(object):
+    template_name = 'resourcerequirement/confirm.html'
+
+    def get_form(self, form_class=None):
+        form = super(ResourceRequirementConfirmMixin, self).\
+            get_form(form_class)
+        for name, field in form.fields.iteritems():
+            field.widget = HiddenInput()
+        return form
+
+    def get_form_kwargs(self):
+        kwargs = super(ResourceRequirementConfirmMixin, self).\
+            get_form_kwargs()
+        kwargs['product'] = self.product
+        kwargs['initial'].update({
+            'resource_pool': self.request.GET.get('resource_pool'),
+            'required_amount': self.request.GET.get('required_amount')
+        })
+        return kwargs
+
+    def form_valid(self, form):
+        self.object = form.save()
+        return redirect(
+            reverse('resourcerequirement-list', args=[self.object.product.id])
+        )
+
+    def get_context_data(self, **kwargs):
+        resource_pool = ResourcePool.objects.get(
+            id=self.request.GET.get('resource_pool')
+        )
+        required_amount = int(self.request.GET.get('required_amount'))
+        old_amount = self.get_old_amount()
+        context = {
+            'resource_pool': resource_pool,
+            'required_amount': required_amount,
+            'old_amount': old_amount,
+            'delta': required_amount - old_amount,
+            'visit_data': [
+                {
+                    'visit': eventtime.visit,
+                    'eventtime': eventtime,
+                    'assigned_count': self.get_assigned_count(eventtime.visit),
+                    'available': eventtime.visit.
+                    resources_available_for_autoassign(resource_pool)
+                } for eventtime in self.product.booked_eventtimes()
+            ]
+        }
+        context.update(kwargs)
+        return super(ResourceRequirementConfirmMixin, self).get_context_data(
+            **context
+        )
+
+    def get_old_amount(self):
+        return 0
+
+    def get_assigned_count(self, visit):
+        return 0
+
+
 class ResourceRequirementCreateView(BackMixin, BreadcrumbMixin,
                                     EditorRequriedMixin, CreateView):
     model = ResourceRequirement
     form_class = EditResourceRequirementForm
-
-    def get_template_names(self):
-        return ['resourcerequirement/form.html']
+    just_preserve_back = True
+    template_name = 'resourcerequirement/form.html'
 
     def dispatch(self, request, *args, **kwargs):
         self.product = Product.objects.get(id=self.kwargs['product'])
@@ -766,9 +824,14 @@ class ResourceRequirementCreateView(BackMixin, BreadcrumbMixin,
         )
 
     def form_valid(self, form):
-        self.object = form.save()
         return self.redirect(
-            reverse('product-view', args=[self.product.id])
+            reverse(
+                'resourcerequirement-create-confirm',
+                args=[self.product.id]
+            ) + "?resource_pool=%s&required_amount=%d" % (
+                form.cleaned_data['resource_pool'].id,
+                form.cleaned_data['required_amount']
+            )
         )
 
     def get_breadcrumbs(self):
@@ -786,18 +849,35 @@ class ResourceRequirementCreateView(BackMixin, BreadcrumbMixin,
         ]
 
 
+class ResourceRequirementCreateConfirmView(
+    ResourceRequirementConfirmMixin, ResourceRequirementCreateView
+):
+    pass
+
+
 class ResourceRequirementUpdateView(BackMixin, BreadcrumbMixin,
                                     EditorRequriedMixin, UpdateView):
     model = ResourceRequirement
     form_class = EditResourceRequirementForm
+    just_preserve_back = True
+    template_name = 'resourcerequirement/form.html'
+    required_amount = None
 
-    def get_template_names(self):
-        return ['resourcerequirement/form.html']
+    def dispatch(self, *args, **kwargs):
+        self.object = self.get_object()
+        self.required_amount = self.object.required_amount
+        return super(ResourceRequirementUpdateView, self).dispatch(
+            *args, **kwargs
+        )
 
     def get_form_kwargs(self):
         kwargs = super(ResourceRequirementUpdateView, self).get_form_kwargs()
         kwargs['product'] = self.object.product
         return kwargs
+
+    @property
+    def product(self):
+        return self.object.product
 
     def get_context_data(self, **kwargs):
         context = {}
@@ -808,10 +888,25 @@ class ResourceRequirementUpdateView(BackMixin, BreadcrumbMixin,
         )
 
     def form_valid(self, form):
-        self.object = form.save()
-        return self.redirect(
-            reverse('product-view', args=[self.object.product.id])
-        )
+        new_required_amount = int(form.cleaned_data['required_amount'])
+        if new_required_amount > self.required_amount:
+            return self.redirect(
+                reverse(
+                    'resourcerequirement-edit-confirm',
+                    args=[self.product.id, self.object.id]
+                ) + "?resource_pool=%s&required_amount=%d" % (
+                    form.cleaned_data['resource_pool'].id,
+                    new_required_amount
+                )
+            )
+        else:
+            self.object = form.save()
+            return redirect(
+                reverse(
+                    'resourcerequirement-list',
+                    args=[self.object.product.id]
+                )
+            )
 
     def get_breadcrumbs(self):
         return [
@@ -822,10 +917,20 @@ class ResourceRequirementUpdateView(BackMixin, BreadcrumbMixin,
             },
             {
                 'url': reverse('product-view', args=[self.object.product.id]),
-                'text': unicode(self.object.product)
+                'text': unicode(self.product)
             },
             {'text': _(u'Redigér ressourcebehov')}
         ]
+
+
+class ResourceRequirementUpdateConfirmView(
+    ResourceRequirementConfirmMixin, ResourceRequirementUpdateView
+):
+    def get_old_amount(self):
+        return self.object.required_amount
+
+    def get_assigned_count(self, visit):
+        return visit.resources_assigned(self.object).count()
 
 
 class ResourceRequirementListView(BreadcrumbMixin, EditorRequriedMixin,

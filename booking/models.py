@@ -3056,6 +3056,11 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             return "expired"
         return ""
 
+    def resources_assigned(self, requirement):
+        return self.resources.filter(
+            visitresource__resource_requirement=requirement
+        )
+
     def resources_required(self, resource_type):
         missing = 0
         for requirement in self.product.resourcerequirement_set.filter(
@@ -3852,6 +3857,14 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
         return context
 
+    def resources_available_for_autoassign(self, resource_pool):
+        eligible = resource_pool.resources.exclude(visitresource__visit=self)
+        found = []
+        for resource in eligible:
+            if resource.available_for_visit(self):
+                found.append(resource)
+        return found
+
     def autoassign_resources(self):
         if self.is_multiproductvisit:
             self.multiproductvisit.autoassign_resources()
@@ -3865,7 +3878,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 if extra_needed > 0:
                     eligible = requirement.resource_pool.resources.exclude(
                         id__in=[resource.id for resource in assigned]
-                    ).order_by('?')
+                    )
                     found = []
                     for resource in eligible:
                         if resource.available_for_visit(self):
