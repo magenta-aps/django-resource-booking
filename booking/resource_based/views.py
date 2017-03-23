@@ -763,20 +763,24 @@ class ResourceRequirementConfirmMixin(object):
         )
         required_amount = int(self.request.GET.get('required_amount'))
         old_amount = self.get_old_amount()
+        visit_data = []
+        for eventtime in self.product.booked_eventtimes():
+            data = {
+                'visit': eventtime.visit,
+                'eventtime': eventtime,
+                'assigned_count': self.get_assigned_count(eventtime.visit),
+                'available': eventtime.visit.
+                    resources_available_for_autoassign(resource_pool)
+            }
+            data['insufficient'] = len(data['available']) + old_amount < required_amount
+            visit_data.append(data)
+
         context = {
             'resource_pool': resource_pool,
             'required_amount': required_amount,
             'old_amount': old_amount,
             'delta': required_amount - old_amount,
-            'visit_data': [
-                {
-                    'visit': eventtime.visit,
-                    'eventtime': eventtime,
-                    'assigned_count': self.get_assigned_count(eventtime.visit),
-                    'available': eventtime.visit.
-                    resources_available_for_autoassign(resource_pool)
-                } for eventtime in self.product.booked_eventtimes()
-            ]
+            'visit_data': visit_data
         }
         context.update(kwargs)
         return super(ResourceRequirementConfirmMixin, self).get_context_data(

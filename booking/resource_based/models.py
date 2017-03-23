@@ -169,7 +169,7 @@ class EventTime(models.Model):
         result = None
 
         for req in self.product.resourcerequirement_set.all():
-            if hasattr(self, 'visit'):
+            if hasattr(self, 'visit') and self.visit is not None:
                 assigned = self.visit.visitresource.filter(
                     resource_requirement=req
                 ).count()
