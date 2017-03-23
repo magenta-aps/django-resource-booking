@@ -1869,3 +1869,7 @@ body.lightbox {
         height: 35px;
     }
 }
+
+.nowrap {
+    white-space: nowrap;
+}

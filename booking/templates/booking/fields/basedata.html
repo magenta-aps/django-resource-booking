@@ -2,7 +2,7 @@
 {% if bookerform.firstname or bookerform.lastname %}
 <div class="form-group">
     <div class="col-sm-2">
-        <label class="control-label required {{ bookerform.firstname.css_classes }}" for="{{ bookerform.firstname.id_for_label }}">{% trans "For- og efternavn" %}</label>
+        <label class="control-label required nowrap {{ bookerform.firstname.css_classes }}" for="{{ bookerform.firstname.id_for_label }}">{% trans "For- og efternavn" %}</label>
     </div>
     <div class="col-sm-3{% if bookerform.firstname.errors %} has-error{% endif %}">
         {{ bookerform.firstname }}
@@ -22,7 +22,7 @@
 {% if bookerform.email %}
 <div class="form-group">
     <div class="col-sm-2">
-        <label class="control-label required {{ bookerform.email.css_classes }}" for="{{ bookerform.email.id_for_label }}">{% trans "Email" %}</label>
+        <label class="control-label required nowrap {{ bookerform.email.css_classes }}" for="{{ bookerform.email.id_for_label }}">{% trans "Email" %}</label>
     </div>
     <div class="col-sm-3{% if bookerform.email.errors %} has-error{% endif %}">
         {{ bookerform.email }}
@@ -42,7 +42,7 @@
 {% if bookerform.phone %}
 <div class="form-group">
     <div class="col-sm-2">
-        <label class="control-label required {{ bookerform.phone.css_classes }}" for="{{ bookerform.phone.id_for_label }}">{% trans "Telefonnummer" %}</label>
+        <label class="control-label required nowrap {{ bookerform.phone.css_classes }}" for="{{ bookerform.phone.id_for_label }}">{% trans "Telefonnummer" %}</label>
     </div>
     <div class="col-sm-6{% if bookerform.phone.errors %} has-error{% endif %}">
         {{ bookerform.phone }}
