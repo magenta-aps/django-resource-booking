@@ -3670,6 +3670,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                             resource=resource,
                             resource_requirement=requirement
                         ).save()
+            self.resources_updated()
 
 
 Visit.add_override_property('duration')
