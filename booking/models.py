@@ -39,6 +39,7 @@ from profile.constants import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
 import math
 import uuid
 import sys
+import random
 
 BLANK_LABEL = '---------'
 BLANK_OPTION = (None, BLANK_LABEL,)
@@ -1424,10 +1425,64 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     TIME_MODE_RESOURCE_CONTROLLED = 2
     TIME_MODE_SPECIFIC = 3
     TIME_MODE_GUEST_SUGGESTED = 4
+    TIME_MODE_NO_BOOKING = 5
+    TIME_MODE_RESOURCE_CONTROLLED_AUTOASSIGN = 6
+
+    time_mode_choice_map = {
+        STUDENT_FOR_A_DAY: set((
+            TIME_MODE_SPECIFIC,
+            TIME_MODE_GUEST_SUGGESTED,
+            TIME_MODE_RESOURCE_CONTROLLED,
+            TIME_MODE_NONE,
+            TIME_MODE_NO_BOOKING,
+        )),
+        STUDIEPRAKTIK: set((
+            TIME_MODE_SPECIFIC,
+            TIME_MODE_GUEST_SUGGESTED,
+            TIME_MODE_RESOURCE_CONTROLLED,
+            TIME_MODE_NONE,
+            TIME_MODE_NO_BOOKING,
+        )),
+        OPEN_HOUSE: set((
+            TIME_MODE_NO_BOOKING,
+        )),
+        TEACHER_EVENT: set((
+            TIME_MODE_SPECIFIC,
+        )),
+        GROUP_VISIT: set((
+            TIME_MODE_SPECIFIC,
+            TIME_MODE_GUEST_SUGGESTED,
+            TIME_MODE_RESOURCE_CONTROLLED,
+        )),
+        STUDY_PROJECT: set((
+            TIME_MODE_SPECIFIC,
+            TIME_MODE_GUEST_SUGGESTED,
+            TIME_MODE_RESOURCE_CONTROLLED,
+            TIME_MODE_NONE,
+            TIME_MODE_NO_BOOKING,
+        )),
+        ASSIGNMENT_HELP: set((
+            TIME_MODE_NONE,
+            TIME_MODE_NO_BOOKING,
+        )),
+        OTHER_OFFERS: set((
+            TIME_MODE_SPECIFIC,
+            TIME_MODE_GUEST_SUGGESTED,
+            TIME_MODE_RESOURCE_CONTROLLED,
+            TIME_MODE_NONE,
+            TIME_MODE_NO_BOOKING,
+        )),
+        STUDY_MATERIAL: set((
+            TIME_MODE_NONE,
+        )),
+    }
 
     time_mode_choices = (
         (TIME_MODE_RESOURCE_CONTROLLED,
          _(u"Tilbuddets tidspunkter styres af ressourcer")),
+        (TIME_MODE_RESOURCE_CONTROLLED_AUTOASSIGN,
+         _(u"Tilbuddets tidspunkter styres af ressourcer,"
+           u" med automatisk tildeling")),
         (TIME_MODE_SPECIFIC,
          _(u"Tilbuddet har faste tidspunkter")),
         (TIME_MODE_GUEST_SUGGESTED,
@@ -1709,6 +1764,53 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         choices=needed_number_choices,
         blank=False
     )
+
+    @property
+    def available_time_modes(self):
+        if self.type is None:
+            return Product.time_mode_choices
+
+        available_set = Product.time_mode_choice_map.get(self.type)
+        if Product.TIME_MODE_RESOURCE_CONTROLLED in available_set and True:
+            # TODO: replace True with check for SNM
+            available_set.add(Product.TIME_MODE_RESOURCE_CONTROLLED_AUTOASSIGN)
+
+        return tuple(
+            x for x in Product.time_mode_choices if x[0] in available_set
+        )
+
+    @property
+    def total_required_hosts(self):
+        if self.is_resource_controlled:
+            return self.resourcerequirement_set.filter(
+                resource_pool__resource_type=ResourceType.RESOURCE_TYPE_HOST
+            ).aggregate(
+                total_required=Sum('required_amount')
+            )['total_required'] or 0
+        else:
+            return int(self.needed_hosts)
+
+    @property
+    def total_required_teachers(self):
+        if self.is_resource_controlled:
+            return self.resourcerequirement_set.filter(
+                resource_pool__resource_type=ResourceType.RESOURCE_TYPE_TEACHER
+            ).aggregate(
+                total_required=Sum('required_amount')
+            )['total_required'] or 0
+        else:
+            return int(self.needed_teachers)
+
+    @property
+    def total_required_rooms(self):
+        if self.is_resource_controlled:
+            return self.resourcerequirement_set.filter(
+                resource_pool__resource_type=ResourceType.RESOURCE_TYPE_ROOM
+            ).aggregate(
+                total_required=Sum('required_amount')
+            )['total_required'] or 0
+        else:
+            return 1
 
     @property
     def bookable_times(self):
@@ -2011,6 +2113,10 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     @classmethod
     def filter_public_bookable(cls, queryset):
         nonblocked = EventTime.NONBLOCKED_RESOURCE_STATES
+        resource_controlled = [
+            Product.TIME_MODE_RESOURCE_CONTROLLED,
+            Product.TIME_MODE_RESOURCE_CONTROLLED_AUTOASSIGN
+        ]
         return queryset.filter(
             Q(time_mode=cls.TIME_MODE_GUEST_SUGGESTED) |
             Q(
@@ -2022,10 +2128,10 @@ class Product(AvailabilityUpdaterMixin, models.Model):
                 eventtime__visit__workflow_status__in=Visit.BOOKABLE_STATES,
             ) & Q(
                 # Either not resource controlled
-                (~Q(time_mode=Product.TIME_MODE_RESOURCE_CONTROLLED)) |
+                (~Q(time_mode__in=resource_controlled)) |
                 # Or resource-controlled with nonblocked eventtimes
                 Q(
-                    time_mode=Product.TIME_MODE_RESOURCE_CONTROLLED,
+                    time_mode__in=resource_controlled,
                     eventtime__resource_status__in=nonblocked
                 )
             )
@@ -2111,7 +2217,10 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def is_resource_controlled(self):
-        return self.time_mode == Product.TIME_MODE_RESOURCE_CONTROLLED
+        return self.time_mode in [
+            Product.TIME_MODE_RESOURCE_CONTROLLED,
+            Product.TIME_MODE_RESOURCE_CONTROLLED_AUTOASSIGN
+        ]
 
     @property
     def is_guest_time_suggested(self):
@@ -2120,6 +2229,17 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     @property
     def is_time_controlled(self):
         return self.time_mode != Product.TIME_MODE_NONE
+
+    @property
+    def are_resources_autoassigned(self):
+        return self.time_mode == \
+               Product.TIME_MODE_RESOURCE_CONTROLLED_AUTOASSIGN
+
+    def has_time_management(self):
+        return self.time_mode not in (
+            Product.TIME_MODE_NONE,
+            Product.TIME_MODE_GUEST_SUGGESTED
+        )
 
     @property
     def can_join_waitinglist(self):
@@ -2188,6 +2308,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     def uses_time_management(self):
         return self.time_mode is not None and self.time_mode in (
             Product.TIME_MODE_RESOURCE_CONTROLLED,
+            Product.TIME_MODE_RESOURCE_CONTROLLED_AUTOASSIGN,
             Product.TIME_MODE_SPECIFIC,
         )
 
@@ -2787,6 +2908,25 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 self.eventtime.start <= timezone.now():
             return "expired"
         return ""
+
+    def resources_assigned(self, requirement):
+        if self.is_multiproductvisit:
+            return self.multiproductvisit.resources_assigned(requirement)
+        return self.resources.filter(
+            visitresource__resource_requirement=requirement
+        )
+
+    def resources_required(self, resource_type):
+        missing = 0
+        for requirement in self.product.resourcerequirement_set.filter(
+            resource_pool__resource_type_id=resource_type
+        ):
+            resources = self.visitresource.filter(
+                resource_requirement=requirement
+            )
+            if resources.count() < requirement.required_amount:
+                missing += (requirement.required_amount - resources.count())
+        return missing
 
     @property
     def total_required_teachers(self):
@@ -3533,6 +3673,46 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
         return context
 
+    def resources_available_for_autoassign(self, resource_pool):
+        eligible = resource_pool.resources.exclude(visitresource__visit=self)
+        found = []
+        for resource in eligible:
+            if resource.available_for_visit(self):
+                found.append(resource)
+        return found
+
+    def autoassign_resources(self):
+        if self.is_multiproductvisit:
+            self.multiproductvisit.autoassign_resources()
+        if self.product.time_mode == \
+                Product.TIME_MODE_RESOURCE_CONTROLLED_AUTOASSIGN:
+            for requirement in self.product.resourcerequirement_set.all():
+                assigned = self.resources.filter(
+                    visitresource__resource_requirement=requirement
+                )
+                extra_needed = requirement.required_amount - assigned.count()
+                if extra_needed > 0:
+                    eligible = requirement.resource_pool.resources.exclude(
+                        id__in=[resource.id for resource in assigned]
+                    )
+                    random.shuffle(eligible)
+                    found = []
+                    for resource in eligible:
+                        if resource.available_for_visit(self):
+                            found.append(resource)
+                            if len(found) >= extra_needed:
+                                break
+                    if len(found) < extra_needed:
+                        # requirement cannot be fulfilled;
+                        # not enough available resources
+                        pass
+                    for resource in found:
+                        VisitResource(
+                            visit=self,
+                            resource=resource,
+                            resource_requirement=requirement
+                        ).save()
+
 
 Visit.add_override_property('duration')
 Visit.add_override_property('locality')
@@ -3602,6 +3782,16 @@ class MultiProductVisit(Visit):
 
     def planned_status_is_blocked(self):
         return True
+
+    def resources_assigned(self, requirement):
+        resource_list = []
+        for visit in self.subvisits_unordered:
+            resource_list += list(visit.resources_assigned(requirement))
+        # return resource_list
+        # Return as a Queryset, because someone may need the db methods
+        return Resource.objects.filter(
+            id__in=[res.id for res in resource_list]
+        )
 
     @property
     def total_required_teachers(self):
@@ -3783,6 +3973,10 @@ class MultiProductVisit(Visit):
                         unit
                     )
 
+    def autoassign_resources(self):
+        for visit in self.subvisits_unordered:
+            visit.autoassign_resources()
+
     def __unicode__(self):
         if hasattr(self, 'eventtime'):
             return _(u'Besøg %s - Prioriteret liste af %d underbesøg - %s') % (
@@ -3863,6 +4057,7 @@ class MultiProductVisitTemp(models.Model):
             )
             if index == 0:
                 mpv.responsible = product.tilbudsansvarlig
+        mpv.autoassign_resources()
         mpv.save()
         return mpv
 
