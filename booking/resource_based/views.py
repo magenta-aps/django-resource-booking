@@ -818,15 +818,24 @@ class ResourceRequirementCreateView(BackMixin, BreadcrumbMixin,
         )
 
     def form_valid(self, form):
-        return self.redirect(
-            reverse(
-                'resourcerequirement-create-confirm',
-                args=[self.product.id]
-            ) + "?resource_pool=%s&required_amount=%d" % (
-                form.cleaned_data['resource_pool'].id,
-                form.cleaned_data['required_amount']
+        if self.product.booked_eventtimes().count() > 0:
+            return self.redirect(
+                reverse(
+                    'resourcerequirement-create-confirm',
+                    args=[self.product.id]
+                ) + "?resource_pool=%s&required_amount=%d" % (
+                    form.cleaned_data['resource_pool'].id,
+                    form.cleaned_data['required_amount']
+                )
             )
-        )
+        else:
+            self.object = form.save()
+            return redirect(
+                reverse(
+                    'resourcerequirement-list',
+                    args=[self.object.product.id]
+                )
+            )
 
     def get_breadcrumbs(self):
         return [
@@ -883,7 +892,8 @@ class ResourceRequirementUpdateView(BackMixin, BreadcrumbMixin,
 
     def form_valid(self, form):
         new_required_amount = int(form.cleaned_data['required_amount'])
-        if new_required_amount > self.required_amount:
+        if new_required_amount > self.required_amount and \
+                self.product.booked_eventtimes().count() > 0:
             return self.redirect(
                 reverse(
                     'resourcerequirement-edit-confirm',
