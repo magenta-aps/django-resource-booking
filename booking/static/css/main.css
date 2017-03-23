@@ -2050,3 +2050,9 @@ body.lightbox {
 .table-bordered > thead {
     border-bottom-width: 1px;
 }
+
+.content-box {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 4px;
+}
