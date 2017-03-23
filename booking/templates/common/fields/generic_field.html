@@ -1,6 +1,6 @@
 {% if field %}
 <div class="row form-group">
-    <div class="col-sm-2{% if field.errors %} has-error{% endif %}{% if label_classes %} {{ label_classes }}{% endif %}">
+    <div class="{% if widelabel %}col-sm-3{% else %}col-sm-2{% endif %}{% if field.errors %} has-error{% endif %}{% if label_classes %} {{ label_classes }}{% endif %}">
         <label for="{{ field.id_for_label }}" class="control-label {% if field.field.required %}required{% endif %}">{{ field.label }}:</label>
         {% if field.help_text %}
             <span class="help-block">{{ field.help_text }}</span>
@@ -9,7 +9,7 @@
     <div class="col-sm-7{% if field_classes %} {{ field_classes }}{% endif %}">
         {{ field }}
     </div>
-    <div class="col-sm-3 with-errors{% if error_classes %} {{ error_classes }}{% endif %}">
+    <div class="{% if widelabel %}col-sm-2{% else %}col-sm-3{% endif %} with-errors{% if error_classes %} {{ error_classes }}{% endif %}">
         {{ field.errors }}
     </div>
 </div>
