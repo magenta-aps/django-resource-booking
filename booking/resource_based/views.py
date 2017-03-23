@@ -770,9 +770,10 @@ class ResourceRequirementConfirmMixin(object):
                 'eventtime': eventtime,
                 'assigned_count': self.get_assigned_count(eventtime.visit),
                 'available': eventtime.visit.
-                    resources_available_for_autoassign(resource_pool)
+                resources_available_for_autoassign(resource_pool)
             }
-            data['insufficient'] = len(data['available']) + old_amount < required_amount
+            data['insufficient'] = len(data['available']) + old_amount < \
+                required_amount
             visit_data.append(data)
 
         context = {
