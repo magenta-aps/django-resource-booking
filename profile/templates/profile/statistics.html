@@ -18,19 +18,21 @@
 
 <form class="clearfix" action="{% url 'statistics' %}" method="get">
     <div class="form-group row">
-        <label class="col-sm-2 control-label" for="{{ form.organizationalunit.id_units}}">{% trans 'Enheder:' %}</label>
+        <div class="col-sm-2">
+            <label class="control-label" for="{{ form.organizationalunits.id_for_label }}">{% trans 'Enheder:' %}</label>
+        </div>
         <div class="col-sm-6">
-            {{ form.units }}
+            {{ form.organizationalunits }}
         </div>
         <div class="col-sm-4">
             {% if form.organizationalunits.errors %}
                 {{ form.organizationalunits.errors }}
             {% else %}
                 <div class="content-box text-muted">
-                <dl class="dl-horizontal">
-                    <dt style="white-space: normal">{% trans 'Windows/<wbr/>Linux:' %}</dt><dd>{% trans 'Hold ctrl eller shift nede for at vælge flere enheder.' %}</dd>
-                    <dt>{% trans 'Mac:' %}</dt><dd>{% trans 'Hold &#8984;-tasten nede for at vælge flere enheder.' %}</dd>
-                </dl>
+                    <dl class="dl-horizontal">
+                        <dt style="white-space: normal">{% trans 'Windows/<wbr/>Linux:' %}</dt><dd>{% trans 'Hold ctrl eller shift nede for at vælge flere enheder.' %}</dd>
+                        <dt>{% trans 'Mac:' %}</dt><dd>{% trans 'Hold &#8984;-tasten nede for at vælge flere enheder.' %}</dd>
+                    </dl>
                 </div>
             {% endif %}
         </div>
