@@ -2349,12 +2349,6 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     def is_time_controlled(self):
         return self.time_mode != Product.TIME_MODE_NONE
 
-    def has_time_management(self):
-        return self.time_mode not in (
-            Product.TIME_MODE_NONE,
-            Product.TIME_MODE_GUEST_SUGGESTED
-        )
-
     @property
     def are_resources_autoassigned(self):
         return self.time_mode == \
