@@ -39,6 +39,7 @@ from profile.constants import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
 import math
 import uuid
 import sys
+import random
 
 BLANK_LABEL = '---------'
 BLANK_OPTION = (None, BLANK_LABEL,)
@@ -2909,6 +2910,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         return ""
 
     def resources_assigned(self, requirement):
+        if self.is_multiproductvisit:
+            return self.multiproductvisit.resources_assigned(requirement)
         return self.resources.filter(
             visitresource__resource_requirement=requirement
         )
@@ -3692,6 +3695,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                     eligible = requirement.resource_pool.resources.exclude(
                         id__in=[resource.id for resource in assigned]
                     )
+                    random.shuffle(eligible)
                     found = []
                     for resource in eligible:
                         if resource.available_for_visit(self):
@@ -3778,6 +3782,16 @@ class MultiProductVisit(Visit):
 
     def planned_status_is_blocked(self):
         return True
+
+    def resources_assigned(self, requirement):
+        resource_list = []
+        for visit in self.subvisits_unordered:
+            resource_list += list(visit.resources_assigned(requirement))
+        # return resource_list
+        # Return as a Queryset, because someone may need the db methods
+        return Resource.objects.filter(
+            id__in=[res.id for res in resource_list]
+        )
 
     @property
     def total_required_teachers(self):
