@@ -769,20 +769,25 @@ class ResourceRequirementConfirmMixin(object):
         )
         required_amount = int(self.request.GET.get('required_amount'))
         old_amount = self.get_old_amount()
+        visit_data = []
+        for eventtime in self.product.booked_eventtimes():
+            data = {
+                'visit': eventtime.visit,
+                'eventtime': eventtime,
+                'assigned_count': self.get_assigned_count(eventtime.visit),
+                'available': eventtime.visit.
+                resources_available_for_autoassign(resource_pool)
+            }
+            data['insufficient'] = len(data['available']) + old_amount < \
+                required_amount
+            visit_data.append(data)
+
         context = {
             'resource_pool': resource_pool,
             'required_amount': required_amount,
             'old_amount': old_amount,
             'delta': required_amount - old_amount,
-            'visit_data': [
-                {
-                    'visit': eventtime.visit,
-                    'eventtime': eventtime,
-                    'assigned_count': self.get_assigned_count(eventtime.visit),
-                    'available': eventtime.visit.
-                    resources_available_for_autoassign(resource_pool)
-                } for eventtime in self.product.booked_eventtimes()
-            ]
+            'visit_data': visit_data
         }
         context.update(kwargs)
         return super(ResourceRequirementConfirmMixin, self).get_context_data(
@@ -824,15 +829,24 @@ class ResourceRequirementCreateView(BackMixin, BreadcrumbMixin,
         )
 
     def form_valid(self, form):
-        return self.redirect(
-            reverse(
-                'resourcerequirement-create-confirm',
-                args=[self.product.id]
-            ) + "?resource_pool=%s&required_amount=%d" % (
-                form.cleaned_data['resource_pool'].id,
-                form.cleaned_data['required_amount']
+        if self.product.booked_eventtimes().count() > 0:
+            return self.redirect(
+                reverse(
+                    'resourcerequirement-create-confirm',
+                    args=[self.product.id]
+                ) + "?resource_pool=%s&required_amount=%d" % (
+                    form.cleaned_data['resource_pool'].id,
+                    form.cleaned_data['required_amount']
+                )
             )
-        )
+        else:
+            self.object = form.save()
+            return redirect(
+                reverse(
+                    'resourcerequirement-list',
+                    args=[self.object.product.id]
+                )
+            )
 
     def get_breadcrumbs(self):
         return [
@@ -889,7 +903,8 @@ class ResourceRequirementUpdateView(BackMixin, BreadcrumbMixin,
 
     def form_valid(self, form):
         new_required_amount = int(form.cleaned_data['required_amount'])
-        if new_required_amount > self.required_amount:
+        if new_required_amount > self.required_amount and \
+                self.product.booked_eventtimes().count() > 0:
             return self.redirect(
                 reverse(
                     'resourcerequirement-edit-confirm',
