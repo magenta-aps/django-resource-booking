@@ -1,4 +1,5 @@
 # encoding: utf-8
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.contrib.auth import models as auth_models
 from django.core.urlresolvers import reverse
@@ -1267,7 +1268,8 @@ class ResourceRequirement(AvailabilityUpdaterMixin, models.Model):
         verbose_name=_(u"Ressourcegruppe")
     )
     required_amount = models.IntegerField(
-        verbose_name=_(u"Påkrævet antal")
+        verbose_name=_(u"Påkrævet antal"),
+        validators=[MinValueValidator(1)]
     )
 
     def can_delete(self):

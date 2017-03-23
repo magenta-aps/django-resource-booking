@@ -45,7 +45,8 @@ from booking.views import MultiProductVisitTempUpdateView
 from booking.views import MultiProductVisitTempProductsView
 from booking.views import MultiProductVisitTempConfirmView
 
-from booking.resource_based.views import ResourceCreateView, ResourceDetailView
+from booking.resource_based.views import ResourceCreateView, ResourceDetailView, \
+    ResourceRequirementCreateConfirmView, ResourceRequirementUpdateConfirmView
 from booking.resource_based.views import ResourceListView, ResourceUpdateView
 from booking.resource_based.views import ResourceDeleteView
 
@@ -382,10 +383,23 @@ urlpatterns = patterns(
     url(r'^product/(?P<product>[0-9]+)/resourcerequirement/create/?$',
         ResourceRequirementCreateView.as_view(),
         name='resourcerequirement-create'),
+    url(r'^product/(?P<product>[0-9]+)/resourcerequirement/create/confirm/?$',
+        ResourceRequirementCreateConfirmView.as_view(),
+        name='resourcerequirement-create-confirm'),
+
+
+
     url(r'^product/(?P<product>[0-9]+)/resource'
         r'requirement/(?P<pk>[0-9]+)/edit/?$',
         ResourceRequirementUpdateView.as_view(),
         name='resourcerequirement-edit'),
+
+
+    url(r'^product/(?P<product>[0-9]+)/resource'
+        r'requirement/(?P<pk>[0-9]+)/edit/confirm/?$',
+        ResourceRequirementUpdateConfirmView.as_view(),
+        name='resourcerequirement-edit-confirm'),
+
     url(r'^product/(?P<product>[0-9]+)/resourcerequirement/?$',
         ResourceRequirementListView.as_view(),
         name='resourcerequirement-list'),

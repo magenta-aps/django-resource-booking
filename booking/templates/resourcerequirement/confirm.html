@@ -1,0 +1,71 @@
+{% extends 'index.html' %}
+{% load i18n %}
+
+{% block htmltitle %} - {% if object.pk %}{% trans "redigér ressourcebehov" %}{% else %}{% trans "opret ressourcebehov" %}{% endif %}{% endblock %}
+
+{% block content %}
+
+    {% include 'common/breadcrumbrow.html' %}
+    <div class="divider"></div>
+
+    <h1>{% if object.pk %}{% trans "Redigér ressourcebehov" %}{% else %}{% trans "Opret ressourcebehov" %}{% endif %}</h1>
+    <hr/>
+
+    <p>
+        <dl class="dl-horizontal wide">
+            <dt>{% trans 'Ressourcegruppe:' %}</dt>
+            <dd>{{ resource_pool.name }}</dd>
+            <dt>{% trans 'Antal (før):' %}</dt>
+            <dd>{{ old_amount }}</dd>
+            <dt>{% trans 'Antal (nu):' %}</dt>
+            <dd>{{ required_amount }}</dd>
+            <dt>{% trans 'Tilføjelse:' %}</dt>
+            <dd>{{ delta }}</dd>
+        </dl>
+    </p>
+
+    {{ form.errors }}
+
+    <p>{% trans 'Tilbuddet har allerede bookede besøg. Din ændring vil have indflydelse på disse' %}</p>
+
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>{% trans 'Tidspunkt' %}</th>
+                <th>{% trans 'Bookinger' %}</th>
+                <th>{% blocktrans with poolname=resource_pool.name %}Tildelte ressourcer ({{ poolname }}){% endblocktrans %}</th>
+                <th>{% blocktrans with poolname=resource_pool.name %}Ledige ressourcer ({{ poolname }}){% endblocktrans %}</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for item in visit_data %}
+            <tr {% if item.available|length < delta %}class="danger" data-toggle="tooltip" data-placement="right" title="{% blocktrans with poolname=resource_pool.name %}Der er ikke nok ledige ressourcer i gruppen &quot;{{ poolname }}&quot; på det tidspunkt hvor dette besøg foregår{% endblocktrans %}"{% endif %}>
+                <td><a href="{% url 'visit-view' item.visit.id %}">{{ item.eventtime.start }}</a></td>
+                <td>{{ item.visit.bookings.count }}</td>
+                <td>{{ item.assigned_count }}</td>
+                <td>{{ item.available|length }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <form action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% trans 'Er du sikker på at du vil gennemføre disse ændringer?' %}
+        {{ form.resource_pool }}
+        {{ form.required_amount }}
+        <div class="divider"></div>
+        <button type="submit" class="btn btn-primary">{% trans 'Ja' %}</button>
+        <a class="btn btn-default" href="{% if oncancel %}{{ oncancel }}{% else %}javascript:history.back(){% endif %}">{% trans 'Nej' %}</a>
+        <div class="divider"></div>
+    </form>
+
+{% endblock %}
+
+{% block extra_scripts %}
+    <script type="text/javascript">
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip();
+        })
+    </script>
+{% endblock %}
