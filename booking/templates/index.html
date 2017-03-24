@@ -86,7 +86,7 @@
         </nav>
 
         {% if user.is_authenticated %}
-        <div class="container personal-bar">
+        <div class="container personal-bar" style="height: auto; max-height: 30px;">
             <ul class="list-inline">
                 <li class="home"><a href="{% url 'user_profile' %}">{% trans 'Min side' %}</a></li>
                 {% if user.userprofile.is_administrator %}
