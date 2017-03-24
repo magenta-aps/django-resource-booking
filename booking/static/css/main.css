@@ -2053,8 +2053,8 @@ body.lightbox {
 
 .content-box {
     border: 1px solid #ccc;
-    border-radius: 4px;
     padding: 4px;
+    font-size: 12px;
 }
 
 .nowrap {
