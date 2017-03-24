@@ -3878,8 +3878,10 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 )
                 extra_needed = requirement.required_amount - assigned.count()
                 if extra_needed > 0:
-                    eligible = requirement.resource_pool.resources.exclude(
-                        id__in=[resource.id for resource in assigned]
+                    eligible = list(
+                        requirement.resource_pool.resources.exclude(
+                            id__in=[resource.id for resource in assigned]
+                        )
                     )
                     random.shuffle(eligible)
                     found = []
