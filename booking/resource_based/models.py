@@ -508,7 +508,7 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
 
         # Not available on times when we are booked as a resource
         if hasattr(self, 'resource'):
-            for x in self.resource.booked_eventtimes(from_dt, to_dt):
+            for x in self.resource.occupied_eventtimes(from_dt, to_dt):
                 if not x.start or not x.end:
                     continue
                 yield CalendarEventInstance(
