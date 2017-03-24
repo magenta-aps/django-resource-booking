@@ -501,53 +501,55 @@ class UserProfile(models.Model):
         return qs
 
     def save(self, *args, **kwargs):
-        exists = self.pk is not None
 
-        if not exists:
-            role = self.get_role()
-            if role in CLASSES_BY_ROLE:
-                classes = CLASSES_BY_ROLE[role]
-                content_types = [
-                    contenttype
-                    for contenttype in ContentType.objects.all()
-                    if contenttype.model_class() in classes
-                ]
-                permissions = Permission.objects.filter(
-                    content_type__in=content_types
-                )
-                for permission in permissions:
-                    self.user.user_permissions.add(permission)
+        self.update_user_permissions()
 
         result = super(UserProfile, self).save(*args, **kwargs)
 
-        if not exists:
-            # Create a resource for the user
-            if self.is_teacher and self.organizationalunit:
-                if self.user.teacherresource_set.exists():
-                    resource = self.user.teacherresource_set.first()
-                    resource.organizationalunit = self.organizationalunit
-                else:
-                    resource = booking.models.TeacherResource(
-                        user=self.user,
-                        organizationalunit=self.organizationalunit
-                    )
-                    resource.make_calendar()
-                resource.save()
+        # Create a resource for the user
+        if self.is_teacher and self.organizationalunit:
+            if self.user.teacherresource_set.exists():
+                resource = self.user.teacherresource_set.first()
+                resource.organizationalunit = self.organizationalunit
+            else:
+                resource = booking.models.TeacherResource(
+                    user=self.user,
+                    organizationalunit=self.organizationalunit
+                )
+                resource.make_calendar()
+            resource.save()
 
-            # Create a resource for the user
-            if self.is_host and self.organizationalunit:
-                if self.user.hostresource_set.exists():
-                    resource = self.user.hostresource_set.first()
-                    resource.organizationalunit = self.organizationalunit
-                else:
-                    resource = booking.models.HostResource(
-                        user=self.user,
-                        organizationalunit=self.organizationalunit
-                    )
-                    resource.make_calendar()
-                resource.save()
+        # Create a resource for the user
+        if self.is_host and self.organizationalunit:
+            if self.user.hostresource_set.exists():
+                resource = self.user.hostresource_set.first()
+                resource.organizationalunit = self.organizationalunit
+            else:
+                resource = booking.models.HostResource(
+                    user=self.user,
+                    organizationalunit=self.organizationalunit
+                )
+                resource.make_calendar()
+            resource.save()
 
         return result
+
+    def update_user_permissions(self):
+        role = self.get_role()
+        if role in CLASSES_BY_ROLE:
+            classes = CLASSES_BY_ROLE[role]
+            content_types = [
+                contenttype
+                for contenttype in ContentType.objects.all()
+                if contenttype.model_class() in classes
+            ]
+            permissions = Permission.objects.filter(
+                content_type__in=content_types,
+            ).exclude(
+                user=self.user
+            )
+            for permission in permissions:
+                self.user.user_permissions.add(permission)
 
 
 class EmailLoginURL(models.Model):
