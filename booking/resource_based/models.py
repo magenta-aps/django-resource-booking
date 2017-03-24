@@ -530,7 +530,7 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
                     )
 
         if hasattr(self, 'product'):
-            for x in self.product.booked_eventtimes(from_dt, to_dt):
+            for x in self.product.occupied_eventtimes(from_dt, to_dt):
                 if not x.start or not x.end:
                     continue
                 yield CalendarEventInstance(
@@ -934,7 +934,7 @@ class Resource(AvailabilityUpdaterMixin, models.Model):
     def can_delete(self):
         return True
 
-    def booked_eventtimes(self, dt_from=None, dt_to=None):
+    def occupied_eventtimes(self, dt_from=None, dt_to=None):
         qs = EventTime.objects.filter(
             visit__resources=self
         ).exclude(
@@ -953,7 +953,7 @@ class Resource(AvailabilityUpdaterMixin, models.Model):
                 from_dt, to_dt, exclude_sources
             )
 
-        qs = self.booked_eventtimes(from_dt, to_dt)
+        qs = self.occupied_eventtimes(from_dt, to_dt)
 
         visit_exclude_sources = set([
             x for x in exclude_sources if type(x) is Visit

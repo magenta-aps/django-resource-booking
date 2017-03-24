@@ -1184,9 +1184,9 @@ class CalendarView(LoginRequiredMixin, CalRelatedMixin, DetailView):
         prod = calendar.product if hasattr(calendar, 'product') else None
 
         if hasattr(calendar, 'resource'):
-            bt = calendar.resource.booked_eventtimes(start_dt, end_dt)
+            bt = calendar.resource.occupied_eventtimes(start_dt, end_dt)
         elif hasattr(calendar, 'product'):
-            bt = calendar.product.booked_eventtimes(start_dt, end_dt)
+            bt = calendar.product.occupied_eventtimes(start_dt, end_dt)
         else:
             bt = None
 
