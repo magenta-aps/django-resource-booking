@@ -38,6 +38,8 @@
         <ul>
         {% for eventtime in product.booked_eventtimes %}
             <li><a href="{% url 'visit-view' eventtime.visit.id %}">{{ eventtime.visit }}</a></li>
+        {% empty %}
+            <li>{% trans 'Der er ingen bookede besøg på tilbuddet' %}</li>
         {% endfor %}
         </ul>
     {% endif %}
