@@ -2479,7 +2479,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         else:
             return True
 
-    def booked_eventtimes(self, dt_from=None, dt_to=None):
+    def occupied_eventtimes(self, dt_from=None, dt_to=None):
         qs = self.eventtime_set.filter(
             visit__isnull=False,
             start__isnull=False,
@@ -2493,6 +2493,11 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             qs = qs.filter(start__lt=dt_to)
 
         return qs
+
+    def booked_eventtimes(self, dt_from=None, dt_to=None):
+        return self.occupied_eventtimes(dt_from, dt_to).filter(
+            visit__bookings__isnull=False
+        ).distinct()
 
     @classmethod
     # Migrate from old system where guest-suggest-time products was determined
