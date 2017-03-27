@@ -2599,7 +2599,6 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
         return self.visit.product
 
     def get(self, request, *args, **kwargs):
-        print "VisitBookingCreateView"
         return self.render_to_response(
             self.get_context_data(**self.get_forms())
         )

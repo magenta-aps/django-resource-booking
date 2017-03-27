@@ -1,9 +1,12 @@
 <p>Kære {{ recipient.get_full_name }}.</p>
 
 <p>
-    Du har tilmeldt dig besøg {{ visit.display_title }} på Københavns Universitet.
-    Vi vil gøre, hvad vi kan for at opfylde dit ønske om tidspunkt,
-    og du hører fra os, når besøget er planlagt.
+    Du har ønsket mindst {{ visit.real.required_visits }} a følgende besøg:
+    {% for product in visit.real.products %}
+        <a href="{% url 'product-visit' product.id %}">{{ product.title }}</a><br/>
+    {% endfor %}
+
+    Vi vil gøre, hvad vi kan for at opfylde dit ønske om tidspunkt, og du hører fra os, når besøget er planlagt.
     {% if visit.is_multiproductvisit %}
         {% include 'booking/email/snippets/contact_addresses.html' with product=visit.real.primary_visit.product %}
     {% else %}
@@ -15,16 +18,6 @@
 </p>
 <p>
 {% include 'booking/email/snippets/booking_info.html' with booking=booking booker=booking.booker %}
-</p>
-<p>
-    {% if visit.is_multiproductvisit %}
-        Læs mere om de ønskede tilbud her:
-        {% for product in visit.real.products %}
-            <a href="{% full_url 'product-view' product.pk %}">{{ product.title }}</a>{% if forloop.last %}.{% else %},{% endif %}
-        {% endfor %}
-    {% else %}
-        <a href="{% full_url 'product-view' product.pk %}">Læs mere om tilbuddet her</a>.
-    {% endif %}
 </p>
 {% include 'booking/email/snippets/reply_link.html' %}
 
