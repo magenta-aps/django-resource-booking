@@ -107,8 +107,8 @@ class EditMyProductsForm(forms.ModelForm):
 class StatisticsForm(forms.Form):
     organizationalunits = forms.ModelMultipleChoiceField(
         queryset=OrganizationalUnit.objects.none(),
-        widget=forms.SelectMultiple,
-        error_messages={'required': _(u'Dette felt er påkrævet!')}
+        widget=forms.SelectMultiple(attrs={'class':'form-control', 'style':'height:10em'}),
+        error_messages={'required': _(u'Dette felt er påkrævet!')},
     )
     from_date = forms.DateField(
         widget=forms.TextInput(
