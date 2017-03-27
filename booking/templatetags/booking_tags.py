@@ -28,7 +28,7 @@ def upload_name_strip_path(value):
 
 @register.filter
 def highlight(text, filter):
-    words = filter.split(' ')
+    words = [re.escape(x) for x in filter.split(' ')]
     pattern = re.compile(r"(?P<filter>%s)" % '|'.join(words), re.IGNORECASE)
     return mark_safe(re.sub(pattern, r"<mark>\g<filter></mark>", text))
 

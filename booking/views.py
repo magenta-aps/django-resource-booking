@@ -721,11 +721,15 @@ class SearchView(BreadcrumbMixin, ListView):
             val = None
         return val
 
+    search_prune = re.compile("\s\W+")
+
     def get_base_queryset(self):
         if self.base_queryset is None:
             searchexpression = self.request.GET.get("q", "").strip()
-
             if searchexpression:
+                searchexpression = SearchView.search_prune.sub(
+                    '', searchexpression
+                )
                 # We run a raw query on individual words, ANDed together
                 # and with a wildcard at the end of each word
                 searchexpression = " & ".join(
