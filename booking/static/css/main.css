@@ -1419,11 +1419,17 @@ body.lightbox {
     .navbar {
         margin-bottom: 0;
     }
-    .navbar-default .navbar-nav>li>a {
+    .navbar-default .navbar-nav>li>a,
+    .navbar-default .navbar-nav>li>button {
         color: #eee;
         padding: 3px 5px 0 9px;
     }
-    .navbar-default .navbar-nav>li>a:hover, .navbar-default .navbar-nav>li>a:active, .navbar-default .navbar-nav>li>a:focus {
+    .navbar-default .navbar-nav>li>a:hover,
+    .navbar-default .navbar-nav>li>button:hover,
+    .navbar-default .navbar-nav>li>a:active,
+    .navbar-default .navbar-nav>li>button:active,
+    .navbar-default .navbar-nav>li>a:focus,
+    .navbar-default .navbar-nav>li>button:focus {
         color: #eee;
         text-decoration: underline;
     }
@@ -1868,4 +1874,30 @@ body.lightbox {
         width: 35px;
         height: 35px;
     }
+}
+
+/* Let <button> tags exist in .nav-tabs with the same styling as <a> */
+/* So copy the styles that apply to the <a> tags */
+
+.nav-tabs > li.active > button,
+.nav-tabs > li.active > button:focus,
+.nav-tabs > li.active > button:hover {
+    color: #555;
+    cursor: default;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-bottom-color: transparent;
+}
+
+.nav-tabs > li > button {
+    margin-right: 2px;
+    line-height: 1.42857143;
+    border: 1px solid transparent;
+    border-radius: 4px 4px 0 0;
+}
+
+.nav > li > button {
+    position: relative;
+    display: block;
+    padding: 10px 15px;
 }

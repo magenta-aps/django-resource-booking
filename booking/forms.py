@@ -1343,6 +1343,9 @@ class MultiProductVisitTempProductsForm(forms.ModelForm):
         model = MultiProductVisitTemp
         fields = ['required_visits', 'notes']
         widgets = {
+            'required_visits': TextInput(
+                attrs={'class': 'form-control input-sm'}
+            ),
             'notes': Textarea(
                 attrs={'class': 'form-control input-sm'}
             )
