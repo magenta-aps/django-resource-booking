@@ -1799,7 +1799,7 @@ body.lightbox {
 }
 
 .content-box {
-    border: 1px solid #ccc;
+    line-height: 1.2;
     padding: 4px;
     font-size: 12px;
 }
