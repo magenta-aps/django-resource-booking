@@ -1367,7 +1367,7 @@ class MultiProductVisitTempProductsForm(forms.ModelForm):
     def clean(self):
         super(MultiProductVisitTempProductsForm, self).clean()
         if self.products_key in self.cleaned_data and \
-                        len(self.cleaned_data[self.products_key]) == 0:
+                len(self.cleaned_data[self.products_key]) == 0:
             raise forms.ValidationError(_(u"Der er ikke valgt nogen besøg"))
         products_selected = 0 if self.products_key not in self.cleaned_data \
             else len(self.cleaned_data[self.products_key])
