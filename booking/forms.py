@@ -1387,13 +1387,14 @@ class MultiProductVisitTempDateForm(forms.ModelForm):
         self.fields['date'].input_formats = ['%d-%m-%Y', '%d.%m.%Y']
 
     def clean(self):
-        date = self.cleaned_data['date']
-        product = self.cleaned_data['baseproduct']
-        if not product.is_bookable(date):
-            raise ValidationError(
-                {'date': _(u'Det valgte tilbud kan ikke '
-                           u'lade sig gøre på denne dato')}
-            )
+        if 'date' in self.cleaned_data:
+            date = self.cleaned_data['date']
+            product = self.cleaned_data['baseproduct']
+            if not product.is_bookable(date):
+                raise ValidationError(
+                    {'date': _(u'Det valgte tilbud kan ikke '
+                               u'lade sig gøre på denne dato')}
+                )
         return super(MultiProductVisitTempDateForm, self).clean()
 
 
