@@ -97,11 +97,15 @@
                 <div class="disclaimer">{% trans 'Bemærk at din bestilling først er bindende, når du har modtaget en bekræftelse fra den ansvarlige arrangør fra Københavns Universitet.' %}</div>
             {% endif %}
             <div class="go-back">
-                {% if searchurl != "/search" %}
-                    <a href="#" class="btn btn-default" onclick="history.go(-1); return false;"><span class="glyphicon glyphicon-chevron-left"></span>{% trans 'Tilbage til søgeresultat' %}</a>
-                {% else %}
-                    <a href="{{ searchurl }}" class="btn btn-default"><span class="glyphicon glyphicon-chevron-left"></span> {% trans 'Søg i tilbud' %}</a>
-                {% endif %}
+                {% url 'search' as basesearch %}
+                <a href="{{ searchurl }}" class="btn btn-default">
+                    <span class="glyphicon glyphicon-chevron-left"></span>
+                    {% if searchurl != basesearch %}
+                        {% trans 'Tilbage til søgeresultat' %}
+                    {% else %}
+                        {% trans 'Søg i tilbud' %}
+                    {% endif %}
+                </a>
             </div>
         </div>
         <div class="col-sm-6 col-md-5">
