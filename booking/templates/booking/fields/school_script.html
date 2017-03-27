@@ -27,8 +27,8 @@
                 showOptions = showOptions.add(levelSelect.find("option[value="+showValues[i]+"]"));
             }
             var hideOptions = levelSelect.find("option").not(showOptions);
-            showOptions.show();
-            hideOptions.hide();
+            showOptions.filter("span>option").unwrap();
+            hideOptions.filter(":not(span>option)").wrap("<span>").parent().hide();
             hideOptions.filter(":selected").removeAttr("selected");
         };
 
