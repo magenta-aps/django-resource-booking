@@ -14,7 +14,7 @@
 
 <div class="divider"></div>
 
-<h1>{{ organizationalunit.name }} - Statistik</h1>
+<h1>{% trans 'Statistik' %}</h1>
 
 <form class="clearfix" action="{% url 'statistics' %}" method="get">
     <div class="form-group row">
@@ -28,7 +28,7 @@
             {% if form.organizationalunits.errors %}
                 {{ form.organizationalunits.errors }}
             {% else %}
-                <div class="content-box text-muted">
+                <div class="text-muted" style="line-height: 1.2">
                     <p>{% trans 'Hold ctrl eller shift nede for at vælge flere enheder (Windows).' %}</p>
                     <p>{% trans 'Hold &#8984;-tasten nede for at vælge flere enheder (Mac).' %}</p>
                 </div>
