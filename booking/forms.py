@@ -1336,7 +1336,8 @@ class MultiProductVisitTempProductsForm(forms.ModelForm):
 
     products = OrderedModelMultipleChoiceField(
         queryset=Product.objects.all(),
-        widget=OrderedMultipleHiddenChooser()
+        widget=OrderedMultipleHiddenChooser(),
+        error_messages={'required': _(u"Der er ikke valgt nogen besøg")}
     )
 
     class Meta:
@@ -1353,6 +1354,8 @@ class MultiProductVisitTempProductsForm(forms.ModelForm):
 
     def clean_products(self):
         products = self.cleaned_data[self.products_key]
+        if len(products) == 0:
+            raise forms.ValidationError(_(u"Der er ikke valgt nogen besøg"))
         common_institution = binary_and([
             product.institution_level for product in products
         ])
@@ -1366,9 +1369,6 @@ class MultiProductVisitTempProductsForm(forms.ModelForm):
 
     def clean(self):
         super(MultiProductVisitTempProductsForm, self).clean()
-        if self.products_key in self.cleaned_data and \
-                len(self.cleaned_data[self.products_key]) == 0:
-            raise forms.ValidationError(_(u"Der er ikke valgt nogen besøg"))
         products_selected = 0 if self.products_key not in self.cleaned_data \
             else len(self.cleaned_data[self.products_key])
         if self.cleaned_data['required_visits'] > products_selected:
