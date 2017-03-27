@@ -14,13 +14,13 @@ echo '******************************'
 
 SYSTEM_PACKAGES=( $(cat "${DIR}/docs/SYSTEM_DEPENDENCIES") )
 
-for pkg in "${SYSTEM_PACKAGES[@]}"
-do
-    if [ $(dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -c "ok installed") -eq 0 ]
-    then
-        sudo apt-get -y install $pkg # > ${DIR}/install.log
-    fi
-done
+#for pkg in "${SYSTEM_PACKAGES[@]}"
+#do
+#    if [ $(dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -c "ok installed") -eq 0 ]
+#    then
+#        sudo apt-get -y install $pkg # > ${DIR}/install.log
+#    fi
+#done
 
 
 # Install virtualenv

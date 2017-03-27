@@ -48,7 +48,7 @@ INSTALLED_APPS = (
     'django_cron',
     'ckeditor',
     'ckeditor_uploader',
-    'macros'
+    'macros',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -235,7 +235,7 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 PUBLIC_URL_PROTOCOL = 'http'
-PUBLIC_URL_HOSTNAME = 'fokusku.dk'
+PUBLIC_URL_HOSTNAME = 'kubooking.magenta-aps.dk'
 PUBLIC_URL_PORT = None
 
 local_settings_file = os.path.join(
@@ -267,3 +267,4 @@ CRON_CLASSES = [
     "booking.cron.NotifyEventTimeJob",
     "booking.cron.EvaluationReminderJob"
 ]
+
