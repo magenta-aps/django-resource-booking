@@ -1901,14 +1901,6 @@ body.lightbox {
     display: block;
     padding: 10px 15px;
 }
-/*
-.popup-container {
-    position: fixed;
-    left: 0;
-    right: 0;
-    width: 100%;
-    height: 100%;
-}*/
 
 .alert-popup {
     position: fixed;
