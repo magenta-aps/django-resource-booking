@@ -2065,6 +2065,7 @@ body.lightbox {
 
 .nowrap {
     white-space: nowrap;
+}
 
 /* Let <button> tags exist in .nav-tabs with the same styling as <a> */
 /* So copy the styles that apply to the <a> tags */
