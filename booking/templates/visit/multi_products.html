@@ -17,6 +17,9 @@
     <h1>{% blocktrans %}Bestil flere besøg på den samme dag{% endblocktrans %}</h1>
     <div class="divider"></div>
 
+        <div class="alert alert-success alert-popup" role="alert" id="success_popup">{% trans 'Besøget er tilføjet' %}</div>
+
+
     <form id="mpvform" action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
 
         <ul class="nav nav-tabs step-anchor">
@@ -120,6 +123,7 @@
             var inputPrototype = $("[name='{{ form.products.name }}'][data-prototype]");
             var placeholder = deselectedList.find("#placeholder");
             var drawHelp = $("#drawhelp");
+            var success_popup = $("#success_popup");
 
             var update = function() {
                 var anySelected = !!selectedList.children().not(placeholder).length;
@@ -155,6 +159,11 @@
                 {# Move the <li> to the deselected list #}
                 selectedList.append(deselectedList.find("li#product_"+id));
                 update();
+                success_popup.fadeIn(1000, function(){
+                    setTimeout(function(){
+                        success_popup.fadeOut(1000);
+                    }, 1000);
+                });
             };
             $(".selectbutton").on('click', select);
             update();
