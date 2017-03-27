@@ -2092,3 +2092,13 @@ body.lightbox {
     display: block;
     padding: 10px 15px;
 }
+
+.alert-popup {
+    position: fixed;
+    left: 50%;
+    width: 300px;
+    margin-left: -150px;
+    top: 50%;
+    z-index: 100;
+    display: none;
+}
