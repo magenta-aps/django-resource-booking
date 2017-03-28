@@ -346,24 +346,6 @@
 
                     <div class="row row-border">
                         <strong class="{{ left_class }}">
-                            {% trans 'Link til evaluering' %}
-                        </strong>
-                        <div class="{{ center_class }}">
-                            {% if object.evaluation_link %}
-                                <a href="{{ object.evaluation_link }}">{{ object.evaluation_link }}</a>
-                            {% else %}
-                                {% trans 'Ikke angivet' %}
-                            {% endif %}
-                        </div>
-                        {% if can_edit %}
-                            <div class="{{ right_class }}">
-                                <a href="{% url 'change-visit-eval' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Redigér' %}</a>
-                            </div>
-                        {% endif %}
-                    </div>
-
-                    <div class="row row-border">
-                        <strong class="{{ left_class }}">
                             {% trans 'Interne kommentarer' %}
                         </strong>
                         <div class="{{ center_class }}">
