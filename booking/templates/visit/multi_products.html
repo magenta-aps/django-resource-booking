@@ -168,7 +168,7 @@
             Sortable.create(
                 selectedList.get(0),
                 {
-                    'handle': '.movebutton',
+                    //'handle': '.movebutton',
                     'onSort': function(evt) {
                         {# Move the associated hidden input field to the correct index #}
                         var inputFields = $("input[name='{{ form.products.name }}'][disabled!='disabled']");
