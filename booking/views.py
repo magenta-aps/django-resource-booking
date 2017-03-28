@@ -36,7 +36,7 @@ from django.views.generic.edit import FormMixin, ModelFormMixin
 from django.views.generic.edit import FormView, ProcessFormView
 from django.views.defaults import bad_request
 
-from profile.models import EDIT_ROLES
+from profile.models import EDIT_ROLES, ADMINISTRATOR
 from profile.models import role_to_text
 from booking.models import Product, Visit, StudyMaterial
 from booking.models import KUEmailMessage
@@ -493,6 +493,10 @@ class EmailSuccessView(TemplateView):
 
 class EditorRequriedMixin(RoleRequiredMixin):
     roles = EDIT_ROLES
+
+
+class AdminRequiredMixin(RoleRequiredMixin):
+    roles = [ADMINISTRATOR]
 
 
 class UnitAccessRequiredMixin(object):
@@ -2765,7 +2769,7 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
         return super(VisitBookingCreateView, self).get_context_data(**context)
 
 
-class EmbedcodesView(TemplateView):
+class EmbedcodesView(AdminRequiredMixin, TemplateView):
     template_name = "embedcodes.html"
 
     def get_context_data(self, **kwargs):
