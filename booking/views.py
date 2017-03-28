@@ -3523,6 +3523,7 @@ class EmailReplyView(BreadcrumbMixin, DetailView):
         context = {}
         context['form'] = self.get_form()
         context['product'] = self.get_product()
+        context['is_guest_mail'] = self.object.template_type.send_to_booker
         context.update(kwargs)
         return super(EmailReplyView, self).get_context_data(**context)
 
