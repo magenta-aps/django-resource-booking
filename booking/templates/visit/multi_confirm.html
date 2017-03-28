@@ -14,7 +14,6 @@
     <div class="divider"></div>
 
     <h1>{% blocktrans %}Bestil flere besøg på den samme dag{% endblocktrans %}</h1>
-    <div class="divider"></div>
 
     <ul class="nav nav-tabs step-anchor">
         <li>
@@ -27,6 +26,7 @@
             <a href="{% url 'mpv-confirm' object.id %}" role="button">{% trans 'Bekræft' %}</a>
         </li>
     </ul>
+    <div class="divider"></div>
 
     <form id="mpvform" action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
 
