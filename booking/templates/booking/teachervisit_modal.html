@@ -23,11 +23,4 @@
 {% block extra_scripts %}
     {% include 'booking/fields/school_script.html' %}
     {% include "booking/fields/time_script.html" %}
-    <script type="text/javascript">
-        $(function(){
-            $("#submitbutton").click(function(){
-                $("#bookingform").submit();
-            });
-        });
-    </script>
 {% endblock %}
