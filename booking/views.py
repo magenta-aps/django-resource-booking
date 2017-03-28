@@ -3418,6 +3418,7 @@ class EmailReplyView(BreadcrumbMixin, DetailView):
     original_object = None
 
     def get_form(self):
+        print self.object.body
         if self.form is None:
             if self.request.method == "GET":
                 self.form = EmailReplyForm()
