@@ -30,10 +30,6 @@
     {% include "booking/fields/time_script.html" %}
     <script type="text/javascript">
         $(function(){
-            $("#submitbutton").click(function(){
-                console.log("submitbutton click");
-                $("#bookingform").submit();
-            });
             $("#cancelbutton").click(function(){
                 {% if back %}
                     document.location = "{{ back }}";
