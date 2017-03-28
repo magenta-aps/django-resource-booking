@@ -92,7 +92,7 @@
                 {% if user.userprofile.is_administrator %}
                 <li><a href="{% url 'admin:index' %}">{% trans 'Avanceret' %}</a></li>
                 {% endif %}
-                {% if view.kwargs.can_be_embedded %}
+                {% if view.kwargs.can_be_embedded and user.userprofile.is_administrator %}
                 <li><a href="{% url 'embedcodes' view.request.get_full_path|slice:"1:" %}">{% trans 'Indlejr side' %}</a></li>
                 {% endif %}
                 <li class="pull-right">
