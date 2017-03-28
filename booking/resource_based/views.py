@@ -759,6 +759,8 @@ class ResourceRequirementConfirmMixin(object):
 
     def form_valid(self, form):
         self.object = form.save()
+        for eventtime in self.product.booked_eventtimes():
+            eventtime.visit.autoassign_resources()
         return redirect(
             reverse('resourcerequirement-list', args=[self.object.product.id])
         )
