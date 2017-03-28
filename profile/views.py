@@ -102,6 +102,12 @@ class ProfileView(LoginRequiredMixin, TemplateView):
 
         context['is_editor'] = self.request.user.userprofile.has_edit_role()
 
+        context['autoassign_failed'] = Product.objects.filter(
+            eventtime__visit__workflow_status=Visit.WORKFLOW_STATUS_AUTOASSIGN_FAILED
+        )
+        context['autoassign_failed_status'] = \
+            Visit.WORKFLOW_STATUS_AUTOASSIGN_FAILED
+
         for list in context['lists']:
             if 'title' in list:
                 if type(list['title']) == dict:
