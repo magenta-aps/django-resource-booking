@@ -155,6 +155,11 @@ strong, .bold {
     margin: 0 auto;
 }
 
+textarea.form-control {
+    width: 100%;
+    resize: none;
+}
+
 @media (min-width: 768px) {
     .container {
         padding-left: 26px;
