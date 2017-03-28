@@ -105,7 +105,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         autoassign_fail = Visit.WORKFLOW_STATUS_AUTOASSIGN_FAILED
         context['autoassign_failed'] = Product.objects.filter(
             eventtime__visit__workflow_status=autoassign_fail
-        )
+        ).distinct()
         context['autoassign_failed_status'] = autoassign_fail
 
         for list in context['lists']:
