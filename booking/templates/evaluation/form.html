@@ -84,7 +84,7 @@
             {'key': 'tname', 'default': '{{ guest.full_name }}'},
             {'key': 'uname', 'default': '{{ guest.full_name }}'},
             {'key': 'email', 'default': '{{ guest.email }}'},
-            {'key': 'uv'},
+            {'key': 'uv', 'default': '{{ visit.assigned_teachers.first.get_full_name|default:"" }}'},
             {'key': 'of'},
             {'key': 'oename', 'default': '{{ visit.display_title }}'},
             {'key': 'bd', 'default': '{{ visit.start_datetime|date:"j F" }}'},
