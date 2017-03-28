@@ -3197,7 +3197,10 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     @classmethod
     def being_planned_queryset(cls, **kwargs):
         return cls.objects.filter(
-            workflow_status=cls.WORKFLOW_STATUS_BEING_PLANNED,
+            workflow_status__in=[
+                cls.WORKFLOW_STATUS_BEING_PLANNED,
+                cls.WORKFLOW_STATUS_AUTOASSIGN_FAILED
+            ],
             **kwargs
         )
 

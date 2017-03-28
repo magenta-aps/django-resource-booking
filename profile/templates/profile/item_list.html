@@ -63,8 +63,16 @@
                         {% if visit.real.comments %}
                             <p class="status-comment">{% trans 'Kommentar:' %} {{ visit.real.comments }}</p>
                         {% endif %}
-                        {% if list.color != 'alert-danger' %}
-                            <p><span class="label label-{{ visit.real.get_workflow_status_class }} pull-right">{{ visit.real.get_workflow_status_display }}</span></p>
+                        {% if visit.real.workflow_status != visit.WORKFLOW_STATUS_BEING_PLANNED %}
+                            <p>
+                                <span class="label label-{{ visit.real.get_workflow_status_class }} pull-right">
+                                    {% if visit.real.workflow_status == visit.WORKFLOW_STATUS_AUTOASSIGN_FAILED %}
+                                        {% trans 'Ressourceændring' %}
+                                    {% else %}
+                                        {{ visit.real.get_workflow_status_display }}
+                                    {% endif %}
+                                </span>
+                            </p>
                         {% endif %}
                     </div>
                 {% endfor %}
