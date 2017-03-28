@@ -37,9 +37,6 @@
 
     <script type="text/javascript">
         $(function(){
-            $("#submitbutton").click(function(){
-                $("#bookingform").submit();
-            });
             $("#cancelbutton").click(function(){
                 {% if back %}
                     document.location = "{{ back }}";
