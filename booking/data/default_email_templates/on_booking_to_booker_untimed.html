@@ -4,7 +4,7 @@
     Du har ønsket mindst {{ visit.real.required_visits }} af følgende besøg:
     <ul>
     {% for product in visit.real.products %}
-        <li><a href="{% url 'product-visit' product.id %}">{{ product.title }}</a></li>
+        <li><a href="{% url 'product-view' product.id %}">{{ product.title }}</a></li>
     {% endfor %}
     </ul>
 
