@@ -15,9 +15,8 @@
     <div class="divider"></div>
 
     <h1>{% blocktrans %}Bestil flere besøg på den samme dag{% endblocktrans %}</h1>
-    <div class="divider"></div>
-    <form id="mpvform" action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
 
+    <form id="mpvform" action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
         <ul class="nav nav-tabs step-anchor">
             {% if object and object.id %}
                 <li class="active">
@@ -41,6 +40,8 @@
                 </li>
             {% endif %}
         </ul>
+        <div class="divider"></div>
+
         {{ form.non_field_errors }}
 
         {% csrf_token %}

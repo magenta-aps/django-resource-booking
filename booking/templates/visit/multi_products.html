@@ -15,7 +15,6 @@
     <div class="divider"></div>
 
     <h1>{% blocktrans %}Bestil flere besøg på den samme dag{% endblocktrans %}</h1>
-    <div class="divider"></div>
 
     <div class="alert alert-success alert-popup" role="alert" id="success_popup">{% trans 'Besøget er tilføjet' %}</div>
 
@@ -32,6 +31,7 @@
                 <button type="submit" formaction="?next={% url 'mpv-confirm' object.id %}" role="button">{% trans 'Bekræft' %}</button>
             </li>
         </ul>
+        <div class="divider"></div>
 
         <h2>{% trans 'Mine besøg' %}</h2>
 
@@ -116,10 +116,8 @@
     <script>
     <!--
         $(function() {
-            var dateSelect = $("[name='{{ form.date.name }}']");
             var selectedList = $("#selected-product-list");
             var deselectedList = $("#deselected-product-list");
-            var inputPrototype = $("[name='{{ form.products.name }}'][data-prototype]");
             var placeholder = deselectedList.find("#placeholder");
             var drawHelp = $("#drawhelp");
             var success_popup = $("#success_popup");
@@ -166,7 +164,6 @@
             };
             $(".selectbutton").on('click', select);
             update();
-
 
             Sortable.create(
                 selectedList.get(0),

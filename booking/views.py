@@ -2696,7 +2696,8 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
         context = {
             'level_map': Guest.level_map,
             'modal': self.modal,
-            'times_available': available_times
+            'times_available': available_times,
+            'visit_multiple': True
         }
         context.update(kwargs)
         return super(VisitBookingCreateView, self).get_context_data(**context)
