@@ -918,6 +918,8 @@ class ResourceRequirementUpdateView(BackMixin, BreadcrumbMixin,
             )
         else:
             self.object = form.save()
+            for eventtime in self.product.booked_eventtimes():
+                eventtime.visit.resources_updated()
             return redirect(
                 reverse(
                     'resourcerequirement-list',
@@ -1018,6 +1020,15 @@ class ResourceRequirementDeleteView(BackMixin, BreadcrumbMixin,
             },
             {'text': _(u'Slet ressourcebehov')}
         ]
+
+    def delete(self, *args, **kwargs):
+        product = self.get_object().product
+        response = super(ResourceRequirementDeleteView, self).delete(
+            *args, **kwargs
+        )
+        for eventtime in product.booked_eventtimes():
+            eventtime.visit.resources_updated()
+        return response
 
 
 class VisitResourceEditView(EditorRequriedMixin, FormView):
