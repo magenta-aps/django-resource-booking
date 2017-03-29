@@ -40,8 +40,8 @@ from profile.constants import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
 
 import math
 import uuid
-import sys
 import random
+import sys
 
 BLANK_LABEL = '---------'
 BLANK_OPTION = (None, BLANK_LABEL,)
@@ -184,6 +184,7 @@ class OrganizationalUnit(models.Model):
         blank=True
     )
     autoassign_resources_enabled = models.BooleanField(
+        verbose_name=_(u'Automatisk tildeling mulig'),
         default=False
     )
 
