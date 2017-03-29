@@ -180,6 +180,7 @@ class OrganizationalUnit(models.Model):
         blank=True
     )
     autoassign_resources_enabled = models.BooleanField(
+        verbose_name=_(u'Automatisk tildeling mulig'),
         default=False
     )
 
