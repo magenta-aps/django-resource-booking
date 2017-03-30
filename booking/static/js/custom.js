@@ -46,16 +46,6 @@ $("#reset-btn").click(function() {
     $("form").trigger("submit")
 });
 
-// Automatically submit the search form whenever the filters are changed
-$(function() {
-    $('#filter-search-results input[type=checkbox]').on('change', function() {
-        $(this.form).trigger("submit")
-    });
-    $('#filter-search-results input.datepicker').on('changeDate', function() {
-        $(this.form).trigger("submit")
-    });
-});
-
 // Move child items to a destination (handy when django just doesn't let you put elements where they should be
 // Usage: put items in a container and add attributes: <div data-move="input" data-target="#move_{data-attr}" data-attr="value"><input type="checkbox" value="hey"></div>
 // Also add or modify a recipient container: <div id="move_hey"></div>
@@ -97,3 +87,33 @@ $.fn.enable = function(doEnable, key) {
         $this.data("disable", locks);
     });
 };
+
+
+(function($){
+    $("input[type='number'][data-validation-number-min-message][min]").on('input.bs.validator change.bs.validator focusout.bs.validator', function(){
+        var $this = $(this),
+            key = 'native-error',
+            message = $this.attr('data-validation-number-min-message');
+        if (message) {
+            message = message.replace("%d", ""+this.min);
+            if (!this.checkValidity() && (parseInt(this.value, 10) < parseInt(this.min, 10))) {
+                $this.data(key, message);
+            } else if ($this.data(key) === message) {
+                $this.removeData(key);
+            }
+        }
+    });
+    $("input[type='number'][data-validation-number-max-message][max]").on('input.bs.validator change.bs.validator focusout.bs.validator', function(){
+        var $this = $(this),
+            key = 'native-error',
+            message = $this.attr('data-validation-number-max-message');
+        if (message) {
+            message = message.replace("%d", ""+this.max);
+            if (!this.checkValidity() && (parseInt(this.value, 10) > parseInt(this.max, 10))) {
+                $this.data(key, message);
+            } else if ($this.data(key) === message) {
+                $this.removeData(key);
+            }
+        }
+    });
+}(jQuery));
