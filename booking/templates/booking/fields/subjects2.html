@@ -46,12 +46,16 @@
                     <div class="col-sm-2">
                         <label class="control-label" for="{{ form.subject.id_for_label }}">{% trans "Fag/Niveau (Grundskole)" %}</label>
                     </div>
-                    <div class="col-sm-4{% if form.subject.errors %} has-error{% endif %}">
+                    <div class="{% if bookerform.level and not no_level_field %}col-sm-6{% else %}col-sm-4{% endif %}{% if form.subject.errors %} has-error{% endif %}">
                         {{ form.subject }}
                     </div>
-                    <div class="col-sm-2{% if form.level.errors %} has-error{% endif %}">
-                        {{ form.level }}
-                    </div>
+                    {% if bookerform.level and not no_level_field %}
+                        <input id="{{ form.level.id_for_label }}" type="hidden" name="{{ form.level.html_name }}" class="subjectlevel" value="{{ form.level.value|default:'' }}"/>
+                    {% else %}
+                        <div class="col-sm-2{% if form.level.errors %} has-error{% endif %}">
+                             {{ form.level }}
+                        </div>
+                    {% endif %}
                     <div class="col-sm-1 rowadder">
                         <button type="button" id="addRow2" class="btn action">{% trans "Tilføj ny" %}</button>
                     </div>

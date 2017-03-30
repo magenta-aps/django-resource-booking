@@ -1,4 +1,5 @@
 {% load i18n %}
+{% load booking_tags %}
 {% if gymnasiesubjectform or grundskolesubjectform %}
 <script type="text/javascript" src="{% static 'js/formset-row.js' %}"></script>
 <script type="text/javascript" id="subjects2_script">
@@ -45,6 +46,9 @@
             button.text('{% trans "Fjern" %}');
             button.click(removeRow);
             row.find(".with-errors").remove();
+            {% if bookerform.level and not no_level_field %}
+                row.find("input.subjectlevel").val($("#{{ bookerform.level.id_for_label }}").val());
+            {% endif %}
         };
 
         var removeRow = function() {
@@ -85,6 +89,19 @@
 
 
     });
+
+    {% if bookerform.level and not no_level_field %}
+    $(function(){
+        {% autoescape off %}
+        var conversion = {{ grundskole_level_conversion | jsonify }};
+        {% endautoescape %}
+        $("#{{ bookerform.level.id_for_label }}").change(function(){
+            if (this.value in conversion) {
+                $("input.subjectlevel").val(conversion[this.value]);
+            }
+        });
+    });
+    {% endif %}
     //-->
 </script>
 {% endif %}

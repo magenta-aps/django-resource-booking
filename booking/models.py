@@ -9,6 +9,7 @@ from django.db.models import Max
 from django.db.models import Sum
 from django.db.models import Q
 from django.db.models.base import ModelBase
+from django.db.models.functions import Coalesce
 from django.utils import six
 from django.template.context import make_context
 from django.utils import timezone
@@ -505,6 +506,11 @@ class EmailTemplateType(
         null=True
     )
 
+    ordering = models.IntegerField(
+        verbose_name=u'Sortering',
+        default=0
+    )
+
     @property
     def name(self):
         return self.name_da
@@ -572,6 +578,8 @@ class EmailTemplateType(
 
     enable_autosend = models.BooleanField(default=False)
 
+    form_show = models.BooleanField(default=False)
+
     @staticmethod
     def set_default(key, **kwargs):
         try:
@@ -592,38 +600,43 @@ class EmailTemplateType(
     def set_defaults():
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED,
-            name_da=u'Besked til gæst ved booking af besøg (med fast tid)',
+            name_da=u'Besked til gæst ved tilmelding (med fast tid)',
             manual_sending_visit_enabled=True,
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
             send_to_booker=True,
             enable_booking=True,
             is_default=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True,
+            ordering=1
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED_UNTIMED,
-            name_da=u'Besked til gæst ved booking af besøg '
-                    u'(besøg uden fast tid)',
+            name_da=u'Besked til gæst ved tilmelding (besøg uden fast tid)',
             manual_sending_visit_enabled=True,
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
             send_to_booker=True,
             enable_booking=True,
             is_default=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True,
+            ordering=2
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED_WAITING,
-            name_da=u'Besked til gæster har tilmeldt sig venteliste',
+            name_da=u'Besked til gæster der har tilmeldt sig venteliste',
             manual_sending_visit_enabled=True,
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
             send_to_booker=True,
             enable_booking=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True,
+            ordering=3
         )
 
         EmailTemplateType.set_default(
@@ -634,15 +647,20 @@ class EmailTemplateType(
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
             enable_booking=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True,
+            ordering=4
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__SPOT_OPEN,
-            name_da=u'Besked til gæst, der får tilbudt plads venteliste',
+            name_da=u'Mail til gæst fra venteliste, '
+                    u'der får tilbudt plads på besøget',
             manual_sending_visit_enabled=True,
             enable_booking=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True,
+            ordering=5
         )
 
         EmailTemplateType.set_default(
@@ -650,7 +668,10 @@ class EmailTemplateType(
             name_da=u'Besked til gæst ved accept af plads (fra venteliste)',
             send_to_booker=True,
             enable_booking=True,
-            enable_autosend=True
+            enable_autosend=True,
+            is_default=True,
+            form_show=False,
+            ordering=6
         )
 
         EmailTemplateType.set_default(
@@ -658,7 +679,9 @@ class EmailTemplateType(
             name_da=u'Besked til gæst ved afvisning af plads (fra venteliste)',
             send_to_booker=True,
             enable_booking=True,
-            enable_autosend=True
+            enable_autosend=False,
+            form_show=False,
+            ordering=7
         )
 
         EmailTemplateType.set_default(
@@ -667,7 +690,9 @@ class EmailTemplateType(
             manual_sending_visit_enabled=True,
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True,
+            ordering=8
         )
 
         EmailTemplateType.set_default(
@@ -676,7 +701,9 @@ class EmailTemplateType(
             send_to_contactperson=True,
             enable_booking=True,
             is_default=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True,
+            ordering=9
         )
 
         EmailTemplateType.set_default(
@@ -685,7 +712,10 @@ class EmailTemplateType(
                     u'af plads (fra venteliste)',
             send_to_contactperson=True,
             enable_booking=True,
-            enable_autosend=True
+            enable_autosend=True,
+            is_default=True,
+            form_show=False,
+            ordering=10
         )
 
         EmailTemplateType.set_default(
@@ -696,7 +726,9 @@ class EmailTemplateType(
             send_to_potential_hosts=True,
             enable_booking=True,
             avoid_already_assigned=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True,
+            ordering=11
         )
 
         EmailTemplateType.set_default(
@@ -708,7 +740,9 @@ class EmailTemplateType(
             send_to_potential_teachers=True,
             enable_booking=True,
             avoid_already_assigned=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True,
+            ordering=12
         )
 
         EmailTemplateType.set_default(
@@ -716,7 +750,9 @@ class EmailTemplateType(
             name_da=u'Bekræftelsesmail til vært',
             manual_sending_visit_enabled=True,
             send_to_visit_added_host=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True,
+            ordering=13
         )
 
         EmailTemplateType.set_default(
@@ -724,7 +760,9 @@ class EmailTemplateType(
             name_da=u'Bekræftelsesmail til underviser',
             manual_sending_visit_enabled=True,
             send_to_visit_added_teacher=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True,
+            ordering=14
         )
 
         EmailTemplateType.set_default(
@@ -733,7 +771,9 @@ class EmailTemplateType(
                     u'ledig værtsrolle på besøg',
             send_to_editors=True,
             enable_days=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True,
+            ordering=15
         )
 
         EmailTemplateType.set_default(
@@ -741,7 +781,9 @@ class EmailTemplateType(
             name_da=u'Besked til lokaleansvarlig',
             manual_sending_visit_enabled=True,
             manual_sending_mpv_sub_enabled=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True,
+            ordering=16
         )
 
         EmailTemplateType.set_default(
@@ -755,7 +797,9 @@ class EmailTemplateType(
             send_to_visit_hosts=True,
             send_to_visit_teachers=True,
             enable_booking=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True,
+            ordering=17
         )
 
         EmailTemplateType.set_default(
@@ -768,7 +812,9 @@ class EmailTemplateType(
             send_to_visit_hosts=True,
             send_to_visit_teachers=True,
             enable_booking=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True,
+            ordering=18
         )
 
         EmailTemplateType.set_default(
@@ -782,31 +828,41 @@ class EmailTemplateType(
             send_to_visit_hosts=True,
             send_to_visit_teachers=True,
             enable_days=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True,
+            ordering=19
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_ALL_EVALUATION,
             name_da=u'Besked til alle om evaluering',
             manual_sending_visit_enabled=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True,
+            ordering=20
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.SYSTEM__BASICMAIL_ENVELOPE,
-            name_da=u'Forespørgsel fra bruger via kontaktformular',
-            enable_autosend=False
+            name_da=u'Besked til tilbudsansvarlig',
+            enable_autosend=False,
+            form_show=False,
+            ordering=21
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.SYSTEM__EMAIL_REPLY,
             name_da=u'Svar på e-mail fra systemet',
-            enable_autosend=False
+            enable_autosend=False,
+            form_show=False,
+            ordering=22
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.SYSTEM__USER_CREATED,
-            name_da=u'Besked til bruger ved brugeroprettelse'
+            name_da=u'Besked til bruger ved brugeroprettelse',
+            form_show=False,
+            ordering=23
         )
 
     @staticmethod
@@ -863,23 +919,52 @@ class EmailTemplateType(
     def add_defaults_to_all():
         for product in Product.objects.all():
             for template_type in EmailTemplateType.objects.filter(
-                is_default=True
+                enable_autosend=True
             ):
-                if product.productautosend_set.filter(
+                qs = product.productautosend_set.filter(
                     template_type=template_type
-                ).count() == 0:
-                    print "    create autosends for product %d" % product.id
+                )
+                if qs.count() == 0:
+                    print "    create autosend type %d for product %d" % \
+                          (template_type.key, product.id)
                     autosend = ProductAutosend(
                         template_key=template_type.key,
                         template_type=template_type,
                         product=product,
-                        enabled=True
+                        enabled=template_type.is_default
                     )
                     autosend.save()
-                    for visit in product.visit_set.all():
-                        print "        creating inheriting autosends for " \
-                              "visit %d" % visit.id
-                        visit.create_inheriting_autosends()
+                elif qs.count() > 1:
+                    print "    removing extraneous autosend %d " \
+                          "for product %d" % (template_type.key, product.id)
+                    for extra in qs[1:]:
+                        extra.delete()
+
+        for visit in Visit.objects.all():
+            if not visit.is_multiproductvisit:
+                for template_type in EmailTemplateType.objects.filter(
+                    enable_autosend=True
+                ):
+                    qs = visit.visitautosend_set.filter(
+                        template_type=template_type
+                    )
+                    if qs.count() == 0:
+                        print "    creating autosend type %d for visit %d" % \
+                              (template_type.key, visit.id)
+                        visitautosend = VisitAutosend(
+                            visit=visit,
+                            inherit=True,
+                            template_key=template_type.key,
+                            template_type=template_type,
+                            days=None,
+                            enabled=False
+                        )
+                        visitautosend.save()
+                    elif qs.count() > 1:
+                        print "    removing extraneous autosend %d " \
+                              "for visit %d" % (template_type.key, visit.id)
+                    for extra in qs[1:]:
+                        extra.delete()
 
     @staticmethod
     def migrate():
@@ -887,9 +972,6 @@ class EmailTemplateType(
         EmailTemplate.migrate()
         Autosend.migrate()
         KUEmailMessage.migrate()
-
-
-EmailTemplateType.set_defaults()
 
 
 class EmailTemplate(models.Model):
@@ -1765,6 +1847,17 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     )
 
     @property
+    def available_time_modes(self):
+        if self.type is None:
+            return Product.time_mode_choices
+
+        available_set = Product.time_mode_choice_map.get(self.type)
+
+        return tuple(
+            x for x in Product.time_mode_choices if x[0] in available_set
+        )
+
+    @property
     def total_required_hosts(self):
         if self.is_resource_controlled:
             return self.resourcerequirement_set.filter(
@@ -1797,16 +1890,6 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         else:
             return 1
 
-    def available_time_modes(self):
-        if self.type is None:
-            return Product.time_mode_choices
-
-        available_set = Product.time_mode_choice_map.get(self.type)
-
-        return tuple(
-            x for x in Product.time_mode_choices if x[0] in available_set
-        )
-
     @property
     def bookable_times(self):
         qs = self.eventtime_set.filter(
@@ -1821,10 +1904,13 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             max = (self.maximum_number_of_visitors +
                    (self.waiting_list_length or 0))
             qs = qs.annotate(
-                Sum('visit__bookings__booker__attendee_count')
+                attendees=Coalesce(
+                    Sum('visit__bookings__booker__attendee_count'),
+                    0
+                )
             ).filter(
                 Q(visit__isnull=True) |
-                Q(visit__bookings__booker__attendee_count__sum__lt=max)
+                Q(attendees__lt=max)
             )
         return qs
 
@@ -2727,8 +2813,11 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         if not self.is_multiproductvisit and \
                 not self.product.is_resource_controlled:
             # Correct number of hosts/teachers must be assigned
+            if self.needed_hosts > 0 or self.needed_teachers > 0:
+                return True
+
             # Room assignment must be resolved
-            if self.needs_hosts or self.needs_teachers or self.needs_room:
+            if self.room_status == Visit.STATUS_NOT_ASSIGNED:
                 return True
 
         return False
@@ -4625,6 +4714,28 @@ class Guest(models.Model):
         blank=False,
         verbose_name=u'Niveau'
     )
+
+    grundskole_level_conversion = {
+        f0: GrundskoleLevel.f0,
+        f1: GrundskoleLevel.f1,
+        f2: GrundskoleLevel.f2,
+        f3: GrundskoleLevel.f3,
+        f4: GrundskoleLevel.f4,
+        f5: GrundskoleLevel.f5,
+        f6: GrundskoleLevel.f6,
+        f7: GrundskoleLevel.f7,
+        f8: GrundskoleLevel.f8,
+        f9: GrundskoleLevel.f9,
+        f10: GrundskoleLevel.f10
+    }
+
+    @staticmethod
+    def grundskole_level_map():
+        return {
+            thisref: GrundskoleLevel.objects.get(level=grundskoleref).id
+            for thisref, grundskoleref
+            in Guest.grundskole_level_conversion.iteritems()
+        }
 
     school = models.ForeignKey(
         School,

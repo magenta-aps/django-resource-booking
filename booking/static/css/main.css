@@ -810,8 +810,12 @@ a>.caret, a>.caret:focus, a>.caret:active {
     transform: rotate(135deg);
 }
 
+.modal-header {
+    min-height: unset;
+}
+
 .modal-header, .modal-body {
-    padding: 20px;
+    padding: 15px;
 }
 
 .modal-content {
@@ -1312,6 +1316,58 @@ a.template-overridden, a.template-overridden:hover, a.template-overridden:active
 
 
 /*Backend specific styles end */
+
+
+/* MultiProductVisit BEGIN */
+
+#deselected-product-list li .movebutton,
+#deselected-product-list li .deselectbutton,
+#confirm-product-list li .movebutton,
+#confirm-product-list li .deselectbutton {
+    display: none;
+}
+
+#deselected-product-list,
+#selected-product-list,
+#confirm-product-list {
+    font-size: 1.5em;
+    list-style-type: none;
+}
+
+#selected-product-list li .movebutton {
+    cursor: move;
+}
+
+#selected-product-list li .selectbutton,
+#selected-product-list li .teaser,
+#confirm-product-list li .selectbutton,
+#confirm-product-list li .teaser {
+    display: none;
+}
+
+#selected-product-list li .title,
+#confirm-product-list li .title {
+    display: inline;
+    font-weight: normal;
+    margin: 0;
+}
+
+#mpvform #deselected-product-list li#placeholder,
+#mpvform #drawhelp {
+    display: none;
+}
+
+#mpvform li .institution {
+    font-size: 0.75em;
+}
+
+li.subvisit-status-1 a.visit-link,
+li.subvisit-status-7 a.visit-link,
+li.subvisit-status-8 a.visit-link {
+    text-decoration: line-through;
+}
+
+/* MultiProductVisit END */
 
 
 /* Embedded pages styles */

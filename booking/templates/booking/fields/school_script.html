@@ -11,16 +11,17 @@
         var levelSelect = $("#{{ bookerform.level.id_for_label }}");
 
         var updateSchoolType = function(schoolType) {
+            schoolType = parseInt(schoolType, 10);
             $("#{{ bookerform.school_type.id_for_label }}").val(schoolType);
 
             // Show/hide the dependents
             $(".institution_level_dependent").each(function(){
                 var $this = $(this);
-                $this.toggle(!!($this.attr("data-display-value") & schoolType));
+                $this.toggle(parseInt($this.attr("data-display-value"), 10) === schoolType);
             });
 
             // Update the level selector options
-            var showOptions = $(levelSelect.find("option[value='']"));
+            var showOptions = levelSelect.find("option[value='']");
             var showValues = levelMap[schoolType];
             for (var i=0; i<showValues.length; i++) {
                 showOptions = showOptions.add(levelSelect.find("option[value="+showValues[i]+"]"));
@@ -72,6 +73,8 @@
             var schoolType = $("#{{ bookerform.school_type.id_for_label }}").val();
             if (schoolType) {
                 updateSchoolType(schoolType);
+            } else {
+                updateSchoolType({{ product.institution_level }});
             }
         {% endif %}
     });

@@ -1619,6 +1619,18 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
             )
             if autosendformset.is_valid():
                 autosendformset.save()
+        for template_type in EmailTemplateType.objects.filter(
+            enable_autosend=True,
+            form_show=False
+        ):
+            self.object.productautosend_set.get_or_create(
+                template_type=template_type,
+                defaults={
+                    'template_key': template_type.key,
+                    'product': self.object,
+                    'enabled': template_type.is_default
+                }
+            )
 
     def get_success_url(self):
         try:
@@ -2294,7 +2306,8 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
             'times_available': available_times,
             'only_waitinglist': only_waitinglist,
             'gymnasiefag_available': self.gymnasiefag_available(),
-            'grundskolefag_available': self.grundskolefag_available()
+            'grundskolefag_available': self.grundskolefag_available(),
+            'grundskole_level_conversion': Guest.grundskole_level_map()
         }
         context.update(kwargs)
         return super(BookingView, self).get_context_data(**context)
@@ -2603,7 +2616,6 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
         return self.visit.product
 
     def get(self, request, *args, **kwargs):
-        print "VisitBookingCreateView"
         return self.render_to_response(
             self.get_context_data(**self.get_forms())
         )
@@ -3079,7 +3091,7 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
             )
 
         context['emailtemplate_waitinglist'] = \
-            EmailTemplateType.NOTIFY_GUEST__SPOT_OPEN
+            EmailTemplateType.notify_guest__spot_open.id
         user = self.request.user
 
         usertype = self.kwargs.get('usertype')

@@ -90,7 +90,7 @@ STATICFILES_FINDERS = [
 
 # Local thirdparty cache; holds all downloaded
 # dependencies in this folder under the root
-NPM_ROOT_PATH = 'thirdparty'
+NPM_ROOT_PATH = BASE_DIR + '/thirdparty'
 
 # collectstatic will put dependencies in static/thirdparty/
 NPM_STATIC_FILES_PREFIX = 'thirdparty'

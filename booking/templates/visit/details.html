@@ -122,9 +122,9 @@
                     <div class="row row-border">
                         <strong class="col-sm-3">{% trans 'Tidspunkt' %}</strong>
                         {% if object.eventtime.start %}
-                            <div class="col-sm-6">{{ object.eventtime.interval_display }}</div>
+                            <div class="col-sm-8">{{ object.eventtime.interval_display }}</div>
                         {% else %}
-                            <div class="col-sm-6">
+                            <div class="col-sm-8">
                                 {% if object.start_datetime %}
                                     {{ object.start_datetime }}
                                 {% else %}
@@ -155,7 +155,7 @@
                             <strong class="col-sm-3">
                                 {% trans 'Ansvarlig' %}
                             </strong>
-                            <div class="col-sm-6">
+                            <div class="col-sm-8">
                                 {% if object.responsible %}
                                     {{ object.responsible }}
                                 {% else %}
@@ -176,7 +176,7 @@
                             <strong class="col-sm-2">
                                 {{ requirementdata.type.plural }}:
                             </strong>
-                            <div class="col-sm-6">
+                            <div class="col-sm-8">
                                 {% blocktrans with found=requirementdata.acquired needed=requirementdata.required type=requirementdata.type.plural|lower %}{{ found }}/{{ needed }} {{ type }} fundet{% endblocktrans %}
                             </div>
                             <div class="col-sm-2">
@@ -185,9 +185,9 @@
 
                                 {% elif requirementdata.is_host and is_potential_host %}
                                     {% if can_become_host %}
-                                        <a href="{% url 'become-host' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Bliv vært for dette besøg.' %}</a>
+                                        <a href="{% url 'become-host' object.pk %}" role="button" class="btn btn-default btn-xs pull-right">{% trans 'Bliv vært for dette besøg.' %}</a>
                                         {% if host %}
-                                            <a href="{% url 'decline-host' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Jeg ønsker ikke at være vært' %}</a>
+                                            <a href="{% url 'decline-host' object.pk %}" role="button" class="btn btn-default btn-xs pull-right">{% trans 'Jeg ønsker ikke at være vært' %}</a>
                                         {% endif %}
                                     {% elif is_assigned_as_host %}
                                         {% trans '(allerede vært for dette besøg)' %}
@@ -217,7 +217,7 @@
                             <strong class="col-sm-3">
                                 {% trans 'Undervisere' %}
                             </strong>
-                            <div class="col-sm-6">
+                            <div class="col-sm-8">
                             {% blocktrans with found=object.assigned_teachers|length needed=object.total_required_teachers %}{{ found }}/{{ needed }} undervisere fundet{% endblocktrans %}
                             </div>
                             {% if can_edit %}
@@ -230,13 +230,13 @@
                                     {% if request.user in object.teachers.all %}
                                         {% trans '(allerede underviser for dette besøg)' %}
                                     {% else %}
-                                        <a href="{% url 'become-teacher' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Bliv underviser for dette besøg' %}</a>
+                                        <a href="{% url 'become-teacher' object.pk %}" role="button" class="btn btn-default btn-xs pull-right">{% trans 'Bliv underviser for dette besøg' %}</a>
                                         {% if teacher %}
-                                            <a href="{% url 'decline-teacher' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Jeg ønsker ikke at være underviser' %}</a>
+                                            <a href="{% url 'decline-teacher' object.pk %}" role="button" class="btn btn-default btn-xs pull-right">{% trans 'Jeg ønsker ikke at være underviser' %}</a>
                                         {% endif %}
                                     {% endif %}
                                 {% else %}
-                                    <button type="button" class="btn btn-default" data-toggle="modal" data-target="#teachers-found" >{% trans 'Alle fundet' %}</button>
+                                    <button type="button" class="btn btn-default btn-xs pull-right" data-toggle="modal" data-target="#teachers-found" >{% trans 'Alle fundet' %}</button>
                                 {% endif %}
                                 </div>
                             {% endif %}
@@ -248,7 +248,7 @@
                             <strong class="col-sm-3">
                                 {% trans 'Værter' %}
                             </strong>
-                            <div class="col-sm-6">
+                            <div class="col-sm-8">
                                 {% blocktrans with found=object.assigned_hosts|length needed=object.total_required_hosts %}{{ found }}/{{ needed }} værter fundet{% endblocktrans %}
                             </div>
                             {% if can_edit %}
@@ -261,13 +261,13 @@
                                         {% if request.user in object.hosts.all %}
                                             {% trans '(allerede vært for dette besøg)' %}
                                         {% else %}
-                                            <a href="{% url 'become-host' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Bliv vært for dette besøg.' %}</a>
+                                            <a href="{% url 'become-host' object.pk %}" role="button" class="btn btn-default btn-xs pull-right">{% trans 'Bliv vært for dette besøg.' %}</a>
                                             {% if host %}
-                                                <a href="{% url 'decline-host' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Jeg ønsker ikke at være vært' %}</a>
+                                                <a href="{% url 'decline-host' object.pk %}" role="button" class="btn btn-default btn-xs pull-right">{% trans 'Jeg ønsker ikke at være vært' %}</a>
                                             {% endif %}
                                         {% endif %}
                                     {% else %}
-                                        <button type="button" class="btn btn-default pull-right" data-toggle="modal" data-target="#hosts-found" >{% trans 'Alle fundet' %}</button>
+                                        <button type="button" class="btn btn-default btn-xs pull-right" data-toggle="modal" data-target="#hosts-found" >{% trans 'Alle fundet' %}</button>
                                     {% endif %}
                                 </div>
                             {% endif %}
@@ -279,7 +279,7 @@
                             <strong class="col-sm-3">
                                 {% trans 'Lokaler' %}
                             </strong>
-                            <div class="col-sm-6">
+                            <div class="col-sm-8">
                                 {{ object.get_room_status_display }}
                                 {% if object.rooms.all %}
                                 <ul>
@@ -302,7 +302,7 @@
                             <strong class="col-sm-3">
                                 {% trans 'Automatisk e-mail' %}
                             </strong>
-                            <div class="col-sm-6">
+                            <div class="col-sm-8">
                                 {{ object.get_autosend_display }}
                             </div>
                             {% if can_edit %}
@@ -317,7 +317,7 @@
                         <strong class="col-sm-3">
                             {% trans 'Status' %}
                         </strong>
-                        <div class="col-sm-6">
+                        <div class="col-sm-8">
                             {{ object.get_workflow_status_display }}
                         </div>
                         {% if can_edit %}
@@ -332,7 +332,7 @@
                             <strong class="col-sm-3">
                                 {% trans 'Antal på venteliste' %}
                             </strong>
-                            <div class="col-sm-6">
+                            <div class="col-sm-8">
                                 {{ object.nr_waiting }}
                             </div>
                             {% if can_edit %}
@@ -347,7 +347,7 @@
                         <strong class="col-sm-3">
                             {% trans 'Link til evaluering' %}
                         </strong>
-                        <div class="col-sm-6">
+                        <div class="col-sm-8">
                             {% if object.evaluation_link %}
                                 <a href="{{ object.evaluation_link }}">{{ object.evaluation_link }}</a>
                             {% else %}
@@ -365,7 +365,7 @@
                         <strong class="col-sm-3">
                             {% trans 'Interne kommentarer' %}
                         </strong>
-                        <div class="col-sm-6">
+                        <div class="col-sm-8">
                             <pre>{{ object.comments }}</pre>
                         </div>
                         {% if can_edit %}

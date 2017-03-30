@@ -176,24 +176,28 @@ class EventTime(models.Model):
 
         result = None
 
-        for req in self.product.resourcerequirement_set.all():
-            if hasattr(self, 'visit') and self.visit is not None:
-                assigned = self.visit.visitresource.filter(
-                    resource_requirement=req
-                ).count()
-            else:
-                assigned = 0
+        if self.product is not None:
+            for req in self.product.resourcerequirement_set.all():
+                if hasattr(self, 'visit') and self.visit is not None:
+                    assigned = self.visit.visitresource.filter(
+                        resource_requirement=req
+                    ).count()
+                else:
+                    assigned = 0
 
-            if req.required_amount == assigned:
-                continue
-            else:
-                fully_assigned = False
+                if req.required_amount == assigned:
+                    continue
+                else:
+                    fully_assigned = False
 
-            if self.start and self.end and not req.has_free_resources_between(
-                self.start, self.end, req.required_amount - assigned
-            ):
-                result = EventTime.RESOURCE_STATUS_BLOCKED
-                break
+                if self.start and self.end and \
+                        not req.has_free_resources_between(
+                            self.start,
+                            self.end,
+                            req.required_amount - assigned
+                        ):
+                    result = EventTime.RESOURCE_STATUS_BLOCKED
+                    break
 
         if result is None:
             if fully_assigned:
@@ -532,12 +536,13 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
                 for x in profile.assigned_to_visits.all():
                     if not x.eventtime.start or not x.eventtime.end:
                         continue
-                    yield CalendarEventInstance(
-                        x.eventtime.start,
-                        x.eventtime.end,
-                        available=False,
-                        source=x
-                    )
+                    if x.eventtime.start < to_dt and x.eventtime.end > from_dt:
+                        yield CalendarEventInstance(
+                            x.eventtime.start,
+                            x.eventtime.end,
+                            available=False,
+                            source=x
+                        )
 
         if hasattr(self, 'product'):
             for x in self.product.booked_eventtimes(from_dt, to_dt):
