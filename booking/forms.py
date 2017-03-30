@@ -975,9 +975,10 @@ class BookerForm(forms.ModelForm):
         school = self.cleaned_data.get('school')
         if School.objects.filter(name=school).count() == 0:
             raise forms.ValidationError(
-                _(u'Du har ikke valgt skole/gymnasium fra listen. Du skal '
-                  u'vælge skole/gymnasium fra listen for at kunne '
-                  u'tilmelde dig.')
+                _(u'Du skal vælge skole/gymnasium fra listen for at kunne '
+                  u'tilmelde dig. Hvis din skole eller dit gymnasium ikke '
+                  u'kommer frem på listen, kontakt da support@fokus.dk '
+                  u'for at få hjælp til tilmelding.')
             )
         return school
 
