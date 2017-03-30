@@ -45,7 +45,7 @@
 {% endif %}
 
 {% if bookerform.level and not no_level_field %}
-<div class="form-group institution_level_dependent" data-display-value="2">
+<div class="form-group">
     <div class="col-sm-2">
         <label class="control-label {% if bookerform.fields.level.required %}required{% endif %}{{ bookerform.level.css_classes }}" for="{{ bookerform.level.id_for_label }}">
             {% trans "Klasse" %}

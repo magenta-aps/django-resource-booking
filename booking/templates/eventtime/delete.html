@@ -4,12 +4,6 @@
 
 {% block htmltitle %} - {% trans "Slet tidspunkter for" %} '{{ product.title }}'{% endblock %}
 
-{% block head %}
-{% include 'common/resources/datepicker_style.html' %}
-<link rel="stylesheet" href="{% static 'css/bootstrap-slider.css' %}" />
-{% endblock %}
-
-
 {% block content %}
     <div class="divider"></div>
     <h1>
@@ -41,9 +35,3 @@
     </div>
 {% endblock %}
 
-{% block extra_scripts %}
-{% include 'eventtime/date_interval_script.html' %}
-<script type="text/javascript"><!--
-KU.initialize_time_interval('#create-time-form');
-//--></script>
-{% endblock %}

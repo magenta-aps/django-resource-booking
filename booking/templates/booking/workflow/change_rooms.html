@@ -19,9 +19,9 @@
                 {% include 'common/fields/generic_field.html' with field=form.room_status %}
                 <div class="row form-group">
                     <div class="col-sm-2">
-                        <label class="" for="id_locality">Lokalitet for eksisterende lokaler:</label>
+                        <label class="" for="id_locality">{% trans 'Lokalitet for eksisterende lokaler:' %}</label>
                     </div>
-                    <div class="col-sm-10">
+                    <div class="col-sm-7">
                         <select class="form-control input-sm" id="id_locality" name="locality">
                         {% for id, name, selected in locality_choices %}
                         <option value="{{ id }}"{% if selected %} selected="selected"{% endif %}>{{ name }}</option>

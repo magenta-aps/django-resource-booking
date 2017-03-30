@@ -8,7 +8,7 @@
 
 {% block head %}
     {% include 'common/resources/datepicker_style.html' %}
-    <link href="{% static 'css/bootstrap-clockpicker.css' %}" type="text/css" media="all" rel="stylesheet"  />
+    {% include 'common/resources/clockpicker_style.html' %}
     {{ form.media }}
     <style type="text/css">
         div.recurrence-widget div.mode,
@@ -145,9 +145,8 @@
 {% endblock %}
 
 {% block extra_scripts %}
-    <script type="text/javascript" src="{% static 'js/bootstrap-clockpicker.js' %}"></script>
-    <script type="text/javascript" src="{% static 'thirdparty/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js' %}"></script>
-    <script type="text/javascript" src="{% static 'thirdparty/bootstrap-datepicker/dist/locales/bootstrap-datepicker.da.min.js' %}"></script>
+    {% include 'common/resources/datepicker_script.html' %}
+    {% include 'common/resources/clockpicker_script.html' %}
 
     <script type="text/javascript">
     $(function(){

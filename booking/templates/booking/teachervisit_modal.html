@@ -1,5 +1,6 @@
 {% extends 'lightbox-index.html' %}
 {% load i18n %}
+{% load booking_tags %}
 
 {% block content %}
     {% include 'booking/snippets/header.html' %}
@@ -23,11 +24,5 @@
 {% block extra_scripts %}
     {% include 'booking/fields/school_script.html' %}
     {% include "booking/fields/time_script.html" %}
-    <script type="text/javascript">
-        $(function(){
-            $("#submitbutton").click(function(){
-                $("#bookingform").submit();
-            });
-        });
-    </script>
+    <script type="text/javascript" src="{% static 'js/ieform.js' %}"></script>
 {% endblock %}

@@ -70,24 +70,24 @@
         </div>
         <div class="col-sm-4 col-md-3">
             <div class="input-group input-group-sm search-list items-pr-side">
-                <span class="input-group-addon">Vis</span>
+                <span class="input-group-addon">{% trans 'Vis' %}</span>
                 <div class="input-group-btn">
                     <button type="button" class="btn btn-default">
                         {% if request.GET.pagesize == "all" %}
-                            Vis alle
+                            {% trans 'Vis alle' %}
                         {% else %}
                             {{ paginator.per_page }}
                         {% endif %}
                     </button>
-                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> <span class="caret"></span> <span class="sr-only">Vis anrtal resultater pr. side</span> </button>
+                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> <span class="caret"></span> <span class="sr-only">{% trans 'Vis antal resultater pr. side' %}</span> </button>
                     <ul class="dropdown-menu">
-                        <li{% if request.GET.pagesize == "all" %} class="selected"{% endif %}><a href="?{{ qstring }}&pagesize=all">Vis alle</a></li>
+                        <li{% if request.GET.pagesize == "all" %} class="selected"{% endif %}><a href="?{{ qstring }}&pagesize=all">{% trans 'Vis alle' %}</a></li>
                         {% for size in pagesizes %}
                             <li{% if size == paginator.per_page %} class="selected"{% endif %}><a href="?{{ qstring }}&pagesize={{size}}">{{size}}</a></li>
                         {% endfor %}
                     </ul>
                 </div>
-                <span class="input-group-addon"> pr. side</span>
+                <span class="input-group-addon">{% trans 'pr. side' %}</span>
             </div>
         </div>
     </div>

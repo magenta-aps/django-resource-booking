@@ -21,7 +21,27 @@
         <div class="panel panel-default">
             <div class="panel-body">
                 {% for subform in form %}
-                    {% include 'common/fields/generic_field.html' with field=subform.resources field_classes='scroll-300' %}
+                    <div class="row form-group">
+                        <div class="col-sm-2{% if subform.resources.errors %} has-error{% endif %}{% if label_classes %} {{ label_classes }}{% endif %}">
+                            <label for="{{ subform.resources.id_for_label }}" class="control-label {% if subform.resources.field.required %}required{% endif %}">
+                                {{ subform.resources.label }}:
+                            </label>
+                            <span class="help-block">{{ subform.resources.field.label_suffix }}</span>
+                            {% if subform.resources.help_text %}
+                                <span class="help-block">{{ subform.resources.help_text }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-sm-7 scroll-300">
+                            {% if subform.resources %}
+                                {{ subform.resources }}
+                            {% else %}
+                                {% trans 'Ingen ressourcer tilgængelige' %}
+                            {% endif %}
+                        </div>
+                        <div class="col-sm-3 with-errors{% if error_classes %} {{ error_classes }}{% endif %}">
+                            {{ subform.resources.errors }}
+                        </div>
+                    </div>
                 {% endfor %}
             </div>
         </div>
