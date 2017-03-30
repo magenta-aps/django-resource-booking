@@ -9,6 +9,8 @@ from django.views.generic import TemplateView, ListView, DetailView
 from django.views.generic import RedirectView
 from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic.edit import FormView, DeleteView
+
+from django.forms.widgets import TextInput
 from booking.models import OrganizationalUnit, Product
 from booking.resource_based.forms import ResourceTypeForm, EditResourceForm
 from booking.resource_based.forms import ResourcePoolTypeForm
@@ -110,6 +112,11 @@ class CreateTimeView(CreateView):
             **kwargs
         )
 
+    def form_valid(self, *args, **kwargs):
+        response = super(CreateTimeView, self).form_valid(*args, **kwargs)
+        self.object.update_availability()
+        return response
+
     def get_success_url(self):
         return reverse(
             'manage-times', args=[self.kwargs.get('product_pk', -1)]
@@ -191,6 +198,7 @@ class CreateTimesFromRulesView(FormView):
                 notes='',
             )
             d.save()
+            d.update_availability()
 
         return super(CreateTimesFromRulesView, self).form_valid(form)
 
@@ -908,6 +916,7 @@ class VisitResourceEditView(EditorRequriedMixin, FormView):
 
     def form_valid(self, form):
         form.save()
+        self.visit.resources_updated()
         return super(VisitResourceEditView, self).form_valid(form)
 
     def get_success_url(self):
@@ -1119,6 +1128,10 @@ class CalendarEventCreateView(LoginRequiredMixin, CalRelatedMixin, CreateView):
         'start': "Blahblah"
     }
 
+    widgets = {
+        'title': TextInput(attrs={'class': 'form-control input-sm'})
+    }
+
     def get_form(self, form_class=None):
         if form_class is None:
             form_class = self.get_form_class()
@@ -1145,6 +1158,9 @@ class CalendarEventCreateView(LoginRequiredMixin, CalRelatedMixin, CreateView):
                 hours=16
             )
         form = form_class(**kwargs)
+        for fieldname, widget in self.widgets.iteritems():
+            form.fields[fieldname].widget = widget
+
         return form
 
     def get_context_data(self, **kwargs):
