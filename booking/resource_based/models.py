@@ -96,6 +96,14 @@ class EventTime(models.Model):
         verbose_name=_(u'Interne kommentarer')
     )
 
+    has_notified_start = models.BooleanField(
+        default=False
+    )
+
+    has_notified_end = models.BooleanField(
+        default=False
+    )
+
     def set_calculated_end_time(self):
         # Don't calculate if already set
         if self.end is None:
@@ -159,6 +167,7 @@ class EventTime(models.Model):
         self.visit = visit
         self.save()
         visit.create_inheriting_autosends()
+        visit.resources_updated()
 
         return visit
 
@@ -479,14 +488,16 @@ class EventTime(models.Model):
         return " ".join([unicode(x) for x in parts])
 
     def on_start(self):
-        print "eventtime %d starts" % self.id
+        self.has_notified_start = True
         if self.visit:
             self.visit.on_starttime()
+        self.save()
 
     def on_end(self):
-        print "eventtime %d ends" % self.id
+        self.has_notified_end = True
         if self.visit:
             self.visit.on_endtime()
+        self.save()
 
 
 class Calendar(AvailabilityUpdaterMixin, models.Model):
