@@ -1664,9 +1664,11 @@ body.lightbox {
         display: flex;
     }
 }
+
 .footer .btn {
   margin-right: 10px;
 }
+
 .globalfooter {
     position: relative;
     width: 100%;
