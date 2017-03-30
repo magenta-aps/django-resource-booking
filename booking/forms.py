@@ -1401,13 +1401,17 @@ class MultiProductVisitTempProductsForm(forms.ModelForm):
 
     products = OrderedModelMultipleChoiceField(
         queryset=Product.objects.all(),
-        widget=OrderedMultipleHiddenChooser()
+        widget=OrderedMultipleHiddenChooser(),
+        error_messages={'required': _(u"Der er ikke valgt nogen besøg")}
     )
 
     class Meta:
         model = MultiProductVisitTemp
         fields = ['required_visits', 'notes']
         widgets = {
+            'required_visits': TextInput(
+                attrs={'class': 'form-control input-sm'}
+            ),
             'notes': Textarea(
                 attrs={'class': 'form-control input-sm'}
             )
@@ -1415,24 +1419,21 @@ class MultiProductVisitTempProductsForm(forms.ModelForm):
 
     def clean_products(self):
         products = self.cleaned_data[self.products_key]
+        if len(products) == 0:
+            raise forms.ValidationError(_(u"Der er ikke valgt nogen besøg"))
         common_institution = binary_and([
             product.institution_level for product in products
         ])
         if common_institution == 0:
             raise forms.ValidationError(
-                _(u"Nogle af de valgte tilbud henvender sig kun til "
-                  u"folkeskoleklasser, og andre kun til gymnasieklasser"),
+                _(u"Nogle af de valgte besøg henvender sig kun til "
+                  u"grundskoleklasser og andre kun til gymnasieklasser"),
                 code='conflict'
             )
         return products
 
     def clean(self):
         super(MultiProductVisitTempProductsForm, self).clean()
-        if self.products_key not in self.cleaned_data or \
-                len(self.cleaned_data[self.products_key]) == 0:
-            raise forms.ValidationError(
-                _(u"Der er ikke valgt nogen produkter")
-            )
         products_selected = 0 if self.products_key not in self.cleaned_data \
             else len(self.cleaned_data[self.products_key])
         if self.cleaned_data['required_visits'] > products_selected:
