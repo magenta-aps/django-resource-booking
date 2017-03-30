@@ -447,7 +447,7 @@ class CreateUserView(FormView, UpdateView):
             if not pk:
                 try:
                     KUEmailMessage.send_email(
-                        EmailTemplateType.SYSTEM__USER_CREATED,
+                        EmailTemplateType.system__user_created,
                         {
                             'user': user,
                             'password': form.cleaned_data['password1'],
@@ -692,18 +692,21 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
         writer = UnicodeWriter(response, delimiter=';')
 
         # Heading
-        writer.writerow(
-            [_(u"Enhed"), _(u"Tilmelding"), _(u"Type"), _(u"Tilbud"),
-             _(u"Besøgsdato"), _(u"Klassetrin/Niveau"), _(u"Antal deltagere"),
-             _(u"Oplæg om uddannelser"), _(u"Rundvisning"), _(u"Region"),
-             _(u"Skole"), _(u"Postnummer og by"), _(u"Adresse"), _(u"Lærer"),
-             _(u"Lærer email"), _(u"Bemærkninger fra koordinator"),
-             _(u"Bemærkninger fra lærer"), _(u"Værter"), _(u"Undervisere")]
-        )
+        writer.writerow([
+            _(u"Enhed"), _(u"Tilmelding"), _(u"Type"), _(u"Tilbud"),
+            _(u"Besøgsdato"), _(u"Klassetrin/Niveau"), _(u"Antal deltagere"),
+            _(u"Oplæg om uddannelser"), _(u"Rundvisning"), _(u"Andet"),
+            _(u"Region"), _(u"Skole"), _(u"Postnummer og by"), _(u"Adresse"),
+            _(u"Lærer"), _(u"Lærer email"), _(u"Bemærkninger fra koordinator"),
+            _(u"Bemærkninger fra lærer"), _(u"Værter"), _(u"Undervisere")
+        ])
         # Rows
         for booking in context['bookings']:
-            presentation_desired = _(u'Nej')
-            tour_desired = _(u'Nej')
+            no = _(u'Nej')
+            yes = _(u'Ja')
+            presentation_desired = no
+            tour_desired = no
+            custom_desired = no
             has_classbooking = False
             try:
                 has_classbooking = (booking.classbooking is not None)
@@ -712,10 +715,11 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
 
             if has_classbooking:
                 if booking.classbooking.presentation_desired:
-                        presentation_desired = _(u'Ja')
-                if booking.classbooking:
-                    if booking.classbooking.tour_desired:
-                        tour_desired = _(u'Ja')
+                    presentation_desired = yes
+                if booking.classbooking.tour_desired:
+                    tour_desired = yes
+                if booking.classbooking.custom_desired:
+                    custom_desired = booking.visit.product.custom_name
 
             writer.writerow([
                 booking.visit.product.organizationalunit.name,
@@ -736,6 +740,7 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
                 str(booking.booker.attendee_count or 0),
                 presentation_desired,
                 tour_desired,
+                custom_desired,
                 booking.booker.school.postcode.region.name or "",
                 (booking.booker.school.name or "") + "(" +
                 booking.booker.school.get_type_display() + ")",
