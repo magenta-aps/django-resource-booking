@@ -759,6 +759,8 @@ class ResourceRequirementConfirmMixin(object):
 
     def form_valid(self, form):
         self.object = form.save()
+        for eventtime in self.product.booked_eventtimes():
+            eventtime.visit.autoassign_resources()
         return redirect(
             reverse('resourcerequirement-list', args=[self.object.product.id])
         )
@@ -778,7 +780,7 @@ class ResourceRequirementConfirmMixin(object):
                 'available': eventtime.visit.
                 resources_available_for_autoassign(resource_pool)
             }
-            data['insufficient'] = data['assigned_count'] + old_amount < \
+            data['insufficient'] = len(data['available']) + old_amount < \
                 required_amount
             visit_data.append(data)
 
@@ -916,6 +918,8 @@ class ResourceRequirementUpdateView(BackMixin, BreadcrumbMixin,
             )
         else:
             self.object = form.save()
+            for eventtime in self.product.booked_eventtimes():
+                eventtime.visit.resources_updated()
             return redirect(
                 reverse(
                     'resourcerequirement-list',
@@ -1016,6 +1020,15 @@ class ResourceRequirementDeleteView(BackMixin, BreadcrumbMixin,
             },
             {'text': _(u'Slet ressourcebehov')}
         ]
+
+    def delete(self, *args, **kwargs):
+        product = self.get_object().product
+        response = super(ResourceRequirementDeleteView, self).delete(
+            *args, **kwargs
+        )
+        for eventtime in product.booked_eventtimes():
+            eventtime.visit.resources_updated()
+        return response
 
 
 class VisitResourceEditView(EditorRequriedMixin, FormView):

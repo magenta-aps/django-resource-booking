@@ -2995,11 +2995,14 @@ class VisitSearchView(VisitListView):
 
         w = int(w)
 
-        planned_status = Visit.WORKFLOW_STATUS_BEING_PLANNED
+        being_planned_status = [
+            Visit.WORKFLOW_STATUS_BEING_PLANNED,
+            Visit.WORKFLOW_STATUS_AUTOASSIGN_FAILED
+        ]
         if w == form.WORKFLOW_STATUS_PENDING:
-            return qs.filter(workflow_status=planned_status)
+            return qs.filter(workflow_status__in=being_planned_status)
         elif w == form.WORKFLOW_STATUS_READY:
-            return qs.exclude(workflow_status=planned_status)
+            return qs.exclude(workflow_status__in=being_planned_status)
         else:
             return qs.filter(workflow_status=w)
 

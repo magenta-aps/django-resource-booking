@@ -2662,6 +2662,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     WORKFLOW_STATUS_CANCELLED = 7
     WORKFLOW_STATUS_NOSHOW = 8
     WORKFLOW_STATUS_PLANNED_NO_BOOKING = 9
+    WORKFLOW_STATUS_AUTOASSIGN_FAILED = 10
 
     BEING_PLANNED_STATUS_TEXT = u'Under planlægning'
     PLANNED_STATUS_TEXT = u'Planlagt (ressourcer tildelt)'
@@ -2678,11 +2679,13 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         WORKFLOW_STATUS_CANCELLED: 'success',
         WORKFLOW_STATUS_NOSHOW: 'success',
         WORKFLOW_STATUS_PLANNED_NO_BOOKING: 'success',
+        WORKFLOW_STATUS_AUTOASSIGN_FAILED: 'danger',
     }
 
     BOOKABLE_STATES = set([
         WORKFLOW_STATUS_BEING_PLANNED,
         WORKFLOW_STATUS_PLANNED,
+        WORKFLOW_STATUS_AUTOASSIGN_FAILED
     ])
 
     workflow_status_choices = (
@@ -2696,6 +2699,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         (WORKFLOW_STATUS_EVALUATED, _(u'Evalueret')),
         (WORKFLOW_STATUS_CANCELLED, _(u'Aflyst')),
         (WORKFLOW_STATUS_NOSHOW, _(u'Udeblevet')),
+        (WORKFLOW_STATUS_AUTOASSIGN_FAILED, _(u'Automatisk tildeling fejlet')),
     )
 
     workflow_status = models.IntegerField(
@@ -2795,6 +2799,11 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         WORKFLOW_STATUS_NOSHOW: [
             WORKFLOW_STATUS_BEING_PLANNED,
         ],
+        WORKFLOW_STATUS_AUTOASSIGN_FAILED: [
+            WORKFLOW_STATUS_BEING_PLANNED,
+            WORKFLOW_STATUS_CANCELLED,
+            WORKFLOW_STATUS_PLANNED
+        ]
     }
 
     # 15556: For these statuses, when the visit's starttime is passed,
@@ -2804,7 +2813,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         WORKFLOW_STATUS_PLANNED,
         WORKFLOW_STATUS_PLANNED_NO_BOOKING,
         WORKFLOW_STATUS_CONFIRMED,
-        WORKFLOW_STATUS_REMINDED
+        WORKFLOW_STATUS_REMINDED,
+        WORKFLOW_STATUS_AUTOASSIGN_FAILED
     ]
 
     def can_assign_resources(self):
@@ -2947,7 +2957,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             self.WORKFLOW_STATUS_PLANNED,
             self.WORKFLOW_STATUS_PLANNED_NO_BOOKING,
             self.WORKFLOW_STATUS_CONFIRMED,
-            self.WORKFLOW_STATUS_REMINDED
+            self.WORKFLOW_STATUS_REMINDED,
+            self.WORKFLOW_STATUS_AUTOASSIGN_FAILED
         ]:
             self.workflow_status = self.WORKFLOW_STATUS_EXECUTED
             self.save()
@@ -3346,7 +3357,10 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     @classmethod
     def being_planned_queryset(cls, **kwargs):
         return cls.objects.filter(
-            workflow_status=cls.WORKFLOW_STATUS_BEING_PLANNED,
+            workflow_status__in=[
+                cls.WORKFLOW_STATUS_BEING_PLANNED,
+                cls.WORKFLOW_STATUS_AUTOASSIGN_FAILED
+            ],
             **kwargs
         )
 
@@ -3870,7 +3884,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                     if len(found) < extra_needed:
                         # requirement cannot be fulfilled;
                         # not enough available resources
-                        pass
+                        self.workflow_status = \
+                            self.WORKFLOW_STATUS_AUTOASSIGN_FAILED
+                        self.save()
                     for resource in found:
                         VisitResource(
                             visit=self,
@@ -4103,7 +4119,8 @@ class MultiProductVisit(Visit):
                 Visit.WORKFLOW_STATUS_EXECUTED,
                 Visit.WORKFLOW_STATUS_PLANNED,
                 Visit.WORKFLOW_STATUS_PLANNED_NO_BOOKING,
-                Visit.WORKFLOW_STATUS_REMINDED
+                Visit.WORKFLOW_STATUS_REMINDED,
+                Visit.WORKFLOW_STATUS_AUTOASSIGN_FAILED
             ])
             for visit in active:
                 if visit.organizationalunit is not None:

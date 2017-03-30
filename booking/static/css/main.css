@@ -89,7 +89,9 @@ a {
     cursor: pointer;
 }
 
-a:not(.btn), a:not(.btn):hover, a:not(.btn):active {
+a:not(.btn,.text-muted,.text-primary,.text-success,.text-info,.text-warning,.text-danger),
+a:not(.btn,.text-muted,.text-primary,.text-success,.text-info,.text-warning,.text-danger):hover,
+a:not(.btn,.text-muted,.text-primary,.text-success,.text-info,.text-warning,.text-danger):active {
     color: #165aad;
 }
 h1 > a {
