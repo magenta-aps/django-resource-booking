@@ -1489,9 +1489,11 @@ body.lightbox {
         display: flex;
     }
 }
+
 .footer .btn {
   margin-right: 10px;
 }
+
 .globalfooter {
     position: relative;
     width: 100%;
@@ -1624,6 +1626,12 @@ body.lightbox {
 .globalfooter .social-items .social-item {
     display: inline-block;
     margin: .5em .3em 0 0;
+}
+
+/* MultiProductVisit END */
+
+.cke_dialog_ui_file .cke_dialog_ui_input_file {
+    height: 2.5em;
 }
 
 .globalfooter .social-items .social-item .social-icon {

@@ -189,6 +189,39 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+CKEDITOR_UPLOAD_PATH = 'uploads/'
+CKEDITOR_CONFIGS = {
+    'default': {
+        'image_previewText': ' ',
+        'toolbar_kubooking': [
+            {'name': 'text', 'items': [
+                'Bold', 'Italic', 'Underline', '-', 'JustifyLeft',
+                'JustifyCenter', 'JustifyRight', 'JustifyBlock'
+            ]},
+            {'name': 'format', 'items': ['Format', 'RemoveFormat']},
+            {'name': 'indent', 'items': [
+                'BulletedList', 'NumberedList', '-', 'Outdent', 'Indent'
+            ]},
+            {'name': 'insert', 'items': [
+                'Link', 'Unlink', 'Anchor', 'Image', 'HorizontalRule'
+            ]},
+            '/',
+            {'name': 'undo', 'items': ['Undo', 'Redo']},
+            {'name': 'meta', 'items': [
+                'Source', 'ShowBlocks', 'SpecialChar', 'About'
+            ]}
+        ],
+        'toolbar': 'kubooking'
+    }
+}
+
+# 'theme_advanced_buttons1':
+# 'bold,italic,underline,|,justifyleft,justifycenter,justifyright,'
+# 'justifyfull,|,formatselect,|,bullist,numlist,outdent,indent,|,'
+# 'link,unlink,anchor,image,hr,removeformat',
+# 'theme_advanced_buttons2':
+# 'undo,redo,|,code,cleanup,visualaid,charmap,help'
+
 # Whether to enable SAML
 USE_SAML = False
 MAKE_SAML_LOGIN_DEFAULT = False
