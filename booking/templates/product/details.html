@@ -179,7 +179,8 @@
                                         {% endif %}
                                         </p>
                                     {% else %}
-                                        {% trans 'Foreslå selv et tidspunkt' %}
+                                        {% trans 'Foreslå selv et tidspunkt' %}<br/>
+                                        {% trans 'Der kan være begrænsninger for hvilke dage, besøget kan lade sig gøre - se beskrivelse af besøget.' %}
                                     {% endif %}
                                 {% elif object.time_mode == view.model.TIME_MODE_NO_BOOKING %}
                                     {% include 'product/details-eventtime-list.html' with eventtime_list=object.future_times %}
