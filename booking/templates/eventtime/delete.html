@@ -1,15 +1,8 @@
 {% extends 'index.html' %}
 {% load i18n %}
-{% load staticfiles %}
 {% load booking_tags %}
 
 {% block htmltitle %} - {% trans "Slet tidspunkter for" %} '{{ product.title }}'{% endblock %}
-
-{% block head %}
-{% include 'common/resources/datepicker_style.html' %}
-<link rel="stylesheet" href="{% static 'css/bootstrap-slider.css' %}" />
-{% endblock %}
-
 
 {% block content %}
     <div class="divider"></div>
@@ -35,20 +28,10 @@
                 </li>
             {% endfor %}
             </ul>
-            <input type="submit" value="Slet tidspunkter" name="confirm"
-                   role="button" class="btn btn-sm btn-success"/>
-            <input type="submit" value="Annullér" name="cancel"
-                   role="button" class="btn btn-sm btn-danger"/>
+            <input type="submit" value="Slet tidspunkter" name="confirm" role="button" class="btn btn-sm btn-success"/>
+            <input type="submit" value="Annullér" name="cancel" role="button" class="btn btn-sm btn-danger"/>
             </form>
         </div>
     </div>
-
-    </div>
 {% endblock %}
 
-{% block extra_scripts %}
-{% include 'eventtime/date_interval_script.html' %}
-<script type="text/javascript"><!--
-KU.initialize_time_interval('#create-time-form');
-//--></script>
-{% endblock %}

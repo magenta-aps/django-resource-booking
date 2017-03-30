@@ -46,12 +46,22 @@ echo '******************************************'
 python "$DIR/setup.py" develop # &>>  ${DIR}/install.log
 
 
-# Install Python package, including dependencies
+# Install Git hooks
 echo '********************'
 echo 'Installing git hooks'
 echo '********************'
 
 ln -sf $DIR/tools/git-hooks/* "$DIR/.git/hooks/"
+
+# Install cron entry
+echo '*********************'
+echo 'Installing cron entry'
+echo '*********************'
+
+# Yes, run every minute. We're all crazy here.
+# This is to accomodate the NotifyEventTimeJob in cron.py
+# If another solution is found, feel free to modify the cron specification here
+echo "* * * * * ku $DIR/runcron" | sudo tee /etc/cron.d/django-resource-booking
 
 echo ''
 echo '**********************'

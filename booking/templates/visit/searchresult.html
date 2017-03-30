@@ -1,5 +1,4 @@
 {% extends "index.html" %}
-{% load staticfiles %}
 {% load booking_tags %}
 {% load i18n %}
 
@@ -23,14 +22,6 @@
                     <h2 class="col-sm-6 col-sm-offset-2">{% trans 'Filtrér søgning' %}</h2>
                     <div class="col-sm-4">
                         {{form.errors}}
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <div class="col-sm-2">
-                        <label for="{{ form.q.id_for_label }}">{{ form.q.label }}</label>
-                    </div>
-                    <div class="col-sm-6">
-                        {{ form.q }}
                     </div>
                 </div>
                 <div class="form-group row">
@@ -106,7 +97,7 @@
             {% if not results %}
             <p>{% trans 'Din søgning gav ikke noget resultat.' %}</p>
             {% else %}
-            <h2 class="bold">
+            <h2 class="results-header">
                 {{ paginator.count }} resultater matcher din søgning
                 {% if request.GET.q %}
                 på "{{request.GET.q}}"
