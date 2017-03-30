@@ -1538,10 +1538,12 @@ body.lightbox {
         margin-left: 110px;
         padding-top: 7px;
     }
-    .dl-horizontal.status dt {
+    .dl-horizontal.status dt,
+    .dl-horizontal.wide dt {
         width: 145px;
     }
-    .dl-horizontal.status dd {
+    .dl-horizontal.status dd,
+    .dl-horizontal.wide dd {
         margin-left: 150px;
     }
     #startbookingform .form-group [class*="col-"]+[class*="col-"] {

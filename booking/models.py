@@ -41,6 +41,7 @@ import math
 import uuid
 import random
 import sys
+import random
 
 BLANK_LABEL = '---------'
 BLANK_OPTION = (None, BLANK_LABEL,)
@@ -2335,6 +2336,17 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         )
 
     @property
+    def are_resources_autoassigned(self):
+        return self.time_mode == \
+               Product.TIME_MODE_RESOURCE_CONTROLLED_AUTOASSIGN
+
+    def has_time_management(self):
+        return self.time_mode not in (
+            Product.TIME_MODE_NONE,
+            Product.TIME_MODE_GUEST_SUGGESTED
+        )
+
+    @property
     def can_join_waitinglist(self):
         return self.is_type_bookable and \
             self.state == Product.ACTIVE and \
@@ -2452,7 +2464,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         else:
             return True
 
-    def booked_eventtimes(self, dt_from=None, dt_to=None):
+    def occupied_eventtimes(self, dt_from=None, dt_to=None):
         qs = self.eventtime_set.filter(
             visit__isnull=False,
             start__isnull=False,
@@ -2466,6 +2478,11 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             qs = qs.filter(start__lt=dt_to)
 
         return qs
+
+    def booked_eventtimes(self, dt_from=None, dt_to=None):
+        return self.occupied_eventtimes(dt_from, dt_to).filter(
+            visit__bookings__isnull=False
+        ).distinct()
 
     @classmethod
     # Migrate from old system where guest-suggest-time products was determined
@@ -3020,6 +3037,13 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 self.eventtime.start <= timezone.now():
             return "expired"
         return ""
+
+    def resources_assigned(self, requirement):
+        if self.is_multiproductvisit:
+            return self.multiproductvisit.resources_assigned(requirement)
+        return self.resources.filter(
+            visitresource__resource_requirement=requirement
+        )
 
     def resources_required(self, resource_type):
         missing = 0
@@ -3821,6 +3845,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     def resources_available_for_autoassign(self, resource_pool):
         eligible = resource_pool.resources.exclude(visitresource__visit=self)
+
         return [
             resource
             for resource in eligible
@@ -3931,6 +3956,16 @@ class MultiProductVisit(Visit):
 
     def planned_status_is_blocked(self):
         return True
+
+    def resources_assigned(self, requirement):
+        resource_list = []
+        for visit in self.subvisits_unordered:
+            resource_list += list(visit.resources_assigned(requirement))
+        # return resource_list
+        # Return as a Queryset, because someone may need the db methods
+        return Resource.objects.filter(
+            id__in=[res.id for res in resource_list]
+        )
 
     @property
     def total_required_teachers(self):

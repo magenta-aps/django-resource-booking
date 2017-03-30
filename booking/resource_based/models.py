@@ -1,4 +1,5 @@
 # encoding: utf-8
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.contrib.auth import models as auth_models
 from django.core.urlresolvers import reverse
@@ -522,7 +523,7 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
 
         # Not available on times when we are booked as a resource
         if hasattr(self, 'resource'):
-            for x in self.resource.booked_eventtimes(from_dt, to_dt):
+            for x in self.resource.occupied_eventtimes(from_dt, to_dt):
                 if not x.start or not x.end:
                     continue
                 yield CalendarEventInstance(
@@ -545,7 +546,7 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
                         )
 
         if hasattr(self, 'product'):
-            for x in self.product.booked_eventtimes(from_dt, to_dt):
+            for x in self.product.occupied_eventtimes(from_dt, to_dt):
                 if not x.start or not x.end:
                     continue
                 yield CalendarEventInstance(
@@ -964,7 +965,7 @@ class Resource(AvailabilityUpdaterMixin, models.Model):
     def can_delete(self):
         return True
 
-    def booked_eventtimes(self, dt_from=None, dt_to=None):
+    def occupied_eventtimes(self, dt_from=None, dt_to=None):
         qs = EventTime.objects.filter(
             visit__resources=self
         ).exclude(
@@ -983,7 +984,7 @@ class Resource(AvailabilityUpdaterMixin, models.Model):
                 from_dt, to_dt, exclude_sources
             )
 
-        qs = self.booked_eventtimes(from_dt, to_dt)
+        qs = self.occupied_eventtimes(from_dt, to_dt)
 
         visit_exclude_sources = set([
             x for x in exclude_sources if type(x) is Visit
@@ -1307,7 +1308,8 @@ class ResourceRequirement(AvailabilityUpdaterMixin, models.Model):
         verbose_name=_(u"Ressourcegruppe")
     )
     required_amount = models.IntegerField(
-        verbose_name=_(u"Påkrævet antal")
+        verbose_name=_(u"Påkrævet antal"),
+        validators=[MinValueValidator(1)]
     )
 
     def can_delete(self):
