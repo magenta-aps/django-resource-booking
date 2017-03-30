@@ -721,7 +721,7 @@ class SearchView(BreadcrumbMixin, ListView):
             val = None
         return val
 
-    search_prune = re.compile("[\s\W]+")
+    search_prune = re.compile(u"[^\s\wæøåÆØÅ]+")
 
     def get_base_queryset(self):
         if self.base_queryset is None:
@@ -735,6 +735,7 @@ class SearchView(BreadcrumbMixin, ListView):
                 searchexpression = " & ".join(
                     ["%s:*" % x for x in searchexpression.split()]
                 )
+                print searchexpression
                 qs = self.model.objects.search(searchexpression, raw=True)
             else:
                 qs = self.model.objects.all()
