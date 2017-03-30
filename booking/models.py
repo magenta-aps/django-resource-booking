@@ -40,8 +40,8 @@ from profile.constants import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
 
 import math
 import uuid
-import sys
 import random
+import sys
 
 BLANK_LABEL = '---------'
 BLANK_OPTION = (None, BLANK_LABEL,)
@@ -182,6 +182,10 @@ class OrganizationalUnit(models.Model):
         verbose_name=u'Hjemmeside',
         null=True,
         blank=True
+    )
+    autoassign_resources_enabled = models.BooleanField(
+        verbose_name=_(u'Automatisk ressourcetildeling mulig'),
+        default=False
     )
 
     def belongs_to(self, unit):
@@ -1883,8 +1887,8 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             return Product.time_mode_choices
 
         available_set = Product.time_mode_choice_map.get(self.type)
-        if Product.TIME_MODE_RESOURCE_CONTROLLED in available_set and True:
-            # TODO: replace True with check for SNM
+        if Product.TIME_MODE_RESOURCE_CONTROLLED in available_set and \
+                self.organizationalunit.autoassign_resources_enabled:
             available_set.add(Product.TIME_MODE_RESOURCE_CONTROLLED_AUTOASSIGN)
 
         return tuple(
@@ -3092,6 +3096,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def total_required_teachers(self):
         if self.override_needed_teachers is not None:
             return self.override_needed_teachers
+
         return self.product.total_required_teachers
 
     @property
@@ -3123,6 +3128,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def total_required_hosts(self):
         if self.override_needed_hosts is not None:
             return self.override_needed_hosts
+
         return self.product.total_required_hosts
 
     @property
@@ -3874,11 +3880,12 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     def resources_available_for_autoassign(self, resource_pool):
         eligible = resource_pool.resources.exclude(visitresource__visit=self)
-        found = []
-        for resource in eligible:
-            if resource.available_for_visit(self):
-                found.append(resource)
-        return found
+
+        return [
+            resource
+            for resource in eligible
+            if resource.available_for_visit(self)
+        ]
 
     def autoassign_resources(self):
         if self.is_multiproductvisit:

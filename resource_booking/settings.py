@@ -46,8 +46,6 @@ INSTALLED_APPS = (
     'timedelta',
     'tinymce',
     'django_cron',
-    'ckeditor',
-    'ckeditor_uploader',
     'macros'
 )
 
