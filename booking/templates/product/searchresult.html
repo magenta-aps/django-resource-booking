@@ -1,5 +1,4 @@
 {% extends "index.html" %}
-{% load staticfiles %}
 {% load booking_tags %}
 {% load i18n %}
 
@@ -12,7 +11,7 @@
 {% block content %}
         <div class="row">
         <div id="leftside" class="col-sm-6 col-md-3">
-            <button type="button" class="visible-xs btn btn-default" data-toggle="collapse" data-target="#filters" id="filter-btn">{% trans 'Filtrer søgeresultat' %} <span class="glyphicon glyphicon-chevron-down hidden-print"></span></button>
+            <button type="button" class="visible-xs btn btn-primary" data-toggle="collapse" data-target="#filters" id="filter-btn">{% trans 'Filtrer søgeresultat' %} <span class="glyphicon glyphicon-chevron-down hidden-print"></span></button>
             <div class="hidden-xs" id="filters">
                 <form class="" action="{% url 'search' %}" method="get" name="filter-search-results" id="filter-search-results">
                 {% if adminform %}
@@ -125,7 +124,7 @@
             {% include 'common/breadcrumbrow.html' %}
 
             {% if user.userprofile.can_create %}
-                <a class="pull-right btn btn-default" href="{% url 'product-create' %}?back={{ request.get_full_path | urlencode }}">
+                <a class="pull-right btn btn-primary" href="{% url 'product-create' %}?back={{ request.get_full_path | urlencode }}">
                     <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
                     {% trans 'Opret tilbud' %}
                 </a>
@@ -146,13 +145,13 @@
             {% if not results %}
                 <p>{% trans 'Din søgning gav ikke noget resultat.' %}</p>
             {% else %}
-            <h2 class="bold">{% blocktrans with count=paginator.count|default:results.count query=request.GET.q %}{{ count }} resultater matcher din søgning på "{{ query }}"{% endblocktrans %}</h2>
+            <h2 class="results-header">{% blocktrans with count=paginator.count|default:results.count query=request.GET.q %}{{ count }} resultater matcher din søgning på "{{ query }}"{% endblocktrans %}</h2>
 
             <div class="divider"></div>
 
             <ul class="media-list">
                 {% for res in results %}
-                    {% include 'resource/../product/listitem.html' with item=res fullquery=fullquery %}
+                    {% include 'product/listitem.html' with item=res fullquery=fullquery %}
                {% endfor %}
             </ul>
             {% endif %}
@@ -179,7 +178,7 @@
                         </span>
                     </li>
                     {% endif %}
-                    
+
                     {% if page_obj.has_next %}
                     <li>
                         <a href="?{{ qstring }}&page={{ page_obj.next_page_number }}&pagesize={{paginator.per_page}}" aria-label="Næste">
@@ -226,37 +225,25 @@
             </div>
         </div>
     </div>
-    
+
 {% endblock %}
-{% block footer %}
-        <div class="container">
-            <div class="row">
-                <footer>
-                    <div class="container">
-                        <div class="row footer-columns">
-                            <div class="col-sm-6 col-sm-offset-1 col-md-offset-3">
-                                <ul class="footerlinks">
-                                    <li><a href="http://kommunikation.ku.dk/">Kommunikation</a></li>
-                                    <li><a href="http://www.ku.dk/">Københavns Universitet</a></li>
-                                    <li>Nørregade 10, Postboks 2177</li>
-                                    <li>1017 København K</li>
-                                </ul>
-                            </div>
-                            <div class="col-sm-3">
-                                <ul class="footerlinks">
-                                    <li class="clearfix social-icons"><a target="_blank" class="footer-social" href="https://www.facebook.com/universitet"><span class="icon-circle"><i class="fa fa-facebook"></i></span></a><a target="_blank" class="footer-social" href="https://www.linkedin.com/edu/k%C3%B8benhavns-universitet-12012"><span class="icon-circle"><i class="fa fa-linkedin"></i></span></a><a target="_blank" class="footer-social" href="https://twitter.com/koebenhavns_uni"><span class="icon-circle"><i class="fa fa-twitter"></i></span></a></li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </footer>
-            </div>
-        </div>
-    {% endblock %}
 
 {% block extra_scripts %}
 
     {% include 'common/resources/datepicker_script.html' %}
-    <script src="{% static 'js/custom.js' %}"></script>
-    
+
+    <script type="text/javascript">
+    <!--
+    // Automatically submit the search form whenever the filters are changed
+    $(function() {
+        $('#filter-search-results input[type=checkbox]').on('change', function() {
+            $(this.form).trigger("submit");
+        });
+        $('#filter-search-results input.datepicker').on('changeDate', function() {
+            $(this.form).trigger("submit");
+        });
+    });
+    //-->
+    </script>
+
 {% endblock %}
