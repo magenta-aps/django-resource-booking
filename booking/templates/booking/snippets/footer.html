@@ -1,4 +1,5 @@
 {% load i18n %}
+{% load booking_tags %}
 {% if modal %}
     <div class="modal-footer">
         <p class="text-center">
@@ -28,3 +29,6 @@
         </div>
     </div>
 {% endif %}
+<!--[if IE]>
+<script type="text/javascript" src="{% static 'js/ieform.js' %}"></script>
+<![endif]-->
