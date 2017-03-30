@@ -1468,7 +1468,10 @@ class EvaluationForm(forms.ModelForm):
     nonparticipating_guests = ModelMultipleChoiceField(
         queryset=Guest.objects.all(),
         required=False,
-        label=_(u'Deltagere uden spørgeskema')
+        label=_(u'Deltagere uden spørgeskema'),
+        help_text=_(u'Markér deltagere der ikke '
+                    u'skal have tilsendt spørgeskema'),
+        widget=CheckboxSelectMultiple
     )
 
     def __init__(self, visit, *args, **kwargs):
