@@ -45,10 +45,14 @@
 }
 
 .listcontainer .panel.panel-bookings .panel-heading .panel-title {
-    font-size: 13px;
+    font-size: 1em;
     display: inline-block;
     max-width: 85%;
     color: #333;
+}
+
+.panel-bookings .list-group-item-text li {
+  margin: 2px 0;
 }
 
 .listcontainer .badge-primary {
@@ -74,18 +78,35 @@
     opacity: 1;
 }
 
-.admin-links .list-group-item-heading {
-    font-size: 12px;
-    font-weight: bold;
+.list-group .admin-links>.list-group-item {
+    background-color: transparent;
+    background: rgb(250, 250, 250);
+    background: -moz-linear-gradient(top, rgba(250, 250, 250, 1) 0%, rgba(230, 230, 230, 1) 100%);
+    background: -webkit-linear-gradient(top, rgba(250, 250, 250, 1) 0%, rgba(230, 230, 230, 1) 100%);
+    background: linear-gradient(to bottom, rgba(250, 250, 250, 1) 0%, rgba(230, 230, 230, 1) 100%);
+    filter: progid: DXImageTransform.Microsoft.gradient( startColorstr='#fafafa', endColorstr='#e6e6e6', GradientType=0);
 }
 
-.listcontainer .list-group-item > a:hover {
+.admin-links .list-group-item-heading {
+    font-size: 1em;
+    font-weight: 600;
+    color: #252525;
+}
+
+.listcontainer .list-group-item>a:hover {
     text-decoration: none;
 }
+
+#adminblock .list-group-item {
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
 #filter-panel .search-offers {
     background-color: #f2f2f2;
     border: 1px solid #ddd;
 }
+
 #filter-panel .input-group {
     margin-right: 10px;
 }
@@ -101,9 +122,11 @@
 #filter-panel .input-group:nth-child(1) {
     width: 40%;
 }
+
 #filter-panel .input-group:nth-child(2) {
     width: 27%;
 }
+
 #filter-panel .input-group:nth-child(3) {
     width: 28%;
 }

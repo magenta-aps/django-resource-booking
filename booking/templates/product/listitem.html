@@ -72,7 +72,13 @@
                 </li>
                 <li>
                     <strong>{% trans 'Pris:' %}</strong>
-                    <span class="type-offer">{{ item.price }}</span>
+                    <span class="type-offer">
+                        {% if item.price == 0 %}
+                            {% trans 'Gratis' %}
+                        {% else %}
+                            {{ item.price }}
+                        {% endif %}
+                    </span>
                 </li>
             </ul>
         </div>
