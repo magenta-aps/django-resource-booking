@@ -3095,6 +3095,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def total_required_teachers(self):
         if self.override_needed_teachers is not None:
             return self.override_needed_teachers
+
         return self.product.total_required_teachers
 
     @property
@@ -3126,6 +3127,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def total_required_hosts(self):
         if self.override_needed_hosts is not None:
             return self.override_needed_hosts
+
         return self.product.total_required_hosts
 
     @property
@@ -3880,6 +3882,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     def resources_available_for_autoassign(self, resource_pool):
         eligible = resource_pool.resources.exclude(visitresource__visit=self)
+
         return [
             resource
             for resource in eligible
