@@ -766,31 +766,37 @@ class SearchView(BreadcrumbMixin, ListView):
                     Q(eventtime__start__lte=next_midnight)
                 )
 
-            date_cond &= Q(
-                Q(calendar__isnull=True) |
-                Q(
-                    Q(calendar__calendarevent__in=CalendarEvent.get_events(
-                        CalendarEvent.AVAILABLE, t_from, t_to
-                    )) & ~
-                    Q(calendar__calendarevent__in=CalendarEvent.get_events(
-                        CalendarEvent.NOT_AVAILABLE, t_from, t_to
-                    ))
-                )
-            )
-
             if is_public:
+
+                date_cond &= Q(
+                    Q(calendar__isnull=True) |
+                    Q(
+                        Q(calendar__calendarevent__in=CalendarEvent.get_events(
+                            CalendarEvent.AVAILABLE, t_from, t_to
+                        )) & ~
+                        Q(calendar__calendarevent__in=CalendarEvent.get_events(
+                            CalendarEvent.NOT_AVAILABLE, t_from, t_to
+                        ))
+                    )
+                )
+
                 # Public searches are always from todays date and onward
                 if t_from is None:
                     t_from = timezone.now()
-                    date_cond = date_cond & Q(eventtime__start__gt=t_from)
+                    date_cond &= Q(
+                        needs_no_eventtime | Q(eventtime__start__gt=t_from)
+                    )
 
                 # Public users only want to search within bookable dates
                 ok_states = Visit.BOOKABLE_STATES
                 in_bookable_state = (
-                    Q(eventtime__bookable=True) &
+                    needs_no_eventtime |
                     Q(
-                        Q(eventtime__visit__isnull=True) |
-                        Q(eventtime__visit__workflow_status__in=ok_states)
+                        Q(eventtime__bookable=True) &
+                        Q(
+                            Q(eventtime__visit__isnull=True) |
+                            Q(eventtime__visit__workflow_status__in=ok_states)
+                        )
                     )
                 )
 
