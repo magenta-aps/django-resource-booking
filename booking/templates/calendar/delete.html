@@ -1,12 +1,8 @@
 {% extends 'index.html' %}
 {% load i18n %}
-{% load staticfiles %}
 {% load booking_tags %}
 
 {% block htmltitle %} - {% trans 'slet kalender' %}{% endblock %}
-
-{% block head %}
-{% endblock %}
 
 {% block content %}
 
@@ -29,7 +25,7 @@
         </p>
 
         <input type="submit" role="button" class="btn btn-success" value="{% trans 'Slet kalender' %}" />
-        <a href="{% url 'calendar' view.kwargs.pk %}" role="button" class="btn btn-danger" />{% trans 'Annullér' %}</a>
+        <a href="{% url 'calendar' view.kwargs.pk %}" role="button" class="btn btn-danger">{% trans 'Annullér' %}</a>
         <div class="divider"></div>
 
     </form>
