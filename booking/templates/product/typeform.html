@@ -1,12 +1,8 @@
 {% extends 'index.html' %}
 {% load i18n %}
-{% load staticfiles %}
 {% load booking_tags %}
 
 {% block htmltitle %} - {% if object %}{% trans "rediger tilbud" %}{% else %}{% trans "opret tilbud" %}{% endif %}{% endblock %}
-
-{% block head %}
-{% endblock %}
 
 {% block content %}
     {% include 'common/breadcrumbrow.html' %}
@@ -20,7 +16,7 @@
             <div class="panel panel-default">
                 <div id="headingCategory" class="panel-heading" role="tab">
                     <h4 class="panel-title">
-                        <a class="" aria-controls="collapseCategory" aria-expanded="true" href="#collapseCategory" data-parent="#accordion" role="button">{% trans "Kategorisering" %}</a><span class="caret"></span>
+                        <a class="" aria-controls="collapseCategory" aria-expanded="true" data-parent="#accordion" role="button">{% trans "Kategorisering" %}<span class="caret pull-right"></span></a>
                     </h4>
                 </div>
                 <div id="collapseCategory" class="panel-collapse collapse in
