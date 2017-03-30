@@ -1,20 +1,14 @@
 {% extends 'index.html' %}
 {% load i18n %}
-{% load staticfiles %}
 {% load booking_tags %}
 
 {% block htmltitle %} - {% trans "opret ressourcegruppe" %}{% endblock %}
 
-{% block head %}
-{% endblock %}
-
 {% block content %}
 
     {% include 'common/breadcrumbrow.html' %}
-    <div class="divider"></div>
 
     <h1>{% trans 'Opret ressourcegruppe' %}</h1>
-    <hr/>
 
     <form id="resourceform" action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
 
