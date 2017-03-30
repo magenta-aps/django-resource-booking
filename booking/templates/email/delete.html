@@ -1,6 +1,5 @@
 {% extends 'index.html' %}
 {% load i18n %}
-{% load staticfiles %}
 
 {% block content %}
 
@@ -8,7 +7,7 @@
 
     <form action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
         {% csrf_token %}
-        <p>{% trans 'Er du sikker på at du vil slette denne skabelon?' %}</p>
+        <p class="margin-top-10-mobile">{% trans 'Er du sikker på at du vil slette denne skabelon?' %}</p>
         <dl class="dl-horizontal wide">
             <dt>{% trans 'Emne:' %}</dt>
             <dd>{{ object.get_key_display }}</dd>
@@ -19,7 +18,8 @@
             <dt>{% trans 'Beskedens tekst:' %}</dt>
             <dd>{{ object.body }}</dd>
         </dl>
-        <button type="submit" class="btn btn-primary">{% trans 'Ja' %}</button>
-        <a class="btn btn-default" href="{% if oncancel %}{{ oncancel }}{% else %}javascript:history.back(){% endif %}">{% trans 'Nej' %}</a>
+        <div class="divider"></div>
+        <a class="btn btn-default" href="{% if oncancel %}{{ oncancel }}{% else %}javascript:history.back(){% endif %}"><span class="glyphicon glyphicon-chevron-left"></span> {% trans 'Nej' %}</a>
+        <button type="submit" class="btn btn-primary">{% trans 'Ja slet' %}</button>
     </form>
 {% endblock %}

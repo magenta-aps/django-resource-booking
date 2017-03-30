@@ -38,6 +38,7 @@ from profile.constants import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
 
 import math
 import uuid
+import sys
 
 BLANK_LABEL = '---------'
 BLANK_OPTION = (None, BLANK_LABEL,)
@@ -2636,7 +2637,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             WORKFLOW_STATUS_NOSHOW,
         ],
         WORKFLOW_STATUS_EXECUTED: [
-            WORKFLOW_STATUS_EVALUATED,
             WORKFLOW_STATUS_NOSHOW
         ],
         WORKFLOW_STATUS_EVALUATED: [
@@ -2761,11 +2761,14 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         for x in self.affected_eventtimes:
             x.update_availability()
 
-    def resource_accepts(self):
+    def resources_updated(self):
         if self.workflow_status == self.WORKFLOW_STATUS_BEING_PLANNED and \
                 not self.planned_status_is_blocked():
             self.workflow_status = self.WORKFLOW_STATUS_PLANNED
             self.save()
+
+    def resource_accepts(self):
+        self.resources_updated()
 
     def resource_declines(self):
         if self.workflow_status == self.WORKFLOW_STATUS_BEING_PLANNED:
@@ -2773,10 +2776,16 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             self.save()
 
     def on_starttime(self):
-        pass
+        if self.eventtime is not None:
+            if self.eventtime.start is not None and self.eventtime.end is None:
+                self.on_expire()
 
     def on_endtime(self):
+        self.on_expire()
+
+    def on_expire(self):
         if self.workflow_status in [
+            self.WORKFLOW_STATUS_BEING_PLANNED,
             self.WORKFLOW_STATUS_PLANNED,
             self.WORKFLOW_STATUS_PLANNED_NO_BOOKING,
             self.WORKFLOW_STATUS_CONFIRMED,
@@ -2925,6 +2934,22 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         return self.room_status == self.STATUS_NOT_ASSIGNED
 
     @property
+    def needed_items(self):
+        if self.is_multiproductvisit:
+            return self.multiproductvisit.needed_items
+        if self.product.is_resource_controlled:
+            return self.resources_required(ResourceType.RESOURCE_TYPE_ITEM)
+        return 0
+
+    @property
+    def needed_vehicles(self):
+        if self.is_multiproductvisit:
+            return self.multiproductvisit.needed_vehicles
+        if self.product.is_resource_controlled:
+            return self.resources_required(ResourceType.RESOURCE_TYPE_VEHICLE)
+        return 0
+
+    @property
     def is_booked(self):
         """Has this Visit instance been booked yet?"""
         return len(self.bookings.all()) > 0
@@ -3030,8 +3055,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     @property
     def available_seats(self):
         limit = self.product.maximum_number_of_visitors
-        if limit is not None:
-            return max(limit - self.nr_attendees, 0)
+        if limit is None:
+            return sys.maxint
+        return max(limit - self.nr_attendees, 0)
 
     def get_workflow_status_class(self):
         return self.status_to_class_map.get(self.workflow_status, 'default')
@@ -3607,6 +3633,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
         return context
 
+
 Visit.add_override_property('duration')
 Visit.add_override_property('locality')
 
@@ -3728,6 +3755,20 @@ class MultiProductVisit(Visit):
             if subvisit.needs_room:
                 return True
         return False
+
+    @property
+    def needed_items(self):
+        return sum(
+            subvisit.needed_items
+            for subvisit in self.subvisits_unordered
+        )
+
+    @property
+    def needed_vehicles(self):
+        return sum(
+            subvisit.needed_vehicles
+            for subvisit in self.subvisits_unordered
+        )
 
     @property
     def available_seats(self):
