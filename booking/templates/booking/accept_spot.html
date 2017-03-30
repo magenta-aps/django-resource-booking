@@ -1,8 +1,6 @@
 {% extends 'index.html' %}
-{% load staticfiles %}
 {% load booking_tags %}
 {% load i18n %}
-{% load booking_tags %}
 
 {% block htmltitle %} - {{ object.visit.product.title }} - {{ object.visit.date_display }} - {% blocktrans with id=object.id %}Booking #{{ id }}{% endblocktrans %}{% endblock %}
 

@@ -1,10 +1,10 @@
 {% load i18n %}
 {% if not success %}
-    <h4 class="modal-title" id="overskrift">
+    <h1 class="modal-title" id="overskrift">
         {% if only_waitinglist %}
             {% blocktrans with title=product.title %}Skriv dig på venteliste til tilbuddet "{{ title }}"{% endblocktrans %}
         {% else %}
             {% blocktrans with title=product.title %}Tilmeld dig tilbuddet "{{ title }}"{% endblocktrans %}
         {% endif %}
-    </h4>
+    </h1>
 {% endif %}
