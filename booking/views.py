@@ -740,7 +740,6 @@ class SearchView(BreadcrumbMixin, ListView):
                 searchexpression = " & ".join(
                     ["%s:*" % x for x in searchexpression.split()]
                 )
-                print searchexpression
                 qs = self.model.objects.search(searchexpression, raw=True)
             else:
                 qs = self.model.objects.all()
