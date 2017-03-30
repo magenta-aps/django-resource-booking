@@ -89,7 +89,9 @@ a {
     cursor: pointer;
 }
 
-a:not(.btn), a:not(.btn):hover, a:not(.btn):active {
+a:not(.btn,.text-muted,.text-primary,.text-success,.text-info,.text-warning,.text-danger),
+a:not(.btn,.text-muted,.text-primary,.text-success,.text-info,.text-warning,.text-danger):hover,
+a:not(.btn,.text-muted,.text-primary,.text-success,.text-info,.text-warning,.text-danger):active {
     color: #165aad;
 }
 h1 > a {
@@ -153,6 +155,11 @@ strong, .bold {
 
 .container {
     margin: 0 auto;
+}
+
+textarea.form-control {
+    width: 100%;
+    resize: none;
 }
 
 @media (min-width: 768px) {
@@ -810,8 +817,12 @@ a>.caret, a>.caret:focus, a>.caret:active {
     transform: rotate(135deg);
 }
 
+.modal-header {
+    min-height: unset;
+}
+
 .modal-header, .modal-body {
-    padding: 20px;
+    padding: 15px;
 }
 
 .modal-content {
@@ -840,9 +851,25 @@ a>.caret, a>.caret:focus, a>.caret:active {
     transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
 }
 
+/* Firefox-specific beautification of select dropdown buttons - rather than have an ugly grey box, put in a nice arrow */
+@-moz-document url-prefix() {
+    select.form-control {
+        padding-right: 25px;
+        background-image: url("data:image/svg+xml,\
+            <svg version='1.1' xmlns='http://www.w3.org/2000/svg' width='10px' height='10px' viewBox='0 0 1000 1000' fill='rgb(51,51,51)'>\
+                <path d='M900 400 l -800 0 l 400 400 z'/>\
+            </svg>");
+        background-repeat: no-repeat;
+        background-position: calc(100% - 7px) 50%;
+        -moz-appearance: none;
+        appearance: none;
+    }
+}
+
+/*
 #id_type, #embediframeform [type="text"] {
     width: auto;
-}
+}*/
 
 
 /*Backend specific styles start */
@@ -1240,6 +1267,16 @@ a.template-overridden, a.template-overridden:hover, a.template-overridden:active
 }
 
 
+.list-outside-limit {
+    display: none;
+}
+
+.list-within-limit,
+.list-outside-limit {
+    margin-bottom: 10px;
+}
+
+
 /* frontpage lists end */
 
 
@@ -1287,6 +1324,58 @@ a.template-overridden, a.template-overridden:hover, a.template-overridden:active
 
 
 /*Backend specific styles end */
+
+
+/* MultiProductVisit BEGIN */
+
+#deselected-product-list li .movebutton,
+#deselected-product-list li .deselectbutton,
+#confirm-product-list li .movebutton,
+#confirm-product-list li .deselectbutton {
+    display: none;
+}
+
+#deselected-product-list,
+#selected-product-list,
+#confirm-product-list {
+    font-size: 1.5em;
+    list-style-type: none;
+}
+
+#selected-product-list li .movebutton {
+    cursor: move;
+}
+
+#selected-product-list li .selectbutton,
+#selected-product-list li .teaser,
+#confirm-product-list li .selectbutton,
+#confirm-product-list li .teaser {
+    display: none;
+}
+
+#selected-product-list li .title,
+#confirm-product-list li .title {
+    display: inline;
+    font-weight: normal;
+    margin: 0;
+}
+
+#mpvform #deselected-product-list li#placeholder,
+#mpvform #drawhelp {
+    display: none;
+}
+
+#mpvform li .institution {
+    font-size: 0.75em;
+}
+
+li.subvisit-status-1 a.visit-link,
+li.subvisit-status-7 a.visit-link,
+li.subvisit-status-8 a.visit-link {
+    text-decoration: line-through;
+}
+
+/* MultiProductVisit END */
 
 
 /* Embedded pages styles */
@@ -1404,11 +1493,17 @@ body.lightbox {
     .navbar {
         margin-bottom: 0;
     }
-    .navbar-default .navbar-nav>li>a {
+    .navbar-default .navbar-nav>li>a,
+    .navbar-default .navbar-nav>li>button {
         color: #eee;
         padding: 3px 5px 0 9px;
     }
-    .navbar-default .navbar-nav>li>a:hover, .navbar-default .navbar-nav>li>a:active, .navbar-default .navbar-nav>li>a:focus {
+    .navbar-default .navbar-nav>li>a:hover,
+    .navbar-default .navbar-nav>li>button:hover,
+    .navbar-default .navbar-nav>li>a:active,
+    .navbar-default .navbar-nav>li>button:active,
+    .navbar-default .navbar-nav>li>a:focus,
+    .navbar-default .navbar-nav>li>button:focus {
         color: #eee;
         text-decoration: underline;
     }
@@ -1450,10 +1545,12 @@ body.lightbox {
         margin-left: 110px;
         padding-top: 7px;
     }
-    .dl-horizontal.status dt {
+    .dl-horizontal.status dt,
+    .dl-horizontal.wide dt {
         width: 145px;
     }
-    .dl-horizontal.status dd {
+    .dl-horizontal.status dd,
+    .dl-horizontal.wide dd {
         margin-left: 150px;
     }
     #startbookingform .form-group [class*="col-"]+[class*="col-"] {
@@ -1474,9 +1571,11 @@ body.lightbox {
         display: flex;
     }
 }
+
 .footer .btn {
   margin-right: 10px;
 }
+
 .globalfooter {
     position: relative;
     width: 100%;
@@ -1609,6 +1708,12 @@ body.lightbox {
 .globalfooter .social-items .social-item {
     display: inline-block;
     margin: .5em .3em 0 0;
+}
+
+/* MultiProductVisit END */
+
+.cke_dialog_ui_file .cke_dialog_ui_input_file {
+    height: 2.5em;
 }
 
 .globalfooter .social-items .social-item .social-icon {
@@ -1855,17 +1960,48 @@ body.lightbox {
     }
 }
 
-/* Firefox-specific beautification of select dropdown buttons - rather than have an ugly grey box, put in a nice arrow */
-@-moz-document url-prefix() {
-    select.form-control {
-        padding-right: 25px;
-        background-image: url("data:image/svg+xml,\
-            <svg version='1.1' xmlns='http://www.w3.org/2000/svg' width='10px' height='10px' viewBox='0 0 1000 1000' fill='rgb(51,51,51)'>\
-                <path d='M900 400 l -800 0 l 400 400 z'/>\
-            </svg>");
-        background-repeat: no-repeat;
-        background-position: calc(100% - 7px) 50%;
-        -moz-appearance: none;
-        appearance: none;
-    }
+.content-box {
+    line-height: 1.2;
+    padding: 4px;
+    font-size: 12px;
+}
+
+.nowrap {
+    white-space: nowrap;
+}
+
+/* Let <button> tags exist in .nav-tabs with the same styling as <a> */
+/* So copy the styles that apply to the <a> tags */
+
+.nav-tabs > li.active > button,
+.nav-tabs > li.active > button:focus,
+.nav-tabs > li.active > button:hover {
+    color: #555;
+    cursor: default;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-bottom-color: transparent;
+}
+
+.nav-tabs > li > button {
+    margin-right: 2px;
+    line-height: 1.42857143;
+    border: 1px solid transparent;
+    border-radius: 4px 4px 0 0;
+}
+
+.nav > li > button {
+    position: relative;
+    display: block;
+    padding: 10px 15px;
+}
+
+.alert-popup {
+    position: fixed;
+    left: 50%;
+    width: 300px;
+    margin-left: -150px;
+    top: 50%;
+    z-index: 100;
+    display: none;
 }

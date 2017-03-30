@@ -1,4 +1,5 @@
 # encoding: utf-8
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.contrib.auth import models as auth_models
 from django.core.urlresolvers import reverse
@@ -13,6 +14,7 @@ from profile.constants import TEACHER, HOST, NONE
 import datetime
 import math
 import re
+import sys
 
 
 class EventTime(models.Model):
@@ -95,6 +97,14 @@ class EventTime(models.Model):
         verbose_name=_(u'Interne kommentarer')
     )
 
+    has_notified_start = models.BooleanField(
+        default=False
+    )
+
+    has_notified_end = models.BooleanField(
+        default=False
+    )
+
     def set_calculated_end_time(self):
         # Don't calculate if already set
         if self.end is None:
@@ -158,6 +168,7 @@ class EventTime(models.Model):
         self.visit = visit
         self.save()
         visit.create_inheriting_autosends()
+        visit.resources_updated()
 
         return visit
 
@@ -166,24 +177,28 @@ class EventTime(models.Model):
 
         result = None
 
-        for req in self.product.resourcerequirement_set.all():
-            if hasattr(self, 'visit'):
-                assigned = self.visit.visitresource.filter(
-                    resource_requirement=req
-                ).count()
-            else:
-                assigned = 0
+        if self.product is not None:
+            for req in self.product.resourcerequirement_set.all():
+                if hasattr(self, 'visit') and self.visit is not None:
+                    assigned = self.visit.visitresource.filter(
+                        resource_requirement=req
+                    ).count()
+                else:
+                    assigned = 0
 
-            if req.required_amount == assigned:
-                continue
-            else:
-                fully_assigned = False
+                if req.required_amount == assigned:
+                    continue
+                else:
+                    fully_assigned = False
 
-            if self.start and self.end and not req.has_free_resources_between(
-                self.start, self.end, req.required_amount - assigned
-            ):
-                result = EventTime.RESOURCE_STATUS_BLOCKED
-                break
+                if self.start and self.end and \
+                        not req.has_free_resources_between(
+                            self.start,
+                            self.end,
+                            req.required_amount - assigned
+                        ):
+                    result = EventTime.RESOURCE_STATUS_BLOCKED
+                    break
 
         if result is None:
             if fully_assigned:
@@ -267,7 +282,10 @@ class EventTime(models.Model):
         if self.visit:
             return self.visit.available_seats
         elif self.product:
-            return self.product.maximum_number_of_visitors
+            max = self.product.maximum_number_of_visitors
+            if max is None:  # No limit set
+                return sys.maxint
+            return max
         else:
             return 0
 
@@ -475,14 +493,16 @@ class EventTime(models.Model):
         return " ".join([unicode(x) for x in parts])
 
     def on_start(self):
-        print "eventtime %d starts" % self.id
+        self.has_notified_start = True
         if self.visit:
             self.visit.on_starttime()
+        self.save()
 
     def on_end(self):
-        print "eventtime %d ends" % self.id
+        self.has_notified_end = True
         if self.visit:
             self.visit.on_endtime()
+        self.save()
 
 
 class Calendar(AvailabilityUpdaterMixin, models.Model):
@@ -503,7 +523,7 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
 
         # Not available on times when we are booked as a resource
         if hasattr(self, 'resource'):
-            for x in self.resource.booked_eventtimes(from_dt, to_dt):
+            for x in self.resource.occupied_eventtimes(from_dt, to_dt):
                 if not x.start or not x.end:
                     continue
                 yield CalendarEventInstance(
@@ -517,15 +537,16 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
                 for x in profile.assigned_to_visits.all():
                     if not x.eventtime.start or not x.eventtime.end:
                         continue
-                    yield CalendarEventInstance(
-                        x.eventtime.start,
-                        x.eventtime.end,
-                        available=False,
-                        source=x
-                    )
+                    if x.eventtime.start < to_dt and x.eventtime.end > from_dt:
+                        yield CalendarEventInstance(
+                            x.eventtime.start,
+                            x.eventtime.end,
+                            available=False,
+                            source=x
+                        )
 
         if hasattr(self, 'product'):
-            for x in self.product.booked_eventtimes(from_dt, to_dt):
+            for x in self.product.occupied_eventtimes(from_dt, to_dt):
                 if not x.start or not x.end:
                     continue
                 yield CalendarEventInstance(
@@ -839,6 +860,21 @@ class CalendarEvent(AvailabilityUpdaterMixin, models.Model):
     def calender_event_title(self):
         return self.title
 
+    @staticmethod
+    def get_events(availability, start=None, end=None):
+        if availability in [
+            CalendarEvent.AVAILABLE, CalendarEvent.NOT_AVAILABLE
+        ]:
+            qs = CalendarEvent.objects.filter(
+                availability=availability
+            )
+            if start is not None:
+                qs = qs.filter(end__gte=start)
+            if end is not None:
+                qs = qs.filter(start__lte=end)
+            return qs
+        return CalendarEvent.objects.none()
+
     def __unicode__(self):
         return ", ".join(unicode(x) for x in [
             self.title,
@@ -858,14 +894,6 @@ class ResourceType(models.Model):
     RESOURCE_TYPE_ROOM = 4
     RESOURCE_TYPE_HOST = 5
 
-    default_resource_names = {
-        RESOURCE_TYPE_ITEM: _(u"Materiale"),
-        RESOURCE_TYPE_VEHICLE: _(u"Transportmiddel"),
-        RESOURCE_TYPE_TEACHER: _(u"Underviser"),
-        RESOURCE_TYPE_ROOM: _(u"Lokale"),
-        RESOURCE_TYPE_HOST: _(u"Vært"),
-    }
-
     def __init__(self, *args, **kwargs):
         super(ResourceType, self).__init__(*args, **kwargs)
         if self.id == ResourceType.RESOURCE_TYPE_ITEM:
@@ -884,21 +912,29 @@ class ResourceType(models.Model):
     name = models.CharField(
         max_length=30
     )
+    plural = models.CharField(
+        max_length=30,
+        default=""
+    )
 
-    @classmethod
-    def create_defaults(cls):
-        for id, name in cls.default_resource_names.iteritems():
+    @staticmethod
+    def create_defaults():
+        for (id, name, plural) in [
+            (ResourceType.RESOURCE_TYPE_ITEM, u"Materiale", u"Materialer"),
+            (ResourceType.RESOURCE_TYPE_VEHICLE,
+             u"Transportmiddel", u"Transportmidler"),
+            (ResourceType.RESOURCE_TYPE_TEACHER,
+             u"Underviser", u"Undervisere"),
+            (ResourceType.RESOURCE_TYPE_ROOM, u"Lokale", u"Lokaler"),
+            (ResourceType.RESOURCE_TYPE_HOST, u"Vært", u"Værter")
+        ]:
             try:
                 item = ResourceType.objects.get(id=id)
-                if item.name != name:  # WTF!
-                    raise Exception(
-                        u"ResourceType(id=%d) already exists, but has "
-                        u"name %s instead of %s" % (id, item.name, name)
-                    )
-                else:
-                    pass  # Item already exists; all is well
+                item.name = name
+                item.plural = plural
+                item.save()
             except ResourceType.DoesNotExist:
-                item = ResourceType(id=id, name=name)
+                item = ResourceType(id=id, name=name, plural=plural)
                 item.save()
                 print "Created new ResourceType %d=%s" % (id, name)
 
@@ -929,7 +965,7 @@ class Resource(AvailabilityUpdaterMixin, models.Model):
     def can_delete(self):
         return True
 
-    def booked_eventtimes(self, dt_from=None, dt_to=None):
+    def occupied_eventtimes(self, dt_from=None, dt_to=None):
         qs = EventTime.objects.filter(
             visit__resources=self
         ).exclude(
@@ -948,7 +984,7 @@ class Resource(AvailabilityUpdaterMixin, models.Model):
                 from_dt, to_dt, exclude_sources
             )
 
-        qs = self.booked_eventtimes(from_dt, to_dt)
+        qs = self.occupied_eventtimes(from_dt, to_dt)
 
         visit_exclude_sources = set([
             x for x in exclude_sources if type(x) is Visit
@@ -1039,6 +1075,15 @@ class Resource(AvailabilityUpdaterMixin, models.Model):
             )
         else:
             return EventTime.objects.none()
+
+    def save(self, *args, **kwargs):
+        is_creating = self.pk is None
+
+        super(Resource, self).save(*args, **kwargs)
+
+        # Auto-create a calendar along with the resource
+        if is_creating:
+            self.make_calendar()
 
 
 class UserResource(Resource):
@@ -1263,7 +1308,8 @@ class ResourceRequirement(AvailabilityUpdaterMixin, models.Model):
         verbose_name=_(u"Ressourcegruppe")
     )
     required_amount = models.IntegerField(
-        verbose_name=_(u"Påkrævet antal")
+        verbose_name=_(u"Påkrævet antal"),
+        validators=[MinValueValidator(1)]
     )
 
     def can_delete(self):

@@ -1,6 +1,5 @@
 {% extends 'index.html' %}
 {% load i18n %}
-{% load staticfiles %}
 {% load booking_tags %}
 
 {% block htmltitle %} - {% trans "tilmeld prioriteret liste af arrangementer på samme dag" %}{% endblock %}
@@ -14,13 +13,20 @@
     {% include 'common/breadcrumbrow.html' %}
     <div class="divider"></div>
 
-    <h1>{% blocktrans %}Tilmeld prioriteret liste af arrangementer på samme dag{% endblocktrans %}</h1>
-<div class="divider"></div>
-    <p class="btn-group">
-        <a class="btn btn-default" href="{% url 'mpv-edit-date' object.id %}" role="button">{% trans 'Vælg dato' %}</a>
-        <a class="btn btn-default" href="{% url 'mpv-edit-products' object.id %}" role="button">{% trans 'Vælg tilbud' %}</a>
-        <a class="btn btn-default active" href="{% url 'mpv-confirm' object.id %}" role="button">{% trans 'Bekræft' %}</a>
-    </p>
+    <h1>{% blocktrans %}Bestil flere besøg på den samme dag{% endblocktrans %}</h1>
+
+    <ul class="nav nav-tabs step-anchor">
+        <li>
+            <a href="{% url 'mpv-edit-date' object.id %}" role="button">{% trans 'Vælg dato' %}</a>
+        </li>
+        <li>
+            <a href="{% url 'mpv-edit-products' object.id %}" role="button">{% trans 'Vælg besøg' %}</a>
+        </li>
+        <li class="active">
+            <a href="{% url 'mpv-confirm' object.id %}" role="button">{% trans 'Bekræft' %}</a>
+        </li>
+    </ul>
+    <div class="divider"></div>
 
     <form id="mpvform" action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
 
@@ -33,7 +39,7 @@
                 <ul class="warninglist">
                     <li>
                         <strong>{% trans 'Bemærk:' %}</strong>
-                        {% trans 'Flere af de valgte tilbud foregår forskellige steder. Der må indberegnes transporttid på besøgsdagen.' %}
+                        {% trans 'Flere af de valgte besøg foregår forskellige steder. Der må indberegnes transporttid på besøgsdagen.' %}
                     </li>
                 </ul>
             </p>
@@ -42,19 +48,19 @@
         <label>{% trans 'Valgt dato:' %}</label>
         <p id="confirm-date">{{ object.date }}</p>
 
-        <label>{% trans 'Valgte tilbud:' %}</label>
+        <label>{% trans 'Valgte besøg:' %}</label>
         <ul id="confirm-product-list" class="list-group">
             {% for product in object.products_ordered %}
                 <li class="list-group-item">{{ product.title }}</li>
             {% endfor %}
         </ul>
 
-        <label>{% trans 'Mindste antal ønskede tilbud:' %}</label>
+        <label>{% trans 'Mindste antal ønskede besøg:' %}</label>
         <p id="confirm-required-visits">{{ object.required_visits }}</p>
 
         <fieldset>
             <a class="btn btn-default cancelbutton" href="{% url 'mpv-edit-products' object.id %}">{% trans "Tilbage" %}</a>
-            <button class="btn btn-primary" type="submit">{% trans "Bestil valgte tilbud" %}</button>
+            <button class="btn btn-primary" type="submit">{% trans "Bestil valgte besøg" %}</button>
         </fieldset>
         <div class="divider"></div>
 
