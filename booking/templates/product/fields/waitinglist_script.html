@@ -1,0 +1,41 @@
+{% if form.do_create_waiting_list and form.time_mode %}
+
+<script type="text/javascript">
+    <!--
+        $(function(){
+            var waitinglistField = $("#{{ form.do_create_waiting_list.id_for_label }}"),
+                timemodeField = $("#{{ form.time_mode.id_for_label }}"),
+                disableValues = {{ disable_waitinglist_on_timemode_values | jsonify }},
+                savedCheckValue = waitinglistField.is(":checked"),
+                waitinglistLabel = $("label[for='{{ form.do_create_waiting_list.id_for_label }}']");
+            var updateTimemode = function() {
+                var value = timemodeField.val();
+                var hide = false;
+                for (var i=0; i<disableValues.length; i++) {
+                    if (disableValues[i].toString() === value.toString()) {
+                        hide = true;
+                        break;
+                    }
+                }
+                if (hide) {
+                    if (waitinglistField.is(":visible")) {
+                        waitinglistField.hide();
+                        waitinglistLabel.hide();
+                        savedCheckValue = waitinglistField.is(":checked");
+                        waitinglistField.prop("checked", false);
+                    }
+                } else {
+                    if (waitinglistField.is(":hidden")) {
+                        waitinglistField.show();
+                        waitinglistLabel.show();
+                        waitinglistField.prop("checked", savedCheckValue);
+                    }
+                }
+                $(".waitinglist-dependent").toggle(!hide && waitinglistField.is(":checked"));
+            };
+            timemodeField.change(updateTimemode);
+            updateTimemode();
+        });
+    //-->
+</script>
+{% endif %}

@@ -12,6 +12,8 @@ from profile.constants import TEACHER, HOST, NONE
 
 import datetime
 import math
+import re
+import sys
 
 
 class EventTime(models.Model):
@@ -134,6 +136,10 @@ class EventTime(models.Model):
 
         visit_model = EventTime.visit.field.related_model
 
+        # Flag newly created visits as needing attention
+        if "needs_attention_since" not in kwargs:
+            kwargs['needs_attention_since'] = timezone.now()
+
         visit = visit_model(**kwargs)
 
         # If the product specifies no rooms are needed, set this on the
@@ -162,7 +168,7 @@ class EventTime(models.Model):
         result = None
 
         for req in self.product.resourcerequirement_set.all():
-            if self.visit:
+            if hasattr(self, 'visit'):
                 assigned = self.visit.visitresource.filter(
                     resource_requirement=req
                 ).count()
@@ -262,7 +268,10 @@ class EventTime(models.Model):
         if self.visit:
             return self.visit.available_seats
         elif self.product:
-            return self.product.maximum_number_of_visitors
+            max = self.product.maximum_number_of_visitors
+            if max is None:  # No limit set
+                return sys.maxint
+            return max
         else:
             return 0
 
@@ -283,45 +292,94 @@ class EventTime(models.Model):
     def can_be_deleted(self):
         return not self.visit
 
+    date_re = re.compile("^(\d{2}).(\d{2}).(\d{4})$")
+    date_with_times_re = re.compile(
+        "^(\d{2}).(\d{2}).(\d{4})\s+(\d{2}):(\d{2})\s+-\s+(\d{2}):(\d{2})$"
+    )
+    dates_re = re.compile(
+        "^" +
+        "(\d{2}).(\d{2}).(\d{4})" +
+        "\s+-\s+" +
+        "(\d{2}).(\d{2}).(\d{4})" +
+        "$"
+    )
+    dates_with_times_re = re.compile(
+        "^" +
+        "(\d{2}).(\d{2}).(\d{4})\s+(\d{2}):(\d{2})" +
+        "\s+-\s+" +
+        "(\d{2}).(\d{2}).(\d{4})\s+(\d{2}):(\d{2})" +
+        "$"
+    )
+
     @staticmethod
     # Parses the human readable interval that is used on web pages.
     def parse_human_readable_interval(interval_str):
-        parts = interval_str.split(" ", 1)
 
-        dateparts = parts[0].split(".")
-        start = timezone.datetime(
-            year=int(dateparts[2]),
-            month=int(dateparts[1]),
-            day=int(dateparts[0]),
-            hour=0,
-            minute=0
-        )
-        end = timezone.datetime(
-            year=int(dateparts[2]),
-            month=int(dateparts[1]),
-            day=int(dateparts[0]),
-            hour=0,
-            minute=0
-        )
-        if len(parts) > 1:
-            timeparts = parts[1].split(" - ")
-
-            starttimes = timeparts[0].split(":")
-            start = start + datetime.timedelta(
-                hours=int(starttimes[0]),
-                minutes=int(starttimes[1])
+        match = EventTime.date_re.search(interval_str)
+        if match is not None:
+            dt = timezone.datetime(
+                year=int(match.group(3)),
+                month=int(match.group(2)),
+                day=int(match.group(1))
+            )
+            return(
+                timezone.make_aware(dt),
+                timezone.make_aware(dt + datetime.timedelta(days=1)),
             )
 
-            if len(timeparts) > 1:
-                endtimes = timeparts[1].split(":")
-                end = end + datetime.timedelta(
-                    hours=int(endtimes[0]),
-                    minutes=int(endtimes[1])
-                )
-        else:
-            end = end + datetime.timedelta(days=1)
+        match = EventTime.date_with_times_re.search(interval_str)
+        if match is not None:
+            dt = timezone.datetime(
+                year=int(match.group(3)),
+                month=int(match.group(2)),
+                day=int(match.group(1)),
+            )
+            return(
+                timezone.make_aware(dt + datetime.timedelta(
+                    hours=int(match.group(4)),
+                    minutes=int(match.group(5))
+                )),
+                timezone.make_aware(dt + datetime.timedelta(
+                    hours=int(match.group(6)),
+                    minutes=int(match.group(7))
+                ))
+            )
 
-        return (timezone.make_aware(start), timezone.make_aware(end))
+        match = EventTime.dates_re.search(interval_str)
+        if match is not None:
+            return(
+                timezone.make_aware(timezone.datetime(
+                    year=int(match.group(3)),
+                    month=int(match.group(2)),
+                    day=int(match.group(1)),
+                )),
+                timezone.make_aware(timezone.datetime(
+                    year=int(match.group(6)),
+                    month=int(match.group(5)),
+                    day=int(match.group(4)),
+                ) + datetime.timedelta(days=1))
+            )
+
+        match = EventTime.dates_with_times_re.search(interval_str)
+        if match is not None:
+            return(
+                timezone.make_aware(timezone.datetime(
+                    year=int(match.group(3)),
+                    month=int(match.group(2)),
+                    day=int(match.group(1)),
+                    hour=int(match.group(4)),
+                    minute=int(match.group(5))
+                )),
+                timezone.make_aware(timezone.datetime(
+                    year=int(match.group(8)),
+                    month=int(match.group(7)),
+                    day=int(match.group(6)),
+                    hour=int(match.group(9)),
+                    minute=int(match.group(10))
+                ))
+            )
+
+        return None
 
     @property
     def duration_matches_product(self):
@@ -377,16 +435,36 @@ class EventTime(models.Model):
 
     @property
     def interval_display(self):
-        if self.end and self.has_specific_time:
-            if self.naive_start.date() != self.naive_end.date():
-                return " - ".join([self.l10n_start, self.l10n_end])
+        if self.end:
+            diff_dates = self.naive_start.date() != self.naive_end.date()
+            if self.has_specific_time:
+                if diff_dates:
+                    return " - ".join([self.l10n_start, self.l10n_end])
+                else:
+                    return " - ".join([self.l10n_start, self.l10n_end_time])
             else:
-                return " - ".join([self.l10n_start, self.l10n_end_time])
+                if diff_dates:
+                    return " - ".join([
+                        formats.date_format(
+                            self.naive_start, "SHORT_DATE_FORMAT"
+                        ),
+                        formats.date_format(
+                            self.naive_end - datetime.timedelta(days=1),
+                            "SHORT_DATE_FORMAT"
+                        ),
+                    ])
+                else:
+                    return formats.date_format(
+                        self.naive_start, "SHORT_DATE_FORMAT"
+                    ),
         else:
             if self.start:
-                return unicode(
-                    formats.date_format(self.naive_start, "SHORT_DATE_FORMAT")
-                )
+                if self.has_specific_time:
+                    return self.l10n_start
+                else:
+                    return formats.date_format(
+                        self.naive_start, "SHORT_DATE_FORMAT"
+                    ),
             else:
                 return unicode(_(u"<Intet tidspunkt angivet>"))
 
@@ -399,6 +477,16 @@ class EventTime(models.Model):
         parts.append(self.interval_display)
 
         return " ".join([unicode(x) for x in parts])
+
+    def on_start(self):
+        print "eventtime %d starts" % self.id
+        if self.visit:
+            self.visit.on_starttime()
+
+    def on_end(self):
+        print "eventtime %d ends" % self.id
+        if self.visit:
+            self.visit.on_endtime()
 
 
 class Calendar(AvailabilityUpdaterMixin, models.Model):
@@ -420,6 +508,8 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
         # Not available on times when we are booked as a resource
         if hasattr(self, 'resource'):
             for x in self.resource.booked_eventtimes(from_dt, to_dt):
+                if not x.start or not x.end:
+                    continue
                 yield CalendarEventInstance(
                     x.start,
                     x.end,
@@ -429,6 +519,8 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
             if hasattr(self.resource, 'user'):
                 profile = self.resource.user.userprofile
                 for x in profile.assigned_to_visits.all():
+                    if not x.eventtime.start or not x.eventtime.end:
+                        continue
                     yield CalendarEventInstance(
                         x.eventtime.start,
                         x.eventtime.end,
@@ -438,6 +530,8 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
 
         if hasattr(self, 'product'):
             for x in self.product.booked_eventtimes(from_dt, to_dt):
+                if not x.start or not x.end:
+                    continue
                 yield CalendarEventInstance(
                     x.start,
                     x.end,
@@ -1240,13 +1334,13 @@ class VisitResource(AvailabilityUpdaterMixin, models.Model):
             resourcetype = self.resource.resource_type.id
             if resourcetype == ResourceType.RESOURCE_TYPE_TEACHER:
                 self.visit.autosend(
-                    EmailTemplateType.NOTIFY_TEACHER__ASSOCIATED,
+                    EmailTemplateType.notify_teacher__associated,
                     [self.resource.teacherresource.user],
                     True
                 )
             if resourcetype == ResourceType.RESOURCE_TYPE_HOST:
                 self.visit.autosend(
-                    EmailTemplateType.NOTIFY_HOST__ASSOCIATED,
+                    EmailTemplateType.notify_host__associated,
                     [self.resource.hostresource.user],
                     True
                 )

@@ -1,6 +1,6 @@
 {% extends 'index.html' %}
 {% load i18n %}
-{% load staticfiles %}
+{% load booking_tags %}
 
 {% block htmltitle %} - {% trans 'emailskabeloner' %}{% endblock %}
 
@@ -8,7 +8,6 @@
 
     {% include 'common/breadcrumbrow.html' %}
 
-    <div class="divider"></div>
     <div class="row form-group">
         <div class="col-sm-8">
             <h1>{% trans "Emailskabeloner" %}</h1>
@@ -20,9 +19,8 @@
             </a>
         </div>
     </div>
-    <hr/>
 
-    <p>
+    <p class="double-columns">
         {% blocktrans %}
         Når man ønsker at afsende en email fra systemet, (manuelt eller
         automatisk), tager systemet udgangspunkt i den skabelon, som er
@@ -58,7 +56,7 @@
             {% for object in object_list %}
                 <tr class="{% if object in duplicates %}warning{% endif %}">
                     <td class="col-sm-3">
-                        {{ object.get_key_display }}
+                        {{ object.type.name }}
                     </td>
                     <td class="col-sm-4">
                         {% if object.organizationalunit %}

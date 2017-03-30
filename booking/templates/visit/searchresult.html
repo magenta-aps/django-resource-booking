@@ -1,5 +1,4 @@
 {% extends "index.html" %}
-{% load staticfiles %}
 {% load booking_tags %}
 {% load i18n %}
 
@@ -17,20 +16,12 @@
             {% include 'common/breadcrumbrow.html' %}
 
             <div class="divider"></div>
-            
+
             <form class="clearfix" role="søg" action={% url 'visit-search' %}>
                 <div class="row">
                     <h2 class="col-sm-6 col-sm-offset-2">{% trans 'Filtrér søgning' %}</h2>
                     <div class="col-sm-4">
                         {{form.errors}}
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <div class="col-sm-2">
-                        <label for="{{ form.q.id_for_label }}">{{ form.q.label }}</label>
-                    </div>
-                    <div class="col-sm-6">
-                        {{ form.q }}
                     </div>
                 </div>
                 <div class="form-group row">
@@ -74,14 +65,6 @@
                     </div>
                 </div>
                 <div class="form-group row">
-                    <div class="col-sm-2">
-                        <label for="{{ form.w.id_for_label }}">{{ form.w.label }}</label>
-                    </div>
-                    <div class="col-sm-6">
-                        {{ form.w }}
-                    </div>
-                </div>
-                <div class="form-group row">
                     <div class="col-sm-3 col-sm-offset-2">
                         <label for="{{ form.p_min.id_for_label }}">{{ form.p_min.label }}</label>
                         {{ form.p_min }}
@@ -107,18 +90,24 @@
                     </div>
                 </div>
             </form>
+            <div class="row">
+                <div class="col-sm-8 col-sm-offset-2">
             <div class="divider"></div>
             <h1>{% trans 'Søgeresultat' %}</h1>
             {% if not results %}
             <p>{% trans 'Din søgning gav ikke noget resultat.' %}</p>
             {% else %}
-            <h2 class="bold">
+            <h2 class="results-header">
                 {{ paginator.count }} resultater matcher din søgning
                 {% if request.GET.q %}
                 på "{{request.GET.q}}"
                 {% endif %}
             </h2>
             <div class="divider"></div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-8 col-sm-offset-2">
             <ul class="media-list">
             {% for res in results %}
                 <li class="media">
@@ -168,6 +157,8 @@
             {% endif %}
         </div>
     </div>
+        </div>
+    </div>
     <div class="row">
         <div class="col-sm-6 col-md-5 col-sm-offset-1 col-md-offset-3">
             {% if paginator %}
@@ -189,7 +180,7 @@
                         </span>
                     </li>
                     {% endif %}
-                    
+
                     {% if page_obj.has_next %}
                     <li>
                         <a href="?{{ qstring }}&page={{ page_obj.next_page_number }}&pagesize={{paginator.per_page}}" aria-label="Næste">
@@ -205,7 +196,7 @@
                         </span>
                     </li>
                     {% endif %}
-                
+
                 </ul>
             </nav>
             {% endif %}
@@ -233,37 +224,11 @@
             </div>
         </div>
     </div>
-    
+
 {% endblock %}
-{% block footer %}
-        <div class="container">
-            <div class="row">
-                <footer>
-                    <div class="container">
-                        <div class="row footer-columns">
-                            <div class="col-sm-6 col-sm-offset-1 col-md-offset-3">
-                                <ul class="footerlinks">
-                                    <li><a href="http://kommunikation.ku.dk/">Kommunikation</a></li>
-                                    <li><a href="http://www.ku.dk/">Københavns Universitet</a></li>
-                                    <li>Nørregade 10, Postboks 2177</li>
-                                    <li>1017 København K</li>
-                                </ul>
-                            </div>
-                            <div class="col-sm-3">
-                                <ul class="footerlinks">
-                                    <li class="clearfix social-icons"><a target="_blank" class="footer-social" href="https://www.facebook.com/universitet"><span class="icon-circle"><i class="fa fa-facebook"></i></span></a><a target="_blank" class="footer-social" href="https://www.linkedin.com/edu/k%C3%B8benhavns-universitet-12012"><span class="icon-circle"><i class="fa fa-linkedin"></i></span></a><a target="_blank" class="footer-social" href="https://twitter.com/koebenhavns_uni"><span class="icon-circle"><i class="fa fa-twitter"></i></span></a></li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </footer>
-            </div>
-        </div>
-    {% endblock %}
 
 {% block extra_scripts %}
-    
+
     {% include 'common/resources/datepicker_script.html' %}
-    <script src="{% static 'js/custom.js' %}"></script>
-    
+
 {% endblock %}

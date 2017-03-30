@@ -1,7 +1,9 @@
 {% load i18n %}
 {% if bookingform.subjects %}
 <div class="form-group">
-    <label class="col-sm-2 control-label required" for="{{ bookingform.subjects.id_for_label }}">{% trans "Fag" %}</label>
+    <div class="col-sm-2">
+        <label class="control-label required" for="{{ bookingform.subjects.id_for_label }}">{% trans "Fag" %}</label>
+    </div>
     <div class="col-sm-6{% if bookingform.subjects.errors %} has-error{% endif %}">
         {{ bookingform.subjects }}
             {% if grundskolefag_available or gymnasiefag_available %}

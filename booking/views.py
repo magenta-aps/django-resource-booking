@@ -14,6 +14,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse, reverse_lazy
+from django.utils.translation.trans_real import get_languages
 from django.db.models import Count
 from django.db.models import Min
 from django.db.models import Q
@@ -37,7 +38,6 @@ from django.views.defaults import bad_request
 from profile.models import EDIT_ROLES
 from profile.models import role_to_text
 from booking.models import Product, Visit, StudyMaterial
-from booking.models import ProductAutosend
 from booking.models import KUEmailMessage
 from booking.models import Subject
 from booking.models import OrganizationalUnit
@@ -143,7 +143,7 @@ class MainPageView(TemplateView):
                     'color': self.HEADING_BLUE,
                     'type': 'Product',
                     'title': _(u'Senest bookede tilbud'),
-                    'queryset': Product.get_latest_booked(),
+                    'queryset': Product.get_latest_booked(self.request.user),
                     'limit': 10,
                     'button': {
                         'text': _(u'Vis alle'),
@@ -317,7 +317,7 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
     template_name = 'email/compose.html'
     form_class = EmailComposeForm
     recipients = []
-    template_key = None
+    template_type = None
     template_context = {}
     modal = True
 
@@ -327,14 +327,16 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
     RECIPIENT_ROOMRESPONSIBLE = 'roomresponsible'
     RECIPIENT_SEPARATOR = ':'
 
-    def get_template_key(self, request):
+    def get_template_type(self, request):
         try:  # see if there's a template key defined in the URL params
-            self.template_key = int(request.GET.get("template", None))
-        except (ValueError, TypeError):
+            self.template_type = EmailTemplateType.objects.get(
+                id=int(request.GET.get("template", None))
+            )
+        except:
             pass
 
     def dispatch(self, request, *args, **kwargs):
-        self.get_template_key(request)
+        self.get_template_type(request)
         return super(EmailComposeView, self).dispatch(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
@@ -365,15 +367,18 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
                 body=data['body']
             )
             try:
-                template.key = int(request.POST.get("template", None))
+                typeid = int(request.POST.get("template", None))
+                template.type = EmailTemplateType.objects.get(id=typeid)
+                template.key = template.type.key
             except (ValueError, TypeError):
                 pass
             context = self.template_context
             recipients = self.lookup_recipients(
                 form.cleaned_data['recipients']
             )
-            KUEmailMessage.send_email(template, context, recipients,
-                                      self.object)
+            KUEmailMessage.send_email(
+                template, context, recipients, self.object
+            )
             return super(EmailComposeView, self).form_valid(form)
 
         return self.render_to_response(
@@ -382,10 +387,9 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
 
     def get_initial(self):
         initial = super(EmailComposeView, self).get_initial()
-        if self.template_key is not None:
+        if self.template_type is not None:
             template = \
-                EmailTemplate.get_template(self.template_key,
-                                           self.get_unit())
+                EmailTemplate.get_template(self.template_type, self.get_unit())
             if template is not None:
                 initial['subject'] = template.subject
                 initial['body'] = template.body
@@ -394,10 +398,10 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = {}
-        context['templates'] = EmailTemplate.get_template(self.template_key,
-                                                          self.get_unit(),
-                                                          True)
-        context['template_key'] = self.template_key
+        context['templates'] = EmailTemplate.get_template(
+            self.template_type, self.get_unit(), True
+        )
+        context['template_type'] = self.template_type.id
         context['template_unit'] = self.get_unit()
         context['modal'] = self.modal
         context.update(kwargs)
@@ -1131,7 +1135,7 @@ class ProductCustomListView(BreadcrumbMixin, ListView):
             listtype = self.request.GET.get("type", "")
 
             if listtype == self.TYPE_LATEST_BOOKED:
-                return Product.get_latest_booked()
+                return Product.get_latest_booked(self.request.user)
             elif listtype == self.TYPE_LATEST_UPDATED:
                 return Product.get_latest_updated(self.request.user)
 
@@ -1452,8 +1456,10 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
                 initial = []
                 if not self.object or not self.object.pk:
                     initial = [
-                        {'template_key': item, 'active': True}
-                        for item in EmailTemplateType.get_keys(is_default=True)
+                        {'template_type': type, 'enabled': True}
+                        for type in EmailTemplateType.objects.filter(
+                            is_default=True
+                        )
                     ]
                 forms['autosendformset'] = ProductAutosendFormSet(
                     None, instance=self.object, initial=initial
@@ -1572,6 +1578,10 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
             Product.STUDY_PROJECT, Product.OTHER_OFFERS
         ]
 
+        context['disable_waitinglist_on_timemode_values'] = [
+            Product.TIME_MODE_GUEST_SUGGESTED
+        ]
+
         context.update(kwargs)
 
         return super(EditProductView, self).get_context_data(**context)
@@ -1602,21 +1612,7 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
                 self.request.POST, instance=self.object
             )
             if autosendformset.is_valid():
-                # Update autosend
-                for autosendform in autosendformset:
-                    if autosendform.is_valid():
-                        data = autosendform.cleaned_data
-                        if len(data) > 0:
-                            if data.get('DELETE'):
-                                ProductAutosend.objects.filter(
-                                    product=data['product'],
-                                    template_key=data['template_key']
-                                ).delete()
-                            else:
-                                try:
-                                    autosendform.save()
-                                except:
-                                    pass
+                autosendformset.save()
 
     def get_success_url(self):
         try:
@@ -1912,7 +1908,7 @@ class VisitNotifyView(LoginRequiredMixin, ModalMixin, BreadcrumbMixin,
         self.recipients = []
         pk = kwargs['pk']
         self.object = Visit.objects.get(id=pk)
-        self.get_template_key(request)
+        self.get_template_type(request)
         # template_type = EmailTemplateType.get(self.template_key)
         # if self.object.is_multi_sub and \
         #         template_type.manual_sending_mpv_enabled:
@@ -2370,6 +2366,12 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
             # If the chosen eventtime does not have a visit, create it now
             if not eventtime.visit:
                 eventtime.make_visit()
+                log_action(
+                    self.request.user,
+                    eventtime.visit,
+                    LOGACTION_CREATE,
+                    _(u'Besøg oprettet')
+                )
 
             booking.visit = eventtime.visit
 
@@ -2415,30 +2417,39 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
 
             booking.ensure_statistics()
 
+            # Flag attention requirement on visit
+            booking.visit.needs_attention_since = timezone.now()
+
             # Trigger updating of search index
             booking.visit.save()
 
             if put_in_waitinglist:
                 booking.autosend(
-                    EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED_WAITING
+                    EmailTemplateType.notify_guest__booking_created_waiting
+                )
+            elif booking.visit.product.uses_time_management:
+                booking.autosend(
+                    EmailTemplateType.notify_guest__booking_created
                 )
             else:
                 booking.autosend(
-                    EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED
+                    EmailTemplateType.notify_guest__booking_created_untimed
                 )
 
-            booking.autosend(EmailTemplateType.NOTIFY_EDITORS__BOOKING_CREATED)
+            booking.autosend(
+                EmailTemplateType.notify_editors__booking_created
+            )
 
             if booking.visit.needs_teachers or \
                     booking.visit.product.is_resource_controlled:
                 booking.autosend(
-                    EmailTemplateType.NOTIFY_HOST__REQ_TEACHER_VOLUNTEER
+                    EmailTemplateType.notify_host__req_teacher_volunteer
                 )
 
             if booking.visit.needs_hosts or \
                     booking.visit.product.is_resource_controlled:
                 booking.autosend(
-                    EmailTemplateType.NOTIFY_HOST__REQ_HOST_VOLUNTEER
+                    EmailTemplateType.notify_host__req_host_volunteer
                 )
 
             self.object = booking
@@ -2610,12 +2621,10 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
         object.save()
 
         object.autosend(
-            EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED
+            EmailTemplateType.notify_guest__booking_created_untimed
         )
 
-        object.autosend(
-            EmailTemplateType.NOTIFY_EDITORS__BOOKING_CREATED
-        )
+        object.autosend(EmailTemplateType.notify_editors__booking_created)
 
         return redirect(
             reverse(
@@ -2697,8 +2706,14 @@ class EmbedcodesView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = {}
+        base_url = kwargs['embed_url']
 
-        embed_url = 'embed/' + kwargs['embed_url']
+        for language in get_languages():
+            if base_url.startswith("%s/" % language):
+                base_url = base_url[len(language)+1:]
+                break
+
+        embed_url = 'embed/' + base_url
 
         # We only want to test the part before ? (or its encoded value, %3F):
         test_url = embed_url.split('?', 1)[0]
@@ -2712,6 +2727,7 @@ class EmbedcodesView(TemplateView):
                 break
 
         context['can_embed'] = can_embed
+        context['base_url'] = base_url
         context['full_url'] = self.request.build_absolute_uri('/' + embed_url)
 
         context['breadcrumbs'] = [
@@ -2721,7 +2737,7 @@ class EmbedcodesView(TemplateView):
             },
             {
                 'url': self.request.path,
-                'text': '/' + kwargs['embed_url']
+                'text': '/' + base_url
             }
         ]
 
@@ -3155,7 +3171,7 @@ class EmailTemplateListView(LoginRequiredMixin, BreadcrumbMixin, ListView):
             for j in xrange(i, len(self.object_list)):
                 objectB = self.object_list[j]
                 if objectA != objectB \
-                        and objectA.key == objectB.key \
+                        and objectA.type == objectB.type \
                         and objectA.organizationalunit == \
                         objectB.organizationalunit:
                     context['duplicates'].extend([objectA, objectB])
@@ -3193,8 +3209,8 @@ class EmailTemplateEditView(LoginRequiredMixin, UnitAccessRequiredMixin,
             self.object = EmailTemplate.objects.get(pk=pk)
             self.check_item(self.object)
         form = self.get_form()
-        if 'key' in request.GET:
-            form.initial['key'] = request.GET['key']
+        if 'type' in request.GET:
+            form.initial['type'] = request.GET['type']
         if 'organizationalunit' in request.GET:
             form.initial['organizationalunit'] = \
                 request.GET['organizationalunit']
@@ -3218,6 +3234,8 @@ class EmailTemplateEditView(LoginRequiredMixin, UnitAccessRequiredMixin,
         context.update(kwargs)
         if form.is_valid():
             self.object = form.save()
+            self.object.key = self.object.type.key
+            self.object.save()
             return self.redirect(reverse('emailtemplate-list'))
 
         return self.render_to_response(
@@ -3402,6 +3420,7 @@ class EmailReplyView(BreadcrumbMixin, DetailView):
     slug_field = 'reply_nonce'
     slug_url_kwarg = 'reply_nonce'
     form = None
+    original_object = None
 
     def get_form(self):
         if self.form is None:
@@ -3411,16 +3430,26 @@ class EmailReplyView(BreadcrumbMixin, DetailView):
                 self.form = EmailReplyForm(self.request.POST)
         return self.form
 
+    def get_original_object(self):
+        if self.original_object is None:
+            try:
+                ct = ContentType.objects.get(pk=self.object.content_type_id)
+                self.original_object = ct.get_object_for_this_type(
+                    pk=self.object.object_id
+                )
+            except Exception as e:
+                print "Error when getting email-reply object: %s" % e
+
+        return self.original_object
+
     def get_product(self):
-        try:
-            ct = ContentType.objects.get(pk=self.object.content_type_id)
-            if ct.model_class() == Product:
-                return ct.get_object_for_this_type(pk=self.object.object_id)
-            elif ct.model_class() == Visit:
-                visit = ct.get_object_for_this_type(pk=self.object.object_id)
-                return visit.product
-        except Exception as e:
-            print "Error when getting email-reply object: %s" % e
+        orig_obj = self.get_original_object()
+        if type(orig_obj) == Visit:
+            return orig_obj.product
+        elif type(orig_obj) == Product:
+            return orig_obj
+
+        return None
 
     def get_context_data(self, **kwargs):
         context = {}
@@ -3433,25 +3462,36 @@ class EmailReplyView(BreadcrumbMixin, DetailView):
         form = self.get_form()
         if form.is_valid():
             self.object = self.get_object()
+            orig_obj = self.get_original_object()
             orig_message = self.object
+            visit = orig_obj if type(orig_obj) == Visit else None
             reply = form.cleaned_data.get('reply', "").strip()
             product = self.get_product()
-            recipients = product.organizationalunit.get_editors()
+
+            recipients = product.get_responsible_persons()
+
             KUEmailMessage.send_email(
-                EmailTemplateType.SYSTEM__EMAIL_REPLY,
+                EmailTemplateType.system__email_reply,
                 {
+                    'visit': visit,
                     'product': product,
+                    'orig_object': orig_obj,
                     'orig_message': orig_message,
                     'reply': reply,
                     'log_message': _(u"Svar:") + "\n" + reply
                 },
                 recipients,
-                product,
+                orig_obj,
                 organizationalunit=product.organizationalunit
             )
             result_url = reverse(
                 'reply-to-email', args=[self.object.reply_nonce]
             )
+
+            # Mark visit as needing attention
+            if visit:
+                visit.set_needs_attention()
+
             return redirect(result_url + '?thanks=1')
         else:
             return self.get(request, *args, **kwargs)
@@ -3577,14 +3617,14 @@ class BookingAcceptView(BreadcrumbMixin, FormView):
                     self.object.dequeue()
                     self.dequeued = True
                     self.object.autosend(
-                        EmailTemplateType.NOTIFY_GUEST__SPOT_ACCEPTED
+                        EmailTemplateType.notify_guest__spot_accepted
                     )
             elif self.answer == 'no':
                 self.object.autosend(
-                    EmailTemplateType.NOTIFY_GUEST__SPOT_REJECTED
+                    EmailTemplateType.notify_guest__spot_rejected
                 )
                 self.object.autosend(
-                    EmailTemplateType.NOTIFY_EDITORS__SPOT_REJECTED
+                    EmailTemplateType.notify_editors__spot_rejected
                 )
                 self.object_id = self.object.id
                 self.object.delete()

@@ -10,12 +10,13 @@
         {% endif %}
         {% if not field.field.queryset.count %}
             <p>
-            {% blocktrans %}
-            Der blev ikke fundet nogen brugere at vælge ud fra. Undersøg
-            om der findes brugere af den korrekte type inden inden for din
-            enhed. For besøg bør du også undersøge om der er blevet tilknyttet
-            potentielle værter/undervisere til det tilbud besøget er baseret
-            på.
+            {% blocktrans with unitname=object.organizationalunit.name %}
+                Der blev ikke fundet nogen brugere at vælge ud fra. Undersøg
+                om der findes brugere af den korrekte type inden inden for din
+                enhed ({{ unitname }}).
+                For besøg bør du også undersøge om der er blevet tilknyttet
+                potentielle værter/undervisere til det tilbud besøget
+                er baseret på.
             {% endblocktrans %}
             </p>
         {% else %}

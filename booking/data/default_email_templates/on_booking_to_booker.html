@@ -30,23 +30,6 @@
 <p>
     Vi glæder os til at se dig!
 </p>
-{% else %}
-<p>
-    Du har tilmeldt dig besøg {{ visit.display_title }} på Københavns Universitet.
-    Vi vil gøre, hvad vi kan for at opfylde dit ønske om tidspunkt,
-    og du hører fra os, når besøget er planlagt.
-    {% if visit.is_multiproductvisit %}
-        {% include 'booking/email/snippets/contact_addresses.html' with product=visit.real.primary_visit.product %}
-    {% else %}
-        {% include 'booking/email/snippets/contact_addresses.html' with product=product %}
-    {% endif %}
-</p>
-<p>
-    Detaljer for din tilmelding:
-</p>
-<p>
-{% include 'booking/email/snippets/booking_info.html' with booking=booking booker=booking.booker %}
-</p>
 {% endif %}
 <p>
     {% if visit.is_multiproductvisit %}

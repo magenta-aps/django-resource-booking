@@ -1,12 +1,8 @@
 {% extends 'index.html' %}
 {% load i18n %}
-{% load staticfiles %}
 {% load booking_tags %}
 
 {% block htmltitle %} - {% trans 'besked' %}{% endblock %}
-
-{% block head %}
-{% endblock %}
 
 {% block content %}
 
@@ -117,8 +113,8 @@
                         </div>
                     </div>
 
-                    {% if template_key %}
-                        <input type="hidden" name="template" value="{{ template_key }}" />
+                    {% if template_type %}
+                        <input type="hidden" name="template" value="{{ template_type }}" />
                         <div class="row form-group">
                             <div class="col-sm-2">
                                 <label>{% trans 'Skabeloner:' %}</label>
@@ -126,14 +122,18 @@
                             <div class="col-sm-10">
                                 {% if templates %}
                                     {% for template in templates reversed %}
-                                        <a href="{% url 'emailtemplate-view' template.id %}" class="
-                                        {% if forloop.last %}template-selected{% else %}template-overridden{% endif %}
-                                        ">{% if template.organizationalunit %}{{ template.organizationalunit.name }}{% else %}{% trans 'Rodskabelon' %}{% endif %}</a>
+                                        <a href="{% url 'emailtemplate-view' template.id %}" class="{% if forloop.last %}template-selected{% else %}template-overridden{% endif %}">
+                                            {% if template.organizationalunit %}
+                                                {{ template.organizationalunit.name }}
+                                            {% else %}
+                                                {% trans 'Rodskabelon' %}
+                                            {% endif %}
+                                        </a>
                                         {% if not forloop.last %} &gt; {% endif %}
                                     {% endfor %}
                                 {% else %}
                                     {% trans 'Ingen skabeloner fundet' %}
-                                    <a href="{% url 'emailtemplate-create' %}?organizationalunit={{ template_unit.id }}&key={{ template_key }}">{% trans 'Opret skabelon' %}</a>
+                                    <a href="{% url 'emailtemplate-create' %}?organizationalunit={{ template_unit.id }}&type={{ template_type }}">{% trans 'Opret skabelon' %}</a>
                                 {% endif %}
                             </div>
                         </div>

@@ -279,7 +279,8 @@ class OrganizationalUnitForm(forms.ModelForm):
 
 class ProductInitialForm(forms.Form):
     type = forms.ChoiceField(
-        choices=Product.resource_type_choices
+        choices=Product.resource_type_choices,
+        widget=Select(attrs={'class': 'form-control'})
     )
 
 
@@ -621,36 +622,56 @@ class ProductStudyMaterialForm(ProductStudyMaterialFormBase):
 class ProductAutosendForm(forms.ModelForm):
     class Meta:
         model = ProductAutosend
-        fields = ['template_key', 'enabled', 'days']
+        fields = ['template_type', 'enabled', 'days']
         widgets = {
-            'template_key': forms.HiddenInput()
+            'template_type': forms.HiddenInput()
         }
 
     def __init__(self, *args, **kwargs):
         super(ProductAutosendForm, self).__init__(*args, **kwargs)
 
-        template_key = None
-        if kwargs.get('instance'):
-            template_key = kwargs['instance'].template_key
-        elif kwargs.get('initial'):
-            template_key = kwargs['initial']['template_key']
-        if template_key is not None:
-            template_type = EmailTemplateType.get(template_key)
+        template_type = self.template_type
+        if template_type is not None:
             if not template_type.enable_days:
                 self.fields['days'].widget = forms.HiddenInput()
-            elif template_key == \
+            elif template_type.key == \
                     EmailTemplateType.NOTITY_ALL__BOOKING_REMINDER:
                 self.fields['days'].help_text = _(u'Notifikation vil blive '
                                                   u'afsendt dette antal dage '
                                                   u'før besøget')
-            elif template_key == EmailTemplateType.NOTIFY_HOST__HOSTROLE_IDLE:
+            elif template_type.key == \
+                    EmailTemplateType.NOTIFY_HOST__HOSTROLE_IDLE:
                 self.fields['days'].help_text = _(u'Notifikation vil blive '
                                                   u'afsendt dette antal dage '
                                                   u'efter første booking er '
                                                   u'foretaget')
 
+    @property
+    def template_type(self):
+        template_type = None
+        try:
+            template_type = self.instance.template_type
+        except:
+            pass
+        if template_type is None:
+            try:
+                template_type = self.initial['template_type']
+            except:
+                pass
+
+        if isinstance(template_type, EmailTemplateType):
+            return template_type
+        if type(template_type) == int:
+            return self.fields['template_type'].to_python(
+                template_type
+            )
+
     def label(self):
-        return EmailTemplateType.get_name(self.initial['template_key'])
+        return self.template_type.name
+
+    def has_changed(self):
+        return (self.instance.pk is None) or \
+            super(ProductAutosendForm, self).has_changed()
 
 
 ProductAutosendFormSetBase = inlineformset_factory(
@@ -658,7 +679,7 @@ ProductAutosendFormSetBase = inlineformset_factory(
     ProductAutosend,
     form=ProductAutosendForm,
     extra=0,
-    max_num=len(EmailTemplateType.key_choices),
+    max_num=EmailTemplateType.objects.filter(enable_autosend=True).count(),
     can_delete=False,
     can_order=False
 )
@@ -666,24 +687,41 @@ ProductAutosendFormSetBase = inlineformset_factory(
 
 class ProductAutosendFormSet(ProductAutosendFormSetBase):
     def __init__(self, *args, **kwargs):
+        initial = kwargs.get('initial', [])
         if 'instance' in kwargs:
             autosends = kwargs['instance'].get_autosends(True)
-            if len(autosends) < len(EmailTemplateType.key_choices):
+            all_autosends = EmailTemplateType.objects.filter(
+                enable_autosend=True
+            )
+            if len(autosends) < all_autosends.count():
                 initial = []
-                existing_keys = [
-                    autosend.template_key for autosend in autosends
+                existing_types = [
+                    autosend.template_type for autosend in autosends
                 ]
-                for key, label in EmailTemplateType.key_choices:
-                    if key not in existing_keys:
+                for type in all_autosends:
+                    if type not in existing_types:
                         initial.append({
-                            'template_key': key,
+                            'template_type': type,
                             'enabled': False,
                             'days': ''
                         })
-                initial.sort(key=lambda choice: choice['template_key'])
-                kwargs['initial'] = initial
                 self.extra = len(initial)
         super(ProductAutosendFormSet, self).__init__(*args, **kwargs)
+        if len(initial) > 0:
+            initial.sort(key=lambda choice: choice['template_type'].key)
+            self.initial = [{} for x in existing_types] + initial
+
+    def save_new_objects(self, commit=True):
+        self.new_objects = []
+        for form in self.forms:
+            if form.instance and form.instance.pk:
+                continue
+            if self.can_delete and self._should_delete_form(form):
+                continue
+            self.new_objects.append(self.save_new(form, commit=commit))
+            if not commit:
+                self.saved_forms.append(form)
+        return self.new_objects
 
 
 class BookingForm(forms.ModelForm):
@@ -924,6 +962,16 @@ class BookerForm(forms.ModelForm):
                 raise forms.ValidationError(_(u'Ukendt postnummer'))
         return postcode
 
+    def clean_school(self):
+        school = self.cleaned_data.get('school')
+        if School.objects.filter(name=school).count() == 0:
+            raise forms.ValidationError(
+                _(u'Du har ikke valgt skole/gymnasium fra listen. Du skal '
+                  u'vælge skole/gymnasium fra listen for at kunne '
+                  u'tilmelde dig.')
+            )
+        return school
+
     def clean(self):
         cleaned_data = super(BookerForm, self).clean()
         email = cleaned_data.get("email")
@@ -1103,7 +1151,7 @@ class EmailTemplateForm(forms.ModelForm):
 
     class Meta:
         model = EmailTemplate
-        fields = ('key', 'subject', 'body', 'organizationalunit')
+        fields = ('type', 'subject', 'body', 'organizationalunit')
         widgets = {
             'subject': TextInput(attrs={'class': 'form-control'}),
             'body': Textarea(attrs={'rows': 10, 'cols': 90}),
