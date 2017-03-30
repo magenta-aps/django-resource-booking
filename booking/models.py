@@ -38,6 +38,7 @@ from profile.constants import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
 
 import math
 import uuid
+import sys
 
 BLANK_LABEL = '---------'
 BLANK_OPTION = (None, BLANK_LABEL,)
@@ -258,6 +259,16 @@ class OrganizationalUnit(models.Model):
             recipients.extend(self.get_editors())
 
         return recipients
+
+    @classmethod
+    def root_unit_id(cls):
+        unit = cls.objects.filter(
+            type__name=u"Københavns Universitet"
+        ).first()
+        if unit:
+            return unit.pk
+        else:
+            return ""
 
 
 # Master data related to bookable resources start here
@@ -1701,7 +1712,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def bookable_times(self):
-        return self.eventtime_set.filter(
+        qs = self.eventtime_set.filter(
             Q(bookable=True) &
             (
                 Q(visit__isnull=True) |
@@ -1709,6 +1720,16 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             ) &
             (~Q(resource_status=EventTime.RESOURCE_STATUS_BLOCKED))
         )
+        if self.maximum_number_of_visitors is not None:
+            max = (self.maximum_number_of_visitors +
+                   (self.waiting_list_length or 0))
+            qs = qs.annotate(
+                Sum('visit__bookings__booker__attendee_count')
+            ).filter(
+                Q(visit__isnull=True) |
+                Q(visit__bookings__booker__attendee_count__sum__lt=max)
+            )
+        return qs
 
     @property
     def future_times(self):
@@ -1920,6 +1941,16 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
         return recipients
 
+    # Returns best guess for who is responsible for visits for this product.
+    def get_responsible_persons(self):
+        if self.tilbudsansvarlig:
+            return [self.tilbudsansvarlig]
+
+        if self.created_by:
+            return [self.created_by]
+
+        return self.organizationalunit.get_editors()
+
     def get_view_url(self):
         return reverse('product-view', args=[self.pk])
 
@@ -2113,15 +2144,41 @@ class Product(AvailabilityUpdaterMixin, models.Model):
                 minutes=int(minutes)
             )
 
+    @property
+    def duration_display(self):
+        if not self.duration:
+            return ""
+        (hours, minutes) = self.duration.split(":")
+        try:
+            hours = int(hours)
+            minutes = int(minutes)
+            parts = []
+            if hours == 1:
+                parts.append(_(u"1 time"))
+            elif hours > 1:
+                parts.append(_(u"%s timer") % hours)
+            if minutes == 1:
+                parts.append(_(u"1 minut"))
+            else:
+                parts.append(_(u"%s minutter") % minutes)
+
+            return _(u" og ").join([unicode(x) for x in parts])
+        except Exception as e:
+            print e
+            return ""
+
     @staticmethod
-    def get_latest_booked():
-        products = Product.objects.filter(
+    def get_latest_booked(user=None):
+        qs = Product.objects.filter(
             eventtime__visit__bookings__statistics__created_time__isnull=False
         ).annotate(latest_booking=Max(
             'eventtime__visit__bookings__statistics__created_time'
         )).order_by("-latest_booking")
 
-        return list(products)
+        if user and not user.is_authenticated():
+            return Product.filter_public_bookable(qs).distinct()
+        else:
+            return qs
 
     @property
     def room_responsible_users(self):
@@ -2424,6 +2481,12 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     )
 
     last_workflow_update = models.DateTimeField(default=timezone.now)
+    needs_attention_since = models.DateTimeField(
+        blank=True,
+        null=True,
+        default=None,
+        verbose_name=_(u'Behov for opmærksomhed siden')
+    )
 
     comments = models.TextField(
         blank=True,
@@ -2878,6 +2941,17 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             else:
                 return self.bookings.none()
 
+    def set_needs_attention(self, since=None):
+        if since is None:
+            since = timezone.now()
+
+        if not (
+            self.needs_attention_since and
+            self.needs_attention_since >= since
+        ):
+            self.needs_attention_since = since
+            self.save()
+
     @property
     def booking_list(self):
         return self.get_bookings(False, True)
@@ -2905,8 +2979,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     @property
     def available_seats(self):
         limit = self.product.maximum_number_of_visitors
-        if limit is not None:
-            return max(limit - self.nr_attendees, 0)
+        if limit is None:
+            return sys.maxint
+        return max(limit - self.nr_attendees, 0)
 
     def get_workflow_status_class(self):
         return self.status_to_class_map.get(self.workflow_status, 'default')
@@ -3481,6 +3556,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         context['can_notify'] = profile.can_notify(self)
 
         return context
+
 
 Visit.add_override_property('duration')
 Visit.add_override_property('locality')

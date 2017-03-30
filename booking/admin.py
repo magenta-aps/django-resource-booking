@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from django.contrib import admin
 from django.db import models as django_models
 from django.db.models import Q
@@ -121,19 +123,42 @@ class KUBookingUnitAdmin(KUBookingModelAdmin):
 
         profile = request.user.userprofile
 
-        # Limit parent choices to faculties the user has access to
-        unit_qs = profile.get_unit_queryset().filter(type__name="Fakultet")
-        form.base_fields['parent'].queryset = unit_qs
-        if not profile.is_administrator:
+        allowed_parent_types = [u"Fakultet"]
+
+        if profile.is_administrator:
+            # Administrators are allowed to select the root as a parent
+            allowed_parent_types.append(u"Københavns Universitet")
+
+            # Remove root type choice option unless a root does not exist
+            # or we're currently editing an existing one.
+            if (
+                self.model.root_unit_id() and
+                not (
+                    obj and obj.type and
+                    obj.type.name == u"Københavns Universitet"
+                )
+            ):
+                type_field = form.base_fields['type']
+                type_field.queryset = type_field.queryset.exclude(
+                    name=u"Københavns Universitet"
+                )
+        else:
             # All units must have faculty parent
             form.base_fields['parent'].empty_label = None
 
             # Only allow "Institut" choice
             type_field = form.base_fields['type']
             type_field.queryset = type_field.queryset.filter(
-                name="Institut"
+                name=u"Institut"
             )
             type_field.empty_label = None
+
+        # Limit parent choices to types the user has access to
+        unit_qs = profile.get_unit_queryset().filter(
+            type__name__in=allowed_parent_types
+        )
+
+        form.base_fields['parent'].queryset = unit_qs
 
         return form
 

@@ -1,11 +1,13 @@
 {% load i18n %}
 {% if bookerform.attendee_count %}
 <div class="form-group">
-    <label class="col-sm-2 control-label required {{ bookerform.attendee_count.css_classes }}" for="{{ bookerform.attendee_count.id_for_label }}">{% trans "Antal deltagere" %}</label>
+    <div class="col-sm-2">
+        <label class="control-label required {{ bookerform.attendee_count.css_classes }}" for="{{ bookerform.attendee_count.id_for_label }}">{% trans "Antal deltagere" %}</label>
+    </div>
     <div class="col-sm-6{% if bookerform.attendee_count.errors %} has-error{% endif %}">
         {{ bookerform.attendee_count }}
     </div>
-    <div class="col-sm-3 help-block with-errors">
+    <div class="col-sm-4 help-block with-errors">
         <ul class="list-unstyled" id="waitinglist_warning" style="display:none">
             <li>{% trans 'Der er ikke nok ledige pladser, men du kan skrive dig på venteliste i stedet' %}</li>
         </ul>
