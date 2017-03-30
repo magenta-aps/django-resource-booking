@@ -181,7 +181,7 @@ class OrganizationalUnit(models.Model):
         blank=True
     )
     autoassign_resources_enabled = models.BooleanField(
-        verbose_name=_(u'Automatisk tildeling mulig'),
+        verbose_name=_(u'Automatisk ressourcetildeling mulig'),
         default=False
     )
 
@@ -3644,6 +3644,14 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         context['can_notify'] = profile.can_notify(self)
 
         return context
+
+    def resources_available_for_autoassign(self, resource_pool):
+        eligible = resource_pool.resources.exclude(visitresource__visit=self)
+        return [
+            resource
+            for resource in eligible
+            if resource.available_for_visit(self)
+        ]
 
     def autoassign_resources(self):
         if self.is_multiproductvisit:
