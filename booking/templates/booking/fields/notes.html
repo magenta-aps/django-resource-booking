@@ -8,7 +8,11 @@
         {{ bookingform.notes }}
     </div>
     <div class="col-sm-4 help-block with-errors">
-        {{ bookingform.notes.errors }}
+        {% if bookingform.notes.errors %}
+            {{ bookingform.notes.errors }}
+        {% else %}
+            {% trans 'Angiv her hvis du har tilmeldt dig andre tilbud på samme dag' %}
+        {% endif %}
     </div>
 </div>
 {% endif %}

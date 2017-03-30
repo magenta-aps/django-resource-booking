@@ -14,6 +14,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse, reverse_lazy
+from django.utils.translation.trans_real import get_languages
 from django.db.models import Count
 from django.db.models import Min
 from django.db.models import Q
@@ -35,7 +36,7 @@ from django.views.generic.edit import FormMixin, ModelFormMixin
 from django.views.generic.edit import FormView, ProcessFormView
 from django.views.defaults import bad_request
 
-from profile.models import EDIT_ROLES
+from profile.models import EDIT_ROLES, ADMINISTRATOR
 from profile.models import role_to_text
 from booking.models import Product, Visit, StudyMaterial
 from booking.models import KUEmailMessage
@@ -51,6 +52,7 @@ from booking.models import log_action
 from booking.models import LOGACTION_CREATE, LOGACTION_CHANGE
 from booking.models import RoomResponsible
 from booking.models import BookerResponseNonce
+from booking.models import CalendarEvent
 
 from booking.models import MultiProductVisit
 from booking.models import MultiProductVisitTemp
@@ -398,12 +400,9 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = {}
-        print self.template_type
-        print self.get_unit()
         context['templates'] = EmailTemplate.get_template(
             self.template_type, self.get_unit(), True
         )
-        print context['templates']
         context['template_type'] = self.template_type.id
         context['template_unit'] = self.get_unit()
         context['modal'] = self.modal
@@ -493,6 +492,10 @@ class EmailSuccessView(TemplateView):
 
 class EditorRequriedMixin(RoleRequiredMixin):
     roles = EDIT_ROLES
+
+
+class AdminRequiredMixin(RoleRequiredMixin):
+    roles = [ADMINISTRATOR]
 
 
 class UnitAccessRequiredMixin(object):
@@ -726,6 +729,8 @@ class SearchView(BreadcrumbMixin, ListView):
         if self.base_queryset is None:
             searchexpression = self.request.GET.get("q", "")
 
+            needs_no_eventtime = Q(time_mode=Product.TIME_MODE_GUEST_SUGGESTED)
+
             qs = self.model.objects.search(searchexpression)
 
             date_cond = Q()
@@ -736,12 +741,30 @@ class SearchView(BreadcrumbMixin, ListView):
             is_public = not self.request.user.is_authenticated()
 
             if t_from:
-                date_cond = date_cond & Q(eventtime__start__gt=t_from)
+                date_cond &= Q(
+                    needs_no_eventtime |
+                    Q(eventtime__start__gt=t_from)
+                )
 
             if t_to:
                 # End datetime is midnight of the next day
                 next_midnight = t_to + timedelta(hours=24)
-                date_cond = date_cond & Q(eventtime__start__lte=next_midnight)
+                date_cond &= Q(
+                    needs_no_eventtime |
+                    Q(eventtime__start__lte=next_midnight)
+                )
+
+            date_cond &= Q(
+                Q(calendar__isnull=True) |
+                Q(
+                    Q(calendar__calendarevent__in=CalendarEvent.get_events(
+                        CalendarEvent.AVAILABLE, t_from, t_to
+                    )) & ~
+                    Q(calendar__calendarevent__in=CalendarEvent.get_events(
+                        CalendarEvent.NOT_AVAILABLE, t_from, t_to
+                    ))
+                )
+            )
 
             if is_public:
                 # Public searches are always from todays date and onward
@@ -772,7 +795,7 @@ class SearchView(BreadcrumbMixin, ListView):
                 always_bookable = Q(
                     time_mode__in=[
                         Product.TIME_MODE_NONE,
-                        Product.TIME_MODE_GUEST_SUGGESTED,
+                        Product.TIME_MODE_NO_BOOKING,
                     ]
                 )
                 qs = qs.filter(
@@ -1575,11 +1598,12 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
             enable_days=True
         )
 
-        context['hastime'] = self.object.type in [
-            Product.STUDENT_FOR_A_DAY, Product.STUDIEPRAKTIK,
-            Product.OPEN_HOUSE, Product.TEACHER_EVENT, Product.GROUP_VISIT,
-            Product.STUDY_PROJECT, Product.OTHER_OFFERS
-        ]
+        time_modes = self.object.available_time_modes
+        if len(time_modes) == 1:
+            context['hidden_time_mode'] = True
+            context['hastime'] = False
+        elif len(time_modes) > 1:
+            context['hastime'] = True
 
         context['disable_waitinglist_on_timemode_values'] = [
             Product.TIME_MODE_GUEST_SUGGESTED
@@ -1616,6 +1640,18 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
             )
             if autosendformset.is_valid():
                 autosendformset.save()
+        for template_type in EmailTemplateType.objects.filter(
+            enable_autosend=True,
+            form_show=False
+        ):
+            self.object.productautosend_set.get_or_create(
+                template_type=template_type,
+                defaults={
+                    'template_key': template_type.key,
+                    'product': self.object,
+                    'enabled': template_type.is_default
+                }
+            )
 
     def get_success_url(self):
         try:
@@ -2291,7 +2327,8 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
             'times_available': available_times,
             'only_waitinglist': only_waitinglist,
             'gymnasiefag_available': self.gymnasiefag_available(),
-            'grundskolefag_available': self.grundskolefag_available()
+            'grundskolefag_available': self.grundskolefag_available(),
+            'grundskole_level_conversion': Guest.grundskole_level_map()
         }
         context.update(kwargs)
         return super(BookingView, self).get_context_data(**context)
@@ -2600,7 +2637,6 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
         return self.visit.product
 
     def get(self, request, *args, **kwargs):
-        print "VisitBookingCreateView"
         return self.render_to_response(
             self.get_context_data(**self.get_forms())
         )
@@ -2704,13 +2740,19 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
         return super(VisitBookingCreateView, self).get_context_data(**context)
 
 
-class EmbedcodesView(TemplateView):
+class EmbedcodesView(AdminRequiredMixin, TemplateView):
     template_name = "embedcodes.html"
 
     def get_context_data(self, **kwargs):
         context = {}
+        base_url = kwargs['embed_url']
 
-        embed_url = 'embed/' + kwargs['embed_url']
+        for language in get_languages():
+            if base_url.startswith("%s/" % language):
+                base_url = base_url[len(language)+1:]
+                break
+
+        embed_url = 'embed/' + base_url
 
         # We only want to test the part before ? (or its encoded value, %3F):
         test_url = embed_url.split('?', 1)[0]
@@ -2724,6 +2766,7 @@ class EmbedcodesView(TemplateView):
                 break
 
         context['can_embed'] = can_embed
+        context['base_url'] = base_url
         context['full_url'] = self.request.build_absolute_uri('/' + embed_url)
 
         context['breadcrumbs'] = [
@@ -2733,7 +2776,7 @@ class EmbedcodesView(TemplateView):
             },
             {
                 'url': self.request.path,
-                'text': '/' + kwargs['embed_url']
+                'text': '/' + base_url
             }
         ]
 
@@ -3069,7 +3112,7 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
             )
 
         context['emailtemplate_waitinglist'] = \
-            EmailTemplateType.NOTIFY_GUEST__SPOT_OPEN
+            EmailTemplateType.notify_guest__spot_open.id
         user = self.request.user
 
         usertype = self.kwargs.get('usertype')

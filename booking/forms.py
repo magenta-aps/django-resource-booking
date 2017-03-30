@@ -23,7 +23,7 @@ from django.forms import formset_factory, inlineformset_factory
 from django.forms import TextInput, NumberInput, DateInput, Textarea, Select
 from django.forms import HiddenInput
 from django.utils.translation import ugettext_lazy as _
-from tinymce.widgets import TinyMCE
+from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from .fields import ExtensibleMultipleChoiceField
 from .fields import OrderedModelMultipleChoiceField
 
@@ -280,7 +280,8 @@ class OrganizationalUnitForm(forms.ModelForm):
 
 class ProductInitialForm(forms.Form):
     type = forms.ChoiceField(
-        choices=Product.resource_type_choices
+        choices=Product.resource_type_choices,
+        widget=Select(attrs={'class': 'form-control'})
     )
 
 
@@ -315,7 +316,7 @@ class ProductForm(forms.ModelForm):
                     'maxlength': 210
                 }
             ),
-            'description': TinyMCE(),
+            'description': CKEditorUploadingWidget(),
             'custom_name': TextInput(attrs={
                 'class': 'titlefield form-control input-sm',
                 'rows': 1, 'size': 62
@@ -389,14 +390,21 @@ class ProductForm(forms.ModelForm):
 
         self.current_unit = unit
 
+        time_mode_choices = self.instance.available_time_modes
+
         if not self.instance.pk and 'initial' in kwargs:
             kwargs['initial']['tilbudsansvarlig'] = self.user.pk
             if unit is not None:
                 kwargs['initial']['organizationalunit'] = unit.pk
+            # When only one choice for time modes, default to that
+            if len(time_mode_choices) == 1:
+                kwargs['initial']['time_mode'] = time_mode_choices[0][0]
 
         super(ProductForm, self).__init__(*args, **kwargs)
         self.fields['organizationalunit'].queryset = self.get_unit_query_set()
         self.fields['type'].widget = HiddenInput()
+        # Set time_mode choices to calculated value from instance
+        self.fields['time_mode'].choices = time_mode_choices
 
         if unit is not None and 'locality' in self.fields:
             self.fields['locality'].choices = [BLANK_OPTION] + \
@@ -582,6 +590,7 @@ class AssignmentHelpForm(ProductForm):
         model = Product
         fields = ('type', 'title', 'teaser', 'description', 'state',
                   'institution_level', 'topics',
+                  'time_mode',
                   'tilbudsansvarlig', 'organizationalunit',
                   'comment',
                   )
@@ -593,6 +602,7 @@ class StudyMaterialForm(ProductForm):
         model = Product
         fields = ('type', 'title', 'teaser', 'description', 'price', 'state',
                   'institution_level', 'topics',
+                  'time_mode',
                   'tilbudsansvarlig', 'organizationalunit',
                   'comment'
                   )
@@ -670,8 +680,10 @@ class ProductAutosendForm(forms.ModelForm):
         return self.template_type.name
 
     def has_changed(self):
-        return (self.instance.pk is None) or \
+        return (
+            (self.instance.pk is None) or
             super(ProductAutosendForm, self).has_changed()
+        )
 
 
 ProductAutosendFormSetBase = inlineformset_factory(
@@ -679,7 +691,9 @@ ProductAutosendFormSetBase = inlineformset_factory(
     ProductAutosend,
     form=ProductAutosendForm,
     extra=0,
-    max_num=EmailTemplateType.objects.filter(enable_autosend=True).count(),
+    max_num=EmailTemplateType.objects.filter(
+        enable_autosend=True, form_show=True
+    ).count(),
     can_delete=False,
     can_order=False
 )
@@ -688,29 +702,35 @@ ProductAutosendFormSetBase = inlineformset_factory(
 class ProductAutosendFormSet(ProductAutosendFormSetBase):
     def __init__(self, *args, **kwargs):
         initial = kwargs.get('initial', [])
+        existing_types = []
         if 'instance' in kwargs:
-            autosends = kwargs['instance'].get_autosends(True)
-            all_autosends = EmailTemplateType.objects.filter(
-                enable_autosend=True
+            instance = kwargs['instance']
+            all_types = EmailTemplateType.objects.filter(
+                enable_autosend=True, form_show=True
             )
-            if len(autosends) < all_autosends.count():
-                initial = []
-                existing_types = [
-                    autosend.template_type for autosend in autosends
-                ]
-                print existing_types
-                for type in all_autosends:
-                    if type not in existing_types:
-                        initial.append({
-                            'template_type': type,
-                            'enabled': False,
-                            'days': ''
-                        })
-                self.extra = len(initial)
+            b = [type.id for type in all_types]
+            b.sort()
+            product_autosends = instance.get_autosends(True).filter(
+                template_type__in=all_types
+            ).order_by('template_type__ordering')
+            a = [autosend.template_type.id for autosend in product_autosends]
+            a.sort()
+            kwargs['queryset'] = product_autosends
+
+            initial = []
+            existing_types = [
+                autosend.template_type for autosend in product_autosends
+            ]
+            for type in all_types:
+                if type not in existing_types:
+                    initial.append({
+                        'template_type': type,
+                        'enabled': type.is_default,
+                        'days': ''
+                    })
+            self.extra = len(initial)
+            kwargs['initial'] = initial
         super(ProductAutosendFormSet, self).__init__(*args, **kwargs)
-        if len(initial) > 0:
-            initial.sort(key=lambda choice: choice['template_type'].key)
-            self.initial = [{} for x in existing_types] + initial
 
     def save_new_objects(self, commit=True):
         self.new_objects = []
@@ -775,24 +795,42 @@ class BookingForm(forms.ModelForm):
                 product = eventtime.product
 
                 if visit:
-                    available_seats = eventtime.visit.available_seats
+                    available_seats = visit.available_seats
+                    waitinglist_capacity = visit.waiting_list_capacity
+                    bookings = visit.bookings.count
                 else:
                     available_seats = product.maximum_number_of_visitors
+                    waitinglist_capacity = 0
+                    bookings = 0
 
+                capacity_text = None
                 if available_seats is None:
                     choices.append((eventtime.pk, date))
-                elif available_seats > 0 or \
-                        visit and visit.waiting_list_capacity > 0:
-                    if visit:
-                        capacity_text = \
-                            _("(%d pladser tilbage, "
-                              "%d ventelistepladser tilbage)") % \
-                            (available_seats, visit.waiting_list_capacity)
+                else:
+                    if bookings == 0:
+                        # There are no bookings at all - yet
+                        capacity_text = "%d ledige pladser" % available_seats
+                    elif available_seats > 0:
+                        if waitinglist_capacity > 0:
+                            # There's some room on both
+                            # regular and waiting list
+                            capacity_text = _("%d ledige pladser + "
+                                              "venteliste") % available_seats
+                        else:
+                            # There's only regular seats
+                            capacity_text = _("%d ledige pladser") % \
+                                            available_seats
                     else:
-                        capacity_text = _("(%d pladser tilbage)") % \
-                            available_seats
+                        if waitinglist_capacity > 0:
+                            # There's only waitinglist seats
+                            capacity_text = _("venteliste (%d pladser)") % \
+                                            waitinglist_capacity
+                        else:
+                            # There's no room at all
+                            continue
+
                     choices.append(
-                        (eventtime.pk, "%s %s" % (date, capacity_text))
+                        (eventtime.pk, "%s - %s" % (date, capacity_text))
                     )
 
             self.fields['eventtime'].choices = choices
@@ -897,8 +935,23 @@ class BookerForm(forms.ModelForm):
         attendeecount_widget = self.fields['attendee_count'].widget
 
         attendeecount_widget.attrs['min'] = 1
-        if len(products) > 0:
 
+        if len(products) > 1:
+            attendeecount_widget.attrs['data-validation-number-min-message'] =\
+                _(u"Der der kræves mindst %d "
+                  u"deltagere på at af de besøg du har valgt.")
+            attendeecount_widget.attrs['data-validation-number-max-message'] =\
+                _(u"Der er max plads til %d "
+                  u"deltagere på et af de besøg du har valgt.")
+        else:
+            attendeecount_widget.attrs['data-validation-number-min-message'] =\
+                _(u"Der der kræves mindst %d "
+                  u"deltagere på det besøg du har valgt.")
+            attendeecount_widget.attrs['data-validation-number-max-message'] =\
+                _(u"Der er max plads til %d "
+                  u"deltagere på det besøg du har valgt.")
+
+        if len(products) > 0:
             min_visitors = [
                 product.minimum_number_of_visitors
                 for product in products
@@ -967,9 +1020,10 @@ class BookerForm(forms.ModelForm):
         school = self.cleaned_data.get('school')
         if School.objects.filter(name=school).count() == 0:
             raise forms.ValidationError(
-                _(u'Du har ikke valgt skole/gymnasium fra listen. Du skal '
-                  u'vælge skole/gymnasium fra listen for at kunne '
-                  u'tilmelde dig.')
+                _(u'Du skal vælge skole/gymnasium fra listen for at kunne '
+                  u'tilmelde dig. Hvis din skole eller dit gymnasium ikke '
+                  u'kommer frem på listen, kontakt da support@fokus.dk '
+                  u'for at få hjælp til tilmelding.')
             )
         return school
 
@@ -1156,7 +1210,6 @@ class EmailTemplateForm(forms.ModelForm):
         widgets = {
             'subject': TextInput(attrs={'class': 'form-control'}),
             'body': Textarea(attrs={'rows': 10, 'cols': 90}),
-            # 'body': TinyMCE(attrs={'rows': 10, 'cols': 90}),
         }
 
     def __init__(self, user, *args, **kwargs):
@@ -1204,11 +1257,11 @@ EmailTemplatePreviewContextForm = formset_factory(
 
 
 class BaseEmailComposeForm(forms.Form):
+
     required_css_class = 'required'
 
     body = forms.CharField(
         max_length=65584,
-        # widget=TinyMCE(attrs={'rows': 10, 'cols': 90}),
         widget=Textarea(attrs={'rows': 10, 'cols': 90}),
         label=_(u'Tekst')
     )
