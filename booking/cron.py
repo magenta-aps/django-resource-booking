@@ -284,4 +284,3 @@ class EvaluationReminderJob(KuCronJob):
         finally:
             for autosend in autosends:
                 autosend.refresh_from_db()
-
