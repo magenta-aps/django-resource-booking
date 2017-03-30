@@ -1342,11 +1342,11 @@ class MultiProductVisitTempDateForm(forms.ModelForm):
             date = self.cleaned_data['date']
             product = self.cleaned_data['baseproduct']
             if not product.is_bookable(date):
-                raise ValidationError(
+                raise forms.ValidationError(
                     {'date': _(u'Det er desværre ikke muligt at bestille '
                                u'besøget på den valgte dato. Se venligst '
-                               u'uddybende informationer om mulige tidspunkter '
-                               u'på beskrivelsen af besøget.')
+                               u'uddybende informationer om mulige tidspunkter'
+                               u' på beskrivelsen af besøget.')
                      }
                 )
         return super(MultiProductVisitTempDateForm, self).clean()
