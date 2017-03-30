@@ -112,6 +112,11 @@ class CreateTimeView(CreateView):
             **kwargs
         )
 
+    def form_valid(self, *args, **kwargs):
+        response = super(CreateTimeView, self).form_valid(*args, **kwargs)
+        self.object.update_availability()
+        return response
+
     def get_success_url(self):
         return reverse(
             'manage-times', args=[self.kwargs.get('product_pk', -1)]
@@ -193,6 +198,7 @@ class CreateTimesFromRulesView(FormView):
                 notes='',
             )
             d.save()
+            d.update_availability()
 
         return super(CreateTimesFromRulesView, self).form_valid(form)
 
