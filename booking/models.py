@@ -5162,6 +5162,7 @@ class KUEmailMessage(models.Model):
     body = models.TextField(blank=False, null=False)
     htmlbody = models.TextField(blank=True, null=True)
     from_email = models.TextField(blank=False, null=False)
+    original_from_email = models.TextField(blank=True, null=True)
     recipients = models.TextField(
         blank=False,
         null=False
@@ -5190,7 +5191,8 @@ class KUEmailMessage(models.Model):
 
     @staticmethod
     def save_email(email_message, instance,
-                   reply_nonce=None, htmlbody=None, template_type=None):
+                   reply_nonce=None, htmlbody=None,
+                   template_type=None, original_from_email=None):
         """
         :param email_message: An instance of
         django.core.mail.message.EmailMessage
@@ -5210,6 +5212,7 @@ class KUEmailMessage(models.Model):
             body=email_message.body,
             htmlbody=htmlbody,
             from_email=email_message.from_email,
+            original_from_email=original_from_email,
             recipients=', '.join(email_message.recipients()),
             content_type=ctype,
             object_id=instance.id,
@@ -5223,7 +5226,7 @@ class KUEmailMessage(models.Model):
 
     @staticmethod
     def send_email(template, context, recipients, instance, unit=None,
-                   **kwargs):
+                   original_from_email=None, **kwargs):
         if isinstance(template, EmailTemplateType):
             key = template.key
             template = EmailTemplate.get_template(template, unit)
@@ -5286,7 +5289,6 @@ class KUEmailMessage(models.Model):
                     email['full'] = address
 
                 email['get_full_name'] = email.get('name', email['full'])
-
                 emails[address] = email
 
         for email in emails.values():
@@ -5323,8 +5325,9 @@ class KUEmailMessage(models.Model):
             message = EmailMultiAlternatives(
                 subject=subject,
                 body=textbody,
+                # from_email=from_email or settings.DEFAULT_FROM_EMAIL,
                 from_email=settings.DEFAULT_FROM_EMAIL,
-                to=[email['full']]
+                to=[email['full']],
             )
             if htmlbody is not None:
                 message.attach_alternative(htmlbody, 'text/html')
@@ -5332,7 +5335,8 @@ class KUEmailMessage(models.Model):
 
             msg_obj = KUEmailMessage.save_email(
                 message, instance, reply_nonce=nonce,
-                template_type=template.type
+                template_type=template.type,
+                original_from_email=original_from_email
             )
             KUEmailRecipient.register(msg_obj, email)
 
