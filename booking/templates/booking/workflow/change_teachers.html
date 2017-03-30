@@ -1,5 +1,4 @@
 {% extends 'index.html' %}
-{% load staticfiles %}
 {% load booking_tags %}
 {% load i18n %}
 
@@ -36,7 +35,7 @@
             {% include 'common/fields/boolean_field.html' with field=form.send_emails left_label="Udsendelse af e-mail:" %}
         {% else %}
             <div class="row form-group">
-                <div class="col-sm-2"><strong>Udsendelse af e-mail:</strong></div>
+                <div class="col-sm-2"><strong>{% trans 'Udsendelse af e-mail:' %}</strong></div>
                 <div class="col-sm-7">
                     <p>
                         {% blocktrans with inviteret_type="undervisere" template_name=email_template_name %}
