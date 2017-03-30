@@ -52,7 +52,7 @@
                                         <li>{% blocktrans count needed=visit.real.needed_hosts %}Mangler {{ needed }} vært{% plural %}Mangler {{ needed }} værter{% endblocktrans %}</li>
                                     {% endif %}
                                     {% if visit.real.needs_room %}
-                                        <li>{% blocktrans with count=1 %}Mangler lokale{% endblocktrans %}</li>
+                                        <li>{% blocktrans count needed=visit.real.needed_rooms %}Mangler {{ needed }} lokale{% plural %}Mangler {{ needed }} lokaler{% endblocktrans %}</li>
                                     {% endif %}
                                     {% if visit.real.needed_items %}
                                         <li>{% blocktrans count needed=visit.real.needed_items %}Mangler {{ needed }} materiale{% plural %}Mangler {{ needed }} materialer{% endblocktrans %}</li>
