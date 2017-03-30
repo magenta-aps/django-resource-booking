@@ -725,13 +725,25 @@ class SearchView(BreadcrumbMixin, ListView):
             val = None
         return val
 
+    search_prune = re.compile(u"[^\s\wæøåÆØÅ]+")
+
     def get_base_queryset(self):
         if self.base_queryset is None:
-            searchexpression = self.request.GET.get("q", "")
+            searchexpression = self.request.GET.get("q", "").strip()
+            if searchexpression:
+                searchexpression = SearchView.search_prune.sub(
+                    '', searchexpression
+                )
+                # We run a raw query on individual words, ANDed together
+                # and with a wildcard at the end of each word
+                searchexpression = " & ".join(
+                    ["%s:*" % x for x in searchexpression.split()]
+                )
+                qs = self.model.objects.search(searchexpression, raw=True)
+            else:
+                qs = self.model.objects.all()
 
             needs_no_eventtime = Q(time_mode=Product.TIME_MODE_GUEST_SUGGESTED)
-
-            qs = self.model.objects.search(searchexpression)
 
             date_cond = Q()
 
