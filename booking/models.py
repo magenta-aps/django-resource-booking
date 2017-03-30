@@ -2924,8 +2924,10 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             x.update_availability()
 
     def resources_updated(self):
-        if self.workflow_status == self.WORKFLOW_STATUS_BEING_PLANNED and \
-                not self.planned_status_is_blocked(True):
+        if self.workflow_status in [
+            self.WORKFLOW_STATUS_BEING_PLANNED,
+            self.WORKFLOW_STATUS_AUTOASSIGN_FAILED
+        ] and not self.planned_status_is_blocked(True):
             self.workflow_status = self.WORKFLOW_STATUS_PLANNED
             self.save()
         elif self.workflow_status in [
