@@ -389,14 +389,21 @@ class ProductForm(forms.ModelForm):
 
         self.current_unit = unit
 
+        time_mode_choices = self.instance.available_time_modes
+
         if not self.instance.pk and 'initial' in kwargs:
             kwargs['initial']['tilbudsansvarlig'] = self.user.pk
             if unit is not None:
                 kwargs['initial']['organizationalunit'] = unit.pk
+            # When only one choice for time modes, default to that
+            if len(time_mode_choices) == 1:
+                kwargs['initial']['time_mode'] = time_mode_choices[0][0]
 
         super(ProductForm, self).__init__(*args, **kwargs)
         self.fields['organizationalunit'].queryset = self.get_unit_query_set()
         self.fields['type'].widget = HiddenInput()
+        # Set time_mode choices to calculated value from instance
+        self.fields['time_mode'].choices = time_mode_choices
 
         if unit is not None and 'locality' in self.fields:
             self.fields['locality'].choices = [BLANK_OPTION] + \
@@ -582,6 +589,7 @@ class AssignmentHelpForm(ProductForm):
         model = Product
         fields = ('type', 'title', 'teaser', 'description', 'state',
                   'institution_level', 'topics',
+                  'time_mode',
                   'tilbudsansvarlig', 'organizationalunit',
                   'comment',
                   )
@@ -593,6 +601,7 @@ class StudyMaterialForm(ProductForm):
         model = Product
         fields = ('type', 'title', 'teaser', 'description', 'price', 'state',
                   'institution_level', 'topics',
+                  'time_mode',
                   'tilbudsansvarlig', 'organizationalunit',
                   'comment'
                   )
