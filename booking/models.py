@@ -38,6 +38,7 @@ from profile.constants import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
 
 import math
 import uuid
+import sys
 
 BLANK_LABEL = '---------'
 BLANK_OPTION = (None, BLANK_LABEL,)
@@ -1423,12 +1424,66 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     TIME_MODE_RESOURCE_CONTROLLED = 2
     TIME_MODE_SPECIFIC = 3
     TIME_MODE_GUEST_SUGGESTED = 4
+    TIME_MODE_NO_BOOKING = 5
+
+    time_mode_choice_map = {
+        STUDENT_FOR_A_DAY: set((
+            TIME_MODE_SPECIFIC,
+            TIME_MODE_GUEST_SUGGESTED,
+            TIME_MODE_RESOURCE_CONTROLLED,
+            TIME_MODE_NONE,
+            TIME_MODE_NO_BOOKING,
+        )),
+        STUDIEPRAKTIK: set((
+            TIME_MODE_SPECIFIC,
+            TIME_MODE_GUEST_SUGGESTED,
+            TIME_MODE_RESOURCE_CONTROLLED,
+            TIME_MODE_NONE,
+            TIME_MODE_NO_BOOKING,
+        )),
+        OPEN_HOUSE: set((
+            TIME_MODE_NO_BOOKING,
+        )),
+        TEACHER_EVENT: set((
+            TIME_MODE_SPECIFIC,
+        )),
+        GROUP_VISIT: set((
+            TIME_MODE_SPECIFIC,
+            TIME_MODE_GUEST_SUGGESTED,
+            TIME_MODE_RESOURCE_CONTROLLED,
+        )),
+        STUDY_PROJECT: set((
+            TIME_MODE_SPECIFIC,
+            TIME_MODE_GUEST_SUGGESTED,
+            TIME_MODE_RESOURCE_CONTROLLED,
+            TIME_MODE_NONE,
+            TIME_MODE_NO_BOOKING,
+        )),
+        ASSIGNMENT_HELP: set((
+            TIME_MODE_NONE,
+            TIME_MODE_NO_BOOKING,
+        )),
+        OTHER_OFFERS: set((
+            TIME_MODE_SPECIFIC,
+            TIME_MODE_GUEST_SUGGESTED,
+            TIME_MODE_RESOURCE_CONTROLLED,
+            TIME_MODE_NONE,
+            TIME_MODE_NO_BOOKING,
+        )),
+        STUDY_MATERIAL: set((
+            TIME_MODE_NONE,
+        )),
+    }
 
     time_mode_choices = (
+        (TIME_MODE_NONE,
+         _(u"Tilbuddet har ingen tidspunkter og ingen tilmelding")),
         (TIME_MODE_RESOURCE_CONTROLLED,
          _(u"Tilbuddets tidspunkter styres af ressourcer")),
         (TIME_MODE_SPECIFIC,
          _(u"Tilbuddet har faste tidspunkter")),
+        (TIME_MODE_NO_BOOKING,
+         _(u"Tilbuddet har faste tidspunkter, men er uden tilmelding")),
         (TIME_MODE_GUEST_SUGGESTED,
          _(u"Gæster foreslår mulige tidspunkter")),
     )
@@ -1708,6 +1763,17 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         choices=needed_number_choices,
         blank=False
     )
+
+    @property
+    def available_time_modes(self):
+        if self.type is None:
+            return Product.time_mode_choices
+
+        available_set = Product.time_mode_choice_map.get(self.type)
+
+        return tuple(
+            x for x in Product.time_mode_choices if x[0] in available_set
+        )
 
     @property
     def bookable_times(self):
@@ -2045,6 +2111,11 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     def has_bookable_visits(self):
         if self.time_mode == Product.TIME_MODE_GUEST_SUGGESTED:
             return True
+        if self.time_mode in (
+            Product.TIME_MODE_NONE,
+            Product.TIME_MODE_NO_BOOKING
+        ):
+            return False
 
         # Time controlled products are only bookable if there's a valid
         # bookable time in the future, and that time isn't fully booked
@@ -2119,6 +2190,12 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     @property
     def is_time_controlled(self):
         return self.time_mode != Product.TIME_MODE_NONE
+
+    def has_time_management(self):
+        return self.time_mode not in (
+            Product.TIME_MODE_NONE,
+            Product.TIME_MODE_GUEST_SUGGESTED
+        )
 
     @property
     def can_join_waitinglist(self):
@@ -2560,7 +2637,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             WORKFLOW_STATUS_NOSHOW,
         ],
         WORKFLOW_STATUS_EXECUTED: [
-            WORKFLOW_STATUS_EVALUATED,
             WORKFLOW_STATUS_NOSHOW
         ],
         WORKFLOW_STATUS_EVALUATED: [
@@ -2685,11 +2761,14 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         for x in self.affected_eventtimes:
             x.update_availability()
 
-    def resource_accepts(self):
+    def resources_updated(self):
         if self.workflow_status == self.WORKFLOW_STATUS_BEING_PLANNED and \
                 not self.planned_status_is_blocked():
             self.workflow_status = self.WORKFLOW_STATUS_PLANNED
             self.save()
+
+    def resource_accepts(self):
+        self.resources_updated()
 
     def resource_declines(self):
         if self.workflow_status == self.WORKFLOW_STATUS_BEING_PLANNED:
@@ -2697,10 +2776,16 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             self.save()
 
     def on_starttime(self):
-        pass
+        if self.eventtime is not None:
+            if self.eventtime.start is not None and self.eventtime.end is None:
+                self.on_expire()
 
     def on_endtime(self):
+        self.on_expire()
+
+    def on_expire(self):
         if self.workflow_status in [
+            self.WORKFLOW_STATUS_BEING_PLANNED,
             self.WORKFLOW_STATUS_PLANNED,
             self.WORKFLOW_STATUS_PLANNED_NO_BOOKING,
             self.WORKFLOW_STATUS_CONFIRMED,
@@ -2856,6 +2941,22 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         return self.room_status == self.STATUS_NOT_ASSIGNED
 
     @property
+    def needed_items(self):
+        if self.is_multiproductvisit:
+            return self.multiproductvisit.needed_items
+        if self.product.is_resource_controlled:
+            return self.resources_required(ResourceType.RESOURCE_TYPE_ITEM)
+        return 0
+
+    @property
+    def needed_vehicles(self):
+        if self.is_multiproductvisit:
+            return self.multiproductvisit.needed_vehicles
+        if self.product.is_resource_controlled:
+            return self.resources_required(ResourceType.RESOURCE_TYPE_VEHICLE)
+        return 0
+
+    @property
     def is_booked(self):
         """Has this Visit instance been booked yet?"""
         return len(self.bookings.all()) > 0
@@ -2927,6 +3028,10 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         if since is None:
             since = timezone.now()
 
+        # Also mark parent as needing attention
+        if self.is_multi_sub:
+            self.multi_master.set_needs_attention(since=since)
+
         if not (
             self.needs_attention_since and
             self.needs_attention_since >= since
@@ -2961,8 +3066,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     @property
     def available_seats(self):
         limit = self.product.maximum_number_of_visitors
-        if limit is not None:
-            return max(limit - self.nr_attendees, 0)
+        if limit is None:
+            return sys.maxint
+        return max(limit - self.nr_attendees, 0)
 
     def get_workflow_status_class(self):
         return self.status_to_class_map.get(self.workflow_status, 'default')
@@ -3055,8 +3161,13 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     @classmethod
     def planned_queryset(cls, **kwargs):
-        return cls.objects.exclude(
-            workflow_status=cls.WORKFLOW_STATUS_BEING_PLANNED,
+        return cls.objects.filter(
+            workflow_status__in=[
+                cls.WORKFLOW_STATUS_PLANNED,
+                cls.WORKFLOW_STATUS_PLANNED_NO_BOOKING,
+                cls.WORKFLOW_STATUS_CONFIRMED,
+                cls.WORKFLOW_STATUS_REMINDED
+            ],
         ).filter(**kwargs)
 
     @staticmethod
@@ -3538,6 +3649,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
         return context
 
+
 Visit.add_override_property('duration')
 Visit.add_override_property('locality')
 
@@ -3659,6 +3771,20 @@ class MultiProductVisit(Visit):
             if subvisit.needs_room:
                 return True
         return False
+
+    @property
+    def needed_items(self):
+        return sum(
+            subvisit.needed_items
+            for subvisit in self.subvisits_unordered
+        )
+
+    @property
+    def needed_vehicles(self):
+        return sum(
+            subvisit.needed_vehicles
+            for subvisit in self.subvisits_unordered
+        )
 
     @property
     def available_seats(self):
@@ -3849,6 +3975,7 @@ class MultiProductVisitTemp(models.Model):
         mpv = MultiProductVisit(
             required_visits=self.required_visits
         )
+        mpv.needs_attention_since = timezone.now()
         mpv.save()
         mpv.create_eventtime(self.date)
         mpv.ensure_statistics()

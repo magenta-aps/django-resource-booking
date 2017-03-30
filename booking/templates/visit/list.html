@@ -1,5 +1,4 @@
 {% extends "index.html" %}
-{% load staticfiles %}
 {% load booking_tags %}
 {% load i18n %}
 
@@ -76,7 +75,7 @@
                                 </span>
                             </li>
                         {% endif %}
-                        
+
                         {% if page_obj.has_next %}
                             <li>
                                 <a href="?{{ qstring }}&page={{ page_obj.next_page_number }}&pagesize={{paginator.per_page}}" aria-label="{% trans 'Næste' %}">
@@ -92,7 +91,7 @@
                                 </span>
                             </li>
                         {% endif %}
-                        
+
                     </ul>
                 </nav>
             {% endif %}
@@ -121,8 +120,4 @@
         </div>
     </div>
 
-{% endblock %}
-
-{% block extra_scripts %}
-    <script src="{% static 'js/custom.js' %}"></script>
 {% endblock %}
