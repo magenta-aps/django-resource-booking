@@ -14,6 +14,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse, reverse_lazy
+from django.utils.translation.trans_real import get_languages
 from django.db.models import Count
 from django.db.models import Min
 from django.db.models import Q
@@ -34,7 +35,7 @@ from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.edit import FormMixin, FormView, ProcessFormView
 from django.views.defaults import bad_request
 
-from profile.models import EDIT_ROLES
+from profile.models import EDIT_ROLES, ADMINISTRATOR
 from profile.models import role_to_text
 from booking.models import Product, Visit, StudyMaterial
 from booking.models import KUEmailMessage
@@ -397,12 +398,9 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = {}
-        print self.template_type
-        print self.get_unit()
         context['templates'] = EmailTemplate.get_template(
             self.template_type, self.get_unit(), True
         )
-        print context['templates']
         context['template_type'] = self.template_type.id
         context['template_unit'] = self.get_unit()
         context['modal'] = self.modal
@@ -492,6 +490,10 @@ class EmailSuccessView(TemplateView):
 
 class EditorRequriedMixin(RoleRequiredMixin):
     roles = EDIT_ROLES
+
+
+class AdminRequiredMixin(RoleRequiredMixin):
+    roles = [ADMINISTRATOR]
 
 
 class UnitAccessRequiredMixin(object):
@@ -772,6 +774,7 @@ class SearchView(BreadcrumbMixin, ListView):
                     time_mode__in=[
                         Product.TIME_MODE_NONE,
                         Product.TIME_MODE_GUEST_SUGGESTED,
+                        Product.TIME_MODE_NO_BOOKING,
                     ]
                 )
                 qs = qs.filter(
@@ -1574,11 +1577,12 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
             enable_days=True
         )
 
-        context['hastime'] = self.object.type in [
-            Product.STUDENT_FOR_A_DAY, Product.STUDIEPRAKTIK,
-            Product.OPEN_HOUSE, Product.TEACHER_EVENT, Product.GROUP_VISIT,
-            Product.STUDY_PROJECT, Product.OTHER_OFFERS
-        ]
+        time_modes = self.object.available_time_modes
+        if len(time_modes) == 1:
+            context['hidden_time_mode'] = True
+            context['hastime'] = False
+        elif len(time_modes) > 1:
+            context['hastime'] = True
 
         context['disable_waitinglist_on_timemode_values'] = [
             Product.TIME_MODE_GUEST_SUGGESTED
@@ -2703,13 +2707,19 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
         return super(VisitBookingCreateView, self).get_context_data(**context)
 
 
-class EmbedcodesView(TemplateView):
+class EmbedcodesView(AdminRequiredMixin, TemplateView):
     template_name = "embedcodes.html"
 
     def get_context_data(self, **kwargs):
         context = {}
+        base_url = kwargs['embed_url']
 
-        embed_url = 'embed/' + kwargs['embed_url']
+        for language in get_languages():
+            if base_url.startswith("%s/" % language):
+                base_url = base_url[len(language)+1:]
+                break
+
+        embed_url = 'embed/' + base_url
 
         # We only want to test the part before ? (or its encoded value, %3F):
         test_url = embed_url.split('?', 1)[0]
@@ -2723,6 +2733,7 @@ class EmbedcodesView(TemplateView):
                 break
 
         context['can_embed'] = can_embed
+        context['base_url'] = base_url
         context['full_url'] = self.request.build_absolute_uri('/' + embed_url)
 
         context['breadcrumbs'] = [
@@ -2732,7 +2743,7 @@ class EmbedcodesView(TemplateView):
             },
             {
                 'url': self.request.path,
-                'text': '/' + kwargs['embed_url']
+                'text': '/' + base_url
             }
         ]
 

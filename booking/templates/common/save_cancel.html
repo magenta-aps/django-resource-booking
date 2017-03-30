@@ -1,9 +1,11 @@
 {% load i18n %}
-<div>    
-    <a class="btn btn-default pull-left formpartbutton"
+<div class="row">
+    <div class="col-sm-12">
+    <a class="btn btn-default pull-right formpartbutton"
        href="{% if oncancel %}{{ oncancel }}{% else %}javascript:history.back(){% endif %}"
        data-dismiss="modal">
         {% trans "Annullér" %}
     </a>
-    <button class="btn btn-primary pull-right formpartbutton" type="submit">{% trans "Gem" %}</button>
+    <button class="btn btn-primary pull-right margin-right-10 formpartbutton" type="submit">{% trans "Gem" %}</button>
+</div>
 </div>
