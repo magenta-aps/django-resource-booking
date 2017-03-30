@@ -39,7 +39,7 @@
         </thead>
         <tbody>
         {% for item in visit_data %}
-            <tr {% if item.available|length < delta %}class="danger" data-toggle="tooltip" data-placement="right" title="{% blocktrans with poolname=resource_pool.name %}Der er ikke nok ledige ressourcer i gruppen &quot;{{ poolname }}&quot; på det tidspunkt hvor dette besøg foregår{% endblocktrans %}"{% endif %}>
+            <tr {% if item.insufficient %}class="danger" data-toggle="tooltip" data-placement="right" title="{% blocktrans with poolname=resource_pool.name %}Der er ikke nok ledige ressourcer i gruppen &quot;{{ poolname }}&quot; på det tidspunkt hvor dette besøg foregår{% endblocktrans %}"{% endif %}>
                 <td><a href="{% url 'visit-view' item.visit.id %}">{{ item.eventtime.start }}</a></td>
                 <td>{{ item.visit.bookings.count }}</td>
                 <td>{{ item.assigned_count }}</td>

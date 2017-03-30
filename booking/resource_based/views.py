@@ -112,6 +112,11 @@ class CreateTimeView(CreateView):
             **kwargs
         )
 
+    def form_valid(self, *args, **kwargs):
+        response = super(CreateTimeView, self).form_valid(*args, **kwargs)
+        self.object.update_availability()
+        return response
+
     def get_success_url(self):
         return reverse(
             'manage-times', args=[self.kwargs.get('product_pk', -1)]
@@ -193,6 +198,7 @@ class CreateTimesFromRulesView(FormView):
                 notes='',
             )
             d.save()
+            d.update_availability()
 
         return super(CreateTimesFromRulesView, self).form_valid(form)
 
@@ -783,15 +789,7 @@ class ResourceRequirementConfirmMixin(object):
             'required_amount': required_amount,
             'old_amount': old_amount,
             'delta': required_amount - old_amount,
-            'visit_data': [
-                {
-                    'visit': eventtime.visit,
-                    'eventtime': eventtime,
-                    'assigned_count': self.get_assigned_count(eventtime.visit),
-                    'available': eventtime.visit.
-                    resources_available_for_autoassign(resource_pool)
-                } for eventtime in self.product.booked_eventtimes()
-            ]
+            'visit_data': visit_data
         }
         context.update(kwargs)
         return super(ResourceRequirementConfirmMixin, self).get_context_data(
@@ -833,15 +831,24 @@ class ResourceRequirementCreateView(BackMixin, BreadcrumbMixin,
         )
 
     def form_valid(self, form):
-        return self.redirect(
-            reverse(
-                'resourcerequirement-create-confirm',
-                args=[self.product.id]
-            ) + "?resource_pool=%s&required_amount=%d" % (
-                form.cleaned_data['resource_pool'].id,
-                form.cleaned_data['required_amount']
+        if self.product.booked_eventtimes().count() > 0:
+            return self.redirect(
+                reverse(
+                    'resourcerequirement-create-confirm',
+                    args=[self.product.id]
+                ) + "?resource_pool=%s&required_amount=%d" % (
+                    form.cleaned_data['resource_pool'].id,
+                    form.cleaned_data['required_amount']
+                )
             )
-        )
+        else:
+            self.object = form.save()
+            return redirect(
+                reverse(
+                    'resourcerequirement-list',
+                    args=[self.object.product.id]
+                )
+            )
 
     def get_breadcrumbs(self):
         return [
@@ -898,7 +905,8 @@ class ResourceRequirementUpdateView(BackMixin, BreadcrumbMixin,
 
     def form_valid(self, form):
         new_required_amount = int(form.cleaned_data['required_amount'])
-        if new_required_amount > self.required_amount:
+        if new_required_amount > self.required_amount and \
+                self.product.booked_eventtimes().count() > 0:
             return self.redirect(
                 reverse(
                     'resourcerequirement-edit-confirm',
@@ -1057,6 +1065,7 @@ class VisitResourceEditView(EditorRequriedMixin, FormView):
 
     def form_valid(self, form):
         form.save()
+        self.visit.resources_updated()
         return super(VisitResourceEditView, self).form_valid(form)
 
     def get_success_url(self):
@@ -1195,9 +1204,9 @@ class CalendarView(LoginRequiredMixin, CalRelatedMixin, DetailView):
         prod = calendar.product if hasattr(calendar, 'product') else None
 
         if hasattr(calendar, 'resource'):
-            bt = calendar.resource.booked_eventtimes(start_dt, end_dt)
+            bt = calendar.resource.occupied_eventtimes(start_dt, end_dt)
         elif hasattr(calendar, 'product'):
-            bt = calendar.product.booked_eventtimes(start_dt, end_dt)
+            bt = calendar.product.occupied_eventtimes(start_dt, end_dt)
         else:
             bt = None
 

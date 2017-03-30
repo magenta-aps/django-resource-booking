@@ -1,12 +1,8 @@
 {% extends 'index.html' %}
 {% load i18n %}
-{% load staticfiles %}
 {% load booking_tags %}
 
 {% block htmltitle %} - {% trans 'tilmeld arrangement' %}{% endblock %}
-
-{% block head %}
-{% endblock %}
 
 {% block content %}
 
@@ -30,14 +26,14 @@
 {% endblock %}
 
 {% block extra_scripts %}
+
+
     {% include 'booking/fields/location_script.html' %}
     {% include 'booking/fields/school_script.html' %}
     {% include "booking/fields/time_script.html" %}
+    <script type="text/javascript" src="{% static 'js/ieform.js' %}"></script>
     <script type="text/javascript">
         $(function(){
-            $("#submitbutton").click(function(){
-                $("#bookingform").submit();
-            });
             $("#cancelbutton").click(function(){
                 {% if back %}
                     document.location = "{{ back }}";
