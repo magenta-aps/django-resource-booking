@@ -1,5 +1,6 @@
 {% extends 'lightbox-index.html' %}
 {% load i18n %}
+{% load booking_tags %}
 
 {% block htmltitle %} - {% trans 'tilmeld "studerende for en dag"' %}{% endblock %}
 
@@ -29,5 +30,6 @@
     {% include 'booking/fields/location_script.html' %}
     {% include 'booking/fields/school_script.html' %}
     {% include "booking/fields/time_script.html" %}
+    <script type="text/javascript" src="{% static 'js/ieform.js' %}"></script>
 
 {% endblock %}

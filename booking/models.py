@@ -1881,14 +1881,13 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         blank=False
     )
 
-    @property
-    def available_time_modes(self):
+    def available_time_modes(self, unit=None):
         if self.type is None:
             return Product.time_mode_choices
 
         available_set = Product.time_mode_choice_map.get(self.type)
-        if Product.TIME_MODE_RESOURCE_CONTROLLED in available_set and \
-                self.organizationalunit.autoassign_resources_enabled:
+        if Product.TIME_MODE_RESOURCE_CONTROLLED in available_set \
+                and unit is not None and unit.autoassign_resources_enabled:
             available_set.add(Product.TIME_MODE_RESOURCE_CONTROLLED_AUTOASSIGN)
 
         return tuple(

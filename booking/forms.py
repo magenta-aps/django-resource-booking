@@ -16,7 +16,6 @@ from booking.models import BLANK_LABEL, BLANK_OPTION
 from booking.widgets import OrderedMultipleHiddenChooser
 from booking.utils import binary_or, binary_and
 from django import forms
-from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.db.models.expressions import OrderBy
 from django.forms import CheckboxSelectMultiple, CheckboxInput
@@ -1391,9 +1390,12 @@ class MultiProductVisitTempDateForm(forms.ModelForm):
             date = self.cleaned_data['date']
             product = self.cleaned_data['baseproduct']
             if not product.is_bookable(date):
-                raise ValidationError(
-                    {'date': _(u'Det valgte tilbud kan ikke '
-                               u'lade sig gøre på denne dato')}
+                raise forms.ValidationError(
+                    {'date': _(u'Det er desværre ikke muligt at bestille '
+                               u'besøget på den valgte dato. Der kan være '
+                               u'begrænsninger for hvilke dage, besøget kan '
+                               u'lade sig gøre - se beskrivelse af besøget.')
+                     }
                 )
         return super(MultiProductVisitTempDateForm, self).clean()
 
