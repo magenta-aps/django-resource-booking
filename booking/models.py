@@ -1765,6 +1765,27 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     )
 
     @property
+    def total_required_hosts(self):
+        if self.is_resource_controlled:
+            return self.resourcerequirement_set.filter(
+                resource_pool__resource_type=ResourceType.RESOURCE_TYPE_HOST
+            ).aggregate(
+                total_required=Sum('required_amount')
+            )['total_required'] or 0
+        else:
+            return int(self.needed_hosts)
+
+    @property
+    def total_required_teachers(self):
+        if self.is_resource_controlled:
+            return self.resourcerequirement_set.filter(
+                resource_pool__resource_type=ResourceType.RESOURCE_TYPE_TEACHER
+            ).aggregate(
+                total_required=Sum('required_amount')
+            )['total_required'] or 0
+        else:
+            return int(self.needed_teachers)
+
     def available_time_modes(self):
         if self.type is None:
             return Product.time_mode_choices
@@ -2875,7 +2896,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         if self.override_needed_teachers is not None:
             return self.override_needed_teachers
 
-        return self.product.needed_teachers
+        return self.product.total_required_teachers
 
     @property
     def needed_teachers(self):
@@ -2903,11 +2924,20 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         return self.needed_teachers > 0
 
     @property
+    def assigned_teachers(self):
+        if self.product.is_resource_controlled:
+            return User.objects.filter(
+                teacherresource__visitresource__visit=self
+            )
+        else:
+            return self.teachers.all()
+
+    @property
     def total_required_hosts(self):
         if self.override_needed_hosts is not None:
             return self.override_needed_hosts
 
-        return self.product.needed_hosts
+        return self.product.total_required_hosts
 
     @property
     def needed_hosts(self):
@@ -2933,6 +2963,15 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     @property
     def needs_hosts(self):
         return self.needed_hosts > 0
+
+    @property
+    def assigned_hosts(self):
+        if self.product.is_resource_controlled:
+            return User.objects.filter(
+                hostresource__visitresource__visit=self
+            )
+        else:
+            return self.hosts.all()
 
     @property
     def needs_room(self):
@@ -3542,16 +3581,29 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         return False
 
     def requirement_details(self):
-        return [
-            {
-                'name': requirement.resource_pool.name,
-                'required': requirement.required_amount,
-                'acquired': self.resources.filter(
-                    visitresource__resource_requirement=requirement
-                ).count()
-            }
-            for requirement in self.product.resourcerequirement_set.all()
-        ]
+        details = []
+        for type in ResourceType.objects.all():
+            requirements = self.product.resourcerequirement_set.filter(
+                resource_pool__resource_type=type
+            )
+            if requirements.count() > 0:
+                required = 0
+                acquired = 0
+                for requirement in requirements:
+                    required += requirement.required_amount
+                    acquired += self.resources.filter(
+                        visitresource__resource_requirement=requirement
+                    ).count()
+                details.append({
+                    'required': required,
+                    'acquired': acquired,
+                    'type': type,
+                    'is_teacher': (
+                        type.id == ResourceType.RESOURCE_TYPE_TEACHER
+                    ),
+                    'is_host': (type.id == ResourceType.RESOURCE_TYPE_HOST)
+                })
+        return details
 
     @property
     def is_multiproductvisit(self):
@@ -3580,24 +3632,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             return '%s - %s' % (res, self.product.title)
         else:
             return res
-
-    @property
-    def assigned_teachers(self):
-        if self.product.is_resource_controlled:
-            return User.objects.filter(
-                teacherresource__visitresource__visit=self
-            )
-        else:
-            return self.teachers.all()
-
-    @property
-    def assigned_hosts(self):
-        if self.product.is_resource_controlled:
-            return User.objects.filter(
-                hostresource__visitresource__visit=self
-            )
-        else:
-            return self.hosts.all()
 
     def context_for_user(self, user, request_usertype=None):
         profile = user.userprofile

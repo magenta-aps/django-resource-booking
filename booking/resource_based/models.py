@@ -873,14 +873,6 @@ class ResourceType(models.Model):
     RESOURCE_TYPE_ROOM = 4
     RESOURCE_TYPE_HOST = 5
 
-    default_resource_names = {
-        RESOURCE_TYPE_ITEM: _(u"Materiale"),
-        RESOURCE_TYPE_VEHICLE: _(u"Transportmiddel"),
-        RESOURCE_TYPE_TEACHER: _(u"Underviser"),
-        RESOURCE_TYPE_ROOM: _(u"Lokale"),
-        RESOURCE_TYPE_HOST: _(u"Vært"),
-    }
-
     def __init__(self, *args, **kwargs):
         super(ResourceType, self).__init__(*args, **kwargs)
         if self.id == ResourceType.RESOURCE_TYPE_ITEM:
@@ -899,21 +891,29 @@ class ResourceType(models.Model):
     name = models.CharField(
         max_length=30
     )
+    plural = models.CharField(
+        max_length=30,
+        default=""
+    )
 
-    @classmethod
-    def create_defaults(cls):
-        for id, name in cls.default_resource_names.iteritems():
+    @staticmethod
+    def create_defaults():
+        for (id, name, plural) in [
+            (ResourceType.RESOURCE_TYPE_ITEM, u"Materiale", u"Materialer"),
+            (ResourceType.RESOURCE_TYPE_VEHICLE,
+             u"Transportmiddel", u"Transportmidler"),
+            (ResourceType.RESOURCE_TYPE_TEACHER,
+             u"Underviser", u"Undervisere"),
+            (ResourceType.RESOURCE_TYPE_ROOM, u"Lokale", u"Lokaler"),
+            (ResourceType.RESOURCE_TYPE_HOST, u"Vært", u"Værter")
+        ]:
             try:
                 item = ResourceType.objects.get(id=id)
-                if item.name != name:  # WTF!
-                    raise Exception(
-                        u"ResourceType(id=%d) already exists, but has "
-                        u"name %s instead of %s" % (id, item.name, name)
-                    )
-                else:
-                    pass  # Item already exists; all is well
+                item.name = name
+                item.plural = plural
+                item.save()
             except ResourceType.DoesNotExist:
-                item = ResourceType(id=id, name=name)
+                item = ResourceType(id=id, name=name, plural=plural)
                 item.save()
                 print "Created new ResourceType %d=%s" % (id, name)
 
