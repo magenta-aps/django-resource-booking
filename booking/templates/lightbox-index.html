@@ -1,4 +1,4 @@
-{% load staticfiles %}
+{% load booking_tags %}
 {% load i18n %}
 <!DOCTYPE html>
 <html lang="da">
@@ -33,7 +33,8 @@
     </head>
     <body class="lightbox">
 
-        {% block header %}{% endblock %}
+        {% block header %}
+        {% endblock %}
 
         {% block content %}
         {% endblock %}
