@@ -177,6 +177,7 @@
     {{ form.media }}
     {% include 'common/resources/datetime-picker_script.html' %}
     <script type="text/javascript" src="{% static 'js/formutil.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/ieform.js' %}"></script>
 
     {% include 'product/fields/studymaterials_script.html' %}
 {#    {% include 'common/fields/autosend_script.html' %}#}
@@ -207,10 +208,38 @@
 
     //--></script>
 
-    <script type="text/javascript">
+    <script type="text/javascript"><!--
         $(function () {
             $('[data-toggle="tooltip"]').tooltip({'container':$('body')});
-        })
-    </script>
+        });
+    //--></script>
+
+    <script type="text/javascript"><!--
+        $(function() {
+            {% autoescape off %}
+            var timemodes_enabled = {{ timemodes_enabled|jsonify }};
+            {% endautoescape %}
+            var timemode_select = $("#{{ form.time_mode.id_for_label }}");
+
+            var update_unit = function(){
+                var value = $("#{{ form.organizationalunit.id_for_label }}").val();
+                console.log(value);
+                if (value !== "") {
+                    var enabled = timemodes_enabled[value];
+                    console.log(enabled);
+                    timemode_select.find("option").each(function(){
+                        var option = $(this);
+                        if (enabled.indexOf(parseInt(option.val(), 10)) === -1) {
+                            option.hideOption();
+                        } else {
+                            option.showOption();
+                        }
+                    });
+                }
+            };
+            $("#{{ form.organizationalunit.id_for_label }}").change(update_unit);
+            update_unit();
+        });
+    //--></script>
 
 {% endblock %}
