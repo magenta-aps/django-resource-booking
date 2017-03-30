@@ -63,13 +63,12 @@ class ResourceTypeForm(forms.Form):
 
     def __init__(self, **kwargs):
         user = kwargs.pop("user")
-        kwargs['initial']['unit'] = user.userprofile.organizationalunit.pk
-
-        res = super(ResourceTypeForm, self).__init__(**kwargs)
-
+        try:
+            kwargs['initial']['unit'] = user.userprofile.organizationalunit.pk
+        except AttributeError:
+            pass
+        super(ResourceTypeForm, self).__init__(**kwargs)
         self['unit'].field.queryset = user.userprofile.get_unit_queryset()
-
-        return res
 
 
 class EditResourceForm(forms.ModelForm):
@@ -190,13 +189,12 @@ class ResourcePoolTypeForm(forms.Form):
 
     def __init__(self, **kwargs):
         user = kwargs.pop("user")
-        kwargs['initial']['unit'] = user.userprofile.organizationalunit.pk
-
-        res = super(ResourcePoolTypeForm, self).__init__(**kwargs)
-
+        try:
+            kwargs['initial']['unit'] = user.userprofile.organizationalunit.pk
+        except AttributeError:
+            pass
+        super(ResourcePoolTypeForm, self).__init__(**kwargs)
         self['unit'].field.queryset = user.userprofile.get_unit_queryset()
-
-        return res
 
 
 class EditResourcePoolForm(forms.ModelForm):
@@ -226,12 +224,14 @@ class EditResourcePoolForm(forms.ModelForm):
 
 
 class EditResourceRequirementForm(forms.ModelForm):
+
     class Meta:
         model = ResourceRequirement
         fields = ['resource_pool', 'required_amount']
         widgets = {
             'required_amount': NumberInput(attrs={
-                'min': 1
+                'min': 1,
+                'class': 'form-control input-sm'
             })
         }
 
@@ -271,7 +271,10 @@ class EditVisitResourceForm(forms.Form):
         self.visit = visit
         self.resource_requirement = resource_requirement
         resourcefield = self.fields['resources']
-        resourcefield.label = resource_requirement.resource_pool.name
+        resourcefield.label = \
+            resource_requirement.resource_pool.resource_type.plural or \
+            resource_requirement.resource_pool.resource_type.name
+        resourcefield.label_suffix = resource_requirement.resource_pool.name
         resourcefield.help_text = __(
             u"%(count)d nødvendig",
             u"%(count)d nødvendige",

@@ -1,8 +1,10 @@
 from django.conf.urls import patterns, url, include
 from django.conf.urls.static import static
 from django.conf import settings
+from django.core.urlresolvers import RegexURLPattern
+from django.views.decorators.clickjacking import xframe_options_exempt
 
-from .views import MainPageView, VisitNotifyView
+from booking.views import MainPageView, VisitNotifyView
 
 from booking.views import PostcodeView, SchoolView, ProductInquireView
 from booking.views import RrulestrView
@@ -56,7 +58,9 @@ from booking.resource_based.views import ResourcePoolUpdateView
 from booking.resource_based.views import ResourcePoolDeleteView
 
 from booking.resource_based.views import ResourceRequirementCreateView
+from booking.resource_based.views import ResourceRequirementCreateConfirmView
 from booking.resource_based.views import ResourceRequirementUpdateView
+from booking.resource_based.views import ResourceRequirementUpdateConfirmView
 from booking.resource_based.views import ResourceRequirementListView
 from booking.resource_based.views import ResourceRequirementDeleteView
 
@@ -82,7 +86,7 @@ product_calendarevent_kwargs['related_kwargs_name'] = 'prod'
 urlpatterns = patterns(
 
     '',
-    (r'^jsi18n/$', 'django.views.i18n.javascript_catalog', js_info_dict),
+    (r'^jsi18n$', 'django.views.i18n.javascript_catalog', js_info_dict),
     url(r'^$', MainPageView.as_view(), name='index'),
 
     # Main search page
@@ -382,10 +386,23 @@ urlpatterns = patterns(
     url(r'^product/(?P<product>[0-9]+)/resourcerequirement/create/?$',
         ResourceRequirementCreateView.as_view(),
         name='resourcerequirement-create'),
+    url(r'^product/(?P<product>[0-9]+)/resourcerequirement/create/confirm/?$',
+        ResourceRequirementCreateConfirmView.as_view(),
+        name='resourcerequirement-create-confirm'),
+
+
+
     url(r'^product/(?P<product>[0-9]+)/resource'
         r'requirement/(?P<pk>[0-9]+)/edit/?$',
         ResourceRequirementUpdateView.as_view(),
         name='resourcerequirement-edit'),
+
+
+    url(r'^product/(?P<product>[0-9]+)/resource'
+        r'requirement/(?P<pk>[0-9]+)/edit/confirm/?$',
+        ResourceRequirementUpdateConfirmView.as_view(),
+        name='resourcerequirement-edit-confirm'),
+
     url(r'^product/(?P<product>[0-9]+)/resourcerequirement/?$',
         ResourceRequirementListView.as_view(),
         name='resourcerequirement-list'),
@@ -409,17 +426,18 @@ embed_views = [
 
 embedpatterns = []
 for x in urlpatterns:
-    if hasattr(x, 'name') and x.name in embed_views:
-        # Tell template system that these URLs can be embedded
-        x.default_args['can_be_embedded'] = True
+    if isinstance(x, RegexURLPattern):
+        if hasattr(x, 'name') and x.name in embed_views:
+            # Tell template system that these URLs can be embedded
+            x.default_args['can_be_embedded'] = True
 
-        # Add a corresponding embed URL
-        embedpatterns.append(
-            url(
-                '^(?P<embed>embed/)' + x.regex.pattern[1:],
-                x._callback,
-                name=x.name + '-embed'
+            # Add a corresponding embed URL
+            embedpatterns.append(
+                url(
+                    '^(?P<embed>embed/)' + x.regex.pattern[1:],
+                    xframe_options_exempt(x._callback),
+                    name=x.name + '-embed'
+                )
             )
-        )
 
 urlpatterns += embedpatterns

@@ -240,25 +240,32 @@ VisitAutosendFormSetBase = inlineformset_factory(
 class VisitAutosendFormSet(VisitAutosendFormSetBase):
     def __init__(self, *args, **kwargs):
         if 'instance' in kwargs:
-            autosends = kwargs['instance'].get_autosends(False, True, False)
-            all_autosends = EmailTemplateType.objects.filter(
-                enable_autosend=True
+            instance = kwargs['instance']
+            all_types = EmailTemplateType.objects.filter(
+                enable_autosend=True, form_show=True
             )
-            if len(autosends) < all_autosends.count():
+            visit_autosends = instance.visitautosend_set.filter(
+                template_type__in=all_types
+            ).order_by('template_type__ordering')
+            kwargs['queryset'] = visit_autosends
+
+            if visit_autosends.count() < all_types.count():
                 initial = []
                 existing_types = [
-                    autosend.template_type for autosend in autosends
+                    autosend.template_type for autosend in visit_autosends
                 ]
-                for type in all_autosends:
+                for type in all_types:
                     if type.key not in existing_types:
                         initial.append({
                             'template_type': type,
                             'enabled': False,
-                            'inherit': False,
+                            'inherit': True,
                             'days': '',
                             'visit': kwargs['instance'].pk
                         })
-                initial.sort(key=lambda choice: choice['template_type'].key)
+                initial.sort(
+                    key=lambda choice: choice['template_type'].ordering
+                )
                 kwargs['initial'] = initial
                 self.extra = len(initial)
         super(VisitAutosendFormSet, self).__init__(*args, **kwargs)

@@ -16,6 +16,8 @@ CLASSES_BY_ROLE = {}
 CLASSES_BY_ROLE[COORDINATOR] = set([
     booking_models.Locality,
     booking_models.Room,
+    booking_models.Resource,
+    booking_models.RoomResource,
     booking_models.RoomResponsible,
 ])
 
