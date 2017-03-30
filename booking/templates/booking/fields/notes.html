@@ -7,8 +7,14 @@
     <div class="col-sm-6{% if bookingform.notes.errors %} has-error{% endif %}">
         {{ bookingform.notes }}
     </div>
-    <div class="col-sm-3 help-block with-errors">
-        {{ bookingform.notes.errors }}
+    <div class="col-sm-4 help-block with-errors">
+        {% if bookingform.notes.errors %}
+            {{ bookingform.notes.errors }}
+        {% elif visit_multiple %}
+            {% trans 'Hvis du har tilmeldt dig andre besøg på samme dag end de besøg, du er ved at bestille, da angiv dem venligst i kommentarfeltet.' %}
+        {% else %}
+            {% trans 'Hvis du tidligere har tilmeldt dig andre besøg på samme dag, da angiv det venligst i kommentarfeltet.' %}
+        {% endif %}
     </div>
 </div>
 {% endif %}

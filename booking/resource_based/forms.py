@@ -10,30 +10,32 @@ from booking.models import VisitResource
 from booking.fields import MultipleChoiceDisableField
 from booking.widgets import CheckboxSelectMultipleDisable
 from django import forms
+from django.core.validators import RegexValidator
 from django.forms import CheckboxSelectMultiple, NumberInput
 from django.forms import formset_factory, BaseFormSet
 from django.utils.translation import ugettext_lazy as _, ungettext_lazy as __
 
 
 class CreateTimesFromRulesForm(forms.Form):
-    start = forms.DateTimeField(
-        label=_(u'Starttidspunkt'),
-        required=False,
-        initial='',
+    hh_mm_validator = RegexValidator("^[0-2][0-9]:[0-5][0-9]$")
+
+    start_time = forms.CharField(
+        label=_(u'Fra'),
+        required=True,
+        initial='08:00',
+        validators=[hh_mm_validator]
     )
-    end = forms.DateTimeField(
-        label=_(u'Sluttidspunkt'),
-        required=False,
-        initial='',
+    end_time = forms.CharField(
+        label=_(u'Til'),
+        required=True,
+        initial='16:00',
+        validators=[hh_mm_validator]
     )
-    has_specific_time = forms.ChoiceField(
-        initial=True,
-        required=False,
-        label=_(u"Angivelse af tidspunkt"),
-        choices=(
-            (True, _(u"Både dato og tidspunkt")),
-            (False, _(u"Kun dato")),
-        ),
+    extra_days = forms.ChoiceField(
+        label=_(u'Fulde dage'),
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        choices=((x, x) for x in range(0, 11))
     )
 
 
@@ -61,13 +63,12 @@ class ResourceTypeForm(forms.Form):
 
     def __init__(self, **kwargs):
         user = kwargs.pop("user")
-        kwargs['initial']['unit'] = user.userprofile.organizationalunit.pk
-
-        res = super(ResourceTypeForm, self).__init__(**kwargs)
-
+        try:
+            kwargs['initial']['unit'] = user.userprofile.organizationalunit.pk
+        except AttributeError:
+            pass
+        super(ResourceTypeForm, self).__init__(**kwargs)
         self['unit'].field.queryset = user.userprofile.get_unit_queryset()
-
-        return res
 
 
 class EditResourceForm(forms.ModelForm):
@@ -188,13 +189,12 @@ class ResourcePoolTypeForm(forms.Form):
 
     def __init__(self, **kwargs):
         user = kwargs.pop("user")
-        kwargs['initial']['unit'] = user.userprofile.organizationalunit.pk
-
-        res = super(ResourcePoolTypeForm, self).__init__(**kwargs)
-
+        try:
+            kwargs['initial']['unit'] = user.userprofile.organizationalunit.pk
+        except AttributeError:
+            pass
+        super(ResourcePoolTypeForm, self).__init__(**kwargs)
         self['unit'].field.queryset = user.userprofile.get_unit_queryset()
-
-        return res
 
 
 class EditResourcePoolForm(forms.ModelForm):
@@ -224,12 +224,14 @@ class EditResourcePoolForm(forms.ModelForm):
 
 
 class EditResourceRequirementForm(forms.ModelForm):
+
     class Meta:
         model = ResourceRequirement
         fields = ['resource_pool', 'required_amount']
         widgets = {
             'required_amount': NumberInput(attrs={
-                'min': 1
+                'min': 1,
+                'class': 'form-control input-sm'
             })
         }
 
@@ -269,7 +271,10 @@ class EditVisitResourceForm(forms.Form):
         self.visit = visit
         self.resource_requirement = resource_requirement
         resourcefield = self.fields['resources']
-        resourcefield.label = resource_requirement.resource_pool.name
+        resourcefield.label = \
+            resource_requirement.resource_pool.resource_type.plural or \
+            resource_requirement.resource_pool.resource_type.name
+        resourcefield.label_suffix = resource_requirement.resource_pool.name
         resourcefield.help_text = __(
             u"%(count)d nødvendig",
             u"%(count)d nødvendige",

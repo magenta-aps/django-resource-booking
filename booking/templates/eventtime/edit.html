@@ -1,13 +1,11 @@
 {% extends 'index.html' %}
 {% load i18n %}
-{% load staticfiles %}
 {% load booking_tags %}
 
 {% block htmltitle %} - {% trans "Rediger tidspunkt for" %} '{{ product.title }}'{% endblock %}
 
 {% block head %}
-{% include 'common/resources/datepicker_style.html' %}
-<link rel="stylesheet" href="{% static 'css/bootstrap-slider.css' %}" />
+    {% include 'eventtime/date_interval_style.html' %}
 {% endblock %}
 
 
@@ -37,7 +35,6 @@
             </form>
         </div>
     </div>
-
 {% endblock %}
 
 {% block extra_scripts %}

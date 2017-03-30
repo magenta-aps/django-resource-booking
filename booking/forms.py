@@ -22,7 +22,7 @@ from django.forms import formset_factory, inlineformset_factory
 from django.forms import TextInput, NumberInput, DateInput, Textarea, Select
 from django.forms import HiddenInput
 from django.utils.translation import ugettext_lazy as _
-from tinymce.widgets import TinyMCE
+from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from .fields import ExtensibleMultipleChoiceField
 from .fields import OrderedModelMultipleChoiceField
 
@@ -279,7 +279,8 @@ class OrganizationalUnitForm(forms.ModelForm):
 
 class ProductInitialForm(forms.Form):
     type = forms.ChoiceField(
-        choices=Product.resource_type_choices
+        choices=Product.resource_type_choices,
+        widget=Select(attrs={'class': 'form-control'})
     )
 
 
@@ -314,7 +315,7 @@ class ProductForm(forms.ModelForm):
                     'maxlength': 210
                 }
             ),
-            'description': TinyMCE(),
+            'description': CKEditorUploadingWidget(),
             'custom_name': TextInput(attrs={
                 'class': 'titlefield form-control input-sm',
                 'rows': 1, 'size': 62
@@ -388,14 +389,21 @@ class ProductForm(forms.ModelForm):
 
         self.current_unit = unit
 
+        time_mode_choices = self.instance.available_time_modes
+
         if not self.instance.pk and 'initial' in kwargs:
             kwargs['initial']['tilbudsansvarlig'] = self.user.pk
             if unit is not None:
                 kwargs['initial']['organizationalunit'] = unit.pk
+            # When only one choice for time modes, default to that
+            if len(time_mode_choices) == 1:
+                kwargs['initial']['time_mode'] = time_mode_choices[0][0]
 
         super(ProductForm, self).__init__(*args, **kwargs)
         self.fields['organizationalunit'].queryset = self.get_unit_query_set()
         self.fields['type'].widget = HiddenInput()
+        # Set time_mode choices to calculated value from instance
+        self.fields['time_mode'].choices = time_mode_choices
 
         if unit is not None and 'locality' in self.fields:
             self.fields['locality'].choices = [BLANK_OPTION] + \
@@ -581,6 +589,7 @@ class AssignmentHelpForm(ProductForm):
         model = Product
         fields = ('type', 'title', 'teaser', 'description', 'state',
                   'institution_level', 'topics',
+                  'time_mode',
                   'tilbudsansvarlig', 'organizationalunit',
                   'comment',
                   )
@@ -592,6 +601,7 @@ class StudyMaterialForm(ProductForm):
         model = Product
         fields = ('type', 'title', 'teaser', 'description', 'price', 'state',
                   'institution_level', 'topics',
+                  'time_mode',
                   'tilbudsansvarlig', 'organizationalunit',
                   'comment'
                   )
@@ -669,8 +679,10 @@ class ProductAutosendForm(forms.ModelForm):
         return self.template_type.name
 
     def has_changed(self):
-        return (self.instance.pk is None) or \
-               super(ProductAutosendForm, self).has_changed()
+        return (
+            (self.instance.pk is None) or
+            super(ProductAutosendForm, self).has_changed()
+        )
 
 
 ProductAutosendFormSetBase = inlineformset_factory(
@@ -782,24 +794,42 @@ class BookingForm(forms.ModelForm):
                 product = eventtime.product
 
                 if visit:
-                    available_seats = eventtime.visit.available_seats
+                    available_seats = visit.available_seats
+                    waitinglist_capacity = visit.waiting_list_capacity
+                    bookings = visit.bookings.count
                 else:
                     available_seats = product.maximum_number_of_visitors
+                    waitinglist_capacity = 0
+                    bookings = 0
 
+                capacity_text = None
                 if available_seats is None:
                     choices.append((eventtime.pk, date))
-                elif available_seats > 0 or \
-                        visit and visit.waiting_list_capacity > 0:
-                    if visit:
-                        capacity_text = \
-                            _("(%d pladser tilbage, "
-                              "%d ventelistepladser tilbage)") % \
-                            (available_seats, visit.waiting_list_capacity)
+                else:
+                    if bookings == 0:
+                        # There are no bookings at all - yet
+                        capacity_text = "%d ledige pladser" % available_seats
+                    elif available_seats > 0:
+                        if waitinglist_capacity > 0:
+                            # There's some room on both
+                            # regular and waiting list
+                            capacity_text = _("%d ledige pladser + "
+                                              "venteliste") % available_seats
+                        else:
+                            # There's only regular seats
+                            capacity_text = _("%d ledige pladser") % \
+                                            available_seats
                     else:
-                        capacity_text = _("(%d pladser tilbage)") % \
-                            available_seats
+                        if waitinglist_capacity > 0:
+                            # There's only waitinglist seats
+                            capacity_text = _("venteliste (%d pladser)") % \
+                                            waitinglist_capacity
+                        else:
+                            # There's no room at all
+                            continue
+
                     choices.append(
-                        (eventtime.pk, "%s %s" % (date, capacity_text))
+                        (eventtime.pk, "%s - %s" % (date, capacity_text))
                     )
 
             self.fields['eventtime'].choices = choices
@@ -904,8 +934,23 @@ class BookerForm(forms.ModelForm):
         attendeecount_widget = self.fields['attendee_count'].widget
 
         attendeecount_widget.attrs['min'] = 1
-        if len(products) > 0:
 
+        if len(products) > 1:
+            attendeecount_widget.attrs['data-validation-number-min-message'] =\
+                _(u"Der der kræves mindst %d "
+                  u"deltagere på at af de besøg du har valgt.")
+            attendeecount_widget.attrs['data-validation-number-max-message'] =\
+                _(u"Der er max plads til %d "
+                  u"deltagere på et af de besøg du har valgt.")
+        else:
+            attendeecount_widget.attrs['data-validation-number-min-message'] =\
+                _(u"Der der kræves mindst %d "
+                  u"deltagere på det besøg du har valgt.")
+            attendeecount_widget.attrs['data-validation-number-max-message'] =\
+                _(u"Der er max plads til %d "
+                  u"deltagere på det besøg du har valgt.")
+
+        if len(products) > 0:
             min_visitors = [
                 product.minimum_number_of_visitors
                 for product in products
@@ -969,6 +1014,17 @@ class BookerForm(forms.ModelForm):
             except:
                 raise forms.ValidationError(_(u'Ukendt postnummer'))
         return postcode
+
+    def clean_school(self):
+        school = self.cleaned_data.get('school')
+        if School.objects.filter(name=school).count() == 0:
+            raise forms.ValidationError(
+                _(u'Du skal vælge skole/gymnasium fra listen for at kunne '
+                  u'tilmelde dig. Hvis din skole eller dit gymnasium ikke '
+                  u'kommer frem på listen, kontakt da support@fokus.dk '
+                  u'for at få hjælp til tilmelding.')
+            )
+        return school
 
     def clean(self):
         cleaned_data = super(BookerForm, self).clean()
@@ -1153,7 +1209,6 @@ class EmailTemplateForm(forms.ModelForm):
         widgets = {
             'subject': TextInput(attrs={'class': 'form-control'}),
             'body': Textarea(attrs={'rows': 10, 'cols': 90}),
-            # 'body': TinyMCE(attrs={'rows': 10, 'cols': 90}),
         }
 
     def __init__(self, user, *args, **kwargs):
@@ -1201,11 +1256,11 @@ EmailTemplatePreviewContextForm = formset_factory(
 
 
 class BaseEmailComposeForm(forms.Form):
+
     required_css_class = 'required'
 
     body = forms.CharField(
         max_length=65584,
-        # widget=TinyMCE(attrs={'rows': 10, 'cols': 90}),
         widget=Textarea(attrs={'rows': 10, 'cols': 90}),
         label=_(u'Tekst')
     )
@@ -1312,11 +1367,12 @@ class EvaluationOverviewForm(forms.Form):
 class MultiProductVisitTempDateForm(forms.ModelForm):
     class Meta:
         model = MultiProductVisitTemp
-        fields = ['date']
+        fields = ['date', 'baseproduct']
         widgets = {
             'date': DateInput(
                 attrs={'class': 'datepicker form-control'}
-            )
+            ),
+            'baseproduct': HiddenInput()
         }
         labels = {
             'date': _(u'Vælg dato')
@@ -1326,6 +1382,20 @@ class MultiProductVisitTempDateForm(forms.ModelForm):
         super(MultiProductVisitTempDateForm, self).__init__(*args, **kwargs)
         self.fields['date'].input_formats = ['%d-%m-%Y', '%d.%m.%Y']
 
+    def clean(self):
+        if 'date' in self.cleaned_data:
+            date = self.cleaned_data['date']
+            product = self.cleaned_data['baseproduct']
+            if not product.is_bookable(date):
+                raise forms.ValidationError(
+                    {'date': _(u'Det er desværre ikke muligt at bestille '
+                               u'besøget på den valgte dato. Der kan være '
+                               u'begrænsninger for hvilke dage, besøget kan '
+                               u'lade sig gøre - se beskrivelse af besøget.')
+                     }
+                )
+        return super(MultiProductVisitTempDateForm, self).clean()
+
 
 class MultiProductVisitTempProductsForm(forms.ModelForm):
 
@@ -1333,13 +1403,17 @@ class MultiProductVisitTempProductsForm(forms.ModelForm):
 
     products = OrderedModelMultipleChoiceField(
         queryset=Product.objects.all(),
-        widget=OrderedMultipleHiddenChooser()
+        widget=OrderedMultipleHiddenChooser(),
+        error_messages={'required': _(u"Der er ikke valgt nogen besøg")}
     )
 
     class Meta:
         model = MultiProductVisitTemp
         fields = ['required_visits', 'notes']
         widgets = {
+            'required_visits': TextInput(
+                attrs={'class': 'form-control input-sm'}
+            ),
             'notes': Textarea(
                 attrs={'class': 'form-control input-sm'}
             )
@@ -1347,24 +1421,21 @@ class MultiProductVisitTempProductsForm(forms.ModelForm):
 
     def clean_products(self):
         products = self.cleaned_data[self.products_key]
+        if len(products) == 0:
+            raise forms.ValidationError(_(u"Der er ikke valgt nogen besøg"))
         common_institution = binary_and([
             product.institution_level for product in products
         ])
         if common_institution == 0:
             raise forms.ValidationError(
-                _(u"Nogle af de valgte tilbud henvender sig kun til "
-                  u"folkeskoleklasser, og andre kun til gymnasieklasser"),
+                _(u"Nogle af de valgte besøg henvender sig kun til "
+                  u"grundskoleklasser og andre kun til gymnasieklasser"),
                 code='conflict'
             )
         return products
 
     def clean(self):
         super(MultiProductVisitTempProductsForm, self).clean()
-        if self.products_key not in self.cleaned_data or \
-                len(self.cleaned_data[self.products_key]) == 0:
-            raise forms.ValidationError(
-                _(u"Der er ikke valgt nogen produkter")
-            )
         products_selected = 0 if self.products_key not in self.cleaned_data \
             else len(self.cleaned_data[self.products_key])
         if self.cleaned_data['required_visits'] > products_selected:
