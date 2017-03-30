@@ -9,19 +9,23 @@
             <button id="cancelbutton" type="button" class="btn btn-default pull-left formpartbutton" data-dismiss="modal">{% trans "Annullér" %}</button>
             <button id="previousbutton" type="button" class="btn btn-default pull-left formpartbutton" data-formpart-action="prev" style="display:none">{% trans "Forrige" %}</button>
             <button id="nextbutton" type="button" class="btn btn-default pull-right formpartbutton" data-formpart-action="next" style="display:none">{% trans "Næste" %}</button>
-            <button id="submitbutton" type="button" class="btn btn-primary pull-right formpartbutton">{% trans "Tilmeld!" %}</button>
+            <button id="submitbutton" type="submit" class="btn btn-primary pull-right formpartbutton" form="bookingform">{% trans "Tilmeld!" %}</button>
         </div>
     </div>
 {% else %}
     <div class="footer">
-        <p class="text-center">
+      <div class="row">
+        <div class="col-xs-12 col-sm-10 col-sm-offset-2">
+        <p>
             {% trans "Bemærk venligst at aftalen først er bindende, når du har modtaget en bekræftelse<br />fra den arrangør på Københavns Universitet, der er ansvarlig for besøget." %}
         </p>
+      </div>
+      </div>
         <div>
-            <button id="cancelbutton" type="button" class="btn btn-default pull-left formpartbutton" >{% trans "Annullér" %}</button>
+            <button id="cancelbutton" type="button" class="btn btn-default pull-left formpartbutton">{% trans "Annullér" %}</button>
             <button id="previousbutton" type="button" class="btn btn-default pull-left formpartbutton" data-formpart-action="prev" style="display:none">{% trans "Forrige" %}</button>
-            <button id="nextbutton" type="button" class="btn btn-default pull-right formpartbutton" data-formpart-action="next" style="display:none">{% trans "Næste" %}</button>
-            <button id="submitbutton" type="button" class="btn btn-primary pull-right formpartbutton">{% trans "Tilmeld!" %}</button>
+            <button id="nextbutton" type="button" class="btn btn-default formpartbutton" data-formpart-action="next" style="display:none">{% trans "Næste" %}</button>
+            <button id="submitbutton" type="submit" class="btn btn-primary formpartbutton" form="bookingform">{% trans "Tilmeld" %}</button>
         </div>
     </div>
 {% endif %}

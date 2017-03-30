@@ -4,9 +4,6 @@
 
 {% block htmltitle %} - {% trans 'tilmeld arrangement' %}{% endblock %}
 
-{% block head %}
-{% endblock %}
-
 {% block content %}
 
     <div class="modal-body">
@@ -37,9 +34,6 @@
     <script type="text/javascript" src="{% static 'js/ieform.js' %}"></script>
     <script type="text/javascript">
         $(function(){
-            $("#submitbutton").click(function(){
-                $("#bookingform").submit();
-            });
             $("#cancelbutton").click(function(){
                 {% if back %}
                     document.location = "{{ back }}";

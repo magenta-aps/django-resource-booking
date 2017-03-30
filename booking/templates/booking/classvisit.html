@@ -4,9 +4,6 @@
 
 {% block htmltitle %} - {% trans 'tilmeld klassebesøg' %}{% endblock %}
 
-{% block head %}
-{% endblock %}
-
 {% block content %}
 
     {% include 'booking/snippets/header.html' %}
@@ -40,9 +37,6 @@
     <script type="text/javascript" src="{% static 'js/ieform.js' %}"></script>
     <script type="text/javascript"><!--
     $(function(){
-        $("#submitbutton").click(function(){
-            $("#bookingform").submit();
-        });
         $("#cancelbutton").click(function(){
             {% if back %}
                 document.location = "{{ back }}";
