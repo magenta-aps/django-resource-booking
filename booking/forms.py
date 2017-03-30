@@ -389,8 +389,6 @@ class ProductForm(forms.ModelForm):
 
         self.current_unit = unit
 
-        time_mode_choices = self.instance.available_time_modes()
-
         if not self.instance.pk and 'initial' in kwargs:
             kwargs['initial']['tilbudsansvarlig'] = self.user.pk
             if unit is not None:
