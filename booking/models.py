@@ -41,7 +41,6 @@ import math
 import uuid
 import random
 import sys
-import random
 
 BLANK_LABEL = '---------'
 BLANK_OPTION = (None, BLANK_LABEL,)
@@ -2328,12 +2327,6 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     @property
     def is_time_controlled(self):
         return self.time_mode != Product.TIME_MODE_NONE
-
-    def has_time_management(self):
-        return self.time_mode not in (
-            Product.TIME_MODE_NONE,
-            Product.TIME_MODE_GUEST_SUGGESTED
-        )
 
     @property
     def are_resources_autoassigned(self):
