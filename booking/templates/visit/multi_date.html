@@ -33,6 +33,7 @@
 
         {% csrf_token %}
         {% include 'common/fields/generic_field.html' with field=form.date %}
+        {{ form.baseproduct }}
 
         <fieldset>
             <a class="btn btn-default cancelbutton" href="{% if object %}{% url 'product-book-notime' object.id %}{% elif oncancel %}{{ oncancel }}{% else %}javascript:history.back(){% endif %}">{% trans "Annullér bestilling" %}</a>

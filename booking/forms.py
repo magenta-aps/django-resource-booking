@@ -14,6 +14,7 @@ from booking.models import BLANK_LABEL, BLANK_OPTION
 from booking.widgets import OrderedMultipleHiddenChooser
 from booking.utils import binary_or, binary_and
 from django import forms
+from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.db.models.expressions import OrderBy
 from django.forms import CheckboxSelectMultiple, CheckboxInput
@@ -1367,11 +1368,12 @@ class EvaluationOverviewForm(forms.Form):
 class MultiProductVisitTempDateForm(forms.ModelForm):
     class Meta:
         model = MultiProductVisitTemp
-        fields = ['date']
+        fields = ['date', 'baseproduct']
         widgets = {
             'date': DateInput(
                 attrs={'class': 'datepicker form-control'}
-            )
+            ),
+            'baseproduct': HiddenInput()
         }
         labels = {
             'date': _(u'Vælg dato')
@@ -1380,6 +1382,17 @@ class MultiProductVisitTempDateForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(MultiProductVisitTempDateForm, self).__init__(*args, **kwargs)
         self.fields['date'].input_formats = ['%d-%m-%Y', '%d.%m.%Y']
+
+    def clean(self):
+        if 'date' in self.cleaned_data:
+            date = self.cleaned_data['date']
+            product = self.cleaned_data['baseproduct']
+            if not product.is_bookable(date):
+                raise ValidationError(
+                    {'date': _(u'Det valgte tilbud kan ikke '
+                               u'lade sig gøre på denne dato')}
+                )
+        return super(MultiProductVisitTempDateForm, self).clean()
 
 
 class MultiProductVisitTempProductsForm(forms.ModelForm):
