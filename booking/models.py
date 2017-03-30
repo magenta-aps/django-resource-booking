@@ -39,6 +39,7 @@ from profile.constants import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
 
 import math
 import uuid
+import sys
 
 BLANK_LABEL = '---------'
 BLANK_OPTION = (None, BLANK_LABEL,)
@@ -3016,6 +3017,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def total_required_teachers(self):
         if self.override_needed_teachers is not None:
             return self.override_needed_teachers
+
         return self.product.total_required_teachers
 
     @property
@@ -3047,6 +3049,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def total_required_hosts(self):
         if self.override_needed_hosts is not None:
             return self.override_needed_hosts
+
         return self.product.total_required_hosts
 
     @property
@@ -3091,6 +3094,22 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     @property
     def needs_room(self):
         return self.needed_rooms > 0
+
+    @property
+    def needed_items(self):
+        if self.is_multiproductvisit:
+            return self.multiproductvisit.needed_items
+        if self.product.is_resource_controlled:
+            return self.resources_required(ResourceType.RESOURCE_TYPE_ITEM)
+        return 0
+
+    @property
+    def needed_vehicles(self):
+        if self.is_multiproductvisit:
+            return self.multiproductvisit.needed_vehicles
+        if self.product.is_resource_controlled:
+            return self.resources_required(ResourceType.RESOURCE_TYPE_VEHICLE)
+        return 0
 
     @property
     def is_booked(self):
@@ -3202,8 +3221,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     @property
     def available_seats(self):
         limit = self.product.maximum_number_of_visitors
-        if limit is not None:
-            return max(limit - self.nr_attendees, 0)
+        if limit is None:
+            return sys.maxint
+        return max(limit - self.nr_attendees, 0)
 
     def get_workflow_status_class(self):
         return self.status_to_class_map.get(self.workflow_status, 'default')
@@ -3779,6 +3799,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
         return context
 
+
 Visit.add_override_property('duration')
 Visit.add_override_property('locality')
 
@@ -3928,6 +3949,20 @@ class MultiProductVisit(Visit):
             if subvisit.needs_room:
                 return True
         return False
+
+    @property
+    def needed_items(self):
+        return sum(
+            subvisit.needed_items
+            for subvisit in self.subvisits_unordered
+        )
+
+    @property
+    def needed_vehicles(self):
+        return sum(
+            subvisit.needed_vehicles
+            for subvisit in self.subvisits_unordered
+        )
 
     @property
     def available_seats(self):

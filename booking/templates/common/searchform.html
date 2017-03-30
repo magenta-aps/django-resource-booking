@@ -1,19 +1,22 @@
 {% load i18n %}
-<form class="clearfix" role="søg" action={% url 'search' %}>
-    <div class="input-group">
-        <label class="sr-only" for="searchBox">{% trans 'Søg efter tilbud' %}</label>
-        <input type="text" class="form-control" id="searchBox" placeholder="{% trans 'Søg efter tilbud - indtast et eller flere søgeord...' %}" name="q" value="{{ request.GET.q }}"/>
-        <span class="input-group-btn">
-            <a id="reset-btn" class="btn btn-default" aria-label="{% trans 'Ryd søgning' %}">
-                <span class="glyphicon glyphicon-remove"></span>
-            </a>
-            <button class="btn btn-primary" id="search" type="submit">
-                <span class="hidden-xs">{% trans 'Søg' %}</span>
-                <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
-            </button>
-        </span>
-    </div>
-    {% for x in hiddenrepeats %}
-        <input type="hidden" name="{{ x.name }}" value="{{ x.value }}" />
-    {% endfor %}
-</form>
+<div class="row">
+    <div class="col-xs-12 col-sm-9">
+      <form class="clearfix" role="søg" action={% url 'search' %}>
+          <div class="input-group">
+              <label class="sr-only" for="searchBox">{% trans 'Søg efter tilbud' %}</label>
+              <input type="text" class="form-control" id="searchBox" placeholder="{% trans 'Søg efter tilbud - indtast et eller flere søgeord...' %}" name="q" value="{{ request.GET.q }}"/>
+              <span class="input-group-btn">
+                  <a id="reset-btn" class="btn btn-default" aria-label="{% trans 'Ryd søgning' %}">
+                      <span class="glyphicon glyphicon-remove"></span>
+                  </a>
+                  <button class="btn btn-primary" id="search" type="submit">
+                      {% trans 'Søg' %}
+                  </button>
+              </span>
+          </div>
+          {% for x in hiddenrepeats %}
+              <input type="hidden" name="{{ x.name }}" value="{{ x.value }}" />
+          {% endfor %}
+      </form>
+  </div>
+</div>

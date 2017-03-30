@@ -13,6 +13,7 @@ from profile.constants import TEACHER, HOST, NONE
 import datetime
 import math
 import re
+import sys
 
 
 class EventTime(models.Model):
@@ -280,7 +281,10 @@ class EventTime(models.Model):
         if self.visit:
             return self.visit.available_seats
         elif self.product:
-            return self.product.maximum_number_of_visitors
+            max = self.product.maximum_number_of_visitors
+            if max is None:  # No limit set
+                return sys.maxint
+            return max
         else:
             return 0
 

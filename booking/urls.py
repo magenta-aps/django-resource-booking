@@ -1,9 +1,10 @@
 from django.conf.urls import patterns, url, include
 from django.conf.urls.static import static
 from django.conf import settings
+from django.core.urlresolvers import RegexURLPattern
 from django.views.decorators.clickjacking import xframe_options_exempt
 
-from .views import MainPageView, VisitNotifyView
+from booking.views import MainPageView, VisitNotifyView
 
 from booking.views import PostcodeView, SchoolView, ProductInquireView
 from booking.views import RrulestrView
@@ -83,7 +84,7 @@ product_calendarevent_kwargs['related_kwargs_name'] = 'prod'
 urlpatterns = patterns(
 
     '',
-    (r'^jsi18n/$', 'django.views.i18n.javascript_catalog', js_info_dict),
+    (r'^jsi18n$', 'django.views.i18n.javascript_catalog', js_info_dict),
     url(r'^$', MainPageView.as_view(), name='index'),
 
     # Main search page
@@ -410,17 +411,18 @@ embed_views = [
 
 embedpatterns = []
 for x in urlpatterns:
-    if hasattr(x, 'name') and x.name in embed_views:
-        # Tell template system that these URLs can be embedded
-        x.default_args['can_be_embedded'] = True
+    if isinstance(x, RegexURLPattern):
+        if hasattr(x, 'name') and x.name in embed_views:
+            # Tell template system that these URLs can be embedded
+            x.default_args['can_be_embedded'] = True
 
-        # Add a corresponding embed URL
-        embedpatterns.append(
-            url(
-                '^(?P<embed>embed/)' + x.regex.pattern[1:],
-                xframe_options_exempt(x._callback),
-                name=x.name + '-embed'
+            # Add a corresponding embed URL
+            embedpatterns.append(
+                url(
+                    '^(?P<embed>embed/)' + x.regex.pattern[1:],
+                    xframe_options_exempt(x._callback),
+                    name=x.name + '-embed'
+                )
             )
-        )
 
 urlpatterns += embedpatterns
