@@ -93,11 +93,11 @@
             <tbody>
             {% for booking in bookings %}
                 <tr>
-                    <td>{{ booking.visit.product.resource_ptr.organizationalunit.name }}</td>
+                    <td>{{ booking.visit.product.organizationalunit.name }}</td>
                     <td><a href="{% url 'booking-view' booking.id %}">{{ booking }}</a></td>
-                    <td>{{ booking.visit.get_type_display }}</td>
-                    <td><a href="{% url 'product-view' booking.visit.product.resource_ptr.id %}">{{ booking.visit.product.resource_ptr.title }}</a></td>
-                    <td>{{ booking.visit.interval_display}}</td>
+                    <td>{{ booking.visit.product.get_type_display }}</td>
+                    <td><a href="{% url 'product-view' booking.visit.product.pk %}">{{ booking.visit.product.title }}</a></td>
+                    <td>{{ booking.visit.start_datetime|date:'d-m-Y H:i:s'}} til {{ booking.visit.end_datetime|date:'d-m-Y H:i:s'}}</td>
                     <td>
                         {% for bookingsubjectlevel in booking.bookinggrundskolesubjectlevel_set.all %}
                             {{ bookingsubjectlevel.subject }}/{{ bookingsubjectlevel.level }},
@@ -123,18 +123,18 @@
                     <td>{{ booking.booker.school.address }}</td>
                     <td>{{ booking.booker.get_full_name }} </td>
                     <td>{{ booking.booker.get_email }} </td>
-                    <td>{{ booking.visit.product.resource_ptr.comment }} </td>
+                    <td>{{ booking.visit.product.comment }} </td>
                     <td>{{ booking.comments }} </td>
                     <td>
                         {% if booking.hosts %}
-                            {% for host in booking.hosts.all %}
+                            {% for host in booking.visit.assigned_hosts.all %}
                                  {{ host.get_full_name }},
                             {% endfor %}
                         {% endif %}
                     </td>
                     <td>
                         {% if booking.teachers %}
-                            {% for teacher in booking.teachers.all %}
+                            {% for teacher in booking.visit.assigned_teachers.all %}
                                  {{ teacher.get_full_name }},
                             {% endfor %}
                         {% endif %}

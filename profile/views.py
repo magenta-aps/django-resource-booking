@@ -631,7 +631,7 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
             context['organizationalunits'] = self.organizationalunits
             qs = Booking.objects\
                 .select_related(
-                    'visit__productresource_ptr__organizationalunit'
+                    'visit__eventtime__product__organizationalunit'
                 ) \
                 .select_related('booker__school')\
                 .prefetch_related('bookinggymnasiesubjectlevel_set__subject') \
@@ -640,14 +640,14 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
                                   '__subject')\
                 .prefetch_related('bookinggrundskolesubjectlevel_set__level') \
                 .filter(
-                    visit__productresource_ptr__organizationalunit_id__in=self
+                    visit__eventtime__product__organizationalunit=self
                     .organizationalunits
                 )
             if from_date:
                 qs = qs.filter(visit__eventtime__start__gte=from_date)
             if to_date:
                 qs = qs.filter(visit__eventtime__end__lt=to_date)
-            qs = qs.order_by('visit__productresource_ptr')
+            qs = qs.order_by('visit__eventtime__product__pk')
             context['bookings'] = qs
         context.update(kwargs)
 
@@ -722,12 +722,12 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
                     custom_desired = booking.visit.product.custom_name
 
             writer.writerow([
-                booking.visit.product.resource_ptr.organizationalunit.name,
+                booking.visit.product.organizationalunit.name,
                 booking.__unicode__(),
-                booking.visit.get_type_display(),
-                booking.visit.product.resource_ptr.title,
-                str(booking.visit.first_eventtime.start) + " til " +
-                str(booking.visit.first_eventtime.end),
+                booking.visit.product.get_type_display(),
+                booking.visit.product.title,
+                str(booking.visit.eventtime.start or "") + " til " +
+                str(booking.visit.eventtime.end or ""),
                 u", ".join([
                     u'%s/%s' % (x.subject, x.level)
                     for x in booking.bookinggrundskolesubjectlevel_set.all()
@@ -737,29 +737,29 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
                     for x in
                     booking.bookinggymnasiesubjectlevel_set.all()
                 ]),
-                str(booking.booker.attendee_count),
+                str(booking.booker.attendee_count or 0),
                 presentation_desired,
                 tour_desired,
                 custom_desired,
                 booking.booker.school.postcode.region.name or "",
                 (booking.booker.school.name or "") + "(" +
                 booking.booker.school.get_type_display() + ")",
-                str(booking.booker.school.postcode.number) + " " +
-                booking.booker.school.postcode.city,
-                str(booking.booker.school.address),
-                booking.booker.get_full_name(),
-                booking.booker.get_email(),
-                booking.visit.product.resource_ptr.comment,
-                booking.comments,
+                str(booking.booker.school.postcode.number or "") + " " +
+                booking.booker.school.postcode.city or "",
+                unicode(booking.booker.school.address or ""),
+                booking.booker.get_full_name() or "",
+                booking.booker.get_email() or "",
+                booking.visit.product.comment or "",
+                booking.comments or "",
                 u", ".join([
                     u'%s' % (x.get_full_name())
                     for x in
-                    booking.hosts.all()
+                    booking.visit.assigned_hosts.all()
                 ]),
                 u", ".join([
                     u'%s' % (x.get_full_name())
                     for x in
-                    booking.teachers.all()
+                    booking.visit.assigned_teachers.all()
                 ]),
             ])
 
