@@ -5160,6 +5160,7 @@ class KUEmailMessage(models.Model):
     )
     subject = models.TextField(blank=False, null=False)
     body = models.TextField(blank=False, null=False)
+    htmlbody = models.TextField(blank=True, null=True)
     from_email = models.TextField(blank=False, null=False)
     recipients = models.TextField(
         blank=False,
@@ -5199,9 +5200,15 @@ class KUEmailMessage(models.Model):
         """
         ctype = ContentType.objects.get_for_model(instance)
         template_key = None if template_type is None else template_type.key
+        htmlbody = None
+        for (content, mimetype) in email_message.alternatives:
+            if mimetype == 'text/html':
+                htmlbody = content
+                break
         ku_email_message = KUEmailMessage(
             subject=email_message.subject,
             body=email_message.body,
+            htmlbody=htmlbody,
             from_email=email_message.from_email,
             recipients=', '.join(email_message.recipients()),
             content_type=ctype,
