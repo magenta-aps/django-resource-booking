@@ -910,6 +910,7 @@ class VisitResourceEditView(EditorRequriedMixin, FormView):
 
     def form_valid(self, form):
         form.save()
+        self.visit.resources_updated()
         return super(VisitResourceEditView, self).form_valid(form)
 
     def get_success_url(self):
