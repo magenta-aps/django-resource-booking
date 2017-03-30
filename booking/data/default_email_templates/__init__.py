@@ -54,17 +54,16 @@ def import_one(key):
 
     et_type = EmailTemplateType.objects.get(key=key)
 
-    try:
-        template = EmailTemplate.objects.get(
-            type=et_type,
-            organizationalunit__isnull=True
-        )
-    except EmailTemplate.DoesNotExist:
-        template = EmailTemplate(type=et_type, organizationalunit=None)
-
-    template.subject = subject
-    template.body = body
-    template.save()
+    templates = EmailTemplate.objects.filter(
+        type=et_type,
+        organizationalunit__isnull=True
+    )
+    if templates.count() == 0:
+        templates = [EmailTemplate(type=et_type, organizationalunit=None)]
+    for template in templates:
+        template.subject = subject
+        template.body = body
+        template.save()
 
 
 def import_all():
