@@ -810,8 +810,12 @@ a>.caret, a>.caret:focus, a>.caret:active {
     transform: rotate(135deg);
 }
 
+.modal-header {
+    min-height: unset;
+}
+
 .modal-header, .modal-body {
-    padding: 20px;
+    padding: 15px;
 }
 
 .modal-content {
@@ -840,9 +844,24 @@ a>.caret, a>.caret:focus, a>.caret:active {
     transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
 }
 
+/* Firefox-specific beautification of select dropdown buttons - rather than have an ugly grey box, put in a nice arrow */
+@-moz-document url-prefix() {
+    select {
+        padding-right: 25px;
+        background-image: url("data:image/svg+xml,\
+            <svg version='1.1' xmlns='http://www.w3.org/2000/svg' width='10px' height='10px' viewBox='0 0 1000 1000' fill='rgb(51,51,51)'>\
+                <path d='M900 400 l -800 0 l 400 400 z'/>\
+            </svg>") !important;
+        background-repeat: no-repeat;
+        background-position: calc(100% - 7px) 50%;
+        -moz-appearance: none;
+        appearance: none;
+    }
+}
+/*
 #id_type, #embediframeform [type="text"] {
     width: auto;
-}
+}*/
 
 
 /*Backend specific styles start */
@@ -1240,6 +1259,16 @@ a.template-overridden, a.template-overridden:hover, a.template-overridden:active
 }
 
 
+.list-outside-limit {
+    display: none;
+}
+
+.list-within-limit,
+.list-outside-limit {
+    margin-bottom: 10px;
+}
+
+
 /* frontpage lists end */
 
 
@@ -1287,6 +1316,58 @@ a.template-overridden, a.template-overridden:hover, a.template-overridden:active
 
 
 /*Backend specific styles end */
+
+
+/* MultiProductVisit BEGIN */
+
+#deselected-product-list li .movebutton,
+#deselected-product-list li .deselectbutton,
+#confirm-product-list li .movebutton,
+#confirm-product-list li .deselectbutton {
+    display: none;
+}
+
+#deselected-product-list,
+#selected-product-list,
+#confirm-product-list {
+    font-size: 1.5em;
+    list-style-type: none;
+}
+
+#selected-product-list li .movebutton {
+    cursor: move;
+}
+
+#selected-product-list li .selectbutton,
+#selected-product-list li .teaser,
+#confirm-product-list li .selectbutton,
+#confirm-product-list li .teaser {
+    display: none;
+}
+
+#selected-product-list li .title,
+#confirm-product-list li .title {
+    display: inline;
+    font-weight: normal;
+    margin: 0;
+}
+
+#mpvform #deselected-product-list li#placeholder,
+#mpvform #drawhelp {
+    display: none;
+}
+
+#mpvform li .institution {
+    font-size: 0.75em;
+}
+
+li.subvisit-status-1 a.visit-link,
+li.subvisit-status-7 a.visit-link,
+li.subvisit-status-8 a.visit-link {
+    text-decoration: line-through;
+}
+
+/* MultiProductVisit END */
 
 
 /* Embedded pages styles */
@@ -1474,9 +1555,11 @@ body.lightbox {
         display: flex;
     }
 }
+
 .footer .btn {
   margin-right: 10px;
 }
+
 .globalfooter {
     position: relative;
     width: 100%;
@@ -1609,6 +1692,12 @@ body.lightbox {
 .globalfooter .social-items .social-item {
     display: inline-block;
     margin: .5em .3em 0 0;
+}
+
+/* MultiProductVisit END */
+
+.cke_dialog_ui_file .cke_dialog_ui_input_file {
+    height: 2.5em;
 }
 
 .globalfooter .social-items .social-item .social-icon {
@@ -1868,4 +1957,14 @@ body.lightbox {
         -moz-appearance: none;
         appearance: none;
     }
+}
+
+.content-box {
+    line-height: 1.2;
+    padding: 4px;
+    font-size: 12px;
+}
+
+.nowrap {
+    white-space: nowrap;
 }

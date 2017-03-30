@@ -1,0 +1,17 @@
+{% load i18n %}
+
+<ul class="list-unstyled" id="dato">
+{% for eventtime in eventtime_list|slice:":10" %}
+    <li>{{ eventtime.interval_display }}</li>
+{% endfor %}
+{% if eventtime_list.count > 10 %}
+    {% for eventtime in eventtime_list|slice:"10:" %}
+        <li class="hidden default-hidden">{{ eventtime.interval_display }}</li>
+    {% endfor %}
+    <li>
+        <span id="show_all_times" class="btn btn-default btn-xs pull-right">{% trans 'Vis alle' %} ({{eventtime_list.count}})</span>
+        <span id="hide_extra_times" class="btn btn-default btn-xs pull-right hidden">{% trans 'Skjul ekstra' %}</span>
+    </li>
+{% endif %}
+</ul>
+<div class="clearfix"></div>
