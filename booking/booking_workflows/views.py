@@ -171,6 +171,8 @@ class ChangeVisitTeachersView(AutologgerMixin, UpdateWithCancelView):
             ChangeVisitTeachersView, self
         ).form_valid(form)
 
+        self.object.resources_updated()
+
         if form.cleaned_data.get('send_emails', False):
             new_teachers = self.object.teachers.all()
             recipients = [
@@ -225,6 +227,8 @@ class ChangeVisitHostsView(AutologgerMixin, UpdateWithCancelView):
         old_hosts = set([x for x in old.hosts.all()])
 
         response = super(ChangeVisitHostsView, self).form_valid(form)
+
+        self.object.resources_updated()
 
         if form.cleaned_data.get('send_emails', False):
             new_hosts = self.object.hosts.all()
@@ -294,6 +298,7 @@ class ChangeVisitRoomsView(AutologgerMixin, UpdateWithCancelView):
 
         self.save_rooms()
         result = super(ChangeVisitRoomsView, self).form_valid(form)
+        self.object.resources_updated()
         return result
 
     def save_rooms(self):
@@ -529,7 +534,11 @@ class BecomeSomethingView(AutologgerMixin, VisitBreadcrumbMixin,
                     self.object.hosts_rejected.add(request.user)
                 if isinstance(self, DeclineTeacherView):
                     self.object.teachers_rejected.add(request.user)
-                self.object.save()
+
+                self.object.resource_declines()
+
+                # Mark visit as needing attention - also saves the visit
+                self.object.set_needs_attention()
 
             elif request.POST.get("confirm"):
                 if self.object.product.is_resource_controlled:
@@ -552,6 +561,10 @@ class BecomeSomethingView(AutologgerMixin, VisitBreadcrumbMixin,
                         [request.user],
                         True
                     )
+                self.object.resource_accepts()
+
+                # Mark visit as needing attention
+                self.object.set_needs_attention()
 
             self._log_changes()
 

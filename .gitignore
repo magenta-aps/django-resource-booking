@@ -19,8 +19,9 @@ python-env
 /resource_booking/saml/*.key
 /resource_booking/saml/*.pem
 .ropeproject
-.ropeproject
 *.sqlite3
 /static/
 *.swp
 /thirdparty/node_modules/
+/cron.log
+

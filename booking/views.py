@@ -14,6 +14,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse, reverse_lazy
+from django.utils.translation.trans_real import get_languages
 from django.db.models import Count
 from django.db.models import Min
 from django.db.models import Q
@@ -142,7 +143,7 @@ class MainPageView(TemplateView):
                     'color': self.HEADING_BLUE,
                     'type': 'Product',
                     'title': _(u'Senest bookede tilbud'),
-                    'queryset': Product.get_latest_booked(),
+                    'queryset': Product.get_latest_booked(self.request.user),
                     'limit': 10,
                     'button': {
                         'text': _(u'Vis alle'),
@@ -397,12 +398,9 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = {}
-        print self.template_type
-        print self.get_unit()
         context['templates'] = EmailTemplate.get_template(
             self.template_type, self.get_unit(), True
         )
-        print context['templates']
         context['template_type'] = self.template_type.id
         context['template_unit'] = self.get_unit()
         context['modal'] = self.modal
@@ -772,6 +770,7 @@ class SearchView(BreadcrumbMixin, ListView):
                     time_mode__in=[
                         Product.TIME_MODE_NONE,
                         Product.TIME_MODE_GUEST_SUGGESTED,
+                        Product.TIME_MODE_NO_BOOKING,
                     ]
                 )
                 qs = qs.filter(
@@ -1137,7 +1136,7 @@ class ProductCustomListView(BreadcrumbMixin, ListView):
             listtype = self.request.GET.get("type", "")
 
             if listtype == self.TYPE_LATEST_BOOKED:
-                return Product.get_latest_booked()
+                return Product.get_latest_booked(self.request.user)
             elif listtype == self.TYPE_LATEST_UPDATED:
                 return Product.get_latest_updated(self.request.user)
 
@@ -1574,11 +1573,12 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
             enable_days=True
         )
 
-        context['hastime'] = self.object.type in [
-            Product.STUDENT_FOR_A_DAY, Product.STUDIEPRAKTIK,
-            Product.OPEN_HOUSE, Product.TEACHER_EVENT, Product.GROUP_VISIT,
-            Product.STUDY_PROJECT, Product.OTHER_OFFERS
-        ]
+        time_modes = self.object.available_time_modes
+        if len(time_modes) == 1:
+            context['hidden_time_mode'] = True
+            context['hastime'] = False
+        elif len(time_modes) > 1:
+            context['hastime'] = True
 
         context['disable_waitinglist_on_timemode_values'] = [
             Product.TIME_MODE_GUEST_SUGGESTED
@@ -2368,6 +2368,12 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
             # If the chosen eventtime does not have a visit, create it now
             if not eventtime.visit:
                 eventtime.make_visit()
+                log_action(
+                    self.request.user,
+                    eventtime.visit,
+                    LOGACTION_CREATE,
+                    _(u'Besøg oprettet')
+                )
 
             booking.visit = eventtime.visit
 
@@ -2412,6 +2418,9 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
                         subjectform.save()
 
             booking.ensure_statistics()
+
+            # Flag attention requirement on visit
+            booking.visit.needs_attention_since = timezone.now()
 
             # Trigger updating of search index
             booking.visit.save()
@@ -2699,8 +2708,14 @@ class EmbedcodesView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = {}
+        base_url = kwargs['embed_url']
 
-        embed_url = 'embed/' + kwargs['embed_url']
+        for language in get_languages():
+            if base_url.startswith("%s/" % language):
+                base_url = base_url[len(language)+1:]
+                break
+
+        embed_url = 'embed/' + base_url
 
         # We only want to test the part before ? (or its encoded value, %3F):
         test_url = embed_url.split('?', 1)[0]
@@ -2714,6 +2729,7 @@ class EmbedcodesView(TemplateView):
                 break
 
         context['can_embed'] = can_embed
+        context['base_url'] = base_url
         context['full_url'] = self.request.build_absolute_uri('/' + embed_url)
 
         context['breadcrumbs'] = [
@@ -2723,7 +2739,7 @@ class EmbedcodesView(TemplateView):
             },
             {
                 'url': self.request.path,
-                'text': '/' + kwargs['embed_url']
+                'text': '/' + base_url
             }
         ]
 
@@ -3406,6 +3422,7 @@ class EmailReplyView(BreadcrumbMixin, DetailView):
     slug_field = 'reply_nonce'
     slug_url_kwarg = 'reply_nonce'
     form = None
+    original_object = None
 
     def get_form(self):
         if self.form is None:
@@ -3415,16 +3432,26 @@ class EmailReplyView(BreadcrumbMixin, DetailView):
                 self.form = EmailReplyForm(self.request.POST)
         return self.form
 
+    def get_original_object(self):
+        if self.original_object is None:
+            try:
+                ct = ContentType.objects.get(pk=self.object.content_type_id)
+                self.original_object = ct.get_object_for_this_type(
+                    pk=self.object.object_id
+                )
+            except Exception as e:
+                print "Error when getting email-reply object: %s" % e
+
+        return self.original_object
+
     def get_product(self):
-        try:
-            ct = ContentType.objects.get(pk=self.object.content_type_id)
-            if ct.model_class() == Product:
-                return ct.get_object_for_this_type(pk=self.object.object_id)
-            elif ct.model_class() == Visit:
-                visit = ct.get_object_for_this_type(pk=self.object.object_id)
-                return visit.product
-        except Exception as e:
-            print "Error when getting email-reply object: %s" % e
+        orig_obj = self.get_original_object()
+        if type(orig_obj) == Visit:
+            return orig_obj.product
+        elif type(orig_obj) == Product:
+            return orig_obj
+
+        return None
 
     def get_context_data(self, **kwargs):
         context = {}
@@ -3437,25 +3464,36 @@ class EmailReplyView(BreadcrumbMixin, DetailView):
         form = self.get_form()
         if form.is_valid():
             self.object = self.get_object()
+            orig_obj = self.get_original_object()
             orig_message = self.object
+            visit = orig_obj if type(orig_obj) == Visit else None
             reply = form.cleaned_data.get('reply', "").strip()
             product = self.get_product()
-            recipients = product.organizationalunit.get_editors()
+
+            recipients = product.get_responsible_persons()
+
             KUEmailMessage.send_email(
                 EmailTemplateType.system__email_reply,
                 {
+                    'visit': visit,
                     'product': product,
+                    'orig_object': orig_obj,
                     'orig_message': orig_message,
                     'reply': reply,
                     'log_message': _(u"Svar:") + "\n" + reply
                 },
                 recipients,
-                product,
+                orig_obj,
                 organizationalunit=product.organizationalunit
             )
             result_url = reverse(
                 'reply-to-email', args=[self.object.reply_nonce]
             )
+
+            # Mark visit as needing attention
+            if visit:
+                visit.set_needs_attention()
+
             return redirect(result_url + '?thanks=1')
         else:
             return self.get(request, *args, **kwargs)

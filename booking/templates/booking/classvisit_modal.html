@@ -1,15 +1,8 @@
 {% extends 'lightbox-index.html' %}
 {% load i18n %}
-{% load staticfiles %}
 {% load booking_tags %}
 
 {% block htmltitle %} - {% trans 'tilmeld klassebesøg' %}{% endblock %}
-
-{% block head %}
-{% endblock %}
-
-{% block header %}
-{% endblock %}
 
 {% block content %}
 
@@ -23,7 +16,6 @@
 
             <div id="part1" class="formpart" data-prevbutton="cancelbutton"  data-nextbutton="nextbutton" data-next="part2" {% if bookerform.errors or not bookingform.errors %} data-first="true"{% endif %}>
                 {{ bookerform.non_field_errors }}
-                {{ bookerform.errors }}
                 {% include "booking/fields/basedata.html" %}
                 {% include "booking/fields/school.html" %}
                 {% include "booking/fields/location.html" %}

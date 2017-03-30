@@ -6,7 +6,6 @@ from booking.models import EmailTemplateType, KUEmailMessage
 from booking.models import VisitComment
 from booking.utils import UnicodeWriter
 from django.contrib import messages
-from django.db.models import F
 from django.db.models import Q
 from django.db.models.aggregates import Count, Sum
 from django.db.models.functions import Coalesce
@@ -28,7 +27,6 @@ from booking.views import LoginRequiredMixin, AccessDenied
 from booking.views import EditorRequriedMixin, VisitCustomListView
 from django.views.generic.list import ListView
 from profile.forms import UserCreateForm, EditMyProductsForm, StatisticsForm
-from profile.models import AbsDateDist
 from profile.models import EmailLoginURL
 from profile.models import UserProfile, UserRole, EDIT_ROLES, NONE
 from profile.models import HOST, TEACHER
@@ -118,11 +116,30 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         context.update(**kwargs)
         return super(ProfileView, self).get_context_data(**context)
 
+    datediff_sql = """
+        LEAST(
+            ABS(
+                EXTRACT(
+                    EPOCH FROM
+                    (
+                        "booking_visit"."needs_attention_since" -
+                        STATEMENT_TIMESTAMP()
+                    )
+                )
+            ),
+            ABS(
+                EXTRACT(
+                    EPOCH FROM
+                    "booking_eventtime"."start"  - STATEMENT_TIMESTAMP()
+                )
+            )
+        )
+    """
+
     def sort_vo_queryset(self, qs):
-        qs = qs.annotate(
-            datediff=AbsDateDist(F('eventtime__start'))
+        return qs.extra(
+            select={'datediff': self.datediff_sql}
         ).order_by('datediff')
-        return qs
 
     def lists_by_role(self):
         role = self.request.user.userprofile.get_role()
@@ -614,7 +631,7 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
             context['organizationalunits'] = self.organizationalunits
             qs = Booking.objects\
                 .select_related(
-                    'visit__productresource_ptr__organizationalunit'
+                    'visit__eventtime__product__organizationalunit'
                 ) \
                 .select_related('booker__school')\
                 .prefetch_related('bookinggymnasiesubjectlevel_set__subject') \
@@ -623,14 +640,14 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
                                   '__subject')\
                 .prefetch_related('bookinggrundskolesubjectlevel_set__level') \
                 .filter(
-                    visit__productresource_ptr__organizationalunit_id__in=self
+                    visit__eventtime__product__organizationalunit=self
                     .organizationalunits
                 )
             if from_date:
                 qs = qs.filter(visit__eventtime__start__gte=from_date)
             if to_date:
                 qs = qs.filter(visit__eventtime__end__lt=to_date)
-            qs = qs.order_by('visit__productresource_ptr')
+            qs = qs.order_by('visit__eventtime__product__pk')
             context['bookings'] = qs
         context.update(kwargs)
 
@@ -675,18 +692,21 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
         writer = UnicodeWriter(response, delimiter=';')
 
         # Heading
-        writer.writerow(
-            [_(u"Enhed"), _(u"Tilmelding"), _(u"Type"), _(u"Tilbud"),
-             _(u"Besøgsdato"), _(u"Klassetrin/Niveau"), _(u"Antal deltagere"),
-             _(u"Oplæg om uddannelser"), _(u"Rundvisning"), _(u"Region"),
-             _(u"Skole"), _(u"Postnummer og by"), _(u"Adresse"), _(u"Lærer"),
-             _(u"Lærer email"), _(u"Bemærkninger fra koordinator"),
-             _(u"Bemærkninger fra lærer"), _(u"Værter"), _(u"Undervisere")]
-        )
+        writer.writerow([
+            _(u"Enhed"), _(u"Tilmelding"), _(u"Type"), _(u"Tilbud"),
+            _(u"Besøgsdato"), _(u"Klassetrin/Niveau"), _(u"Antal deltagere"),
+            _(u"Oplæg om uddannelser"), _(u"Rundvisning"), _(u"Andet"),
+            _(u"Region"), _(u"Skole"), _(u"Postnummer og by"), _(u"Adresse"),
+            _(u"Lærer"), _(u"Lærer email"), _(u"Bemærkninger fra koordinator"),
+            _(u"Bemærkninger fra lærer"), _(u"Værter"), _(u"Undervisere")
+        ])
         # Rows
         for booking in context['bookings']:
-            presentation_desired = _(u'Nej')
-            tour_desired = _(u'Nej')
+            no = _(u'Nej')
+            yes = _(u'Ja')
+            presentation_desired = no
+            tour_desired = no
+            custom_desired = no
             has_classbooking = False
             try:
                 has_classbooking = (booking.classbooking is not None)
@@ -695,18 +715,19 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
 
             if has_classbooking:
                 if booking.classbooking.presentation_desired:
-                        presentation_desired = _(u'Ja')
-                if booking.classbooking:
-                    if booking.classbooking.tour_desired:
-                        tour_desired = _(u'Ja')
+                    presentation_desired = yes
+                if booking.classbooking.tour_desired:
+                    tour_desired = yes
+                if booking.classbooking.custom_desired:
+                    custom_desired = booking.visit.product.custom_name
 
             writer.writerow([
-                booking.visit.product.resource_ptr.organizationalunit.name,
+                booking.visit.product.organizationalunit.name,
                 booking.__unicode__(),
-                booking.visit.get_type_display(),
-                booking.visit.product.resource_ptr.title,
-                str(booking.visit.first_eventtime.start) + " til " +
-                str(booking.visit.first_eventtime.end),
+                booking.visit.product.get_type_display(),
+                booking.visit.product.title,
+                str(booking.visit.eventtime.start or "") + " til " +
+                str(booking.visit.eventtime.end or ""),
                 u", ".join([
                     u'%s/%s' % (x.subject, x.level)
                     for x in booking.bookinggrundskolesubjectlevel_set.all()
@@ -716,28 +737,29 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
                     for x in
                     booking.bookinggymnasiesubjectlevel_set.all()
                 ]),
-                str(booking.booker.attendee_count),
+                str(booking.booker.attendee_count or 0),
                 presentation_desired,
                 tour_desired,
-                booking.booker.school.postcode.region.name,
-                booking.booker.school.name + "(" +
+                custom_desired,
+                booking.booker.school.postcode.region.name or "",
+                (booking.booker.school.name or "") + "(" +
                 booking.booker.school.get_type_display() + ")",
-                str(booking.booker.school.postcode.number) + " " +
-                booking.booker.school.postcode.city,
-                str(booking.booker.school.address),
-                booking.booker.get_full_name(),
-                booking.booker.get_email(),
-                booking.visit.product.resource_ptr.comment,
-                booking.comments,
+                str(booking.booker.school.postcode.number or "") + " " +
+                booking.booker.school.postcode.city or "",
+                unicode(booking.booker.school.address or ""),
+                booking.booker.get_full_name() or "",
+                booking.booker.get_email() or "",
+                booking.visit.product.comment or "",
+                booking.comments or "",
                 u", ".join([
                     u'%s' % (x.get_full_name())
                     for x in
-                    booking.hosts.all()
+                    booking.visit.assigned_hosts.all()
                 ]),
                 u", ".join([
                     u'%s' % (x.get_full_name())
                     for x in
-                    booking.teachers.all()
+                    booking.visit.assigned_teachers.all()
                 ]),
             ])
 

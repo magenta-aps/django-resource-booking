@@ -10,7 +10,7 @@
 
     <div class="row">
         <div class="col-sm-5 col-sm-offset-2">
-            <h1>{% trans 'Administrér brugere' %}</h1>        
+            <h1>{% trans 'Administrér brugere' %}</h1>
         </div>
     </div>
 
@@ -18,7 +18,7 @@
         <div class="row">
 
             <div class="col-sm-5 col-sm-offset-2">
-                <a href="{% url 'user_create' %}" class="btn btn-default btn-tiny">
+                <a href="{% url 'user_create' %}" class="btn btn-primary btn-sm">
                     <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
                     {% trans 'Opret ny bruger' %}
                 </a>
@@ -33,13 +33,13 @@
                 </div>
             {% endif %}
         </div>
-        
+
         <div class="divider"></div>
 
         <div class="row">
             <h2 class="col-sm-5 col-sm-offset-2">{% trans 'Filtrér brugerliste' %}</h2>
         </div>
-        
+
         <div>
             <form class="form-horizontal clearfix" name="filteruserlist" id="filteruserlist">
                 <div class="form-group">
@@ -78,8 +78,9 @@
     </div>
     <div class="divider"></div>
     <div>
-        <div>
-            <ul class="list-unstyled">
+        <div class="row">
+            <div class="col-sm-8 col-sm-offset-1">
+                <ul class="list-unstyled">
                 {% for otheruser in users %}
                 <li class="media">
                     <div class=" row">
@@ -111,6 +112,7 @@
                 </li>
                 {% endfor %}
             </ul>
+            </div>
         </div>
         <div class="divider"></div>
     </div>

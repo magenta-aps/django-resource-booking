@@ -12,7 +12,9 @@
     </div>
     <div class="col-sm-4 help-block with-errors">
         {{ bookerform.firstname.errors }}
-        {{ bookerform.lastname.errors }}
+        {% if bookerform.lastname.errors and bookerform.lastname.errors != bookerform.firstname.errors %}
+            {{ bookerform.lastname.errors }}
+        {% endif %}
     </div>
 </div>
 {% endif %}
@@ -30,7 +32,9 @@
     </div>
     <div class="col-sm-4 help-block with-errors">
         {{ bookerform.email.errors }}
-        {{ bookerform.repeatemail.errors }}
+        {% if bookerform.repeatemail.errors and bookerform.repeatemail.errors != bookerform.email.errors %}
+            {{ bookerform.repeatemail.errors }}
+        {% endif %}
     </div>
 </div>
 {% endif %}
