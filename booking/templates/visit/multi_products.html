@@ -1,6 +1,5 @@
 {% extends 'index.html' %}
 {% load i18n %}
-{% load staticfiles %}
 {% load booking_tags %}
 
 {% block htmltitle %} - {% trans "tilmeld prioriteret liste af arrangementer på samme dag" %}{% endblock %}
@@ -14,60 +13,90 @@
     {% include 'common/breadcrumbrow.html' %}
     <div class="divider"></div>
 
-    <h1>{% blocktrans %}Tilmeld prioriteret liste af arrangementer på samme dag{% endblocktrans %}</h1>
-  <div class="divider"></div>
+    <h1>{% blocktrans %}Bestil flere besøg på den samme dag{% endblocktrans %}</h1>
+
+    <div class="alert alert-success alert-popup" role="alert" id="success_popup">{% trans 'Besøget er tilføjet' %}</div>
 
     <form id="mpvform" action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
 
-        <p class="btn-group">
-            <button class="btn btn-default" type="submit" formaction="?next={% url 'mpv-edit-date' object.id %}" role="button">{% trans 'Vælg dato' %}</button>
-            <a class="btn btn-default active" href="#" role="button">{% trans 'Vælg tilbud' %}</a>
-            <button class="btn btn-default" type="submit" formaction="?next={% url 'mpv-confirm' object.id %}" role="button">{% trans 'Bekræft' %}</button>
-        </p>
-
-        {{ form.non_field_errors }}
-
-        {% csrf_token %}
-        {% if form.products.errors %}
-            <div>{{ form.products.errors }}</div>
-        {% endif %}
-        {{ form.products }}
-
-        <ul class="list-group" id="selected-product-list">
-            {% for productid in form.products.value %}
-                {% if productid in available_products %}
-                    {% include 'visit/multi_product_item.html' with product=available_products|get:productid %}
-                {% endif %}
-            {% endfor %}
-        </ul>
-
-        <p id="drawhelp">{% trans 'Du kan trække i tilbuddene for at prioritere dem.' %}</p>
-        <p>{% trans 'Vælg tilbud:' %}<br/>{% trans '(Listen er begrænset til tilbud uden faste tider der kan lade sig gøre den pågældende dag)' %}</p>
-        <ul class="list-group scroll-500" id="deselected-product-list">
-            {% for productid,product in available_products.items %}
-                {% if product.id not in form.products.value %}
-                    {% include 'visit/multi_product_item.html' with product=product %}
-                {% endif %}
-            {% endfor %}
-            <li id="placeholder" class="list-group-item">{% trans 'Ingen tilbud tilgængelige' %}</li>
-        </ul>
-
-        <ul style="display:none">
-            <li id="product_prototype" class="list-group-item">
-                <span class="glyphicon glyphicon-move movebutton"></span>
-                <a class="btn btn-default pull-right selectbutton">{% trans 'Vælg' %}</a>
-                <h2 class="title"></h2>
-                <p class="teaser"></p>
-                <a class="deselectbutton">
-                    <span class="glyphicon glyphicon-remove"></span>
-                </a>
+        <ul class="nav nav-tabs step-anchor">
+            <li>
+                <button type="submit" formaction="?next={% url 'mpv-edit-date' object.id %}" role="button">{% trans 'Vælg dato' %}</button>
+            </li>
+            <li class="active">
+                <a href="#" role="button">{% trans 'Vælg besøg' %}</a>
+            </li>
+            <li>
+                <button type="submit" formaction="?next={% url 'mpv-confirm' object.id %}" role="button">{% trans 'Bekræft' %}</button>
             </li>
         </ul>
+        <div class="divider"></div>
 
-        <p>{% trans 'Her skal du angive, hvor mange af de besøg du har prioriteret, du ønsker at opleve på dagen.' %}</p>
-        {% include 'common/fields/generic_field.html' with field=form.required_visits %}
+        <h2>{% trans 'Mine besøg' %}</h2>
 
-        {% include 'common/fields/generic_field.html' with field=form.notes %}
+        <div class="row form-group">
+            <div class="col-sm-9">
+                {{ form.non_field_errors }}
+                {% csrf_token %}
+                {% if form.products.errors %}
+                    <div>{{ form.products.errors }}</div>
+                {% endif %}
+                {{ form.products }}
+                <ul class="list-group" id="selected-product-list">
+                    {% for productid in form.products.value %}
+                        {% if productid in available_products %}
+                            {% include 'visit/multi_product_item.html' with product=available_products|get:productid %}
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="col-sm-3">
+                <p class="helptext">{% trans 'Træk boksene med dine besøg op og ned for at sætte dem i en prioriteret rækkefølge' %}</p>
+            </div>
+        </div>
+
+        <h2>{% trans 'Vælg besøg' %}</h2>
+
+        <div class="row form-group">
+            <div class="col-sm-9">
+                <ul class="list-group scroll-500" id="deselected-product-list">
+                    {% for productid,product in available_products.items %}
+                        {% if product.id not in form.products.value %}
+                            {% include 'visit/multi_product_item.html' with product=product %}
+                        {% endif %}
+                    {% endfor %}
+                    <li id="placeholder" class="list-group-item">{% trans 'Ingen tilbud tilgængelige' %}</li>
+                </ul>
+                <ul style="display:none">
+                    <li id="product_prototype" class="list-group-item">
+                        <span class="glyphicon glyphicon-move movebutton"></span>
+                        <a class="btn btn-default pull-right selectbutton">{% trans 'Vælg' %}</a>
+                        <h2 class="title"></h2>
+                        <p class="teaser"></p>
+                        <a class="deselectbutton">
+                            <span class="glyphicon glyphicon-remove"></span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="col-sm-3">
+                <p class="helptext">{% trans 'Bemærk: Listen viser besøg uden faste tider, som kan lade sig gøre på den valgte dag.' %}</p>
+            </div>
+        </div>
+
+        <div class="row form-group">
+            <div class="col-sm-9">
+                {% include 'common/fields/generic_field.html' with field=form.required_visits %}
+            </div>
+            <div class="col-sm-3">
+                <p class="helptext">{% trans 'Angiv hvor mange af de valgte besøg, du ønsker at opleve på dagen.' %}</p>
+            </div>
+        </div>
+        <div class="row form-group">
+            <div class="col-sm-9">
+                {% include 'common/fields/generic_field.html' with field=form.notes %}
+            </div>
+        </div>
 
         <fieldset>
             <a class="btn btn-default cancelbutton" href="{% url 'mpv-edit-date' object.id %}">{% trans "Tilbage" %}</a>
@@ -86,12 +115,11 @@
     <script>
     <!--
         $(function() {
-            var dateSelect = $("[name='{{ form.date.name }}']");
             var selectedList = $("#selected-product-list");
             var deselectedList = $("#deselected-product-list");
-            var inputPrototype = $("[name='{{ form.products.name }}'][data-prototype]");
             var placeholder = deselectedList.find("#placeholder");
             var drawHelp = $("#drawhelp");
+            var success_popup = $("#success_popup");
 
             var update = function() {
                 var anySelected = !!selectedList.children().not(placeholder).length;
@@ -127,15 +155,19 @@
                 {# Move the <li> to the deselected list #}
                 selectedList.append(deselectedList.find("li#product_"+id));
                 update();
+                success_popup.fadeIn(1000, function(){
+                    setTimeout(function(){
+                        success_popup.fadeOut(1000);
+                    }, 1000);
+                });
             };
             $(".selectbutton").on('click', select);
             update();
 
-
             Sortable.create(
                 selectedList.get(0),
                 {
-                    'handle': '.movebutton',
+                    //'handle': '.movebutton',
                     'onSort': function(evt) {
                         {# Move the associated hidden input field to the correct index #}
                         var inputFields = $("input[name='{{ form.products.name }}'][disabled!='disabled']");
