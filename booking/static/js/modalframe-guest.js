@@ -13,7 +13,7 @@ window.modal = {
     },
     documentHeight: 0,
     updateHeight: function() {
-        var height = 1;
+        var height = 0;
         $(document.body).children().not("script").each(function(){
             height += $(this).outerHeight(true);
         });
@@ -92,6 +92,7 @@ $(function(){
         show(firstFormPart);
     }
 
-    setInterval(modal.updateHeight.bind(modal), 500);
-
+    // setInterval(modal.updateHeight.bind(modal), 500);
+    $(document).resize(modal.updateHeight.bind(modal));
+    $("input,select").change(modal.updateHeight.bind(modal));
 });
