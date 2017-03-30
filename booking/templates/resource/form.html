@@ -1,19 +1,14 @@
 {% extends 'index.html' %}
 {% load i18n %}
-{% load staticfiles %}
 {% load booking_tags %}
 
 {% block htmltitle %} - {% if object.pk %}{% trans "rediger ressource" %}{% else %}{% trans "opret ressource" %}{% endif %}{% endblock %}
-
-{% block head %}
-{% endblock %}
 
 {% block content %}
 
     {% include 'common/breadcrumbrow.html' %}
 
     <h1>{% if object.pk %}{% trans "Rediger ressource" %}{% else %}{% trans "Opret ressource" %}{% endif %}</h1>
-    <hr/>
 
     <form id="resourceform" action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
 
@@ -27,7 +22,7 @@
                         <label for="{{ field.id_for_label }}" class="control-label">{% trans 'Type:' %}</label>
                     </div>
                     <div class="col-sm-7">
-                        {{ object.resource_type }}
+                        {{ object.resource_type.name }}
                         {% if object.resource_type.id == ResourceType.RESOURCE_TYPE_HOST %}
                             <a href="{% url 'user_edit' object.user.pk %}" class="btn btn-default btn-xs" role="button">{% trans 'Gå til redigering af vært' %}</a>
                         {% elif object.resource_type.id == ResourceType.RESOURCE_TYPE_TEACHER %}

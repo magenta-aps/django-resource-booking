@@ -1,34 +1,36 @@
 {% extends 'index.html' %}
 {% load i18n %}
-{% load staticfiles %}
 {% load booking_tags %}
 
 {% block htmltitle %} - {% trans "tilmeld arrangement uden fast tidspunkt" %}{% endblock %}
-
-{% block head %}{% endblock %}
 
 {% block content %}
 
     {% include 'common/breadcrumbrow.html' %}
     <div class="divider"></div>
 
-    <h1>{% blocktrans %}Arrangement uden fast tidspunkt{% endblocktrans %}</h1>
-    <hr/>
+    <h1>{% blocktrans %}Besøg uden fast tidspunkt{% endblocktrans %}</h1>
 
     <p>
         {% blocktrans %}
-            Du har valg at tilmelde dig et arrangement uden fast tidspunkt.
-            Arrangementer uden fast tidspunkt kan enten bestilles ved at angive en række ønskede tidspunkter for arrangementet,
-            eller ved at angive en prioriteret ønskeliste for arrangementer der alle skal foregå på den samme dag.
+            Du har valgt at tilmelde dig et besøg uden fast tidspunkt.
+            Besøg uden fast tidspunkt kan enten bestilles ved at angive en række ønskede tidspunkter for besøget,
+            eller ved at angive en prioriteret ønskeliste for besøg der alle skal foregå på den samme dag.
         {% endblocktrans %}
     </p>
-
+    <div class="divider"></div>
     <fieldset>
-        <a class="btn btn-default" href="{% url 'product-view' object.id %}">{% trans "Tilbage" %}</a>
-        <a class="btn btn-primary" href="{% url 'product-book' object.id %}">{% trans "Bestil med ønske om tidspunkt" %}</a>
-        <a class="btn btn-default" href="{% url 'mpv-create' %}?back={{ request.get_full_path | urlencode }}&base={{ object.id }}">{% trans "Bestil flere arrangementer på den samme dag" %}</a>
+        <a class="btn btn-default margin-bottom-5-mobile" href="{% url 'product-view' object.id %}">
+            <span class="glyphicon glyphicon-chevron-left"></span>
+            {% trans "Tilbage" %}
+        </a>
+        <a class="btn btn-primary margin-bottom-5-mobile" href="{% url 'product-book' object.id %}">
+            {% trans "Bestil med ønske om tidspunkt" %}
+        </a>
+        <a class="btn btn-primary margin-bottom-5-mobile" href="{% url 'mpv-create' %}?back={{ request.get_full_path | urlencode }}&base={{ object.id }}">
+            {% trans "Bestil flere besøg på den samme dag" %}
+        </a>
     </fieldset>
     <div class="divider"></div>
 
 {% endblock %}
-

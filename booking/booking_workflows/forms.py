@@ -132,9 +132,9 @@ class BecomeSomethingForm(forms.Form):
 class VisitAutosendForm(forms.ModelForm):
     class Meta:
         model = VisitAutosend
-        fields = ['template_key', 'enabled', 'inherit', 'days']
+        fields = ['template_type', 'enabled', 'inherit', 'days']
         widgets = {
-            'template_key': forms.HiddenInput()
+            'template_type': forms.HiddenInput()
         }
 
     ACTIVITY_DISABLED = 0
@@ -178,21 +178,21 @@ class VisitAutosendForm(forms.ModelForm):
 
         super(VisitAutosendForm, self).__init__(*args, **kwargs)
 
-        template_key = None
+        template_type = None
         if 'instance' in kwargs:
-            template_key = kwargs['instance'].template_key
+            template_type = kwargs['instance'].template_type
         elif 'initial' in kwargs:
-            template_key = kwargs['initial']['template_key']
-        if template_key is not None:
-            template_type = EmailTemplateType.get(template_key)
+            template_type = kwargs['initial']['template_type']
+        if template_type is not None:
             if not template_type.enable_days:
                 self.fields['days'].widget = forms.HiddenInput()
-            elif template_key == \
+            elif template_type.key == \
                     EmailTemplateType.NOTITY_ALL__BOOKING_REMINDER:
                 self.fields['days'].help_text = _(u'Notifikation vil blive '
                                                   u'afsendt dette antal dage '
                                                   u'før besøget')
-            elif template_key == EmailTemplateType.NOTIFY_HOST__HOSTROLE_IDLE:
+            elif template_type.key == \
+                    EmailTemplateType.NOTIFY_HOST__HOSTROLE_IDLE:
                 self.fields['days'].help_text = _(u'Notifikation vil blive '
                                                   u'afsendt dette antal dage '
                                                   u'efter første booking '
@@ -210,14 +210,20 @@ class VisitAutosendForm(forms.ModelForm):
             return self.instance.visit
 
     @property
-    def template_key(self):
-        return self.initial['template_key']
+    def template_type(self):
+        value = self.initial['template_type']
+        if isinstance(value, EmailTemplateType):
+            return value
+        if type(value) == int:
+            return self.fields['template_type'].to_python(
+                value
+            )
 
     def label(self):
-        return EmailTemplateType.get_name(self.template_key)
+        return self.template_type.name
 
     def inherit_from(self):
-        return self.associated_visit.product.get_autosend(self.template_key)
+        return self.associated_visit.product.get_autosend(self.template_type)
 
 
 VisitAutosendFormSetBase = inlineformset_factory(
@@ -225,7 +231,7 @@ VisitAutosendFormSetBase = inlineformset_factory(
     VisitAutosend,
     form=VisitAutosendForm,
     extra=0,
-    max_num=len(EmailTemplateType.key_choices),
+    max_num=EmailTemplateType.objects.filter(enable_autosend=True).count(),
     can_delete=False,
     can_order=False
 )
@@ -234,22 +240,32 @@ VisitAutosendFormSetBase = inlineformset_factory(
 class VisitAutosendFormSet(VisitAutosendFormSetBase):
     def __init__(self, *args, **kwargs):
         if 'instance' in kwargs:
-            autosends = kwargs['instance'].get_autosends(False, True, False)
-            if len(autosends) < len(EmailTemplateType.key_choices):
+            instance = kwargs['instance']
+            all_types = EmailTemplateType.objects.filter(
+                enable_autosend=True, form_show=True
+            )
+            visit_autosends = instance.visitautosend_set.filter(
+                template_type__in=all_types
+            ).order_by('template_type__ordering')
+            kwargs['queryset'] = visit_autosends
+
+            if visit_autosends.count() < all_types.count():
                 initial = []
-                existing_keys = [
-                    autosend.template_key for autosend in autosends
+                existing_types = [
+                    autosend.template_type for autosend in visit_autosends
                 ]
-                for key, label in EmailTemplateType.key_choices:
-                    if key not in existing_keys:
+                for type in all_types:
+                    if type.key not in existing_types:
                         initial.append({
-                            'template_key': key,
+                            'template_type': type,
                             'enabled': False,
-                            'inherit': False,
+                            'inherit': True,
                             'days': '',
                             'visit': kwargs['instance'].pk
                         })
-                initial.sort(key=lambda choice: choice['template_key'])
+                initial.sort(
+                    key=lambda choice: choice['template_type'].ordering
+                )
                 kwargs['initial'] = initial
                 self.extra = len(initial)
         super(VisitAutosendFormSet, self).__init__(*args, **kwargs)

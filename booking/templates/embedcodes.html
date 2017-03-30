@@ -8,7 +8,7 @@
 {% include 'common/breadcrumbrow.html' %}
 
 {% if can_embed %}
-<h1>{% blocktrans with url=embed_url %}Indlejring af siden {{ url }}{% endblocktrans %}</h1>
+<h1>{% blocktrans with url=base_url %}Indlejring af siden {{ url }}{% endblocktrans %}</h1>
 
 <h2>{% trans 'Indlejring via Proxy-dokument i Obvius CMS' %}</h2>
 <p>

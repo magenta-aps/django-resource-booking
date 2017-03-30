@@ -1,5 +1,4 @@
 {% extends "index.html" %}
-{% load staticfiles %}
 {% load i18n %}
 
 {% block content %}
@@ -31,7 +30,7 @@
                     <label class="sr-only" for="searchBox">{% trans 'Søg efter tilbud' %}</label>
                     <input type="text" class="form-control" id="searchBox" placeholder="{% trans 'Indtast et eller flere søgeord...' %}" name="q">
                     <span class="input-group-btn">
-                        <button class="btn btn-primary" type="submit">{% trans 'Søg' %}  <span class="glyphicon glyphicon-search" aria-hidden="true"></span></button>
+                        <button class="btn btn-primary" type="submit">{% trans 'Søg' %}</button>
                     </span>
                 </div>
             </form>
@@ -55,4 +54,8 @@
     </div>
     {% endif %}
 
+{% endblock %}
+
+{% block extra_scripts %}
+    <script src="{% static 'js/list.js' %}"></script>
 {% endblock %}

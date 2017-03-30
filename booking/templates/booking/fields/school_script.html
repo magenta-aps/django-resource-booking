@@ -1,4 +1,3 @@
-{% load staticfiles %}
 {% if bookerform.school %}
 <script src="{% static 'thirdparty/bootstrap-3-typeahead/bootstrap3-typeahead.min.js' %}"></script>
 <script type="text/javascript" id="school_script">
@@ -12,24 +11,36 @@
         var levelSelect = $("#{{ bookerform.level.id_for_label }}");
 
         var updateSchoolType = function(schoolType) {
+            schoolType = parseInt(schoolType, 10);
             $("#{{ bookerform.school_type.id_for_label }}").val(schoolType);
 
             // Show/hide the dependents
             $(".institution_level_dependent").each(function(){
                 var $this = $(this);
-                $this.toggle(!!($this.attr("data-display-value") & schoolType));
+                $this.toggle(parseInt($this.attr("data-display-value"), 10) === schoolType);
             });
 
             // Update the level selector options
-            var showOptions = $(levelSelect.find("option[value='']"));
+            var showOptions = levelSelect.find("option[value='']");
             var showValues = levelMap[schoolType];
             for (var i=0; i<showValues.length; i++) {
                 showOptions = showOptions.add(levelSelect.find("option[value="+showValues[i]+"]"));
             }
             var hideOptions = levelSelect.find("option").not(showOptions);
-            showOptions.show();
-            hideOptions.hide();
+            showOptions.filter("span>option").unwrap();
+            hideOptions.filter(":not(span>option)").wrap("<span>").parent().hide();
             hideOptions.filter(":selected").removeAttr("selected");
+        };
+
+        var updateSchool = function(school) {
+            if (school.postcode && postcode.length) {
+                // Update the postcode field
+                postcode.val(school.postcode.number);
+                postcode.change();
+            }
+            if (school.type) {
+                updateSchoolType(school.type);
+            }
         };
 
         schoolField.typeahead({
@@ -56,23 +67,40 @@
                 return item.name;
             },
             updater: function (selected) {
-                if (selected.postcode && postcode.length) {
-                    // Update the postcode field
-                    postcode.val(selected.postcode.number);
-                    postcode.change();
-                }
-
-                if (selected.type) {
-                    updateSchoolType(selected.type);
-                }
+                updateSchool(selected);
                 return selected.name;
             }
+        });
+
+        schoolField.change(function() {
+            var schoolName = schoolField.val().trim();
+            $.ajax({
+                url: "{% url 'school' %}",
+                data: {
+                    q: schoolField.val(),
+                    t: schoolField.attr("data-institution-level")
+                },
+                dataType: "json",
+                complete: function (response) {
+                    if (response && response.status === 200) {
+                        var schools = response.responseJSON.schools;
+                        for (var i=0; i<schools.length; i++) {
+                            var school = schools[i];
+                            if (school.name.trim().toLowerCase() === schoolName.toLowerCase()) {
+                                updateSchool(school);
+                            }
+                        }
+                    }
+                }.bind(this)
+            });
         });
 
         {% if bookerform.school_type %}
             var schoolType = $("#{{ bookerform.school_type.id_for_label }}").val();
             if (schoolType) {
                 updateSchoolType(schoolType);
+            } else {
+                updateSchoolType({{ product.institution_level }});
             }
         {% endif %}
     });

@@ -10,22 +10,25 @@ var KU = KU || {};
             $time_mode = $root.find('select.time-mode').first(),
             $start = $root.find('div.start-input input').first(),
             $end = $root.find('div.end-input input').first(),
-            $specific = $root.find('div.specific-time-input input').first()
-            ;
+            $specific = $root.find('div.specific-time-input input').first();
 
         function zero_pad(int_val) {
-            if(int_val < 10)
+            if (int_val < 10) {
                 return "0" + int_val;
-            else
+            } else {
                 return int_val;
+            }
         }
 
         function text_to_jsdate(text_value) {
+            if (!text_value) {
+                return new Date();
+            }
             var date_parts = text_value.substr(0, 10).split(/[. -]/),
                 time_text = text_value.substr(11) || '',
                 time_parts = time_text.split(/[:]/);
 
-            if(date_parts[0].length != 4) {
+            if (date_parts[0].length != 4) {
                 date_parts = date_parts.reverse();
             }
 
@@ -67,12 +70,11 @@ var KU = KU || {};
             var from = text_to_jsdate($start.val()),
                 from_txt = format_datetime(from),
                 to = text_to_jsdate($end.val()),
-                to_txt = format_datetime(to)
-                ;
+                to_txt = format_datetime(to);
 
             // If we're using full days we want the widgets to use one day
             // earlier.
-            if($time_mode.val() == "full_days") {
+            if ($time_mode.val() == "full_days") {
                 $specific.val("");
                 if(from_txt.substr(0, 10) != to_txt.substr(0, 10)) {
                     to.setTime(to.getTime() - 24 * 60 * 60 * 1000);
@@ -196,6 +198,6 @@ var KU = KU || {};
         });
 
         update_widgets();
-        $time_mode.trigger("change");
+        // $time_mode.trigger("change");
     };
 })(KU);

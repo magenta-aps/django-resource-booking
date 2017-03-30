@@ -1,20 +1,14 @@
 {% extends 'index.html' %}
 {% load i18n %}
-{% load staticfiles %}
 {% load booking_tags %}
 
 {% block htmltitle %} - {% if object.pk %}{% trans "redigér ressourcegruppe" %}{% else %}{% trans "opret ressourcegruppe" %}{% endif %}{% endblock %}
 
-{% block head %}
-{% endblock %}
-
 {% block content %}
 
     {% include 'common/breadcrumbrow.html' %}
-    <div class="divider"></div>
 
     <h1>{% if object.pk %}{% trans "Redigér ressourcegruppe" %}{% else %}{% trans "Opret ressourcegruppe" %}{% endif %}</h1>
-    <hr/>
 
     <form id="resourceform" action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
 

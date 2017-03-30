@@ -21,7 +21,7 @@ from booking.booking_workflows.forms import VisitAddLogEntryForm
 from booking.booking_workflows.forms import VisitAddCommentForm
 from booking.booking_workflows.forms import ResetVisitChangesForm
 from booking.models import Visit
-from booking.models import EmailTemplate, EmailTemplateType
+from booking.models import EmailTemplateType
 from booking.models import EventTime
 from booking.models import Locality
 from booking.models import LOGACTION_MANUAL_ENTRY
@@ -33,7 +33,6 @@ from booking.views import RoleRequiredMixin, EditorRequriedMixin
 from booking.views import VisitDetailView
 from django.views.generic.base import ContextMixin
 from profile.models import TEACHER, HOST, EDIT_ROLES
-from itertools import chain
 
 import booking.models
 
@@ -89,9 +88,17 @@ class ChangeVisitStartTimeView(AutologgerMixin,
         return form
 
     def get_context_data(self, **kwargs):
+        if not self.object.has_specific_time:
+            time_mode = "full_days"
+        elif self.object.duration_matches_product:
+            time_mode = "use_duration"
+        else:
+            time_mode = "time_and_date"
+
         return super(ChangeVisitStartTimeView, self).get_context_data(
             product=self.object.product,
             use_product_duration=self.object.duration_matches_product,
+            time_mode_value=time_mode,
             **kwargs
         )
 
@@ -116,12 +123,12 @@ class ChangeVisitStatusView(AutologgerMixin, UpdateWithCancelView):
         if status == Visit.WORKFLOW_STATUS_PLANNED:
             # Booking is planned
             self.object.autosend(
-                EmailTemplateType.NOTIFY_ALL__BOOKING_COMPLETE
+                EmailTemplateType.notify_all__booking_complete
             )
         if status == Visit.WORKFLOW_STATUS_CANCELLED:
             # Booking is cancelled
             self.object.autosend(
-                EmailTemplateType.NOTIFY_ALL__BOOKING_CANCELED
+                EmailTemplateType.notify_all__booking_canceled
             )
         return response
 
@@ -155,11 +162,10 @@ class ChangeVisitTeachersView(AutologgerMixin, UpdateWithCancelView):
             for user in self.get_form().base_fields['teachers'].queryset.all()
         }
         context['can_send_emails'] = self.object.autosend_enabled(
-            EmailTemplateType.NOTIFY_TEACHER__ASSOCIATED
+            EmailTemplateType.notify_teacher__associated
         )
-        context['email_template_name'] = EmailTemplateType.get_name(
-            EmailTemplateType.NOTIFY_TEACHER__ASSOCIATED
-        )
+        context['email_template_name'] = \
+            EmailTemplateType.notify_teacher__associated.name
         context.update(kwargs)
         return super(ChangeVisitTeachersView, self).\
             get_context_data(**context)
@@ -173,6 +179,8 @@ class ChangeVisitTeachersView(AutologgerMixin, UpdateWithCancelView):
             ChangeVisitTeachersView, self
         ).form_valid(form)
 
+        self.object.resources_updated()
+
         if form.cleaned_data.get('send_emails', False):
             new_teachers = self.object.teachers.all()
             recipients = [
@@ -183,7 +191,7 @@ class ChangeVisitTeachersView(AutologgerMixin, UpdateWithCancelView):
             if len(recipients) > 0:
                 # Send a message to only these recipients
                 self.object.autosend(
-                    EmailTemplateType.NOTIFY_TEACHER__ASSOCIATED,
+                    EmailTemplateType.notify_teacher__associated,
                     recipients,
                     True
                 )
@@ -213,11 +221,10 @@ class ChangeVisitHostsView(AutologgerMixin, UpdateWithCancelView):
             for user in self.get_form().base_fields['hosts'].queryset.all()
             }
         context['can_send_emails'] = self.object.autosend_enabled(
-            EmailTemplateType.NOTIFY_HOST__ASSOCIATED
+            EmailTemplateType.notify_host__associated
         )
-        context['email_template_name'] = EmailTemplateType.get_name(
-            EmailTemplateType.NOTIFY_HOST__ASSOCIATED
-        )
+        context['email_template_name'] = \
+            EmailTemplateType.notify_host__associated.name
         context.update(kwargs)
         return super(ChangeVisitHostsView, self).\
             get_context_data(**context)
@@ -229,6 +236,8 @@ class ChangeVisitHostsView(AutologgerMixin, UpdateWithCancelView):
 
         response = super(ChangeVisitHostsView, self).form_valid(form)
 
+        self.object.resources_updated()
+
         if form.cleaned_data.get('send_emails', False):
             new_hosts = self.object.hosts.all()
             recipients = [
@@ -239,7 +248,7 @@ class ChangeVisitHostsView(AutologgerMixin, UpdateWithCancelView):
             if len(recipients) > 0:
                 # Send a message to only these recipients
                 self.object.autosend(
-                    EmailTemplateType.NOTIFY_HOST__ASSOCIATED,
+                    EmailTemplateType.notify_host__associated,
                     recipients,
                     True
                 )
@@ -297,6 +306,7 @@ class ChangeVisitRoomsView(AutologgerMixin, UpdateWithCancelView):
 
         self.save_rooms()
         result = super(ChangeVisitRoomsView, self).form_valid(form)
+        self.object.resources_updated()
         return result
 
     def save_rooms(self):
@@ -413,38 +423,6 @@ class ChangeVisitAutosendView(AutologgerMixin, UpdateWithCancelView):
     def get_success_url(self):
         return reverse('visit-view', args=[self.object.pk])
 
-    def get_context_data(self, **kwargs):
-        context = {}
-
-        context['inherited'] = {
-            item.template_key:
-            {
-                'template_key': item.template_key,
-                'enabled': item.enabled,
-                'days': item.days
-            }
-            for item in chain.from_iterable(
-                product.productautosend_set.all()
-                for product in self.object.real.products
-            )
-        }
-        context['template_keys'] = list(set(
-            template.key
-            for template in chain.from_iterable(
-                EmailTemplate.get_templates(product.organizationalunit)
-                for product in self.object.real.products
-            )
-        ))
-        if hasattr(self.object, 'product') and self.object.product is not None:
-            context['organizationalunit'] = \
-                self.object.product.organizationalunit
-        context['autosend_enable_days'] = EmailTemplateType.get_keys(
-            enable_days=True
-        )
-        context.update(kwargs)
-        return super(ChangeVisitAutosendView, self).\
-            get_context_data(**context)
-
 
 class BecomeSomethingView(AutologgerMixin, VisitBreadcrumbMixin,
                           RoleRequiredMixin, FormView):
@@ -454,7 +432,7 @@ class BecomeSomethingView(AutologgerMixin, VisitBreadcrumbMixin,
     view_title = _(u'Tilmeld rolle')
     roles = [HOST, TEACHER] + list(EDIT_ROLES)
     form_class = BecomeSomethingForm
-    notify_mail_template_key = None
+    notify_mail_template_type = None
     object = None
 
     ERROR_NONE_NEEDED = _(
@@ -585,9 +563,9 @@ class BecomeSomethingView(AutologgerMixin, VisitBreadcrumbMixin,
                     getattr(self.object, self.m2m_attribute).add(request.user)
 
                 # Notify the user about the association
-                if self.notify_mail_template_key:
+                if self.notify_mail_template_type:
                     self.object.autosend(
-                        self.notify_mail_template_key,
+                        self.notify_mail_template_type,
                         [request.user],
                         True
                     )
@@ -612,7 +590,7 @@ class BecomeTeacherView(BecomeSomethingView):
     m2m_attribute = "teachers"
     template_name = "booking/workflow/become_teacher.html"
     view_title = _(u'Tilmeld som underviser')
-    notify_mail_template_key = EmailTemplateType.NOTIFY_TEACHER__ASSOCIATED
+    notify_mail_template_type = EmailTemplateType.notify_teacher__associated
 
     ERROR_NONE_NEEDED = _(u"Besøget har ikke brug for flere undervisere")
     ERROR_WRONG_ROLE = _(
@@ -633,7 +611,7 @@ class DeclineTeacherView(BecomeSomethingView):
     m2m_attribute = "teachers"
     template_name = "booking/workflow/decline_teacher.html"
     view_title = _(u'Tilmeld som underviser')
-    notify_mail_template_key = EmailTemplateType.NOTIFY_TEACHER__ASSOCIATED
+    notify_mail_template_type = EmailTemplateType.notify_teacher__associated
 
     ERROR_NONE_NEEDED = _(u"Besøget har ikke brug for flere undervisere")
     ERROR_WRONG_ROLE = _(
@@ -654,7 +632,7 @@ class BecomeHostView(BecomeSomethingView):
     m2m_attribute = "hosts"
     template_name = "booking/workflow/become_host.html"
     view_title = _(u'Tilmeld som vært')
-    notify_mail_template_key = EmailTemplateType.NOTIFY_HOST__ASSOCIATED
+    notify_mail_template_type = EmailTemplateType.notify_host__associated
 
     ERROR_NONE_NEEDED = _(u"Besøget har ikke brug for flere værter")
     ERROR_WRONG_ROLE = _(
@@ -675,7 +653,7 @@ class DeclineHostView(BecomeSomethingView):
     m2m_attribute = "hosts"
     template_name = "booking/workflow/decline_host.html"
     view_title = _(u'Tilmeld som vært')
-    notify_mail_template_key = EmailTemplateType.NOTIFY_HOST__ASSOCIATED
+    notify_mail_template_type = EmailTemplateType.notify_host__associated
 
     ERROR_NONE_NEEDED = _(u"Besøget har ikke brug for flere værter")
     ERROR_WRONG_ROLE = _(
