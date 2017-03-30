@@ -1,12 +1,8 @@
 {% extends 'index.html' %}
 {% load i18n %}
-{% load staticfiles %}
 {% load booking_tags %}
 
 {% block htmltitle %} - {% trans "ressourcebehov" %}{% endblock %}
-
-{% block head %}
-{% endblock %}
 
 {% block content %}
 
@@ -15,6 +11,9 @@
 
     <h1>{% blocktrans with productname=product.title %}Ressourcebehov for '{{ productname }}'{% endblocktrans %}</h1>
     <p>{% blocktrans with unitname=product.organizationalunit.name %}Enhed: {{ unitname }}{% endblocktrans %}</p>
+    {% if product.are_resources_autoassigned %}
+        <p>{% trans 'Ressourcer tildeles automatisk til besøg ved booking' %}</p>
+    {% endif %}
     <hr/>
 
     <div>
