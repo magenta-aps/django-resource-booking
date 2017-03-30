@@ -726,7 +726,7 @@ class SearchView(BreadcrumbMixin, ListView):
             val = None
         return val
 
-    search_prune = re.compile("\s\W+")
+    search_prune = re.compile("[\s\W]+")
 
     def get_base_queryset(self):
         if self.base_queryset is None:
