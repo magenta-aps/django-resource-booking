@@ -52,12 +52,15 @@ def import_one(key):
     if os.path.exists(fname):
         body = open(fname).read()
 
+    et_type = EmailTemplateType.objects.get(key=key)
+
     try:
         template = EmailTemplate.objects.get(
-            key=key, organizationalunit__isnull=True
+            type=et_type,
+            organizationalunit__isnull=True
         )
     except EmailTemplate.DoesNotExist:
-        template = EmailTemplate(key=key, organizationalunit=None)
+        template = EmailTemplate(type=et_type, organizationalunit=None)
 
     template.subject = subject
     template.body = body

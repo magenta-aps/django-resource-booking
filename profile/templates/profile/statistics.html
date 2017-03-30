@@ -5,20 +5,34 @@
 {% trans 'opret ny bruger' %}
 {% endblock %}
 
+{% block head %}
+    {% include 'common/resources/datepicker_style.html' %}
+    {% include 'common/resources/datatables_style.html' %}
+{% endblock %}
+
 {% block content %}
 
 <div class="divider"></div>
 
-<h1>{{ organizationalunit.name }} - Statistik</h1>
+<h1>{% trans 'Statistik' %}</h1>
 
 <form class="clearfix" action="{% url 'statistics' %}" method="get">
     <div class="form-group row">
-        <label class="col-sm-2 control-label" for="{{ form.organizationalunit.id_units}}">{% trans 'Enheder:' %}</label>
+        <div class="col-sm-2">
+            <label class="control-label" for="{{ form.organizationalunits.id_for_label }}">{% trans 'Enheder:' %}</label>
+        </div>
         <div class="col-sm-6">
-            {{ form.units }}
+            {{ form.organizationalunits }}
         </div>
         <div class="col-sm-4">
-            {{ form.organizationalunits.errors }}
+            {% if form.organizationalunits.errors %}
+                {{ form.organizationalunits.errors }}
+            {% else %}
+                <div class="text-muted content-box">
+                    <p>{% trans 'Hold ctrl eller shift nede for at vælge flere enheder (Windows).' %}</p>
+                    <p>{% trans 'Hold &#8984;-tasten nede for at vælge flere enheder (Mac).' %}</p>
+                </div>
+            {% endif %}
         </div>
     </div>
     <div class="form-group row">
@@ -50,7 +64,7 @@
     </div>
 
     <div class="table-responsive">
-        <table class="table table-striped">
+        <table id="statistics_table" class="table table-striped">
             <thead>
                 <tr>
                     <th>{% trans 'Enhed' %}</th>
@@ -62,6 +76,7 @@
                     <th>{% trans 'Antal deltagere' %}</th>
                     <th>{% trans 'Oplæg om uddannelser' %}</th>
                     <th>{% trans 'Rundvisning' %}</th>
+                    <th>{% trans 'Andet' %}</th>
                     <th>{% trans 'Region' %}</th>
                     <th>{% trans 'Skole' %}</th>
                     <th>{% trans 'Postnummer og by' %}</th>
@@ -78,10 +93,10 @@
             <tbody>
             {% for booking in bookings %}
                 <tr>
-                    <td>{{ booking.visit.product.resource_ptr.organizationalunit.name }}</td>
+                    <td>{{ booking.visit.product.organizationalunit.name }}</td>
                     <td><a href="{% url 'booking-view' booking.id %}">{{ booking }}</a></td>
-                    <td>{{ booking.visit.get_type_display }}</td>
-                    <td><a href="{% url 'product-view' booking.visit.product.resource_ptr.id %}">{{ booking.visit.product.resource_ptr.title }}</a></td>
+                    <td>{{ booking.visit.product.get_type_display }}</td>
+                    <td><a href="{% url 'product-view' booking.visit.product.pk %}">{{ booking.visit.product.title }}</a></td>
                     <td>{{ booking.visit.start_datetime|date:'d-m-Y H:i:s'}} til {{ booking.visit.end_datetime|date:'d-m-Y H:i:s'}}</td>
                     <td>
                         {% for bookingsubjectlevel in booking.bookinggrundskolesubjectlevel_set.all %}
@@ -92,19 +107,14 @@
                             {{ bookingsubjectlevel.subject }}/{{ bookingsubjectlevel.level }},
                         {% endfor %}
                     </td>
-                    <td>{{ booking.booker.attendee_count }}</td>
+                    <td>{{ booking.booker.attendee_count|default:"0" }}</td>
+                    <td>{{ booking.classbooking.presentation_desired|yesno|capfirst }}</td>
+                    <td>{{ booking.classbooking.tour_desired|yesno|capfirst }}</td>
                     <td>
-                        {% if booking.classbooking.presentation_desired %}
-                            Ja
+                        {% if booking.classbooking.custom_desired %}
+                            {{ booking.visit.product.custom_name }}
                         {% else %}
-                            Nej
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if booking.classbooking.tour_desired %}
-                            Ja
-                        {% else %}
-                            Nej
+                            {% trans 'Nej' %}
                         {% endif %}
                     </td>
                     <td>{{ booking.booker.school.postcode.region.name }}</td>
@@ -113,18 +123,18 @@
                     <td>{{ booking.booker.school.address }}</td>
                     <td>{{ booking.booker.get_full_name }} </td>
                     <td>{{ booking.booker.get_email }} </td>
-                    <td>{{ booking.visit.product.resource_ptr.comment }} </td>
+                    <td>{{ booking.visit.product.comment }} </td>
                     <td>{{ booking.comments }} </td>
                     <td>
                         {% if booking.hosts %}
-                            {% for host in booking.hosts.all %}
+                            {% for host in booking.visit.assigned_hosts.all %}
                                  {{ host.get_full_name }},
                             {% endfor %}
                         {% endif %}
                     </td>
                     <td>
                         {% if booking.teachers %}
-                            {% for teacher in booking.teachers.all %}
+                            {% for teacher in booking.visit.assigned_teachers.all %}
                                  {{ teacher.get_full_name }},
                             {% endfor %}
                         {% endif %}
@@ -138,7 +148,16 @@
 {% endblock %}
 
 {% block extra_scripts %}
-
     {% include 'common/resources/datepicker_script.html' %}
-
+    {% include 'common/resources/datatables_script.html' %}
+    <script type="text/javascript">
+        $(function() {
+            $('#statistics_table').DataTable({
+                paging: false,
+                info: false,
+                responsive: true,
+                order: [[1, "asc"]]
+            });
+        });
+    </script>
 {% endblock %}

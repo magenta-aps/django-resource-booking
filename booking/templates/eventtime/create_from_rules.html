@@ -1,14 +1,13 @@
 {% extends 'index.html' %}
 {% load tz %}
 {% load i18n %}
-{% load staticfiles %}
 {% load booking_tags %}
 
 {% block htmltitle %} - {% trans "Opret tidspunkter for" %} '{{ product.title }}'{% endblock %}
 
 {% block head %}
-{% include 'common/resources/datepicker_style.html' %}
-<link href="{% static 'css/bootstrap-clockpicker.css' %}" type="text/css" media="all" rel="stylesheet"  />
+    {% include 'common/resources/datepicker_style.html' %}
+    {% include 'common/resources/clockpicker_style.html' %}
 {% endblock %}
 
 
@@ -126,8 +125,8 @@
             </div>
 
             <div>
-                <input class="btn btn-success" type="submit" value="{% trans 'Opret tidspunkter' %}" role="button" />
-                <a href="{% url 'manage-times' product.pk %}" role="button" class="btn btn-danger">{% trans 'Annullér' %}</a>
+                <input class="btn btn-primary" type="submit" value="{% trans 'Opret tidspunkter' %}" role="button" />
+                <a href="{% url 'manage-times' product.pk %}" role="button" class="btn btn-default">{% trans 'Annullér' %}</a>
             </div>
         </form>
     </div>
@@ -135,5 +134,8 @@
 {% endblock %}
 
 {% block extra_scripts %}
-{% include 'eventtime/create_from_rules_script.html' %}
+    {% include 'common/resources/datepicker_script.html' %}
+    {% include 'common/resources/clockpicker_script.html' %}
+    <script src="{% static 'js/rrule.js' %}"></script>
+    <script src="{% static 'js/times-from-rules.js' %}"></script>
 {% endblock %}
