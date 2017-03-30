@@ -1,13 +1,5 @@
 {% extends 'lightbox-index.html' %}
 {% load i18n %}
-{% load staticfiles %}
-{% load booking_tags %}
-
-{% block head %}
-{% endblock %}
-
-{% block header %}
-{% endblock %}
 
 {% block content %}
     {% with success=True %}
@@ -15,7 +7,7 @@
     {% endwith %}
 
     <div class="modal-body">
-        <p>{% blocktrans with title=product.title %}Tak for din tilmelding til "{{ title }}". Du hører fra os snarest.{% endblocktrans%}</p>
+        <p>{% blocktrans with title=product.title %}Tak for din tilmelding til "{{ title }}". Du hører fra os snarest.{% endblocktrans %}</p>
         <p><a id="rebook" href="{% url 'product-book' object.id %}?modal=1">{% trans "Foretag ny tilmelding" %}</a></p>
     </div>
 

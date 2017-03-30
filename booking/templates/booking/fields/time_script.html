@@ -18,7 +18,7 @@
             if (visitSelect.length && attendeeField.length) {
                 var updateVisit = function() {
                     var visit = visitAvailable[visitSelect.val()];
-                    if (visit !== null) {
+                    if (visit) {
                         attendeeField.attr("max", Math.min(Math.max(visit.available, visit.waitinglist), existingMax));
                         attendeeField.trigger('change');
                         if (visit.available < existingMax) {
@@ -29,7 +29,7 @@
 
                 var updateAttendees = function() {
                     var visit = visitAvailable[visitSelect.val()];
-                    if (visit !== null) {
+                    if (visit) {
                         var doWaitingList = only_waitinglist || (attendeeField.val() > visit.available && attendeeField.val() <= visit.waitinglist);
                         submitbutton.text(doWaitingList ? "{% trans 'Tilmeld til venteliste!' %}" : "{% trans 'Tilmeld!' %}");
                         if (!only_waitinglist) {
