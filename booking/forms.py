@@ -22,7 +22,7 @@ from django.forms import formset_factory, inlineformset_factory
 from django.forms import TextInput, NumberInput, DateInput, Textarea, Select
 from django.forms import HiddenInput
 from django.utils.translation import ugettext_lazy as _
-from tinymce.widgets import TinyMCE
+from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from .fields import ExtensibleMultipleChoiceField
 from .fields import OrderedModelMultipleChoiceField
 
@@ -279,7 +279,8 @@ class OrganizationalUnitForm(forms.ModelForm):
 
 class ProductInitialForm(forms.Form):
     type = forms.ChoiceField(
-        choices=Product.resource_type_choices
+        choices=Product.resource_type_choices,
+        widget=Select(attrs={'class': 'form-control'})
     )
 
 
@@ -314,7 +315,7 @@ class ProductForm(forms.ModelForm):
                     'maxlength': 210
                 }
             ),
-            'description': TinyMCE(),
+            'description': CKEditorUploadingWidget(),
             'custom_name': TextInput(attrs={
                 'class': 'titlefield form-control input-sm',
                 'rows': 1, 'size': 62
@@ -388,14 +389,21 @@ class ProductForm(forms.ModelForm):
 
         self.current_unit = unit
 
+        time_mode_choices = self.instance.available_time_modes
+
         if not self.instance.pk and 'initial' in kwargs:
             kwargs['initial']['tilbudsansvarlig'] = self.user.pk
             if unit is not None:
                 kwargs['initial']['organizationalunit'] = unit.pk
+            # When only one choice for time modes, default to that
+            if len(time_mode_choices) == 1:
+                kwargs['initial']['time_mode'] = time_mode_choices[0][0]
 
         super(ProductForm, self).__init__(*args, **kwargs)
         self.fields['organizationalunit'].queryset = self.get_unit_query_set()
         self.fields['type'].widget = HiddenInput()
+        # Set time_mode choices to calculated value from instance
+        self.fields['time_mode'].choices = time_mode_choices
 
         if unit is not None and 'locality' in self.fields:
             self.fields['locality'].choices = [BLANK_OPTION] + \
@@ -581,6 +589,7 @@ class AssignmentHelpForm(ProductForm):
         model = Product
         fields = ('type', 'title', 'teaser', 'description', 'state',
                   'institution_level', 'topics',
+                  'time_mode',
                   'tilbudsansvarlig', 'organizationalunit',
                   'comment',
                   )
@@ -592,6 +601,7 @@ class StudyMaterialForm(ProductForm):
         model = Product
         fields = ('type', 'title', 'teaser', 'description', 'price', 'state',
                   'institution_level', 'topics',
+                  'time_mode',
                   'tilbudsansvarlig', 'organizationalunit',
                   'comment'
                   )
@@ -697,7 +707,6 @@ class ProductAutosendFormSet(ProductAutosendFormSetBase):
                 existing_types = [
                     autosend.template_type for autosend in autosends
                 ]
-                print existing_types
                 for type in all_autosends:
                     if type not in existing_types:
                         initial.append({
@@ -966,9 +975,10 @@ class BookerForm(forms.ModelForm):
         school = self.cleaned_data.get('school')
         if School.objects.filter(name=school).count() == 0:
             raise forms.ValidationError(
-                _(u'Du har ikke valgt skole/gymnasium fra listen. Du skal '
-                  u'vælge skole/gymnasium fra listen for at kunne '
-                  u'tilmelde dig.')
+                _(u'Du skal vælge skole/gymnasium fra listen for at kunne '
+                  u'tilmelde dig. Hvis din skole eller dit gymnasium ikke '
+                  u'kommer frem på listen, kontakt da support@fokus.dk '
+                  u'for at få hjælp til tilmelding.')
             )
         return school
 
@@ -1155,7 +1165,6 @@ class EmailTemplateForm(forms.ModelForm):
         widgets = {
             'subject': TextInput(attrs={'class': 'form-control'}),
             'body': Textarea(attrs={'rows': 10, 'cols': 90}),
-            # 'body': TinyMCE(attrs={'rows': 10, 'cols': 90}),
         }
 
     def __init__(self, user, *args, **kwargs):
@@ -1203,11 +1212,11 @@ EmailTemplatePreviewContextForm = formset_factory(
 
 
 class BaseEmailComposeForm(forms.Form):
+
     required_css_class = 'required'
 
     body = forms.CharField(
         max_length=65584,
-        # widget=TinyMCE(attrs={'rows': 10, 'cols': 90}),
         widget=Textarea(attrs={'rows': 10, 'cols': 90}),
         label=_(u'Tekst')
     )

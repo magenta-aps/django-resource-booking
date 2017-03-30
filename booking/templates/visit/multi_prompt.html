@@ -1,11 +1,8 @@
 {% extends 'index.html' %}
 {% load i18n %}
-{% load staticfiles %}
 {% load booking_tags %}
 
 {% block htmltitle %} - {% trans "tilmeld arrangement uden fast tidspunkt" %}{% endblock %}
-
-{% block head %}{% endblock %}
 
 {% block content %}
 
@@ -21,7 +18,7 @@
             eller ved at angive en prioriteret ønskeliste for arrangementer der alle skal foregå på den samme dag.
         {% endblocktrans %}
     </p>
-
+    <div class="divider"></div>
     <fieldset>
         <a class="btn btn-default margin-bottom-5-mobile" href="{% url 'product-view' object.id %}"><span class="glyphicon glyphicon-chevron-left"></span> {% trans "Tilbage" %}</a>
         <a class="btn btn-primary margin-bottom-5-mobile" href="{% url 'product-book' object.id %}">{% trans "Bestil med ønske om tidspunkt" %}</a>

@@ -1,6 +1,5 @@
 {% extends 'index.html' %}
 {% load i18n %}
-{% load staticfiles %}
 
 {% block htmltitle %} - {% trans "slet ressourcegruppe" %}{% endblock %}
 
@@ -13,6 +12,7 @@
     <form action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <p>{% trans 'Er du sikker på at du vil slette denne ressourcegruppe?' %}</p>
+        <p>{% trans 'Dette kan have indflydelse på eksisterende besøg, der benytter denne ressourcegruppe, både dem der er under planlægning, og dem der er færdigplanlagte' %}</p>
         <dl class="dl-horizontal">
             <dt>{% trans 'Type' %}</dt>
             <dd>{{ object.resource_type }}</dd>

@@ -1,5 +1,4 @@
 {% extends "index.html" %}
-{% load staticfiles %}
 {% load booking_tags %}
 {% load i18n %}
 
@@ -146,13 +145,13 @@
             {% if not results %}
                 <p>{% trans 'Din søgning gav ikke noget resultat.' %}</p>
             {% else %}
-            <h2 class="bold">{% blocktrans with count=paginator.count|default:results.count query=request.GET.q %}{{ count }} resultater matcher din søgning på "{{ query }}"{% endblocktrans %}</h2>
+            <h2 class="results-header">{% blocktrans with count=paginator.count|default:results.count query=request.GET.q %}{{ count }} resultater matcher din søgning på "{{ query }}"{% endblocktrans %}</h2>
 
             <div class="divider"></div>
 
             <ul class="media-list">
                 {% for res in results %}
-                    {% include 'resource/../product/listitem.html' with item=res fullquery=fullquery %}
+                    {% include 'product/listitem.html' with item=res fullquery=fullquery %}
                {% endfor %}
             </ul>
             {% endif %}
@@ -232,5 +231,19 @@
 {% block extra_scripts %}
 
     {% include 'common/resources/datepicker_script.html' %}
+
+    <script type="text/javascript">
+    <!--
+    // Automatically submit the search form whenever the filters are changed
+    $(function() {
+        $('#filter-search-results input[type=checkbox]').on('change', function() {
+            $(this.form).trigger("submit");
+        });
+        $('#filter-search-results input.datepicker').on('changeDate', function() {
+            $(this.form).trigger("submit");
+        });
+    });
+    //-->
+    </script>
 
 {% endblock %}
