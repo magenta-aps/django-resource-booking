@@ -10,6 +10,7 @@ DIR = os.path.dirname(__file__)
 
 IMPORT_MAP = {
     EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED: 'on_booking_to_booker',
+    EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED_UNTIMED: 'on_booking_to_booker_untimed',
     EmailTemplateType.NOTIFY_EDITORS__BOOKING_CREATED: 'on_booking_to_editors',
     EmailTemplateType.NOTIFY_HOST__REQ_TEACHER_VOLUNTEER: 'request_teacher',
     EmailTemplateType.NOTIFY_HOST__REQ_HOST_VOLUNTEER: 'request_host',
@@ -51,12 +52,15 @@ def import_one(key):
     if os.path.exists(fname):
         body = open(fname).read()
 
+    et_type = EmailTemplateType.objects.get(key=key)
+
     try:
         template = EmailTemplate.objects.get(
-            key=key, organizationalunit__isnull=True
+            type=et_type,
+            organizationalunit__isnull=True
         )
     except EmailTemplate.DoesNotExist:
-        template = EmailTemplate(key=key, organizationalunit=None)
+        template = EmailTemplate(type=et_type, organizationalunit=None)
 
     template.subject = subject
     template.body = body
