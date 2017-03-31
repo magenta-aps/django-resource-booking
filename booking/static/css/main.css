@@ -1814,6 +1814,12 @@ body.lightbox {
     background-color: #d7352a;
 }
 
+/* MultiProductVisit END */
+
+.cke_dialog_ui_file .cke_dialog_ui_input_file {
+    height: 2.5em;
+}
+
 .globalfooter .social-items .social-item .social-icon.vimeo {
     background-image: url('http://cms.ku.dk/grafik/images/social-icons/social_icon_vimeo.svg');
 }
