@@ -13,6 +13,7 @@ from django.db.models.functions import Coalesce
 from django.utils import six
 from django.template.context import make_context
 from django.utils import timezone
+from django.utils.crypto import get_random_string
 from djorm_pgfulltext.models import SearchManager
 from djorm_pgfulltext.fields import VectorField
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -486,6 +487,8 @@ class EmailTemplateType(
     NOTIFY_TEACHER__ASSOCIATED = 21  # Ticket 15701
     NOTIFY_ALL_EVALUATION = 22  # Ticket 15701
     NOTIFY_GUEST__BOOKING_CREATED_UNTIMED = 23  # Ticket 16914
+    NOTIFY_GUEST__EVALUATION_FIRST = 24  # Ticket 13819
+    NOTIFY_GUEST__EVALUATION_SECOND = 25  # Ticket 13819
 
     @staticmethod
     def get(template_key):
@@ -868,6 +871,29 @@ class EmailTemplateType(
             name_da=u'Besked til bruger ved brugeroprettelse',
             form_show=False,
             ordering=23
+        )
+
+        EmailTemplateType.set_default(
+            EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST,
+            name_da=u'Besked til bruger angående evaluering (første besked)',
+            form_show=True,
+            send_to_booker=True,
+            enable_autosend=True,
+            enable_booking=True,
+            is_default=True,
+            ordering=24
+        )
+
+        EmailTemplateType.set_default(
+            EmailTemplateType.NOTIFY_GUEST__EVALUATION_SECOND,
+            name_da=u'Besked til bruger angående evaluering (anden besked)',
+            form_show=True,
+            send_to_booker=True,
+            enable_autosend=True,
+            enable_booking=True,
+            enable_days=True,
+            is_default=True,
+            ordering=25
         )
 
     @staticmethod
@@ -2902,6 +2928,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         if last_workflow_status is None or \
                 last_workflow_status != self.workflow_status:
             self.last_workflow_update = timezone.now()
+            if self.workflow_status == self.WORKFLOW_STATUS_EXECUTED:
+                if self.evaluation is not None:
+                    self.evaluation.send_first_notification()
 
     @property
     # QuerySet that finds EventTimes that will be affected by resource changes
@@ -4971,6 +5000,7 @@ class Booking(models.Model):
 
     def autosend(self, template_type, recipients=None,
                  only_these_recipients=False):
+
         visit = self.visit.real
         if visit.autosend_enabled(template_type):
             product = visit.product
@@ -4995,6 +5025,8 @@ class Booking(models.Model):
                 self.visit,
                 organizationalunit=unit
             )
+            return True
+        return False
 
     def as_searchtext(self):
         return " ".join([unicode(x) for x in [
@@ -5417,6 +5449,143 @@ class BookerResponseNonce(models.Model):
         attrs.update(kwargs)
 
         return cls.objects.create(**attrs)
+
+
+class Evaluation(models.Model):
+    url = models.CharField(
+        max_length=1024,
+        verbose_name=u'Evaluerings-URL'
+    )
+    visit = models.OneToOneField(
+        Visit,
+        null=False,
+        blank=False
+    )
+    guests = models.ManyToManyField(
+        Guest,
+        through='EvaluationGuest'
+    )
+
+    def send_notification(self, template_type, new_status, filter=None):
+        qs = self.evaluationguest_set.all()
+        if filter is not None:
+            qs = qs.filter(**filter)
+        for evalguest in qs:
+            for booking in evalguest.guest.booking_set.filter(
+                visit=self.visit
+            ):
+                # There really should be only one here
+                try:
+                    sent = booking.autosend(
+                        template_type
+                    )
+                    if sent:
+                        evalguest.status = new_status
+                        evalguest.save()
+                except Exception as e:
+                    print e
+
+    def send_first_notification(self):
+        self.send_notification(
+            EmailTemplateType.notify_guest__evaluation_first,
+            EvaluationGuest.STATUS_FIRST_SENT
+        )
+
+    def send_second_notification(self):
+        self.send_notification(
+            EmailTemplateType.notify_guest__evaluation_second,
+            EvaluationGuest.STATUS_SECOND_SENT,
+            {'status': EvaluationGuest.STATUS_FIRST_SENT}
+        )
+
+    def status_count(self, status):
+        return self.evaluationguest_set.filter(status=status).count()
+
+    def no_participation_count(self):
+        return self.status_count(EvaluationGuest.STATUS_NO_PARTICIPATION)
+
+    def not_sent_count(self):
+        return self.status_count(EvaluationGuest.STATUS_NOT_SENT)
+
+    def first_sent_count(self):
+        return self.status_count(EvaluationGuest.STATUS_FIRST_SENT)
+
+    def second_sent_count(self):
+        return self.status_count(EvaluationGuest.STATUS_SECOND_SENT)
+
+    def link_clicked_count(self):
+        return self.status_count(EvaluationGuest.STATUS_LINK_CLICKED)
+
+
+class EvaluationGuest(models.Model):
+    evaluation = models.ForeignKey(
+        Evaluation,
+        null=False,
+        blank=False
+    )
+    guest = models.OneToOneField(
+        Guest,
+        null=False,
+        blank=False
+    )
+    STATUS_NO_PARTICIPATION = 0
+    STATUS_NOT_SENT = 1
+    STATUS_FIRST_SENT = 2
+    STATUS_SECOND_SENT = 3
+    STATUS_LINK_CLICKED = 4
+    status_choices = [
+        (STATUS_NO_PARTICIPATION, _(u'Modtager ikke evaluering')),
+        (STATUS_NOT_SENT, _(u'Ikke afholdt / ikke afsendt')),
+        (STATUS_FIRST_SENT, _(u'Sendt første gang')),
+        (STATUS_SECOND_SENT, _(u'Sendt anden gang')),
+        (STATUS_LINK_CLICKED, _(u'Har klikket på link'))
+    ]
+    status = models.SmallIntegerField(
+        choices=status_choices,
+        verbose_name=u'status'
+    )
+    shortlink_id = models.CharField(
+        max_length=16,
+    )
+
+    @property
+    def shortlink(self):
+        return "http://localhost:8000/l/%s" % self.shortlink_id
+
+    @property
+    def status_display(self):
+        for status, label in self.status_choices:
+            if status == self.status:
+                return label
+
+    def save(self, *args, **kwargs):
+        if self.shortlink_id is None or len(self.shortlink_id) == 0:
+            self.shortlink_id = ''.join(get_random_string(length=13))
+        return super(EvaluationGuest, self).save(*args, **kwargs)
+
+    @property
+    def url(self):
+        template = Template(
+            "{% load booking_tags %}" +
+            "{% load i18n %}" +
+            "{% language 'da' %}\n" +
+            unicode(self.evaluation.url) +
+            "{% endlanguage %}\n"
+        )
+        context = make_context({
+            'evaluation': self.evaluation,
+            'guest': self.guest,
+            'visit': self.evaluation.visit
+        })
+
+        rendered = template.render(context)
+        return rendered
+
+        # return self.evaluation.url
+
+    def link_clicked(self):
+        self.status = self.STATUS_LINK_CLICKED
+        self.save()
 
 
 from booking.resource_based import models as rb_models  # noqa

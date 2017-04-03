@@ -95,6 +95,12 @@
                             </h4>
                         </a>
                     {% endif %}
+                    <a class="list-group-item" href="{% url 'visit-evaluation-statistics' %}">
+                        <h4 class="list-group-item-heading">
+                            {% trans 'Evalueringer' %}
+                            <span class="glyphicon glyphicon-question-sign pull-right" data-toggle="tooltip" data-placement="right" title="{% trans 'Her kan du se statistik over evalueringer' %}"></span>
+                        </h4>
+                    </a>
                 </div>
             {% endif %}
         </div>
