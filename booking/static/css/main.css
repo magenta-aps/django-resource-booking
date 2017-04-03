@@ -1429,30 +1429,44 @@ a.template-overridden, a.template-overridden:hover, a.template-overridden:active
 
 /* MultiProductVisit BEGIN */
 
-#deselected-product-list li .movebutton, #deselected-product-list li .deselectbutton, #confirm-product-list li .movebutton, #confirm-product-list li .deselectbutton {
+#deselected-product-list li .movebutton,
+#deselected-product-list li .deselectbutton,
+#confirm-product-list li .movebutton,
+#confirm-product-list li .deselectbutton {
     display: none;
 }
 
-#deselected-product-list, #selected-product-list, #confirm-product-list {
+#deselected-product-list,
+#selected-product-list,
+#confirm-product-list {
     font-size: 1.5em;
     list-style-type: none;
+}
+
+#selected-product-list li {
+    cursor: move;
 }
 
 #selected-product-list li .movebutton {
     cursor: move;
 }
 
-#selected-product-list li .selectbutton, #selected-product-list li .teaser, #confirm-product-list li .selectbutton, #confirm-product-list li .teaser {
+#selected-product-list li .selectbutton,
+#selected-product-list li .teaser,
+#confirm-product-list li .selectbutton,
+#confirm-product-list li .teaser {
     display: none;
 }
 
-#selected-product-list li .title, #confirm-product-list li .title {
+#selected-product-list li .title,
+#confirm-product-list li .title {
     display: inline-block;
     font-weight: normal;
     margin: 0 0 5px;
 }
 
-#mpvform #deselected-product-list li#placeholder, #mpvform #drawhelp {
+#mpvform #deselected-product-list li#placeholder,
+#mpvform #drawhelp {
     display: none;
 }
 
@@ -2092,7 +2106,9 @@ body.lightbox {
     background-color: #f4f4f4;
 }
 
-.nav-tabs>li.active>button, .nav-tabs>li.active>button:focus, .nav-tabs>li.active>button:hover {
+.nav-tabs>li.active>button,
+.nav-tabs>li.active>button:focus,
+.nav-tabs>li.active>button:hover {
     color: #555;
     cursor: default;
     background-color: #fff;
@@ -2100,7 +2116,9 @@ body.lightbox {
     border-bottom-color: transparent;
 }
 
-.nav-tabs>li>a:hover {
+.nav-tabs>li>a:hover,
+.nav>li.disabled>a:focus,
+.nav>li.disabled>a:hover {
     border: 0;
     border-top: 1px solid #fff;
     background-color: #ddd;
