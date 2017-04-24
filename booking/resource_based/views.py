@@ -11,7 +11,7 @@ from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic.edit import FormView, DeleteView
 
 from django.forms.widgets import TextInput, HiddenInput
-from booking.models import OrganizationalUnit, Product
+from booking.models import OrganizationalUnit, Product, Visit
 from booking.resource_based.forms import ResourceTypeForm, EditResourceForm
 from booking.resource_based.forms import ResourcePoolTypeForm
 from booking.resource_based.forms import EditResourcePoolForm
@@ -535,6 +535,17 @@ class ResourceDeleteView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
 
     def get_object(self):
         return Resource.get_subclass_instance(self.kwargs.get("pk"))
+
+    def get_context_data(self, **kwargs):
+        context = {}
+        context['affected_visits'] = self.object.visitresource.filter(
+            visit__eventtime__product__time_mode=
+            Product.TIME_MODE_RESOURCE_CONTROLLED_AUTOASSIGN
+        )
+        context.update(kwargs)
+        return super(ResourceDeleteView, self).get_context_data(
+            **context
+        )
 
     def get_breadcrumbs(self):
         return [
