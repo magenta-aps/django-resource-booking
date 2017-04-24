@@ -222,11 +222,7 @@
                             {% blocktrans with found=object.assigned_teachers|length needed=object.total_required_teachers %}{{ found }}/{{ needed }} undervisere fundet{% endblocktrans %}
                             </div>
                             {% if can_edit %}
-<<<<<<< HEAD
                                 <div class="{{ right_class }}">
-=======
-                                <div class="col-sm-2">
->>>>>>> develop
                                     <a href="{% if object.product.is_resource_controlled %}{% url 'visit-resources-edit' object.pk %}{% else %}{% url 'change-visit-teachers' object.pk %}{% endif %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Redigér' %}</a>
                                 </div>
                             {% elif request.user.userprofile.is_teacher %}
@@ -257,11 +253,7 @@
                                 {% blocktrans with found=object.assigned_hosts|length needed=object.total_required_hosts %}{{ found }}/{{ needed }} værter fundet{% endblocktrans %}
                             </div>
                             {% if can_edit %}
-<<<<<<< HEAD
                                 <div class="{{ right_class }}">
-=======
-                                <div class="col-sm-2">
->>>>>>> develop
                                     <a href="{% if object.product.is_resource_controlled %}{% url 'visit-resources-edit' object.pk %}{% else %}{% url 'change-visit-hosts' object.pk %}{% endif %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Redigér' %}</a>
                                 </div>
                             {% elif request.user.userprofile.is_host %}
@@ -371,11 +363,7 @@
                             <strong class="{{ left_class }}">
                                 {% trans 'Nylige ændringer' %}
                             </strong>
-<<<<<<< HEAD
                             <div class="{{ center_class }}">
-=======
-                            <div class="col-sm-5">
->>>>>>> develop
                                 <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
                                 {% trans 'Dette besøg er markeret som havende nylige ændringer' %}.
                             </div>
