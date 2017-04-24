@@ -3895,6 +3895,11 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         if self.product.time_mode == \
                 Product.TIME_MODE_RESOURCE_CONTROLLED_AUTOASSIGN:
             for requirement in self.product.resourcerequirement_set.all():
+                if requirement.being_deleted:
+                    # Deletion of VisitResources can start this process, but
+                    # we must ignore requirements that are scheduled for
+                    # deletion.
+                    continue
                 assigned = self.resources.filter(
                     visitresource__resource_requirement=requirement
                 )
