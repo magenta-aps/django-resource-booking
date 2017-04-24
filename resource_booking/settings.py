@@ -267,4 +267,3 @@ CRON_CLASSES = [
     "booking.cron.NotifyEventTimeJob",
     "booking.cron.EvaluationReminderJob"
 ]
-
