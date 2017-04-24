@@ -1334,10 +1334,10 @@ class ResourceRequirement(AvailabilityUpdaterMixin, models.Model):
         )
 
     def has_free_resources_between(self, from_dt, to_dt, amount=1):
-        if amount <= 0:
-            return True
         if self.resource_pool is None:
             return False
+        if amount <= 0:
+            return True
 
         count = 0
 
@@ -1351,6 +1351,8 @@ class ResourceRequirement(AvailabilityUpdaterMixin, models.Model):
         return False
 
     def is_fullfilled_for(self, visit):
+        if self.resource_pool is None:
+            return False
         return VisitResource.objects.filter(
             visit=visit,
             resource_requirement=self
