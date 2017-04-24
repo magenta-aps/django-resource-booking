@@ -536,17 +536,6 @@ class ResourceDeleteView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
     def get_object(self):
         return Resource.get_subclass_instance(self.kwargs.get("pk"))
 
-    def get_context_data(self, **kwargs):
-        context = {}
-        autoassign = Product.TIME_MODE_RESOURCE_CONTROLLED_AUTOASSIGN
-        context['affected_visits'] = self.object.visitresource.filter(
-            visit__eventtime__product__time_mode=autoassign
-        )
-        context.update(kwargs)
-        return super(ResourceDeleteView, self).get_context_data(
-            **context
-        )
-
     def get_breadcrumbs(self):
         return [
             {'url': reverse('resource-list'), 'text': _(u'Ressourcer')},
