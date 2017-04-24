@@ -13,10 +13,10 @@
         {% csrf_token %}
         <p>{% trans 'Er du sikker på at du vil slette denne ressource?' %}</p>
 
-        {% if affected_visits.count %}
-            <p>{% trans 'Disse besøg påvirkes af ressourceændringen. Bemærk at det kun er tilbud af typen automatisk ressourcestyring som vises.' %}</p>
+        {% if object.visitresource.count %}
+            <p>{% trans 'Dette vil have indflydelse på eksisterende besøg, der benytter denne ressource:' %}</p>
             <ul>
-            {% for visitresource in affected_visits %}
+            {% for visitresource in object.visitresource.all %}
                 <li><a href="{% url "visit-view" visitresource.visit.id %}">{{ visitresource.visit }}</a></li>
             {% endfor %}
             </ul>
