@@ -104,7 +104,7 @@
                     <h2>{% trans 'Statusoverblik' %}</h2>
                     {% if not object.can_assign_resources %}
                         <div class="row">
-                            <p class="{{ center_class }}">
+                            <p class="col-sm-12">
                                 {% blocktrans with text=object.BEING_PLANNED_STATUS_TEXT %}
                                     Dette er et færdigplanlagt besøg, og statussen bør derfor ændres til '{{ text }}' inden ændringer i ressourcerne foretages.
                                     Vær opmærksom på at en ændring i de tildelte ressourcegrupper også medfører ændringer i det færdigplanlagte besøg.
