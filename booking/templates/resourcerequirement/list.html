@@ -37,18 +37,28 @@
         <tbody>
         {% for resourcerequirement in resourcerequirements.all %}
             <tr>
-                <td>
-                    <a href="{% url 'resourcepool-view' resourcerequirement.resource_pool.id %}">{{ resourcerequirement.resource_pool.name }}</a>
-                </td>
-                <td>
-                    {{ resourcerequirement.resource_pool.resource_type.name }}
-                </td>
-                <td {% if resourcerequirement.required_amount|gt:resourcerequirement.resource_pool.resources.count %}class="text-danger"{% endif %}>
-                    {{ resourcerequirement.required_amount }}
-                </td>
-                <td>
-                    {{ resourcerequirement.resource_pool.resources.count }}
-                </td>
+                {% if resourcerequirement.resource_pool %}
+                    <td>
+                        <a href="{% url 'resourcepool-view' resourcerequirement.resource_pool.id %}">{{ resourcerequirement.resource_pool.name }}</a>
+                    </td>
+                    <td>
+                        {{ resourcerequirement.resource_pool.resource_type.name }}
+                    </td>
+                    <td {% if resourcerequirement.required_amount|gt:resourcerequirement.resource_pool.resources.count %}class="text-danger"{% endif %}>
+                        {{ resourcerequirement.required_amount }}
+                    </td>
+                    <td>
+                        {{ resourcerequirement.resource_pool.resources.count }}
+                    </td>
+                {% else %}
+                    <td colspan="2" class="text-danger">
+                        {% trans 'Ingen ressourcegruppe angivet' %}
+                    </td>
+                    <td>
+                        {{ resourcerequirement.required_amount }}
+                    </td>
+                    <td></td>
+                {% endif %}
                 <td>
                     <a href="{% url 'resourcerequirement-edit' resourcerequirement.product.id resourcerequirement.id %}?back={{ request.get_full_path | urlencode }}" role="button" class="btn btn-primary btn-xs">{% trans 'Redigér' %}</a>
                     {% if resourcerequirement.can_delete %}

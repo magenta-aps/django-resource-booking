@@ -3802,6 +3802,13 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                     ),
                     'is_host': (type.id == ResourceType.RESOURCE_TYPE_HOST)
                 })
+        for requirement in self.product.resourcerequirement_set.filter(
+            resource_pool__isnull=True
+        ):
+            details.append({
+                'unknown': True,
+                'id': requirement.id
+            })
         return details
 
     @property

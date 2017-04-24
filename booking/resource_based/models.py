@@ -1,6 +1,7 @@
 # encoding: utf-8
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.db.models.deletion import SET_NULL
 from django.contrib.auth import models as auth_models
 from django.core.urlresolvers import reverse
 from django.utils import formats
@@ -1305,7 +1306,10 @@ class ResourceRequirement(AvailabilityUpdaterMixin, models.Model):
     product = models.ForeignKey("Product")
     resource_pool = models.ForeignKey(
         ResourcePool,
-        verbose_name=_(u"Ressourcegruppe")
+        verbose_name=_(u"Ressourcegruppe"),
+        null=True,
+        blank=False,
+        on_delete=SET_NULL
     )
     required_amount = models.IntegerField(
         verbose_name=_(u"Påkrævet antal"),
@@ -1332,6 +1336,8 @@ class ResourceRequirement(AvailabilityUpdaterMixin, models.Model):
     def has_free_resources_between(self, from_dt, to_dt, amount=1):
         if amount <= 0:
             return True
+        if self.resource_pool is None:
+            return False
 
         count = 0
 
