@@ -1,5 +1,5 @@
-from django.db.models.signals import post_save
-from booking.models import Guest
+from django.db.models.signals import post_save, post_delete
+from booking.models import Guest, VisitResource
 from booking.models import Booking, ClassBooking, TeacherBooking
 from booking.models import Product
 from booking.models import Visit
@@ -51,3 +51,10 @@ def on_booker_save(sender, instance, **kwargs):
             run_searchindex_for_object(vo)
 
 post_save.connect(on_booker_save, sender=Guest)
+
+
+def on_resourcevisit_delete(sender, instance, using, **kwargs):
+    if instance.visit is not None:
+        instance.visit.autoassign_resources()
+
+post_delete.connect(on_resourcevisit_delete, sender=VisitResource)
