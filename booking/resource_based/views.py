@@ -720,10 +720,11 @@ class ResourcePoolDeleteView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
             request, *args, **kwargs
         )
 
-
     def get_context_data(self, **kwargs):
         context = {}
-        context['affected_visits'] = Visit.objects.filter(visitresource__resource_requirement__resource_pool=self.object).distinct()
+        context['affected_visits'] = Visit.objects.filter(
+            visitresource__resource_requirement__resource_pool=self.object
+        ).distinct()
         context.update(kwargs)
         return super(ResourcePoolDeleteView, self).get_context_data(
             **context

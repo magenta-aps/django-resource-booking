@@ -276,7 +276,8 @@ class EditVisitResourceForm(forms.Form):
             resourcefield.label = \
                 resource_requirement.resource_pool.resource_type.plural or \
                 resource_requirement.resource_pool.resource_type.name
-            resourcefield.label_suffix = resource_requirement.resource_pool.name
+            resourcefield.label_suffix = \
+                resource_requirement.resource_pool.name
 
             resourcefield.choices = [
                 (resource.id, resource.get_name())
