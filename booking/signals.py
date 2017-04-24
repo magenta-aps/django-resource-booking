@@ -1,5 +1,7 @@
-from django.db.models.signals import post_save, post_delete
-from booking.models import Guest, VisitResource
+from django.db.models.signals import post_save, post_delete, pre_delete
+from django.dispatch import receiver
+
+from booking.models import Guest, VisitResource, ResourceRequirement
 from booking.models import Booking, ClassBooking, TeacherBooking
 from booking.models import Product
 from booking.models import Visit
@@ -53,8 +55,13 @@ def on_booker_save(sender, instance, **kwargs):
 post_save.connect(on_booker_save, sender=Guest)
 
 
-def on_resourcevisit_delete(sender, instance, using, **kwargs):
+@receiver(pre_delete, sender=ResourceRequirement)
+def before_requirement_delete(sender, instance, using, **kwargs):
+    instance.being_deleted = True
+    instance.save()
+
+
+@receiver(post_delete, sender=VisitResource)
+def on_visitresource_delete(sender, instance, using, **kwargs):
     if instance.visit is not None:
         instance.visit.autoassign_resources()
-
-post_delete.connect(on_resourcevisit_delete, sender=VisitResource)

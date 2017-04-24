@@ -1312,6 +1312,15 @@ class ResourceRequirement(AvailabilityUpdaterMixin, models.Model):
         validators=[MinValueValidator(1)]
     )
 
+    # For avoiding an IntegrityError when deleting Requirements:
+    # A pre_delete signal will set this flag, and Visit.autoassign_resources()
+    # will then ignore this requirement. If we don't do this, the requirement
+    # slated for deletion can cause a new VisitResource to be created in
+    # Visit.autoassign_resources(), referencing the deleted requirement.
+    being_deleted = models.BooleanField(
+        default=False
+    )
+
     def can_delete(self):
         return True
 
