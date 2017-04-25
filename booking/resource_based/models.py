@@ -1105,7 +1105,7 @@ class UserResource(Resource):
         )
 
     def get_name(self):
-        return unicode(self.user.get_full_name())
+        return unicode(self.user.username)
 
     def can_delete(self):
         return False
