@@ -1,7 +1,7 @@
 <p>Kære {{ recipient.get_full_name }}.</p>
 
 <p>
-    Du har ønsket mindst {{ visit.real.required_visits }} af følgende besøg:
+    Du har ønsket mindst {{ visit.real.required_visits }} af følgende besøg den {{ visit.real.eventtime.start|date:'d.m.Y' }}:
     <ul>
     {% for product in visit.real.products %}
         <li><a href="{% full_url 'product-view' product.id %}">{{ product.title }}</a></li>
