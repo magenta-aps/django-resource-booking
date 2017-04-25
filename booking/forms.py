@@ -1211,7 +1211,7 @@ class EmailTemplateForm(forms.ModelForm):
         fields = ('type', 'subject', 'body', 'organizationalunit')
         widgets = {
             'subject': TextInput(attrs={'class': 'form-control'}),
-            'body': Textarea(attrs={'rows': 10, 'cols': 90}),
+            'body': Textarea(attrs={'class': 'form-control'}),
         }
 
     def __init__(self, user, *args, **kwargs):
@@ -1264,7 +1264,7 @@ class BaseEmailComposeForm(forms.Form):
 
     body = forms.CharField(
         max_length=65584,
-        widget=Textarea(attrs={'rows': 10, 'cols': 90}),
+        widget=Textarea(attrs={'class': 'form-control'}),
         label=_(u'Tekst')
     )
 
