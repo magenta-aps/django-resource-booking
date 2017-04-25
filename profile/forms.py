@@ -13,19 +13,21 @@ class UserCreateForm(UserCreationForm):
     role = ModelChoiceField(
         required=True,
         queryset=UserRole.objects.all(),
-        label=_(u'Rolle')
+        label=_(u'Rolle'),
+        widget=forms.Select(attrs={'class': 'form-control'})
     )
     organizationalunit = ModelChoiceField(
         required=True,
         queryset=OrganizationalUnit.objects.all(),
-        label=_(u'Enhed')
+        label=_(u'Enhed'),
+        widget=forms.Select(attrs={'class': 'form-control'})
     )
     additional_information = forms.CharField(
-        widget=forms.Textarea,
         required=False,
         label=UserProfile._meta.get_field_by_name(
             'additional_information'
-        )[0].verbose_name
+        )[0].verbose_name,
+        widget=forms.Textarea(attrs={'class': 'form-control'})
     )
 
     class Meta:
