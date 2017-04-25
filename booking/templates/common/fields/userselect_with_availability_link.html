@@ -28,10 +28,12 @@
                             {% trans 'Se detaljer' %}
                             <span class="glyphicon glyphicon-new-window"></span>
                         </a>
-                        <a href="{% url 'availability' pk %}#todaysdate" role="button" class="btn btn-default btn-xs" onclick="this.target='_blank';">
-                            {% trans 'Kalender' %}
-                            <span class="glyphicon glyphicon-new-window"></span>
-                        </a>
+                        {% if user_resources and user_resources|get:pk %}
+                            <a href="{% url 'calendar' user_resources|get:pk %}#todaysdate" role="button" class="btn btn-default btn-xs" onclick="this.target='_blank';">
+                                {% trans 'Kalender' %}
+                                <span class="glyphicon glyphicon-new-window"></span>
+                            </a>
+                        {% endif %}
                     </label>
                 </div>
                 {% endfor %}
