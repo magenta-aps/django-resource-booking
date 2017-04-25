@@ -12,15 +12,15 @@ var KU = KU || {};
             $end = $root.find('div.end-input input').first(),
             $specific = $root.find('div.specific-time-input input').first();
 
-        function zero_pad(int_val) {
+        var zero_pad = function(int_val) {
             if (int_val < 10) {
                 return "0" + int_val;
             } else {
                 return int_val;
             }
-        }
+        };
 
-        function text_to_jsdate(text_value) {
+        var text_to_jsdate = function(text_value) {
             if (!text_value) {
                 return new Date();
             }
@@ -28,7 +28,7 @@ var KU = KU || {};
                 time_text = text_value.substr(11) || '',
                 time_parts = time_text.split(/[:]/);
 
-            if (date_parts[0].length != 4) {
+            if (date_parts[0].length !== 4) {
                 date_parts = date_parts.reverse();
             }
 
@@ -40,9 +40,9 @@ var KU = KU || {};
                 time_parts[1] || 0,
                 time_parts[2] || 0
             );
-        }
+        };
 
-        function format_datetime(jsdate) {
+        var format_datetime = function(jsdate) {
             return [
                 zero_pad(jsdate.getDate()),
                 zero_pad(jsdate.getMonth() + 1),
@@ -52,9 +52,9 @@ var KU = KU || {};
                 zero_pad(jsdate.getMinutes()),
                 "00"
             ].join(":");
-        }
+        };
 
-        function iso_datetime(jsdate) {
+        var iso_datetime = function(jsdate) {
             return [
                 jsdate.getFullYear(),
                 zero_pad(jsdate.getMonth() + 1),
@@ -64,9 +64,9 @@ var KU = KU || {};
                 zero_pad(jsdate.getMinutes()),
                 "00"
             ].join(":");
-        }
+        };
 
-        function update_widgets() {
+        var update_widgets = function() {
             var from = text_to_jsdate($start.val()),
                 from_txt = format_datetime(from),
                 to = text_to_jsdate($end.val()),
@@ -74,9 +74,9 @@ var KU = KU || {};
 
             // If we're using full days we want the widgets to use one day
             // earlier.
-            if ($time_mode.val() == "full_days") {
+            if ($time_mode.val() === "full_days") {
                 $specific.val("");
-                if(from_txt.substr(0, 10) != to_txt.substr(0, 10)) {
+                if (from_txt.substr(0, 10) !== to_txt.substr(0, 10)) {
                     to.setTime(to.getTime() - 24 * 60 * 60 * 1000);
                     to_txt = format_datetime(to);
                 }
@@ -88,38 +88,36 @@ var KU = KU || {};
             $start_time.val(from_txt.substr(11, 5));
             $end_date.val(to_txt.substr(0, 10));
             $end_time.val(to_txt.substr(11, 5));
-        }
+        };
 
-        function next_day(date_val) {
-
+        var next_day = function(date_val) {
             // Add 24 hours
             date.setTime(date.getTime() + 24 * 60 * 60 * 1000);
-
             return [
                 zero_pad(date.getDate()),
                 zero_pad(date.getMonth() + 1),
                 date.getFullYear()
             ].join(".");
-        }
+        };
 
-        function update_datetimes() {
+        var update_datetimes = function() {
             var start_date_val = $start_date.val() || '',
                 time_mode_val = $time_mode.val() || '',
                 duration_in_min = $time_mode.attr('data-duration-in-minutes'),
                 from, to, from_txt, to_txt;
 
-            if(!start_date_val) {
+            if (!start_date_val) {
                 $start.val('');
                 $end.val('');
                 $output.text($output.attr('data-no-date-selected-text'));
-            } else if(time_mode_val == 'full_days') {
+            } else if (time_mode_val === 'full_days') {
                 from = text_to_jsdate(start_date_val);
                 to = text_to_jsdate($end_date.val());
 
                 from_txt = format_datetime(from).substr(0, 10);
                 to_txt = format_datetime(to).substr(0, 10);
 
-                if(from_txt != to_txt) {
+                if (from_txt !== to_txt) {
                     $output.text(from_txt + " - " + to_txt);
                 } else {
                     $output.text(from_txt);
@@ -127,7 +125,7 @@ var KU = KU || {};
 
                 // The end-time we want to save is midnight of the next day
                 to.setTime(to.getTime() + 24 * 60 * 60 * 1000);
-            } else if(time_mode_val == 'use_duration') {
+            } else if (time_mode_val === 'use_duration') {
                 from = text_to_jsdate(start_date_val + " " + $start_time.val());
                 to = new Date(from.getTime());
                 to.setTime(to.getTime() + duration_in_min * 60 * 1000);
@@ -136,7 +134,7 @@ var KU = KU || {};
                     " - " +
                     format_datetime(to).substr(11, 5)
                 );
-            } else if(time_mode_val == 'time_and_date') {
+            } else if (time_mode_val === 'time_and_date') {
                 from = text_to_jsdate(
                     start_date_val + " " + $start_time.val()
                 );
@@ -159,7 +157,7 @@ var KU = KU || {};
             if(update_callback) {
                 update_callback();
             }
-        }
+        };
 
         $root.find('.input-daterange').datepicker({
             language: 'da',
@@ -178,26 +176,27 @@ var KU = KU || {};
             'afterDone': update_datetimes
         });
 
-        $time_mode.on("change", function() {
-            var val = $(this).val(),
+        var on_timemode_change = function() {
+            var val = $time_mode.val(),
                 $time_widgets = $root.find('div.input-group.clockpicker');
-            if(val == 'full_days') {
+            if (val === 'full_days') {
                 $time_widgets.hide();
                 $end_date.removeAttr('disabled');
                 $end_time.removeAttr('disabled');
-            } else if(val == 'use_duration') {
+            } else if (val === 'use_duration') {
                 $time_widgets.show();
                 $end_date.attr('disabled', 'disabled');
                 $end_time.attr('disabled', 'disabled');
-            } else if(val == 'time_and_date') {
+            } else if (val === 'time_and_date') {
                 $time_widgets.show();
                 $end_date.removeAttr('disabled');
                 $end_time.removeAttr('disabled');
             }
             update_datetimes();
-        });
+        };
 
+        $time_mode.on("change", on_timemode_change);
+        on_timemode_change();
         update_widgets();
-        // $time_mode.trigger("change");
     };
 })(KU);
