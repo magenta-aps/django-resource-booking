@@ -83,29 +83,27 @@
                 <ul class="list-unstyled">
                 {% for otheruser in users %}
                 <li class="media">
-                    <div class=" row">
-                        <div class="col-sm-2 userlist-label">{% trans 'Navn:' %}</div>
-                        <div class="col-sm-5">
-                            {% if otheruser.get_full_name %}
-                            {{ otheruser.get_full_name }} ({{ otheruser.username }})
-                            {% else %}
-                            "{{ otheruser.username }}"
-                            {% endif %}
-                            {% if user == otheruser or otheruser.userprofile.get_role in user.userprofile.available_roles %}
-                                <a href="{% url 'user_edit' otheruser.pk %}">{% trans 'Redigér' %}</a>
-                                <a href="{% url 'user_delete' otheruser.pk %}">{% trans 'Slet' %}</a>
-                            {% endif %}
-                        </div>
+                    <div class="row">
+                        <div class="col-sm-2 userlist-label">{% trans 'Brugernavn:' %}</div>
+                        <div class="col-sm-5">{{ otheruser.username }}</div>
+                        {% if user == otheruser or otheruser.userprofile.get_role in user.userprofile.available_roles %}
+                            <a href="{% url 'user_edit' otheruser.pk %}">{% trans 'Redigér' %}</a>
+                            <a href="{% url 'user_delete' otheruser.pk %}">{% trans 'Slet' %}</a>
+                        {% endif %}
                     </div>
-                    <div class=" row">
+                    <div class="row">
+                        <div class="col-sm-2 userlist-label">{% trans 'Navn:' %}</div>
+                        <div class="col-sm-5">{{ otheruser.get_full_name }}</div>
+                    </div>
+                    <div class="row">
                         <div class="col-sm-2 userlist-label">{% trans 'Email:' %}</div>
                         <div class="col-sm-5">{{ otheruser.email }}</div>
                     </div>
-                    <div class=" row">
+                    <div class="row">
                         <div class="col-sm-2 userlist-label">{% trans 'Enhed:' %}</div>
                         <div class="col-sm-5">{{ otheruser.userprofile.organizationalunit.name }}</div>
                     </div>
-                    <div class=" row">
+                    <div class="row">
                         <div class="col-sm-2 userlist-label">{% trans 'Rolle:' %}</div>
                         <div class="col-sm-5">{{ otheruser.userprofile.get_role_name }}</div>
                     </div>
