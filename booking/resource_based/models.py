@@ -969,15 +969,11 @@ class Resource(AvailabilityUpdaterMixin, models.Model):
         return True
 
     def resource_assigned_query(self):
-        return None
+        return Q(visit__resources=self)
 
     def occupied_eventtimes(self, dt_from=None, dt_to=None):
-        query = Q(visit__resources=self)
-        extra_query = self.resource_assigned_query()
-        if extra_query:
-            query |= extra_query
         qs = EventTime.objects.filter(
-            query
+            self.resource_assigned_query()
         ).exclude(
             visit__workflow_status=Visit.WORKFLOW_STATUS_CANCELLED
         )
@@ -1191,7 +1187,8 @@ class TeacherResource(UserResource):
     resource_type_id = ResourceType.RESOURCE_TYPE_TEACHER
 
     def resource_assigned_query(self):
-        return Q(visit__teachers=self.user)
+        return super(TeacherResource, self).resource_assigned_query() | \
+               Q(visit__teachers=self.user)
 
 
 class HostResource(UserResource):
@@ -1199,7 +1196,8 @@ class HostResource(UserResource):
     resource_type_id = ResourceType.RESOURCE_TYPE_HOST
 
     def resource_assigned_query(self):
-        return Q(visit__hosts=self.user)
+        return super(HostResource, self).resource_assigned_query() | \
+               Q(visit__hosts=self.user)
 
 
 class RoomResource(Resource):
@@ -1240,6 +1238,10 @@ class RoomResource(Resource):
             unit = room.locality.organizationalunit
         room_resource = RoomResource(room=room, organizationalunit=unit)
         room_resource.save()
+
+    def resource_assigned_query(self):
+        return super(RoomResource, self).resource_assigned_query() | \
+               Q(visit__rooms=self.room)
 
 
 class NamedResource(Resource):
