@@ -43,7 +43,12 @@ class ChangeVisitTeachersForm(forms.ModelForm):
     class Meta:
         model = Visit
         fields = ['teachers', 'override_needed_teachers']
-        widgets = {'teachers': forms.CheckboxSelectMultiple()}
+        widgets = {
+            'teachers': forms.CheckboxSelectMultiple(),
+            'override_needed_teachers': forms.Select(
+                attrs={'class': 'form-control'}
+            )
+        }
 
     send_emails = forms.BooleanField(
         label=_(u"Udsend e-mails til nye undervisere der tilknyttes"),
@@ -61,7 +66,12 @@ class ChangeVisitHostsForm(forms.ModelForm):
     class Meta:
         model = Visit
         fields = ['hosts', 'override_needed_hosts']
-        widgets = {'hosts': forms.CheckboxSelectMultiple()}
+        widgets = {
+            'hosts': forms.CheckboxSelectMultiple(),
+            'override_needed_hosts': forms.Select(
+                attrs={'class': 'form-control'}
+            )
+        }
 
     send_emails = forms.BooleanField(
         label=_(u"Udsend e-mails til nye værter der tilknyttes"),
