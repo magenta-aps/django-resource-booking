@@ -1,6 +1,7 @@
 # encoding: utf-8
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.db.models import Q
 from django.contrib.auth import models as auth_models
 from django.core.urlresolvers import reverse
 from django.utils import formats
@@ -523,7 +524,9 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
 
         # Not available on times when we are booked as a resource
         if hasattr(self, 'resource'):
-            for x in self.resource.occupied_eventtimes(from_dt, to_dt):
+            for x in self.resource.subclass_instance.occupied_eventtimes(
+                    from_dt, to_dt
+            ):
                 if not x.start or not x.end:
                     continue
                 yield CalendarEventInstance(
@@ -965,9 +968,16 @@ class Resource(AvailabilityUpdaterMixin, models.Model):
     def can_delete(self):
         return True
 
+    def resource_assigned_query(self):
+        return None
+
     def occupied_eventtimes(self, dt_from=None, dt_to=None):
+        query = Q(visit__resources=self)
+        extra_query = self.resource_assigned_query()
+        if extra_query:
+            query |= extra_query
         qs = EventTime.objects.filter(
-            visit__resources=self
+            query
         ).exclude(
             visit__workflow_status=Visit.WORKFLOW_STATUS_CANCELLED
         )
@@ -1158,15 +1168,38 @@ class UserResource(Resource):
             )
             user_resource.save()
 
+    @classmethod
+    def for_user(cls, user):
+        return cls.objects.filter(user=user).first()
+
+    @classmethod
+    def get_map(cls, queryset):
+        # This one puts the db lookup in a loop. We don't like that
+        # return {
+        #     x.id: cls.for_user(c)
+        #     for x in queryset.all()
+        # }
+        # This one extracts all the resources from db before looping them
+        return {
+            resource.user.id: resource.id
+            for resource in cls.objects.filter(user__in=queryset)
+        }
+
 
 class TeacherResource(UserResource):
     role = TEACHER
     resource_type_id = ResourceType.RESOURCE_TYPE_TEACHER
 
+    def resource_assigned_query(self):
+        return Q(visit__teachers=self.user)
+
 
 class HostResource(UserResource):
     role = HOST
     resource_type_id = ResourceType.RESOURCE_TYPE_HOST
+
+    def resource_assigned_query(self):
+        return Q(visit__hosts=self.user)
 
 
 class RoomResource(Resource):
