@@ -2457,9 +2457,11 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             hours = math.floor(mins / 60)
             mins = mins % 60
             if(hours == 1):
-                return _(u"1 time og %d minutter") % (mins)
+                return _(u"1 time og %(minutes)d minutter") % {'minutes': mins}
             else:
-                return _(u"%d timer og %d minutter") % (hours, mins)
+                return _(u"%(hours)d timer og %(minutes)d minutter") % {
+                    'hours': hours, 'minutes': mins
+                }
         else:
             return ""
 
@@ -3040,10 +3042,14 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     @property
     def date_display_context(self):
         if hasattr(self, 'eventtime') and self.eventtime.start:
-            return _("d. %s kl. %s") % (
-                formats.date_format(self.eventtime.naive_start, "DATE_FORMAT"),
-                formats.date_format(self.eventtime.naive_start, "TIME_FORMAT")
-            )
+            return _("d. %(date)s kl. %(time)s") % {
+                'date': formats.date_format(
+                    self.eventtime.naive_start, "DATE_FORMAT"
+                ),
+                'time': formats.date_format(
+                    self.eventtime.naive_start, "TIME_FORMAT"
+                )
+            }
         else:
             return _(u'på ikke-fastlagt tidspunkt')
 
@@ -3337,11 +3343,11 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         if self.is_multiproductvisit:
             return self.multiproductvisit.__unicode__()
         if hasattr(self, 'eventtime'):
-            return _(u'Besøg %s - %s - %s') % (
-                self.pk,
-                unicode(self.real.display_title),
-                unicode(self.eventtime.interval_display)
-            )
+            return _(u'Besøg %(id)s - %(title)s - %(time)s') % {
+                'id': self.pk,
+                'title': unicode(self.real.display_title),
+                'time': unicode(self.eventtime.interval_display)
+            }
         else:
             return unicode(_(u'Besøg %s - uden tidspunkt') % self.pk)
 
@@ -4235,11 +4241,12 @@ class MultiProductVisit(Visit):
 
     def __unicode__(self):
         if hasattr(self, 'eventtime'):
-            return _(u'Besøg %s - Prioriteret liste af %d underbesøg - %s') % (
-                self.pk,
-                self.subvisits_unordered.count(),
-                unicode(self.eventtime.interval_display)
-            )
+            return _(u'Besøg %(id)s - Prioriteret liste af '
+                     u'%(count)d underbesøg - %(time)s') % {
+                'id': self.pk,
+                'count': self.subvisits_unordered.count(),
+                'time': unicode(self.eventtime.interval_display)
+            }
         else:
             return unicode(_(u'Besøg %s - uden tidspunkt') % self.pk)
 
