@@ -28,7 +28,7 @@
                 </p>
             </div>
         </div>
-    {% elif product %}
+    {% elif product or visit %}
         <form name="reply-to-email-form" id="reply-to-email-form" method="post" action="{% url 'reply-to-email' object.reply_nonce %}">
             {% csrf_token %}
 
