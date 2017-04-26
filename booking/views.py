@@ -3525,12 +3525,18 @@ class EmailReplyView(BreadcrumbMixin, DetailView):
             return orig_obj.product
         elif type(orig_obj) == Product:
             return orig_obj
+        return None
 
+    def get_visit(self):
+        orig_obj = self.get_original_object()
+        if type(orig_obj) == Visit:
+            return orig_obj
         return None
 
     def get_context_data(self, **kwargs):
         context = {}
         context['form'] = self.get_form()
+        context['visit'] = self.get_visit()
         context['product'] = self.get_product()
         context['is_guest_mail'] = self.object.template_type.send_to_booker
         context.update(kwargs)
