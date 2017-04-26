@@ -1,4 +1,5 @@
 {% extends "index.html" %}
+{% load booking_tags %}
 
 {% block content %}
 <div class="divider"></div>
@@ -14,4 +15,8 @@
      </div>
 </form>
 <div class="divider"></div>
+{% endblock %}
+
+{% block extra_scripts %}
+    <script type="text/javascript" src="{% static "js/modalframe-guest.js" %}"></script>
 {% endblock %}
