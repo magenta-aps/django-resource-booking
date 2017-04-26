@@ -132,11 +132,11 @@
                                     {% trans 'Ikke angivet' %}
                                 {% endif %}
                             </div>
-                            {% if can_edit %}
-                                <div class="{{ right_class }}">
-                                    <a href="{% url 'change-visit-starttime' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Redigér' %}</a>
-                                </div>
-                            {% endif %}
+                        {% endif %}
+                        {% if can_edit %}
+                            <div class="{{ right_class }}">
+                                <a href="{% url 'change-visit-starttime' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Redigér' %}</a>
+                            </div>
                         {% endif %}
                     </div>
 
