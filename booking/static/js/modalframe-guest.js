@@ -13,12 +13,20 @@ window.modal = {
             this.parent.setHeight(this.id, height);
         }
     },
+    obtainChildrenHeight: function(element) {
+        var height = 0;
+        $(element).children().not("script").each(function() {
+            if (this.nodeName === "FORM") {
+                height += window.modal.obtainChildrenHeight(this);
+            } else {
+                height += $(this).outerHeight(true);
+            }
+        });
+        return height;
+    },
     documentHeight: 0,
     updateHeight: function() {
-        var height = 0;
-        $(document.body).children().not("script").each(function(){
-            height += $(this).outerHeight(true);
-        });
+        var height = window.modal.obtainChildrenHeight(document.body);
         if (height != this.documentHeight) {
             this.documentHeight = height;
             this.setHeight(height);
