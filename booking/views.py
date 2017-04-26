@@ -3551,6 +3551,9 @@ class EmailReplyView(BreadcrumbMixin, DetailView):
             visit = self.get_visit()
             reply = form.cleaned_data.get('reply', "").strip()
             product = self.get_product()
+            unit = visit.real.organizationalunit \
+                if visit is not None \
+                else product.organizationalunit
 
             recipients = orig_message.original_from_email
 
@@ -3566,7 +3569,7 @@ class EmailReplyView(BreadcrumbMixin, DetailView):
                 },
                 recipients,
                 orig_obj,
-                organizationalunit=visit.real.organizationalunit
+                organizationalunit=unit
             )
             result_url = reverse(
                 'reply-to-email', args=[self.object.reply_nonce]
