@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-04-26 10:10+0200\n"
+"POT-Creation-Date: 2017-04-26 10:07+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,170 +22,168 @@ msgstr ""
 #: static/recurrence/js/recurrence-widget.js:1610
 msgctxt "date"
 msgid "%l, %F %j, %Y"
-msgstr "%H, %F %j, %Y"
+msgstr ""
 
 #: booking/static/js/recurrence-widget.js:1777
 #: static/js/recurrence-widget.js:1777
 #: static/recurrence/js/recurrence-widget.js:1775
 msgid "including"
-msgstr "inklusive"
+msgstr ""
 
 #: booking/static/js/recurrence-widget.js:1777
 #: static/js/recurrence-widget.js:1777
 #: static/recurrence/js/recurrence-widget.js:1775
 msgid "excluding"
-msgstr "eksklusive"
+msgstr ""
 
 #: booking/static/js/recurrence-widget.js:1781
 #: static/js/recurrence-widget.js:1781
 #: static/recurrence/js/recurrence-widget.js:1779
 msgid "Frequency"
-msgstr "Hyppighed"
+msgstr ""
 
 #: booking/static/js/recurrence-widget.js:1782
 #: static/js/recurrence-widget.js:1782
 #: static/recurrence/js/recurrence-widget.js:1780
 msgid "On the"
-msgstr "Den"
+msgstr ""
 
 #: booking/static/js/recurrence-widget.js:1783
 #: static/js/recurrence-widget.js:1783
 #: static/recurrence/js/recurrence-widget.js:1781
 msgid "Each"
-msgstr "Hver"
+msgstr ""
 
 #: booking/static/js/recurrence-widget.js:1784
 #: static/js/recurrence-widget.js:1784
 #: static/recurrence/js/recurrence-widget.js:1782
 msgid "Every"
-msgstr "Hver"
+msgstr ""
 
 #: booking/static/js/recurrence-widget.js:1785
 #: static/js/recurrence-widget.js:1785
 #: static/recurrence/js/recurrence-widget.js:1783
 msgid "Until"
-msgstr "Indtil"
+msgstr ""
 
 #: booking/static/js/recurrence-widget.js:1786
 #: static/js/recurrence-widget.js:1786
 #: static/recurrence/js/recurrence-widget.js:1784
 msgid "Occurs %(number)s time"
-msgstr "Sker %(number)s gang"
+msgstr ""
 
 #: booking/static/js/recurrence-widget.js:1787
 #: static/js/recurrence-widget.js:1787
 #: static/recurrence/js/recurrence-widget.js:1785
 msgid "Occurs %(number)s times"
-msgstr "Sker %(number)s gange"
+msgstr ""
 
 #: booking/static/js/recurrence-widget.js:1788
 #: static/js/recurrence-widget.js:1788
 #: static/recurrence/js/recurrence-widget.js:1786
 msgid "Date"
-msgstr "Dato"
+msgstr ""
 
 #: booking/static/js/recurrence-widget.js:1789
 #: static/js/recurrence-widget.js:1789
 #: static/recurrence/js/recurrence-widget.js:1787
 msgid "Time"
-msgstr "Tid"
+msgstr ""
 
 #: booking/static/js/recurrence-widget.js:1790
 #: static/js/recurrence-widget.js:1790
 #: static/recurrence/js/recurrence-widget.js:1788
 msgid "Repeat until"
-msgstr "Gentag indtil"
+msgstr ""
 
 #: booking/static/js/recurrence-widget.js:1791
 #: static/js/recurrence-widget.js:1791
-#, fuzzy
-#| msgid "Exclude these occurences"
 msgid "Exclude these occurrences"
-msgstr "Ekskluder disse hændelser"
+msgstr ""
 
 #: booking/static/js/recurrence-widget.js:1792
 #: static/js/recurrence-widget.js:1792
 #: static/recurrence/js/recurrence-widget.js:1790
 msgid "Exclude this date"
-msgstr "Ekskluder denne dato"
+msgstr ""
 
 #: booking/static/js/recurrence-widget.js:1793
 #: static/js/recurrence-widget.js:1793
 #: static/recurrence/js/recurrence-widget.js:1791
 msgid "Add rule"
-msgstr "Tilføj regel"
+msgstr ""
 
 #: booking/static/js/recurrence-widget.js:1794
 #: static/js/recurrence-widget.js:1794
 #: static/recurrence/js/recurrence-widget.js:1792
 msgid "Add date"
-msgstr "Tilføj dato"
+msgstr ""
 
 #: booking/static/js/recurrence-widget.js:1795
 #: python-env/lib/python2.7/site-packages/grappelli/static/admin/js/SelectFilter2.js:70
 #: static/admin/js/SelectFilter2.js:69 static/js/recurrence-widget.js:1795
 #: static/recurrence/js/recurrence-widget.js:1793
 msgid "Remove"
-msgstr "Fjern"
+msgstr ""
 
 #: booking/static/js/recurrence-widget.js:1796
 #: static/admin/js/admin/DateTimeShortcuts.js:220
 #: static/js/recurrence-widget.js:1796
 #: static/recurrence/js/recurrence-widget.js:1794
 msgid "Calendar"
-msgstr "Kalender"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1006 static/js/recurrence.js:1006
 #: static/recurrence/js/recurrence.js:1006
 msgid "midnight"
-msgstr "midnat"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1007 static/js/recurrence.js:1007
 #: static/recurrence/js/recurrence.js:1007
 msgid "noon"
-msgstr "middag"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1008 static/js/recurrence.js:1008
 #: static/recurrence/js/recurrence.js:1008
 msgid "on the %(items)s"
-msgstr "den %(items)s"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1009 static/js/recurrence.js:1009
 #: static/recurrence/js/recurrence.js:1009
 msgid "every %(number)s %(freq)s"
-msgstr "hver %(number)s %(freq)s"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1010 static/js/recurrence.js:1010
 #: static/recurrence/js/recurrence.js:1010
 msgid "each %(items)s"
-msgstr "hver %(items)s"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1011 static/js/recurrence.js:1011
 #: static/recurrence/js/recurrence.js:1011
 msgid "occuring %(number)s time"
-msgstr "sker %(number)s gang"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1012 static/js/recurrence.js:1012
 #: static/recurrence/js/recurrence.js:1012
 msgid "occuring %(number)s times"
-msgstr "sker %(number)s gange"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1013 static/js/recurrence.js:1013
 #: static/recurrence/js/recurrence.js:1013
 msgid "until %(date)s"
-msgstr "indtil %(date)s"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1017 booking/static/js/rrule.js:2574
 #: static/js/recurrence.js:1017 static/js/rrule.js:2574
 #: static/recurrence/js/recurrence.js:1017
 msgid "year"
-msgstr "år"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1017 booking/static/js/rrule.js:2549
 #: static/js/recurrence.js:1017 static/js/rrule.js:2549
 #: static/recurrence/js/recurrence.js:1017
 msgid "month"
-msgstr "måned"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1017 booking/static/js/rrule.js:2509
 #: booking/static/js/rrule.js.c:2520 booking/static/js/rrule.js:2591
@@ -193,311 +191,311 @@ msgstr "måned"
 #: static/js/rrule.js.c:2520 static/js/rrule.js:2591
 #: static/recurrence/js/recurrence.js:1017
 msgid "week"
-msgstr "uge"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1017 booking/static/js/rrule.js:2486
 #: booking/static/js/rrule.js.c:2586 static/js/recurrence.js:1017
 #: static/js/rrule.js:2486 static/js/rrule.js.c:2586
 #: static/recurrence/js/recurrence.js:1017
 msgid "day"
-msgstr "dag"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1018 booking/static/js/rrule.js:2473
 #: static/js/recurrence.js:1018 static/js/rrule.js:2473
 #: static/recurrence/js/recurrence.js:1018
 msgid "hour"
-msgstr "time"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1018 static/js/recurrence.js:1018
 #: static/recurrence/js/recurrence.js:1018
 msgid "minute"
-msgstr "minut"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1018 static/js/recurrence.js:1018
 #: static/recurrence/js/recurrence.js:1018
 msgid "second"
-msgstr "sekund"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1021 booking/static/js/rrule.js:2566
 #: booking/static/js/rrule.js.c:2574 static/js/recurrence.js:1021
 #: static/js/rrule.js:2566 static/js/rrule.js.c:2574
 #: static/recurrence/js/recurrence.js:1021
 msgid "years"
-msgstr "år"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1021 booking/static/js/rrule.js:2540
 #: booking/static/js/rrule.js.c:2549 static/js/recurrence.js:1021
 #: static/js/rrule.js:2540 static/js/rrule.js.c:2549
 #: static/recurrence/js/recurrence.js:1021
 msgid "months"
-msgstr "måneder"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1021 booking/static/js/rrule.js:2509
 #: booking/static/js/rrule.js.c:2591 static/js/recurrence.js:1021
 #: static/js/rrule.js:2509 static/js/rrule.js.c:2591
 #: static/recurrence/js/recurrence.js:1021
 msgid "weeks"
-msgstr "uger"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1021 booking/static/js/rrule.js:2486
 #: static/js/recurrence.js:1021 static/js/rrule.js:2486
 #: static/recurrence/js/recurrence.js:1021
 msgid "days"
-msgstr "dage"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1022 booking/static/js/rrule.js:2473
 #: static/js/recurrence.js:1022 static/js/rrule.js:2473
 #: static/recurrence/js/recurrence.js:1022
 msgid "hours"
-msgstr "timer"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1022 static/js/recurrence.js:1022
 #: static/recurrence/js/recurrence.js:1022
 msgid "minutes"
-msgstr "minutter"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1022 static/js/recurrence.js:1022
 #: static/recurrence/js/recurrence.js:1022
 msgid "seconds"
-msgstr "sekunder"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1025 static/js/recurrence.js:1025
 #: static/recurrence/js/recurrence.js:1025
 msgid "annually"
-msgstr "årligt"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1025 static/js/recurrence.js:1025
 #: static/recurrence/js/recurrence.js:1025
 msgid "monthly"
-msgstr "månedligt"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1025 static/js/recurrence.js:1025
 #: static/recurrence/js/recurrence.js:1025
 msgid "weekly"
-msgstr "ugentligt"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1025 static/js/recurrence.js:1025
 #: static/recurrence/js/recurrence.js:1025
 msgid "daily"
-msgstr "dagligt"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1026 static/js/recurrence.js:1026
 #: static/recurrence/js/recurrence.js:1026
 msgid "hourly"
-msgstr "hver time"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1026 static/js/recurrence.js:1026
 #: static/recurrence/js/recurrence.js:1026
 msgid "minutely"
-msgstr "hvert minut"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1026 static/js/recurrence.js:1026
 #: static/recurrence/js/recurrence.js:1026
 msgid "secondly"
-msgstr "hvert sekund"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1029 static/js/recurrence.js:1029
 #: static/recurrence/js/recurrence.js:1029
 msgid "Monday"
-msgstr "mandag"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1029 static/js/recurrence.js:1029
 #: static/recurrence/js/recurrence.js:1029
 msgid "Tuesday"
-msgstr "tirsdag"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1029 static/js/recurrence.js:1029
 #: static/recurrence/js/recurrence.js:1029
 msgid "Wednesday"
-msgstr "onsdag"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1029 static/js/recurrence.js:1029
 #: static/recurrence/js/recurrence.js:1029
 msgid "Thursday"
-msgstr "torsdag"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1030 static/js/recurrence.js:1030
 #: static/recurrence/js/recurrence.js:1030
 msgid "Friday"
-msgstr "fredag"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1030 static/js/recurrence.js:1030
 #: static/recurrence/js/recurrence.js:1030
 msgid "Saturday"
-msgstr "lørdag"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1030 static/js/recurrence.js:1030
 #: static/recurrence/js/recurrence.js:1030
 msgid "Sunday"
-msgstr "søndag"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1033 static/js/recurrence.js:1033
 #: static/recurrence/js/recurrence.js:1033
 msgid "Mon"
-msgstr "man"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1033 static/js/recurrence.js:1033
 #: static/recurrence/js/recurrence.js:1033
 msgid "Tue"
-msgstr "tir"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1033 static/js/recurrence.js:1033
 #: static/recurrence/js/recurrence.js:1033
 msgid "Wed"
-msgstr "ons"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1033 static/js/recurrence.js:1033
 #: static/recurrence/js/recurrence.js:1033
 msgid "Thu"
-msgstr "tor"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1034 static/js/recurrence.js:1034
 #: static/recurrence/js/recurrence.js:1034
 msgid "Fri"
-msgstr "fre"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1034 static/js/recurrence.js:1034
 #: static/recurrence/js/recurrence.js:1034
 msgid "Sat"
-msgstr "lør"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1034 static/js/recurrence.js:1034
 #: static/recurrence/js/recurrence.js:1034
 msgid "Sun"
-msgstr "søn"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1037 static/js/recurrence.js:1037
 #: static/recurrence/js/recurrence.js:1037
 msgctxt "Monday first letter"
 msgid "M"
-msgstr "M"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1038 static/js/recurrence.js:1038
 #: static/recurrence/js/recurrence.js:1038
 msgctxt "Tuesday first letter"
 msgid "T"
-msgstr "T"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1039 static/js/recurrence.js:1039
 #: static/recurrence/js/recurrence.js:1039
 msgctxt "Wednesday first letter"
 msgid "W"
-msgstr "O"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1040 static/js/recurrence.js:1040
 #: static/recurrence/js/recurrence.js:1040
 msgctxt "Thursday first letter"
 msgid "T"
-msgstr "T"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1041 static/js/recurrence.js:1041
 #: static/recurrence/js/recurrence.js:1041
 msgctxt "Friday first letter"
 msgid "F"
-msgstr "F"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1042 static/js/recurrence.js:1042
 #: static/recurrence/js/recurrence.js:1042
 msgctxt "Saturday first letter"
 msgid "S"
-msgstr "L"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1043 static/js/recurrence.js:1043
 #: static/recurrence/js/recurrence.js:1043
 msgctxt "Sunday first letter"
 msgid "S"
-msgstr "S"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1046 static/js/recurrence.js:1046
 #: static/recurrence/js/recurrence.js:1046
 msgid "first %(weekday)s"
-msgstr "første %(weekday)s"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1047 static/js/recurrence.js:1047
 #: static/recurrence/js/recurrence.js:1047
 msgid "second %(weekday)s"
-msgstr "anden %(weekday)s"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1048 static/js/recurrence.js:1048
 #: static/recurrence/js/recurrence.js:1048
 msgid "third %(weekday)s"
-msgstr "tredje %(weekday)s"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1049 static/js/recurrence.js:1049
 #: static/recurrence/js/recurrence.js:1049
 msgid "fourth %(weekday)s"
-msgstr "fjerde %(weekday)s"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1050 booking/static/js/recurrence.js:1059
 #: static/js/recurrence.js:1050 static/js/recurrence.js.c:1059
 #: static/recurrence/js/recurrence.js:1050
 #: static/recurrence/js/recurrence.js:1059
 msgid "last %(weekday)s"
-msgstr "sidste %(weekday)s"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1051 static/js/recurrence.js:1051
 #: static/recurrence/js/recurrence.js:1051
 msgid "second last %(weekday)s"
-msgstr "næstsidste %(weekday)s"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1052 static/js/recurrence.js:1052
 #: static/recurrence/js/recurrence.js:1052
 msgid "third last %(weekday)s"
-msgstr "tredjesidste %(weekday)s"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1055 static/js/recurrence.js:1055
 #: static/recurrence/js/recurrence.js:1055
 msgid "1st %(weekday)s"
-msgstr "første %(weekday)s"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1056 static/js/recurrence.js:1056
 #: static/recurrence/js/recurrence.js:1056
 msgid "2nd %(weekday)s"
-msgstr "anden %(weekday)s"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1057 static/js/recurrence.js:1057
 #: static/recurrence/js/recurrence.js:1057
 msgid "3rd %(weekday)s"
-msgstr "tredje %(weekday)s"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1058 static/js/recurrence.js:1058
 #: static/recurrence/js/recurrence.js:1058
 msgid "4th %(weekday)s"
-msgstr "fjerde %(weekday)s"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1060 static/js/recurrence.js:1060
 #: static/recurrence/js/recurrence.js:1060
 msgid "2nd last %(weekday)s"
-msgstr "næstsidste %(weekday)s"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1061 static/js/recurrence.js:1061
 #: static/recurrence/js/recurrence.js:1061
 msgid "3rd last %(weekday)s"
-msgstr "tredjesidste %(weekday)s"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1064 static/js/recurrence.js:1064
 #: static/recurrence/js/recurrence.js:1064
 msgid "January"
-msgstr "januar"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1064 static/js/recurrence.js:1064
 #: static/recurrence/js/recurrence.js:1064
 msgid "February"
-msgstr "februar"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1064 booking/static/js/recurrence.js:1076
 #: static/js/recurrence.js:1064 static/js/recurrence.js.c:1076
 #: static/recurrence/js/recurrence.js:1064
 #: static/recurrence/js/recurrence.js:1076
 msgid "March"
-msgstr "marts"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1065 booking/static/js/recurrence.js:1077
 #: static/js/recurrence.js:1065 static/js/recurrence.js.c:1077
 #: static/recurrence/js/recurrence.js:1065
 #: static/recurrence/js/recurrence.js:1077
 msgid "April"
-msgstr "april"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1065 booking/static/js/recurrence.js:1071
 #: booking/static/js/recurrence.js:1077 static/js/recurrence.js:1065
@@ -507,136 +505,136 @@ msgstr "april"
 #: static/recurrence/js/recurrence.js:1077
 msgctxt "month name"
 msgid "May"
-msgstr "maj"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1065 booking/static/js/recurrence.js:1077
 #: static/js/recurrence.js:1065 static/js/recurrence.js.c:1077
 #: static/recurrence/js/recurrence.js:1065
 #: static/recurrence/js/recurrence.js:1077
 msgid "June"
-msgstr "juni"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1066 booking/static/js/recurrence.js:1078
 #: static/js/recurrence.js:1066 static/js/recurrence.js.c:1078
 #: static/recurrence/js/recurrence.js:1066
 #: static/recurrence/js/recurrence.js:1078
 msgid "July"
-msgstr "juli"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1066 static/js/recurrence.js:1066
 #: static/recurrence/js/recurrence.js:1066
 msgid "August"
-msgstr "august"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1066 static/js/recurrence.js:1066
 #: static/recurrence/js/recurrence.js:1066
 msgid "September"
-msgstr "september"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1067 static/js/recurrence.js:1067
 #: static/recurrence/js/recurrence.js:1067
 msgid "October"
-msgstr "oktober"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1067 static/js/recurrence.js:1067
 #: static/recurrence/js/recurrence.js:1067
 msgid "November"
-msgstr "november"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1067 static/js/recurrence.js:1067
 #: static/recurrence/js/recurrence.js:1067
 msgid "December"
-msgstr "december"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1070 static/js/recurrence.js:1070
 #: static/recurrence/js/recurrence.js:1070
 msgid "Jan"
-msgstr "jan"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1070 static/js/recurrence.js:1070
 #: static/recurrence/js/recurrence.js:1070
 msgid "Feb"
-msgstr "feb"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1070 static/js/recurrence.js:1070
 #: static/recurrence/js/recurrence.js:1070
 msgid "Mar"
-msgstr "mar"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1071 static/js/recurrence.js:1071
 #: static/recurrence/js/recurrence.js:1071
 msgid "Apr"
-msgstr "apr"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1071 static/js/recurrence.js:1071
 #: static/recurrence/js/recurrence.js:1071
 msgid "Jun"
-msgstr "jun"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1072 static/js/recurrence.js:1072
 #: static/recurrence/js/recurrence.js:1072
 msgid "Jul"
-msgstr "jul"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1072 static/js/recurrence.js:1072
 #: static/recurrence/js/recurrence.js:1072
 msgid "Aug"
-msgstr "aug"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1072 static/js/recurrence.js:1072
 #: static/recurrence/js/recurrence.js:1072
 msgid "Sep"
-msgstr "sep"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1073 static/js/recurrence.js:1073
 #: static/recurrence/js/recurrence.js:1073
 msgid "Oct"
-msgstr "okt"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1073 static/js/recurrence.js:1073
 #: static/recurrence/js/recurrence.js:1073
 msgid "Nov"
-msgstr "nov"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1073 static/js/recurrence.js:1073
 #: static/recurrence/js/recurrence.js:1073
 msgid "Dec"
-msgstr "dec"
+msgstr ""
 
 #: booking/static/js/recurrence.js:1076 static/js/recurrence.js:1076
 #: static/recurrence/js/recurrence.js:1076
 msgid "Jan."
-msgstr "jan."
+msgstr ""
 
 #: booking/static/js/recurrence.js:1076 static/js/recurrence.js:1076
 #: static/recurrence/js/recurrence.js:1076
 msgid "Feb."
-msgstr "feb."
+msgstr ""
 
 #: booking/static/js/recurrence.js:1078 static/js/recurrence.js:1078
 #: static/recurrence/js/recurrence.js:1078
 msgid "Aug."
-msgstr "aug."
+msgstr ""
 
 #: booking/static/js/recurrence.js:1078 static/js/recurrence.js:1078
 #: static/recurrence/js/recurrence.js:1078
 msgid "Sept."
-msgstr "sept."
+msgstr ""
 
 #: booking/static/js/recurrence.js:1079 static/js/recurrence.js:1079
 #: static/recurrence/js/recurrence.js:1079
 msgid "Oct."
-msgstr "okt."
+msgstr ""
 
 #: booking/static/js/recurrence.js:1079 static/js/recurrence.js:1079
 #: static/recurrence/js/recurrence.js:1079
 msgid "Nov."
-msgstr "nov."
+msgstr ""
 
 #: booking/static/js/recurrence.js:1079 static/js/recurrence.js:1079
 #: static/recurrence/js/recurrence.js:1079
 msgid "Dec."
-msgstr "dec."
+msgstr ""
 
 #: booking/static/js/recurrence.js:1082 static/js/recurrence.js:1082
 #: static/recurrence/js/recurrence.js:1082
@@ -663,16 +661,12 @@ msgid "RRule error: Unable to fully convert this rrule to text"
 msgstr ""
 
 #: booking/static/js/rrule.js:2446 static/js/rrule.js:2446
-#, fuzzy
-#| msgid "Every"
 msgid "every"
-msgstr "Hver"
+msgstr ""
 
 #: booking/static/js/rrule.js:2450 static/js/rrule.js:2450
-#, fuzzy
-#| msgid "Until"
 msgid "until"
-msgstr "Indtil"
+msgstr ""
 
 #: booking/static/js/rrule.js:2456 static/js/rrule.js:2456
 msgid "for"
@@ -694,17 +688,13 @@ msgstr ""
 #: booking/static/js/rrule.js:2517 booking/static/js/rrule.js.c:2554
 #: static/js/rrule.js:2483 static/js/rrule.js.c:2515 static/js/rrule.js:2517
 #: static/js/rrule.js.c:2554
-#, fuzzy
-#| msgid "weeks"
 msgid "weekdays"
-msgstr "uger"
+msgstr ""
 
 #: booking/static/js/rrule.js:2483 booking/static/js/rrule.js.c:2515
 #: static/js/rrule.js:2483 static/js/rrule.js.c:2515
-#, fuzzy
-#| msgid "weekly"
 msgid "weekday"
-msgstr "ugentligt"
+msgstr ""
 
 #: booking/static/js/rrule.js:2490 booking/static/js/rrule.js.c:2523
 #: booking/static/js/rrule.js:2541 booking/static/js/rrule.js.c:2590
@@ -717,18 +707,14 @@ msgstr ""
 #: booking/static/js/rrule.js:2599 booking/static/js/rrule.js.c:2613
 #: static/js/rrule.js:2517 static/js/rrule.js.c:2554 static/js/rrule.js:2599
 #: static/js/rrule.js.c:2613
-#, fuzzy
-#| msgid "Mon"
 msgid "on"
-msgstr "man"
+msgstr ""
 
 #: booking/static/js/rrule.js:2584 booking/static/js/rrule.js.c:2604
 #: booking/static/js/rrule.js:2620 static/js/rrule.js:2584
 #: static/js/rrule.js.c:2604 static/js/rrule.js:2620
-#, fuzzy
-#| msgid "On the"
 msgid "on the"
-msgstr "Den"
+msgstr ""
 
 #: booking/static/js/rrule.js:2585 booking/static/js/rrule.js.c:2592
 #: booking/static/js/rrule.js:2605 booking/static/js/rrule.js.c:2618
@@ -736,29 +722,21 @@ msgstr "Den"
 #: booking/static/js/rrule.js:2633 static/js/rrule.js:2585
 #: static/js/rrule.js.c:2592 static/js/rrule.js:2605 static/js/rrule.js.c:2618
 #: static/js/rrule.js:2621 static/js/rrule.js.c:2629 static/js/rrule.js:2633
-#, fuzzy
-#| msgid "Jan"
 msgid "and"
-msgstr "jan"
+msgstr ""
 
 #: booking/static/js/rrule.js:2600 booking/static/js/rrule.js.c:2602
 #: static/js/rrule.js:2600 static/js/rrule.js.c:2602
-#, fuzzy
-#| msgid "hour"
 msgid "or"
-msgstr "time"
+msgstr ""
 
 #: booking/static/js/rrule.js:2601 static/js/rrule.js:2601
-#, fuzzy
-#| msgid "On the"
 msgid "the"
-msgstr "Den"
+msgstr ""
 
 #: booking/static/js/rrule.js:2628 static/js/rrule.js:2628
-#, fuzzy
-#| msgid "Sat"
 msgid "at"
-msgstr "lør"
+msgstr ""
 
 #: booking/static/js/rrule.js:2640 booking/static/js/rrule.js.c:2661
 #: static/js/rrule.js:2640 static/js/rrule.js.c:2661
@@ -832,10 +810,8 @@ msgstr ""
 
 #: python-env/lib/python2.7/site-packages/grappelli/static/admin/js/SelectFilter2.js:81
 #: static/admin/js/SelectFilter2.js:80
-#, fuzzy
-#| msgid "Remove"
 msgid "Remove all"
-msgstr "Fjern"
+msgstr ""
 
 #: python-env/lib/python2.7/site-packages/grappelli/static/admin/js/SelectFilter2.js:81
 #: static/admin/js/SelectFilter2.js:80
@@ -892,10 +868,8 @@ msgstr[1] ""
 
 #: static/admin/js/admin/DateTimeShortcuts.js:114
 #: static/admin/js/admin/DateTimeShortcuts.js:149
-#, fuzzy
-#| msgid "Nov"
 msgid "Now"
-msgstr "nov"
+msgstr ""
 
 #: static/admin/js/admin/DateTimeShortcuts.js:118
 msgid "Clock"
@@ -906,10 +880,8 @@ msgid "Choose a time"
 msgstr ""
 
 #: static/admin/js/admin/DateTimeShortcuts.js:150
-#, fuzzy
-#| msgid "midnight"
 msgid "Midnight"
-msgstr "midnat"
+msgstr ""
 
 #: static/admin/js/admin/DateTimeShortcuts.js:151
 msgid "6 a.m."
@@ -958,4 +930,4 @@ msgstr ""
 
 #: static/recurrence/js/recurrence-widget.js:1789
 msgid "Exclude these occurences"
-msgstr "Ekskluder disse hændelser"
+msgstr ""

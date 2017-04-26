@@ -2470,10 +2470,16 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
                     booking.visit.waiting_list_capacity
                 if attendee_count > waitinglist_capacity:
                     booking.delete()
-                    raise Exception(_(u"Cannot place booking with %d attendees"
-                                      u" in waiting list; there are only %d "
-                                      u"spots") %
-                                    (attendee_count, waitinglist_capacity))
+                    raise Exception(_(u"Cannot place booking with "
+                                      u"%(attendee_count)d attendees in "
+                                      u"waiting list; there are only "
+                                      u"%(waitinglist_capacity)d spots") %
+                                    {
+                                        'attendee_count': attendee_count,
+                                        'waitinglist_capacity':
+                                            waitinglist_capacity
+                                    }
+                                    )
 
                 booking.waitinglist_spot = \
                     booking.visit.next_waiting_list_spot
