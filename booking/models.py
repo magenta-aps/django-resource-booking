@@ -5462,17 +5462,22 @@ class KUEmailMessage(models.Model):
 
         # Log the sending
         if emails and instance:
+            logmessage = [
+                _(u"Template: %s") % template.type.name
+                if template.type else "None",
+                _(u"Modtagere: %s") % ", ".join(
+                    [x['full'] for x in emails]
+                )
+            ]
+            ctxmsg = context.get('log_message', None)
+            if ctxmsg:
+                logmessage.append(unicode(ctxmsg))
+
             log_action(
                 context.get("web_user", None),
                 instance,
                 LOGACTION_MAIL_SENT,
-                "\n".join([unicode(x) for x in [
-                    _(u"Template: ") + template.type.name,
-                    _(u"Modtagere: ") + ", ".join(
-                        [x['full'] for x in emails]
-                    ),
-                    context.get('log_message', None)
-                ] if x])
+                u"\n".join(logmessage)
             )
 
     def get_reply_url(self, full=False):
