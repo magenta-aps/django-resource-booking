@@ -5,11 +5,11 @@
 
 {% block content %}
 
-    <h1>{% blocktrans with name=object.user role=object.get_role_name %}Information om {{ role|lower }} {{ name }}{% endblocktrans %}</h1>
+    <h1>{% blocktrans with name=object.user.get_full_name role=object.get_role_name %}Information om {{ role|lower }} {{ name }}{% endblocktrans %}</h1>
 
     <div class="row">
         <div class="col-sm-12">
-            <h2>{% blocktrans with name=object.user %}Besøg {{ name }} er tilknyttet{% endblocktrans %}</h2>
+            <h2>{% blocktrans with name=object.user.get_full_name %}Besøg {{ name }} er tilknyttet{% endblocktrans %}</h2>
             <ul>
             {% for date in accepted %}
                 <li>
@@ -29,7 +29,7 @@
             {% endfor %}
             </ul>
             <div class="divider"></div>
-            <h2>{% blocktrans with name=object.user %}Besøg {{ name }} ikke har accepteret{% endblocktrans %}</h2>
+            <h2>{% blocktrans with name=object.user.get_full_name %}Besøg {{ name }} ikke har accepteret{% endblocktrans %}</h2>
             <ul>
             {% for date in unaccepted %}
                 <li>
