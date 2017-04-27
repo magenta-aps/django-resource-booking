@@ -16,7 +16,7 @@ from django.utils.translation import ugettext_lazy as _
 import booking.models
 
 from booking.models import OrganizationalUnit, Product
-from booking.utils import get_related_content_types
+from booking.utils import get_related_content_types, full_email
 
 # User roles
 from profile.constants import TEACHER, HOST, COORDINATOR, ADMINISTRATOR
@@ -127,6 +127,9 @@ class UserProfile(models.Model):
 
     def __unicode__(self):
         return self.user.username
+
+    def get_full_email(self):
+        return full_email(self.user.email, self.user.get_full_name())
 
     def get_role(self):
         """Return the role code, i.e. TEACHER, HOST, etc."""
