@@ -1155,13 +1155,11 @@ class ObjectStatistics(models.Model):
 
     created_time = models.DateTimeField(
         blank=False,
-        auto_now_add=True,
+        auto_now_add=True
     )
     updated_time = models.DateTimeField(
         blank=False,
-        default=timezone.now
-        # auto_now=True  # This would update the field on every save,
-        # including when we just want to update the display counter
+        auto_now_add=True
     )
     visited_time = models.DateTimeField(
         blank=True,
