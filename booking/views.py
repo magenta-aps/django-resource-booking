@@ -404,7 +404,8 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
         context['templates'] = EmailTemplate.get_template(
             self.template_type, self.get_unit(), True
         )
-        context['template_type'] = self.template_type.id
+        context['template_type'] = self.template_type.id \
+            if self.template_type else None
         context['template_unit'] = self.get_unit()
         context['modal'] = self.modal
         context.update(kwargs)
