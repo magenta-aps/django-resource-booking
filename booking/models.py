@@ -5303,10 +5303,11 @@ class KUEmailMessage(models.Model):
                     address = recipient.get_email()
                 except:
                     pass
-            if address is not None and address != '' and \
-                    (address not in emails or
-                         (user and not emails[address]['user'])
-                     ):
+            if address is not None and address != '' and (
+                    address not in emails or (
+                        user and not emails[address]['user']
+                    )
+            ):
 
                 email = {
                     'address': address,
@@ -5382,7 +5383,6 @@ class KUEmailMessage(models.Model):
         # Alias any visit to "besoeg" for easier use by danes
         if 'besoeg' not in context and 'visit' in context:
             context['besoeg'] = context['visit']
-
 
         if type(recipients) is not list:
             recipients = [recipients]
