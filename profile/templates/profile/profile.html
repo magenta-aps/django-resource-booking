@@ -157,15 +157,15 @@
                 {% endif %}
         </div>
         <div class="col-xs-12 col-sm-8">
-            {% if autoassign_failed.count > 0 %}
-                <a href="{% url 'visit-search' %}?w={{ autoassign_failed_status }}" class="text-danger" target="_blank">
-                    {% if autoassign_failed.count == 1 %}
-                        {% blocktrans with productname=autoassign_failed.first.title %}
+            {% if autoassign_failed.visits.count > 0 %}
+                <a href="{% url 'visit-search' %}?w={{ autoassign_failed.status_id }}" class="text-danger" target="_blank">
+                    {% if autoassign_failed.products.count == 1 %}
+                        {% blocktrans with productname=autoassign_failed.products.first.title %}
                             OBS: {{ productname }} har besøg der mangler ressourcer
                         {% endblocktrans %}
                     {% else %}
-                        {% blocktrans with productcount=autoassign_failed.count %}
-                            OBS: Der er {{ productcount }} tilbud med besøg der mangler ressourcer
+                        {% blocktrans with visitcount=autoassign_failed.visits.count status=autoassign_failed.status_name %}
+                            OBS: Du har {{ visitcount }} besøg med status {{ status }}
                         {% endblocktrans %}
                     {% endif %}
                 </a>

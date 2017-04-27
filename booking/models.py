@@ -2904,10 +2904,14 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
         return result
 
-    def workflow_status_display(self):
-        for value, label in self.workflow_status_choices:
-            if value == self.workflow_status:
+    @classmethod
+    def workflow_status_name(cls, workflow_status):
+        for value, label in cls.workflow_status_choices:
+            if value == workflow_status:
                 return label
+
+    def workflow_status_display(self):
+        return Visit.workflow_status_name(self.workflow_status)
 
     def get_subjects(self):
         if hasattr(self, 'teacherbooking'):
