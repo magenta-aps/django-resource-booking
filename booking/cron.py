@@ -118,7 +118,8 @@ class IdleHostroleJob(KuCronJob):
             num_bookings__gt=0,
             workflow_status__in=[
                 Visit.WORKFLOW_STATUS_BEING_PLANNED,
-                Visit.WORKFLOW_STATUS_REJECTED
+                Visit.WORKFLOW_STATUS_REJECTED,
+                Visit.WORKFLOW_STATUS_AUTOASSIGN_FAILED
             ]
         )
         visits_needing_hosts = [
