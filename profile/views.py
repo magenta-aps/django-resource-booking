@@ -112,7 +112,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
                 workflow_status=autoassign_fail
             ).distinct(),
             'status_id': autoassign_fail,
-            'status_name': _("Ressourceændring")
+            'status_name': _(u"Ressourceændring")
         }
 
         for list in context['lists']:
