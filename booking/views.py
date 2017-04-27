@@ -1341,6 +1341,7 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
                     if is_cloning:
                         self.object.pk = None
                         self.object.id = None
+                        self.object.calendar = None
                 except ObjectDoesNotExist:
                     raise Http404
 
