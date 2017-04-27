@@ -267,6 +267,11 @@ class OrganizationalUnit(models.Model):
 
         return recipients
 
+    def get_reply_recipients(self, template_type):
+        if template_type.reply_to_unit_responsible:
+            return [self.contact]
+        return []
+
     @classmethod
     def root_unit_id(cls):
         unit = cls.objects.filter(
@@ -587,6 +592,23 @@ class EmailTemplateType(
     enable_autosend = models.BooleanField(default=False)
 
     form_show = models.BooleanField(default=False)
+
+    @property
+    def reply_to_product_responsible(self):
+        for x in [
+            self.send_to_visit_hosts, self.send_to_visit_teachers,
+            self.send_to_booker, self.send_to_potential_hosts,
+            self.send_to_potential_teachers, self.send_to_visit_added_host,
+            self.send_to_visit_added_teacher, self.send_to_unit_hosts,
+            self.send_to_unit_teachers
+        ]:
+            if x:
+                return True
+        return False
+
+    @property
+    def reply_to_unit_responsible(self):
+        return False
 
     @staticmethod
     def set_default(key, **kwargs):
@@ -2161,6 +2183,14 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
         return recipients
 
+    def get_reply_recipients(self, template_type):
+        recipients = self.organizationalunit.get_reply_recipients(
+            template_type
+        )
+        if template_type.reply_to_product_responsible:
+            recipients.extend(self.get_responsible_persons())
+        return recipients
+
     # Returns best guess for who is responsible for visits for this product.
     def get_responsible_persons(self):
         if self.tilbudsansvarlig:
@@ -3461,6 +3491,15 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                     recipients.remove(item)
         return recipients
 
+    def get_reply_recipients(self, template_type):
+        product = self.product
+        if self.is_multiproductvisit and self.multiproductvisit.primary_visit:
+            product = self.multiproductvisit.primary_visit.product
+        if product:
+            return product.get_reply_recipients(template_type)
+        else:
+            return []
+
     def create_inheriting_autosends(self):
         for template_type in EmailTemplateType.objects.filter(
             enable_autosend=True
@@ -3546,12 +3585,16 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             if not only_these_recipients:
                 recipients.update(self.get_recipients(template_type))
 
+            # People who will receive any replies to the mail
+            reply_recipients = self.get_reply_recipients(template_type)
+
             KUEmailMessage.send_email(
                 template_type,
                 {'visit': self, 'besoeg': self, 'product': product},
                 list(recipients),
                 self,
-                unit
+                unit,
+                original_from_email=reply_recipients
             )
 
             if not only_these_recipients and template_type.send_to_booker:
@@ -3567,7 +3610,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                         },
                         booking.booker,
                         self,
-                        unit
+                        unit,
+                        original_from_email=reply_recipients
                     )
 
     def get_autosend_display(self):
@@ -4206,6 +4250,9 @@ class MultiProductVisit(Visit):
             if not only_these_recipients:
                 recipients.update(self.get_recipients(template_type))
 
+            # People who will receive any replies to the mail
+            reply_recipients = self.get_reply_recipients(template_type)
+
             params = {'visit': self, 'products': self.products}
 
             KUEmailMessage.send_email(
@@ -4213,7 +4260,8 @@ class MultiProductVisit(Visit):
                 params,
                 list(recipients),
                 self,
-                unit
+                unit,
+                original_from_email=reply_recipients
             )
 
             if not only_these_recipients and template_type.send_to_booker:
@@ -4226,7 +4274,8 @@ class MultiProductVisit(Visit):
                         }),
                         booking.booker,
                         self,
-                        unit
+                        unit,
+                        original_from_email=reply_recipients
                     )
 
     def autoassign_resources(self):
@@ -4998,6 +5047,9 @@ class Booking(models.Model):
             recipients.append(self.booker)
         return recipients
 
+    def get_reply_recipients(self, template_type):
+        return self.visit.get_reply_recipients(template_type)
+
     def autosend(self, template_type, recipients=None,
                  only_these_recipients=False):
 
@@ -5023,7 +5075,8 @@ class Booking(models.Model):
                 },
                 list(recipients),
                 self.visit,
-                organizationalunit=unit
+                organizationalunit=unit,
+                original_from_email=self.get_reply_recipients(template_type)
             )
             return True
         return False
@@ -5222,6 +5275,56 @@ class KUEmailMessage(models.Model):
     )
 
     @staticmethod
+    def extract_addresses(recipients):
+        if type(recipients) != list:
+            recipients = [recipients]
+        emails = {}
+        for recipient in recipients:
+            name = None
+            address = None
+            user = None
+            guest = None
+            if isinstance(recipient, basestring):
+                address = recipient
+            elif isinstance(recipient, User):
+                name = recipient.get_full_name()
+                address = recipient.email
+                user = recipient
+            elif isinstance(recipient, Guest):
+                name = recipient.get_name()
+                address = recipient.get_email()
+                guest = recipient
+            else:
+                try:
+                    name = recipient.get_name()
+                except:
+                    pass
+                try:
+                    address = recipient.get_email()
+                except:
+                    pass
+            if address is not None and address != '' and \
+                    (address not in emails or
+                         (user and not emails[address]['user'])
+                     ):
+
+                email = {
+                    'address': address,
+                    'user': user,
+                    'guest': guest,
+                }
+
+                if name is not None:
+                    email['name'] = name
+                    email['full'] = u"\"%s\" <%s>" % (name, address)
+                else:
+                    email['full'] = address
+
+                email['get_full_name'] = email.get('name', email['full'])
+                emails[address] = email
+        return emails.values()
+
+    @staticmethod
     def save_email(email_message, instance,
                    reply_nonce=None, htmlbody=None,
                    template_type=None, original_from_email=None):
@@ -5244,7 +5347,12 @@ class KUEmailMessage(models.Model):
             body=email_message.body,
             htmlbody=htmlbody,
             from_email=email_message.from_email,
-            original_from_email=original_from_email,
+            original_from_email=", ".join([
+                address['full']
+                for address in KUEmailMessage.extract_addresses(
+                    original_from_email
+                )
+            ]),
             recipients=', '.join(email_message.recipients()),
             content_type=ctype,
             object_id=instance.id,
@@ -5275,55 +5383,13 @@ class KUEmailMessage(models.Model):
         if 'besoeg' not in context and 'visit' in context:
             context['besoeg'] = context['visit']
 
-        emails = {}
+
         if type(recipients) is not list:
             recipients = [recipients]
 
-        for recipient in recipients:
-            name = None
-            address = None
-            user = None
-            guest = None
-            if isinstance(recipient, basestring):
-                address = recipient
-            elif isinstance(recipient, User):
-                name = recipient.get_full_name()
-                address = recipient.email
-                user = recipient
-            elif isinstance(recipient, Guest):
-                name = recipient.get_name()
-                address = recipient.get_email()
-                guest = recipient
-            else:
-                try:
-                    name = recipient.get_name()
-                except:
-                    pass
-                try:
-                    address = recipient.get_email()
-                except:
-                    pass
-            if address is not None and address != '' and \
-                    (address not in emails or
-                        (user and not emails[address]['user'])
-                     ):
+        emails = KUEmailMessage.extract_addresses(recipients)
 
-                email = {
-                    'address': address,
-                    'user': user,
-                    'guest': guest,
-                }
-
-                if name is not None:
-                    email['name'] = name
-                    email['full'] = u"\"%s\" <%s>" % (name, address)
-                else:
-                    email['full'] = address
-
-                email['get_full_name'] = email.get('name', email['full'])
-                emails[address] = email
-
-        for email in emails.values():
+        for email in emails:
             nonce = uuid.uuid4()
             ctx = {
                 'organizationalunit': unit,
@@ -5381,7 +5447,7 @@ class KUEmailMessage(models.Model):
                 "\n".join([unicode(x) for x in [
                     _(u"Template: ") + template.type.name,
                     _(u"Modtagere: ") + ", ".join(
-                        [x['full'] for x in emails.values()]
+                        [x['full'] for x in emails]
                     ),
                     context.get('log_message', None)
                 ] if x])

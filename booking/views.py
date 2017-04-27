@@ -380,7 +380,8 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
                 form.cleaned_data['recipients']
             )
             KUEmailMessage.send_email(
-                template, context, recipients, self.object
+                template, context, recipients, self.object,
+                original_from_email=request.user.userprofile.get_full_email()
             )
             return super(EmailComposeView, self).form_valid(form)
 
@@ -3569,7 +3570,8 @@ class EmailReplyView(BreadcrumbMixin, DetailView):
                 },
                 recipients,
                 orig_obj,
-                organizationalunit=unit
+                organizationalunit=unit,
+                original_from_email=request.user.userprofile.get_full_email()
             )
             result_url = reverse(
                 'reply-to-email', args=[self.object.reply_nonce]
