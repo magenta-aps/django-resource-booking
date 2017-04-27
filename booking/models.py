@@ -3390,7 +3390,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         return cls.objects.filter(
             workflow_status__in=[
                 cls.WORKFLOW_STATUS_BEING_PLANNED,
-                cls.WORKFLOW_STATUS_AUTOASSIGN_FAILED
+                cls.WORKFLOW_STATUS_AUTOASSIGN_FAILED,
+                cls.WORKFLOW_STATUS_REJECTED
             ],
             **kwargs
         )
