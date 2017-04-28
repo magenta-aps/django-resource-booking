@@ -380,7 +380,8 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
                 form.cleaned_data['recipients']
             )
             KUEmailMessage.send_email(
-                template, context, recipients, self.object
+                template, context, recipients, self.object,
+                original_from_email=request.user.userprofile.get_full_email()
             )
             return super(EmailComposeView, self).form_valid(form)
 
@@ -3526,12 +3527,18 @@ class EmailReplyView(BreadcrumbMixin, DetailView):
             return orig_obj.product
         elif type(orig_obj) == Product:
             return orig_obj
+        return None
 
+    def get_visit(self):
+        orig_obj = self.get_original_object()
+        if type(orig_obj) == Visit:
+            return orig_obj
         return None
 
     def get_context_data(self, **kwargs):
         context = {}
         context['form'] = self.get_form()
+        context['visit'] = self.get_visit()
         context['product'] = self.get_product()
         context['is_guest_mail'] = self.object.template_type.send_to_booker
         context.update(kwargs)
@@ -3543,9 +3550,12 @@ class EmailReplyView(BreadcrumbMixin, DetailView):
             self.object = self.get_object()
             orig_obj = self.get_original_object()
             orig_message = self.object
-            visit = orig_obj if type(orig_obj) == Visit else None
+            visit = self.get_visit()
             reply = form.cleaned_data.get('reply', "").strip()
             product = self.get_product()
+            unit = visit.real.organizationalunit \
+                if visit is not None \
+                else product.organizationalunit
 
             recipients = orig_message.original_from_email
 
@@ -3561,7 +3571,8 @@ class EmailReplyView(BreadcrumbMixin, DetailView):
                 },
                 recipients,
                 orig_obj,
-                organizationalunit=product.organizationalunit
+                organizationalunit=unit,
+                original_from_email=request.user.userprofile.get_full_email()
             )
             result_url = reverse(
                 'reply-to-email', args=[self.object.reply_nonce]
