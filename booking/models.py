@@ -2963,8 +2963,10 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 last_workflow_status != self.workflow_status:
             self.last_workflow_update = timezone.now()
             if self.workflow_status == self.WORKFLOW_STATUS_EXECUTED:
-                if self.evaluation is not None:
+                try:
                     self.evaluation.send_first_notification()
+                except AttributeError:
+                    pass
 
     @property
     # QuerySet that finds EventTimes that will be affected by resource changes
