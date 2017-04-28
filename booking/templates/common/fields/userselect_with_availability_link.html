@@ -28,11 +28,18 @@
                             {% trans 'Se detaljer' %}
                             <span class="glyphicon glyphicon-new-window"></span>
                         </a>
-                        {% if user_resources and user_resources|get:pk %}
-                            <a href="{% url 'calendar' user_resources|get:pk %}#todaysdate" role="button" class="btn btn-default btn-xs" onclick="this.target='_blank';">
-                                {% trans 'Kalender' %}
-                                <span class="glyphicon glyphicon-new-window"></span>
-                            </a>
+                        {% if user_resources and user_resources|get:pk|get:'id' %}
+                            {% if user_resources|get:pk|get:'calendar' %}
+                                <a href="{% url 'calendar' user_resources|get:pk|get:'id' %}#todaysdate" role="button" class="btn btn-default btn-xs" onclick="this.target='_blank';">
+                                    {% trans 'Kalender' %}
+                                    <span class="glyphicon glyphicon-new-window"></span>
+                                </a>
+                            {% else %}
+                                <button type="button" disabled="disabled" class="btn btn-default btn-xs" title="{% trans 'Der findes ingen kalender for denne ressource' %}">
+                                    {% trans 'Kalender' %}
+                                    <span class="glyphicon glyphicon-new-window"></span>
+                                </button>
+                            {% endif %}
                         {% endif %}
                     </label>
                 </div>

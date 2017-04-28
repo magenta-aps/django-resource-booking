@@ -1178,7 +1178,7 @@ class UserResource(Resource):
         # }
         # This one extracts all the resources from db before looping them
         return {
-            resource.user.id: resource.id
+            resource.user.id: resource
             for resource in cls.objects.filter(user__in=queryset)
         }
 
