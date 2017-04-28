@@ -104,10 +104,16 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         context['is_editor'] = self.request.user.userprofile.has_edit_role()
 
         autoassign_fail = Visit.WORKFLOW_STATUS_AUTOASSIGN_FAILED
-        context['autoassign_failed'] = Product.objects.filter(
-            eventtime__visit__workflow_status=autoassign_fail
-        ).distinct()
-        context['autoassign_failed_status'] = autoassign_fail
+        context['autoassign_failed'] = {
+            'products': Product.objects.filter(
+                eventtime__visit__workflow_status=autoassign_fail
+            ).distinct(),
+            'visits': Visit.objects.filter(
+                workflow_status=autoassign_fail
+            ).distinct(),
+            'status_id': autoassign_fail,
+            'status_name': _(u"Ressourceændring")
+        }
 
         for list in context['lists']:
             if 'title' in list:
