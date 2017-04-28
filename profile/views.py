@@ -920,10 +920,10 @@ class AvailabilityView(LoginRequiredMixin, DetailView):
         current = None
         today = timezone.localtime(timezone.now()).date()
         for x in qs:
-            if x.eventtime and x.eventtime.start:
+            try:
                 date = timezone.localtime(x.eventtime.start).date()
-            else:
-                date = None
+            except AttributeError:
+                continue
             if current is None or current['date'] != date:
                 if today and date > today:
                     dates.append({
