@@ -2,6 +2,7 @@
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Q
+from django.db.models.deletion import SET_NULL
 from django.contrib.auth import models as auth_models
 from django.core.urlresolvers import reverse
 from django.utils import formats
@@ -1340,11 +1341,23 @@ class ResourceRequirement(AvailabilityUpdaterMixin, models.Model):
     product = models.ForeignKey("Product")
     resource_pool = models.ForeignKey(
         ResourcePool,
-        verbose_name=_(u"Ressourcegruppe")
+        verbose_name=_(u"Ressourcegruppe"),
+        null=True,
+        blank=False,
+        on_delete=SET_NULL
     )
     required_amount = models.IntegerField(
         verbose_name=_(u"Påkrævet antal"),
         validators=[MinValueValidator(1)]
+    )
+
+    # For avoiding an IntegrityError when deleting Requirements:
+    # A pre_delete signal will set this flag, and Visit.autoassign_resources()
+    # will then ignore this requirement. If we don't do this, the requirement
+    # slated for deletion can cause a new VisitResource to be created in
+    # Visit.autoassign_resources(), referencing the deleted requirement.
+    being_deleted = models.BooleanField(
+        default=False
     )
 
     def can_delete(self):
@@ -1356,6 +1369,8 @@ class ResourceRequirement(AvailabilityUpdaterMixin, models.Model):
         )
 
     def has_free_resources_between(self, from_dt, to_dt, amount=1):
+        if self.resource_pool is None:
+            return False
         if amount <= 0:
             return True
 
@@ -1371,6 +1386,8 @@ class ResourceRequirement(AvailabilityUpdaterMixin, models.Model):
         return False
 
     def is_fullfilled_for(self, visit):
+        if self.resource_pool is None:
+            return False
         return VisitResource.objects.filter(
             visit=visit,
             resource_requirement=self
