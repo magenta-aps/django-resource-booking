@@ -1158,6 +1158,23 @@ class UserResource(Resource):
             )
             user_resource.save()
 
+    @classmethod
+    def for_user(cls, user):
+        return cls.objects.filter(user=user).first()
+
+    @classmethod
+    def get_map(cls, queryset):
+        # This one puts the db lookup in a loop. We don't like that
+        # return {
+        #     x.id: cls.for_user(c)
+        #     for x in queryset.all()
+        # }
+        # This one extracts all the resources from db before looping them
+        return {
+            resource.user.id: resource
+            for resource in cls.objects.filter(user__in=queryset)
+        }
+
 
 class TeacherResource(UserResource):
     role = TEACHER
