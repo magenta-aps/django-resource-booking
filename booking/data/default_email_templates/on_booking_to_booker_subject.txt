@@ -1,1 +1,1 @@
-Tilmelding til foKUs-tilbud {{ product.title }}
+Tilmelding til {{ product.title }} - Københavns Universitet

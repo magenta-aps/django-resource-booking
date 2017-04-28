@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from booking.models import StudyMaterial, ProductAutosend, Booking
+from booking.models import StudyMaterial, ProductAutosend, Booking, \
+    EvaluationGuest
 from booking.models import Subject, BookingGrundskoleSubjectLevel
 from booking.models import Locality, OrganizationalUnitType, OrganizationalUnit
 from booking.models import Product
@@ -10,6 +11,7 @@ from booking.models import ClassBooking, TeacherBooking, \
 from booking.models import EmailTemplate, EmailTemplateType
 from booking.models import Visit
 from booking.models import MultiProductVisitTemp, MultiProductVisitTempProduct
+from booking.models import Evaluation
 from booking.models import BLANK_LABEL, BLANK_OPTION
 from booking.widgets import OrderedMultipleHiddenChooser
 from booking.utils import binary_or, binary_and
@@ -17,6 +19,7 @@ from django import forms
 from django.db.models import Q
 from django.db.models.expressions import OrderBy
 from django.forms import CheckboxSelectMultiple, CheckboxInput
+from django.forms import ModelMultipleChoiceField
 from django.forms import EmailInput
 from django.forms import formset_factory, inlineformset_factory
 from django.forms import TextInput, NumberInput, DateInput, Textarea, Select
@@ -1208,7 +1211,7 @@ class EmailTemplateForm(forms.ModelForm):
         fields = ('type', 'subject', 'body', 'organizationalunit')
         widgets = {
             'subject': TextInput(attrs={'class': 'form-control'}),
-            'body': Textarea(attrs={'rows': 10, 'cols': 90}),
+            'body': Textarea(attrs={'class': 'form-control'}),
         }
 
     def __init__(self, user, *args, **kwargs):
@@ -1261,7 +1264,7 @@ class BaseEmailComposeForm(forms.Form):
 
     body = forms.CharField(
         max_length=65584,
-        widget=Textarea(attrs={'rows': 10, 'cols': 90}),
+        widget=Textarea(attrs={'class': 'form-control'}),
         label=_(u'Tekst')
     )
 
@@ -1452,3 +1455,93 @@ class MultiProductVisitTempProductsForm(forms.ModelForm):
             )
             relation.save()
         return mvpt
+
+
+class EvaluationForm(forms.ModelForm):
+
+    class Meta:
+        model = Evaluation
+        fields = ['url']
+        widgets = {'url': TextInput(attrs={
+            'class': 'form-control input-sm',
+            'readonly': 'readonly'
+        })}
+
+    nonparticipating_guests = ModelMultipleChoiceField(
+        queryset=Guest.objects.all(),
+        required=False,
+        label=_(u'Deltagere uden spørgeskema')
+    )
+
+    def __init__(self, visit, *args, **kwargs):
+        self.instance = kwargs.get('instance')
+        self.visit = visit
+        if self.instance:
+            kwargs['initial']['nonparticipating_guests'] = [
+                evaluationguest.guest
+                for evaluationguest
+                in self.instance.evaluationguest_set.filter(
+                    status=EvaluationGuest.STATUS_NO_PARTICIPATION
+                )
+            ]
+        super(EvaluationForm, self).__init__(*args, **kwargs)
+        self.fields['nonparticipating_guests'].queryset = Guest.objects.filter(
+            booking__in=self.visit.booking_list
+        )
+
+    def get_queryset(self):
+        return Evaluation.objects.filter(visit=self.visit)
+
+    def save(self, commit=True):
+        self.instance.visit = self.visit
+        super(EvaluationForm, self).save(commit)
+        existing_guests = {
+            evalguest.guest: evalguest
+            for evalguest in self.instance.evaluationguest_set.all()
+        }
+        for booking in self.visit.booking_list:
+            guest = booking.booker
+            status = EvaluationGuest.STATUS_NO_PARTICIPATION
+            if guest not in self.cleaned_data['nonparticipating_guests']:
+                status = EvaluationGuest.STATUS_NOT_SENT
+            if guest in existing_guests:
+                evalguest = existing_guests[guest]
+                evalguest.status = status
+            else:
+                evalguest = EvaluationGuest(
+                    evaluation=self.instance,
+                    guest=guest,
+                    status=status
+                )
+            evalguest.save()
+        return self.instance
+
+
+class EvaluationStatisticsForm(forms.Form):
+
+    from_date = forms.DateField(
+        label=_(u'Dato fra'),
+        input_formats=['%d-%m-%Y'],
+        required=False,
+        widget=forms.DateInput(
+            attrs={
+                'class': 'form-control input-sm datepicker datepicker-admin'
+            }
+        )
+    )
+
+    to_date = forms.DateField(
+        label=_(u'Dato til'),
+        input_formats=['%d-%m-%Y'],
+        required=False,
+        widget=forms.DateInput(
+            attrs={
+                'class': 'form-control input-sm datepicker datepicker-admin'
+            }
+        )
+    )
+
+    unit = forms.ModelChoiceField(
+        label=_(u'Enhed'),
+        queryset=OrganizationalUnit.objects.all()
+    )

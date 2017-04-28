@@ -1,20 +1,31 @@
-<p>Kære {{ recipient.get_full_name }}.</p>
+<p>Kære {{ recipient.get_full_name }}</p>
 
-<p>
-    Du har ønsket mindst {{ visit.real.required_visits }} af følgende besøg:
-    <ul>
-    {% for product in visit.real.products %}
-        <li><a href="{% full_url 'product-view' product.id %}">{{ product.title }}</a></li>
-    {% endfor %}
-    </ul>
-
-    Vi vil gøre, hvad vi kan for at opfylde dit ønske om tidspunkt, og du hører fra os, når besøget er planlagt.
-    {% if visit.is_multiproductvisit %}
+{% if visit.is_multiproductvisit %}
+    <p>
+        Du har ønsket mindst {{ visit.real.required_visits }} af følgende besøg den {{ visit.real.eventtime.start|date:'d.m.Y' }}:
+        <ul>
+        {% for product in visit.real.products %}
+            <li><a href="{% full_url 'product-view' product.id %}">{{ product.title }}</a></li>
+        {% endfor %}
+        </ul>
+        Vi vil gøre, hvad vi kan for at opfylde dit ønske om tidspunkt, og du hører fra os, når besøget er planlagt.
         {% include 'booking/email/snippets/contact_addresses.html' with product=visit.real.primary_visit.product %}
-    {% else %}
+    </p>
+{% else %}
+    <p>
+        Du har tilmeldt dig besøg {{ visit.display_title }}
+        {% include 'booking/email/snippets/visit_time.html' %}
+        på Københavns Universitet{% if visit.locality %}:
+        {% include 'booking/email/snippets/product_maplink.html' %}{% endif %}.
         {% include 'booking/email/snippets/contact_addresses.html' with product=product %}
+    </p>
+    {% if not visit.start_datetime and visit.desired_time %}
+        <p>Ønsket tidspunkt: {{ visit.desired_time }}</p>
     {% endif %}
-</p>
+    <p>
+        Vi vil gøre, hvad vi kan for at opfylde dit ønske om tidspunkt, og du hører fra os, når besøget er planlagt.
+    </p>
+{% endif %}
 <p>
     Detaljer for din tilmelding:
 </p>

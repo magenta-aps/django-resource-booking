@@ -97,7 +97,7 @@
                     <td><a href="{% url 'booking-view' booking.id %}">{{ booking }}</a></td>
                     <td>{{ booking.visit.product.get_type_display }}</td>
                     <td><a href="{% url 'product-view' booking.visit.product.pk %}">{{ booking.visit.product.title }}</a></td>
-                    <td>{{ booking.visit.start_datetime|date:'d-m-Y H:i:s'}} til {{ booking.visit.end_datetime|date:'d-m-Y H:i:s'}}</td>
+                    <td>{{ booking.visit.interval_display }}</td>
                     <td>
                         {% for bookingsubjectlevel in booking.bookinggrundskolesubjectlevel_set.all %}
                             {{ bookingsubjectlevel.subject }}/{{ bookingsubjectlevel.level }},

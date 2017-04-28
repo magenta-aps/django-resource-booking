@@ -11,7 +11,7 @@ from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic.edit import FormView, DeleteView
 
 from django.forms.widgets import TextInput, HiddenInput
-from booking.models import OrganizationalUnit, Product
+from booking.models import OrganizationalUnit, Product, Visit
 from booking.resource_based.forms import ResourceTypeForm, EditResourceForm
 from booking.resource_based.forms import ResourcePoolTypeForm
 from booking.resource_based.forms import EditResourcePoolForm
@@ -718,6 +718,16 @@ class ResourcePoolDeleteView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
                 member.delete()
         return super(ResourcePoolDeleteView, self).delete(
             request, *args, **kwargs
+        )
+
+    def get_context_data(self, **kwargs):
+        context = {}
+        context['affected_visits'] = Visit.objects.filter(
+            visitresource__resource_requirement__resource_pool=self.object
+        ).distinct()
+        context.update(kwargs)
+        return super(ResourcePoolDeleteView, self).get_context_data(
+            **context
         )
 
     def get_template_names(self):

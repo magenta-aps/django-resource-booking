@@ -30,7 +30,7 @@ from django.utils.decorators import method_decorator
 from django.utils.http import urlquote
 from django.utils.translation import ugettext as _
 from django.views.generic import View, TemplateView, ListView, DetailView
-from django.views.generic.base import ContextMixin
+from django.views.generic.base import ContextMixin, RedirectView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.edit import FormMixin, ModelFormMixin
 from django.views.generic.edit import FormView, ProcessFormView
@@ -53,9 +53,9 @@ from booking.models import LOGACTION_CREATE, LOGACTION_CHANGE
 from booking.models import RoomResponsible
 from booking.models import BookerResponseNonce
 from booking.models import CalendarEvent
-
 from booking.models import MultiProductVisit
 from booking.models import MultiProductVisitTemp, MultiProductVisitTempProduct
+from booking.models import Evaluation, EvaluationGuest
 
 from booking.forms import ProductInitialForm, ProductForm
 from booking.forms import GuestEmailComposeForm, StudentForADayBookingForm
@@ -81,6 +81,7 @@ from booking.forms import VisitSearchForm
 from booking.forms import AcceptBookingForm
 from booking.forms import MultiProductVisitTempDateForm
 from booking.forms import MultiProductVisitTempProductsForm
+from booking.forms import EvaluationForm, EvaluationStatisticsForm
 
 from booking.utils import full_email, get_model_field_map
 from booking.utils import get_related_content_types, merge_dicts
@@ -379,7 +380,8 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
                 form.cleaned_data['recipients']
             )
             KUEmailMessage.send_email(
-                template, context, recipients, self.object
+                template, context, recipients, self.object,
+                original_from_email=request.user.userprofile.get_full_email()
             )
             return super(EmailComposeView, self).form_valid(form)
 
@@ -403,7 +405,8 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
         context['templates'] = EmailTemplate.get_template(
             self.template_type, self.get_unit(), True
         )
-        context['template_type'] = self.template_type.id
+        context['template_type'] = self.template_type.id \
+            if self.template_type else None
         context['template_unit'] = self.get_unit()
         context['modal'] = self.modal
         context.update(kwargs)
@@ -1340,6 +1343,7 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
                     if is_cloning:
                         self.object.pk = None
                         self.object.id = None
+                        self.object.calendar = None
                 except ObjectDoesNotExist:
                     raise Http404
 
@@ -2469,10 +2473,16 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
                     booking.visit.waiting_list_capacity
                 if attendee_count > waitinglist_capacity:
                     booking.delete()
-                    raise Exception(_(u"Cannot place booking with %d attendees"
-                                      u" in waiting list; there are only %d "
-                                      u"spots") %
-                                    (attendee_count, waitinglist_capacity))
+                    raise Exception(_(u"Cannot place booking with "
+                                      u"%(attendee_count)d attendees in "
+                                      u"waiting list; there are only "
+                                      u"%(waitinglist_capacity)d spots") %
+                                    {
+                                        'attendee_count': attendee_count,
+                                        'waitinglist_capacity':
+                                            waitinglist_capacity
+                                    }
+                                    )
 
                 booking.waitinglist_spot = \
                     booking.visit.next_waiting_list_spot
@@ -3524,12 +3534,18 @@ class EmailReplyView(BreadcrumbMixin, DetailView):
             return orig_obj.product
         elif type(orig_obj) == Product:
             return orig_obj
+        return None
 
+    def get_visit(self):
+        orig_obj = self.get_original_object()
+        if type(orig_obj) == Visit:
+            return orig_obj
         return None
 
     def get_context_data(self, **kwargs):
         context = {}
         context['form'] = self.get_form()
+        context['visit'] = self.get_visit()
         context['product'] = self.get_product()
         context['is_guest_mail'] = self.object.template_type.send_to_booker
         context.update(kwargs)
@@ -3541,9 +3557,12 @@ class EmailReplyView(BreadcrumbMixin, DetailView):
             self.object = self.get_object()
             orig_obj = self.get_original_object()
             orig_message = self.object
-            visit = orig_obj if type(orig_obj) == Visit else None
+            visit = self.get_visit()
             reply = form.cleaned_data.get('reply', "").strip()
             product = self.get_product()
+            unit = visit.real.organizationalunit \
+                if visit is not None \
+                else product.organizationalunit
 
             recipients = orig_message.original_from_email
 
@@ -3559,7 +3578,8 @@ class EmailReplyView(BreadcrumbMixin, DetailView):
                 },
                 recipients,
                 orig_obj,
-                organizationalunit=product.organizationalunit
+                organizationalunit=unit,
+                original_from_email=request.user.userprofile.get_full_email()
             )
             result_url = reverse(
                 'reply-to-email', args=[self.object.reply_nonce]
@@ -3919,3 +3939,126 @@ class MultiProductVisitTempConfirmView(BreadcrumbMixin, DetailView):
                 'text': _(u'Bekræft')
             }
         ]
+
+
+class EvaluationEditView(BreadcrumbMixin, UpdateView):
+
+    form_class = EvaluationForm
+    template_name = "evaluation/form.html"
+    model = Evaluation
+
+    def get_object(self, queryset=None):
+        if 'pk' in self.kwargs:
+            return super(EvaluationEditView, self).get_object(queryset)
+
+    def get_visit(self):
+        if self.object:
+            return self.object.visit
+        return Visit.objects.get(id=self.kwargs.get('visit'))
+
+    def get_form_kwargs(self):
+        kwargs = super(EvaluationEditView, self).get_form_kwargs()
+        kwargs['visit'] = Visit.objects.get(id=self.kwargs.get('visit'))
+        return kwargs
+
+    def get_success_url(self):
+        return reverse(
+            'visit-evaluation-view', args=[
+                self.object.visit.id, self.object.id
+            ]
+        )
+
+    def get_breadcrumb_args(self):
+        return [self.object, self.get_visit()]
+
+    @staticmethod
+    def build_breadcrumbs(evaluation, visit=None):
+        if visit is None:
+            visit = evaluation.visit
+        if evaluation is None:
+            return VisitDetailView.build_breadcrumbs(visit) + [
+                {'text': _(u'Opret evaluering')}
+            ]
+        else:
+            return EvaluationDetailView.build_breadcrumbs(evaluation) + [
+                {'text': _(u'Rediger')}
+            ]
+
+
+class EvaluationDetailView(BreadcrumbMixin, DetailView):
+
+    template_name = "evaluation/details.html"
+    model = Evaluation
+
+    def get_breadcrumb_args(self):
+        return [self.object]
+
+    @staticmethod
+    def build_breadcrumbs(evaluation):
+        return VisitDetailView.build_breadcrumbs(evaluation.visit) + [
+            {
+                'text': _(u'Evaluering'),
+                'url': reverse(
+                    'visit-evaluation-view',
+                    args=[evaluation.visit.id, evaluation.id]
+                )
+            }
+        ]
+
+
+class EvaluationRedirectView(RedirectView):
+
+    permanent = False
+
+    def get_redirect_url(self, *args, **kwargs):
+        try:
+            evalguest = EvaluationGuest.objects.get(
+                shortlink_id=kwargs['linkid']
+            )
+        except:
+            raise Http404
+        url = evalguest.url
+        if url is None:
+            raise Http404
+        evalguest.link_clicked()
+        return url
+
+
+class EvaluationStatisticsView(TemplateView):
+
+    template_name = "evaluation/statistics.html"
+
+    def get_form(self):
+        return EvaluationStatisticsForm(self.request.GET)
+
+    def get_context_data(self, **kwargs):
+        form = self.get_form()
+        form.full_clean()
+        data = form.clean()
+        has_filter = False
+        queryset = Visit.objects.filter(evaluation__isnull=False)
+
+        unit = data.get("unit")
+        if unit is not None:
+            queryset = Visit.unit_filter(queryset, unit)
+            has_filter = True
+
+        from_date = data.get('from_date')
+        if from_date is not None:
+            queryset = queryset.filter(eventtime__start__gte=from_date)
+            has_filter = True
+
+        to_date = data.get('to_date')
+        if to_date is not None:
+            queryset = queryset.filter(eventtime__start__lte=to_date)
+            has_filter = True
+
+        context = {
+            'has_filter': has_filter,
+            'visits': queryset,
+            'form': form
+        }
+        context.update(kwargs)
+        return super(EvaluationStatisticsView, self).get_context_data(
+            **context
+        )

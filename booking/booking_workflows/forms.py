@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from django.contrib.auth.models import User
+
 from booking.models import Visit, VisitAutosend, MultiProductVisit
 from booking.models import EmailTemplateType
 from django import forms
@@ -43,7 +45,12 @@ class ChangeVisitTeachersForm(forms.ModelForm):
     class Meta:
         model = Visit
         fields = ['teachers', 'override_needed_teachers']
-        widgets = {'teachers': forms.CheckboxSelectMultiple()}
+        widgets = {
+            'teachers': forms.CheckboxSelectMultiple(),
+            'override_needed_teachers': forms.Select(
+                attrs={'class': 'form-control'}
+            )
+        }
 
     send_emails = forms.BooleanField(
         label=_(u"Udsend e-mails til nye undervisere der tilknyttes"),
@@ -53,7 +60,9 @@ class ChangeVisitTeachersForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ChangeVisitTeachersForm, self).__init__(*args, **kwargs)
-        self.fields['teachers'].queryset = \
+        teacherfield = self.fields['teachers']
+        teacherfield.label_from_instance = User.get_full_name
+        teacherfield.queryset = \
             kwargs['instance'].product.potentielle_undervisere.all()
 
 
@@ -61,7 +70,12 @@ class ChangeVisitHostsForm(forms.ModelForm):
     class Meta:
         model = Visit
         fields = ['hosts', 'override_needed_hosts']
-        widgets = {'hosts': forms.CheckboxSelectMultiple()}
+        widgets = {
+            'hosts': forms.CheckboxSelectMultiple(),
+            'override_needed_hosts': forms.Select(
+                attrs={'class': 'form-control'}
+            )
+        }
 
     send_emails = forms.BooleanField(
         label=_(u"Udsend e-mails til nye værter der tilknyttes"),
@@ -71,7 +85,9 @@ class ChangeVisitHostsForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ChangeVisitHostsForm, self).__init__(*args, **kwargs)
-        self.fields['hosts'].queryset = \
+        hostfield = self.fields['hosts']
+        hostfield.label_from_instance = User.get_full_name
+        hostfield.queryset = \
             kwargs['instance'].product.potentielle_vaerter.all()
 
 

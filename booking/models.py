@@ -13,6 +13,7 @@ from django.db.models.functions import Coalesce
 from django.utils import six
 from django.template.context import make_context
 from django.utils import timezone
+from django.utils.crypto import get_random_string
 from djorm_pgfulltext.models import SearchManager
 from djorm_pgfulltext.fields import VectorField
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -266,6 +267,11 @@ class OrganizationalUnit(models.Model):
 
         return recipients
 
+    def get_reply_recipients(self, template_type):
+        if template_type.reply_to_unit_responsible:
+            return [self.contact]
+        return []
+
     @classmethod
     def root_unit_id(cls):
         unit = cls.objects.filter(
@@ -486,6 +492,8 @@ class EmailTemplateType(
     NOTIFY_TEACHER__ASSOCIATED = 21  # Ticket 15701
     NOTIFY_ALL_EVALUATION = 22  # Ticket 15701
     NOTIFY_GUEST__BOOKING_CREATED_UNTIMED = 23  # Ticket 16914
+    NOTIFY_GUEST__EVALUATION_FIRST = 24  # Ticket 13819
+    NOTIFY_GUEST__EVALUATION_SECOND = 25  # Ticket 13819
 
     @staticmethod
     def get(template_key):
@@ -584,6 +592,23 @@ class EmailTemplateType(
     enable_autosend = models.BooleanField(default=False)
 
     form_show = models.BooleanField(default=False)
+
+    @property
+    def reply_to_product_responsible(self):
+        for x in [
+            self.send_to_visit_hosts, self.send_to_visit_teachers,
+            self.send_to_booker, self.send_to_potential_hosts,
+            self.send_to_potential_teachers, self.send_to_visit_added_host,
+            self.send_to_visit_added_teacher, self.send_to_unit_hosts,
+            self.send_to_unit_teachers
+        ]:
+            if x:
+                return True
+        return False
+
+    @property
+    def reply_to_unit_responsible(self):
+        return False
 
     @staticmethod
     def set_default(key, **kwargs):
@@ -870,6 +895,29 @@ class EmailTemplateType(
             ordering=23
         )
 
+        EmailTemplateType.set_default(
+            EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST,
+            name_da=u'Besked til bruger angående evaluering (første besked)',
+            form_show=True,
+            send_to_booker=True,
+            enable_autosend=True,
+            enable_booking=True,
+            is_default=True,
+            ordering=24
+        )
+
+        EmailTemplateType.set_default(
+            EmailTemplateType.NOTIFY_GUEST__EVALUATION_SECOND,
+            name_da=u'Besked til bruger angående evaluering (anden besked)',
+            form_show=True,
+            send_to_booker=True,
+            enable_autosend=True,
+            enable_booking=True,
+            enable_days=True,
+            is_default=True,
+            ordering=25
+        )
+
     @staticmethod
     def get_keys(**kwargs):
         return [
@@ -1129,13 +1177,11 @@ class ObjectStatistics(models.Model):
 
     created_time = models.DateTimeField(
         blank=False,
-        auto_now_add=True,
+        auto_now_add=True
     )
     updated_time = models.DateTimeField(
         blank=False,
-        default=timezone.now
-        # auto_now=True  # This would update the field on every save,
-        # including when we just want to update the display counter
+        auto_now_add=True
     )
     visited_time = models.DateTimeField(
         blank=True,
@@ -2135,6 +2181,14 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
         return recipients
 
+    def get_reply_recipients(self, template_type):
+        recipients = self.organizationalunit.get_reply_recipients(
+            template_type
+        )
+        if template_type.reply_to_product_responsible:
+            recipients.extend(self.get_responsible_persons())
+        return recipients
+
     # Returns best guess for who is responsible for visits for this product.
     def get_responsible_persons(self):
         if self.tilbudsansvarlig:
@@ -2431,9 +2485,11 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             hours = math.floor(mins / 60)
             mins = mins % 60
             if(hours == 1):
-                return _(u"1 time og %d minutter") % (mins)
+                return _(u"1 time og %(minutes)d minutter") % {'minutes': mins}
             else:
-                return _(u"%d timer og %d minutter") % (hours, mins)
+                return _(u"%(hours)d timer og %(minutes)d minutter") % {
+                    'hours': hours, 'minutes': mins
+                }
         else:
             return ""
 
@@ -2878,10 +2934,14 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
         return result
 
-    def workflow_status_display(self):
-        for value, label in self.workflow_status_choices:
-            if value == self.workflow_status:
+    @classmethod
+    def workflow_status_name(cls, workflow_status):
+        for value, label in cls.workflow_status_choices:
+            if value == workflow_status:
                 return label
+
+    def workflow_status_display(self):
+        return Visit.workflow_status_name(self.workflow_status)
 
     def get_subjects(self):
         if hasattr(self, 'teacherbooking'):
@@ -2902,6 +2962,11 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         if last_workflow_status is None or \
                 last_workflow_status != self.workflow_status:
             self.last_workflow_update = timezone.now()
+            if self.workflow_status == self.WORKFLOW_STATUS_EXECUTED:
+                try:
+                    self.evaluation.send_first_notification()
+                except AttributeError:
+                    pass
 
     @property
     # QuerySet that finds EventTimes that will be affected by resource changes
@@ -3011,10 +3076,14 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     @property
     def date_display_context(self):
         if hasattr(self, 'eventtime') and self.eventtime.start:
-            return _("d. %s kl. %s") % (
-                formats.date_format(self.eventtime.naive_start, "DATE_FORMAT"),
-                formats.date_format(self.eventtime.naive_start, "TIME_FORMAT")
-            )
+            return _("d. %(date)s kl. %(time)s") % {
+                'date': formats.date_format(
+                    self.eventtime.naive_start, "DATE_FORMAT"
+                ),
+                'time': formats.date_format(
+                    self.eventtime.naive_start, "TIME_FORMAT"
+                )
+            }
         else:
             return _(u'på ikke-fastlagt tidspunkt')
 
@@ -3308,11 +3377,11 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         if self.is_multiproductvisit:
             return self.multiproductvisit.__unicode__()
         if hasattr(self, 'eventtime'):
-            return _(u'Besøg %s - %s - %s') % (
-                self.pk,
-                unicode(self.real.display_title),
-                unicode(self.eventtime.interval_display)
-            )
+            return _(u'Besøg %(id)s - %(title)s - %(time)s') % {
+                'id': self.pk,
+                'title': unicode(self.real.display_title),
+                'time': unicode(self.eventtime.interval_display)
+            }
         else:
             return unicode(_(u'Besøg %s - uden tidspunkt') % self.pk)
 
@@ -3361,7 +3430,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         return cls.objects.filter(
             workflow_status__in=[
                 cls.WORKFLOW_STATUS_BEING_PLANNED,
-                cls.WORKFLOW_STATUS_AUTOASSIGN_FAILED
+                cls.WORKFLOW_STATUS_AUTOASSIGN_FAILED,
+                cls.WORKFLOW_STATUS_REJECTED
             ],
             **kwargs
         )
@@ -3431,6 +3501,15 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 if item in recipients:
                     recipients.remove(item)
         return recipients
+
+    def get_reply_recipients(self, template_type):
+        product = self.product
+        if self.is_multiproductvisit and self.multiproductvisit.primary_visit:
+            product = self.multiproductvisit.primary_visit.product
+        if product:
+            return product.get_reply_recipients(template_type)
+        else:
+            return []
 
     def create_inheriting_autosends(self):
         for template_type in EmailTemplateType.objects.filter(
@@ -3517,12 +3596,16 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             if not only_these_recipients:
                 recipients.update(self.get_recipients(template_type))
 
+            # People who will receive any replies to the mail
+            reply_recipients = self.get_reply_recipients(template_type)
+
             KUEmailMessage.send_email(
                 template_type,
                 {'visit': self, 'besoeg': self, 'product': product},
                 list(recipients),
                 self,
-                unit
+                unit,
+                original_from_email=reply_recipients
             )
 
             if not only_these_recipients and template_type.send_to_booker:
@@ -3538,7 +3621,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                         },
                         booking.booker,
                         self,
-                        unit
+                        unit,
+                        original_from_email=reply_recipients
                     )
 
     def get_autosend_display(self):
@@ -3773,6 +3857,13 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                     ),
                     'is_host': (type.id == ResourceType.RESOURCE_TYPE_HOST)
                 })
+        for requirement in self.product.resourcerequirement_set.filter(
+            resource_pool__isnull=True
+        ):
+            details.append({
+                'unknown': True,
+                'id': requirement.id
+            })
         return details
 
     @property
@@ -3866,6 +3957,11 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         if self.product.time_mode == \
                 Product.TIME_MODE_RESOURCE_CONTROLLED_AUTOASSIGN:
             for requirement in self.product.resourcerequirement_set.all():
+                if requirement.being_deleted:
+                    # Deletion of VisitResources can start this process, but
+                    # we must ignore requirements that are scheduled for
+                    # deletion.
+                    continue
                 assigned = self.resources.filter(
                     visitresource__resource_requirement=requirement
                 )
@@ -4177,6 +4273,9 @@ class MultiProductVisit(Visit):
             if not only_these_recipients:
                 recipients.update(self.get_recipients(template_type))
 
+            # People who will receive any replies to the mail
+            reply_recipients = self.get_reply_recipients(template_type)
+
             params = {'visit': self, 'products': self.products}
 
             KUEmailMessage.send_email(
@@ -4184,7 +4283,8 @@ class MultiProductVisit(Visit):
                 params,
                 list(recipients),
                 self,
-                unit
+                unit,
+                original_from_email=reply_recipients
             )
 
             if not only_these_recipients and template_type.send_to_booker:
@@ -4197,7 +4297,8 @@ class MultiProductVisit(Visit):
                         }),
                         booking.booker,
                         self,
-                        unit
+                        unit,
+                        original_from_email=reply_recipients
                     )
 
     def autoassign_resources(self):
@@ -4206,11 +4307,12 @@ class MultiProductVisit(Visit):
 
     def __unicode__(self):
         if hasattr(self, 'eventtime'):
-            return _(u'Besøg %s - Prioriteret liste af %d underbesøg - %s') % (
-                self.pk,
-                self.subvisits_unordered.count(),
-                unicode(self.eventtime.interval_display)
-            )
+            return _(u'Besøg %(id)s - Prioriteret liste af '
+                     u'%(count)d underbesøg - %(time)s') % {
+                'id': self.pk,
+                'count': self.subvisits_unordered.count(),
+                'time': unicode(self.eventtime.interval_display)
+            }
         else:
             return unicode(_(u'Besøg %s - uden tidspunkt') % self.pk)
 
@@ -4969,8 +5071,12 @@ class Booking(models.Model):
             recipients.append(self.booker)
         return recipients
 
+    def get_reply_recipients(self, template_type):
+        return self.visit.get_reply_recipients(template_type)
+
     def autosend(self, template_type, recipients=None,
                  only_these_recipients=False):
+
         visit = self.visit.real
         if visit.autosend_enabled(template_type):
             product = visit.product
@@ -4993,8 +5099,11 @@ class Booking(models.Model):
                 },
                 list(recipients),
                 self.visit,
-                organizationalunit=unit
+                organizationalunit=unit,
+                original_from_email=self.get_reply_recipients(template_type)
             )
+            return True
+        return False
 
     def as_searchtext(self):
         return " ".join([unicode(x) for x in [
@@ -5190,6 +5299,57 @@ class KUEmailMessage(models.Model):
     )
 
     @staticmethod
+    def extract_addresses(recipients):
+        if type(recipients) != list:
+            recipients = [recipients]
+        emails = {}
+        for recipient in recipients:
+            name = None
+            address = None
+            user = None
+            guest = None
+            if isinstance(recipient, basestring):
+                address = recipient
+            elif isinstance(recipient, User):
+                name = recipient.get_full_name()
+                address = recipient.email
+                user = recipient
+            elif isinstance(recipient, Guest):
+                name = recipient.get_name()
+                address = recipient.get_email()
+                guest = recipient
+            else:
+                try:
+                    name = recipient.get_name()
+                except:
+                    pass
+                try:
+                    address = recipient.get_email()
+                except:
+                    pass
+            if address is not None and address != '' and (
+                    address not in emails or (
+                        user and not emails[address]['user']
+                    )
+            ):
+
+                email = {
+                    'address': address,
+                    'user': user,
+                    'guest': guest,
+                }
+
+                if name is not None:
+                    email['name'] = name
+                    email['full'] = u"\"%s\" <%s>" % (name, address)
+                else:
+                    email['full'] = address
+
+                email['get_full_name'] = email.get('name', email['full'])
+                emails[address] = email
+        return emails.values()
+
+    @staticmethod
     def save_email(email_message, instance,
                    reply_nonce=None, htmlbody=None,
                    template_type=None, original_from_email=None):
@@ -5212,7 +5372,12 @@ class KUEmailMessage(models.Model):
             body=email_message.body,
             htmlbody=htmlbody,
             from_email=email_message.from_email,
-            original_from_email=original_from_email,
+            original_from_email=", ".join([
+                address['full']
+                for address in KUEmailMessage.extract_addresses(
+                    original_from_email
+                )
+            ]),
             recipients=', '.join(email_message.recipients()),
             content_type=ctype,
             object_id=instance.id,
@@ -5243,55 +5408,12 @@ class KUEmailMessage(models.Model):
         if 'besoeg' not in context and 'visit' in context:
             context['besoeg'] = context['visit']
 
-        emails = {}
         if type(recipients) is not list:
             recipients = [recipients]
 
-        for recipient in recipients:
-            name = None
-            address = None
-            user = None
-            guest = None
-            if isinstance(recipient, basestring):
-                address = recipient
-            elif isinstance(recipient, User):
-                name = recipient.get_full_name()
-                address = recipient.email
-                user = recipient
-            elif isinstance(recipient, Guest):
-                name = recipient.get_name()
-                address = recipient.get_email()
-                guest = recipient
-            else:
-                try:
-                    name = recipient.get_name()
-                except:
-                    pass
-                try:
-                    address = recipient.get_email()
-                except:
-                    pass
-            if address is not None and address != '' and \
-                    (address not in emails or
-                        (user and not emails[address]['user'])
-                     ):
+        emails = KUEmailMessage.extract_addresses(recipients)
 
-                email = {
-                    'address': address,
-                    'user': user,
-                    'guest': guest,
-                }
-
-                if name is not None:
-                    email['name'] = name
-                    email['full'] = u"\"%s\" <%s>" % (name, address)
-                else:
-                    email['full'] = address
-
-                email['get_full_name'] = email.get('name', email['full'])
-                emails[address] = email
-
-        for email in emails.values():
+        for email in emails:
             nonce = uuid.uuid4()
             ctx = {
                 'organizationalunit': unit,
@@ -5342,17 +5464,22 @@ class KUEmailMessage(models.Model):
 
         # Log the sending
         if emails and instance:
+            logmessage = [
+                _(u"Template: %s") % template.type.name
+                if template.type else "None",
+                _(u"Modtagere: %s") % ", ".join(
+                    [x['full'] for x in emails]
+                )
+            ]
+            ctxmsg = context.get('log_message', None)
+            if ctxmsg:
+                logmessage.append(unicode(ctxmsg))
+
             log_action(
                 context.get("web_user", None),
                 instance,
                 LOGACTION_MAIL_SENT,
-                "\n".join([unicode(x) for x in [
-                    _(u"Template: ") + template.type.name,
-                    _(u"Modtagere: ") + ", ".join(
-                        [x['full'] for x in emails.values()]
-                    ),
-                    context.get('log_message', None)
-                ] if x])
+                u"\n".join(logmessage)
             )
 
     def get_reply_url(self, full=False):
@@ -5417,6 +5544,143 @@ class BookerResponseNonce(models.Model):
         attrs.update(kwargs)
 
         return cls.objects.create(**attrs)
+
+
+class Evaluation(models.Model):
+    url = models.CharField(
+        max_length=1024,
+        verbose_name=u'Evaluerings-URL'
+    )
+    visit = models.OneToOneField(
+        Visit,
+        null=False,
+        blank=False
+    )
+    guests = models.ManyToManyField(
+        Guest,
+        through='EvaluationGuest'
+    )
+
+    def send_notification(self, template_type, new_status, filter=None):
+        qs = self.evaluationguest_set.all()
+        if filter is not None:
+            qs = qs.filter(**filter)
+        for evalguest in qs:
+            for booking in evalguest.guest.booking_set.filter(
+                visit=self.visit
+            ):
+                # There really should be only one here
+                try:
+                    sent = booking.autosend(
+                        template_type
+                    )
+                    if sent:
+                        evalguest.status = new_status
+                        evalguest.save()
+                except Exception as e:
+                    print e
+
+    def send_first_notification(self):
+        self.send_notification(
+            EmailTemplateType.notify_guest__evaluation_first,
+            EvaluationGuest.STATUS_FIRST_SENT
+        )
+
+    def send_second_notification(self):
+        self.send_notification(
+            EmailTemplateType.notify_guest__evaluation_second,
+            EvaluationGuest.STATUS_SECOND_SENT,
+            {'status': EvaluationGuest.STATUS_FIRST_SENT}
+        )
+
+    def status_count(self, status):
+        return self.evaluationguest_set.filter(status=status).count()
+
+    def no_participation_count(self):
+        return self.status_count(EvaluationGuest.STATUS_NO_PARTICIPATION)
+
+    def not_sent_count(self):
+        return self.status_count(EvaluationGuest.STATUS_NOT_SENT)
+
+    def first_sent_count(self):
+        return self.status_count(EvaluationGuest.STATUS_FIRST_SENT)
+
+    def second_sent_count(self):
+        return self.status_count(EvaluationGuest.STATUS_SECOND_SENT)
+
+    def link_clicked_count(self):
+        return self.status_count(EvaluationGuest.STATUS_LINK_CLICKED)
+
+
+class EvaluationGuest(models.Model):
+    evaluation = models.ForeignKey(
+        Evaluation,
+        null=False,
+        blank=False
+    )
+    guest = models.OneToOneField(
+        Guest,
+        null=False,
+        blank=False
+    )
+    STATUS_NO_PARTICIPATION = 0
+    STATUS_NOT_SENT = 1
+    STATUS_FIRST_SENT = 2
+    STATUS_SECOND_SENT = 3
+    STATUS_LINK_CLICKED = 4
+    status_choices = [
+        (STATUS_NO_PARTICIPATION, _(u'Modtager ikke evaluering')),
+        (STATUS_NOT_SENT, _(u'Ikke afholdt / ikke afsendt')),
+        (STATUS_FIRST_SENT, _(u'Sendt første gang')),
+        (STATUS_SECOND_SENT, _(u'Sendt anden gang')),
+        (STATUS_LINK_CLICKED, _(u'Har klikket på link'))
+    ]
+    status = models.SmallIntegerField(
+        choices=status_choices,
+        verbose_name=u'status'
+    )
+    shortlink_id = models.CharField(
+        max_length=16,
+    )
+
+    @property
+    def shortlink(self):
+        return "http://localhost:8000/l/%s" % self.shortlink_id
+
+    @property
+    def status_display(self):
+        for status, label in self.status_choices:
+            if status == self.status:
+                return label
+
+    def save(self, *args, **kwargs):
+        if self.shortlink_id is None or len(self.shortlink_id) == 0:
+            self.shortlink_id = ''.join(get_random_string(length=13))
+        return super(EvaluationGuest, self).save(*args, **kwargs)
+
+    @property
+    def url(self):
+        template = Template(
+            "{% load booking_tags %}" +
+            "{% load i18n %}" +
+            "{% language 'da' %}\n" +
+            unicode(self.evaluation.url) +
+            "{% endlanguage %}\n"
+        )
+        context = make_context({
+            'evaluation': self.evaluation,
+            'guest': self.guest,
+            'visit': self.evaluation.visit
+        })
+
+        rendered = template.render(context)
+        return rendered
+
+        # return self.evaluation.url
+
+    def link_clicked(self):
+        self.status = self.STATUS_LINK_CLICKED
+        self.save()
 
 
 from booking.resource_based import models as rb_models  # noqa

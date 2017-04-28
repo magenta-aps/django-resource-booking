@@ -12,7 +12,18 @@
     <form action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <p>{% trans 'Er du sikker på at du vil slette denne ressource?' %}</p>
-        <p>{% trans 'Dette kan have indflydelse på eksisterende besøg, der benytter denne ressource, både dem der er under planlægning, og dem der er færdigplanlagte' %}</p>
+
+        {% if object.visitresource.count %}
+            <p>{% trans 'Dette vil have indflydelse på eksisterende besøg, der benytter denne ressource:' %}</p>
+            <ul>
+            {% for visitresource in object.visitresource.all %}
+                <li><a href="{% url "visit-view" visitresource.visit.id %}">{{ visitresource.visit }}</a></li>
+            {% endfor %}
+            </ul>
+        {% else %}
+            <p>{% trans 'Dette kan have indflydelse på eksisterende besøg, der benytter denne ressource, både dem der er under planlægning, og dem der er færdigplanlagte' %}</p>
+        {% endif %}
+
         <dl class="dl-horizontal">
             <dt>{% trans 'Type' %}</dt>
             <dd>{{ object.resource_type }}</dd>

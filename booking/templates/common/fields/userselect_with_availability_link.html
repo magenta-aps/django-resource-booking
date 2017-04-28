@@ -10,13 +10,11 @@
         {% endif %}
         {% if not field.field.queryset.count %}
             <p>
-            {% blocktrans with unitname=object.organizationalunit.name %}
-                Der blev ikke fundet nogen brugere at vælge ud fra. Undersøg
-                om der findes brugere af den korrekte type inden inden for din
-                enhed ({{ unitname }}).
-                For besøg bør du også undersøge om der er blevet tilknyttet
-                potentielle værter/undervisere til det tilbud besøget
-                er baseret på.
+            {% url 'user_list' as unitlink %}
+            {% url 'product-simple-ressources' object.product.id as productlink %}
+            {% blocktrans with unitname=object.organizationalunit.name unitid=object.organizationalunit.id productlink=productlink %}
+                Der blev ikke fundet nogen brugere at vælge ud fra. Undersøg om der findes brugere af den korrekte type inden inden for din enhed (<a href="{{ unitlink }}?unit={{ unitid }}">{{ unitname }}</a>).
+                For besøg bør du også undersøge om der er blevet <a href="{{ productlink }}">tilknyttet potentielle værter/undervisere</a> til det tilbud besøget er baseret på.
             {% endblocktrans %}
             </p>
         {% else %}
@@ -24,22 +22,25 @@
                 {% for pk, label in field.field.choices %}
                 <div class="checkbox">
                     <label for="id_{{ form.teachers.name }}_{{ forloop.counter0 }}">
-                        <input
-                            {% if pk in field.value %}
-                            checked="checked"
-                            {% endif %}
-                            id="id_{{ field.name }}_{{ forloop.counter0 }}"
-                            name="{{ field.name }}"
-                            type="checkbox"
-                            value="{{ pk }}"
-                        >
+                        <input {% if pk in field.value %}checked="checked"{% endif %} id="id_{{ field.name }}_{{ forloop.counter0 }}" name="{{ field.name }}" type="checkbox" value="{{ pk }}"/>
                         {{ label }}
-                        <a href="{% url 'availability' pk %}#todaysdate"
-                           role="button" class="btn btn-default btn-xs"
-                           onclick="this.target='_blank';">
+                        <a href="{% url 'availability' pk %}#todaysdate" role="button" class="btn btn-default btn-xs" onclick="this.target='_blank';">
                             {% trans 'Se detaljer' %}
                             <span class="glyphicon glyphicon-new-window"></span>
                         </a>
+                        {% if user_resources and user_resources|get:pk|get:'id' %}
+                            {% if user_resources|get:pk|get:'calendar' %}
+                                <a href="{% url 'calendar' user_resources|get:pk|get:'id' %}#todaysdate" role="button" class="btn btn-default btn-xs" onclick="this.target='_blank';">
+                                    {% trans 'Kalender' %}
+                                    <span class="glyphicon glyphicon-new-window"></span>
+                                </a>
+                            {% else %}
+                                <button type="button" disabled="disabled" class="btn btn-default btn-xs" title="{% trans 'Der findes ingen kalender for denne ressource' %}">
+                                    {% trans 'Kalender' %}
+                                    <span class="glyphicon glyphicon-new-window"></span>
+                                </button>
+                            {% endif %}
+                        {% endif %}
                     </label>
                 </div>
                 {% endfor %}

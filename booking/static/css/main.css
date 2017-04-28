@@ -36,8 +36,9 @@ body {
     -ms-flex-direction: column;
     flex-direction: column;
 }
+
 body.lightbox {
-  background-color: #fff;
+    background-color: #fff;
 }
 
 .content-container {
@@ -48,9 +49,9 @@ body.lightbox {
 }
 
 h1 {
-  font-size: 20px;
-  line-height: 1.4;
-  margin: 0.67em 0 22px;
+    font-size: 20px;
+    line-height: 1.4;
+    margin: 0.67em 0 22px;
 }
 
 h2 {
@@ -94,12 +95,15 @@ a:not(.btn,.text-muted,.text-primary,.text-success,.text-info,.text-warning,.tex
 a:not(.btn,.text-muted,.text-primary,.text-success,.text-info,.text-warning,.text-danger):active {
     color: #165aad;
 }
-h1 > a {
-  color: #252525!important;
+
+h1>a {
+    color: #252525!important;
 }
-h1 > a:hover {
-  color: #252525!important;
+
+h1>a:hover {
+    color: #252525!important;
 }
+
 strong, .bold {
     font-weight: bold;
 }
@@ -397,6 +401,103 @@ textarea.form-control {
     border-color: transparent;
 }
 
+.panel.panel-default>.panel-heading {
+    padding: 6px 2px 6px 6px;
+    background: rgb(234, 234, 232);
+    background: -moz-linear-gradient(top, rgba(234, 234, 232, 1) 0%, rgba(241, 241, 241, 1) 100%);
+    background: -webkit-linear-gradient(top, rgba(234, 234, 232, 1) 0%, rgba(241, 241, 241, 1) 100%);
+    background: linear-gradient(to bottom, rgba(234, 234, 232, 1) 0%, rgba(241, 241, 241, 1) 100%);
+    filter: progid: DXImageTransform.Microsoft.gradient( startColorstr='#eaeae8', endColorstr='#f1f1f1', GradientType=0);
+    border-color: #cacaca;
+    border-top: 1px solid #901a1e;
+    border-bottom: 1px solid #D5D5D5;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+}
+
+.panel .panel-title, .panel .panel-title a {
+    font-size: 12px;
+    color: #5e5e5e;
+    font-weight: bold;
+}
+
+#mapinfo .panel-heading:hover, #mapinfo .panel-heading:active, #mapinfo .panel-heading:focus {
+    text-decoration: none;
+}
+
+#mapinfo .panel-heading.collapsed h3.panel-title:after {
+    font-family: 'Glyphicons Halflings';
+    content: "\e252";
+    margin-left: 4px;
+    font-size: 10px;
+    position: relative;
+    top: 2px;
+}
+
+#mapinfo .panel-heading:not(.collapsed) h3.panel-title:after {
+    font-family: 'Glyphicons Halflings';
+    content: "\e250";
+    margin-left: 4px;
+    font-size: 10px;
+    position: relative;
+    top: 1px;
+}
+
+#productform .panel .panel-title a {
+    display: block;
+    position: relative;
+}
+
+#productform .panel .panel-title a .caret, #productform .panel .panel-title a .caret-up {
+    position: absolute;
+    right: 10px;
+    top: 40%;
+}
+
+#productform .panel .panel-title a .caret-up {
+    position: absolute;
+    right: 10px;
+    top: 40%;
+}
+
+.panel.panel-sidebar .panel-body a .caret-up {
+    color: initial;
+    margin-left: 5px;
+    display: inline-block;
+    width: 0;
+    height: 0;
+}
+
+a>.caret, a>.caret-up, a>.caret:focus, a>.caret-up:focus, a>.caret:active, a>.caret-up:active {
+    color: #252525;
+    outline: none;
+}
+
+.caret {
+    -webkit-transform: rotate(270deg);
+    -moz-transform: rotate(270deg);
+    -ms-transform: rotate(270deg);
+    -o-transform: rotate(270deg);
+    transform: rotate(270deg);
+}
+
+.caret-up {
+    display: inline-block;
+    width: 0;
+    height: 0;
+    margin-left: 2px;
+    vertical-align: middle;
+    border-top: 4px dashed;
+    border-top: 4px solid\9;
+    border-right: 4px solid transparent;
+    border-left: 4px solid transparent;
+    -webkit-transform: rotate(360deg);
+    -moz-transform: rotate(360deg);
+    -ms-transform: rotate(360deg);
+    -o-transform: rotate(360deg);
+    transform: rotate(360deg);
+}
+
 .panel-body {
     padding: 15px 15px 15px 0;
 }
@@ -467,8 +568,9 @@ textarea.form-control {
     padding: 5px 10px 5px 0;
     border: 0;
 }
+
 #accordion h3 {
-  margin-top: 10px;
+    margin-top: 10px;
 }
 
 .panel.panel-default .panel-title {
@@ -739,11 +841,6 @@ hr {
     color: #333;
 }
 
-a>.caret, a>.caret:focus, a>.caret:active {
-    color: #252525;
-    outline: none;
-}
-
 .input-daterange {
     margin-top: 20px;
 }
@@ -851,20 +948,23 @@ a>.caret, a>.caret:focus, a>.caret:active {
     transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
 }
 
+
 /* Firefox-specific beautification of select dropdown buttons - rather than have an ugly grey box, put in a nice arrow */
+
 @-moz-document url-prefix() {
     select.form-control {
         padding-right: 25px;
         background-image: url("data:image/svg+xml,\
             <svg version='1.1' xmlns='http://www.w3.org/2000/svg' width='10px' height='10px' viewBox='0 0 1000 1000' fill='rgb(51,51,51)'>\
                 <path d='M900 400 l -800 0 l 400 400 z'/>\
-            </svg>");
+            </svg>") !important;
         background-repeat: no-repeat;
         background-position: calc(100% - 7px) 50%;
         -moz-appearance: none;
         appearance: none;
     }
 }
+
 
 /*
 #id_type, #embediframeform [type="text"] {
@@ -918,7 +1018,7 @@ a#attachAddFileField {
     color: #a94442;
 }
 
-div ul.errorlist {
+ul.errorlist {
     color: #a94442;
     background-color: #f2dede;
     border: 1px solid #a94442;
@@ -928,7 +1028,7 @@ div ul.errorlist {
     max-width: 70%;
 }
 
-div ul.warninglist {
+ul.warninglist {
     color: #8a6d3b;
     background-color: #fcf8e3;
     border: 1px solid #8a6d3b;
@@ -1219,14 +1319,17 @@ a.template-overridden, a.template-overridden:hover, a.template-overridden:active
 .listcontainer a.list-group-item .list-group-item-heading {
     line-height: 16px;
 }
+
 .list-group-item-heading {
     font-size: 20px;
     font-weight: 400;
     color: #252525;
 }
+
 .list-group-item-heading:active, .list-group-item-heading:focus {
-  color: #252525;
+    color: #252525;
 }
+
 .listcontainer .list-group-item ul {
     padding-left: 0;
     color: #252525;
@@ -1266,13 +1369,11 @@ a.template-overridden, a.template-overridden:hover, a.template-overridden:active
     text-decoration: none;
 }
 
-
 .list-outside-limit {
     display: none;
 }
 
-.list-within-limit,
-.list-outside-limit {
+.list-within-limit, .list-outside-limit {
     margin-bottom: 10px;
 }
 
@@ -1342,6 +1443,10 @@ a.template-overridden, a.template-overridden:hover, a.template-overridden:active
     list-style-type: none;
 }
 
+#selected-product-list li {
+    cursor: move;
+}
+
 #selected-product-list li .movebutton {
     cursor: move;
 }
@@ -1355,9 +1460,9 @@ a.template-overridden, a.template-overridden:hover, a.template-overridden:active
 
 #selected-product-list li .title,
 #confirm-product-list li .title {
-    display: inline;
+    display: inline-block;
     font-weight: normal;
-    margin: 0;
+    margin: 0 0 5px;
 }
 
 #mpvform #deselected-product-list li#placeholder,
@@ -1369,11 +1474,13 @@ a.template-overridden, a.template-overridden:hover, a.template-overridden:active
     font-size: 0.75em;
 }
 
-li.subvisit-status-1 a.visit-link,
-li.subvisit-status-7 a.visit-link,
-li.subvisit-status-8 a.visit-link {
+#confirm-product-list {
+  font-size: 16px;
+}
+li.subvisit-status-1 a.visit-link, li.subvisit-status-7 a.visit-link, li.subvisit-status-8 a.visit-link {
     text-decoration: line-through;
 }
+
 
 /* MultiProductVisit END */
 
@@ -1493,17 +1600,11 @@ body.lightbox {
     .navbar {
         margin-bottom: 0;
     }
-    .navbar-default .navbar-nav>li>a,
-    .navbar-default .navbar-nav>li>button {
+    .navbar-default .navbar-nav>li>a, .navbar-default .navbar-nav>li>button {
         color: #eee;
         padding: 3px 5px 0 9px;
     }
-    .navbar-default .navbar-nav>li>a:hover,
-    .navbar-default .navbar-nav>li>button:hover,
-    .navbar-default .navbar-nav>li>a:active,
-    .navbar-default .navbar-nav>li>button:active,
-    .navbar-default .navbar-nav>li>a:focus,
-    .navbar-default .navbar-nav>li>button:focus {
+    .navbar-default .navbar-nav>li>a:hover, .navbar-default .navbar-nav>li>button:hover, .navbar-default .navbar-nav>li>a:active, .navbar-default .navbar-nav>li>button:active, .navbar-default .navbar-nav>li>a:focus, .navbar-default .navbar-nav>li>button:focus {
         color: #eee;
         text-decoration: underline;
     }
@@ -1545,12 +1646,10 @@ body.lightbox {
         margin-left: 110px;
         padding-top: 7px;
     }
-    .dl-horizontal.status dt,
-    .dl-horizontal.wide dt {
+    .dl-horizontal.status dt, .dl-horizontal.wide dt {
         width: 145px;
     }
-    .dl-horizontal.status dd,
-    .dl-horizontal.wide dd {
+    .dl-horizontal.status dd, .dl-horizontal.wide dd {
         margin-left: 150px;
     }
     #startbookingform .form-group [class*="col-"]+[class*="col-"] {
@@ -1573,7 +1672,7 @@ body.lightbox {
 }
 
 .footer .btn {
-  margin-right: 10px;
+    margin-right: 10px;
 }
 
 .globalfooter {
@@ -1709,6 +1808,7 @@ body.lightbox {
     display: inline-block;
     margin: .5em .3em 0 0;
 }
+
 
 /* MultiProductVisit END */
 
@@ -1846,7 +1946,7 @@ body.lightbox {
 
 @media (max-width: 767px) {
     .margin-bottom-5-mobile {
-      margin-bottom: 5px;
+        margin-bottom: 5px;
     }
     .globalfooter .container {
         padding-right: 0;
@@ -1966,6 +2066,18 @@ body.lightbox {
     }
 }
 
+.text-top {
+    vertical-align: top !important;
+}
+
+.table-bordered>thead>tr>td, .table-bordered>thead>tr>th {
+    border-bottom-width: 1px;
+}
+
+.table-bordered>thead {
+    border-bottom-width: 1px;
+}
+
 .content-box {
     line-height: 1.2;
     padding: 4px;
@@ -1976,12 +2088,27 @@ body.lightbox {
     white-space: nowrap;
 }
 
+.warninglist {
+    list-style-type: none;
+}
+
 /* Let <button> tags exist in .nav-tabs with the same styling as <a> */
+
+
 /* So copy the styles that apply to the <a> tags */
 
-.nav-tabs > li.active > button,
-.nav-tabs > li.active > button:focus,
-.nav-tabs > li.active > button:hover {
+#deselected-product-list .teaser {
+    line-height: normal;
+    font-size: 14px;
+}
+
+#deselected-product-list li:nth-child(odd), #selected-product-list li:nth-child(odd), #confirm-product-list li:nth-child(odd) {
+    background-color: #f4f4f4;
+}
+
+.nav-tabs>li.active>button,
+.nav-tabs>li.active>button:focus,
+.nav-tabs>li.active>button:hover {
     color: #555;
     cursor: default;
     background-color: #fff;
@@ -1989,14 +2116,23 @@ body.lightbox {
     border-bottom-color: transparent;
 }
 
-.nav-tabs > li > button {
+.nav-tabs>li>a:hover,
+.nav>li.disabled>a:focus,
+.nav>li.disabled>a:hover {
+    border: 0;
+    border-top: 1px solid #fff;
+    background-color: #ddd;
+    color: inherit;
+}
+
+.nav-tabs>li>button {
     margin-right: 2px;
     line-height: 1.42857143;
     border: 1px solid transparent;
     border-radius: 4px 4px 0 0;
 }
 
-.nav > li > button {
+.nav>li>button {
     position: relative;
     display: block;
     padding: 10px 15px;
@@ -2010,4 +2146,82 @@ body.lightbox {
     top: 50%;
     z-index: 100;
     display: none;
+}
+
+.step-anchor li>a {
+    border: 0;
+    border-radius: 0;
+}
+
+.step-anchor li.active>a {
+    color: #fff;
+    background-color: #337ab7;
+    border: 1px solid #ddd;
+    padding-left: 30px;
+    margin-right: 0;
+}
+
+.step-anchor>li.active>a:hover, .step-anchor>li.active>a:active, .step-anchor>li.active>a:focus {
+    color: #fff;
+    background-color: #337ab7;
+}
+
+.step-anchor>li>button, .step-anchor>li>a {
+    color: #666;
+    text-decoration: none;
+    padding: 10px 10px 10px 35px;
+    margin-right: 0;
+    position: relative;
+    display: block;
+    float: left;
+    border-radius: 0;
+    outline-style: none;
+    background: #ddd;
+    border-top: 1px solid #fff;
+}
+
+.step-anchor>li>button:before, step-anchor>li>a:before {
+    content: " ";
+    display: block;
+    width: 0;
+    height: 0;
+    border-top: 20px solid transparent;
+    border-bottom: 20px solid transparent;
+    border-left: 20px solid white;
+    position: absolute;
+    top: 0;
+    left: 100%;
+    z-index: 1;
+}
+
+.step-anchor>li>button:after, .step-anchor>li>a:after {
+    content: " ";
+    display: block;
+    width: 0;
+    height: 0;
+    border-top: 20px solid transparent;
+    border-bottom: 20px solid transparent;
+    border-left: 20px solid #ddd;
+    position: absolute;
+    top: 0;
+    left: 100%;
+    z-index: 2;
+}
+
+.step-anchor>li.active>a:before {
+    content: " ";
+    display: block;
+    width: 0;
+    height: 0;
+    border-top: 20px solid transparent;
+    border-bottom: 20px solid transparent;
+    border-left: 20px solid #337ab7;
+    position: absolute;
+    top: 0;
+    left: 100%;
+    z-index: 1;
+}
+
+.step-anchor>li.active>button:after, .step-anchor>li.active>a:after {
+    border-left: 20px solid #337ab7;
 }
