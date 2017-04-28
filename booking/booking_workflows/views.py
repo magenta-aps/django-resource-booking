@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 from django.db.models.expressions import OrderBy
 from django.db.models import Q
 from django.core.urlresolvers import reverse
@@ -20,6 +19,7 @@ from booking.booking_workflows.forms import ChangeVisitEvalForm
 from booking.booking_workflows.forms import VisitAddLogEntryForm
 from booking.booking_workflows.forms import VisitAddCommentForm
 from booking.booking_workflows.forms import ResetVisitChangesForm
+from booking.models import TeacherResource, HostResource
 from booking.models import Visit
 from booking.models import EmailTemplateType
 from booking.models import EventTime
@@ -148,6 +148,7 @@ class ChangeVisitTeachersView(AutologgerMixin, UpdateWithCancelView):
 
     def get_context_data(self, **kwargs):
         context = {}
+        queryset = self.get_form().base_fields['teachers'].queryset
         context['comments'] = {
             user.id: [
                 {
@@ -159,13 +160,14 @@ class ChangeVisitTeachersView(AutologgerMixin, UpdateWithCancelView):
                 }
                 for comment in self.object.get_comments(user).all()
             ]
-            for user in self.get_form().base_fields['teachers'].queryset.all()
+            for user in queryset.all()
         }
         context['can_send_emails'] = self.object.autosend_enabled(
             EmailTemplateType.notify_teacher__associated
         )
         context['email_template_name'] = \
             EmailTemplateType.notify_teacher__associated.name
+        context['user_resources'] = TeacherResource.get_map(queryset)
         context.update(kwargs)
         return super(ChangeVisitTeachersView, self).\
             get_context_data(**context)
@@ -207,6 +209,7 @@ class ChangeVisitHostsView(AutologgerMixin, UpdateWithCancelView):
 
     def get_context_data(self, **kwargs):
         context = {}
+        queryset = self.get_form().base_fields['hosts'].queryset
         context['comments'] = {
             user.id: [
                 {
@@ -218,13 +221,14 @@ class ChangeVisitHostsView(AutologgerMixin, UpdateWithCancelView):
                 }
                 for comment in self.object.get_comments(user).all()
                 ]
-            for user in self.get_form().base_fields['hosts'].queryset.all()
+            for user in queryset.all()
             }
         context['can_send_emails'] = self.object.autosend_enabled(
             EmailTemplateType.notify_host__associated
         )
         context['email_template_name'] = \
             EmailTemplateType.notify_host__associated.name
+        context['user_resources'] = HostResource.get_map(queryset)
         context.update(kwargs)
         return super(ChangeVisitHostsView, self).\
             get_context_data(**context)

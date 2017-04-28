@@ -45,7 +45,7 @@
                 <div class="form-group">
                     <label class="col-sm-2 control-label">{% trans 'Enhed:' %}</label>
                     <div class="col-sm-5">
-                        <select name="unit">
+                        <select name="unit" class="form-control">
                             <option value="">-- {% trans 'Vælg enhed' %} --</option>
                             {% for val, name in possible_units %}
                             <option value="{{ val }}"{% if selected_unit == val %}selected=" selected"{% endif %}>{{ name }}</option>
@@ -56,7 +56,7 @@
                 <div class="form-group">
                     <label class="col-sm-2 control-label">{% trans 'Rolle:' %}</label>
                     <div class="col-sm-5">
-                        <select name="role">
+                        <select name="role" class="form-control">
                             <option value="">-- {% trans 'Vælg rolle' %} --</option>
                             {% for val, name in possible_roles %}
                             <option value="{{ val }}"{% if selected_role == val %}selected=" selected"{% endif %}>{{ name }}</option>
@@ -67,7 +67,7 @@
                 <div class="form-group">
                     <label class="col-sm-2 control-label">{% trans 'Søg i navn:' %}</label>
                     <div class="col-sm-5">
-                        <input type="text" name="q" value="{{ request.GET.q }}">
+                        <input type="text" name="q" value="{{ request.GET.q }}" class="form-control">
                     </div>
                 </div>
                 <div class="col-sm-2 col-sm-offset-2 padleft5">
