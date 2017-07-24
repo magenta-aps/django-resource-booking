@@ -302,7 +302,7 @@ class ProductForm(forms.ModelForm):
                   'tour_available', 'catering_available',
                   'presentation_available', 'custom_available', 'custom_name',
                   'tilbudsansvarlig', 'organizationalunit',
-                  'preparation_time', 'comment',
+                  'preparation_time', 'comment', 'only_one_guest_per_visit'
                   )
 
         widgets = {
@@ -568,7 +568,7 @@ class ClassProductForm(ProductForm):
                   'tour_available', 'catering_available',
                   'presentation_available', 'custom_available', 'custom_name',
                   'tilbudsansvarlig', 'roomresponsible', 'organizationalunit',
-                  'preparation_time', 'comment',
+                  'preparation_time', 'comment', 'only_one_guest_per_visit'
                   )
         widgets = ProductForm.Meta.widgets
         labels = ProductForm.Meta.labels

@@ -1901,6 +1901,11 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         blank=False
     )
 
+    only_one_guest_per_visit = models.BooleanField(
+        default=False,
+        verbose_name=_(u'Der tillades kun 1 tilmelding pr. besøg')
+    )
+
     def available_time_modes(self, unit=None):
         if self.type is None:
             return Product.time_mode_choices
