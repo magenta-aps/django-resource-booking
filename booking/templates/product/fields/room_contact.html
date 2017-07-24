@@ -6,17 +6,17 @@
     </div>
     <div class="col-sm-7">
         {% if form.roomresponsible %}
-            {% trans 'Vælg roomresponsible' %}
+            {% trans 'Vælg lokaleansvarlige' %}
             {{ form.roomresponsible }}
         {% else %}
             <p>
-            {% trans 'Ingen roomresponsible fundet for ' %}{{ form.current_unit }}
+            {% trans 'Ingen lokaleansvarlige fundet for ' %}{{ form.current_unit }}
             </p>
         {% endif %}
         <p>
             <a href="{% url 'admin:booking_roomresponsible_changelist' %}"
                onclick="this.target='_blank';"
-            >{% trans 'Klik her for at redigere mulige roomresponsible' %} <span class="glyphicon glyphicon-new-window" aria-hidden="true"></span></a>
+            >{% trans 'Klik her for at redigere mulige lokaleansvarlige' %} <span class="glyphicon glyphicon-new-window" aria-hidden="true"></span></a>
         </p>
     </div>
     <div class="col-sm-3 with-errors">
