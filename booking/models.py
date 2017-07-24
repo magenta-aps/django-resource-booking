@@ -1962,6 +1962,10 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             ) &
             (~Q(resource_status=EventTime.RESOURCE_STATUS_BLOCKED))
         )
+        if self.only_one_guest_per_visit:
+            qs = qs.filter(
+                visit__bookings__isnull=True
+            )
         if self.maximum_number_of_visitors is not None:
             max = (self.maximum_number_of_visitors +
                    (self.waiting_list_length or 0))
@@ -3240,6 +3244,13 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         return len(self.bookings.all()) > 0
 
     @property
+    def only_one_guest_per_visit(self):
+        for product in self.products:
+            if product.only_one_guest_per_visit:
+                return True
+        return False
+
+    @property
     def is_bookable(self):
         # Can this visit be booked?
         if self.workflow_status not in self.BOOKABLE_STATES:
@@ -3247,6 +3258,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         if self.expired:
             return False
         if self.available_seats == 0:
+            return False
+        if self.bookings.count() > 0 and self.only_one_guest_per_visit:
             return False
         return True
 
@@ -3286,6 +3299,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         if self.waiting_list_capacity <= 0:
             return False
         if self.waiting_list_closed:
+            return False
+        if self.bookings.count() > 0 and self.only_one_guest_per_visit:
             return False
         return True
 
