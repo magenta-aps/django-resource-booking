@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 from booking.models import StudyMaterial, ProductAutosend, Booking, \
     EvaluationGuest
 from booking.models import Subject, BookingGrundskoleSubjectLevel
@@ -26,7 +25,7 @@ from django.forms import TextInput, NumberInput, DateInput, Textarea, Select
 from django.forms import HiddenInput
 from django.utils.translation import ugettext_lazy as _
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
-from .fields import ExtensibleMultipleChoiceField
+from .fields import ExtensibleMultipleChoiceField, VisitEventTimeField
 from .fields import OrderedModelMultipleChoiceField
 
 
@@ -751,7 +750,7 @@ class BookingForm(forms.ModelForm):
 
     scheduled = False
 
-    eventtime = forms.ChoiceField(
+    eventtime = VisitEventTimeField(
         required=False,
         label=_(u"Tidspunkt"),
         choices=(),
@@ -805,7 +804,6 @@ class BookingForm(forms.ModelForm):
                     waitinglist_capacity = 0
                     bookings = 0
 
-                capacity_text = None
                 if available_seats is None:
                     choices.append((eventtime.pk, date))
                 else:
