@@ -1,8 +1,8 @@
 # encoding: utf-8
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models.deletion import SET_NULL
 from django.db.models import Q
+from django.db.models.deletion import SET_NULL
 from django.contrib.auth import models as auth_models
 from django.core.urlresolvers import reverse
 from django.utils import formats
