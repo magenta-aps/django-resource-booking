@@ -1,6 +1,8 @@
 *~
 /booking/migrations/0*.py
 /booking/migrations/*_auto_*
+/build
+/config/booking
 dist
 *.egg-info
 /.idea/
@@ -9,6 +11,7 @@ install.log
 /local-*
 /locale/**/*.mo
 /media/
+/migrate_restart
 /profile/migrations/0*.py
 /profile/migrations/*_auto_*
 *.pyc
