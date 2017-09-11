@@ -1,7 +1,7 @@
 {% extends 'index.html' %}
 {% load i18n %}
 
-{% block htmltitle %} - {% trans 'Svar på email' %} {{ object.subject }}{% endblock %}
+{% block htmltitle %} - {% trans 'Svar på e-mail' %} {{ object.subject }}{% endblock %}
 
 {% block content %}
 
@@ -14,7 +14,7 @@
                 {% if is_guest_mail and not request.GET.thanks %}
                     {% trans 'Her kan du stille spørgsmål til din tilmelding eller skrive en kommentar' %}
                 {% else %}
-                    {% trans "Svar på email" %}
+                    {% trans "Svar på e-mail" %}
                 {% endif %}
             </h1>
         </div>

@@ -25,7 +25,7 @@
                 {% csrf_token %}
                 <div>
                     <input type="submit" role="button" class="btn btn-danger" value="{% trans 'Slet markerede' %}">
-                    <a href="{% url 'create-time' product.pk %}" role="button" class="btn btn-primary">
+                    <a href="{% url 'create-time' product.pk %}" role="button" class="btn btn-primary pull-right margin-left-10">
                         <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
                         {% trans 'Opret nyt tidspunkt' %}
                     </a>
@@ -34,6 +34,7 @@
                         {% trans 'Opret nye tidspunkter ud fra regler' %}
                     </a>
                 </div>
+                <div class="divider"></div>
                 {% if object.eventtime_set.all %}
                 <div class="table-responsive">
                     <table class="table table-striped table-hover">

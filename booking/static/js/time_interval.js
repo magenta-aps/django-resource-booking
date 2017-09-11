@@ -158,11 +158,13 @@ var KU = KU || {};
                 update_callback();
             }
         };
-
+        var date = new Date();
+        date.setDate(date.getDate());
         $root.find('.input-daterange').datepicker({
             language: 'da',
             format: 'dd.mm.yyyy',
             weekStart: 1,
+            startDate: date,
             calendarWeeks: true,
             todayHighlight: true,
             clearBtn: true,
