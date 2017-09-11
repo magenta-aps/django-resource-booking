@@ -1,6 +1,7 @@
 *~
 /booking/migrations/0*.py
 /booking/migrations/*_auto_*
+/cron.log
 dist
 *.egg-info
 /.idea/
