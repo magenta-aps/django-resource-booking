@@ -40,7 +40,7 @@
                     <p>
                         {% blocktrans with inviteret_type="undervisere" template_name=email_template_name %}
                             Det er i øjeblikket ikke muligt at udsende e-mails til {{ inviteret_type }} der tilknyttes dette besøg.
-                            Hvis du vil have muligheden for at udsende emails skal du tilføje automatisk e-mail udsendelse
+                            Hvis du vil have muligheden for at udsende e-mails skal du tilføje automatisk e-mail udsendelse
                             for "{{ template_name }}" til besøget.
                         {% endblocktrans %}
                     </p>
@@ -53,7 +53,7 @@
             <input class="btn btn-default pull-left" type="submit" value="{% trans 'Annullér' %}" name="cancel">
             <input class="btn btn-primary pull-right" type="submit" value="{% trans 'Opdater' %}" name="confirm">
         </div>
-        
+
     </form>
 {% endblock %}
 
