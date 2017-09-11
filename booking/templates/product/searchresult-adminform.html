@@ -4,10 +4,10 @@
         <input class="hiddenfield" type="hidden" name="{{ name }}" value="{{ value }}" />
     {% endfor %}
     <div class="row">
-        <h2 class="col-sm-6 col-sm-offset-2">{% trans 'Filtrér søgning' %}</h2>
+        <h2 class="col-sm-6 col-sm-offset-3">{% trans 'Filtrér søgning' %}</h2>
     </div>
     <div class="form-group row">
-        <div class="col-sm-2">
+        <div class="col-sm-3">
             <label for="{{ form.q.id_for_label }}">{{ form.q.label }}</label>
         </div>
         <div class="col-sm-6">
@@ -15,7 +15,7 @@
         </div>
     </div>
     <div class="form-group row">
-        <div class="col-sm-2">
+        <div class="col-sm-3">
             <label for="{{ form.s.id_for_label }}">{{ form.s.label }}</label>
         </div>
         <div class="col-sm-6">
@@ -23,7 +23,7 @@
         </div>
     </div>
     <div class="form-group row">
-        <div class="col-sm-2">
+        <div class="col-sm-3">
             <label for="{{ form.v.id_for_label }}">{{ form.v.label }}</label>
         </div>
         <div class="col-sm-6">
@@ -31,7 +31,7 @@
         </div>
     </div>
     <div class="form-group row">
-        <div class="col-sm-2">
+        <div class="col-sm-3">
             <label for="{{ form.b.id_for_label }}">{{ form.b.label }}</label>
         </div>
         <div class="col-sm-6">
@@ -39,7 +39,7 @@
         </div>
     </div>
     <div class="form-group row">
-        <div class="col-sm-2">
+        <div class="col-sm-3">
             <label for="{{ form.u.id_for_label }}">{{ form.u.label }}</label>
         </div>
         <div class="col-sm-6">
@@ -47,7 +47,7 @@
         </div>
     </div>
     <div class="form-group row">
-        <div class="col-sm-3 col-sm-offset-2">
+        <div class="col-sm-3 col-sm-offset-3">
             <label for="{{ form.from_date.id_for_label }}">{{ form.from_date.label }}</label>
             {{ form.from_date }}
         </div>
@@ -57,8 +57,8 @@
         </div>
     </div>
     <div class="row">
-        <div class="col-sm-6 col-sm-offset-2">
-            <input class="btn btn-primary pull-right" type="submit" value="{% trans 'Opdater' %}">        
+        <div class="col-sm-6 col-sm-offset-3">
+            <input class="btn btn-primary pull-right" type="submit" value="{% trans 'Opdater' %}">
         </div>
     </div>
 

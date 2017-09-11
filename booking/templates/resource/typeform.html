@@ -20,7 +20,7 @@
                 {% include 'common/fields/generic_field.html' with field=form.type %}
                 <div class="row form-group">
                     <div class="col-sm-12">
-                    {% trans 'Undervisere, værter og lokaler skal oprettes i deres egne systemer:' %}<br/>
+                    {% trans 'Undervisere, værter og lokaler skal oprettes separat:' %}<br/>
                     <a href="{% url 'user_create' %}">{% trans 'Klik her for at oprette en underviser eller vært' %}</a><br/>
                     <a href="{% url 'admin:booking_room_add' %}">{% trans 'Klik her for at oprette et lokale' %}</a>
                 </div>

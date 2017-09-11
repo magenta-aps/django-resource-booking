@@ -226,10 +226,13 @@
         }
         set_control_values();
 
+        var date = new Date();
+        date.setDate(date.getDate());
         $('.input-daterange').datepicker({
             language: 'da',
             format: 'dd.mm.yyyy',
             weekStart: 1,
+            startDate: date,
             calendarWeeks: true,
             todayHighlight: true,
             clearBtn: true,
