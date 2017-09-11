@@ -31,10 +31,10 @@
                 </div>
                 <div id="collapseTeachersAndHosts" class="panel-collapse collapse in" aria-labelledby="headingContact" role="tabpanel" aria-expanded="false" style="">
                     <div class="panel-body">
-                    {% trans "Vælg værter der skal kunne kontaktes for afvikling af dette tilbud" as vaerter_helptext %}
+                    {% trans "Vælg værter, der skal kunne kontaktes for afvikling af dette tilbud." as vaerter_helptext %}
                     {% include 'common/fields/userselect_with_availability_link.html' with field=form.potentielle_vaerter helptext=vaerter_helptext object=object %}
                     {% include 'common/fields/generic_field.html' with field=form.needed_hosts %}
-                    {% trans "Vælg undervisere der skal kunne kontaktes for afvikling af dette tilbud" as uv_helptext %}
+                    {% trans "Vælg undervisere, der skal kunne kontaktes for afvikling af dette tilbud." as uv_helptext %}
                     {% include 'common/fields/userselect_with_availability_link.html' with field=form.potentielle_undervisere helptext=uv_helptext object=object %}
                     {% include 'common/fields/generic_field.html' with field=form.needed_teachers %}
                     </div>

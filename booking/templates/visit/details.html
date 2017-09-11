@@ -20,7 +20,7 @@
         <div class="divider"></div>
     </div>
 
-    <div class="row overview">
+    <div class="row overview" style="margin-right:0;">
         <div class="col-sm-12 col-md-10 col-md-offset-2 panel panel-default">
           <div class="row">
             <div class="col-xs-12 col-sm-8">
@@ -48,7 +48,7 @@
                     <div>
                         {% url 'product-view' object.product.id as producturl %}
                         {% blocktrans with nr_bookers=object.nr_attendees producttitle=object.product.title %}
-                            {{ nr_bookers }} har tilmeldt sig denne instans af <a href="{{ producturl }}">{{ producttitle }}</a>
+                            {{ nr_bookers }} har tilmeldt sig <a href="{{ producturl }}">{{ producttitle }}</a>
                         {% endblocktrans %}
                     </div>
                     {% endif %}
@@ -348,7 +348,25 @@
 
                     <div class="row row-border">
                         <strong class="{{ left_class }}">
-                            {% trans 'Interne kommentarer' %}
+                            {% trans 'Link til evaluering' %}
+                        </strong>
+                        <div class="{{ center_class }}">
+                            {% if object.evaluation_link %}
+                                <a href="{{ object.evaluation_link }}">{{ object.evaluation_link }}</a>
+                            {% else %}
+                                {% trans 'Ikke angivet' %}
+                            {% endif %}
+                        </div>
+                        {% if can_edit %}
+                            <div class="{{ right_class }}">
+                                <a href="{% url 'change-visit-eval' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Redigér' %}</a>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row row-border">
+                        <strong class="{{ left_class }}">
+                            {% trans 'Vigtig bemærkning' %}
                         </strong>
                         <div class="{{ center_class }}">
                             <pre>{{ object.comments }}</pre>

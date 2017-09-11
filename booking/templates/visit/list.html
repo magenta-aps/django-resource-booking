@@ -2,18 +2,23 @@
 {% load booking_tags %}
 {% load i18n %}
 
-{% block htmltitle %} - {% trans 'liste af besøg' %}{% endblock %}
+{% block htmltitle %} - {% trans 'Liste af besøg' %}{% endblock %}
 
 {% block content %}
     <div class="row">
         <div id="main" class="col-sm-12 col-md-12">
-
             {% include 'common/breadcrumbrow.html' %}
-
-            <div class="divider"></div>
-
+            <div class="row">
+              <div class="col-sm-12">
+                  <h1>{% trans 'Afviklede besøg' %}</h1>
+                  <a class="batoToKU" href="http://fokus.ku.dk/">{% trans 'Tilbage til portal' %}</a><br />
+                  <a class="batoToKU" href="/search?q=">{% trans 'Søg efter tilbud' %}</a>
+              </div>
+          </div>
             {% if not results %}
+                <div class="divider"></div>
                 <p>{% trans 'Ingen besøg fundet.' %}</p>
+                <div class="divider"></div>
             {% else %}
                 <h2 class="bold">
                     {% blocktrans with count=paginator.count %}{{ count }} besøg fundet{% endblocktrans %}
