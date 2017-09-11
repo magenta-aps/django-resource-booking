@@ -9,21 +9,25 @@
         <div id="main" class="col-sm-12 col-md-12">
 
             {% include 'common/breadcrumbrow.html' %}
-
-            <div class="divider"></div>
+            <a class="batoToKU" href="http://fokus.ku.dk/">Tilbage til portal</a>
+            <h1 class="results-title">{% trans 'Tilbud' %}</h1>
 
             {% if not results %}
                 <p>{% trans 'Ingen tilbud fundet.' %}</p>
             {% else %}
-                <h2 class="bold">
+                <h3 class="results-header">
                     {% blocktrans with count=paginator.count %}{{ count }} tilbud fundet{% endblocktrans %}
-                </h2>
+                </h3>
                 <div class="divider"></div>
-                <ul class="media-list">
-                    {% for res in results %}
-                        {% include 'product/listitem.html' with item=res %}
-                    {% endfor %}
-                </ul>
+                <div class="row">
+                  <div class="col-sm-12">
+                    <ul class="media-list">
+                        {% for res in results %}
+                            {% include 'product/listitem.html' with item=res %}
+                        {% endfor %}
+                    </ul>
+                </div>
+              </div>
             {% endif %}
         </div>
     </div>
@@ -48,7 +52,7 @@
                             </span>
                             </li>
                         {% endif %}
-                        
+
                         {% if page_obj.has_next %}
                             <li>
                                 <a href="?{{ qstring }}&page={{ page_obj.next_page_number }}&pagesize={{paginator.per_page}}" aria-label="{% trans 'Næste' %}">

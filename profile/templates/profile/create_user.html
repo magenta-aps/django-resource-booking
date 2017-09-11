@@ -27,112 +27,95 @@
         <form method="POST" class="form-horizontal">
             {% csrf_token %}
             <div class="row" id="admin-input">
-                <fieldset>
+
                     <div class="form-group">
-                        <label class="col-sm-2 control-label" for="{{ form.username.id_for_username}}">{{ form.username.label }}:</label>
+                        <label class="col-sm-2 col-sm-offset-1 control-label" for="{{ form.username.id_for_username}}">{{ form.username.label }}:</label>
                         <div class="col-sm-5">
                             {{ form.username }}
                         </div>
-                        <div class="col-sm-5 with-errors">
+                        <div class="col-sm-4 with-errors">
                             {{ form.username.errors }}
                         </div>
                     </div>
-                </fieldset>
-                <fieldset>
                     <div class="form-group">
-                        <label class="col-sm-2 control-label" for="{{ form.email.id_for_email}}">{{ form.email.label }}:</label>
+                        <label class="col-sm-2 col-sm-offset-1 control-label" for="{{ form.email.id_for_email}}">{{ form.email.label }}:</label>
                         <div class="col-sm-5">
                             {{ form.email }}
                         </div>
-                        <div class="col-sm-5 with-errors">
+                        <div class="col-sm-4 with-errors">
                             {{ form.email.errors }}
                         </div>
                     </div>
-                </fieldset>
-                <fieldset>
                 <div class="form-group">
-                        <label class="col-sm-2 control-label" for="{{ form.first_name.id_for_first_name}}">{{ form.first_name.label }}:</label>
+                        <label class="col-sm-2 col-sm-offset-1 control-label" for="{{ form.first_name.id_for_first_name}}">{{ form.first_name.label }}:</label>
                         <div class="col-sm-5">
                             {{ form.first_name }}
                         </div>
-                    <div class="col-sm-5 with-errors">
+                    <div class="col-sm-4 with-errors">
                         {{ form.first_name.errors }}
                     </div>
                     </div>
-                </fieldset>
-                <fieldset>
                     <div class="form-group">
-                        <label class="col-sm-2 control-label" for="{{ form.last_name.id_for_last_name}}">{{ form.last_name.label }}:</label>
+                        <label class="col-sm-2 col-sm-offset-1 control-label" for="{{ form.last_name.id_for_last_name}}">{{ form.last_name.label }}:</label>
                         <div class="col-sm-5">
                             {{ form.last_name }}
                         </div>
-                        <div class="col-sm-5 with-errors">
+                        <div class="col-sm-4 with-errors">
                             {{ form.last_name.errors }}
                         </div>
                     </div>
-                </fieldset>
-                <fieldset>
                     <div class="form-group">
-                        <label class="col-sm-2 control-label" for="{{ form.password1.id_for_password1}}">{{ form.password1.label }}:</label>
+                        <label class="col-sm-2 col-sm-offset-1 control-label" for="{{ form.password1.id_for_password1}}">{{ form.password1.label }}:</label>
                         <div class="col-sm-5">
                             {{ form.password1 }}
                         </div>
-                        <div class="col-sm-5 with-errors">
+                        <div class="col-sm-4 with-errors">
                             {{ form.password1.errors }}
                         </div>
                     </div>
-                </fieldset>
-                <fieldset>
                     <div class="form-group">
-                        <label class="col-sm-2 control-label" for="{{ form.password2.id_for_password2}}">{{ form.password2.label }}:</label>
+                        <label class="col-sm-2 col-sm-offset-1 control-label" for="{{ form.password2.id_for_password2}}">{{ form.password2.label }}:</label>
                         <div class="col-sm-5">
                             {{ form.password2 }}
                         </div>
-                        <div class="col-sm-5 with-errors">
+                        <div class="col-sm-4 with-errors">
                             {{ form.password2.errors }}
                         </div>
                     </div>
-                </fieldset>
-                <fieldset>
                     <div class="form-group">
-                        <label class="col-sm-2 control-label" for="{{ form.role.id_for_role}}">{{ form.role.label }}:</label>
+                        <label class="col-sm-2 col-sm-offset-1 control-label" for="{{ form.role.id_for_role}}">{{ form.role.label }}:</label>
                         <div class="col-sm-5">
                             {{ form.role }}
                         </div>
-                        <div class="col-sm-5 with-errors">
+                        <div class="col-sm-4 with-errors">
                             {{ form.role.errors }}
                         </div>
                     </div>
-                </fieldset>
-                <fieldset>
                     <div class="form-group">
-                        <label class="col-sm-2 control-label" for="{{ form.organizationalunit.id_for_unit}}">{{ form.organizationalunit.label }}:</label>
+                        <label class="col-sm-2 col-sm-offset-1 control-label" for="{{ form.organizationalunit.id_for_unit}}">{{ form.organizationalunit.label }}:</label>
                         <div class="col-sm-5">
                             {{ form.organizationalunit }}
                         </div>
-                        <div class="col-sm-5 with-errors">
+                        <div class="col-sm-4 with-errors">
                             {{ form.organizationalunit.errors }}
                         </div>
                     </div>
-                </fieldset>
                 {% if request.user.userprofile.has_edit_role %}
-                <fieldset>
                     <div class="form-group">
-                        <label class="col-sm-2 control-label" for="{{ form.additional_information.id_for_unit}}">{{ form.additional_information.label }}:</label>
+                        <label class="col-sm-2 col-sm-offset-1 control-label" for="{{ form.additional_information.id_for_unit}}">{{ form.additional_information.label }}:</label>
                         <div class="col-sm-5">
                             {{ form.additional_information }}
                         </div>
-                        <div class="col-sm-5 with-errors">
+                        <div class="col-sm-4 with-errors">
                             {{ form.additional_information.errors }}
                         </div>
                     </div>
-                </fieldset>
                 {% else %}
                 {{ form.additional_information.as_hidden }}
                 {% endif %}
                 <div class="row">
-                    <div class="col-sm-5 col-sm-offset-2">
-                        <input class="btn btn-primary pull-right" type="submit" value="Gem" name="submit">        
+                    <div class="col-sm-6 col-sm-offset-2">
+                        <input class="btn btn-primary pull-right" type="submit" value="Gem" name="submit">
                     </div>
                     {% if messages %}
                         <div class="col-sm-5 col-sm-offset-2 alert alert-success" role="alert">

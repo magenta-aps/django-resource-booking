@@ -51,7 +51,7 @@
                 </ul>
             </div>
             <div class="col-sm-3">
-                <p class="helptext">{% trans 'Træk boksene med dine besøg op og ned for at sætte dem i en prioriteret rækkefølge' %}</p>
+                <p class="helptext">{% trans 'Træk boksene med dine besøg op og ned for at sætte dem i en prioriteret rækkefølge. Første prioritet er øverst.' %}</p>
             </div>
         </div>
 
@@ -65,7 +65,7 @@
                             {% include 'visit/multi_product_item.html' with product=product %}
                         {% endif %}
                     {% endfor %}
-                    <li id="placeholder" class="list-group-item">{% trans 'Ingen tilbud tilgængelige' %}</li>
+                    <li id="placeholder" class="list-group-item">{% trans 'Ingen yderligere tilbud er tilgængelige' %}</li>
                 </ul>
                 <ul style="display:none">
                     <li id="product_prototype" class="list-group-item">
@@ -80,7 +80,7 @@
                 </ul>
             </div>
             <div class="col-sm-3">
-                <p class="helptext">{% trans 'Bemærk: Listen viser besøg uden faste tider, som kan lade sig gøre på den valgte dag.' %}</p>
+                <p class="helptext">{% trans 'Bemærk: Listen viser besøg uden faste tider, som kan lade sig gøre på den valgte dag. Savner du et besøg på listen, skal det muligvis tilmeldes separat.' %}</p>
             </div>
         </div>
 
