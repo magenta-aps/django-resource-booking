@@ -8,14 +8,16 @@
 
     <div class="modal-body">
         <p>{% blocktrans with title=product.title %}Tak for din tilmelding til "{{ title }}". Du hører fra os snarest.{% endblocktrans %}</p>
+        {% if product.has_bookable_visits %}
         <p><a id="rebook" href="{% url 'product-book' object.id %}?modal=1">{% trans "Foretag ny tilmelding" %}</a></p>
+        {% endif %}
     </div>
 
     <div class="modal-footer">
         <p class="text-center">
             {% trans "Bemærk venligst at aftalen først er bindende, når du har modtaget en bekræftelse<br />fra den arrangør på Københavns Universitet, der er ansvarlig for besøget." %}
         </p>
-        <button type="button" class="btn btn-primary" data-dismiss="modal">{% trans "OK" %}</button>
+        <button type="button" id="okButton" class="btn btn-primary" data-dismiss="modal">{% trans "OK" %}</button>
     </div>
 
 {% endblock %}
@@ -23,7 +25,13 @@
 {% block extra_scripts %}
     <script type="text/javascript">
         <!--
+        {% if product.has_bookable_visits %}
             $("#rebook").attr("href", "{% url 'product-book' object.id %}?modal=1" + document.location.hash);
+        {% else %}
+            $("#okButton").click(function(){
+                window.parent.document.location.reload(true);
+            });
+        {% endif %}
         //-->
     </script>
 {% endblock %}
