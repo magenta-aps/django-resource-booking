@@ -94,14 +94,27 @@
                         <li class="login"><a href="{% url 'logout' %}">{% trans 'Log ud' %}</a></li>
                         {% else %}
                         <li class="login"><a href="{% url 'standard_login' %}">{% trans 'Log ind' %}</a></li>
-                    {% endif %}
+                      {% endif %}
                         <li><a href="http://kalender.ku.dk">{% trans 'Kalender' %}</a></li>
                         <li><a href="http://findvej.ku.dk">{% trans 'Find vej' %}</a></li>
                         <li><a href="http://www.ku.dk/vejviser/">{% trans 'Telefonbog' %}</a></li>
                         <li><a href="http://jobportal.ku.dk/">{% trans 'Job' %}</a></li>
                         <li><a href="http://velkommen.ku.dk/indeks/">{% trans 'A-Å-indeks' %}</a></li>
                         <li><a href="https://intranet.ku.dk/">{% trans 'KUnet' %}</a></li>
-                        <li class="global-sprog"><a href="http://research.ku.dk/" class="english">English</a></li>
+                        {% trans "system_current_language" as current_language %}
+                        {% if current_language == "en" %}
+                            {% if "/en/" in request.get_full_path %}
+                                <li class="global-sprog"><a href="/da/{{ request.get_full_path|cut:'/en/' }}" class="danish">Dansk</a></li>
+                            {% else %}
+                                <li class="global-sprog"><a href="/da{{ request.get_full_path }}" class="danish">Dansk</a></li>
+                            {% endif %}
+                        {% else %}
+                            {% if "/da/" in request.get_full_path %}
+                                <li class="global-sprog"><a href="/en/{{ request.get_full_path|cut:'/da/' }}" class="english">English</a></li>
+                            {% else %}
+                                <li class="global-sprog"><a href="/en{{ request.get_full_path }}" class="english">English</a></li>
+                            {% endif %}
+                        {% endif %}
                     </ul>
                 </div>
             </div>

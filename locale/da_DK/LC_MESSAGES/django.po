@@ -3,12 +3,11 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-04-26 10:09+0200\n"
+"POT-Creation-Date: 2017-09-22 11:33+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,36 +16,36 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: booking/booking_workflows/forms.py:28
+#: booking/booking_workflows/forms.py:30
 msgid "Ny status"
 msgstr ""
 
-#: booking/booking_workflows/forms.py:49
+#: booking/booking_workflows/forms.py:56
 msgid "Udsend e-mails til nye undervisere der tilknyttes"
 msgstr ""
 
-#: booking/booking_workflows/forms.py:67
+#: booking/booking_workflows/forms.py:81
 msgid "Udsend e-mails til nye værter der tilknyttes"
 msgstr ""
 
-#: booking/booking_workflows/forms.py:99
+#: booking/booking_workflows/forms.py:115
 msgid "Ny log-post"
 msgstr ""
 
-#: booking/booking_workflows/forms.py:112
+#: booking/booking_workflows/forms.py:128
 msgid "Ny kommentar"
 msgstr ""
 
-#: booking/booking_workflows/forms.py:121
+#: booking/booking_workflows/forms.py:137
 msgid "Opfyld behov for"
 msgstr ""
 
-#: booking/booking_workflows/forms.py:127 booking/forms.py:1341
-#: booking/models.py:1690
+#: booking/booking_workflows/forms.py:143 booking/forms.py:1339
+#: booking/models.py:1710
 msgid "Kommentar"
 msgstr ""
 
-#: booking/booking_workflows/forms.py:145 booking/models.py:4386
+#: booking/booking_workflows/forms.py:161 booking/models.py:4472
 #: booking/templates/booking/workflow/change_autosend.html:32
 #: booking/templates/booking/workflow/change_autosend.html:54
 #: booking/templates/booking/workflow/change_autosend.html:61
@@ -54,22 +53,22 @@ msgstr ""
 msgid "Aktiv"
 msgstr ""
 
-#: booking/booking_workflows/forms.py:146
+#: booking/booking_workflows/forms.py:162
 msgid "Nedarv"
 msgstr ""
 
-#: booking/booking_workflows/forms.py:147
+#: booking/booking_workflows/forms.py:163
 #: booking/templates/booking/workflow/change_autosend.html:34
 #: booking/templates/booking/workflow/change_autosend.html:56
 #: booking/templates/booking/workflow/change_autosend.html:63
 msgid "Inaktiv"
 msgstr ""
 
-#: booking/booking_workflows/forms.py:191 booking/forms.py:651
+#: booking/booking_workflows/forms.py:207 booking/forms.py:650
 msgid "Notifikation vil blive afsendt dette antal dage før besøget"
 msgstr ""
 
-#: booking/booking_workflows/forms.py:196 booking/forms.py:656
+#: booking/booking_workflows/forms.py:212 booking/forms.py:655
 msgid ""
 "Notifikation vil blive afsendt dette antal dage efter første booking er "
 "foretaget"
@@ -85,7 +84,7 @@ msgstr ""
 
 #: booking/booking_workflows/views.py:116
 #: booking/templates/booking/workflow/change_status.html:42
-#: booking/templates/visit/details.html:326
+#: booking/templates/visit/details.html:328
 msgid "Skift status"
 msgstr ""
 
@@ -97,91 +96,91 @@ msgstr ""
 msgid "Redigér undervisere"
 msgstr ""
 
-#: booking/booking_workflows/views.py:206
+#: booking/booking_workflows/views.py:208
 msgid "Redigér værter"
 msgstr ""
 
-#: booking/booking_workflows/views.py:263
+#: booking/booking_workflows/views.py:267
 msgid "Redigér lokaler"
 msgstr ""
 
-#: booking/booking_workflows/views.py:345
+#: booking/booking_workflows/views.py:349
 msgid "Redigér kommentarer"
 msgstr ""
 
-#: booking/booking_workflows/views.py:352
+#: booking/booking_workflows/views.py:356
 msgid "Redigér evalueringslink"
 msgstr ""
 
-#: booking/booking_workflows/views.py:360
+#: booking/booking_workflows/views.py:364
 msgid "Tilføj log-post"
 msgstr ""
 
-#: booking/booking_workflows/views.py:403
+#: booking/booking_workflows/views.py:407
 msgid "Tilføj kommentar"
 msgstr ""
 
-#: booking/booking_workflows/views.py:417
+#: booking/booking_workflows/views.py:421
 msgid "Redigér automatiske emails"
 msgstr ""
 
-#: booking/booking_workflows/views.py:432
+#: booking/booking_workflows/views.py:436
 msgid "Tilmeld rolle"
 msgstr ""
 
-#: booking/booking_workflows/views.py:439
+#: booking/booking_workflows/views.py:443
 msgid "Det valgte besøg har ikke behov for flere personer i den givne rolle"
 msgstr ""
 
-#: booking/booking_workflows/views.py:443
+#: booking/booking_workflows/views.py:447
 msgid "Du har ikke den rette rolle til at bruge denne funktion"
 msgstr ""
 
-#: booking/booking_workflows/views.py:446
+#: booking/booking_workflows/views.py:450
 msgid "Du er allerede blevet tildelt den givne rolle"
 msgstr ""
 
-#: booking/booking_workflows/views.py:592
-#: booking/booking_workflows/views.py:613
+#: booking/booking_workflows/views.py:596
+#: booking/booking_workflows/views.py:617
 msgid "Tilmeld som underviser"
 msgstr ""
 
-#: booking/booking_workflows/views.py:595
-#: booking/booking_workflows/views.py:616
+#: booking/booking_workflows/views.py:599
+#: booking/booking_workflows/views.py:620
 msgid "Besøget har ikke brug for flere undervisere"
 msgstr ""
 
-#: booking/booking_workflows/views.py:597
-#: booking/booking_workflows/views.py:618
+#: booking/booking_workflows/views.py:601
+#: booking/booking_workflows/views.py:622
 msgid "Du skal have rollen underviser for at kunne bruge denne funktion"
 msgstr ""
 
-#: booking/booking_workflows/views.py:600
-#: booking/booking_workflows/views.py:621
+#: booking/booking_workflows/views.py:604
+#: booking/booking_workflows/views.py:625
 msgid "Du er allerede underviser på besøget"
 msgstr ""
 
-#: booking/booking_workflows/views.py:634
-#: booking/booking_workflows/views.py:655
+#: booking/booking_workflows/views.py:638
+#: booking/booking_workflows/views.py:659
 msgid "Tilmeld som vært"
 msgstr ""
 
-#: booking/booking_workflows/views.py:637
-#: booking/booking_workflows/views.py:658
+#: booking/booking_workflows/views.py:641
+#: booking/booking_workflows/views.py:662
 msgid "Besøget har ikke brug for flere værter"
 msgstr ""
 
-#: booking/booking_workflows/views.py:639
-#: booking/booking_workflows/views.py:660
+#: booking/booking_workflows/views.py:643
+#: booking/booking_workflows/views.py:664
 msgid "Du skal have rollen vært for at kunne bruge denne funktion"
 msgstr ""
 
-#: booking/booking_workflows/views.py:642
-#: booking/booking_workflows/views.py:663
+#: booking/booking_workflows/views.py:646
+#: booking/booking_workflows/views.py:667
 msgid "Du er allerede vært på besøget"
 msgstr ""
 
-#: booking/booking_workflows/views.py:677
+#: booking/booking_workflows/views.py:681
 msgid "Nulstil markør for nylige ændringer"
 msgstr ""
 
@@ -189,471 +188,472 @@ msgstr ""
 msgid "Besked fra foKUs"
 msgstr ""
 
-#: booking/forms.py:36 booking/forms.py:156
+#: booking/fields.py:152
+msgid "Det valgte tidspunkt er blevet lukket for booking"
+msgstr ""
+
+#: booking/forms.py:35 booking/forms.py:155
 msgid "Fritekst"
 msgstr ""
 
-#: booking/forms.py:42 booking/models.py:1490
+#: booking/forms.py:41 booking/models.py:1510
 #: booking/templates/evaluation/details.html:56
 #: booking/templates/evaluation/statistics.html:55
-#: booking/templates/visit/details.html:319
+#: booking/templates/visit/details.html:321
 msgid "Status"
 msgstr ""
 
-#: booking/forms.py:43
+#: booking/forms.py:42
 msgid "[Vælg status]"
 msgstr ""
 
-#: booking/forms.py:48
+#: booking/forms.py:47
 msgid "Tilbud er aktivt"
 msgstr ""
 
-#: booking/forms.py:50 booking/forms.py:63 booking/forms.py:76
-#: booking/forms.py:131 booking/forms.py:192 booking/forms.py:255
+#: booking/forms.py:49 booking/forms.py:62 booking/forms.py:75
+#: booking/forms.py:130 booking/forms.py:191 booking/forms.py:254
 msgid "[Vælg]"
 msgstr ""
 
-#: booking/forms.py:51 booking/templates/booking/accept_spot.html:73
+#: booking/forms.py:50 booking/templates/booking/accept_spot.html:73
 #: booking/templates/calendar_event_confirm_delete.html:17
 #: booking/templates/resourcerequirement/confirm.html:58
-#: booking/templates/resourcerequirement/delete.html:32 booking/views.py:678
-#: profile/views.py:722
+#: booking/templates/resourcerequirement/delete.html:32 booking/views.py:680
+#: profile/views.py:728
 msgid "Ja"
 msgstr ""
 
-#: booking/forms.py:52 booking/templates/booking/accept_spot.html:74
+#: booking/forms.py:51 booking/templates/booking/accept_spot.html:74
 #: booking/templates/calendar_event_confirm_delete.html:18
 #: booking/templates/email/delete.html:22
-#: booking/templates/resource/delete.html:44
-#: booking/templates/resourcepool/delete.html:50
+#: booking/templates/resourcepool/delete.html:61
 #: booking/templates/resourcerequirement/confirm.html:59
-#: booking/templates/resourcerequirement/delete.html:33 booking/views.py:679
-#: profile/templates/profile/statistics.html:117 profile/views.py:721
+#: booking/templates/resourcerequirement/delete.html:33 booking/views.py:681
+#: profile/templates/profile/statistics.html:117 profile/views.py:727
 msgid "Nej"
 msgstr ""
 
-#: booking/forms.py:61
+#: booking/forms.py:60
 msgid "Besøg / ikke besøg"
 msgstr ""
 
-#: booking/forms.py:64
+#: booking/forms.py:63
 msgid "Tilbud med besøg"
 msgstr ""
 
-#: booking/forms.py:65
+#: booking/forms.py:64
 msgid "Tilbud uden besøg"
 msgstr ""
 
-#: booking/forms.py:74 booking/templates/resourcerequirement/confirm.html:35
+#: booking/forms.py:73 booking/templates/resourcerequirement/confirm.html:35
 msgid "Bookinger"
 msgstr ""
 
-#: booking/forms.py:77
+#: booking/forms.py:76
 msgid "Tilbud der har bookinger"
 msgstr ""
 
-#: booking/forms.py:78
+#: booking/forms.py:77
 msgid "Tilbud der ikke har bookinger"
 msgstr ""
 
-#: booking/forms.py:88 booking/forms.py:173 booking/forms.py:1232
-#: booking/forms.py:1545 booking/models.py:410 booking/models.py:1512
+#: booking/forms.py:87 booking/forms.py:172 booking/forms.py:1230
+#: booking/forms.py:1543 booking/models.py:415 booking/models.py:1532
 #: booking/resource_based/forms.py:60 booking/resource_based/forms.py:186
-#: booking/templates/email/list.html:48
-#: booking/templates/resource/delete.html:19
+#: booking/templates/email/list.html:40
+#: booking/templates/resource/delete.html:30
 #: booking/templates/resource/details.html:25
-#: booking/templates/resource/list.html:36
+#: booking/templates/resource/list.html:35
+#: booking/templates/resource/list.html:44
 #: booking/templates/resourcepool/details.html:24
-#: booking/templates/resourcepool/list.html:43 profile/forms.py:21
-#: profile/templates/profile/statistics.html:70 profile/views.py:712
+#: booking/templates/resourcepool/list.html:43 profile/forms.py:22
+#: profile/templates/profile/statistics.html:70 profile/views.py:718
 msgid "Enhed"
 msgstr ""
 
-#: booking/forms.py:93 booking/forms.py:216 booking/forms.py:1534
+#: booking/forms.py:92 booking/forms.py:215 booking/forms.py:1532
 msgid "Dato til"
 msgstr ""
 
-#: booking/forms.py:98 booking/forms.py:210 booking/forms.py:1523
+#: booking/forms.py:97 booking/forms.py:209 booking/forms.py:1521
 msgid "Dato fra"
 msgstr ""
 
-#: booking/forms.py:132 booking/forms.py:256
+#: booking/forms.py:131 booking/forms.py:255
 msgid "Tilbud under min enhed"
 msgstr ""
 
-#: booking/forms.py:133 booking/forms.py:257
+#: booking/forms.py:132 booking/forms.py:256
 msgid "Tilbud under mit fakultet"
 msgstr ""
 
-#: booking/forms.py:136 booking/forms.py:260
+#: booking/forms.py:135 booking/forms.py:259
 msgid "Tilbud under alle enheder jeg kan administrere"
 msgstr ""
 
-#: booking/forms.py:162
+#: booking/forms.py:161
 msgid "Tilbuds-ID"
 msgstr ""
 
-#: booking/forms.py:181
+#: booking/forms.py:180
 msgid "Workflow status"
 msgstr ""
 
-#: booking/forms.py:183
+#: booking/forms.py:182
 msgid "Alle"
 msgstr ""
 
-#: booking/forms.py:184
+#: booking/forms.py:183
 msgid "Alle ikke-planlagte"
 msgstr ""
 
-#: booking/forms.py:185
+#: booking/forms.py:184
 msgid "Alle planlagte"
 msgstr ""
 
-#: booking/forms.py:198
+#: booking/forms.py:197
 msgid "Minimum antal deltagere"
 msgstr ""
 
-#: booking/forms.py:204
+#: booking/forms.py:203
 msgid "Maksimum antal deltagere"
 msgstr ""
 
-#: booking/forms.py:378 booking/forms.py:1292 booking/models.py:402
-#: booking/models.py:4524 booking/models.py:4555
-#: booking/resource_based/models.py:1217 booking/resource_based/models.py:1262
+#: booking/forms.py:377 booking/forms.py:1290 booking/models.py:407
+#: booking/models.py:4610 booking/models.py:4641
+#: booking/resource_based/models.py:1253 booking/resource_based/models.py:1298
 #: booking/templates/common/modal_contact.html:12
 #: booking/templates/evaluation/details.html:54
-#: booking/templates/resource/delete.html:21
+#: booking/templates/resource/delete.html:32
 #: booking/templates/resource/details.html:27
-#: booking/templates/resource/list.html:34
-#: booking/templates/resourcepool/delete.html:19
+#: booking/templates/resource/list.html:33
+#: booking/templates/resource/list.html:42
+#: booking/templates/resourcepool/delete.html:30
 #: booking/templates/resourcepool/details.html:26
 #: booking/templates/resourcepool/list.html:41
 msgid "Navn"
 msgstr ""
 
-#: booking/forms.py:428 booking/models.py:1863 profile/constants.py:28
+#: booking/forms.py:427 booking/models.py:1883 profile/constants.py:28
 msgid "Ingen"
 msgstr ""
 
-#: booking/forms.py:428
-#, fuzzy
-#| msgid "1 minute"
+#: booking/forms.py:427
 msgid "15 minutter"
-msgstr "1 minut"
+msgstr "15 minutter"
 
-#: booking/forms.py:429
-#, fuzzy
-#| msgid "1 minute"
+#: booking/forms.py:428
 msgid "30 minutter"
-msgstr "1 minut"
+msgstr "30 minutter"
 
-#: booking/forms.py:429
-#, fuzzy
-#| msgid "1 minute"
+#: booking/forms.py:428
 msgid "45 minutter"
-msgstr "1 minut"
+msgstr "45 minutter"
 
-#: booking/forms.py:430 booking/models.py:2400
+#: booking/forms.py:429 booking/models.py:2437
 msgid "1 time"
 msgstr ""
 
-#: booking/forms.py:430
+#: booking/forms.py:429
 msgid "1 time, 15 minutter"
 msgstr ""
 
-#: booking/forms.py:431
+#: booking/forms.py:430
 msgid "1 time, 30 minutter"
 msgstr ""
 
-#: booking/forms.py:432
+#: booking/forms.py:431
 msgid "1 time, 45 minutter"
 msgstr ""
 
-#: booking/forms.py:433
+#: booking/forms.py:432
 msgid "2 timer"
 msgstr ""
 
-#: booking/forms.py:434
+#: booking/forms.py:433
 msgid "2 timer, 30 minutter"
 msgstr ""
 
-#: booking/forms.py:435
+#: booking/forms.py:434
 msgid "3 timer"
 msgstr ""
 
-#: booking/forms.py:436
+#: booking/forms.py:435
 msgid "3 timer, 30 minutter"
 msgstr ""
 
-#: booking/forms.py:437
+#: booking/forms.py:436
 msgid "4 timer"
 msgstr ""
 
-#: booking/forms.py:438
+#: booking/forms.py:437
 msgid "4 timer, 30 minutter"
 msgstr ""
 
-#: booking/forms.py:439
+#: booking/forms.py:438
 msgid "5 timer"
 msgstr ""
 
-#: booking/forms.py:440
+#: booking/forms.py:439
 msgid "5 timer, 30 minutter"
 msgstr ""
 
-#: booking/forms.py:441
+#: booking/forms.py:440
 msgid "6 timer"
 msgstr ""
 
-#: booking/forms.py:442
+#: booking/forms.py:441
 msgid "6 timer, 30 minutter"
 msgstr ""
 
-#: booking/forms.py:443
+#: booking/forms.py:442
 msgid "7 timer"
 msgstr ""
 
-#: booking/forms.py:444
+#: booking/forms.py:443
 msgid "7 timer, 30 minutter"
 msgstr ""
 
-#: booking/forms.py:445
+#: booking/forms.py:444
 msgid "8 timer"
 msgstr ""
 
-#: booking/forms.py:446
+#: booking/forms.py:445
 msgid "8 timer, 30 minutter"
 msgstr ""
 
-#: booking/forms.py:447
+#: booking/forms.py:446
 msgid "9 timer"
 msgstr ""
 
-#: booking/forms.py:448
+#: booking/forms.py:447
 msgid "9 timer, 30 minutter"
 msgstr ""
 
-#: booking/forms.py:449
+#: booking/forms.py:448
 msgid "10 timer"
 msgstr ""
 
-#: booking/forms.py:449
+#: booking/forms.py:448
 msgid "11 timer"
 msgstr ""
 
-#: booking/forms.py:450
+#: booking/forms.py:449
 msgid "12 timer"
 msgstr ""
 
-#: booking/forms.py:450
+#: booking/forms.py:449
 msgid "13 timer"
 msgstr ""
 
-#: booking/forms.py:451
+#: booking/forms.py:450
 msgid "14 timer"
 msgstr ""
 
-#: booking/forms.py:451
+#: booking/forms.py:450
 msgid "15 timer"
 msgstr ""
 
-#: booking/forms.py:452
+#: booking/forms.py:451
 msgid "20 timer"
 msgstr ""
 
-#: booking/forms.py:452
+#: booking/forms.py:451
 msgid "24 timer"
 msgstr ""
 
-#: booking/forms.py:453
+#: booking/forms.py:452
 msgid "36 timer"
 msgstr ""
 
-#: booking/forms.py:453
+#: booking/forms.py:452
 msgid "48 timer"
 msgstr ""
 
-#: booking/forms.py:492
+#: booking/forms.py:491
 msgid ""
 "The minimum numbers of visitors must not be larger than the maximum number "
 "of visitors"
 msgstr ""
 
-#: booking/forms.py:495
+#: booking/forms.py:494
 msgid ""
 "The maximum numbers of visitors must not be smaller than the minimum number "
 "of visitors"
 msgstr ""
 
-#: booking/forms.py:756 booking/forms.py:772
+#: booking/forms.py:755 booking/forms.py:771
 #: booking/templates/eventtime/date_interval.html:24
-#: booking/templates/eventtime/list.html:43
+#: booking/templates/eventtime/list.html:44
 #: booking/templates/resourcerequirement/confirm.html:34
-#: booking/templates/visit/details.html:124
+#: booking/templates/visit/details.html:114
 msgid "Tidspunkt"
 msgstr ""
 
-#: booking/forms.py:819
+#: booking/forms.py:817
 #, python-format
 msgid "%d ledige pladser + venteliste"
 msgstr ""
 
-#: booking/forms.py:823
+#: booking/forms.py:821
 #, python-format
 msgid "%d ledige pladser"
 msgstr ""
 
-#: booking/forms.py:828
+#: booking/forms.py:826
 #, python-format
 msgid "venteliste (%d pladser)"
 msgstr ""
 
-#: booking/forms.py:871
+#: booking/forms.py:869
 msgid "Fornavn"
 msgstr ""
 
-#: booking/forms.py:875
+#: booking/forms.py:873
 msgid "Efternavn"
 msgstr ""
 
-#: booking/forms.py:879 booking/forms.py:1302
+#: booking/forms.py:877 booking/forms.py:1300
+#: booking/templates/evaluation/details.html:55
 msgid "E-mail"
 msgstr ""
 
-#: booking/forms.py:883 booking/templates/booking/fields/basedata.html:45
+#: booking/forms.py:881 booking/templates/booking/fields/basedata.html:45
 msgid "Telefonnummer"
 msgstr ""
 
-#: booking/forms.py:900
+#: booking/forms.py:898
 msgid "Gentag e-mail"
 msgstr ""
 
-#: booking/forms.py:915
+#: booking/forms.py:913
 msgid "Postnummer"
 msgstr ""
 
-#: booking/forms.py:923
+#: booking/forms.py:921
 msgid "By"
 msgstr ""
 
-#: booking/forms.py:943
+#: booking/forms.py:941
 #, python-format
 msgid "Der der kræves mindst %d deltagere på at af de besøg du har valgt."
 msgstr ""
 
-#: booking/forms.py:946
+#: booking/forms.py:944
 #, python-format
 msgid "Der er max plads til %d deltagere på et af de besøg du har valgt."
 msgstr ""
 
-#: booking/forms.py:950
+#: booking/forms.py:948
 #, python-format
 msgid "Der der kræves mindst %d deltagere på det besøg du har valgt."
 msgstr ""
 
-#: booking/forms.py:953
+#: booking/forms.py:951
 #, python-format
 msgid "Der er max plads til %d deltagere på det besøg du har valgt."
 msgstr ""
 
-#: booking/forms.py:1018
+#: booking/forms.py:1016
 msgid "Ukendt postnummer"
 msgstr ""
 
-#: booking/forms.py:1025
+#: booking/forms.py:1023
 msgid ""
 "Du skal vælge skole/gymnasium fra listen for at kunne tilmelde dig. Hvis din "
 "skole eller dit gymnasium ikke kommer frem på listen, kontakt da "
 "support@fokus.dk for at få hjælp til tilmelding."
 msgstr ""
 
-#: booking/forms.py:1044
+#: booking/forms.py:1042
 msgid "Indtast den samme e-mail i begge felter"
 msgstr ""
 
-#: booking/forms.py:1231 booking/forms.py:1268
+#: booking/forms.py:1229 booking/forms.py:1266
 msgid "Tekst"
 msgstr ""
 
-#: booking/forms.py:1233 booking/templates/evaluation/statistics.html:53
-#: profile/templates/profile/statistics.html:73 profile/views.py:712
+#: booking/forms.py:1231 booking/templates/evaluation/statistics.html:53
+#: booking/templates/product/list.html:13
+#: profile/templates/profile/statistics.html:73 profile/views.py:718
 msgid "Tilbud"
 msgstr ""
 
-#: booking/forms.py:1234 booking/models.py:4342 booking/models.py:4425
-#: booking/models.py:4944 booking/resource_based/models.py:1358
-#: booking/templates/visit/list.html:26
+#: booking/forms.py:1232 booking/models.py:4428 booking/models.py:4511
+#: booking/models.py:5030 booking/resource_based/models.py:1410
+#: booking/templates/visit/list.html:31
 #: booking/templates/visit/searchresult.html:115
 msgid "Besøg"
 msgstr ""
 
-#: booking/forms.py:1242 profile/templates/profile/statistics.html:71
-#: profile/views.py:712
+#: booking/forms.py:1240 profile/templates/profile/statistics.html:71
+#: profile/views.py:718
 msgid "Tilmelding"
 msgstr ""
 
-#: booking/forms.py:1275
+#: booking/forms.py:1273
 msgid "Modtagere"
 msgstr ""
 
-#: booking/forms.py:1281 booking/templates/email/reply.html:37
+#: booking/forms.py:1279 booking/templates/email/reply.html:37
 msgid "Emne"
 msgstr ""
 
-#: booking/forms.py:1296
+#: booking/forms.py:1294
 msgid "Dit navn"
 msgstr ""
 
-#: booking/forms.py:1306
+#: booking/forms.py:1304
 msgid "Din e-mail"
 msgstr ""
 
-#: booking/forms.py:1312 booking/templates/common/modal_contact.html:20
+#: booking/forms.py:1310 booking/templates/common/modal_contact.html:20
 msgid "Telefon"
 msgstr ""
 
-#: booking/forms.py:1316
+#: booking/forms.py:1314
 msgid "Dit telefonnummer"
 msgstr ""
 
-#: booking/forms.py:1326
+#: booking/forms.py:1324
 msgid "Mit svar"
 msgstr ""
 
-#: booking/forms.py:1350
+#: booking/forms.py:1348
 msgid "Afgræns ud fra enhed(er)"
 msgstr ""
 
-#: booking/forms.py:1355
+#: booking/forms.py:1353
 msgid "Begræns til besøg jeg personligt er involveret i"
 msgstr ""
 
-#: booking/forms.py:1381 booking/templates/visit/multi_confirm.html:20
+#: booking/forms.py:1379 booking/templates/visit/multi_confirm.html:20
 #: booking/templates/visit/multi_date.html:22
 #: booking/templates/visit/multi_date.html:32
-#: booking/templates/visit/multi_products.html:24 booking/views.py:3818
-#: booking/views.py:3834
+#: booking/templates/visit/multi_products.html:24 booking/views.py:3831
+#: booking/views.py:3847
 msgid "Vælg dato"
 msgstr ""
 
-#: booking/forms.py:1394
+#: booking/forms.py:1392
 msgid ""
 "Det er desværre ikke muligt at bestille besøget på den valgte dato. Der kan "
 "være begrænsninger for hvilke dage, besøget kan lade sig gøre - se "
 "beskrivelse af besøget."
 msgstr ""
 
-#: booking/forms.py:1410 booking/forms.py:1428
+#: booking/forms.py:1408 booking/forms.py:1426
 msgid "Der er ikke valgt nogen besøg"
 msgstr ""
 
-#: booking/forms.py:1434
+#: booking/forms.py:1432
 msgid ""
 "Nogle af de valgte besøg henvender sig kun til grundskoleklasser og andre "
 "kun til gymnasieklasser"
 msgstr ""
 
-#: booking/forms.py:1473
+#: booking/forms.py:1471
 msgid "Deltagere uden spørgeskema"
 msgstr ""
 
@@ -690,10 +690,6 @@ msgid "Lokaleanvarlige"
 msgstr ""
 
 #: booking/models.py:124 booking/models.py:127
-#: python-env/lib/python2.7/site-packages/django/forms/formsets.py:372
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/delete_confirmation.html:19
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/submit_line.html:7
-#: python-env/lib/python2.7/site-packages/grappelli/templates/related_widget_wrapper.html:26
 msgid "Delete"
 msgstr ""
 
@@ -717,580 +713,577 @@ msgstr ""
 msgid "Automatisk ressourcetildeling mulig"
 msgstr ""
 
-#: booking/models.py:286 booking/models.py:287
+#: booking/models.py:291 booking/models.py:292
 msgid "fag"
 msgstr ""
 
-#: booking/models.py:297 booking/templates/frontpage.html:20
+#: booking/models.py:302 booking/templates/frontpage.html:20
 msgid "Gymnasie"
 msgstr ""
 
-#: booking/models.py:298 booking/templates/booking/fields/school.html:10
+#: booking/models.py:303 booking/templates/booking/fields/school.html:10
 #: booking/templates/frontpage.html:27
 msgid "Grundskole"
 msgstr ""
 
-#: booking/models.py:299
+#: booking/models.py:304
 msgid "Både gymnasie og grundskole"
 msgstr ""
 
-#: booking/models.py:356
+#: booking/models.py:361
 msgid "emne"
 msgstr ""
 
-#: booking/models.py:357
+#: booking/models.py:362
 msgid "emner"
 msgstr ""
 
-#: booking/models.py:370
+#: booking/models.py:375
 msgid "undervisningsmateriale"
 msgstr ""
 
-#: booking/models.py:371
+#: booking/models.py:376
 msgid "undervisningsmaterialer"
 msgstr ""
 
-#: booking/models.py:376 booking/templates/evaluation/details.html:39
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:2308
+#: booking/models.py:381 booking/templates/evaluation/details.html:39
 msgid "URL"
 msgstr ""
 
-#: booking/models.py:377 booking/models.py:388
+#: booking/models.py:382 booking/models.py:393
 msgid "Vedhæftet fil"
 msgstr ""
 
-#: booking/models.py:398
+#: booking/models.py:403
 msgid "lokalitet"
 msgstr ""
 
-#: booking/models.py:399
+#: booking/models.py:404
 msgid "lokaliteter"
 msgstr ""
 
-#: booking/models.py:403 booking/models.py:1503
+#: booking/models.py:408 booking/models.py:1523
 #: booking/templates/product/form.html:60
 msgid "Beskrivelse"
 msgstr ""
 
-#: booking/models.py:404 booking/models.py:4661
-#: profile/templates/profile/statistics.html:83 profile/views.py:715
+#: booking/models.py:409 booking/models.py:4747
+#: profile/templates/profile/statistics.html:83 profile/views.py:721
 msgid "Adresse"
 msgstr ""
 
-#: booking/models.py:406 profile/templates/profile/statistics.html:82
-#: profile/views.py:715
+#: booking/models.py:411 profile/templates/profile/statistics.html:82
+#: profile/views.py:721
 msgid "Postnummer og by"
 msgstr ""
 
-#: booking/models.py:1186
+#: booking/models.py:1206
 msgid "gymnasiefagtilknytning"
 msgstr ""
 
-#: booking/models.py:1187
+#: booking/models.py:1207
 msgid "gymnasiefagtilknytninger"
 msgstr ""
 
-#: booking/models.py:1266
+#: booking/models.py:1286
 msgid "grundskolefagtilknytning"
 msgstr ""
 
-#: booking/models.py:1267
+#: booking/models.py:1287
 msgid "grundskolefagtilknytninger"
 msgstr ""
 
-#: booking/models.py:1286
+#: booking/models.py:1306
 msgid "Klassetrin fra"
 msgstr ""
 
-#: booking/models.py:1289
+#: booking/models.py:1309
 msgid "Klassetrin til"
 msgstr ""
 
-#: booking/models.py:1345 booking/models.py:1359
+#: booking/models.py:1365 booking/models.py:1379
 msgid "Gymnasieniveau"
 msgstr ""
 
-#: booking/models.py:1346
+#: booking/models.py:1366
 msgid "Gymnasieniveauer"
 msgstr ""
 
-#: booking/models.py:1379 booking/models.py:1410
+#: booking/models.py:1399 booking/models.py:1430
 msgid "Grundskoleniveau"
 msgstr ""
 
-#: booking/models.py:1380
+#: booking/models.py:1400
 msgid "Grundskoleniveauer"
 msgstr ""
 
-#: booking/models.py:1396 booking/models.py:4845
+#: booking/models.py:1416 booking/models.py:4931
 msgid "0. klasse"
 msgstr ""
 
-#: booking/models.py:1397 booking/models.py:4846
+#: booking/models.py:1417 booking/models.py:4932
 msgid "1. klasse"
 msgstr ""
 
-#: booking/models.py:1398 booking/models.py:4847
+#: booking/models.py:1418 booking/models.py:4933
 msgid "2. klasse"
 msgstr ""
 
-#: booking/models.py:1399 booking/models.py:4848
+#: booking/models.py:1419 booking/models.py:4934
 msgid "3. klasse"
 msgstr ""
 
-#: booking/models.py:1400 booking/models.py:4849
+#: booking/models.py:1420 booking/models.py:4935
 msgid "4. klasse"
 msgstr ""
 
-#: booking/models.py:1401 booking/models.py:4850
+#: booking/models.py:1421 booking/models.py:4936
 msgid "5. klasse"
 msgstr ""
 
-#: booking/models.py:1402 booking/models.py:4851
+#: booking/models.py:1422 booking/models.py:4937
 msgid "6. klasse"
 msgstr ""
 
-#: booking/models.py:1403 booking/models.py:4852
+#: booking/models.py:1423 booking/models.py:4938
 msgid "7. klasse"
 msgstr ""
 
-#: booking/models.py:1404 booking/models.py:4853
+#: booking/models.py:1424 booking/models.py:4939
 msgid "8. klasse"
 msgstr ""
 
-#: booking/models.py:1405 booking/models.py:4854
+#: booking/models.py:1425 booking/models.py:4940
 msgid "9. klasse"
 msgstr ""
 
-#: booking/models.py:1406 booking/models.py:4855
+#: booking/models.py:1426 booking/models.py:4941
 msgid "10. klasse"
 msgstr ""
 
-#: booking/models.py:1431 booking/models.py:1432
+#: booking/models.py:1451 booking/models.py:1452
 msgid "tilbud"
 msgstr ""
 
-#: booking/models.py:1447
+#: booking/models.py:1467
 msgid "Studerende for en dag"
 msgstr ""
 
-#: booking/models.py:1448
+#: booking/models.py:1468
 msgid "Studiepraktik"
 msgstr ""
 
-#: booking/models.py:1449
+#: booking/models.py:1469
 msgid "Åbent hus"
 msgstr ""
 
-#: booking/models.py:1450
+#: booking/models.py:1470
 msgid "Lærerarrangement"
 msgstr ""
 
-#: booking/models.py:1451
+#: booking/models.py:1471
 msgid "Besøg med klassen"
 msgstr ""
 
-#: booking/models.py:1452
+#: booking/models.py:1472
 msgid "Studieretningsprojekt"
 msgstr ""
 
-#: booking/models.py:1453
+#: booking/models.py:1473
 msgid "Lektiehjælp"
 msgstr ""
 
-#: booking/models.py:1454
+#: booking/models.py:1474
 msgid "Andre tilbud"
 msgstr ""
 
-#: booking/models.py:1455
+#: booking/models.py:1475
 msgid "Undervisningsmateriale"
 msgstr ""
 
-#: booking/models.py:1480
+#: booking/models.py:1500
 msgid "Under udarbejdelse"
 msgstr ""
 
-#: booking/models.py:1481
+#: booking/models.py:1501
 msgid "Offentlig"
 msgstr ""
 
-#: booking/models.py:1482
+#: booking/models.py:1502
 msgid "Skjult"
 msgstr ""
 
-#: booking/models.py:1494 booking/resource_based/models.py:698
+#: booking/models.py:1514 booking/resource_based/models.py:702
 msgid "Titel"
 msgstr ""
 
-#: booking/models.py:1499
+#: booking/models.py:1519
 msgid "Teaser"
 msgstr ""
 
-#: booking/models.py:1506
+#: booking/models.py:1526
 msgid "Mouseover-tekst"
 msgstr ""
 
-#: booking/models.py:1515
-#: python-env/lib/python2.7/site-packages/grappelli/dashboard/modules.py:187
+#: booking/models.py:1535
 msgid "Links"
 msgstr ""
 
-#: booking/models.py:1518
+#: booking/models.py:1538
 msgid "Institution"
 msgstr ""
 
-#: booking/models.py:1524 booking/models.py:2584 booking/models.py:4465
-#: booking/resource_based/models.py:1229 booking/resource_based/models.py:1244
-#: booking/templates/product/form.html:128
+#: booking/models.py:1544 booking/models.py:2621 booking/models.py:4551
+#: booking/resource_based/models.py:1265 booking/resource_based/models.py:1280
+#: booking/templates/product/form.html:129
 msgid "Lokalitet"
 msgstr ""
 
-#: booking/models.py:1532 booking/models.py:2592
+#: booking/models.py:1552 booking/models.py:2629
 #: booking/templates/product/simple_ressources.html:47
-#: booking/templates/visit/details.html:281
+#: booking/templates/visit/details.html:283
 msgid "Lokaler"
 msgstr ""
 
-#: booking/models.py:1594
+#: booking/models.py:1614
 msgid "Tilbuddet har ingen tidspunkter og ingen tilmelding"
 msgstr ""
 
-#: booking/models.py:1596
+#: booking/models.py:1616
 msgid "Tilbuddets tidspunkter styres af ressourcer"
 msgstr ""
 
-#: booking/models.py:1598
+#: booking/models.py:1618
 msgid "Tilbuddets tidspunkter styres af ressourcer, med automatisk tildeling"
 msgstr ""
 
-#: booking/models.py:1601
+#: booking/models.py:1621
 msgid "Tilbuddet har faste tidspunkter"
 msgstr ""
 
-#: booking/models.py:1603
+#: booking/models.py:1623
 msgid "Tilbuddet har faste tidspunkter, men er uden tilmelding"
 msgstr ""
 
-#: booking/models.py:1605
+#: booking/models.py:1625
 msgid "Gæster foreslår mulige tidspunkter"
 msgstr ""
 
-#: booking/models.py:1613
+#: booking/models.py:1633
 msgid "Håndtering af tidspunkter"
 msgstr ""
 
-#: booking/models.py:1620 booking/views.py:2171
+#: booking/models.py:1640 booking/views.py:2174
 msgid "Tilbudsansvarlig"
 msgstr ""
 
-#: booking/models.py:1629 booking/views.py:2025 booking/views.py:2182
+#: booking/models.py:1649 booking/views.py:2028 booking/views.py:2185
 msgid "Lokaleansvarlige"
 msgstr ""
 
-#: booking/models.py:1636 booking/views.py:2076
+#: booking/models.py:1656 booking/views.py:2079
 msgid "Potentielle undervisere"
 msgstr ""
 
-#: booking/models.py:1646 booking/views.py:2061
+#: booking/models.py:1666 booking/views.py:2064
 msgid "Potentielle værter"
 msgstr ""
 
-#: booking/models.py:1658
+#: booking/models.py:1678
 msgid "Forberedelsestid"
 msgstr ""
 
-#: booking/models.py:1667 booking/templates/product/details.html:221
+#: booking/models.py:1687 booking/templates/product/details.html:221
 msgid "Pris"
 msgstr ""
 
-#: booking/models.py:1672 booking/templates/product/searchresult.html:60
+#: booking/models.py:1692 booking/templates/product/searchresult.html:61
 msgid "Gymnasiefag"
 msgstr ""
 
-#: booking/models.py:1679 booking/templates/product/searchresult.html:79
+#: booking/models.py:1699 booking/templates/product/searchresult.html:80
 msgid "Grundskolefag"
 msgstr ""
 
-#: booking/models.py:1684
+#: booking/models.py:1704
 msgid "Tags"
 msgstr ""
 
-#: booking/models.py:1686
+#: booking/models.py:1706
 msgid "Emner"
 msgstr ""
 
-#: booking/models.py:1696
+#: booking/models.py:1716
 msgid "Oprettet af"
 msgstr ""
 
-#: booking/models.py:1708 booking/models.py:2766
+#: booking/models.py:1728 booking/models.py:2803
 msgid "Tekst-værdier til fritekstsøgning"
 msgstr ""
 
-#: booking/models.py:1764
+#: booking/models.py:1784
 msgid "Tilbuddet kræver brug af et eller flere lokaler"
 msgstr ""
 
-#: booking/models.py:1775 booking/models.py:2577
+#: booking/models.py:1795 booking/models.py:2614
 #: booking/templates/product/details.html:216
 msgid "Varighed"
 msgstr ""
 
-#: booking/models.py:1782
+#: booking/models.py:1802
 msgid "Udsend evaluering"
 msgstr ""
 
-#: booking/models.py:1787
+#: booking/models.py:1807
 msgid "Gruppebesøg"
 msgstr ""
 
-#: booking/models.py:1793
+#: booking/models.py:1813
 msgid "Mindste antal deltagere"
 msgstr ""
 
-#: booking/models.py:1798
+#: booking/models.py:1818
 msgid "Højeste antal deltagere"
 msgstr ""
 
-#: booking/models.py:1804
+#: booking/models.py:1824
 msgid "Ventelister"
 msgstr ""
 
-#: booking/models.py:1809
+#: booking/models.py:1829
 msgid "Antal pladser"
 msgstr ""
 
-#: booking/models.py:1814
+#: booking/models.py:1834
 msgid "Lukning af venteliste (dage inden besøg)"
 msgstr ""
 
-#: booking/models.py:1819
+#: booking/models.py:1839
 msgid "Lukning af venteliste (timer inden besøg)"
 msgstr ""
 
-#: booking/models.py:1824
+#: booking/models.py:1844
 msgid "Vis nedtælling"
 msgstr ""
 
-#: booking/models.py:1830
+#: booking/models.py:1850
 msgid "Mulighed for rundvisning"
 msgstr ""
 
-#: booking/models.py:1836
+#: booking/models.py:1856
 msgid "Mulighed for forplejning"
 msgstr ""
 
-#: booking/models.py:1842
+#: booking/models.py:1862
 msgid "Mulighed for oplæg om uddannelse"
 msgstr ""
 
-#: booking/models.py:1848 booking/models.py:4860
-#: profile/templates/profile/statistics.html:79 profile/views.py:714
+#: booking/models.py:1868 booking/models.py:4946
+#: profile/templates/profile/statistics.html:79 profile/views.py:720
 msgid "Andet"
 msgstr ""
 
-#: booking/models.py:1854
+#: booking/models.py:1874
 msgid "Navn for tilpasset mulighed"
 msgstr ""
 
-#: booking/models.py:1867
+#: booking/models.py:1887
 msgid "Mere end 10"
 msgstr ""
 
-#: booking/models.py:1872
+#: booking/models.py:1892
 msgid "Nødvendigt antal værter"
 msgstr ""
 
-#: booking/models.py:1879
+#: booking/models.py:1899
 msgid "Nødvendigt antal undervisere"
 msgstr ""
 
-#: booking/models.py:1999
+#: booking/models.py:1906
+msgid "Der tillades kun 1 tilmelding pr. besøg"
+msgstr ""
+
+#: booking/models.py:2028
 #, python-format
 msgid "Max. %(visitors)d"
 msgstr ""
 
-#: booking/models.py:2002
+#: booking/models.py:2031
 #, python-format
 msgid "Min. %(visitors)d"
 msgstr ""
 
-#: booking/models.py:2402
+#: booking/models.py:2439
 #, python-format
 msgid "%s timer"
 msgstr ""
 
-#: booking/models.py:2404
-#, fuzzy
-#| msgid "1 minute"
+#: booking/models.py:2441
 msgid "1 minut"
 msgstr "1 minut"
 
-#: booking/models.py:2406
-#, fuzzy, python-format
-#| msgid "%i minutes"
+#: booking/models.py:2443
 msgid "%s minutter"
-msgstr "%i minutter"
+msgstr "%s minutter"
 
-#: booking/models.py:2408
+#: booking/models.py:2445
 msgid " og "
 msgstr ""
 
-#: booking/models.py:2460
+#: booking/models.py:2497
 #, python-format
 msgid "1 time og %(minutes)d minutter"
 msgstr ""
 
-#: booking/models.py:2462
+#: booking/models.py:2499
 #, python-format
 msgid "%(hours)d timer og %(minutes)d minutter"
 msgstr ""
 
-#: booking/models.py:2527
+#: booking/models.py:2564
 #, python-format
 msgid "Tilbud #%(pk)s - %(title)s"
 msgstr ""
 
-#: booking/models.py:2534 booking/models.py:2535
+#: booking/models.py:2571 booking/models.py:2572
 msgid "besøg"
 msgstr ""
 
-#: booking/models.py:2552 booking/resource_based/models.py:77
-#: booking/resource_based/models.py:723
+#: booking/models.py:2589 booking/resource_based/models.py:79
+#: booking/resource_based/models.py:727
 msgid "Starttidspunkt"
 msgstr ""
 
-#: booking/models.py:2565 booking/resource_based/models.py:42
+#: booking/models.py:2602 booking/resource_based/models.py:44
 msgid "Kan bookes"
 msgstr ""
 
-#: booking/models.py:2597
+#: booking/models.py:2634
 msgid "Brug værdi fra tilbud"
 msgstr ""
 
-#: booking/models.py:2601
+#: booking/models.py:2638
 msgid "Antal nødvendige værter"
 msgstr ""
 
-#: booking/models.py:2614
+#: booking/models.py:2651
 msgid "Tilknyttede værter"
 msgstr ""
 
-#: booking/models.py:2624
+#: booking/models.py:2661
 msgid "Værter, som har afslået"
 msgstr ""
 
-#: booking/models.py:2628
+#: booking/models.py:2665
 msgid "Antal nødvendige undervisere"
 msgstr ""
 
-#: booking/models.py:2641
+#: booking/models.py:2678
 msgid "Tilknyttede undervisere"
 msgstr ""
 
-#: booking/models.py:2651
+#: booking/models.py:2688
 msgid "Undervisere, som har afslået"
 msgstr ""
 
-#: booking/models.py:2659
+#: booking/models.py:2696
 msgid "Tildeling af lokaler ikke påkrævet"
 msgstr ""
 
-#: booking/models.py:2660
+#: booking/models.py:2697
 msgid "Afventer tildeling/bekræftelse"
 msgstr ""
 
-#: booking/models.py:2661
+#: booking/models.py:2698
 msgid "Tildelt/bekræftet"
 msgstr ""
 
-#: booking/models.py:2667
+#: booking/models.py:2704
 msgid "Status for tildeling af lokaler"
 msgstr ""
 
-#: booking/models.py:2680
+#: booking/models.py:2717
 msgid "Besøgets ressourcer"
 msgstr ""
 
-#: booking/models.py:2721
+#: booking/models.py:2758
 msgid "Afvist af undervisere eller værter"
 msgstr ""
 
-#: booking/models.py:2724
+#: booking/models.py:2761
 msgid "Bekræftet af gæst"
 msgstr ""
 
-#: booking/models.py:2725
+#: booking/models.py:2762
 msgid "Påmindelse afsendt"
 msgstr ""
 
-#: booking/models.py:2726
+#: booking/models.py:2763
 msgid "Afviklet"
 msgstr ""
 
-#: booking/models.py:2727
+#: booking/models.py:2764
 msgid "Evalueret"
 msgstr ""
 
-#: booking/models.py:2728 profile/templates/profile/profile.html:212
+#: booking/models.py:2765 profile/templates/profile/profile.html:212
 msgid "Aflyst"
 msgstr ""
 
-#: booking/models.py:2729
+#: booking/models.py:2766
 msgid "Udeblevet"
 msgstr ""
 
-#: booking/models.py:2730
+#: booking/models.py:2767
 msgid "Automatisk tildeling fejlet"
 msgstr ""
 
-#: booking/models.py:2743
+#: booking/models.py:2780
 msgid "Behov for opmærksomhed siden"
 msgstr ""
 
-#: booking/models.py:2749 booking/resource_based/models.py:97
-#: booking/templates/visit/details.html:367
+#: booking/models.py:2786 booking/resource_based/models.py:99
 msgid "Interne kommentarer"
 msgstr ""
 
-#: booking/models.py:2754 booking/templates/visit/details.html:349
+#: booking/models.py:2791 booking/templates/visit/details.html:351
 msgid "Link til evaluering"
 msgstr ""
 
-#: booking/models.py:3006 booking/models.py:3039
+#: booking/models.py:3049 booking/models.py:3082
 msgid "ikke-fastlagt tidspunkt"
 msgstr ""
 
-#: booking/models.py:3028
+#: booking/models.py:3071
 #, python-format
 msgid "Besøg #%d"
 msgstr ""
 
-#: booking/models.py:3045
+#: booking/models.py:3088
 #, python-format
 msgid "d. %(date)s kl. %(time)s"
 msgstr ""
 
-#: booking/models.py:3054
+#: booking/models.py:3097
 msgid "på ikke-fastlagt tidspunkt"
 msgstr ""
 
-#: booking/models.py:3346
+#: booking/models.py:3400
 #, python-format
 msgid "Besøg %(id)s - %(title)s - %(time)s"
 msgstr ""
 
-#: booking/models.py:3352 booking/models.py:4251
+#: booking/models.py:3406 booking/models.py:4337
 #, python-format
 msgid "Besøg %s - uden tidspunkt"
 msgstr ""
 
-#: booking/models.py:3835
+#: booking/models.py:3911
 #, python-format
 msgid "Besøg #%s"
 msgstr ""
 
-#: booking/models.py:3945 booking/models.py:4264
+#: booking/models.py:4026 booking/models.py:4350
 #: booking/templates/evaluation/statistics.html:54
 #: booking/templates/eventtime/create_from_rules.html:34
 #: booking/templates/eventtime/create_from_rules.html:107
@@ -1299,265 +1292,267 @@ msgstr ""
 msgid "Dato"
 msgstr ""
 
-#: booking/models.py:3949 booking/models.py:4298
+#: booking/models.py:4030 booking/models.py:4384
 msgid "Antal ønskede besøg"
 msgstr ""
 
-#: booking/models.py:3955
+#: booking/models.py:4036
 msgid "Besøgsansvarlig"
 msgstr ""
 
-#: booking/models.py:4133
+#: booking/models.py:4214
 #, python-format
 msgid "d. %s"
 msgstr ""
 
-#: booking/models.py:4244
+#: booking/models.py:4330
 #, python-format
 msgid "Besøg %(id)s - Prioriteret liste af %(count)d underbesøg - %(time)s"
 msgstr ""
 
-#: booking/models.py:4356
+#: booking/models.py:4442
 msgid "Kommentartekst"
 msgstr ""
 
-#: booking/models.py:4359
+#: booking/models.py:4445
 msgid "Tidsstempel"
 msgstr ""
 
-#: booking/models.py:4376
+#: booking/models.py:4462
 #: booking/templates/booking/workflow/change_autosend.html:31
 #: booking/templates/product/fields/autosend.html:18
 msgid "Skabelon"
 msgstr ""
 
-#: booking/models.py:4383
+#: booking/models.py:4469
 #: booking/templates/booking/workflow/change_autosend.html:36
 #: booking/templates/product/fields/autosend.html:20
 msgid "Dage"
 msgstr ""
 
-#: booking/models.py:4439
+#: booking/models.py:4525
 msgid "BesøgForekomst"
 msgstr ""
 
-#: booking/models.py:4443
+#: booking/models.py:4529
 #: booking/templates/booking/workflow/change_autosend.html:33
 msgid "Genbrug indstilling fra tilbud"
 msgstr ""
 
-#: booking/models.py:4460
+#: booking/models.py:4546
 msgid "lokale"
 msgstr ""
 
-#: booking/models.py:4461
+#: booking/models.py:4547
 msgid "lokaler"
 msgstr ""
 
-#: booking/models.py:4472
+#: booking/models.py:4558
 msgid "Navn på lokale"
 msgstr ""
 
-#: booking/models.py:4479
+#: booking/models.py:4565
 msgid "Ingen lokalitet"
 msgstr ""
 
-#: booking/models.py:4491
+#: booking/models.py:4577
 msgid "<uden lokalitet>"
 msgstr ""
 
-#: booking/models.py:4519
+#: booking/models.py:4605
 msgid "region"
 msgstr ""
 
-#: booking/models.py:4520
+#: booking/models.py:4606
 msgid "regioner"
 msgstr ""
 
-#: booking/models.py:4531
+#: booking/models.py:4617
 msgid "Engelsk navn"
 msgstr ""
 
-#: booking/models.py:4550
+#: booking/models.py:4636
 msgid "kommune"
 msgstr ""
 
-#: booking/models.py:4551
+#: booking/models.py:4637
 msgid "kommuner"
 msgstr ""
 
-#: booking/models.py:4561 booking/templates/booking/fields/location.html:25
-#: profile/templates/profile/statistics.html:80 profile/views.py:715
+#: booking/models.py:4647 booking/templates/booking/fields/location.html:25
+#: profile/templates/profile/statistics.html:80 profile/views.py:721
 msgid "Region"
 msgstr ""
 
-#: booking/models.py:4585
+#: booking/models.py:4671
 msgid "postnummer"
 msgstr ""
 
-#: booking/models.py:4586
+#: booking/models.py:4672
 msgid "postnumre"
 msgstr ""
 
-#: booking/models.py:4644
+#: booking/models.py:4730
 msgid "uddannelsesinstitution"
 msgstr ""
 
-#: booking/models.py:4645
+#: booking/models.py:4731
 msgid "uddannelsesinstitutioner"
 msgstr ""
 
-#: booking/models.py:4665
+#: booking/models.py:4751
 msgid "CVR-nummer"
 msgstr ""
 
-#: booking/models.py:4669
+#: booking/models.py:4755
 msgid "EAN-nummer"
 msgstr ""
 
-#: booking/models.py:4683
+#: booking/models.py:4769
 msgid "Uddannelsestype"
 msgstr ""
 
-#: booking/models.py:4774 booking/models.py:4775
+#: booking/models.py:4860 booking/models.py:4861
 msgid "besøgende"
 msgstr ""
 
-#: booking/models.py:4806
+#: booking/models.py:4892
 msgid "stx"
 msgstr ""
 
-#: booking/models.py:4807
+#: booking/models.py:4893
 msgid "hf"
 msgstr ""
 
-#: booking/models.py:4808
+#: booking/models.py:4894
 msgid "htx"
 msgstr ""
 
-#: booking/models.py:4809
+#: booking/models.py:4895
 msgid "eux"
 msgstr ""
 
-#: booking/models.py:4810
+#: booking/models.py:4896
 msgid "hhx"
 msgstr ""
 
-#: booking/models.py:4856
+#: booking/models.py:4942
 msgid "1.g"
 msgstr ""
 
-#: booking/models.py:4857
+#: booking/models.py:4943
 msgid "2.g"
 msgstr ""
 
-#: booking/models.py:4858
+#: booking/models.py:4944
 msgid "3.g"
 msgstr ""
 
-#: booking/models.py:4859
+#: booking/models.py:4945
 msgid "Student"
 msgstr ""
 
-#: booking/models.py:4934
+#: booking/models.py:5020
 msgid "booking"
 msgstr ""
 
-#: booking/models.py:4935
+#: booking/models.py:5021
 msgid "bookinger"
 msgstr ""
 
-#: booking/models.py:4949
+#: booking/models.py:5035
 msgid "Ventelisteposition"
 msgstr ""
 
-#: booking/models.py:4970
+#: booking/models.py:5056
 #, python-format
 msgid "Attribute %s on Booking is readonly."
 msgstr ""
 
-#: booking/models.py:4971
+#: booking/models.py:5057
 msgid "Set it on the Visit instead."
 msgstr ""
 
-#: booking/models.py:5064
+#: booking/models.py:5154
 #, python-format
 msgid "Tilmelding #%d"
 msgstr ""
 
-#: booking/models.py:5104
+#: booking/models.py:5194
 msgid "booking for klassebesøg"
 msgstr ""
 
-#: booking/models.py:5105
+#: booking/models.py:5195
 msgid "bookinger for klassebesøg"
 msgstr ""
 
-#: booking/models.py:5108
+#: booking/models.py:5198
 msgid "Rundvisning ønsket"
 msgstr ""
 
-#: booking/models.py:5112
+#: booking/models.py:5202
 msgid "Forplejning ønsket"
 msgstr ""
 
-#: booking/models.py:5116
+#: booking/models.py:5206
 msgid "Oplæg om uddannelse ønsket"
 msgstr ""
 
-#: booking/models.py:5120
+#: booking/models.py:5210
 msgid "Specialtilbud ønsket"
 msgstr ""
 
-#: booking/models.py:5128
+#: booking/models.py:5218
 msgid "booking for lærerarrangement"
 msgstr ""
 
-#: booking/models.py:5129
+#: booking/models.py:5219
 msgid "bookinger for lærerarrangementer"
 msgstr ""
 
-#: booking/models.py:5148
+#: booking/models.py:5238
 msgid "fagniveau for booking (gymnasium)"
 msgstr ""
 
-#: booking/models.py:5149
+#: booking/models.py:5239
 msgid "fagniveauer for bookinger (gymnasium)"
 msgstr ""
 
-#: booking/models.py:5172
+#: booking/models.py:5262
 msgid "klasseniveau for booking (grundskole)"
 msgstr ""
 
-#: booking/models.py:5173
+#: booking/models.py:5263
 msgid "klasseniveauer for bookinger(grundskole)"
 msgstr ""
 
-#: booking/models.py:5389
-msgid "Template: "
+#: booking/models.py:5488
+#, python-format
+msgid "Template: %s"
 msgstr ""
 
-#: booking/models.py:5390
-msgid "Modtagere: "
+#: booking/models.py:5490
+#, python-format
+msgid "Modtagere: %s"
 msgstr ""
 
-#: booking/models.py:5544
+#: booking/models.py:5652
 msgid "Modtager ikke evaluering"
 msgstr ""
 
-#: booking/models.py:5545
+#: booking/models.py:5653
 msgid "Ikke afholdt / ikke afsendt"
 msgstr ""
 
-#: booking/models.py:5546 booking/templates/evaluation/statistics.html:60
+#: booking/models.py:5654 booking/templates/evaluation/statistics.html:60
 msgid "Sendt første gang"
 msgstr ""
 
-#: booking/models.py:5547 booking/templates/evaluation/statistics.html:61
+#: booking/models.py:5655 booking/templates/evaluation/statistics.html:61
 msgid "Sendt anden gang"
 msgstr ""
 
-#: booking/models.py:5548 booking/templates/evaluation/statistics.html:62
+#: booking/models.py:5656 booking/templates/evaluation/statistics.html:62
 msgid "Har klikket på link"
 msgstr ""
 
@@ -1574,173 +1569,186 @@ msgid "Fulde dage"
 msgstr ""
 
 #: booking/resource_based/forms.py:51 booking/resource_based/forms.py:179
-#: booking/resource_based/models.py:948 booking/templates/email/list.html:45
-#: booking/templates/resource/delete.html:17
+#: booking/resource_based/models.py:952 booking/templates/email/list.html:37
+#: booking/templates/resource/delete.html:28
 #: booking/templates/resource/details.html:23
-#: booking/templates/resource/list.html:35
-#: booking/templates/resourcepool/delete.html:17
+#: booking/templates/resource/list.html:34
+#: booking/templates/resource/list.html:43
+#: booking/templates/resourcepool/delete.html:28
 #: booking/templates/resourcepool/details.html:22
 #: booking/templates/resourcepool/list.html:42
 #: booking/templates/resourcerequirement/delete.html:23
 #: booking/templates/resourcerequirement/list.html:31
-#: profile/templates/profile/statistics.html:72 profile/views.py:712
+#: profile/templates/profile/statistics.html:72 profile/views.py:718
 msgid "Type"
 msgstr ""
 
 #: booking/resource_based/forms.py:90 booking/resource_based/views.py:582
 #: booking/resource_based/views.py:596 booking/resource_based/views.py:618
-#: booking/resource_based/views.py:664 booking/resource_based/views.py:730
+#: booking/resource_based/views.py:664 booking/resource_based/views.py:740
 #: booking/templates/resourcepool/list.html:11
 msgid "Ressourcegrupper"
 msgstr ""
 
-#: booking/resource_based/models.py:23
+#: booking/resource_based/forms.py:294
+msgid "Ukendt ressourcebehov"
+msgstr ""
+
+#: booking/resource_based/forms.py:295
+msgid ""
+"Tilbuddet har et uspecificeret ressourcebehov. Dette er et problem som skal "
+"rettes"
+msgstr ""
+
+#: booking/resource_based/models.py:25
 msgid "tidspunkt"
 msgstr ""
 
-#: booking/resource_based/models.py:24
+#: booking/resource_based/models.py:26
 msgid "tidspunkter"
 msgstr ""
 
-#: booking/resource_based/models.py:50
+#: booking/resource_based/models.py:52
 msgid "Ressourcer ledige"
 msgstr ""
 
-#: booking/resource_based/models.py:51
+#: booking/resource_based/models.py:53
 msgid "Blokeret af manglende ressourcer"
 msgstr ""
 
-#: booking/resource_based/models.py:52
+#: booking/resource_based/models.py:54
 msgid "Ressourcer tildelt"
 msgstr ""
 
-#: booking/resource_based/models.py:60
+#: booking/resource_based/models.py:62
 msgid "Ledige"
 msgstr ""
 
-#: booking/resource_based/models.py:61
+#: booking/resource_based/models.py:63
 msgid "Blokeret"
 msgstr ""
 
-#: booking/resource_based/models.py:62
+#: booking/resource_based/models.py:64
 msgid "Tildelt"
 msgstr ""
 
-#: booking/resource_based/models.py:73
+#: booking/resource_based/models.py:75
 msgid "Ressource-status"
 msgstr ""
 
-#: booking/resource_based/models.py:82 booking/resource_based/models.py:726
+#: booking/resource_based/models.py:84 booking/resource_based/models.py:730
 #: booking/templates/calendar/calendar_event.html:90
 #: booking/templates/eventtime/date_interval.html:61
 msgid "Sluttidspunkt"
 msgstr ""
 
-#: booking/resource_based/models.py:88
+#: booking/resource_based/models.py:90
 msgid "Angivelse af tidspunkt"
 msgstr ""
 
-#: booking/resource_based/models.py:90
+#: booking/resource_based/models.py:92
 msgid "Både dato og tidspunkt"
 msgstr ""
 
-#: booking/resource_based/models.py:91
+#: booking/resource_based/models.py:93
 msgid "Kun dato"
 msgstr ""
 
-#: booking/resource_based/models.py:427
+#: booking/resource_based/models.py:429
 msgid "Migreret fra Visit"
 msgstr ""
 
-#: booking/resource_based/models.py:483 booking/resource_based/models.py:837
+#: booking/resource_based/models.py:485 booking/resource_based/models.py:841
 msgid "<Intet tidspunkt angivet>"
 msgstr ""
 
-#: booking/resource_based/models.py:486
+#: booking/resource_based/models.py:488
 #: booking/templates/booking/details.html:82
 msgid "Tidspunkt:"
 msgstr ""
 
-#: booking/resource_based/models.py:490
+#: booking/resource_based/models.py:492
 #, python-format
 msgid "(Besøg: %s)"
 msgstr ""
 
-#: booking/resource_based/models.py:705
+#: booking/resource_based/models.py:709
 #: booking/templates/calendar/calendar.html:5
-#: booking/templates/calendar/calendar.html:42 booking/templates/index.html:76
-#: booking/templates/resource/list.html:60
+#: booking/templates/calendar/calendar.html:42
+#: booking/templates/common/fields/userselect_with_availability_link.html:34
+#: booking/templates/common/fields/userselect_with_availability_link.html:39
+#: booking/templates/index.html:98 booking/templates/resource/list.html:68
 msgid "Kalender"
 msgstr ""
 
-#: booking/resource_based/models.py:713
+#: booking/resource_based/models.py:717
 msgid "Tilgængelig"
 msgstr ""
 
-#: booking/resource_based/models.py:714
+#: booking/resource_based/models.py:718
 msgid "Utilgængelig"
 msgstr ""
 
-#: booking/resource_based/models.py:718
+#: booking/resource_based/models.py:722
 msgid "Tilgængelighed"
 msgstr ""
 
-#: booking/resource_based/models.py:730
+#: booking/resource_based/models.py:734
 msgid "Gentagelser"
 msgstr ""
 
-#: booking/resource_based/models.py:884
+#: booking/resource_based/models.py:888
 msgid " (med gentagelser)"
 msgstr ""
 
-#: booking/resource_based/models.py:952 booking/resource_based/models.py:1266
+#: booking/resource_based/models.py:956 booking/resource_based/models.py:1302
 msgid "Ressourcens enhed"
 msgstr ""
 
-#: booking/resource_based/models.py:958
+#: booking/resource_based/models.py:962
 msgid "Ressourcens kalender"
 msgstr ""
 
-#: booking/resource_based/models.py:1098 profile/constants.py:23
+#: booking/resource_based/models.py:1105 profile/constants.py:23
 msgid "Underviser"
 msgstr ""
 
-#: booking/resource_based/models.py:1176
+#: booking/resource_based/models.py:1208
 msgid "Lokale"
 msgstr ""
 
-#: booking/resource_based/models.py:1271 booking/resource_based/views.py:366
+#: booking/resource_based/models.py:1307 booking/resource_based/views.py:366
 #: booking/resource_based/views.py:387 booking/resource_based/views.py:430
 #: booking/resource_based/views.py:479 booking/resource_based/views.py:541
-#: booking/templates/eventtime/list.html:49
-#: booking/templates/resource/list.html:12
+#: booking/templates/eventtime/list.html:50
+#: booking/templates/resource/list.html:13
 msgid "Ressourcer"
 msgstr ""
 
-#: booking/resource_based/models.py:1279
+#: booking/resource_based/models.py:1315
 #, python-format
 msgid "Gruppe af %s"
 msgstr ""
 
-#: booking/resource_based/models.py:1308
+#: booking/resource_based/models.py:1344
 #: booking/templates/resourcerequirement/delete.html:25
 #: booking/templates/resourcerequirement/list.html:30
 msgid "Ressourcegruppe"
 msgstr ""
 
-#: booking/resource_based/models.py:1311
+#: booking/resource_based/models.py:1350
 msgid "Påkrævet antal"
 msgstr ""
 
-#: booking/resource_based/models.py:1363
+#: booking/resource_based/models.py:1415
 msgid "Ressource"
 msgstr ""
 
-#: booking/resource_based/models.py:1368 booking/resource_based/views.py:991
+#: booking/resource_based/models.py:1420 booking/resource_based/views.py:1001
 msgid "Ressourcebehov"
 msgstr ""
 
-#: booking/resource_based/views.py:323 booking/views.py:2445
+#: booking/resource_based/views.py:323 booking/views.py:2448
 msgid "Besøg oprettet"
 msgstr ""
 
@@ -1751,31 +1759,33 @@ msgid "Opret ressource"
 msgstr ""
 
 #: booking/resource_based/views.py:486 booking/resource_based/views.py:671
-#: booking/templates/email/list.html:70
+#: booking/templates/email/list.html:62
 #: booking/templates/product/details.html:32
 #: booking/templates/resource/details.html:15
-#: booking/templates/resource/list.html:68
+#: booking/templates/resource/list.html:76
 #: booking/templates/resourcepool/details.html:16
 #: booking/templates/resourcepool/list.html:64
-#: booking/templates/resourcerequirement/list.html:53
-#: booking/templates/visit/details.html:137
-#: booking/templates/visit/details.html:168
-#: booking/templates/visit/details.html:185
-#: booking/templates/visit/details.html:226
-#: booking/templates/visit/details.html:257
-#: booking/templates/visit/details.html:295
-#: booking/templates/visit/details.html:311
-#: booking/templates/visit/details.html:360
-#: booking/templates/visit/details.html:374 booking/views.py:1656
-#: booking/views.py:3358 profile/templates/profile/user_list.html:95
+#: booking/templates/resourcerequirement/list.html:63
+#: booking/templates/visit/details.html:128
+#: booking/templates/visit/details.html:158
+#: booking/templates/visit/details.html:186
+#: booking/templates/visit/details.html:228
+#: booking/templates/visit/details.html:259
+#: booking/templates/visit/details.html:297
+#: booking/templates/visit/details.html:313
+#: booking/templates/visit/details.html:362
+#: booking/templates/visit/details.html:376 booking/views.py:1659
+#: booking/views.py:3361 profile/templates/profile/user_list.html:92
 msgid "Redigér"
 msgstr ""
 
-#: booking/resource_based/views.py:544 booking/resource_based/views.py:736
-#: booking/templates/email/list.html:72 booking/templates/resource/list.html:70
+#: booking/resource_based/views.py:544 booking/resource_based/views.py:746
+#: booking/templates/email/list.html:64
+#: booking/templates/resource/delete.html:54
+#: booking/templates/resource/list.html:78
 #: booking/templates/resourcepool/list.html:66
-#: booking/templates/resourcerequirement/list.html:55 booking/views.py:3495
-#: profile/templates/profile/user_list.html:96
+#: booking/templates/resourcerequirement/list.html:65 booking/views.py:3498
+#: profile/templates/profile/user_list.html:93
 msgid "Slet"
 msgstr ""
 
@@ -1785,45 +1795,43 @@ msgstr ""
 msgid "Opret ressourcegruppe"
 msgstr ""
 
-#: booking/resource_based/views.py:855 booking/resource_based/views.py:932
-#: booking/resource_based/views.py:982 booking/resource_based/views.py:1012
-#: booking/views.py:1153
+#: booking/resource_based/views.py:865 booking/resource_based/views.py:942
+#: booking/resource_based/views.py:992 booking/resource_based/views.py:1022
+#: booking/views.py:1155
 msgid "Søgning"
 msgstr ""
 
-#: booking/resource_based/views.py:858 booking/resource_based/views.py:935
-#: booking/resource_based/views.py:985 booking/resource_based/views.py:1015
-#: booking/templates/product/searchresult.html:133
-#: booking/templates/visit/searchresult.html:96 booking/views.py:1158
-#: booking/views.py:3067
+#: booking/resource_based/views.py:868 booking/resource_based/views.py:945
+#: booking/resource_based/views.py:995 booking/resource_based/views.py:1025
+#: booking/templates/visit/searchresult.html:96 booking/views.py:1160
+#: booking/views.py:3070
 msgid "Søgeresultat"
 msgstr ""
 
-#: booking/resource_based/views.py:864
+#: booking/resource_based/views.py:874
 #: booking/templates/resourcerequirement/confirm.html:11
 #: booking/templates/resourcerequirement/form.html:12
 msgid "Opret ressourcebehov"
 msgstr ""
 
-#: booking/resource_based/views.py:941
+#: booking/resource_based/views.py:951
 #: booking/templates/product/details.html:39
 #: booking/templates/resourcerequirement/confirm.html:11
 #: booking/templates/resourcerequirement/form.html:12
 msgid "Redigér ressourcebehov"
 msgstr ""
 
-#: booking/resource_based/views.py:1021
+#: booking/resource_based/views.py:1031
 #: booking/templates/resourcerequirement/delete.html:11
 msgid "Slet ressourcebehov"
 msgstr ""
 
-#: booking/resource_based/views.py:1082
+#: booking/resource_based/views.py:1092
 #, python-format
 msgid "Ingen kalender fundet for %s"
 msgstr ""
 
-#: booking/resource_based/views.py:1097 profile/views.py:882
-#: python-env/lib/python2.7/site-packages/django/views/generic/detail.py:55
+#: booking/resource_based/views.py:1107 profile/views.py:888
 #, python-format
 msgid "No %(verbose_name)s found matching the query"
 msgstr ""
@@ -1902,12 +1910,12 @@ msgid "tilmeld klassebesøg"
 msgstr ""
 
 #: booking/templates/booking/classvisit.html:11
-#: booking/templates/booking/classvisit_modal.html:11
+#: booking/templates/booking/classvisit_modal.html:12
 #: booking/templates/booking/form.html:10
 #: booking/templates/booking/studyproject.html:11
 #: booking/templates/booking/studyproject_modal.html:15
 #: booking/templates/booking/teachervisit.html:11
-#: booking/templates/booking/teachervisit_modal.html:8
+#: booking/templates/booking/teachervisit_modal.html:9
 msgid ""
 "Udfyld venligst nedenstående formular for at tilmelde dig et tilbud. Felter "
 "markeret med * er obligatoriske."
@@ -1960,14 +1968,13 @@ msgstr ""
 
 #: booking/templates/booking/details.html:86
 #: booking/templates/booking/snippets/list.html:18
-#: profile/templates/profile/user_list.html:87
+#: profile/templates/profile/user_list.html:97
 msgid "Navn:"
 msgstr ""
 
 #: booking/templates/booking/details.html:89
-#: booking/templates/booking/snippets/list.html:20
 #: profile/templates/profile/user_list.html:101
-msgid "Email:"
+msgid "E-mail:"
 msgstr ""
 
 #: booking/templates/booking/details.html:92
@@ -2000,7 +2007,7 @@ msgid "Antal deltagere:"
 msgstr ""
 
 #: booking/templates/booking/details.html:136
-#: booking/templates/visit/details.html:527
+#: booking/templates/visit/details.html:529
 #: profile/templates/profile/item_list.html:78
 msgid "Kommentar:"
 msgstr ""
@@ -2021,7 +2028,7 @@ msgid "Oplæg om uddannelse:"
 msgstr ""
 
 #: booking/templates/booking/details.html:174
-#: booking/templates/visit/details.html:545 booking/views.py:3080
+#: booking/templates/visit/details.html:547 booking/views.py:3083
 #: profile/templates/profile/profile.html:155
 msgid "Søg i besøg"
 msgstr ""
@@ -2036,7 +2043,7 @@ msgid "Detaljer om tilbuddet"
 msgstr ""
 
 #: booking/templates/booking/fields/attendees.html:5
-#: profile/templates/profile/statistics.html:76 profile/views.py:713
+#: profile/templates/profile/statistics.html:76 profile/views.py:719
 msgid "Antal deltagere"
 msgstr ""
 
@@ -2050,7 +2057,6 @@ msgid "For- og efternavn"
 msgstr ""
 
 #: booking/templates/booking/fields/basedata.html:25
-#: booking/templates/evaluation/details.html:55
 msgid "Email"
 msgstr ""
 
@@ -2059,7 +2065,7 @@ msgid "Postnr. og by"
 msgstr ""
 
 #: booking/templates/booking/fields/notes.html:5
-#: booking/templates/visit/details.html:504
+#: booking/templates/visit/details.html:506
 msgid "Kommentarer"
 msgstr ""
 
@@ -2080,7 +2086,7 @@ msgid "Gymnasium"
 msgstr ""
 
 #: booking/templates/booking/fields/school.html:12
-#: profile/templates/profile/statistics.html:81 profile/views.py:715
+#: profile/templates/profile/statistics.html:81 profile/views.py:721
 msgid "Skole"
 msgstr ""
 
@@ -2185,13 +2191,13 @@ msgid "tilmeld arrangement"
 msgstr ""
 
 #: booking/templates/booking/show_email_log.html:12
-msgid "Emails vedrørende denne tilmelding:"
+msgid "E-mails vedrørende denne tilmelding:"
 msgstr ""
 
 #: booking/templates/booking/snippets/footer.html:6
 #: booking/templates/booking/snippets/footer.html:20
 #: booking/templates/booking/success.html:14
-#: booking/templates/booking/success_modal.html:16
+#: booking/templates/booking/success_modal.html:18
 msgid ""
 "Bemærk venligst at aftalen først er bindende, når du har modtaget en "
 "bekræftelse<br />fra den arrangør på Københavns Universitet, der er "
@@ -2227,13 +2233,13 @@ msgstr ""
 
 #: booking/templates/booking/snippets/footer.html:10
 #: booking/templates/booking/snippets/footer.html:26
-#: booking/templates/product/list.html:38
-#: booking/templates/product/list.html:40
-#: booking/templates/product/list.html:47
-#: booking/templates/product/searchresult.html:170
-#: booking/templates/product/searchresult.html:177
-#: booking/templates/visit/list.html:65 booking/templates/visit/list.html:67
-#: booking/templates/visit/list.html:74
+#: booking/templates/product/list.html:42
+#: booking/templates/product/list.html:44
+#: booking/templates/product/list.html:51
+#: booking/templates/product/searchresult.html:172
+#: booking/templates/product/searchresult.html:179
+#: booking/templates/visit/list.html:70 booking/templates/visit/list.html:72
+#: booking/templates/visit/list.html:79
 #: booking/templates/visit/searchresult.html:172
 #: booking/templates/visit/searchresult.html:179
 msgid "Forrige"
@@ -2241,13 +2247,13 @@ msgstr ""
 
 #: booking/templates/booking/snippets/footer.html:11
 #: booking/templates/booking/snippets/footer.html:27
-#: booking/templates/product/list.html:54
-#: booking/templates/product/list.html:56
-#: booking/templates/product/list.html:63
-#: booking/templates/product/searchresult.html:185
-#: booking/templates/product/searchresult.html:192
-#: booking/templates/visit/list.html:81 booking/templates/visit/list.html:82
-#: booking/templates/visit/list.html:89
+#: booking/templates/product/list.html:58
+#: booking/templates/product/list.html:60
+#: booking/templates/product/list.html:67
+#: booking/templates/product/searchresult.html:187
+#: booking/templates/product/searchresult.html:194
+#: booking/templates/visit/list.html:86 booking/templates/visit/list.html:87
+#: booking/templates/visit/list.html:94
 #: booking/templates/visit/searchresult.html:187
 #: booking/templates/visit/searchresult.html:194
 msgid "Næste"
@@ -2272,6 +2278,10 @@ msgstr ""
 #: booking/templates/booking/snippets/header_text.html:7
 #, python-format
 msgid "Tilmeld dig tilbuddet \"%(title)s\""
+msgstr ""
+
+#: booking/templates/booking/snippets/list.html:20
+msgid "Email:"
 msgstr ""
 
 #: booking/templates/booking/snippets/list.html:22
@@ -2312,15 +2322,21 @@ msgid "tilmeld \"studerende for en dag\"-arrangement"
 msgstr ""
 
 #: booking/templates/booking/studentforaday.html:11
+msgid ""
+"Når du har udfyldt formularen, sender vi en e-mail til dig, der bekræfter "
+"din henvendelse. Vi finder herefter en studerende, som kontakter dig, og "
+"sammen finder I en dag der passer."
+msgstr ""
+
+#: booking/templates/booking/studentforaday_modal.html:5
+msgid "tilmeld \"studerende for en dag\""
+msgstr ""
+
 #: booking/templates/booking/studentforaday_modal.html:11
 msgid ""
 "Når du har udfyldt formularen, sender vi en email til dig, der bekræfter din "
 "henvendelse. Vi finder herefter en studerende, som kontakter dig, og sammen "
 "finder I en dag der passer."
-msgstr ""
-
-#: booking/templates/booking/studentforaday_modal.html:5
-msgid "tilmeld \"studerende for en dag\""
 msgstr ""
 
 #: booking/templates/booking/studyproject.html:5
@@ -2338,7 +2354,7 @@ msgstr ""
 
 #: booking/templates/booking/success.html:17
 #: booking/templates/booking/success.html:19
-#: booking/templates/booking/success_modal.html:18
+#: booking/templates/booking/success_modal.html:20
 #: booking/templates/email/inquire-success.html:11
 #: booking/templates/email/success.html:11
 msgid "OK"
@@ -2349,7 +2365,7 @@ msgstr ""
 msgid "Tak for din tilmelding til \"%(title)s\". Du hører fra os snarest."
 msgstr ""
 
-#: booking/templates/booking/success_modal.html:11
+#: booking/templates/booking/success_modal.html:12
 msgid "Foretag ny tilmelding"
 msgstr ""
 
@@ -2461,8 +2477,8 @@ msgstr ""
 #, python-format
 msgid ""
 "\n"
-"                    Indstil for hvilke situationer der skal afsendes email "
-"automatisk. Skabeloner til email-afsendelse kan redigeres på <a href="
+"                    Indstil for hvilke situationer der skal afsendes e-mail- "
+"automatisk. Skabeloner til e-mailafsendelse kan redigeres på <a href="
 "\"%(template_list_url)s\" target=\"_blank\">Skabelon-listen</a>.\n"
 "                "
 msgstr ""
@@ -2529,8 +2545,8 @@ msgid ""
 "\n"
 "                            Det er i øjeblikket ikke muligt at udsende e-"
 "mails til %(inviteret_type)s der tilknyttes dette besøg.\n"
-"                            Hvis du vil have muligheden for at udsende "
-"emails skal du tilføje automatisk e-mail udsendelse\n"
+"                            Hvis du vil have muligheden for at udsende e-"
+"mails skal du tilføje automatisk e-mail udsendelse\n"
 "                            for \"%(template_name)s\" til besøget.\n"
 "                        "
 msgstr ""
@@ -2727,7 +2743,7 @@ msgstr ""
 
 #: booking/templates/calendar/calendar_event.html:131
 #: booking/templates/common/fields/autosend_script.html:143
-#: booking/templates/eventtime/create.html:29 booking/views.py:3363
+#: booking/templates/eventtime/create.html:29 booking/views.py:3366
 msgid "Opret"
 msgstr ""
 
@@ -2803,23 +2819,24 @@ msgstr ""
 msgid "Ingen lokaler valgt"
 msgstr ""
 
-#: booking/templates/common/fields/userselect_with_availability_link.html:13
+#: booking/templates/common/fields/userselect_with_availability_link.html:15
 #, python-format
 msgid ""
 "\n"
-"                Der blev ikke fundet nogen brugere at vælge ud fra. "
-"Undersøg\n"
-"                om der findes brugere af den korrekte type inden inden for "
-"din\n"
-"                enhed (%(unitname)s).\n"
-"                For besøg bør du også undersøge om der er blevet tilknyttet\n"
-"                potentielle værter/undervisere til det tilbud besøget\n"
-"                er baseret på.\n"
+"                Der er ikke oprette nogle værter/undervisere i enheden. "
+"Undersøg om der findes brugere af den korrekte type inden inden for din "
+"enhed (<a href=\"%(unitlink)s?unit=%(unitid)s\">%(unitname)s</a>).\n"
+"                Værter og undervisere kan oprettes via følgende <a href="
+"\"%(productlink)s\">link</a>.\n"
 "            "
 msgstr ""
 
-#: booking/templates/common/fields/userselect_with_availability_link.html:40
+#: booking/templates/common/fields/userselect_with_availability_link.html:28
 msgid "Se detaljer"
+msgstr ""
+
+#: booking/templates/common/fields/userselect_with_availability_link.html:38
+msgid "Der findes ingen kalender for denne ressource"
 msgstr ""
 
 #: booking/templates/common/item_list.html:20
@@ -2892,14 +2909,14 @@ msgstr ""
 msgid "Pris:"
 msgstr ""
 
-#: booking/templates/common/item_list.html:91 booking/views.py:3971
+#: booking/templates/common/item_list.html:91 booking/views.py:3984
 #: profile/templates/profile/item_list.html:154
 msgid "Rediger"
 msgstr ""
 
 #: booking/templates/common/item_list.html:92
-#: booking/templates/email/list.html:71 booking/views.py:1656
-#: booking/views.py:3358 profile/templates/profile/item_list.html:155
+#: booking/templates/email/list.html:63 booking/views.py:1659
+#: booking/views.py:3361 profile/templates/profile/item_list.html:155
 msgid "Kopiér"
 msgstr ""
 
@@ -2921,10 +2938,10 @@ msgstr ""
 
 #: booking/templates/common/modal_hosts_found.html:10
 #: booking/templates/common/modal_teachers_found.html:10
-#: booking/templates/visit/details.html:196
-#: booking/templates/visit/details.html:208
-#: booking/templates/visit/details.html:240
-#: booking/templates/visit/details.html:271
+#: booking/templates/visit/details.html:197
+#: booking/templates/visit/details.html:209
+#: booking/templates/visit/details.html:242
+#: booking/templates/visit/details.html:273
 msgid "Alle fundet"
 msgstr ""
 
@@ -2950,6 +2967,7 @@ msgstr ""
 
 #: booking/templates/common/searchform.html:6
 #: booking/templates/frontpage.html:10 booking/templates/frontpage.html:32
+#: booking/templates/visit/list.html:15
 msgid "Søg efter tilbud"
 msgstr ""
 
@@ -2962,7 +2980,7 @@ msgid "Ryd søgning"
 msgstr ""
 
 #: booking/templates/common/searchform.html:13
-#: booking/templates/frontpage.html:35 booking/templates/iframe-index.html:44
+#: booking/templates/frontpage.html:35 booking/templates/iframe-index.html:68
 #: profile/templates/profile/profile.html:188
 msgid "Søg"
 msgstr ""
@@ -3067,7 +3085,7 @@ msgstr ""
 #: booking/templates/email/preview.html:30
 #: booking/templates/resource/form.html:37
 #: booking/templates/resourcepool/form.html:30
-#: booking/templates/visit/details.html:118
+#: booking/templates/visit/details.html:108
 #: profile/templates/profile/user_list.html:46
 #: profile/templates/profile/user_list.html:105
 msgid "Enhed:"
@@ -3082,8 +3100,7 @@ msgid "Beskedens tekst:"
 msgstr ""
 
 #: booking/templates/email/delete.html:23
-#: booking/templates/resource/delete.html:43
-#: booking/templates/resourcepool/delete.html:49
+#: booking/templates/resourcepool/delete.html:60
 msgid "Ja slet"
 msgstr ""
 
@@ -3111,7 +3128,8 @@ msgstr ""
 msgid "Preview skabelon"
 msgstr ""
 
-#: booking/templates/email/form.html:31 booking/templates/email/preview.html:38
+#: booking/templates/email/form.html:31
+#: booking/templates/email/preview.html:38
 msgid "Slet skabelon"
 msgstr ""
 
@@ -3138,11 +3156,11 @@ msgstr ""
 #: booking/templates/email/form.html:92
 msgid ""
 "\n"
-"                                    Skabelon-systemet anvender <a href="
-"\"https://docs.djangoproject.com/en/1.9/ref/templates/language/\" target="
-"\"_blank\">Djangos skabelonmodel</a>. Det betyder, at der udover almindelig "
-"tekst og HTML-kode kan indsættes felter, som udfyldes med værdier fra "
-"Bookinger, Besøg og Tilbud ud fra den sammenhæng beskeden skal udsendes i.\n"
+"                                Herunder har du mulighed for at indsætte "
+"variabler, som trækkes fra det tilbud/besøg, som du sender mailen fra. Dette "
+"gør det lettere for dig hurtigt at genbruge din skabelon til flere tilbud/"
+"besøg, som har forskellige variabler, f.eks. tider, lokaliteter, ressourcer "
+"osv.\n"
 "                                "
 msgstr ""
 
@@ -3191,43 +3209,40 @@ msgid "Tak for din henvendelse. Du hører fra os snarest."
 msgstr ""
 
 #: booking/templates/email/list.html:5
-msgid "emailskabeloner"
+msgid "e-mailskabeloner"
 msgstr ""
 
 #: booking/templates/email/list.html:13
-msgid "Emailskabeloner"
+msgid "E-mailskabeloner"
 msgstr ""
 
 #: booking/templates/email/list.html:24
 msgid ""
 "\n"
-"        Når man ønsker at afsende en email fra systemet, (manuelt eller\n"
-"        automatisk), tager systemet udgangspunkt i den skabelon, som er\n"
-"        relevant i den enkelte situation og for den enhed, som står bag\n"
-"        besøget. Hvis der ikke allerede findes en skabelon for enheden,\n"
-"        anvender systemet i stedet en skabelon for en overordnet enhed\n"
-"        (f.eks. instituttets fakultet). Hvis der heller ikke findes en\n"
-"        skabelon dér, anvender systemet den generelle grundskabelon. Det\n"
-"        er også muligt selv at formulere indholdet i en email, hvis\n"
-"        man ønsker en anden tekst end den, der står i grundskabelonen.\n"
+"        E-mailskabeloner giver mulighed for at skabe eget indhold til de "
+"mails, som sendes ud. Dette fungerer ved, at din egen skabelon erstatter "
+"grundskabelonen. Systemet vil benytte den skabelon, som er tættest "
+"tilknyttet til tilbuddets enhed (dvs. først trækkes fra institut herefter "
+"fakultet).\n"
 "        "
 msgstr ""
 
-#: booking/templates/email/list.html:38
+#: booking/templates/email/list.html:30
 msgid ""
 "Advarsel: der er flere skabeloner med samme Type og Enhed. Kun én af disse "
 "vil komme i betragtning"
 msgstr ""
 
-#: booking/templates/email/list.html:51
+#: booking/templates/email/list.html:43
 msgid "Handlinger"
 msgstr ""
 
-#: booking/templates/email/list.html:65 booking/templates/email/preview.html:32
+#: booking/templates/email/list.html:57
+#: booking/templates/email/preview.html:32
 msgid "Grundskabelon"
 msgstr ""
 
-#: booking/templates/email/list.html:69
+#: booking/templates/email/list.html:61
 #: booking/templates/email/preview.html:104
 msgid "Preview"
 msgstr ""
@@ -3295,7 +3310,8 @@ msgid "Beskedens tekst"
 msgstr ""
 
 #: booking/templates/email/reply.html:4 booking/templates/email/reply.html:17
-msgid "Svar på email"
+#: booking/views.py:3604
+msgid "Svar på e-mail"
 msgstr ""
 
 #: booking/templates/email/reply.html:15
@@ -3303,7 +3319,8 @@ msgid ""
 "Her kan du stille spørgsmål til din tilmelding eller skrive en kommentar"
 msgstr ""
 
-#: booking/templates/email/reply.html:27 booking/templates/email/success.html:7
+#: booking/templates/email/reply.html:27
+#: booking/templates/email/success.html:7
 msgid "Beskeden er afsendt."
 msgstr ""
 
@@ -3389,7 +3406,7 @@ msgid "overblik over evalueringer"
 msgstr ""
 
 #: booking/templates/evaluation/form.html:12
-#: booking/templates/visit/details.html:410 booking/views.py:3967
+#: booking/templates/visit/details.html:412 booking/views.py:3980
 msgid "Opret evaluering"
 msgstr ""
 
@@ -3422,12 +3439,12 @@ msgid "Gymnasielærere"
 msgstr ""
 
 #: booking/templates/evaluation/list.html:52
-#: booking/templates/visit/list.html:16
+#: booking/templates/visit/list.html:20
 msgid "Ingen besøg fundet."
 msgstr ""
 
 #: booking/templates/evaluation/list.html:55
-#: booking/templates/visit/list.html:19
+#: booking/templates/visit/list.html:24
 #, python-format
 msgid "%(count)s besøg fundet"
 msgstr ""
@@ -3467,12 +3484,12 @@ msgid "Startdato"
 msgstr ""
 
 #: booking/templates/eventtime/create_from_rules.html:42
-#: booking/templates/product/form.html:107
+#: booking/templates/product/form.html:108
 msgid "Tidspunkt og varighed"
 msgstr ""
 
 #: booking/templates/eventtime/create_from_rules.html:47
-#: booking/templates/product/searchresult.html:102
+#: booking/templates/product/searchresult.html:103
 #: profile/templates/profile/statistics.html:40
 msgid "Fra:"
 msgstr ""
@@ -3664,32 +3681,32 @@ msgstr ""
 msgid "Opret nye tidspunkter ud fra regler"
 msgstr ""
 
-#: booking/templates/eventtime/list.html:44
+#: booking/templates/eventtime/list.html:45
 #: profile/templates/profile/item_list.html:50
 msgid "Tilmeldinger"
 msgstr ""
 
-#: booking/templates/eventtime/list.html:45 booking/views.py:2140
+#: booking/templates/eventtime/list.html:46 booking/views.py:2143
 msgid "Gæster"
 msgstr ""
 
-#: booking/templates/eventtime/list.html:46
+#: booking/templates/eventtime/list.html:47
 msgid "Værter tildelt"
 msgstr ""
 
-#: booking/templates/eventtime/list.html:47
+#: booking/templates/eventtime/list.html:48
 msgid "Undervisere tildelt"
 msgstr ""
 
-#: booking/templates/eventtime/list.html:51
+#: booking/templates/eventtime/list.html:52
 msgid "Besøg status"
 msgstr ""
 
-#: booking/templates/eventtime/list.html:80
+#: booking/templates/eventtime/list.html:81
 msgid "Ikke oprettet"
 msgstr ""
 
-#: booking/templates/eventtime/list.html:96
+#: booking/templates/eventtime/list.html:97
 msgid "Der er ikke defineret nogen tidspunkter"
 msgstr ""
 
@@ -3697,84 +3714,88 @@ msgstr ""
 msgid "Tilbud rettet mod:"
 msgstr ""
 
-#: booking/templates/frontpage.html:33 booking/templates/iframe-index.html:41
+#: booking/templates/frontpage.html:33 booking/templates/iframe-index.html:65
 msgid "Indtast et eller flere søgeord..."
 msgstr ""
 
-#: booking/templates/iframe-index.html:11 booking/templates/index.html:15
+#: booking/templates/iframe-index.html:10 booking/templates/index.html:14
 #: booking/templates/product/searchresult.html:5
 msgid "søg i tilbud"
 msgstr ""
 
-#: booking/templates/index.html:67 booking/templates/index.html.py:121
-#: booking/templates/index.html:122
+#: booking/templates/index.html:89 booking/templates/index.html.py:156
+#: booking/templates/index.html:157
 msgid "Københavns Universitet"
 msgstr ""
 
-#: booking/templates/index.html:72 booking/templates/index.html.py:101
+#: booking/templates/index.html:94 booking/templates/index.html.py:136
 msgid "Log ud"
 msgstr ""
 
-#: booking/templates/index.html:74
+#: booking/templates/index.html:96
 msgid "Log ind"
 msgstr ""
 
-#: booking/templates/index.html:77
+#: booking/templates/index.html:99
 msgid "Find vej"
 msgstr ""
 
-#: booking/templates/index.html:78
+#: booking/templates/index.html:100
 msgid "Telefonbog"
 msgstr ""
 
-#: booking/templates/index.html:79
+#: booking/templates/index.html:101
 msgid "Job"
 msgstr ""
 
-#: booking/templates/index.html:80
+#: booking/templates/index.html:102
 msgid "A-Å-indeks"
 msgstr ""
 
-#: booking/templates/index.html:81
+#: booking/templates/index.html:103
 msgid "KUnet"
 msgstr ""
 
-#: booking/templates/index.html:91 override_templates/admin/base.html:36
-#: profile/views.py:491 profile/views.py:600
+#: booking/templates/index.html:104
+msgid "system_current_language"
+msgstr "da"
+
+#: booking/templates/index.html:126 override_templates/admin/base.html:36
+#: profile/views.py:497 profile/views.py:606
 msgid "Min side"
 msgstr ""
 
-#: booking/templates/index.html:93
+#: booking/templates/index.html:128
 msgid "Avanceret"
 msgstr ""
 
-#: booking/templates/index.html:96
+#: booking/templates/index.html:131
 msgid "Indlejr side"
 msgstr ""
 
-#: booking/templates/index.html:105 profile/templates/profile/profile.html:16
+#: booking/templates/index.html:140 profile/templates/profile/profile.html:16
 #: profile/templates/profile/profile_new_user.html:18
 msgid "Du er logget ind som"
 msgstr ""
 
-#: booking/templates/index.html:126
+#: booking/templates/index.html:161
 msgid "Velkommen til Københavns Universitet"
 msgstr ""
 
-#: booking/templates/index.html:127
-msgid "foKUs"
+#: booking/templates/index.html:162
+msgid "FOKUS"
 msgstr ""
 
-#: booking/templates/index.html:128
-msgid "Portal for skole- og gymnasieområdet"
+#: booking/templates/index.html:163
+msgid "Tilbud til gymnasie- og grundskolen"
 msgstr ""
 
 #: booking/templates/product/details-eventtime-list.html:12
-#: booking/templates/product/list.html:77
-#: booking/templates/product/list.html:84
-#: booking/templates/product/searchresult.html:207
-#: booking/templates/product/searchresult.html:215
-#: booking/templates/visit/list.html:112 booking/views.py:141
+#: booking/templates/product/list.html:81
+#: booking/templates/product/list.html:88
+#: booking/templates/product/searchresult.html:209
+#: booking/templates/product/searchresult.html:217
+#: booking/templates/visit/list.html:117 booking/views.py:141
 #: booking/views.py:152
 msgid "Vis alle"
 msgstr ""
@@ -3787,7 +3808,7 @@ msgstr ""
 msgid "Kopier tilbud"
 msgstr ""
 
-#: booking/templates/product/details.html:41 booking/views.py:1783
+#: booking/templates/product/details.html:41 booking/views.py:1786
 msgid "Redigér ressourcer"
 msgstr ""
 
@@ -3858,7 +3879,7 @@ msgid "Administrér kalender"
 msgstr ""
 
 #: booking/templates/product/details.html:182
-#: booking/templates/resource/list.html:64
+#: booking/templates/resource/list.html:72
 #: profile/templates/profile/profile.html:121
 #: profile/templates/profile/profile.html:137
 msgid "Opret kalender"
@@ -3902,7 +3923,7 @@ msgid "Mulighed for"
 msgstr ""
 
 #: booking/templates/product/details.html:228
-#: profile/templates/profile/statistics.html:78 profile/views.py:714
+#: profile/templates/profile/statistics.html:78 profile/views.py:720
 msgid "Rundvisning"
 msgstr ""
 
@@ -3940,23 +3961,23 @@ msgid ""
 msgstr ""
 
 #: booking/templates/product/fields/contact.html:13
-msgid "Udryldes feltet ikke bruges i stedet brugeren der oprettede tilbuddet,"
+msgid "Udfyldes feltet ikke bruges i stedet brugeren der oprettede tilbuddet,"
 msgstr ""
 
 #: booking/templates/product/fields/contact.html:16
-msgid "Udryldes feltet ikke bruges i stedet nuværende bruger,"
+msgid "Udfyldes feltet ikke bruges i stedet nuværende bruger,"
 msgstr ""
 
 #: booking/templates/product/fields/room_contact.html:9
-msgid "Vælg roomresponsible"
+msgid "Vælg lokaleansvarlig"
 msgstr ""
 
 #: booking/templates/product/fields/room_contact.html:13
-msgid "Ingen roomresponsible fundet for "
+msgid "Ingen lokaleansvarlige fundet for "
 msgstr ""
 
 #: booking/templates/product/fields/room_contact.html:19
-msgid "Klik her for at redigere mulige roomresponsible"
+msgid "Klik her for at redigere mulige lokaleansvarlige"
 msgstr ""
 
 #: booking/templates/product/fields/rooms.html:11
@@ -4083,11 +4104,11 @@ msgstr ""
 msgid "Målgruppe"
 msgstr ""
 
-#: booking/templates/product/form.html:148
+#: booking/templates/product/form.html:149
 msgid "Kontaktinformation"
 msgstr ""
 
-#: booking/templates/product/form.html:169
+#: booking/templates/product/form.html:170
 msgid "Interne oplysninger"
 msgstr ""
 
@@ -4104,19 +4125,19 @@ msgstr ""
 msgid "%(count)s tilbud fundet"
 msgstr ""
 
-#: booking/templates/product/list.html:73 booking/templates/visit/list.html:101
-#, fuzzy
-#| msgid "%is"
+#: booking/templates/product/list.html:77
+#: booking/templates/visit/list.html:106
 msgid "Vis"
-msgstr "%is"
+msgstr "Vis"
 
-#: booking/templates/product/list.html:82 booking/templates/visit/list.html:110
+#: booking/templates/product/list.html:86
+#: booking/templates/visit/list.html:115
 msgid "Vis antal resultater pr. side"
 msgstr ""
 
-#: booking/templates/product/list.html:90
-#: booking/templates/product/searchresult.html:224
-#: booking/templates/visit/list.html:118
+#: booking/templates/product/list.html:94
+#: booking/templates/product/searchresult.html:226
+#: booking/templates/visit/list.html:123
 msgid "pr. side"
 msgstr ""
 
@@ -4173,7 +4194,7 @@ msgid "Titel:"
 msgstr ""
 
 #: booking/templates/product/rightbox.html:29
-#: booking/templates/visit/details.html:485
+#: booking/templates/visit/details.html:487
 msgid "Hvad:"
 msgstr ""
 
@@ -4194,43 +4215,51 @@ msgstr ""
 msgid "Filtrer søgeresultat"
 msgstr ""
 
-#: booking/templates/product/searchresult.html:27
+#: booking/templates/product/searchresult.html:28
 msgid "Afgræns din søgning"
 msgstr ""
 
-#: booking/templates/product/searchresult.html:30
+#: booking/templates/product/searchresult.html:31
 msgid "Hvor er du fra?"
 msgstr ""
 
-#: booking/templates/product/searchresult.html:44
+#: booking/templates/product/searchresult.html:45
 msgid "Hvad søger du?"
 msgstr ""
 
-#: booking/templates/product/searchresult.html:98
+#: booking/templates/product/searchresult.html:99
 msgid "Vælg periode"
 msgstr ""
 
-#: booking/templates/product/searchresult.html:104
-#: booking/templates/product/searchresult.html:110
+#: booking/templates/product/searchresult.html:105
+#: booking/templates/product/searchresult.html:111
 msgid "Klik og vælg dato"
 msgstr ""
 
-#: booking/templates/product/searchresult.html:108
+#: booking/templates/product/searchresult.html:109
 #: profile/templates/profile/statistics.html:44
 msgid "Til:"
 msgstr ""
 
-#: booking/templates/product/searchresult.html:129 booking/views.py:1266
-#: booking/views.py:1661 profile/templates/profile/profile.html:23
+#: booking/templates/product/searchresult.html:130 booking/views.py:1268
+#: booking/views.py:1664 profile/templates/profile/profile.html:23
 msgid "Opret tilbud"
 msgstr ""
 
-#: booking/templates/product/searchresult.html:146
+#: booking/templates/product/searchresult.html:134
+msgid "Find tilbud til gymnasie- og grundskolen"
+msgstr ""
+
+#: booking/templates/product/searchresult.html:135
+msgid "Søg på emne, fag eller typer af tilbud"
+msgstr ""
+
+#: booking/templates/product/searchresult.html:148
 #: booking/templates/visit/searchresult.html:98
 msgid "Din søgning gav ikke noget resultat."
 msgstr ""
 
-#: booking/templates/product/searchresult.html:148
+#: booking/templates/product/searchresult.html:150
 #, python-format
 msgid "%(count)s resultater matcher din søgning på \"%(query)s\""
 msgstr ""
@@ -4244,11 +4273,12 @@ msgid "Værter og undervisere"
 msgstr ""
 
 #: booking/templates/product/simple_ressources.html:34
-msgid "Vælg værter der skal kunne kontaktes for afvikling af dette tilbud"
+msgid "Vælg værter, der skal kunne kontaktes for afvikling af dette tilbud."
 msgstr ""
 
 #: booking/templates/product/simple_ressources.html:37
-msgid "Vælg undervisere der skal kunne kontaktes for afvikling af dette tilbud"
+msgid ""
+"Vælg undervisere, der skal kunne kontaktes for afvikling af dette tilbud."
 msgstr ""
 
 #: booking/templates/resource/delete.html:4
@@ -4260,28 +4290,39 @@ msgid "Slet ressource"
 msgstr ""
 
 #: booking/templates/resource/delete.html:14
-msgid "Er du sikker på at du vil slette denne ressource?"
+msgid "Er du sikker på, at du vil slette denne ressource?"
 msgstr ""
 
-#: booking/templates/resource/delete.html:15
+#: booking/templates/resource/delete.html:17
+msgid ""
+"Dette vil have indflydelse på eksisterende besøg, der benytter denne "
+"ressource:"
+msgstr ""
+
+#: booking/templates/resource/delete.html:24
 msgid ""
 "Dette kan have indflydelse på eksisterende besøg, der benytter denne "
 "ressource, både dem der er under planlægning, og dem der er færdigplanlagte"
 msgstr ""
 
-#: booking/templates/resource/delete.html:23
+#: booking/templates/resource/delete.html:34
 #: booking/templates/resource/details.html:29
-#: booking/templates/resource/list.html:37
+#: booking/templates/resource/list.html:36
+#: booking/templates/resource/list.html:45
 msgid "Grupper"
 msgstr ""
 
-#: booking/templates/resource/delete.html:32
+#: booking/templates/resource/delete.html:43
 #: booking/templates/resource/details.html:38
 msgid "Ikke medlem af nogen grupper"
 msgstr ""
 
-#: booking/templates/resource/delete.html:39
+#: booking/templates/resource/delete.html:50
 msgid "Ressourcens grupper vil ikke blive slettet"
+msgstr ""
+
+#: booking/templates/resource/delete.html:55
+msgid "Annuller"
 msgstr ""
 
 #: booking/templates/resource/details.html:17
@@ -4339,42 +4380,44 @@ msgstr ""
 msgid "Gå til redigering af lokale"
 msgstr ""
 
-#: booking/templates/resource/list.html:5
+#: booking/templates/resource/list.html:6
 msgid "ressourcer"
 msgstr ""
 
-#: booking/templates/resource/list.html:13
+#: booking/templates/resource/list.html:14
 #: booking/templates/resourcerequirement/list.html:24
 #: profile/templates/profile/profile.html:74
 msgid "Administrér ressourcegrupper"
 msgstr ""
 
-#: booking/templates/resource/list.html:16
+#: booking/templates/resource/list.html:17
 msgid "Opret ny ressource"
 msgstr ""
 
-#: booking/templates/resource/list.html:21
+#: booking/templates/resource/list.html:22
 msgid ""
 "\n"
-"            Ressourcer er enkelte objekter, personer eller lokaler som kan "
-"anvendes under et besøg, og som kun kan anvendes af ét besøg ad gangen.\n"
+"            Ressourcer er enkelte objekter, personer eller lokaler, som kan "
+"anvendes under et besøg, og som kun kan anvendes af ét besøg ad gangen.<br/"
+">\n"
 "            Under planlægningen af et besøg udvælges de specifikke "
 "ressourcer, med henblik på at reservere disse til besøget.\n"
 "        "
 msgstr ""
 
-#: booking/templates/resource/list.html:38
+#: booking/templates/resource/list.html:37
+#: booking/templates/resource/list.html:46
 #: booking/templates/resourcepool/list.html:45
 #: booking/templates/resourcerequirement/list.html:34
 msgid "Handling"
 msgstr ""
 
-#: booking/templates/resource/list.html:77
+#: booking/templates/resource/list.html:85
 msgid "Ingen ressourcer"
 msgstr ""
 
 #: booking/templates/resource/typeform.html:23
-msgid "Undervisere, værter og lokaler skal oprettes i deres egne systemer:"
+msgid "Undervisere, værter og lokaler skal oprettes separat:"
 msgstr ""
 
 #: booking/templates/resource/typeform.html:24
@@ -4397,24 +4440,30 @@ msgstr ""
 msgid "Er du sikker på at du vil slette denne ressourcegruppe?"
 msgstr ""
 
-#: booking/templates/resourcepool/delete.html:15
+#: booking/templates/resourcepool/delete.html:17
+msgid ""
+"Dette vil have indflydelse på eksisterende besøg, der benytter denne "
+"ressourcegruppe:"
+msgstr ""
+
+#: booking/templates/resourcepool/delete.html:24
 msgid ""
 "Dette kan have indflydelse på eksisterende besøg, der benytter denne "
 "ressourcegruppe, både dem der er under planlægning, og dem der er "
 "færdigplanlagte"
 msgstr ""
 
-#: booking/templates/resourcepool/delete.html:21
+#: booking/templates/resourcepool/delete.html:32
 #: booking/templates/resourcepool/details.html:28
 msgid "Medlemmer"
 msgstr ""
 
-#: booking/templates/resourcepool/delete.html:30
+#: booking/templates/resourcepool/delete.html:41
 #: booking/templates/resourcepool/details.html:37
 msgid "Ingen medlemmer"
 msgstr ""
 
-#: booking/templates/resourcepool/delete.html:40
+#: booking/templates/resourcepool/delete.html:51
 #, python-format
 msgid ""
 "\n"
@@ -4603,7 +4652,11 @@ msgstr ""
 msgid "Antal tilgængelige"
 msgstr ""
 
-#: booking/templates/resourcerequirement/list.html:62
+#: booking/templates/resourcerequirement/list.html:55
+msgid "Ingen ressourcegruppe angivet"
+msgstr ""
+
+#: booking/templates/resourcerequirement/list.html:72
 msgid "Ingen ressourcebehov"
 msgstr ""
 
@@ -4632,8 +4685,8 @@ msgstr ""
 #, python-format
 msgid ""
 "\n"
-"                            %(nr_bookers)s har tilmeldt sig denne instans af "
-"<a href=\"%(producturl)s\">%(producttitle)s</a>\n"
+"                            %(nr_bookers)s har tilmeldt sig <a href="
+"\"%(producturl)s\">%(producttitle)s</a>\n"
 "                        "
 msgstr ""
 
@@ -4649,137 +4702,140 @@ msgstr ""
 msgid "Statusoverblik"
 msgstr ""
 
-#: booking/templates/visit/details.html:108
-#, python-format
-msgid ""
-"\n"
-"                                    Dette er et færdigplanlagt besøg, og "
-"statussen bør derfor ændres til '%(text)s' inden ændringer i ressourcerne "
-"foretages.\n"
-"                                    Vær opmærksom på at en ændring i de "
-"tildelte ressourcegrupper også medfører ændringer i det færdigplanlagte "
-"besøg.\n"
-"                                "
-msgstr ""
-
-#: booking/templates/visit/details.html:132
-#: booking/templates/visit/details.html:355
+#: booking/templates/visit/details.html:122
+#: booking/templates/visit/details.html:357
 msgid "Ikke angivet"
 msgstr ""
 
-#: booking/templates/visit/details.html:146
+#: booking/templates/visit/details.html:136
 msgid "Min. ønskede tilbud"
 msgstr ""
 
-#: booking/templates/visit/details.html:157
+#: booking/templates/visit/details.html:147
 msgid "Ansvarlig"
 msgstr ""
 
-#: booking/templates/visit/details.html:163
+#: booking/templates/visit/details.html:153
 msgid "Ikke tildelt"
 msgstr ""
 
-#: booking/templates/visit/details.html:181
+#: booking/templates/visit/details.html:169
+msgid "Ufuldstændigt behov"
+msgstr ""
+
+#: booking/templates/visit/details.html:172
+msgid "Ressourcebehovet er ikke udspecificeret"
+msgstr ""
+
+#: booking/templates/visit/details.html:175
+msgid "Ret"
+msgstr ""
+
+#: booking/templates/visit/details.html:182
 #, python-format
 msgid "%(found)s/%(needed)s %(type)s fundet"
 msgstr ""
 
-#: booking/templates/visit/details.html:189
-#: booking/templates/visit/details.html:265
+#: booking/templates/visit/details.html:190
+#: booking/templates/visit/details.html:267
 msgid "Bliv vært for dette besøg."
 msgstr ""
 
-#: booking/templates/visit/details.html:191
-#: booking/templates/visit/details.html:267
+#: booking/templates/visit/details.html:192
+#: booking/templates/visit/details.html:269
 msgid "Jeg ønsker ikke at være vært"
 msgstr ""
 
-#: booking/templates/visit/details.html:194
-#: booking/templates/visit/details.html:263
+#: booking/templates/visit/details.html:195
+#: booking/templates/visit/details.html:265
 msgid "(allerede vært for dette besøg)"
 msgstr ""
 
-#: booking/templates/visit/details.html:201
-#: booking/templates/visit/details.html:234
+#: booking/templates/visit/details.html:202
+#: booking/templates/visit/details.html:236
 msgid "Bliv underviser for dette besøg"
 msgstr ""
 
-#: booking/templates/visit/details.html:203
-#: booking/templates/visit/details.html:236
+#: booking/templates/visit/details.html:204
+#: booking/templates/visit/details.html:238
 msgid "Jeg ønsker ikke at være underviser"
 msgstr ""
 
-#: booking/templates/visit/details.html:206
-#: booking/templates/visit/details.html:232
+#: booking/templates/visit/details.html:207
+#: booking/templates/visit/details.html:234
 msgid "(allerede underviser for dette besøg)"
 msgstr ""
 
-#: booking/templates/visit/details.html:219 booking/views.py:2160
-#: profile/templates/profile/statistics.html:89 profile/views.py:717
+#: booking/templates/visit/details.html:221 booking/views.py:2163
+#: profile/templates/profile/statistics.html:89 profile/views.py:723
 msgid "Undervisere"
 msgstr ""
 
-#: booking/templates/visit/details.html:222
+#: booking/templates/visit/details.html:224
 #, python-format
 msgid "%(found)s/%(needed)s undervisere fundet"
 msgstr ""
 
-#: booking/templates/visit/details.html:250 booking/views.py:2149
-#: profile/templates/profile/statistics.html:88 profile/views.py:717
+#: booking/templates/visit/details.html:252 booking/views.py:2152
+#: profile/templates/profile/statistics.html:88 profile/views.py:723
 msgid "Værter"
 msgstr ""
 
-#: booking/templates/visit/details.html:253
+#: booking/templates/visit/details.html:255
 #, python-format
 msgid "%(found)s/%(needed)s værter fundet"
 msgstr ""
 
-#: booking/templates/visit/details.html:304
+#: booking/templates/visit/details.html:306
 msgid "Automatisk e-mail"
 msgstr ""
 
-#: booking/templates/visit/details.html:334
+#: booking/templates/visit/details.html:336
 msgid "Antal på venteliste"
 msgstr ""
 
-#: booking/templates/visit/details.html:341
+#: booking/templates/visit/details.html:343
 msgid "Se liste"
 msgstr ""
 
-#: booking/templates/visit/details.html:382
+#: booking/templates/visit/details.html:369
+msgid "Vigtig bemærkning"
+msgstr ""
+
+#: booking/templates/visit/details.html:384
 #: profile/templates/profile/item_list.html:42
 msgid "Nylige ændringer"
 msgstr ""
 
-#: booking/templates/visit/details.html:386
+#: booking/templates/visit/details.html:388
 msgid "Dette besøg er markeret som havende nylige ændringer"
 msgstr ""
 
-#: booking/templates/visit/details.html:389
+#: booking/templates/visit/details.html:391
 msgid "Klik her for at fjerne markeringen"
 msgstr ""
 
-#: booking/templates/visit/details.html:397 booking/views.py:3987
+#: booking/templates/visit/details.html:399 booking/views.py:4000
 msgid "Evaluering"
 msgstr ""
 
-#: booking/templates/visit/details.html:403
+#: booking/templates/visit/details.html:405
 msgid "Ingen evaluering oprettet"
 msgstr ""
 
-#: booking/templates/visit/details.html:408
+#: booking/templates/visit/details.html:410
 msgid "Vis evaluering"
 msgstr ""
 
-#: booking/templates/visit/details.html:430
+#: booking/templates/visit/details.html:432
 msgid "Tilmeldte"
 msgstr ""
 
-#: booking/templates/visit/details.html:447
+#: booking/templates/visit/details.html:449
 msgid "Venteliste"
 msgstr ""
 
-#: booking/templates/visit/details.html:452
+#: booking/templates/visit/details.html:454
 #, python-format
 msgid ""
 "\n"
@@ -4787,7 +4843,7 @@ msgid ""
 "                            "
 msgstr ""
 
-#: booking/templates/visit/details.html:456
+#: booking/templates/visit/details.html:458
 #, python-format
 msgid ""
 "\n"
@@ -4795,57 +4851,65 @@ msgid ""
 "                            "
 msgstr ""
 
-#: booking/templates/visit/details.html:472
+#: booking/templates/visit/details.html:474
 msgid "Aktivitetslog"
 msgstr ""
 
-#: booking/templates/visit/details.html:476
+#: booking/templates/visit/details.html:478
 msgid "Tilføj ny log-post"
 msgstr ""
 
-#: booking/templates/visit/details.html:483
-#: booking/templates/visit/details.html:515
+#: booking/templates/visit/details.html:485
+#: booking/templates/visit/details.html:517
 msgid "Hvem:"
 msgstr ""
 
-#: booking/templates/visit/details.html:487
-#: booking/templates/visit/details.html:525
+#: booking/templates/visit/details.html:489
+#: booking/templates/visit/details.html:527
 msgid "Hvornår"
 msgstr ""
 
-#: booking/templates/visit/details.html:489
+#: booking/templates/visit/details.html:491
 msgid "Besked:"
 msgstr ""
 
-#: booking/templates/visit/details.html:508
+#: booking/templates/visit/details.html:510
 msgid "Tilføj ny kommentar"
 msgstr ""
 
-#: booking/templates/visit/details.html:580
+#: booking/templates/visit/details.html:582
 #, python-brace-format
 msgid ""
 "Der er kun {available} pladser tilbage. Du har valgt {selected} deltagere."
 msgstr ""
 
-#: booking/templates/visit/details.html:608
+#: booking/templates/visit/details.html:610
 msgid "Er du sikke på at du vil slette disse tilmeldinger?"
 msgstr ""
 
 #: booking/templates/visit/list.html:5
-msgid "liste af besøg"
+msgid "Liste af besøg"
 msgstr ""
 
-#: booking/templates/visit/list.html:28
+#: booking/templates/visit/list.html:13
+msgid "Afviklede besøg"
+msgstr ""
+
+#: booking/templates/visit/list.html:14
+msgid "Tilbage til portal"
+msgstr ""
+
+#: booking/templates/visit/list.html:33
 #: booking/templates/visit/searchresult.html:117
 msgid "Tilbud:"
 msgstr ""
 
-#: booking/templates/visit/list.html:30
+#: booking/templates/visit/list.html:35
 #: booking/templates/visit/searchresult.html:133
 msgid "Booket af:"
 msgstr ""
 
-#: booking/templates/visit/list.html:35
+#: booking/templates/visit/list.html:40
 #, python-format
 msgid ""
 "\n"
@@ -4854,7 +4918,7 @@ msgid ""
 "                                                    "
 msgstr ""
 
-#: booking/templates/visit/list.html:42
+#: booking/templates/visit/list.html:47
 #, python-format
 msgid ""
 "\n"
@@ -4872,7 +4936,6 @@ msgstr ""
 #: booking/templates/visit/multi_confirm.html:16
 #: booking/templates/visit/multi_date.html:16
 #: booking/templates/visit/multi_products.html:16
-#: booking/templates/visit/multi_prompt.html:31
 msgid "Bestil flere besøg på den samme dag"
 msgstr ""
 
@@ -4886,7 +4949,7 @@ msgstr ""
 #: booking/templates/visit/multi_confirm.html:26
 #: booking/templates/visit/multi_date.html:28
 #: booking/templates/visit/multi_date.html:38
-#: booking/templates/visit/multi_products.html:30 booking/views.py:3926
+#: booking/templates/visit/multi_products.html:30 booking/views.py:3939
 msgid "Bekræft"
 msgstr ""
 
@@ -4910,7 +4973,7 @@ msgstr ""
 
 #: booking/templates/visit/multi_confirm.html:62
 #: booking/templates/visit/multi_products.html:102
-#: booking/templates/visit/multi_prompt.html:25
+#: booking/templates/visit/multi_prompt.html:23
 msgid "Tilbage"
 msgstr ""
 
@@ -4918,7 +4981,7 @@ msgstr ""
 msgid "Bestil valgte besøg"
 msgstr ""
 
-#: booking/templates/visit/multi_date.html:25 booking/views.py:3900
+#: booking/templates/visit/multi_date.html:25 booking/views.py:3913
 msgid "Vælg tilbud"
 msgstr ""
 
@@ -4952,17 +5015,18 @@ msgstr ""
 #: booking/templates/visit/multi_products.html:54
 msgid ""
 "Træk boksene med dine besøg op og ned for at sætte dem i en prioriteret "
-"rækkefølge"
+"rækkefølge. Første prioritet er øverst."
 msgstr ""
 
 #: booking/templates/visit/multi_products.html:68
-msgid "Ingen tilbud tilgængelige"
+msgid "Ingen yderligere tilbud er tilgængelige"
 msgstr ""
 
 #: booking/templates/visit/multi_products.html:83
 msgid ""
 "Bemærk: Listen viser besøg uden faste tider, som kan lade sig gøre på den "
-"valgte dag."
+"valgte dag. Savner du et besøg på listen, skal det muligvis tilmeldes "
+"separat."
 msgstr ""
 
 #: booking/templates/visit/multi_products.html:92
@@ -4980,16 +5044,18 @@ msgstr ""
 #: booking/templates/visit/multi_prompt.html:15
 msgid ""
 "\n"
-"            Du har valgt at tilmelde dig et besøg uden fast tidspunkt.\n"
-"            Besøg uden fast tidspunkt kan enten bestilles ved at angive en "
-"række ønskede tidspunkter for besøget,\n"
-"            eller ved at angive en prioriteret ønskeliste for besøg der alle "
-"skal foregå på den samme dag.\n"
+"            Her kan du tilmelde dig et eller flere besøg af typen: uden fast "
+"tidspunkt. Du kan angive et tidspunkt, hvor du ønsker at opleve et bestemt "
+"tilbud eller tilmelde dig flere forskellige tilbud på den samme dag.\n"
 "        "
 msgstr ""
 
-#: booking/templates/visit/multi_prompt.html:28
-msgid "Bestil med ønske om tidspunkt"
+#: booking/templates/visit/multi_prompt.html:26
+msgid "Tilmeld med ønske om tidspunkt "
+msgstr ""
+
+#: booking/templates/visit/multi_prompt.html:29
+msgid "Tilmeld flere besøg på samme dag"
 msgstr ""
 
 #: booking/templates/visit/resources.html:5
@@ -5182,122 +5248,118 @@ msgstr ""
 msgid "Senest bookede tilbud"
 msgstr ""
 
-#: booking/views.py:509 booking/views.py:517
+#: booking/views.py:511 booking/views.py:519
 msgid "You cannot edit an object for a unit that you don't belong to"
 msgstr ""
 
-#: booking/views.py:597
+#: booking/views.py:599
 #, python-format
 msgid ""
 "Ændrede felter:\n"
 "%s"
 msgstr ""
 
-#: booking/views.py:600
+#: booking/views.py:602
 #, python-format
 msgid ""
 "Oprettet med felter:\n"
 "%s"
 msgstr ""
 
-#: booking/views.py:1218
+#: booking/views.py:1220
 msgid "Tilbudsliste"
 msgstr ""
 
-#: booking/views.py:1295
+#: booking/views.py:1297
 msgid "Du kan kun redigere enheder,som du selv er koordinator for."
 msgstr ""
 
-#: booking/views.py:1568
+#: booking/views.py:1571
 msgid ""
 "Der findes besøg for tilbudet med deltagerantal udenfor de angivne min-/max-"
 "grænser for deltagere!"
 msgstr ""
 
-#: booking/views.py:1591
+#: booking/views.py:1594
 msgid "Tilbuddet blev gemt."
 msgstr ""
 
-#: booking/views.py:1707 profile/views.py:401
+#: booking/views.py:1710 profile/views.py:407
 msgid "Du kan kun redigere enheder, som du selv er koordinator for."
 msgstr ""
 
-#: booking/views.py:1930
+#: booking/views.py:1933
 msgid "There are no root templates with the SYSTEM__BASICMAIL_ENVELOPE key"
 msgstr ""
 
-#: booking/views.py:2005
+#: booking/views.py:2008
 msgid "Deltagende gæster"
 msgstr ""
 
-#: booking/views.py:2015
+#: booking/views.py:2018
 msgid "Gæster på venteliste"
 msgstr ""
 
-#: booking/views.py:2035
+#: booking/views.py:2038
 msgid "Tildelte værter"
 msgstr ""
 
-#: booking/views.py:2048
+#: booking/views.py:2051
 msgid "Tildelte undervisere"
 msgstr ""
 
-#: booking/views.py:2112 booking/views.py:2214
+#: booking/views.py:2115 booking/views.py:2217
 msgid "Send notifikation"
 msgstr ""
 
-#: booking/views.py:2467
+#: booking/views.py:2470
 msgid "Cannot place booking with in waiting list; the waiting list is closed"
 msgstr ""
 
-#: booking/views.py:2473
+#: booking/views.py:2476
 #, python-format
 msgid ""
 "Cannot place booking with %(attendee_count)d attendees in waiting list; "
 "there are only %(waitinglist_capacity)d spots"
 msgstr ""
 
-#: booking/views.py:2865
+#: booking/views.py:2868
 msgid "Besøgsliste"
 msgstr ""
 
-#: booking/views.py:3276
+#: booking/views.py:3279
 msgid "Emailskabelonliste"
 msgstr ""
 
-#: booking/views.py:3565
+#: booking/views.py:3577
 msgid "Svar:"
 msgstr ""
 
-#: booking/views.py:3591
-msgid "Svar på e-mail"
-msgstr ""
-
-#: booking/views.py:3652
+#: booking/views.py:3665
 msgid "Oversigt over evalueringer"
 msgstr ""
 
-#: booking/views.py:3682
+#: booking/views.py:3695
 msgid "Booking findes ikke længere"
 msgstr ""
 
-#: booking/views.py:3684 booking/views.py:3688
+#: booking/views.py:3697 booking/views.py:3701
 msgid "Ugyldig token"
 msgstr ""
 
-#: booking/views.py:3686
+#: booking/views.py:3699
 msgid "Token er udløbet"
 msgstr ""
 
-#: booking/views.py:3740
+#: booking/views.py:3753
 msgid "Slettet tilmelding"
 msgstr ""
 
-#: booking/views.py:3742
+#: booking/views.py:3755
 msgid "Svar på ledig plads"
 msgstr ""
 
-#: booking/views.py:3759
+#: booking/views.py:3772
 msgid "Vælg bestillingstype"
 msgstr ""
 
@@ -5306,58 +5368,18 @@ msgid "Welcome,"
 msgstr ""
 
 #: override_templates/admin/base.html:40
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/base.html:106
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin_doc/bookmarklets.html:9
 msgid "Documentation"
 msgstr ""
 
 #: override_templates/admin/base.html:44
-#: python-env/lib/python2.7/site-packages/grappelli/dashboard/dashboards.py:138
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/auth/user/change_password.html:11
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/auth/user/change_password.html:57
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/base.html:91
 msgid "Change password"
 msgstr ""
 
 #: override_templates/admin/base.html:46
-#: python-env/lib/python2.7/site-packages/grappelli/dashboard/dashboards.py:140
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/base.html:94
 msgid "Log out"
 msgstr ""
 
 #: override_templates/admin/base.html:56
-#: python-env/lib/python2.7/site-packages/grappelli/dashboard/templates/admin/index.html:25
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/500.html:9
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/app_index.html:11
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/auth/user/change_password.html:7
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/base.html:124
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/change_form.html:147
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/change_list.html:150
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/change_list_filter_sidebar.html:151
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/constance/change_list.html:43
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/csv_export_selected_confirmation.html:9
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/delete_confirmation.html:13
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/delete_selected_confirmation.html:13
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/index.html:18
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/invalid_setup.html:9
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/object_history.html:9
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin_doc/bookmarklets.html:8
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin_doc/index.html:9
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin_doc/missing_docutils.html:8
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin_doc/model_detail.html:20
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin_doc/model_index.html:23
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin_doc/template_filter_index.html:25
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin_doc/template_tag_index.html:27
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin_doc/view_detail.html:7
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin_doc/view_index.html:23
-#: python-env/lib/python2.7/site-packages/grappelli/templates/grp_doc/basic_page_structure.html:132
-#: python-env/lib/python2.7/site-packages/grappelli/templates/grp_doc/context_navigation.html:55
-#: python-env/lib/python2.7/site-packages/grappelli/templates/registration/password_change_done.html:6
-#: python-env/lib/python2.7/site-packages/grappelli/templates/registration/password_change_form.html:6
-#: python-env/lib/python2.7/site-packages/grappelli/templates/reversion/recover_form.html:7
-#: python-env/lib/python2.7/site-packages/grappelli/templates/reversion/recover_list.html:6
-#: python-env/lib/python2.7/site-packages/grappelli/templates/reversion/revision_form.html:7
-#: python-env/lib/python2.7/site-packages/grappelli/templates/smuggler/load_data_form.html:26
 msgid "Home"
 msgstr ""
 
@@ -5385,7 +5407,7 @@ msgstr ""
 msgid "Rolle"
 msgstr ""
 
-#: profile/forms.py:113
+#: profile/forms.py:115
 msgid "Dette felt er påkrævet!"
 msgstr ""
 
@@ -5398,7 +5420,7 @@ msgid "brugerroller"
 msgstr ""
 
 #: profile/models.py:119 profile/templates/profile/profile.html:197
-#: profile/views.py:258 profile/views.py:308
+#: profile/views.py:264 profile/views.py:314
 msgid "Mine tilbud"
 msgstr ""
 
@@ -5456,7 +5478,7 @@ msgid "Rediger bruger '%(username)s'"
 msgstr ""
 
 #: profile/templates/profile/create_user.html:19
-#: profile/templates/profile/user_list.html:23 profile/views.py:502
+#: profile/templates/profile/user_list.html:23 profile/views.py:508
 msgid "Opret ny bruger"
 msgstr ""
 
@@ -5518,7 +5540,7 @@ msgstr[1] ""
 msgid "Antal på venteliste:"
 msgstr ""
 
-#: profile/templates/profile/item_list.html:84
+#: profile/templates/profile/item_list.html:84 profile/views.py:115
 msgid "Ressourceændring"
 msgstr ""
 
@@ -5546,13 +5568,12 @@ msgid "Velkommen"
 msgstr ""
 
 #: profile/templates/profile/profile.html:25
-#: python-env/lib/python2.7/site-packages/grappelli/dashboard/dashboards.py:152
 msgid "Administration"
 msgstr ""
 
 #: profile/templates/profile/profile.html:30
-#: profile/templates/profile/user_list.html:13 profile/views.py:492
-#: profile/views.py:601
+#: profile/templates/profile/user_list.html:13 profile/views.py:498
+#: profile/views.py:607
 msgid "Administrér brugere"
 msgstr ""
 
@@ -5563,7 +5584,7 @@ msgid ""
 msgstr ""
 
 #: profile/templates/profile/profile.html:36
-msgid "Administrér emailskabeloner"
+msgid "Administrér e-mailskabeloner"
 msgstr ""
 
 #: profile/templates/profile/profile.html:37
@@ -5689,8 +5710,8 @@ msgstr ""
 #, python-format
 msgid ""
 "\n"
-"                            OBS: Der er %(productcount)s tilbud med besøg "
-"der mangler ressourcer\n"
+"                            OBS: Du har %(visitcount)s besøg med status "
+"%(status)s\n"
 "                        "
 msgstr ""
 
@@ -5811,31 +5832,31 @@ msgstr ""
 msgid "Download csv"
 msgstr ""
 
-#: profile/templates/profile/statistics.html:74 profile/views.py:713
+#: profile/templates/profile/statistics.html:74 profile/views.py:719
 msgid "Besøgsdato"
 msgstr ""
 
-#: profile/templates/profile/statistics.html:75 profile/views.py:713
+#: profile/templates/profile/statistics.html:75 profile/views.py:719
 msgid "Klassetrin/Niveau"
 msgstr ""
 
-#: profile/templates/profile/statistics.html:77 profile/views.py:714
+#: profile/templates/profile/statistics.html:77 profile/views.py:720
 msgid "Oplæg om uddannelser"
 msgstr ""
 
-#: profile/templates/profile/statistics.html:84 profile/views.py:716
+#: profile/templates/profile/statistics.html:84 profile/views.py:722
 msgid "Lærer"
 msgstr ""
 
-#: profile/templates/profile/statistics.html:85 profile/views.py:716
-msgid "Lærer email"
+#: profile/templates/profile/statistics.html:85
+msgid "Lærers e-mail"
 msgstr ""
 
-#: profile/templates/profile/statistics.html:86 profile/views.py:716
+#: profile/templates/profile/statistics.html:86 profile/views.py:722
 msgid "Bemærkninger fra koordinator"
 msgstr ""
 
-#: profile/templates/profile/statistics.html:87 profile/views.py:717
+#: profile/templates/profile/statistics.html:87 profile/views.py:723
 msgid "Bemærkninger fra lærer"
 msgstr ""
 
@@ -5864,6 +5885,10 @@ msgstr ""
 msgid "Søg i navn:"
 msgstr ""
 
+#: profile/templates/profile/user_list.html:89
+msgid "Brugernavn:"
+msgstr ""
+
 #: profile/views.py:74
 #, python-format
 msgid "%(count)d senest afviklet besøg"
@@ -5871,8 +5896,8 @@ msgid_plural "%(count)d seneste afviklede besøg"
 msgstr[0] ""
 msgstr[1] ""
 
-#: profile/views.py:82 profile/views.py:98 profile/views.py:184
-#: profile/views.py:218 profile/views.py:243
+#: profile/views.py:82 profile/views.py:98 profile/views.py:190
+#: profile/views.py:224 profile/views.py:249
 msgid "Søg i alle"
 msgstr ""
 
@@ -5883,1959 +5908,82 @@ msgid_plural "%(count)d dagens besøg"
 msgstr[0] ""
 msgstr[1] ""
 
-#: profile/views.py:168
+#: profile/views.py:174
 #, python-format
 msgid "%(count)d tilbud i min enhed"
 msgid_plural "%(count)d tilbud i min enhed"
 msgstr[0] ""
 msgstr[1] ""
 
-#: profile/views.py:194
+#: profile/views.py:200
 #, python-format
 msgid "%(count)d besøg under planlægning"
 msgid_plural "%(count)d besøg under planlægning"
 msgstr[0] ""
 msgstr[1] ""
 
-#: profile/views.py:226
+#: profile/views.py:232
 #, python-format
 msgid "%(count)d planlagt besøg"
 msgid_plural "%(count)d planlagte besøg"
 msgstr[0] ""
 msgstr[1] ""
 
-#: profile/views.py:270
+#: profile/views.py:276
 #, python-format
 msgid "%(count)d besøg der mangler undervisere"
 msgid_plural "%(count)d besøg der mangler undervisere"
 msgstr[0] ""
 msgstr[1] ""
 
-#: profile/views.py:285
+#: profile/views.py:291
 #, python-format
 msgid "%(count)d besøg hvor jeg er underviser"
 msgid_plural "%(count)d besøg hvor jeg er underviser"
 msgstr[0] ""
 msgstr[1] ""
 
-#: profile/views.py:320
+#: profile/views.py:326
 #, python-format
 msgid "%(count)d besøg der mangler værter"
 msgid_plural "%(count)d besøg der mangler værter"
 msgstr[0] ""
 msgstr[1] ""
 
-#: profile/views.py:335
+#: profile/views.py:341
 #, python-format
 msgid "%(count)d besøg hvor jeg er vært"
 msgid_plural "%(count)d besøg hvor jeg er vært"
 msgstr[0] ""
 msgstr[1] ""
 
-#: profile/views.py:378
+#: profile/views.py:384
 msgid "Du har rollen 'Fakultetsredaktør', men er ikke tilknyttet nogen enhed."
 msgstr ""
 
-#: profile/views.py:386
+#: profile/views.py:392
 msgid "Du kan kun redigere enheder, som ligger under dit fakultet."
 msgstr ""
 
-#: profile/views.py:393
+#: profile/views.py:399
 msgid "Du har rollen 'Koordinator', men er ikke tilknyttet nogen enhed."
 msgstr ""
 
-#: profile/views.py:409
+#: profile/views.py:415
 #, python-format
 msgid "Du har ikke rettigheder til at redigere brugere med rollen \"%s\""
 msgstr ""
 
-#: profile/views.py:480
+#: profile/views.py:486
 #, python-format
 msgid "Brugeren %s blev gemt"
 msgstr ""
 
-#: profile/views.py:497
+#: profile/views.py:503
 #, python-format
 msgid "Redigér bruger '%s'"
 msgstr ""
 
-#: python-env/lib/python2.7/site-packages/django/contrib/messages/apps.py:7
-msgid "Messages"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/contrib/sitemaps/apps.py:7
-msgid "Site Maps"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/contrib/staticfiles/apps.py:7
-msgid "Static Files"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/contrib/syndication/apps.py:7
-msgid "Syndication"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/contrib/webdesign/apps.py:7
-msgid "Web Design"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/core/validators.py:20
-msgid "Enter a valid value."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/core/validators.py:87
-#: python-env/lib/python2.7/site-packages/django/forms/fields.py:712
-msgid "Enter a valid URL."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/core/validators.py:130
-msgid "Enter a valid integer."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/core/validators.py:141
-msgid "Enter a valid email address."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/core/validators.py:215
-msgid ""
-"Enter a valid 'slug' consisting of letters, numbers, underscores or hyphens."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/core/validators.py:220
-#: python-env/lib/python2.7/site-packages/django/core/validators.py:239
-msgid "Enter a valid IPv4 address."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/core/validators.py:225
-#: python-env/lib/python2.7/site-packages/django/core/validators.py:240
-msgid "Enter a valid IPv6 address."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/core/validators.py:235
-#: python-env/lib/python2.7/site-packages/django/core/validators.py:238
-msgid "Enter a valid IPv4 or IPv6 address."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/core/validators.py:263
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:1144
-msgid "Enter only digits separated by commas."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/core/validators.py:272
-#, python-format
-msgid "Ensure this value is %(limit_value)s (it is %(show_value)s)."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/core/validators.py:298
-#, python-format
-msgid "Ensure this value is less than or equal to %(limit_value)s."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/core/validators.py:305
-#, python-format
-msgid "Ensure this value is greater than or equal to %(limit_value)s."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/core/validators.py:314
-#, python-format
-msgid ""
-"Ensure this value has at least %(limit_value)d character (it has "
-"%(show_value)d)."
-msgid_plural ""
-"Ensure this value has at least %(limit_value)d characters (it has "
-"%(show_value)d)."
-msgstr[0] ""
-msgstr[1] ""
-
-#: python-env/lib/python2.7/site-packages/django/core/validators.py:325
-#, python-format
-msgid ""
-"Ensure this value has at most %(limit_value)d character (it has "
-"%(show_value)d)."
-msgid_plural ""
-"Ensure this value has at most %(limit_value)d characters (it has "
-"%(show_value)d)."
-msgstr[0] ""
-msgstr[1] ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/base.py:1130
-#: python-env/lib/python2.7/site-packages/django/forms/models.py:719
-msgid "and"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/base.py:1132
-#, python-format
-msgid "%(model_name)s with this %(field_labels)s already exists."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:107
-#, python-format
-msgid "Value %(value)r is not a valid choice."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:108
-msgid "This field cannot be null."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:109
-msgid "This field cannot be blank."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:110
-#, python-format
-msgid "%(model_name)s with this %(field_label)s already exists."
-msgstr ""
-
-#. Translators: The 'lookup_type' is one of 'date', 'year' or 'month'.
-#. Eg: "Title must be unique for pub_date year"
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:114
-#, python-format
-msgid ""
-"%(field_label)s must be unique for %(date_field_label)s %(lookup_type)s."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:132
-#, python-format
-msgid "Field of type: %(field_type)s"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:922
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:1832
-msgid "Integer"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:926
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:1830
-#, python-format
-msgid "'%(value)s' value must be an integer."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:1001
-#, python-format
-msgid "'%(value)s' value must be either True or False."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:1003
-msgid "Boolean (Either True or False)"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:1078
-#, python-format
-msgid "String (up to %(max_length)s)"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:1139
-msgid "Comma-separated integers"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:1188
-#, python-format
-msgid ""
-"'%(value)s' value has an invalid date format. It must be in YYYY-MM-DD "
-"format."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:1190
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:1340
-#, python-format
-msgid ""
-"'%(value)s' value has the correct format (YYYY-MM-DD) but it is an invalid "
-"date."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:1193
-msgid "Date (without time)"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:1338
-#, python-format
-msgid ""
-"'%(value)s' value has an invalid format. It must be in YYYY-MM-DD HH:MM[:ss[."
-"uuuuuu]][TZ] format."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:1342
-#, python-format
-msgid ""
-"'%(value)s' value has the correct format (YYYY-MM-DD HH:MM[:ss[.uuuuuu]]"
-"[TZ]) but it is an invalid date/time."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:1346
-msgid "Date (with time)"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:1498
-#, python-format
-msgid "'%(value)s' value must be a decimal number."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:1500
-msgid "Decimal number"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:1651
-#, python-format
-msgid ""
-"'%(value)s' value has an invalid format. It must be in [DD] [HH:[MM:]]ss[."
-"uuuuuu] format."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:1654
-#: python-env/lib/python2.7/site-packages/django_cron/admin.py:52
-msgid "Duration"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:1705
-msgid "Email address"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:1729
-msgid "File path"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:1796
-#, python-format
-msgid "'%(value)s' value must be a float."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:1798
-msgid "Floating point number"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:1899
-msgid "Big (8 byte) integer"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:1914
-msgid "IPv4 address"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:1950
-msgid "IP address"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:2029
-#, python-format
-msgid "'%(value)s' value must be either None, True or False."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:2031
-msgid "Boolean (Either True, False or None)"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:2091
-msgid "Positive integer"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:2103
-msgid "Positive small integer"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:2116
-#, python-format
-msgid "Slug (up to %(max_length)s)"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:2145
-msgid "Small integer"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:2152
-msgid "Text"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:2175
-#, python-format
-msgid ""
-"'%(value)s' value has an invalid format. It must be in HH:MM[:ss[.uuuuuu]] "
-"format."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:2177
-#, python-format
-msgid ""
-"'%(value)s' value has the correct format (HH:MM[:ss[.uuuuuu]]) but it is an "
-"invalid time."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:2180
-msgid "Time"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:2331
-msgid "Raw binary data"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/__init__.py:2375
-#, python-format
-msgid "'%(value)s' is not a valid UUID."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/files.py:239
-msgid "File"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/files.py:389
-msgid "Image"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/related.py:1796
-#, python-format
-msgid "%(model)s instance with %(field)s %(value)r does not exist."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/related.py:1798
-msgid "Foreign Key (type determined by related field)"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/related.py:2028
-msgid "One-to-one relationship"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/db/models/fields/related.py:2118
-msgid "Many-to-many relationship"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/forms/fields.py:64
-msgid "This field is required."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/forms/fields.py:237
-msgid "Enter a whole number."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/forms/fields.py:280
-#: python-env/lib/python2.7/site-packages/django/forms/fields.py:317
-msgid "Enter a number."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/forms/fields.py:319
-#, python-format
-msgid "Ensure that there are no more than %(max)s digit in total."
-msgid_plural "Ensure that there are no more than %(max)s digits in total."
-msgstr[0] ""
-msgstr[1] ""
-
-#: python-env/lib/python2.7/site-packages/django/forms/fields.py:323
-#, python-format
-msgid "Ensure that there are no more than %(max)s decimal place."
-msgid_plural "Ensure that there are no more than %(max)s decimal places."
-msgstr[0] ""
-msgstr[1] ""
-
-#: python-env/lib/python2.7/site-packages/django/forms/fields.py:327
-#, python-format
-msgid ""
-"Ensure that there are no more than %(max)s digit before the decimal point."
-msgid_plural ""
-"Ensure that there are no more than %(max)s digits before the decimal point."
-msgstr[0] ""
-msgstr[1] ""
-
-#: python-env/lib/python2.7/site-packages/django/forms/fields.py:438
-#: python-env/lib/python2.7/site-packages/django/forms/fields.py:1193
-msgid "Enter a valid date."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/forms/fields.py:462
-#: python-env/lib/python2.7/site-packages/django/forms/fields.py:1194
-msgid "Enter a valid time."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/forms/fields.py:484
-msgid "Enter a valid date/time."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/forms/fields.py:525
-msgid "Enter a valid duration."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/forms/fields.py:591
-msgid "No file was submitted. Check the encoding type on the form."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/forms/fields.py:592
-msgid "No file was submitted."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/forms/fields.py:593
-msgid "The submitted file is empty."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/forms/fields.py:595
-#, python-format
-msgid "Ensure this filename has at most %(max)d character (it has %(length)d)."
-msgid_plural ""
-"Ensure this filename has at most %(max)d characters (it has %(length)d)."
-msgstr[0] ""
-msgstr[1] ""
-
-#: python-env/lib/python2.7/site-packages/django/forms/fields.py:598
-msgid "Please either submit a file or check the clear checkbox, not both."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/forms/fields.py:660
-msgid ""
-"Upload a valid image. The file you uploaded was either not an image or a "
-"corrupted image."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/forms/fields.py:827
-#: python-env/lib/python2.7/site-packages/django/forms/fields.py:921
-#: python-env/lib/python2.7/site-packages/django/forms/models.py:1235
-#, python-format
-msgid "Select a valid choice. %(value)s is not one of the available choices."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/forms/fields.py:922
-#: python-env/lib/python2.7/site-packages/django/forms/fields.py:1037
-#: python-env/lib/python2.7/site-packages/django/forms/models.py:1234
-msgid "Enter a list of values."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/forms/fields.py:1038
-msgid "Enter a complete value."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/forms/fields.py:1264
-msgid "Enter a valid UUID."
-msgstr ""
-
-#. Translators: This is the default suffix added to form field labels
-#: python-env/lib/python2.7/site-packages/django/forms/forms.py:129
-msgid ":"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/forms/forms.py:214
-#, python-format
-msgid "(Hidden field %(name)s) %(error)s"
-msgstr ""
-
-#. Translators: If found as last label character, these punctuation
-#. characters will prevent the default label_suffix to be appended to the label
-#: python-env/lib/python2.7/site-packages/django/forms/forms.py:659
-msgid ":?.!"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/forms/formsets.py:96
-msgid "ManagementForm data is missing or has been tampered with"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/forms/formsets.py:333
-#, python-format
-msgid "Please submit %d or fewer forms."
-msgid_plural "Please submit %d or fewer forms."
-msgstr[0] ""
-msgstr[1] ""
-
-#: python-env/lib/python2.7/site-packages/django/forms/formsets.py:340
-#, python-format
-msgid "Please submit %d or more forms."
-msgid_plural "Please submit %d or more forms."
-msgstr[0] ""
-msgstr[1] ""
-
-#: python-env/lib/python2.7/site-packages/django/forms/formsets.py:368
-#: python-env/lib/python2.7/site-packages/django/forms/formsets.py:370
-msgid "Order"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/forms/models.py:713
-#, python-format
-msgid "Please correct the duplicate data for %(field)s."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/forms/models.py:717
-#, python-format
-msgid "Please correct the duplicate data for %(field)s, which must be unique."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/forms/models.py:723
-#, python-format
-msgid ""
-"Please correct the duplicate data for %(field_name)s which must be unique "
-"for the %(lookup)s in %(date_field)s."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/forms/models.py:731
-msgid "Please correct the duplicate values below."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/forms/models.py:1054
-msgid "The inline foreign key did not match the parent instance primary key."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/forms/models.py:1120
-msgid "Select a valid choice. That choice is not one of the available choices."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/forms/models.py:1237
-#, python-format
-msgid "\"%(pk)s\" is not a valid value for a primary key."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/forms/utils.py:165
-#, python-format
-msgid ""
-"%(datetime)s couldn't be interpreted in time zone %(current_timezone)s; it "
-"may be ambiguous or it may not exist."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/forms/widgets.py:345
-msgid "Currently"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/forms/widgets.py:346
-#: python-env/lib/python2.7/site-packages/grappelli/templates/related_widget_wrapper.html:10
-msgid "Change"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/forms/widgets.py:347
-msgid "Clear"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/forms/widgets.py:555
-msgid "Unknown"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/forms/widgets.py:556
-msgid "Yes"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/forms/widgets.py:557
-msgid "No"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/template/defaultfilters.py:865
-msgid "yes,no,maybe"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/template/defaultfilters.py:894
-#: python-env/lib/python2.7/site-packages/django/template/defaultfilters.py:906
-#, python-format
-msgid "%(size)d byte"
-msgid_plural "%(size)d bytes"
-msgstr[0] ""
-msgstr[1] ""
-
-#: python-env/lib/python2.7/site-packages/django/template/defaultfilters.py:908
-#, python-format
-msgid "%s KB"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/template/defaultfilters.py:910
-#, python-format
-msgid "%s MB"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/template/defaultfilters.py:912
-#, python-format
-msgid "%s GB"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/template/defaultfilters.py:914
-#, python-format
-msgid "%s TB"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/template/defaultfilters.py:916
-#, python-format
-msgid "%s PB"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dateformat.py:61
-msgid "p.m."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dateformat.py:62
-msgid "a.m."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dateformat.py:67
-msgid "PM"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dateformat.py:68
-msgid "AM"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dateformat.py:151
-msgid "midnight"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dateformat.py:153
-msgid "noon"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:6
-msgid "Monday"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:6
-msgid "Tuesday"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:6
-msgid "Wednesday"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:6
-msgid "Thursday"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:6
-msgid "Friday"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:7
-msgid "Saturday"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:7
-msgid "Sunday"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:10
-msgid "Mon"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:10
-msgid "Tue"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:10
-msgid "Wed"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:10
-msgid "Thu"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:10
-msgid "Fri"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:11
-msgid "Sat"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:11
-msgid "Sun"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:18
-msgid "January"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:18
-msgid "February"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:18
-msgid "March"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:18
-msgid "April"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:18
-msgid "May"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:18
-msgid "June"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:19
-msgid "July"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:19
-msgid "August"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:19
-msgid "September"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:19
-msgid "October"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:19
-msgid "November"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:20
-msgid "December"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:23
-msgid "jan"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:23
-msgid "feb"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:23
-msgid "mar"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:23
-msgid "apr"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:23
-msgid "may"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:23
-msgid "jun"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:24
-msgid "jul"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:24
-msgid "aug"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:24
-msgid "sep"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:24
-msgid "oct"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:24
-msgid "nov"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:24
-msgid "dec"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:31
-msgctxt "abbrev. month"
-msgid "Jan."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:32
-msgctxt "abbrev. month"
-msgid "Feb."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:33
-msgctxt "abbrev. month"
-msgid "March"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:34
-msgctxt "abbrev. month"
-msgid "April"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:35
-msgctxt "abbrev. month"
-msgid "May"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:36
-msgctxt "abbrev. month"
-msgid "June"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:37
-msgctxt "abbrev. month"
-msgid "July"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:38
-msgctxt "abbrev. month"
-msgid "Aug."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:39
-msgctxt "abbrev. month"
-msgid "Sept."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:40
-msgctxt "abbrev. month"
-msgid "Oct."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:41
-msgctxt "abbrev. month"
-msgid "Nov."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:42
-msgctxt "abbrev. month"
-msgid "Dec."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:45
-msgctxt "alt. month"
-msgid "January"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:46
-msgctxt "alt. month"
-msgid "February"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:47
-msgctxt "alt. month"
-msgid "March"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:48
-msgctxt "alt. month"
-msgid "April"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:49
-msgctxt "alt. month"
-msgid "May"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:50
-msgctxt "alt. month"
-msgid "June"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:51
-msgctxt "alt. month"
-msgid "July"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:52
-msgctxt "alt. month"
-msgid "August"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:53
-msgctxt "alt. month"
-msgid "September"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:54
-msgctxt "alt. month"
-msgid "October"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:55
-msgctxt "alt. month"
-msgid "November"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/dates.py:56
-msgctxt "alt. month"
-msgid "December"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/ipv6.py:10
-msgid "This is not a valid IPv6 address."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/text.py:79
-#, python-format
-msgctxt "String to return when truncating text"
-msgid "%(truncated_text)s..."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/text.py:248
-msgid "or"
-msgstr ""
-
-#. Translators: This string is used as a separator between list elements
-#: python-env/lib/python2.7/site-packages/django/utils/text.py:267
-#: python-env/lib/python2.7/site-packages/django/utils/timesince.py:58
-msgid ", "
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/timesince.py:10
-#, python-format
-msgid "%d year"
-msgid_plural "%d years"
-msgstr[0] ""
-msgstr[1] ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/timesince.py:11
-#, python-format
-msgid "%d month"
-msgid_plural "%d months"
-msgstr[0] ""
-msgstr[1] ""
-
-#: python-env/lib/python2.7/site-packages/django/utils/timesince.py:12
-#, fuzzy, python-format
-#| msgid "%i weeks"
-msgid "%d week"
-msgid_plural "%d weeks"
-msgstr[0] "%i uger"
-msgstr[1] "%i uger"
-
-#: python-env/lib/python2.7/site-packages/django/utils/timesince.py:13
-#, fuzzy, python-format
-#| msgid "%i days"
-msgid "%d day"
-msgid_plural "%d days"
-msgstr[0] "%i dage"
-msgstr[1] "%i dage"
-
-#: python-env/lib/python2.7/site-packages/django/utils/timesince.py:14
-#, fuzzy, python-format
-#| msgid "%i hours"
-msgid "%d hour"
-msgid_plural "%d hours"
-msgstr[0] "%i timer"
-msgstr[1] "%i timer"
-
-#: python-env/lib/python2.7/site-packages/django/utils/timesince.py:15
-#, fuzzy, python-format
-#| msgid "%i minutes"
-msgid "%d minute"
-msgid_plural "%d minutes"
-msgstr[0] "%i minutter"
-msgstr[1] "%i minutter"
-
-#: python-env/lib/python2.7/site-packages/django/utils/timesince.py:47
-#, fuzzy
-#| msgid "%i minutes"
-msgid "0 minutes"
-msgstr "%i minutter"
-
-#: python-env/lib/python2.7/site-packages/django/views/csrf.py:107
-msgid "Forbidden"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/views/csrf.py:108
-msgid "CSRF verification failed. Request aborted."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/views/csrf.py:112
-msgid ""
-"You are seeing this message because this HTTPS site requires a 'Referer "
-"header' to be sent by your Web browser, but none was sent. This header is "
-"required for security reasons, to ensure that your browser is not being "
-"hijacked by third parties."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/views/csrf.py:117
-msgid ""
-"If you have configured your browser to disable 'Referer' headers, please re-"
-"enable them, at least for this site, or for HTTPS connections, or for 'same-"
-"origin' requests."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/views/csrf.py:122
-msgid ""
-"You are seeing this message because this site requires a CSRF cookie when "
-"submitting forms. This cookie is required for security reasons, to ensure "
-"that your browser is not being hijacked by third parties."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/views/csrf.py:127
-msgid ""
-"If you have configured your browser to disable cookies, please re-enable "
-"them, at least for this site, or for 'same-origin' requests."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/views/csrf.py:132
-msgid "More information is available with DEBUG=True."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/views/debug.py:583
-msgid "Welcome to Django"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/views/debug.py:584
-msgid "It worked!"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/views/debug.py:585
-msgid "Congratulations on your first Django-powered page."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/views/debug.py:586
-msgid ""
-"Of course, you haven't actually done any work yet. Next, start your first "
-"app by running <code>python manage.py startapp [app_label]</code>."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/views/debug.py:588
-msgid ""
-"You're seeing this message because you have <code>DEBUG = True</code> in "
-"your Django settings file and you haven't configured any URLs. Get to work!"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/views/generic/dates.py:48
-msgid "No year specified"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/views/generic/dates.py:104
-msgid "No month specified"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/views/generic/dates.py:163
-msgid "No day specified"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/views/generic/dates.py:219
-msgid "No week specified"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/views/generic/dates.py:378
-#: python-env/lib/python2.7/site-packages/django/views/generic/dates.py:406
-#, python-format
-msgid "No %(verbose_name_plural)s available"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/views/generic/dates.py:660
-#, python-format
-msgid ""
-"Future %(verbose_name_plural)s not available because %(class_name)s."
-"allow_future is False."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/views/generic/dates.py:694
-#, python-format
-msgid "Invalid date string '%(datestr)s' given format '%(format)s'"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/views/generic/list.py:76
-msgid "Page is not 'last', nor can it be converted to an int."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/views/generic/list.py:81
-#, python-format
-msgid "Invalid page (%(page_number)s): %(message)s"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/views/generic/list.py:172
-#, python-format
-msgid "Empty list and '%(class_name)s.allow_empty' is False."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/views/static.py:58
-msgid "Directory indexes are not allowed here."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/views/static.py:60
-#, python-format
-msgid "\"%(path)s\" does not exist"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django/views/static.py:100
-#, python-format
-msgid "Index of %(directory)s"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django_common/admin.py:196
-#, python-format
-msgid "Add %s"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django_common/admin.py:222
-#: python-env/lib/python2.7/site-packages/grappelli/tests/test_switch.py:146
-#: python-env/lib/python2.7/site-packages/grappelli/views/switch.py:40
-#: python-env/lib/python2.7/site-packages/grappelli/views/switch.py:51
-#, python-format
-msgid "%(name)s object with primary key %(key)r does not exist."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django_common/admin.py:323
-#, python-format
-msgid "Change %s"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django_common/management/commands/generate_secret_key.py:11
-msgid "This command generates SECRET_KEY"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django_common/management/commands/generate_secret_key.py:24
-#, python-format
-msgid "SECRET_KEY length default=%d"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django_common/management/commands/generate_secret_key.py:27
-#, python-format
-msgid "alphabet to use default=%s"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django_common/templates/common/admin/nested_tabular.html:44
-msgid "Delete?"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django_common/templates/common/admin/nested_tabular.html:58
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/change_form.html:166
-msgid "View on site"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django_common/templates/common/admin/nested_tabular.html:478
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/edit_inline/stacked.html:56
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/edit_inline/tabular.html:92
-#, python-format
-msgid "Add another %(verbose_name)s"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django_common/templates/common/admin/nested_tabular.html:481
-#: python-env/lib/python2.7/site-packages/django_common/templates/common/admin/nested_tabular.html:495
-msgid "Remove"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django_cron/admin.py:12
-msgid "duration"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django_cron/admin.py:17
-#, fuzzy
-#| msgid "1 minute"
-msgid "<= 1 minute"
-msgstr "1 minut"
-
-#: python-env/lib/python2.7/site-packages/django_cron/admin.py:18
-#, fuzzy
-#| msgid "1 minute"
-msgid "> 1 minute"
-msgstr "1 minut"
-
-#: python-env/lib/python2.7/site-packages/django_cron/admin.py:19
-#, fuzzy
-#| msgid "1 hour"
-msgid "> 1 hour"
-msgstr "1 time"
-
-#: python-env/lib/python2.7/site-packages/django_cron/admin.py:20
-#, fuzzy
-#| msgid "1 day"
-msgid "> 1 day"
-msgstr "1 dag"
-
-#: python-env/lib/python2.7/site-packages/django_cron/helpers.py:18
-msgid "day,days"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django_cron/helpers.py:21
-msgid "hour,hours"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django_cron/helpers.py:24
-#, fuzzy
-#| msgid "%i minutes"
-msgid "minute,minutes"
-msgstr "%i minutter"
-
-#: python-env/lib/python2.7/site-packages/django_cron/helpers.py:27
-msgid "second,seconds"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/django_cron/helpers.py:29
-#, fuzzy
-#| msgid "1 second"
-msgid "< 1 second"
-msgstr "1 sekund"
-
-#: python-env/lib/python2.7/site-packages/grappelli/dashboard/dashboards.py:90
-msgid "Dashboard"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/dashboard/dashboards.py:134
-msgid "Quick links"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/dashboard/dashboards.py:137
-msgid "Return to site"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/dashboard/dashboards.py:146
-#: python-env/lib/python2.7/site-packages/grappelli/dashboard/modules.py:213
-msgid "Applications"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/dashboard/dashboards.py:157
-#: python-env/lib/python2.7/site-packages/grappelli/dashboard/modules.py:290
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/index.html:71
-msgid "Recent Actions"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/dashboard/dashboards.py:161
-msgid "Latest Django News"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/dashboard/dashboards.py:168
-msgid "Support"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/dashboard/dashboards.py:171
-msgid "Django documentation"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/dashboard/dashboards.py:176
-msgid "Django \"django-users\" mailing list"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/dashboard/dashboards.py:181
-msgid "Django irc channel"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/dashboard/modules.py:350
-msgid "RSS Feed"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/dashboard/templates/grappelli/dashboard/modules/app_list.html:19
-#: python-env/lib/python2.7/site-packages/grappelli/dashboard/templates/grappelli/dashboard/modules/model_list.html:9
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/app_index.html:30
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/change_form.html:153
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/index.html:45
-#: python-env/lib/python2.7/site-packages/grappelli/templates/related_widget_wrapper.html:18
-msgid "Add"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/dashboard/templates/grappelli/dashboard/modules/recent_actions.html:18
-msgid "None Available"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/404.html:7
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/404.html:11
-msgid "Page not found"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/404.html:12
-msgid "We're sorry, but the requested page could not be found."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/500.html:10
-msgid "Server error"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/500.html:15
-msgid "Server error (500)"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/500.html:19
-msgid "Server Error <em>(500)</em>"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/500.html:20
-msgid ""
-"There's been an error. It's been reported to the site administrators via e-"
-"mail and should be fixed shortly. Thanks for your patience."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/actions.html:10
-msgid "Click here to select the objects across all pages"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/actions.html:10
-#, python-format
-msgid "Select all %(total_count)s %(module_name)s"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/actions.html:11
-msgid "Clear selection"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/app_index.html:13
-#, python-format
-msgid "<li>%(name)s</li>"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/app_index.html:37
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/index.html:54
-msgid "You don´t have permission to edit anything."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/auth/user/change_password.html:15
-#: python-env/lib/python2.7/site-packages/grappelli/templates/registration/password_change_done.html:7
-#: python-env/lib/python2.7/site-packages/grappelli/templates/registration/password_change_form.html:7
-msgid "Password change"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/auth/user/change_password.html:24
-#, python-format
-msgid "Enter a new password for the user <strong>%(username)s</strong>."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/auth/user/change_password.html:27
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/change_form.html:184
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/change_list.html:231
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/change_list_filter_sidebar.html:230
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/login.html:31
-#: python-env/lib/python2.7/site-packages/grappelli/templates/smuggler/load_data_form.html:42
-msgid "Please correct the error below."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/auth/user/change_password.html:27
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/change_form.html:184
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/change_list.html:231
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/change_list_filter_sidebar.html:230
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/login.html:31
-#: python-env/lib/python2.7/site-packages/grappelli/templates/smuggler/load_data_form.html:44
-msgid "Please correct the errors below."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/auth/user/change_password.html:34
-#: python-env/lib/python2.7/site-packages/grappelli/templates/registration/password_change_form.html:30
-msgid "New password"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/auth/user/change_password.html:46
-#: python-env/lib/python2.7/site-packages/grappelli/templates/registration/password_change_form.html:37
-msgid "Password (again)"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/auth/user/change_password.html:50
-#: python-env/lib/python2.7/site-packages/grappelli/templates/registration/password_reset_confirm.html:29
-msgid "Enter the same password as above, for verification."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/base.html:101
-msgid "View site"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/change_form.html:137
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/edit_inline/stacked.html:8
-msgid "Open All Items"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/change_form.html:138
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/edit_inline/stacked.html:9
-msgid "Close All Items"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/change_form.html:165
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/object_history.html:15
-#: python-env/lib/python2.7/site-packages/grappelli/templates/reversion/revision_form.html:11
-msgid "History"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/change_list.html:168
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/change_list_filter_sidebar.html:169
-#: python-env/lib/python2.7/site-packages/grappelli/templates/smuggler/change_list.html:15
-#, python-format
-msgid "Add %(name)s"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/change_list.html:197
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/change_list_filter_sidebar.html:184
-msgid "Filter"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/change_list.html:258
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/constance/change_list.html:119
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/submit_line.html:10
-msgid "Save"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/change_list_results.html:18
-msgid "Toggle sorting"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/change_list_results.html:19
-#, python-format
-msgid "Sorting priority: %(priority_number)s"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/change_list_results.html:20
-msgid "Remove from sorting"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/constance/change_list.html:70
-msgid "Name"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/constance/change_list.html:75
-msgid "Default"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/constance/change_list.html:80
-msgid "Value"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/constance/change_list.html:85
-msgid "Is modified"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/csv_export_selected_confirmation.html:12
-msgid "Export selection as CSV"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/csv_export_selected_confirmation.html:31
-msgid "Export following fields:"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/csv_export_selected_confirmation.html:34
-msgid "Select all"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/csv_export_selected_confirmation.html:54
-msgid "Back"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/csv_export_selected_confirmation.html:55
-msgid "Export"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/delete_confirmation.html:29
-#, python-format
-msgid ""
-"Deleting the %(object_name)s '%(escaped_object)s' would result in deleting "
-"related objects, but your account doesn't have permission to delete the "
-"following types of objects:"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/delete_confirmation.html:37
-#, python-format
-msgid ""
-"Deleting the %(object_name)s '%(escaped_object)s' would require deleting the "
-"following protected related objects:"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/delete_confirmation.html:47
-#, python-format
-msgid ""
-"Are you sure you want to delete the %(object_name)s \"%(escaped_object)s\"? "
-"All of the following related items will be deleted:"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/delete_confirmation.html:55
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/delete_selected_confirmation.html:58
-msgid "Cancel"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/delete_confirmation.html:56
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/delete_selected_confirmation.html:59
-msgid "Yes, I'm sure"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/delete_selected_confirmation.html:16
-msgid "Delete multiple objects"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/delete_selected_confirmation.html:26
-#, python-format
-msgid ""
-"Deleting the selected %(objects_name)s would result in deleting related "
-"objects, but your account doesn't have permission to delete the following "
-"types of objects:"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/delete_selected_confirmation.html:34
-#, python-format
-msgid ""
-"Deleting the selected %(objects_name)s would require deleting the following "
-"protected related objects:"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/delete_selected_confirmation.html:44
-#, python-format
-msgid ""
-"Are you sure you want to delete the selected %(objects_name)s? All of the "
-"following objects and their related items will be deleted:"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/edit_inline/stacked.html:10
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/edit_inline/stacked.html:58
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/edit_inline/tabular.html:94
-msgid "Add Item"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/edit_inline/stacked.html:27
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/edit_inline/tabular.html:67
-msgid "View on Site"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/edit_inline/stacked.html:29
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/edit_inline/tabular.html:69
-msgid "Move Item"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/edit_inline/stacked.html:33
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/edit_inline/stacked.html:38
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/edit_inline/tabular.html:73
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/edit_inline/tabular.html:78
-msgid "Delete Item"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/edit_inline/tabular.html:8
-msgid "Add Another"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/filter.html:4
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/filter_listing.html:3
-#, python-format
-msgid "%(filter_title)s"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/includes/object_delete_summary.html:3
-msgid "Summary"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/index.html:59
-msgid "Custom Views"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/index.html:73
-msgid "My Actions"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/index.html:76
-msgid "None available"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/invalid_setup.html:16
-msgid ""
-"Something's wrong with your database installation. Make sure the appropriate "
-"database tables have been created, and make sure the database is readable by "
-"the appropriate user."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/login.html:26
-msgid "Login"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/login.html:60
-msgid "Forgotten your password or username?"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/login.html:67
-#: python-env/lib/python2.7/site-packages/grappelli/templates/registration/password_reset_complete.html:17
-msgid "Log in"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/object_history.html:26
-#: python-env/lib/python2.7/site-packages/grappelli/templates/reversion/object_history.html:13
-#: python-env/lib/python2.7/site-packages/grappelli/templates/reversion/recover_list.html:22
-msgid "Date/time"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/object_history.html:27
-#: python-env/lib/python2.7/site-packages/grappelli/templates/reversion/object_history.html:14
-msgid "User"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/object_history.html:28
-msgid "Action"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/object_history.html:34
-msgid "DATETIME_FORMAT"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/object_history.html:42
-#: python-env/lib/python2.7/site-packages/grappelli/templates/reversion/object_history.html:36
-msgid ""
-"This object doesn't have a change history. It probably wasn't added via this "
-"admin site."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/pagination.html:8
-#: python-env/lib/python2.7/site-packages/grappelli/views/related.py:185
-#, python-format
-msgid "%(counter)s result"
-msgid_plural "%(counter)s results"
-msgstr[0] ""
-msgstr[1] ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/pagination.html:13
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/pagination.html:15
-#, python-format
-msgid "%(full_result_count)s total"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/pagination.html:27
-msgid "Show all"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/related_widget_wrapper.html:24
-#: python-env/lib/python2.7/site-packages/grappelli/templates/related_widget_wrapper.html:16
-#, python-format
-msgid "Add another %(model)s"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/submit_line.html:13
-msgid "Save as new"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/submit_line.html:16
-msgid "Save and add another"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin/submit_line.html:19
-msgid "Save and continue editing"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin_doc/bookmarklets.html:10
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin_doc/bookmarklets.html:16
-msgid "Bookmarklets"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin_doc/bookmarklets.html:13
-msgid "Documentation bookmarklets"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin_doc/bookmarklets.html:18
-msgid ""
-"\n"
-"            <p>To install bookmarklets, drag the link to your bookmarks\n"
-"    toolbar, or right-click the link and add it to your bookmarks. Now you "
-"can\n"
-"    select the bookmarklet from any page in the site.  Note that some of "
-"these\n"
-"    bookmarklets require you to be viewing the site from a computer "
-"designated\n"
-"    as \"internal\" (talk to your system administrator if you aren't sure "
-"if\n"
-"    your computer is \"internal\").</p>\n"
-"        "
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin_doc/bookmarklets.html:27
-msgid "Documentation for this page"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin_doc/bookmarklets.html:28
-msgid ""
-"Jumps you from any page to the documentation for the view that generates "
-"that page."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin_doc/bookmarklets.html:31
-msgid "Show object ID"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin_doc/bookmarklets.html:32
-msgid ""
-"Shows the content-type and unique ID for pages that represent a single "
-"object."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin_doc/bookmarklets.html:35
-msgid "Edit this object (current window)"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin_doc/bookmarklets.html:36
-msgid "Jumps to the admin page for pages that represent a single object."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin_doc/bookmarklets.html:39
-msgid "Edit this object (new window)"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin_doc/bookmarklets.html:40
-msgid "As above, but opens the admin page in a new window."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin_doc/view_index.html:43
-msgid "Empty namespace"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/admin_doc/view_index.html:57
-msgid "Views by empty namespace"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/registration/logged_out.html:16
-msgid "Log in again"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/registration/password_change_done.html:16
-msgid "Your password was changed."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/registration/password_change_form.html:18
-msgid ""
-"Please enter your old password, for security's sake, and then enter your new "
-"password twice so we can verify you typed it in correctly."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/registration/password_change_form.html:23
-msgid "Old password"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/registration/password_change_form.html:46
-#: python-env/lib/python2.7/site-packages/grappelli/templates/registration/password_reset_confirm.html:35
-msgid "Change my password"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/registration/password_reset_complete.html:16
-msgid "Your password has been set. You may go ahead and log in now."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/registration/password_reset_confirm.html:18
-msgid ""
-"Please enter your new password twice so we can verify you typed it in "
-"correctly."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/registration/password_reset_confirm.html:21
-msgid "New password:"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/registration/password_reset_confirm.html:26
-msgid "Confirm password:"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/registration/password_reset_confirm.html:47
-msgid ""
-"The password reset link was invalid, possibly because it has already been "
-"used. Please request a new password reset."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/registration/password_reset_done.html:5
-msgid "Password reset successful"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/registration/password_reset_done.html:16
-msgid ""
-"We've emailed you instructions for setting your password, if an account "
-"exists with the email you entered. You should receive them shortly."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/registration/password_reset_done.html:17
-msgid ""
-"If you don't receive an email, please make sure you've entered the address "
-"you registered with, and check your spam folder."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/registration/password_reset_email.html:2
-#, python-format
-msgid ""
-"You're receiving this email because you requested a password reset for your "
-"user account at %(site_name)s."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/registration/password_reset_email.html:4
-msgid "Please go to the following page and choose a new password:"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/registration/password_reset_email.html:8
-msgid "Your username, in case you've forgotten:"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/registration/password_reset_email.html:10
-msgid "Thanks for using our site!"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/registration/password_reset_email.html:12
-#, python-format
-msgid "The %(site_name)s team"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/registration/password_reset_form.html:5
-msgid "Password reset"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/registration/password_reset_form.html:17
-msgid ""
-"Forgotten your password? Enter your email address below, and we'll email "
-"instructions for setting a new one."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/registration/password_reset_form.html:20
-msgid "Email address:"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/registration/password_reset_form.html:28
-msgid "Reset my password"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/related_widget_wrapper.html:8
-#, python-format
-msgid "Change selected %(model)s"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/related_widget_wrapper.html:24
-#, python-format
-msgid "Delete selected %(model)s"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/reversion/change_list.html:6
-#: python-env/lib/python2.7/site-packages/grappelli/templates/reversion/recover_form.html:10
-#: python-env/lib/python2.7/site-packages/grappelli/templates/reversion/recover_list.html:9
-#, python-format
-msgid "Recover deleted %(name)s"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/reversion/object_history.html:7
-msgid ""
-"Choose a date from the list below to revert to a previous version of this "
-"object."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/reversion/object_history.html:15
-msgid "Comment"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/reversion/recover_form.html:20
-msgid "Press the save button below to recover this version of the object."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/reversion/recover_list.html:16
-msgid ""
-"Choose a date from the list below to recover a deleted version of an object."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/reversion/recover_list.html:36
-msgid "There are no deleted objects to recover."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/reversion/revision_form.html:12
-#, python-format
-msgid "Revert %(verbose_name)s"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/reversion/revision_form.html:21
-msgid "Press the save button below to revert to this version of the object."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/smuggler/change_list.html:7
-msgid "Dump data"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/smuggler/change_list.html:11
-#: python-env/lib/python2.7/site-packages/grappelli/templates/smuggler/load_data_form.html:8
-#: python-env/lib/python2.7/site-packages/grappelli/templates/smuggler/load_data_form.html:27
-#: python-env/lib/python2.7/site-packages/grappelli/templates/smuggler/load_data_form.html:37
-msgid "Load data"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/smuggler/load_data_form.html:48
-msgid ""
-"Existing items with same <strong>primary key</strong> will be overwritten."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templates/smuggler/load_data_form.html:55
-msgid "Load"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/templatetags/grp_tags.py:65
-msgid "Django site admin"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/tests/test_switch.py:103
-#: python-env/lib/python2.7/site-packages/grappelli/tests/test_switch.py:162
-#: python-env/lib/python2.7/site-packages/grappelli/views/switch.py:37
-#: python-env/lib/python2.7/site-packages/grappelli/views/switch.py:48
-msgid "Permission denied."
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/grappelli/views/related.py:98
-#: python-env/lib/python2.7/site-packages/grappelli/views/related.py:128
-msgid "?"
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/timedelta/forms.py:14
-msgid "Enter a valid time span: e.g. \"3 days, 4 hours, 2 minutes\""
-msgstr ""
-
-#: python-env/lib/python2.7/site-packages/tinymce/views.py:71
-msgid "Error running spellchecker"
+#: profile/views.py:722
+msgid "Lærer email"
 msgstr ""

@@ -1620,14 +1620,18 @@ body.lightbox {
   #leftside {
     padding-top: 20px;
   }
-  li.global-sprog a.english {
-    background-image: url("http://forskning.ku.dk/grafik/globalmenu/flag-uk.gif");
+  li.global-sprog a {
+    background-image: url("../img/globalmenu/flag-uk.gif");
     background-color: transparent;
     background-repeat: no-repeat;
-    background-position: top 6px right;
+    background-position: top 8px right;
     display: inline-block;
     width: 73px;
     padding-left: 3px;
+  }
+  li.global-sprog a.danish {
+    background-image: url("../img/globalmenu/flag-dk.gif");
+    padding-left: 13px;
   }
   #filters.collapse {
     display: block!important;
