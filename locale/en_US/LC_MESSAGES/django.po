@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-09-22 11:33+0200\n"
+"POT-Creation-Date: 2017-09-22 14:56+0200\n"
 "PO-Revision-Date: 2016-03-02 14:19+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -73,8 +73,9 @@ msgstr "Notification will be sent this amount of days before the visit"
 msgid ""
 "Notifikation vil blive afsendt dette antal dage efter første booking er "
 "foretaget"
-msgstr "Notification will be sent this amount of days after first booking"
-"has been made"
+msgstr ""
+"Notification will be sent this amount of days after first bookinghas been "
+"made"
 
 #: booking/booking_workflows/views.py:41
 msgid "opdater"
@@ -567,9 +568,9 @@ msgid ""
 "skole eller dit gymnasium ikke kommer frem på listen, kontakt da "
 "support@fokus.dk for at få hjælp til tilmelding."
 msgstr ""
-"You must choose school/highschool from the dropdown in order to sign up. "
-"If your school or highschool is not in the list contact support@fokus.dk "
-"for help with signing up."
+"You must choose school/highschool from the dropdown in order to sign up. If "
+"your school or highschool is not in the list contact support@fokus.dk for "
+"help with signing up."
 
 #: booking/forms.py:1042
 msgid "Indtast den samme e-mail i begge felter"
@@ -1135,6 +1136,7 @@ msgid "1 minut"
 msgstr "1 minut"
 
 #: booking/models.py:2443
+#, python-format
 msgid "%s minutter"
 msgstr "%s minutes"
 
@@ -1267,10 +1269,12 @@ msgid "ikke-fastlagt tidspunkt"
 msgstr "undecided time"
 
 #: booking/models.py:3071
+#, python-format
 msgid "Besøg #%d"
-msgstr "Visit %%d"
+msgstr "Visit #%d"
 
 #: booking/models.py:3088
+#, python-format
 msgid "d. %(date)s kl. %(time)s"
 msgstr "%(date)s at %(time)s"
 
@@ -1542,6 +1546,7 @@ msgid "Template: %s"
 msgstr ""
 
 #: booking/models.py:5490
+#, python-format
 msgid "Modtagere: %s"
 msgstr "Recipients: %s"
 
@@ -1677,6 +1682,7 @@ msgid "Tidspunkt:"
 msgstr "Time:"
 
 #: booking/resource_based/models.py:492
+#, python-format
 msgid "(Besøg: %s)"
 msgstr "(Visit: %s)"
 
@@ -1835,6 +1841,7 @@ msgid "Slet ressourcebehov"
 msgstr "Delete resource need"
 
 #: booking/resource_based/views.py:1092
+#, python-format
 msgid "Ingen kalender fundet for %s"
 msgstr "No calendar found for %s"
 
@@ -1883,8 +1890,8 @@ msgid ""
 msgstr ""
 "\n"
 "                    <strong>%(firstname)s %(lastname)s</strong> has signed "
-"up for <a href=\"%(producturl)s\">%(producttitle)s</a> at time "
-"<a href=\"%(visiturl)s\">%(visittime)s</a>"
+"up for <a href=\"%(producturl)s\">%(producttitle)s</a> at time <a href="
+"\"%(visiturl)s\">%(visittime)s</a>"
 
 #: booking/templates/booking/accept_spot.html:40
 msgid "Du er allerede tilmeldt besøget"
@@ -1938,8 +1945,8 @@ msgid ""
 "Udfyld venligst nedenstående formular for at tilmelde dig et tilbud. Felter "
 "markeret med * er obligatoriske."
 msgstr ""
-"Fill out the form below to sign up for the visit. Fields marked with * "
-"are mandatory."
+"Fill out the form below to sign up for the visit. Fields marked with * are "
+"mandatory."
 
 #: booking/templates/booking/details.html:29
 #, python-format
@@ -1952,8 +1959,8 @@ msgid ""
 msgstr ""
 "\n"
 "                            <strong>%(firstname)s %(lastname)s</strong> has "
-"requested to join a <a href=\"%(visiturl)s\">prioritized list</a> of "
-"offers on %(visitdate)s:"
+"requested to join a <a href=\"%(visiturl)s\">prioritized list</a> of offers "
+"on %(visitdate)s:"
 
 #: booking/templates/booking/details.html:39
 #, python-format
@@ -1966,8 +1973,8 @@ msgid ""
 msgstr ""
 "\n"
 "                            <strong>%(firstname)s %(lastname)s</strong> has "
-"signed up for <a href=\"%(producturl)s\">%(producttitle)s</a> on "
-"<a href=\"%(visiturl)s\">%(visittime)s</a>"
+"signed up for <a href=\"%(producturl)s\">%(producttitle)s</a> on <a href="
+"\"%(visiturl)s\">%(visittime)s</a>"
 
 #: booking/templates/booking/details.html:44
 #, python-format
@@ -2062,6 +2069,7 @@ msgid "Søg i besøg"
 msgstr "Search in visits"
 
 #: booking/templates/booking/details.html:183
+#, python-format
 msgid "Detaljer om tilbuddet '%(title)s'"
 msgstr "Details about the offer '%(title)s'"
 
@@ -2131,8 +2139,8 @@ msgid ""
 "tilmelding."
 msgstr ""
 "You must choose school/high school from the list in order to sign up. If "
-"your shool or high shool is not in the list, please contact "
-"\"mailto:support@fokus.dk\">support@fokus.dk</a> for help with signing up."
+"your shool or high shool is not in the list, please contact \"mailto:"
+"support@fokus.dk\">support@fokus.dk</a> for help with signing up."
 
 #: booking/templates/booking/fields/school.html:36
 msgid "Gymnasieretning"
@@ -2212,8 +2220,8 @@ msgid ""
 "på dagen. Vi gør, hvad vi kan for at opfylde dine ønsker, og du hører fra "
 "os, så snart vi ved, om det kan lade sig gøre."
 msgstr ""
-"You are able to specify the times you wish to participate in the offer. "
-"You can speficy specific dates, weeks or times of the day. We will try to "
+"You are able to specify the times you wish to participate in the offer. You "
+"can speficy specific dates, weeks or times of the day. We will try to "
 "accommodate your wishes and we will contact you as soon as we know what is "
 "possible."
 
@@ -2314,10 +2322,12 @@ msgid "Close"
 msgstr ""
 
 #: booking/templates/booking/snippets/header_text.html:5
+#, python-format
 msgid "Skriv dig på venteliste til tilbuddet \"%(title)s\""
 msgstr "Sign up for the waiting list for \"%(title)s\""
 
 #: booking/templates/booking/snippets/header_text.html:7
+#, python-format
 msgid "Tilmeld dig tilbuddet \"%(title)s\""
 msgstr "Sign up for the offer \"%(title)s\""
 
@@ -2406,10 +2416,10 @@ msgid "OK"
 msgstr ""
 
 #: booking/templates/booking/success_modal.html:10
+#, python-format
 msgid "Tak for din tilmelding til \"%(title)s\". Du hører fra os snarest."
 msgstr ""
-"Thank you for your request for \"%(title)s\"! You will hear from "
-"us shortly."
+"Thank you for your request for \"%(title)s\"! You will hear from us shortly."
 
 #: booking/templates/booking/success_modal.html:12
 msgid "Foretag ny tilmelding"
@@ -2717,6 +2727,7 @@ msgid "Du har nu afslået at blive underviser for besøget %(object)s."
 msgstr ""
 
 #: booking/templates/booking/workflow/usercomments_script.html:17
+#, python-brace-format
 msgid "Kommentarer ({count})"
 msgstr "Comments ({count})"
 
@@ -2891,6 +2902,7 @@ msgstr ""
 
 #: booking/templates/common/item_list.html:28
 #: profile/templates/profile/item_list.html:38
+#, python-format
 msgid "Dato/tid: %(date)s"
 msgstr "Date/time: %(date)s"
 
@@ -5507,6 +5519,7 @@ msgid "Mangler ikke undervisere"
 msgstr "Not missing any teachers"
 
 #: profile/templates/profile/create_user.html:6
+#, python-format
 msgid "rediger bruger '%(username)s'"
 msgstr "edit user '%(username)s'"
 
@@ -5516,6 +5529,7 @@ msgid "opret ny bruger"
 msgstr "create new user"
 
 #: profile/templates/profile/create_user.html:17
+#, python-format
 msgid "Rediger bruger '%(username)s'"
 msgstr "Edit user '%(username)s'"
 
@@ -5944,6 +5958,7 @@ msgid "Søg i alle"
 msgstr ""
 
 #: profile/views.py:90
+#, python-format
 msgid "%(count)d dagens besøg"
 msgid_plural "%(count)d dagens besøg"
 msgstr[0] "%(count)d daily visit"
@@ -5971,18 +5986,21 @@ msgstr[0] ""
 msgstr[1] ""
 
 #: profile/views.py:276
+#, python-format
 msgid "%(count)d besøg der mangler undervisere"
 msgid_plural "%(count)d besøg der mangler undervisere"
 msgstr[0] "%(count)d visit that needs teachers"
 msgstr[1] "%(count)d visits that needs teachers"
 
 #: profile/views.py:291
+#, python-format
 msgid "%(count)d besøg hvor jeg er underviser"
 msgid_plural "%(count)d besøg hvor jeg er underviser"
 msgstr[0] "%(count)d visit where I am teaching"
 msgstr[1] "%(count)d visits where I am teaching"
 
 #: profile/views.py:326
+#, python-format
 msgid "%(count)d besøg der mangler værter"
 msgid_plural "%(count)d besøg der mangler værter"
 msgstr[0] "%(count)d visit that needs hosts"
