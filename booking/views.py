@@ -114,6 +114,16 @@ def import_views(from_module):
         import_dict[name] = value
 
 
+# Views to handle redirect of old locale-specific URLs starting with
+# /da/ or /en/:
+
+class LocaleRedirectView(RedirectView):
+
+    def get_redirect_url(self, *args, **kwargs):
+        # Redirect to the same URL without the first 3 characters (/en or /da)
+        return self.request.get_full_path()[3:]
+
+
 # A couple of generic superclasses for crud views
 # Our views will inherit from these and from django.views.generic classes
 

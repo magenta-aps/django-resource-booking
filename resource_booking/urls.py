@@ -26,4 +26,5 @@ urlpatterns = [
     url(r'^profile/', include('profile.urls')),
 ]
 # Allow setting language explicitly in url
-urlpatterns += i18n_patterns(*urlpatterns)
+# 2017-09-26, ticket #18859: Disabled for now
+# urlpatterns += i18n_patterns(*urlpatterns)
