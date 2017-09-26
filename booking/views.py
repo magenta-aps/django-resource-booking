@@ -3599,7 +3599,7 @@ class EmailReplyView(BreadcrumbMixin, DetailView):
                 recipients,
                 orig_obj,
                 organizationalunit=unit,
-                original_from_email=request.user.userprofile.get_full_email()
+                original_from_email=orig_message.recipients,
             )
             result_url = reverse(
                 'reply-to-email', args=[self.object.reply_nonce]
