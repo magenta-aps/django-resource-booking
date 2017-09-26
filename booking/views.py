@@ -2570,9 +2570,13 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
     def get_forms(self, data=None):
         forms = {}
         if self.product is not None:
+            if hasattr(self.request, 'LANGUAGE_CODE'):
+                lang = self.request.LANGUAGE_CODE
+            else:
+                lang = 'da'
             forms['bookerform'] = \
                 BookerForm(data, products=[self.product],
-                           language=self.request.LANGUAGE_CODE)
+                           language=lang)
 
             type = self.product.type
             if type == Product.GROUP_VISIT:
@@ -2731,10 +2735,16 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
     def get_forms(self, data=None):
         forms = {}
         bookingform = None
+
+        if hasattr(self.request, 'LANGUAGE_CODE'):
+            lang = self.request.LANGUAGE_CODE
+        else:
+            lang = 'da'
+
         forms['bookerform'] = BookerForm(
             data,
             products=self.visit.products,
-            language=self.request.LANGUAGE_CODE
+            language=lang
         )
         type = None
 
