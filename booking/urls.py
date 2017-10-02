@@ -91,6 +91,8 @@ urlpatterns = patterns(
     (r'^jsi18n$', 'django.views.i18n.javascript_catalog', js_info_dict),
     url(r'^$', MainPageView.as_view(), name='index'),
 
+    url('^(?:da|en)/.*', booking.views.LocaleRedirectView.as_view()),
+
     # Main search page
     url(r'^search', SearchView.as_view(), name='search'),
 
@@ -415,8 +417,7 @@ urlpatterns = patterns(
 
     url(r'^visit/(?P<pk>[0-9]+)/resources/?$',
         VisitResourceEditView.as_view(),
-        name='visit-resources-edit'
-        ),
+        name='visit-resources-edit'),
 
     url(r'^visit/(?P<visit>[0-9]+)/evaluation/create/?$',
         EvaluationEditView.as_view(),
