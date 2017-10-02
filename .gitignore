@@ -3,6 +3,7 @@
 /booking/migrations/*_auto_*
 /build
 /config/booking
+/cron.log
 dist
 *.egg-info
 /.idea/
