@@ -51,7 +51,7 @@
             <div class="row form-group">
                 <div class="col-sm-12">
                     {% if object.htmlbody %}
-                        <iframe style="border:1px solid #ccc; width:100%; height:300px" src="data:text/html;charset=utf-8,{{ object.htmlbody }}"></iframe>
+                        <iframe style="border:1px solid #ccc; width:100%; height:300px" src="{% url 'reply-to-email-htmlbody' view.kwargs.reply_nonce %}"></iframe>
                     {% else %}
                         {{ object.body.strip|linebreaksbr }}
                     {% endif %}
