@@ -293,6 +293,9 @@ urlpatterns = patterns(
         EmailTemplateDeleteView.as_view(),
         name='emailtemplate-delete'),
 
+    url(r'^reply-to-email/(?P<reply_nonce>[0-9a-f-]{36})/htmlbody',
+        booking.views.EmailReplyHtmlBodyView.as_view(),
+        name='reply-to-email-htmlbody'),
     url(r'^reply-to-email/(?P<reply_nonce>[0-9a-f-]{36})',
         EmailReplyView.as_view(),
         name='reply-to-email'),

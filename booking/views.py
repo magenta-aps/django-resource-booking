@@ -3625,6 +3625,21 @@ class EmailReplyView(BreadcrumbMixin, DetailView):
         return breadcrumbs
 
 
+class EmailReplyHtmlBodyView(DetailView):
+    model = KUEmailMessage
+    slug_field = 'reply_nonce'
+    slug_url_kwarg = 'reply_nonce'
+
+    def get(self, *args, **kwargs):
+        self.object = self.get_object()
+
+        response = HttpResponse()
+        response['Content-Type'] = "text/html; charset=utf-8"
+        response.write(self.object.htmlbody)
+
+        return response
+
+
 class EvaluationOverviewView(LoginRequiredMixin, BreadcrumbMixin, ListView):
     model = Visit
     template_name = "evaluation/list.html"
