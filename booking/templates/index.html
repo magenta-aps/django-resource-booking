@@ -101,20 +101,6 @@
                         <li><a href="http://jobportal.ku.dk/">{% trans 'Job' %}</a></li>
                         <li><a href="http://velkommen.ku.dk/indeks/">{% trans 'A-Å-indeks' %}</a></li>
                         <li><a href="https://intranet.ku.dk/">{% trans 'KUnet' %}</a></li>
-                        {% trans "system_current_language" as current_language %}
-                        {% if current_language == "en" %}
-                            {% if "/en/" in request.get_full_path %}
-                                <li class="global-sprog"><a href="/da/{{ request.get_full_path|cut:'/en/' }}" class="danish">Dansk</a></li>
-                            {% else %}
-                                <li class="global-sprog"><a href="/da{{ request.get_full_path }}" class="danish">Dansk</a></li>
-                            {% endif %}
-                        {% else %}
-                            {% if "/da/" in request.get_full_path %}
-                                <li class="global-sprog"><a href="/en/{{ request.get_full_path|cut:'/da/' }}" class="english">English</a></li>
-                            {% else %}
-                                <li class="global-sprog"><a href="/en{{ request.get_full_path }}" class="english">English</a></li>
-                            {% endif %}
-                        {% endif %}
                     </ul>
                 </div>
             </div>
@@ -158,7 +144,7 @@
                         </a>
                     </div>
                     <div id="branding-title">
-                        <a href="{% url 'index' %}" title="{% trans 'Velkommen til Københavns Universitet' %}">
+                        <a href="{% url 'index' %}search" title="{% trans 'Velkommen til Københavns Universitet' %}">
                             <h2>{% trans 'FOKUS' %}</h2>
                             <p>{% trans 'Tilbud til gymnasie- og grundskolen' %}</p>
                         </a>
@@ -246,13 +232,16 @@
                   <a target="_blank" href="https://www.linkedin.com/edu/k%C3%B8benhavns-universitet-12012" class="social-icon linkedin" title="LinkedIn"></a>
                 </div>
                 <div class="social-item">
-                  <a target="_blank" href="http://velkommen.ku.dk/apps" class="social-icon app" title="KU Apps"></a>
-                </div>
-                <div class="social-item">
-                  <a target="_blank" href="http://nyheder.ku.dk/rss/" class="social-icon rss" title="RSS"></a>
+                    <a target="_blank" href="https://www.instagram.com/university_of_copenhagen/" class="social-icon instagram icon icon-phone" title="Instagram" onclick="_gaq.push(['mainTracker._trackEvent', 'Footer-dk', 'klik', 'Instagram']);"></a>
                 </div>
                 <div class="social-item">
                   <a target="_blank" href="https://twitter.com/koebenhavns_uni" class="social-icon twitter" title="Twitter"></a>
+                </div>
+                <div class="social-item">
+                  <a target="_blank" href="http://video.ku.dk" class="social-icon ku_video" title="KU Videoportal"></a>
+                </div>
+                <div class="social-item">
+                  <a target="_blank" href="http://velkommen.ku.dk/apps" class="social-icon app" title="KU Apps"></a>
                 </div>
                 <div class="social-item">
                   <a target="_blank" href="https://www.youtube.com/user/CopenhagenUniversity" class="social-icon youtube" title="YouTube"></a>
@@ -265,9 +254,6 @@
                 </div>
                 <div class="social-item">
                   <a target="_blank" href="https://www.coursera.org/ucph" class="social-icon coursera" title="Coursera"></a>
-                </div>
-                <div class="social-item">
-                  <a target="_blank" href="http://video.ku.dk" class="social-icon ku_video" title="KU Videoportal"></a>
                 </div>
               </div>
             </div>

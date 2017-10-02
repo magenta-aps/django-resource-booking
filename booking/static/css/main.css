@@ -1,12 +1,21 @@
 @import url('https://fonts.googleapis.com/css?family=Open+Sans:400,600,700&subset=latin-ext');
 @font-face {
   font-family: 'arrow';
-  src: url('http://cms.ku.dk/grafik/arrow.eot');
-  src: url('http://cms.ku.dk/grafik/arrow.eot?#iefix') format('embedded-opentype'), url('http://cms.ku.dk/grafik/arrow.woff') format('woff'), url('http://cms.ku.dk/grafik/arrow.ttf') format('truetype'), url('http://cms.ku.dk/grafik/arrow.svg#arrow') format('svg');
+  src: url('https://bootstrap.secure.ku.dk/fonts/arrow.eot');
+  src: url('https://bootstrap.secure.ku.dk/fonts/arrow.eot?#iefix') format('embedded-opentype'), url('https://bootstrap.secure.ku.dk/fonts/arrow.woff') format('woff'), url('https://bootstrap.secure.ku.dk/fonts/arrow.ttf') format('truetype'), url('https://bootstrap.secure.ku.dk/fonts/arrow.svg#arrow') format('svg');
   font-weight: normal;
   font-style: normal;
 }
-
+@font-face {
+  font-family: "ku-symbols";
+  src: url('https://bootstrap.secure.ku.dk/fonts/KU.eot');
+  src: url('https://bootstrap.secure.ku.dk/KU.eot?#iefix') format('embedded-opentype'),
+  url('https://bootstrap.secure.ku.dk/fonts/KU.woff2') format('woff2'),
+  url('https://bootstrap.secure.ku.dk/fonts/KU.woff') format('woff'),
+  url('https://bootstrap.secure.ku.dk/fonts/KU.ttf') format('truetype'),
+  url('https://bootstrap.secure.ku.dk/fonts/KU.svg#ku_symbols') format('svg');
+  text-transform: none;
+}
 html, body {
   text-align: left;
   height: 100%;
@@ -41,6 +50,16 @@ body.lightbox {
   background-color: #fff;
 }
 
+.service-msg {
+  display:table-cell;
+  background-color: #faebcc;
+  border-color: #fbe4b4;
+  color: #6d501d;
+}
+.service-msg div {
+    padding-right: 7px;
+    display:table-cell;
+}
 .content-container {
   -webkit-box-flex: 1;
   -ms-flex: 1 0 auto;
@@ -229,7 +248,12 @@ textarea.form-control {
 .navbar-nav.navbar-right {
   font-size: 12px;
 }
-
+.batoToKU {
+  margin-bottom: 34px;
+  display: block;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #ccc;
+}
 .personal-bar {
   background-color: #fff;
   border-bottom: 1px solid #ccc;
@@ -264,7 +288,20 @@ textarea.form-control {
   margin-right: 3px;
   display: inline-block;
 }
+.contactaddress {
+  font-size: 12px;
+  line-height: normal;
+}
+.contactsupport {
+  text-align: right;
+  font-size: 12px;
+  line-height: normal;
+}
 
+.sitefooter {
+  border-top: 1px solid #ccc;
+  margin: 0 15px 13px 15px;
+}
 
 /*.personal-bar a[href*="admin"]:before {
 }*/
@@ -381,6 +418,14 @@ textarea.form-control {
 
 #filters.in, #filters.collapsing {
   display: block!important;
+}
+
+.userlist-label {
+  font-weight: 700;
+}
+
+.edit-user-links {
+  text-align: right;
 }
 
 .media-body dl dd ul {
@@ -722,6 +767,9 @@ mark, .matched-search-phrase {
 
 .panel.panel-offer-fact-box .panel-heading {
   padding: 5px 0 0 0;
+}
+.panel.panel-offer-fact-box .panel-body {
+  padding: 15px 0;
 }
 
 .offer-actions {
@@ -1620,19 +1668,6 @@ body.lightbox {
   #leftside {
     padding-top: 20px;
   }
-  li.global-sprog a {
-    background-image: url("../img/globalmenu/flag-uk.gif");
-    background-color: transparent;
-    background-repeat: no-repeat;
-    background-position: top 8px right;
-    display: inline-block;
-    width: 73px;
-    padding-left: 3px;
-  }
-  li.global-sprog a.danish {
-    background-image: url("../img/globalmenu/flag-dk.gif");
-    padding-left: 13px;
-  }
   #filters.collapse {
     display: block!important;
     height: auto!important;
@@ -1642,7 +1677,7 @@ body.lightbox {
     margin-bottom: 0;
   }
   .dl-horizontal dt {
-    width: 175px;
+    width: 120px;
     text-align: left;
   }
   .dl-horizontal dt, .dl-horizontal dd {
@@ -1650,7 +1685,7 @@ body.lightbox {
     padding-top: 7px;
   }
   .dl-horizontal dd {
-    margin-left: 175px;
+    margin-left: 120px;
     padding-top: 7px;
   }
   .dl-horizontal.status dt, .dl-horizontal.wide dt {

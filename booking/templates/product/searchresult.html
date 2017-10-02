@@ -143,6 +143,10 @@
             {% endif %}
 
             <div class="divider"></div>
+            <div class="col-xs-12 alert alert-warning service-msg" role="alert">
+              <div class="glyphicon glyphicon-wrench"></div>
+              <div class="search-msg"><strong>Nyt site.</strong> Vi opdaterer tilbud løbende.</div>
+            </div>
 
             {% if not results %}
                 <p>{% trans 'Din søgning gav ikke noget resultat.' %}</p>
@@ -227,13 +231,23 @@
             </div>
         </div>
     </div>
-
+    <div class="row">
+      <div class="sitefooter clearfix"></div>
+      <div class="col-xs-12 col-sm-6 contactaddress">
+        <a href="http://kommunikation.ku.dk/">Kommunikation</a><br/>
+        <a href="http://www.ku.dk">Københavns Universitet</a><br/>
+        Nørregade 10, Postboks 2177<br/>
+        1017 København K
+      </div>
+      <div class="col-xs-12 col-sm-6 contactsupport">Kontakt:<br/>
+        Rikke Bøyesen<br/>
+        <a href="mailto:rb@adm.ku.dk">rb@adm.ku.dk</a>
+      </div>
+    </div>
 {% endblock %}
 
 {% block extra_scripts %}
-
     {% include 'common/resources/datepicker_script.html' %}
-
     <script type="text/javascript">
     <!--
     // Automatically submit the search form whenever the filters are changed
