@@ -4498,6 +4498,13 @@ class Autosend(models.Model):
         )
 
     @property
+    def as_initial(self):
+        result = {}
+        for x in ('template_type', 'enabled', 'days'):
+            result[x] = getattr(self, x)
+        return result
+
+    @property
     def days_relevant(self):
         return self.template_type.enable_days
 
