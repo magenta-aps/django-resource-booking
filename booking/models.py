@@ -5417,11 +5417,14 @@ class KUEmailMessage(models.Model):
         return ku_email_message
 
     @staticmethod
-    def send_email(template, context, recipients, instance, unit=None,
-                   original_from_email=None, **kwargs):
+    def send_email(template, context, recipients, instance,
+                   organizationalunit=None, original_from_email=None,
+                   **kwargs):
         if isinstance(template, EmailTemplateType):
             key = template.key
-            template = EmailTemplate.get_template(template, unit)
+            template = EmailTemplate.get_template(
+                template, organizationalunit
+            )
             if template is None:
                 raise Exception(
                     u"Template with key %s does not exist!" % key
@@ -5443,7 +5446,7 @@ class KUEmailMessage(models.Model):
         for email in emails:
             nonce = uuid.uuid4()
             ctx = {
-                'organizationalunit': unit,
+                'organizationalunit': organizationalunit,
                 'recipient': email,
                 'sender': settings.DEFAULT_FROM_EMAIL,
                 'reply_nonce': nonce
