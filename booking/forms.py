@@ -703,21 +703,25 @@ ProductAutosendFormSetBase = inlineformset_factory(
 class ProductAutosendFormSet(ProductAutosendFormSetBase):
     def __init__(self, *args, **kwargs):
         initial = kwargs.get('initial', [])
+        instance = kwargs.get("instance", None)
         existing_types = []
-        if 'instance' in kwargs:
-            instance = kwargs['instance']
+
+        # Ensure that no-longer-used templatetypes are removed and that new
+        # defaults are added to autosend choices. Only do this for products
+        # that are saved in the database and have a primary key.
+        if instance and instance.pk:
+            # Get list of all currently enabled types
             all_types = EmailTemplateType.objects.filter(
                 enable_autosend=True, form_show=True
             )
-            b = [type.id for type in all_types]
-            b.sort()
+            # Get all relevant types from the product
             product_autosends = instance.get_autosends(True).filter(
                 template_type__in=all_types
             ).order_by('template_type__ordering')
-            a = [autosend.template_type.id for autosend in product_autosends]
-            a.sort()
+            # Tell the form that is the set we already have
             kwargs['queryset'] = product_autosends
 
+            # Add any missing defaults
             initial = []
             existing_types = [
                 autosend.template_type for autosend in product_autosends
@@ -729,8 +733,12 @@ class ProductAutosendFormSet(ProductAutosendFormSetBase):
                         'enabled': type.is_default,
                         'days': ''
                     })
+            # Add the new defaults as extra forms, with their data specified
+            # in initial
             self.extra = len(initial)
             kwargs['initial'] = initial
+        else:
+            self.extra = len(initial)
         super(ProductAutosendFormSet, self).__init__(*args, **kwargs)
 
     def save_new_objects(self, commit=True):
