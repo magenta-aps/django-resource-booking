@@ -118,6 +118,7 @@ def import_views(from_module):
 # /da/ or /en/:
 
 class LocaleRedirectView(RedirectView):
+    permanent = False
 
     def get_redirect_url(self, *args, **kwargs):
         # Redirect to the same URL without the first 3 characters (/en or /da)
@@ -1510,20 +1511,63 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
         Product.OTHER_OFFERS: OtherProductForm
     }
 
+    def get_clone_source(self):
+        pk = self.kwargs.get("pk", -1)
+        return self.model.objects.get(pk=pk)
+
+    def get_initial_autosends(self):
+        if self.is_cloning():
+            # Clone should add everything from the source we are cloning
+            clone_src = self.get_clone_source()
+            currently_active_types = EmailTemplateType.objects.filter(
+                enable_autosend=True, form_show=True
+            )
+            initial = []
+            existing_types = set([])
+            # Add all currently active types from the object we're cloning
+            for x in clone_src.get_autosends(True).filter(
+                template_type__in=currently_active_types
+            ):
+                initial.append(x.as_initial)
+                existing_types.add(x.template_type)
+
+            # Add any defaults that was not present on the cloned object
+            for x in currently_active_types.exclude(
+                pk__in=[x.pk for x in existing_types]
+            ):
+                initial.append({
+                    'template_type': x,
+                    'enabled': x.is_default,
+                    'days': ''
+                })
+        elif not self.object or not self.object.pk:
+            # When creating a new object, just get all the defaults
+            initial = [
+                {
+                    'template_type': x,
+                    'enabled': x.is_default,
+                    'days': ''
+                }
+                for x in EmailTemplateType.objects.filter(
+                    enable_autosend=True, form_show=True
+                )
+            ]
+        else:
+            # Existing objects being edited should just use the existing set
+            # leaving it up the ProductAutosendFormSet to add any missing
+            # defaults.
+            initial = None
+
+        return initial
+
     def get_forms(self):
         forms = super(EditProductView, self).get_forms()
         if self.request.method == 'GET':
             if self.object.is_type_bookable:
-                initial = []
-                if not self.object or not self.object.pk:
-                    initial = [
-                        {'template_type': type, 'enabled': True}
-                        for type in EmailTemplateType.objects.filter(
-                            is_default=True
-                        )
-                    ]
                 forms['autosendformset'] = ProductAutosendFormSet(
-                    None, instance=self.object, initial=initial
+                    None,
+                    instance=self.object,
+                    initial=self.get_initial_autosends()
                 )
 
         if self.request.method == 'POST':
@@ -1566,6 +1610,14 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
     def is_cloning(self):
         return self.kwargs.get("clone", False)
 
+    def get(self, request, *args, **kwargs):
+        pk = kwargs.get("pk")
+        self.set_object(pk, request, self.is_cloning())
+
+        return self.render_to_response(
+            self.get_context_data(**self.get_forms())
+        )
+
     # Handle both forms, creating a Product and a number of StudyMaterials
     def post(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
@@ -1590,7 +1642,7 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
 
             self.object.ensure_statistics()
 
-            self.save_autosend()
+            self.save_autosend(forms.get("autosendformset"))
 
             self.save_studymaterials()
 
@@ -1674,13 +1726,13 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
                 {'text': _(u'Opret tilbud')}
             ]
 
-    def save_autosend(self):
-        if self.object.is_type_bookable:
-            autosendformset = ProductAutosendFormSet(
-                self.request.POST, instance=self.object
-            )
+    def save_autosend(self, autosendformset=None):
+        if self.object.is_type_bookable and autosendformset is not None:
             if autosendformset.is_valid():
                 autosendformset.save()
+            else:
+                print "Error with submitted autosendformset:\n"
+                print autosendformset.errors
         for template_type in EmailTemplateType.objects.filter(
             enable_autosend=True,
             form_show=False
