@@ -3651,7 +3651,7 @@ class EmailReplyView(BreadcrumbMixin, DetailView):
                 recipients,
                 orig_obj,
                 organizationalunit=unit,
-                original_from_email=request.user.userprofile.get_full_email()
+                original_from_email=orig_message.recipients,
             )
             result_url = reverse(
                 'reply-to-email', args=[self.object.reply_nonce]
@@ -3675,6 +3675,21 @@ class EmailReplyView(BreadcrumbMixin, DetailView):
             breadcrumbs = ProductDetailView.build_breadcrumbs(product)
         breadcrumbs.append({'text': _(u'Svar på e-mail')})
         return breadcrumbs
+
+
+class EmailReplyHtmlBodyView(DetailView):
+    model = KUEmailMessage
+    slug_field = 'reply_nonce'
+    slug_url_kwarg = 'reply_nonce'
+
+    def get(self, *args, **kwargs):
+        self.object = self.get_object()
+
+        response = HttpResponse()
+        response['Content-Type'] = "text/html; charset=utf-8"
+        response.write(self.object.htmlbody)
+
+        return response
 
 
 class EvaluationOverviewView(LoginRequiredMixin, BreadcrumbMixin, ListView):
