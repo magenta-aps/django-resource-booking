@@ -150,9 +150,9 @@
 {% block extra_scripts %}
     {% include 'common/resources/datepicker_script.html' %}
     <script type="text/javascript"><!--
-    (function($) {
-        $('#id_from_date').datepicker({startDate: null});
-    })(jQuery);
+    jQuery(function($) {
+        $('#id_from_date').datepicker('setStartDate', null);
+    });
     //--></script>
     {% include 'common/resources/datatables_script.html' %}
     <script type="text/javascript">
