@@ -3017,7 +3017,7 @@ class VisitSearchView(VisitListView):
         if re.match('^#?\d+$', t):
             if t[0] == "#":
                 t = t[1:]
-            qs = qs.filter(product__pk=t)
+            qs = qs.filter(eventtime__product__pk=t)
         elif t:
             qs = self.model.objects.none()
 
@@ -3714,7 +3714,7 @@ class EvaluationOverviewView(LoginRequiredMixin, BreadcrumbMixin, ListView):
         if form.is_valid():
             formdata = form.cleaned_data
             qs = self.model.objects.filter(
-                product__organizationalunit__in=form.user
+                eventtime__product__organizationalunit__in=form.user
                 .userprofile.get_unit_queryset(),
                 evaluation_link__isnull=False,
             ).exclude(
@@ -3723,15 +3723,15 @@ class EvaluationOverviewView(LoginRequiredMixin, BreadcrumbMixin, ListView):
             unit_limit = formdata.get('organizationalunit', [])
             if unit_limit:
                 qs = qs.filter(
-                    product__organizationalunit__in=unit_limit
+                    eventtime__product__organizationalunit__in=unit_limit
                 )
             if formdata.get('limit_to_personal'):
                 user = self.request.user
                 qs = qs.filter(
-                    Q(product__created_by=user) |
+                    Q(eventtime__product__created_by=user) |
                     Q(teachers=user) |
                     Q(hosts=user) |
-                    Q(product__tilbudsansvarlig=user)
+                    Q(eventtime__product__tilbudsansvarlig=user)
                 )
         else:
             qs = self.model.objects.none()
