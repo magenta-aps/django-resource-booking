@@ -88,5 +88,10 @@
 {% endblock %}
 
 {% block extra_scripts %}
-    {% include 'common/resources/datepicker_script.html' %}
+{% include 'common/resources/datepicker_script.html' %}
+<script type="text/javascript"><!--
+(function($) {
+    $('#id_from_date').datepicker({startDate: null});
+})(jQuery);
+//--></script>
 {% endblock %}
