@@ -15,7 +15,6 @@ from django.template.context import make_context
 from django.utils import timezone
 from django.utils.crypto import get_random_string
 from djorm_pgfulltext.models import SearchManager
-from djorm_pgfulltext.fields import VectorField
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
@@ -38,6 +37,7 @@ from datetime import timedelta, datetime, date, time
 from profile.constants import TEACHER, HOST
 from profile.constants import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
 
+import djorm_pgfulltext.fields
 import math
 import uuid
 import random
@@ -96,6 +96,24 @@ def log_action(user, obj, action_flag, change_message=''):
         action_flag,
         change_message
     )
+
+
+class VectorField(djorm_pgfulltext.fields.VectorField):
+    """
+    Customized version of djorm_pgfulltext.fields.VectorField that does
+    not always enable indexes. This is needed since the default index created
+    does not work for large amounts of data.
+    """
+    def __init__(self, *args, **kwargs):
+        kwargs['null'] = True
+        kwargs['default'] = ''
+        kwargs['editable'] = False
+        kwargs['serialize'] = False
+        # Note: Calling the super of super here, since the super
+        # will re-enable kwargs['db_index']
+        super(djorm_pgfulltext.fields.VectorField, self).__init__(
+            *args, **kwargs
+        )
 
 
 class RoomResponsible(models.Model):
@@ -1719,7 +1737,9 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     )
 
     # ts_vector field for fulltext search
-    search_index = VectorField()
+    search_index = VectorField(
+        db_index=False,
+    )
 
     # Field for concatenating search data from relations
     extra_search_text = models.TextField(
@@ -2794,7 +2814,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     )
 
     # ts_vector field for fulltext search
-    search_index = VectorField()
+    search_index = VectorField(
+        db_index=False
+    )
 
     # Field for concatenating search data from relations
     extra_search_text = models.TextField(
