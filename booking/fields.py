@@ -153,4 +153,6 @@ class VisitEventTimeField(ChoiceField):
                     )
         except self.model.DoesNotExist:
             pass
+        except ValueError:
+            pass
         return super(ChoiceField, self).clean(value)
