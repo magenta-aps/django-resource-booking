@@ -63,6 +63,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
 )
+EXTRA_MIDDLEWARE = ()
 
 ROOT_URLCONF = 'resource_booking.urls'
 
@@ -245,6 +246,10 @@ local_settings_file = os.path.join(
 )
 if os.path.exists(local_settings_file):
     from local_settings import *  # noqa
+
+# Add extra middleware defined in the local settings file to the ones
+# already specified.
+MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + tuple(EXTRA_MIDDLEWARE)
 
 PUBLIC_URL = "".join([
     PUBLIC_URL_PROTOCOL, "://",
