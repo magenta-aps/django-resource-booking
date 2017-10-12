@@ -295,3 +295,11 @@ def binary_and(*items):
         except:
             pass
     return base
+
+
+class DummyRecipient(object):
+    def get_name(self):
+        return "Eksempel Modtager";
+
+    def get_email(self):
+        return "email@example.com"
