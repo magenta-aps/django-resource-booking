@@ -23,7 +23,7 @@ from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.utils import formats
 from django.utils.translation import ugettext_lazy as _, ungettext_lazy as __
-from django.template.base import Template, VariableNode, Node
+from django.template.base import Template, VariableNode
 from django.template.loader import get_template
 from django.template.loader_tags import IncludeNode
 

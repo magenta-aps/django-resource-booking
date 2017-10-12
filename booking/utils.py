@@ -299,7 +299,7 @@ def binary_and(*items):
 
 class DummyRecipient(object):
     def get_name(self):
-        return "Eksempel Modtager";
+        return "Eksempel Modtager"
 
     def get_email(self):
         return "email@example.com"

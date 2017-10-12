@@ -224,7 +224,7 @@ class FullURLNode(defaulttags.Node):
                 return ''
             else:
                 return self.prefix(self.tokenize(result, context))
-        except Exception as e:
+        except:
             # return _(u'&lt;Forkert url&gt;')
             args = [arg.resolve(context) for arg in self.url_node.args]
             string_if_invalid = context.template.engine.string_if_invalid
