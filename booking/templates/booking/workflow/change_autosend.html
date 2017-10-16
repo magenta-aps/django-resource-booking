@@ -1,5 +1,4 @@
 {% extends 'index.html' %}
-{% load staticfiles %}
 {% load i18n %}
 {% load booking_tags %}
 
@@ -19,7 +18,7 @@
             {% url 'emailtemplate-list' as template_list_url %}
             <p>
                 {% blocktrans %}
-                    Indstil for hvilke situationer der skal afsendes email automatisk. Skabeloner til email-afsendelse kan redigeres på <a href="{{ template_list_url }}" target="_blank">Skabelon-listen</a>.
+                    Indstil for hvilke situationer der skal afsendes e-mail- automatisk. Skabeloner til e-mailafsendelse kan redigeres på <a href="{{ template_list_url }}" target="_blank">Skabelon-listen</a>.
                 {% endblocktrans %}
             </p>
             <form name="changebookingautosendform" id="changebookingautosendform" action="{% url 'change-visit-autosend' object.pk %}" method="post">

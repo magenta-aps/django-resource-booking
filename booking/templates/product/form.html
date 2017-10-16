@@ -1,6 +1,5 @@
 {% extends 'index.html' %}
 {% load i18n %}
-{% load staticfiles %}
 {% load booking_tags %}
 
 {% block htmltitle %} - {% if object.pk %}{% trans "rediger tilbud" %}{% else %}{% trans "opret tilbud" %}{% endif %}{% endblock %}
@@ -18,7 +17,7 @@
             <h1>{{ object.get_type_display }}</h1>
         </div>
         <div class="col-sm-4 text-right">
-            <a href="#" class="btn btn-default btn-sm openall">{% trans "Åben alle felter" %}</a> <a href="#" class="btn btn-default btn-sm closeall">{% trans "Luk alle felter" %}</a>
+            <button class="btn btn-default btn-sm openall">{% trans "Åben alle felter" %}</buttom> <button class="btn btn-default btn-sm closeall">{% trans "Luk alle felter" %}</button>
         </div>
     </div>
 
@@ -96,12 +95,12 @@
                         {% include 'product/fields/subjects.html' %}
                         {% include 'common/fields/generic_field.html' with field=form.minimum_number_of_visitors %}
                         {% include 'common/fields/generic_field.html' with field=form.maximum_number_of_visitors %}
+                        {% include 'common/fields/generic_field.html' with field=form.only_one_guest_per_visit %}
                     </div>
                 </div>
             </div>
             {% endif %}
 
-            {% if hastime or form.duration %}
             <div class="panel panel-default">
                 <div id="headingTimeDuration" class="panel-heading" role="tab">
                     <h4 class="panel-title">
@@ -121,7 +120,6 @@
                     </div>
                 </div>
             </div>
-            {% endif %}
 
             {% if form.locality %}
             <div class="panel panel-default">
@@ -198,6 +196,7 @@
     {{ form.media }}
     {% include 'common/resources/datetime-picker_script.html' %}
     <script type="text/javascript" src="{% static 'js/formutil.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/ieform.js' %}"></script>
 
     {% include 'product/fields/studymaterials_script.html' %}
 {#    {% include 'common/fields/autosend_script.html' %}#}
@@ -228,10 +227,38 @@
 
     //--></script>
 
-    <script type="text/javascript">
+    <script type="text/javascript"><!--
         $(function () {
             $('[data-toggle="tooltip"]').tooltip({'container':$('body')});
-        })
-    </script>
+        });
+    //--></script>
+
+    <script type="text/javascript"><!--
+        $(function() {
+            {% autoescape off %}
+            var timemodes_enabled = {{ timemodes_enabled|jsonify }};
+            {% endautoescape %}
+            var timemode_select = $("#{{ form.time_mode.id_for_label }}");
+
+            var update_unit = function(){
+                var value = $("#{{ form.organizationalunit.id_for_label }}").val();
+                console.log(value);
+                if (value !== "") {
+                    var enabled = timemodes_enabled[value];
+                    console.log(enabled);
+                    timemode_select.find("option").each(function(){
+                        var option = $(this);
+                        if (enabled.indexOf(parseInt(option.val(), 10)) === -1) {
+                            option.hideOption();
+                        } else {
+                            option.showOption();
+                        }
+                    });
+                }
+            };
+            $("#{{ form.organizationalunit.id_for_label }}").change(update_unit);
+            update_unit();
+        });
+    //--></script>
 
 {% endblock %}

@@ -33,7 +33,7 @@
                     </a>
                     <a class="list-group-item" href="{% url 'emailtemplate-list' %}">
                         <h4 class="list-group-item-heading">
-                            {% trans 'Administrér emailskabeloner' %}
+                            {% trans 'Administrér e-mailskabeloner' %}
                             <span class="glyphicon glyphicon-question-sign pull-right" data-toggle="tooltip" data-placement="right" title="{% trans 'Opret og redigér overordnede e-mails.' %}"></span>
                         </h4>
                     </a>
@@ -102,15 +102,15 @@
                         </h4>
                     </a>
                 </div>
-            {% endif %}        
+            {% endif %}
         </div>
     </div>
-    
+
     <div class="row">
         <div class="col-sm-12">
             {% if request.user.userprofile.is_teacher %}
             <p>
-                {% blocktrans %}Som underviser har du mulighed for at angive hvornår du kan undervise{% endblocktrans %}.<br />
+                {% trans 'Som underviser har du mulighed for at angive hvornår du kan undervise.' %}<br />
             </p>
             <p>
                 {% if request.user.userprofile.get_resource.calendar %}
@@ -126,7 +126,7 @@
             </p>
             {% elif request.user.userprofile.is_host %}
             <p>
-                {% blocktrans %}Som vært har du mulighed for at angive hvornår du kan deltage i besøg{% endblocktrans %}.<br />
+                {% trans 'Som vært har du mulighed for at angive hvornår du kan deltage i besøg.' %}<br />
             </p>
             <p>
                 {% if request.user.userprofile.get_resource.calendar %}
@@ -144,28 +144,35 @@
         </div>
     </div>
     <div class="row">
-        <div class="col-sm-3">
-            <div class="list-group admin-links">
+        <div class="col-xs-12 col-sm-4">
                 {% if request.user.userprofile.can_create %}
-                    <a class="list-group-item" href="{% url 'search' %}">
-                        <h4 class="list-group-item-heading">{% trans 'Søg i tilbud' %}</h4>
-                        <p class="list-group-item-text">{% trans 'Søg i tilbud der ligger i systemet.' %}</p>
+                    <a class="btn btn-default margin-right-10 margin-bottom-5" href="{% url 'search' %}">
+                        {% trans 'Søg i tilbud' %} <span class="glyphicon glyphicon-menu-right"></span>
                     </a>
                 {% endif %}
-            </div>
+                {% if request.user.userprofile.can_create %}
+                    <a class="btn btn-default margin-right-10 margin-bottom-5" href="{% url 'visit-search' %}">
+                        {% trans 'Søg i besøg' %} <span class="glyphicon glyphicon-menu-right"></span>
+                    </a>
+                {% endif %}
         </div>
-        <div class="col-sm-3">
-            <div class="list-group admin-links">
-                {% if request.user.userprofile.can_create %}
-                    <a class="list-group-item" href="{% url 'visit-search' %}">
-                        <h4 class="list-group-item-heading">{% trans 'Søg i besøg' %}</h4>
-                        <p class="list-group-item-text">{% trans 'Søg i besøg der ligger i systemet.' %}</p>
-                    </a>
-                {% endif %}
-            </div>
+        <div class="col-xs-12 col-sm-8">
+            {% if autoassign_failed.visits.count > 0 %}
+                <a href="{% url 'visit-search' %}?w={{ autoassign_failed.status_id }}" class="text-danger" target="_blank">
+                    {% if autoassign_failed.products.count == 1 %}
+                        {% blocktrans with productname=autoassign_failed.products.first.title %}
+                            OBS: {{ productname }} har besøg der mangler ressourcer
+                        {% endblocktrans %}
+                    {% else %}
+                        {% blocktrans with visitcount=autoassign_failed.visits.count status=autoassign_failed.status_name %}
+                            OBS: Du har {{ visitcount }} besøg med status {{ status }}
+                        {% endblocktrans %}
+                    {% endif %}
+                </a>
+            {% endif %}
         </div>
     </div>
-
+<div class="divider"></div>
     {% if not "slået fra indtil videre, genindføres måske i en senere fase" %}
     <h2>{% trans 'Søg i tilbud og tilmeldinger' %}</h2>
     <div class="row">
@@ -224,7 +231,7 @@
             </div>
         {% endif %}
     {% endfor %}
-    
+
     <!-- Modal delete booking -->
     <div class="modal fade deleteBooking" tabindex="-1" role="dialog" aria-labelledby="SletBooking">
       <div class="modal-dialog" role="document">
@@ -244,7 +251,7 @@
       </div>
     </div>
     <!-- Modal delete booking end -->
-    
+
 {% endblock %}
 
 {% block extra_scripts %}
@@ -254,4 +261,5 @@
             $('[data-toggle="tooltip"]').tooltip();
         })
     </script>
+    <script src="{% static 'js/list.js' %}"></script>
 {% endblock %}

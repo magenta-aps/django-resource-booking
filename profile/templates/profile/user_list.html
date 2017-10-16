@@ -9,7 +9,7 @@
     {% include 'common/breadcrumbrow.html' %}
 
     <div class="row">
-        <div class="col-sm-5 col-sm-offset-2">
+        <div class="col-sm-5 col-sm-offset-1">
             <h1>{% trans 'Administrér brugere' %}</h1>
         </div>
     </div>
@@ -17,14 +17,14 @@
     <div id="admin-input">
         <div class="row">
 
-            <div class="col-sm-5 col-sm-offset-2">
+            <div class="col-sm-5 col-sm-offset-1">
                 <a href="{% url 'user_create' %}" class="btn btn-primary btn-sm">
                     <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
                     {% trans 'Opret ny bruger' %}
                 </a>
             </div>
             {% if messages %}
-                <div class="col-sm-5 col-sm-offset-2 alert-success" role="alert">
+                <div class="col-sm-5 col-sm-offset-1 alert-success" role="alert">
                     <ul>
                         {% for message in messages %}
                             <li {% if message.tags %}class="{{ message.tags }}"{% endif %}>{{ message }}</li>
@@ -37,15 +37,15 @@
         <div class="divider"></div>
 
         <div class="row">
-            <h2 class="col-sm-5 col-sm-offset-2">{% trans 'Filtrér brugerliste' %}</h2>
+            <h2 class="col-sm-5 col-sm-offset-1">{% trans 'Filtrér brugerliste' %}</h2>
         </div>
 
         <div>
             <form class="form-horizontal clearfix" name="filteruserlist" id="filteruserlist">
                 <div class="form-group">
-                    <label class="col-sm-2 control-label">{% trans 'Enhed:' %}</label>
+                    <label class="col-sm-2 col-sm-offset-1 control-label">{% trans 'Enhed:' %}</label>
                     <div class="col-sm-5">
-                        <select name="unit">
+                        <select name="unit" class="form-control">
                             <option value="">-- {% trans 'Vælg enhed' %} --</option>
                             {% for val, name in possible_units %}
                             <option value="{{ val }}"{% if selected_unit == val %}selected=" selected"{% endif %}>{{ name }}</option>
@@ -54,9 +54,9 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-2 control-label">{% trans 'Rolle:' %}</label>
+                    <label class="col-sm-2 col-sm-offset-1 control-label">{% trans 'Rolle:' %}</label>
                     <div class="col-sm-5">
-                        <select name="role">
+                        <select name="role" class="form-control">
                             <option value="">-- {% trans 'Vælg rolle' %} --</option>
                             {% for val, name in possible_roles %}
                             <option value="{{ val }}"{% if selected_role == val %}selected=" selected"{% endif %}>{{ name }}</option>
@@ -65,13 +65,15 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-2 control-label">{% trans 'Søg i navn:' %}</label>
+                    <label class="col-sm-2 col-sm-offset-1 control-label">{% trans 'Søg i navn:' %}</label>
                     <div class="col-sm-5">
-                        <input type="text" name="q" value="{{ request.GET.q }}">
+                        <input type="text" name="q" value="{{ request.GET.q }}" class="form-control">
                     </div>
                 </div>
-                <div class="col-sm-2 col-sm-offset-2 padleft5">
-                    <input class="btn btn-primary" type="submit" value="Søg">
+                <div class="form-group">
+                  <div class="col-sm-8 text-right">
+                      <input class="btn btn-primary" type="submit" value="Søg">
+                  </div>
                 </div>
             </form>
         </div>
@@ -83,31 +85,31 @@
                 <ul class="list-unstyled">
                 {% for otheruser in users %}
                 <li class="media">
-                    <div class=" row">
+                    <div class="row">
+                        <div class="col-sm-2 userlist-label">{% trans 'Brugernavn:' %}</div>
+                        <div class="col-sm-6">{{ otheruser.username }}</div>
+                        {% if user == otheruser or otheruser.userprofile.get_role in user.userprofile.available_roles %}
+                        <div class="col-sm-4 edit-user-links">
+                            <a href="{% url 'user_edit' otheruser.pk %}">{% trans 'Redigér' %}</a>
+                            <a href="{% url 'user_delete' otheruser.pk %}">{% trans 'Slet' %}</a>
+                          </div>
+                        {% endif %}
+                    </div>
+                    <div class="row">
                         <div class="col-sm-2 userlist-label">{% trans 'Navn:' %}</div>
-                        <div class="col-sm-5">
-                            {% if otheruser.get_full_name %}
-                            {{ otheruser.get_full_name }} ({{ otheruser.username }})
-                            {% else %}
-                            "{{ otheruser.username }}"
-                            {% endif %}
-                            {% if user == otheruser or otheruser.userprofile.get_role in user.userprofile.available_roles %}
-                                <a href="{% url 'user_edit' otheruser.pk %}">{% trans 'Redigér' %}</a>
-                                <a href="{% url 'user_delete' otheruser.pk %}">{% trans 'Slet' %}</a>
-                            {% endif %}
-                        </div>
+                        <div class="col-sm-6">{{ otheruser.get_full_name }}</div>
                     </div>
-                    <div class=" row">
-                        <div class="col-sm-2 userlist-label">{% trans 'Email:' %}</div>
-                        <div class="col-sm-5">{{ otheruser.email }}</div>
+                    <div class="row">
+                        <div class="col-sm-2 userlist-label">{% trans 'E-mail:' %}</div>
+                        <div class="col-sm-6">{{ otheruser.email }}</div>
                     </div>
-                    <div class=" row">
+                    <div class="row">
                         <div class="col-sm-2 userlist-label">{% trans 'Enhed:' %}</div>
-                        <div class="col-sm-5">{{ otheruser.userprofile.organizationalunit.name }}</div>
+                        <div class="col-sm-6">{{ otheruser.userprofile.organizationalunit.name }}</div>
                     </div>
-                    <div class=" row">
+                    <div class="row">
                         <div class="col-sm-2 userlist-label">{% trans 'Rolle:' %}</div>
-                        <div class="col-sm-5">{{ otheruser.userprofile.get_role_name }}</div>
+                        <div class="col-sm-6">{{ otheruser.userprofile.get_role_name }}</div>
                     </div>
                 </li>
                 {% endfor %}

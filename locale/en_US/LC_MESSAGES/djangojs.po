@@ -1,0 +1,933 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2017-04-26 10:07+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: booking/static/js/recurrence-widget.js:1612
+#: static/js/recurrence-widget.js:1612
+#: static/recurrence/js/recurrence-widget.js:1610
+msgctxt "date"
+msgid "%l, %F %j, %Y"
+msgstr ""
+
+#: booking/static/js/recurrence-widget.js:1777
+#: static/js/recurrence-widget.js:1777
+#: static/recurrence/js/recurrence-widget.js:1775
+msgid "including"
+msgstr ""
+
+#: booking/static/js/recurrence-widget.js:1777
+#: static/js/recurrence-widget.js:1777
+#: static/recurrence/js/recurrence-widget.js:1775
+msgid "excluding"
+msgstr ""
+
+#: booking/static/js/recurrence-widget.js:1781
+#: static/js/recurrence-widget.js:1781
+#: static/recurrence/js/recurrence-widget.js:1779
+msgid "Frequency"
+msgstr ""
+
+#: booking/static/js/recurrence-widget.js:1782
+#: static/js/recurrence-widget.js:1782
+#: static/recurrence/js/recurrence-widget.js:1780
+msgid "On the"
+msgstr ""
+
+#: booking/static/js/recurrence-widget.js:1783
+#: static/js/recurrence-widget.js:1783
+#: static/recurrence/js/recurrence-widget.js:1781
+msgid "Each"
+msgstr ""
+
+#: booking/static/js/recurrence-widget.js:1784
+#: static/js/recurrence-widget.js:1784
+#: static/recurrence/js/recurrence-widget.js:1782
+msgid "Every"
+msgstr ""
+
+#: booking/static/js/recurrence-widget.js:1785
+#: static/js/recurrence-widget.js:1785
+#: static/recurrence/js/recurrence-widget.js:1783
+msgid "Until"
+msgstr ""
+
+#: booking/static/js/recurrence-widget.js:1786
+#: static/js/recurrence-widget.js:1786
+#: static/recurrence/js/recurrence-widget.js:1784
+msgid "Occurs %(number)s time"
+msgstr ""
+
+#: booking/static/js/recurrence-widget.js:1787
+#: static/js/recurrence-widget.js:1787
+#: static/recurrence/js/recurrence-widget.js:1785
+msgid "Occurs %(number)s times"
+msgstr ""
+
+#: booking/static/js/recurrence-widget.js:1788
+#: static/js/recurrence-widget.js:1788
+#: static/recurrence/js/recurrence-widget.js:1786
+msgid "Date"
+msgstr ""
+
+#: booking/static/js/recurrence-widget.js:1789
+#: static/js/recurrence-widget.js:1789
+#: static/recurrence/js/recurrence-widget.js:1787
+msgid "Time"
+msgstr ""
+
+#: booking/static/js/recurrence-widget.js:1790
+#: static/js/recurrence-widget.js:1790
+#: static/recurrence/js/recurrence-widget.js:1788
+msgid "Repeat until"
+msgstr ""
+
+#: booking/static/js/recurrence-widget.js:1791
+#: static/js/recurrence-widget.js:1791
+msgid "Exclude these occurrences"
+msgstr ""
+
+#: booking/static/js/recurrence-widget.js:1792
+#: static/js/recurrence-widget.js:1792
+#: static/recurrence/js/recurrence-widget.js:1790
+msgid "Exclude this date"
+msgstr ""
+
+#: booking/static/js/recurrence-widget.js:1793
+#: static/js/recurrence-widget.js:1793
+#: static/recurrence/js/recurrence-widget.js:1791
+msgid "Add rule"
+msgstr ""
+
+#: booking/static/js/recurrence-widget.js:1794
+#: static/js/recurrence-widget.js:1794
+#: static/recurrence/js/recurrence-widget.js:1792
+msgid "Add date"
+msgstr ""
+
+#: booking/static/js/recurrence-widget.js:1795
+#: python-env/lib/python2.7/site-packages/grappelli/static/admin/js/SelectFilter2.js:70
+#: static/admin/js/SelectFilter2.js:69 static/js/recurrence-widget.js:1795
+#: static/recurrence/js/recurrence-widget.js:1793
+msgid "Remove"
+msgstr ""
+
+#: booking/static/js/recurrence-widget.js:1796
+#: static/admin/js/admin/DateTimeShortcuts.js:220
+#: static/js/recurrence-widget.js:1796
+#: static/recurrence/js/recurrence-widget.js:1794
+msgid "Calendar"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1006 static/js/recurrence.js:1006
+#: static/recurrence/js/recurrence.js:1006
+msgid "midnight"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1007 static/js/recurrence.js:1007
+#: static/recurrence/js/recurrence.js:1007
+msgid "noon"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1008 static/js/recurrence.js:1008
+#: static/recurrence/js/recurrence.js:1008
+msgid "on the %(items)s"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1009 static/js/recurrence.js:1009
+#: static/recurrence/js/recurrence.js:1009
+msgid "every %(number)s %(freq)s"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1010 static/js/recurrence.js:1010
+#: static/recurrence/js/recurrence.js:1010
+msgid "each %(items)s"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1011 static/js/recurrence.js:1011
+#: static/recurrence/js/recurrence.js:1011
+msgid "occuring %(number)s time"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1012 static/js/recurrence.js:1012
+#: static/recurrence/js/recurrence.js:1012
+msgid "occuring %(number)s times"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1013 static/js/recurrence.js:1013
+#: static/recurrence/js/recurrence.js:1013
+msgid "until %(date)s"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1017 booking/static/js/rrule.js:2574
+#: static/js/recurrence.js:1017 static/js/rrule.js:2574
+#: static/recurrence/js/recurrence.js:1017
+msgid "year"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1017 booking/static/js/rrule.js:2549
+#: static/js/recurrence.js:1017 static/js/rrule.js:2549
+#: static/recurrence/js/recurrence.js:1017
+msgid "month"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1017 booking/static/js/rrule.js:2509
+#: booking/static/js/rrule.js.c:2520 booking/static/js/rrule.js:2591
+#: static/js/recurrence.js:1017 static/js/rrule.js:2509
+#: static/js/rrule.js.c:2520 static/js/rrule.js:2591
+#: static/recurrence/js/recurrence.js:1017
+msgid "week"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1017 booking/static/js/rrule.js:2486
+#: booking/static/js/rrule.js.c:2586 static/js/recurrence.js:1017
+#: static/js/rrule.js:2486 static/js/rrule.js.c:2586
+#: static/recurrence/js/recurrence.js:1017
+msgid "day"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1018 booking/static/js/rrule.js:2473
+#: static/js/recurrence.js:1018 static/js/rrule.js:2473
+#: static/recurrence/js/recurrence.js:1018
+msgid "hour"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1018 static/js/recurrence.js:1018
+#: static/recurrence/js/recurrence.js:1018
+msgid "minute"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1018 static/js/recurrence.js:1018
+#: static/recurrence/js/recurrence.js:1018
+msgid "second"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1021 booking/static/js/rrule.js:2566
+#: booking/static/js/rrule.js.c:2574 static/js/recurrence.js:1021
+#: static/js/rrule.js:2566 static/js/rrule.js.c:2574
+#: static/recurrence/js/recurrence.js:1021
+msgid "years"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1021 booking/static/js/rrule.js:2540
+#: booking/static/js/rrule.js.c:2549 static/js/recurrence.js:1021
+#: static/js/rrule.js:2540 static/js/rrule.js.c:2549
+#: static/recurrence/js/recurrence.js:1021
+msgid "months"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1021 booking/static/js/rrule.js:2509
+#: booking/static/js/rrule.js.c:2591 static/js/recurrence.js:1021
+#: static/js/rrule.js:2509 static/js/rrule.js.c:2591
+#: static/recurrence/js/recurrence.js:1021
+msgid "weeks"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1021 booking/static/js/rrule.js:2486
+#: static/js/recurrence.js:1021 static/js/rrule.js:2486
+#: static/recurrence/js/recurrence.js:1021
+msgid "days"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1022 booking/static/js/rrule.js:2473
+#: static/js/recurrence.js:1022 static/js/rrule.js:2473
+#: static/recurrence/js/recurrence.js:1022
+msgid "hours"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1022 static/js/recurrence.js:1022
+#: static/recurrence/js/recurrence.js:1022
+msgid "minutes"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1022 static/js/recurrence.js:1022
+#: static/recurrence/js/recurrence.js:1022
+msgid "seconds"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1025 static/js/recurrence.js:1025
+#: static/recurrence/js/recurrence.js:1025
+msgid "annually"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1025 static/js/recurrence.js:1025
+#: static/recurrence/js/recurrence.js:1025
+msgid "monthly"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1025 static/js/recurrence.js:1025
+#: static/recurrence/js/recurrence.js:1025
+msgid "weekly"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1025 static/js/recurrence.js:1025
+#: static/recurrence/js/recurrence.js:1025
+msgid "daily"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1026 static/js/recurrence.js:1026
+#: static/recurrence/js/recurrence.js:1026
+msgid "hourly"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1026 static/js/recurrence.js:1026
+#: static/recurrence/js/recurrence.js:1026
+msgid "minutely"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1026 static/js/recurrence.js:1026
+#: static/recurrence/js/recurrence.js:1026
+msgid "secondly"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1029 static/js/recurrence.js:1029
+#: static/recurrence/js/recurrence.js:1029
+msgid "Monday"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1029 static/js/recurrence.js:1029
+#: static/recurrence/js/recurrence.js:1029
+msgid "Tuesday"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1029 static/js/recurrence.js:1029
+#: static/recurrence/js/recurrence.js:1029
+msgid "Wednesday"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1029 static/js/recurrence.js:1029
+#: static/recurrence/js/recurrence.js:1029
+msgid "Thursday"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1030 static/js/recurrence.js:1030
+#: static/recurrence/js/recurrence.js:1030
+msgid "Friday"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1030 static/js/recurrence.js:1030
+#: static/recurrence/js/recurrence.js:1030
+msgid "Saturday"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1030 static/js/recurrence.js:1030
+#: static/recurrence/js/recurrence.js:1030
+msgid "Sunday"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1033 static/js/recurrence.js:1033
+#: static/recurrence/js/recurrence.js:1033
+msgid "Mon"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1033 static/js/recurrence.js:1033
+#: static/recurrence/js/recurrence.js:1033
+msgid "Tue"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1033 static/js/recurrence.js:1033
+#: static/recurrence/js/recurrence.js:1033
+msgid "Wed"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1033 static/js/recurrence.js:1033
+#: static/recurrence/js/recurrence.js:1033
+msgid "Thu"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1034 static/js/recurrence.js:1034
+#: static/recurrence/js/recurrence.js:1034
+msgid "Fri"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1034 static/js/recurrence.js:1034
+#: static/recurrence/js/recurrence.js:1034
+msgid "Sat"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1034 static/js/recurrence.js:1034
+#: static/recurrence/js/recurrence.js:1034
+msgid "Sun"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1037 static/js/recurrence.js:1037
+#: static/recurrence/js/recurrence.js:1037
+msgctxt "Monday first letter"
+msgid "M"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1038 static/js/recurrence.js:1038
+#: static/recurrence/js/recurrence.js:1038
+msgctxt "Tuesday first letter"
+msgid "T"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1039 static/js/recurrence.js:1039
+#: static/recurrence/js/recurrence.js:1039
+msgctxt "Wednesday first letter"
+msgid "W"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1040 static/js/recurrence.js:1040
+#: static/recurrence/js/recurrence.js:1040
+msgctxt "Thursday first letter"
+msgid "T"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1041 static/js/recurrence.js:1041
+#: static/recurrence/js/recurrence.js:1041
+msgctxt "Friday first letter"
+msgid "F"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1042 static/js/recurrence.js:1042
+#: static/recurrence/js/recurrence.js:1042
+msgctxt "Saturday first letter"
+msgid "S"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1043 static/js/recurrence.js:1043
+#: static/recurrence/js/recurrence.js:1043
+msgctxt "Sunday first letter"
+msgid "S"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1046 static/js/recurrence.js:1046
+#: static/recurrence/js/recurrence.js:1046
+msgid "first %(weekday)s"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1047 static/js/recurrence.js:1047
+#: static/recurrence/js/recurrence.js:1047
+msgid "second %(weekday)s"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1048 static/js/recurrence.js:1048
+#: static/recurrence/js/recurrence.js:1048
+msgid "third %(weekday)s"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1049 static/js/recurrence.js:1049
+#: static/recurrence/js/recurrence.js:1049
+msgid "fourth %(weekday)s"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1050 booking/static/js/recurrence.js:1059
+#: static/js/recurrence.js:1050 static/js/recurrence.js.c:1059
+#: static/recurrence/js/recurrence.js:1050
+#: static/recurrence/js/recurrence.js:1059
+msgid "last %(weekday)s"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1051 static/js/recurrence.js:1051
+#: static/recurrence/js/recurrence.js:1051
+msgid "second last %(weekday)s"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1052 static/js/recurrence.js:1052
+#: static/recurrence/js/recurrence.js:1052
+msgid "third last %(weekday)s"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1055 static/js/recurrence.js:1055
+#: static/recurrence/js/recurrence.js:1055
+msgid "1st %(weekday)s"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1056 static/js/recurrence.js:1056
+#: static/recurrence/js/recurrence.js:1056
+msgid "2nd %(weekday)s"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1057 static/js/recurrence.js:1057
+#: static/recurrence/js/recurrence.js:1057
+msgid "3rd %(weekday)s"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1058 static/js/recurrence.js:1058
+#: static/recurrence/js/recurrence.js:1058
+msgid "4th %(weekday)s"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1060 static/js/recurrence.js:1060
+#: static/recurrence/js/recurrence.js:1060
+msgid "2nd last %(weekday)s"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1061 static/js/recurrence.js:1061
+#: static/recurrence/js/recurrence.js:1061
+msgid "3rd last %(weekday)s"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1064 static/js/recurrence.js:1064
+#: static/recurrence/js/recurrence.js:1064
+msgid "January"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1064 static/js/recurrence.js:1064
+#: static/recurrence/js/recurrence.js:1064
+msgid "February"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1064 booking/static/js/recurrence.js:1076
+#: static/js/recurrence.js:1064 static/js/recurrence.js.c:1076
+#: static/recurrence/js/recurrence.js:1064
+#: static/recurrence/js/recurrence.js:1076
+msgid "March"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1065 booking/static/js/recurrence.js:1077
+#: static/js/recurrence.js:1065 static/js/recurrence.js.c:1077
+#: static/recurrence/js/recurrence.js:1065
+#: static/recurrence/js/recurrence.js:1077
+msgid "April"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1065 booking/static/js/recurrence.js:1071
+#: booking/static/js/recurrence.js:1077 static/js/recurrence.js:1065
+#: static/js/recurrence.js.c:1071 static/js/recurrence.js:1077
+#: static/recurrence/js/recurrence.js:1065
+#: static/recurrence/js/recurrence.js:1071
+#: static/recurrence/js/recurrence.js:1077
+msgctxt "month name"
+msgid "May"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1065 booking/static/js/recurrence.js:1077
+#: static/js/recurrence.js:1065 static/js/recurrence.js.c:1077
+#: static/recurrence/js/recurrence.js:1065
+#: static/recurrence/js/recurrence.js:1077
+msgid "June"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1066 booking/static/js/recurrence.js:1078
+#: static/js/recurrence.js:1066 static/js/recurrence.js.c:1078
+#: static/recurrence/js/recurrence.js:1066
+#: static/recurrence/js/recurrence.js:1078
+msgid "July"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1066 static/js/recurrence.js:1066
+#: static/recurrence/js/recurrence.js:1066
+msgid "August"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1066 static/js/recurrence.js:1066
+#: static/recurrence/js/recurrence.js:1066
+msgid "September"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1067 static/js/recurrence.js:1067
+#: static/recurrence/js/recurrence.js:1067
+msgid "October"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1067 static/js/recurrence.js:1067
+#: static/recurrence/js/recurrence.js:1067
+msgid "November"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1067 static/js/recurrence.js:1067
+#: static/recurrence/js/recurrence.js:1067
+msgid "December"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1070 static/js/recurrence.js:1070
+#: static/recurrence/js/recurrence.js:1070
+msgid "Jan"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1070 static/js/recurrence.js:1070
+#: static/recurrence/js/recurrence.js:1070
+msgid "Feb"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1070 static/js/recurrence.js:1070
+#: static/recurrence/js/recurrence.js:1070
+msgid "Mar"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1071 static/js/recurrence.js:1071
+#: static/recurrence/js/recurrence.js:1071
+msgid "Apr"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1071 static/js/recurrence.js:1071
+#: static/recurrence/js/recurrence.js:1071
+msgid "Jun"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1072 static/js/recurrence.js:1072
+#: static/recurrence/js/recurrence.js:1072
+msgid "Jul"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1072 static/js/recurrence.js:1072
+#: static/recurrence/js/recurrence.js:1072
+msgid "Aug"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1072 static/js/recurrence.js:1072
+#: static/recurrence/js/recurrence.js:1072
+msgid "Sep"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1073 static/js/recurrence.js:1073
+#: static/recurrence/js/recurrence.js:1073
+msgid "Oct"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1073 static/js/recurrence.js:1073
+#: static/recurrence/js/recurrence.js:1073
+msgid "Nov"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1073 static/js/recurrence.js:1073
+#: static/recurrence/js/recurrence.js:1073
+msgid "Dec"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1076 static/js/recurrence.js:1076
+#: static/recurrence/js/recurrence.js:1076
+msgid "Jan."
+msgstr ""
+
+#: booking/static/js/recurrence.js:1076 static/js/recurrence.js:1076
+#: static/recurrence/js/recurrence.js:1076
+msgid "Feb."
+msgstr ""
+
+#: booking/static/js/recurrence.js:1078 static/js/recurrence.js:1078
+#: static/recurrence/js/recurrence.js:1078
+msgid "Aug."
+msgstr ""
+
+#: booking/static/js/recurrence.js:1078 static/js/recurrence.js:1078
+#: static/recurrence/js/recurrence.js:1078
+msgid "Sept."
+msgstr ""
+
+#: booking/static/js/recurrence.js:1079 static/js/recurrence.js:1079
+#: static/recurrence/js/recurrence.js:1079
+msgid "Oct."
+msgstr ""
+
+#: booking/static/js/recurrence.js:1079 static/js/recurrence.js:1079
+#: static/recurrence/js/recurrence.js:1079
+msgid "Nov."
+msgstr ""
+
+#: booking/static/js/recurrence.js:1079 static/js/recurrence.js:1079
+#: static/recurrence/js/recurrence.js:1079
+msgid "Dec."
+msgstr ""
+
+#: booking/static/js/recurrence.js:1082 static/js/recurrence.js:1082
+#: static/recurrence/js/recurrence.js:1082
+msgid "a.m."
+msgstr ""
+
+#: booking/static/js/recurrence.js:1082 static/js/recurrence.js:1082
+#: static/recurrence/js/recurrence.js:1082
+msgid "p.m."
+msgstr ""
+
+#: booking/static/js/recurrence.js:1083 static/js/recurrence.js:1083
+#: static/recurrence/js/recurrence.js:1083
+msgid "AM"
+msgstr ""
+
+#: booking/static/js/recurrence.js:1083 static/js/recurrence.js:1083
+#: static/recurrence/js/recurrence.js:1083
+msgid "PM"
+msgstr ""
+
+#: booking/static/js/rrule.js:2443 static/js/rrule.js:2443
+msgid "RRule error: Unable to fully convert this rrule to text"
+msgstr ""
+
+#: booking/static/js/rrule.js:2446 static/js/rrule.js:2446
+msgid "every"
+msgstr ""
+
+#: booking/static/js/rrule.js:2450 static/js/rrule.js:2450
+msgid "until"
+msgstr ""
+
+#: booking/static/js/rrule.js:2456 static/js/rrule.js:2456
+msgid "for"
+msgstr ""
+
+#: booking/static/js/rrule.js:2459 static/js/rrule.js:2459
+msgid "times"
+msgstr ""
+
+#: booking/static/js/rrule.js:2459 static/js/rrule.js:2459
+msgid "time"
+msgstr ""
+
+#: booking/static/js/rrule.js:2462 static/js/rrule.js:2462
+msgid "(~ approximate)"
+msgstr ""
+
+#: booking/static/js/rrule.js:2483 booking/static/js/rrule.js.c:2515
+#: booking/static/js/rrule.js:2517 booking/static/js/rrule.js.c:2554
+#: static/js/rrule.js:2483 static/js/rrule.js.c:2515 static/js/rrule.js:2517
+#: static/js/rrule.js.c:2554
+msgid "weekdays"
+msgstr ""
+
+#: booking/static/js/rrule.js:2483 booking/static/js/rrule.js.c:2515
+#: static/js/rrule.js:2483 static/js/rrule.js.c:2515
+msgid "weekday"
+msgstr ""
+
+#: booking/static/js/rrule.js:2490 booking/static/js/rrule.js.c:2523
+#: booking/static/js/rrule.js:2541 booking/static/js/rrule.js.c:2590
+#: static/js/rrule.js:2490 static/js/rrule.js.c:2523 static/js/rrule.js:2541
+#: static/js/rrule.js.c:2590
+msgid "in"
+msgstr ""
+
+#: booking/static/js/rrule.js:2517 booking/static/js/rrule.js.c:2554
+#: booking/static/js/rrule.js:2599 booking/static/js/rrule.js.c:2613
+#: static/js/rrule.js:2517 static/js/rrule.js.c:2554 static/js/rrule.js:2599
+#: static/js/rrule.js.c:2613
+msgid "on"
+msgstr ""
+
+#: booking/static/js/rrule.js:2584 booking/static/js/rrule.js.c:2604
+#: booking/static/js/rrule.js:2620 static/js/rrule.js:2584
+#: static/js/rrule.js.c:2604 static/js/rrule.js:2620
+msgid "on the"
+msgstr ""
+
+#: booking/static/js/rrule.js:2585 booking/static/js/rrule.js.c:2592
+#: booking/static/js/rrule.js:2605 booking/static/js/rrule.js.c:2618
+#: booking/static/js/rrule.js:2621 booking/static/js/rrule.js.c:2629
+#: booking/static/js/rrule.js:2633 static/js/rrule.js:2585
+#: static/js/rrule.js.c:2592 static/js/rrule.js:2605 static/js/rrule.js.c:2618
+#: static/js/rrule.js:2621 static/js/rrule.js.c:2629 static/js/rrule.js:2633
+msgid "and"
+msgstr ""
+
+#: booking/static/js/rrule.js:2600 booking/static/js/rrule.js.c:2602
+#: static/js/rrule.js:2600 static/js/rrule.js.c:2602
+msgid "or"
+msgstr ""
+
+#: booking/static/js/rrule.js:2601 static/js/rrule.js:2601
+msgid "the"
+msgstr ""
+
+#: booking/static/js/rrule.js:2628 static/js/rrule.js:2628
+msgid "at"
+msgstr ""
+
+#: booking/static/js/rrule.js:2640 booking/static/js/rrule.js.c:2661
+#: static/js/rrule.js:2640 static/js/rrule.js.c:2661
+msgid "last"
+msgstr ""
+
+#: booking/static/js/rrule.js:2647 static/js/rrule.js:2647
+msgid "st"
+msgstr ""
+
+#: booking/static/js/rrule.js:2651 static/js/rrule.js:2651
+msgid "nd"
+msgstr ""
+
+#: booking/static/js/rrule.js:2655 static/js/rrule.js:2655
+msgid "rd"
+msgstr ""
+
+#: booking/static/js/rrule.js:2658 static/js/rrule.js:2658
+msgid "th"
+msgstr ""
+
+#: python-env/lib/python2.7/site-packages/grappelli/static/admin/js/SelectFilter2.js:45
+#: static/admin/js/SelectFilter2.js:45
+#, c-format
+msgid "Available %s"
+msgstr ""
+
+#: python-env/lib/python2.7/site-packages/grappelli/static/admin/js/SelectFilter2.js:46
+#: static/admin/js/SelectFilter2.js:46
+#, c-format
+msgid ""
+"This is the list of available %s. You may choose some by selecting them in "
+"the box below and then clicking the \"Choose\" arrow between the two boxes."
+msgstr ""
+
+#: python-env/lib/python2.7/site-packages/grappelli/static/admin/js/SelectFilter2.js:58
+#: static/admin/js/SelectFilter2.js:57
+msgid "Filter"
+msgstr ""
+
+#: python-env/lib/python2.7/site-packages/grappelli/static/admin/js/SelectFilter2.js:62
+#: static/admin/js/SelectFilter2.js:61
+msgid "Choose all"
+msgstr ""
+
+#: python-env/lib/python2.7/site-packages/grappelli/static/admin/js/SelectFilter2.js:62
+#: static/admin/js/SelectFilter2.js:61
+#, c-format
+msgid "Click to choose all %s at once."
+msgstr ""
+
+#: python-env/lib/python2.7/site-packages/grappelli/static/admin/js/SelectFilter2.js:68
+#: static/admin/js/SelectFilter2.js:67
+msgid "Choose"
+msgstr ""
+
+#: python-env/lib/python2.7/site-packages/grappelli/static/admin/js/SelectFilter2.js:76
+#: static/admin/js/SelectFilter2.js:75
+#, c-format
+msgid "Chosen %s"
+msgstr ""
+
+#: python-env/lib/python2.7/site-packages/grappelli/static/admin/js/SelectFilter2.js:77
+#: static/admin/js/SelectFilter2.js:76
+#, c-format
+msgid ""
+"This is the list of chosen %s. You may remove some by selecting them in the "
+"box below and then clicking the \"Remove\" arrow between the two boxes."
+msgstr ""
+
+#: python-env/lib/python2.7/site-packages/grappelli/static/admin/js/SelectFilter2.js:81
+#: static/admin/js/SelectFilter2.js:80
+msgid "Remove all"
+msgstr ""
+
+#: python-env/lib/python2.7/site-packages/grappelli/static/admin/js/SelectFilter2.js:81
+#: static/admin/js/SelectFilter2.js:80
+#, c-format
+msgid "Click to remove all chosen %s at once."
+msgstr ""
+
+#: python-env/lib/python2.7/site-packages/grappelli/static/admin/js/actions.js:28
+#: python-env/lib/python2.7/site-packages/grappelli/static/admin/js/actions.min.js:28
+#: static/admin/js/actions.js:22 static/admin/js/actions.min.js:1
+msgid "%(sel)s of %(cnt)s selected"
+msgid_plural "%(sel)s of %(cnt)s selected"
+msgstr[0] ""
+msgstr[1] ""
+
+#: static/admin/js/SelectFilter2.js:53
+#, c-format
+msgid "Type into this box to filter down the list of available %s."
+msgstr ""
+
+#: static/admin/js/actions.js:114 static/admin/js/actions.min.js:4
+msgid ""
+"You have unsaved changes on individual editable fields. If you run an "
+"action, your unsaved changes will be lost."
+msgstr ""
+
+#: static/admin/js/actions.js:126 static/admin/js/actions.min.js:5
+msgid ""
+"You have selected an action, but you haven't saved your changes to "
+"individual fields yet. Please click OK to save. You'll need to re-run the "
+"action."
+msgstr ""
+
+#: static/admin/js/actions.js:128 static/admin/js/actions.min.js:5
+msgid ""
+"You have selected an action, and you haven't made any changes on individual "
+"fields. You're probably looking for the Go button rather than the Save "
+"button."
+msgstr ""
+
+#: static/admin/js/admin/DateTimeShortcuts.js:79
+#, c-format
+msgid "Note: You are %s hour ahead of server time."
+msgid_plural "Note: You are %s hours ahead of server time."
+msgstr[0] ""
+msgstr[1] ""
+
+#: static/admin/js/admin/DateTimeShortcuts.js:87
+#, c-format
+msgid "Note: You are %s hour behind server time."
+msgid_plural "Note: You are %s hours behind server time."
+msgstr[0] ""
+msgstr[1] ""
+
+#: static/admin/js/admin/DateTimeShortcuts.js:114
+#: static/admin/js/admin/DateTimeShortcuts.js:149
+msgid "Now"
+msgstr ""
+
+#: static/admin/js/admin/DateTimeShortcuts.js:118
+msgid "Clock"
+msgstr ""
+
+#: static/admin/js/admin/DateTimeShortcuts.js:146
+msgid "Choose a time"
+msgstr ""
+
+#: static/admin/js/admin/DateTimeShortcuts.js:150
+msgid "Midnight"
+msgstr ""
+
+#: static/admin/js/admin/DateTimeShortcuts.js:151
+msgid "6 a.m."
+msgstr ""
+
+#: static/admin/js/admin/DateTimeShortcuts.js:152
+msgid "Noon"
+msgstr ""
+
+#: static/admin/js/admin/DateTimeShortcuts.js:156
+#: static/admin/js/admin/DateTimeShortcuts.js:276
+msgid "Cancel"
+msgstr ""
+
+#: static/admin/js/admin/DateTimeShortcuts.js:216
+#: static/admin/js/admin/DateTimeShortcuts.js:269
+msgid "Today"
+msgstr ""
+
+#: static/admin/js/admin/DateTimeShortcuts.js:267
+msgid "Yesterday"
+msgstr ""
+
+#: static/admin/js/admin/DateTimeShortcuts.js:271
+msgid "Tomorrow"
+msgstr ""
+
+#: static/admin/js/calendar.js:8
+msgid ""
+"January February March April May June July August September October November "
+"December"
+msgstr ""
+
+#: static/admin/js/calendar.js:9
+msgid "S M T W T F S"
+msgstr ""
+
+#: static/admin/js/collapse.js:8 static/admin/js/collapse.js.c:19
+#: static/admin/js/collapse.min.js:1
+msgid "Show"
+msgstr ""
+
+#: static/admin/js/collapse.js:16 static/admin/js/collapse.min.js:1
+msgid "Hide"
+msgstr ""
+
+#: static/recurrence/js/recurrence-widget.js:1789
+msgid "Exclude these occurences"
+msgstr ""

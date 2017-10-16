@@ -3,6 +3,7 @@ from datetime import timedelta, date
 from booking.models import VisitAutosend, EmailTemplateType, Visit
 from booking.models import MultiProductVisitTemp, EventTime
 from django_cron import CronJobBase, Schedule
+from django_cron.models import CronJobLog
 from django.db.models import Count
 from django.utils import timezone
 
@@ -12,6 +13,7 @@ import traceback
 class KuCronJob(CronJobBase):
 
     description = "base KU cron job"
+    code = None
 
     def run(self):
         pass
@@ -30,6 +32,16 @@ class KuCronJob(CronJobBase):
             print traceback.format_exc()
             print "CRON job failed"
             raise
+
+    def get_last_run(self):
+        try:
+            return CronJobLog.objects.filter(
+                code=self.code,
+                is_success=True,
+                ran_at_time__isnull=True
+            ).latest('start_time')
+        except CronJobLog.DoesNotExist:
+            pass
 
 
 class ReminderJob(KuCronJob):
@@ -104,7 +116,11 @@ class IdleHostroleJob(KuCronJob):
             num_bookings=Count('bookings'),
         ).filter(
             num_bookings__gt=0,
-            workflow_status=Visit.WORKFLOW_STATUS_BEING_PLANNED
+            workflow_status__in=[
+                Visit.WORKFLOW_STATUS_BEING_PLANNED,
+                Visit.WORKFLOW_STATUS_REJECTED,
+                Visit.WORKFLOW_STATUS_AUTOASSIGN_FAILED
+            ]
         )
         visits_needing_hosts = [
             visit for visit in visit_qs if visit.needs_hosts
@@ -186,28 +202,34 @@ class RemoveOldMvpJob(KuCronJob):
 
 
 class NotifyEventTimeJob(KuCronJob):
-    RUN_EVERY_MINS = 1
-    schedule = Schedule(run_every_mins=RUN_EVERY_MINS)
+    schedule = Schedule(run_every_mins=0)
     code = 'kubooking.notifyeventtime'
     description = "notifies EventTimes that they're starting/ending"
 
     def run(self):
-        start = timezone.now().replace(second=0, microsecond=0)
-        next = start + timedelta(minutes=1)
+        prev = self.get_last_run()
+        if prev:
+            start = prev.start_time
+            end = timezone.now()
+            print "Notifying eventtimes between %s and %s" % (
+                unicode(start), unicode(end)
+            )
 
-        for eventtime in EventTime.objects.filter(
-                has_notified_start=False,
-                start__gte=start,
-                start__lt=next
-        ):
-            eventtime.on_start()
+            for eventtime in EventTime.objects.filter(
+                    has_notified_start=False,
+                    start__gte=start,
+                    start__lt=end
+            ):
+                print "Notifying EventTime %d (starting)" % eventtime.id
+                eventtime.on_start()
 
-        for eventtime in EventTime.objects.filter(
-                has_notified_end=False,
-                end__gte=start,
-                end__lt=next
-        ):
-            eventtime.on_end()
+            for eventtime in EventTime.objects.filter(
+                    has_notified_end=False,
+                    end__gte=start,
+                    end__lt=end
+            ):
+                print "Notifying EventTime %d (ending)" % eventtime.id
+                eventtime.on_end()
 
 
 class EvaluationReminderJob(KuCronJob):

@@ -1,9 +1,7 @@
 {% extends "index.html" %}
-{% load staticfiles %}
-{% load booking_tags %}
 {% load i18n %}
 
-{% block htmltitle %} - vis email log{% endblock %}
+{% block htmltitle %} - vis e-mail log{% endblock %}
 
 {% block content %}
     <div class="row">
@@ -11,7 +9,7 @@
 
             {% include 'common/breadcrumbrow.html' %}
 
-            <h1>Emails vedrørende denne tilmelding:</h1>
+            <h1>{% trans 'E-mails vedrørende denne tilmelding:' %}</h1>
             <ul>
                 {% for item in queryset %}
                     <li>{{ item.action_time|date:'d-m-Y H:i:s'}}: {{ item.change_message }}</li>

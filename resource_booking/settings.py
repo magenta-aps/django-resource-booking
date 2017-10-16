@@ -46,11 +46,15 @@ INSTALLED_APPS = (
     'timedelta',
     'tinymce',
     'django_cron',
+    'macros',
+    'ckeditor',
+    'ckeditor_uploader'
 )
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
+    # 2017-09-26, ticket #18859: Disabled for now
+    # 'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -59,6 +63,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
 )
+EXTRA_MIDDLEWARE = ()
 
 ROOT_URLCONF = 'resource_booking.urls'
 
@@ -89,7 +94,7 @@ STATICFILES_FINDERS = [
 
 # Local thirdparty cache; holds all downloaded
 # dependencies in this folder under the root
-NPM_ROOT_PATH = 'thirdparty'
+NPM_ROOT_PATH = BASE_DIR + '/thirdparty'
 
 # collectstatic will put dependencies in static/thirdparty/
 NPM_STATIC_FILES_PREFIX = 'thirdparty'
@@ -115,7 +120,13 @@ NPM_FILE_PATTERNS = {
                   'lib/compressed/themes/default.time.css'
                   ],
     'rrule': ['lib/rrule.js'],
-    'sortablejs': ['Sortable.min.js']
+    'sortablejs': ['Sortable.min.js'],
+    'clockpicker': ['dist/bootstrap-clockpicker.min.css',
+                    'dist/bootstrap-clockpicker.min.js'],
+    'datatables.net': ['js/jquery.dataTables.js'],
+    'datatables.net-dt': ['css/jquery.dataTables.css', 'images/*'],
+    'datatables.net-responsive': ['js/dataTables.responsive.js'],
+    'datatables.net-responsive-dt': ['css/responsive.dataTables.css'],
 }
 
 # Django-tinymce config
@@ -182,6 +193,39 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+CKEDITOR_UPLOAD_PATH = 'uploads/'
+CKEDITOR_CONFIGS = {
+    'default': {
+        'image_previewText': ' ',
+        'toolbar_kubooking': [
+            {'name': 'text', 'items': [
+                'Bold', 'Italic', 'Underline', '-', 'JustifyLeft',
+                'JustifyCenter', 'JustifyRight', 'JustifyBlock'
+            ]},
+            {'name': 'format', 'items': ['Format', 'RemoveFormat']},
+            {'name': 'indent', 'items': [
+                'BulletedList', 'NumberedList', '-', 'Outdent', 'Indent'
+            ]},
+            {'name': 'insert', 'items': [
+                'Link', 'Unlink', 'Anchor', 'Image', 'HorizontalRule'
+            ]},
+            '/',
+            {'name': 'undo', 'items': ['Undo', 'Redo']},
+            {'name': 'meta', 'items': [
+                'Source', 'ShowBlocks', 'SpecialChar', 'About'
+            ]}
+        ],
+        'toolbar': 'kubooking'
+    }
+}
+
+# 'theme_advanced_buttons1':
+# 'bold,italic,underline,|,justifyleft,justifycenter,justifyright,'
+# 'justifyfull,|,formatselect,|,bullist,numlist,outdent,indent,|,'
+# 'link,unlink,anchor,image,hr,removeformat',
+# 'theme_advanced_buttons2':
+# 'undo,redo,|,code,cleanup,visualaid,charmap,help'
+
 # Whether to enable SAML
 USE_SAML = False
 MAKE_SAML_LOGIN_DEFAULT = False
@@ -202,6 +246,10 @@ local_settings_file = os.path.join(
 )
 if os.path.exists(local_settings_file):
     from local_settings import *  # noqa
+
+# Add extra middleware defined in the local settings file to the ones
+# already specified.
+MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + tuple(EXTRA_MIDDLEWARE)
 
 PUBLIC_URL = "".join([
     PUBLIC_URL_PROTOCOL, "://",

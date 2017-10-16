@@ -1,8 +1,10 @@
 # encoding: utf-8
 from datetime import timedelta
+
 from django.db import models
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Permission
+from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.db.models import Aggregate
 from django.db.models import Count
@@ -14,12 +16,14 @@ from django.utils.translation import ugettext_lazy as _
 import booking.models
 
 from booking.models import OrganizationalUnit, Product
-from booking.utils import get_related_content_types
+from booking.utils import get_related_content_types, full_email
 
 # User roles
 from profile.constants import TEACHER, HOST, COORDINATOR, ADMINISTRATOR
 from profile.constants import FACULTY_EDITOR, NONE
 from profile.constants import EDIT_ROLES, user_role_choices, available_roles
+
+from booking.admin import CLASSES_BY_ROLE
 
 import uuid
 
@@ -123,6 +127,9 @@ class UserProfile(models.Model):
 
     def __unicode__(self):
         return self.user.username
+
+    def get_full_email(self):
+        return full_email(self.user.email, self.user.get_full_name())
 
     def get_role(self):
         """Return the role code, i.e. TEACHER, HOST, etc."""
@@ -498,6 +505,8 @@ class UserProfile(models.Model):
 
     def save(self, *args, **kwargs):
 
+        self.update_user_permissions()
+
         result = super(UserProfile, self).save(*args, **kwargs)
 
         # Create a resource for the user
@@ -527,6 +536,23 @@ class UserProfile(models.Model):
             resource.save()
 
         return result
+
+    def update_user_permissions(self):
+        role = self.get_role()
+        if role in CLASSES_BY_ROLE:
+            classes = CLASSES_BY_ROLE[role]
+            content_types = [
+                contenttype
+                for contenttype in ContentType.objects.all()
+                if contenttype.model_class() in classes
+            ]
+            permissions = Permission.objects.filter(
+                content_type__in=content_types,
+            ).exclude(
+                user=self.user
+            )
+            for permission in permissions:
+                self.user.user_permissions.add(permission)
 
 
 class EmailLoginURL(models.Model):

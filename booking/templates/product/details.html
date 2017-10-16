@@ -1,5 +1,4 @@
 {% extends 'index.html' %}
-{% load staticfiles %}
 {% load timedelta %}
 {% load i18n %}
 {% load booking_tags %}
@@ -13,32 +12,36 @@
     <div class="row titlebar hidden-print">
         <div class="col-sm-12 col-md-8"><h2>{{ object.get_type_display }}</h2></div>
     </div>
-    {% if messages %}
-    <div class="col-sm-4 alert alert-info" role="alert">
-        <ul>
-            {% for message in messages %}
-            <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-            {% endfor %}
-        </ul>
-    </div>
-    {% endif %}
-    <div class="row">
-        <div class="col-sm-12 col-md-8">
 
+    {% if messages %}
+        <div class="row">
+            <div class="col-sm-4 alert alert-info" role="alert">
+                <ul>
+                    {% for message in messages %}
+                    <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="row">
+        <div class="col-sm-12 col-md-7">
+            <div class="offer-actions">
             {% if can_edit %}
-                <a class="pull-right btn btn-primary margin-bottom-10" href="{% url 'product-edit' object.pk %}">{% trans 'Redigér' %}</a>
+                <a class="btn btn-primary" href="{% url 'product-edit' object.pk %}">{% trans 'Redigér' %}</a>
             {% endif %}
             {% if user.userprofile.can_create %}
-                <a class="pull-right btn btn-primary margin-bottom-10 margin-right-10" href="{% url 'product-clone' object.pk %}">{% trans 'Kopier tilbud' %}</a>
+                <a class="btn btn-primary" href="{% url 'product-clone' object.pk %}">{% trans 'Kopier tilbud' %}</a>
             {% endif %}
             {% if can_edit %}
                 {% if object.is_resource_controlled %}
-                    <a class="pull-right btn btn-primary margin-bottom-10 margin-right-10" href="{% url 'resourcerequirement-list' object.pk %}">{% trans 'Redigér ressourcebehov' %}</a>
+                    <a class="btn btn-primary" href="{% url 'resourcerequirement-list' object.pk %}">{% trans 'Redigér ressourcebehov' %}</a>
                 {% else %}
-                    <a class="pull-right btn btn-primary margin-bottom-10 margin-right-10" href="{% url 'product-simple-ressources' object.pk %}">{% trans 'Redigér ressourcer' %}</a>
+                    <a class="btn btn-primary" href="{% url 'product-simple-ressources' object.pk %}">{% trans 'Redigér ressourcer' %}</a>
                 {% endif %}
             {% endif %}
-
+          </div>
             <h1>{{ object.title }}</h1>
             <div class="well">
                 {% autoescape off %}
@@ -97,16 +100,20 @@
                 <div class="disclaimer">{% trans 'Bemærk at din bestilling først er bindende, når du har modtaget en bekræftelse fra den ansvarlige arrangør fra Københavns Universitet.' %}</div>
             {% endif %}
             <div class="go-back">
-                {% if searchurl != "/search" %}
-                    <a href="#" class="btn btn-default" onclick="history.go(-1); return false;"><span class="glyphicon glyphicon-chevron-left"></span>{% trans 'Tilbage til søgeresultat' %}</a>
-                {% else %}
-                    <a href="{{ searchurl }}" class="btn btn-default"><span class="glyphicon glyphicon-chevron-left"></span> {% trans 'Søg i tilbud' %}</a>
-                {% endif %}
+                {% url 'search' as basesearch %}
+                <a href="{{ searchurl }}" class="btn btn-default">
+                    <span class="glyphicon glyphicon-chevron-left"></span>
+                    {% if searchurl != basesearch %}
+                        {% trans 'Tilbage til søgeresultat' %}
+                    {% else %}
+                        {% trans 'Søg i tilbud' %}
+                    {% endif %}
+                </a>
             </div>
         </div>
-        <div class="col-sm-6 col-md-4">
+        <div class="col-sm-6 col-md-5">
             <form class="form-horizontal">
-                <div class="panel panel-default">
+                <div class="panel panel-offer-fact-box">
                     <div class="panel-heading">
                         <h3 class="panel-title">{% trans 'Hvem, hvor og hvornår' %}</h3>
                     </div>
@@ -147,7 +154,7 @@
                                     {{ object.locality.name }}<br>
                                     {{ object.locality.address_line }}<br>
                                     {{ object.locality.zip_city }}
-                                </a>
+                                </a> <span class="glyphicon glyphicon-new-window"></span>
                                 </dd>
                             {% endif %}
 
@@ -176,24 +183,13 @@
                                         {% endif %}
                                         </p>
                                     {% else %}
-                                        {% trans 'Foreslå selv et tidspunkt' %}
+                                        {% trans 'Foreslå selv et tidspunkt' %}<br/>
+                                        {% trans 'Der kan være begrænsninger for hvilke dage, besøget kan lade sig gøre - se beskrivelse af besøget.' %}
                                     {% endif %}
+                                {% elif object.time_mode == view.model.TIME_MODE_NO_BOOKING %}
+                                    {% include 'product/details-eventtime-list.html' with eventtime_list=object.future_times %}
                                 {% elif object.future_bookable_times %}
-                                    <ul class="list-unstyled" id="dato">
-                                    {% for eventtime in object.future_bookable_times|slice:":10" %}
-                                        <li>{{ eventtime.interval_display }}</li>
-                                    {% endfor %}
-                                    {% if object.future_bookable_times.count > 10 %}
-                                        {% for eventtime in object.future_bookable_times|slice:"10:" %}
-                                            <li class="hidden default-hidden">{{ eventtime.interval_display }}</li>
-                                        {% endfor %}
-                                        <li>
-                                            <span id="show_all_times" class="btn btn-default btn-xs pull-right">{% trans 'Vis alle' %} ({{object.future_bookable_times.count}})</span>
-                                            <span id="hide_extra_times" class="btn btn-default btn-xs pull-right hidden">{% trans 'Skjul ekstra' %}</span>
-                                        </li>
-                                    {% endif %}
-                                    </ul>
-                                    <div class="clearfix"></div>
+                                    {% include 'product/details-eventtime-list.html' with eventtime_list=object.future_bookable_times %}
                                 {% else %}
                                     {% trans 'Der er i øjeblikket ikke nogen tidspunkter der er åbne for tilmelding på dette tilbud' %}
                                 {% endif %}
@@ -206,10 +202,12 @@
                                             {{ nr_visits }} besøg
                                         {% endblocktrans %}
                                     </div>
+                                    {% if object.has_time_management %}
                                     <hr />
                                     <p>
                                         <a class="pull-right btn btn-primary btn-xs margin-bottom-10 margin-right-10" href="{% url 'manage-times' object.pk %}">{% trans 'Administrér tidspunkter' %}</a>
                                     </p>
+                                    {% endif %}
                                 {% endif %}
                             </dd>
                             {% endif %}
@@ -262,14 +260,13 @@
     <script type="text/javascript"><!--
         (function($) {
             $('#show_all_times').on('click', function() {
-                console.log($('#dato li.default-hidden'));
                 $('#dato li.default-hidden').removeClass("hidden");
-                $('#show_all_times').addClass("hidden");;
+                $('#show_all_times').addClass("hidden");
                 $('#hide_extra_times').removeClass("hidden");
             });
             $('#hide_extra_times').on('click', function() {
                 $('#dato li.default-hidden').addClass("hidden");
-                $('#show_all_times').removeClass("hidden");;
+                $('#show_all_times').removeClass("hidden");
                 $('#hide_extra_times').addClass("hidden");
             });
         })(jQuery);

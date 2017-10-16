@@ -1,12 +1,8 @@
 {% extends 'index.html' %}
 {% load i18n %}
-{% load staticfiles %}
 {% load booking_tags %}
 
 {% block htmltitle %} - {% if object.pk %}{% trans "redigér ressourcebehov" %}{% else %}{% trans "opret ressourcebehov" %}{% endif %}{% endblock %}
-
-{% block head %}
-{% endblock %}
 
 {% block content %}
 
@@ -23,8 +19,8 @@
 
         <div class="panel panel-default">
             <div class="panel-body">
-                {% include 'common/fields/generic_field.html' with field=form.resource_pool %}
-                {% include 'common/fields/generic_field.html' with field=form.required_amount %}
+                {% include 'common/fields/generic_field.html' with field=form.resource_pool widelabel=1 %}
+                {% include 'common/fields/generic_field.html' with field=form.required_amount widelabel=1 %}
             </div>
         </div>
 
@@ -32,6 +28,17 @@
         <div class="divider"></div>
 
     </form>
+
+    {% if product.are_resources_autoassigned %}
+        <h2>{% trans 'Påvirkede besøg' %}</h2>
+        <ul>
+        {% for eventtime in product.booked_eventtimes %}
+            <li><a href="{% url 'visit-view' eventtime.visit.id %}">{{ eventtime.visit }}</a></li>
+        {% empty %}
+            <li>{% trans 'Der er ingen bookede besøg på tilbuddet' %}</li>
+        {% endfor %}
+        </ul>
+    {% endif %}
 
 {% endblock %}
 

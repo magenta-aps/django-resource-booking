@@ -1,6 +1,9 @@
 *~
 /booking/migrations/0*.py
 /booking/migrations/*_auto_*
+/build
+/config/booking
+/cron.log
 dist
 *.egg-info
 /.idea/
@@ -9,6 +12,7 @@ install.log
 /local-*
 /locale/**/*.mo
 /media/
+/migrate_restart
 /profile/migrations/0*.py
 /profile/migrations/*_auto_*
 *.pyc
@@ -19,10 +23,9 @@ python-env
 /resource_booking/saml/*.key
 /resource_booking/saml/*.pem
 .ropeproject
-.ropeproject
 *.sqlite3
 /static/
 *.swp
 /thirdparty/node_modules/
-cron.log
+/cron.log
 

@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from django.contrib.auth.models import User
+
 from booking.models import Visit, VisitAutosend, MultiProductVisit
 from booking.models import EmailTemplateType
 from django import forms
@@ -43,7 +45,12 @@ class ChangeVisitTeachersForm(forms.ModelForm):
     class Meta:
         model = Visit
         fields = ['teachers', 'override_needed_teachers']
-        widgets = {'teachers': forms.CheckboxSelectMultiple()}
+        widgets = {
+            'teachers': forms.CheckboxSelectMultiple(),
+            'override_needed_teachers': forms.Select(
+                attrs={'class': 'form-control'}
+            )
+        }
 
     send_emails = forms.BooleanField(
         label=_(u"Udsend e-mails til nye undervisere der tilknyttes"),
@@ -53,7 +60,9 @@ class ChangeVisitTeachersForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ChangeVisitTeachersForm, self).__init__(*args, **kwargs)
-        self.fields['teachers'].queryset = \
+        teacherfield = self.fields['teachers']
+        teacherfield.label_from_instance = User.get_full_name
+        teacherfield.queryset = \
             kwargs['instance'].product.potentielle_undervisere.all()
 
 
@@ -61,7 +70,12 @@ class ChangeVisitHostsForm(forms.ModelForm):
     class Meta:
         model = Visit
         fields = ['hosts', 'override_needed_hosts']
-        widgets = {'hosts': forms.CheckboxSelectMultiple()}
+        widgets = {
+            'hosts': forms.CheckboxSelectMultiple(),
+            'override_needed_hosts': forms.Select(
+                attrs={'class': 'form-control'}
+            )
+        }
 
     send_emails = forms.BooleanField(
         label=_(u"Udsend e-mails til nye værter der tilknyttes"),
@@ -71,7 +85,9 @@ class ChangeVisitHostsForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ChangeVisitHostsForm, self).__init__(*args, **kwargs)
-        self.fields['hosts'].queryset = \
+        hostfield = self.fields['hosts']
+        hostfield.label_from_instance = User.get_full_name
+        hostfield.queryset = \
             kwargs['instance'].product.potentielle_vaerter.all()
 
 
@@ -240,25 +256,32 @@ VisitAutosendFormSetBase = inlineformset_factory(
 class VisitAutosendFormSet(VisitAutosendFormSetBase):
     def __init__(self, *args, **kwargs):
         if 'instance' in kwargs:
-            autosends = kwargs['instance'].get_autosends(False, True, False)
-            all_autosends = EmailTemplateType.objects.filter(
-                enable_autosend=True
+            instance = kwargs['instance']
+            all_types = EmailTemplateType.objects.filter(
+                enable_autosend=True, form_show=True
             )
-            if len(autosends) < all_autosends.count():
+            visit_autosends = instance.visitautosend_set.filter(
+                template_type__in=all_types
+            ).order_by('template_type__ordering')
+            kwargs['queryset'] = visit_autosends
+
+            if visit_autosends.count() < all_types.count():
                 initial = []
                 existing_types = [
-                    autosend.template_type for autosend in autosends
+                    autosend.template_type for autosend in visit_autosends
                 ]
-                for type in all_autosends:
+                for type in all_types:
                     if type.key not in existing_types:
                         initial.append({
                             'template_type': type,
                             'enabled': False,
-                            'inherit': False,
+                            'inherit': True,
                             'days': '',
                             'visit': kwargs['instance'].pk
                         })
-                initial.sort(key=lambda choice: choice['template_type'].key)
+                initial.sort(
+                    key=lambda choice: choice['template_type'].ordering
+                )
                 kwargs['initial'] = initial
                 self.extra = len(initial)
         super(VisitAutosendFormSet, self).__init__(*args, **kwargs)

@@ -3,8 +3,6 @@ $(function($){
         $end_time = $('#id_end_time'),
         $extra_days = $('#id_extra_days');
 
-    var currentDates = [];
-
     function pad(number) {
         var r = String(number);
         if (r.length === 1) {
@@ -56,7 +54,6 @@ $(function($){
         autoclose: true
     });
 
-
     function datestr_to_date(datestr) {
         var d = new Date(),
             dparts = datestr.split(/[\/.-]/);
@@ -106,11 +103,25 @@ $(function($){
 
     var freq_map = {
         "weekly": [RRule.WEEKLY, 1],
-        "montly": [RRule.MONTHLY, 1],
+        "monthly": [RRule.MONTHLY, 1],
         "trimonthly": [RRule.MONTHLY, 3],
         "halfyearly": [RRule.MONTHLY, 6],
         "yearly": [RRule.YEARLY, 1]
     };
+
+    // When frequency is updated, enable or disable the weekday checkboxes
+    // since they are only relevant when "weekly" is selected
+    var updateFrequency = function() {
+        var value = $("#input-frequency").val(),
+            enable_weekdays = (freq_map[value][0] === RRule.WEEKLY),
+            props = {disabled: !enable_weekdays};
+        if (!enable_weekdays) {
+            props['checked'] = false;
+        }
+        $("#input-weekdays input[type=checkbox]").prop(props);
+    };
+    $("#input-frequency").change(updateFrequency);
+    updateFrequency();
 
     // RRule update
     var updateRRDates = function() {
@@ -125,74 +136,79 @@ $(function($){
             count_val = $('#input-count').val() || '',
             freq_val = $('#input-frequency').val();
 
-        if(start_date_val) {
+        if (start_date_val) {
             options.dtstart = datestr_to_date(start_date_val);
         }
 
-        if(end_date_val) {
+        if (end_date_val) {
             options.until = datestr_to_date(end_date_val);
         } else if(count_val.match(/^\d+$/)) {
             options.count = count_val;
         }
 
-        if(freq_val) {
+        if (freq_val) {
             var mapped = freq_map[freq_val];
-            if(mapped) {
+            if (mapped) {
                 options.freq = mapped[0];
                 options.interval = mapped[1];
             }
         }
 
-        $('#input-weekdays input:checked').each(function() {
-            var val = weekday_map[$(this).attr('name')];
-            if(val)
-                options.byweekday.push(val);
-        });
-        if(options.byweekday.length === 0) {
+        if (options.freq === RRule.WEEKLY) {
+            $('#input-weekdays input:checked').each(function () {
+                var val = weekday_map[$(this).attr('name')];
+                if (val) {
+                    options.byweekday.push(val);
+                }
+            });
+        }
+        if (options.byweekday.length === 0) {
             delete options.byweekday;
         }
 
         var start_hhmm = ($start_time.val() || '00:00').split(":"),
             end_hhmm = ($end_time.val() || '00:00').split(":"),
-            start_offset = (
-                parseInt(start_hhmm[0]) * 60 + parseInt(start_hhmm[1])
-            ),
-            end_offset = (
-                parseInt(end_hhmm[0]) * 60 + parseInt(end_hhmm[1])
-            ),
-            extra_days = parseInt($extra_days.val() || 0)
-            ;
+            start_hours = parseInt(start_hhmm[0], 10),
+            start_minutes = parseInt(start_hhmm[1], 10),
+            end_hours = parseInt(end_hhmm[0], 10),
+            end_minutes = parseInt(end_hhmm[1], 10),
+            extra_days = parseInt($extra_days.val() || 0);
+        if (extra_days < 0) {
+            extra_days = 0;
+        }
 
         // If end offset was less than start offset we've wrapped around
         // midnight.
-        if(end_offset < start_offset) {
-            end_offset += 24 * 60;
+        if (end_hours < start_hours || (end_hours === start_hours && end_minutes < start_minutes)) {
+            extra_days += 1;
         }
 
-        if(extra_days > 0) {
-            end_offset += extra_days * 24 * 60;
+        if (extra_days > 0) {
+            end_hours += extra_days * 24;
         }
-
-        rule = new RRule(options);
+        var rule = new RRule(options);
         var outputEl = $('.rrule-datelist');
         outputEl.html('');
-        if(rule.options.count || rule.options.until) {
-            list = rule.all();
+        if (rule.options.count || rule.options.until) {
+            var list = rule.all();
             for (var i=0; i<list.length; i++) {
                 var time = list[i].getTime(),
-                    d1 = new Date(time + start_offset * 60 * 1000),
-                    d2 = new Date(time + end_offset * 60 * 1000),
-                    value_str = format_interval(d1, d2);
+                    d1 = new Date(time);
+                    d2 = new Date(time);
+                d1.setHours(start_hours);
+                d1.setMinutes(start_minutes - d1.getTimezoneOffset());
+                d2.setHours(end_hours);
+                d2.setMinutes(end_minutes - d2.getTimezoneOffset());
+                var value_str = format_interval(d1, d2);
 
                 outputEl.append([
                     '<li>',
-                    '  <input type="hidden" name="selecteddate" value="' + value_str + '" />',
+                      '<input type="hidden" name="selecteddate" value="' + value_str + '" />',
                        value_str,
                     '</li>'
                 ].join(""));
             }
         }
-
         return true;
     };
 
@@ -201,7 +217,7 @@ $(function($){
     // RRule input methods
     rrdatepickStart.datepicker().on('hide', updateRRDates);
     rrdatepick.datepicker().on('hide', function() {
-        if($(this).val()) {
+        if ($(this).val()) {
             $('#input-count').val('');
         }
         updateRRDates();
@@ -209,7 +225,7 @@ $(function($){
     $('#input-weekdays input').on('change', updateRRDates);
     $('#input-frequency').on('change', updateRRDates);
     $('#input-count').on('keyup', function() {
-        if($(this).val()) {
+        if ($(this).val()) {
             rrdatepick.val('');
         }
         updateRRDates();

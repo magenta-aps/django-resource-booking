@@ -9,6 +9,7 @@ from django.db.models import Max
 from django.db.models import Sum
 from django.db.models import Q
 from django.db.models.base import ModelBase
+from django.db.models.functions import Coalesce
 from django.utils import six
 from django.template.context import make_context
 from django.utils import timezone
@@ -39,6 +40,8 @@ from profile.constants import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
 
 import math
 import uuid
+import random
+import sys
 
 BLANK_LABEL = '---------'
 BLANK_OPTION = (None, BLANK_LABEL,)
@@ -180,6 +183,10 @@ class OrganizationalUnit(models.Model):
         null=True,
         blank=True
     )
+    autoassign_resources_enabled = models.BooleanField(
+        verbose_name=_(u'Automatisk ressourcetildeling mulig'),
+        default=False
+    )
 
     def belongs_to(self, unit):
         if self == unit:
@@ -259,6 +266,11 @@ class OrganizationalUnit(models.Model):
             recipients.extend(self.get_editors())
 
         return recipients
+
+    def get_reply_recipients(self, template_type):
+        if template_type.reply_to_unit_responsible:
+            return [self.contact]
+        return []
 
     @classmethod
     def root_unit_id(cls):
@@ -507,6 +519,11 @@ class EmailTemplateType(
         null=True
     )
 
+    ordering = models.IntegerField(
+        verbose_name=u'Sortering',
+        default=0
+    )
+
     @property
     def name(self):
         return self.name_da
@@ -574,6 +591,25 @@ class EmailTemplateType(
 
     enable_autosend = models.BooleanField(default=False)
 
+    form_show = models.BooleanField(default=False)
+
+    @property
+    def reply_to_product_responsible(self):
+        for x in [
+            self.send_to_visit_hosts, self.send_to_visit_teachers,
+            self.send_to_booker, self.send_to_potential_hosts,
+            self.send_to_potential_teachers, self.send_to_visit_added_host,
+            self.send_to_visit_added_teacher, self.send_to_unit_hosts,
+            self.send_to_unit_teachers
+        ]:
+            if x:
+                return True
+        return False
+
+    @property
+    def reply_to_unit_responsible(self):
+        return False
+
     @staticmethod
     def set_default(key, **kwargs):
         try:
@@ -594,38 +630,43 @@ class EmailTemplateType(
     def set_defaults():
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED,
-            name_da=u'Besked til gæst ved booking af besøg (med fast tid)',
+            name_da=u'Besked til gæst ved tilmelding (med fast tid)',
             manual_sending_visit_enabled=True,
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
             send_to_booker=True,
             enable_booking=True,
             is_default=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True,
+            ordering=1
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED_UNTIMED,
-            name_da=u'Besked til gæst ved booking af besøg '
-                    u'(besøg uden fast tid)',
+            name_da=u'Besked til gæst ved tilmelding (besøg uden fast tid)',
             manual_sending_visit_enabled=True,
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
             send_to_booker=True,
             enable_booking=True,
             is_default=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True,
+            ordering=2
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__BOOKING_CREATED_WAITING,
-            name_da=u'Besked til gæster har tilmeldt sig venteliste',
+            name_da=u'Besked til gæster der har tilmeldt sig venteliste',
             manual_sending_visit_enabled=True,
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
             send_to_booker=True,
             enable_booking=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True,
+            ordering=3
         )
 
         EmailTemplateType.set_default(
@@ -636,15 +677,20 @@ class EmailTemplateType(
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
             enable_booking=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True,
+            ordering=4
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__SPOT_OPEN,
-            name_da=u'Besked til gæst, der får tilbudt plads venteliste',
+            name_da=u'Mail til gæst fra venteliste, '
+                    u'der får tilbudt plads på besøget',
             manual_sending_visit_enabled=True,
             enable_booking=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True,
+            ordering=5
         )
 
         EmailTemplateType.set_default(
@@ -652,7 +698,10 @@ class EmailTemplateType(
             name_da=u'Besked til gæst ved accept af plads (fra venteliste)',
             send_to_booker=True,
             enable_booking=True,
-            enable_autosend=True
+            enable_autosend=True,
+            is_default=True,
+            form_show=False,
+            ordering=6
         )
 
         EmailTemplateType.set_default(
@@ -660,7 +709,9 @@ class EmailTemplateType(
             name_da=u'Besked til gæst ved afvisning af plads (fra venteliste)',
             send_to_booker=True,
             enable_booking=True,
-            enable_autosend=True
+            enable_autosend=False,
+            form_show=False,
+            ordering=7
         )
 
         EmailTemplateType.set_default(
@@ -669,7 +720,9 @@ class EmailTemplateType(
             manual_sending_visit_enabled=True,
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True,
+            ordering=8
         )
 
         EmailTemplateType.set_default(
@@ -678,7 +731,9 @@ class EmailTemplateType(
             send_to_contactperson=True,
             enable_booking=True,
             is_default=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True,
+            ordering=9
         )
 
         EmailTemplateType.set_default(
@@ -687,7 +742,10 @@ class EmailTemplateType(
                     u'af plads (fra venteliste)',
             send_to_contactperson=True,
             enable_booking=True,
-            enable_autosend=True
+            enable_autosend=True,
+            is_default=True,
+            form_show=False,
+            ordering=10
         )
 
         EmailTemplateType.set_default(
@@ -698,7 +756,9 @@ class EmailTemplateType(
             send_to_potential_hosts=True,
             enable_booking=True,
             avoid_already_assigned=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True,
+            ordering=11
         )
 
         EmailTemplateType.set_default(
@@ -710,7 +770,9 @@ class EmailTemplateType(
             send_to_potential_teachers=True,
             enable_booking=True,
             avoid_already_assigned=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True,
+            ordering=12
         )
 
         EmailTemplateType.set_default(
@@ -718,7 +780,9 @@ class EmailTemplateType(
             name_da=u'Bekræftelsesmail til vært',
             manual_sending_visit_enabled=True,
             send_to_visit_added_host=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True,
+            ordering=13
         )
 
         EmailTemplateType.set_default(
@@ -726,7 +790,9 @@ class EmailTemplateType(
             name_da=u'Bekræftelsesmail til underviser',
             manual_sending_visit_enabled=True,
             send_to_visit_added_teacher=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True,
+            ordering=14
         )
 
         EmailTemplateType.set_default(
@@ -735,7 +801,9 @@ class EmailTemplateType(
                     u'ledig værtsrolle på besøg',
             send_to_editors=True,
             enable_days=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True,
+            ordering=15
         )
 
         EmailTemplateType.set_default(
@@ -743,7 +811,9 @@ class EmailTemplateType(
             name_da=u'Besked til lokaleansvarlig',
             manual_sending_visit_enabled=True,
             manual_sending_mpv_sub_enabled=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True,
+            ordering=16
         )
 
         EmailTemplateType.set_default(
@@ -757,7 +827,9 @@ class EmailTemplateType(
             send_to_visit_hosts=True,
             send_to_visit_teachers=True,
             enable_booking=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True,
+            ordering=17
         )
 
         EmailTemplateType.set_default(
@@ -770,7 +842,9 @@ class EmailTemplateType(
             send_to_visit_hosts=True,
             send_to_visit_teachers=True,
             enable_booking=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True,
+            ordering=18
         )
 
         EmailTemplateType.set_default(
@@ -784,31 +858,41 @@ class EmailTemplateType(
             send_to_visit_hosts=True,
             send_to_visit_teachers=True,
             enable_days=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True,
+            ordering=19
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_ALL_EVALUATION,
             name_da=u'Besked til alle om evaluering',
             manual_sending_visit_enabled=True,
-            enable_autosend=True
+            enable_autosend=True,
+            form_show=True,
+            ordering=20
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.SYSTEM__BASICMAIL_ENVELOPE,
-            name_da=u'Forespørgsel fra bruger via kontaktformular',
-            enable_autosend=False
+            name_da=u'Besked til tilbudsansvarlig',
+            enable_autosend=False,
+            form_show=False,
+            ordering=21
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.SYSTEM__EMAIL_REPLY,
             name_da=u'Svar på e-mail fra systemet',
-            enable_autosend=False
+            enable_autosend=False,
+            form_show=False,
+            ordering=22
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.SYSTEM__USER_CREATED,
-            name_da=u'Besked til bruger ved brugeroprettelse'
+            name_da=u'Besked til bruger ved brugeroprettelse',
+            form_show=False,
+            ordering=23
         )
 
         EmailTemplateType.set_default(
@@ -888,23 +972,52 @@ class EmailTemplateType(
     def add_defaults_to_all():
         for product in Product.objects.all():
             for template_type in EmailTemplateType.objects.filter(
-                is_default=True
+                enable_autosend=True
             ):
-                if product.productautosend_set.filter(
+                qs = product.productautosend_set.filter(
                     template_type=template_type
-                ).count() == 0:
-                    print "    create autosends for product %d" % product.id
+                )
+                if qs.count() == 0:
+                    print "    create autosend type %d for product %d" % \
+                          (template_type.key, product.id)
                     autosend = ProductAutosend(
                         template_key=template_type.key,
                         template_type=template_type,
                         product=product,
-                        enabled=True
+                        enabled=template_type.is_default
                     )
                     autosend.save()
-                    for visit in product.visit_set.all():
-                        print "        creating inheriting autosends for " \
-                              "visit %d" % visit.id
-                        visit.create_inheriting_autosends()
+                elif qs.count() > 1:
+                    print "    removing extraneous autosend %d " \
+                          "for product %d" % (template_type.key, product.id)
+                    for extra in qs[1:]:
+                        extra.delete()
+
+        for visit in Visit.objects.all():
+            if not visit.is_multiproductvisit:
+                for template_type in EmailTemplateType.objects.filter(
+                    enable_autosend=True
+                ):
+                    qs = visit.visitautosend_set.filter(
+                        template_type=template_type
+                    )
+                    if qs.count() == 0:
+                        print "    creating autosend type %d for visit %d" % \
+                              (template_type.key, visit.id)
+                        visitautosend = VisitAutosend(
+                            visit=visit,
+                            inherit=True,
+                            template_key=template_type.key,
+                            template_type=template_type,
+                            days=None,
+                            enabled=False
+                        )
+                        visitautosend.save()
+                    elif qs.count() > 1:
+                        print "    removing extraneous autosend %d " \
+                              "for visit %d" % (template_type.key, visit.id)
+                    for extra in qs[1:]:
+                        extra.delete()
 
     @staticmethod
     def migrate():
@@ -912,9 +1025,6 @@ class EmailTemplateType(
         EmailTemplate.migrate()
         Autosend.migrate()
         KUEmailMessage.migrate()
-
-
-EmailTemplateType.set_defaults()
 
 
 class EmailTemplate(models.Model):
@@ -1067,13 +1177,11 @@ class ObjectStatistics(models.Model):
 
     created_time = models.DateTimeField(
         blank=False,
-        auto_now_add=True,
+        auto_now_add=True
     )
     updated_time = models.DateTimeField(
         blank=False,
-        default=timezone.now
-        # auto_now=True  # This would update the field on every save,
-        # including when we just want to update the display counter
+        auto_now_add=True
     )
     visited_time = models.DateTimeField(
         blank=True,
@@ -1449,12 +1557,70 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     TIME_MODE_RESOURCE_CONTROLLED = 2
     TIME_MODE_SPECIFIC = 3
     TIME_MODE_GUEST_SUGGESTED = 4
+    TIME_MODE_NO_BOOKING = 5
+    TIME_MODE_RESOURCE_CONTROLLED_AUTOASSIGN = 6
+
+    time_mode_choice_map = {
+        STUDENT_FOR_A_DAY: set((
+            TIME_MODE_SPECIFIC,
+            TIME_MODE_GUEST_SUGGESTED,
+            TIME_MODE_RESOURCE_CONTROLLED,
+            TIME_MODE_NONE,
+            TIME_MODE_NO_BOOKING,
+        )),
+        STUDIEPRAKTIK: set((
+            TIME_MODE_SPECIFIC,
+            TIME_MODE_GUEST_SUGGESTED,
+            TIME_MODE_RESOURCE_CONTROLLED,
+            TIME_MODE_NONE,
+            TIME_MODE_NO_BOOKING,
+        )),
+        OPEN_HOUSE: set((
+            TIME_MODE_NO_BOOKING,
+        )),
+        TEACHER_EVENT: set((
+            TIME_MODE_SPECIFIC,
+        )),
+        GROUP_VISIT: set((
+            TIME_MODE_SPECIFIC,
+            TIME_MODE_GUEST_SUGGESTED,
+            TIME_MODE_RESOURCE_CONTROLLED,
+        )),
+        STUDY_PROJECT: set((
+            TIME_MODE_SPECIFIC,
+            TIME_MODE_GUEST_SUGGESTED,
+            TIME_MODE_RESOURCE_CONTROLLED,
+            TIME_MODE_NONE,
+            TIME_MODE_NO_BOOKING,
+        )),
+        ASSIGNMENT_HELP: set((
+            TIME_MODE_NONE,
+            TIME_MODE_NO_BOOKING,
+        )),
+        OTHER_OFFERS: set((
+            TIME_MODE_SPECIFIC,
+            TIME_MODE_GUEST_SUGGESTED,
+            TIME_MODE_RESOURCE_CONTROLLED,
+            TIME_MODE_NONE,
+            TIME_MODE_NO_BOOKING,
+        )),
+        STUDY_MATERIAL: set((
+            TIME_MODE_NONE,
+        )),
+    }
 
     time_mode_choices = (
+        (TIME_MODE_NONE,
+         _(u"Tilbuddet har ingen tidspunkter og ingen tilmelding")),
         (TIME_MODE_RESOURCE_CONTROLLED,
          _(u"Tilbuddets tidspunkter styres af ressourcer")),
+        (TIME_MODE_RESOURCE_CONTROLLED_AUTOASSIGN,
+         _(u"Tilbuddets tidspunkter styres af ressourcer,"
+           u" med automatisk tildeling")),
         (TIME_MODE_SPECIFIC,
          _(u"Tilbuddet har faste tidspunkter")),
+        (TIME_MODE_NO_BOOKING,
+         _(u"Tilbuddet har faste tidspunkter, men er uden tilmelding")),
         (TIME_MODE_GUEST_SUGGESTED,
          _(u"Gæster foreslår mulige tidspunkter")),
     )
@@ -1735,6 +1901,57 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         blank=False
     )
 
+    only_one_guest_per_visit = models.BooleanField(
+        default=False,
+        verbose_name=_(u'Der tillades kun 1 tilmelding pr. besøg')
+    )
+
+    def available_time_modes(self, unit=None):
+        if self.type is None:
+            return Product.time_mode_choices
+
+        available_set = Product.time_mode_choice_map.get(self.type)
+        if Product.TIME_MODE_RESOURCE_CONTROLLED in available_set \
+                and unit is not None and unit.autoassign_resources_enabled:
+            available_set.add(Product.TIME_MODE_RESOURCE_CONTROLLED_AUTOASSIGN)
+
+        return tuple(
+            x for x in Product.time_mode_choices if x[0] in available_set
+        )
+
+    @property
+    def total_required_hosts(self):
+        if self.is_resource_controlled:
+            return self.resourcerequirement_set.filter(
+                resource_pool__resource_type=ResourceType.RESOURCE_TYPE_HOST
+            ).aggregate(
+                total_required=Sum('required_amount')
+            )['total_required'] or 0
+        else:
+            return int(self.needed_hosts)
+
+    @property
+    def total_required_teachers(self):
+        if self.is_resource_controlled:
+            return self.resourcerequirement_set.filter(
+                resource_pool__resource_type=ResourceType.RESOURCE_TYPE_TEACHER
+            ).aggregate(
+                total_required=Sum('required_amount')
+            )['total_required'] or 0
+        else:
+            return int(self.needed_teachers)
+
+    @property
+    def total_required_rooms(self):
+        if self.is_resource_controlled:
+            return self.resourcerequirement_set.filter(
+                resource_pool__resource_type=ResourceType.RESOURCE_TYPE_ROOM
+            ).aggregate(
+                total_required=Sum('required_amount')
+            )['total_required'] or 0
+        else:
+            return 1
+
     @property
     def bookable_times(self):
         qs = self.eventtime_set.filter(
@@ -1745,14 +1962,21 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             ) &
             (~Q(resource_status=EventTime.RESOURCE_STATUS_BLOCKED))
         )
+        if self.only_one_guest_per_visit:
+            qs = qs.filter(
+                visit__bookings__isnull=True
+            )
         if self.maximum_number_of_visitors is not None:
             max = (self.maximum_number_of_visitors +
                    (self.waiting_list_length or 0))
             qs = qs.annotate(
-                Sum('visit__bookings__booker__attendee_count')
+                attendees=Coalesce(
+                    Sum('visit__bookings__booker__attendee_count'),
+                    0
+                )
             ).filter(
                 Q(visit__isnull=True) |
-                Q(visit__bookings__booker__attendee_count__sum__lt=max)
+                Q(attendees__lt=max)
             )
         return qs
 
@@ -1966,6 +2190,14 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
         return recipients
 
+    def get_reply_recipients(self, template_type):
+        recipients = self.organizationalunit.get_reply_recipients(
+            template_type
+        )
+        if template_type.reply_to_product_responsible:
+            recipients.extend(self.get_responsible_persons())
+        return recipients
+
     # Returns best guess for who is responsible for visits for this product.
     def get_responsible_persons(self):
         if self.tilbudsansvarlig:
@@ -2036,6 +2268,10 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     @classmethod
     def filter_public_bookable(cls, queryset):
         nonblocked = EventTime.NONBLOCKED_RESOURCE_STATES
+        resource_controlled = [
+            Product.TIME_MODE_RESOURCE_CONTROLLED,
+            Product.TIME_MODE_RESOURCE_CONTROLLED_AUTOASSIGN
+        ]
         return queryset.filter(
             Q(time_mode=cls.TIME_MODE_GUEST_SUGGESTED) |
             Q(
@@ -2047,10 +2283,10 @@ class Product(AvailabilityUpdaterMixin, models.Model):
                 eventtime__visit__workflow_status__in=Visit.BOOKABLE_STATES,
             ) & Q(
                 # Either not resource controlled
-                (~Q(time_mode=Product.TIME_MODE_RESOURCE_CONTROLLED)) |
+                (~Q(time_mode__in=resource_controlled)) |
                 # Or resource-controlled with nonblocked eventtimes
                 Q(
-                    time_mode=Product.TIME_MODE_RESOURCE_CONTROLLED,
+                    time_mode__in=resource_controlled,
                     eventtime__resource_status__in=nonblocked
                 )
             )
@@ -2071,6 +2307,11 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     def has_bookable_visits(self):
         if self.time_mode == Product.TIME_MODE_GUEST_SUGGESTED:
             return True
+        if self.time_mode in (
+            Product.TIME_MODE_NONE,
+            Product.TIME_MODE_NO_BOOKING
+        ):
+            return False
 
         # Time controlled products are only bookable if there's a valid
         # bookable time in the future, and that time isn't fully booked
@@ -2136,7 +2377,10 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def is_resource_controlled(self):
-        return self.time_mode == Product.TIME_MODE_RESOURCE_CONTROLLED
+        return self.time_mode in [
+            Product.TIME_MODE_RESOURCE_CONTROLLED,
+            Product.TIME_MODE_RESOURCE_CONTROLLED_AUTOASSIGN
+        ]
 
     @property
     def is_guest_time_suggested(self):
@@ -2145,6 +2389,17 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     @property
     def is_time_controlled(self):
         return self.time_mode != Product.TIME_MODE_NONE
+
+    @property
+    def are_resources_autoassigned(self):
+        return self.time_mode == \
+               Product.TIME_MODE_RESOURCE_CONTROLLED_AUTOASSIGN
+
+    def has_time_management(self):
+        return self.time_mode not in (
+            Product.TIME_MODE_NONE,
+            Product.TIME_MODE_GUEST_SUGGESTED
+        )
 
     @property
     def can_join_waitinglist(self):
@@ -2213,6 +2468,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     def uses_time_management(self):
         return self.time_mode is not None and self.time_mode in (
             Product.TIME_MODE_RESOURCE_CONTROLLED,
+            Product.TIME_MODE_RESOURCE_CONTROLLED_AUTOASSIGN,
             Product.TIME_MODE_SPECIFIC,
         )
 
@@ -2238,9 +2494,11 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             hours = math.floor(mins / 60)
             mins = mins % 60
             if(hours == 1):
-                return _(u"1 time og %d minutter") % (mins)
+                return _(u"1 time og %(minutes)d minutter") % {'minutes': mins}
             else:
-                return _(u"%d timer og %d minutter") % (hours, mins)
+                return _(u"%(hours)d timer og %(minutes)d minutter") % {
+                    'hours': hours, 'minutes': mins
+                }
         else:
             return ""
 
@@ -2263,7 +2521,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         else:
             return True
 
-    def booked_eventtimes(self, dt_from=None, dt_to=None):
+    def occupied_eventtimes(self, dt_from=None, dt_to=None):
         qs = self.eventtime_set.filter(
             visit__isnull=False,
             start__isnull=False,
@@ -2277,6 +2535,11 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             qs = qs.filter(start__lt=dt_to)
 
         return qs
+
+    def booked_eventtimes(self, dt_from=None, dt_to=None):
+        return self.occupied_eventtimes(dt_from, dt_to).filter(
+            visit__bookings__isnull=False
+        ).distinct()
 
     @classmethod
     # Migrate from old system where guest-suggest-time products was determined
@@ -2464,6 +2727,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     WORKFLOW_STATUS_CANCELLED = 7
     WORKFLOW_STATUS_NOSHOW = 8
     WORKFLOW_STATUS_PLANNED_NO_BOOKING = 9
+    WORKFLOW_STATUS_AUTOASSIGN_FAILED = 10
 
     BEING_PLANNED_STATUS_TEXT = u'Under planlægning'
     PLANNED_STATUS_TEXT = u'Planlagt (ressourcer tildelt)'
@@ -2480,11 +2744,13 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         WORKFLOW_STATUS_CANCELLED: 'success',
         WORKFLOW_STATUS_NOSHOW: 'success',
         WORKFLOW_STATUS_PLANNED_NO_BOOKING: 'success',
+        WORKFLOW_STATUS_AUTOASSIGN_FAILED: 'danger',
     }
 
     BOOKABLE_STATES = set([
         WORKFLOW_STATUS_BEING_PLANNED,
         WORKFLOW_STATUS_PLANNED,
+        WORKFLOW_STATUS_AUTOASSIGN_FAILED
     ])
 
     workflow_status_choices = (
@@ -2498,6 +2764,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         (WORKFLOW_STATUS_EVALUATED, _(u'Evalueret')),
         (WORKFLOW_STATUS_CANCELLED, _(u'Aflyst')),
         (WORKFLOW_STATUS_NOSHOW, _(u'Udeblevet')),
+        (WORKFLOW_STATUS_AUTOASSIGN_FAILED, _(u'Automatisk tildeling fejlet')),
     )
 
     workflow_status = models.IntegerField(
@@ -2586,7 +2853,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             WORKFLOW_STATUS_NOSHOW,
         ],
         WORKFLOW_STATUS_EXECUTED: [
-            WORKFLOW_STATUS_EVALUATED,
             WORKFLOW_STATUS_NOSHOW
         ],
         WORKFLOW_STATUS_EVALUATED: [
@@ -2598,6 +2864,11 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         WORKFLOW_STATUS_NOSHOW: [
             WORKFLOW_STATUS_BEING_PLANNED,
         ],
+        WORKFLOW_STATUS_AUTOASSIGN_FAILED: [
+            WORKFLOW_STATUS_BEING_PLANNED,
+            WORKFLOW_STATUS_CANCELLED,
+            WORKFLOW_STATUS_PLANNED
+        ]
     }
 
     # 15556: For these statuses, when the visit's starttime is passed,
@@ -2607,14 +2878,15 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         WORKFLOW_STATUS_PLANNED,
         WORKFLOW_STATUS_PLANNED_NO_BOOKING,
         WORKFLOW_STATUS_CONFIRMED,
-        WORKFLOW_STATUS_REMINDED
+        WORKFLOW_STATUS_REMINDED,
+        WORKFLOW_STATUS_AUTOASSIGN_FAILED
     ]
 
     def can_assign_resources(self):
         being_planned = Visit.WORKFLOW_STATUS_BEING_PLANNED
         return self.workflow_status == being_planned
 
-    def planned_status_is_blocked(self):
+    def planned_status_is_blocked(self, skip_planned_check=False):
 
         if self.is_multiproductvisit:
             multiproductvisit = self.multiproductvisit
@@ -2622,23 +2894,28 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 Q(workflow_status=Visit.WORKFLOW_STATUS_PLANNED) |
                 Q(workflow_status=Visit.WORKFLOW_STATUS_PLANNED_NO_BOOKING)
             ).count()
-            if subs_planned >= multiproductvisit.required_visits:
-                return False
+            if subs_planned < multiproductvisit.required_visits:
+                return True
 
         # We have to have a chosen starttime before we are planned
         if not hasattr(self, 'eventtime') or not self.eventtime.start:
             return True
 
         # It's not blocked if we can't choose it
-        ws_planned = Visit.WORKFLOW_STATUS_PLANNED
-        if ws_planned not in (x[0] for x in self.possible_status_choices()):
+        if not skip_planned_check and \
+                Visit.WORKFLOW_STATUS_PLANNED not in (
+                    x[0] for x in self.possible_status_choices()
+                ):
             return False
 
-        if self.product.time_mode == Product.TIME_MODE_RESOURCE_CONTROLLED:
-            for x in self.product.resourcerequirement_set.all():
-                if not x.is_fullfilled_for(self):
-                    return True
-        else:
+        for product in self.products:
+            if product.is_resource_controlled:
+                for x in product.resourcerequirement_set.all():
+                    if not x.is_fullfilled_for(self):
+                        return True
+
+        if not self.is_multiproductvisit and \
+                not self.product.is_resource_controlled:
             # Correct number of hosts/teachers must be assigned
             if self.needed_hosts > 0 or self.needed_teachers > 0:
                 return True
@@ -2666,10 +2943,14 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
         return result
 
-    def workflow_status_display(self):
-        for value, label in self.workflow_status_choices:
-            if value == self.workflow_status:
+    @classmethod
+    def workflow_status_name(cls, workflow_status):
+        for value, label in cls.workflow_status_choices:
+            if value == workflow_status:
                 return label
+
+    def workflow_status_display(self):
+        return Visit.workflow_status_name(self.workflow_status)
 
     def get_subjects(self):
         if hasattr(self, 'teacherbooking'):
@@ -2691,8 +2972,10 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 last_workflow_status != self.workflow_status:
             self.last_workflow_update = timezone.now()
             if self.workflow_status == self.WORKFLOW_STATUS_EXECUTED:
-                if self.evaluation is not None:
+                try:
                     self.evaluation.send_first_notification()
+                except AttributeError:
+                    pass
 
     @property
     # QuerySet that finds EventTimes that will be affected by resource changes
@@ -2714,11 +2997,27 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         for x in self.affected_eventtimes:
             x.update_availability()
 
-    def resource_accepts(self):
-        if self.workflow_status == self.WORKFLOW_STATUS_BEING_PLANNED and \
-                not self.planned_status_is_blocked():
+    def resources_updated(self):
+        if self.workflow_status in [
+            self.WORKFLOW_STATUS_BEING_PLANNED,
+            self.WORKFLOW_STATUS_AUTOASSIGN_FAILED
+        ] and not self.planned_status_is_blocked(True):
+
             self.workflow_status = self.WORKFLOW_STATUS_PLANNED
             self.save()
+
+            # Send out notification that the visit is now planned.
+            self.autosend(EmailTemplateType.notify_all__booking_complete)
+
+        elif self.workflow_status in [
+                    self.WORKFLOW_STATUS_PLANNED,
+                    self.WORKFLOW_STATUS_PLANNED_NO_BOOKING
+                ] and self.planned_status_is_blocked(True):
+            self.workflow_status = self.WORKFLOW_STATUS_BEING_PLANNED
+            self.save()
+
+    def resource_accepts(self):
+        self.resources_updated()
 
     def resource_declines(self):
         if self.workflow_status == self.WORKFLOW_STATUS_BEING_PLANNED:
@@ -2726,14 +3025,21 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             self.save()
 
     def on_starttime(self):
-        pass
+        if self.eventtime is not None:
+            if self.eventtime.start is not None and self.eventtime.end is None:
+                self.on_expire()
 
     def on_endtime(self):
+        self.on_expire()
+
+    def on_expire(self):
         if self.workflow_status in [
+            self.WORKFLOW_STATUS_BEING_PLANNED,
             self.WORKFLOW_STATUS_PLANNED,
             self.WORKFLOW_STATUS_PLANNED_NO_BOOKING,
             self.WORKFLOW_STATUS_CONFIRMED,
-            self.WORKFLOW_STATUS_REMINDED
+            self.WORKFLOW_STATUS_REMINDED,
+            self.WORKFLOW_STATUS_AUTOASSIGN_FAILED
         ]:
             self.workflow_status = self.WORKFLOW_STATUS_EXECUTED
             self.save()
@@ -2784,10 +3090,14 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     @property
     def date_display_context(self):
         if hasattr(self, 'eventtime') and self.eventtime.start:
-            return _("d. %s kl. %s") % (
-                formats.date_format(self.eventtime.naive_start, "DATE_FORMAT"),
-                formats.date_format(self.eventtime.naive_start, "TIME_FORMAT")
-            )
+            return _("d. %(date)s kl. %(time)s") % {
+                'date': formats.date_format(
+                    self.eventtime.naive_start, "DATE_FORMAT"
+                ),
+                'time': formats.date_format(
+                    self.eventtime.naive_start, "TIME_FORMAT"
+                )
+            }
         else:
             return _(u'på ikke-fastlagt tidspunkt')
 
@@ -2816,71 +3126,134 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             return "expired"
         return ""
 
+    def resources_assigned(self, requirement):
+        if self.is_multiproductvisit:
+            return self.multiproductvisit.resources_assigned(requirement)
+        return self.resources.filter(
+            visitresource__resource_requirement=requirement
+        )
+
+    def resources_required(self, resource_type):
+        missing = 0
+        for requirement in self.product.resourcerequirement_set.filter(
+            resource_pool__resource_type_id=resource_type
+        ):
+            resources = self.visitresource.filter(
+                resource_requirement=requirement
+            )
+            if resources.count() < requirement.required_amount:
+                missing += (requirement.required_amount - resources.count())
+        return missing
+
     @property
     def total_required_teachers(self):
         if self.override_needed_teachers is not None:
             return self.override_needed_teachers
 
-        return self.product.needed_teachers
+        return self.product.total_required_teachers
 
     @property
     def needed_teachers(self):
-        return self.total_required_teachers - self.teachers.count()
+        if self.is_multiproductvisit:
+            return self.multiproductvisit.needed_teachers
+        elif self.product.is_resource_controlled:
+            return self.resources_required(ResourceType.RESOURCE_TYPE_TEACHER)
+        else:
+            return self.total_required_teachers - \
+                   self.assigned_teachers.count()
 
     @property
     def needs_teachers(self):
+        return self.needed_teachers > 0
+
+    @property
+    def assigned_teachers(self):
+        if self.is_multiproductvisit:
+            return self.multiproductvisit.assigned_teachers
         if self.product.is_resource_controlled:
-            teacher_type = ResourceType.RESOURCE_TYPE_TEACHER
-            teacher_requirements = self.product.resourcerequirement_set.filter(
-                resource_pool__resource_type_id=teacher_type
+            return User.objects.filter(
+                teacherresource__visitresource__visit=self
             )
-            for requirement in teacher_requirements:
-                teacher_resources = self.visitresource.filter(
-                    resource_requirement=requirement
-                )
-                if teacher_resources.count() < requirement.required_amount:
-                    return True
-            return False
         else:
-            return self.needed_teachers > 0
+            return self.teachers.all()
 
     @property
     def total_required_hosts(self):
         if self.override_needed_hosts is not None:
             return self.override_needed_hosts
 
-        return self.product.needed_hosts
+        return self.product.total_required_hosts
 
     @property
     def needed_hosts(self):
-        return self.total_required_hosts - self.hosts.count()
+        if self.is_multiproductvisit:
+            return self.multiproductvisit.needed_hosts
+        elif self.product.is_resource_controlled:
+            return self.resources_required(ResourceType.RESOURCE_TYPE_HOST)
+        else:
+            return self.total_required_hosts - self.assigned_hosts.count()
 
     @property
     def needs_hosts(self):
+        return self.needed_hosts > 0
+
+    @property
+    def assigned_hosts(self):
         if self.is_multiproductvisit:
-            return self.multiproductvisit.needs_hosts
+            return self.multiproductvisit.assigned_hosts
         if self.product.is_resource_controlled:
-            host_requirements = self.product.resourcerequirement_set.filter(
-                resource_pool__resource_type_id=ResourceType.RESOURCE_TYPE_HOST
+            return User.objects.filter(
+                hostresource__visitresource__visit=self
             )
-            for requirement in host_requirements:
-                host_resources = self.visitresource.filter(
-                    resource_requirement=requirement
-                )
-                if host_resources.count() < requirement.required_amount:
-                    return True
-            return False
         else:
-            return self.needed_hosts > 0
+            return self.hosts.all()
+
+    @property
+    def total_required_rooms(self):
+        if self.override_needed_hosts is not None:
+            return self.override_needed_hosts
+        return self.product.total_required_rooms
+
+    @property
+    def needed_rooms(self):
+        if self.is_multiproductvisit:
+            return self.multiproductvisit.needed_rooms
+        elif self.product.is_resource_controlled:
+            return self.resources_required(ResourceType.RESOURCE_TYPE_ROOM)
+        else:
+            return 1 if self.room_status == self.STATUS_NOT_ASSIGNED else 0
 
     @property
     def needs_room(self):
-        return self.room_status == self.STATUS_NOT_ASSIGNED
+        return self.needed_rooms > 0
+
+    @property
+    def needed_items(self):
+        if self.is_multiproductvisit:
+            return self.multiproductvisit.needed_items
+        if self.product.is_resource_controlled:
+            return self.resources_required(ResourceType.RESOURCE_TYPE_ITEM)
+        return 0
+
+    @property
+    def needed_vehicles(self):
+        if self.is_multiproductvisit:
+            return self.multiproductvisit.needed_vehicles
+        if self.product.is_resource_controlled:
+            return self.resources_required(ResourceType.RESOURCE_TYPE_VEHICLE)
+        return 0
 
     @property
     def is_booked(self):
         """Has this Visit instance been booked yet?"""
         return len(self.bookings.all()) > 0
+
+    @property
+    def only_one_guest_per_visit(self):
+        for product in self.products:
+            if product.only_one_guest_per_visit:
+                return True
+        return False
 
     @property
     def is_bookable(self):
@@ -2890,6 +3263,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         if self.expired:
             return False
         if self.available_seats == 0:
+            return False
+        if self.bookings.count() > 0 and self.only_one_guest_per_visit:
             return False
         return True
 
@@ -2930,6 +3305,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             return False
         if self.waiting_list_closed:
             return False
+        if self.bookings.count() > 0 and self.only_one_guest_per_visit:
+            return False
         return True
 
     def get_bookings(self, include_waitinglist=False, include_regular=True):
@@ -2948,6 +3325,10 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def set_needs_attention(self, since=None):
         if since is None:
             since = timezone.now()
+
+        # Also mark parent as needing attention
+        if self.is_multi_sub:
+            self.multi_master.set_needs_attention(since=since)
 
         if not (
             self.needs_attention_since and
@@ -2983,8 +3364,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     @property
     def available_seats(self):
         limit = self.product.maximum_number_of_visitors
-        if limit is not None:
-            return max(limit - self.nr_attendees, 0)
+        if limit is None:
+            return sys.maxint
+        return max(limit - self.nr_attendees, 0)
 
     def get_workflow_status_class(self):
         return self.status_to_class_map.get(self.workflow_status, 'default')
@@ -3020,11 +3402,11 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         if self.is_multiproductvisit:
             return self.multiproductvisit.__unicode__()
         if hasattr(self, 'eventtime'):
-            return _(u'Besøg %s - %s - %s') % (
-                self.pk,
-                unicode(self.real.display_title),
-                unicode(self.eventtime.interval_display)
-            )
+            return _(u'Besøg %(id)s - %(title)s - %(time)s') % {
+                'id': self.pk,
+                'title': unicode(self.real.display_title),
+                'time': unicode(self.eventtime.interval_display)
+            }
         else:
             return unicode(_(u'Besøg %s - uden tidspunkt') % self.pk)
 
@@ -3071,14 +3453,23 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     @classmethod
     def being_planned_queryset(cls, **kwargs):
         return cls.objects.filter(
-            workflow_status=cls.WORKFLOW_STATUS_BEING_PLANNED,
+            workflow_status__in=[
+                cls.WORKFLOW_STATUS_BEING_PLANNED,
+                cls.WORKFLOW_STATUS_AUTOASSIGN_FAILED,
+                cls.WORKFLOW_STATUS_REJECTED
+            ],
             **kwargs
         )
 
     @classmethod
     def planned_queryset(cls, **kwargs):
-        return cls.objects.exclude(
-            workflow_status=cls.WORKFLOW_STATUS_BEING_PLANNED,
+        return cls.objects.filter(
+            workflow_status__in=[
+                cls.WORKFLOW_STATUS_PLANNED,
+                cls.WORKFLOW_STATUS_PLANNED_NO_BOOKING,
+                cls.WORKFLOW_STATUS_CONFIRMED,
+                cls.WORKFLOW_STATUS_REMINDED
+            ],
         ).filter(**kwargs)
 
     @staticmethod
@@ -3135,6 +3526,15 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 if item in recipients:
                     recipients.remove(item)
         return recipients
+
+    def get_reply_recipients(self, template_type):
+        product = self.product
+        if self.is_multiproductvisit and self.multiproductvisit.primary_visit:
+            product = self.multiproductvisit.primary_visit.product
+        if product:
+            return product.get_reply_recipients(template_type)
+        else:
+            return []
 
     def create_inheriting_autosends(self):
         for template_type in EmailTemplateType.objects.filter(
@@ -3221,12 +3621,16 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             if not only_these_recipients:
                 recipients.update(self.get_recipients(template_type))
 
+            # People who will receive any replies to the mail
+            reply_recipients = self.get_reply_recipients(template_type)
+
             KUEmailMessage.send_email(
                 template_type,
                 {'visit': self, 'besoeg': self, 'product': product},
                 list(recipients),
                 self,
-                unit
+                unit,
+                original_from_email=reply_recipients
             )
 
             if not only_these_recipients and template_type.send_to_booker:
@@ -3242,7 +3646,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                         },
                         booking.booker,
                         self,
-                        unit
+                        unit,
+                        original_from_email=reply_recipients
                     )
 
     def get_autosend_display(self):
@@ -3455,16 +3860,36 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         return False
 
     def requirement_details(self):
-        return [
-            {
-                'name': requirement.resource_pool.name,
-                'required': requirement.required_amount,
-                'acquired': self.resources.filter(
-                    visitresource__resource_requirement=requirement
-                ).count()
-            }
-            for requirement in self.product.resourcerequirement_set.all()
-        ]
+        details = []
+        for type in ResourceType.objects.all():
+            requirements = self.product.resourcerequirement_set.filter(
+                resource_pool__resource_type=type
+            )
+            if requirements.count() > 0:
+                required = 0
+                acquired = 0
+                for requirement in requirements:
+                    required += requirement.required_amount
+                    acquired += self.resources.filter(
+                        visitresource__resource_requirement=requirement
+                    ).count()
+                details.append({
+                    'required': required,
+                    'acquired': acquired,
+                    'type': type,
+                    'is_teacher': (
+                        type.id == ResourceType.RESOURCE_TYPE_TEACHER
+                    ),
+                    'is_host': (type.id == ResourceType.RESOURCE_TYPE_HOST)
+                })
+        for requirement in self.product.resourcerequirement_set.filter(
+            resource_pool__isnull=True
+        ):
+            details.append({
+                'unknown': True,
+                'id': requirement.id
+            })
+        return details
 
     @property
     def is_multiproductvisit(self):
@@ -3493,24 +3918,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             return '%s - %s' % (res, self.product.title)
         else:
             return res
-
-    @property
-    def assigned_teachers(self):
-        if self.product.is_resource_controlled:
-            return User.objects.filter(
-                teacherresource__visitresource__visit=self
-            )
-        else:
-            return self.teachers.all()
-
-    @property
-    def assigned_hosts(self):
-        if self.product.is_resource_controlled:
-            return User.objects.filter(
-                hostresource__visitresource__visit=self
-            )
-        else:
-            return self.hosts.all()
 
     def context_for_user(self, user, request_usertype=None):
         profile = user.userprofile
@@ -3559,6 +3966,58 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         context['can_notify'] = profile.can_notify(self)
 
         return context
+
+    def resources_available_for_autoassign(self, resource_pool):
+        eligible = resource_pool.resources.exclude(visitresource__visit=self)
+
+        return [
+            resource
+            for resource in eligible
+            if resource.available_for_visit(self)
+        ]
+
+    def autoassign_resources(self):
+        if self.is_multiproductvisit:
+            self.multiproductvisit.autoassign_resources()
+        if self.product.time_mode == \
+                Product.TIME_MODE_RESOURCE_CONTROLLED_AUTOASSIGN:
+            for requirement in self.product.resourcerequirement_set.all():
+                if requirement.being_deleted:
+                    # Deletion of VisitResources can start this process, but
+                    # we must ignore requirements that are scheduled for
+                    # deletion.
+                    continue
+                assigned = self.resources.filter(
+                    visitresource__resource_requirement=requirement
+                )
+                extra_needed = requirement.required_amount - assigned.count()
+                if extra_needed > 0:
+                    eligible = list(
+                        requirement.resource_pool.resources.exclude(
+                            id__in=[resource.id for resource in assigned]
+                        )
+                    )
+                    random.shuffle(eligible)
+                    found = []
+                    for resource in eligible:
+                        if resource.available_for_visit(self):
+                            found.append(resource)
+                            if len(found) >= extra_needed:
+                                break
+                    if len(found) < extra_needed:
+                        # requirement cannot be fulfilled;
+                        # not enough available resources
+                        self.workflow_status = \
+                            self.WORKFLOW_STATUS_AUTOASSIGN_FAILED
+                        self.save()
+                    for resource in found:
+                        VisitResource(
+                            visit=self,
+                            resource=resource,
+                            resource_requirement=requirement
+                        ).save()
+            self.resources_updated()
+
 
 Visit.add_override_property('duration')
 Visit.add_override_property('locality')
@@ -3629,17 +4088,20 @@ class MultiProductVisit(Visit):
     def planned_status_is_blocked(self):
         return True
 
+    def resources_assigned(self, requirement):
+        resource_list = []
+        for visit in self.subvisits_unordered:
+            resource_list += list(visit.resources_assigned(requirement))
+        # return resource_list
+        # Return as a Queryset, because someone may need the db methods
+        return Resource.objects.filter(
+            id__in=[res.id for res in resource_list]
+        )
+
     @property
     def total_required_teachers(self):
         return sum(
             subvisit.total_required_teachers
-            for subvisit in self.subvisits_unordered
-        )
-
-    @property
-    def total_required_hosts(self):
-        return sum(
-            subvisit.total_required_hosts
             for subvisit in self.subvisits_unordered
         )
 
@@ -3653,12 +4115,10 @@ class MultiProductVisit(Visit):
         )
 
     @property
-    def assigned_hosts(self):
-        return User.objects.filter(
-            id__in=flatten([
-                [user.id for user in subvisit.assigned_hosts]
-                for subvisit in self.subvisits_unordered
-            ])
+    def needed_teachers(self):
+        return sum(
+            subvisit.needed_teachers
+            for subvisit in self.subvisits_unordered
         )
 
     @property
@@ -3669,6 +4129,29 @@ class MultiProductVisit(Visit):
         return False
 
     @property
+    def total_required_hosts(self):
+        return sum(
+            subvisit.total_required_hosts
+            for subvisit in self.subvisits_unordered
+        )
+
+    @property
+    def assigned_hosts(self):
+        return User.objects.filter(
+            id__in=flatten([
+                [user.id for user in subvisit.assigned_hosts]
+                for subvisit in self.subvisits_unordered
+            ])
+        )
+
+    @property
+    def needed_hosts(self):
+        return sum(
+            subvisit.needed_hosts
+            for subvisit in self.subvisits_unordered
+        )
+
+    @property
     def needs_hosts(self):
         for subvisit in self.subvisits_unordered:
             if subvisit.needs_hosts:
@@ -3676,11 +4159,39 @@ class MultiProductVisit(Visit):
         return False
 
     @property
+    def total_required_rooms(self):
+        return sum(
+            subvisit.total_required_rooms
+            for subvisit in self.subvisits_unordered
+        )
+
+    @property
+    def needed_rooms(self):
+        return sum(
+            subvisit.needed_rooms
+            for subvisit in self.subvisits_unordered
+        )
+
+    @property
     def needs_room(self):
         for subvisit in self.subvisits_unordered:
             if subvisit.needs_room:
                 return True
         return False
+
+    @property
+    def needed_items(self):
+        return sum(
+            subvisit.needed_items
+            for subvisit in self.subvisits_unordered
+        )
+
+    @property
+    def needed_vehicles(self):
+        return sum(
+            subvisit.needed_vehicles
+            for subvisit in self.subvisits_unordered
+        )
 
     @property
     def available_seats(self):
@@ -3731,7 +4242,8 @@ class MultiProductVisit(Visit):
                 Visit.WORKFLOW_STATUS_EXECUTED,
                 Visit.WORKFLOW_STATUS_PLANNED,
                 Visit.WORKFLOW_STATUS_PLANNED_NO_BOOKING,
-                Visit.WORKFLOW_STATUS_REMINDED
+                Visit.WORKFLOW_STATUS_REMINDED,
+                Visit.WORKFLOW_STATUS_AUTOASSIGN_FAILED
             ])
             for visit in active:
                 if visit.organizationalunit is not None:
@@ -3786,6 +4298,9 @@ class MultiProductVisit(Visit):
             if not only_these_recipients:
                 recipients.update(self.get_recipients(template_type))
 
+            # People who will receive any replies to the mail
+            reply_recipients = self.get_reply_recipients(template_type)
+
             params = {'visit': self, 'products': self.products}
 
             KUEmailMessage.send_email(
@@ -3793,7 +4308,8 @@ class MultiProductVisit(Visit):
                 params,
                 list(recipients),
                 self,
-                unit
+                unit,
+                original_from_email=reply_recipients
             )
 
             if not only_these_recipients and template_type.send_to_booker:
@@ -3806,16 +4322,22 @@ class MultiProductVisit(Visit):
                         }),
                         booking.booker,
                         self,
-                        unit
+                        unit,
+                        original_from_email=reply_recipients
                     )
+
+    def autoassign_resources(self):
+        for visit in self.subvisits_unordered:
+            visit.autoassign_resources()
 
     def __unicode__(self):
         if hasattr(self, 'eventtime'):
-            return _(u'Besøg %s - Prioriteret liste af %d underbesøg - %s') % (
-                self.pk,
-                self.subvisits_unordered.count(),
-                unicode(self.eventtime.interval_display)
-            )
+            return _(u'Besøg %(id)s - Prioriteret liste af '
+                     u'%(count)d underbesøg - %(time)s') % {
+                'id': self.pk,
+                'count': self.subvisits_unordered.count(),
+                'time': unicode(self.eventtime.interval_display)
+            }
         else:
             return unicode(_(u'Besøg %s - uden tidspunkt') % self.pk)
 
@@ -3871,6 +4393,7 @@ class MultiProductVisitTemp(models.Model):
         mpv = MultiProductVisit(
             required_visits=self.required_visits
         )
+        mpv.needs_attention_since = timezone.now()
         mpv.save()
         mpv.create_eventtime(self.date)
         mpv.ensure_statistics()
@@ -3889,6 +4412,7 @@ class MultiProductVisitTemp(models.Model):
             )
             if index == 0:
                 mpv.responsible = product.tilbudsansvarlig
+        mpv.autoassign_resources()
         mpv.save()
         return mpv
 
@@ -3972,6 +4496,13 @@ class Autosend(models.Model):
             self.get_name(),
             "enabled" if self.enabled else "disabled"
         )
+
+    @property
+    def as_initial(self):
+        result = {}
+        for x in ('template_type', 'enabled', 'days'):
+            result[x] = getattr(self, x)
+        return result
 
     @property
     def days_relevant(self):
@@ -4432,6 +4963,28 @@ class Guest(models.Model):
         verbose_name=u'Niveau'
     )
 
+    grundskole_level_conversion = {
+        f0: GrundskoleLevel.f0,
+        f1: GrundskoleLevel.f1,
+        f2: GrundskoleLevel.f2,
+        f3: GrundskoleLevel.f3,
+        f4: GrundskoleLevel.f4,
+        f5: GrundskoleLevel.f5,
+        f6: GrundskoleLevel.f6,
+        f7: GrundskoleLevel.f7,
+        f8: GrundskoleLevel.f8,
+        f9: GrundskoleLevel.f9,
+        f10: GrundskoleLevel.f10
+    }
+
+    @staticmethod
+    def grundskole_level_map():
+        return {
+            thisref: GrundskoleLevel.objects.get(level=grundskoleref).id
+            for thisref, grundskoleref
+            in Guest.grundskole_level_conversion.iteritems()
+        }
+
     school = models.ForeignKey(
         School,
         null=True,
@@ -4550,6 +5103,9 @@ class Booking(models.Model):
             recipients.append(self.booker)
         return recipients
 
+    def get_reply_recipients(self, template_type):
+        return self.visit.get_reply_recipients(template_type)
+
     def autosend(self, template_type, recipients=None,
                  only_these_recipients=False):
 
@@ -4575,7 +5131,8 @@ class Booking(models.Model):
                 },
                 list(recipients),
                 self.visit,
-                organizationalunit=unit
+                organizationalunit=unit,
+                original_from_email=self.get_reply_recipients(template_type)
             )
             return True
         return False
@@ -4744,7 +5301,9 @@ class KUEmailMessage(models.Model):
     )
     subject = models.TextField(blank=False, null=False)
     body = models.TextField(blank=False, null=False)
+    htmlbody = models.TextField(blank=True, null=True)
     from_email = models.TextField(blank=False, null=False)
+    original_from_email = models.TextField(blank=True, null=True)
     recipients = models.TextField(
         blank=False,
         null=False
@@ -4772,55 +5331,10 @@ class KUEmailMessage(models.Model):
     )
 
     @staticmethod
-    def save_email(email_message, instance,
-                   reply_nonce=None, htmlbody=None, template_type=None):
-        """
-        :param email_message: An instance of
-        django.core.mail.message.EmailMessage
-        :param instance: The object that the message concerns i.e. Booking,
-        Product etc.
-        :return: None
-        """
-        ctype = ContentType.objects.get_for_model(instance)
-        template_key = None if template_type is None else template_type.key
-        ku_email_message = KUEmailMessage(
-            subject=email_message.subject,
-            body=email_message.body,
-            from_email=email_message.from_email,
-            recipients=', '.join(email_message.recipients()),
-            content_type=ctype,
-            object_id=instance.id,
-            reply_nonce=reply_nonce,
-            template_type=template_type,
-            template_key=template_key
-        )
-        ku_email_message.save()
-
-        return ku_email_message
-
-    @staticmethod
-    def send_email(template, context, recipients, instance, unit=None,
-                   **kwargs):
-        if isinstance(template, EmailTemplateType):
-            key = template.key
-            template = EmailTemplate.get_template(template, unit)
-            if template is None:
-                raise Exception(
-                    u"Template with key %s does not exist!" % key
-                )
-        if not isinstance(template, EmailTemplate):
-            raise Exception(
-                u"Invalid template object '%s'" % str(template)
-            )
-
-        # Alias any visit to "besoeg" for easier use by danes
-        if 'besoeg' not in context and 'visit' in context:
-            context['besoeg'] = context['visit']
-
-        emails = {}
-        if type(recipients) is not list:
+    def extract_addresses(recipients):
+        if type(recipients) != list:
             recipients = [recipients]
-
+        emails = {}
         for recipient in recipients:
             name = None
             address = None
@@ -4845,10 +5359,11 @@ class KUEmailMessage(models.Model):
                     address = recipient.get_email()
                 except:
                     pass
-            if address is not None and address != '' and \
-                    (address not in emails or
-                        (user and not emails[address]['user'])
-                     ):
+            if address is not None and address != '' and (
+                    address not in emails or (
+                        user and not emails[address]['user']
+                    )
+            ):
 
                 email = {
                     'address': address,
@@ -4863,13 +5378,80 @@ class KUEmailMessage(models.Model):
                     email['full'] = address
 
                 email['get_full_name'] = email.get('name', email['full'])
-
                 emails[address] = email
+        return emails.values()
 
-        for email in emails.values():
+    @staticmethod
+    def save_email(email_message, instance,
+                   reply_nonce=None, htmlbody=None,
+                   template_type=None, original_from_email=None):
+        """
+        :param email_message: An instance of
+        django.core.mail.message.EmailMessage
+        :param instance: The object that the message concerns i.e. Booking,
+        Product etc.
+        :return: None
+        """
+        ctype = ContentType.objects.get_for_model(instance)
+        template_key = None if template_type is None else template_type.key
+        htmlbody = None
+        for (content, mimetype) in email_message.alternatives:
+            if mimetype == 'text/html':
+                htmlbody = content
+                break
+        ku_email_message = KUEmailMessage(
+            subject=email_message.subject,
+            body=email_message.body,
+            htmlbody=htmlbody,
+            from_email=email_message.from_email,
+            original_from_email=", ".join([
+                address['full']
+                for address in KUEmailMessage.extract_addresses(
+                    original_from_email
+                )
+            ]),
+            recipients=', '.join(email_message.recipients()),
+            content_type=ctype,
+            object_id=instance.id,
+            reply_nonce=reply_nonce,
+            template_type=template_type,
+            template_key=template_key
+        )
+        ku_email_message.save()
+
+        return ku_email_message
+
+    @staticmethod
+    def send_email(template, context, recipients, instance,
+                   organizationalunit=None, original_from_email=None,
+                   **kwargs):
+        if isinstance(template, EmailTemplateType):
+            key = template.key
+            template = EmailTemplate.get_template(
+                template, organizationalunit
+            )
+            if template is None:
+                raise Exception(
+                    u"Template with key %s does not exist!" % key
+                )
+        if not isinstance(template, EmailTemplate):
+            raise Exception(
+                u"Invalid template object '%s'" % str(template)
+            )
+
+        # Alias any visit to "besoeg" for easier use by danes
+        if 'besoeg' not in context and 'visit' in context:
+            context['besoeg'] = context['visit']
+
+        if type(recipients) is not list:
+            recipients = [recipients]
+
+        emails = KUEmailMessage.extract_addresses(recipients)
+
+        for email in emails:
             nonce = uuid.uuid4()
             ctx = {
-                'organizationalunit': unit,
+                'organizationalunit': organizationalunit,
                 'recipient': email,
                 'sender': settings.DEFAULT_FROM_EMAIL,
                 'reply_nonce': nonce
@@ -4900,8 +5482,9 @@ class KUEmailMessage(models.Model):
             message = EmailMultiAlternatives(
                 subject=subject,
                 body=textbody,
+                # from_email=from_email or settings.DEFAULT_FROM_EMAIL,
                 from_email=settings.DEFAULT_FROM_EMAIL,
-                to=[email['full']]
+                to=[email['full']],
             )
             if htmlbody is not None:
                 message.attach_alternative(htmlbody, 'text/html')
@@ -4909,23 +5492,29 @@ class KUEmailMessage(models.Model):
 
             msg_obj = KUEmailMessage.save_email(
                 message, instance, reply_nonce=nonce,
-                template_type=template.type
+                template_type=template.type,
+                original_from_email=original_from_email
             )
             KUEmailRecipient.register(msg_obj, email)
 
         # Log the sending
         if emails and instance:
+            logmessage = [
+                _(u"Template: %s") % template.type.name
+                if template.type else "None",
+                _(u"Modtagere: %s") % ", ".join(
+                    [x['full'] for x in emails]
+                )
+            ]
+            ctxmsg = context.get('log_message', None)
+            if ctxmsg:
+                logmessage.append(unicode(ctxmsg))
+
             log_action(
                 context.get("web_user", None),
                 instance,
                 LOGACTION_MAIL_SENT,
-                "\n".join([unicode(x) for x in [
-                    _(u"Template: ") + template.type.name,
-                    _(u"Modtagere: ") + ", ".join(
-                        [x['full'] for x in emails.values()]
-                    ),
-                    context.get('log_message', None)
-                ] if x])
+                u"\n".join(logmessage)
             )
 
     def get_reply_url(self, full=False):

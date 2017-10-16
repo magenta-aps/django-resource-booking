@@ -1,12 +1,9 @@
 {% extends 'index.html' %}
 {% load i18n %}
-{% load staticfiles %}
 {% load booking_tags %}
 
-{% block htmltitle %} - {% trans "ressourcer" %}{% endblock %}
 
-{% block head %}
-{% endblock %}
+{% block htmltitle %} - {% trans "ressourcer" %}{% endblock %}
 
 {% block content %}
 
@@ -23,16 +20,14 @@
 
     <p class="margin-top-10 double-columns">
         {% blocktrans %}
-            Ressourcer er enkelte objekter, personer eller lokaler som kan anvendes under et besøg, og som kun kan anvendes af ét besøg ad gangen.
+            Ressourcer er enkelte objekter, personer eller lokaler, som kan anvendes under et besøg, og som kun kan anvendes af ét besøg ad gangen.<br/>
             Under planlægningen af et besøg udvælges de specifikke ressourcer, med henblik på at reservere disse til besøget.
         {% endblocktrans %}
     </p>
 
     <div class="row">
         <div class="col-md-12">
-
-            <div class="table-responsive">
-            <table class="table table-striped table-hover">
+            <table id="ressource-table" class="table table-striped table-hover">
                 <thead>
                     <tr>
                         <th>{% trans 'Navn' %}</th>
@@ -42,6 +37,15 @@
                         <th>{% trans 'Handling' %}</th>
                     </tr>
                 </thead>
+                <tfoot>
+                  <tr>
+                    <th>{% trans 'Navn' %}</th>
+                    <th>{% trans 'Type' %}</th>
+                    <th>{% trans 'Enhed' %}</th>
+                    <th>{% trans 'Grupper' %}</th>
+                    <th>{% trans 'Handling' %}</th>
+                  </tr>
+                </tfoot>
                 <tbody>
                 {% for resource in resources %}
                     <tr>
@@ -84,11 +88,57 @@
                 {% endfor %}
                 </tbody>
             </table>
-        </div>
             <p>
                 (Undervisere og lokaler kan ikke slettes herfra)
             </p>
         </div>
     </div>
+{% endblock %}
+{% block extra_scripts %}
+<script src="https://cdn.datatables.net/1.10.15/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.15/js/dataTables.bootstrap.min.js"></script>
+<script>
+$(document).ready(function() {
+  // Datatable language switcher
+  function getLanguage() {
+    var langMap = {
+      en: 'English',
+      da: 'Danish'
+    };
+    var lang = $('html').attr('lang');
+    return '//cdn.datatables.net/plug-ins/1.10.13/i18n/' + langMap[lang] + '.json';
+  }
 
+  // DataTable
+  var table = $('#ressource-table').DataTable({
+    language: {
+      url: getLanguage()
+    },
+    "dom": '<"listing"l>tip',
+    ordering: true,
+    autoWidth: false,
+    responsive: true,
+    initComplete: function() {
+      // Apply the search
+      table.columns().every(function() {
+        var that = this;
+
+        $('input', this.footer()).on('keyup change', function() {
+          if (that.search() !== this.value) {
+            that
+              .search(this.value)
+              .draw();
+          }
+        });
+      });
+    }
+  });
+
+  // Setup - add a text input to each footer cell
+  $('#ressource-table tfoot th').each(function() {
+    var title = $(this).text().toLowerCase();
+    $(this).html('<input type="text" class="form-control input-sm ku-filters" placeholder="Søg i ' + title + '" />');
+  });
+});
+</script>
 {% endblock %}

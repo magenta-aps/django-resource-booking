@@ -1,8 +1,8 @@
 {% extends 'index.html' %}
 {% load i18n %}
-{% load staticfiles %}
+{% load booking_tags %}
 
-{% block htmltitle %} - {% trans 'emailskabeloner' %}{% endblock %}
+{% block htmltitle %} - {% trans 'e-mailskabeloner' %}{% endblock %}
 
 {% block content %}
 
@@ -10,7 +10,7 @@
 
     <div class="row form-group">
         <div class="col-sm-8">
-            <h1>{% trans "Emailskabeloner" %}</h1>
+            <h1>{% trans "E-mailskabeloner" %}</h1>
         </div>
         <div class="col-sm-4 text-right">
             <a href="{% url 'emailtemplate-create' %}" class="btn btn-primary">
@@ -20,17 +20,9 @@
         </div>
     </div>
 
-    <p class="double-columns">
+    <p>
         {% blocktrans %}
-        Når man ønsker at afsende en email fra systemet, (manuelt eller
-        automatisk), tager systemet udgangspunkt i den skabelon, som er
-        relevant i den enkelte situation og for den enhed, som står bag
-        besøget. Hvis der ikke allerede findes en skabelon for enheden,
-        anvender systemet i stedet en skabelon for en overordnet enhed
-        (f.eks. instituttets fakultet). Hvis der heller ikke findes en
-        skabelon dér, anvender systemet den generelle grundskabelon. Det
-        er også muligt selv at formulere indholdet i en email, hvis
-        man ønsker en anden tekst end den, der står i grundskabelonen.
+        E-mailskabeloner giver mulighed for at skabe eget indhold til de mails, som sendes ud. Dette fungerer ved, at din egen skabelon erstatter grundskabelonen. Systemet vil benytte den skabelon, som er tættest tilknyttet til tilbuddets enhed (dvs. først trækkes fra institut herefter fakultet).
         {% endblocktrans %}
     </p>
 

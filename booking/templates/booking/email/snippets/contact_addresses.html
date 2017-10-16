@@ -1,4 +1,5 @@
 {% if product.inquire_user %}
-Hvis du har spørgsmål {% if vedr %}vedrørende{% else %}til{% endif %} din tilmelding, kan du skrive til
-<a href="mailto:{{ product.inquire_user.email }}">{% if product.inquire_user.get_full_name %}{{ product.inquire_user.get_full_name }}{% else %}{{ product.inquire_user.username }}{% endif %}</a>.
+Hvis du har spørgsmål {% if vedr %}vedrørende{% else %}til{% endif %} din
+tilmelding, kan du svare på denne e-mail ved at besøge adressen
+<a href="{% full_url 'reply-to-email' reply_nonce %}">{% full_url 'reply-to-email' reply_nonce %}</a>.
 {% endif %}

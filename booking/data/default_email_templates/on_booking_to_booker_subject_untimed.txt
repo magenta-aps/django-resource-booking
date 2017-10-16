@@ -1,1 +1,0 @@
-Tilmelding til foKUs-tilbud {{ product.title }}

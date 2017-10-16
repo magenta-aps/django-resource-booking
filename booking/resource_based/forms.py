@@ -63,13 +63,12 @@ class ResourceTypeForm(forms.Form):
 
     def __init__(self, **kwargs):
         user = kwargs.pop("user")
-        kwargs['initial']['unit'] = user.userprofile.organizationalunit.pk
-
-        res = super(ResourceTypeForm, self).__init__(**kwargs)
-
+        try:
+            kwargs['initial']['unit'] = user.userprofile.organizationalunit.pk
+        except AttributeError:
+            pass
+        super(ResourceTypeForm, self).__init__(**kwargs)
         self['unit'].field.queryset = user.userprofile.get_unit_queryset()
-
-        return res
 
 
 class EditResourceForm(forms.ModelForm):
@@ -190,13 +189,12 @@ class ResourcePoolTypeForm(forms.Form):
 
     def __init__(self, **kwargs):
         user = kwargs.pop("user")
-        kwargs['initial']['unit'] = user.userprofile.organizationalunit.pk
-
-        res = super(ResourcePoolTypeForm, self).__init__(**kwargs)
-
+        try:
+            kwargs['initial']['unit'] = user.userprofile.organizationalunit.pk
+        except AttributeError:
+            pass
+        super(ResourcePoolTypeForm, self).__init__(**kwargs)
         self['unit'].field.queryset = user.userprofile.get_unit_queryset()
-
-        return res
 
 
 class EditResourcePoolForm(forms.ModelForm):
@@ -226,12 +224,14 @@ class EditResourcePoolForm(forms.ModelForm):
 
 
 class EditResourceRequirementForm(forms.ModelForm):
+
     class Meta:
         model = ResourceRequirement
         fields = ['resource_pool', 'required_amount']
         widgets = {
             'required_amount': NumberInput(attrs={
-                'min': 1
+                'min': 1,
+                'class': 'form-control input-sm'
             })
         }
 
@@ -240,7 +240,7 @@ class EditResourceRequirementForm(forms.ModelForm):
         if product is not None:
             self.product = product
             unit = product.organizationalunit
-            self.fields['resource_pool'].choices = [
+            self.fields['resource_pool'].choices = [(None, "-----------")] + [
                 (pool.id, pool.name)
                 for pool in ResourcePool.objects.filter(
                     organizationalunit=unit
@@ -271,23 +271,36 @@ class EditVisitResourceForm(forms.Form):
         self.visit = visit
         self.resource_requirement = resource_requirement
         resourcefield = self.fields['resources']
-        resourcefield.label = resource_requirement.resource_pool.name
+
+        if resource_requirement.resource_pool:
+            resourcefield.label = \
+                resource_requirement.resource_pool.resource_type.plural or \
+                resource_requirement.resource_pool.resource_type.name
+            resourcefield.label_suffix = \
+                resource_requirement.resource_pool.name
+
+            resourcefield.choices = [
+                (resource.id, resource.get_name())
+                for resource
+                in resource_requirement.resource_pool.specific_resources
+            ]
+            resourcefield.disabled_values = [
+                resource.id
+                for resource
+                in resource_requirement.resource_pool.specific_resources
+                if not resource.available_for_visit(visit)
+            ]
+        else:
+            resourcefield.label = _(u"Ukendt ressourcebehov")
+            resourcefield.label_suffix = _(u"Tilbuddet har et uspecificeret "
+                                           u"ressourcebehov. Dette er et "
+                                           u"problem som skal rettes")
+
         resourcefield.help_text = __(
             u"%(count)d nødvendig",
             u"%(count)d nødvendige",
             'count'
         ) % {'count': resource_requirement.required_amount}
-        resourcefield.choices = [
-            (resource.id, resource.get_name())
-            for resource
-            in resource_requirement.resource_pool.specific_resources
-        ]
-        resourcefield.disabled_values = [
-            resource.id
-            for resource
-            in resource_requirement.resource_pool.specific_resources
-            if not resource.available_for_visit(visit)
-        ]
 
     def save(self):
         resources = set(

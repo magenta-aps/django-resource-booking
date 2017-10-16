@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 from django.db.models.expressions import OrderBy
 from django.db.models import Q
 from django.core.urlresolvers import reverse
@@ -20,6 +19,7 @@ from booking.booking_workflows.forms import ChangeVisitEvalForm
 from booking.booking_workflows.forms import VisitAddLogEntryForm
 from booking.booking_workflows.forms import VisitAddCommentForm
 from booking.booking_workflows.forms import ResetVisitChangesForm
+from booking.models import TeacherResource, HostResource
 from booking.models import Visit
 from booking.models import EmailTemplateType
 from booking.models import EventTime
@@ -88,9 +88,17 @@ class ChangeVisitStartTimeView(AutologgerMixin,
         return form
 
     def get_context_data(self, **kwargs):
+        if not self.object.has_specific_time:
+            time_mode = "full_days"
+        elif self.object.duration_matches_product:
+            time_mode = "use_duration"
+        else:
+            time_mode = "time_and_date"
+
         return super(ChangeVisitStartTimeView, self).get_context_data(
             product=self.object.product,
             use_product_duration=self.object.duration_matches_product,
+            time_mode_value=time_mode,
             **kwargs
         )
 
@@ -140,6 +148,7 @@ class ChangeVisitTeachersView(AutologgerMixin, UpdateWithCancelView):
 
     def get_context_data(self, **kwargs):
         context = {}
+        queryset = self.get_form().base_fields['teachers'].queryset
         context['comments'] = {
             user.id: [
                 {
@@ -151,13 +160,14 @@ class ChangeVisitTeachersView(AutologgerMixin, UpdateWithCancelView):
                 }
                 for comment in self.object.get_comments(user).all()
             ]
-            for user in self.get_form().base_fields['teachers'].queryset.all()
+            for user in queryset.all()
         }
         context['can_send_emails'] = self.object.autosend_enabled(
             EmailTemplateType.notify_teacher__associated
         )
         context['email_template_name'] = \
             EmailTemplateType.notify_teacher__associated.name
+        context['user_resources'] = TeacherResource.get_map(queryset)
         context.update(kwargs)
         return super(ChangeVisitTeachersView, self).\
             get_context_data(**context)
@@ -170,6 +180,8 @@ class ChangeVisitTeachersView(AutologgerMixin, UpdateWithCancelView):
         response = super(
             ChangeVisitTeachersView, self
         ).form_valid(form)
+
+        self.object.resources_updated()
 
         if form.cleaned_data.get('send_emails', False):
             new_teachers = self.object.teachers.all()
@@ -197,6 +209,7 @@ class ChangeVisitHostsView(AutologgerMixin, UpdateWithCancelView):
 
     def get_context_data(self, **kwargs):
         context = {}
+        queryset = self.get_form().base_fields['hosts'].queryset
         context['comments'] = {
             user.id: [
                 {
@@ -208,13 +221,14 @@ class ChangeVisitHostsView(AutologgerMixin, UpdateWithCancelView):
                 }
                 for comment in self.object.get_comments(user).all()
                 ]
-            for user in self.get_form().base_fields['hosts'].queryset.all()
+            for user in queryset.all()
             }
         context['can_send_emails'] = self.object.autosend_enabled(
             EmailTemplateType.notify_host__associated
         )
         context['email_template_name'] = \
             EmailTemplateType.notify_host__associated.name
+        context['user_resources'] = HostResource.get_map(queryset)
         context.update(kwargs)
         return super(ChangeVisitHostsView, self).\
             get_context_data(**context)
@@ -225,6 +239,8 @@ class ChangeVisitHostsView(AutologgerMixin, UpdateWithCancelView):
         old_hosts = set([x for x in old.hosts.all()])
 
         response = super(ChangeVisitHostsView, self).form_valid(form)
+
+        self.object.resources_updated()
 
         if form.cleaned_data.get('send_emails', False):
             new_hosts = self.object.hosts.all()
@@ -294,6 +310,7 @@ class ChangeVisitRoomsView(AutologgerMixin, UpdateWithCancelView):
 
         self.save_rooms()
         result = super(ChangeVisitRoomsView, self).form_valid(form)
+        self.object.resources_updated()
         return result
 
     def save_rooms(self):

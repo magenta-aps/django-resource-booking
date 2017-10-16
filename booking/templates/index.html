@@ -1,37 +1,86 @@
-{% load staticfiles %}
 {% load i18n %}
+{% load booking_tags %}
+{% load macros %}
+{% macro head_block %}
+    {% block head %}{% endblock %}
+{% endmacro %}
 <!DOCTYPE html>
 <html lang="da">
     <head>
-
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
-        <title>foKUs{% block htmltitle %} - {% trans 'søg i tilbud' %}{% endblock %}</title>
+        <title>FOKUS{% block htmltitle %} - {% trans 'søg i tilbud' %}{% endblock %}</title>
+        {% if not view.kwargs.embed %}
+            <!-- 3rd party stylesheets -->
+            <link href="{% static 'thirdparty/bootstrap/dist/css/bootstrap.min.css' %}" rel="stylesheet"/>
+            <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet"/>
+            <link href="https://cdn.datatables.net/1.10.15/css/dataTables.bootstrap.min.css" rel="stylesheet"/>
+            <link href="https://cdn.datatables.net/responsive/2.1.1/css/responsive.bootstrap.min.css" rel="stylesheet"/>
+            <!-- Our own stylesheet -->
+            <link href="{% static 'css/main.css' %}" rel="stylesheet"/>
+            <!-- Our own header content -->
+            {% use_macro head_block %}
+            <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+            <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+            <!--[if lt IE 9]>
+                <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+                <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+            <![endif]-->
+            <script type="text/javascript" src="/jsi18n"></script>
+            <link href="{% static 'img/favicon.ico' %}" rel="shortcut icon"/>
+        {% endif %}
+        <script type="text/javascript">
+          var _gaq = _gaq || [];
+          _gaq.push(['mainTracker._setAccount', 'UA-28098356-1']);
+          _gaq.push(['mainTracker._setDomainName','ku.dk']);
+          _gaq.push(['mainTracker._setAllowHash',false]);
+          _gaq.push(['mainTracker._setAllowAnchor',true]);
+          _gaq.push(['mainTracker._setAllowLinker',true]);
+          _gaq.push(['mainTracker._trackPageview']);
 
+          _gaq.push(['legacyTracker._setAccount', 'UA-2368844-7']);
+          _gaq.push(['legacyTracker._setDomainName','fokus.ku.dk']);
+          _gaq.push(['legacyTracker._setAllowHash',false]);
+          _gaq.push(['legacyTracker._setAllowAnchor',true]);
+          _gaq.push(['legacyTracker._setAllowLinker',true]);
+          _gaq.push(['legacyTracker._trackPageview']);
+
+          (function() {
+          var ga = document.createElement('script');
+          ga.type = 'text/javascript';
+          ga.async = true; ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+          var s = document.getElementsByTagName('script')[0];
+          s.parentNode.insertBefore(ga, s); })();
+
+          (function() {
+          var kuga = document.createElement('script');
+          kuga.type = 'text/javascript';
+          kuga.async = true;
+          kuga.src = ('https:' == document.location.protocol ? 'https://cms.secure.ku.dk' : 'http://cms.ku.dk') + '/scripts_js/ga.extended.js';
+          var s = document.getElementsByTagName('script')[1];
+          s.parentNode.insertBefore(kuga, s);
+          })();
+      </script>
+    </head>
+    <body class="{% if view.kwargs.embed %}embedded{% endif %}">
+    {% if view.kwargs.embed %}
         <!-- 3rd party stylesheets -->
-        <link href="{% static 'thirdparty/bootstrap/dist/css/bootstrap.min.css' %}" rel="stylesheet">
-
+        <link href="{% static 'thirdparty/bootstrap/dist/css/bootstrap.min.css' %}" rel="stylesheet"/>
+        <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet"/>
         <!-- Our own stylesheet -->
-        <link href="{% static 'css/main.css' %}" rel="stylesheet">
-
+        <link href="{% static 'css/main.css' %}" rel="stylesheet"/>
         <!-- Our own header content -->
-        {% block head %}{% endblock %}
-
+        {% use_macro head_block %}
         <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
         <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
         <!--[if lt IE 9]>
             <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
             <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
         <![endif]-->
-
-        <script type="text/javascript" src="/jsi18n/"></script>
-        <link href="{% static 'img/favicon.ico' %}" rel="shortcut icon">
-
-    </head>
-    <body class="{% if view.kwargs.embed %}embedded{% endif %}">
-
+        <script type="text/javascript" src="{% full_url 'django.views.i18n.javascript_catalog' %}"></script>
+    {% endif %}
     {% if not view.kwargs.embed %}
     {% block header %}
         <nav class="navbar navbar-default">
@@ -41,31 +90,30 @@
                 </div>
                 <div id="navbar" class="navbar-collapse collapse">
                     <ul class="nav navbar-nav navbar-right">
-                        {% if user.is_authenticated %}
+                      {% if user.is_authenticated %}
                         <li class="login"><a href="{% url 'logout' %}">{% trans 'Log ud' %}</a></li>
                         {% else %}
                         <li class="login"><a href="{% url 'standard_login' %}">{% trans 'Log ind' %}</a></li>
-                        {% endif %}
+                      {% endif %}
                         <li><a href="http://kalender.ku.dk">{% trans 'Kalender' %}</a></li>
                         <li><a href="http://findvej.ku.dk">{% trans 'Find vej' %}</a></li>
                         <li><a href="http://www.ku.dk/vejviser/">{% trans 'Telefonbog' %}</a></li>
                         <li><a href="http://jobportal.ku.dk/">{% trans 'Job' %}</a></li>
                         <li><a href="http://velkommen.ku.dk/indeks/">{% trans 'A-Å-indeks' %}</a></li>
                         <li><a href="https://intranet.ku.dk/">{% trans 'KUnet' %}</a></li>
-                        <li class="global-sprog"><a href="http://research.ku.dk/" class="english">English</a></li>
                     </ul>
                 </div>
             </div>
         </nav>
 
         {% if user.is_authenticated %}
-        <div class="container personal-bar">
+        <div class="container personal-bar" style="height: auto; max-height: 30px;">
             <ul class="list-inline">
                 <li class="home"><a href="{% url 'user_profile' %}">{% trans 'Min side' %}</a></li>
                 {% if user.userprofile.is_administrator %}
                 <li><a href="{% url 'admin:index' %}">{% trans 'Avanceret' %}</a></li>
                 {% endif %}
-                {% if view.kwargs.can_be_embedded %}
+                {% if view.kwargs.can_be_embedded and user.userprofile.is_administrator %}
                 <li><a href="{% url 'embedcodes' view.request.get_full_path|slice:"1:" %}">{% trans 'Indlejr side' %}</a></li>
                 {% endif %}
                 <li class="pull-right">
@@ -96,9 +144,9 @@
                         </a>
                     </div>
                     <div id="branding-title">
-                        <a href="{% url 'index' %}" title="{% trans 'Velkommen til Københavns Universitet' %}">
-                            <h2>{% trans 'foKUs' %}</h2>
-                            <p>{% trans 'Portal for skole- og gymnasieområdet' %}</p>
+                        <a href="{% url 'index' %}search" title="{% trans 'Velkommen til Københavns Universitet' %}">
+                            <h2>{% trans 'FOKUS' %}</h2>
+                            <p>{% trans 'Tilbud til gymnasie- og grundskolen' %}</p>
                         </a>
                     </div>
                 </div>
@@ -184,13 +232,16 @@
                   <a target="_blank" href="https://www.linkedin.com/edu/k%C3%B8benhavns-universitet-12012" class="social-icon linkedin" title="LinkedIn"></a>
                 </div>
                 <div class="social-item">
-                  <a target="_blank" href="http://velkommen.ku.dk/apps" class="social-icon app" title="KU Apps"></a>
-                </div>
-                <div class="social-item">
-                  <a target="_blank" href="http://nyheder.ku.dk/rss/" class="social-icon rss" title="RSS"></a>
+                    <a target="_blank" href="https://www.instagram.com/university_of_copenhagen/" class="social-icon instagram icon icon-phone" title="Instagram" onclick="_gaq.push(['mainTracker._trackEvent', 'Footer-dk', 'klik', 'Instagram']);"></a>
                 </div>
                 <div class="social-item">
                   <a target="_blank" href="https://twitter.com/koebenhavns_uni" class="social-icon twitter" title="Twitter"></a>
+                </div>
+                <div class="social-item">
+                  <a target="_blank" href="http://video.ku.dk" class="social-icon ku_video" title="KU Videoportal"></a>
+                </div>
+                <div class="social-item">
+                  <a target="_blank" href="http://velkommen.ku.dk/apps" class="social-icon app" title="KU Apps"></a>
                 </div>
                 <div class="social-item">
                   <a target="_blank" href="https://www.youtube.com/user/CopenhagenUniversity" class="social-icon youtube" title="YouTube"></a>
@@ -203,9 +254,6 @@
                 </div>
                 <div class="social-item">
                   <a target="_blank" href="https://www.coursera.org/ucph" class="social-icon coursera" title="Coursera"></a>
-                </div>
-                <div class="social-item">
-                  <a target="_blank" href="http://video.ku.dk" class="social-icon ku_video" title="KU Videoportal"></a>
                 </div>
               </div>
             </div>

@@ -2,9 +2,10 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.serializers import serialize
 from django.db.models.query import QuerySet
-from django.template import defaulttags
+from django.template import defaulttags, Node, TemplateSyntaxError
 from django.template.base import FilterExpression
 from django.template.defaultfilters import register
+from django.templatetags.static import StaticNode
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
@@ -28,7 +29,7 @@ def upload_name_strip_path(value):
 
 @register.filter
 def highlight(text, filter):
-    words = filter.split(' ')
+    words = [re.escape(x) for x in filter.split(' ')]
     pattern = re.compile(r"(?P<filter>%s)" % '|'.join(words), re.IGNORECASE)
     return mark_safe(re.sub(pattern, r"<mark>\g<filter></mark>", text))
 
@@ -145,8 +146,12 @@ def gt(a, b):
 
 
 @register.filter
-def get(dictionary, key):
-    return dictionary[key]
+def get(obj, key):
+    if obj is not None and key is not None:
+        if isinstance(obj, dict):
+            return obj[key]
+        if hasattr(obj, key):
+            return getattr(obj, key)
 
 
 @register.filter
@@ -243,3 +248,60 @@ class FullURLNode(defaulttags.Node):
 def full_url(parser, token):
     url_node = defaulttags.url(parser, token)
     return FullURLNode(url_node)
+
+
+@register.tag
+def setvar(parser, token):
+    # Sets a variable in a template. Use only when you really need it
+    try:
+        # Splitting by None == splitting by spaces.
+        tag_name, arg = token.contents.split(None, 1)
+    except ValueError:
+        raise TemplateSyntaxError(
+            "%r tag requires arguments" % token.contents.split()[0]
+        )
+
+    m = re.search(r'(.*?) as (\w+)', arg)
+    if not m:
+        raise TemplateSyntaxError("%r tag had invalid arguments" % tag_name)
+
+    new_val, var_name = m.groups()
+    if not (new_val[0] == new_val[-1] and new_val[0] in ('"', "'")):
+        raise TemplateSyntaxError(
+            "%r tag's argument should be in quotes" % tag_name
+        )
+
+    return SetVarNode(new_val[1:-1], var_name)
+
+
+class SetVarNode(Node):
+
+    def __init__(self, new_val, var_name):
+        self.new_val = new_val
+        self.var_name = var_name
+
+    def render(self, context):
+        context[self.var_name] = self.new_val
+        return ''
+
+
+class CustomStaticNode(StaticNode):
+
+    def prefix(self, url):
+        return settings.PUBLIC_URL + url
+
+    def render(self, context):
+        result = super(CustomStaticNode, self).render(context)
+        # If the view args has 'embed' set, we are in an embedded page
+        if 'view' in context and context['view'].kwargs.get('embed'):
+            # prefix the url
+            if self.varname is None:
+                return self.prefix(result)
+            context[self.varname] = self.prefix(context[self.varname])
+        return result
+
+
+# Override the usual 'static' tag with our own
+@register.tag('static')
+def do_static(parser, token):
+    return CustomStaticNode.handle_token(parser, token)

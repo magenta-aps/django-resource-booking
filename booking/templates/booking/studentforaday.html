@@ -1,18 +1,14 @@
 {% extends 'index.html' %}
 {% load i18n %}
-{% load staticfiles %}
 {% load booking_tags %}
 
 {% block htmltitle %} - {% trans 'tilmeld "studerende for en dag"-arrangement' %}{% endblock %}
-
-{% block head %}
-{% endblock %}
 
 {% block content %}
 
     {% include 'booking/snippets/header.html' %}
     <div class="modal-body">
-        <p>{% trans "Når du har udfyldt formularen, sender vi en email til dig, der bekræfter din henvendelse. Vi finder herefter en studerende, som kontakter dig, og sammen finder I en dag der passer." %}</p>
+        <p>{% trans "Når du har udfyldt formularen, sender vi en e-mail til dig, der bekræfter din henvendelse. Vi finder herefter en studerende, som kontakter dig, og sammen finder I en dag der passer." %}</p>
         <div class="divider"></div>
 
         <form id="bookingform" class="form-horizontal clearfix" data-toggle="validator" role="form" novalidate="true" method="POST">
@@ -35,11 +31,9 @@
     {% include 'booking/fields/school_script.html' %}
     {% include "booking/fields/time_script.html" %}
 
+    <script type="text/javascript" src="{% static 'js/ieform.js' %}"></script>
     <script type="text/javascript">
         $(function(){
-            $("#submitbutton").click(function(){
-                $("#bookingform").submit();
-            });
             $("#cancelbutton").click(function(){
                 {% if back %}
                     document.location = "{{ back }}";
