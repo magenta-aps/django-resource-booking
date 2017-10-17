@@ -4096,12 +4096,12 @@ class EvaluationDetailView(BreadcrumbMixin, DetailView):
 
     @staticmethod
     def build_breadcrumbs(evaluation):
-        return VisitDetailView.build_breadcrumbs(evaluation.visit) + [
+        return ProductDetailView.build_breadcrumbs(evaluation.product) + [
             {
                 'text': _(u'Evaluering'),
                 'url': reverse(
-                    'visit-evaluation-view',
-                    args=[evaluation.visit.id, evaluation.id]
+                    'evaluation-view',
+                    args=[evaluation.id]
                 )
             }
         ]
