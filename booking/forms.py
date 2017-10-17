@@ -1467,8 +1467,9 @@ class EvaluationForm(forms.ModelForm):
     class Meta:
         model = Evaluation
         fields = ['url']
-        widgets = {'url': TextInput(attrs={
+        widgets = {'url': Textarea(attrs={
             'class': 'form-control input-sm',
+            'rows': '4',
             'readonly': 'readonly'
         })}
 
