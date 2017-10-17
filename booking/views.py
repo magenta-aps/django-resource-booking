@@ -4034,9 +4034,16 @@ class EvaluationEditView(BreadcrumbMixin, UpdateView):
     template_name = "evaluation/form.html"
     model = Evaluation
 
-    def get_object(self, queryset=None):
-        if 'pk' in self.kwargs:
-            return super(EvaluationEditView, self).get_object(queryset)
+    def get_object(self):
+        if 'product' in self.kwargs and 'id' not in self.kwargs:
+            return None
+        return super(EvaluationEditView, self).get_object()
+
+    def get_product(self, queryset=None):
+        if 'product' in self.kwargs:
+            return Product.objects.get(pk=self.kwargs['product'])
+        if self.object is not None:
+            return self.object.product
 
     def get_visit(self):
         if self.object:
@@ -4045,25 +4052,32 @@ class EvaluationEditView(BreadcrumbMixin, UpdateView):
 
     def get_form_kwargs(self):
         kwargs = super(EvaluationEditView, self).get_form_kwargs()
-        kwargs['visit'] = Visit.objects.get(id=self.kwargs.get('visit'))
+        kwargs['product'] = self.get_product()
         return kwargs
 
     def get_success_url(self):
         return reverse(
-            'visit-evaluation-view', args=[
-                self.object.visit.id, self.object.id
+            'evaluation-view', args=[
+                self.object.id
             ]
         )
 
+    def form_valid(self, form):
+        response = super(EvaluationEditView, self).form_valid(form)
+        if self.object.product is None:
+            self.object.product = self.get_product()
+            self.object.save()
+        return response
+
     def get_breadcrumb_args(self):
-        return [self.object, self.get_visit()]
+        return [self.object, self.get_product()]
 
     @staticmethod
-    def build_breadcrumbs(evaluation, visit=None):
-        if visit is None:
-            visit = evaluation.visit
+    def build_breadcrumbs(evaluation, product=None):
+        if product is None:
+            product = evaluation.product
         if evaluation is None:
-            return VisitDetailView.build_breadcrumbs(visit) + [
+            return ProductDetailView.build_breadcrumbs(product) + [
                 {'text': _(u'Opret evaluering')}
             ]
         else:

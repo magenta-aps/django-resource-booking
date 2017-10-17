@@ -20,7 +20,6 @@ from booking.views import BookingNotifyView, BookingDetailView
 from booking.views import BookingAcceptView
 from booking.views import EmailTemplateListView, EmailTemplateEditView
 from booking.views import EmailTemplateDetailView, EmailTemplateDeleteView
-from booking.views import ChangeVisitEvalView
 from booking.views import ChangeVisitStatusView
 from booking.views import ChangeVisitStartTimeView
 from booking.views import ChangeVisitResponsibleView
@@ -202,9 +201,6 @@ urlpatterns = patterns(
     url(r'^visit/(?P<pk>[0-9]+)/change_comments/?$',
         ChangeVisitCommentsView.as_view(),
         name='change-visit-comments'),
-    url(r'^visit/(?P<pk>[0-9]+)/change_evaluation_link/?$',
-        ChangeVisitEvalView.as_view(),
-        name='change-visit-eval'),
     url(r'^visit/(?P<pk>[0-9]+)/add_logentry/?$',
         VisitAddLogEntryView.as_view(),
         name='visit-add-logentry'),
@@ -417,26 +413,31 @@ urlpatterns = patterns(
         r'requirement/(?P<pk>[0-9]+)/delete/?$',
         ResourceRequirementDeleteView.as_view(),
         name='resourcerequirement-delete'),
-
     url(r'^visit/(?P<pk>[0-9]+)/resources/?$',
         VisitResourceEditView.as_view(),
         name='visit-resources-edit'),
 
-    url(r'^visit/(?P<visit>[0-9]+)/evaluation/create/?$',
+    url(r'^evaluation/create/(?P<product>[0-9]+)/?$',
         EvaluationEditView.as_view(),
-        name='visit-evaluation-create'),
-    url(r'^visit/(?P<visit>[0-9]+)/evaluation/(?P<pk>[0-9]+)/edit/?$',
+        name='evaluation-create'),
+
+    url(r'^evaluation/(?P<pk>[0-9]+)/edit/?$',
         EvaluationEditView.as_view(),
-        name='visit-evaluation-edit'),
-    url(r'^visit/(?P<visit>[0-9]+)/evaluation/(?P<pk>[0-9]+)/?$',
+        name='evaluation-edit'),
+
+    url(r'^evaluation/(?P<pk>[0-9]+)/?$',
         EvaluationDetailView.as_view(),
-        name='visit-evaluation-view'),
+        name='evaluation-view'),
+
     url(r'^e/(?P<linkid>[a-zA-Z0-9]+)$',
         EvaluationRedirectView.as_view(),
-        name='visit-evaluation-redirect'),
-    url(r'^visit/evaluations/?$',
+        name='evaluation-redirect'),
+
+    url(r'^evaluation/statistics/?$',
         EvaluationStatisticsView.as_view(),
-        name='visit-evaluation-statistics')
+        name='evaluation-statistics'),
+
+
 
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

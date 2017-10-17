@@ -103,12 +103,6 @@ class ChangeVisitCommentsForm(forms.ModelForm):
         fields = ['comments']
 
 
-class ChangeVisitEvalForm(forms.ModelForm):
-    class Meta:
-        model = Visit
-        fields = ['evaluation_link']
-
-
 class VisitAddLogEntryForm(forms.Form):
     new_comment = forms.CharField(
         widget=forms.Textarea,

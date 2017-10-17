@@ -1906,6 +1906,13 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         verbose_name=_(u'Der tillades kun 1 tilmelding pr. besøg')
     )
 
+    evaluation_link = models.CharField(
+        max_length=1024,
+        verbose_name=_(u'Link til evaluering'),
+        blank=True,
+        default='',
+    )
+
     def available_time_modes(self, unit=None):
         if self.type is None:
             return Product.time_mode_choices
@@ -2784,13 +2791,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         blank=True,
         default='',
         verbose_name=_(u'Interne kommentarer')
-    )
-
-    evaluation_link = models.CharField(
-        max_length=1024,
-        verbose_name=_(u'Link til evaluering'),
-        blank=True,
-        default='',
     )
 
     # ts_vector field for fulltext search
@@ -5588,12 +5588,17 @@ class Evaluation(models.Model):
     )
     visit = models.OneToOneField(
         Visit,
-        null=False,
-        blank=False
+        null=True,
+        blank=True
     )
     guests = models.ManyToManyField(
         Guest,
         through='EvaluationGuest'
+    )
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        null=True
     )
 
     def send_notification(self, template_type, new_status, filter=None):
@@ -5645,6 +5650,13 @@ class Evaluation(models.Model):
 
     def link_clicked_count(self):
         return self.status_count(EvaluationGuest.STATUS_LINK_CLICKED)
+
+    @staticmethod
+    def migrate():
+        for evaluation in Evaluation.objects.all():
+            if evaluation.product is None \
+                    and len(evaluation.visit.products) > 0:
+                evaluation.product = evaluation.visit.products[0]
 
 
 class EvaluationGuest(models.Model):

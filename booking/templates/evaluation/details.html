@@ -13,14 +13,14 @@
     <div class="row titlebar hidden-print">
         <div class="col-sm-12 col-md-9">
             <h1>
-                {% url 'visit-view' object.visit.pk as visit_url %}
-                {% blocktrans with title=object.visit.display_title on_date=object.visit.date_display_context %}
-                    Evaluering af <a href="{{ visit_url }}">{{ title }} {{ on_date }}</a>
+                {% url 'product-view' object.product.pk as product_url %}
+                {% blocktrans with title=object.product.title %}
+                    Evaluering af <a href="{{ product_url }}">{{ title }}</a>
                 {% endblocktrans %}
             </h1>
         </div>
         <div class="pull-right">
-            <a class="btn btn-primary dropdown-toggle" href="{% url 'visit-evaluation-edit' object.visit.pk object.id %}">
+            <a class="btn btn-primary dropdown-toggle" href="{% url 'evaluation-edit' object.id %}">
                 {% trans 'Rediger evaluering' %}
             </a>
         </div>
