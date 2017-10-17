@@ -170,12 +170,9 @@
 
         var checkboxUpdate = function() {
             var $this = $(this);
-            console.log(this);
             var key = $this.attr("id").substring("enable_".length);
             var enabled = $this.is(":checked");
-            console.log(enabled);
             $("#field_"+key+", #default_"+key).prop("disabled", !enabled);
-            console.log($("#field_"+key+", #default_"+key));
         };
         $("input[type=checkbox]").change(checkboxUpdate);
         $("input[type=checkbox]").each(checkboxUpdate);
