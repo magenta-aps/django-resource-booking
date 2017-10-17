@@ -17,7 +17,8 @@
         {{ form.non_field_errors }}
 
         <div class="row form-group">
-            <div class="col-sm-2">
+            <div class="col-sm-1"></div>
+            <div class="col-sm-1">
                 <label for="presetSelector">{% trans 'Type:' %}</label>
             </div>
             <div class="col-sm-7">
@@ -162,9 +163,22 @@
             var checkboxes = fieldContainer.find("input[type=checkbox]");
             checkboxes.prop("checked", false);
             checkboxes.filter(elements).prop("checked", true);
+            checkboxes.each(checkboxUpdate);
             updateUrl();
         };
         presetSelector.on("change", updateSelect);
+
+        var checkboxUpdate = function() {
+            var $this = $(this);
+            console.log(this);
+            var key = $this.attr("id").substring("enable_".length);
+            var enabled = $this.is(":checked");
+            console.log(enabled);
+            $("#field_"+key+", #default_"+key).prop("disabled", !enabled);
+            console.log($("#field_"+key+", #default_"+key));
+        };
+        $("input[type=checkbox]").change(checkboxUpdate);
+        $("input[type=checkbox]").each(checkboxUpdate);
 
         {% verbatim %}
         var tagStart = new RegExp("^{{");
