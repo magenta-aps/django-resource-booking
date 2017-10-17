@@ -1472,58 +1472,16 @@ class EvaluationForm(forms.ModelForm):
             'readonly': 'readonly'
         })}
 
-    nonparticipating_guests = ModelMultipleChoiceField(
-        queryset=Guest.objects.all(),
-        required=False,
-        label=_(u'Deltagere uden spørgeskema'),
-        help_text=_(u'Markér deltagere der ikke '
-                    u'skal have tilsendt spørgeskema'),
-        widget=CheckboxSelectMultiple
-    )
-
     def __init__(self, product, *args, **kwargs):
         self.product = product
-        # self.instance = product.evaluation
-        # if self.instance:
-        #     kwargs['initial']['nonparticipating_guests'] = [
-        #         evaluationguest.guest
-        #         for evaluationguest
-        #         in self.instance.evaluationguest_set.filter(
-        #             status=EvaluationGuest.STATUS_NO_PARTICIPATION
-        #         )
-        #     ]
         super(EvaluationForm, self).__init__(*args, **kwargs)
-        # self.fields['nonparticipating_guests'].queryset = \
-        # Guest.objects.filter(
-        #     booking__in=self.visit.booking_list
-        # )
 
     def get_queryset(self):
         return Evaluation.objects.filter(product=self.product)
 
     def save(self, commit=True):
-        print self.instance
         self.instance.product = self.product
         super(EvaluationForm, self).save(commit)
-        # existing_guests = {
-        #     evalguest.guest: evalguest
-        #     for evalguest in self.instance.evaluationguest_set.all()
-        # }
-        # for booking in self.visit.booking_list:
-        #     guest = booking.booker
-        #     status = EvaluationGuest.STATUS_NO_PARTICIPATION
-        #     if guest not in self.cleaned_data['nonparticipating_guests']:
-        #         status = EvaluationGuest.STATUS_NOT_SENT
-        #     if guest in existing_guests:
-        #         evalguest = existing_guests[guest]
-        #         evalguest.status = status
-        #     else:
-        #         evalguest = EvaluationGuest(
-        #             evaluation=self.instance,
-        #             guest=guest,
-        #             status=status
-        #         )
-        #     evalguest.save()
         return self.instance
 
 
