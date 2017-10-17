@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-from booking.models import StudyMaterial, ProductAutosend, Booking, \
-    EvaluationGuest
+from booking.models import StudyMaterial, ProductAutosend, Booking
 from booking.models import Subject, BookingGrundskoleSubjectLevel
 from booking.models import Locality, OrganizationalUnitType, OrganizationalUnit
 from booking.models import Product
@@ -1494,7 +1493,8 @@ class EvaluationForm(forms.ModelForm):
         #         )
         #     ]
         super(EvaluationForm, self).__init__(*args, **kwargs)
-        # self.fields['nonparticipating_guests'].queryset = Guest.objects.filter(
+        # self.fields['nonparticipating_guests'].queryset = \
+        # Guest.objects.filter(
         #     booking__in=self.visit.booking_list
         # )
 
