@@ -86,45 +86,70 @@
                 'keys': ['key', 'tname', 'email', 'bd', 'ofn1', 'ofn2', 'ofv1', 'ofv2', 'agn', 'agv', 'rgn', 'opl', 'rv', 'kt']
             }
         ];
-        {% verbatim %}
+
         var formDefinition = {
             'key': {},
-            'tname': {'default': '{{ guest.full_name }}'},
-            'uname': {'default': '{{ guest.full_name }}'},
-            'email': {'text': 'E-mail', 'default': '{{ guest.email }}'},
+            'tname': {
+                'default': '{% verbatim %}{{ guest.full_name }}{% endverbatim %}'
+            },
+            'uname': {
+                'default': '{% verbatim %}{{ guest.full_name }}{% endverbatim %}'
+            },
+            'email': {
+                'text': '{% trans "E-mail" %}',
+                'default': '{% verbatim %}{{ guest.email }}{% endverbatim %}'
+            },
             'uv': {
-                'text': 'Underviser',
-                'default': '{{ visit.assigned_teachers.first.get_full_name|default:"" }}'
+                'text': '{% trans "Underviser" %}',
+                'default': '{% verbatim %}{{ visit.assigned_teachers.first.get_full_name|default:"" }}{% endverbatim %}'
             },
             'of': {},
-            'oename': {'default': '{{ visit.display_title }}'},
+            'oename': {
+                'default': '{% verbatim %}{{ visit.display_title }}{% endverbatim %}'
+            },
             'bd': {
-                'text': 'Besøgsdag',
-                'default': '{{ visit.start_datetime|date:"j F" }}'
+                'text': '{% trans "Besøgsdag" %}',
+                'default': '{% verbatim %}{{ visit.start_datetime|date:"j F" }}{% endverbatim %}'
             },
             'ofn1': {
-                'text': '1. Øvelse/foredrag',
-                'default': '{{ visit.display_title }}'
+                'text': '{% trans "1. Øvelse/foredrag" %}',
+                'default': '{% verbatim %}{{ visit.display_title }}{% endverbatim %}'
             },
-            'ofv1': {'text': 'Ø/F værdi 1'},
-            'ofn2': {'text': '2. Øvelse/foredrag'},
-            'ofv2': {'text': 'Ø/F værdi 2'},
+            'ofv1': {
+                'text': '{% trans "Ø/F værdi 1" %}'
+            },
+            'ofn2': {
+                'text': '{% trans "2. Øvelse/foredrag" %}'
+            },
+            'ofv2': {
+                'text': '{% trans "Ø/F værdi 2" %}'
+            },
             'agn': {
-                'text': 'Ansvarligguide navn',
-                'default': '{{ guest.get_full_name }}'
+                'text': '{% trans "Ansvarligguide navn" %}',
+                'default': '{% verbatim %}{{ guest.get_full_name }}{% endverbatim %}'
             },
-            'agv': {'text': 'Ansvarlig guide'},
+            'agv': {
+                'text': '{% trans "Ansvarlig guide" %}'
+            },
             'rgn': {
-                'text': 'Rundvisningsguide(r) navn',
-                'default': '{{ guest.lastname }} {{ guest.firstname }}'
+                'text': '{% trans "Rundvisningsguide(r) navn" %}',
+                'default': '{% verbatim %}{{ guest.lastname }} {{ guest.firstname }}{% endverbatim %}'
             },
-            'rgv': {'text': 'Rundvisningsguide(r) navn'},
-            'kt': {'text': 'Klassetrin'},
-            'opl': {'text': 'Oplæg'},
-            'rv': {'text': 'Rundvisning'}
+            'rgv': {
+                'text': '{% trans "Rundvisningsguide(r) navn" %}'
+            },
+            'kt': {
+                'text': '{% trans "Klassetrin" %}'
+            },
+            'opl': {
+                'text': '{% trans "Oplæg" %}'
+            },
+            'rv': {
+                'text': '{% trans "Rundvisning" %}'
+            }
         };
         var keyOrder = ['key', 'tname', 'uname', 'email', 'uv', 'of', 'oename', 'bd', 'ofn1', 'ofv1', 'ofn2', 'ofv2', 'agn', 'agv', 'rgn', 'rgv', 'kt', 'opl', 'rv'];
-        {% endverbatim %}
+
 
         var fieldContainer = $("#fieldContainer"),
             extraFields = $("#extrafields"),
@@ -151,7 +176,7 @@
             fieldRowHtml[j++] = '</div>';
 
             fieldRowHtml[j++] = '<div class="col-sm-1">';
-            fieldRowHtml[j++] = '<label class="control-label" for="field_' + key + '">' + key + ':</label>';
+            fieldRowHtml[j++] = '[' + key + ']';
             fieldRowHtml[j++] = '</div>';
 
             fieldRowHtml[j++] = '<div class="col-sm-5">';
