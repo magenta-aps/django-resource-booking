@@ -2309,3 +2309,10 @@ body.lightbox {
   color: #252525;
   font-weight: 400;
 }
+
+#evaluationform .tooltip,
+#evaluationform .tooltip .tooltip-inner {
+  width: 400px;
+  max-width: 400px;
+  text-align: left;
+}

@@ -113,23 +113,43 @@
             },
             'ofn1': {
                 'text': '{% trans "1. Øvelse/foredrag" %}',
-                'default': '{% verbatim %}{{ visit.display_title }}{% endverbatim %}'
+                'default': '{% verbatim %}{{ visit.display_title }}{% endverbatim %}',
             },
             'ofv1': {
-                'text': '{% trans "Ø/F værdi 1" %}'
+                'text': '{% trans "Ø/F værdi 1" %}',
+                'help': "1 = Moderne bioteknologi; dyrlæger, dyreforsøg og dyrevelfærd\n" +
+                        "2 = Gensplejsning og planteforædling\n" +
+                        "3 = Adfærd og adfærdsproblemer hos landbrugs- og forsøgsdyr\n" +
+                        "6 = Recirkulering af næringsstoffer fra by til land - et skridt på vejen mod bæredygtige samfund\n" +
+                        "8 = Er landbrugspolitikken i USA til for landmændenes eller politikernes skyld?\n" +
+                        "9 = Antibiotikumresistens hos bakterier"
             },
             'ofn2': {
                 'text': '{% trans "2. Øvelse/foredrag" %}'
             },
             'ofv2': {
-                'text': '{% trans "Ø/F værdi 2" %}'
+                'text': '{% trans "Ø/F værdi 2" %}',
+                'help': "1 = Moderne bioteknologi; dyrlæger, dyreforsøg og dyrevelfærd\n" +
+                        "2 = Gensplejsning og planteforædling\n" +
+                        "3 = Adfærd og adfærdsproblemer hos landbrugs- og forsøgsdyr\n" +
+                        "6 = Recirkulering af næringsstoffer fra by til land - et skridt på vejen mod bæredygtige samfund\n" +
+                        "8 = Er landbrugspolitikken i USA til for landmændenes eller politikernes skyld?\n" +
+                        "9 = Antibiotikumresistens hos bakterier"
             },
             'agn': {
                 'text': '{% trans "Ansvarligguide navn" %}',
                 'default': '{% verbatim %}{{ guest.get_full_name }}{% endverbatim %}'
             },
             'agv': {
-                'text': '{% trans "Ansvarlig guide" %}'
+                'text': '{% trans "Ansvarlig guide" %}',
+                'help': "2 = Agnete Solvej Poulsen\n" +
+                        "3 = Anders Kruse\n" +
+                        "4 = Andreas Eske Johansen Sørensen\n" +
+                        "5 = Anine Svendsen Kimer\n" +
+                        "6 = Camilla Buch Vang Hansen\n" +
+                        "8 = Guide Kristina Mejer\n" +
+                        "9 = Jeppe Baden\n" +
+                        "10 = Pernille Vestergaard Jensen"
             },
             'rgn': {
                 'text': '{% trans "Rundvisningsguide(r) navn" %}',
@@ -139,7 +159,24 @@
                 'text': '{% trans "Rundvisningsguide(r) navn" %}'
             },
             'kt': {
-                'text': '{% trans "Klassetrin" %}'
+                'text': '{% trans "Klassetrin" %}',
+                'help': "14 = Børnehave\n" +
+                        "0 = 0. klasse\n" +
+                        "1 = 1. klasse\n" +
+                        "2 = 2. klasse\n" +
+                        "3 = 3. klasse\n" +
+                        "4 = 4. klasse\n" +
+                        "5 = 5. klasse\n" +
+                        "6 = 6. klasse\n" +
+                        "7 = 7. klasse\n" +
+                        "8 = 8. klasse\n" +
+                        "9 = 9. klasse\n" +
+                        "10 = 10. klasse\n" +
+                        "11 = 1. G\n" +
+                        "12 = 2. G\n" +
+                        "13 = 3. G\n" +
+                        "15 = Speciel\n" +
+                        "16 = Andet"
             },
             'opl': {
                 'text': '{% trans "Oplæg" %}'
@@ -177,6 +214,12 @@
 
             fieldRowHtml[j++] = '<div class="col-sm-1">';
             fieldRowHtml[j++] = '[' + key + ']';
+            if ('help' in fieldDefinition) {
+                fieldRowHtml[j++] = '<span class="glyphicon glyphicon-question-sign" data-toggle="tooltip" data-placement="right" title="';
+                fieldRowHtml[j++] = fieldDefinition['help'].replace(/\n/g, "<br/>");
+                fieldRowHtml[j++] = '"></span>';
+
+            }
             fieldRowHtml[j++] = '</div>';
 
             fieldRowHtml[j++] = '<div class="col-sm-5">';
@@ -282,5 +325,12 @@
 
         updateSelect();
         //updateUrl();
+    </script>
+    <script type="text/javascript">
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip({
+                html: true
+            });
+        })
     </script>
 {% endblock %}
