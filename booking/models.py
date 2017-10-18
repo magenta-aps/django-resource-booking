@@ -5040,7 +5040,7 @@ class Booking(models.Model):
         verbose_name = _(u'booking')
         verbose_name_plural = _(u'bookinger')
 
-    booker = models.ForeignKey(Guest)
+    booker = models.OneToOneField(Guest)
 
     visit = models.ForeignKey(
         Visit,
@@ -5617,9 +5617,7 @@ class Evaluation(models.Model):
         if filter is not None:
             qs = qs.filter(**filter)
         for evalguest in qs:
-            for booking in evalguest.guest.booking_set.filter(
-                visit=self.visit
-            ):
+            for booking in evalguest.bookings:
                 # There really should be only one here
                 try:
                     sent = booking.autosend(
@@ -5669,7 +5667,11 @@ class Evaluation(models.Model):
                     and len(evaluation.visit.products) > 0:
                 # evaluation.product = evaluation.visit.products[0]
                 evaluation.visit.products[0].primary_evaluation = evaluation
-
+        for evaluationguest in EvaluationGuest.objects.all():
+            if evaluationguest.visit is None and \
+                    evaluationguest.evaluation.visit is not None:
+                evaluationguest.visit = evaluationguest.evaluation.visit
+                evaluationguest.save()
 
 
 class EvaluationGuest(models.Model):
@@ -5682,6 +5684,10 @@ class EvaluationGuest(models.Model):
         Guest,
         null=False,
         blank=False
+    )
+    visit = models.ForeignKey(
+        Visit,
+        null=True
     )
     STATUS_NO_PARTICIPATION = 0
     STATUS_NOT_SENT = 1
@@ -5719,6 +5725,14 @@ class EvaluationGuest(models.Model):
         return super(EvaluationGuest, self).save(*args, **kwargs)
 
     @property
+    def booking(self):
+        return self.guest.booking
+
+    @property
+    def visit(self):
+        return self.guest.booking.visit
+
+    @property
     def url(self):
         template = Template(
             "{% load booking_tags %}" +
@@ -5727,10 +5741,12 @@ class EvaluationGuest(models.Model):
             unicode(self.evaluation.url) +
             "{% endlanguage %}\n"
         )
+
         context = make_context({
             'evaluation': self.evaluation,
             'guest': self.guest,
-            'visit': self.evaluation.visit
+            'visit': self.visit,
+            'booking': self.booking
         })
 
         rendered = template.render(context)
