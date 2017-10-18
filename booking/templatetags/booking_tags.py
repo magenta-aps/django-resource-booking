@@ -1,5 +1,3 @@
-import numbers
-
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.serializers import serialize
@@ -320,3 +318,18 @@ def evaluation_boolean(value):
         elif isinstance(value, (int, long, float, complex)):
             b = value > 0
     return 1 if b else 2
+
+
+kt_conversion = Guest.grundskole_level_conversion.copy()
+kt_conversion.update({
+    Guest.g1: 11,
+    Guest.g2: 12,
+    Guest.g3: 13,
+    Guest.student: 15,
+    Guest.other: 16
+})
+
+
+@register.filter
+def evaluation_classlevel(value):
+    return kt_conversion.get(value)
