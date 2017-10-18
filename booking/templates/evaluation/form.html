@@ -195,6 +195,7 @@
             },
             'rv': {
                 'text': '{% trans "Rundvisning" %}',
+                'default': '{% verbatim %}{{ booking.classbooking.tour_desired | evaluation_boolean }}{% endverbatim %}',
                 'help': '1 = Ja\n'+
                         '2 = Nej'
             }
