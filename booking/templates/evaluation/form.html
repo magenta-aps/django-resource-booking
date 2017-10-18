@@ -16,33 +16,40 @@
         {% csrf_token %}
         {{ form.non_field_errors }}
 
-        <div class="row form-group">
-            <div class="col-sm-1"></div>
-            <div class="col-sm-1">
-                <label for="presetSelector">{% trans 'Type:' %}</label>
-            </div>
-            <div class="col-sm-7">
-                <select id="presetSelector" class="form-control input-sm"></select>
-            </div>
-        </div>
-
-        <div id="fieldContainer"></div>
-        <div class="row form-group">
-            <div class="col-sm-2">
-                <label for="extrafields">{% trans 'Ekstra felter:' %}</label>
-            </div>
-            <div class="col-sm-7">
-                <textarea id="extrafields" style="width:100%; min-height:8em; resize:none"></textarea>
-            </div>
-            <div class="col-sm-3">
-                {% trans 'Ekstra URL-parametre, f.eks.:' %}<br>
-                <code>foo=bar</code><br/>
-                <code>version=42</code><br/>
-                {% trans 'Linjeskift erstattes af & i resultatet' %}
-            </div>
-        </div>
-
-        {% include 'common/fields/generic_field.html' with field=form.url %}
+        <table class="table">
+            <tr><td>
+                <div class="row form-group">
+                    <div class="col-sm-1">
+                        <label for="presetSelector">{% trans 'Type:' %}</label>
+                    </div>
+                    <div class="col-sm-8">
+                        <select id="presetSelector" class="form-control input-sm"></select>
+                    </div>
+                </div>
+            </td></tr>
+            <tr><td>
+                <div id="fieldContainer"></div>
+            </td></tr>
+            <tr><td>
+                <div class="row form-group">
+                    <div class="col-sm-2">
+                        <label for="extrafields">{% trans 'Ekstra felter:' %}</label>
+                    </div>
+                    <div class="col-sm-7">
+                        <textarea id="extrafields" style="width:100%; min-height:8em; resize:none"></textarea>
+                    </div>
+                    <div class="col-sm-3">
+                        {% trans 'Ekstra URL-parametre, f.eks.:' %}<br>
+                        <code>foo=bar</code><br/>
+                        <code>version=42</code><br/>
+                        {% trans 'Linjeskift erstattes af & i resultatet' %}
+                    </div>
+                </div>
+            </td></tr>
+            <tr><td>
+                {% include 'common/fields/generic_field.html' with field=form.url %}
+            </td></tr>
+        </table>
         {{ form.secondary }}
         {% include 'common/save_cancel.html' %}
     </form>
@@ -80,27 +87,43 @@
             }
         ];
         {% verbatim %}
-        var formDefinition = [
-            {'key': 'key'},
-            {'key': 'tname', 'default': '{{ guest.full_name }}'},
-            {'key': 'uname', 'default': '{{ guest.full_name }}'},
-            {'key': 'email', 'text': 'E-mail', 'default': '{{ guest.email }}'},
-            {'key': 'uv', 'text': 'Underviser', 'default': '{{ visit.assigned_teachers.first.get_full_name|default:"" }}'},
-            {'key': 'of'},
-            {'key': 'oename', 'default': '{{ visit.display_title }}'},
-            {'key': 'bd', 'text': 'Besøgsdag', 'default': '{{ visit.start_datetime|date:"j F" }}'},
-            {'key': 'ofn1', 'text': '1. Øvelse/foredrag', 'default': '{{ visit.display_title }}'},
-            {'key': 'ofv1', 'text': 'Ø/F værdi 1'},
-            {'key': 'ofn2', 'text': '2. Øvelse/foredrag'},
-            {'key': 'ofv2', 'text': 'Ø/F værdi 2'},
-            {'key': 'agn', 'text': 'Ansvarligguide navn', 'default': '{{ guest.get_full_name }}'},
-            {'key': 'agv', 'text': 'Ansvarlig guide'},
-            {'key': 'rgn', 'text': 'Rundvisningsguide(r) navn', 'default': '{{ guest.lastname }} {{ guest.firstname }}'},
-            {'key': 'rgv', 'text': 'Rundvisningsguide(r) navn'},
-            {'key': 'kt', 'text': 'Klassetrin'},
-            {'key': 'opl', 'text': 'Oplæg'},
-            {'key': 'rv', 'text': 'Rundvisning'}
-        ];
+        var formDefinition = {
+            'key': {},
+            'tname': {'default': '{{ guest.full_name }}'},
+            'uname': {'default': '{{ guest.full_name }}'},
+            'email': {'text': 'E-mail', 'default': '{{ guest.email }}'},
+            'uv': {
+                'text': 'Underviser',
+                'default': '{{ visit.assigned_teachers.first.get_full_name|default:"" }}'
+            },
+            'of': {},
+            'oename': {'default': '{{ visit.display_title }}'},
+            'bd': {
+                'text': 'Besøgsdag',
+                'default': '{{ visit.start_datetime|date:"j F" }}'
+            },
+            'ofn1': {
+                'text': '1. Øvelse/foredrag',
+                'default': '{{ visit.display_title }}'
+            },
+            'ofv1': {'text': 'Ø/F værdi 1'},
+            'ofn2': {'text': '2. Øvelse/foredrag'},
+            'ofv2': {'text': 'Ø/F værdi 2'},
+            'agn': {
+                'text': 'Ansvarligguide navn',
+                'default': '{{ guest.get_full_name }}'
+            },
+            'agv': {'text': 'Ansvarlig guide'},
+            'rgn': {
+                'text': 'Rundvisningsguide(r) navn',
+                'default': '{{ guest.lastname }} {{ guest.firstname }}'
+            },
+            'rgv': {'text': 'Rundvisningsguide(r) navn'},
+            'kt': {'text': 'Klassetrin'},
+            'opl': {'text': 'Oplæg'},
+            'rv': {'text': 'Rundvisning'}
+        };
+        var keyOrder = ['key', 'tname', 'uname', 'email', 'uv', 'of', 'oename', 'bd', 'ofn1', 'ofv1', 'ofn2', 'ofv2', 'agn', 'agv', 'rgn', 'rgv', 'kt', 'opl', 'rv'];
         {% endverbatim %}
 
         var fieldContainer = $("#fieldContainer"),
@@ -108,11 +131,11 @@
             defaults = {};
 
         // Generate field rows
-        for (var i=0; i<formDefinition.length; i++) {
-            var fieldDefinition = formDefinition[i];
+        for (var i=0; i<keyOrder.length; i++) {
+            var key = keyOrder[i];
+            var fieldDefinition = formDefinition[key];
             var fieldRowHtml = [], j = 0;
-            var key = fieldDefinition['key'],
-                defaultValue = 'default' in fieldDefinition ? fieldDefinition['default'] : null,
+            var defaultValue = 'default' in fieldDefinition ? fieldDefinition['default'] : null,
                 enabled = true,
                 value = key in original ? (original[key]) : (defaultValue !== null ? defaultValue : ''),
                 text = fieldDefinition['text'] || '';
@@ -188,9 +211,9 @@
 
         var updateUrl = function() {
             var params = [];
-            for (var k = 0; k < formDefinition.length; k++) {
-                var fieldDefinition = formDefinition[k],
-                    key = fieldDefinition['key'];
+            for (var k = 0; k < keyOrder.length; k++) {
+                var key = keyOrder[k];
+                var fieldDefinition = formDefinition[key];
                 if ($("#enable_"+key).is(":checked")) {
                     params.push({
                         'key': key,
