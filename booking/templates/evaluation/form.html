@@ -189,6 +189,7 @@
             },
             'opl': {
                 'text': '{% trans "Oplæg" %}',
+                'default': '{% verbatim %}{{ booking.classbooking.presentation_desired | evaluation_boolean }}{% endverbatim %}',
                 'help': '1 = Ja\n'+
                         '2 = Nej'
             },
