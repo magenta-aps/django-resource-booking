@@ -285,7 +285,6 @@
             $("#field_"+key+", #default_"+key).prop("disabled", !enabled);
         };
         $("input[type=checkbox]").change(checkboxUpdate);
-        $("input[type=checkbox]").each(checkboxUpdate);
 
         {% verbatim %}
         var tagStart = new RegExp("^{{");
@@ -338,7 +337,13 @@
         });
 
         updateSelect();
-        //updateUrl();
+
+        for (var key in original) {
+            $("#enable_"+key).prop("checked", true);
+        }
+
+        $("input[type=checkbox]").each(checkboxUpdate);
+        updateUrl();
     </script>
     <script type="text/javascript">
         $(function () {
