@@ -84,23 +84,22 @@
             {'key': 'key'},
             {'key': 'tname', 'default': '{{ guest.full_name }}'},
             {'key': 'uname', 'default': '{{ guest.full_name }}'},
-            {'key': 'email', 'default': '{{ guest.email }}'},
-            {'key': 'uv', 'default': '{{ visit.assigned_teachers.first.get_full_name|default:"" }}'},
+            {'key': 'email', 'text': 'E-mail', 'default': '{{ guest.email }}'},
+            {'key': 'uv', 'text': 'Underviser', 'default': '{{ visit.assigned_teachers.first.get_full_name|default:"" }}'},
             {'key': 'of'},
             {'key': 'oename', 'default': '{{ visit.display_title }}'},
-            {'key': 'bd', 'default': '{{ visit.start_datetime|date:"j F" }}'},
-            {'key': 'ofn1', 'default': '{{ visit.display_title }}'},
-            {'key': 'ofv1'},
-            {'key': 'ofv2'},
-            {'key': 'ofn1'},
-            {'key': 'ofn2'},
-            {'key': 'agn', 'default': '{{ guest.get_full_name }}'},
-            {'key': 'agv'},
-            {'key': 'rgn', 'default': '{{ guest.lastname }} {{ guest.firstname }}'},
-            {'key': 'rgv'},
-            {'key': 'kt'},
-            {'key': 'opl'},
-            {'key': 'rv'}
+            {'key': 'bd', 'text': 'Besøgsdag', 'default': '{{ visit.start_datetime|date:"j F" }}'},
+            {'key': 'ofn1', 'text': '1. Øvelse/foredrag', 'default': '{{ visit.display_title }}'},
+            {'key': 'ofv1', 'text': 'Ø/F værdi 1'},
+            {'key': 'ofn2', 'text': '2. Øvelse/foredrag'},
+            {'key': 'ofv2', 'text': 'Ø/F værdi 2'},
+            {'key': 'agn', 'text': 'Ansvarligguide navn', 'default': '{{ guest.get_full_name }}'},
+            {'key': 'agv', 'text': 'Ansvarlig guide'},
+            {'key': 'rgn', 'text': 'Rundvisningsguide(r) navn', 'default': '{{ guest.lastname }} {{ guest.firstname }}'},
+            {'key': 'rgv', 'text': 'Rundvisningsguide(r) navn'},
+            {'key': 'kt', 'text': 'Klassetrin'},
+            {'key': 'opl', 'text': 'Oplæg'},
+            {'key': 'rv', 'text': 'Rundvisning'}
         ];
         {% endverbatim %}
 
@@ -115,7 +114,8 @@
             var key = fieldDefinition['key'],
                 defaultValue = 'default' in fieldDefinition ? fieldDefinition['default'] : null,
                 enabled = true,
-                value = key in original ? (original[key]) : (defaultValue !== null ? defaultValue : '');
+                value = key in original ? (original[key]) : (defaultValue !== null ? defaultValue : ''),
+                text = fieldDefinition['text'] || '';
 
             fieldRowHtml[j++] = '<div class="row form-group">';
 
@@ -123,11 +123,15 @@
             fieldRowHtml[j++] = '<input type="checkbox" id="enable_' + key + '" ' + (enabled ? 'checked="checked"' : '') + '/>';
             fieldRowHtml[j++] = '</div>';
 
+            fieldRowHtml[j++] = '<div class="col-sm-2">';
+            fieldRowHtml[j++] = '<label class="control-label" for="field_' + key + '">' + text + '</label>';
+            fieldRowHtml[j++] = '</div>';
+
             fieldRowHtml[j++] = '<div class="col-sm-1">';
             fieldRowHtml[j++] = '<label class="control-label" for="field_' + key + '">' + key + ':</label>';
             fieldRowHtml[j++] = '</div>';
 
-            fieldRowHtml[j++] = '<div class="col-sm-7">';
+            fieldRowHtml[j++] = '<div class="col-sm-5">';
             fieldRowHtml[j++] = '<input class="form-control input-sm" type="text" id="field_' + key + '"/>';
             fieldRowHtml[j++] = '</div>';
 
