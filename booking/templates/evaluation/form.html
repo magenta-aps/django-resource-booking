@@ -97,14 +97,16 @@
         var formDefinition = {
             'key': {},
             'tname': {
-                'default': '{% verbatim %}{{ guest.full_name }}{% endverbatim %}'
-            },
-            'uname': {
+                'text': '{% trans "Gæstens navn" %}',
                 'default': '{% verbatim %}{{ guest.full_name }}{% endverbatim %}'
             },
             'email': {
-                'text': '{% trans "E-mail" %}',
+                'text': '{% trans "Gæstens email-adresse" %}',
                 'default': '{% verbatim %}{{ guest.email }}{% endverbatim %}'
+            },
+            'uname': {
+                'text': '{% trans "Underviserens navn" %}',
+                'default': '{% verbatim %}{{ visit.assigned_teachers.first.get_full_name|default:"" }}{% endverbatim %}'
             },
             'uv': {
                 'text': '{% trans "Underviser" %}',
@@ -119,7 +121,7 @@
                 'default': '{% verbatim %}{{ visit.start_datetime|date:"j F" }}{% endverbatim %}'
             },
             'ofn1': {
-                'text': '{% trans "1. Øvelse/foredrag" %}',
+                'text': '{% trans "Øvelse/foredrag navn" %}',
                 'default': '{% verbatim %}{{ visit.display_title }}{% endverbatim %}',
             },
             'ofv1': {
@@ -132,7 +134,7 @@
                         "9 = Antibiotikumresistens hos bakterier"
             },
             'ofn2': {
-                'text': '{% trans "2. Øvelse/foredrag" %}'
+                'text': '{% trans "2. Øvelse/foredrag navn" %}'
             },
             'ofv2': {
                 'text': '{% trans "Ø/F værdi 2" %}',
@@ -186,13 +188,17 @@
                         "16 = Andet"
             },
             'opl': {
-                'text': '{% trans "Oplæg" %}'
+                'text': '{% trans "Oplæg" %}',
+                'help': '1 = Ja\n'+
+                        '2 = Nej'
             },
             'rv': {
-                'text': '{% trans "Rundvisning" %}'
+                'text': '{% trans "Rundvisning" %}',
+                'help': '1 = Ja\n'+
+                        '2 = Nej'
             }
         };
-        var keyOrder = ['key', 'tname', 'uname', 'email', 'uv', 'of', 'oename', 'bd', 'ofn1', 'ofv1', 'ofn2', 'ofv2', 'agn', 'agv', 'rgn', 'rgv', 'kt', 'opl', 'rv'];
+        var keyOrder = ['key', 'tname', 'email', 'uname', 'uv', 'of', 'oename', 'bd', 'ofn1', 'ofv1', 'ofn2', 'ofv2', 'agn', 'agv', 'rgn', 'rgv', 'kt', 'opl', 'rv'];
 
 
         var fieldContainer = $("#fieldContainer"),
@@ -220,12 +226,11 @@
             fieldRowHtml[j++] = '</div>';
 
             fieldRowHtml[j++] = '<div class="col-sm-1">';
-            fieldRowHtml[j++] = '[' + key + ']';
+            //fieldRowHtml[j++] = '[' + key + ']';
             if ('help' in fieldDefinition) {
                 fieldRowHtml[j++] = '<span class="glyphicon glyphicon-question-sign" data-toggle="tooltip" data-placement="right" title="';
                 fieldRowHtml[j++] = fieldDefinition['help'].replace(/\n/g, "<br/>");
                 fieldRowHtml[j++] = '"></span>';
-
             }
             fieldRowHtml[j++] = '</div>';
 
