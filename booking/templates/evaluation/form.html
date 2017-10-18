@@ -3,13 +3,20 @@
 {% load booking_tags %}
 {% load i18n %}
 
-{% block htmltitle %} - {% trans 'overblik over evalueringer' %}{% endblock %}
+{% block htmltitle %} - {% if object.pk %}{% trans "Redigér evaluering" %}{% else %}{% trans "Opret evaluering" %}{% endif %}{% endblock %}
 
 {% block content %}
 
     {% include 'common/breadcrumbrow.html' %}
 
-    <h1>{% if object.pk %}{% trans "Rediger evaluering" %}{% else %}{% trans "Opret evaluering" %}{% endif %}</h1>
+    <h1>{% if object.pk %}{% trans "Redigér evaluering" %}{% else %}{% trans "Opret evaluering" %}{% endif %}</h1>
+
+    {% verbatim %}
+    <p>
+        For hvert besøg udsendes et link til et evalueringsskema. Skemaet forudfyldes med værdier som defineres her.
+        Ved udsendelse trækkes data ind fra besøget og gæsten: F.eks. vil {{ guest.full_name }} erstattes med gæstens fulde navn.
+    </p>
+    {% endverbatim %}
 
     <form id="evaluationform" action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
 
