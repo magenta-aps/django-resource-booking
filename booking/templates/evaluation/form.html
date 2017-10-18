@@ -43,6 +43,7 @@
         </div>
 
         {% include 'common/fields/generic_field.html' with field=form.url %}
+        {{ form.secondary }}
         {% include 'common/save_cancel.html' %}
     </form>
 

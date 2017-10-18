@@ -1465,12 +1465,15 @@ class EvaluationForm(forms.ModelForm):
 
     class Meta:
         model = Evaluation
-        fields = ['url']
-        widgets = {'url': Textarea(attrs={
-            'class': 'form-control input-sm',
-            'rows': '4',
-            'readonly': 'readonly'
-        })}
+        fields = ['url', 'secondary']
+        widgets = {
+            'url': Textarea(attrs={
+                'class': 'form-control input-sm',
+                'rows': '4',
+                'readonly': 'readonly'
+            }),
+            'secondary': HiddenInput()
+        }
 
     def __init__(self, product, *args, **kwargs):
         self.product = product

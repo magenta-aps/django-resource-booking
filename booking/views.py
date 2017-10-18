@@ -4034,7 +4034,7 @@ class EvaluationEditView(BreadcrumbMixin, UpdateView):
     template_name = "evaluation/form.html"
     model = Evaluation
 
-    def get_object(self):
+    def get_object(self, **kwargs):
         if 'product' in self.kwargs and 'id' not in self.kwargs:
             return None
         return super(EvaluationEditView, self).get_object()
@@ -4053,6 +4053,14 @@ class EvaluationEditView(BreadcrumbMixin, UpdateView):
     def get_form_kwargs(self):
         kwargs = super(EvaluationEditView, self).get_form_kwargs()
         kwargs['product'] = self.get_product()
+        if self.object is None:
+            secondary = True \
+                if self.request.GET.get('secondary', '0') == '1' \
+                else False
+            if 'initial' not in kwargs:
+                kwargs['initial'] = {}
+            kwargs['initial']['secondary'] = secondary
+
         return kwargs
 
     def get_success_url(self):

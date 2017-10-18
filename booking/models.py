@@ -1913,6 +1913,14 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         default='',
     )
 
+    @property
+    def primary_evaluation(self):
+        return self.evaluation_set.filter(secondary=False).first()
+
+    @property
+    def secondary_evaluation(self):
+        return self.evaluation_set.filter(secondary=True).first()
+
     def available_time_modes(self, unit=None):
         if self.type is None:
             return Product.time_mode_choices
@@ -5600,6 +5608,9 @@ class Evaluation(models.Model):
         on_delete=models.CASCADE,
         null=True
     )
+    secondary = models.BooleanField(
+        default=False
+    )
 
     def send_notification(self, template_type, new_status, filter=None):
         qs = self.evaluationguest_set.all()
@@ -5656,7 +5667,9 @@ class Evaluation(models.Model):
         for evaluation in Evaluation.objects.all():
             if evaluation.product is None \
                     and len(evaluation.visit.products) > 0:
-                evaluation.product = evaluation.visit.products[0]
+                # evaluation.product = evaluation.visit.products[0]
+                evaluation.visit.products[0].primary_evaluation = evaluation
+
 
 
 class EvaluationGuest(models.Model):
