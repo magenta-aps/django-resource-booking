@@ -95,7 +95,9 @@
         ];
 
         var formDefinition = {
-            'key': {},
+            'key': {
+                'text': 'Formularnøgle'
+            },
             'tname': {
                 'text': '{% trans "Gæstens navn" %}',
                 'default': '{% verbatim %}{{ guest.full_name }}{% endverbatim %}'
@@ -214,7 +216,7 @@
             var defaultValue = 'default' in fieldDefinition ? fieldDefinition['default'] : null,
                 enabled = true,
                 value = key in original ? (original[key]) : (defaultValue !== null ? defaultValue : ''),
-                text = fieldDefinition['text'] || '';
+                text = fieldDefinition['text'] || ('['+key+']');
 
             fieldRowHtml[j++] = '<div class="row form-group">';
 
