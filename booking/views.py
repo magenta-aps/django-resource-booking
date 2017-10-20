@@ -4126,16 +4126,9 @@ class EvaluationRedirectView(RedirectView):
     permanent = False
 
     def get_redirect_url(self, *args, **kwargs):
-        try:
-            evalguest = EvaluationGuest.objects.get(
-                shortlink_id=kwargs['linkid']
-            )
-        except:
-            raise Http404
-        url = evalguest.url
+        url = EvaluationGuest.get_redirect_url(kwargs['linkid'], True)
         if url is None:
             raise Http404
-        evalguest.link_clicked()
         return url
 
 

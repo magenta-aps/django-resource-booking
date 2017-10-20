@@ -493,6 +493,7 @@ class EmailTemplateType(
     NOTIFY_ALL_EVALUATION = 22  # Ticket 15701
     NOTIFY_GUEST__BOOKING_CREATED_UNTIMED = 23  # Ticket 16914
     NOTIFY_GUEST__EVALUATION_FIRST = 24  # Ticket 13819
+    NOTIFY_GUEST__EVALUATION_FIRST_STUDENTS = 26  # Ticket 13819
     NOTIFY_GUEST__EVALUATION_SECOND = 25  # Ticket 13819
 
     @staticmethod
@@ -907,6 +908,18 @@ class EmailTemplateType(
         )
 
         EmailTemplateType.set_default(
+            EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST_STUDENTS,
+            name_da=u'Besked til bruger angående evaluering (første besked), '
+                    u'for videresendelse til elever',
+            form_show=True,
+            send_to_booker=True,
+            enable_autosend=True,
+            enable_booking=True,
+            is_default=True,
+            ordering=25
+        )
+
+        EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__EVALUATION_SECOND,
             name_da=u'Besked til bruger angående evaluering (anden besked)',
             form_show=True,
@@ -915,7 +928,7 @@ class EmailTemplateType(
             enable_booking=True,
             enable_days=False,
             is_default=True,
-            ordering=25
+            ordering=26
         )
 
     @staticmethod
@@ -978,7 +991,7 @@ class EmailTemplateType(
                     template_type=template_type
                 )
                 if qs.count() == 0:
-                    print "    create autosend type %d for product %d" % \
+                    print "    creating autosend type %d for product %d" % \
                           (template_type.key, product.id)
                     autosend = ProductAutosend(
                         template_key=template_type.key,
@@ -2980,10 +2993,12 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 last_workflow_status != self.workflow_status:
             self.last_workflow_update = timezone.now()
             if self.workflow_status == self.WORKFLOW_STATUS_EXECUTED:
-                try:
-                    self.product.evaluation.send_first_notification(self)
-                except AttributeError:
-                    pass
+                for evaluation in [
+                    self.product.primary_evaluation,
+                    self.product.secondary_evaluation
+                ]:
+                    if evaluation is not None:
+                        evaluation.send_first_notification(self)
 
     @property
     # QuerySet that finds EventTimes that will be affected by resource changes
@@ -5118,6 +5133,7 @@ class Booking(models.Model):
                  only_these_recipients=False):
 
         visit = self.visit.real
+        print "enabled: %s" % unicode(visit.autosend_enabled(template_type))
         if visit.autosend_enabled(template_type):
             product = visit.product
             unit = visit.organizationalunit
@@ -5613,17 +5629,15 @@ class Evaluation(models.Model):
 
     def send_notification(self, template_type, new_status, filter=None):
         qs = self.product.evaluationguest_set.all()
-        print qs
-        print filter
         if filter is not None:
             qs = qs.filter(**filter)
         print qs
         for evalguest in qs:
-            # There really should be only one here
             try:
                 sent = evalguest.booking.autosend(
                     template_type
                 )
+                print sent
                 if sent:
                     evalguest.status = new_status
                     evalguest.save()
@@ -5632,19 +5646,19 @@ class Evaluation(models.Model):
 
     def send_first_notification(self, visit):
         print "send first notification pertaining to visit %d" % visit.id
-        print self.product.evaluationguest_set.all()
+        template = EmailTemplateType.notify_guest__evaluation_first_students \
+            if self.secondary \
+            else EmailTemplateType.notify_guest__evaluation_first
         self.send_notification(
-            EmailTemplateType.notify_guest__evaluation_first,
+            template,
             EvaluationGuest.STATUS_FIRST_SENT,
             {
-                'status': EvaluationGuest.STATUS_NOT_SENT,
                 'guest__booking__visit': visit
             }
         )
 
     def send_second_notification(self, visit):
         print "send second notification pertaining to visit %d" % visit.id
-        print self.evaluationguest_set.all()
         self.send_notification(
             EmailTemplateType.notify_guest__evaluation_second,
             EvaluationGuest.STATUS_SECOND_SENT,
@@ -5750,7 +5764,15 @@ class EvaluationGuest(models.Model):
 
     @property
     def link(self):
-        return settings.PUBLIC_URL + reverse('evaluation-redirect', args=[self.shortlink_id])
+        return self.link_obtain(self.shortlink_id)
+
+    @property
+    def link_secondary(self):
+        return self.link_obtain(self.shortlink_id + "_s")
+
+    @staticmethod
+    def link_obtain(shortlink_id):
+        return settings.PUBLIC_URL + reverse('evaluation-redirect', args=[shortlink_id])
 
     @property
     def status_display(self):
@@ -5810,6 +5832,25 @@ class EvaluationGuest(models.Model):
             })
             rendered = template.render(context)
             return rendered.strip()
+
+    @staticmethod
+    def get_redirect_url(shortlink_id, set_link_click=False):
+        secondary = False
+        if shortlink_id.endswith("_s"):
+            secondary = True
+            shortlink_id = shortlink_id[:-2]
+        try:
+            evalguest = EvaluationGuest.objects.get(
+                shortlink_id=shortlink_id
+            )
+        except:
+            return None
+        url = evalguest.secondary_url if secondary else evalguest.url
+        if url is None:
+            return None
+        if set_link_click:
+            evalguest.link_clicked()
+        return url
 
     def link_clicked(self):
         self.status = self.STATUS_LINK_CLICKED

@@ -429,7 +429,7 @@ urlpatterns = patterns(
         EvaluationDetailView.as_view(),
         name='evaluation-view'),
 
-    url(r'^e/(?P<linkid>[a-zA-Z0-9]+)$',
+    url(r'^e/(?P<linkid>[a-zA-Z0-9]+(_s)?)$',
         EvaluationRedirectView.as_view(),
         name='evaluation-redirect'),
 
