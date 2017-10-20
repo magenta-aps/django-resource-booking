@@ -5712,15 +5712,15 @@ class Evaluation(models.Model):
                     if product is not None:
                         for evaluation in product.evaluation_set:
                             guest.evaluationguest = EvaluationGuest(
-                                evaluation = evaluation,
-                                guest = guest,
-                                visit = visit
+                                evaluation=evaluation,
+                                guest=guest,
+                                visit=visit
                             )
                             guest.evaluationguest.save()
 
 
 class EvaluationGuest(models.Model):
-    #deprecate
+    # deprecate
     evaluation = models.ForeignKey(
         Evaluation,
         null=True,
@@ -5772,7 +5772,10 @@ class EvaluationGuest(models.Model):
 
     @staticmethod
     def link_obtain(shortlink_id):
-        return settings.PUBLIC_URL + reverse('evaluation-redirect', args=[shortlink_id])
+        return settings.PUBLIC_URL + reverse(
+            'evaluation-redirect',
+            args=[shortlink_id]
+        )
 
     @property
     def status_display(self):
