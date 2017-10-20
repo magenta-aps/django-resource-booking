@@ -4,11 +4,7 @@
     Vi vil sætte stor pris på, hvis du vil tage dig tid til at evaluere besøg
     <a href="{% full_url 'product-view' product.pk %}">{{ product.title }}</a>
     der blev gennemført {% include 'booking/email/snippets/visit_time.html' %} på Københavns Universitet.
-    Evaluér her
-    1: {{ recipient.guest }}
-    2: {{ recipient.guest.firstname }}
-    3: {{ recipient.guest.evaluationguest.shortlink_id }}
-    <a href="{{ recipient.guest.firstname }}">{{ visit.evaluation_link }}</a>.
+    Evaluér her: <a href="{{ recipient.guest.evaluationguest.link }}">{{ recipient.guest.evaluationguest.link }}</a>.
 </p>
 <p>
     På forhånd tak for hjælpen!

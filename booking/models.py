@@ -5749,7 +5749,7 @@ class EvaluationGuest(models.Model):
     )
 
     @property
-    def shortlink(self):
+    def link(self):
         return settings.PUBLIC_URL + reverse('evaluation-redirect', args=[self.shortlink_id])
 
     @property
