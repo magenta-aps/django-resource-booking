@@ -58,7 +58,7 @@
                                 </tr>
                                 </thead>
                                 <tbody>
-                                {% for participant in object.evaluationguest_set.all %}
+                                {% for participant in object.product.evaluationguest_set.all %}
                                     <tr>
                                         <td>{{ participant.guest.get_name }}</td>
                                         <td>{{ participant.guest.get_email }}</td>

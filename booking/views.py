@@ -2597,6 +2597,12 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
                     EmailTemplateType.notify_host__req_host_volunteer
                 )
 
+            evaluationguest = EvaluationGuest(
+                product=self.product,
+                guest=booking.booker
+            )
+            evaluationguest.save()
+
             self.object = booking
             self.model = booking.__class__
 
