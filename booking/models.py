@@ -1934,6 +1934,15 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     def secondary_evaluation(self):
         return self.evaluation_set.filter(secondary=True).first()
 
+    @property
+    def evaluations(self):
+        return [
+            evaluation for evaluation in [
+                self.primary_evaluation, self.secondary_evaluation
+            ]
+            if evaluation is not None
+        ]
+
     def available_time_modes(self, unit=None):
         if self.type is None:
             return Product.time_mode_choices
@@ -2993,12 +3002,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 last_workflow_status != self.workflow_status:
             self.last_workflow_update = timezone.now()
             if self.workflow_status == self.WORKFLOW_STATUS_EXECUTED:
-                for evaluation in [
-                    self.product.primary_evaluation,
-                    self.product.secondary_evaluation
-                ]:
-                    if evaluation is not None:
-                        evaluation.send_first_notification(self)
+                for evaluation in self.product.evaluations:
+                    evaluation.send_first_notification(self)
 
     @property
     # QuerySet that finds EventTimes that will be affected by resource changes
@@ -5659,7 +5664,7 @@ class Evaluation(models.Model):
     )
 
     def send_notification(self, template_type, new_status, filter=None):
-        qs = self.product.evaluationguest_set.all()
+        qs = self.evaluationguest_set.all()
         if filter is not None:
             qs = qs.filter(**filter)
         print qs
@@ -5735,28 +5740,25 @@ class Evaluation(models.Model):
                 evaluationguest.save()
 
         for guest in Guest.objects.all():
-            evaluationguest = guest.get_evaluationguest()
-            if evaluationguest is None:
-                booking = guest.get_booking()
-                if booking is not None:
-                    visit = booking.visit
-                    if visit.is_multiproductvisit:
-                        product = visit.products[0]
-                    else:
-                        product = visit.product
-                    if product is not None:
-                        # for evaluation in product.evaluation_set.all():
-                        guest.evaluationguest = EvaluationGuest(
-                            # evaluation=evaluation,
+            booking = guest.get_booking()
+            if booking is not None:
+                for product in booking.visit.products:
+                    for evaluation in product.evaluations:
+                        if EvaluationGuest.objects.filter(
                             guest=guest,
-                            visit=visit,
-                            product=product
-                        )
-                        guest.evaluationguest.save()
+                            product=product,
+                            evaluation=evaluation
+                        ).count() == 0:
+                            evaluationguest = EvaluationGuest(
+                                # evaluation=evaluation,
+                                guest=guest,
+                                product=product,
+                                evaluation = evaluation
+                            )
+                            evaluationguest.save()
 
 
 class EvaluationGuest(models.Model):
-    # deprecate
     evaluation = models.ForeignKey(
         Evaluation,
         null=True,
@@ -5767,7 +5769,7 @@ class EvaluationGuest(models.Model):
         null=True,
         blank=True
     )
-    guest = models.OneToOneField(
+    guest = models.ForeignKey(
         Guest,
         null=False,
         blank=False
@@ -5834,48 +5836,26 @@ class EvaluationGuest(models.Model):
 
     @property
     def url(self):
-        evaluation = self.product.primary_evaluation
-        if evaluation is not None:
-            template = Template(
-                "{% load booking_tags %}" +
-                "{% load i18n %}" +
-                "{% language 'da' %}\n" +
-                unicode(evaluation.url) +
-                "{% endlanguage %}\n"
-            )
-            context = make_context({
-                'evaluation': evaluation,
-                'guest': self.guest,
-                'visit': self.visit,
-                'product': self.product,
-                'booking': self.booking
-            })
-            try:
-                rendered = template.render(context)
-                return rendered.strip()
-            except Exception as e:
-                return "<error: %s>" % e.message
-
-    @property
-    def secondary_url(self):
-        evaluation = self.product.secondary_evaluation
-        if evaluation is not None:
-            template = Template(
-                "{% load booking_tags %}" +
-                "{% load i18n %}" +
-                "{% language 'da' %}\n" +
-                unicode(evaluation.url) +
-                "{% endlanguage %}\n"
-            )
-            context = make_context({
-                'evaluation': evaluation,
-                'guest': self.guest,
-                'visit': self.visit,
-                'product': self.product,
-                'booking': self.booking
-            })
+        template = Template(
+            "{% load booking_tags %}" +
+            "{% load i18n %}" +
+            "{% language 'da' %}\n" +
+            unicode(self.evaluation.url) +
+            "{% endlanguage %}\n"
+        )
+        context = make_context({
+            'evaluation': self.evaluation,
+            'guest': self.guest,
+            'visit': self.visit,
+            'product': self.product,
+            'booking': self.booking
+        })
+        try:
             rendered = template.render(context)
             return rendered.strip()
+        except Exception as e:
+            print e.message
+            return "<error: %s>" % e.message
 
     @staticmethod
     def get_redirect_url(shortlink_id, set_link_click=False):
@@ -5885,12 +5865,13 @@ class EvaluationGuest(models.Model):
             shortlink_id = shortlink_id[:-2]
         try:
             evalguest = EvaluationGuest.objects.get(
-                shortlink_id=shortlink_id
+                shortlink_id=shortlink_id,
+                evaluation__secondary=secondary
             )
         except:
             return None
-        url = evalguest.secondary_url if secondary else evalguest.url
-        if url is None:
+        url = evalguest.url
+        if url is None or 'error' in url:
             return None
         if set_link_click:
             evalguest.link_clicked()
