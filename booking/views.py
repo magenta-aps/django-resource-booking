@@ -2774,6 +2774,12 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
             object.booker = forms['bookerform'].save()
         object.save()
 
+        evaluationguest = EvaluationGuest(
+            product=self.visit.products[0],
+            guest=object.booker
+        )
+        evaluationguest.save()
+
         object.autosend(
             EmailTemplateType.notify_guest__booking_created_untimed
         )

@@ -53,7 +53,6 @@
                         <a href="{% url 'evaluation-create' object.pk %}?secondary=1" role="button" class="btn btn-primary">{% trans 'Opret evaluering for elever' %}</a>
                     {% endif %}
                 {% else %}
-                    not group
                     {% if object.primary_evaluation %}
                         <a href="{% url 'evaluation-view' object.primary_evaluation.pk %}" role="button" class="btn btn-primary">{% trans 'Vis evaluering' %}</a>
                     {% else %}

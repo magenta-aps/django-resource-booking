@@ -5021,6 +5021,18 @@ class Guest(models.Model):
         validators=[validators.MinValueValidator(int(1))]
     )
 
+    def get_booking(self):
+        try:
+            return self.booking
+        except:
+            return None
+
+    def get_evaluationguest(self):
+        try:
+            return self.evaluationguest
+        except:
+            return None
+
     def as_searchtext(self):
         return " ".join([unicode(x) for x in [
             self.firstname,
@@ -5133,8 +5145,26 @@ class Booking(models.Model):
                  only_these_recipients=False):
 
         visit = self.visit.real
-        print "enabled: %s" % unicode(visit.autosend_enabled(template_type))
-        if visit.autosend_enabled(template_type):
+        enabled = visit.autosend_enabled(template_type)
+        print "Template type %s is %senabled for visit %d" % (
+            template_type,
+            "" if visit.autosend_enabled(template_type) else "not ",
+            visit.id
+        )
+
+        if visit.is_multiproductvisit and template_type.key in [
+            EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST,
+            EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST_STUDENTS,
+            EmailTemplateType.NOTIFY_GUEST__EVALUATION_SECOND
+        ]:
+            for product in visit.products:
+                if product.autosend_enabled(template_type):
+                    print "Making exception for evaluation " \
+                          "mail with product %d" % product.id
+                    enabled = True
+                    break
+
+        if enabled:
             product = visit.product
             unit = visit.organizationalunit
             if recipients is None:
@@ -5143,6 +5173,7 @@ class Booking(models.Model):
                 recipients = set(recipients)
             if not only_these_recipients:
                 recipients.update(self.get_recipients(template_type))
+            print "recipients: %s" % unicode(recipients)
             KUEmailMessage.send_email(
                 template_type,
                 {
@@ -5637,7 +5668,6 @@ class Evaluation(models.Model):
                 sent = evalguest.booking.autosend(
                     template_type
                 )
-                print sent
                 if sent:
                     evalguest.status = new_status
                     evalguest.save()
@@ -5690,7 +5720,9 @@ class Evaluation(models.Model):
     def migrate():
         for evaluation in Evaluation.objects.all():
             if evaluation.product is None \
-                    and len(evaluation.visit.products) > 0:
+                    and evaluation.visit is not None \
+                    and len(evaluation.visit.products) > 0 \
+                    and evaluation.visit.products[0].primary_evaluation is None:
                 # evaluation.product = evaluation.visit.products[0]
                 evaluation.visit.products[0].primary_evaluation = evaluation
         for evaluationguest in EvaluationGuest.objects.all():
@@ -5703,20 +5735,24 @@ class Evaluation(models.Model):
                 evaluationguest.save()
 
         for guest in Guest.objects.all():
-            if guest.evaluationguest is None:
-                visit = guest.booking.visit
-                if visit.is_multiproductvisit:
-                    pass
-                else:
-                    product = visit.product
+            evaluationguest = guest.get_evaluationguest()
+            if evaluationguest is None:
+                booking = guest.get_booking()
+                if booking is not None:
+                    visit = booking.visit
+                    if visit.is_multiproductvisit:
+                        product = visit.products[0]
+                    else:
+                        product = visit.product
                     if product is not None:
-                        for evaluation in product.evaluation_set:
-                            guest.evaluationguest = EvaluationGuest(
-                                evaluation=evaluation,
-                                guest=guest,
-                                visit=visit
-                            )
-                            guest.evaluationguest.save()
+                        # for evaluation in product.evaluation_set.all():
+                        guest.evaluationguest = EvaluationGuest(
+                            # evaluation=evaluation,
+                            guest=guest,
+                            visit=visit,
+                            product=product
+                        )
+                        guest.evaluationguest.save()
 
 
 class EvaluationGuest(models.Model):
@@ -5811,10 +5847,14 @@ class EvaluationGuest(models.Model):
                 'evaluation': evaluation,
                 'guest': self.guest,
                 'visit': self.visit,
+                'product': self.product,
                 'booking': self.booking
             })
-            rendered = template.render(context)
-            return rendered.strip()
+            try:
+                rendered = template.render(context)
+                return rendered.strip()
+            except Exception as e:
+                return "<error: %s>" % e.message
 
     @property
     def secondary_url(self):
@@ -5831,6 +5871,7 @@ class EvaluationGuest(models.Model):
                 'evaluation': evaluation,
                 'guest': self.guest,
                 'visit': self.visit,
+                'product': self.product,
                 'booking': self.booking
             })
             rendered = template.render(context)
