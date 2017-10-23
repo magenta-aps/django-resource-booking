@@ -5645,7 +5645,7 @@ class Evaluation(models.Model):
         max_length=1024,
         verbose_name=u'Evaluerings-URL'
     )
-    #deprecate
+    # deprecate
     visit = models.OneToOneField(
         Visit,
         null=True,
@@ -5725,12 +5725,12 @@ class Evaluation(models.Model):
     @staticmethod
     def migrate():
         for evaluation in Evaluation.objects.all():
+            visit = evaluation.visit
             if evaluation.product is None \
-                    and evaluation.visit is not None \
-                    and len(evaluation.visit.products) > 0 \
-                    and evaluation.visit.products[0].primary_evaluation is None:
-                # evaluation.product = evaluation.visit.products[0]
-                evaluation.visit.products[0].primary_evaluation = evaluation
+                    and visit is not None \
+                    and len(visit.products) > 0 \
+                    and visit.products[0].primary_evaluation is None:
+                visit.products[0].primary_evaluation = evaluation
         for evaluationguest in EvaluationGuest.objects.all():
             # if evaluationguest.visit is None and \
             #         evaluationguest.evaluation.visit is not None:
@@ -5754,7 +5754,7 @@ class Evaluation(models.Model):
                                 # evaluation=evaluation,
                                 guest=guest,
                                 product=product,
-                                evaluation = evaluation
+                                evaluation=evaluation
                             )
                             evaluationguest.save()
 

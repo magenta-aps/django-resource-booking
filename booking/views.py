@@ -3730,8 +3730,7 @@ class EvaluationOverviewView(LoginRequiredMixin, BreadcrumbMixin, ListView):
             formdata = form.cleaned_data
 
             product_qs = Product.objects.filter(
-                organizationalunit__in=
-                form.user.userprofile.get_unit_queryset(),
+                organizationalunit=form.user.userprofile.get_unit_queryset(),
                 evaluation__isnull=False
             )
             visit_qs = Visit.objects.all()
