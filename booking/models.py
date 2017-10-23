@@ -5645,6 +5645,7 @@ class Evaluation(models.Model):
         max_length=1024,
         verbose_name=u'Evaluerings-URL'
     )
+    #deprecate
     visit = models.OneToOneField(
         Visit,
         null=True,
