@@ -2599,12 +2599,13 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
                 )
 
             for evaluation in self.product.evaluations:
-                evaluationguest = EvaluationGuest(
-                    product=self.product,
-                    guest=booking.booker,
-                    evaluation=evaluation
-                )
-                evaluationguest.save()
+                if evaluation is not None:
+                    evaluationguest = EvaluationGuest(
+                        product=self.product,
+                        guest=booking.booker,
+                        evaluation=evaluation
+                    )
+                    evaluationguest.save()
 
             self.object = booking
             self.model = booking.__class__
@@ -2779,12 +2780,13 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
 
         for product in self.visit.products:
             for evaluation in product.evaluations:
-                evaluationguest = EvaluationGuest(
-                    product=product,
-                    evaluation=evaluation,
-                    guest=object.booker
-                )
-                evaluationguest.save()
+                if evaluation is not None:
+                    evaluationguest = EvaluationGuest(
+                        product=product,
+                        evaluation=evaluation,
+                        guest=object.booker
+                    )
+                    evaluationguest.save()
 
         object.autosend(
             EmailTemplateType.notify_guest__booking_created_untimed
