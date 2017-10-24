@@ -5,7 +5,11 @@
     Vi vil sætte stor pris på, hvis du vil tage dig tid til at evaluere besøg på Københavns Universitet d. {% include 'booking/email/snippets/visit_time.html' %}.
     Evaluér her:
     <ul>
-    {% for evaluationguest in recipient.guest.evaluationguest_set.all %}<li><a href="{{ evaluationguest.link }}">{{ evaluationguest.link }}</a></li>{% endfor %}
+        {% for evaluationguest in recipient.guest.evaluationguest_set.all %}
+            {% if not evaluationguest.evaluation.secondary %}
+                <li><a href="{{ evaluationguest.link }}">{{ evaluationguest.link }}</a></li>
+            {% endif %}
+        {% endfor %}
     </ul>
 </p>
 {% else %}
@@ -13,7 +17,7 @@
     Vi vil sætte stor pris på, hvis du vil tage dig tid til at evaluere besøg
     <a href="{% full_url 'product-view' product.pk %}">{{ product.title }}</a>
     der blev gennemført {% include 'booking/email/snippets/visit_time.html' %} på Københavns Universitet.
-    Evaluér her: {% for evaluationguest in recipient.guest.evaluationguest_set.all %}<a href="{{ evaluationguest.link }}">{{ evaluationguest.link }}</a>{% endfor %}.
+    Evaluér her: {% for evaluationguest in recipient.guest.evaluationguest_set.all %}{% if not evaluationguest.evaluation.secondary %}<a href="{{ evaluationguest.link }}">{{ evaluationguest.link }}</a>{% endif %}{% endfor %}.
 </p>
 {% endif %}
 <p>

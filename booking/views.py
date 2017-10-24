@@ -4100,7 +4100,7 @@ class EvaluationEditView(BreadcrumbMixin, UpdateView):
             self.object.product = self.get_product()
             self.object.save()
         for visit in self.object.product.get_visits():
-            for booking in visit.bookings:
+            for booking in visit.booking_list:
                 guest = booking.booker
                 if EvaluationGuest.objects.filter(
                     product=self.object.product,
