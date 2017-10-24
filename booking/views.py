@@ -2597,11 +2597,13 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
                     EmailTemplateType.notify_host__req_host_volunteer
                 )
 
-            evaluationguest = EvaluationGuest(
-                product=self.product,
-                guest=booking.booker
-            )
-            evaluationguest.save()
+            for evaluation in self.product.evaluations:
+                evaluationguest = EvaluationGuest(
+                    product=self.product,
+                    guest=booking.booker,
+                    evaluation=evaluation
+                )
+                evaluationguest.save()
 
             self.object = booking
             self.model = booking.__class__
@@ -4095,6 +4097,20 @@ class EvaluationEditView(BreadcrumbMixin, UpdateView):
         if self.object.product is None:
             self.object.product = self.get_product()
             self.object.save()
+        for visit in self.object.product.visit_set.all():
+            for booking in visit.bookings:
+                guest = booking.booker
+                if EvaluationGuest.objects.filter(
+                    product=self.object.product,
+                    evaluation=self.object,
+                    guest=guest
+                ).count() == 0:
+                    evaluationguest = EvaluationGuest(
+                        product=self.object.product,
+                        evaluation=self.object,
+                        guest=guest
+                    )
+                    evaluationguest.save()
         return response
 
     def get_breadcrumb_args(self):
