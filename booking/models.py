@@ -5765,7 +5765,7 @@ class Evaluation(models.Model):
                     and visit is not None \
                     and len(visit.products) > 0 \
                     and visit.products[0].primary_evaluation is None:
-                visit.products[0].primary_evaluation = evaluation
+                evaluation.product = visit.products[0]
         for evaluationguest in EvaluationGuest.objects.all():
             # if evaluationguest.visit is None and \
             #         evaluationguest.evaluation.visit is not None:
@@ -5779,19 +5779,20 @@ class Evaluation(models.Model):
             booking = guest.get_booking()
             if booking is not None:
                 for product in booking.visit.products:
-                    for evaluation in product.evaluations:
-                        if EvaluationGuest.objects.filter(
-                            guest=guest,
-                            product=product,
-                            evaluation=evaluation
-                        ).count() == 0:
-                            evaluationguest = EvaluationGuest(
-                                # evaluation=evaluation,
+                    if product is not None:
+                        for evaluation in product.evaluations:
+                            if EvaluationGuest.objects.filter(
                                 guest=guest,
                                 product=product,
                                 evaluation=evaluation
-                            )
-                            evaluationguest.save()
+                            ).count() == 0:
+                                evaluationguest = EvaluationGuest(
+                                    # evaluation=evaluation,
+                                    guest=guest,
+                                    product=product,
+                                    evaluation=evaluation
+                                )
+                                evaluationguest.save()
 
 
 class EvaluationGuest(models.Model):
