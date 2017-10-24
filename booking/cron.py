@@ -237,6 +237,7 @@ class EvaluationReminderJob(KuCronJob):
     schedule = Schedule(run_at_times=RUN_AT_TIMES)
     code = 'kubooking.evaluationreminder'
     description = "sends evaluation reminder emails"
+    days = 5
 
     def run(self):
         emailtemplate = EmailTemplateType.notify_guest__evaluation_second
@@ -258,9 +259,7 @@ class EvaluationReminderJob(KuCronJob):
         extra = []
         for autosend in inheriting_autosends:
             inherited = autosend.get_inherited()
-            if inherited is not None and inherited.enabled and \
-                    (inherited.days is not None or autosend.days is not None):
-                autosend.days = autosend.days or inherited.days
+            if inherited is not None and inherited.enabled:
                 autosend.enabled = inherited.enabled
                 extra.append(autosend)
         print "Found %d enabled inheriting autosends" % len(extra)
@@ -274,17 +273,24 @@ class EvaluationReminderJob(KuCronJob):
                     visit = autosend.visit
                     print "Autosend %d for Visit %d:" % \
                           (autosend.id, visit.id)
-                    print "    Visit ends on %s" % \
-                          unicode(visit.end_datetime.date())
-                    alertday = visit.end_datetime.date() + \
-                        timedelta(autosend.days)
-                    print "    Autosend specifies to send %d days after " \
-                          "completion, on %s" % (autosend.days, alertday)
-                    if alertday == today:
-                        print "    That's today; sending messages now"
-                        visit.evaluation.send_second_notification()
+                    if visit.end_datetime is None:
+                        print "Visit %d has no apparent end_datetime"
                     else:
-                        print "    That's not today. Not sending messages"
+                        print "    Visit ends on %s" % \
+                              unicode(visit.end_datetime.date())
+                        alertday = visit.end_datetime.date() + \
+                            timedelta(self.days)
+                        print "    Hardcoded to send %d days after " \
+                              "completion, on %s" % (self.days, alertday)
+                        if alertday == today:
+                            print "    That's today; sending messages now"
+                            product = visit.product
+                            if product is not None:
+                                for evaluation in product.evaluations:
+                                    evaluation.send_second_notification(visit)
+
+                        else:
+                            print "    That's not today. Not sending messages"
         finally:
             for autosend in autosends:
                 autosend.refresh_from_db()

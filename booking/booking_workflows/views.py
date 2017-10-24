@@ -15,7 +15,6 @@ from booking.booking_workflows.forms import ChangeVisitTeachersForm
 from booking.booking_workflows.forms import ChangeVisitHostsForm
 from booking.booking_workflows.forms import ChangeVisitRoomsForm
 from booking.booking_workflows.forms import ChangeVisitCommentsForm
-from booking.booking_workflows.forms import ChangeVisitEvalForm
 from booking.booking_workflows.forms import VisitAddLogEntryForm
 from booking.booking_workflows.forms import VisitAddCommentForm
 from booking.booking_workflows.forms import ResetVisitChangesForm
@@ -347,13 +346,6 @@ class ChangeVisitCommentsView(AutologgerMixin, UpdateWithCancelView):
     form_class = ChangeVisitCommentsForm
     template_name = "booking/workflow/change_comments.html"
     view_title = _(u'Redigér kommentarer')
-
-
-class ChangeVisitEvalView(AutologgerMixin, UpdateWithCancelView):
-    model = Visit
-    form_class = ChangeVisitEvalForm
-    template_name = "booking/workflow/change_eval_link.html"
-    view_title = _(u'Redigér evalueringslink')
 
 
 class VisitAddLogEntryView(VisitBreadcrumbMixin, FormView):

@@ -3,46 +3,61 @@
 {% load booking_tags %}
 {% load i18n %}
 
-{% block htmltitle %} - {% trans 'overblik over evalueringer' %}{% endblock %}
+{% block htmltitle %} - {% if object.pk %}{% trans "Redigér evaluering" %}{% else %}{% trans "Opret evaluering" %}{% endif %}{% endblock %}
 
 {% block content %}
 
     {% include 'common/breadcrumbrow.html' %}
 
-    <h1>{% if object.pk %}{% trans "Rediger evaluering" %}{% else %}{% trans "Opret evaluering" %}{% endif %}</h1>
+    <h1>{% if object.pk %}{% trans "Redigér evaluering" %}{% else %}{% trans "Opret evaluering" %}{% endif %}</h1>
+
+    {% verbatim %}
+    <p>
+        For hvert besøg udsendes et link til et evalueringsskema. Skemaet forudfyldes med værdier som defineres her.
+        Ved udsendelse trækkes data ind fra besøget og gæsten: F.eks. vil {{ guest.full_name }} erstattes med gæstens fulde navn.
+    </p>
+    {% endverbatim %}
 
     <form id="evaluationform" action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
 
         {% csrf_token %}
         {{ form.non_field_errors }}
 
-        <div class="row form-group">
-            <div class="col-sm-2">
-                <label for="presetSelector">{% trans 'Type:' %}</label>
-            </div>
-            <div class="col-sm-7">
-                <select id="presetSelector" class="form-control input-sm"></select>
-            </div>
-        </div>
-
-        <div id="fieldContainer"></div>
-        <div class="row form-group">
-            <div class="col-sm-2">
-                <label for="extrafields">{% trans 'Ekstra felter:' %}</label>
-            </div>
-            <div class="col-sm-7">
-                <textarea id="extrafields" style="width:100%; min-height:8em; resize:none"></textarea>
-            </div>
-            <div class="col-sm-3">
-                {% trans 'Ekstra URL-parametre, f.eks.:' %}<br>
-                <code>foo=bar</code><br/>
-                <code>version=42</code><br/>
-                {% trans 'Linjeskift erstattes af & i resultatet' %}
-            </div>
-        </div>
-
-        {% include 'common/fields/generic_field.html' with field=form.url %}
-        {% include 'common/fields/generic_field.html' with field=form.nonparticipating_guests %}
+        <table class="table">
+            <tr><td>
+                <div class="row form-group">
+                    <div class="col-sm-1">
+                        <label for="presetSelector">{% trans 'Type:' %}</label>
+                    </div>
+                    <div class="col-sm-8">
+                        <select id="presetSelector" class="form-control input-sm"></select>
+                    </div>
+                </div>
+            </td></tr>
+            <tr><td>
+                <div id="fieldContainer"></div>
+            </td></tr>
+            <tr><td>
+                <div class="row form-group">
+                    <div class="col-sm-2">
+                        <label for="extrafields">{% trans 'Ekstra felter:' %}</label>
+                    </div>
+                    <div class="col-sm-7">
+                        <textarea id="extrafields" style="width:100%; min-height:8em; resize:none"></textarea>
+                    </div>
+                    <div class="col-sm-3">
+                        {% trans 'Ekstra URL-parametre, f.eks.:' %}<br>
+                        <code>foo=bar</code><br/>
+                        <code>version=42</code><br/>
+                        {% trans 'Linjeskift erstattes af & i resultatet' %}
+                    </div>
+                </div>
+            </td></tr>
+            <tr><td>
+                {% include 'common/fields/generic_field.html' with field=form.url %}
+            </td></tr>
+        </table>
+        {{ form.secondary }}
         {% include 'common/save_cancel.html' %}
     </form>
 
@@ -78,43 +93,130 @@
                 'keys': ['key', 'tname', 'email', 'bd', 'ofn1', 'ofn2', 'ofv1', 'ofv2', 'agn', 'agv', 'rgn', 'opl', 'rv', 'kt']
             }
         ];
-        {% verbatim %}
-        var formDefinition = [
-            {'key': 'key'},
-            {'key': 'tname', 'default': '{{ guest.full_name }}'},
-            {'key': 'uname', 'default': '{{ guest.full_name }}'},
-            {'key': 'email', 'default': '{{ guest.email }}'},
-            {'key': 'uv', 'default': '{{ visit.assigned_teachers.first.get_full_name|default:"" }}'},
-            {'key': 'of'},
-            {'key': 'oename', 'default': '{{ visit.display_title }}'},
-            {'key': 'bd', 'default': '{{ visit.start_datetime|date:"j F" }}'},
-            {'key': 'ofn1', 'default': '{{ visit.display_title }}'},
-            {'key': 'ofv1'},
-            {'key': 'ofv2'},
-            {'key': 'ofn1'},
-            {'key': 'ofn2'},
-            {'key': 'agn', 'default': '{{ guest.get_full_name }}'},
-            {'key': 'agv'},
-            {'key': 'rgn', 'default': '{{ guest.lastname }} {{ guest.firstname }}'},
-            {'key': 'rgv'},
-            {'key': 'kt'},
-            {'key': 'opl'},
-            {'key': 'rv'}
-        ];
-        {% endverbatim %}
+
+        var formDefinition = {
+            'key': {
+                'text': 'Formularnøgle'
+            },
+            'tname': {
+                'text': '{% trans "Gæstens navn" %}',
+                'default': '{% verbatim %}{{ guest.full_name }}{% endverbatim %}'
+            },
+            'email': {
+                'text': '{% trans "Gæstens email-adresse" %}',
+                'default': '{% verbatim %}{{ guest.email }}{% endverbatim %}'
+            },
+            'uname': {
+                'text': '{% trans "Underviserens navn" %}',
+                'default': '{% verbatim %}{{ visit.assigned_teachers.first.get_full_name|default:"" }}{% endverbatim %}'
+            },
+            'uv': {
+                'text': '{% trans "Underviser" %}',
+                'default': '{% verbatim %}{{ visit.assigned_teachers.first.get_full_name|default:"" }}{% endverbatim %}'
+            },
+            'of': {},
+            'oename': {
+                'default': '{% verbatim %}{{ product.title }}{% endverbatim %}'
+            },
+            'bd': {
+                'text': '{% trans "Besøgsdag" %}',
+                'default': '{% verbatim %}{{ visit.start_datetime|date:"j F" }}{% endverbatim %}'
+            },
+            'ofn1': {
+                'text': '{% trans "Øvelse/foredrag navn" %}',
+                'default': '{% verbatim %}{{ product.title }}{% endverbatim %}'
+            },
+            'ofv1': {
+                'text': '{% trans "Ø/F værdi 1" %}',
+                'help': "1 = Moderne bioteknologi; dyrlæger, dyreforsøg og dyrevelfærd\n" +
+                        "2 = Gensplejsning og planteforædling\n" +
+                        "3 = Adfærd og adfærdsproblemer hos landbrugs- og forsøgsdyr\n" +
+                        "6 = Recirkulering af næringsstoffer fra by til land - et skridt på vejen mod bæredygtige samfund\n" +
+                        "8 = Er landbrugspolitikken i USA til for landmændenes eller politikernes skyld?\n" +
+                        "9 = Antibiotikumresistens hos bakterier"
+            },
+            'ofn2': {
+                'text': '{% trans "2. Øvelse/foredrag navn" %}'
+            },
+            'ofv2': {
+                'text': '{% trans "Ø/F værdi 2" %}',
+                'help': "1 = Moderne bioteknologi; dyrlæger, dyreforsøg og dyrevelfærd\n" +
+                        "2 = Gensplejsning og planteforædling\n" +
+                        "3 = Adfærd og adfærdsproblemer hos landbrugs- og forsøgsdyr\n" +
+                        "6 = Recirkulering af næringsstoffer fra by til land - et skridt på vejen mod bæredygtige samfund\n" +
+                        "8 = Er landbrugspolitikken i USA til for landmændenes eller politikernes skyld?\n" +
+                        "9 = Antibiotikumresistens hos bakterier"
+            },
+            'agn': {
+                'text': '{% trans "Ansvarligguide navn" %}'
+            },
+            'agv': {
+                'text': '{% trans "Ansvarlig guide" %}',
+                'help': "2 = Agnete Solvej Poulsen\n" +
+                        "3 = Anders Kruse\n" +
+                        "4 = Andreas Eske Johansen Sørensen\n" +
+                        "5 = Anine Svendsen Kimer\n" +
+                        "6 = Camilla Buch Vang Hansen\n" +
+                        "8 = Guide Kristina Mejer\n" +
+                        "9 = Jeppe Baden\n" +
+                        "10 = Pernille Vestergaard Jensen"
+            },
+            'rgn': {
+                'text': '{% trans "Rundvisningsguide(r) navn" %}'
+            },
+            'rgv': {
+                'text': '{% trans "Rundvisningsguide(r) navn" %}'
+            },
+            'kt': {
+                'text': '{% trans "Klassetrin" %}',
+                'default': '{% verbatim %}{{ guest.level | evaluation_classlevel }}{% endverbatim %}',
+                'help': "14 = Børnehave\n" +
+                        "0 = 0. klasse\n" +
+                        "1 = 1. klasse\n" +
+                        "2 = 2. klasse\n" +
+                        "3 = 3. klasse\n" +
+                        "4 = 4. klasse\n" +
+                        "5 = 5. klasse\n" +
+                        "6 = 6. klasse\n" +
+                        "7 = 7. klasse\n" +
+                        "8 = 8. klasse\n" +
+                        "9 = 9. klasse\n" +
+                        "10 = 10. klasse\n" +
+                        "11 = 1. G\n" +
+                        "12 = 2. G\n" +
+                        "13 = 3. G\n" +
+                        "15 = Speciel\n" +
+                        "16 = Andet"
+            },
+            'opl': {
+                'text': '{% trans "Oplæg" %}',
+                'default': '{% verbatim %}{{ booking.classbooking.presentation_desired | evaluation_boolean }}{% endverbatim %}',
+                'help': '1 = Ja\n'+
+                        '2 = Nej'
+            },
+            'rv': {
+                'text': '{% trans "Rundvisning" %}',
+                'default': '{% verbatim %}{{ booking.classbooking.tour_desired | evaluation_boolean }}{% endverbatim %}',
+                'help': '1 = Ja\n'+
+                        '2 = Nej'
+            }
+        };
+        var keyOrder = ['key', 'tname', 'email', 'uname', 'uv', 'of', 'oename', 'bd', 'ofn1', 'ofv1', 'ofn2', 'ofv2', 'agn', 'agv', 'rgn', 'rgv', 'kt', 'opl', 'rv'];
+
 
         var fieldContainer = $("#fieldContainer"),
             extraFields = $("#extrafields"),
             defaults = {};
 
         // Generate field rows
-        for (var i=0; i<formDefinition.length; i++) {
-            var fieldDefinition = formDefinition[i];
+        for (var i=0; i<keyOrder.length; i++) {
+            var key = keyOrder[i];
+            var fieldDefinition = formDefinition[key];
             var fieldRowHtml = [], j = 0;
-            var key = fieldDefinition['key'],
-                defaultValue = 'default' in fieldDefinition ? fieldDefinition['default'] : null,
+            var defaultValue = 'default' in fieldDefinition ? fieldDefinition['default'] : null,
                 enabled = true,
-                value = key in original ? (original[key]) : (defaultValue !== null ? defaultValue : '');
+                value = key in original ? (original[key]) : (defaultValue !== null ? defaultValue : ''),
+                text = fieldDefinition['text'] || ('['+key+']');
 
             fieldRowHtml[j++] = '<div class="row form-group">';
 
@@ -122,11 +224,20 @@
             fieldRowHtml[j++] = '<input type="checkbox" id="enable_' + key + '" ' + (enabled ? 'checked="checked"' : '') + '/>';
             fieldRowHtml[j++] = '</div>';
 
-            fieldRowHtml[j++] = '<div class="col-sm-1">';
-            fieldRowHtml[j++] = '<label class="control-label" for="field_' + key + '">' + key + ':</label>';
+            fieldRowHtml[j++] = '<div class="col-sm-2">';
+            fieldRowHtml[j++] = '<label class="control-label" for="field_' + key + '">' + text + '</label>';
             fieldRowHtml[j++] = '</div>';
 
-            fieldRowHtml[j++] = '<div class="col-sm-7">';
+            fieldRowHtml[j++] = '<div class="col-sm-1">';
+            //fieldRowHtml[j++] = '[' + key + ']';
+            if ('help' in fieldDefinition) {
+                fieldRowHtml[j++] = '<span class="glyphicon glyphicon-question-sign" data-toggle="tooltip" data-placement="right" title="';
+                fieldRowHtml[j++] = fieldDefinition['help'].replace(/\n/g, "<br/>");
+                fieldRowHtml[j++] = '"></span>';
+            }
+            fieldRowHtml[j++] = '</div>';
+
+            fieldRowHtml[j++] = '<div class="col-sm-5">';
             fieldRowHtml[j++] = '<input class="form-control input-sm" type="text" id="field_' + key + '"/>';
             fieldRowHtml[j++] = '</div>';
 
@@ -163,9 +274,18 @@
             var checkboxes = fieldContainer.find("input[type=checkbox]");
             checkboxes.prop("checked", false);
             checkboxes.filter(elements).prop("checked", true);
+            checkboxes.each(checkboxUpdate);
             updateUrl();
         };
         presetSelector.on("change", updateSelect);
+
+        var checkboxUpdate = function() {
+            var $this = $(this);
+            var key = $this.attr("id").substring("enable_".length);
+            var enabled = $this.is(":checked");
+            $("#field_"+key+", #default_"+key).prop("disabled", !enabled);
+        };
+        $("input[type=checkbox]").change(checkboxUpdate);
 
         {% verbatim %}
         var tagStart = new RegExp("^{{");
@@ -173,9 +293,9 @@
 
         var updateUrl = function() {
             var params = [];
-            for (var k = 0; k < formDefinition.length; k++) {
-                var fieldDefinition = formDefinition[k],
-                    key = fieldDefinition['key'];
+            for (var k = 0; k < keyOrder.length; k++) {
+                var key = keyOrder[k];
+                var fieldDefinition = formDefinition[key];
                 if ($("#enable_"+key).is(":checked")) {
                     params.push({
                         'key': key,
@@ -218,6 +338,19 @@
         });
 
         updateSelect();
-        //updateUrl();
+
+        for (var key in original) {
+            $("#enable_"+key).prop("checked", true);
+        }
+
+        $("input[type=checkbox]").each(checkboxUpdate);
+        updateUrl();
+    </script>
+    <script type="text/javascript">
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip({
+                html: true
+            });
+        })
     </script>
 {% endblock %}

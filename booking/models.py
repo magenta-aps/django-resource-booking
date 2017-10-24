@@ -513,6 +513,7 @@ class EmailTemplateType(
     NOTIFY_ALL_EVALUATION = 22  # Ticket 15701
     NOTIFY_GUEST__BOOKING_CREATED_UNTIMED = 23  # Ticket 16914
     NOTIFY_GUEST__EVALUATION_FIRST = 24  # Ticket 13819
+    NOTIFY_GUEST__EVALUATION_FIRST_STUDENTS = 26  # Ticket 13819
     NOTIFY_GUEST__EVALUATION_SECOND = 25  # Ticket 13819
 
     @staticmethod
@@ -927,15 +928,27 @@ class EmailTemplateType(
         )
 
         EmailTemplateType.set_default(
+            EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST_STUDENTS,
+            name_da=u'Besked til bruger angående evaluering (første besked), '
+                    u'for videresendelse til elever',
+            form_show=True,
+            send_to_booker=True,
+            enable_autosend=True,
+            enable_booking=True,
+            is_default=True,
+            ordering=25
+        )
+
+        EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__EVALUATION_SECOND,
             name_da=u'Besked til bruger angående evaluering (anden besked)',
             form_show=True,
             send_to_booker=True,
             enable_autosend=True,
             enable_booking=True,
-            enable_days=True,
+            enable_days=False,
             is_default=True,
-            ordering=25
+            ordering=26
         )
 
     @staticmethod
@@ -998,7 +1011,7 @@ class EmailTemplateType(
                     template_type=template_type
                 )
                 if qs.count() == 0:
-                    print "    create autosend type %d for product %d" % \
+                    print "    creating autosend type %d for product %d" % \
                           (template_type.key, product.id)
                     autosend = ProductAutosend(
                         template_key=template_type.key,
@@ -1938,6 +1951,30 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         verbose_name=_(u'Der tillades kun 1 tilmelding pr. besøg')
     )
 
+    evaluation_link = models.CharField(
+        max_length=1024,
+        verbose_name=_(u'Link til evaluering'),
+        blank=True,
+        default='',
+    )
+
+    @property
+    def primary_evaluation(self):
+        return self.evaluation_set.filter(secondary=False).first()
+
+    @property
+    def secondary_evaluation(self):
+        return self.evaluation_set.filter(secondary=True).first()
+
+    @property
+    def evaluations(self):
+        return [
+            evaluation for evaluation in [
+                self.primary_evaluation, self.secondary_evaluation
+            ]
+            if evaluation is not None
+        ]
+
     def available_time_modes(self, unit=None):
         if self.type is None:
             return Product.time_mode_choices
@@ -2818,13 +2855,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         verbose_name=_(u'Interne kommentarer')
     )
 
-    evaluation_link = models.CharField(
-        max_length=1024,
-        verbose_name=_(u'Link til evaluering'),
-        blank=True,
-        default='',
-    )
-
     # ts_vector field for fulltext search
     search_index = VectorField(
         db_index=False
@@ -3006,10 +3036,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 last_workflow_status != self.workflow_status:
             self.last_workflow_update = timezone.now()
             if self.workflow_status == self.WORKFLOW_STATUS_EXECUTED:
-                try:
-                    self.evaluation.send_first_notification()
-                except AttributeError:
-                    pass
+                for evaluation in self.product.evaluations:
+                    evaluation.send_first_notification(self)
 
     @property
     # QuerySet that finds EventTimes that will be affected by resource changes
@@ -5032,6 +5060,18 @@ class Guest(models.Model):
         validators=[validators.MinValueValidator(int(1))]
     )
 
+    def get_booking(self):
+        try:
+            return self.booking
+        except:
+            return None
+
+    def get_evaluationguest(self):
+        try:
+            return self.evaluationguest
+        except:
+            return None
+
     def as_searchtext(self):
         return " ".join([unicode(x) for x in [
             self.firstname,
@@ -5066,7 +5106,7 @@ class Booking(models.Model):
         verbose_name = _(u'booking')
         verbose_name_plural = _(u'bookinger')
 
-    booker = models.ForeignKey(Guest)
+    booker = models.OneToOneField(Guest)
 
     visit = models.ForeignKey(
         Visit,
@@ -5145,7 +5185,26 @@ class Booking(models.Model):
                  only_these_recipients=False):
 
         visit = self.visit.real
-        if visit.autosend_enabled(template_type):
+        enabled = visit.autosend_enabled(template_type)
+        print "Template type %s is %senabled for visit %d" % (
+            template_type,
+            "" if visit.autosend_enabled(template_type) else "not ",
+            visit.id
+        )
+
+        if visit.is_multiproductvisit and template_type.key in [
+            EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST,
+            EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST_STUDENTS,
+            EmailTemplateType.NOTIFY_GUEST__EVALUATION_SECOND
+        ]:
+            for product in visit.products:
+                if product.autosend_enabled(template_type):
+                    print "Making exception for evaluation " \
+                          "mail with product %d" % product.id
+                    enabled = True
+                    break
+
+        if enabled:
             product = visit.product
             unit = visit.organizationalunit
             if recipients is None:
@@ -5154,7 +5213,7 @@ class Booking(models.Model):
                 recipients = set(recipients)
             if not only_these_recipients:
                 recipients.update(self.get_recipients(template_type))
-
+            print "recipients: %s" % unicode(recipients)
             KUEmailMessage.send_email(
                 template_type,
                 {
@@ -5621,46 +5680,63 @@ class Evaluation(models.Model):
         max_length=1024,
         verbose_name=u'Evaluerings-URL'
     )
+    # deprecate
     visit = models.OneToOneField(
         Visit,
-        null=False,
-        blank=False
+        null=True,
+        blank=True
     )
     guests = models.ManyToManyField(
         Guest,
         through='EvaluationGuest'
+    )
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        null=True
+    )
+    secondary = models.BooleanField(
+        default=False
     )
 
     def send_notification(self, template_type, new_status, filter=None):
         qs = self.evaluationguest_set.all()
         if filter is not None:
             qs = qs.filter(**filter)
+        print qs
         for evalguest in qs:
-            for booking in evalguest.guest.booking_set.filter(
-                visit=self.visit
-            ):
-                # There really should be only one here
-                try:
-                    sent = booking.autosend(
-                        template_type
-                    )
-                    if sent:
-                        evalguest.status = new_status
-                        evalguest.save()
-                except Exception as e:
-                    print e
+            try:
+                sent = evalguest.booking.autosend(
+                    template_type
+                )
+                if sent:
+                    evalguest.status = new_status
+                    evalguest.save()
+            except Exception as e:
+                print e
 
-    def send_first_notification(self):
+    def send_first_notification(self, visit):
+        print "send first notification pertaining to visit %d" % visit.id
+        template = EmailTemplateType.notify_guest__evaluation_first_students \
+            if self.secondary \
+            else EmailTemplateType.notify_guest__evaluation_first
         self.send_notification(
-            EmailTemplateType.notify_guest__evaluation_first,
-            EvaluationGuest.STATUS_FIRST_SENT
+            template,
+            EvaluationGuest.STATUS_FIRST_SENT,
+            {
+                'guest__booking__visit': visit
+            }
         )
 
-    def send_second_notification(self):
+    def send_second_notification(self, visit):
+        print "send second notification pertaining to visit %d" % visit.id
         self.send_notification(
             EmailTemplateType.notify_guest__evaluation_second,
             EvaluationGuest.STATUS_SECOND_SENT,
-            {'status': EvaluationGuest.STATUS_FIRST_SENT}
+            {
+                'status': EvaluationGuest.STATUS_FIRST_SENT,
+                'guest__booking__visit': visit
+            }
         )
 
     def status_count(self, status):
@@ -5681,17 +5757,63 @@ class Evaluation(models.Model):
     def link_clicked_count(self):
         return self.status_count(EvaluationGuest.STATUS_LINK_CLICKED)
 
+    @staticmethod
+    def migrate():
+        for evaluation in Evaluation.objects.all():
+            visit = evaluation.visit
+            if evaluation.product is None \
+                    and visit is not None \
+                    and len(visit.products) > 0 \
+                    and visit.products[0].primary_evaluation is None:
+                visit.products[0].primary_evaluation = evaluation
+        for evaluationguest in EvaluationGuest.objects.all():
+            # if evaluationguest.visit is None and \
+            #         evaluationguest.evaluation.visit is not None:
+            #     evaluationguest.visit = evaluationguest.evaluation.visit
+            #     evaluationguest.save()
+            if evaluationguest.evaluation is not None:
+                evaluationguest.product = evaluationguest.evaluation.product
+                evaluationguest.save()
+
+        for guest in Guest.objects.all():
+            booking = guest.get_booking()
+            if booking is not None:
+                for product in booking.visit.products:
+                    for evaluation in product.evaluations:
+                        if EvaluationGuest.objects.filter(
+                            guest=guest,
+                            product=product,
+                            evaluation=evaluation
+                        ).count() == 0:
+                            evaluationguest = EvaluationGuest(
+                                # evaluation=evaluation,
+                                guest=guest,
+                                product=product,
+                                evaluation=evaluation
+                            )
+                            evaluationguest.save()
+
 
 class EvaluationGuest(models.Model):
     evaluation = models.ForeignKey(
         Evaluation,
-        null=False,
-        blank=False
+        null=True,
+        blank=True
     )
-    guest = models.OneToOneField(
+    product = models.ForeignKey(
+        Product,
+        null=True,
+        blank=True
+    )
+    guest = models.ForeignKey(
         Guest,
         null=False,
         blank=False
+    )
+    # deprecate
+    visit = models.ForeignKey(
+        Visit,
+        null=False
     )
     STATUS_NO_PARTICIPATION = 0
     STATUS_NOT_SENT = 1
@@ -5707,15 +5829,27 @@ class EvaluationGuest(models.Model):
     ]
     status = models.SmallIntegerField(
         choices=status_choices,
-        verbose_name=u'status'
+        verbose_name=u'status',
+        default=STATUS_NOT_SENT
     )
     shortlink_id = models.CharField(
         max_length=16,
     )
 
     @property
-    def shortlink(self):
-        return "http://localhost:8000/l/%s" % self.shortlink_id
+    def link(self):
+        return self.link_obtain(self.shortlink_id)
+
+    @property
+    def link_secondary(self):
+        return self.link_obtain(self.shortlink_id + "_s")
+
+    @staticmethod
+    def link_obtain(shortlink_id):
+        return settings.PUBLIC_URL + reverse(
+            'evaluation-redirect',
+            args=[shortlink_id]
+        )
 
     @property
     def status_display(self):
@@ -5729,6 +5863,14 @@ class EvaluationGuest(models.Model):
         return super(EvaluationGuest, self).save(*args, **kwargs)
 
     @property
+    def booking(self):
+        return self.guest.booking
+
+    @property
+    def visit(self):
+        return self.guest.booking.visit
+
+    @property
     def url(self):
         template = Template(
             "{% load booking_tags %}" +
@@ -5740,13 +5882,36 @@ class EvaluationGuest(models.Model):
         context = make_context({
             'evaluation': self.evaluation,
             'guest': self.guest,
-            'visit': self.evaluation.visit
+            'visit': self.visit,
+            'product': self.product,
+            'booking': self.booking
         })
+        try:
+            rendered = template.render(context)
+            return rendered.strip()
+        except Exception as e:
+            print e.message
+            return "<error: %s>" % e.message
 
-        rendered = template.render(context)
-        return rendered
-
-        # return self.evaluation.url
+    @staticmethod
+    def get_redirect_url(shortlink_id, set_link_click=False):
+        secondary = False
+        if shortlink_id.endswith("_s"):
+            secondary = True
+            shortlink_id = shortlink_id[:-2]
+        try:
+            evalguest = EvaluationGuest.objects.get(
+                shortlink_id=shortlink_id,
+                evaluation__secondary=secondary
+            )
+        except:
+            return None
+        url = evalguest.url
+        if url is None or 'error' in url:
+            return None
+        if set_link_click:
+            evalguest.link_clicked()
+        return url
 
     def link_clicked(self):
         self.status = self.STATUS_LINK_CLICKED

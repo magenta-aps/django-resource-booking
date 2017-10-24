@@ -1,11 +1,21 @@
 <p>Kære {{ recipient.get_full_name }}.</p>
 
+{% if visit.is_multiproductvisit %}
+<p>
+    Vi vil sætte stor pris på, hvis du vil tage dig tid til at evaluere besøg på Københavns Universitet d. {% include 'booking/email/snippets/visit_time.html' %}.
+    Evaluér her:
+    <ul>
+    {% for evaluationguest in recipient.guest.evaluationguest_set.all %}<li><a href="{{ evaluationguest.link }}">{{ evaluationguest.link }}</a></li>{% endfor %}
+    </ul>
+</p>
+{% else %}
 <p>
     Vi vil sætte stor pris på, hvis du vil tage dig tid til at evaluere besøg
     <a href="{% full_url 'product-view' product.pk %}">{{ product.title }}</a>
     der blev gennemført {% include 'booking/email/snippets/visit_time.html' %} på Københavns Universitet.
-    Evaluér her: <a href="{{ recipient.guest.evaluationguest.shortlink }}">{{ recipient.guest.evaluationguest.shortlink }}</a>.
+    Evaluér her: {% for evaluationguest in recipient.guest.evaluationguest_set.all %}<a href="{{ evaluationguest.link }}">{{ evaluationguest.link }}</a>{% endfor %}.
 </p>
+{% endif %}
 <p>
     På forhånd tak for hjælpen!
 </p>

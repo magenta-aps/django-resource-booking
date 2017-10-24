@@ -2598,6 +2598,12 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
                     EmailTemplateType.notify_host__req_host_volunteer
                 )
 
+            evaluationguest = EvaluationGuest(
+                product=self.product,
+                guest=booking.booker
+            )
+            evaluationguest.save()
+
             self.object = booking
             self.model = booking.__class__
 
@@ -2768,6 +2774,15 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
         if 'bookerform' in forms:
             object.booker = forms['bookerform'].save()
         object.save()
+
+        for product in self.visit.products:
+            for evaluation in product.evaluations:
+                evaluationguest = EvaluationGuest(
+                    product=product,
+                    evaluation=evaluation,
+                    guest=object.booker
+                )
+                evaluationguest.save()
 
         object.autosend(
             EmailTemplateType.notify_guest__booking_created_untimed
@@ -3808,30 +3823,34 @@ class EvaluationOverviewView(LoginRequiredMixin, BreadcrumbMixin, ListView):
 
         if form.is_valid():
             formdata = form.cleaned_data
-            qs = self.model.objects.filter(
-                eventtime__product__organizationalunit__in=form.user
-                .userprofile.get_unit_queryset(),
-                evaluation_link__isnull=False,
-            ).exclude(
-                evaluation_link="",
+            product_qs = Product.objects.filter(
+                organizationalunit=form.user.userprofile.get_unit_queryset(),
+                evaluation__isnull=False
             )
+            visit_qs = Visit.objects.all()
             unit_limit = formdata.get('organizationalunit', [])
             if unit_limit:
-                qs = qs.filter(
-                    eventtime__product__organizationalunit__in=unit_limit
+                product_qs = product_qs.filter(
+                    organizationalunit__in=unit_limit
                 )
             if formdata.get('limit_to_personal'):
                 user = self.request.user
-                qs = qs.filter(
-                    Q(eventtime__product__created_by=user) |
+                visits = visit_qs.filter(
                     Q(teachers=user) |
-                    Q(hosts=user) |
-                    Q(eventtime__product__tilbudsansvarlig=user)
+                    Q(hosts=user)
                 )
+                product_qs = product_qs.filter(
+                    Q(created_by=user) |
+                    Q(eventtime__visit=visits) |
+                    Q(tilbudsansvarlig=user)
+                )
+            visit_qs = visit_qs.filter(
+                eventtime__product=product_qs
+            )
         else:
-            qs = self.model.objects.none()
+            visit_qs = self.model.objects.none()
 
-        return qs.order_by('-eventtime__start', '-eventtime__end')
+        return visit_qs.order_by('-eventtime__start', '-eventtime__end')
 
     def get_context_data(self, **kwargs):
         return super(EvaluationOverviewView, self).get_context_data(
@@ -4129,9 +4148,16 @@ class EvaluationEditView(BreadcrumbMixin, UpdateView):
     template_name = "evaluation/form.html"
     model = Evaluation
 
-    def get_object(self, queryset=None):
-        if 'pk' in self.kwargs:
-            return super(EvaluationEditView, self).get_object(queryset)
+    def get_object(self, **kwargs):
+        if 'product' in self.kwargs and 'id' not in self.kwargs:
+            return None
+        return super(EvaluationEditView, self).get_object()
+
+    def get_product(self, queryset=None):
+        if 'product' in self.kwargs:
+            return Product.objects.get(pk=self.kwargs['product'])
+        if self.object is not None:
+            return self.object.product
 
     def get_visit(self):
         if self.object:
@@ -4140,25 +4166,40 @@ class EvaluationEditView(BreadcrumbMixin, UpdateView):
 
     def get_form_kwargs(self):
         kwargs = super(EvaluationEditView, self).get_form_kwargs()
-        kwargs['visit'] = Visit.objects.get(id=self.kwargs.get('visit'))
+        kwargs['product'] = self.get_product()
+        if self.object is None:
+            secondary = True \
+                if self.request.GET.get('secondary', '0') == '1' \
+                else False
+            if 'initial' not in kwargs:
+                kwargs['initial'] = {}
+            kwargs['initial']['secondary'] = secondary
+
         return kwargs
 
     def get_success_url(self):
         return reverse(
-            'visit-evaluation-view', args=[
-                self.object.visit.id, self.object.id
+            'evaluation-view', args=[
+                self.object.id
             ]
         )
 
+    def form_valid(self, form):
+        response = super(EvaluationEditView, self).form_valid(form)
+        if self.object.product is None:
+            self.object.product = self.get_product()
+            self.object.save()
+        return response
+
     def get_breadcrumb_args(self):
-        return [self.object, self.get_visit()]
+        return [self.object, self.get_product()]
 
     @staticmethod
-    def build_breadcrumbs(evaluation, visit=None):
-        if visit is None:
-            visit = evaluation.visit
+    def build_breadcrumbs(evaluation, product=None):
+        if product is None:
+            product = evaluation.product
         if evaluation is None:
-            return VisitDetailView.build_breadcrumbs(visit) + [
+            return ProductDetailView.build_breadcrumbs(product) + [
                 {'text': _(u'Opret evaluering')}
             ]
         else:
@@ -4177,12 +4218,12 @@ class EvaluationDetailView(BreadcrumbMixin, DetailView):
 
     @staticmethod
     def build_breadcrumbs(evaluation):
-        return VisitDetailView.build_breadcrumbs(evaluation.visit) + [
+        return ProductDetailView.build_breadcrumbs(evaluation.product) + [
             {
                 'text': _(u'Evaluering'),
                 'url': reverse(
-                    'visit-evaluation-view',
-                    args=[evaluation.visit.id, evaluation.id]
+                    'evaluation-view',
+                    args=[evaluation.id]
                 )
             }
         ]
@@ -4193,16 +4234,9 @@ class EvaluationRedirectView(RedirectView):
     permanent = False
 
     def get_redirect_url(self, *args, **kwargs):
-        try:
-            evalguest = EvaluationGuest.objects.get(
-                shortlink_id=kwargs['linkid']
-            )
-        except:
-            raise Http404
-        url = evalguest.url
+        url = EvaluationGuest.get_redirect_url(kwargs['linkid'], True)
         if url is None:
             raise Http404
-        evalguest.link_clicked()
         return url
 
 
