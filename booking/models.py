@@ -5186,11 +5186,11 @@ class Booking(models.Model):
 
         visit = self.visit.real
         enabled = visit.autosend_enabled(template_type)
-        print "Template type %s is %senabled for visit %d" % (
-            template_type,
-            "" if visit.autosend_enabled(template_type) else "not ",
-            visit.id
-        )
+        # print "Template type %s is %senabled for visit %d" % (
+        #     template_type,
+        #     "" if visit.autosend_enabled(template_type) else "not ",
+        #     visit.id
+        # )
 
         if visit.is_multiproductvisit and template_type.key in [
             EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST,
@@ -5199,8 +5199,8 @@ class Booking(models.Model):
         ]:
             for product in visit.products:
                 if product.autosend_enabled(template_type):
-                    print "Making exception for evaluation " \
-                          "mail with product %d" % product.id
+                    # print "Making exception for evaluation " \
+                    #       "mail with product %d" % product.id
                     enabled = True
                     break
 
@@ -5213,7 +5213,6 @@ class Booking(models.Model):
                 recipients = set(recipients)
             if not only_these_recipients:
                 recipients.update(self.get_recipients(template_type))
-            print "recipients: %s" % unicode(recipients)
             KUEmailMessage.send_email(
                 template_type,
                 {
