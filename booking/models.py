@@ -5806,10 +5806,6 @@ class EvaluationGuest(models.Model):
     def link(self):
         return self.link_obtain(self.shortlink_id)
 
-    @property
-    def link_secondary(self):
-        return self.link_obtain(self.shortlink_id + "_s")
-
     @staticmethod
     def link_obtain(shortlink_id):
         return settings.PUBLIC_URL + reverse(
@@ -5861,14 +5857,9 @@ class EvaluationGuest(models.Model):
 
     @staticmethod
     def get_redirect_url(shortlink_id, set_link_click=False):
-        secondary = False
-        if shortlink_id.endswith("_s"):
-            secondary = True
-            shortlink_id = shortlink_id[:-2]
         try:
             evalguest = EvaluationGuest.objects.get(
                 shortlink_id=shortlink_id,
-                evaluation__secondary=secondary
             )
         except:
             return None
