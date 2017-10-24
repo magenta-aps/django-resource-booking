@@ -46,7 +46,7 @@
 
                         <div class="row form-group">
                             <div class="col-sm-2"></div>
-                            <div class="col-sm-5">
+                            <div class="col-sm-7">
                                 {% blocktrans %}
                                     Når en emailskabelon skal findes til et givet formål (f.eks. når en booking foretages), søges efter en skabelon med den rette type. Først søges efter skabeloner associeret med det relevante institut, derefter skabeloner associeret med det relevante fakultet, og sidst efter skabeloner uden enhed tilknyttet. Den først fundne af disse skabeloner vil blive anvendt til udsendelse af email.
                                 {% endblocktrans %}
@@ -57,17 +57,17 @@
                             <div class="col-sm-2">
                                 <label class="{{ form.type.css_classes }}" for="{{ form.type.id_for_label }}">{{ form.type.label }}:</label>
                             </div>
-                            <div class="col-sm-5">
+                            <div class="col-sm-7">
                                 {{ form.type }}
                             </div>
-                            <div class="col-sm-5">
+                            <div class="col-sm-3">
                                 {{ form.type.errors }}
                             </div>
                         </div>
 
                         <div class="row form-group">
                             <div class="col-sm-2"></div>
-                            <div id="key_info" class="col-sm-5" style="display: none">
+                            <div id="key_info" class="col-sm-7" style="display: none">
                                 <span id="key_dosend">{% trans 'Automatisk udsendelse til:' %}</span>
                                 <span id="key_dontsend">{% trans 'Ingen automatisk udsendelse' %}</span>
                                 <ul></ul>
@@ -78,17 +78,17 @@
                             <div class="col-sm-2">
                                 <label class="{{ form.organizationalunit.css_classes }}" for="{{ form.organizationalunit.id_for_label }}">{{ form.organizationalunit.label }}:</label>
                             </div>
-                            <div class="col-sm-5">
+                            <div class="col-sm-7">
                                 {{ form.organizationalunit }}
                             </div>
-                            <div class="col-sm-5">
+                            <div class="col-sm-3">
                                 {{ form.organizationalunit.errors }}
                             </div>
                         </div>
 
                         <div class="row form-group">
                             <div class="col-sm-2"></div>
-                            <div class="col-sm-5">
+                            <div class="col-sm-7">
                                 {% blocktrans %}
                                 Herunder har du mulighed for at indsætte variabler, som trækkes fra det tilbud/besøg, som du sender mailen fra. Dette gør det lettere for dig hurtigt at genbruge din skabelon til flere tilbud/besøg, som har forskellige variabler, f.eks. tider, lokaliteter, ressourcer osv.
                                 {% endblocktrans %}
@@ -97,7 +97,7 @@
 
                         <div class="row form-group">
                             <div class="col-sm-2"></div>
-                            <div class="col-sm-5">
+                            <div class="col-sm-7">
                                 <div id="fieldinsert" class="dropdown">
                                     <a role="button" data-toggle="dropdown" class="btn btn-default pull-right disabled" data-target="#" href="#">
                                         {% trans 'Indsæt felt' %} <span class="caret"></span>
@@ -113,10 +113,10 @@
                             <div class="col-sm-2">
                                 <label class="{{ form.subject.css_classes }}" for="{{ form.subject.id_for_label }}">{{ form.subject.label }}:</label>
                             </div>
-                            <div class="col-sm-5">
+                            <div class="col-sm-7">
                                 {{ form.subject }}
                             </div>
-                            <div class="col-sm-5">
+                            <div class="col-sm-3">
                                 {{ form.subject.errors }}
                             </div>
                         </div>
@@ -125,10 +125,10 @@
                             <div class="col-sm-2">
                                 <label class="{{ form.body.css_classes }}" for="{{ form.body.id_for_label }}">{{ form.body.label }}:</label>
                             </div>
-                            <div class="col-sm-5">
+                            <div class="col-sm-7">
                                 {{ form.body }}
                             </div>
-                            <div class="col-sm-5">
+                            <div class="col-sm-3">
                                 {{ form.body.errors }}
                             </div>
                         </div>
