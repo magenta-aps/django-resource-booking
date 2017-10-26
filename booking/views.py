@@ -4093,6 +4093,10 @@ class EvaluationEditView(BreadcrumbMixin, UpdateView):
             guide.value: guide.name
             for guide in booking_models.Guide.objects.all()
         }
+        context['exercises_presentations'] = {
+            e.value: e.name
+            for e in booking_models.ExercisePresentation.objects.all()
+        }
         context.update(kwargs)
         return super(EvaluationEditView, self).get_context_data(
             **context

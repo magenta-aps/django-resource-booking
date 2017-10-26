@@ -5895,6 +5895,29 @@ class Guide(models.Model):
                 guide.save()
 
 
+class ExercisePresentation(models.Model):
+    value = models.IntegerField(
+        null=False
+    )
+    name = models.CharField(
+        null=False,
+        max_length=256
+    )
+
+    def __str__(self):
+        return self.name
+
+    @staticmethod
+    def create_defaults():
+        from booking.data import exercises_presentations
+        for value, name in exercises_presentations.\
+                exercises_presentations.items():
+            if ExercisePresentation.objects.filter(value=value).count() == 0:
+                exercise_presentation = ExercisePresentation(
+                    value=value, name=name
+                )
+                exercise_presentation.save()
+
 
 from booking.resource_based import models as rb_models  # noqa
 
