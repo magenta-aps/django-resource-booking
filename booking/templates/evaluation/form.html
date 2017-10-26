@@ -152,20 +152,32 @@
             },
             'agv': {
                 'text': '{% trans "Ansvarlig guide" %}',
-                'help': "2 = Agnete Solvej Poulsen\n" +
-                        "3 = Anders Kruse\n" +
-                        "4 = Andreas Eske Johansen Sørensen\n" +
-                        "5 = Anine Svendsen Kimer\n" +
-                        "6 = Camilla Buch Vang Hansen\n" +
-                        "8 = Guide Kristina Mejer\n" +
-                        "9 = Jeppe Baden\n" +
-                        "10 = Pernille Vestergaard Jensen"
+                'multiple_choice': {
+                    "2": "Agnete Solvej Poulsen",
+                    "3": "Anders Kruse",
+                    "4": "Andreas Eske Johansen Sørensen",
+                    "5": "Anine Svendsen Kimer",
+                    "6": "Camilla Buch Vang Hansen",
+                    "8": "Guide Kristina Mejer",
+                    "9": "Jeppe Baden",
+                    "10": "Pernille Vestergaard Jensen"
+                }
             },
             'rgn': {
                 'text': '{% trans "Rundvisningsguide(r) navn" %}'
             },
             'rgv': {
-                'text': '{% trans "Rundvisningsguide(r) navn" %}'
+                'text': '{% trans "Rundvisningsguide(r) navn" %}',
+                'multiple_choice': {
+                    "2": "Agnete Solvej Poulsen",
+                    "3": "Anders Kruse",
+                    "4": "Andreas Eske Johansen Sørensen",
+                    "5": "Anine Svendsen Kimer",
+                    "6": "Camilla Buch Vang Hansen",
+                    "8": "Guide Kristina Mejer",
+                    "9": "Jeppe Baden",
+                    "10": "Pernille Vestergaard Jensen"
+                }
             },
             'kt': {
                 'text': '{% trans "Klassetrin" %}',
@@ -216,7 +228,7 @@
             var defaultValue = 'default' in fieldDefinition ? fieldDefinition['default'] : null,
                 enabled = true,
                 value = key in original ? (original[key]) : (defaultValue !== null ? defaultValue : ''),
-                text = fieldDefinition['text'] || ('['+key+']');
+                text = fieldDefinition['text'] || ('[' + key + ']');
 
             fieldRowHtml[j++] = '<div class="row form-group">';
 
@@ -238,7 +250,15 @@
             fieldRowHtml[j++] = '</div>';
 
             fieldRowHtml[j++] = '<div class="col-sm-5">';
-            fieldRowHtml[j++] = '<input class="form-control input-sm" type="text" id="field_' + key + '"/>';
+            if ('multiple_choice' in fieldDefinition) {
+                fieldRowHtml[j++] = '<select multiple class="form-control input-sm" id="field_' + key + '">';
+                for (var key in fieldDefinition['multiple_choice']) {
+                    fieldRowHtml[j++] = '<option value="'+key+'">' + fieldDefinition['multiple_choice'][key] + '</option>';
+                }
+                fieldRowHtml[j++] = '</select>';
+            } else {
+                fieldRowHtml[j++] = '<input class="form-control input-sm" type="text" id="field_' + key + '"/>';
+            }
             fieldRowHtml[j++] = '</div>';
 
             if (defaultValue !== null) {
@@ -295,12 +315,23 @@
             var params = [];
             for (var k = 0; k < keyOrder.length; k++) {
                 var key = keyOrder[k];
-                var fieldDefinition = formDefinition[key];
                 if ($("#enable_"+key).is(":checked")) {
-                    params.push({
-                        'key': key,
-                        'value': $("#field_" + key).val().trim()
-                    });
+                    var value = $("#field_" + key).val();
+                    if (value != null) {
+                        if (value instanceof Array) {
+                            for (var item in value) {
+                                params.push({
+                                    'key': key + "_" + item,
+                                    'value': 1
+                                });
+                            }
+                        } else {
+                            params.push({
+                                'key': key,
+                                'value': value.trim()
+                            });
+                        }
+                    }
                 }
             }
             extraParams = extraFields.val().split(/[\n&]/);
@@ -328,7 +359,7 @@
             }
             urlField.val(urlBase + "?" + resultParams.join("&"));
         };
-        fieldContainer.find("input").on("input", updateUrl);
+        fieldContainer.find("input, select").on("input", updateUrl);
         extraFields.on("input", updateUrl);
 
         fieldContainer.find(".setdefault").on('click', function() {
