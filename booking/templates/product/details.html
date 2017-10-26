@@ -68,7 +68,7 @@
             {% endif %}
             <div class="well order-buttons hidden-print">
                 {% if object.is_bookable %}
-                    {% if object.is_guest_time_suggested %}
+                    {% if object.is_guest_time_suggested and object.type != object.STUDENT_FOR_A_DAY %}
                         <a class="btn btn-primary" href="{% url 'product-book-notime' object.id %}">
                             {% trans 'Tilmeld' %}
                             <span class="glyphicon glyphicon-chevron-right"></span>
