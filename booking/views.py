@@ -85,6 +85,7 @@ from booking.forms import EvaluationForm, EvaluationStatisticsForm
 
 from booking.utils import full_email, get_model_field_map
 from booking.utils import get_related_content_types, merge_dicts
+from booking.utils import DummyRecipient
 
 
 import booking.models as booking_models
@@ -3457,15 +3458,90 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
                # 'ProductGrundskoleFag': ProductGrundskoleFag
                }
 
-    @staticmethod
-    def _getObjectJson():
-        return json.dumps({
+    def get_recipient_choices(self):
+        result = []
+        if not self.object:
+            return []
+        tt = self.object.type
+
+        for x in [tt.send_to_booker]:
+            if x:
+                result.append({'text': _(u"Gæst"), 'value': 'guest'})
+                break
+
+        for x in [tt.send_to_unit_hosts,
+                  tt.send_to_potential_hosts,
+                  tt.send_to_visit_hosts,
+                  tt.send_to_visit_added_host]:
+            if x:
+                result.append({'text': _(u"Vært"), 'value': 'host'})
+                break
+
+        for x in [tt.send_to_unit_teachers,
+                  tt.send_to_potential_teachers,
+                  tt.send_to_visit_teachers,
+                  tt.send_to_visit_added_teacher]:
+            if x:
+                result.append({'text': _(u"Underviser"), 'value': 'teacher'})
+                break
+
+        for x in [tt.send_to_editors, tt.send_to_contactperson]:
+            if x:
+                result.append(
+                    {'text': _(u"Koordinator"), 'value': 'coordinator'}
+                )
+                break
+
+        if len(result) < 1:
+            result.append({'text': _(u"Eksempel modtager"), 'value': 'others'})
+
+        return result
+
+    def _getObjectJson(self):
+        result = {
             key: [
                 {'text': unicode(object), 'value': object.id}
                 for object in type.objects.order_by('id')
             ]
             for key, type in EmailTemplateDetailView.classes.items()
-        })
+        }
+        result['Recipient'] = self.get_recipient_choices()
+        return json.dumps(result)
+
+    def update_context_with_recipient(self, selected, ctx):
+        if selected is None:
+            return
+        user_obj = None
+        if selected == "guest":
+            # Guests should be able to reply
+            ctx['reply_nonce'] = '00000000-0000-0000-0000-000000000000'
+
+            if "booker" in ctx:
+                user_obj = ctx["booker"]
+            elif "booking" in ctx:
+                user_obj = ctx["booking"].booker
+            else:
+                user_obj = Guest.objects.last()
+        elif selected == "teacher":
+            user_obj = User.objects.filter(userprofile__user_role=1).last()
+        elif selected == "host":
+            user_obj = User.objects.filter(userprofile__user_role=2).last()
+        elif selected == "coordinator":
+            user_obj = self.request.user
+        elif selected == "others":
+            user_obj = DummyRecipient()
+        if user_obj is not None:
+            formatted = KUEmailMessage.extract_addresses(user_obj)
+            if len(formatted) > 0:
+                ctx['recipient'] = formatted[0]
+
+    def extend_context(self, context):
+        # Get product from visit if only visit is present
+        if ("product" not in context and "visit" in context and
+                hasattr(context["visit"], "product")):
+            context["product"] = context["visit"].product
+        if "besoeg" not in context and "visit" in context:
+            context["besoeg"] = context["visit"]
 
     @method_decorator(login_required)
     def get(self, request, *args, **kwargs):
@@ -3476,20 +3552,26 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
         context = {}
         if self.object is not None:
             variables = self.object.get_template_variables()
+            # alias booker to needing a booking
+            if "booking" not in variables:
+                for x in variables:
+                    if x.split(".")[0] == "booker":
+                        variables.append("booking")
+                        break
             formset.initial = []
+            lookup = {
+                key.lower(): key
+                for key in self.classes.keys()
+            }
             for variable in variables:
                 base_variable = variable.split(".")[0]
                 if base_variable not in context:
                     variable = base_variable.lower()
-                    lookup = {
-                        key.lower(): key
-                        for key in self.classes.keys()
-                    }
                     if variable in lookup:
                         type = lookup[variable]
                         clazz = self.classes[type]
                         try:
-                            value = clazz.objects.all()[0]
+                            value = clazz.objects.last()
                             context[base_variable] = value
                             formset.initial.append({
                                 'key': base_variable,
@@ -3498,6 +3580,15 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
                             })
                         except clazz.DoesNotExist:
                             pass
+            rcpt_choices = self.get_recipient_choices()
+            rcpt_selected = rcpt_choices[0].get("value")
+            formset.initial.append({
+                'key': 'recipient',
+                'type': 'Recipient',
+                'value': rcpt_selected
+            })
+            self.update_context_with_recipient(rcpt_selected, context)
+            self.extend_context(context)
 
         data = {'form': formset,
                 'subject': self.object.expand_subject(context, True),
@@ -3528,8 +3619,12 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
                         value = clazz.objects.get(pk=value)
                     except clazz.DoesNotExist:
                         pass
+                elif type == "Recipient":
+                    self.update_context_with_recipient(value, context)
+                    continue
                 context[form.cleaned_data['key']] = value
 
+        self.extend_context(context)
         data = {'form': formset,
                 'subject': self.object.expand_subject(context, True),
                 'body': self.object.expand_body(context, True),

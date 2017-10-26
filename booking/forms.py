@@ -1002,6 +1002,8 @@ class BookerForm(forms.ModelForm):
                 # Class level is not mandatory for teacher events.
                 if product.type == Product.TEACHER_EVENT:
                     self.fields['level'].required = False
+                if product.type == Product.STUDENT_FOR_A_DAY:
+                    self.fields['attendee_count'].initial = 1
 
         # Eventually we may want a prettier solution,
         # but for now this will have to do
@@ -1246,6 +1248,7 @@ class EmailTemplatePreviewContextEntryForm(forms.Form):
             # ('PostCode', PostCode),
             # ('School', School),
             ('Booking', _(u'Tilmelding')),
+            ('Recipient', _(u'Modtager')),
         ),
         widget=Select(attrs={'class': 'form-control emailtemplate-type'})
     )
