@@ -1246,6 +1246,7 @@ class EmailTemplatePreviewContextEntryForm(forms.Form):
             # ('PostCode', PostCode),
             # ('School', School),
             ('Booking', _(u'Tilmelding')),
+            ('Recipient', _(u'Modtager')),
         ),
         widget=Select(attrs={'class': 'form-control emailtemplate-type'})
     )
