@@ -5874,6 +5874,28 @@ class EvaluationGuest(models.Model):
         self.save()
 
 
+class Guide(models.Model):
+    value = models.IntegerField(
+        null=False
+    )
+    name = models.CharField(
+        null=False,
+        max_length=64
+    )
+
+    def __str__(self):
+        return self.name
+
+    @staticmethod
+    def create_defaults():
+        from booking.data import guides
+        for value, name in guides.guides.items():
+            if Guide.objects.filter(value=value).count() == 0:
+                guide = Guide(value=value, name=name)
+                guide.save()
+
+
+
 from booking.resource_based import models as rb_models  # noqa
 
 EventTime = rb_models.EventTime

@@ -152,32 +152,14 @@
             },
             'agv': {
                 'text': '{% trans "Ansvarlig guide" %}',
-                'multiple_choice': {
-                    "2": "Agnete Solvej Poulsen",
-                    "3": "Anders Kruse",
-                    "4": "Andreas Eske Johansen Sørensen",
-                    "5": "Anine Svendsen Kimer",
-                    "6": "Camilla Buch Vang Hansen",
-                    "8": "Guide Kristina Mejer",
-                    "9": "Jeppe Baden",
-                    "10": "Pernille Vestergaard Jensen"
-                }
+                'multiple_choice': {% autoescape off %}{{ guides|jsonify }}{% endautoescape %}
             },
             'rgn': {
                 'text': '{% trans "Rundvisningsguide(r) navn" %}'
             },
             'rgv': {
                 'text': '{% trans "Rundvisningsguide(r) navn" %}',
-                'multiple_choice': {
-                    "2": "Agnete Solvej Poulsen",
-                    "3": "Anders Kruse",
-                    "4": "Andreas Eske Johansen Sørensen",
-                    "5": "Anine Svendsen Kimer",
-                    "6": "Camilla Buch Vang Hansen",
-                    "8": "Guide Kristina Mejer",
-                    "9": "Jeppe Baden",
-                    "10": "Pernille Vestergaard Jensen"
-                }
+                'multiple_choice': {% autoescape off %}{{ guides|jsonify }}{% endautoescape %}
             },
             'kt': {
                 'text': '{% trans "Klassetrin" %}',
@@ -319,7 +301,8 @@
                     var value = $("#field_" + key).val();
                     if (value != null) {
                         if (value instanceof Array) {
-                            for (var item in value) {
+                            for (var i=0; i<value.length; i++) {
+                                var item = value[i];
                                 params.push({
                                     'key': key + "_" + item,
                                     'value': 1
