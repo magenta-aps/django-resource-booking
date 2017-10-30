@@ -4181,6 +4181,21 @@ class EvaluationEditView(BreadcrumbMixin, UpdateView):
 
         return kwargs
 
+    def get_context_data(self, **kwargs):
+        context = {}
+        context['guides'] = {
+            guide.value: guide.name
+            for guide in booking_models.Guide.objects.all()
+        }
+        context['exercises_presentations'] = {
+            e.value: e.name
+            for e in booking_models.ExercisePresentation.objects.all()
+        }
+        context.update(kwargs)
+        return super(EvaluationEditView, self).get_context_data(
+            **context
+        )
+
     def get_success_url(self):
         return reverse(
             'evaluation-view', args=[

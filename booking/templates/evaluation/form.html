@@ -111,11 +111,16 @@
                 'default': '{% verbatim %}{{ visit.assigned_teachers.first.get_full_name|default:"" }}{% endverbatim %}'
             },
             'uv': {
-                'text': '{% trans "Underviser" %}',
+                'text': '{% trans "Underviser id" %}',
                 'default': '{% verbatim %}{{ visit.assigned_teachers.first.get_full_name|default:"" }}{% endverbatim %}'
             },
-            'of': {},
+            'of': {
+                'text': '{% trans "Øvelse/foredrag id" %}',
+                //'multiple_choice': {% autoescape off %}{{ exercises_presentations|jsonify }}{% endautoescape %},
+                'help': '{% trans "Indsæt id fra SurveyXact" %}'
+            },
             'oename': {
+                'text': '{% trans "Øvelse/foredrag navn" %}',
                 'default': '{% verbatim %}{{ product.title }}{% endverbatim %}'
             },
             'bd': {
@@ -123,49 +128,37 @@
                 'default': '{% verbatim %}{{ visit.start_datetime|date:"j F" }}{% endverbatim %}'
             },
             'ofn1': {
-                'text': '{% trans "Øvelse/foredrag navn" %}',
+                'text': '{% trans "Øvelse/foredrag 1 navn" %}',
                 'default': '{% verbatim %}{{ product.title }}{% endverbatim %}'
             },
             'ofv1': {
-                'text': '{% trans "Ø/F værdi 1" %}',
-                'help': "1 = Moderne bioteknologi; dyrlæger, dyreforsøg og dyrevelfærd\n" +
-                        "2 = Gensplejsning og planteforædling\n" +
-                        "3 = Adfærd og adfærdsproblemer hos landbrugs- og forsøgsdyr\n" +
-                        "6 = Recirkulering af næringsstoffer fra by til land - et skridt på vejen mod bæredygtige samfund\n" +
-                        "8 = Er landbrugspolitikken i USA til for landmændenes eller politikernes skyld?\n" +
-                        "9 = Antibiotikumresistens hos bakterier"
+                'text': '{% trans "Øvelse/foredrag 1 variabelnavn" %}',
+                //'multiple_choice': {% autoescape off %}{{ exercises_presentations|jsonify }}{% endautoescape %},
+                'help': '{% trans "Indsæt id fra SurveyXact" %}'
             },
             'ofn2': {
-                'text': '{% trans "2. Øvelse/foredrag navn" %}'
+                'text': '{% trans "Øvelse/foredrag 2 navn" %}'
             },
             'ofv2': {
-                'text': '{% trans "Ø/F værdi 2" %}',
-                'help': "1 = Moderne bioteknologi; dyrlæger, dyreforsøg og dyrevelfærd\n" +
-                        "2 = Gensplejsning og planteforædling\n" +
-                        "3 = Adfærd og adfærdsproblemer hos landbrugs- og forsøgsdyr\n" +
-                        "6 = Recirkulering af næringsstoffer fra by til land - et skridt på vejen mod bæredygtige samfund\n" +
-                        "8 = Er landbrugspolitikken i USA til for landmændenes eller politikernes skyld?\n" +
-                        "9 = Antibiotikumresistens hos bakterier"
+                'text': '{% trans "Øvelse/foredrag 2 variabelnavn" %}',
+                //'multiple_choice': {% autoescape off %}{{ exercises_presentations|jsonify }}{% endautoescape %},
+                'help': '{% trans "Indsæt id fra SurveyXact" %}'
             },
             'agn': {
-                'text': '{% trans "Ansvarligguide navn" %}'
+                'text': '{% trans "Værts navn" %}'
             },
             'agv': {
-                'text': '{% trans "Ansvarlig guide" %}',
-                'help': "2 = Agnete Solvej Poulsen\n" +
-                        "3 = Anders Kruse\n" +
-                        "4 = Andreas Eske Johansen Sørensen\n" +
-                        "5 = Anine Svendsen Kimer\n" +
-                        "6 = Camilla Buch Vang Hansen\n" +
-                        "8 = Guide Kristina Mejer\n" +
-                        "9 = Jeppe Baden\n" +
-                        "10 = Pernille Vestergaard Jensen"
+                'text': '{% trans "Værts id" %}',
+                //'multiple_choice': {% autoescape off %}{{ guides|jsonify }}{% endautoescape %},
+                'help': '{% trans "Indsæt id fra SurveyXact" %}'
             },
             'rgn': {
-                'text': '{% trans "Rundvisningsguide(r) navn" %}'
+                'text': '{% trans "Værts navn" %}'
             },
             'rgv': {
-                'text': '{% trans "Rundvisningsguide(r) navn" %}'
+                'text': '{% trans "Vært id" %}',
+                //'multiple_choice': {% autoescape off %}{{ guides|jsonify }}{% endautoescape %},
+                'help': '{% trans "Indsæt id fra SurveyXact" %}'
             },
             'kt': {
                 'text': '{% trans "Klassetrin" %}',
@@ -201,6 +194,7 @@
                         '2 = Nej'
             }
         };
+        console.log(formDefinition);
         var keyOrder = ['key', 'tname', 'email', 'uname', 'uv', 'of', 'oename', 'bd', 'ofn1', 'ofv1', 'ofn2', 'ofv2', 'agn', 'agv', 'rgn', 'rgv', 'kt', 'opl', 'rv'];
 
 
@@ -212,49 +206,60 @@
         for (var i=0; i<keyOrder.length; i++) {
             var key = keyOrder[i];
             var fieldDefinition = formDefinition[key];
-            var fieldRowHtml = [], j = 0;
-            var defaultValue = 'default' in fieldDefinition ? fieldDefinition['default'] : null,
-                enabled = true,
-                value = key in original ? (original[key]) : (defaultValue !== null ? defaultValue : ''),
-                text = fieldDefinition['text'] || ('['+key+']');
+            if (fieldDefinition) {
+                var fieldRowHtml = [], j = 0;
+                console.log(fieldDefinition);
+                var defaultValue = ('default' in fieldDefinition) ? fieldDefinition['default'] : null,
+                    enabled = true,
+                    value = (key in original) ? (original[key]) : (defaultValue !== null ? defaultValue : ''),
+                    text = fieldDefinition['text'] || ('[' + key + ']');
 
-            fieldRowHtml[j++] = '<div class="row form-group">';
+                fieldRowHtml[j++] = '<div class="row form-group">';
 
-            fieldRowHtml[j++] = '<div class="col-sm-1">';
-            fieldRowHtml[j++] = '<input type="checkbox" id="enable_' + key + '" ' + (enabled ? 'checked="checked"' : '') + '/>';
-            fieldRowHtml[j++] = '</div>';
-
-            fieldRowHtml[j++] = '<div class="col-sm-2">';
-            fieldRowHtml[j++] = '<label class="control-label" for="field_' + key + '">' + text + '</label>';
-            fieldRowHtml[j++] = '</div>';
-
-            fieldRowHtml[j++] = '<div class="col-sm-1">';
-            //fieldRowHtml[j++] = '[' + key + ']';
-            if ('help' in fieldDefinition) {
-                fieldRowHtml[j++] = '<span class="glyphicon glyphicon-question-sign" data-toggle="tooltip" data-placement="right" title="';
-                fieldRowHtml[j++] = fieldDefinition['help'].replace(/\n/g, "<br/>");
-                fieldRowHtml[j++] = '"></span>';
-            }
-            fieldRowHtml[j++] = '</div>';
-
-            fieldRowHtml[j++] = '<div class="col-sm-5">';
-            fieldRowHtml[j++] = '<input class="form-control input-sm" type="text" id="field_' + key + '"/>';
-            fieldRowHtml[j++] = '</div>';
-
-            if (defaultValue !== null) {
-                fieldRowHtml[j++] = '<div class="col-sm-3">';
-                fieldRowHtml[j++] = '<button type="button" class="btn btn-default btn-sm setdefault" id="default_' + key + '" data-key="' + key + '">' + defaultLabel + '</button>'
+                fieldRowHtml[j++] = '<div class="col-sm-1">';
+                fieldRowHtml[j++] = '<input type="checkbox" id="enable_' + key + '" ' + (enabled ? 'checked="checked"' : '') + '/>';
                 fieldRowHtml[j++] = '</div>';
-            }
 
-            fieldRowHtml[j++] = '</div>';
+                fieldRowHtml[j++] = '<div class="col-sm-2">';
+                fieldRowHtml[j++] = '<label class="control-label" for="field_' + key + '">' + text + '</label>';
+                fieldRowHtml[j++] = '</div>';
 
-            fieldContainer.append($(fieldRowHtml.join("")));
+                fieldRowHtml[j++] = '<div class="col-sm-1">';
+                //fieldRowHtml[j++] = '[' + key + ']';
+                if ('help' in fieldDefinition) {
+                    fieldRowHtml[j++] = '<span class="glyphicon glyphicon-question-sign" data-toggle="tooltip" data-placement="right" title="';
+                    fieldRowHtml[j++] = fieldDefinition['help'].replace(/\n/g, "<br/>");
+                    fieldRowHtml[j++] = '"></span>';
+                }
+                fieldRowHtml[j++] = '</div>';
 
-            fieldContainer.find("#field_"+key).val(value);
+                fieldRowHtml[j++] = '<div class="col-sm-5">';
+                if ('multiple_choice' in fieldDefinition) {
+                    fieldRowHtml[j++] = '<select multiple class="form-control input-sm" id="field_' + key + '">';
+                    for (var key in fieldDefinition['multiple_choice']) {
+                        fieldRowHtml[j++] = '<option value="' + key + '">' + fieldDefinition['multiple_choice'][key] + '</option>';
+                    }
+                    fieldRowHtml[j++] = '</select>';
+                } else {
+                    fieldRowHtml[j++] = '<input class="form-control input-sm" type="text" id="field_' + key + '"/>';
+                }
+                fieldRowHtml[j++] = '</div>';
 
-            if (defaultValue !== null) {
-                defaults[key] = defaultValue;
+                if (defaultValue !== null) {
+                    fieldRowHtml[j++] = '<div class="col-sm-3">';
+                    fieldRowHtml[j++] = '<button type="button" class="btn btn-default btn-sm setdefault" id="default_' + key + '" data-key="' + key + '">' + defaultLabel + '</button>'
+                    fieldRowHtml[j++] = '</div>';
+                }
+
+                fieldRowHtml[j++] = '</div>';
+
+                fieldContainer.append($(fieldRowHtml.join("")));
+
+                fieldContainer.find("#field_" + key).val(value);
+
+                if (defaultValue !== null) {
+                    defaults[key] = defaultValue;
+                }
             }
         }
 
@@ -295,12 +300,24 @@
             var params = [];
             for (var k = 0; k < keyOrder.length; k++) {
                 var key = keyOrder[k];
-                var fieldDefinition = formDefinition[key];
                 if ($("#enable_"+key).is(":checked")) {
-                    params.push({
-                        'key': key,
-                        'value': $("#field_" + key).val().trim()
-                    });
+                    var value = $("#field_" + key).val();
+                    if (value != null) {
+                        if (value instanceof Array) {
+                            for (var i=0; i<value.length; i++) {
+                                var item = value[i];
+                                params.push({
+                                    'key': key + "_" + item,
+                                    'value': 1
+                                });
+                            }
+                        } else {
+                            params.push({
+                                'key': key,
+                                'value': value.trim()
+                            });
+                        }
+                    }
                 }
             }
             extraParams = extraFields.val().split(/[\n&]/);
@@ -328,7 +345,7 @@
             }
             urlField.val(urlBase + "?" + resultParams.join("&"));
         };
-        fieldContainer.find("input").on("input", updateUrl);
+        fieldContainer.find("input, select").on("input", updateUrl);
         extraFields.on("input", updateUrl);
 
         fieldContainer.find(".setdefault").on('click', function() {
