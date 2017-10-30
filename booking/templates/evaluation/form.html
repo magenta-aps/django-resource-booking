@@ -116,7 +116,8 @@
             },
             'of': {
                 'text': '{% trans "Øvelse/foredrag id" %}',
-                'multiple_choice': {% autoescape off %}{{ exercises_presentations|jsonify }}{% endautoescape %}
+                //'multiple_choice': {% autoescape off %}{{ exercises_presentations|jsonify }}{% endautoescape %},
+                'help': '{% trans "Indsæt id fra SurveyXact" %}'
             },
             'oename': {
                 'text': '{% trans "Øvelse/foredrag navn" %}',
@@ -127,35 +128,37 @@
                 'default': '{% verbatim %}{{ visit.start_datetime|date:"j F" }}{% endverbatim %}'
             },
             'ofn1': {
-                'text': '{% trans "Øvelse/foredrag navn" %}',
+                'text': '{% trans "Øvelse/foredrag 1 navn" %}',
                 'default': '{% verbatim %}{{ product.title }}{% endverbatim %}'
             },
             'ofv1': {
-                'text': '{% trans "Ø/F værdi 1" %}',
-                'multiple_choice': {% autoescape off %}{{ exercises_presentations|jsonify }}{% endautoescape %}
+                'text': '{% trans "Øvelse/foredrag 1 variabelnavn" %}',
+                //'multiple_choice': {% autoescape off %}{{ exercises_presentations|jsonify }}{% endautoescape %},
+                'help': '{% trans "Indsæt id fra SurveyXact" %}'
             },
-            {% comment %}
             'ofn2': {
-                'text': '{% trans "2. Øvelse/foredrag navn" %}'
+                'text': '{% trans "Øvelse/foredrag 2 navn" %}'
             },
-            {% endcomment %}
             'ofv2': {
-                'text': '{% trans "Ø/F værdi 2" %}',
-                'multiple_choice': {% autoescape off %}{{ exercises_presentations|jsonify }}{% endautoescape %}
+                'text': '{% trans "Øvelse/foredrag 2 variabelnavn" %}',
+                //'multiple_choice': {% autoescape off %}{{ exercises_presentations|jsonify }}{% endautoescape %},
+                'help': '{% trans "Indsæt id fra SurveyXact" %}'
             },
             'agn': {
-                'text': '{% trans "Ansvarligguide navn" %}'
+                'text': '{% trans "Værts navn" %}'
             },
             'agv': {
-                'text': '{% trans "Ansvarlig guide" %}',
-                'multiple_choice': {% autoescape off %}{{ guides|jsonify }}{% endautoescape %}
+                'text': '{% trans "Værts id" %}',
+                //'multiple_choice': {% autoescape off %}{{ guides|jsonify }}{% endautoescape %},
+                'help': '{% trans "Indsæt id fra SurveyXact" %}'
             },
             'rgn': {
-                'text': '{% trans "Rundvisningsguide(r) navn" %}'
+                'text': '{% trans "Værts navn" %}'
             },
             'rgv': {
-                'text': '{% trans "Rundvisningsguide(r) navn" %}',
-                'multiple_choice': {% autoescape off %}{{ guides|jsonify }}{% endautoescape %}
+                'text': '{% trans "Vært id" %}',
+                //'multiple_choice': {% autoescape off %}{{ guides|jsonify }}{% endautoescape %},
+                'help': '{% trans "Indsæt id fra SurveyXact" %}'
             },
             'kt': {
                 'text': '{% trans "Klassetrin" %}',
