@@ -65,6 +65,7 @@
 
 {% block extra_scripts %}
     <script type="text/javascript">
+        (function(){
 
         var urlField = $("#{{ form.url.id_for_label }}");
         var urlBase = "http://survey-xact.dk/LinkCollector";
@@ -134,7 +135,8 @@
             'ofv1': {
                 'text': '{% trans "Øvelse/foredrag 1 variabelnavn" %}',
                 //'multiple_choice': {% autoescape off %}{{ exercises_presentations|jsonify }}{% endautoescape %},
-                'help': '{% trans "Indsæt id fra SurveyXact" %}'
+                'help': '{% trans "Indsæt id fra SurveyXact" %}',
+                'multi': true
             },
             'ofn2': {
                 'text': '{% trans "Øvelse/foredrag 2 navn" %}'
@@ -142,7 +144,8 @@
             'ofv2': {
                 'text': '{% trans "Øvelse/foredrag 2 variabelnavn" %}',
                 //'multiple_choice': {% autoescape off %}{{ exercises_presentations|jsonify }}{% endautoescape %},
-                'help': '{% trans "Indsæt id fra SurveyXact" %}'
+                'help': '{% trans "Indsæt id fra SurveyXact" %}',
+                'multi': true
             },
             'agn': {
                 'text': '{% trans "Værts navn [agn]" %}'
@@ -150,7 +153,8 @@
             'agv': {
                 'text': '{% trans "Værts id [agv]" %}',
                 //'multiple_choice': {% autoescape off %}{{ guides|jsonify }}{% endautoescape %},
-                'help': '{% trans "Indsæt id fra SurveyXact" %}'
+                'help': '{% trans "Indsæt id fra SurveyXact" %}',
+                'multi': true
             },
             'rgn': {
                 'text': '{% trans "Værts navn [rgn]" %}'
@@ -158,7 +162,8 @@
             'rgv': {
                 'text': '{% trans "Værts id [rgv]" %}',
                 //'multiple_choice': {% autoescape off %}{{ guides|jsonify }}{% endautoescape %},
-                'help': '{% trans "Indsæt id fra SurveyXact" %}'
+                'help': '{% trans "Indsæt id fra SurveyXact" %}',
+                'multi': true
             },
             'kt': {
                 'text': '{% trans "Klassetrin" %}',
@@ -194,7 +199,6 @@
                         '2 = Nej'
             }
         };
-        console.log(formDefinition);
         var keyOrder = ['key', 'tname', 'email', 'uname', 'uv', 'of', 'oename', 'bd', 'ofn1', 'ofv1', 'ofn2', 'ofv2', 'agn', 'agv', 'rgn', 'rgv', 'kt', 'opl', 'rv'];
 
 
@@ -208,7 +212,6 @@
             var fieldDefinition = formDefinition[key];
             if (fieldDefinition) {
                 var fieldRowHtml = [], j = 0;
-                console.log(fieldDefinition);
                 var defaultValue = ('default' in fieldDefinition) ? fieldDefinition['default'] : null,
                     enabled = true,
                     value = (key in original) ? (original[key]) : (defaultValue !== null ? defaultValue : ''),
@@ -300,12 +303,22 @@
             var params = [];
             for (var k = 0; k < keyOrder.length; k++) {
                 var key = keyOrder[k];
+                var fieldDefinition = formDefinition[key];
                 if ($("#enable_"+key).is(":checked")) {
                     var value = $("#field_" + key).val();
                     if (value != null) {
                         if (value instanceof Array) {
-                            for (var i=0; i<value.length; i++) {
+                            for (var i = 0; i < value.length; i++) {
                                 var item = value[i];
+                                params.push({
+                                    'key': key + "_" + item,
+                                    'value': 1
+                                });
+                            }
+                        } else if (fieldDefinition.multi) {
+                            var items = value.split(",");
+                            for (var i = 0; i < items.length; i++) {
+                                var item = items[i].trim();
                                 params.push({
                                     'key': key + "_" + item,
                                     'value': 1
@@ -320,7 +333,7 @@
                     }
                 }
             }
-            extraParams = extraFields.val().split(/[\n&]/);
+            var extraParams = extraFields.val().split(/[\n&]/);
             for (var l=0; l<extraParams.length; l++) {
                 var extraParam = extraParams[l].trim();
                 if (extraParam.length > 0) {
@@ -362,6 +375,7 @@
 
         $("input[type=checkbox]").each(checkboxUpdate);
         updateUrl();
+        })();
     </script>
     <script type="text/javascript">
         $(function () {
