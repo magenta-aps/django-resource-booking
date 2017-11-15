@@ -1030,7 +1030,7 @@ class BookerForm(forms.ModelForm):
             raise forms.ValidationError(
                 _(u'Du skal vælge skole/gymnasium fra listen for at kunne '
                   u'tilmelde dig. Hvis din skole eller dit gymnasium ikke '
-                  u'kommer frem på listen, kontakt da support@fokus.dk '
+                  u'kommer frem på listen, kontakt da fokussupport@adm.ku.dk '
                   u'for at få hjælp til tilmelding.')
             )
         return school
