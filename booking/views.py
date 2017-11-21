@@ -16,9 +16,6 @@ from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse, reverse_lazy
 from django.utils.translation.trans_real import get_languages
 from django.db.models import Count
-from django.db.models import F
-from django.db.models import IntegerField
-from django.db.models import Min
 from django.db.models import Q
 from django.db.models import Sum
 from django.db.models.expressions import RawSQL
