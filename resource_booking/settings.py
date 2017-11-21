@@ -256,6 +256,9 @@ PUBLIC_URL = "".join([
     ":".join([str(x) for x in (PUBLIC_URL_HOSTNAME, PUBLIC_URL_PORT) if x])
 ])
 
+# By default allow access using all hostnames
+ALLOWED_HOSTS = ["*"]
+
 # Include SAML setup if the local settings specify it:
 # if USE_SAML:
 #     from saml_settings import *  # noqa
