@@ -16,9 +16,12 @@ from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse, reverse_lazy
 from django.utils.translation.trans_real import get_languages
 from django.db.models import Count
+from django.db.models import F
+from django.db.models import IntegerField
 from django.db.models import Min
 from django.db.models import Q
 from django.db.models import Sum
+from django.db.models.expressions import RawSQL
 from django.db.models.functions import Coalesce
 from django.forms.models import model_to_dict
 from django.http import Http404
@@ -35,6 +38,7 @@ from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.edit import FormMixin, ModelFormMixin
 from django.views.generic.edit import FormView, ProcessFormView
 from django.views.defaults import bad_request
+
 
 from profile.models import EDIT_ROLES, ADMINISTRATOR
 from profile.models import role_to_text
@@ -687,6 +691,10 @@ class SearchView(BreadcrumbMixin, ListView):
     to_datetime = None
     admin_form = None
     facet_queryset = None
+    needs_num_bookings = False
+    t_from = None
+    t_to = None
+    is_public = True
 
     boolean_choice = (
         (1, _(u'Ja')),
@@ -697,6 +705,13 @@ class SearchView(BreadcrumbMixin, ListView):
         id_match_url = self.check_search_by_id()
         if id_match_url:
             return redirect(id_match_url)
+
+        self.t_from = self.get_date_from_request("from")
+        self.t_to = self.get_date_from_request("to")
+        self.is_public = not self.request.user.is_authenticated()
+        # Public searches are always from todays date and onward
+        if self.is_public and self.t_from is None:
+            self.t_from = timezone.now()
 
         return super(SearchView, self).dispatch(request, *args, **kwargs)
 
@@ -762,45 +777,32 @@ class SearchView(BreadcrumbMixin, ListView):
 
             date_cond = Q()
 
-            t_from = self.get_date_from_request("from")
-            t_to = self.get_date_from_request("to")
-
-            is_public = not self.request.user.is_authenticated()
-
-            if t_from:
+            if self.t_from:
                 date_cond &= Q(
                     needs_no_eventtime |
-                    Q(eventtime__start__gt=t_from)
+                    Q(eventtime__start__gt=self.t_from)
                 )
 
-            if t_to:
+            if self.t_to:
                 # End datetime is midnight of the next day
-                next_midnight = t_to + timedelta(hours=24)
+                next_midnight = self.t_to + timedelta(hours=24)
                 date_cond &= Q(
                     needs_no_eventtime |
                     Q(eventtime__start__lte=next_midnight)
                 )
 
-            if is_public:
-
+            if self.is_public:
                 date_cond &= Q(
                     Q(calendar__isnull=True) |
                     Q(
                         Q(calendar__calendarevent__in=CalendarEvent.get_events(
-                            CalendarEvent.AVAILABLE, t_from, t_to
+                            CalendarEvent.AVAILABLE, self.t_from, self.t_to
                         )) & ~
                         Q(calendar__calendarevent__in=CalendarEvent.get_events(
-                            CalendarEvent.NOT_AVAILABLE, t_from, t_to
+                            CalendarEvent.NOT_AVAILABLE, self.t_from, self.t_to
                         ))
                     )
                 )
-
-                # Public searches are always from todays date and onward
-                if t_from is None:
-                    t_from = timezone.now()
-                    date_cond &= Q(
-                        needs_no_eventtime | Q(eventtime__start__gt=t_from)
-                    )
 
                 # Public users only want to search within bookable dates
                 ok_states = Visit.BOOKABLE_STATES
@@ -839,14 +841,10 @@ class SearchView(BreadcrumbMixin, ListView):
                     always_bookable
                 )
             else:
-                # Need this for search for products with/without bookings
-                qs = qs.annotate(
-                    num_bookings=Count('eventtime__visit__bookings')
-                )
                 qs = qs.filter(date_cond)
 
-            self.from_datetime = t_from or ""
-            self.to_datetime = t_to or ""
+            self.from_datetime = self.t_from or ""
+            self.to_datetime = self.t_to or ""
 
             qs = qs.distinct()
 
@@ -854,11 +852,46 @@ class SearchView(BreadcrumbMixin, ListView):
 
         return self.base_queryset
 
+    def annotate_for_filters(self, qs):
+        if self.needs_num_bookings:
+            # This old solution is slow as it causes postgresql to do a group
+            # by on all the fields which results in all the field being used
+            # for sorting, which takes a looooong time.
+            # qs = qs.annotate(
+            #     num_bookings=Count("eventtime__visit__bookings")
+            # )
+            sql = '''
+                SELECT
+                    COUNT(nb_bookings.id)
+                FROM
+                    booking_product nb_products
+                    JOIN
+                    booking_eventtime nb_eventtimes ON (
+                        nb_products.id = nb_eventtimes.product_id
+                    )
+                    JOIN
+                    booking_visit nb_visits ON (
+                        nb_eventtimes.visit_id = nb_visits.id
+                    )
+                    JOIN
+                    booking_booking nb_bookings ON (
+                        nb_visits.id = nb_bookings.visit_id
+                    )
+                WHERE
+                    nb_products.id = booking_product.id
+            '''
+            qs = qs.annotate(num_bookings=RawSQL(sql, tuple()))
+            self.needs_num_bookings = False
+
+        return qs
+
     def annotate(self, qs):
-        qs = qs.annotate(
-            eventtime_count=Count('eventtime__visit__pk', distinct=True),
-            first_eventtime=Min('eventtime__start')
-        )
+        # No longer used, annotations are carried out on the result object
+        # list in get_context_data.
+        # qs = qs.annotate(
+        #     eventtime_count=Count('eventtime__pk', distinct=True),
+        #     first_eventtime=Min('eventtime__start')
+        # )
         return qs
 
     def get_filters(self):
@@ -950,8 +983,10 @@ class SearchView(BreadcrumbMixin, ListView):
         b = int(b)
 
         if b == AdminProductSearchForm.HAS_BOOKINGS:
+            self.needs_num_bookings = True
             self.filters["num_bookings__gt"] = 0
         elif b == AdminProductSearchForm.HAS_NO_BOOKINGS:
+            self.needs_num_bookings = True
             self.filters["num_bookings"] = 0
 
     def filter_by_unit(self, form):
@@ -978,15 +1013,18 @@ class SearchView(BreadcrumbMixin, ListView):
     def get_facet_queryset(self):
         if not self.facet_queryset:
             self.facet_queryset = Product.objects.filter(
-                pk__in=[x.pk for x in self.get_base_queryset()]
-            ).annotate(
-                num_bookings=Count('eventtime__visit__bookings')
+                pk__in=[x["pk"] for x in self.get_base_queryset().values("pk")]
+            )
+            self.facet_queryset = self.annotate_for_filters(
+                self.facet_queryset
             )
         return self.facet_queryset
 
     def get_queryset(self):
         filters = self.get_filters()
-        qs = self.get_base_queryset().filter(**filters)
+        qs = self.get_facet_queryset()
+        qs = self.annotate_for_filters(qs)
+        qs = qs.filter(**filters)
         qs = self.annotate(qs)
         return qs
 
@@ -1159,7 +1197,31 @@ class SearchView(BreadcrumbMixin, ListView):
             context['has_edit_role'] = True
 
         context.update(kwargs)
-        return super(SearchView, self).get_context_data(**context)
+
+        result = super(SearchView, self).get_context_data(**context)
+
+        result['results'] = result['object_list'] = self.annotate_object_list(
+            result.get("object_list", [])
+        )
+
+        return result
+
+    def annotate_object_list(self, object_list):
+        result = []
+
+        for x in object_list.all():
+            eventtimes = x.bookable_times
+            if self.t_from:
+                eventtimes = eventtimes.filter(start__gte=self.t_from)
+            if self.t_to:
+                next_midnight = self.t_to + timedelta(hours=24)
+                eventtimes = eventtimes.filter(start__lte=next_midnight)
+            x.eventtime_count = eventtimes.count()
+            first = eventtimes.order_by("start").first()
+            if first:
+                x.first_eventtime = first.start
+            result.append(x)
+        return result
 
     @staticmethod
     def build_breadcrumbs(request=None):
