@@ -21,7 +21,7 @@ designed for the University of Copenhagen.""",
       zip_safe=False,
       install_requires=[
           # -*- Extra requirements: -*-
-          'Django==1.8.5',
+          'Django==1.8.18',
           'flake8==2.5.0',
           'psycopg2',
           'djorm-ext-pgfulltext==0.10',
