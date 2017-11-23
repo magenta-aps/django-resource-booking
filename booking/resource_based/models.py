@@ -1034,6 +1034,10 @@ class Resource(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def subclass_instance(self):
+        try:
+            return self.resource_type.resource_class.objects.get(pk=self.pk)
+        except:
+            pass
         return Resource.get_subclass_instance(self.pk)
 
     def group_preview(self, maxchars=50):
