@@ -15,7 +15,6 @@ from django.template.context import make_context
 from django.utils import timezone
 from django.utils.crypto import get_random_string
 from djorm_pgfulltext.models import SearchManager
-from djorm_pgfulltext.fields import VectorField
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
@@ -24,6 +23,8 @@ from django.core.urlresolvers import reverse
 from django.utils import formats
 from django.utils.translation import ugettext_lazy as _, ungettext_lazy as __
 from django.template.base import Template, VariableNode
+from django.template.loader import get_template
+from django.template.loader_tags import IncludeNode
 
 from booking.mixins import AvailabilityUpdaterMixin
 from booking.utils import ClassProperty, full_email, CustomStorage, html2text
@@ -38,6 +39,7 @@ from datetime import timedelta, datetime, date, time
 from profile.constants import TEACHER, HOST
 from profile.constants import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
 
+import djorm_pgfulltext.fields
 import math
 import uuid
 import random
@@ -96,6 +98,24 @@ def log_action(user, obj, action_flag, change_message=''):
         action_flag,
         change_message
     )
+
+
+class VectorField(djorm_pgfulltext.fields.VectorField):
+    """
+    Customized version of djorm_pgfulltext.fields.VectorField that does
+    not always enable indexes. This is needed since the default index created
+    does not work for large amounts of data.
+    """
+    def __init__(self, *args, **kwargs):
+        kwargs['null'] = True
+        kwargs['default'] = ''
+        kwargs['editable'] = False
+        kwargs['serialize'] = False
+        # Note: Calling the super of super here, since the super
+        # will re-enable kwargs['db_index']
+        super(djorm_pgfulltext.fields.VectorField, self).__init__(
+            *args, **kwargs
+        )
 
 
 class RoomResponsible(models.Model):
@@ -1159,10 +1179,20 @@ class EmailTemplate(models.Model):
         for item in [self.subject, self.body]:
             text = item.replace("%20", " ")
             template = EmailTemplate.get_template_object(text)
-            for node in template:
-                if isinstance(node, VariableNode):
-                    variables.append(unicode(node.filter_expression))
+            self._add_template_vars(template, variables)
         return variables
+
+    def _add_template_vars(self, template, variables):
+        for node in template:
+            # Include everything that is send to included sub-templates
+            for x in node.get_nodes_by_type(IncludeNode):
+                try:
+                    subtemplate = get_template(x.template.var)
+                    self._add_template_vars(subtemplate.template, variables)
+                except Exception as e:
+                    print "Error while processcing included template: %s" % e
+            for x in node.get_nodes_by_type(VariableNode):
+                variables.append(unicode(x.filter_expression))
 
     @staticmethod
     def migrate():
@@ -1719,7 +1749,9 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     )
 
     # ts_vector field for fulltext search
-    search_index = VectorField()
+    search_index = VectorField(
+        db_index=False,
+    )
 
     # Field for concatenating search data from relations
     extra_search_text = models.TextField(
@@ -2794,7 +2826,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     )
 
     # ts_vector field for fulltext search
-    search_index = VectorField()
+    search_index = VectorField(
+        db_index=False
+    )
 
     # Field for concatenating search data from relations
     extra_search_text = models.TextField(

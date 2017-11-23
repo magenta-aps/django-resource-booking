@@ -88,7 +88,7 @@ product_calendarevent_kwargs['related_kwargs_name'] = 'prod'
 urlpatterns = patterns(
 
     '',
-    (r'^jsi18n$', 'django.views.i18n.javascript_catalog', js_info_dict),
+    (r'^jsi18n/?$', 'django.views.i18n.javascript_catalog', js_info_dict),
     url(r'^$', MainPageView.as_view(), name='index'),
 
     url('^(?:da|en)/.*', booking.views.LocaleRedirectView.as_view()),
