@@ -5121,8 +5121,9 @@ class Booking(models.Model):
         if qs is None:
             qs = Booking.objects.all()
 
+        unit_qs = user.userprofile.get_unit_queryset()
         return qs.filter(
-            product__organizationalunit=user.userprofile.get_unit_queryset()
+            visit__eventtime__product__organizationalunit=unit_qs
         )
 
     def get_absolute_url(self):
