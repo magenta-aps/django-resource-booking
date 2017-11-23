@@ -670,7 +670,7 @@ class ResourcePoolUpdateView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
             })
             breadcrumbs.append({'text': _(u'Redigér')})
         else:
-            breadcrumbs.append({'text': _(u'Opret ressource')})
+            breadcrumbs.append({'text': _(u'Opret ressourcegruppe')})
         return breadcrumbs
 
     def get_context_data(self, **kwargs):
