@@ -3549,9 +3549,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         else:
             recipients = []
         if template_type.send_to_visit_hosts:
-            recipients.extend(self.hosts.all())
+            recipients.extend(self.assigned_hosts)
         if template_type.send_to_visit_teachers:
-            recipients.extend(self.teachers.all())
+            recipients.extend(self.assigned_teachers)
         if template_type.avoid_already_assigned:
             for item in self.hosts.all():
                 if item in recipients:
@@ -5121,8 +5121,9 @@ class Booking(models.Model):
         if qs is None:
             qs = Booking.objects.all()
 
+        unit_qs = user.userprofile.get_unit_queryset()
         return qs.filter(
-            product__organizationalunit=user.userprofile.get_unit_queryset()
+            visit__eventtime__product__organizationalunit=unit_qs
         )
 
     def get_absolute_url(self):

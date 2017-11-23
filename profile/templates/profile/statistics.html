@@ -149,6 +149,12 @@
 
 {% block extra_scripts %}
     {% include 'common/resources/datepicker_script.html' %}
+    <script type="text/javascript"><!--
+    jQuery(function($) {
+        $('#id_from_date').datepicker('setStartDate', null);
+        $('#id_to_date').datepicker('setStartDate', null);
+    });
+    //--></script>
     {% include 'common/resources/datatables_script.html' %}
     <script type="text/javascript">
         $(function() {
