@@ -1454,13 +1454,20 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
     def save_subjects(self):
         existing_gym_fag = {}
         for x in self.object.productgymnasiefag_set.all():
-            existing_gym_fag[x.as_submitvalue()] = x
+            if x.as_submitvalue() in existing_gym_fag:
+                # Remove duplicate
+                x.delete()
+            else:
+                existing_gym_fag[x.as_submitvalue()] = x
 
+        created = set()
         for gval in self.request.POST.getlist('gymnasiefag', []):
             if gval in existing_gym_fag:
                 del existing_gym_fag[gval]
-            else:
+            elif gval not in created:
                 ProductGymnasieFag.create_from_submitvalue(self.object, gval)
+
+            created.add(gval)
 
         # Delete any remaining values that were not submitted
         for x in existing_gym_fag.itervalues():
@@ -1468,15 +1475,20 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
 
         existing_gs_fag = {}
         for x in self.object.productgrundskolefag_set.all():
-            existing_gs_fag[x.as_submitvalue()] = x
+            if x.as_submitvalue() in existing_gs_fag:
+                # Remove saved duplicate
+                x.delete()
+            else:
+                existing_gs_fag[x.as_submitvalue()] = x
 
+        created = set()
         for gval in self.request.POST.getlist('grundskolefag', []):
             if gval in existing_gs_fag:
                 del existing_gs_fag[gval]
-            else:
-                ProductGrundskoleFag.create_from_submitvalue(
-                    self.object, gval
-                )
+            elif gval not in created:
+                ProductGrundskoleFag.create_from_submitvalue(self.object, gval)
+
+            created.add(gval)
 
         # Delete any remaining values that were not submitted
         for x in existing_gs_fag.itervalues():
