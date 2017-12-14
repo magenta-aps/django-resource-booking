@@ -1713,6 +1713,13 @@ body.lightbox {
   }
 }
 
+#booking-spinner {
+    position: absolute;
+    bottom: 8em;
+    left: 2em;
+    right: 2em;
+}
+
 .footer .btn {
   margin-right: 10px;
 }
