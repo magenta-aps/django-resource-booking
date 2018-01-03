@@ -858,6 +858,7 @@ class EmailTemplateType(
             manual_sending_visit_enabled=True,
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
+            send_to_contactperson=True,
             send_to_booker=True,
             send_to_visit_hosts=True,
             send_to_visit_teachers=True,
