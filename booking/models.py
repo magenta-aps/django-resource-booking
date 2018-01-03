@@ -5759,6 +5759,7 @@ EventTime = rb_models.EventTime
 Calendar = rb_models.Calendar
 CalendarEvent = rb_models.CalendarEvent
 CalendarEventInstance = rb_models.CalendarEventInstance
+CalendarCalculatedAvailable = rb_models.CalendarCalculatedAvailable
 ResourceType = rb_models.ResourceType
 Resource = rb_models.Resource
 TeacherResource = rb_models.TeacherResource

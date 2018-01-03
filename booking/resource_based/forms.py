@@ -114,10 +114,11 @@ class EditResourceForm(forms.ModelForm):
         old_save_m2m = self.save_m2m
 
         def save_m2m():
+            values = tuple(self.cleaned_data['resourcepools'])
+
             old_save_m2m()
             instance.resourcepool_set.clear()
-            for resourcepool in self.cleaned_data['resourcepools']:
-                instance.resourcepool_set.add(resourcepool)
+            instance.resourcepool_set.add(*values)
 
         self.save_m2m = save_m2m
         if commit:
