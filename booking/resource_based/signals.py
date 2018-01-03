@@ -48,8 +48,8 @@
 # post_save.connect(resources_on_requirement_save, sender=ResourceRequirement)
 #
 #
-# # When a requirement is removed from a product any eventtimes for that product
-# # will have to recalculate availability
+# # When a requirement is removed from a product any eventtimes for that
+# # product will have to recalculate availability
 # def resources_on_requirement_delete(sender, instance, **kwargs):
 #     qs = instance.product.eventtime_set.filter(
 #         resource_status=EventTime.RESOURCE_STATUS_BLOCKED
@@ -70,10 +70,11 @@
 #         # The way we look up affected EventTimes will ensure that we always
 #         # update any relevant Visit's eventtimes.
 #         if reverse:
-#             # Visits are in the pk_set, so we look up any EventTimes from that:
+#             # Visits are in the pk_set, so we look up any EventTimes from
+#             # that:
 #             eventtimes = EventTime.objects.filter(visit__in=pk_set)
-#             # We want pk_set to be a set of Resource pks so we get the pk from
-#             # instance:
+#             # We want pk_set to be a set of Resource pks so we get the pk
+#             # from instance:
 #             pk_set = set([instance.pk])
 #         else:
 #             # Find the EventTime associated with the instance visit
@@ -97,8 +98,8 @@
 #             qs = qs.filter(time_cond)
 #
 #         if action == "post_add":
-#             # When we restrict new resources we're only interested in updating
-#             # eventtimes currently marked as available.
+#             # When we restrict new resources we're only interested in
+#             # updating eventtimes currently marked as available.
 #             qs = qs.filter(
 #                 resource_status=EventTime.RESOURCE_STATUS_AVAILABLE
 #             )
@@ -131,14 +132,14 @@
 #             product__resourcerequirement__resource_pool__in=pools
 #         )
 #         if action == "post_add":
-#             # Teachers or hosts being assigned means that available times that
-#             # might need them needs to be checked
+#             # Teachers or hosts being assigned means that available times
+#             # that might need them needs to be checked
 #             qs = qs.filter(
 #                 resource_status=EventTime.RESOURCE_STATUS_AVAILABLE
 #             )
 #         else:
-#             # Teachers or hosts being unassigned means that blocked times that
-#             # might need them needs to be checked
+#             # Teachers or hosts being unassigned means that blocked times
+#             # that might need them needs to be checked
 #             qs = qs.filter(
 #                 resource_status=EventTime.RESOURCE_STATUS_BLOCKED
 #             )

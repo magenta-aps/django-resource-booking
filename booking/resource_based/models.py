@@ -919,9 +919,6 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
         current_start = None
         current_end = None
 
-        START = 0
-        END = 1
-
         try:
             next_unavailable = unavailables.next()
         except StopIteration:
@@ -1886,8 +1883,6 @@ class ResourceRequirement(AvailabilityUpdaterMixin, models.Model):
             return False
         if amount <= 0:
             return True
-
-        count = 0
 
         free_resources = self.resource_pool.available_resources_between(
             from_dt, to_dt
