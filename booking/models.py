@@ -2787,7 +2787,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     workflow_status_choices = (
         (WORKFLOW_STATUS_BEING_PLANNED, _(BEING_PLANNED_STATUS_TEXT)),
-        (WORKFLOW_STATUS_REJECTED, _(u'Afvist af undervisere eller værter')),
+        (WORKFLOW_STATUS_REJECTED, _(u'Afvist af undervisere eller vært')),
         (WORKFLOW_STATUS_PLANNED, _(PLANNED_STATUS_TEXT)),
         (WORKFLOW_STATUS_PLANNED_NO_BOOKING, _(PLANNED_NOBOOKING_TEXT)),
         (WORKFLOW_STATUS_CONFIRMED, _(u'Bekræftet af gæst')),
@@ -3032,23 +3032,38 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             x.update_availability()
 
     def resources_updated(self):
-        if self.workflow_status in [
+
+        orig_status = self.workflow_status
+
+        # If current status is rejected by personel, check if personel is
+        # still needed and if not change status accordingly
+        if (
+            self.workflow_status == self.WORKFLOW_STATUS_REJECTED and
+            not self.needs_hosts and
+            not self.needs_teachers
+        ):
+            if self.planned_status_is_blocked(True):
+                self.workflow_status = self.WORKFLOW_STATUS_BEING_PLANNED
+            else:
+                self.workflow_status = self.WORKFLOW_STATUS_PLANNED
+
+        elif self.workflow_status in [
             self.WORKFLOW_STATUS_BEING_PLANNED,
             self.WORKFLOW_STATUS_AUTOASSIGN_FAILED
         ] and not self.planned_status_is_blocked(True):
-
             self.workflow_status = self.WORKFLOW_STATUS_PLANNED
-            self.save()
-
-            # Send out notification that the visit is now planned.
-            self.autosend(EmailTemplateType.notify_all__booking_complete)
 
         elif self.workflow_status in [
                     self.WORKFLOW_STATUS_PLANNED,
                     self.WORKFLOW_STATUS_PLANNED_NO_BOOKING
                 ] and self.planned_status_is_blocked(True):
             self.workflow_status = self.WORKFLOW_STATUS_BEING_PLANNED
+
+        if orig_status != self.workflow_status:
             self.save()
+            # Send out planned notification if we switched to planned
+            if self.workflow_status == self.WORKFLOW_STATUS_PLANNED:
+                self.autosend(EmailTemplateType.notify_all__booking_complete)
 
     def resource_accepts(self):
         self.resources_updated()
