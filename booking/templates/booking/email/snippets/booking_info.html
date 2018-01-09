@@ -6,4 +6,8 @@
 <strong>Postnummer</strong>: {{ booker.school.postcode.number|default:"Ikke angivet" }}<br />
 <strong>By</strong>: {{ booker.school.postcode.city|default:"Ikke angivet" }}<br />
 <strong>Region</strong>: {{ booker.school.postcode.region|default:"Ikke angivet" }}<br />
-<strong>Antal deltagere</strong>: {{ booker.attendee_count|default:"0" }}
+<strong>Antal deltagere</strong>: {{ booker.attendee_count|default:"0" }}<br />
+{% if booking.notes %}
+<strong>Kommentarer:</strong>
+<pre>{{ booking.notes }}</pre>
+{% endif %}
