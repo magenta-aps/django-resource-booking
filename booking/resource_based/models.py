@@ -183,10 +183,6 @@ class EventTime(models.Model):
 
         result = None
 
-        start = time.time()
-        t1 = start
-        t2 = start
-
         if self.product is not None:
             for req in self.product.resourcerequirement_set.all():
                 try:
@@ -209,7 +205,6 @@ class EventTime(models.Model):
                         ):
                     result = EventTime.RESOURCE_STATUS_BLOCKED
                     break
-        t1 = time.time()
 
         if result is None:
             if fully_assigned:
@@ -220,10 +215,6 @@ class EventTime(models.Model):
         if self.resource_status != result:
             self.resource_status = result
             self.save()
-        t2 = time.time()
-
-        times = (self.pk, t1 - start, t2 - t1, t2 - start)
-        print times
 
     @property
     def resource_status_class(self):
@@ -541,8 +532,6 @@ class EventTime(models.Model):
                 )
             )
         )
-
-        print "Updating availability for %d eventtimes" % qs.count()
 
         with transaction.atomic():
             for x in qs:
@@ -925,8 +914,6 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
             next_unavailable = None
 
         for x in availables:
-            # TODO: Skip availables that has been matched by long overlapping
-            # available
 
             if current_end:
                 # If the current available ends before the current open
@@ -1298,6 +1285,13 @@ class CalendarEvent(AvailabilityUpdaterMixin, models.Model):
             return self.calendar.affected_eventtimes
         else:
             return EventTime.objects.none()
+
+    @property
+    def affected_calendars(self):
+        if self.calendar:
+            return Calendar.objects.filter(pk=self.calendar.pk)
+        else:
+            return Calendar.objects.none()
 
     @property
     def calendar_event_link(self):
@@ -1926,9 +1920,21 @@ class VisitResource(AvailabilityUpdaterMixin, models.Model):
         related_name='visitresource'
     )
 
+    @property
+    def affected_calendars(self):
+        return Calendar.objects.filter(resource__visitresource=self)
+
+    @property
+    def affected_eventtimes(self):
+        if self.resource_requirement:
+            return self.resource_requirement.affected_eventtimes
+        else:
+            return EventTime.objects.none()
+
     def save(self, *args, **kwargs):
         new = self.pk is None
         super(VisitResource, self).save(*args, **kwargs)
+
         if new:
             resourcetype = self.resource.resource_type.id
             if resourcetype == ResourceType.RESOURCE_TYPE_TEACHER:
@@ -1943,10 +1949,3 @@ class VisitResource(AvailabilityUpdaterMixin, models.Model):
                     [self.resource.hostresource.user],
                     True
                 )
-
-    @property
-    def affected_eventtimes(self):
-        if self.resource_requirement:
-            return self.resource_requirement.affected_eventtimes
-        else:
-            return EventTime.objects.none()

@@ -3027,6 +3027,15 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         else:
             return EventTime.objects.none()
 
+    @property
+    # Calendars that needs to be updated if assigned teachers or hosts are
+    # changed.
+    def affected_calendars(self):
+        return Calendar.objects.filter(
+            Q(resource__teacherresource__user__in=self.teachers.all()) |
+            Q(resource__hostresource__user__in=self.hosts.all())
+        )
+
     def update_availability(self):
         for x in self.affected_eventtimes:
             x.update_availability()
