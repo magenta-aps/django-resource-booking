@@ -20,7 +20,6 @@ import datetime
 import math
 import re
 import sys
-import time
 
 
 class EventTime(models.Model):
