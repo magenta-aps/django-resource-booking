@@ -772,7 +772,7 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
                 booking.booker.get_full_name() or "",
                 booking.booker.get_email() or "",
                 booking.visit.product.comment or "",
-                booking.comments or "",
+                booking.notes or "",
                 u", ".join([
                     u'%s' % (x.get_full_name())
                     for x in
