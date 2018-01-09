@@ -1202,13 +1202,16 @@ class CalendarView(LoginRequiredMixin, CalRelatedMixin, DetailView):
             date = x.start.astimezone(
                 timezone.get_current_timezone()
             ).date()
-            # Add event to all the days it spans
-            delta = x.end - x.start + datetime.timedelta(hours=24, seconds=-1)
-            for y in range(0, delta.days):
+            date_midnight = timezone.make_aware(
+                datetime.datetime.combine(date, datetime.time())
+            )
+            while date_midnight <= x.end:
                 key = date.isoformat()
                 if key in events_by_date:
-                    events_by_date[key].append(x.day_marker(date))
+                    marker = x.day_marker(date)
+                    events_by_date[key].append(marker)
                 date = date + datetime.timedelta(days=1)
+                date_midnight = date_midnight + datetime.timedelta(days=1)
 
         res = calendar.resource if hasattr(calendar, 'resource') else None
         prod = calendar.product if hasattr(calendar, 'product') else None
