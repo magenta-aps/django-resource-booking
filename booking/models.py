@@ -2067,9 +2067,15 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     #  - All EventTimes for products that has requirements that uses these
     #    ResourcePools.
     def affected_eventtimes(self):
-        potential_resources = Resource.objects.filter(
-            resourcepool__resourcerequirement__product=self
-        )
+        if self.is_resource_controlled:
+            potential_resources = Resource.objects.filter(
+                resourcepool__resourcerequirement__product=self
+            )
+        else:
+            potential_resources = Resource.objects.filter(
+                Q(teacherresource__user=self.potentielle_undervisere.all()) |
+                Q(hostresource__user=self.potentielle_vaerter.all())
+            )
         resource_pools = ResourcePool.objects.filter(
             resources=potential_resources
         )
