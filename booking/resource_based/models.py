@@ -353,7 +353,7 @@ class EventTime(models.Model):
             WHERE "nrs_product"."id" = "booking_eventtime"."product_id"
         '''
 
-        available_calender_time_exists_sql = '''
+        available_calender_times_sql = '''
             SELECT
                 "booking_calendarcalculatedavailable"."id"
             FROM
@@ -420,33 +420,30 @@ class EventTime(models.Model):
                     EXISTS(%s)
                 )
         ''' % (
+            # Need to check blocking bookings for resources that do not have
+            # a calendar.
             blocking_booking_assignments_sql,
-            available_calender_time_exists_sql,
+            available_calender_times_sql,
         )
 
         num_assigned_for_requirement_sql = '''
             SELECT
                 COUNT(1)
             FROM
-                "booking_visitresource" "assigned_resource"
+                "booking_visit" "assigned_visit"
                 INNER JOIN
-                "booking_visit" "assigned_visit" ON (
-                    "assigned_resource"."visit_id" =
-                        "assigned_visit"."id"
-                )
-                INNER JOIN "booking_eventtime" "assigned_eventtime" ON (
-                    "assigned_visit"."id" =
-                        "assigned_eventtime"."visit_id"
+                "booking_visitresource" "assigned_resource" ON (
+                    "assigned_visit"."id" = "assigned_resource"."visit_id"
                 )
             WHERE (
+                "assigned_visit"."id" = "booking_eventtime"."visit_id"
+                AND
                 "assigned_resource"."resource_requirement_id" =
                     "num_fullfilled_req"."id"
-                AND
-                "assigned_eventtime"."id" = "booking_eventtime"."id"
             )
         '''
 
-        num_fullfilled_sql = '''
+        num_can_be_fullfilled_sql = '''
             SELECT
                 COUNT(1)
             FROM
@@ -459,6 +456,8 @@ class EventTime(models.Model):
                 "nfr_product"."id" = "booking_eventtime"."product_id"
                 AND
                 (
+                    "num_fullfilled_req"."required_amount" > (%s)
+                    AND
                     "num_fullfilled_req"."required_amount" <= (
                         (%s)
                         +
@@ -467,7 +466,8 @@ class EventTime(models.Model):
                 )
         ''' % (
             num_assigned_for_requirement_sql,
-            num_available_resources_sql
+            num_assigned_for_requirement_sql,
+            num_available_resources_sql,
         )
 
         num_assigned_sql = '''
@@ -483,7 +483,7 @@ class EventTime(models.Model):
                 "nar_product"."id" = "booking_eventtime"."product_id"
                 AND
                 (
-                    "num_assigned_req"."required_amount" = (
+                    "num_assigned_req"."required_amount" <= (
                         SELECT
                             COUNT(1)
                         FROM
@@ -493,17 +493,12 @@ class EventTime(models.Model):
                                 "assigned_resource2"."visit_id" =
                                     "assigned_visit2"."id"
                             )
-                            INNER JOIN "booking_eventtime"
-                                "assigned_eventtime2" ON (
-                                "assigned_visit2"."id" =
-                                    "assigned_eventtime2"."visit_id"
-                            )
                         WHERE (
                             "assigned_resource2"."resource_requirement_id" =
                                 "num_assigned_req"."id"
                             AND
-                            "assigned_eventtime2"."id" =
-                                "booking_eventtime"."id"
+                            "assigned_visit2"."id" =
+                                "booking_eventtime"."visit_id"
                         )
                     )
                 )
@@ -511,7 +506,7 @@ class EventTime(models.Model):
 
         qs = qs.annotate(
             num_requirements=RawSQL(num_requirements_sql, tuple()),
-            num_fullfilled=RawSQL(num_fullfilled_sql, tuple()),
+            num_can_be_fullfilled=RawSQL(num_can_be_fullfilled_sql, tuple()),
             num_assigned=RawSQL(num_assigned_sql, tuple())
         ).exclude(
             Q(
@@ -521,13 +516,13 @@ class EventTime(models.Model):
             Q(
                 resource_status=EventTime.RESOURCE_STATUS_AVAILABLE,
                 num_requirements__lte=(
-                    F('num_assigned') + F('num_fullfilled')
+                    F('num_assigned') + F('num_can_be_fullfilled')
                 )
             ) |
             Q(
                 resource_status=EventTime.RESOURCE_STATUS_BLOCKED,
                 num_requirements__gt=(
-                    F('num_assigned') + F('num_fullfilled')
+                    F('num_assigned') + F('num_can_be_fullfilled')
                 )
             )
         )
@@ -1771,7 +1766,7 @@ class ResourcePool(AvailabilityUpdaterMixin, models.Model):
         ]
 
     def available_resources_between(self, from_dt, to_dt):
-        return self.resources.annotate(
+        qs = self.resources.annotate(
             has_available_spot=RawSQL(
                 '''
                 EXISTS (
@@ -1797,6 +1792,8 @@ class ResourcePool(AvailabilityUpdaterMixin, models.Model):
         ).filter(
             has_available_spot=True
         )
+
+        return qs
 
     @property
     def affected_eventtimes(self):
