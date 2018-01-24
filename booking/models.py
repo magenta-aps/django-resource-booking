@@ -10,6 +10,7 @@ from django.db.models import Sum
 from django.db.models import Q
 from django.db.models.base import ModelBase
 from django.db.models.functions import Coalesce
+from django.template import TemplateSyntaxError
 from django.utils import six
 from django.template.context import make_context
 from django.utils import timezone
@@ -1115,12 +1116,15 @@ class EmailTemplate(models.Model):
     @staticmethod
     def get_template_object(template_text):
         # Add default includes and encapsulate in danish
-        return Template(
-            "\n".join(EmailTemplate.default_includes) +
-            "{% language 'da' %}\n" +
-            unicode(template_text) +
+        encapsulated = "\n".join(EmailTemplate.default_includes) + \
+            "{% language 'da' %}\n" + \
+            unicode(template_text) + \
             "{% endlanguage %}\n"
-        )
+        try:
+            return Template(encapsulated)
+        except TemplateSyntaxError as e:
+            print "Error in mail template. Full text: %s" % encapsulated
+            raise e
 
     @staticmethod
     def _expand(text, context, keep_placeholders=False):
