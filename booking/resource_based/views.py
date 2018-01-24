@@ -585,28 +585,28 @@ class ResourcePoolCreateView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
             self.get_context_data(**context)
         )
 
-    def get_breadcrumbs(self):
-        return [
-            {
-                'url': reverse('resourcepool-list'),
-                'text': _(u'Ressourcegrupper')
-            },
-            {'text': _(u'Opret ressourcegruppe')},
-        ]
+    @staticmethod
+    def build_breadcrumbs():
+        breadcrumbs = ResourcePoolListView.build_breadcrumbs()
+        breadcrumbs.append({'text': _(u'Opret ressourcegruppe')})
+        return breadcrumbs
 
 
 class ResourcePoolDetailView(BreadcrumbMixin, EditorRequriedMixin, DetailView):
     template_name = "resourcepool/details.html"
     model = ResourcePool
 
-    def get_breadcrumbs(self):
-        return [
-            {
-                'url': reverse('resourcepool-list'),
-                'text': _(u'Ressourcegrupper')
-            },
-            {'text': unicode(self.object)}
-        ]
+    def get_breadcrumb_args(self):
+        return [self.object]
+
+    @staticmethod
+    def build_breadcrumbs(resourcepool):
+        breadcrumbs = ResourcePoolListView.build_breadcrumbs()
+        breadcrumbs.append({
+            'url': reverse('resourcepool-view', args=[resourcepool.id]),
+            'text': unicode(resourcepool)
+        })
+        return breadcrumbs
 
 
 class ResourcePoolListView(BreadcrumbMixin, EditorRequriedMixin, ListView):
@@ -623,10 +623,15 @@ class ResourcePoolListView(BreadcrumbMixin, EditorRequriedMixin, ListView):
     def get_context_object_name(self, queryset):
         return "resourcepools"
 
-    def get_breadcrumbs(self):
-        return [
-            {'text': _(u'Ressourcegrupper')}
+    @staticmethod
+    def build_breadcrumbs():
+        breadcrumbs = [
+            {
+                'url': reverse('resource-list'),
+                'text': _(u'Administrér ressourcegrupper')
+            }
         ]
+        return breadcrumbs
 
 
 class ResourcePoolUpdateView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
@@ -668,18 +673,16 @@ class ResourcePoolUpdateView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
                 self.get_context_data(form=form)
             )
 
-    def get_breadcrumbs(self):
-        breadcrumbs = [{
-            'url': reverse('resourcepool-list'),
-            'text': _(u'Ressourcegrupper')
-        }]
-        if self.object.pk:
-            breadcrumbs.append({
-                'url': reverse('resourcepool-view', args=[self.object.id]),
-                'text': unicode(self.object)
-            })
+    def get_breadcrumb_args(self):
+        return [self.object]
+
+    @staticmethod
+    def build_breadcrumbs(resource):
+        if resource.pk:
+            breadcrumbs = ResourcePoolDetailView.build_breadcrumbs(resource)
             breadcrumbs.append({'text': _(u'Redigér')})
         else:
+            breadcrumbs = ResourcePoolListView.build_breadcrumbs()
             breadcrumbs.append({'text': _(u'Opret ressourcegruppe')})
         return breadcrumbs
 
@@ -743,18 +746,14 @@ class ResourcePoolDeleteView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
     def get_template_names(self):
         return ['resourcepool/delete.html']
 
-    def get_breadcrumbs(self):
-        return [
-            {
-                'url': reverse('resourcepool-list'),
-                'text': _(u'Ressourcegrupper')
-            },
-            {
-                'url': reverse('resourcepool-view', args=[self.object.id]),
-                'text': self.object
-            },
-            {'text': _(u'Slet')}
-        ]
+    def get_breadcrumb_args(self):
+        return [self.object]
+
+    @staticmethod
+    def build_breadcrumbs(resource):
+        breadcrumbs = ResourcePoolDetailView.build_breadcrumbs(resource)
+        breadcrumbs.append({'text': _(u'Slet')})
+        return breadcrumbs
 
 
 class ResourceRequirementConfirmMixin(object):
