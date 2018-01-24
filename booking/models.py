@@ -3611,7 +3611,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             )
         if type(template_type) == int:
             template_type = EmailTemplateType.get(template_type)
-        if follow_inherit and self.autosend_inherits(template_type):
+        if follow_inherit and self.product is not None and \
+                self.autosend_inherits(template_type):
             return self.product.get_autosend(template_type)
         else:
             try:
