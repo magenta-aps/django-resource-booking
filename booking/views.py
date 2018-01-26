@@ -1644,7 +1644,9 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
 
         if self.request.method == 'POST':
             forms['autosendformset'] = ProductAutosendFormSet(
-                self.request.POST, instance=self.object
+                self.request.POST,
+                instance=self.object,
+                initial=self.get_initial_autosends()
             )
         return forms
 
