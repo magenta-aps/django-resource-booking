@@ -3437,13 +3437,10 @@ class EmailTemplateListView(LoginRequiredMixin, BreadcrumbMixin, ListView):
 
     @staticmethod
     def build_breadcrumbs():
-        from profile.views import ProfileView  # noqa
-        breadcrumbs = ProfileView.build_breadcrumbs()
-        breadcrumbs.append({
+        return [{
             'url': reverse('emailtemplate-list'),
             'text': _(u'Emailskabelonliste')
-        })
-        return breadcrumbs
+        }]
 
 
 class EmailTemplateEditView(LoginRequiredMixin, UnitAccessRequiredMixin,
