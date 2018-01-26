@@ -627,12 +627,10 @@ class UserListView(BreadcrumbMixin, EditorRequriedMixin, ListView):
 
     @staticmethod
     def build_breadcrumbs():
-        breadcrumbs = ProfileView.build_breadcrumbs()
-        breadcrumbs.append({
+        return [{
             'text': _(u'Administrér brugere'),
             'url': reverse('user_list')
-        })
-        return breadcrumbs
+        }]
 
 
 class UnitListView(EditorRequriedMixin, ListView):
@@ -813,12 +811,10 @@ class StatisticsView(EditorRequriedMixin, BreadcrumbMixin, TemplateView):
 
     @staticmethod
     def build_breadcrumbs():
-        breadcrumbs = ProfileView.build_breadcrumbs()
-        breadcrumbs.append({
+        return [{
             'url': reverse('statistics'),
             'text': _(u'Statistik over evalueringer')
-        })
-        return breadcrumbs
+        }]
 
 
 class EmailLoginView(DetailView):
