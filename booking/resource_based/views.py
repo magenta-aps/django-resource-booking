@@ -404,7 +404,9 @@ class TimeDetailsView(BreadcrumbMixin, DetailView):
 
     @staticmethod
     def build_breadcrumbs(object, request):
-        breadcrumbs = ManageTimesView.build_breadcrumbs(object.product, request)
+        breadcrumbs = ManageTimesView.build_breadcrumbs(
+            object.product, request
+        )
         breadcrumbs.append({
             'url': reverse('time-view', args=[object.product.id, object.id]),
             'text': _(u'Opret besøg for tidspunkt')
@@ -512,12 +514,12 @@ class ResourceListView(BreadcrumbMixin, EditorRequriedMixin, ListView):
 
     @staticmethod
     def build_breadcrumbs():
-        breadcrumbs = [
-            {
-                'url': reverse('resource-list'),
-                'text': _(u'Administrér ressourcer')
-            }
-        ]
+        from profile.views import ProfileView  # noqa
+        breadcrumbs = ProfileView.build_breadcrumbs()
+        breadcrumbs.append({
+            'url': reverse('resource-list'),
+            'text': _(u'Administrér ressourcer')
+        })
         return breadcrumbs
 
 
@@ -704,12 +706,12 @@ class ResourcePoolListView(BreadcrumbMixin, EditorRequriedMixin, ListView):
 
     @staticmethod
     def build_breadcrumbs():
-        breadcrumbs = [
-            {
-                'url': reverse('resource-list'),
-                'text': _(u'Administrér ressourcegrupper')
-            }
-        ]
+        from profile.views import ProfileView  # noqa
+        breadcrumbs = ProfileView.build_breadcrumbs()
+        breadcrumbs.append({
+            'url': reverse('resource-list'),
+            'text': _(u'Administrér ressourcegrupper')
+        })
         return breadcrumbs
 
 

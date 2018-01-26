@@ -647,7 +647,7 @@ class UnitListView(EditorRequriedMixin, ListView):
         return user.userprofile.get_unit_queryset()
 
 
-class StatisticsView(EditorRequriedMixin, TemplateView):
+class StatisticsView(EditorRequriedMixin, BreadcrumbMixin, TemplateView):
     template_name = "profile/statistics.html"
     form_class = StatisticsForm
     organizationalunits = []
@@ -810,6 +810,15 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
             ])
 
         return response
+
+    @staticmethod
+    def build_breadcrumbs():
+        breadcrumbs = ProfileView.build_breadcrumbs()
+        breadcrumbs.append({
+            'url': reverse('statistics'),
+            'text': _(u'Statistik over evalueringer')
+        })
+        return breadcrumbs
 
 
 class EmailLoginView(DetailView):
