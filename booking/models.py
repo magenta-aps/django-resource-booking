@@ -10,6 +10,7 @@ from django.db.models import Sum
 from django.db.models import Q
 from django.db.models.base import ModelBase
 from django.db.models.functions import Coalesce
+from django.template import TemplateSyntaxError
 from django.utils import six
 from django.template.context import make_context
 from django.utils import timezone
@@ -1115,12 +1116,15 @@ class EmailTemplate(models.Model):
     @staticmethod
     def get_template_object(template_text):
         # Add default includes and encapsulate in danish
-        return Template(
-            "\n".join(EmailTemplate.default_includes) +
-            "{% language 'da' %}\n" +
-            unicode(template_text) +
+        encapsulated = "\n".join(EmailTemplate.default_includes) + \
+            "{% language 'da' %}\n" + \
+            unicode(template_text) + \
             "{% endlanguage %}\n"
-        )
+        try:
+            return Template(encapsulated)
+        except TemplateSyntaxError as e:
+            print "Error in mail template. Full text: %s" % encapsulated
+            raise e
 
     @staticmethod
     def _expand(text, context, keep_placeholders=False):
@@ -3668,7 +3672,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             )
         if type(template_type) == int:
             template_type = EmailTemplateType.get(template_type)
-        if follow_inherit and self.autosend_inherits(template_type):
+        if follow_inherit and self.product is not None and \
+                self.autosend_inherits(template_type):
             return self.product.get_autosend(template_type)
         else:
             try:
@@ -5462,7 +5467,7 @@ class KUEmailMessage(models.Model):
     def extract_addresses(recipients):
         if type(recipients) != list:
             recipients = [recipients]
-        emails = {}
+        emails = []
         for recipient in recipients:
             name = None
             address = None
@@ -5487,11 +5492,7 @@ class KUEmailMessage(models.Model):
                     address = recipient.get_email()
                 except:
                     pass
-            if address is not None and address != '' and (
-                    address not in emails or (
-                        user and not emails[address]['user']
-                    )
-            ):
+            if address is not None and address != '':
 
                 email = {
                     'address': address,
@@ -5506,8 +5507,8 @@ class KUEmailMessage(models.Model):
                     email['full'] = address
 
                 email['get_full_name'] = email.get('name', email['full'])
-                emails[address] = email
-        return emails.values()
+                emails.append(email)
+        return emails
 
     @staticmethod
     def save_email(email_message, instance,

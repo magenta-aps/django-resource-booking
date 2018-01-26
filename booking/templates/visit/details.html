@@ -95,6 +95,72 @@
           </div>
         </div>
     </div>
+    
+    <div style="text-align: center">
+    {% if not can_edit %}
+        {% if object.product.is_resource_controlled and not object.is_multiproductvisit %}
+            {% for requirementdata in object.requirement_details %}
+                {% if not requirementdata.unknown %}
+                    {{ requirementdata.type.plural }}:
+                    {% if requirementdata.is_host and is_potential_host %}
+                        {% if can_become_host %}
+                            <a href="{% url 'become-host' object.pk %}" role="button" class="btn btn-default btn-xs pull-right">{% trans 'Bliv vært for dette besøg.' %}</a>
+                            {% if host %}
+                                <a href="{% url 'decline-host' object.pk %}" role="button" class="btn btn-default btn-xs pull-right">{% trans 'Jeg ønsker ikke at være vært' %}</a>
+                            {% endif %}
+                        {% elif is_assigned_as_host %}
+                            {% trans '(allerede vært for dette besøg)' %}
+                        {% elif not needs_hosts %}
+                            <button type="button" class="btn btn-primary btn-xs pull-right" data-toggle="modal" data-target="#hosts-found" >{% trans 'Alle fundet' %}</button>
+                        {% endif %}
+                    {% endif %}
+                    {% if requirementdata.is_teacher and is_potential_teacher %}
+                        {% if can_become_teacher %}
+                            <a href="{% url 'become-teacher' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Bliv underviser for dette besøg' %}</a>
+                            {% if teacher %}
+                                <a href="{% url 'decline-teacher' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Jeg ønsker ikke at være underviser' %}</a>
+                            {% endif %}
+                        {% elif is_assigned_as_teacher %}
+                            {% trans '(allerede underviser for dette besøg)' %}
+                        {% elif not needs_teachers %}
+                            <button type="button" class="btn btn-primary btn-xs pull-right" data-toggle="modal" data-target="#teachers-found" >{% trans 'Alle fundet' %}</button>
+                        {% endif %}
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+        {% if not object.product.is_resource_controlled and not object.is_multiproductvisit %}
+            {% if request.user.userprofile.is_teacher %}
+                {% if object.needs_teachers %}
+                    {% if request.user in object.teachers.all %}
+                        {% trans '(allerede underviser for dette besøg)' %}
+                    {% else %}
+                        <a href="{% url 'become-teacher' object.pk %}" role="button" class="btn btn-default btn-xs pull-right">{% trans 'Bliv underviser for dette besøg' %}</a>
+                        {% if teacher %}
+                            <a href="{% url 'decline-teacher' object.pk %}" role="button" class="btn btn-default btn-xs pull-right">{% trans 'Jeg ønsker ikke at være underviser' %}</a>
+                        {% endif %}
+                    {% endif %}
+                {% else %}
+                    <button type="button" class="btn btn-default btn-xs pull-right" data-toggle="modal" data-target="#teachers-found" >{% trans 'Alle fundet' %}</button>
+                {% endif %}
+            {% endif %}
+            {% if request.user.userprofile.is_host %}
+                {% if object.needs_hosts %}
+                    {% if request.user in object.hosts.all %}
+                        {% trans '(allerede vært for dette besøg)' %}
+                    {% else %}
+                        <a href="{% url 'become-host' object.pk %}" role="button" class="btn btn-default btn-xs pull-right">{% trans 'Bliv vært for dette besøg.' %}</a>
+                        {% if host %}
+                            <a href="{% url 'decline-host' object.pk %}" role="button" class="btn btn-default btn-xs pull-right">{% trans 'Jeg ønsker ikke at være vært' %}</a>
+                        {% endif %}
+                    {% endif %}
+                {% else %}
+                    <button type="button" class="btn btn-default btn-xs pull-right" data-toggle="modal" data-target="#hosts-found" >{% trans 'Alle fundet' %}</button>
+                {% endif %}
+            {% endif %}
+        {% endif %}
+    {% endif %}
+    </div>
 
     <div class="row status">
         <div class="col-sm-12 col-md-10 col-md-offset-2">
@@ -184,30 +250,6 @@
                                 <div class="{{ right_class }}">
                                     {% if can_edit %}
                                         <a href="{% url 'visit-resources-edit' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right" style="vertical-align:top">{% trans 'Redigér' %}</a>
-
-                                    {% elif requirementdata.is_host and is_potential_host %}
-                                        {% if can_become_host %}
-                                            <a href="{% url 'become-host' object.pk %}" role="button" class="btn btn-default btn-xs pull-right">{% trans 'Bliv vært for dette besøg.' %}</a>
-                                            {% if host %}
-                                                <a href="{% url 'decline-host' object.pk %}" role="button" class="btn btn-default btn-xs pull-right">{% trans 'Jeg ønsker ikke at være vært' %}</a>
-                                            {% endif %}
-                                        {% elif is_assigned_as_host %}
-                                            {% trans '(allerede vært for dette besøg)' %}
-                                        {% elif not needs_hosts %}
-                                            <button type="button" class="btn btn-primary btn-xs pull-right" data-toggle="modal" data-target="#hosts-found" >{% trans 'Alle fundet' %}</button>
-                                        {% endif %}
-
-                                    {% elif requirementdata.is_teacher and is_potential_teacher %}
-                                        {% if can_become_teacher %}
-                                            <a href="{% url 'become-teacher' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Bliv underviser for dette besøg' %}</a>
-                                            {% if teacher %}
-                                                <a href="{% url 'decline-teacher' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Jeg ønsker ikke at være underviser' %}</a>
-                                            {% endif %}
-                                        {% elif is_assigned_as_teacher %}
-                                            {% trans '(allerede underviser for dette besøg)' %}
-                                        {% elif not needs_teachers %}
-                                            <button type="button" class="btn btn-primary btn-xs pull-right" data-toggle="modal" data-target="#teachers-found" >{% trans 'Alle fundet' %}</button>
-                                        {% endif %}
                                     {% endif %}
                                 </div>
                             {% endif %}
@@ -227,21 +269,6 @@
                                 <div class="{{ right_class }}">
                                     <a href="{% if object.product.is_resource_controlled %}{% url 'visit-resources-edit' object.pk %}{% else %}{% url 'change-visit-teachers' object.pk %}{% endif %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Redigér' %}</a>
                                 </div>
-                            {% elif request.user.userprofile.is_teacher %}
-                                <div class="{{ right_class }}">
-                                {% if object.needs_teachers %}
-                                    {% if request.user in object.teachers.all %}
-                                        {% trans '(allerede underviser for dette besøg)' %}
-                                    {% else %}
-                                        <a href="{% url 'become-teacher' object.pk %}" role="button" class="btn btn-default btn-xs pull-right">{% trans 'Bliv underviser for dette besøg' %}</a>
-                                        {% if teacher %}
-                                            <a href="{% url 'decline-teacher' object.pk %}" role="button" class="btn btn-default btn-xs pull-right">{% trans 'Jeg ønsker ikke at være underviser' %}</a>
-                                        {% endif %}
-                                    {% endif %}
-                                {% else %}
-                                    <button type="button" class="btn btn-default btn-xs pull-right" data-toggle="modal" data-target="#teachers-found" >{% trans 'Alle fundet' %}</button>
-                                {% endif %}
-                                </div>
                             {% endif %}
                         </div>
                     {% endif %}
@@ -257,21 +284,6 @@
                             {% if can_edit %}
                                 <div class="{{ right_class }}">
                                     <a href="{% if object.product.is_resource_controlled %}{% url 'visit-resources-edit' object.pk %}{% else %}{% url 'change-visit-hosts' object.pk %}{% endif %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Redigér' %}</a>
-                                </div>
-                            {% elif request.user.userprofile.is_host %}
-                                <div class="{{ right_class }}">
-                                    {% if object.needs_hosts %}
-                                        {% if request.user in object.hosts.all %}
-                                            {% trans '(allerede vært for dette besøg)' %}
-                                        {% else %}
-                                            <a href="{% url 'become-host' object.pk %}" role="button" class="btn btn-default btn-xs pull-right">{% trans 'Bliv vært for dette besøg.' %}</a>
-                                            {% if host %}
-                                                <a href="{% url 'decline-host' object.pk %}" role="button" class="btn btn-default btn-xs pull-right">{% trans 'Jeg ønsker ikke at være vært' %}</a>
-                                            {% endif %}
-                                        {% endif %}
-                                    {% else %}
-                                        <button type="button" class="btn btn-default btn-xs pull-right" data-toggle="modal" data-target="#hosts-found" >{% trans 'Alle fundet' %}</button>
-                                    {% endif %}
                                 </div>
                             {% endif %}
                         </div>

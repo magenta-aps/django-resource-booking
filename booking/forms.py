@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import sys
+
 from booking.models import StudyMaterial, ProductAutosend, Booking
 from booking.models import Subject, BookingGrundskoleSubjectLevel
 from booking.models import Locality, OrganizationalUnitType, OrganizationalUnit
@@ -810,7 +812,7 @@ class BookingForm(forms.ModelForm):
                     waitinglist_capacity = 0
                     bookings = 0
 
-                if available_seats is None:
+                if available_seats is None or available_seats == sys.maxint:
                     choices.append((eventtime.pk, date))
                 else:
                     if bookings == 0:
