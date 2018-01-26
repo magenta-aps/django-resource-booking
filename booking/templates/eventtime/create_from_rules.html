@@ -13,7 +13,8 @@
 
 {% block content %}
     {% timezone "Europe/Copenhagen" %}
-    <div class="divider"></div>
+    {% include 'common/breadcrumbrow.html' %}
+
     <h1>
         {% trans "Opret tidspunkter for" %}
         '<a href="{% url 'product-view' product.pk %}">{{ product.title }}</a>'
