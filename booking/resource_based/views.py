@@ -512,12 +512,12 @@ class ResourceListView(BreadcrumbMixin, EditorRequriedMixin, ListView):
 
     @staticmethod
     def build_breadcrumbs():
-        breadcrumbs = [
-            {
-                'url': reverse('resource-list'),
-                'text': _(u'Administrér ressourcer')
-            }
-        ]
+        from profile.views import ProfileView  # noqa
+        breadcrumbs = ProfileView.build_breadcrumbs()
+        breadcrumbs.append({
+            'url': reverse('resource-list'),
+            'text': _(u'Administrér ressourcer')
+        })
         return breadcrumbs
 
 
@@ -704,12 +704,12 @@ class ResourcePoolListView(BreadcrumbMixin, EditorRequriedMixin, ListView):
 
     @staticmethod
     def build_breadcrumbs():
-        breadcrumbs = [
-            {
-                'url': reverse('resource-list'),
-                'text': _(u'Administrér ressourcegrupper')
-            }
-        ]
+        from profile.views import ProfileView  # noqa
+        breadcrumbs = ProfileView.build_breadcrumbs()
+        breadcrumbs.append({
+            'url': reverse('resource-list'),
+            'text': _(u'Administrér ressourcegrupper')
+        })
         return breadcrumbs
 
 

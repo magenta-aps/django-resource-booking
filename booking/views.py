@@ -93,7 +93,6 @@ import booking.models as booking_models
 import re
 import urls
 
-
 i18n_test = _(u"Dette tester oversættelses-systemet")
 
 
@@ -661,8 +660,7 @@ class BreadcrumbMixin(ContextMixin):
     def get_breadcrumbs(self):
         try:
             return self.build_breadcrumbs(*self.get_breadcrumb_args())
-        except Exception as e:
-            print e
+        except:
             return []
 
     def get_breadcrumb_args(self):
@@ -2917,7 +2915,7 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
         return super(VisitBookingCreateView, self).get_context_data(**context)
 
 
-class EmbedcodesView(AdminRequiredMixin, TemplateView):
+class EmbedcodesView(BreadcrumbMixin, AdminRequiredMixin, TemplateView):
     template_name = "embedcodes.html"
 
     def get_context_data(self, **kwargs):
@@ -2946,20 +2944,19 @@ class EmbedcodesView(AdminRequiredMixin, TemplateView):
         context['base_url'] = base_url
         context['full_url'] = self.request.build_absolute_uri('/' + embed_url)
 
-        context['breadcrumbs'] = [
-            {
-                'url': '/embedcodes/',
-                'text': 'Indlering af side'
-            },
-            {
-                'url': self.request.path,
-                'text': '/' + base_url
-            }
-        ]
-
         context.update(kwargs)
 
         return super(EmbedcodesView, self).get_context_data(**context)
+
+    def get_breadcrumb_args(self):
+        return [self.request, self.kwargs]
+
+    @staticmethod
+    def build_breadcrumbs(request, kwargs):
+        return [
+            {'url': '/embedcodes/', 'text': 'Indlering af side'},
+            {'url': request.path, 'text': '/' + kwargs['embed_url']}
+        ]
 
 
 class VisitListView(LoginRequiredMixin, BreadcrumbMixin, ListView):
@@ -3406,12 +3403,13 @@ class EmailTemplateListView(LoginRequiredMixin, BreadcrumbMixin, ListView):
 
     @staticmethod
     def build_breadcrumbs():
-        return [
-            {
-                'url': reverse('emailtemplate-list'),
-                'text': _(u'Emailskabelonliste')
-            },
-        ]
+        from profile.views import ProfileView  # noqa
+        breadcrumbs = ProfileView.build_breadcrumbs()
+        breadcrumbs.append({
+            'url': reverse('emailtemplate-list'),
+            'text': _(u'Emailskabelonliste')
+        })
+        return breadcrumbs
 
 
 class EmailTemplateEditView(LoginRequiredMixin, UnitAccessRequiredMixin,
@@ -3901,12 +3899,13 @@ class EvaluationOverviewView(LoginRequiredMixin, BreadcrumbMixin, ListView):
 
     @staticmethod
     def build_breadcrumbs():
-        return [
-            {
-                'url': reverse('evaluations'),
-                'text': _(u'Oversigt over evalueringer')
-            }
-        ]
+        from profile.views import ProfileView  # noqa
+        breadcrumbs = ProfileView.build_breadcrumbs()
+        breadcrumbs.append({
+            'url': reverse('evaluations'),
+            'text': _(u'Oversigt over evalueringer')
+        })
+        return breadcrumbs
 
 
 import booking_workflows.views  # noqa
@@ -4266,7 +4265,7 @@ class EvaluationRedirectView(RedirectView):
         return url
 
 
-class EvaluationStatisticsView(TemplateView):
+class EvaluationStatisticsView(BreadcrumbMixin, TemplateView):
 
     template_name = "evaluation/statistics.html"
 
@@ -4304,3 +4303,13 @@ class EvaluationStatisticsView(TemplateView):
         return super(EvaluationStatisticsView, self).get_context_data(
             **context
         )
+
+    @staticmethod
+    def build_breadcrumbs():
+        from profile.views import ProfileView  # noqa
+        breadcrumbs = ProfileView.build_breadcrumbs()
+        breadcrumbs.append({
+            'url': reverse('evaluation-statistics'),
+            'text': _(u'Statistik over evalueringer')
+        })
+        return breadcrumbs
