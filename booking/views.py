@@ -661,7 +661,8 @@ class BreadcrumbMixin(ContextMixin):
     def get_breadcrumbs(self):
         try:
             return self.build_breadcrumbs(*self.get_breadcrumb_args())
-        except:
+        except Exception as e:
+            print e
             return []
 
     def get_breadcrumb_args(self):
