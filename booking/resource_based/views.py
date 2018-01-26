@@ -404,7 +404,9 @@ class TimeDetailsView(BreadcrumbMixin, DetailView):
 
     @staticmethod
     def build_breadcrumbs(object, request):
-        breadcrumbs = ManageTimesView.build_breadcrumbs(object.product, request)
+        breadcrumbs = ManageTimesView.build_breadcrumbs(
+            object.product, request
+        )
         breadcrumbs.append({
             'url': reverse('time-view', args=[object.product.id, object.id]),
             'text': _(u'Opret besøg for tidspunkt')
