@@ -660,7 +660,8 @@ class BreadcrumbMixin(ContextMixin):
     def get_breadcrumbs(self):
         try:
             return self.build_breadcrumbs(*self.get_breadcrumb_args())
-        except:
+        except Exception as e:
+            print e
             return []
 
     def get_breadcrumb_args(self):
@@ -3899,13 +3900,10 @@ class EvaluationOverviewView(LoginRequiredMixin, BreadcrumbMixin, ListView):
 
     @staticmethod
     def build_breadcrumbs():
-        from profile.views import ProfileView  # noqa
-        breadcrumbs = ProfileView.build_breadcrumbs()
-        breadcrumbs.append({
+        return [{
             'url': reverse('evaluations'),
             'text': _(u'Oversigt over evalueringer')
-        })
-        return breadcrumbs
+        }]
 
 
 import booking_workflows.views  # noqa
@@ -4306,10 +4304,7 @@ class EvaluationStatisticsView(BreadcrumbMixin, TemplateView):
 
     @staticmethod
     def build_breadcrumbs():
-        from profile.views import ProfileView  # noqa
-        breadcrumbs = ProfileView.build_breadcrumbs()
-        breadcrumbs.append({
+        return [{
             'url': reverse('evaluation-statistics'),
             'text': _(u'Statistik over evalueringer')
-        })
-        return breadcrumbs
+        }]
