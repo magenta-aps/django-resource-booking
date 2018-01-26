@@ -24,7 +24,7 @@ from booking.resource_based.models import VehicleResource
 from booking.resource_based.models import CustomResource
 from booking.resource_based.models import ResourcePool
 from booking.resource_based.models import ResourceRequirement
-from booking.views import BackMixin, BreadcrumbMixin
+from booking.views import BackMixin, BreadcrumbMixin, ProductDetailView
 from booking.views import LoginRequiredMixin, EditorRequriedMixin
 from itertools import chain
 
@@ -869,19 +869,17 @@ class ResourceRequirementCreateView(BackMixin, BreadcrumbMixin,
                 )
             )
 
-    def get_breadcrumbs(self):
-        return [
-            {'url': reverse('search'), 'text': _(u'Søgning')},
-            {
-                'url': self.request.GET.get("search", reverse('search')),
-                'text': _(u'Søgeresultat')
-            },
-            {
-                'url': reverse('product-view', args=[self.product.id]),
-                'text': unicode(self.product)
-            },
-            {'text': _(u'Opret ressourcebehov')}
-        ]
+    def get_breadcrumb_args(self):
+        return [self.product, self.request]
+
+    @staticmethod
+    def build_breadcrumbs(product, request):
+        breadcrumbs = ProductDetailView.build_breadcrumbs(product, request)
+        breadcrumbs.append({
+            'text': _(u'Opret ressourcebehov'),
+            'url': reverse('resourcerequirement-create', args=[product.id])
+        })
+        return breadcrumbs
 
 
 class ResourceRequirementCreateConfirmView(
@@ -946,19 +944,21 @@ class ResourceRequirementUpdateView(BackMixin, BreadcrumbMixin,
                 )
             )
 
-    def get_breadcrumbs(self):
-        return [
-            {'url': reverse('search'), 'text': _(u'Søgning')},
-            {
-                'url': self.request.GET.get("search", reverse('search')),
-                'text': _(u'Søgeresultat')
-            },
-            {
-                'url': reverse('product-view', args=[self.object.product.id]),
-                'text': unicode(self.product)
-            },
-            {'text': _(u'Redigér ressourcebehov')}
-        ]
+    def get_breadcrumb_args(self):
+        return [self.object, self.request]
+
+    @staticmethod
+    def build_breadcrumbs(object, request):
+        breadcrumbs = ProductDetailView.build_breadcrumbs(
+            object.product, request
+        )
+        breadcrumbs.append({
+            'text': _(u'Redigér ressourcebehov'),
+            'url': reverse(
+                'resourcerequirement-edit', args=[object.product.id, object.id]
+            )
+        })
+        return breadcrumbs
 
 
 class ResourceRequirementUpdateConfirmView(
@@ -996,19 +996,19 @@ class ResourceRequirementListView(BreadcrumbMixin, EditorRequriedMixin,
     def get_queryset(self):
         return self.product.resourcerequirement_set
 
-    def get_breadcrumbs(self):
-        return [
-            {'url': reverse('search'), 'text': _(u'Søgning')},
-            {
-                'url': self.request.GET.get("search", reverse('search')),
-                'text': _(u'Søgeresultat')
-            },
-            {
-                'url': reverse('product-view', args=[self.product.id]),
-                'text': unicode(self.product)
-            },
-            {'text': _(u'Ressourcebehov')}
-        ]
+    def get_breadcrumb_args(self):
+        return [self.product, self.request]
+
+    @staticmethod
+    def build_breadcrumbs(product, request):
+        breadcrumbs = ProductDetailView.build_breadcrumbs(product, request)
+        breadcrumbs.append({
+            'text': _(u'Ressourcebehov'),
+            'url': reverse(
+                'resourcerequirement-list', args=[product.id]
+            )
+        })
+        return breadcrumbs
 
 
 class ResourceRequirementDeleteView(BackMixin, BreadcrumbMixin,
@@ -1026,19 +1026,23 @@ class ResourceRequirementDeleteView(BackMixin, BreadcrumbMixin,
     def get_template_names(self):
         return ['resourcerequirement/delete.html']
 
-    def get_breadcrumbs(self):
-        return [
-            {'url': reverse('search'), 'text': _(u'Søgning')},
-            {
-                'url': self.request.GET.get("search", reverse('search')),
-                'text': _(u'Søgeresultat')
-            },
-            {
-                'url': reverse('product-view', args=[self.object.product.id]),
-                'text': unicode(self.object.product)
-            },
-            {'text': _(u'Slet ressourcebehov')}
-        ]
+    def get_breadcrumb_args(self):
+        return [self.object, self.request]
+
+    @staticmethod
+    def build_breadcrumbs(object, request):
+        breadcrumbs = ProductDetailView.build_breadcrumbs(
+            object.product, request
+        )
+        breadcrumbs.append({
+            'text': _(u'Slet ressourcebehov'),
+            'url': reverse(
+                'resourcerequirement-delete', args=[
+                    object.product.id, object.id
+                ]
+            )
+        })
+        return breadcrumbs
 
     def delete(self, *args, **kwargs):
         product = self.get_object().product
