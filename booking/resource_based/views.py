@@ -1139,8 +1139,32 @@ class CalRelatedMixin(object):
             **kwargs
         )
 
+    @staticmethod
+    def reverseurl_base(object):
+        if isinstance(object, Resource):
+            return 'calendar'
+        elif isinstance(object, Product):
+            return 'product-calendar'
+        return 'calendar'
 
-class CalendarView(LoginRequiredMixin, CalRelatedMixin, DetailView):
+    def get_breadcrumb_args(self):
+        return [
+            self.object, self.get_calendar_rel_object(),
+            self.request, self.kwargs,
+        ]
+
+    @staticmethod
+    def build_breadcrumbs(calendar, object, request, kwargs):
+        if isinstance(object, Product):
+            return ProductDetailView.build_breadcrumbs(object, request)
+        elif isinstance(object, Resource):
+            return ResourceDetailView.build_breadcrumbs(object)
+        return []
+
+
+class CalendarView(
+    LoginRequiredMixin, CalRelatedMixin, BreadcrumbMixin, DetailView
+):
     template_name = 'calendar/calendar.html'
     rel_model_class = booking_models.Resource
 
@@ -1254,6 +1278,20 @@ class CalendarView(LoginRequiredMixin, CalRelatedMixin, DetailView):
             **kwargs
         )
 
+    @staticmethod
+    def build_breadcrumbs(calendar, object, request, kwargs):
+        breadcrumbs = CalRelatedMixin.build_breadcrumbs(
+            calendar, object, request, kwargs
+        )
+        breadcrumbs.append({
+            'url': reverse(
+                CalRelatedMixin.reverseurl_base(object),
+                args=[object.pk]
+            ),
+            'text': _(u'Kalender')
+        })
+        return breadcrumbs
+
 
 class CalendarCreateView(LoginRequiredMixin, CalRelatedMixin, RedirectView):
     permanent = False
@@ -1270,7 +1308,9 @@ class CalendarCreateView(LoginRequiredMixin, CalRelatedMixin, RedirectView):
         )
 
 
-class CalendarDeleteView(LoginRequiredMixin, CalRelatedMixin, DeleteView):
+class CalendarDeleteView(
+    LoginRequiredMixin, CalRelatedMixin, BreadcrumbMixin, DeleteView
+):
     template_name = 'calendar/delete.html'
 
     def get_object(self, queryset=None):
@@ -1285,8 +1325,24 @@ class CalendarDeleteView(LoginRequiredMixin, CalRelatedMixin, DeleteView):
 
         return reverse(reverse_name, args=[self.rel_obj.pk])
 
+    @staticmethod
+    def build_breadcrumbs(calendar, object, request, kwargs):
+        breadcrumbs = CalendarView.build_breadcrumbs(
+            calendar, object, request, kwargs
+        )
+        breadcrumbs.append({
+            'url': reverse(
+                CalRelatedMixin.reverseurl_base(object) + '-delete',
+                args=[object.pk]
+            ),
+            'text': _(u'Slet')
+        })
+        return breadcrumbs
 
-class CalendarEventCreateView(LoginRequiredMixin, CalRelatedMixin, CreateView):
+
+class CalendarEventCreateView(
+    LoginRequiredMixin, CalRelatedMixin, BreadcrumbMixin, CreateView
+):
     model = booking_models.CalendarEvent
     template_name = 'calendar/calendar_event.html'
 
@@ -1356,8 +1412,24 @@ class CalendarEventCreateView(LoginRequiredMixin, CalRelatedMixin, CreateView):
             args=[self.rel_obj.pk]
         )
 
+    @staticmethod
+    def build_breadcrumbs(calendar, object, request, kwargs):
+        breadcrumbs = CalendarView.build_breadcrumbs(
+            calendar, object, request, kwargs
+        )
+        breadcrumbs.append({
+            'url': reverse(
+                CalRelatedMixin.reverseurl_base(object) + '-event-create',
+                args=[object.pk]
+            ),
+            'text': _(u'Opret tid')
+        })
+        return breadcrumbs
 
-class CalendarEventUpdateView(LoginRequiredMixin, CalRelatedMixin, UpdateView):
+
+class CalendarEventUpdateView(
+    LoginRequiredMixin, CalRelatedMixin, BreadcrumbMixin, UpdateView
+):
     model = booking_models.CalendarEvent
     template_name = 'calendar/calendar_event.html'
 
@@ -1391,8 +1463,30 @@ class CalendarEventUpdateView(LoginRequiredMixin, CalRelatedMixin, UpdateView):
             args=[self.rel_obj.pk]
         )
 
+    def get_breadcrumb_args(self):
+        return [
+            self.object.calendar, self.get_calendar_rel_object(), self.object,
+            self.request, self.kwargs,
+        ]
 
-class CalendarEventDeleteView(LoginRequiredMixin, CalRelatedMixin, DeleteView):
+    @staticmethod
+    def build_breadcrumbs(calendar, object, event, request, kwargs):
+        breadcrumbs = CalendarView.build_breadcrumbs(
+            calendar, object, request, kwargs
+        )
+        breadcrumbs.append({
+            'url': reverse(
+                CalRelatedMixin.reverseurl_base(object) + '-event-edit',
+                args=[object.pk, event.pk]
+            ),
+            'text': _(u'Redigér tid')
+        })
+        return breadcrumbs
+
+
+class CalendarEventDeleteView(
+    LoginRequiredMixin, CalRelatedMixin, BreadcrumbMixin, DeleteView
+):
     model = booking_models.CalendarEvent
     template_name = 'calendar_event_confirm_delete.html'
 
@@ -1406,3 +1500,23 @@ class CalendarEventDeleteView(LoginRequiredMixin, CalRelatedMixin, DeleteView):
             self.kwargs.get('reverse_prefix', '') + 'calendar',
             args=[self.rel_obj.pk]
         )
+
+    def get_breadcrumb_args(self):
+        return [
+            self.object.calendar, self.get_calendar_rel_object(), self.object,
+            self.request, self.kwargs,
+        ]
+
+    @staticmethod
+    def build_breadcrumbs(calendar, object, event, request, kwargs):
+        breadcrumbs = CalendarView.build_breadcrumbs(
+            calendar, object, request, kwargs
+        )
+        breadcrumbs.append({
+            'url': reverse(
+                CalRelatedMixin.reverseurl_base(object) + '-event-delete',
+                args=[object.pk, event.pk]
+            ),
+            'text': _(u'Slet tid')
+        })
+        return breadcrumbs
