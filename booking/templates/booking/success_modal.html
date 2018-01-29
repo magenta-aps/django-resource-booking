@@ -22,8 +22,10 @@
 {% block extra_scripts %}
     <script type="text/javascript">
         <!--
-        $("#okButton").click(function(){
-            window.parent.document.location.reload(true);
+        $(function(){
+            window.modal.on('hidden.bs.modal', function() {
+                window.parent.document.location.reload(true);
+            });
         });
         //-->
     </script>
