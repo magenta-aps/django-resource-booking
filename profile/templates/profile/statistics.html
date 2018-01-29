@@ -131,7 +131,7 @@
                     <td>{{ booking.booker.get_full_name }} </td>
                     <td>{{ booking.booker.get_email }} </td>
                     <td>{{ booking.visit.product.comment }} </td>
-                    <td>{{ booking.comments }} </td>
+                    <td>{{ booking.notes }} </td>
                     <td>
                         {% if booking.hosts %}
                             {% for host in booking.visit.assigned_hosts.all %}
