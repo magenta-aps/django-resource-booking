@@ -3042,19 +3042,19 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             self.WORKFLOW_STATUS_BEING_PLANNED,
             self.WORKFLOW_STATUS_AUTOASSIGN_FAILED
         ] and not self.planned_status_is_blocked(True):
-
             self.workflow_status = self.WORKFLOW_STATUS_PLANNED
             self.save()
 
             # Send out notification that the visit is now planned.
             self.autosend(EmailTemplateType.notify_all__booking_complete)
-
         elif self.workflow_status in [
                     self.WORKFLOW_STATUS_PLANNED,
                     self.WORKFLOW_STATUS_PLANNED_NO_BOOKING
                 ] and self.planned_status_is_blocked(True):
             self.workflow_status = self.WORKFLOW_STATUS_BEING_PLANNED
             self.save()
+        if self.is_multi_sub:
+            self.multi_master.resources_updated()
 
     def resource_accepts(self):
         self.resources_updated()
