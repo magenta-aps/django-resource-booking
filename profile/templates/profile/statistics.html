@@ -87,7 +87,7 @@
                     <th>{% trans 'Bemærkninger fra lærer' %}</th>
                     <th>{% trans 'Værter' %}</th>
                     <th>{% trans 'Undervisere' %}</th>
-                    <th></th>
+                    <th>{% trans 'Sorteringsdato' %}</th>
                 </tr>
             </thead>
             <tbody>
@@ -167,9 +167,9 @@
                 info: false,
                 responsive: true,
                 order: [[1, "asc"]],
-                columnDef: [
-                    {target: 4, orderData:20},
-                    {target: 20, visible:false}
+                "columnDefs": [
+                    {targets: 4, orderData:20},
+                    {#{targets: 19, visible: false}#}
                 ]
             });
         });
