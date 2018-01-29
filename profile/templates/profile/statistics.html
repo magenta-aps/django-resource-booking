@@ -72,7 +72,8 @@
                     <th>{% trans 'Type' %}</th>
                     <th>{% trans 'Tilbud' %}</th>
                     <th>{% trans 'Besøgsdato' %}</th>
-                    <th>{% trans 'Klassetrin/Niveau' %}</th>
+                    <th>{% trans 'Klassetrin' %}</th>
+                    <th>{% trans 'Fag/Niveau' %}</th>
                     <th>{% trans 'Antal deltagere' %}</th>
                     <th>{% trans 'Oplæg om uddannelser' %}</th>
                     <th>{% trans 'Rundvisning' %}</th>
@@ -98,13 +99,19 @@
                     <td>{{ booking.visit.product.get_type_display }}</td>
                     <td><a href="{% url 'product-view' booking.visit.product.pk %}">{{ booking.visit.product.title }}</a></td>
                     <td>{{ booking.visit.interval_display }}</td>
+                    <td>{{ booking.booker.get_level_display }}</td>
                     <td>
                         {% for bookingsubjectlevel in booking.bookinggrundskolesubjectlevel_set.all %}
-                            {{ bookingsubjectlevel.subject }}/{{ bookingsubjectlevel.level }},
+                            {% blocktrans with subject=bookingsubjectlevel.subject level=bookingsubjectlevel.level %}
+                                {{ subject }}, {{ level }}
+                            {% endblocktrans %}
+                            {% if not forloop.last %}<br/>{% endif %}
                         {% endfor %}
-
                         {% for bookingsubjectlevel in booking.bookinggymnasiesubjectlevel_set.all %}
-                            {{ bookingsubjectlevel.subject }}/{{ bookingsubjectlevel.level }},
+                            {% blocktrans with subject=bookingsubjectlevel.subject level=bookingsubjectlevel.level class=booking.booker.get_level_display %}
+                                {{ subject }} niveau {{ level }}, {{ class }}
+                            {% endblocktrans %}
+                            {% if not forloop.last %}<br/>{% endif %}
                         {% endfor %}
                     </td>
                     <td>{{ booking.booker.attendee_count|default:"0" }}</td>
