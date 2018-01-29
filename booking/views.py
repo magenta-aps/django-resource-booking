@@ -413,6 +413,11 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
         initial['recipients'] = [id for (id, label) in self.recipients]
         return initial
 
+    def get_form_kwargs(self):
+        kwargs = super(EmailComposeView, self).get_form_kwargs()
+        kwargs['view'] = self
+        return kwargs
+
     def get_context_data(self, **kwargs):
         context = {}
         context['templates'] = EmailTemplate.get_template(
