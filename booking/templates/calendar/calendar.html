@@ -39,7 +39,13 @@
 
     <div class="row">
         <h1 class="col-sm-6">
-            {% trans "Kalender" %}
+            {% if resource and resource.subclass_instance %}
+                {% blocktrans with resourcename=resource.subclass_instance.get_name %}Kalender for {{ resourcename }}{% endblocktrans %}
+            {% elif product %}
+                {% blocktrans with productname=product.title %}Kalender for {{ productname }}{% endblocktrans %}
+            {% else %}
+                {% trans "Kalender" %}
+            {% endif %}
         </h1>
         <p class="col-sm-6 text-right">
             {% if object.resource %}
