@@ -112,18 +112,25 @@
 
                     <div class="row row-border">
                         <strong class="{{ left_class }}">{% trans 'Tidspunkt' %}</strong>
-                        {% if object.eventtime.start %}
-                            <div class="{{ center_class }}">{{ object.eventtime.interval_display }}</div>
-                        {% else %}
+                        {% if object.is_cancelled %}
                             <div class="{{ center_class }}">
-                                {% if object.start_datetime %}
-                                    {{ object.start_datetime }}
-                                {% else %}
-                                    {% trans 'Ikke angivet' %}
-                                {% endif %}
+                                {{ object.cancelled_eventtime.start }}
+                                {% trans '(aflyst tidspunkt) '%}
                             </div>
+                        {% else %}
+                            {% if object.eventtime.start %}
+                                <div class="{{ center_class }}">{{ object.eventtime.interval_display }}</div>
+                            {% else %}
+                                <div class="{{ center_class }}">
+                                    {% if object.start_datetime %}
+                                        {{ object.start_datetime }}
+                                    {% else %}
+                                        {% trans 'Ikke angivet' %}
+                                    {% endif %}
+                                </div>
+                            {% endif %}
                         {% endif %}
-                        {% if can_edit %}
+                        {% if can_edit and not object.is_cancelled %}
                             <div class="{{ right_class }}">
                                 <a href="{% url 'change-visit-starttime' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Redigér' %}</a>
                             </div>
@@ -322,8 +329,11 @@
                         </strong>
                         <div class="{{ center_class }}">
                             {{ object.get_workflow_status_display }}
+                            {% if object.is_cancelled %}
+                            - {% trans 'Det er ikke muligt at ændre status på aflyste besøg' %}
+                            {% endif %}
                         </div>
-                        {% if can_edit %}
+                        {% if can_edit and not object.is_cancelled %}
                         <div class="{{ right_class }}">
                             <a href="{% url 'change-visit-status' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Skift status' %}</a>
                         </div>

@@ -86,6 +86,16 @@
                                     {#     {% trans 'Opret besøg' %} #}
                                     {# </a> #}
                                 {% endif %}
+                                {% with cancelled_count=eventtime.cancelled_visits.count %}
+                                    {% if cancelled_count > 0 %}
+                                    <div>
+                                        {{ eventtime.cancelled_visits.count }}
+                                        <a href="{% url 'cancelled-visits-view' eventtime.product.pk eventtime.pk %}">
+                                            {% if cancelled_count == 1 %}{% trans 'aflyst besøg' %}{% else %}{% trans 'aflyste besøg' %}{% endif %}
+                                        </a>
+                                    </div>
+                                    {% endif %}
+                                {% endwith %}
                             </td>
                         </tr>
                     {% endfor %}

@@ -38,6 +38,11 @@ class EventTime(models.Model):
         on_delete=models.SET_NULL,
     )
 
+    # Cancelled visits have a foreign key relation stored on the visit pointing
+    # to the EventTime. Its name here is:
+    #
+    # cancelled_visits
+
     # Whether the time is publicly bookable
     bookable = models.BooleanField(
         default=True,

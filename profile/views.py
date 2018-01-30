@@ -662,13 +662,21 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
                                   '__subject')\
                 .prefetch_related('bookinggrundskolesubjectlevel_set__level') \
                 .filter(
-                    visit__eventtime__product__organizationalunit=self
-                    .organizationalunits
+                    Q(visit__eventtime__product__organizationalunit=
+                      self.organizationalunits) |
+                    Q(visit__cancelled_eventtime__product__organizationalunit=
+                      self.organizationalunits)
                 )
             if from_date:
-                qs = qs.filter(visit__eventtime__start__gte=from_date)
+                qs = qs.filter(
+                    Q(visit__eventtime__start__gte=from_date) |
+                    Q(visit__cancelled_eventtime__start__gte=from_date)
+                )
             if to_date:
-                qs = qs.filter(visit__eventtime__end__lt=to_date)
+                qs = qs.filter(
+                    Q(visit__eventtime__end__lt=to_date) |
+                    Q(visit__cancelled_eventtime__end__lt=to_date)
+                )
             qs = qs.order_by('visit__eventtime__product__pk')
             context['bookings'] = qs
         context.update(kwargs)
@@ -743,13 +751,21 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
                 if booking.classbooking.custom_desired:
                     custom_desired = booking.visit.product.custom_name
 
+            # Figure out which eventtime to use
+            if hasattr(booking.visit, 'eventtime'):
+                eventtime = booking.visit.eventtime
+                time_extra = ""
+            else:
+                eventtime = booking.visit.cancelled_eventtime
+                time_extra = " (aflyst)"
+
             writer.writerow([
                 booking.visit.product.organizationalunit.name,
                 booking.__unicode__(),
                 booking.visit.product.get_type_display(),
                 booking.visit.product.title,
-                str(booking.visit.eventtime.start or "") + " til " +
-                str(booking.visit.eventtime.end or ""),
+                str(eventtime.l10n_start or "")[0:16] + " til " +
+                str(eventtime.l10n_end or "")[0:16] + time_extra,
                 u", ".join([
                     u'%s/%s' % (x.subject, x.level)
                     for x in booking.bookinggrundskolesubjectlevel_set.all()
