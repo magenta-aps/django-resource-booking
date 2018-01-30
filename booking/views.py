@@ -93,7 +93,6 @@ import booking.models as booking_models
 import re
 import urls
 
-
 i18n_test = _(u"Dette tester oversættelses-systemet")
 
 
@@ -413,6 +412,11 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
         initial['recipients'] = [id for (id, label) in self.recipients]
         return initial
 
+    def get_form_kwargs(self):
+        kwargs = super(EmailComposeView, self).get_form_kwargs()
+        kwargs['view'] = self
+        return kwargs
+
     def get_context_data(self, **kwargs):
         context = {}
         context['templates'] = EmailTemplate.get_template(
@@ -661,7 +665,8 @@ class BreadcrumbMixin(ContextMixin):
     def get_breadcrumbs(self):
         try:
             return self.build_breadcrumbs(*self.get_breadcrumb_args())
-        except:
+        except Exception as e:
+            print e
             return []
 
     def get_breadcrumb_args(self):
@@ -1254,12 +1259,10 @@ class ProductCustomListView(BreadcrumbMixin, ListView):
     def get_queryset(self):
         try:
             listtype = self.request.GET.get("type", "")
-
             if listtype == self.TYPE_LATEST_BOOKED:
                 return Product.get_latest_booked(self.request.user)
             elif listtype == self.TYPE_LATEST_UPDATED:
                 return Product.get_latest_updated(self.request.user)
-
         except:
             pass
         raise Http404
@@ -1275,9 +1278,9 @@ class ProductCustomListView(BreadcrumbMixin, ListView):
         if "pagesize" in qdict:
             qdict.pop("pagesize")
 
-        context["qstring"] = qdict.urlencode()
-
+        context['qstring'] = qdict.urlencode()
         context['pagesizes'] = [5, 10, 15, 20]
+        context['type'] = self.request.GET.get("type", "")
 
         context.update(kwargs)
 
@@ -1644,7 +1647,9 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
 
         if self.request.method == 'POST':
             forms['autosendformset'] = ProductAutosendFormSet(
-                self.request.POST, instance=self.object
+                self.request.POST,
+                instance=self.object,
+                initial=self.get_initial_autosends()
             )
         return forms
 
@@ -2947,7 +2952,7 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
         return super(VisitBookingCreateView, self).get_context_data(**context)
 
 
-class EmbedcodesView(AdminRequiredMixin, TemplateView):
+class EmbedcodesView(BreadcrumbMixin, AdminRequiredMixin, TemplateView):
     template_name = "embedcodes.html"
 
     def get_context_data(self, **kwargs):
@@ -2976,20 +2981,19 @@ class EmbedcodesView(AdminRequiredMixin, TemplateView):
         context['base_url'] = base_url
         context['full_url'] = self.request.build_absolute_uri('/' + embed_url)
 
-        context['breadcrumbs'] = [
-            {
-                'url': '/embedcodes/',
-                'text': 'Indlering af side'
-            },
-            {
-                'url': self.request.path,
-                'text': '/' + base_url
-            }
-        ]
-
         context.update(kwargs)
 
         return super(EmbedcodesView, self).get_context_data(**context)
+
+    def get_breadcrumb_args(self):
+        return [self.request, self.kwargs]
+
+    @staticmethod
+    def build_breadcrumbs(request, kwargs):
+        return [
+            {'url': '/embedcodes/', 'text': 'Indlering af side'},
+            {'url': request.path, 'text': '/' + kwargs['embed_url']}
+        ]
 
 
 class VisitListView(LoginRequiredMixin, BreadcrumbMixin, ListView):
@@ -3436,12 +3440,10 @@ class EmailTemplateListView(LoginRequiredMixin, BreadcrumbMixin, ListView):
 
     @staticmethod
     def build_breadcrumbs():
-        return [
-            {
-                'url': reverse('emailtemplate-list'),
-                'text': _(u'Emailskabelonliste')
-            },
-        ]
+        return [{
+            'url': reverse('emailtemplate-list'),
+            'text': _(u'Emailskabelonliste')
+        }]
 
 
 class EmailTemplateEditView(LoginRequiredMixin, UnitAccessRequiredMixin,
@@ -3935,12 +3937,10 @@ class EvaluationOverviewView(LoginRequiredMixin, BreadcrumbMixin, ListView):
 
     @staticmethod
     def build_breadcrumbs():
-        return [
-            {
-                'url': reverse('evaluations'),
-                'text': _(u'Oversigt over evalueringer')
-            }
-        ]
+        return [{
+            'url': reverse('evaluations'),
+            'text': _(u'Oversigt over evalueringer')
+        }]
 
 
 import booking_workflows.views  # noqa
@@ -4344,7 +4344,7 @@ class EvaluationRedirectView(RedirectView):
         return url
 
 
-class EvaluationStatisticsView(TemplateView):
+class EvaluationStatisticsView(BreadcrumbMixin, TemplateView):
 
     template_name = "evaluation/statistics.html"
 
@@ -4382,3 +4382,10 @@ class EvaluationStatisticsView(TemplateView):
         return super(EvaluationStatisticsView, self).get_context_data(
             **context
         )
+
+    @staticmethod
+    def build_breadcrumbs():
+        return [{
+            'url': reverse('evaluation-statistics'),
+            'text': _(u'Statistik over evalueringer')
+        }]

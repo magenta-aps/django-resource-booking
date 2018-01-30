@@ -3116,6 +3116,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             # Send out planned notification if we switched to planned
             if self.workflow_status == self.WORKFLOW_STATUS_PLANNED:
                 self.autosend(EmailTemplateType.notify_all__booking_complete)
+            if self.is_multi_sub:
+                self.multi_master.resources_updated()
 
     def resource_accepts(self):
         self.resources_updated()
