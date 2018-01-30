@@ -1337,6 +1337,14 @@ a.template-overridden, a.template-overridden:hover, a.template-overridden:active
 
 /* > Visitoccurrence-search end */
 
+#visit_volunteer_buttons {
+  text-align: center;
+  margin-bottom: 1em;
+}
+
+#visit_volunteer_buttons .btn:not(:first-child) {
+  margin-left: 5mm;
+}
 
 /* frontpage lists */
 
@@ -1963,8 +1971,6 @@ body.lightbox {
   background-color: #d7352a;
 }
 
-
-/* MultiProductVisit END */
 
 .cke_dialog_ui_file .cke_dialog_ui_input_file {
   height: 2.5em;
