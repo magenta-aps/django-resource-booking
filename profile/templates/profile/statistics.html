@@ -88,7 +88,7 @@
                     <th>{% trans 'Bemærkninger fra lærer' %}</th>
                     <th>{% trans 'Værter' %}</th>
                     <th>{% trans 'Undervisere' %}</th>
-
+                    <th>{% trans 'Sorteringsdato' %}</th>
                 </tr>
             </thead>
             <tbody>
@@ -146,6 +146,7 @@
                             {% endfor %}
                         {% endif %}
                     </td>
+                    <td>{{ booking.visit.start_datetime|date:"omdHis" }}</td>
                 </tr>
             {% endfor %}
             </tbody>
@@ -156,21 +157,29 @@
 
 {% block extra_scripts %}
     {% include 'common/resources/datepicker_script.html' %}
-    <script type="text/javascript"><!--
+    <script type="text/javascript">
+    <!--
     jQuery(function($) {
         $('#id_from_date').datepicker('setStartDate', null);
         $('#id_to_date').datepicker('setStartDate', null);
     });
-    //--></script>
+    //-->
+    </script>
     {% include 'common/resources/datatables_script.html' %}
     <script type="text/javascript">
+    <!--
         $(function() {
             $('#statistics_table').DataTable({
                 paging: false,
                 info: false,
                 responsive: true,
-                order: [[1, "asc"]]
+                order: [[1, "asc"]],
+                "columnDefs": [
+                    {targets: 4, orderData:20},
+                    {#{targets: 19, visible: false}#}
+                ]
             });
         });
+    //-->
     </script>
 {% endblock %}
