@@ -46,7 +46,7 @@
     <div class="row">
         <h1 class="col-sm-6">
             {% if itemname %}
-                {% blocktrans with itemname=ritemname %}Kalender for {{ itemname }}{% endblocktrans %}
+                {% blocktrans with itemname=itemname %}Kalender for {{ itemname }}{% endblocktrans %}
             {% else %}
                 {% trans "Kalender" %}
             {% endif %}
