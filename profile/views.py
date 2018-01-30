@@ -662,10 +662,14 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
                                   '__subject')\
                 .prefetch_related('bookinggrundskolesubjectlevel_set__level') \
                 .filter(
-                    Q(visit__eventtime__product__organizationalunit=
-                      self.organizationalunits) |
-                    Q(visit__cancelled_eventtime__product__organizationalunit=
-                      self.organizationalunits)
+                    Q(**{
+                        'visit__eventtime__product__'
+                        'organizationalunit': self.organizationalunits
+                    }) |
+                    Q(**{
+                        'visit__cancelled_eventtime__product__'
+                        'organizationalunit': self.organizationalunits
+                    })
                 )
             if from_date:
                 qs = qs.filter(
