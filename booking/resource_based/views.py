@@ -471,7 +471,7 @@ class ResourceDetailView(BreadcrumbMixin, EditorRequriedMixin, TemplateView):
         breadcrumbs = ResourceListView.build_breadcrumbs()
         breadcrumbs.append({
             'url': reverse('resource-view', args=[resource.id]),
-            'text': unicode(resource)
+            'text': resource.subclass_instance.get_name()
         })
         return breadcrumbs
 
@@ -1340,6 +1340,12 @@ class CalendarView(
         res = calendar.resource if hasattr(calendar, 'resource') else None
         prod = calendar.product if hasattr(calendar, 'product') else None
 
+        itemname = None
+        if prod is not None:
+            itemname = prod.title
+        elif res is not None and res.subclass_instance is not None:
+            itemname = res.subclass_instance.get_name()
+
         if hasattr(calendar, 'resource'):
             bt = calendar.resource.occupied_eventtimes(start_dt, end_dt)
         elif hasattr(calendar, 'product'):
@@ -1351,6 +1357,7 @@ class CalendarView(
             calendar=calendar,
             resource=res,
             product=prod,
+            itemname=itemname,
             month=first_of_the_month,
             next_month=first_of_the_month + datetime.timedelta(days=31),
             prev_month=first_of_the_month - datetime.timedelta(days=1),

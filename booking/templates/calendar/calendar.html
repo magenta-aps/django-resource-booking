@@ -2,7 +2,13 @@
 {% load i18n %}
 {% load booking_tags %}
 
-{% block htmltitle %} - {% trans "Kalender" %}{% endblock %}
+{% block htmltitle %} -
+    {% if itemname %}
+        {% blocktrans with itemname=itemname %}Kalender for {{ itemname }}{% endblocktrans %}
+    {% else %}
+        {% trans "Kalender" %}
+    {% endif %}
+{% endblock %}
 
 {% block head %}
 <style type="text/css">
@@ -39,10 +45,8 @@
 
     <div class="row">
         <h1 class="col-sm-6">
-            {% if resource and resource.subclass_instance %}
-                {% blocktrans with resourcename=resource.subclass_instance.get_name %}Kalender for {{ resourcename }}{% endblocktrans %}
-            {% elif product %}
-                {% blocktrans with productname=product.title %}Kalender for {{ productname }}{% endblocktrans %}
+            {% if itemname %}
+                {% blocktrans with itemname=ritemname %}Kalender for {{ itemname }}{% endblocktrans %}
             {% else %}
                 {% trans "Kalender" %}
             {% endif %}
