@@ -81,7 +81,7 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
             'button': {
                 'text': _(u'Søg i alle'),
                 'link': reverse('visit-customlist') + "?type=%s" %
-                        VisitCustomListView.TYPE_TODAY
+                VisitCustomListView.TYPE_TODAY
             }
         }, {
             'color': self.HEADING_GREEN,
