@@ -68,6 +68,22 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
         )
 
         context['lists'].extend([{
+            'color': self.HEADING_BLUE,
+            'type': 'Visit',
+            'title': ungettext_lazy(
+                u'%(count)d dagens besøg',
+                u'%(count)d dagens besøg',
+                'count'
+            ) % {'count': today_qs.count()},
+            'queryset': today_qs,
+            'limit': limit,
+            'limited_qs': today_qs[:limit],
+            'button': {
+                'text': _(u'Søg i alle'),
+                'link': reverse('visit-customlist') + "?type=%s" %
+                        VisitCustomListView.TYPE_TODAY
+            }
+        }, {
             'color': self.HEADING_GREEN,
             'type': 'Visit',
             'title': ungettext_lazy(
@@ -82,22 +98,6 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                 'text': _(u'Søg i alle'),
                 'link': reverse('visit-customlist') + "?type=%s" %
                 VisitCustomListView.TYPE_LATEST_COMPLETED
-            }
-        }, {
-            'color': self.HEADING_BLUE,
-            'type': 'Visit',
-            'title': ungettext_lazy(
-                u'%(count)d dagens besøg',
-                u'%(count)d dagens besøg',
-                'count'
-            ) % {'count': today_qs.count()},
-            'queryset': today_qs,
-            'limit': limit,
-            'limited_qs': today_qs[:limit],
-            'button': {
-                'text': _(u'Søg i alle'),
-                'link': reverse('visit-customlist') + "?type=%s" %
-                VisitCustomListView.TYPE_TODAY
             }
         }])
 
