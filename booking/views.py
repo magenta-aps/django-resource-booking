@@ -1254,12 +1254,10 @@ class ProductCustomListView(BreadcrumbMixin, ListView):
     def get_queryset(self):
         try:
             listtype = self.request.GET.get("type", "")
-
             if listtype == self.TYPE_LATEST_BOOKED:
                 return Product.get_latest_booked(self.request.user)
             elif listtype == self.TYPE_LATEST_UPDATED:
                 return Product.get_latest_updated(self.request.user)
-
         except:
             pass
         raise Http404
@@ -1275,9 +1273,9 @@ class ProductCustomListView(BreadcrumbMixin, ListView):
         if "pagesize" in qdict:
             qdict.pop("pagesize")
 
-        context["qstring"] = qdict.urlencode()
-
+        context['qstring'] = qdict.urlencode()
         context['pagesizes'] = [5, 10, 15, 20]
+        context['type'] = self.request.GET.get("type", "")
 
         context.update(kwargs)
 
