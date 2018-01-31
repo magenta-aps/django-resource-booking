@@ -5394,7 +5394,7 @@ class KUEmailMessage(models.Model):
     def extract_addresses(recipients):
         if type(recipients) != list:
             recipients = [recipients]
-        emails = {}
+        emails = []
         for recipient in recipients:
             name = None
             address = None
@@ -5419,11 +5419,7 @@ class KUEmailMessage(models.Model):
                     address = recipient.get_email()
                 except:
                     pass
-            if address is not None and address != '' and (
-                    address not in emails or (
-                        user and not emails[address]['user']
-                    )
-            ):
+            if address is not None and address != '':
 
                 email = {
                     'address': address,
@@ -5438,8 +5434,8 @@ class KUEmailMessage(models.Model):
                     email['full'] = address
 
                 email['get_full_name'] = email.get('name', email['full'])
-                emails[address] = email
-        return emails.values()
+                emails.append(email)
+        return emails
 
     @staticmethod
     def save_email(email_message, instance,
