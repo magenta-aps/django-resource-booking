@@ -20,7 +20,9 @@
 
 
 {% block content %}
-    <div class="divider"></div>
+
+    {% include 'common/breadcrumbrow.html' %}
+
     <h1>
         {% if object.pk %}
         {% trans "Rediger tid i kalender" %}
