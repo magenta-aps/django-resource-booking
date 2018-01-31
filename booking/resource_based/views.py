@@ -740,6 +740,9 @@ class ResourcePoolUpdateView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
                 self.object.save()
             else:
                 self.object = form.save(commit=True)
+                # Do a 2nd save to trigger update of resource availability
+                # after the form has saved m2m relations.
+                self.object.save()
             return self.redirect(
                 reverse('resource-view', args=[self.object.id])
             )
