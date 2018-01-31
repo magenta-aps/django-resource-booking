@@ -3155,24 +3155,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def display_value(self):
         if not hasattr(self, 'eventtime') or not self.eventtime.start:
             return _(u'ikke-fastlagt tidspunkt')
-
-        start = timezone.localtime(self.eventtime.start)
-        result = formats.date_format(start, "DATETIME_FORMAT")
-
-        if self.duration:
-            try:
-                (hours, mins) = self.duration.split(":", 2)
-                if int(hours) > 0 or int(mins) > 0:
-                    endtime = start + timedelta(
-                        hours=int(hours), minutes=int(mins)
-                    )
-                    result += " - " + formats.date_format(
-                        endtime, "TIME_FORMAT"
-                    )
-            except Exception as e:
-                print e
-
-        return result
+        return self.eventtime.interval_display
 
     @property
     def id_display(self):
