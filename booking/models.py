@@ -437,16 +437,22 @@ class Locality(models.Model):
         null=True,
         on_delete=models.SET_NULL,
     )
+    # Used to signify special addreses with no pre-known location, such as
+    # the booker's own location
+    no_address = models.BooleanField(default=False)
 
     def __unicode__(self):
         return self.name
 
     @property
     def name_and_address(self):
+        if self.no_address:
+            return self.name
         return "%s (%s)" % (
             unicode(self.name),
             ", ".join([
-                unicode(x) for x in [self.address_line, self.zip_city] if x
+                unicode(x) for x in [self.address_line, self.zip_city]
+                if len(x.strip()) > 0
             ])
         )
 
@@ -455,7 +461,7 @@ class Locality(models.Model):
         return " ".join([
             unicode(x)
             for x in (self.name, self.address_line, self.zip_city)
-            if x
+            if len(x.strip()) > 0
         ])
 
     @property
@@ -469,6 +475,16 @@ class Locality(models.Model):
         # return "http://www.findvej.dk/%s,%s" % \
         return "https://maps.google.dk/maps/place/%s,%s" % \
                (self.address_line, self.zip_city)
+
+    @staticmethod
+    def create_defaults():
+        from booking.data import localities
+        data = localities.localities
+        for item in data:
+            try:
+                Locality.objects.get(name=item['name'])
+            except Locality.DoesNotExist:
+                Locality(**item).save()
 
 
 class EmailTemplateTypeMeta(ModelBase):

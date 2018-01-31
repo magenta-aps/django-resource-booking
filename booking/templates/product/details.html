@@ -150,11 +150,15 @@
                             {% if object.locality %}
                                 <dt>{% trans 'Hvor' %}:</dt>
                                 <dd>
-                                <a href="{{ object.locality.location_url }}" target="_blank">
-                                    {{ object.locality.name }}<br>
-                                    {{ object.locality.address_line }}<br>
-                                    {{ object.locality.zip_city }}
-                                </a> <span class="glyphicon glyphicon-new-window"></span>
+                                    {% if object.locality.no_address %}
+                                        {{ object.locality.name }}
+                                    {% else %}
+                                        <a href="{{ object.locality.location_url }}" target="_blank">
+                                        {{ object.locality.name }}<br>
+                                        {{ object.locality.address_line }}<br>
+                                        {{ object.locality.zip_city }}
+                                        </a> <span class="glyphicon glyphicon-new-window"></span>
+                                    {% endif %}
                                 </dd>
                             {% endif %}
 
