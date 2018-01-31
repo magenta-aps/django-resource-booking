@@ -71,8 +71,8 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             'color': self.HEADING_GREEN,
             'type': 'Visit',
             'title': ungettext_lazy(
-                u'%(count)d senest afviklet besøg',
-                u'%(count)d seneste afviklede besøg',
+                u'%(count)d afviklet besøg',
+                u'%(count)d afviklede besøg',
                 'count'
             ) % {'count': recent_qs.count()},
             'queryset': recent_qs,
