@@ -35,6 +35,9 @@
         z-index: 10;
         background-color: #cc3333;
     }
+    table.ressource-kalender td:not([colspan]) {
+        width: 14.25%;
+    }
 </style>
 {% endblock %}
 
@@ -66,7 +69,7 @@
 
     <div class="row">
         <div class="col-md-12">
-            <h2>Tilgængelige tider</h2>
+            <h2>{% trans 'Tilgængelige tider' %}</h2>
             {% if not available %}
             <p>
                 {% trans '(Ingen regler betyder aldrig tilgængelig)' %}
