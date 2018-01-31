@@ -332,7 +332,6 @@
         $('#input-weekdays input').on('change', function(ev) {
             rule.options.byweekday = [];
             $('#input-weekdays input:checked').each(function(){
-                console.log();
                 switch ($(this).attr('name')) {
                     case 'RRule.MO':
                         rule.options.byweekday.push(RRule.MO);

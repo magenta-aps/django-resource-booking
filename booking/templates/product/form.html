@@ -243,10 +243,8 @@
 
             var update_unit = function(){
                 var value = $("#{{ form.organizationalunit.id_for_label }}").val();
-                console.log(value);
                 if (value !== "") {
                     var enabled = timemodes_enabled[value];
-                    console.log(enabled);
                     timemode_select.find("option").each(function(){
                         var option = $(this);
                         if (enabled.indexOf(parseInt(option.val(), 10)) === -1) {
