@@ -2772,14 +2772,14 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     PLANNED_NOBOOKING_TEXT = u'Planlagt og lukket for booking'
 
     status_to_class_map = {
-        WORKFLOW_STATUS_BEING_PLANNED: 'danger',
+        WORKFLOW_STATUS_BEING_PLANNED: 'warning',
         WORKFLOW_STATUS_REJECTED: 'danger',
         WORKFLOW_STATUS_PLANNED: 'success',
         WORKFLOW_STATUS_CONFIRMED: 'success',
         WORKFLOW_STATUS_REMINDED: 'success',
         WORKFLOW_STATUS_EXECUTED: 'success',
         WORKFLOW_STATUS_EVALUATED: 'success',
-        WORKFLOW_STATUS_CANCELLED: 'success',
+        WORKFLOW_STATUS_CANCELLED: 'danger',
         WORKFLOW_STATUS_NOSHOW: 'success',
         WORKFLOW_STATUS_PLANNED_NO_BOOKING: 'success',
         WORKFLOW_STATUS_AUTOASSIGN_FAILED: 'danger',
