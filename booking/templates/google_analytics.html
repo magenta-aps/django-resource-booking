@@ -1,0 +1,32 @@
+<script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['mainTracker._setAccount', 'UA-28098356-1']);
+    _gaq.push(['mainTracker._setDomainName','ku.dk']);
+    _gaq.push(['mainTracker._setAllowHash',false]);
+    _gaq.push(['mainTracker._setAllowAnchor',true]);
+    _gaq.push(['mainTracker._setAllowLinker',true]);
+    _gaq.push(['mainTracker._trackPageview']);
+
+    _gaq.push(['legacyTracker._setAccount', 'UA-2368844-7']);
+    _gaq.push(['legacyTracker._setDomainName','fokus.ku.dk']);
+    _gaq.push(['legacyTracker._setAllowHash',false]);
+    _gaq.push(['legacyTracker._setAllowAnchor',true]);
+    _gaq.push(['legacyTracker._setAllowLinker',true]);
+    _gaq.push(['legacyTracker._trackPageview']);
+
+    (function() {
+        var ga = document.createElement('script');
+        ga.type = 'text/javascript';
+        ga.async = true; ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0];
+        s.parentNode.insertBefore(ga, s); })();
+
+    (function() {
+        var kuga = document.createElement('script');
+        kuga.type = 'text/javascript';
+        kuga.async = true;
+        kuga.src = ('https:' == document.location.protocol ? 'https://cms.secure.ku.dk' : 'http://cms.ku.dk') + '/scripts_js/ga.extended.js';
+        var s = document.getElementsByTagName('script')[1];
+        s.parentNode.insertBefore(kuga, s);
+    })();
+</script>
