@@ -7,6 +7,7 @@
 <!DOCTYPE html>
 <html lang="da">
     <head>
+        {% include 'google_analytics.html' %}
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -31,7 +32,6 @@
             <script type="text/javascript" src="/jsi18n"></script>
             <link href="{% static 'img/favicon.ico' %}" rel="shortcut icon"/>
         {% endif %}
-        {% include 'google_analytics.html' %}
     </head>
     <body class="{% if view.kwargs.embed %}embedded{% endif %}">
     {% if view.kwargs.embed %}
