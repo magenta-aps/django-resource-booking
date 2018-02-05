@@ -98,7 +98,12 @@
                     <td><a href="{% url 'booking-view' booking.id %}">{{ booking }}</a></td>
                     <td>{{ booking.visit.product.get_type_display }}</td>
                     <td><a href="{% url 'product-view' booking.visit.product.pk %}">{{ booking.visit.product.title }}</a></td>
-                    <td>{{ booking.visit.interval_display }}</td>
+                    <td>
+                        {{ booking.visit.interval_display }}
+                        {% if booking.visit.is_cancelled %}
+                        ({% trans 'aflyst' %})
+                        {% endif %}
+                    </td>
                     <td>{{ booking.booker.get_level_display }}</td>
                     <td>
                         {% for bookingsubjectlevel in booking.bookinggrundskolesubjectlevel_set.all %}

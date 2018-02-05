@@ -125,6 +125,10 @@ urlpatterns = patterns(
     url(r'^product/(?P<product_pk>[0-9]+)/manage_times/create$',
         booking.views.CreateTimeView.as_view(),
         name='create-time'),
+    url(r'^product/(?P<product_pk>[0-9]+)/time/(?P<pk>[0-9]+)' +
+        r'/cancelled_visits$',
+        booking.views.CancelledVisitsView.as_view(),
+        name='cancelled-visits-view'),
     url(r'^product/(?P<product_pk>[0-9]+)/time/(?P<pk>[0-9]+)$',
         booking.views.TimeDetailsView.as_view(),
         name='time-view'),

@@ -2817,6 +2817,15 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         verbose_name=_(u'Besøgets ressourcer')
     )
 
+    cancelled_eventtime = models.ForeignKey(
+        'EventTime',
+        verbose_name=_(u"Tidspunkt for aflyst besøg"),
+        related_name='cancelled_visits',
+        blank=True,
+        null=True,
+        default=None
+    )
+
     WORKFLOW_STATUS_BEING_PLANNED = 0
     WORKFLOW_STATUS_REJECTED = 1
     WORKFLOW_STATUS_PLANNED = 2
@@ -2953,9 +2962,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         WORKFLOW_STATUS_EVALUATED: [
             WORKFLOW_STATUS_BEING_PLANNED,
         ],
-        WORKFLOW_STATUS_CANCELLED: [
-            WORKFLOW_STATUS_BEING_PLANNED,
-        ],
+        WORKFLOW_STATUS_CANCELLED: [],
         WORKFLOW_STATUS_NOSHOW: [
             WORKFLOW_STATUS_BEING_PLANNED,
         ],
@@ -3037,6 +3044,22 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 result.append(x)
 
         return result
+
+    @property
+    def is_cancelled(self):
+        return self.workflow_status == Visit.WORKFLOW_STATUS_CANCELLED
+
+    def cancel_visit(self):
+        self.workflow_status = Visit.WORKFLOW_STATUS_CANCELLED
+
+        if(hasattr(self, 'eventtime')):
+            # Break relation to the eventtime
+            eventtime = self.eventtime
+            self.eventtime.visit = None
+            eventtime.save()
+            # Register as a cancelled visit for the given time
+            self.cancelled_eventtime = eventtime
+            self.save()
 
     @classmethod
     def workflow_status_name(cls, workflow_status):
@@ -3206,7 +3229,12 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def interval_display(self):
-        return self.eventtime.interval_display
+        if hasattr(self, 'eventtime'):
+            return self.eventtime.interval_display
+        elif self.cancelled_eventtime:
+            return self.cancelled_eventtime.interval_display
+        else:
+            return ""
 
     @property
     def start_datetime(self):
@@ -3510,6 +3538,12 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 'title': unicode(self.real.display_title),
                 'time': unicode(self.eventtime.interval_display)
             }
+        elif self.cancelled_eventtime:
+            return _(u'Besøg %(id)s - %(title)s - %(time)s (aflyst)') % {
+                'id': self.pk,
+                'title': unicode(self.real.display_title),
+                'time': unicode(self.cancelled_eventtime.interval_display)
+            }
         else:
             return unicode(_(u'Besøg %s - uden tidspunkt') % self.pk)
 
@@ -3517,6 +3551,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def product(self):
         if hasattr(self, 'eventtime'):
             return self.eventtime.product
+        elif self.cancelled_eventtime:
+            return self.cancelled_eventtime.product
         else:
             return None
 

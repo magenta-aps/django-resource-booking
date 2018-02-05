@@ -9,12 +9,30 @@ class AvailabilityUpdaterMixin(object):
         # Store what will be affected before the change
         affected = set(x.pk for x in aff_qs)
 
+        # Whenever affected_eventtimes is calculated using m2m relations we
+        # will get one save before relations are saved and one after. In the
+        # one after relations will be broken, but we still have to adjust the
+        # eventtimes found at the first save. Therefore we must temporarily
+        # store a list of eventtimes to be checked at the next save
+        if (
+            getattr(self, 'affected_eventtimes_uses_m2m', False) and
+            hasattr(self, '_recently_affected')
+        ):
+            affected.update(self._recently_affected)
+
         # Perform change
         res = super(AvailabilityUpdaterMixin, self).save(*args, **kwargs)
 
         # Add what will be affected after the change
         for x in self.affected_eventtimes:
             affected.add(x.pk)
+
+        # Store recently affected, or remove it if we just used it.
+        if getattr(self, 'affected_eventtimes_uses_m2m', False):
+            if hasattr(self, '_recently_affected'):
+                delattr(self, '_recently_affected')
+            else:
+                self._recently_affected = affected
 
         # Update cached availability for any calendars affected by this change
         if hasattr(self, "affected_calendars"):
