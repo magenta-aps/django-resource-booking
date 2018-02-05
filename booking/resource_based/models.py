@@ -1,8 +1,11 @@
 # encoding: utf-8
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.db import transaction
+from django.db.models import F
 from django.db.models import Q
 from django.db.models.deletion import SET_NULL
+from django.db.models.expressions import RawSQL
 from django.contrib.auth import models as auth_models
 from django.core.urlresolvers import reverse
 from django.utils import formats
@@ -10,7 +13,7 @@ from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from recurrence.fields import RecurrenceField
 from booking.mixins import AvailabilityUpdaterMixin
-from booking.models import Room, Visit, EmailTemplateType
+from booking.models import Room, Visit, EmailTemplateType, Product
 from profile.constants import TEACHER, HOST, NONE
 
 import datetime
@@ -181,11 +184,11 @@ class EventTime(models.Model):
 
         if self.product is not None:
             for req in self.product.resourcerequirement_set.all():
-                if hasattr(self, 'visit') and self.visit is not None:
+                try:
                     assigned = self.visit.visitresource.filter(
                         resource_requirement=req
                     ).count()
-                else:
+                except:
                     assigned = 0
 
                 if req.required_amount == assigned:
@@ -326,6 +329,209 @@ class EventTime(models.Model):
         "(\d{2}).(\d{2}).(\d{4})\s+(\d{2}):(\d{2})" +
         "$"
     )
+
+    # Update resource_status for eventtimes in the given queryset
+    @staticmethod
+    def update_resource_status_for_qs(qs):
+        # Make sure we only work on stuff that's actually resource controlled
+        qs = qs.filter(
+            product__time_mode__in=[
+                Product.TIME_MODE_RESOURCE_CONTROLLED,
+                Product.TIME_MODE_RESOURCE_CONTROLLED_AUTOASSIGN
+            ]
+        )
+
+        num_requirements_sql = '''
+            SELECT
+                COUNT(1)
+            FROM
+                "booking_resourcerequirement" "nrs_req"
+                INNER JOIN
+                "booking_product" "nrs_product" ON (
+                    "nrs_req"."product_id" = "nrs_product"."id"
+                )
+            WHERE "nrs_product"."id" = "booking_eventtime"."product_id"
+        '''
+
+        available_calender_times_sql = '''
+            SELECT
+                "booking_calendarcalculatedavailable"."id"
+            FROM
+                "booking_calendarcalculatedavailable"
+            WHERE
+                "booking_calendarcalculatedavailable"."calendar_id" =
+                    "available_resource"."calendar_id"
+                AND
+                    "booking_calendarcalculatedavailable"."start" <=
+                        "booking_eventtime"."start"
+                AND
+                    "booking_calendarcalculatedavailable"."end" >=
+                        "booking_eventtime"."end"
+        '''
+
+        blocking_booking_assignments_sql = '''
+            SELECT
+                "blocking_time"."id"
+            FROM
+                "booking_eventtime" "blocking_time"
+                INNER JOIN
+                "booking_visit" "bt_visit" ON (
+                    "blocking_time"."visit_id" = "bt_visit"."id"
+                )
+                INNER JOIN
+                "booking_visitresource" "bt_resource" ON (
+                    "bt_visit"."id" = "bt_resource"."visit_id"
+                )
+            WHERE
+                "bt_resource"."resource_requirement_id" =
+                    "num_fullfilled_req"."id"
+                AND
+                "bt_resource"."resource_id" = "available_resource"."id"
+                AND
+                "bt_visit"."workflow_status" != 7
+                AND
+                "blocking_time"."start" <
+                    "booking_eventtime"."end"
+                AND
+                "blocking_time"."end" >
+                    "booking_eventtime"."start"
+                AND
+                "blocking_time"."id" != "booking_eventtime"."id"
+        '''
+
+        num_available_resources_sql = '''
+            SELECT
+                COUNT(1)
+            FROM
+                "booking_resource" "available_resource"
+                INNER JOIN
+                "booking_resourcepool_resources" "a_resp_res" ON (
+                     "available_resource"."id" =  "a_resp_res"."resource_id"
+                )
+            WHERE
+                 "a_resp_res"."resourcepool_id" =
+                    "num_fullfilled_req"."resource_pool_id"
+                AND
+                    NOT EXISTS(%s)
+                AND
+                (
+                    "available_resource"."calendar_id" IS NULL
+                    OR
+                    EXISTS(%s)
+                )
+        ''' % (
+            # Need to check blocking bookings for resources that do not have
+            # a calendar.
+            blocking_booking_assignments_sql,
+            available_calender_times_sql,
+        )
+
+        num_assigned_for_requirement_sql = '''
+            SELECT
+                COUNT(1)
+            FROM
+                "booking_visit" "assigned_visit"
+                INNER JOIN
+                "booking_visitresource" "assigned_resource" ON (
+                    "assigned_visit"."id" = "assigned_resource"."visit_id"
+                )
+            WHERE (
+                "assigned_visit"."id" = "booking_eventtime"."visit_id"
+                AND
+                "assigned_resource"."resource_requirement_id" =
+                    "num_fullfilled_req"."id"
+            )
+        '''
+
+        num_can_be_fullfilled_sql = '''
+            SELECT
+                COUNT(1)
+            FROM
+                "booking_resourcerequirement" "num_fullfilled_req"
+                INNER JOIN
+                "booking_product" "nfr_product" ON (
+                    "num_fullfilled_req"."product_id" = "nfr_product"."id"
+                )
+            WHERE
+                "nfr_product"."id" = "booking_eventtime"."product_id"
+                AND
+                (
+                    "num_fullfilled_req"."required_amount" > (%s)
+                    AND
+                    "num_fullfilled_req"."required_amount" <= (
+                        (%s)
+                        +
+                        (%s)
+                    )
+                )
+        ''' % (
+            num_assigned_for_requirement_sql,
+            num_assigned_for_requirement_sql,
+            num_available_resources_sql,
+        )
+
+        num_assigned_sql = '''
+            SELECT
+                COUNT(1)
+            FROM
+                "booking_resourcerequirement" "num_assigned_req"
+                INNER JOIN
+                "booking_product" "nar_product" ON (
+                    "num_assigned_req"."product_id" = "nar_product"."id"
+                )
+            WHERE
+                "nar_product"."id" = "booking_eventtime"."product_id"
+                AND
+                (
+                    "num_assigned_req"."required_amount" <= (
+                        SELECT
+                            COUNT(1)
+                        FROM
+                            "booking_visitresource" "assigned_resource2"
+                            INNER JOIN
+                            "booking_visit" "assigned_visit2" ON (
+                                "assigned_resource2"."visit_id" =
+                                    "assigned_visit2"."id"
+                            )
+                        WHERE (
+                            "assigned_resource2"."resource_requirement_id" =
+                                "num_assigned_req"."id"
+                            AND
+                            "assigned_visit2"."id" =
+                                "booking_eventtime"."visit_id"
+                        )
+                    )
+                )
+        '''
+
+        qs = qs.annotate(
+            num_requirements=RawSQL(num_requirements_sql, tuple()),
+            num_can_be_fullfilled=RawSQL(num_can_be_fullfilled_sql, tuple()),
+            num_assigned=RawSQL(num_assigned_sql, tuple())
+        ).exclude(
+            Q(
+                resource_status=EventTime.RESOURCE_STATUS_ASSIGNED,
+                num_assigned=F('num_requirements')
+            ) |
+            Q(
+                resource_status=EventTime.RESOURCE_STATUS_AVAILABLE,
+                num_requirements__lte=(
+                    F('num_assigned') + F('num_can_be_fullfilled')
+                )
+            ) |
+            Q(
+                resource_status=EventTime.RESOURCE_STATUS_BLOCKED,
+                num_requirements__gt=(
+                    F('num_assigned') + F('num_can_be_fullfilled')
+                )
+            )
+        )
+
+        with transaction.atomic():
+            for x in qs:
+                x.update_availability()
+
+        return qs
 
     @staticmethod
     # Parses the human readable interval that is used on web pages.
@@ -516,49 +722,119 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
             for y in x.between(from_dt, to_dt):
                 yield y
 
-    def unavailable_list(self, from_dt, to_dt):
+    def generate_unavailable_events(self, from_dt, to_dt):
         for x in self.calendarevent_set.filter(
             availability=CalendarEvent.NOT_AVAILABLE
         ).order_by("start", "end"):
             for y in x.between(from_dt, to_dt):
                 yield y
 
+    def generate_resource_occupied_times(self, from_dt, to_dt):
         # Not available on times when we are booked as a resource
         if hasattr(self, 'resource'):
-            for x in self.resource.subclass_instance.occupied_eventtimes(
-                    from_dt, to_dt
-            ):
-                if not x.start or not x.end:
-                    continue
-                yield CalendarEventInstance(
-                    x.start,
-                    x.end,
-                    available=False,
-                    source=x.visit
-                )
-            if hasattr(self.resource, 'user'):
-                profile = self.resource.user.userprofile
-                for x in profile.assigned_to_visits.all():
-                    if not x.eventtime.start or not x.eventtime.end:
+            try:
+                instance = self.resource.subclass_instance
+            except Resource.DoesNotExist:
+                instance = None
+            if instance:
+                for x in instance.occupied_eventtimes(
+                        from_dt, to_dt
+                ).filter(start__isnull=False, end__isnull=False):
+                    if not x.start or not x.end:
                         continue
-                    if x.eventtime.start < to_dt and x.eventtime.end > from_dt:
-                        yield CalendarEventInstance(
-                            x.eventtime.start,
-                            x.eventtime.end,
-                            available=False,
-                            source=x
-                        )
+                    yield CalendarEventInstance(
+                        x.start,
+                        x.end,
+                        available=False,
+                        source=x.visit
+                    )
 
+    def generate_assigned_to_visits(self, from_dt, to_dt):
+        instance = None
+        if hasattr(self, 'resource'):
+            try:
+                instance = self.resource.subclass_instance
+            except Resource.DoesNotExist:
+                pass
+
+        if hasattr(instance, 'user'):
+            profile = instance.user.userprofile
+            for x in profile.assigned_to_visits.filter(
+                eventtime__start__lt=to_dt,
+                eventtime__end__gt=from_dt
+            ):
+                yield CalendarEventInstance(
+                    x.eventtime.start,
+                    x.eventtime.end,
+                    available=False,
+                    source=x
+                )
+
+    def generate_product_unavailalbe(self, from_dt, to_dt):
         if hasattr(self, 'product'):
-            for x in self.product.occupied_eventtimes(from_dt, to_dt):
-                if not x.start or not x.end:
-                    continue
+            for x in self.product.occupied_eventtimes(
+                from_dt, to_dt
+            ).filter(start__isnull=False, end__isnull=False):
                 yield CalendarEventInstance(
                     x.start,
                     x.end,
                     available=False,
                     source=x.visit
                 )
+
+    def unavailable_list(self, from_dt, to_dt):
+        # Collect the generators we want to get items from
+        generators = [self.generate_unavailable_events(from_dt, to_dt)]
+        if hasattr(self, 'resource'):
+            generators.append(
+                self.generate_resource_occupied_times(from_dt, to_dt)
+            )
+            generators.append(
+                self.generate_assigned_to_visits(from_dt, to_dt)
+            )
+        if hasattr(self, 'product'):
+            generators.append(
+                self.generate_product_unavailalbe(from_dt, to_dt)
+            )
+
+        # Pick the first remaining item from any of the generators and remove
+        # any generators that are empty
+        pending_items = []
+        new_generators = []
+        for x in generators:
+            try:
+                item = x.next()
+                new_generators.append(x)
+            except StopIteration:
+                continue
+            pending_items.append(item)
+
+        generators = new_generators
+
+        while(len(generators) > 1):
+            # Find the next item in pending items
+            item_idx = None
+            item = None
+            for idx, x in enumerate(pending_items):
+                if item is None or x < item:
+                    item_idx = idx
+                    item = x
+
+            # move next item from the matched generator to pending items
+            # If generator is empty, remove it and its pending item slot
+            try:
+                pending_items[item_idx] = generators[item_idx].next()
+            except StopIteration:
+                del generators[item_idx]
+                del pending_items[item_idx]
+
+            yield item
+
+        # Yield items from the remaining generator
+        if len(generators) > 0:
+            yield pending_items[0]
+            for x in generators[0]:
+                yield x
 
     def is_available_between(self, from_dt, to_dt, exclude_sources=set([])):
         # Check if availability rules match
@@ -588,9 +864,7 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
     def has_available_time(self, from_dt, to_dt, minutes):
         needed = datetime.timedelta(minutes=minutes)
 
-        unavailables = sorted([
-            x for x in self.unavailable_list(from_dt, to_dt)
-        ], key=lambda x: x.start)
+        unavailables = tuple(self.unavailable_list(from_dt, to_dt))
 
         for available in self.available_list(from_dt, to_dt):
             # The first available start is whatever is later of the start
@@ -618,12 +892,153 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
 
         return False
 
+    # Produces a set of intervals where (the resource of) the calendar is
+    # available. Overlapping or adjecent intervals will be merged together
+    # before output
+    def get_available_intervals(self, from_dt, to_dt):
+        availables = self.available_list(from_dt, to_dt)
+        unavailables = self.unavailable_list(from_dt, to_dt)
+
+        current_start = None
+        current_end = None
+
+        try:
+            next_unavailable = unavailables.next()
+        except StopIteration:
+            next_unavailable = None
+
+        for x in availables:
+
+            if current_end:
+                # If the current available ends before the current open
+                # interval, just skip it.
+                if current_end >= x.end:
+                    continue
+                # If last interval ends before the start of the new available
+                # time, commit it, and start a new interval starting at start
+                # time for the current available marker:
+                if current_end < x.start:
+                    yield (current_start, current_end)
+                    current_start = x.start
+                    current_end = None
+
+            if current_start is None:
+                current_start = x.start
+
+            # Loop over unavailables until we reach one that starts after
+            # the available time:
+            # A: #----------#
+            # U:              #---#
+            while (
+                current_start and
+                next_unavailable and
+                next_unavailable.start < x.end
+            ):
+                # Only unavailable times that end after the current start
+                if next_unavailable.end <= current_start:
+                    # We skip any unavailable that ends before the current
+                    # start time.
+                    # A:       #----------#
+                    # U: #---#
+                    pass
+                else:
+                    if next_unavailable.start > current_start:
+                        if next_unavailable.end < x.end:
+                            # A: #----------#
+                            # U:   #----#
+                            # Return current start until the start of the
+                            # unavailability
+                            yield (current_start, next_unavailable.start)
+                            # Open a new interval starting after the
+                            # unavailable marking
+                            current_start = next_unavailable.end
+                        else:
+                            # A: #----------#
+                            # U:   #----------#
+                            # Return current start until the start of the
+                            # unavailability
+                            yield (current_start, next_unavailable.start)
+                            current_start = None
+                    else:
+                        if next_unavailable.end < x.end:
+                            #  A:    #----------#
+                            #  U: #----------#
+                            current_start = next_unavailable.end
+                        else:
+                            #  A:    #----#
+                            #  U: #----------#
+                            current_start = None
+
+                # Only go on to next unavailable if we have a start time
+                # ot compare it to
+                if current_start:
+                    try:
+                        next_unavailable = unavailables.next()
+                    except StopIteration:
+                        next_unavailable = None
+
+            if current_start and current_start < x.end:
+                current_end = x.end
+            else:
+                current_end = None
+
+        # Yield any leftoever last interval
+        if current_start and current_end:
+            yield (current_start, current_end)
+
+    def recalculate_available(self, to_dt=None):
+
+        # Process from back when the project started
+        from_dt = timezone.make_aware(datetime.datetime(2016, 7, 1))
+        # And default to three years into the future
+        if to_dt is None:
+            to_dt = timezone.now() + datetime.timedelta(days=365*3)
+
+        with transaction.atomic():
+            CalendarCalculatedAvailable.objects.filter(
+                calendar=self,
+                end__gt=from_dt,
+                start__lt=to_dt
+            ).delete()
+            CalendarCalculatedAvailable.objects.bulk_create([
+                CalendarCalculatedAvailable(
+                    calendar=self,
+                    start=x[0],
+                    end=x[1]
+                ) for x in self.get_available_intervals(from_dt, to_dt)
+            ])
+
     @property
     def affected_eventtimes(self):
         if hasattr(self, 'resource'):
             return self.resource.affected_eventtimes
         else:
             return EventTime.objects.none()
+
+
+class CalendarCalculatedAvailable(models.Model):
+
+    class Meta:
+        # DB indexes for ranges
+        index_together = [
+            ["start", "end"],
+            ["end", "start"],
+        ]
+
+    calendar = models.ForeignKey(
+        Calendar,
+        null=False,
+        blank=False,
+        verbose_name=_('Kalender')
+
+    )
+    start = models.DateTimeField(
+        verbose_name=_(u"Starttidspunkt"),
+    )
+    end = models.DateTimeField(
+        verbose_name=_(u"Sluttidspunkt"),
+        blank=True,
+    )
 
 
 class CalendarEventInstance(object):
@@ -692,6 +1107,24 @@ class CalendarEventInstance(object):
         )
 
         return obj
+
+    def __cmp__(self, other):
+        if isinstance(other, CalendarEventInstance):
+            return (
+                (self.start - other.start).total_seconds() or
+                (self.end - other.end).total_seconds()
+            )
+        return NotImplemented
+
+    def __unicode__(self):
+        return 'CalendarEventInstance: %s %s - %s' % (
+            "Available" if self.available else "Unavailable",
+            self.start,
+            self.end
+        )
+
+    def __repr__(self):
+        return '%s at 0x%x' % (self.__unicode__(), id(self))
 
 
 class CalendarEvent(AvailabilityUpdaterMixin, models.Model):
@@ -846,6 +1279,13 @@ class CalendarEvent(AvailabilityUpdaterMixin, models.Model):
             return self.calendar.affected_eventtimes
         else:
             return EventTime.objects.none()
+
+    @property
+    def affected_calendars(self):
+        if self.calendar:
+            return Calendar.objects.filter(pk=self.calendar.pk)
+        else:
+            return Calendar.objects.none()
 
     @property
     def calendar_event_link(self):
@@ -1326,9 +1766,36 @@ class ResourcePool(AvailabilityUpdaterMixin, models.Model):
         ]
 
     def available_resources_between(self, from_dt, to_dt):
-        for x in self.resources.all():
-            if x.is_available_between(from_dt, to_dt):
-                yield x
+        qs = self.resources.annotate(
+            has_available_spot=RawSQL(
+                '''
+                EXISTS (
+                    SELECT
+                        "avail"."id"
+                    FROM
+                        "booking_calendarcalculatedavailable" "avail"
+                        INNER JOIN
+                        "booking_calendar" "avail_cal" ON (
+                            "avail"."calendar_id" = "avail_cal"."id"
+                        )
+                    WHERE (
+                        "avail_cal"."id" = "booking_resource"."calendar_id"
+                        AND
+                        "avail"."start" <= %s
+                        AND
+                        "avail"."end" >= %s
+                    )
+                )
+                ''',
+                (from_dt, to_dt,)
+            )
+        ).filter(
+            has_available_spot=True
+        )
+
+        return qs
+
+    affected_eventtimes_uses_m2m = True
 
     @property
     def affected_eventtimes(self):
@@ -1339,6 +1806,37 @@ class ResourcePool(AvailabilityUpdaterMixin, models.Model):
             )
         else:
             return EventTime.objects.none()
+
+    @classmethod
+    # Find and update availability for eventtimes related to the specified
+    # queryset. Second argument specifies whether the resourcepools in the
+    # queryset has become more or less restrictive, eg. whether the have
+    # lost or gained resources, respectively.
+    def update_eventtimes_on_resource_change(cls, qs, restrictive=False):
+        if restrictive:
+            print "Checking %s for missing resources" % [x for x in qs]
+        else:
+            print "Checking %s for available resources" % [x for x in qs]
+
+        qs = EventTime.objects.filter(
+            product__resourcerequirement__resource_pool__in=qs
+        )
+        if(restrictive):
+            qs = qs.filter(
+                resource_status__in=[
+                    EventTime.RESOURCE_STATUS_AVAILABLE,
+                    EventTime.RESOURCE_STATUS_ASSIGNED
+                ]
+            )
+        else:
+            qs = qs.filter(
+                resource_status__in=[
+                    EventTime.RESOURCE_STATUS_BLOCKED,
+                    EventTime.RESOURCE_STATUS_ASSIGNED
+                ]
+            )
+
+        EventTime.update_resource_status_for_qs(qs)
 
 
 class ResourceRequirement(AvailabilityUpdaterMixin, models.Model):
@@ -1378,16 +1876,11 @@ class ResourceRequirement(AvailabilityUpdaterMixin, models.Model):
         if amount <= 0:
             return True
 
-        count = 0
-
-        for x in self.resource_pool.available_resources_between(
+        free_resources = self.resource_pool.available_resources_between(
             from_dt, to_dt
-        ):
-            count = count + 1
-            if count >= amount:
-                return True
+        ).count()
 
-        return False
+        return free_resources >= amount
 
     def is_fullfilled_for(self, visit):
         if self.resource_pool is None:
@@ -1425,9 +1918,21 @@ class VisitResource(AvailabilityUpdaterMixin, models.Model):
         related_name='visitresource'
     )
 
+    @property
+    def affected_calendars(self):
+        return Calendar.objects.filter(resource__visitresource=self)
+
+    @property
+    def affected_eventtimes(self):
+        if self.resource_requirement:
+            return self.resource_requirement.affected_eventtimes
+        else:
+            return EventTime.objects.none()
+
     def save(self, *args, **kwargs):
         new = self.pk is None
         super(VisitResource, self).save(*args, **kwargs)
+
         if new:
             resourcetype = self.resource.resource_type.id
             if resourcetype == ResourceType.RESOURCE_TYPE_TEACHER:
@@ -1442,10 +1947,3 @@ class VisitResource(AvailabilityUpdaterMixin, models.Model):
                     [self.resource.hostresource.user],
                     True
                 )
-
-    @property
-    def affected_eventtimes(self):
-        if self.resource_requirement:
-            return self.resource_requirement.affected_eventtimes
-        else:
-            return EventTime.objects.none()
