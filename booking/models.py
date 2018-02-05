@@ -3067,8 +3067,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 last_workflow_status != self.workflow_status:
             self.last_workflow_update = timezone.now()
             if self.workflow_status == self.WORKFLOW_STATUS_EXECUTED:
-                for evaluation in self.product.evaluations:
-                    evaluation.send_first_notification(self)
+                for product in self.products:
+                    for evaluation in product.evaluations:
+                        evaluation.send_first_notification(self)
 
     @property
     # QuerySet that finds EventTimes that will be affected by resource changes
@@ -3258,7 +3259,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def needed_teachers(self):
         if self.is_multiproductvisit:
             return self.multiproductvisit.needed_teachers
-        elif self.product.is_resource_controlled:
+        elif self.product is not None and self.product.is_resource_controlled:
             return self.resources_required(ResourceType.RESOURCE_TYPE_TEACHER)
         else:
             return self.total_required_teachers - \
@@ -3290,7 +3291,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def needed_hosts(self):
         if self.is_multiproductvisit:
             return self.multiproductvisit.needed_hosts
-        elif self.product.is_resource_controlled:
+        elif self.product is not None and self.product.is_resource_controlled:
             return self.resources_required(ResourceType.RESOURCE_TYPE_HOST)
         else:
             return self.total_required_hosts - self.assigned_hosts.count()
@@ -3303,7 +3304,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def assigned_hosts(self):
         if self.is_multiproductvisit:
             return self.multiproductvisit.assigned_hosts
-        if self.product.is_resource_controlled:
+        if self.product is not None and self.product.is_resource_controlled:
             return User.objects.filter(
                 hostresource__visitresource__visit=self
             )
