@@ -1410,6 +1410,8 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
                 try:
                     self.object = self.model.objects.get(id=pk)
                     if is_cloning:
+                        print "hephey"
+                        self.original = self.model.objects.get(id=pk)
                         self.object.pk = None
                         self.object.id = None
                         self.object.calendar = None
@@ -1443,8 +1445,8 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
 
     def gymnasiefag_selected(self):
         result = []
-        obj = self.object
         if self.request.method == 'GET':
+            obj = getattr(self, 'original', self.object)
             if obj and obj.pk:
                 for x in obj.productgymnasiefag_set.all():
                     result.append({
@@ -1469,8 +1471,8 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
 
     def grundskolefag_selected(self):
         result = []
-        obj = self.object
         if self.request.method == 'GET':
+            obj = getattr(self, 'original', self.object)
             if obj and obj.pk:
                 for x in obj.productgrundskolefag_set.all():
                     result.append({
@@ -1726,6 +1728,7 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
             GymnasieLevel.objects.all().order_by('level')
 
         context['gymnasiefag_selected'] = self.gymnasiefag_selected()
+        print context['gymnasiefag_selected']
         context['grundskolefag_selected'] = self.grundskolefag_selected()
 
         context['klassetrin_range'] = range(0, 10)
