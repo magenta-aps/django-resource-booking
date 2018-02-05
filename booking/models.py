@@ -4119,7 +4119,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def autoassign_resources(self):
         if self.is_multiproductvisit:
             self.multiproductvisit.autoassign_resources()
-        if self.product.time_mode == \
+        if self.product is not None and self.product.time_mode == \
                 Product.TIME_MODE_RESOURCE_CONTROLLED_AUTOASSIGN:
             for requirement in self.product.resourcerequirement_set.all():
                 if requirement.being_deleted:
