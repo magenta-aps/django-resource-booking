@@ -1,0 +1,25 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load booking_tags %}
+
+{% block htmltitle %} - {% trans "Aflyste besøg for tidspunkt" %} #{{ eventtime.pk }}{% endblock %}
+
+{% block content %}
+    <div class="divider"></div>
+    <h1>
+        {% trans "Aflyste besøg for" %}
+        <a href="{% url 'edit-time' eventtime.product.pk eventtime.pk %}">{{ eventtime }}</a>
+    </h1>
+
+    <div class="divider"></div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <ul>
+            {% for visit in eventtime.cancelled_visits.all %}
+            <li><a href="{% url 'visit-view' visit.pk %}">{{ visit }}</a></li>
+            {% endfor %}
+            </ul>
+        </div>
+    </div>
+{% endblock %}
