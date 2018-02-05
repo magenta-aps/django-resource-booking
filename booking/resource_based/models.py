@@ -1795,6 +1795,8 @@ class ResourcePool(AvailabilityUpdaterMixin, models.Model):
 
         return qs
 
+    affected_eventtimes_uses_m2m = True
+
     @property
     def affected_eventtimes(self):
         if self.pk:
