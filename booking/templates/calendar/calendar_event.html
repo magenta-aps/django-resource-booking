@@ -279,7 +279,7 @@
                 recurrencesField.val(
                     $(this).attr('data-last-value') || ''
                 );
-                $rec_widget = recurrencesField.parent();
+                var $rec_widget = recurrencesField.parent();
                 if ($rec_widget.find('div.panel').length < 1) {
                     $rec_widget.find('.add-button.add-rule').last().trigger(
                         'click'
