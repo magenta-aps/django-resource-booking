@@ -1396,6 +1396,12 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
             self.get_context_data(**self.get_forms())
         )
 
+    def form_valid(self, form):
+        response = super(EditProductBaseView, self).form_valid(form)
+        if hasattr(self, 'original'):
+            self.update_clone(self.original, self.object)
+        return response
+
     def set_object(self, pk, request, is_cloning=False):
         if is_cloning or not hasattr(self, 'object') or self.object is None:
             if pk is None:
@@ -1410,7 +1416,6 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
                 try:
                     self.object = self.model.objects.get(id=pk)
                     if is_cloning:
-                        print "hephey"
                         self.original = self.model.objects.get(id=pk)
                         self.object.pk = None
                         self.object.id = None
@@ -1546,6 +1551,23 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
         # resources.
         if self.is_creating:
             self.request.user.userprofile.my_resources.add(self.object)
+
+    def update_clone(self, original, clone):
+        for teacher in original.potentielle_undervisere.all():
+            clone.potentielle_undervisere.add(teacher)
+        for host in original.potentielle_vaerter.all():
+            clone.potentielle_vaerter.add(host)
+        for room in original.rooms.all():
+            clone.rooms.add(room)
+        for roomresponsible in original.roomresponsible.all():
+            clone.roomresponsible.add(roomresponsible)
+        for link in original.links.all():
+            clone.links.add(link)
+        for tag in original.tags.all():
+            clone.tags.add(tag)
+        for topic in original.topics.all():
+            clone.topics.add(topic)
+        clone.save()
 
 
 class EditProductView(BreadcrumbMixin, EditProductBaseView):
@@ -1728,7 +1750,6 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
             GymnasieLevel.objects.all().order_by('level')
 
         context['gymnasiefag_selected'] = self.gymnasiefag_selected()
-        print context['gymnasiefag_selected']
         context['grundskolefag_selected'] = self.grundskolefag_selected()
 
         context['klassetrin_range'] = range(0, 10)
