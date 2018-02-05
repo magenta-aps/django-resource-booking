@@ -10,7 +10,9 @@
 
 
 {% block content %}
-    <div class="divider"></div>
+
+    {% include 'common/breadcrumbrow.html' %}
+
     <h1>
         {% trans "Rediger tidspunkt for" %}
         '<a href="{% url 'product-view' product.pk %}">{{ product.title }}</a>'

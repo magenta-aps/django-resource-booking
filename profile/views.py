@@ -23,7 +23,7 @@ from django.utils.translation import ugettext as _, ungettext_lazy
 from django.views.generic import TemplateView, DetailView
 from django.views.generic.edit import UpdateView, FormView, DeleteView
 
-from booking.views import LoginRequiredMixin, AccessDenied
+from booking.views import LoginRequiredMixin, AccessDenied, BreadcrumbMixin
 from booking.views import EditorRequriedMixin, VisitCustomListView
 from django.views.generic.list import ListView
 from profile.forms import UserCreateForm, EditMyProductsForm, StatisticsForm
@@ -36,7 +36,7 @@ import warnings
 import profile.models as profile_models
 
 
-class ProfileView(LoginRequiredMixin, TemplateView):
+class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
 
     HEADING_RED = 'alert-danger'
     HEADING_GREEN = 'alert-success'
@@ -71,8 +71,8 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             'color': self.HEADING_GREEN,
             'type': 'Visit',
             'title': ungettext_lazy(
-                u'%(count)d senest afviklet besøg',
-                u'%(count)d seneste afviklede besøg',
+                u'%(count)d afviklet besøg',
+                u'%(count)d afviklede besøg',
                 'count'
             ) % {'count': recent_qs.count()},
             'queryset': recent_qs,
@@ -128,6 +128,13 @@ class ProfileView(LoginRequiredMixin, TemplateView):
 
         context.update(**kwargs)
         return super(ProfileView, self).get_context_data(**context)
+
+    @staticmethod
+    def build_breadcrumbs():
+        breadcrumbs = [
+            {'url': reverse('user_profile'), 'text': _(u'Min side')}
+        ]
+        return breadcrumbs
 
     datediff_sql = """
         LEAST(
@@ -352,7 +359,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         ]
 
 
-class CreateUserView(FormView, UpdateView):
+class CreateUserView(BreadcrumbMixin, FormView, UpdateView):
     model = User
     form_class = UserCreateForm
     template_name = 'profile/create_user.html'
@@ -492,24 +499,7 @@ class CreateUserView(FormView, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = {}
-
-        context['breadcrumbs'] = [
-            {'url': reverse('user_profile'), 'text': _(u'Min side')},
-            {'url': reverse('user_list'), 'text': _(u'Administrér brugere')},
-        ]
-        if self.object and self.object.pk:
-            context['breadcrumbs'].append({
-                'url': reverse('user_edit', args=[self.object.pk]),
-                'text': _(u"Redigér bruger '%s'") % self.object.username
-            })
-        else:
-            context['breadcrumbs'].append({
-                'url': reverse('user_create'),
-                'text': _(u'Opret ny bruger')
-            })
-
         context.update(kwargs)
-
         return super(CreateUserView, self).get_context_data(**context)
 
     def get_form_kwargs(self):
@@ -532,8 +522,26 @@ class CreateUserView(FormView, UpdateView):
         except:
             return '/'
 
+    def get_breadcrumb_args(self):
+        return [self.object]
 
-class DeleteUserView(DeleteView):
+    @staticmethod
+    def build_breadcrumbs(object):
+        breadcrumbs = UserListView.build_breadcrumbs()
+        if object and object.pk:
+            breadcrumbs.append({
+                'url': reverse('user_edit', args=[object.pk]),
+                'text': _(u"Redigér bruger '%s'") % object.username
+            })
+        else:
+            breadcrumbs.append({
+                'url': reverse('user_create'),
+                'text': _(u'Opret ny bruger')
+            })
+        return breadcrumbs
+
+
+class DeleteUserView(BreadcrumbMixin, DeleteView):
 
     model = User
     template_name = 'profile/user_confirm_delete.html'
@@ -545,8 +553,20 @@ class DeleteUserView(DeleteView):
         VisitComment.on_delete_user(self.get_object())
         return super(DeleteUserView, self).delete(request, *args, **kwargs)
 
+    def get_breadcrumb_args(self):
+        return [self.object]
 
-class UserListView(EditorRequriedMixin, ListView):
+    @staticmethod
+    def build_breadcrumbs(object):
+        breadcrumbs = UserListView.build_breadcrumbs()
+        breadcrumbs.append({
+            'url': reverse('user_delete', args=[object.pk]),
+            'text': _(u"Slet bruger '%s'") % object.username
+        })
+        return breadcrumbs
+
+
+class UserListView(BreadcrumbMixin, EditorRequriedMixin, ListView):
     model = User
     template_name = 'profile/user_list.html'
     context_object_name = "users"
@@ -602,13 +622,15 @@ class UserListView(EditorRequriedMixin, ListView):
         context['selected_role'] = self.selected_role
         context['possible_roles'] = user_role_choices
 
-        context['breadcrumbs'] = [
-            {'url': reverse('user_profile'), 'text': _(u'Min side')},
-            {'text': _(u'Administrér brugere')},
-        ]
-
         context.update(kwargs)
         return super(UserListView, self).get_context_data(**context)
+
+    @staticmethod
+    def build_breadcrumbs():
+        return [{
+            'text': _(u'Administrér brugere'),
+            'url': reverse('user_list')
+        }]
 
 
 class UnitListView(EditorRequriedMixin, ListView):
@@ -623,7 +645,7 @@ class UnitListView(EditorRequriedMixin, ListView):
         return user.userprofile.get_unit_queryset()
 
 
-class StatisticsView(EditorRequriedMixin, TemplateView):
+class StatisticsView(EditorRequriedMixin, BreadcrumbMixin, TemplateView):
     template_name = "profile/statistics.html"
     form_class = StatisticsForm
     organizationalunits = []
@@ -806,6 +828,13 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
             ])
 
         return response
+
+    @staticmethod
+    def build_breadcrumbs():
+        return [{
+            'url': reverse('statistics'),
+            'text': _(u'Statistik over evalueringer')
+        }]
 
 
 class EmailLoginView(DetailView):
