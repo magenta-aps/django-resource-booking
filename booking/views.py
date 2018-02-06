@@ -1586,6 +1586,10 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
             clone.topics.add(topic)
         clone.save()
 
+        for resource_requirement in original.resourcerequirement_set.all():
+            cloned_requirement = resource_requirement.clone_to_product(clone)
+            cloned_requirement.save()
+
 
 class EditProductView(BreadcrumbMixin, EditProductBaseView):
 
