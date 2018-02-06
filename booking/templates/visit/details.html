@@ -101,7 +101,6 @@
         {% if object.product.is_resource_controlled and not object.is_multiproductvisit %}
             {% for requirementdata in object.requirement_details %}
                 {% if not requirementdata.unknown %}
-                    {{ requirementdata.type.plural }}:
                     {% if requirementdata.is_host and is_potential_host %}
                         {% if can_become_host %}
                             <a href="{% url 'become-host' object.pk %}" role="button" class="btn btn-success btn-xs">{% trans 'Bliv vært for dette besøg.' %}</a>
