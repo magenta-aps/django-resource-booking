@@ -378,6 +378,40 @@
                         {% endif %}
                     </div>
 
+                    {% if request.user.userprofile.is_host or request.user.userprofile.is_teacher %}
+                        <div class="row row-border">
+                            <strong class="{{ left_class }}">
+                                {% blocktrans count object.organizationalunit.get_editors|length as editorcount %}
+                                    Fakultetsredaktør
+                                    {% plural %}
+                                    Fakultetsredaktører
+                                {% endblocktrans %}
+                            </strong>
+                            <div class="{{ center_class }}">
+                                <ul class="list-unstyled">
+                                    {% for editor in object.organizationalunit.get_editors %}
+                                        <li>
+                                            {{ editor.get_full_name }}
+                                            {% if editor.email %} - <a href="mailto:{{ editor.email }}">{{ editor.email }}</a>{% endif %}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+
+                        {% if object.product.inquire_user %}
+                            <div class="row row-border">
+                                <strong class="{{ left_class }}">
+                                    {% trans 'Kontaktperson' %}
+                                </strong>
+                                <div class="{{ center_class }}">
+                                    {{ object.product.inquire_user.get_full_name }}
+                                    {% if object.product.inquire_user.email %} - <a href="mailto:{{ object.product.inquire_user.email }}">{{ object.product.inquire_user.email }}</a>{% endif %}
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+
                     {% if can_edit and object.has_changes_after_planned %}
                         <div class="row row-border">
                             <strong class="{{ left_class }}">
