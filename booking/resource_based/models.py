@@ -1407,6 +1407,13 @@ class ResourceRequirement(AvailabilityUpdaterMixin, models.Model):
         else:
             return EventTime.objects.none()
 
+    def clone_to_product(self, product):
+        return ResourceRequirement(
+            product=product,
+            resource_pool=self.resource_pool,
+            required_amount=self.required_amount
+        )
+
 
 class VisitResource(AvailabilityUpdaterMixin, models.Model):
     visit = models.ForeignKey(
