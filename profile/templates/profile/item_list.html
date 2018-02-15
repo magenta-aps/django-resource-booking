@@ -1,5 +1,6 @@
 {% load i18n %}
 {% load booking_tags %}
+{% if not headerless %}
 <div class="col-sm-6">
     <div class="panel panel-bookings">
         <div class="panel-heading {{ list.color }}">
@@ -15,16 +16,13 @@
             {% endif %}
         </div>
         <div class="panel-body list" data-list-item=".list-group-item">
-
+            <div class="list-within-limit">
+{% endif %}
             {% if list.type == 'Visit' %}
-                <div class="list-within-limit">
 
                 {% for visit in list.queryset %}
 
-                    {% if forloop.counter0 == list.limit %}
-                        </div>
-                        <div class="list-outside-limit">
-                    {% endif %}
+                    {% if forloop.counter0 < list.limit %}
 
                     <div class="list-group-item clearfix">
                         <a href="{% url 'visit-view' visit.real.pk %}" title="{% trans 'Se arrangementets detaljer' %}">
@@ -89,17 +87,13 @@
                             </p>
                         {% endif %}
                     </div>
+                    {% endif %}
                 {% endfor %}
-                </div>
 
             {% elif list.type == 'Product' %}
 
-                <div class="list-within-limit">
                 {% for res in list.queryset %}
-                    {% if forloop.counter0 == list.limit %}
-                        </div>
-                        <div class="list-outside-limit">
-                    {% endif %}
+                    {% if forloop.counter0 < list.limit %}
 
                         <div class="list-group-item clearfix">
 
@@ -158,15 +152,28 @@
                             <span class="label label-{{ res.get_state_class }} pull-right">{{ res.get_state_display }}</span>
                         </div>
                     </div>
+                    {% endif %}
                 {% endfor %}
-                </div>
             {% endif %}
+{% if not headerless %}
+            </div>
+            <div class="list-outside-limit"></div>
 
             {% if list.queryset.count > list.limit %}
-                <button class="btn btn-primary reveal-link label label-primary pull-right" data-text-reveal="{% blocktrans with count=list.queryset.count %}Vis alle ({{ count }}){% endblocktrans %}" data-text-unreveal="{% trans 'Skjul' %}">
+                <button
+                        class="btn btn-primary reveal-link label label-primary pull-right"
+                        data-text-reveal="{% blocktrans with count=list.queryset.count %}Vis alle ({{ count }}){% endblocktrans %}"
+                        data-text-unreveal="{% trans 'Skjul' %}"
+                        data-text-loading="{% trans 'Henter...' %}"
+                        data-text-error="{% trans 'Fejl' %}"
+                        data-item-type="{{ list.type }}"
+                        data-item-ids="{% for item in list.queryset %}{% if forloop.counter0 >= list.limit %}{{ item.id }},{% endif %}{% endfor %}"
+                        data-csrf-token="{{ csrf_token }}"
+                >
                     {% blocktrans with count=list.queryset.count %}Vis alle ({{ count }}){% endblocktrans %}
                 </button>
             {% endif %}
         </div>
     </div>
 </div>
+{% endif %}
