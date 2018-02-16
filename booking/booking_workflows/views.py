@@ -130,7 +130,9 @@ class ChangeVisitStatusView(AutologgerMixin, UpdateWithCancelView):
             self.object.cancel_visit()
 
             # Send out e-mail notifying everyone that the visit is cancelled
-            self.autosend(EmailTemplateType.notify_all__booking_canceled)
+            self.object.autosend(
+                EmailTemplateType.notify_all__booking_canceled
+            )
 
         return response
 
