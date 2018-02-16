@@ -1,0 +1,40 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% load booking_tags %}
+
+{% block htmltitle %} - {% trans 'tilmeld arrangement' %}{% endblock %}
+
+{% block content %}
+
+    <div class="divider"></div>
+    <form id="bookingform" class="form-horizontal clearfix" data-toggle="validator" role="form" novalidate="true" method="POST">
+        {% csrf_token %}
+        {{ bookerform.non_field_errors }}
+        {% include "booking/fields/basedata.html" %}
+        {% include "booking/fields/school.html" %}
+        {% include "booking/fields/time.html" %}
+        {% include "booking/fields/location.html" %}
+        {% include "booking/fields/attendees.html" %}
+        {% include 'common/save_cancel.html' %}
+    </form>
+
+{% endblock %}
+
+{% block extra_scripts %}
+
+    {% include 'booking/fields/location_script.html' %}
+    {% include 'booking/fields/school_script.html' %}
+    {% include "booking/fields/time_script.html" %}
+    <script type="text/javascript" src="{% static 'js/ieform.js' %}"></script>
+    <script type="text/javascript">
+        $(function(){
+            $("#cancelbutton").click(function(){
+                {% if back %}
+                    document.location = "{{ back }}";
+                {% else %}
+                    history.back();
+                {% endif %}
+            });
+        });
+    </script>
+{% endblock %}
