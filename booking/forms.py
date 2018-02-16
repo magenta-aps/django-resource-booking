@@ -181,7 +181,7 @@ class VisitSearchForm(forms.Form):
     WORKFLOW_STATUS_READY = -2
 
     w = forms.ChoiceField(
-        label=_(u'Workflow status'),
+        label=_(u'Status'),
         choices=(
             ('', _(u'Alle')),
             (WORKFLOW_STATUS_PENDING, _(u'Alle ikke-planlagte')),
