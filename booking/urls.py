@@ -73,6 +73,8 @@ import booking.models
 
 from django.views.generic import TemplateView
 
+from profile.views import ListAjaxView
+
 js_info_dict = {
     'packages': ('recurrence', ),
 }
@@ -436,7 +438,13 @@ urlpatterns = patterns(
         name='visit-evaluation-redirect'),
     url(r'^visit/evaluations/?$',
         EvaluationStatisticsView.as_view(),
-        name='visit-evaluation-statistics')
+        name='visit-evaluation-statistics'),
+
+    url(r'^ajax/list/(?P<type>[A-Za-z]+)/?$',
+        ListAjaxView.as_view(),
+        name='ajax-list')
+
+
 
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
