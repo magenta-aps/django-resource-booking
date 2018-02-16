@@ -6,7 +6,7 @@ from booking.models import EmailTemplateType, KUEmailMessage
 from booking.models import VisitComment
 from booking.utils import UnicodeWriter
 from django.contrib import messages
-from django.db.models import Q
+from django.db.models import Q, Case, When
 from django.db.models.aggregates import Count, Sum
 from django.db.models.functions import Coalesce
 from django.contrib.auth import login, logout, authenticate
@@ -34,6 +34,7 @@ from profile.models import FACULTY_EDITOR, COORDINATOR, user_role_choices
 
 import warnings
 import profile.models as profile_models
+import sys
 
 
 class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
@@ -357,6 +358,35 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
                 'limit': limit
             }
         ]
+
+
+class ListAjaxView(TemplateView):
+    template_name = 'profile/item_list.html'
+
+    def post(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        return self.render_to_response(context)
+
+    type_map = {
+        'Visit': Visit,
+        'Product': Product
+    }
+
+    def get_context_data(self, **kwargs):
+        type = self.kwargs['type']
+        cls = self.type_map[type]
+        ids = self.request.POST.getlist('id[]')
+        ordering = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(ids)])
+        context = {
+            'headerless': True,
+            'list': {
+                'type': type,
+                'limit': sys.maxint,
+                'queryset': cls.objects.filter(id__in=ids).order_by(ordering)
+            }
+        }
+        context.update(kwargs)
+        return super(ListAjaxView, self).get_context_data(**context)
 
 
 class CreateUserView(BreadcrumbMixin, FormView, UpdateView):
