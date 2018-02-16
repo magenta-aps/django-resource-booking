@@ -1093,6 +1093,35 @@ class BookerForm(forms.ModelForm):
         return booker
 
 
+class EditBookerForm(forms.ModelForm):
+
+    class Meta:
+        model = Guest
+        fields = ('firstname', 'lastname', 'email', 'phone', 'attendee_count')
+        widgets = {
+            'firstname': TextInput(
+                attrs={'class': 'form-control input-sm',
+                       'placeholder': _(u'Fornavn')}
+            ),
+            'lastname': TextInput(
+                attrs={'class': 'form-control input-sm',
+                       'placeholder': _(u'Efternavn')}
+            ),
+            'email': EmailInput(
+                attrs={'class': 'form-control input-sm',
+                       'placeholder': _(u'E-mail')}
+            ),
+            'phone': TextInput(
+                attrs={'class': 'form-control input-sm',
+                       'placeholder': _(u'Telefonnummer'),
+                       'pattern': '(\(\+\d+\)|\+\d+)?\s*\d+[ \d]*'},
+            ),
+            'attendee_count': NumberInput(
+                attrs={'class': 'form-control input-sm', 'min': 0}
+            ),
+        }
+
+
 class ClassBookingForm(BookingForm):
 
     class Meta:

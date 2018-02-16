@@ -58,7 +58,7 @@ from booking.models import MultiProductVisit
 from booking.models import MultiProductVisitTemp, MultiProductVisitTempProduct
 from booking.models import Evaluation, EvaluationGuest
 
-from booking.forms import ProductInitialForm, ProductForm
+from booking.forms import ProductInitialForm, ProductForm, EditBookerForm
 from booking.forms import GuestEmailComposeForm, StudentForADayBookingForm
 from booking.forms import OtherProductForm, StudyProjectBookingForm
 from booking.forms import BookingGrundskoleSubjectLevelForm, BookingListForm
@@ -2917,6 +2917,37 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
         }
         context.update(kwargs)
         return super(VisitBookingCreateView, self).get_context_data(**context)
+
+
+class BookingEditView(BreadcrumbMixin, UpdateView):
+    template_name = "booking/edit.html"
+    model = Booking
+
+    def get_forms(self, data=None):
+        return {
+            'bookerform': EditBookerForm(data, instance=self.object.booker)
+        }
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        return self.render_to_response(
+            self.get_context_data(**self.get_forms())
+        )
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        forms = self.get_forms(request.POST)
+        bookerform = forms['bookerform']
+        bookerform.full_clean()
+        if bookerform.is_valid():
+            self.object.booker = bookerform.save()
+        return redirect(reverse('booking-view', args=[self.object.pk]))
+
+    def get_context_data(self, **kwargs):
+        context = super(BookingEditView, self).get_context_data(**kwargs)
+        context['oncancel'] = reverse('booking-view', args=[self.object.pk])
+        context['formname'] = "bookingform"
+        return context
 
 
 class EmbedcodesView(BreadcrumbMixin, AdminRequiredMixin, TemplateView):
