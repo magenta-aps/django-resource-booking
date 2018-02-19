@@ -3116,7 +3116,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def affected_calendars(self):
         return Calendar.objects.filter(
             Q(resource__teacherresource__user__in=self.teachers.all()) |
-            Q(resource__hostresource__user__in=self.hosts.all())
+            Q(resource__hostresource__user__in=self.hosts.all()) |
+            Q(resource__roomresource__room__in=self.rooms.all()) |
+            Q(resource__in=self.resources.all())
         )
 
     def update_availability(self):
