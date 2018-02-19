@@ -1,3 +1,4 @@
+<div class="booking-info">{# Needs to be wrapped in a div or mail programs will insert extra paragraphs #}
 <strong>Navn</strong>: {{ booker.get_full_name }}<br />
 <strong>E-mail</strong>: {{ booker.email|default:"Ikke angivet" }}<br />
 <strong>Telefonnummer</strong>: {{ booker.phone|default:"Ikke angivet" }}<br />
@@ -9,5 +10,6 @@
 <strong>Antal deltagere</strong>: {{ booker.attendee_count|default:"0" }}<br />
 {% if booking.notes %}
 <strong>Kommentarer:</strong>
-<pre>{{ booking.notes }}</pre>
+<div style="white-space: pre; margin: 0; padding: 0;">{{ booking.notes }}</div>
 {% endif %}
+</div>
