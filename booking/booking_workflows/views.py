@@ -126,10 +126,14 @@ class ChangeVisitStatusView(AutologgerMixin, UpdateWithCancelView):
                 EmailTemplateType.notify_all__booking_complete
             )
         if status == Visit.WORKFLOW_STATUS_CANCELLED:
-            # Booking is cancelled
+            # Adjust relations to make the visit list as a cancelled visit
+            self.object.cancel_visit()
+
+            # Send out e-mail notifying everyone that the visit is cancelled
             self.object.autosend(
                 EmailTemplateType.notify_all__booking_canceled
             )
+
         return response
 
 
