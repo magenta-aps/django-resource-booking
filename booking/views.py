@@ -2955,7 +2955,10 @@ class BookingEditView(BreadcrumbMixin, EditorRequriedMixin, UpdateView):
     @staticmethod
     def build_breadcrumbs(booking):
         return BookingDetailView.build_breadcrumbs(booking) + [
-            {'text': _(u'Redigér'), 'url': reverse('booking-edit-view', args=[booking.id])}
+            {
+                'text': _(u'Redigér'),
+                'url': reverse('booking-edit-view', args=[booking.id])
+            }
         ]
 
 
