@@ -186,7 +186,7 @@ urlpatterns = patterns(
         BookingAcceptView.as_view(),
         name='booking-accept-view'),
 
-    url(r'^booking/(?P<pk>[0-9]+)/edit?$',
+    url(r'^booking/(?P<pk>[0-9]+)/edit/?$',
         BookingEditView.as_view(),
         name='booking-edit-view'),
 

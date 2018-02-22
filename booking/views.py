@@ -2980,7 +2980,7 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
         return super(VisitBookingCreateView, self).get_context_data(**context)
 
 
-class BookingEditView(BreadcrumbMixin, UpdateView):
+class BookingEditView(BreadcrumbMixin, EditorRequriedMixin, UpdateView):
     template_name = "booking/edit.html"
     model = Booking
 
@@ -3323,9 +3323,11 @@ class BookingDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
         context['modal'] = BookingNotifyView.modal
 
         user = self.request.user
-        if hasattr(user, 'userprofile') and \
-                user.userprofile.can_notify(self.object):
-            context['can_notify'] = True
+        if hasattr(user, 'userprofile'):
+            if user.userprofile.can_notify(self.object):
+                context['can_notify'] = True
+            if user.userprofile.can_edit(self.object):
+                context['can_edit'] = True
 
         if self.object.visit.is_multiproductvisit:
             context['emailtemplates'] = EmailTemplateType.get_choices(
