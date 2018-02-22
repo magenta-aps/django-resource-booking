@@ -2,11 +2,19 @@
 {% load i18n %}
 {% load booking_tags %}
 
-{% block htmltitle %} - {% trans 'tilmeld arrangement' %}{% endblock %}
+{% block htmltitle %} - {% blocktrans with id=object.id %}Redigér tilmelding #{{ id }}{% endblocktrans %}{% endblock %}
 
 {% block content %}
 
-    <div class="divider"></div>
+    {% include 'common/breadcrumbrow.html' %}
+
+    <div class="row titlebar hidden-print">
+        <div class="col-sm-12 col-md-9">
+            <h1>{% blocktrans with id=object.id %}Redigér tilmelding #{{ id }}{% endblocktrans %}</h1>
+        </div>
+        <div class="divider"></div>
+    </div>
+
     <form id="bookingform" class="form-horizontal clearfix" data-toggle="validator" role="form" novalidate="true" method="POST">
         {% csrf_token %}
         {{ bookerform.non_field_errors }}

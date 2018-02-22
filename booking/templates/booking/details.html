@@ -6,7 +6,7 @@
     {% if not object.visit.is_multi_product_visit %}
         {{ object.visit.product.title }} - {{ object.visit.date_display }} -
     {% endif %}
-    {% blocktrans with id=object.id %}Booking #{{ id }}{% endblocktrans %}
+    {% blocktrans with id=object.id %}Tilmelding #{{ id }}{% endblocktrans %}
 {% endblock %}
 
 {% block content %}

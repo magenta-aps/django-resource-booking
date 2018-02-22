@@ -2949,6 +2949,15 @@ class BookingEditView(BreadcrumbMixin, EditorRequriedMixin, UpdateView):
         context['formname'] = "bookingform"
         return context
 
+    def get_breadcrumb_args(self):
+        return [self.object]
+
+    @staticmethod
+    def build_breadcrumbs(booking):
+        return BookingDetailView.build_breadcrumbs(booking) + [
+            {'text': _(u'Redigér'), 'url': reverse('booking-edit-view', args=[booking.id])}
+        ]
+
 
 class EmbedcodesView(BreadcrumbMixin, AdminRequiredMixin, TemplateView):
     template_name = "embedcodes.html"
