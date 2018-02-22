@@ -2941,12 +2941,17 @@ class BookingEditView(BreadcrumbMixin, EditorRequriedMixin, UpdateView):
         bookerform.full_clean()
         if bookerform.is_valid():
             self.object.booker = bookerform.save()
-        return redirect(reverse('booking-view', args=[self.object.pk]))
+            return redirect(reverse('booking-view', args=[self.object.pk]))
+        return self.render_to_response(
+            self.get_context_data(**forms)
+        )
 
     def get_context_data(self, **kwargs):
         context = super(BookingEditView, self).get_context_data(**kwargs)
         context['oncancel'] = reverse('booking-view', args=[self.object.pk])
         context['formname'] = "bookingform"
+        context['level_map'] = Guest.level_map
+        context['editing'] = True
         return context
 
     def get_breadcrumb_args(self):
