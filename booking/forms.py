@@ -1119,6 +1119,34 @@ class EditBookerForm(forms.ModelForm):
             ),
         }
 
+    school = forms.CharField(
+        widget=TextInput(
+            attrs={'class': 'form-control input-sm',
+                   'autocomplete': 'off'}
+        )
+    )
+
+    def __init__(self, data=None, *args, **kwargs):
+        super(EditBookerForm, self).__init__(data, *args, **kwargs)
+        self.fields['school'].widget.attrs['data-institution-level'] = self.instance.level
+        self.fields['school'].initial = self.instance.school.name
+
+    def clean_school(self):
+        school = self.cleaned_data.get('school')
+        if School.objects.filter(name=school).count() == 0:
+            raise forms.ValidationError(
+                _(u'Skole ikke fundet')
+            )
+        return school
+
+    def save(self, commit=True):
+        booker = super(EditBookerForm, self).save(commit=False)
+        data = self.cleaned_data
+        school = School.objects.get(name__iexact=data.get('school'))
+        booker.school = school
+        booker.save()
+        return booker
+
 
 class ClassBookingForm(BookingForm):
 
