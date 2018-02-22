@@ -16,6 +16,17 @@
         {% include 'booking/email/snippets/booking_info.html' with booking=booking booker=booking.booker %}
     </p>
     <p>
+        Koordinatorer for besøget:
+        <ul>
+            {% for editor in visit.organizationalunit.get_editors %}
+                <li>
+                    {{ editor.get_full_name }}
+                    {% if editor.email %} - <a href="mailto:{{ editor.email }}">{{ editor.email }}</a>{% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    </p>
+    <p>
         Vi glæder os til at se dig!
     </p>
     <p>
@@ -49,6 +60,17 @@
     <p>
         {% include 'booking/email/snippets/booking_list.html' %}
     </p>
+    <p>
+        Koordinatorer for besøget:
+    <ul>
+        {% for editor in visit.organizationalunit.get_editors %}
+            <li>
+                {{ editor.get_full_name }}
+                {% if editor.email %} - <a href="mailto:{{ editor.email }}">{{ editor.email }}</a>{% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+    </p>
 
 {% elif recipient.user.userprofile.is_teacher %}
 
@@ -57,7 +79,8 @@
     <p>Kære {{ recipient.get_full_name }}.</p>
     <p>
         Dette er en reminder om, at du skal være underviser på besøg
-        <a href="{% full_url 'visit-view' visit.pk %}">{{ product.title }}</a>{% if visit.start_datetime %} den {{ visit.start_datetime|date:'d.m.Y' }} kl. {{ visit.start_datetime|time:"H.i" }}{% endif %}.
+        <a href="{% full_url 'visit-view' visit.pk %}">{{ product.title }}</a>
+        {% if visit.start_datetime %} den {{ visit.start_datetime|date:'d.m.Y' }} kl. {{ visit.start_datetime|time:"H.i" }}{% endif %}.
         Besøget afholdes på denne lokalitet
         <a href="{% full_url 'product-view' product.pk %}#mapinfo">{{ product.locality.full_address }}</a>.
     </p>
@@ -73,6 +96,17 @@
     <p>
         {% include 'booking/email/snippets/booking_list.html' %}
     </p>
+    <p>
+        Koordinatorer for besøget:
+        <ul>
+            {% for editor in visit.organizationalunit.get_editors %}
+                <li>
+                    {{ editor.get_full_name }}
+                    {% if editor.email %} - <a href="mailto:{{ editor.email }}">{{ editor.email }}</a>{% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    </p>
 {% else %}
 
     <p>
@@ -81,6 +115,17 @@
     <p>
         Du kan læse yderligere om besøget på adressen
         <a href="{% full_url 'visit-view' visit.pk %}">{% full_url 'visit-view' visit.pk %}</a>
+    </p>
+    <p>
+        Koordinatorer for besøget:
+    <ul>
+        {% for editor in visit.organizationalunit.get_editors %}
+            <li>
+                {{ editor.get_full_name }}
+                {% if editor.email %} - <a href="mailto:{{ editor.email }}">{{ editor.email }}</a>{% endif %}
+            </li>
+        {% endfor %}
+    </ul>
     </p>
 
 {% endif %}
