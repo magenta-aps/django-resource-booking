@@ -1128,7 +1128,8 @@ class EditBookerForm(forms.ModelForm):
 
     def __init__(self, data=None, *args, **kwargs):
         super(EditBookerForm, self).__init__(data, *args, **kwargs)
-        self.fields['school'].widget.attrs['data-institution-level'] = self.instance.level
+        self.fields['school'].widget.attrs['data-institution-level'] = \
+            self.instance.level
         self.fields['school'].initial = self.instance.school.name
 
     def clean_school(self):
