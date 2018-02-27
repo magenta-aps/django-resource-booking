@@ -1241,6 +1241,7 @@ class ClassBookingForm(ClassBookingBaseForm, BookingForm):
 
 
 class TeacherBookingBaseForm(forms.ModelForm):
+    
     class Meta:
         model = TeacherBooking
         fields = ('subjects', 'notes')
@@ -1251,8 +1252,8 @@ class TeacherBookingBaseForm(forms.ModelForm):
         }
 
     def __init__(self, data=None, product=None, *args, **kwargs):
-        super(TeacherBookingBaseForm, self).__init__(data, *args, **kwargs)
         self.product = product
+        super(TeacherBookingBaseForm, self).__init__(data, *args, **kwargs)
 
 
 class TeacherBookingForm(TeacherBookingBaseForm, BookingForm):
@@ -1264,6 +1265,7 @@ class TeacherBookingForm(TeacherBookingBaseForm, BookingForm):
 
 
 class StudentForADayBookingBaseForm(forms.ModelForm):
+
     class Meta:
         model = Booking
         fields = ('notes',)
@@ -1274,8 +1276,10 @@ class StudentForADayBookingBaseForm(forms.ModelForm):
         }
 
     def __init__(self, data=None, product=None, *args, **kwargs):
-        super(StudentForADayBookingBaseForm, self).__init__(data, *args, **kwargs)
         self.product = product
+        super(StudentForADayBookingBaseForm, self).__init__(
+            data, *args, **kwargs
+        )
 
 
 class StudentForADayBookingForm(StudentForADayBookingBaseForm, BookingForm):
