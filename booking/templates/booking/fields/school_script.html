@@ -6,16 +6,17 @@
 
         var levelMap = {{ level_map }};
 
-        var postcode = $("#id_postcode");
-        var city = $("#id_city");
-        var region = $("#id_region");
+        var postcode = $("#{{ bookerform.postcode.id_for_label }}");
+        var city = $("#{{ bookerform.city.id_for_label }}");
+        var region = $("#{{ bookerform.region.id_for_label }}");
         var schoolLocation = postcode.add(city).add(region);
-        var schoolField = $("#id_school");
+        var schoolField = $("#{{ bookerform.school.id_for_label }}");
+        var schoolTypeField = $("#{{ bookerform.school_type.id_for_label }}");
         var levelSelect = $("#{{ bookerform.level.id_for_label }}");
 
         var updateSchoolType = function(schoolType) {
             schoolType = parseInt(schoolType, 10);
-            $("#{{ bookerform.school_type.id_for_label }}").val(schoolType);
+            schoolTypeField.val(schoolType);
 
             // Show/hide the dependents
             $(".institution_level_dependent").each(function(){
@@ -49,13 +50,6 @@
             }
         };
 
-        if (postcode.length) {
-            updateSchool({
-                postcode: {
-                    number: postcode.val()
-                }
-            });
-        }
 
         schoolField.typeahead({
             items: 12,
@@ -109,15 +103,18 @@
             });
         });
 
-        {% if bookerform.school_type %}
-            var schoolType = $("#{{ bookerform.school_type.id_for_label }}").val();
-            if (schoolType) {
-                updateSchoolType(schoolType);
-            } else {
-                updateSchoolType({{ product.institution_level }});
-            }
-        {% endif %}
-
+        if (postcode.length || schoolTypeField.length) {
+            updateSchool({
+                postcode: {
+                    number: postcode.val()
+                },
+                type: schoolTypeField.val()
+            });
+        } else {
+            {% if bookerform.school_type %}
+                updateSchoolType(schoolTypeField.val());
+            {% endif %}
+        }
 
     });
 
