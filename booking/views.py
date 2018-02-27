@@ -2925,7 +2925,11 @@ class BookingEditView(BreadcrumbMixin, EditorRequriedMixin, UpdateView):
 
     def get_forms(self, data=None):
         return {
-            'bookerform': EditBookerForm(data, instance=self.object.booker, products=self.object.visit.products)
+            'bookerform': EditBookerForm(
+                data,
+                instance=self.object.booker,
+                products=self.object.visit.products
+            )
         }
 
     def get(self, request, *args, **kwargs):
