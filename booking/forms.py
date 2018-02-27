@@ -1204,7 +1204,30 @@ class EditBookerForm(forms.ModelForm):
         return booker
 
 
-class ClassBookingForm(BookingForm):
+class ClassBookingBaseForm(forms.ModelForm):
+
+    class Meta:
+        model = ClassBooking
+        fields = ('tour_desired', 'catering_desired', 'presentation_desired',
+                  'custom_desired', 'notes')
+        widgets = {
+            'notes': Textarea(attrs={
+                'class': 'form-control'
+            })
+        }
+
+    def __init__(self, data=None, product=None, *args, **kwargs):
+        super(ClassBookingBaseForm, self).__init__(data, *args, **kwargs)
+        self.product = product
+        print "self.instance.tour_desired: %s" % unicode(self.instance.tour_desired)
+
+        if self.product is not None:
+            for service in ['tour', 'catering', 'presentation', 'custom']:
+                if not getattr(self.product, service + '_available'):
+                    del self.fields[service + '_desired']
+
+
+class ClassBookingForm(ClassBookingBaseForm, BookingForm):
 
     class Meta:
         model = ClassBooking
@@ -1213,38 +1236,46 @@ class ClassBookingForm(BookingForm):
         labels = BookingForm.Meta.labels
         widgets = BookingForm.Meta.widgets
 
+
+class TeacherBookingBaseForm(forms.ModelForm):
+    class Meta:
+        model = TeacherBooking
+        fields = ('subjects', 'notes')
+        widgets = {
+            'notes': Textarea(attrs={
+                'class': 'form-control'
+            })
+        }
+
     def __init__(self, data=None, product=None, *args, **kwargs):
-        super(ClassBookingForm, self).__init__(data, product, *args, **kwargs)
-
-        if self.product is not None:
-            for service in ['tour', 'catering', 'presentation', 'custom']:
-                if not getattr(self.product, service + '_available'):
-                    del self.fields[service + '_desired']
-
-    def save(self, commit=True, *args, **kwargs):
-        booking = super(ClassBookingForm, self).save(commit=False)
-        data = self.cleaned_data
-
-        for service in ['tour_desired', 'catering_desired',
-                        'presentation_desired', 'custom_desired']:
-            if service not in data:
-                data[service] = False
-                setattr(booking, service, False)
-
-        if commit:
-            booking.save(*args, **kwargs)
-        return booking
+        super(TeacherBookingBaseForm, self).__init__(data, *args, **kwargs)
+        self.product = product
 
 
-class TeacherBookingForm(BookingForm):
+class TeacherBookingForm(TeacherBookingBaseForm, BookingForm):
+
     class Meta:
         model = TeacherBooking
         fields = ('subjects', 'notes', 'eventtime')
-        labels = BookingForm.Meta.labels
         widgets = BookingForm.Meta.widgets
 
 
-class StudentForADayBookingForm(BookingForm):
+class StudentForADayBookingBaseForm(forms.ModelForm):
+    class Meta:
+        model = Booking
+        fields = ('notes',)
+        widgets = {
+            'notes': Textarea(attrs={
+                'class': 'form-control'
+            })
+        }
+
+    def __init__(self, data=None, product=None, *args, **kwargs):
+        super(StudentForADayBookingBaseForm, self).__init__(data, *args, **kwargs)
+        self.product = product
+
+
+class StudentForADayBookingForm(StudentForADayBookingBaseForm, BookingForm):
     class Meta:
         model = Booking
         fields = ('notes', 'eventtime')
@@ -1252,7 +1283,26 @@ class StudentForADayBookingForm(BookingForm):
         widgets = BookingForm.Meta.widgets
 
 
-class StudyProjectBookingForm(BookingForm):
+class StudyProjectBookingBaseForm(forms.ModelForm):
+
+    class Meta:
+        model = Booking
+        fields = ('notes',)
+        widgets = {
+            'notes': Textarea(attrs={
+                'class': 'form-control'
+            })
+        }
+
+    def __init__(self, data=None, product=None, *args, **kwargs):
+        super(StudyProjectBookingBaseForm, self).__init__(
+            data, *args, **kwargs
+        )
+        self.product = product
+
+
+class StudyProjectBookingForm(StudyProjectBookingBaseForm, BookingForm):
+
     class Meta:
         model = Booking
         fields = ('notes', 'eventtime')

@@ -41,9 +41,9 @@
                 // Update the postcode field
                 postcode.val(school.postcode.number);
                 postcode.change();
-                schoolLocation.attr("disabled", "disabled");
+                schoolLocation.attr("readonly", "readonly");
             } else {
-                schoolLocation.removeAttr("disabled");
+                schoolLocation.removeAttr("readonly");
             }
             if (school.type) {
                 updateSchoolType(school.type);
