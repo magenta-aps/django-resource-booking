@@ -58,7 +58,9 @@ from booking.models import MultiProductVisit
 from booking.models import MultiProductVisitTemp, MultiProductVisitTempProduct
 from booking.models import Evaluation, EvaluationGuest
 
-from booking.forms import ProductInitialForm, ProductForm, EditBookerForm
+from booking.forms import ProductInitialForm, ProductForm, EditBookerForm, \
+    ClassBookingBaseForm, TeacherBookingBaseForm, \
+    StudentForADayBookingBaseForm, StudyProjectBookingBaseForm
 from booking.forms import GuestEmailComposeForm, StudentForADayBookingForm
 from booking.forms import OtherProductForm, StudyProjectBookingForm
 from booking.forms import BookingGrundskoleSubjectLevelForm, BookingListForm
@@ -2985,13 +2987,45 @@ class BookingEditView(BreadcrumbMixin, EditorRequriedMixin, UpdateView):
     model = Booking
 
     def get_forms(self, data=None):
-        return {
+        products = self.object.visit.products
+        primary_product = products[0]
+        forms = {
             'bookerform': EditBookerForm(
                 data,
                 instance=self.object.booker,
-                products=self.object.visit.products
+                products=products
             )
         }
+        type = primary_product.type
+        if type == Product.GROUP_VISIT:
+            form_class = ClassBookingBaseForm
+            self.object = self.object.classbooking
+
+            # if primary_product.productgymnasiefag_set.count() > 0:
+            #     forms['subjectform'] = BookingGymnasieSubjectLevelForm(data)
+            # if primary_product.productgrundskolefag_set.count() > 0:
+            #     forms['grundskolesubjectform'] = \
+            #         BookingGrundskoleSubjectLevelForm(data)
+
+        elif type == Product.TEACHER_EVENT:
+            form_class = TeacherBookingBaseForm
+            self.object = self.object.teacherbooking
+
+        elif type == Product.STUDENT_FOR_A_DAY:
+            form_class = StudentForADayBookingBaseForm
+
+        elif type == Product.STUDY_PROJECT:
+            form_class = StudyProjectBookingBaseForm
+
+        else:
+            form_class = BookingForm
+
+        forms['bookingform'] = form_class(
+            data,
+            instance=self.object,
+            product=primary_product
+        )
+        return forms
 
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -3003,8 +3037,11 @@ class BookingEditView(BreadcrumbMixin, EditorRequriedMixin, UpdateView):
         self.object = self.get_object()
         forms = self.get_forms(request.POST)
         bookerform = forms['bookerform']
+        bookingform = forms['bookingform']
         bookerform.full_clean()
-        if bookerform.is_valid():
+        bookingform.full_clean()
+        if bookerform.is_valid() and bookingform.is_valid():
+            self.object = bookingform.save()
             self.object.booker = bookerform.save()
             return redirect(reverse('booking-view', args=[self.object.pk]))
         return self.render_to_response(
