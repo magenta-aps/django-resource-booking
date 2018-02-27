@@ -1241,7 +1241,7 @@ class ClassBookingForm(ClassBookingBaseForm, BookingForm):
 
 
 class TeacherBookingBaseForm(forms.ModelForm):
-    
+
     class Meta:
         model = TeacherBooking
         fields = ('subjects', 'notes')
