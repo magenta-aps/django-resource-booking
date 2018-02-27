@@ -1097,7 +1097,8 @@ class EditBookerForm(forms.ModelForm):
 
     class Meta:
         model = Guest
-        fields = ('firstname', 'lastname', 'email', 'phone', 'attendee_count')
+        fields = ('firstname', 'lastname', 'email', 'phone', 'line',
+                  'level', 'attendee_count')
         widgets = {
             'firstname': TextInput(
                 attrs={'class': 'form-control input-sm',
@@ -1119,6 +1120,12 @@ class EditBookerForm(forms.ModelForm):
             'attendee_count': NumberInput(
                 attrs={'class': 'form-control input-sm', 'min': 0}
             ),
+            'line': Select(
+                attrs={'class': 'selectpicker form-control'}
+            ),
+            'level': Select(
+                attrs={'class': 'selectpicker form-control'}
+            ),
         }
 
     school = forms.CharField(
@@ -1126,6 +1133,9 @@ class EditBookerForm(forms.ModelForm):
             attrs={'class': 'form-control input-sm',
                    'autocomplete': 'off'}
         )
+    )
+    school_type = forms.IntegerField(
+        widget=HiddenInput()
     )
     postcode = forms.IntegerField(
         widget=NumberInput(
@@ -1150,7 +1160,7 @@ class EditBookerForm(forms.ModelForm):
         required=False
     )
 
-    def __init__(self, data=None, *args, **kwargs):
+    def __init__(self, data=None, products=[], *args, **kwargs):
         super(EditBookerForm, self).__init__(data, *args, **kwargs)
         self.fields['school'].widget.attrs['data-institution-level'] = \
             self.instance.level
@@ -1161,6 +1171,12 @@ class EditBookerForm(forms.ModelForm):
                 self.fields['postcode'].initial = postcode.number
                 self.fields['city'].initial = postcode.city
                 self.fields['region'].initial = postcode.region
+            level = binary_or(*[
+                product.institution_level for product in products
+            ])
+            self.fields['school'].widget.attrs['data-institution-level'] = \
+                level
+            self.fields['school_type'].initial = level
 
     def clean_school(self):
         school = self.cleaned_data.get('school')
