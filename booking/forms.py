@@ -1127,12 +1127,40 @@ class EditBookerForm(forms.ModelForm):
                    'autocomplete': 'off'}
         )
     )
+    postcode = forms.IntegerField(
+        widget=NumberInput(
+            attrs={'class': 'form-control input-sm',
+                   'placeholder': _(u'Postnummer'),
+                   'min': '1000', 'max': '9999'}
+        ),
+        required=False
+    )
+    city = forms.CharField(
+        widget=TextInput(
+            attrs={'class': 'form-control input-sm',
+                   'placeholder': _(u'By')}
+        ),
+        required=False
+    )
+    region = forms.ModelChoiceField(
+        queryset=Region.objects.all(),
+        widget=Select(
+            attrs={'class': 'selectpicker form-control'}
+        ),
+        required=False
+    )
 
     def __init__(self, data=None, *args, **kwargs):
         super(EditBookerForm, self).__init__(data, *args, **kwargs)
         self.fields['school'].widget.attrs['data-institution-level'] = \
             self.instance.level
-        self.fields['school'].initial = self.instance.school.name
+        if self.instance.school is not None:
+            self.fields['school'].initial = self.instance.school.name
+            postcode = self.instance.school.postcode
+            if postcode is not None:
+                self.fields['postcode'].initial = postcode.number
+                self.fields['city'].initial = postcode.city
+                self.fields['region'].initial = postcode.region
 
     def clean_school(self):
         school = self.cleaned_data.get('school')
@@ -1142,10 +1170,19 @@ class EditBookerForm(forms.ModelForm):
             )
         return school
 
+    def clean_postcode(self):
+        postcode = self.cleaned_data.get('postcode')
+        if postcode is not None:
+            try:
+                PostCode.objects.get(number=postcode)
+            except:
+                raise forms.ValidationError(_(u'Ukendt postnummer'))
+        return postcode
+
     def save(self, commit=True):
         booker = super(EditBookerForm, self).save(commit=False)
         data = self.cleaned_data
-        school = School.objects.get(name__iexact=data.get('school'))
+        school = School.objects.filter(name__iexact=data.get('school')).first()
         booker.school = school
         booker.save()
         return booker

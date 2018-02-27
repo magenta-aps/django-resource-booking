@@ -7,6 +7,9 @@
         var levelMap = {{ level_map }};
 
         var postcode = $("#id_postcode");
+        var city = $("#id_city");
+        var region = $("#id_region");
+        var schoolLocation = postcode.add(city).add(region);
         var schoolField = $("#id_school");
         var levelSelect = $("#{{ bookerform.level.id_for_label }}");
 
@@ -33,15 +36,26 @@
         };
 
         var updateSchool = function(school) {
-            if (school.postcode && postcode.length) {
+            if (school.postcode && school.postcode.number && postcode.length) {
                 // Update the postcode field
                 postcode.val(school.postcode.number);
                 postcode.change();
+                schoolLocation.attr("disabled", "disabled");
+            } else {
+                schoolLocation.removeAttr("disabled");
             }
             if (school.type) {
                 updateSchoolType(school.type);
             }
         };
+
+        if (postcode.length) {
+            updateSchool({
+                postcode: {
+                    number: postcode.val()
+                }
+            });
+        }
 
         schoolField.typeahead({
             items: 12,
@@ -103,6 +117,8 @@
                 updateSchoolType({{ product.institution_level }});
             }
         {% endif %}
+
+
     });
 
     //-->
