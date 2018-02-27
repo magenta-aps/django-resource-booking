@@ -761,6 +761,7 @@ class ProductAutosendFormSet(ProductAutosendFormSetBase):
 class BookingForm(forms.ModelForm):
 
     scheduled = False
+    product = None
 
     eventtime = VisitEventTimeField(
         required=False,
@@ -791,7 +792,11 @@ class BookingForm(forms.ModelForm):
     def __init__(self, data=None, product=None, *args, **kwargs):
         super(BookingForm, self).__init__(data, *args, **kwargs)
 
-        self.product = product
+        if product is None:
+            product = self.product
+        else:
+            self.product = product
+
         # self.scheduled = visit is not None and \
         #    visit.type == Product.FIXED_SCHEDULE_GROUP_VISIT
         self.scheduled = (
@@ -1217,11 +1222,9 @@ class ClassBookingBaseForm(forms.ModelForm):
         }
 
     def __init__(self, data=None, product=None, *args, **kwargs):
-        super(ClassBookingBaseForm, self).__init__(data, *args, **kwargs)
         self.product = product
-        print "self.instance.tour_desired: %s" % unicode(self.instance.tour_desired)
-
-        if self.product is not None:
+        super(ClassBookingBaseForm, self).__init__(data, *args, **kwargs)
+        if product is not None:
             for service in ['tour', 'catering', 'presentation', 'custom']:
                 if not getattr(self.product, service + '_available'):
                     del self.fields[service + '_desired']
