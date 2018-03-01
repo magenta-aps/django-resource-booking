@@ -759,6 +759,7 @@ class ProductAutosendFormSet(ProductAutosendFormSetBase):
 class BookingForm(forms.ModelForm):
 
     scheduled = False
+    product = None
 
     eventtime = VisitEventTimeField(
         required=False,
@@ -789,7 +790,11 @@ class BookingForm(forms.ModelForm):
     def __init__(self, data=None, product=None, *args, **kwargs):
         super(BookingForm, self).__init__(data, *args, **kwargs)
 
-        self.product = product
+        if product is None:
+            product = self.product
+        else:
+            self.product = product
+
         # self.scheduled = visit is not None and \
         #    visit.type == Product.FIXED_SCHEDULE_GROUP_VISIT
         self.scheduled = (
@@ -862,7 +867,7 @@ class BookingForm(forms.ModelForm):
 
     def save(self, commit=True, *args, **kwargs):
         booking = super(BookingForm, self).save(commit, *args, **kwargs)
-        if booking.visit:
+        if booking.visit and 'desired_time' in self.cleaned_data:
             booking.visit.desired_time = self.cleaned_data['desired_time']
         return booking
 
@@ -1215,11 +1220,9 @@ class ClassBookingBaseForm(forms.ModelForm):
         }
 
     def __init__(self, data=None, product=None, *args, **kwargs):
-        super(ClassBookingBaseForm, self).__init__(data, *args, **kwargs)
         self.product = product
-        print "self.instance.tour_desired: %s" % unicode(self.instance.tour_desired)
-
-        if self.product is not None:
+        super(ClassBookingBaseForm, self).__init__(data, *args, **kwargs)
+        if product is not None:
             for service in ['tour', 'catering', 'presentation', 'custom']:
                 if not getattr(self.product, service + '_available'):
                     del self.fields[service + '_desired']
@@ -1236,6 +1239,7 @@ class ClassBookingForm(ClassBookingBaseForm, BookingForm):
 
 
 class TeacherBookingBaseForm(forms.ModelForm):
+
     class Meta:
         model = TeacherBooking
         fields = ('subjects', 'notes')
@@ -1246,8 +1250,8 @@ class TeacherBookingBaseForm(forms.ModelForm):
         }
 
     def __init__(self, data=None, product=None, *args, **kwargs):
-        super(TeacherBookingBaseForm, self).__init__(data, *args, **kwargs)
         self.product = product
+        super(TeacherBookingBaseForm, self).__init__(data, *args, **kwargs)
 
 
 class TeacherBookingForm(TeacherBookingBaseForm, BookingForm):
@@ -1259,6 +1263,7 @@ class TeacherBookingForm(TeacherBookingBaseForm, BookingForm):
 
 
 class StudentForADayBookingBaseForm(forms.ModelForm):
+
     class Meta:
         model = Booking
         fields = ('notes',)
@@ -1269,8 +1274,10 @@ class StudentForADayBookingBaseForm(forms.ModelForm):
         }
 
     def __init__(self, data=None, product=None, *args, **kwargs):
-        super(StudentForADayBookingBaseForm, self).__init__(data, *args, **kwargs)
         self.product = product
+        super(StudentForADayBookingBaseForm, self).__init__(
+            data, *args, **kwargs
+        )
 
 
 class StudentForADayBookingForm(StudentForADayBookingBaseForm, BookingForm):
