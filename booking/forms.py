@@ -869,7 +869,7 @@ class BookingForm(forms.ModelForm):
 
     def save(self, commit=True, *args, **kwargs):
         booking = super(BookingForm, self).save(commit, *args, **kwargs)
-        if booking.visit:
+        if booking.visit and 'desired_time' in self.cleaned_data:
             booking.visit.desired_time = self.cleaned_data['desired_time']
         return booking
 

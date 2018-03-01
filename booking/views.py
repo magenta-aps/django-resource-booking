@@ -2928,17 +2928,20 @@ class BookingEditView(BreadcrumbMixin, EditorRequriedMixin, UpdateView):
     def get_forms(self, data=None):
         products = self.object.visit.products
         primary_product = products[0]
-        forms = {
-            'bookerform': EditBookerForm(
-                data,
-                instance=self.object.booker,
-                products=products
-            )
-        }
+
+        bookerform = EditBookerForm(
+            data,
+            instance=self.object.booker,
+            products=products
+        )
         type = primary_product.type
+        form_class = BookingForm
         if type == Product.GROUP_VISIT:
-            form_class = ClassBookingBaseForm
-            self.object = self.object.classbooking
+            try:
+                self.object = self.object.classbooking
+                form_class = ClassBookingBaseForm
+            except:
+                pass
 
             # if primary_product.productgymnasiefag_set.count() > 0:
             #     forms['subjectform'] = BookingGymnasieSubjectLevelForm(data)
@@ -2947,8 +2950,11 @@ class BookingEditView(BreadcrumbMixin, EditorRequriedMixin, UpdateView):
             #         BookingGrundskoleSubjectLevelForm(data)
 
         elif type == Product.TEACHER_EVENT:
-            form_class = TeacherBookingBaseForm
-            self.object = self.object.teacherbooking
+            try:
+                self.object = self.object.teacherbooking
+                form_class = TeacherBookingBaseForm
+            except:
+                pass
 
         elif type == Product.STUDENT_FOR_A_DAY:
             form_class = StudentForADayBookingBaseForm
@@ -2956,14 +2962,19 @@ class BookingEditView(BreadcrumbMixin, EditorRequriedMixin, UpdateView):
         elif type == Product.STUDY_PROJECT:
             form_class = StudyProjectBookingBaseForm
 
-        else:
-            form_class = BookingForm
-
-        forms['bookingform'] = form_class(
+        bookingform = form_class(
             data,
             instance=self.object,
             product=primary_product
         )
+        if self.object.visit.is_multiproductvisit and \
+                'desired_time' in bookingform.fields:
+            del bookingform.fields['desired_time']
+
+        forms = {
+            'bookerform': bookerform,
+            'bookingform': bookingform
+        }
         return forms
 
     def get(self, request, *args, **kwargs):
