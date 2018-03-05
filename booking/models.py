@@ -2337,33 +2337,39 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     @staticmethod
     def get_latest_created(user=None):
-        qs = Product.objects.filter(statistics__isnull=False).\
-            order_by('-statistics__created_time')
+        qs = Product.objects.filter(statistics__isnull=False)
 
         if user and not user.is_authenticated():
-            return Product.filter_public_bookable(qs).distinct()
-        else:
-            return qs
+            # subselect-instead-of-distinct trick
+            qs = Product.objects.filter(
+                pk__in=Product.filter_public_bookable(qs).only("pk")
+            )
+
+        return qs.order_by('-statistics__created_time')
 
     @staticmethod
     def get_latest_updated(user=None):
-        qs = Product.objects.filter(statistics__isnull=False).\
-            order_by('-statistics__updated_time')
+        qs = Product.objects.filter(statistics__isnull=False)
 
         if user and not user.is_authenticated():
-            return Product.filter_public_bookable(qs).distinct()
-        else:
-            return qs
+            # subselect-instead-of-distinct trick
+            qs = Product.objects.filter(
+                pk__in=Product.filter_public_bookable(qs).only("pk")
+            )
+
+        return qs.order_by('-statistics__updated_time')
 
     @staticmethod
     def get_latest_displayed(user=None):
-        qs = Product.objects.filter(statistics__isnull=False).\
-            order_by('-statistics__visited_time')
+        qs = Product.objects.filter(statistics__isnull=False)
 
         if user and not user.is_authenticated():
-            return Product.filter_public_bookable(qs).distinct()
-        else:
-            return qs
+            # subselect-instead-of-distinct trick
+            qs = Product.objects.filter(
+                pk__in=Product.filter_public_bookable(qs).only("pk")
+            )
+
+        return qs.order_by('-statistics__visited_time')
 
     @classmethod
     def filter_public_bookable(cls, queryset):
@@ -2551,14 +2557,16 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     def get_latest_booked(user=None):
         qs = Product.objects.filter(
             eventtime__visit__bookings__statistics__created_time__isnull=False
-        ).annotate(latest_booking=Max(
-            'eventtime__visit__bookings__statistics__created_time'
-        )).order_by("-latest_booking")
+        )
 
         if user and not user.is_authenticated():
-            return Product.filter_public_bookable(qs).distinct()
-        else:
-            return qs
+            qs = Product.objects.filter(
+                pk__in=Product.filter_public_bookable(qs).only("pk")
+            )
+
+        return qs.annotate(latest_booking=Max(
+            'eventtime__visit__bookings__statistics__created_time'
+        )).order_by("-latest_booking")
 
     @property
     def room_responsible_users(self):
@@ -3089,10 +3097,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         if last_workflow_status is None or \
                 last_workflow_status != self.workflow_status:
             self.last_workflow_update = timezone.now()
-            if self.workflow_status == self.WORKFLOW_STATUS_EXECUTED:
-                for product in self.products:
-                    for evaluation in product.evaluations:
-                        evaluation.send_first_notification(self)
 
     @property
     # QuerySet that finds EventTimes that will be affected by resource changes
