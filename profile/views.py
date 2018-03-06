@@ -816,6 +816,11 @@ class StatisticsView(EditorRequriedMixin, BreadcrumbMixin, TemplateView):
                 eventtime = booking.visit.cancelled_eventtime
                 time_extra = " (aflyst)"
 
+            timetext = " til " .join([x.strip() for x in [
+                str(eventtime.l10n_start or "")[0:16],
+                str(eventtime.l10n_end or "")[0:16]
+            ] if len(x.strip()) > 0])
+
             try:
                 postalregion = booking.booker.school.\
                                      postcode.region.name or ""
@@ -846,8 +851,7 @@ class StatisticsView(EditorRequriedMixin, BreadcrumbMixin, TemplateView):
                 booking.__unicode__(),
                 booking.visit.product.get_type_display(),
                 booking.visit.product.title,
-                str(eventtime.l10n_start or "")[0:16] + " til " +
-                str(eventtime.l10n_end or "")[0:16] + time_extra,
+                timetext + time_extra,
                 booking.booker.get_level_display(),
                 leveltext,
                 str(booking.booker.attendee_count or 0),
