@@ -41,6 +41,11 @@ class EventTime(models.Model):
         on_delete=models.SET_NULL,
     )
 
+    # Cancelled visits have a foreign key relation stored on the visit pointing
+    # to the EventTime. Its name here is:
+    #
+    # cancelled_visits
+
     # Whether the time is publicly bookable
     bookable = models.BooleanField(
         default=True,
@@ -1899,6 +1904,13 @@ class ResourceRequirement(AvailabilityUpdaterMixin, models.Model):
             )
         else:
             return EventTime.objects.none()
+
+    def clone_to_product(self, product):
+        return ResourceRequirement(
+            product=product,
+            resource_pool=self.resource_pool,
+            required_amount=self.required_amount
+        )
 
 
 class VisitResource(AvailabilityUpdaterMixin, models.Model):

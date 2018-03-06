@@ -414,6 +414,11 @@ class TimeDetailsView(BreadcrumbMixin, DetailView):
         return breadcrumbs
 
 
+class CancelledVisitsView(DetailView):
+    model = booking_models.EventTime
+    template_name = 'eventtime/cancelled_visits.html'
+
+
 class ResourceCreateView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
                          FormView):
     template_name = "resource/typeform.html"

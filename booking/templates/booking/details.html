@@ -192,7 +192,9 @@
                     {% endif %}
                 </div>
 
-                {% include 'common/map.html' with locality=object.product.locality %}
+                {% if object.product.locality %}
+                    {% include 'common/map.html' with locality=object.product.locality %}
+                {% endif %}
             </form>
         </div>
     </div>
