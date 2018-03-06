@@ -33,7 +33,7 @@
     <p>
         Dette er en reminder om, at du skal være vært på besøg
         <a href="{% full_url 'visit-view' visit.pk %}">{{ product.title }}</a>
-        {% if visit.start_datetime %} den {{ visit.start_datetime|date:'d.m.Y' }} kl. {{ visit.start_datetime|time:"H.i" }}{% endif %}.
+        {% include 'booking/email/snippets/visit_time.html' %}.
         Besøget afholdes på denne lokalitet:
         <a href="{% full_url 'product-view' product.pk %}#mapinfo">{{ product.locality.full_address }}</a>.
     </p>
@@ -57,7 +57,8 @@
     <p>Kære {{ recipient.get_full_name }}.</p>
     <p>
         Dette er en reminder om, at du skal være underviser på besøg
-        <a href="{% full_url 'visit-view' visit.pk %}">{{ product.title }}</a>{% if visit.start_datetime %} den {{ visit.start_datetime|date:'d.m.Y' }} kl. {{ visit.start_datetime|time:"H.i" }}{% endif %}.
+        <a href="{% full_url 'visit-view' visit.pk %}">{{ product.title }}</a>
+        {% include 'booking/email/snippets/visit_time.html' %}.
         Besøget afholdes på denne lokalitet
         <a href="{% full_url 'product-view' product.pk %}#mapinfo">{{ product.locality.full_address }}</a>.
     </p>
