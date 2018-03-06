@@ -73,6 +73,8 @@ import booking.models
 
 from django.views.generic import TemplateView
 
+from profile.views import ListAjaxView
+
 js_info_dict = {
     'packages': ('recurrence', ),
 }
@@ -126,6 +128,10 @@ urlpatterns = patterns(
     url(r'^product/(?P<product_pk>[0-9]+)/manage_times/create$',
         booking.views.CreateTimeView.as_view(),
         name='create-time'),
+    url(r'^product/(?P<product_pk>[0-9]+)/time/(?P<pk>[0-9]+)' +
+        r'/cancelled_visits$',
+        booking.views.CancelledVisitsView.as_view(),
+        name='cancelled-visits-view'),
     url(r'^product/(?P<product_pk>[0-9]+)/time/(?P<pk>[0-9]+)$',
         booking.views.TimeDetailsView.as_view(),
         name='time-view'),
@@ -436,7 +442,13 @@ urlpatterns = patterns(
         name='visit-evaluation-redirect'),
     url(r'^visit/evaluations/?$',
         EvaluationStatisticsView.as_view(),
-        name='visit-evaluation-statistics')
+        name='visit-evaluation-statistics'),
+
+    url(r'^ajax/list/(?P<type>[A-Za-z]+)/?$',
+        ListAjaxView.as_view(),
+        name='ajax-list')
+
+
 
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
