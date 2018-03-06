@@ -795,11 +795,11 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
                 presentation_desired,
                 tour_desired,
                 custom_desired,
-                booking.booker.school.postcode.region.name or "",
+                postalregion,
                 (booking.booker.school.name or "") + "(" +
                 booking.booker.school.get_type_display() + ")",
-                str(booking.booker.school.postcode.number or "") + " " +
-                booking.booker.school.postcode.city or "",
+                str(postalcode) + " " +
+                postalcity,
                 unicode(booking.booker.school.address or ""),
                 booking.booker.get_full_name() or "",
                 booking.booker.get_email() or "",
