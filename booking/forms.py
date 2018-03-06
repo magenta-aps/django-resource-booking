@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import sys
+
 from booking.models import StudyMaterial, ProductAutosend, Booking, \
     EvaluationGuest
 from booking.models import Subject, BookingGrundskoleSubjectLevel
@@ -15,6 +17,7 @@ from booking.models import BLANK_LABEL, BLANK_OPTION
 from booking.widgets import OrderedMultipleHiddenChooser
 from booking.utils import binary_or, binary_and
 from django import forms
+from django.core import validators
 from django.db.models import Q
 from django.db.models.expressions import OrderBy
 from django.forms import CheckboxSelectMultiple, CheckboxInput
@@ -24,6 +27,7 @@ from django.forms import formset_factory, inlineformset_factory
 from django.forms import TextInput, NumberInput, DateInput, Textarea, Select
 from django.forms import HiddenInput
 from django.utils.translation import ugettext_lazy as _
+
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from .fields import ExtensibleMultipleChoiceField, VisitEventTimeField
 from .fields import OrderedModelMultipleChoiceField
@@ -177,7 +181,7 @@ class VisitSearchForm(forms.Form):
     WORKFLOW_STATUS_READY = -2
 
     w = forms.ChoiceField(
-        label=_(u'Workflow status'),
+        label=_(u'Status'),
         choices=(
             ('', _(u'Alle')),
             (WORKFLOW_STATUS_PENDING, _(u'Alle ikke-planlagte')),
@@ -812,7 +816,7 @@ class BookingForm(forms.ModelForm):
                     waitinglist_capacity = 0
                     bookings = 0
 
-                if available_seats is None:
+                if available_seats is None or available_seats == sys.maxint:
                     choices.append((eventtime.pk, date))
                 else:
                     if bookings == 0:
@@ -1280,18 +1284,33 @@ class BaseEmailComposeForm(forms.Form):
 
 class EmailComposeForm(BaseEmailComposeForm):
 
+    def __init__(self, *args, **kwargs):
+        self.view = kwargs.pop('view', None)
+        super(EmailComposeForm, self).__init__(*args, **kwargs)
+
     recipients = ExtensibleMultipleChoiceField(
         label=_(u'Modtagere'),
         widget=CheckboxSelectMultiple
     )
 
     subject = forms.CharField(
-        max_length=77,
         label=_(u'Emne'),
         widget=TextInput(attrs={
             'class': 'form-control'
         })
     )
+
+    subject_max_length = 77
+
+    def clean_subject(self):
+        subject = self.cleaned_data['subject']
+        if self.view is not None and hasattr(self.view, 'template_context'):
+            context = self.view.template_context
+            template = EmailTemplate(subject=subject, body='')
+            expanded = template.expand_subject(context)
+            validator = validators.MaxLengthValidator(self.subject_max_length)
+            validator(expanded)
+        return subject
 
 
 class GuestEmailComposeForm(BaseEmailComposeForm):

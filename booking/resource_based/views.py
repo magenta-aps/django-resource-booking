@@ -24,7 +24,8 @@ from booking.resource_based.models import VehicleResource
 from booking.resource_based.models import CustomResource
 from booking.resource_based.models import ResourcePool
 from booking.resource_based.models import ResourceRequirement
-from booking.views import BackMixin, BreadcrumbMixin
+from booking.views import BackMixin, BreadcrumbMixin, ProductDetailView, \
+    VisitDetailView
 from booking.views import LoginRequiredMixin, EditorRequriedMixin
 from itertools import chain
 
@@ -32,12 +33,24 @@ import booking.models as booking_models
 import booking.resource_based.forms as rb_forms
 
 
-class ManageTimesView(DetailView):
+class ManageTimesView(BreadcrumbMixin, DetailView):
     model = booking_models.Product
     template_name = 'eventtime/list.html'
 
+    def get_breadcrumb_args(self):
+        return [self.object, self.request]
 
-class CreateTimeView(CreateView):
+    @staticmethod
+    def build_breadcrumbs(object, request):
+        breadcrumbs = ProductDetailView.build_breadcrumbs(object, request)
+        breadcrumbs.append({
+            'url': reverse('manage-times', args=[object.id]),
+            'text': _(u'Administrér tidspunkter')
+        })
+        return breadcrumbs
+
+
+class CreateTimeView(BreadcrumbMixin, CreateView):
     model = booking_models.EventTime
     template_name = 'eventtime/create.html'
     _product = None
@@ -122,8 +135,20 @@ class CreateTimeView(CreateView):
             'manage-times', args=[self.kwargs.get('product_pk', -1)]
         )
 
+    def get_breadcrumb_args(self):
+        return [self.get_product(), self.request]
 
-class CreateTimesFromRulesView(FormView):
+    @staticmethod
+    def build_breadcrumbs(object, request):
+        breadcrumbs = ManageTimesView.build_breadcrumbs(object, request)
+        breadcrumbs.append({
+            'url': reverse('create-time', args=[object.id]),
+            'text': _(u'Opret tidspunkt')
+        })
+        return breadcrumbs
+
+
+class CreateTimesFromRulesView(BreadcrumbMixin, FormView):
     template_name = 'eventtime/create_from_rules.html'
     form_class = rb_forms.CreateTimesFromRulesForm
     product = None
@@ -202,8 +227,20 @@ class CreateTimesFromRulesView(FormView):
 
         return super(CreateTimesFromRulesView, self).form_valid(form)
 
+    def get_breadcrumb_args(self):
+        return [self.get_product(), self.request]
 
-class EditTimeView(UpdateView):
+    @staticmethod
+    def build_breadcrumbs(object, request):
+        breadcrumbs = ManageTimesView.build_breadcrumbs(object, request)
+        breadcrumbs.append({
+            'url': reverse('times-from-rules', args=[object.id]),
+            'text': _(u'Opret tidspunkt ud fra regler')
+        })
+        return breadcrumbs
+
+
+class EditTimeView(BreadcrumbMixin, UpdateView):
     model = booking_models.EventTime
     template_name = 'eventtime/edit.html'
 
@@ -246,8 +283,22 @@ class EditTimeView(UpdateView):
             product_pk = self.kwargs.get('product_pk', -1)
             return reverse('manage-times', args=[product_pk])
 
+    def get_breadcrumb_args(self):
+        return [self.object, self.request]
 
-class DeleteTimesView(TemplateView):
+    @staticmethod
+    def build_breadcrumbs(object, request):
+        breadcrumbs = ManageTimesView.build_breadcrumbs(
+            object.product, request
+        )
+        breadcrumbs.append({
+            'url': reverse('edit-time', args=[object.product.id, object.id]),
+            'text': _(u'Redigér tidspunkt')
+        })
+        return breadcrumbs
+
+
+class DeleteTimesView(BreadcrumbMixin, TemplateView):
     template_name = 'eventtime/delete.html'
     items = []
 
@@ -258,12 +309,17 @@ class DeleteTimesView(TemplateView):
             product=self.kwargs['product_pk']
         )
 
-    def get_context_data(self, **kwargs):
+    def get_product(self):
         try:
-            product = booking_models.Product.objects.get(
+            return booking_models.Product.objects.get(
                 pk=self.kwargs.get('product_pk', -1)
             )
-        except:
+        except Product.DoesNotExist:
+            return None
+
+    def get_context_data(self, **kwargs):
+        product = self.get_product()
+        if product is None:
             raise Http404
 
         return super(DeleteTimesView, self).get_context_data(
@@ -295,8 +351,19 @@ class DeleteTimesView(TemplateView):
     def get_success_url(self):
         return reverse('manage-times', args=[self.kwargs['product_pk']])
 
+    def get_breadcrumb_args(self):
+        return [self.get_product(), self.request]
 
-class TimeDetailsView(DetailView):
+    @staticmethod
+    def build_breadcrumbs(object, request):
+        breadcrumbs = ManageTimesView.build_breadcrumbs(object, request)
+        breadcrumbs.append({
+            'text': _(u'Slet tidspunkter')
+        })
+        return breadcrumbs
+
+
+class TimeDetailsView(BreadcrumbMixin, DetailView):
     model = booking_models.EventTime
     template_name = 'eventtime/details.html'
 
@@ -332,6 +399,25 @@ class TimeDetailsView(DetailView):
     def get_success_url(self):
         return reverse('visit-view', args=[self.object.visit.pk])
 
+    def get_breadcrumb_args(self):
+        return [self.object, self.request]
+
+    @staticmethod
+    def build_breadcrumbs(object, request):
+        breadcrumbs = ManageTimesView.build_breadcrumbs(
+            object.product, request
+        )
+        breadcrumbs.append({
+            'url': reverse('time-view', args=[object.product.id, object.id]),
+            'text': _(u'Opret besøg for tidspunkt')
+        })
+        return breadcrumbs
+
+
+class CancelledVisitsView(DetailView):
+    model = booking_models.EventTime
+    template_name = 'eventtime/cancelled_visits.html'
+
 
 class ResourceCreateView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
                          FormView):
@@ -361,11 +447,11 @@ class ResourceCreateView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
             self.get_context_data(**context)
         )
 
-    def get_breadcrumbs(self):
-        return [
-            {'url': reverse('resource-list'), 'text': _(u'Ressourcer')},
-            {'text': _(u'Opret ressource')},
-        ]
+    @staticmethod
+    def build_breadcrumbs():
+        breadcrumbs = ResourceListView.build_breadcrumbs()
+        breadcrumbs.append({'text': _(u'Opret ressource')})
+        return breadcrumbs
 
 
 class ResourceDetailView(BreadcrumbMixin, EditorRequriedMixin, TemplateView):
@@ -382,11 +468,17 @@ class ResourceDetailView(BreadcrumbMixin, EditorRequriedMixin, TemplateView):
             request, *args, **kwargs
         )
 
-    def get_breadcrumbs(self):
-        return [
-            {'url': reverse('resource-list'), 'text': _(u'Ressourcer')},
-            {'text': unicode(self.object)}
-        ]
+    def get_breadcrumb_args(self):
+        return [self.object]
+
+    @staticmethod
+    def build_breadcrumbs(resource):
+        breadcrumbs = ResourceListView.build_breadcrumbs()
+        breadcrumbs.append({
+            'url': reverse('resource-view', args=[resource.id]),
+            'text': resource.subclass_instance.get_name()
+        })
+        return breadcrumbs
 
     def get_context_data(self, **kwargs):
         context = {}
@@ -425,10 +517,12 @@ class ResourceListView(BreadcrumbMixin, EditorRequriedMixin, ListView):
             ).order_by('name')
         )
 
-    def get_breadcrumbs(self):
-        return [
-            {'text': _(u'Ressourcer')}
-        ]
+    @staticmethod
+    def build_breadcrumbs():
+        return [{
+            'url': reverse('resource-list'),
+            'text': _(u'Administrér ressourcer')
+        }]
 
 
 class ResourceUpdateView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
@@ -473,18 +567,16 @@ class ResourceUpdateView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
             type = self.object.resource_type.id
         return EditResourceForm.get_resource_form_class(type)
 
-    def get_breadcrumbs(self):
-        breadcrumbs = [{
-            'url': reverse('resource-list'),
-            'text': _(u'Ressourcer')
-        }]
-        if self.object.pk:
-            breadcrumbs.append({
-                'url': reverse('resource-view', args=[self.object.id]),
-                'text': unicode(self.object)
-            })
+    def get_breadcrumb_args(self):
+        return [self.object]
+
+    @staticmethod
+    def build_breadcrumbs(resource):
+        if resource.pk:
+            breadcrumbs = ResourceDetailView.build_breadcrumbs(resource)
             breadcrumbs.append({'text': _(u'Redigér')})
         else:
+            breadcrumbs = ResourceListView.build_breadcrumbs()
             breadcrumbs.append({'text': _(u'Opret ressource')})
         return breadcrumbs
 
@@ -536,13 +628,14 @@ class ResourceDeleteView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
     def get_object(self):
         return Resource.get_subclass_instance(self.kwargs.get("pk"))
 
-    def get_breadcrumbs(self):
-        return [
-            {'url': reverse('resource-list'), 'text': _(u'Ressourcer')},
-            {'url': reverse('resource-view', args=[self.object.id]),
-             'text': self.object},
-            {'text': _(u'Slet')}
-        ]
+    def get_breadcrumb_args(self):
+        return [self.object]
+
+    @staticmethod
+    def build_breadcrumbs(resource):
+        breadcrumbs = ResourceDetailView.build_breadcrumbs(resource)
+        breadcrumbs.append({'text': _(u'Slet')})
+        return breadcrumbs
 
 
 class ResourcePoolCreateView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
@@ -575,28 +668,28 @@ class ResourcePoolCreateView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
             self.get_context_data(**context)
         )
 
-    def get_breadcrumbs(self):
-        return [
-            {
-                'url': reverse('resourcepool-list'),
-                'text': _(u'Ressourcegrupper')
-            },
-            {'text': _(u'Opret ressourcegruppe')},
-        ]
+    @staticmethod
+    def build_breadcrumbs():
+        breadcrumbs = ResourcePoolListView.build_breadcrumbs()
+        breadcrumbs.append({'text': _(u'Opret ressourcegruppe')})
+        return breadcrumbs
 
 
 class ResourcePoolDetailView(BreadcrumbMixin, EditorRequriedMixin, DetailView):
     template_name = "resourcepool/details.html"
     model = ResourcePool
 
-    def get_breadcrumbs(self):
-        return [
-            {
-                'url': reverse('resourcepool-list'),
-                'text': _(u'Ressourcegrupper')
-            },
-            {'text': unicode(self.object)}
-        ]
+    def get_breadcrumb_args(self):
+        return [self.object]
+
+    @staticmethod
+    def build_breadcrumbs(resourcepool):
+        breadcrumbs = ResourcePoolListView.build_breadcrumbs()
+        breadcrumbs.append({
+            'url': reverse('resourcepool-view', args=[resourcepool.id]),
+            'text': unicode(resourcepool)
+        })
+        return breadcrumbs
 
 
 class ResourcePoolListView(BreadcrumbMixin, EditorRequriedMixin, ListView):
@@ -613,10 +706,12 @@ class ResourcePoolListView(BreadcrumbMixin, EditorRequriedMixin, ListView):
     def get_context_object_name(self, queryset):
         return "resourcepools"
 
-    def get_breadcrumbs(self):
-        return [
-            {'text': _(u'Ressourcegrupper')}
-        ]
+    @staticmethod
+    def build_breadcrumbs():
+        return [{
+            'url': reverse('resource-list'),
+            'text': _(u'Administrér ressourcegrupper')
+        }]
 
 
 class ResourcePoolUpdateView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
@@ -650,6 +745,9 @@ class ResourcePoolUpdateView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
                 self.object.save()
             else:
                 self.object = form.save(commit=True)
+                # Do a 2nd save to trigger update of resource availability
+                # after the form has saved m2m relations.
+                self.object.save()
             return self.redirect(
                 reverse('resource-view', args=[self.object.id])
             )
@@ -658,18 +756,16 @@ class ResourcePoolUpdateView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
                 self.get_context_data(form=form)
             )
 
-    def get_breadcrumbs(self):
-        breadcrumbs = [{
-            'url': reverse('resourcepool-list'),
-            'text': _(u'Ressourcegrupper')
-        }]
-        if self.object.pk:
-            breadcrumbs.append({
-                'url': reverse('resourcepool-view', args=[self.object.id]),
-                'text': unicode(self.object)
-            })
+    def get_breadcrumb_args(self):
+        return [self.object]
+
+    @staticmethod
+    def build_breadcrumbs(resource):
+        if resource.pk:
+            breadcrumbs = ResourcePoolDetailView.build_breadcrumbs(resource)
             breadcrumbs.append({'text': _(u'Redigér')})
         else:
+            breadcrumbs = ResourcePoolListView.build_breadcrumbs()
             breadcrumbs.append({'text': _(u'Opret ressourcegruppe')})
         return breadcrumbs
 
@@ -733,18 +829,14 @@ class ResourcePoolDeleteView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
     def get_template_names(self):
         return ['resourcepool/delete.html']
 
-    def get_breadcrumbs(self):
-        return [
-            {
-                'url': reverse('resourcepool-list'),
-                'text': _(u'Ressourcegrupper')
-            },
-            {
-                'url': reverse('resourcepool-view', args=[self.object.id]),
-                'text': self.object
-            },
-            {'text': _(u'Slet')}
-        ]
+    def get_breadcrumb_args(self):
+        return [self.object]
+
+    @staticmethod
+    def build_breadcrumbs(resource):
+        breadcrumbs = ResourcePoolDetailView.build_breadcrumbs(resource)
+        breadcrumbs.append({'text': _(u'Slet')})
+        return breadcrumbs
 
 
 class ResourceRequirementConfirmMixin(object):
@@ -860,19 +952,17 @@ class ResourceRequirementCreateView(BackMixin, BreadcrumbMixin,
                 )
             )
 
-    def get_breadcrumbs(self):
-        return [
-            {'url': reverse('search'), 'text': _(u'Søgning')},
-            {
-                'url': self.request.GET.get("search", reverse('search')),
-                'text': _(u'Søgeresultat')
-            },
-            {
-                'url': reverse('product-view', args=[self.product.id]),
-                'text': unicode(self.product)
-            },
-            {'text': _(u'Opret ressourcebehov')}
-        ]
+    def get_breadcrumb_args(self):
+        return [self.product, self.request]
+
+    @staticmethod
+    def build_breadcrumbs(product, request):
+        breadcrumbs = ProductDetailView.build_breadcrumbs(product, request)
+        breadcrumbs.append({
+            'text': _(u'Opret ressourcebehov'),
+            'url': reverse('resourcerequirement-create', args=[product.id])
+        })
+        return breadcrumbs
 
 
 class ResourceRequirementCreateConfirmView(
@@ -937,19 +1027,21 @@ class ResourceRequirementUpdateView(BackMixin, BreadcrumbMixin,
                 )
             )
 
-    def get_breadcrumbs(self):
-        return [
-            {'url': reverse('search'), 'text': _(u'Søgning')},
-            {
-                'url': self.request.GET.get("search", reverse('search')),
-                'text': _(u'Søgeresultat')
-            },
-            {
-                'url': reverse('product-view', args=[self.object.product.id]),
-                'text': unicode(self.product)
-            },
-            {'text': _(u'Redigér ressourcebehov')}
-        ]
+    def get_breadcrumb_args(self):
+        return [self.object, self.request]
+
+    @staticmethod
+    def build_breadcrumbs(object, request):
+        breadcrumbs = ProductDetailView.build_breadcrumbs(
+            object.product, request
+        )
+        breadcrumbs.append({
+            'text': _(u'Redigér ressourcebehov'),
+            'url': reverse(
+                'resourcerequirement-edit', args=[object.product.id, object.id]
+            )
+        })
+        return breadcrumbs
 
 
 class ResourceRequirementUpdateConfirmView(
@@ -987,19 +1079,19 @@ class ResourceRequirementListView(BreadcrumbMixin, EditorRequriedMixin,
     def get_queryset(self):
         return self.product.resourcerequirement_set
 
-    def get_breadcrumbs(self):
-        return [
-            {'url': reverse('search'), 'text': _(u'Søgning')},
-            {
-                'url': self.request.GET.get("search", reverse('search')),
-                'text': _(u'Søgeresultat')
-            },
-            {
-                'url': reverse('product-view', args=[self.product.id]),
-                'text': unicode(self.product)
-            },
-            {'text': _(u'Ressourcebehov')}
-        ]
+    def get_breadcrumb_args(self):
+        return [self.product, self.request]
+
+    @staticmethod
+    def build_breadcrumbs(product, request):
+        breadcrumbs = ProductDetailView.build_breadcrumbs(product, request)
+        breadcrumbs.append({
+            'text': _(u'Ressourcebehov'),
+            'url': reverse(
+                'resourcerequirement-list', args=[product.id]
+            )
+        })
+        return breadcrumbs
 
 
 class ResourceRequirementDeleteView(BackMixin, BreadcrumbMixin,
@@ -1017,19 +1109,23 @@ class ResourceRequirementDeleteView(BackMixin, BreadcrumbMixin,
     def get_template_names(self):
         return ['resourcerequirement/delete.html']
 
-    def get_breadcrumbs(self):
-        return [
-            {'url': reverse('search'), 'text': _(u'Søgning')},
-            {
-                'url': self.request.GET.get("search", reverse('search')),
-                'text': _(u'Søgeresultat')
-            },
-            {
-                'url': reverse('product-view', args=[self.object.product.id]),
-                'text': unicode(self.object.product)
-            },
-            {'text': _(u'Slet ressourcebehov')}
-        ]
+    def get_breadcrumb_args(self):
+        return [self.object, self.request]
+
+    @staticmethod
+    def build_breadcrumbs(object, request):
+        breadcrumbs = ProductDetailView.build_breadcrumbs(
+            object.product, request
+        )
+        breadcrumbs.append({
+            'text': _(u'Slet ressourcebehov'),
+            'url': reverse(
+                'resourcerequirement-delete', args=[
+                    object.product.id, object.id
+                ]
+            )
+        })
+        return breadcrumbs
 
     def delete(self, *args, **kwargs):
         product = self.get_object().product
@@ -1041,7 +1137,7 @@ class ResourceRequirementDeleteView(BackMixin, BreadcrumbMixin,
         return response
 
 
-class VisitResourceEditView(EditorRequriedMixin, FormView):
+class VisitResourceEditView(EditorRequriedMixin, BreadcrumbMixin, FormView):
     template_name = "visit/resources.html"
     form_class = EditVisitResourcesForm
 
@@ -1080,6 +1176,18 @@ class VisitResourceEditView(EditorRequriedMixin, FormView):
 
     def get_success_url(self):
         return reverse('visit-view', args=[self.visit.id])
+
+    def get_breadcrumb_args(self):
+        return [self.visit]
+
+    @staticmethod
+    def build_breadcrumbs(object):
+        breadcrumbs = VisitDetailView.build_breadcrumbs(object)
+        breadcrumbs.append({
+            'url': reverse('visit-resources-edit', args=[object.pk]),
+            'text': _(u'Redigér ressourcer')
+        })
+        return breadcrumbs
 
 
 class CalRelatedMixin(object):
@@ -1126,8 +1234,32 @@ class CalRelatedMixin(object):
             **kwargs
         )
 
+    @staticmethod
+    def reverseurl_base(object):
+        if isinstance(object, Resource):
+            return 'calendar'
+        elif isinstance(object, Product):
+            return 'product-calendar'
+        return 'calendar'
 
-class CalendarView(LoginRequiredMixin, CalRelatedMixin, DetailView):
+    def get_breadcrumb_args(self):
+        return [
+            self.object, self.get_calendar_rel_object(),
+            self.request, self.kwargs,
+        ]
+
+    @staticmethod
+    def build_breadcrumbs(calendar, object, request, kwargs):
+        if isinstance(object, Product):
+            return ProductDetailView.build_breadcrumbs(object, request)
+        elif isinstance(object, Resource):
+            return ResourceDetailView.build_breadcrumbs(object)
+        return []
+
+
+class CalendarView(
+    LoginRequiredMixin, CalRelatedMixin, BreadcrumbMixin, DetailView
+):
     template_name = 'calendar/calendar.html'
     rel_model_class = booking_models.Resource
 
@@ -1202,16 +1334,25 @@ class CalendarView(LoginRequiredMixin, CalRelatedMixin, DetailView):
             date = x.start.astimezone(
                 timezone.get_current_timezone()
             ).date()
-            # Add event to all the days it spans
-            delta = x.end - x.start + datetime.timedelta(hours=24, seconds=-1)
-            for y in range(0, delta.days):
+            date_midnight = timezone.make_aware(
+                datetime.datetime.combine(date, datetime.time())
+            )
+            while date_midnight <= x.end:
                 key = date.isoformat()
                 if key in events_by_date:
-                    events_by_date[key].append(x.day_marker(date))
+                    marker = x.day_marker(date)
+                    events_by_date[key].append(marker)
                 date = date + datetime.timedelta(days=1)
+                date_midnight = date_midnight + datetime.timedelta(days=1)
 
         res = calendar.resource if hasattr(calendar, 'resource') else None
         prod = calendar.product if hasattr(calendar, 'product') else None
+
+        itemname = None
+        if prod is not None:
+            itemname = prod.title
+        elif res is not None and res.subclass_instance is not None:
+            itemname = res.subclass_instance.get_name()
 
         if hasattr(calendar, 'resource'):
             bt = calendar.resource.occupied_eventtimes(start_dt, end_dt)
@@ -1224,6 +1365,7 @@ class CalendarView(LoginRequiredMixin, CalRelatedMixin, DetailView):
             calendar=calendar,
             resource=res,
             product=prod,
+            itemname=itemname,
             month=first_of_the_month,
             next_month=first_of_the_month + datetime.timedelta(days=31),
             prev_month=first_of_the_month - datetime.timedelta(days=1),
@@ -1237,6 +1379,20 @@ class CalendarView(LoginRequiredMixin, CalRelatedMixin, DetailView):
             booked_times=bt,
             **kwargs
         )
+
+    @staticmethod
+    def build_breadcrumbs(calendar, object, request, kwargs):
+        breadcrumbs = CalRelatedMixin.build_breadcrumbs(
+            calendar, object, request, kwargs
+        )
+        breadcrumbs.append({
+            'url': reverse(
+                CalRelatedMixin.reverseurl_base(object),
+                args=[object.pk]
+            ),
+            'text': _(u'Kalender')
+        })
+        return breadcrumbs
 
 
 class CalendarCreateView(LoginRequiredMixin, CalRelatedMixin, RedirectView):
@@ -1254,7 +1410,9 @@ class CalendarCreateView(LoginRequiredMixin, CalRelatedMixin, RedirectView):
         )
 
 
-class CalendarDeleteView(LoginRequiredMixin, CalRelatedMixin, DeleteView):
+class CalendarDeleteView(
+    LoginRequiredMixin, CalRelatedMixin, BreadcrumbMixin, DeleteView
+):
     template_name = 'calendar/delete.html'
 
     def get_object(self, queryset=None):
@@ -1269,8 +1427,24 @@ class CalendarDeleteView(LoginRequiredMixin, CalRelatedMixin, DeleteView):
 
         return reverse(reverse_name, args=[self.rel_obj.pk])
 
+    @staticmethod
+    def build_breadcrumbs(calendar, object, request, kwargs):
+        breadcrumbs = CalendarView.build_breadcrumbs(
+            calendar, object, request, kwargs
+        )
+        breadcrumbs.append({
+            'url': reverse(
+                CalRelatedMixin.reverseurl_base(object) + '-delete',
+                args=[object.pk]
+            ),
+            'text': _(u'Slet')
+        })
+        return breadcrumbs
 
-class CalendarEventCreateView(LoginRequiredMixin, CalRelatedMixin, CreateView):
+
+class CalendarEventCreateView(
+    LoginRequiredMixin, CalRelatedMixin, BreadcrumbMixin, CreateView
+):
     model = booking_models.CalendarEvent
     template_name = 'calendar/calendar_event.html'
 
@@ -1340,8 +1514,24 @@ class CalendarEventCreateView(LoginRequiredMixin, CalRelatedMixin, CreateView):
             args=[self.rel_obj.pk]
         )
 
+    @staticmethod
+    def build_breadcrumbs(calendar, object, request, kwargs):
+        breadcrumbs = CalendarView.build_breadcrumbs(
+            calendar, object, request, kwargs
+        )
+        breadcrumbs.append({
+            'url': reverse(
+                CalRelatedMixin.reverseurl_base(object) + '-event-create',
+                args=[object.pk]
+            ),
+            'text': _(u'Opret tid')
+        })
+        return breadcrumbs
 
-class CalendarEventUpdateView(LoginRequiredMixin, CalRelatedMixin, UpdateView):
+
+class CalendarEventUpdateView(
+    LoginRequiredMixin, CalRelatedMixin, BreadcrumbMixin, UpdateView
+):
     model = booking_models.CalendarEvent
     template_name = 'calendar/calendar_event.html'
 
@@ -1375,8 +1565,30 @@ class CalendarEventUpdateView(LoginRequiredMixin, CalRelatedMixin, UpdateView):
             args=[self.rel_obj.pk]
         )
 
+    def get_breadcrumb_args(self):
+        return [
+            self.object.calendar, self.get_calendar_rel_object(), self.object,
+            self.request, self.kwargs,
+        ]
 
-class CalendarEventDeleteView(LoginRequiredMixin, CalRelatedMixin, DeleteView):
+    @staticmethod
+    def build_breadcrumbs(calendar, object, event, request, kwargs):
+        breadcrumbs = CalendarView.build_breadcrumbs(
+            calendar, object, request, kwargs
+        )
+        breadcrumbs.append({
+            'url': reverse(
+                CalRelatedMixin.reverseurl_base(object) + '-event-edit',
+                args=[object.pk, event.pk]
+            ),
+            'text': _(u'Redigér tid')
+        })
+        return breadcrumbs
+
+
+class CalendarEventDeleteView(
+    LoginRequiredMixin, CalRelatedMixin, BreadcrumbMixin, DeleteView
+):
     model = booking_models.CalendarEvent
     template_name = 'calendar_event_confirm_delete.html'
 
@@ -1390,3 +1602,23 @@ class CalendarEventDeleteView(LoginRequiredMixin, CalRelatedMixin, DeleteView):
             self.kwargs.get('reverse_prefix', '') + 'calendar',
             args=[self.rel_obj.pk]
         )
+
+    def get_breadcrumb_args(self):
+        return [
+            self.object.calendar, self.get_calendar_rel_object(), self.object,
+            self.request, self.kwargs,
+        ]
+
+    @staticmethod
+    def build_breadcrumbs(calendar, object, event, request, kwargs):
+        breadcrumbs = CalendarView.build_breadcrumbs(
+            calendar, object, request, kwargs
+        )
+        breadcrumbs.append({
+            'url': reverse(
+                CalRelatedMixin.reverseurl_base(object) + '-event-delete',
+                args=[object.pk, event.pk]
+            ),
+            'text': _(u'Slet tid')
+        })
+        return breadcrumbs

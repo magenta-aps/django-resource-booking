@@ -12,7 +12,7 @@
 
 {% block content %}
 
-<div class="divider"></div>
+    {% include 'common/breadcrumbrow.html' %}
 
 <h1>{% trans 'Statistik' %}</h1>
 
@@ -87,7 +87,7 @@
                     <th>{% trans 'Bemærkninger fra lærer' %}</th>
                     <th>{% trans 'Værter' %}</th>
                     <th>{% trans 'Undervisere' %}</th>
-
+                    <th>{% trans 'Sorteringsdato' %}</th>
                 </tr>
             </thead>
             <tbody>
@@ -97,7 +97,12 @@
                     <td><a href="{% url 'booking-view' booking.id %}">{{ booking }}</a></td>
                     <td>{{ booking.visit.product.get_type_display }}</td>
                     <td><a href="{% url 'product-view' booking.visit.product.pk %}">{{ booking.visit.product.title }}</a></td>
-                    <td>{{ booking.visit.interval_display }}</td>
+                    <td>
+                        {{ booking.visit.interval_display }}
+                        {% if booking.visit.is_cancelled %}
+                        ({% trans 'aflyst' %})
+                        {% endif %}
+                    </td>
                     <td>
                         {% for bookingsubjectlevel in booking.bookinggrundskolesubjectlevel_set.all %}
                             {{ bookingsubjectlevel.subject }}/{{ bookingsubjectlevel.level }},
@@ -139,6 +144,7 @@
                             {% endfor %}
                         {% endif %}
                     </td>
+                    <td>{{ booking.visit.start_datetime|date:"omdHis" }}</td>
                 </tr>
             {% endfor %}
             </tbody>
@@ -149,21 +155,29 @@
 
 {% block extra_scripts %}
     {% include 'common/resources/datepicker_script.html' %}
-    <script type="text/javascript"><!--
+    <script type="text/javascript">
+    <!--
     jQuery(function($) {
         $('#id_from_date').datepicker('setStartDate', null);
         $('#id_to_date').datepicker('setStartDate', null);
     });
-    //--></script>
+    //-->
+    </script>
     {% include 'common/resources/datatables_script.html' %}
     <script type="text/javascript">
+    <!--
         $(function() {
             $('#statistics_table').DataTable({
                 paging: false,
                 info: false,
                 responsive: true,
-                order: [[1, "asc"]]
+                order: [[1, "asc"]],
+                "columnDefs": [
+                    {targets: 4, orderData:20},
+                    {#{targets: 19, visible: false}#}
+                ]
             });
         });
+    //-->
     </script>
 {% endblock %}

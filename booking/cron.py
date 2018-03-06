@@ -65,6 +65,8 @@ class ReminderJob(KuCronJob):
         inheriting_autosends = list(VisitAutosend.objects.filter(
             inherit=True,
             template_type=EmailTemplateType.notity_all__booking_reminder,
+            visit__eventtime__start__isnull=False,
+            visit__eventtime__start__gte=timezone.now()
         ).all())
 
         extra = []
