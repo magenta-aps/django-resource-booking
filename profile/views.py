@@ -771,7 +771,6 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
             except:
                 postalcity = ""
 
-
             leveltext = u", ".join(
                 [
                     u"%s, %s" % (x.subject, x.level)
