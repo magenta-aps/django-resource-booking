@@ -44,7 +44,7 @@
     <p>
         Dette er en reminder om, at du skal være vært på besøg
         <a href="{% full_url 'visit-view' visit.pk %}">{{ product.title }}</a>
-        {% if visit.start_datetime %} den {{ visit.start_datetime|date:'d.m.Y' }} kl. {{ visit.start_datetime|time:"H.i" }}{% endif %}.
+        {% include 'booking/email/snippets/visit_time.html' %}.
         Besøget afholdes på denne lokalitet:
         <a href="{% full_url 'product-view' product.pk %}#mapinfo">{{ product.locality.full_address }}</a>.
     </p>
@@ -80,7 +80,7 @@
     <p>
         Dette er en reminder om, at du skal være underviser på besøg
         <a href="{% full_url 'visit-view' visit.pk %}">{{ product.title }}</a>
-        {% if visit.start_datetime %} den {{ visit.start_datetime|date:'d.m.Y' }} kl. {{ visit.start_datetime|time:"H.i" }}{% endif %}.
+        {% include 'booking/email/snippets/visit_time.html' %}.
         Besøget afholdes på denne lokalitet
         <a href="{% full_url 'product-view' product.pk %}#mapinfo">{{ product.locality.full_address }}</a>.
     </p>
@@ -110,7 +110,7 @@
 {% else %}
 
     <p>
-        Besøget <a href="{% full_url 'visit-view' visit.pk %}">{{ product.title }} d. {{ visit.start_datetime }}</a> er nu færdigplanlagt.
+        Besøget <a href="{% full_url 'visit-view' visit.pk %}">{{ product.title }} {% include 'booking/email/snippets/visit_time.html' %}</a> er nu færdigplanlagt.
     </p>
     <p>
         Du kan læse yderligere om besøget på adressen

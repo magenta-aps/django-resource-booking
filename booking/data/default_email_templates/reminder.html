@@ -7,7 +7,7 @@
     <p>
         Vi glæder os til at se dig til
         <a href="{% full_url 'product-view' product.pk %}">{{ visit.display_title }}</a>
-        {% if visit.start_datetime %} den {{ visit.start_datetime|date:'d.m.Y' }} kl. {{ visit.start_datetime|time:"H.i" }}{% endif %}
+        {% include 'booking/email/snippets/visit_time.html' %}
         på Københavns Universitet:
         {% include 'booking/email/snippets/product_maplink.html' %}.
         {% include 'booking/email/snippets/contact_addresses.html' with product=product vedr=1 %}
@@ -48,8 +48,9 @@
     <p>
         Dette er en påmindelse om at besøget
         <a href="{% full_url 'product-view' product.pk %}">{{ product.title }}</a>
-        afholdes{% if besoeg.start_datetime %} den {{ besoeg.start_datetime|date:'d.m.Y' }}
-        kl. {{ visit.start_datetime|time:"H.i" }}{% endif %} på Københavns Universitet:
+        afholdes
+        {% include 'booking/email/snippets/visit_time.html' %}
+        på Københavns Universitet:
         <a href="{% full_url 'product-view' product.pk %}#mapinfo">{{ product.locality.full_address }}</a>.
     </p>
     <p>
