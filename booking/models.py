@@ -3765,7 +3765,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     def get_autosend_display(self):
         autosends = self.get_autosends(True, False, False)
-        return ', '.join([autosend.get_name() for autosend in autosends])
+        return [autosend.get_name() for autosend in autosends]
 
     def update_endtime(self):
         if self.deprecated_start_datetime is not None:
