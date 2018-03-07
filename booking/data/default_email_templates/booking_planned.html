@@ -77,7 +77,7 @@
 {% else %}
 
     <p>
-        Besøget <a href="{% full_url 'visit-view' visit.pk %}">{{ product.title }} d. {{ visit.start_datetime }}</a> er nu færdigplanlagt.
+        Besøget <a href="{% full_url 'visit-view' visit.pk %}">{{ product.title }} {% include 'booking/email/snippets/visit_time.html' %}</a> er nu færdigplanlagt.
     </p>
     <p>
         Du kan læse yderligere om besøget på adressen
