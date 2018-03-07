@@ -36,9 +36,10 @@
                                         {% blocktrans with date=visit.real.display_value %}Dato/tid: {{ date }}{% endblocktrans %}
                                     </li>
                                     <li>{% trans 'Antal tilmeldte:' %} {{ visit.real.nr_attendees }}</li>
-                                    {% if request.user.userprofile.has_edit_role and visit.real.has_changes_after_planned %}
-                                    <li><span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span> {% trans 'Nylige ændringer' %}</li>
-                                    {% endif %}
+{#                                    Deaktiveret jf. #20680 #}
+{#                                    {% if request.user.userprofile.has_edit_role and visit.real.has_changes_after_planned %} #}
+{#                                    <li><span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span> {% trans 'Nylige ændringer' %}</li> #}
+{#                                    {% endif %} #}
                                 </ul>
                             </div>
                         </a>
