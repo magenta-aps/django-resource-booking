@@ -16,17 +16,6 @@
         {% include 'booking/email/snippets/booking_info.html' with booking=booking booker=booking.booker %}
     </p>
     <p>
-        Koordinatorer for besøget:
-        <ul>
-            {% for editor in visit.organizationalunit.get_editors %}
-                <li>
-                    {{ editor.get_full_name }}
-                    {% if editor.email %} - <a href="mailto:{{ editor.email }}">{{ editor.email }}</a>{% endif %}
-                </li>
-            {% endfor %}
-        </ul>
-    </p>
-    <p>
         Vi glæder os til at se dig!
     </p>
     <p>
@@ -61,15 +50,7 @@
         {% include 'booking/email/snippets/booking_list.html' %}
     </p>
     <p>
-        Koordinatorer for besøget:
-    <ul>
-        {% for editor in visit.organizationalunit.get_editors %}
-            <li>
-                {{ editor.get_full_name }}
-                {% if editor.email %} - <a href="mailto:{{ editor.email }}">{{ editor.email }}</a>{% endif %}
-            </li>
-        {% endfor %}
-    </ul>
+        {% include 'booking/email/snippets/coordinators.html' %}
     </p>
 
 {% elif recipient.user.userprofile.is_teacher %}
@@ -97,15 +78,7 @@
         {% include 'booking/email/snippets/booking_list.html' %}
     </p>
     <p>
-        Koordinatorer for besøget:
-        <ul>
-            {% for editor in visit.organizationalunit.get_editors %}
-                <li>
-                    {{ editor.get_full_name }}
-                    {% if editor.email %} - <a href="mailto:{{ editor.email }}">{{ editor.email }}</a>{% endif %}
-                </li>
-            {% endfor %}
-        </ul>
+        {% include 'booking/email/snippets/coordinators.html' %}
     </p>
 {% else %}
 
@@ -117,15 +90,19 @@
         <a href="{% full_url 'visit-view' visit.pk %}">{% full_url 'visit-view' visit.pk %}</a>
     </p>
     <p>
-        Koordinatorer for besøget:
-    <ul>
-        {% for editor in visit.organizationalunit.get_editors %}
-            <li>
-                {{ editor.get_full_name }}
-                {% if editor.email %} - <a href="mailto:{{ editor.email }}">{{ editor.email }}</a>{% endif %}
-            </li>
-        {% endfor %}
-    </ul>
+        Vær opmærksom på, om der er forberedelsestid.
+    </p>
+    <p>
+        Detaljer for tilmelding(er):
+    </p>
+    <p>
+        {% include 'booking/email/snippets/preparation.html' %}
+    </p>
+    <p>
+        {% include 'booking/email/snippets/booking_list.html' %}
+    </p>
+    <p>
+        {% include 'booking/email/snippets/coordinators.html' %}
     </p>
 
 {% endif %}
