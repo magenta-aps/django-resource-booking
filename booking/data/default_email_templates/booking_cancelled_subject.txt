@@ -1,1 +1,1 @@
-Aflysning af besøg {{ visit.display_title }} d. {{ visit.start_datetime }}
+Aflysning af besøg {{ visit.display_title }}{% include 'booking/email/snippets/visit_time.html' %}
