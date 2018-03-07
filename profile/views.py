@@ -775,15 +775,16 @@ class StatisticsView(EditorRequriedMixin, BreadcrumbMixin, TemplateView):
 
     def _write_csv(self, response):
         context = self.get_context_data()
-        writer = UnicodeWriter(response, delimiter=';')
+        writer = UnicodeWriter(response, delimiter=',')
 
         # Heading
         writer.writerow([
             _(u"Enhed"), _(u"Tilmelding"), _(u"Type"), _(u"Tilbud"),
-            _(u"Besøgsdato"), _(u"Klassetrin/Niveau"), _(u"Antal deltagere"),
-            _(u"Oplæg om uddannelser"), _(u"Rundvisning"), _(u"Andet"),
-            _(u"Region"), _(u"Skole"), _(u"Postnummer og by"), _(u"Adresse"),
-            _(u"Lærer"), _(u"Lærer email"), _(u"Bemærkninger fra koordinator"),
+            _(u"Besøgsdato"), _(u"Klassetrin"), _(u"Niveau"),
+            _(u"Antal deltagere"), _(u"Oplæg om uddannelser"),
+            _(u"Rundvisning"), _(u"Andet"), _(u"Region"), _(u"Skole"),
+            _(u"Postnummer og by"), _(u"Adresse"), _(u"Lærer"),
+            _(u"Lærer email"), _(u"Bemærkninger fra koordinator"),
             _(u"Bemærkninger fra lærer"), _(u"Værter"), _(u"Undervisere")
         ])
         # Rows
@@ -815,6 +816,11 @@ class StatisticsView(EditorRequriedMixin, BreadcrumbMixin, TemplateView):
                 eventtime = booking.visit.cancelled_eventtime
                 time_extra = " (aflyst)"
 
+            timetext = " til " .join([x.strip() for x in [
+                str(eventtime.l10n_start or "")[0:16],
+                str(eventtime.l10n_end or "")[0:16]
+            ] if len(x.strip()) > 0])
+
             try:
                 postalregion = booking.booker.school.\
                                      postcode.region.name or ""
@@ -829,22 +835,25 @@ class StatisticsView(EditorRequriedMixin, BreadcrumbMixin, TemplateView):
             except:
                 postalcity = ""
 
+            leveltext = u", ".join(
+                [
+                    u"%s, %s" % (x.subject, x.level)
+                    for x in booking.bookinggrundskolesubjectlevel_set.all()
+                ] + [
+                    u"%s, niveau %s" % (x.subject, x.level.get_level_display())
+                    for x in
+                    booking.bookinggymnasiesubjectlevel_set.all()
+                ]
+            )
+
             writer.writerow([
                 booking.visit.product.organizationalunit.name,
                 booking.__unicode__(),
                 booking.visit.product.get_type_display(),
                 booking.visit.product.title,
-                str(eventtime.l10n_start or "")[0:16] + " til " +
-                str(eventtime.l10n_end or "")[0:16] + time_extra,
-                u", ".join([
-                    u'%s/%s' % (x.subject, x.level)
-                    for x in booking.bookinggrundskolesubjectlevel_set.all()
-                ]) +
-                u", ".join([
-                    u'%s/%s' % (x.subject, x.level)
-                    for x in
-                    booking.bookinggymnasiesubjectlevel_set.all()
-                ]),
+                timetext + time_extra,
+                booking.booker.get_level_display(),
+                leveltext,
                 str(booking.booker.attendee_count or 0),
                 presentation_desired,
                 tour_desired,

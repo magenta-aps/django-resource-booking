@@ -3246,6 +3246,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def start_datetime(self):
         if hasattr(self, 'eventtime'):
             return self.eventtime.start
+        elif self.cancelled_eventtime:
+            return self.cancelled_eventtime.start
         else:
             return None
 
@@ -3253,6 +3255,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def end_datetime(self):
         if hasattr(self, 'eventtime'):
             return self.eventtime.end
+        elif self.cancelled_eventtime:
+            return self.cancelled_eventtime.end
         else:
             return None
 
@@ -3798,7 +3802,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     def get_autosend_display(self):
         autosends = self.get_autosends(True, False, False)
-        return ', '.join([autosend.get_name() for autosend in autosends])
+        return [autosend.get_name() for autosend in autosends]
 
     def update_endtime(self):
         if self.deprecated_start_datetime is not None:

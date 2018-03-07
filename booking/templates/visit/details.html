@@ -324,7 +324,11 @@
                                 {% trans 'Automatisk e-mail' %}
                             </strong>
                             <div class="{{ center_class }}">
-                                {{ object.get_autosend_display }}
+                            <ul class="list-unstyled">
+                                {% for autosend in object.get_autosend_display %}
+                                    <li>{{ autosend }}</li>
+                                {% endfor %}
+                            </ul>
                             </div>
                             {% if can_edit %}
                                 <div class="{{ right_class }}">
