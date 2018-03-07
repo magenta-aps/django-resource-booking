@@ -1780,7 +1780,7 @@ body.lightbox {
   width: 430px;
   height: 430px;
   content: ' ';
-  background: url('http://cms.ku.dk/grafik/images/social-icons/footersegl.svg') no-repeat;
+  background: url('https://cms.secure.ku.dk/grafik/images/social-icons/footersegl.svg') no-repeat;
   background-size: cover;
   opacity: .1;
 }
@@ -1847,7 +1847,7 @@ body.lightbox {
   width: 10px;
   height: 14px;
   content: " ";
-  background: url('http://cms.ku.dk/grafik/images/social-icons/padlock.svg') no-repeat;
+  background: url('https://cms.secure.ku.dk/grafik/images/social-icons/padlock.svg') no-repeat;
   background-size: cover;
 }
 
@@ -1892,7 +1892,7 @@ body.lightbox {
 }
 
 .globalfooter .social-items .social-item .social-icon.facebook {
-  background-image: url('http://cms.ku.dk/grafik/images/social-icons/social_icon_facebook.svg');
+  background-image: url('https://cms.secure.ku.dk/grafik/images/social-icons/social_icon_facebook.svg');
 }
 
 .globalfooter .social-items .social-item .social-icon.facebook:hover {
@@ -1900,7 +1900,7 @@ body.lightbox {
 }
 
 .globalfooter .social-items .social-item .social-icon.instagram {
-  background-image: url('http://cms.ku.dk/grafik/images/social-icons/social_icon_instagram.svg');
+  background-image: url('https://cms.secure.ku.dk/grafik/images/social-icons/social_icon_instagram.svg');
 }
 
 .globalfooter .social-items .social-item .social-icon.instagram:hover {
@@ -1908,7 +1908,7 @@ body.lightbox {
 }
 
 .globalfooter .social-items .social-item .social-icon.twitter {
-  background-image: url('http://cms.ku.dk/grafik/images/social-icons/social_icon_twitter.svg');
+  background-image: url('https://cms.secure.ku.dk/grafik/images/social-icons/social_icon_twitter.svg');
 }
 
 .globalfooter .social-items .social-item .social-icon.twitter:hover {
@@ -1916,7 +1916,7 @@ body.lightbox {
 }
 
 .globalfooter .social-items .social-item .social-icon.app {
-  background-image: url('http://cms.ku.dk/grafik/images/social-icons/social_icon_app.svg');
+  background-image: url('https://cms.secure.ku.dk/grafik/images/social-icons/social_icon_app.svg');
 }
 
 .globalfooter .social-items .social-item .social-icon.app:hover {
@@ -1924,7 +1924,7 @@ body.lightbox {
 }
 
 .globalfooter .social-items .social-item .social-icon.coursera {
-  background-image: url('http://cms.ku.dk/grafik/images/social-icons/social_icon_coursera.svg');
+  background-image: url('https://cms.secure.ku.dk/grafik/images/social-icons/social_icon_coursera.svg');
 }
 
 .globalfooter .social-items .social-item .social-icon.coursera:hover {
@@ -1932,7 +1932,7 @@ body.lightbox {
 }
 
 .globalfooter .social-items .social-item .social-icon.futurity {
-  background-image: url('http://cms.ku.dk/grafik/images/social-icons/social_icon_futurity.svg');
+  background-image: url('https://cms.secure.ku.dk/grafik/images/social-icons/social_icon_futurity.svg');
 }
 
 .globalfooter .social-items .social-item .social-icon.futurity:hover {
@@ -1940,7 +1940,7 @@ body.lightbox {
 }
 
 .globalfooter .social-items .social-item .social-icon.ku_video {
-  background-image: url('http://cms.ku.dk/grafik/images/social-icons/social_icon_ku_video.svg');
+  background-image: url('https://cms.secure.ku.dk/grafik/images/social-icons/social_icon_ku_video.svg');
 }
 
 .globalfooter .social-items .social-item .social-icon.ku_video:hover {
@@ -1948,7 +1948,7 @@ body.lightbox {
 }
 
 .globalfooter .social-items .social-item .social-icon.linkedin {
-  background-image: url('http://cms.ku.dk/grafik/images/social-icons/social_icon_linkedin.svg');
+  background-image: url('https://cms.secure.ku.dk/grafik/images/social-icons/social_icon_linkedin.svg');
 }
 
 .globalfooter .social-items .social-item .social-icon.linkedin:hover {
@@ -1956,7 +1956,7 @@ body.lightbox {
 }
 
 .globalfooter .social-items .social-item .social-icon.rss {
-  background-image: url('http://cms.ku.dk/grafik/images/social-icons/social_icon_rss.svg');
+  background-image: url('https://cms.secure.ku.dk/grafik/images/social-icons/social_icon_rss.svg');
 }
 
 .globalfooter .social-items .social-item .social-icon.rss:hover {
@@ -1964,7 +1964,7 @@ body.lightbox {
 }
 
 .globalfooter .social-items .social-item .social-icon.the_conversation {
-  background-image: url('http://cms.ku.dk/grafik/images/social-icons/social_icon_the_conversation.svg');
+  background-image: url('https://cms.secure.ku.dk/grafik/images/social-icons/social_icon_the_conversation.svg');
 }
 
 .globalfooter .social-items .social-item .social-icon.the_conversation:hover {
@@ -1977,7 +1977,7 @@ body.lightbox {
 }
 
 .globalfooter .social-items .social-item .social-icon.vimeo {
-  background-image: url('http://cms.ku.dk/grafik/images/social-icons/social_icon_vimeo.svg');
+  background-image: url('https://cms.secure.ku.dk/grafik/images/social-icons/social_icon_vimeo.svg');
 }
 
 .globalfooter .social-items .social-item .social-icon.vimeo:hover {
@@ -1985,7 +1985,7 @@ body.lightbox {
 }
 
 .globalfooter .social-items .social-item .social-icon.youtube {
-  background-image: url('http://cms.ku.dk/grafik/images/social-icons/social_icon_youtube.svg');
+  background-image: url('https://cms.secure.ku.dk/grafik/images/social-icons/social_icon_youtube.svg');
 }
 
 .globalfooter .social-items .social-item .social-icon.youtube:hover {
