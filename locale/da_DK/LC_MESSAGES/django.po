@@ -5988,3 +5988,6 @@ msgstr ""
 #: profile/views.py:722
 msgid "Lærer email"
 msgstr ""
+
+msgid "Required. 30 characters or fewer. Letters, digits and @/./+/-/_ only."
+msgstr "Påkrævet. Højst 30 tegn. Kun bogstaver (a-z) og cifre samt @/./+/-/_"
