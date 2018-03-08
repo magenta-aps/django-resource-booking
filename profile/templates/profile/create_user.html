@@ -32,7 +32,7 @@
                         <label class="col-sm-2 col-sm-offset-1 control-label" for="{{ form.username.id_for_username}}">{{ form.username.label }}:</label>
                         <div class="col-sm-5">
                             {{ form.username }}
-                            <span class="help-block">{{ form.username.help_text }}</span>
+                            <span id="username_help" class="help-block">{{ form.username.help_text }}</span>
                         </div>
                         <div class="col-sm-4 help-block with-errors">
                             {{ form.username.errors }}
