@@ -733,6 +733,7 @@ class EmailTemplateType(
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__SPOT_ACCEPTED,
             name_da=u'Besked til gæst ved accept af plads (fra venteliste)',
+            manual_sending_visit_enabled=True,
             send_to_booker=True,
             enable_booking=True,
             enable_autosend=True,
@@ -744,6 +745,7 @@ class EmailTemplateType(
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__SPOT_REJECTED,
             name_da=u'Besked til gæst ved afvisning af plads (fra venteliste)',
+            manual_sending_visit_enabled=True,
             send_to_booker=True,
             enable_booking=True,
             enable_autosend=False,
@@ -765,6 +767,7 @@ class EmailTemplateType(
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_EDITORS__BOOKING_CREATED,
             name_da=u'Besked til koordinator, når gæst har tilmeldt sig besøg',
+            manual_sending_visit_enabled=True,
             send_to_contactperson=True,
             enable_booking=True,
             is_default=True,
@@ -777,6 +780,7 @@ class EmailTemplateType(
             EmailTemplateType.NOTIFY_EDITORS__SPOT_REJECTED,
             name_da=u'Besked til koordinatorer ved afvisning '
                     u'af plads (fra venteliste)',
+            manual_sending_visit_enabled=True,
             send_to_contactperson=True,
             enable_booking=True,
             enable_autosend=True,
@@ -836,6 +840,7 @@ class EmailTemplateType(
             EmailTemplateType.NOTIFY_HOST__HOSTROLE_IDLE,
             name_da=u'Notifikation til koordinatorer om '
                     u'ledig værtsrolle på besøg',
+            manual_sending_visit_enabled=True,
             send_to_editors=True,
             enable_days=True,
             enable_autosend=True,
@@ -912,6 +917,7 @@ class EmailTemplateType(
         EmailTemplateType.set_default(
             EmailTemplateType.SYSTEM__BASICMAIL_ENVELOPE,
             name_da=u'Besked til tilbudsansvarlig',
+            manual_sending_visit_enabled=True,
             enable_autosend=False,
             form_show=False,
             ordering=21
@@ -928,6 +934,7 @@ class EmailTemplateType(
         EmailTemplateType.set_default(
             EmailTemplateType.SYSTEM__USER_CREATED,
             name_da=u'Besked til bruger ved brugeroprettelse',
+            manual_sending_visit_enabled=True,
             form_show=False,
             ordering=23
         )
@@ -935,6 +942,7 @@ class EmailTemplateType(
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST,
             name_da=u'Besked til bruger angående evaluering (første besked)',
+            manual_sending_visit_enabled=True,
             form_show=True,
             send_to_booker=True,
             enable_autosend=True,
@@ -944,8 +952,22 @@ class EmailTemplateType(
         )
 
         EmailTemplateType.set_default(
+            EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST_STUDENTS,
+            name_da=u'Besked til bruger angående evaluering (første besked), '
+                    u'for videresendelse til elever',
+            manual_sending_visit_enabled=True,
+            form_show=True,
+            send_to_booker=True,
+            enable_autosend=True,
+            enable_booking=True,
+            is_default=True,
+            ordering=25
+        )
+
+        EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__EVALUATION_SECOND,
             name_da=u'Besked til bruger angående evaluering (anden besked)',
+            manual_sending_visit_enabled=True,
             form_show=True,
             send_to_booker=True,
             enable_autosend=True,
@@ -964,7 +986,7 @@ class EmailTemplateType(
 
     @staticmethod
     def get_choices(**kwargs):
-        types = EmailTemplateType.objects.filter(**kwargs)
+        types = EmailTemplateType.objects.filter(**kwargs).order_by('ordering')
         return [
             (type.id, type.name) for type in types
         ]
