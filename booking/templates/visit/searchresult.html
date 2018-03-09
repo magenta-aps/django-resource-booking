@@ -181,6 +181,12 @@
                     </li>
                     {% endif %}
 
+                    <li class="page-count">
+                        {% blocktrans with page=page_obj.number pages=paginator.num_pages %}
+                            Side {{ page }} af {{ pages }}
+                        {% endblocktrans %}
+                    </li>
+
                     {% if page_obj.has_next %}
                     <li>
                         <a href="?{{ qstring }}&page={{ page_obj.next_page_number }}&pagesize={{paginator.per_page}}" aria-label="Næste">
@@ -202,15 +208,7 @@
             {% endif %}
         </div>
 
-        <div class="col-sm-2 col-md-2">
-            <div class="page-count">
-                {% blocktrans with pages=paginator.num_pages %}
-                {{ pages }} sider
-                {% endblocktrans %}
-            </div>
-        </div>
-
-        <div class="col-sm-3 col-md-2">
+        <div class="col-sm-4 col-md-3">
             <div class="input-group input-group-sm search-list items-pr-side">
                 <span class="input-group-addon">Vis</span>
                 <div class="input-group-btn">
