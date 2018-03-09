@@ -165,7 +165,7 @@
     </div>
 
     <div class="row">
-        <div class="col-sm-5 col-md-4 col-sm-offset-1 col-md-offset-3">
+        <div class="col-sm-6 col-md-5 col-sm-offset-1 col-md-offset-3">
             {% if paginator %}
             <nav>
                 <ul class="pager">
@@ -184,6 +184,12 @@
                         </span>
                     </li>
                     {% endif %}
+                
+                    <li class="page-count">
+                        {% blocktrans with page=page_obj.number pages=paginator.num_pages %}
+                            Side {{ page }} af {{ pages }}
+                        {% endblocktrans %}
+                    </li>
 
                     {% if page_obj.has_next %}
                     <li>
@@ -205,15 +211,7 @@
             {% endif %}
         </div>
 
-        <div class="col-sm-2 col-md-2">
-            <div class="page-count">
-                {% blocktrans with pages=paginator.num_pages %}
-                    {{ pages }} sider
-                {% endblocktrans %}
-            </div>
-        </div>
-
-        <div class="col-sm-3 col-md-2">
+        <div class="col-sm-4 col-md-3">
             <div class="input-group input-group-sm search-list items-pr-side">
                 <span class="input-group-addon">Vis</span>
                 <div class="input-group-btn">
