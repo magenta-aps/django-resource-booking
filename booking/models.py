@@ -3522,12 +3522,15 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def product(self):
-        if hasattr(self, 'eventtime'):
+        try:
             return self.eventtime.product
-        elif self.cancelled_eventtime:
+        except:
+            pass
+        try:
             return self.cancelled_eventtime.product
-        else:
-            return None
+        except:
+            pass
+        return None
 
     def get_override_attr(self, attrname):
         result = getattr(self, 'override_' + attrname, None)
@@ -3765,7 +3768,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     def get_autosend_display(self):
         autosends = self.get_autosends(True, False, False)
-        return ', '.join([autosend.get_name() for autosend in autosends])
+        return [autosend.get_name() for autosend in autosends]
 
     def update_endtime(self):
         if self.deprecated_start_datetime is not None:

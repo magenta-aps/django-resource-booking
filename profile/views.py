@@ -815,6 +815,20 @@ class StatisticsView(EditorRequriedMixin, BreadcrumbMixin, TemplateView):
                 eventtime = booking.visit.cancelled_eventtime
                 time_extra = " (aflyst)"
 
+            try:
+                postalregion = booking.booker.school.\
+                                     postcode.region.name or ""
+            except:
+                postalregion = ""
+            try:
+                postalcode = booking.booker.school.postcode.number or ""
+            except:
+                postalcode = ""
+            try:
+                postalcity = booking.booker.school.postcode.city or ""
+            except:
+                postalcity = ""
+
             writer.writerow([
                 booking.visit.product.organizationalunit.name,
                 booking.__unicode__(),
@@ -835,11 +849,11 @@ class StatisticsView(EditorRequriedMixin, BreadcrumbMixin, TemplateView):
                 presentation_desired,
                 tour_desired,
                 custom_desired,
-                booking.booker.school.postcode.region.name or "",
+                postalregion,
                 (booking.booker.school.name or "") + "(" +
                 booking.booker.school.get_type_display() + ")",
-                str(booking.booker.school.postcode.number or "") + " " +
-                booking.booker.school.postcode.city or "",
+                str(postalcode) + " " +
+                postalcity,
                 unicode(booking.booker.school.address or ""),
                 booking.booker.get_full_name() or "",
                 booking.booker.get_email() or "",

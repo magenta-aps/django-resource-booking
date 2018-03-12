@@ -295,9 +295,8 @@ class ProductForm(forms.ModelForm):
 
     class Meta:
         model = Product
-        fields = ('title', 'teaser', 'description', 'price', 'state',
-                  'type', 'tags',
-                  'institution_level', 'topics',
+        fields = ('title', 'teaser', 'description', 'price', 'state', 'type',
+                  'tags', 'institution_level', 'topics',
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'do_create_waiting_list', 'waiting_list_length',
                   'waiting_list_deadline_days', 'waiting_list_deadline_hours',
@@ -376,6 +375,11 @@ class ProductForm(forms.ModelForm):
             ),
             'tags': CheckboxSelectMultiple(),
             'roomresponsible': CheckboxSelectMultiple,
+            'state': Select(attrs={'class': 'form-control input-sm'}),
+            'time_mode': Select(attrs={'class': 'form-control input-sm'}),
+            'tilbudsansvarlig': Select(
+                attrs={'class': 'form-control input-sm'}
+            )
         }
         labels = {
             'custom_name': _('Navn')
@@ -639,7 +643,8 @@ class ProductAutosendForm(forms.ModelForm):
         model = ProductAutosend
         fields = ['template_type', 'enabled', 'days']
         widgets = {
-            'template_type': forms.HiddenInput()
+            'template_type': forms.HiddenInput(),
+            'days': forms.NumberInput(attrs={'class': 'form-control'})
         }
 
     def __init__(self, *args, **kwargs):
