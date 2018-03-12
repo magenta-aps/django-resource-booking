@@ -3522,12 +3522,15 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def product(self):
-        if hasattr(self, 'eventtime'):
+        try:
             return self.eventtime.product
-        elif self.cancelled_eventtime:
+        except:
+            pass
+        try:
             return self.cancelled_eventtime.product
-        else:
-            return None
+        except:
+            pass
+        return None
 
     def get_override_attr(self, attrname):
         result = getattr(self, 'override_' + attrname, None)
