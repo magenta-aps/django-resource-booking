@@ -1393,6 +1393,8 @@ class EmailTemplateForm(forms.ModelForm):
         model = EmailTemplate
         fields = ('type', 'subject', 'body', 'organizationalunit')
         widgets = {
+            'type': Select(attrs={'class': 'form-control'}),
+            'organizationalunit': Select(attrs={'class': 'form-control'}),
             'subject': TextInput(attrs={'class': 'form-control'}),
             'body': Textarea(attrs={'class': 'form-control'}),
         }
