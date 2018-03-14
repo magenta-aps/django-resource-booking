@@ -3634,7 +3634,6 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
         if "booker" not in context and "booking" in context:
             context["booker"] = context["booking"].booker
 
-
     @method_decorator(login_required)
     def get(self, request, *args, **kwargs):
         pk = kwargs.get("pk")

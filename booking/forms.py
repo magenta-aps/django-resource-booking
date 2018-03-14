@@ -1250,7 +1250,6 @@ class EmailTemplatePreviewContextEntryForm(forms.Form):
         'Guest': Guest,
     }
 
-
     key = forms.CharField(
         max_length=256,
         widget=HiddenInput(attrs={
@@ -1279,11 +1278,6 @@ class EmailTemplatePreviewContextEntryForm(forms.Form):
             type = initial['type']
             if type in self.classes:
                 clazz = self.classes[type]
-                if clazz is not None:
-                    choices=[
-                        (object.id, unicode(object))
-                        for object in clazz.objects.order_by('id')
-                    ]
                 valuefield = self.fields['value']
                 valuefield.widget = Select(
                     attrs={
