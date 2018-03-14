@@ -1715,7 +1715,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     tilbudsansvarlig = models.ForeignKey(
         User,
-        verbose_name=_(u'Tilbudsansvarlig'),
+        verbose_name=_(u'Koordinator'),
         related_name='tilbudsansvarlig_for_set',
         blank=True,
         null=True,
