@@ -3670,20 +3670,22 @@ class EmailTemplateEditView(LoginRequiredMixin, UnitAccessRequiredMixin,
 class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
     template_name = 'email/preview.html'
 
-    classes = {'OrganizationalUnit': OrganizationalUnit,
-               'Product': Product,
-               'Visit': Visit,
-               # 'StudyMaterial': StudyMaterial,
-               # 'Product': Product,
-               # 'Subject': Subject,
-               # 'GymnasieLevel': GymnasieLevel,
-               # 'Room': Room,
-               # 'PostCode': PostCode,
-               # 'School': School,
-               'Booking': Booking,
-               # 'ProductGymnasieFag': ProductGymnasieFag,
-               # 'ProductGrundskoleFag': ProductGrundskoleFag
-               }
+    classes = {
+        'OrganizationalUnit': OrganizationalUnit,
+        'Product': Product,
+        'Visit': Visit,
+        # 'StudyMaterial': StudyMaterial,
+        # 'Product': Product,
+        # 'Subject': Subject,
+        # 'GymnasieLevel': GymnasieLevel,
+        # 'Room': Room,
+        # 'PostCode': PostCode,
+        # 'School': School,
+        'Booking': Booking,
+        'Guest': Guest,
+        # 'ProductGymnasieFag': ProductGymnasieFag,
+        # 'ProductGrundskoleFag': ProductGrundskoleFag
+    }
 
     def get_recipient_choices(self):
         result = []
@@ -3732,7 +3734,7 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
             ]
             for key, type in EmailTemplateDetailView.classes.items()
         }
-        result['Recipient'] = self.get_recipient_choices()
+        # result['Recipient'] = self.get_recipient_choices()
         return json.dumps(result)
 
     def update_context_with_recipient(self, selected, ctx):
@@ -3764,49 +3766,39 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
 
     def extend_context(self, context):
         # Get product from visit if only visit is present
-        if ("product" not in context and "visit" in context and
-                hasattr(context["visit"], "product")):
+        if "product" not in context and "visit" in context and \
+                hasattr(context["visit"], "product"):
             context["product"] = context["visit"].product
         if "besoeg" not in context and "visit" in context:
             context["besoeg"] = context["visit"]
+        if "booker" not in context and "booking" in context:
+            context["booker"] = context["booking"].booker
 
     @method_decorator(login_required)
     def get(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
-        formset = EmailTemplatePreviewContextForm()
         self.object = EmailTemplate.objects.get(pk=pk)
 
         context = {}
+
+        vars = [
+            ('booking', "Booking"),
+            ('visit', "Visit"),
+            ('product', "Product")
+        ]
+        initial = []
+        for v in vars:
+            key = v[0]
+            className = v[1]
+            # context[key] = value
+            initial.append({
+                'key': key,
+                'type': className,
+                # 'value': value.id
+            })
+        formset = EmailTemplatePreviewContextForm(initial=initial)
+
         if self.object is not None:
-            variables = self.object.get_template_variables()
-            # alias booker to needing a booking
-            if "booking" not in variables:
-                for x in variables:
-                    if x.split(".")[0] == "booker":
-                        variables.append("booking")
-                        break
-            formset.initial = []
-            lookup = {
-                key.lower(): key
-                for key in self.classes.keys()
-            }
-            for variable in variables:
-                base_variable = variable.split(".")[0]
-                if base_variable not in context:
-                    variable = base_variable.lower()
-                    if variable in lookup:
-                        type = lookup[variable]
-                        clazz = self.classes[type]
-                        try:
-                            value = clazz.objects.last()
-                            context[base_variable] = value
-                            formset.initial.append({
-                                'key': base_variable,
-                                'type': type,
-                                'value': value.id
-                            })
-                        except clazz.DoesNotExist:
-                            pass
             rcpt_choices = self.get_recipient_choices()
             rcpt_selected = rcpt_choices[0].get("value")
             formset.initial.append({
@@ -3814,15 +3806,21 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
                 'type': 'Recipient',
                 'value': rcpt_selected
             })
-            self.update_context_with_recipient(rcpt_selected, context)
+            for form in formset:
+                if form.initial['key'] == 'recipient':
+                    form.fields['value'].widget.choices = [
+                        (item['value'], item['text'])
+                        for item in self.get_recipient_choices()
+                    ]
             self.extend_context(context)
 
-        data = {'form': formset,
-                'subject': self.object.expand_subject(context, True),
-                'body': self.object.expand_body(context, True),
-                'objects': self._getObjectJson(),
-                'template': self.object
-                }
+        data = {
+            'form': formset,
+            'subject': self.object.expand_subject(context, True),
+            'body': self.object.expand_body(context, True),
+            'objects': self._getObjectJson(),
+            'template': self.object
+        }
 
         data.update(self.get_context_data())
         return render(request, self.template_name, data)
@@ -3838,29 +3836,33 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
 
         for form in formset:
             if form.is_valid():
-                type = form.cleaned_data['type']
-                value = form.cleaned_data['value']
-                if type in self.classes.keys():
-                    clazz = self.classes[type]
-                    try:
-                        value = clazz.objects.get(pk=value)
-                    except clazz.DoesNotExist:
-                        pass
-                elif type == "Recipient":
-                    self.update_context_with_recipient(value, context)
-                    continue
-                context[form.cleaned_data['key']] = value
+                if len(form.cleaned_data):
+                    type = form.cleaned_data['type']
+                    value = form.cleaned_data['value']
+                    if type in self.classes.keys():
+                        clazz = self.classes[type]
+                        try:
+                            value = clazz.objects.get(pk=value)
+                        except clazz.DoesNotExist:
+                            pass
+                    elif type == "Recipient":
+                        self.update_context_with_recipient(value, context)
+                        continue
+                    context[form.cleaned_data['key']] = value
 
         self.extend_context(context)
-        data = {'form': formset,
-                'subject': self.object.expand_subject(context, True),
-                'body': self.object.expand_body(context, True),
-                'objects': self._getObjectJson(),
-                'template': self.object
-                }
+        data = {
+            'form': formset,
+            'subject': self.object.expand_subject(context, True),
+            'body': self.object.expand_body(context, True),
+            'objects': self._getObjectJson(),
+            'template': self.object
+        }
         data.update(self.get_context_data())
-
-        return render(request, self.template_name, data)
+        return HttpResponse(json.dumps({
+            'subject': self.object.expand_subject(context, True),
+            'body': self.object.expand_body(context, True)
+        }))
 
     def get_breadcrumb_args(self):
         return [self.object]
