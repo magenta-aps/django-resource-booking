@@ -22,7 +22,13 @@ CLASSES_BY_ROLE[COORDINATOR] = set([
 ])
 
 CLASSES_BY_ROLE[FACULTY_EDITOR] = set([
-    booking_models.OrganizationalUnit
+    booking_models.OrganizationalUnit,
+    booking_models.Visit,
+    booking_models.Product,
+    booking_models.Autosend,
+    booking_models.ProductAutosend,
+    booking_models.EventTime,
+    booking_models.BookingGrundskoleSubjectLevel
 ])
 
 # Faculty editors will always have access to the same things as
