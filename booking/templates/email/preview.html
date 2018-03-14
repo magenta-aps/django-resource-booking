@@ -27,7 +27,7 @@
                 {% endblocktrans %}
             </h1>
             {% if template.organizationalunit %}
-                <dl class="dl-horizontal"><dt>{% trans 'Enhed:'%}</dt><dd>{{ template.organizationalunit.name }}</dd>
+                <dl class="dl-horizontal"><dt>{% trans 'Enhed:'%}</dt><dd>{{ template.organizationalunit.name }}</dd></dl>
             {% else %}
                 {% trans 'Grundskabelon'%}
             {% endif %}
@@ -40,97 +40,45 @@
         </div>
     <div class="row">
         <div class="col-sm-12">
-            {% trans 'På denne side kan du afprøve skabelonens felter ved at definere en kontekst. Ved tryk på "opdater" bliver skabelonen udfyldt med den angivne kontekst.' %}
+            {% trans 'På denne side kan du afprøve skabelonens felter ved at definere en kontekst.' %}
         </div>
     </div>
-    <form action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
+
+    <form action="" id="previewForm" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
         {% csrf_token %}
-
-        <div id="accordion" class="panel-group" aria-multiselectable="true" role="tablist">
-
-            <div class="panel panel-default">
-                <div id="headingCategory" class="panel-heading" role="tab">
-                    <h4 class="panel-title">
-                        {% trans "Kontekst" %}
-                    </h4>
+        {{ form.management_form }}
+        <div id="rowcontainer">
+        {% for entry in form %}
+            <div class="row form-group"{% if forloop.first %} id="rowprototype"{% endif %}>
+                {{ entry.type }}
+                <div class="col-sm-2">
+                    <label class="control-label" for="{{ entry.value.id_for_label }}">{{ entry.key.value }}:</label>
+                    {{ entry.key }}
                 </div>
-                <div id="collapseTitel" class="panel-collapse collapse in" aria-labelledby="headingCategory" role="tabpanel" aria-expanded="true" style="">
-                    <div class="panel-body">
-
-                        <div class="row form-group">
-                            <div class="col-sm-3">
-                                {% trans 'Variabel' %}
-                            </div>
-                            <div class="col-sm-3">
-                                {% trans 'Datatype' %}
-                            </div>
-                            <div class="col-sm-3">
-                                {% trans 'Værdi' %}
-                            </div>
-                        </div>
-
-                        {{ form.management_form }}
-                        <div id="rowcontainer">
-                        {% for entry in form %}
-                            <div class="row form-group"{% if forloop.first %} id="rowprototype"{% endif %}>
-                                <div class="col-sm-3">
-                                    {{ entry.key }}
-                                </div>
-                                <div class="col-sm-3">
-                                    {{ entry.type }}
-                                </div>
-                                <div class="col-sm-3">
-                                    {{ entry.value }}
-                                </div>
-                                <div class="col-sm-2 rowadder">
-                                    <a href="javascript:void();" id="addRow">{% trans "Tilføj ny" %}</a>
-                                </div>
-                            </div>
-                        {% endfor %}
-                        </div>
-                    </div>
-                </div>
-
-                <fieldset>
-                    <button class="btn btn-primary pull-right" type="submit">{% trans "Opdater" %}</button>
-                </fieldset>
-
-            </div>
-
-            {% if subject or body %}
-            <div class="panel panel-default">
-                <div id="headingCategory" class="panel-heading" role="tab">
-                    <h4 class="panel-title">
-                        {% trans "Preview" %}
-                    </h4>
-                </div>
-                <div id="collapseTitel" class="panel-collapse collapse in" aria-labelledby="headingCategory" role="tabpanel" aria-expanded="true" style="">
-                    <div class="panel-body">
-
-                            {% if subject %}
-                                <h3>{% trans 'Beskedens emne' %}</h3>
-                                <blockquote>{{ subject }}</blockquote>
-                            {% endif %}
-
-                            {% if body %}
-                                <h3>{% trans 'Beskedens tekst' %}</h3>
-                                <blockquote>
-                                    {% autoescape off %}
-                                    {{ body }}
-                                    {% endautoescape %}
-                                </blockquote>
-                            {% endif %}
-
-                    </div>
+                <div class="col-sm-10">
+                    {{ entry.value }}
                 </div>
             </div>
-            {% endif %}
+        {% endfor %}
         </div>
-
-
-        <div class="divider"></div>
     </form>
 
+    {% if subject or body %}
+        <div class="content-panel">
+            {% if subject %}
+                <h3>{% trans 'Beskedens emne' %}</h3>
+                <blockquote id="subject">{{ subject }}</blockquote>
+            {% endif %}
+            {% if body %}
+                <h3>{% trans 'Beskedens tekst' %}</h3>
+                <blockquote id="body">
+                    {% autoescape off %}
+                    {{ body }}
+                    {% endautoescape %}
+                </blockquote>
+            {% endif %}
+        </div>
+    {% endif %}
 
 {% endblock %}
 
@@ -138,49 +86,10 @@
     {{ form.media }}
     <script type="text/javascript" src="{% static 'js/formset-row.js' %}"></script>
 
-
     <script type="text/javascript">
-        $(function(){
-
-            var extraRows = $("#rowcontainer > div").not(":first");
-
-            var mingleRow = function(row) {
-                row.removeAttr("id");
-                row.find("label").text(null);
-                var adder = row.find(".rowadder");
-                adder.addClass("rowremover");
-                adder.removeClass("rowadder");
-                adder.find("a").text('{% trans "Fjern" %}');
-                adder.find("a").click(removeRowEvent);
-
-                $("#rowcontainer").trigger("addrow", row);
-            };
-
-            mingleRow(extraRows);
-
-            $(".rowadder a").click(function(){
-                var newRow = formset.addRow(
-                        $("#{{ form.management_form.TOTAL_FORMS.id_for_label }}"),
-                        $("#{{ form.management_form.MAX_NUM_FORMS.id_for_label }}"),
-                        $("#rowprototype"),
-                        $("#rowcontainer")
-                );
-                mingleRow(newRow);
-                return false;
-            });
-
-            var removeRowEvent = function() {
-                formset.removeRow(
-                    "#{{ form.management_form.TOTAL_FORMS.id_for_label }}",
-                    $(this).parents(".form-group"),
-                    $("#rowcontainer")
-                );
-            };
-
-            $(".rowremover a").click(removeRowEvent);
-        });
-    </script>
-    <script type="text/javascript">
+        var url = "{{ request.get_full_path }}";
+        var processingMessage = "{% trans 'Arbejder...' %}";
+        var errorMessage = "{% trans 'Fejl' %}";
         {% autoescape off %}
         $(function(){
             var objects = {{ objects }};
@@ -188,7 +97,7 @@
             for (var type in objects) {
                 typeClassMap[type] = 'emailtemplate-type-' + type;
             }
-
+/*
             var replaceWidget = function(oldField, newType) {
                 var newWidget = $("<"+newType+">");
                 newWidget.attr({id: oldField.attr("id"), name: oldField.attr("name")});
@@ -196,7 +105,8 @@
                 oldField.replaceWith(newWidget);
                 return newWidget;
             };
-
+            */
+/*
             var typeChanged = function(row, setValue){
                 // When a type field is changed
                 var type = row.find('.emailtemplate-type').val();
@@ -208,36 +118,65 @@
                         newWidget = replaceWidget(valueField, "input");
                     } else if (type in objects) {
                         newWidget = replaceWidget(valueField, "select");
-                        for (var i = 0; i < objects[type].length; i++) {
-                            var optionData = objects[type][i];
-                            var option = $("<option>");
-                            option.val(optionData.value);
-                            option.text(optionData.text);
-                            newWidget.append(option);
+                        var objectList = objects[type];
+                        if (objectList.length) {
+                            for (var i = 0; i < objectList.length; i++) {
+                                var optionData = objectList[i];
+                                var option = $("<option>");
+                                option.val(optionData.value);
+                                option.text(optionData.text);
+                                newWidget.append(option);
+                            }
                         }
                     }
                     if (newWidget) {
                         newWidget.addClass("emailtemplate-value " + typeClassMap[type]);
-                        if (setValue === true) {
-                            newWidget.val(oldValue);
-                        }
+                        //if (setValue === true) {
+                        //    newWidget.val(oldValue);
+                        //}
                     }
                 }
-            };
-
+            };*/
+/*
             var rowAdded = function(event, row, setValue){
                 // When a new context row is added
                 row = $(row);
                 typeChanged(row, setValue);
-                row.find('.emailtemplate-type').change(typeChanged.bind(this, row));
             };
+*/
 
-
-            $("#rowcontainer").find(".row").each(function(){
+            /*$("#rowcontainer").find(".row").each(function(){
                 rowAdded(null, $(this), true);
             });
-            $("#rowcontainer").on("addrow", rowAdded);
+            $("#rowcontainer").on("addrow", rowAdded);*/
+
+            var update = function() {
+                $("#subject").text(processingMessage);
+                $("#body").text(processingMessage);
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: $("#previewForm").serialize(),
+                    dataType: "json",
+                    success: function(data) {
+                        $("#subject").text(data['subject']);
+                        $("#body").html(data['body']);
+                    },
+                    error: function() {
+                        $("#subject").text("Fejl i template");
+                        $("#body").text("Fejl i template");
+                    }
+                });
+            };
+
+            $("#rowcontainer").change(update);
         });
+
+
+
+
+
+
         {% endautoescape %}
     </script>
 {% endblock %}

@@ -1230,7 +1230,7 @@ class EmailTemplateForm(forms.ModelForm):
             'type': Select(attrs={'class': 'form-control'}),
             'organizationalunit': Select(attrs={'class': 'form-control'}),
             'subject': TextInput(attrs={'class': 'form-control'}),
-            'body': Textarea(attrs={'class': 'form-control'}),
+            'body': Textarea(attrs={'class': 'form-control', 'rows': 20}),
         }
 
     def __init__(self, user, *args, **kwargs):
@@ -1241,27 +1241,24 @@ class EmailTemplateForm(forms.ModelForm):
 
 
 class EmailTemplatePreviewContextEntryForm(forms.Form):
+
+    classes = {
+        'OrganizationalUnit': OrganizationalUnit,
+        'Product': Product,
+        'Visit': Visit,
+        'Booking': Booking,
+        'Guest': Guest,
+    }
+
+
     key = forms.CharField(
         max_length=256,
-        widget=TextInput(attrs={'class': 'form-control emailtemplate-key'})
+        widget=HiddenInput(attrs={
+            'class': 'form-control emailtemplate-key',
+        })
     )
-    type = forms.ChoiceField(
-        choices=(
-            ('string', _(u'Tekst')),
-            ('OrganizationalUnit', _(u'Enhed')),
-            ('Product', _(u'Tilbud')),
-            ('Visit', _(u'Besøg')),
-            # ('StudyMaterial', StudyMaterial),
-            # ('Product',Product),
-            # ('Subject', Subject),
-            # ('GymnasieLevel', GymnasieLevel),
-            # ('Room', Room),
-            # ('PostCode', PostCode),
-            # ('School', School),
-            ('Booking', _(u'Tilmelding')),
-            ('Recipient', _(u'Modtager')),
-        ),
-        widget=Select(attrs={'class': 'form-control emailtemplate-type'})
+    type = forms.CharField(
+        widget=HiddenInput(attrs={'class': 'emailtemplate-type'})
     )
     value = forms.CharField(
         max_length=1024,
@@ -1273,8 +1270,44 @@ class EmailTemplatePreviewContextEntryForm(forms.Form):
         )
     )
 
+    def __init__(self, *args, **kwargs):
+        super(EmailTemplatePreviewContextEntryForm, self).__init__(
+            *args, **kwargs
+        )
+        if 'initial' in kwargs:
+            initial = kwargs['initial']
+            type = initial['type']
+            if type in self.classes:
+                clazz = self.classes[type]
+                if clazz is not None:
+                    choices=[
+                        (object.id, unicode(object))
+                        for object in clazz.objects.order_by('id')
+                    ]
+                valuefield = self.fields['value']
+                valuefield.widget = Select(
+                    attrs={
+                        "class": "form-control emailtemplate-value "
+                                 "emailtemplate-type-%s" % type
+                    },
+                    choices=[
+                        (object.id, unicode(object))
+                        for object in clazz.objects.order_by('id')
+                    ]
+                )
+            if type == "Recipient":
+                valuefield = self.fields['value']
+                valuefield.widget = Select(
+                    attrs={
+                        "class": "form-control emailtemplate-value "
+                                 "emailtemplate-type-%s" % type
+                    }
+                )
+
+
 EmailTemplatePreviewContextForm = formset_factory(
-    EmailTemplatePreviewContextEntryForm
+    EmailTemplatePreviewContextEntryForm,
+    extra=0
 )
 
 
