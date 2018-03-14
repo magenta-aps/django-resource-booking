@@ -616,6 +616,9 @@ class EmailTemplateType(
     # Template will be autosent to teachers when they are added to a visit
     send_to_visit_added_teacher = models.BooleanField(default=False)
 
+    # Template will be autosent to room responsible of the product
+    send_to_room_responsible = models.BooleanField(default=False)
+
     # Does the "days" field make sense?
     enable_days = models.BooleanField(default=False)
 
@@ -846,6 +849,7 @@ class EmailTemplateType(
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_HOST__REQ_ROOM,
             name_da=u'Besked til lokaleansvarlig',
+            send_to_room_responsible=True,
             manual_sending_visit_enabled=True,
             manual_sending_mpv_sub_enabled=True,
             enable_autosend=True,
@@ -2249,6 +2253,9 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             if self.inquire_user:
                 contacts.append(self.inquire_user)
             recipients.extend(contacts)
+
+        if template_type.send_to_room_responsible:
+            recipients.extend(self.roomresponsible.all())
 
         return recipients
 
