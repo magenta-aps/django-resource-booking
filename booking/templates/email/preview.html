@@ -64,19 +64,23 @@
     </form>
 
     {% if subject or body %}
-        <div class="content-panel">
-            {% if subject %}
-                <h3>{% trans 'Beskedens emne' %}</h3>
-                <blockquote id="subject">{{ subject }}</blockquote>
-            {% endif %}
-            {% if body %}
-                <h3>{% trans 'Beskedens tekst' %}</h3>
-                <blockquote id="body">
-                    {% autoescape off %}
-                    {{ body }}
-                    {% endautoescape %}
-                </blockquote>
-            {% endif %}
+        <div id="accordion" class="panel-group">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    {% if subject %}
+                        <h3>{% trans 'Beskedens emne' %}</h3>
+                        <blockquote id="subject">{{ subject }}</blockquote>
+                    {% endif %}
+                    {% if body %}
+                        <h3>{% trans 'Beskedens tekst' %}</h3>
+                        <blockquote id="body">
+                            {% autoescape off %}
+                            {{ body }}
+                            {% endautoescape %}
+                        </blockquote>
+                    {% endif %}
+                </div>
+            </div>
         </div>
     {% endif %}
 

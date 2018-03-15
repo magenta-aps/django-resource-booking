@@ -2140,15 +2140,6 @@ body.lightbox {
   font-size: 12px;
 }
 
-.content-panel {
-  border-style: solid;
-  border-color: #ddd;
-  border-width: 1px;
-  border-radius: 4px 4px 0 0;
-  padding: 15px 15px;
-  margin: 0;
-}
-
 .nowrap {
   white-space: nowrap;
 }
