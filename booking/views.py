@@ -3779,8 +3779,6 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
         pk = kwargs.get("pk")
         self.object = EmailTemplate.objects.get(pk=pk)
 
-        context = {}
-
         vars = [
             ('booking', "Booking"),
             ('visit', "Visit"),
@@ -3790,11 +3788,11 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
         for v in vars:
             key = v[0]
             className = v[1]
-            # context[key] = value
+            clazz = self.classes[className]
             initial.append({
                 'key': key,
                 'type': className,
-                # 'value': value.id
+                'value': clazz.objects.order_by('id').first().id
             })
         formset = EmailTemplatePreviewContextForm(initial=initial)
 
@@ -3812,18 +3810,40 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
                         (item['value'], item['text'])
                         for item in self.get_recipient_choices()
                     ]
-            self.extend_context(context)
 
-        data = {
+        data = self.get_filled_template(initial)
+        context = {
             'form': formset,
-            'subject': self.object.expand_subject(context, True),
-            'body': self.object.expand_body(context, True),
             'objects': self._getObjectJson(),
             'template': self.object
         }
+        context.update(data)
 
-        data.update(self.get_context_data())
-        return render(request, self.template_name, data)
+        context.update(self.get_context_data())
+        return render(request, self.template_name, context)
+
+    def get_filled_template(self, items):
+        context = {}
+        for item in items:
+            key = item['key']
+            type = item['type']
+            value = item['value']
+            if type in self.classes.keys():
+                clazz = self.classes[type]
+                try:
+                    value = clazz.objects.get(pk=value)
+                except clazz.DoesNotExist:
+                    pass
+            elif type == "Recipient":
+                self.update_context_with_recipient(value, context)
+                continue
+            context[key] = value
+
+        self.extend_context(context)
+        return {
+            'subject': self.object.expand_subject(context, True),
+            'body': self.object.expand_body(context, True)
+        }
 
     @method_decorator(login_required)
     def post(self, request, *args, **kwargs):
@@ -3831,38 +3851,15 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
         formset = EmailTemplatePreviewContextForm(request.POST)
         self.object = EmailTemplate.objects.get(pk=pk)
 
-        context = {}
         formset.full_clean()
+        items = []
 
         for form in formset:
             if form.is_valid():
                 if len(form.cleaned_data):
-                    type = form.cleaned_data['type']
-                    value = form.cleaned_data['value']
-                    if type in self.classes.keys():
-                        clazz = self.classes[type]
-                        try:
-                            value = clazz.objects.get(pk=value)
-                        except clazz.DoesNotExist:
-                            pass
-                    elif type == "Recipient":
-                        self.update_context_with_recipient(value, context)
-                        continue
-                    context[form.cleaned_data['key']] = value
+                    items.append(form.cleaned_data)
 
-        self.extend_context(context)
-        data = {
-            'form': formset,
-            'subject': self.object.expand_subject(context, True),
-            'body': self.object.expand_body(context, True),
-            'objects': self._getObjectJson(),
-            'template': self.object
-        }
-        data.update(self.get_context_data())
-        return HttpResponse(json.dumps({
-            'subject': self.object.expand_subject(context, True),
-            'body': self.object.expand_body(context, True)
-        }))
+        return HttpResponse(json.dumps(self.get_filled_template(items)))
 
     def get_breadcrumb_args(self):
         return [self.object]
