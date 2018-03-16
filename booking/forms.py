@@ -15,7 +15,7 @@ from booking.models import MultiProductVisitTemp, MultiProductVisitTempProduct
 from booking.models import Evaluation
 from booking.models import BLANK_LABEL, BLANK_OPTION
 from booking.widgets import OrderedMultipleHiddenChooser
-from booking.utils import binary_or, binary_and
+from booking.utils import binary_or, binary_and, TemplateSplit
 from django import forms
 from django.core import validators
 from django.db.models import Q
@@ -1233,11 +1233,118 @@ class EmailTemplateForm(forms.ModelForm):
             'body': Textarea(attrs={'class': 'form-control', 'rows': 20}),
         }
 
+    area_attrs = {'class': 'form-control', 'rows': 20}
+
+    body_guest = forms.CharField(
+        widget=Textarea(attrs=area_attrs),
+        label=_(u'Tekst til gæster'),
+        help_text=_(u'Hvis feltet er tomt, vil indholdet af '
+                    u'"Tekst til andre" blive sendt i stedet'),
+        required=False
+    )
+    body_teacher = forms.CharField(
+        widget=Textarea(attrs=area_attrs),
+        label=_(u'Tekst til undervisere'),
+        help_text=_(u'Hvis feltet er tomt, vil indholdet af '
+                    u'"Tekst til andre" blive sendt i stedet'),
+        required=False
+    )
+    body_host = forms.CharField(
+        widget=Textarea(attrs=area_attrs),
+        label=_(u'Tekst til værter'),
+        help_text=_(u'Hvis feltet er tomt, vil indholdet af '
+                    u'"Tekst til andre" blive sendt i stedet'),
+        required=False
+    )
+    body_other = forms.CharField(
+        widget=Textarea(attrs=area_attrs),
+        label=_(u'Tekst til andre'),
+        required=False
+    )
+
     def __init__(self, user, *args, **kwargs):
         super(EmailTemplateForm, self).__init__(*args, **kwargs)
         self.fields['organizationalunit'].choices = [BLANK_OPTION] + [
             (x.pk, unicode(x))
             for x in user.userprofile.get_unit_queryset()]
+
+        if self.instance is not None:
+            full_body = self.instance.body
+            split = TemplateSplit(full_body)
+
+        guest_block = split.get_subblock_containing("recipient.guest")
+        teacher_block = split.get_subblock_containing(
+            "recipient.user.userprofile.is_teacher"
+        )
+        host_block = split.get_subblock_containing(
+            "recipient.user.userprofile.is_host"
+        )
+        block = None
+        try:
+            block = next(
+                subblock.block
+                for subblock in [guest_block, teacher_block, host_block]
+                if subblock is not None
+            )
+        except StopIteration:
+            pass
+
+        if block is None:
+            # There is no branching - all body text goes in the 'body' field
+            self.fields['body_guest'].widget = HiddenInput()
+            self.fields['body_teacher'].widget = HiddenInput()
+            self.fields['body_host'].widget = HiddenInput()
+            self.fields['body_other'].widget = HiddenInput()
+            self.body_split = False
+
+        else:
+            # There is branching - body text is split up in separate fields
+            else_block = block.get_else_subblock()
+
+            if guest_block is not None:
+                self.fields['body_guest'].initial = \
+                    (guest_block.block.text_before + guest_block.text +
+                     guest_block.block.text_after).strip()
+            if teacher_block is not None:
+                self.fields['body_teacher'].initial = \
+                    (teacher_block.block.text_before + teacher_block.text +
+                     teacher_block.block.text_after).strip()
+            if host_block is not None:
+                self.fields['body_host'].initial = \
+                    (host_block.block.text_before + host_block.text +
+                     host_block.block.text_after).strip()
+            if else_block is not None:
+                self.fields['body_other'].initial = \
+                    (else_block.block.text_before + else_block.text +
+                     else_block.block.text_after).strip()
+
+            self.fields['body'].widget = HiddenInput()
+
+            self.body_split = True
+
+    def clean(self):
+        super(EmailTemplateForm, self).clean()
+        if self.body_split:
+            body = []
+            first = True
+            for condition, fieldname in [
+                ("recipient.guest", "body_guest"),
+                ("recipient.user.userprofile.is_teacher", "body_teacher"),
+                ("recipient.user.userprofile.is_host", "body_host")
+            ]:
+                sub_body = (self.cleaned_data[fieldname] or "").strip()
+                if len(sub_body) > 0:
+                    body.append(
+                        "\r\n{%% %s %s %%}\r\n%s" %
+                        ("if" if first else "elif", condition, sub_body)
+                    )
+                    first = False
+
+            sub_body = (self.cleaned_data["body_other"] or "").strip()
+            if len(sub_body):
+                body.append("\r\n{%% else %%}\r\n%s" % sub_body)
+            body.append('\r\n{% endif %}')
+            self.cleaned_data['body'] = ''.join(body)
 
 
 class EmailTemplatePreviewContextEntryForm(forms.Form):
