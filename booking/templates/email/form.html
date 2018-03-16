@@ -133,18 +133,18 @@
     {{ form.media }}
     <script type="text/javascript">
 
-        function getSelectionStart(o) {
+        var getSelectionStart = function(o) {
             if (o.createTextRange) {
                 var r = document.selection.createRange().duplicate();
                 r.moveEnd('character', o.value.length);
-                if (r.text == '') return o.value.length;
+                if (r.text === '') return o.value.length;
                 return o.value.lastIndexOf(r.text);
             } else {
                 return o.selectionStart;
             }
         };
 
-        function getSelectionEnd(o) {
+        var getSelectionEnd = function(o) {
             if (o.createTextRange) {
                 var r = document.selection.createRange().duplicate();
                 r.moveStart('character', -o.value.length);
@@ -195,50 +195,33 @@
                 closeMenu.call($(this).find(".dropdown-submenu"));
             });
 
-            var subjectField = $("#{{ form.subject.id_for_label }}");
-            var bodyField = $("#{{ form.body.id_for_label }}");
             var dropdownbutton = $("#fieldinsert > [role=button]");
             var currentFocus;
 
-            var focus = function(target) {
-                dropdownbutton.removeClass("disabled")
-                if (target) {
+            var focus = function(event) {
+                var target = $(event.target);
+                dropdownbutton.removeClass("disabled");
+                if (target.length && target.hasClass("enable-field-insert")) {
                     currentFocus = target;
+                    console.log("set currentFocus",currentFocus);
                 }
             };
             var blur = function() {
                 dropdownbutton.addClass("disabled")
             };
 
-            subjectField.on("focus", focus.bind(null, subjectField));
-            subjectField.on("blur", blur);
-            bodyField.on("focus", focus.bind(null, bodyField));
-            bodyField.on("blur", blur);
+            $(".enable-field-insert").on("focus", focus.bind(null)).on("blur", blur);
 
-            /*setTimeout(function(){
-                var editor = tinymce.getInstanceById("{{ form.body.id_for_label }}");
-                var body = $(editor.contentDocument).find("body");
-                body.on("focus", focus.bind(null, bodyField));
-                body.on("blur", blur);
-            },0);*/
-
-            dropdownbutton.on("focus", function() {
-                focus();
-            });
+            dropdownbutton.on("focus", focus.bind(null));
 
             window.insertField = function(field) {
                 var insertion = "\{\{ "+field+" \}\}";
-                if (currentFocus == subjectField) {
-                    var input = subjectField.get(0);
+                if (currentFocus) {
+                    var contents = currentFocus.val();
+                    var input = currentFocus.get(0);
                     var start = getSelectionStart(input);
                     var end = getSelectionEnd(input);
-                    subjectField.val(input.value.substring(0, start) + insertion + input.value.substring(end));
-                } else if (currentFocus == bodyField) {
-                    //tinymce.get(bodyField.attr("id")).execCommand('mceInsertContent',false, insertion);
-                    var input = bodyField.get(0);
-                    var start = getSelectionStart(input);
-                    var end = getSelectionEnd(input);
-                    bodyField.val(input.value.substring(0, start) + insertion + input.value.substring(end));
+                    currentFocus.val(contents.substring(0, start) + insertion + contents.substring(end));
                 }
             }
         });
