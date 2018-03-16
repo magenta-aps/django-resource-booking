@@ -1229,11 +1229,11 @@ class EmailTemplateForm(forms.ModelForm):
         widgets = {
             'type': Select(attrs={'class': 'form-control'}),
             'organizationalunit': Select(attrs={'class': 'form-control'}),
-            'subject': TextInput(attrs={'class': 'form-control'}),
+            'subject': TextInput(attrs={'class': 'form-control enable-field-insert'}),
             'body': Textarea(attrs={'class': 'form-control', 'rows': 20}),
         }
 
-    area_attrs = {'class': 'form-control', 'rows': 20}
+    area_attrs = {'class': 'form-control enable-field-insert', 'rows': 20}
 
     body_guest = forms.CharField(
         widget=Textarea(attrs=area_attrs),
