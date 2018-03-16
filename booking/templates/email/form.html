@@ -109,29 +109,13 @@
                             </div>
                         </div>
 
-                        <div class="row form-group">
-                            <div class="col-sm-2">
-                                <label class="{{ form.subject.css_classes }}" for="{{ form.subject.id_for_label }}">{{ form.subject.label }}:</label>
-                            </div>
-                            <div class="col-sm-7">
-                                {{ form.subject }}
-                            </div>
-                            <div class="col-sm-3">
-                                {{ form.subject.errors }}
-                            </div>
-                        </div>
+                        {% include "common/fields/generic_field.html" with field=form.subject %}
+                        {% include "common/fields/generic_field.html" with field=form.body %}
 
-                        <div class="row form-group">
-                            <div class="col-sm-2">
-                                <label class="{{ form.body.css_classes }}" for="{{ form.body.id_for_label }}">{{ form.body.label }}:</label>
-                            </div>
-                            <div class="col-sm-7">
-                                {{ form.body }}
-                            </div>
-                            <div class="col-sm-3">
-                                {{ form.body.errors }}
-                            </div>
-                        </div>
+                        {% include "common/fields/generic_field.html" with field=form.body_guest %}
+                        {% include "common/fields/generic_field.html" with field=form.body_teacher %}
+                        {% include "common/fields/generic_field.html" with field=form.body_host %}
+                        {% include "common/fields/generic_field.html" with field=form.body_other %}
                     </div>
                 </div>
             </div>
