@@ -93,7 +93,7 @@
     <script type="text/javascript">
         var url = "{{ request.get_full_path }}";
         var processingMessage = "{% trans 'Arbejder...' %}";
-        var errorMessage = "{% trans 'Fejl' %}";
+        var errorMessage = "{% trans 'Fejl i template' %}";
         {% autoescape off %}
         $(function(){
             var objects = {{ objects }};
@@ -101,58 +101,6 @@
             for (var type in objects) {
                 typeClassMap[type] = 'emailtemplate-type-' + type;
             }
-/*
-            var replaceWidget = function(oldField, newType) {
-                var newWidget = $("<"+newType+">");
-                newWidget.attr({id: oldField.attr("id"), name: oldField.attr("name")});
-                newWidget.addClass("form-control");
-                oldField.replaceWith(newWidget);
-                return newWidget;
-            };
-            */
-/*
-            var typeChanged = function(row, setValue){
-                // When a type field is changed
-                var type = row.find('.emailtemplate-type').val();
-                var valueField = row.find('.emailtemplate-value');
-                if (!valueField.hasClass(typeClassMap[type])) {
-                    var oldValue = valueField.val(),
-                        newWidget;
-                    if (type == 'string') {
-                        newWidget = replaceWidget(valueField, "input");
-                    } else if (type in objects) {
-                        newWidget = replaceWidget(valueField, "select");
-                        var objectList = objects[type];
-                        if (objectList.length) {
-                            for (var i = 0; i < objectList.length; i++) {
-                                var optionData = objectList[i];
-                                var option = $("<option>");
-                                option.val(optionData.value);
-                                option.text(optionData.text);
-                                newWidget.append(option);
-                            }
-                        }
-                    }
-                    if (newWidget) {
-                        newWidget.addClass("emailtemplate-value " + typeClassMap[type]);
-                        //if (setValue === true) {
-                        //    newWidget.val(oldValue);
-                        //}
-                    }
-                }
-            };*/
-/*
-            var rowAdded = function(event, row, setValue){
-                // When a new context row is added
-                row = $(row);
-                typeChanged(row, setValue);
-            };
-*/
-
-            /*$("#rowcontainer").find(".row").each(function(){
-                rowAdded(null, $(this), true);
-            });
-            $("#rowcontainer").on("addrow", rowAdded);*/
 
             var update = function() {
                 $("#subject").text(processingMessage);
@@ -167,20 +115,14 @@
                         $("#body").html(data['body']);
                     },
                     error: function() {
-                        $("#subject").text("Fejl i template");
-                        $("#body").text("Fejl i template");
+                        $("#subject").text(errorMessage);
+                        $("#body").text(errorMessage);
                     }
                 });
             };
 
             $("#rowcontainer").change(update);
         });
-
-
-
-
-
-
         {% endautoescape %}
     </script>
 {% endblock %}
