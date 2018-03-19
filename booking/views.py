@@ -3622,6 +3622,11 @@ class EmailTemplateEditView(LoginRequiredMixin, UnitAccessRequiredMixin,
             self.object = form.save()
             self.object.key = self.object.type.key
             self.object.save()
+            if u'continue' in request.POST:
+                self.just_preserve_back = True
+                return self.redirect(
+                    reverse('emailtemplate-edit', args=[self.object.pk])
+                )
             return self.redirect(reverse('emailtemplate-list'))
 
         return self.render_to_response(
