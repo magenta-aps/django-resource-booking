@@ -1,34 +1,35 @@
 # -*- coding: utf-8 -*-
 import sys
 
-from booking.models import StudyMaterial, ProductAutosend, Booking, \
-    EvaluationGuest
-from booking.models import Subject, BookingGrundskoleSubjectLevel
-from booking.models import Locality, OrganizationalUnitType, OrganizationalUnit
-from booking.models import Product
-from booking.models import Guest, Region, PostCode, School
-from booking.models import ClassBooking, TeacherBooking, \
-    BookingGymnasieSubjectLevel
-from booking.models import EmailTemplate, EmailTemplateType
-from booking.models import Visit
-from booking.models import MultiProductVisitTemp, MultiProductVisitTempProduct
-from booking.models import Evaluation
-from booking.models import BLANK_LABEL, BLANK_OPTION
-from booking.widgets import OrderedMultipleHiddenChooser
-from booking.utils import binary_or, binary_and, TemplateSplit
+from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from django import forms
 from django.core import validators
 from django.db.models import Q
 from django.db.models.expressions import OrderBy
 from django.forms import CheckboxSelectMultiple, CheckboxInput
-from django.forms import ModelMultipleChoiceField
 from django.forms import EmailInput
-from django.forms import formset_factory, inlineformset_factory
-from django.forms import TextInput, NumberInput, DateInput, Textarea, Select
 from django.forms import HiddenInput
+from django.forms import ModelMultipleChoiceField
+from django.forms import TextInput, NumberInput, DateInput, Textarea, Select
+from django.forms import formset_factory, inlineformset_factory
+from django.template import TemplateSyntaxError
 from django.utils.translation import ugettext_lazy as _
 
-from ckeditor_uploader.widgets import CKEditorUploadingWidget
+from booking.models import BLANK_LABEL, BLANK_OPTION
+from booking.models import ClassBooking, TeacherBooking, \
+    BookingGymnasieSubjectLevel
+from booking.models import EmailTemplate, EmailTemplateType
+from booking.models import Evaluation
+from booking.models import EvaluationGuest
+from booking.models import Guest, Region, PostCode, School
+from booking.models import Locality, OrganizationalUnitType, OrganizationalUnit
+from booking.models import MultiProductVisitTemp, MultiProductVisitTempProduct
+from booking.models import Product
+from booking.models import StudyMaterial, ProductAutosend, Booking
+from booking.models import Subject, BookingGrundskoleSubjectLevel
+from booking.models import Visit
+from booking.utils import binary_or, binary_and, TemplateSplit
+from booking.widgets import OrderedMultipleHiddenChooser
 from .fields import ExtensibleMultipleChoiceField, VisitEventTimeField
 from .fields import OrderedModelMultipleChoiceField
 
@@ -1324,6 +1325,31 @@ class EmailTemplateForm(forms.ModelForm):
 
             self.body_split = True
 
+    def clean_body_field(self, fieldname):
+        body = self.cleaned_data[fieldname]
+        try:
+            EmailTemplate._expand(body, {}, True)
+        except TemplateSyntaxError as e:
+            raise forms.ValidationError(
+                _(u'Syntaksfejl i skabelon: ') + "\n%s" % e.message
+            )
+        return body
+
+    def clean_body_guest(self):
+        return self.clean_body_field('body_guest')
+
+    def clean_body_teacher(self):
+        return self.clean_body_field('body_teacher')
+
+    def clean_body_host(self):
+        return self.clean_body_field('body_host')
+
+    def clean_body_other(self):
+        return self.clean_body_field('body_other')
+
+    def clean_body(self):
+        return self.clean_body_field('body')
+
     def clean(self):
         super(EmailTemplateForm, self).clean()
         if self.body_split:
@@ -1334,7 +1360,7 @@ class EmailTemplateForm(forms.ModelForm):
                 ("recipient.user.userprofile.is_teacher", "body_teacher"),
                 ("recipient.user.userprofile.is_host", "body_host")
             ]:
-                sub_body = (self.cleaned_data[fieldname] or "").strip()
+                sub_body = self.cleaned_data.get(fieldname, "").strip()
                 if len(sub_body) > 0:
                     body.append(
                         "\r\n{%% %s %s %%}\r\n%s" %
