@@ -37,7 +37,7 @@ from resource_booking import settings
 from datetime import timedelta, datetime, date, time
 
 
-from profile.constants import TEACHER, HOST
+from profile.constants import TEACHER, HOST, NONE, get_role_name
 from profile.constants import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
 
 import djorm_pgfulltext.fields
@@ -5447,6 +5447,16 @@ class KUEmailMessage(models.Model):
                     email['full'] = address
 
                 email['get_full_name'] = email.get('name', email['full'])
+
+                if guest is not None:
+                    email['type'] = u'Gæst'
+                elif user is not None:
+                    role = user.userprofile.get_role()
+                    if role != NONE:
+                        email['type'] = get_role_name(role)
+                if 'type' not in email:
+                    email['type'] = u'Anden'
+
                 emails.append(email)
         return emails
 
@@ -5572,7 +5582,7 @@ class KUEmailMessage(models.Model):
                 _(u"Template: %s") % template.type.name
                 if template.type else "None",
                 _(u"Modtagere: %s") % ", ".join(
-                    [x['full'] for x in emails]
+                    ["%s (%s)" % (x['full'], x['type']) for x in emails]
                 )
             ]
             ctxmsg = context.get('log_message', None)
