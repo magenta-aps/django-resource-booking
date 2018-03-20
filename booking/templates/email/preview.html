@@ -63,26 +63,27 @@
         </div>
     </form>
 
-    {% if subject or body %}
+    {% for item in recipient_output %}
         <div id="accordion" class="panel-group">
             <div class="panel panel-default">
+                <h3>Til {{ item.label }}</h3>
                 <div class="panel-body">
-                    {% if subject %}
+                    {% if item.subject %}
                         <h3>{% trans 'Beskedens emne' %}</h3>
-                        <blockquote id="subject">{{ subject }}</blockquote>
+                        <blockquote id="subject">{{ item.subject }}</blockquote>
                     {% endif %}
-                    {% if body %}
+                    {% if item.body %}
                         <h3>{% trans 'Beskedens tekst' %}</h3>
                         <blockquote id="body">
                             {% autoescape off %}
-                            {{ body }}
+                                {{ item.body }}
                             {% endautoescape %}
                         </blockquote>
                     {% endif %}
                 </div>
             </div>
         </div>
-    {% endif %}
+    {% endfor %}
 
 {% endblock %}
 

@@ -3692,6 +3692,8 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
         # 'ProductGrundskoleFag': ProductGrundskoleFag
     }
 
+    object = None
+
     def get_recipient_choices(self):
         result = []
         if not self.object:
@@ -3801,28 +3803,27 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
             })
         formset = EmailTemplatePreviewContextForm(initial=initial)
 
-        if self.object is not None:
-            rcpt_choices = self.get_recipient_choices()
-            rcpt_selected = rcpt_choices[0].get("value")
-            formset.initial.append({
-                'key': 'recipient',
-                'type': 'Recipient',
-                'value': rcpt_selected
-            })
-            for form in formset:
-                if form.initial['key'] == 'recipient':
-                    form.fields['value'].widget.choices = [
-                        (item['value'], item['text'])
-                        for item in self.get_recipient_choices()
-                    ]
-
-        data = self.get_filled_template(initial)
         context = {
             'form': formset,
             'objects': self._getObjectJson(),
             'template': self.object
         }
-        context.update(data)
+
+        recipient_output = []
+        for key, label in [
+            ('guest', _(u'gæst')),
+            ('teacher', _(u'underviser')),
+            ('host', _(u'vært'))
+        ]:
+            recplist = [
+                {'type': 'Recipient', 'value': key, 'key': 'recipient'}
+            ]
+            recplist.extend(initial)
+            template = self.get_filled_template(recplist)
+            item = {'key': key, 'label': label}
+            item.update(template)
+            recipient_output.append(item)
+        context['recipient_output'] = recipient_output
 
         context.update(self.get_context_data())
         return render(request, self.template_name, context)
