@@ -66,7 +66,9 @@
     {% for item in recipient_output %}
         <div id="accordion" class="panel-group">
             <div class="panel panel-default">
+            {% if item.label %}
                 <h3>Til {{ item.label }}</h3>
+            {% endif %}
                 <div class="panel-body">
                     {% if item.subject %}
                         <h3>{% trans 'Beskedens emne' %}</h3>

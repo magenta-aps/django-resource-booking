@@ -86,7 +86,7 @@ from booking.forms import MultiProductVisitTempDateForm
 from booking.forms import MultiProductVisitTempProductsForm
 from booking.forms import EvaluationForm, EvaluationStatisticsForm
 
-from booking.utils import full_email, get_model_field_map
+from booking.utils import full_email, get_model_field_map, TemplateSplit
 from booking.utils import get_related_content_types, merge_dicts
 from booking.utils import DummyRecipient
 
@@ -3809,12 +3809,31 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
             'template': self.object
         }
 
+        split = TemplateSplit(self.object.body)
+        has_guest_block = split.get_subblock_containing(
+            "recipient.guest"
+        ) is not None
+        has_teacher_block = split.get_subblock_containing(
+            "recipient.user.userprofile.is_teacher"
+        ) is not None
+        has_host_block = split.get_subblock_containing(
+            "recipient.user.userprofile.is_host"
+        ) is not None
+
         recipient_output = []
-        for key, label in [
-            ('guest', _(u'gæst')),
-            ('teacher', _(u'underviser')),
-            ('host', _(u'vært'))
-        ]:
+        recipient_input = []
+        if has_guest_block:
+            recipient_input.append(('guest', _(u'gæst')))
+        if has_teacher_block:
+            recipient_input.append(('teacher', _(u'underviser')))
+        if has_host_block:
+            recipient_input.append(('host', _(u'vært')))
+
+        recipient_input.append(
+            ('others', _(u'andre') if len(recipient_input) > 0 else None)
+        )
+
+        for key, label in recipient_input:
             recplist = [
                 {'type': 'Recipient', 'value': key, 'key': 'recipient'}
             ]
