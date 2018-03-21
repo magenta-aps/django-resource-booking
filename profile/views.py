@@ -636,7 +636,6 @@ class UserListView(BreadcrumbMixin, EditorRequriedMixin, ListView):
                 Q(last_name__icontains=q)
             )
 
-
         return qs.order_by('first_name', 'last_name', 'username')
 
     def get_context_data(self, **kwargs):
