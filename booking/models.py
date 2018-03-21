@@ -1662,6 +1662,10 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         )),
         TEACHER_EVENT: set((
             TIME_MODE_SPECIFIC,
+            TIME_MODE_GUEST_SUGGESTED,
+            TIME_MODE_RESOURCE_CONTROLLED,
+            TIME_MODE_NONE,
+            TIME_MODE_NO_BOOKING,
         )),
         GROUP_VISIT: set((
             TIME_MODE_SPECIFIC,
