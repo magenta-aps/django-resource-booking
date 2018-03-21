@@ -730,7 +730,7 @@ class EmailTemplateType(
             manual_sending_visit_enabled=True,
             enable_booking=True,
             enable_autosend=True,
-            form_show=True,
+            form_show=False,
             ordering=5
         )
 
