@@ -610,8 +610,9 @@ class UserListView(BreadcrumbMixin, EditorRequriedMixin, ListView):
 
         qs = self.model.objects.filter(
             userprofile__organizationalunit__in=unit_qs
+        ).exclude(
+             userprofile__user_role__role=NONE
         )
-
         try:
             self.selected_unit = int(
                 self.request.GET.get("unit", None)
