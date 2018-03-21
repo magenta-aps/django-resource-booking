@@ -651,7 +651,9 @@ class UserListView(BreadcrumbMixin, EditorRequriedMixin, ListView):
         ]
 
         context['selected_role'] = self.selected_role
-        context['possible_roles'] = user_role_choices
+        context['possible_roles'] = [
+            (id, label) for (id, label) in user_role_choices if id != NONE
+        ]
 
         context.update(kwargs)
         return super(UserListView, self).get_context_data(**context)
