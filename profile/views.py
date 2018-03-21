@@ -610,8 +610,9 @@ class UserListView(BreadcrumbMixin, EditorRequriedMixin, ListView):
 
         qs = self.model.objects.filter(
             userprofile__organizationalunit__in=unit_qs
+        ).exclude(
+             userprofile__user_role__role=NONE
         )
-
         try:
             self.selected_unit = int(
                 self.request.GET.get("unit", None)
@@ -634,6 +635,7 @@ class UserListView(BreadcrumbMixin, EditorRequriedMixin, ListView):
                 Q(username__icontains=q) | Q(first_name__icontains=q) |
                 Q(last_name__icontains=q)
             )
+
 
         return qs.order_by('first_name', 'last_name', 'username')
 
