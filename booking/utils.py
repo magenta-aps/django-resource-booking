@@ -308,10 +308,10 @@ class DummyRecipient(object):
 
 class TemplateSplit(object):
 
-    if_re = r'{%\sif[^}]+}'
-    elif_re = r'{%\selif[^}]+}'
-    else_re = r'{%\selse[^}]+}'
-    endif_re = r'{%\sendif[^}]+}'
+    if_re = r'{%\s*if[^}]+}'
+    elif_re = r'{%\s*elif[^}]+}'
+    else_re = r'{%\s*else[^}]+}'
+    endif_re = r'{%\s*endif[^}]+}'
 
     class SubBlock(object):
         def __init__(self, block, t_start, t_end):
