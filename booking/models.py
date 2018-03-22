@@ -1521,7 +1521,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         (STUDENT_FOR_A_DAY, _(u"Studerende for en dag")),
         (STUDIEPRAKTIK, _(u"Studiepraktik")),
         (OPEN_HOUSE, _(u"Åbent hus")),
-        (TEACHER_EVENT, _(u"Lærerarrangement")),
+        (TEACHER_EVENT, _(u"Tilbud til undervisere")),
         (GROUP_VISIT, _(u"Besøg med klassen")),
         (STUDY_PROJECT, _(u"Studieretningsprojekt")),
         (ASSIGNMENT_HELP, _(u"Lektiehjælp")),
@@ -1634,6 +1634,10 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         )),
         TEACHER_EVENT: set((
             TIME_MODE_SPECIFIC,
+            TIME_MODE_GUEST_SUGGESTED,
+            TIME_MODE_RESOURCE_CONTROLLED,
+            TIME_MODE_NONE,
+            TIME_MODE_NO_BOOKING,
         )),
         GROUP_VISIT: set((
             TIME_MODE_SPECIFIC,
@@ -5352,8 +5356,8 @@ class ClassBooking(Booking):
 class TeacherBooking(Booking):
 
     class Meta:
-        verbose_name = _(u'booking for lærerarrangement')
-        verbose_name_plural = _(u'bookinger for lærerarrangementer')
+        verbose_name = _(u'booking for tilbud til undervisere')
+        verbose_name_plural = _(u'bookinger for tilbud til undervisere')
 
     subjects = models.ManyToManyField(
         Subject,
