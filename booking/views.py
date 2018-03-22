@@ -58,7 +58,9 @@ from booking.models import MultiProductVisit
 from booking.models import MultiProductVisitTemp, MultiProductVisitTempProduct
 from booking.models import Evaluation, EvaluationGuest
 
-from booking.forms import ProductInitialForm, ProductForm
+from booking.forms import ProductInitialForm, ProductForm, EditBookerForm, \
+    ClassBookingBaseForm, TeacherBookingBaseForm, \
+    StudentForADayBookingBaseForm, StudyProjectBookingBaseForm
 from booking.forms import GuestEmailComposeForm, StudentForADayBookingForm
 from booking.forms import OtherProductForm, StudyProjectBookingForm
 from booking.forms import BookingGrundskoleSubjectLevelForm, BookingListForm
@@ -2947,6 +2949,104 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
         return super(VisitBookingCreateView, self).get_context_data(**context)
 
 
+class BookingEditView(BreadcrumbMixin, EditorRequriedMixin, UpdateView):
+    template_name = "booking/edit.html"
+    model = Booking
+
+    def get_forms(self, data=None):
+        products = self.object.visit.products
+        primary_product = products[0]
+
+        bookerform = EditBookerForm(
+            data,
+            instance=self.object.booker,
+            products=products
+        )
+        type = primary_product.type
+        form_class = BookingForm
+        if type == Product.GROUP_VISIT:
+            try:
+                self.object = self.object.classbooking
+                form_class = ClassBookingBaseForm
+            except:
+                pass
+
+            # if primary_product.productgymnasiefag_set.count() > 0:
+            #     forms['subjectform'] = BookingGymnasieSubjectLevelForm(data)
+            # if primary_product.productgrundskolefag_set.count() > 0:
+            #     forms['grundskolesubjectform'] = \
+            #         BookingGrundskoleSubjectLevelForm(data)
+
+        elif type == Product.TEACHER_EVENT:
+            try:
+                self.object = self.object.teacherbooking
+                form_class = TeacherBookingBaseForm
+            except:
+                pass
+
+        elif type == Product.STUDENT_FOR_A_DAY:
+            form_class = StudentForADayBookingBaseForm
+
+        elif type == Product.STUDY_PROJECT:
+            form_class = StudyProjectBookingBaseForm
+
+        bookingform = form_class(
+            data,
+            instance=self.object,
+            product=primary_product
+        )
+        if self.object.visit.is_multiproductvisit and \
+                'desired_time' in bookingform.fields:
+            del bookingform.fields['desired_time']
+
+        forms = {
+            'bookerform': bookerform,
+            'bookingform': bookingform
+        }
+        return forms
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        return self.render_to_response(
+            self.get_context_data(**self.get_forms())
+        )
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        forms = self.get_forms(request.POST)
+        bookerform = forms['bookerform']
+        bookingform = forms['bookingform']
+        bookerform.full_clean()
+        bookingform.full_clean()
+        if bookerform.is_valid() and bookingform.is_valid():
+            self.object = bookingform.save()
+            self.object.booker = bookerform.save()
+            return redirect(reverse('booking-view', args=[self.object.pk]))
+        return self.render_to_response(
+            self.get_context_data(**forms)
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super(BookingEditView, self).get_context_data(**kwargs)
+        context['oncancel'] = reverse('booking-view', args=[self.object.pk])
+        context['formname'] = "bookingform"
+        context['level_map'] = Guest.level_map
+        context['editing'] = True
+        return context
+
+    def get_breadcrumb_args(self):
+        return [self.object]
+
+    @staticmethod
+    def build_breadcrumbs(booking):
+        return BookingDetailView.build_breadcrumbs(booking) + [
+            {
+                'text': _(u'Redigér'),
+                'url': reverse('booking-edit-view', args=[booking.id])
+            }
+        ]
+
+
 class EmbedcodesView(BreadcrumbMixin, AdminRequiredMixin, TemplateView):
     template_name = "embedcodes.html"
 
@@ -3259,9 +3359,11 @@ class BookingDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
         context['modal'] = BookingNotifyView.modal
 
         user = self.request.user
-        if hasattr(user, 'userprofile') and \
-                user.userprofile.can_notify(self.object):
-            context['can_notify'] = True
+        if hasattr(user, 'userprofile'):
+            if user.userprofile.can_notify(self.object):
+                context['can_notify'] = True
+            if user.userprofile.can_edit(self.object):
+                context['can_edit'] = True
 
         if self.object.visit.is_multiproductvisit:
             context['emailtemplates'] = EmailTemplateType.get_choices(

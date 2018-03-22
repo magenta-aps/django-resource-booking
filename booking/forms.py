@@ -766,6 +766,7 @@ class ProductAutosendFormSet(ProductAutosendFormSetBase):
 class BookingForm(forms.ModelForm):
 
     scheduled = False
+    product = None
 
     eventtime = VisitEventTimeField(
         required=False,
@@ -796,7 +797,11 @@ class BookingForm(forms.ModelForm):
     def __init__(self, data=None, product=None, *args, **kwargs):
         super(BookingForm, self).__init__(data, *args, **kwargs)
 
-        self.product = product
+        if product is None:
+            product = self.product
+        else:
+            self.product = product
+
         # self.scheduled = visit is not None and \
         #    visit.type == Product.FIXED_SCHEDULE_GROUP_VISIT
         self.scheduled = (
@@ -869,7 +874,7 @@ class BookingForm(forms.ModelForm):
 
     def save(self, commit=True, *args, **kwargs):
         booking = super(BookingForm, self).save(commit, *args, **kwargs)
-        if booking.visit:
+        if booking.visit and 'desired_time' in self.cleaned_data:
             booking.visit.desired_time = self.cleaned_data['desired_time']
         return booking
 
@@ -1098,7 +1103,139 @@ class BookerForm(forms.ModelForm):
         return booker
 
 
-class ClassBookingForm(BookingForm):
+class EditBookerForm(forms.ModelForm):
+
+    class Meta:
+        model = Guest
+        fields = ('firstname', 'lastname', 'email', 'phone', 'line',
+                  'level', 'attendee_count')
+        widgets = {
+            'firstname': TextInput(
+                attrs={'class': 'form-control input-sm',
+                       'placeholder': _(u'Fornavn')}
+            ),
+            'lastname': TextInput(
+                attrs={'class': 'form-control input-sm',
+                       'placeholder': _(u'Efternavn')}
+            ),
+            'email': EmailInput(
+                attrs={'class': 'form-control input-sm',
+                       'placeholder': _(u'E-mail')}
+            ),
+            'phone': TextInput(
+                attrs={'class': 'form-control input-sm',
+                       'placeholder': _(u'Telefonnummer'),
+                       'pattern': '(\(\+\d+\)|\+\d+)?\s*\d+[ \d]*'},
+            ),
+            'attendee_count': NumberInput(
+                attrs={'class': 'form-control input-sm', 'min': 0}
+            ),
+            'line': Select(
+                attrs={'class': 'selectpicker form-control'}
+            ),
+            'level': Select(
+                attrs={'class': 'selectpicker form-control'}
+            ),
+        }
+
+    school = forms.CharField(
+        widget=TextInput(
+            attrs={'class': 'form-control input-sm',
+                   'autocomplete': 'off'}
+        )
+    )
+    school_type = forms.IntegerField(
+        widget=HiddenInput()
+    )
+    postcode = forms.IntegerField(
+        widget=NumberInput(
+            attrs={'class': 'form-control input-sm',
+                   'placeholder': _(u'Postnummer'),
+                   'min': '1000', 'max': '9999'}
+        ),
+        required=False
+    )
+    city = forms.CharField(
+        widget=TextInput(
+            attrs={'class': 'form-control input-sm',
+                   'placeholder': _(u'By')}
+        ),
+        required=False
+    )
+    region = forms.ModelChoiceField(
+        queryset=Region.objects.all(),
+        widget=Select(
+            attrs={'class': 'selectpicker form-control'}
+        ),
+        required=False
+    )
+
+    def __init__(self, data=None, products=[], *args, **kwargs):
+        super(EditBookerForm, self).__init__(data, *args, **kwargs)
+        self.fields['school'].widget.attrs['data-institution-level'] = \
+            self.instance.level
+        if self.instance.school is not None:
+            self.fields['school'].initial = self.instance.school.name
+            postcode = self.instance.school.postcode
+            if postcode is not None:
+                self.fields['postcode'].initial = postcode.number
+                self.fields['city'].initial = postcode.city
+                self.fields['region'].initial = postcode.region
+            level = binary_or(*[
+                product.institution_level for product in products
+            ])
+            self.fields['school'].widget.attrs['data-institution-level'] = \
+                level
+            self.fields['school_type'].initial = level
+
+    def clean_school(self):
+        school = self.cleaned_data.get('school')
+        if School.objects.filter(name=school).count() == 0:
+            raise forms.ValidationError(
+                _(u'Skole ikke fundet')
+            )
+        return school
+
+    def clean_postcode(self):
+        postcode = self.cleaned_data.get('postcode')
+        if postcode is not None:
+            try:
+                PostCode.objects.get(number=postcode)
+            except:
+                raise forms.ValidationError(_(u'Ukendt postnummer'))
+        return postcode
+
+    def save(self, commit=True):
+        booker = super(EditBookerForm, self).save(commit=False)
+        data = self.cleaned_data
+        school = School.objects.filter(name__iexact=data.get('school')).first()
+        booker.school = school
+        booker.save()
+        return booker
+
+
+class ClassBookingBaseForm(forms.ModelForm):
+
+    class Meta:
+        model = ClassBooking
+        fields = ('tour_desired', 'catering_desired', 'presentation_desired',
+                  'custom_desired', 'notes')
+        widgets = {
+            'notes': Textarea(attrs={
+                'class': 'form-control'
+            })
+        }
+
+    def __init__(self, data=None, product=None, *args, **kwargs):
+        self.product = product
+        super(ClassBookingBaseForm, self).__init__(data, *args, **kwargs)
+        if product is not None:
+            for service in ['tour', 'catering', 'presentation', 'custom']:
+                if not getattr(self.product, service + '_available'):
+                    del self.fields[service + '_desired']
+
+
+class ClassBookingForm(ClassBookingBaseForm, BookingForm):
 
     class Meta:
         model = ClassBooking
@@ -1107,38 +1244,50 @@ class ClassBookingForm(BookingForm):
         labels = BookingForm.Meta.labels
         widgets = BookingForm.Meta.widgets
 
+
+class TeacherBookingBaseForm(forms.ModelForm):
+
+    class Meta:
+        model = TeacherBooking
+        fields = ('subjects', 'notes')
+        widgets = {
+            'notes': Textarea(attrs={
+                'class': 'form-control'
+            })
+        }
+
     def __init__(self, data=None, product=None, *args, **kwargs):
-        super(ClassBookingForm, self).__init__(data, product, *args, **kwargs)
-
-        if self.product is not None:
-            for service in ['tour', 'catering', 'presentation', 'custom']:
-                if not getattr(self.product, service + '_available'):
-                    del self.fields[service + '_desired']
-
-    def save(self, commit=True, *args, **kwargs):
-        booking = super(ClassBookingForm, self).save(commit=False)
-        data = self.cleaned_data
-
-        for service in ['tour_desired', 'catering_desired',
-                        'presentation_desired', 'custom_desired']:
-            if service not in data:
-                data[service] = False
-                setattr(booking, service, False)
-
-        if commit:
-            booking.save(*args, **kwargs)
-        return booking
+        self.product = product
+        super(TeacherBookingBaseForm, self).__init__(data, *args, **kwargs)
 
 
-class TeacherBookingForm(BookingForm):
+class TeacherBookingForm(TeacherBookingBaseForm, BookingForm):
+
     class Meta:
         model = TeacherBooking
         fields = ('subjects', 'notes', 'eventtime')
-        labels = BookingForm.Meta.labels
         widgets = BookingForm.Meta.widgets
 
 
-class StudentForADayBookingForm(BookingForm):
+class StudentForADayBookingBaseForm(forms.ModelForm):
+
+    class Meta:
+        model = Booking
+        fields = ('notes',)
+        widgets = {
+            'notes': Textarea(attrs={
+                'class': 'form-control'
+            })
+        }
+
+    def __init__(self, data=None, product=None, *args, **kwargs):
+        self.product = product
+        super(StudentForADayBookingBaseForm, self).__init__(
+            data, *args, **kwargs
+        )
+
+
+class StudentForADayBookingForm(StudentForADayBookingBaseForm, BookingForm):
     class Meta:
         model = Booking
         fields = ('notes', 'eventtime')
@@ -1146,7 +1295,26 @@ class StudentForADayBookingForm(BookingForm):
         widgets = BookingForm.Meta.widgets
 
 
-class StudyProjectBookingForm(BookingForm):
+class StudyProjectBookingBaseForm(forms.ModelForm):
+
+    class Meta:
+        model = Booking
+        fields = ('notes',)
+        widgets = {
+            'notes': Textarea(attrs={
+                'class': 'form-control'
+            })
+        }
+
+    def __init__(self, data=None, product=None, *args, **kwargs):
+        super(StudyProjectBookingBaseForm, self).__init__(
+            data, *args, **kwargs
+        )
+        self.product = product
+
+
+class StudyProjectBookingForm(StudyProjectBookingBaseForm, BookingForm):
+
     class Meta:
         model = Booking
         fields = ('notes', 'eventtime')
