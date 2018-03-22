@@ -7,13 +7,12 @@
     <div class="col-sm-7">
         {{ form.tilbudsansvarlig }}
         <p>
-            {% trans 'Valg af tilbudsansvarlig gør tilbuddet personligt for den valgte ansvarlige' %}.<br />
-            {% trans 'Den tilbudsansvarlige vil også være den der modtager forespørgsler via formularen "Spørg om tilbud"' %}.
+            {% trans 'I dette felt er det muligt at vælge en anden ansvarlig koordinator for tilbuddet end den person, der opretter tilbuddet' %}.<br />
+            {% trans 'Den valgte koordinator vil også modtage forespørgsler via formularen "Spørg om tilbud"' %}.
+            {% trans 'Udfyldes feltet ikke er koordinator:' %}
             {% if form.instance.pk %}
-                {% trans 'Udfyldes feltet ikke bruges i stedet brugeren der oprettede tilbuddet,'%}
                 "{{ form.instance.created_by.get_full_name }} &lt;{{ form.instance.created_by.email }}&gt;".
             {% else %}
-                {% trans 'Udfyldes feltet ikke bruges i stedet nuværende bruger,'%}
                 "{{ request.user.get_full_name }} &lt;{{ request.user.email }}&gt;".
             {% endif %}
         </p>

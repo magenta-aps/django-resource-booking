@@ -1099,7 +1099,7 @@ class EmailTemplate(models.Model):
         return self.type.name
 
     def expand_subject(self, context, keep_placeholders=False):
-        return self._expand(self.subject, context, keep_placeholders)
+        return self._expand(self.subject, context, keep_placeholders, False)
 
     def expand_body(self, context, keep_placeholders=False, encapsulate=False):
         body = self._expand(self.body, context, keep_placeholders)
@@ -1116,12 +1116,16 @@ class EmailTemplate(models.Model):
     ]
 
     @staticmethod
-    def get_template_object(template_text):
+    def get_template_object(template_text, escape=True):
         # Add default includes and encapsulate in danish
-        encapsulated = "\n".join(EmailTemplate.default_includes) + \
-            "{% language 'da' %}\n" + \
-            unicode(template_text) + \
-            "{% endlanguage %}\n"
+        lines = [] + EmailTemplate.default_includes + ["{% language 'da' %}"]
+        if not escape:
+            lines.append("{% autoescape off %}")
+        lines.append(unicode(template_text))
+        if not escape:
+            lines.append("{% endautoescape %}")
+        lines.append("{% endlanguage %}")
+        encapsulated = "\n".join(lines)
         try:
             return Template(encapsulated)
         except TemplateSyntaxError as e:
@@ -1129,8 +1133,8 @@ class EmailTemplate(models.Model):
             raise e
 
     @staticmethod
-    def _expand(text, context, keep_placeholders=False):
-        template = EmailTemplate.get_template_object(text)
+    def _expand(text, context, keep_placeholders=False, escape=True):
+        template = EmailTemplate.get_template_object(text, escape)
 
         if isinstance(context, dict):
             context = make_context(context)
@@ -1517,7 +1521,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         (STUDENT_FOR_A_DAY, _(u"Studerende for en dag")),
         (STUDIEPRAKTIK, _(u"Studiepraktik")),
         (OPEN_HOUSE, _(u"Åbent hus")),
-        (TEACHER_EVENT, _(u"Lærerarrangement")),
+        (TEACHER_EVENT, _(u"Tilbud til undervisere")),
         (GROUP_VISIT, _(u"Besøg med klassen")),
         (STUDY_PROJECT, _(u"Studieretningsprojekt")),
         (ASSIGNMENT_HELP, _(u"Lektiehjælp")),
@@ -1630,6 +1634,10 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         )),
         TEACHER_EVENT: set((
             TIME_MODE_SPECIFIC,
+            TIME_MODE_GUEST_SUGGESTED,
+            TIME_MODE_RESOURCE_CONTROLLED,
+            TIME_MODE_NONE,
+            TIME_MODE_NO_BOOKING,
         )),
         GROUP_VISIT: set((
             TIME_MODE_SPECIFIC,
@@ -1687,7 +1695,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     tilbudsansvarlig = models.ForeignKey(
         User,
-        verbose_name=_(u'Tilbudsansvarlig'),
+        verbose_name=_(u'Koordinator'),
         related_name='tilbudsansvarlig_for_set',
         blank=True,
         null=True,
@@ -3213,6 +3221,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def start_datetime(self):
         if hasattr(self, 'eventtime'):
             return self.eventtime.start
+        elif self.cancelled_eventtime:
+            return self.cancelled_eventtime.start
         else:
             return None
 
@@ -3220,6 +3230,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def end_datetime(self):
         if hasattr(self, 'eventtime'):
             return self.eventtime.end
+        elif self.cancelled_eventtime:
+            return self.cancelled_eventtime.end
         else:
             return None
 
@@ -5344,8 +5356,8 @@ class ClassBooking(Booking):
 class TeacherBooking(Booking):
 
     class Meta:
-        verbose_name = _(u'booking for lærerarrangement')
-        verbose_name_plural = _(u'bookinger for lærerarrangementer')
+        verbose_name = _(u'booking for tilbud til undervisere')
+        verbose_name_plural = _(u'bookinger for tilbud til undervisere')
 
     subjects = models.ManyToManyField(
         Subject,

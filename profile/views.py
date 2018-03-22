@@ -610,8 +610,9 @@ class UserListView(BreadcrumbMixin, EditorRequriedMixin, ListView):
 
         qs = self.model.objects.filter(
             userprofile__organizationalunit__in=unit_qs
+        ).exclude(
+             userprofile__user_role__role=NONE
         )
-
         try:
             self.selected_unit = int(
                 self.request.GET.get("unit", None)
@@ -650,7 +651,9 @@ class UserListView(BreadcrumbMixin, EditorRequriedMixin, ListView):
         ]
 
         context['selected_role'] = self.selected_role
-        context['possible_roles'] = user_role_choices
+        context['possible_roles'] = [
+            (id, label) for (id, label) in user_role_choices if id != NONE
+        ]
 
         context.update(kwargs)
         return super(UserListView, self).get_context_data(**context)
@@ -858,7 +861,7 @@ class StatisticsView(EditorRequriedMixin, BreadcrumbMixin, TemplateView):
                 booking.booker.get_full_name() or "",
                 booking.booker.get_email() or "",
                 booking.visit.product.comment or "",
-                booking.comments or "",
+                booking.notes or "",
                 u", ".join([
                     u'%s' % (x.get_full_name())
                     for x in

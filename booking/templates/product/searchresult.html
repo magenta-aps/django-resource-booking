@@ -184,6 +184,12 @@
                         </span>
                     </li>
                     {% endif %}
+                
+                    <li class="page-count">
+                        {% blocktrans with page=page_obj.number pages=paginator.num_pages %}
+                            Side {{ page }} af {{ pages }}
+                        {% endblocktrans %}
+                    </li>
 
                     {% if page_obj.has_next %}
                     <li>
@@ -204,6 +210,7 @@
             </nav>
             {% endif %}
         </div>
+
         <div class="col-sm-4 col-md-3">
             <div class="input-group input-group-sm search-list items-pr-side">
                 <span class="input-group-addon">Vis</span>

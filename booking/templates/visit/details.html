@@ -442,6 +442,22 @@
 
                     {% endif %}
 
+{#                    Deaktiveret jf. #20680 #}
+{#                    {% if can_edit and object.has_changes_after_planned %} #}
+{#                        <div class="row row-border"> #}
+{#                            <strong class="{{ left_class }}"> #}
+{#                                {% trans 'Nylige ændringer' %} #}
+{#                            </strong> #}
+{#                            <div class="{{ center_class }}"> #}
+{#                                <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span> #}
+{#                                {% trans 'Dette besøg er markeret som havende nylige ændringer' %}. #}
+{#                            </div> #}
+{#                            <div class="{{ right_class }}"> #}
+{#                                <a href="{% url 'visit-reset-changes-marker' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Klik her for at fjerne markeringen' %}</a> #}
+{#                            </div> #}
+{#                        </div> #}
+{#                    {% endif %} #}
+
                 </div>
             </div>
             {% endwith %}
