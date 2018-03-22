@@ -776,7 +776,9 @@ class StatisticsView(EditorRequriedMixin, TemplateView):
                     u"%s - %s" % (x.subject, x.level)
                     for x in booking.bookinggrundskolesubjectlevel_set.all()
                 ] + [
-                    u"%s - niveau %s" % (x.subject, x.level.get_level_display())
+                    u"%s - niveau %s" % (
+                        x.subject, x.level.get_level_display()
+                    )
                     for x in
                     booking.bookinggymnasiesubjectlevel_set.all()
                 ]
