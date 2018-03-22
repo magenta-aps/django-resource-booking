@@ -699,7 +699,7 @@ class EmailTemplateType(
             manual_sending_booking_mpv_enabled=True,
             enable_booking=True,
             enable_autosend=True,
-            form_show=True,
+            form_show=False,
             ordering=4
         )
 
@@ -889,7 +889,7 @@ class EmailTemplateType(
             name_da=u'Besked til alle om evaluering',
             manual_sending_visit_enabled=True,
             enable_autosend=True,
-            form_show=True,
+            form_show=False,
             ordering=20
         )
 
