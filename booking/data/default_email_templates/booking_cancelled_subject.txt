@@ -1,1 +1,1 @@
-Aflysning af besøg {{ visit.display_title }} d. {{ visit.start_datetime }}
+Aflysning af besøg {{ visit.display_title }}{% if visit.start_datetime %} d. {{ visit.start_datetime }}{% endif %}

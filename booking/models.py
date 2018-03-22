@@ -3213,6 +3213,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def start_datetime(self):
         if hasattr(self, 'eventtime'):
             return self.eventtime.start
+        elif self.cancelled_eventtime:
+            return self.cancelled_eventtime.start
         else:
             return None
 
@@ -3220,6 +3222,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def end_datetime(self):
         if hasattr(self, 'eventtime'):
             return self.eventtime.end
+        elif self.cancelled_eventtime:
+            return self.cancelled_eventtime.end
         else:
             return None
 
