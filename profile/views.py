@@ -778,7 +778,7 @@ class StatisticsView(EditorRequriedMixin, BreadcrumbMixin, TemplateView):
 
     def _write_csv(self, response):
         context = self.get_context_data()
-        writer = UnicodeWriter(response, delimiter=',')
+        writer = UnicodeWriter(response, delimiter=';')
 
         # Heading
         writer.writerow([
@@ -840,10 +840,12 @@ class StatisticsView(EditorRequriedMixin, BreadcrumbMixin, TemplateView):
 
             leveltext = u", ".join(
                 [
-                    u"%s, %s" % (x.subject, x.level)
+                    u"%s - %s" % (x.subject, x.level)
                     for x in booking.bookinggrundskolesubjectlevel_set.all()
                 ] + [
-                    u"%s, niveau %s" % (x.subject, x.level.get_level_display())
+                    u"%s - niveau %s" % (
+                        x.subject, x.level.get_level_display()
+                    )
                     for x in
                     booking.bookinggymnasiesubjectlevel_set.all()
                 ]
