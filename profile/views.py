@@ -950,7 +950,7 @@ class EmailLoginView(DetailView):
         return redirect(self.get_dest(request, *args, **kwargs))
 
 
-class EditMyProductsView(EditorRequriedMixin, UpdateView):
+class EditMyProductsView(EditorRequriedMixin, BreadcrumbMixin, UpdateView):
     model = UserProfile
     form_class = EditMyProductsForm
     template_name = 'profile/my_resources.html'
