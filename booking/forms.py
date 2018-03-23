@@ -1493,7 +1493,8 @@ class EmailTemplateForm(forms.ModelForm):
                 pass
 
             if block is None:
-                # There is no branching - all body text goes in the 'body' field
+                # There is no branching;
+                # all body text goes in the 'body' field
                 self.fields[field + '_guest'].widget = HiddenInput()
                 self.fields[field + '_teacher'].widget = HiddenInput()
                 self.fields[field + '_host'].widget = HiddenInput()
