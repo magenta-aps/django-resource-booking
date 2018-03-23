@@ -893,7 +893,7 @@ class StatisticsView(EditorRequriedMixin, BreadcrumbMixin, TemplateView):
     def build_breadcrumbs():
         return [{
             'url': reverse('statistics'),
-            'text': _(u'Statistik over evalueringer')
+            'text': _(u'Statistik over tilmeldinger')
         }]
 
 
@@ -977,6 +977,13 @@ class EditMyProductsView(EditorRequriedMixin, UpdateView):
 
     def get_success_url(self):
         return reverse('user_profile')
+
+    @staticmethod
+    def build_breadcrumbs():
+        return [{
+            'url': reverse('my-resources'),
+            'text': _(u'Mine tilbud')
+        }]
 
 
 class AvailabilityView(LoginRequiredMixin, DetailView):
