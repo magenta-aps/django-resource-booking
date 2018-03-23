@@ -787,8 +787,9 @@ class StatisticsView(EditorRequriedMixin, BreadcrumbMixin, TemplateView):
             _(u"Antal deltagere"), _(u"Oplæg om uddannelser"),
             _(u"Rundvisning"), _(u"Andet"), _(u"Region"), _(u"Skole"),
             _(u"Postnummer og by"), _(u"Adresse"), _(u"Lærer"),
-            _(u"Lærer email"), _(u"Bemærkninger fra koordinator"),
-            _(u"Bemærkninger fra lærer"), _(u"Værter"), _(u"Undervisere")
+            _(u"Lærer email"), _(u"Bemærkninger på tilbud"),
+            _(u"Bemærkninger fra koordinator"), _(u"Bemærkninger fra lærer"),
+            _(u"Værter"), _(u"Undervisere")
         ])
         # Rows
         for booking in context['bookings']:
@@ -872,6 +873,7 @@ class StatisticsView(EditorRequriedMixin, BreadcrumbMixin, TemplateView):
                 booking.booker.get_full_name() or "",
                 booking.booker.get_email() or "",
                 booking.visit.product.comment or "",
+                booking.visit.comments or "",
                 booking.notes or "",
                 u", ".join([
                     u'%s' % (x.get_full_name())
