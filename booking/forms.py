@@ -1400,7 +1400,7 @@ class EmailTemplateForm(forms.ModelForm):
         return self.clean_text_field('body')
 
     def clean(self):
-        super(EmailTemplateForm, self).clean()
+        cleaned_data = super(EmailTemplateForm, self).clean()
         for field in ['subject', 'body']:
             sep = '\r\n' if field == 'body' else ''
             if self.split[field]:
@@ -1412,7 +1412,7 @@ class EmailTemplateForm(forms.ModelForm):
                      field + "_teacher"),
                     ("recipient.user.userprofile.is_host", field + "_host")
                 ]:
-                    sub_text = self.cleaned_data.get(fieldname, "").strip()
+                    sub_text = cleaned_data.get(fieldname, "").strip()
                     if len(sub_text) > 0:
                         text.append(
                             "%s{%% %s %s %%}%s%s" %
@@ -1421,11 +1421,11 @@ class EmailTemplateForm(forms.ModelForm):
                         )
                         first = False
 
-                sub_text = (self.cleaned_data[field + "_other"] or "").strip()
+                sub_text = (cleaned_data[field + "_other"] or "").strip()
                 text.append("%s{%% else %%}%s%s" % (sep, sep, sub_text))
                 text.append("%s{%% endif %%}" % (sep,))
-                self.cleaned_data['text'] = ''.join(text)
-                print text
+                cleaned_data['text'] = ''.join(text)
+        return cleaned_data
 
 
 class EmailTemplatePreviewContextEntryForm(forms.Form):
