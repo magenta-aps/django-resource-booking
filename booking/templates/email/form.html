@@ -112,9 +112,16 @@
                         {% include "common/fields/generic_field.html" with field=form.subject %}
                         {% include "common/fields/generic_field.html" with field=form.body %}
 
+                        {% include "common/fields/generic_field.html" with field=form.subject_guest %}
                         {% include "common/fields/generic_field.html" with field=form.body_guest %}
+
+                        {% include "common/fields/generic_field.html" with field=form.subject_teacher %}
                         {% include "common/fields/generic_field.html" with field=form.body_teacher %}
+
+                        {% include "common/fields/generic_field.html" with field=form.subject_host %}
                         {% include "common/fields/generic_field.html" with field=form.body_host %}
+
+                        {% include "common/fields/generic_field.html" with field=form.subject_other %}
                         {% include "common/fields/generic_field.html" with field=form.body_other %}
                     </div>
                 </div>
