@@ -1425,7 +1425,7 @@ class EmailTemplateForm(forms.ModelForm):
                 sub_text = (cleaned_data[field + "_other"] or "").strip()
                 text.append("%s{%% else %%}%s%s" % (sep, sep, sub_text))
                 text.append("%s{%% endif %%}" % (sep,))
-                cleaned_data['text'] = ''.join(text)
+                cleaned_data[field] = ''.join(text)
         return cleaned_data
 
 
