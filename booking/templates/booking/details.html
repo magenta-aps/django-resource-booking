@@ -139,7 +139,7 @@
                 <dd>{{ object.booker.get_level_display }}</dd>
 
                 <dt>{% trans 'Antal deltagere:' %}</dt>
-                <dd>{{ object.booker.attendee_count }}</dd>
+                <dd>{{ object.booker.attendee_count|default_if_none:0 }}</dd>
 
                 <dt>{% trans 'Kommentar:' %}</dt>
                 <dd>{{ object.notes }}</dd>
