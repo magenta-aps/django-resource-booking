@@ -52,7 +52,7 @@
             <div class="row form-group"{% if forloop.first %} id="rowprototype"{% endif %}>
                 {{ entry.type }}
                 <div class="col-sm-2">
-                    <label class="control-label" for="{{ entry.value.id_for_label }}">{{ entry.key.value }}:</label>
+                    <label class="control-label" for="{{ entry.value.id_for_label }}">{% trans entry.key.value|capfirst %}:</label>
                     {{ entry.key }}
                 </div>
                 <div class="col-sm-10">
