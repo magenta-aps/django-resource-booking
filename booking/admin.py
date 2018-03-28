@@ -3,7 +3,8 @@
 from django.contrib import admin
 from django.db import models as django_models
 from django.db.models import Q
-from django.db.models.fields.related import ReverseSingleRelatedObjectDescriptor
+from django.db.models.fields.related import \
+    ReverseSingleRelatedObjectDescriptor
 
 from booking.resource_based import models as resource_models
 from profile.models import COORDINATOR, FACULTY_EDITOR, EDIT_ROLES
