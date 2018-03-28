@@ -1498,11 +1498,17 @@ msgstr ""
 
 #: booking/models.py:5222
 msgid "booking"
-msgstr ""
+msgstr "tilmelding"
+
+msgid "visit"
+msgstr "besøg"
+
+msgid "product"
+msgstr "tilbud"
 
 #: booking/models.py:5223
 msgid "bookinger"
-msgstr ""
+msgstr "tilmeldinger"
 
 #: booking/models.py:5237
 msgid "Ventelisteposition"
@@ -8255,7 +8261,3 @@ msgstr ""
 #~ msgid "system_current_language"
 #~ msgstr "da"
 
-#~ msgid ""
-#~ "Required. 30 characters or fewer. Letters, digits and @/./+/-/_ only."
-#~ msgstr ""
-#~ "Påkrævet. Højst 30 tegn. Kun bogstaver (a-z) og cifre samt @/./+/-/_"
