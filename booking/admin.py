@@ -3,10 +3,11 @@
 from django.contrib import admin
 from django.db import models as django_models
 from django.db.models import Q
+from django.db.models.fields.related import ReverseSingleRelatedObjectDescriptor
 
-from . import models as booking_models
-from profile.models import COORDINATOR, FACULTY_EDITOR, EDIT_ROLES
 from booking.resource_based import models as resource_models
+from profile.models import COORDINATOR, FACULTY_EDITOR, EDIT_ROLES
+from . import models as booking_models
 
 EXCLUDE_MODELS = set([
     booking_models.GymnasieLevel,
@@ -39,7 +40,8 @@ CLASSES_BY_ROLE[FACULTY_EDITOR].update(CLASSES_BY_ROLE[COORDINATOR])
 CUSTOM_ADMIN_CLASSES = {}
 
 MODEL_UNIT_FILTER_MAP = {
-    'Room': 'locality__organizationalunit'
+    'Room': 'locality__organizationalunit',
+    'Visit': 'eventtime__product__organizationalunit'
 }
 
 
@@ -72,7 +74,10 @@ class KUBookingModelAdmin(admin.ModelAdmin):
         # Filter anything that has a unit to the units the user has access to
         model_name = self.model._meta.object_name
         unit_filter_match = None
-        if hasattr(self.model, 'organizationalunit'):
+        if hasattr(self.model, 'organizationalunit') and isinstance(
+                self.model.organizationalunit,
+                ReverseSingleRelatedObjectDescriptor
+        ):
             unit_filter_match = 'organizationalunit'
         elif model_name in MODEL_UNIT_FILTER_MAP:
             unit_filter_match = MODEL_UNIT_FILTER_MAP[model_name]
