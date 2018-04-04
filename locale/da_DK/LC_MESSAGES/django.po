@@ -6367,7 +6367,7 @@ msgid "Lærer email"
 msgstr ""
 
 msgid "Required. 30 characters or fewer. Letters, digits and @/./+/-/_ only."
-msgstr "Påkrævet. Højst 30 tegn. Kun bogstaver (a-z) og cifre samt @/./+/-/_"
+msgstr "Højst 30 tegn. Kun bogstaver (a-z) og cifre samt @/./+/-/_"
 
 #: profile/views.py:790
 msgid "Bemærkninger på tilbud"
@@ -8260,4 +8260,3 @@ msgstr ""
 
 #~ msgid "system_current_language"
 #~ msgstr "da"
-
