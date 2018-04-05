@@ -63,6 +63,22 @@
                             </h4>
                         </a>
                     {% endif %}
+                    {% if request.user.userprofile.can_edit_product %}
+                        <a class="list-group-item" href="{% url 'admin:booking_product_changelist' %}">
+                            <h4 class="list-group-item-heading">
+                                {% trans 'Administrér tilbud' %}
+                                <span class="glyphicon glyphicon-question-sign pull-right" data-toggle="tooltip" data-placement="right" title="{% trans 'Et tilbud er et arrangement som foregår på et eller flere tidspunkter.' %}"></span>
+                            </h4>
+                        </a>
+                    {% endif %}
+                    {% if request.user.userprofile.can_edit_visit %}
+                        <a class="list-group-item" href="{% url 'admin:booking_visit_changelist' %}">
+                        <h4 class="list-group-item-heading">
+                            {% trans 'Administrér besøg' %}
+                            <span class="glyphicon glyphicon-question-sign pull-right" data-toggle="tooltip" data-placement="right" title="{% trans 'Et besøg er en instans af arrangement som foregår på ét tidspunkt.' %}"></span>
+                        </h4>
+                    </a>
+                    {% endif %}
                     <a class="list-group-item" href="{% url 'resource-list' %}">
                         <h4 class="list-group-item-heading">
                             {% trans 'Administrér ressourcer' %}
