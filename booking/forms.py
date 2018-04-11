@@ -884,7 +884,7 @@ class BookerForm(forms.ModelForm):
     class Meta:
         model = Guest
         fields = ('firstname', 'lastname', 'email', 'phone', 'line',
-                  'level', 'attendee_count')
+                  'level', 'attendee_count', 'teacher_count')
         widgets = {
             'firstname': TextInput(
                 attrs={'class': 'form-control input-sm',
@@ -910,6 +910,9 @@ class BookerForm(forms.ModelForm):
                 attrs={'class': 'selectpicker form-control'}
             ),
             'attendee_count': NumberInput(
+                attrs={'class': 'form-control input-sm', 'min': 0}
+            ),
+            'teacher_count': NumberInput(
                 attrs={'class': 'form-control input-sm', 'min': 0}
             ),
         }
