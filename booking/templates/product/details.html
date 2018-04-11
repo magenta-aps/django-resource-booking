@@ -236,8 +236,10 @@
                             {% endif %}
 
                             {% if object.duration and object.duration != '00:00' %}
+                                {% if object.is_guest_time_suggested or not object.time_mode == view.model.TIME_MODE_NO_BOOKING and not object.future_bookable_times %}
                                 <dt>{% trans 'Varighed' %}:</dt>
                                 <dd>{{ object.duration|timedelta_i18n }}</dd>
+                                {% endif %}
                             {% endif %}
 
                             {% if object.price %}
