@@ -757,6 +757,8 @@ class EmailTemplateType(
             manual_sending_visit_enabled=True,
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
+            send_to_booker=True,
+            enable_days=True,
             enable_autosend=True,
             form_show=True,
             ordering=8
