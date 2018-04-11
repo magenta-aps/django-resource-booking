@@ -3181,8 +3181,6 @@ class VisitSearchView(VisitListView):
             self.form.is_valid()
         return self.form
 
-
-
     def get_queryset(self):
         form = self.get_form()
 
