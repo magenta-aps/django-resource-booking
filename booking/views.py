@@ -2728,7 +2728,6 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
                     )
                     evaluationguest.save()
 
-
             self.object = booking
             self.model = booking.__class__
 
