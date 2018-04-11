@@ -934,7 +934,8 @@ class EmailTemplateType(
 
         EmailTemplateType.set_default(
             EmailTemplateType.SYSTEM__EMAIL_REPLY,
-            name_da=u'Svar på e-mail fra systemet',
+            # name_da=u'Svar på e-mail fra systemet',
+            name_da=u'Skabelon med informationer om tilmelding fra gæst',
             enable_autosend=False,
             form_show=False,
             ordering=22
