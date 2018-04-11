@@ -108,7 +108,7 @@
                             {% endif %}
                             <a href="{% url 'become-host' object.pk %}" role="button" class="btn btn-success btn-xs">{% trans 'Bliv vært for dette besøg.' %}</a>
                         {% elif is_assigned_as_host %}
-                            {% trans '(allerede vært for dette besøg)' %}
+                            {% trans 'Du er allerede tilknyttet som vært på dette besøg' %}
                         {% elif not needs_hosts %}
                             <button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#hosts-found" >{% trans 'Alle værter fundet' %}</button>
                         {% endif %}
@@ -120,7 +120,7 @@
                             {% endif %}
                             <a href="{% url 'become-teacher' object.pk %}" role="button" class="btn btn-success btn-xs">{% trans 'Bliv underviser for dette besøg' %}</a>
                         {% elif is_assigned_as_teacher %}
-                            {% trans '(allerede underviser for dette besøg)' %}
+                            {% trans 'Du er allerede tilknyttet som underviser på dette besøg' %}
                         {% elif not needs_teachers %}
                             <button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#teachers-found" >{% trans 'Alle undervisere fundet' %}</button>
                         {% endif %}
@@ -132,7 +132,7 @@
             {% if request.user.userprofile.is_teacher %}
                 {% if object.needs_teachers %}
                     {% if request.user in object.teachers.all %}
-                        {% trans '(allerede underviser for dette besøg)' %}
+                        {% trans 'Du er allerede tilknyttet som underviser på dette besøg' %}
                     {% else %}
                         {% if teacher %}
                             <a href="{% url 'decline-teacher' object.pk %}" role="button" class="btn btn-danger btn-xs">{% trans 'Jeg ønsker ikke at være underviser' %}</a>
@@ -146,7 +146,7 @@
             {% if request.user.userprofile.is_host %}
                 {% if object.needs_hosts %}
                     {% if request.user in object.hosts.all %}
-                        {% trans '(allerede vært for dette besøg)' %}
+                        {% trans 'Du er allerede tilknyttet som vært på dette besøg' %}
                     {% else %}
                         {% if host %}
                             <a href="{% url 'decline-host' object.pk %}" role="button" class="btn btn-danger btn-xs">{% trans 'Jeg ønsker ikke at være vært' %}</a>
