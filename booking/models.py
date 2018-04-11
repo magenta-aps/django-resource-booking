@@ -5182,6 +5182,13 @@ class Guest(models.Model):
         validators=[validators.MinValueValidator(int(1))]
     )
 
+    teacher_count = models.IntegerField(
+        blank=True,
+        null=True,
+        default=None,
+        verbose_name=u'Heraf lærere'
+    )
+
     def get_booking(self):
         try:
             return self.booking

@@ -74,7 +74,8 @@
                     <th>{% trans 'Besøgsdato' %}</th>
                     <th>{% trans 'Klassetrin' %}</th>
                     <th>{% trans 'Fag/Niveau' %}</th>
-                    <th>{% trans 'Antal deltagere' %}</th>
+                    <th>{% trans 'Totalt antal deltagere' %}</th>
+                    <th>{% trans 'Antal lærere' %}</th>
                     <th>{% trans 'Oplæg om uddannelser' %}</th>
                     <th>{% trans 'Rundvisning' %}</th>
                     <th>{% trans 'Andet' %}</th>
@@ -120,6 +121,7 @@
                         {% endfor %}
                     </td>
                     <td>{{ booking.booker.attendee_count|default:"0" }}</td>
+                    <td>{{ booking.booker.teacher_count|default:"0" }}</td>
                     <td>{{ booking.classbooking.presentation_desired|yesno|capfirst }}</td>
                     <td>{{ booking.classbooking.tour_desired|yesno|capfirst }}</td>
                     <td>
