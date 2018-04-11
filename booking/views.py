@@ -2690,6 +2690,18 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
                     EmailTemplateType.notify_host__req_host_volunteer
                 )
 
+            # If the visit is already planned, send message to guest
+            if booking.visit.workflow_status in [
+                Visit.WORKFLOW_STATUS_PLANNED,
+                Visit.WORKFLOW_STATUS_CONFIRMED,
+                Visit.WORKFLOW_STATUS_REMINDED
+            ]:
+                booking.autosend(
+                    EmailTemplateType.notify_all__booking_complete,
+                    [booking.booker],
+                    True
+                )
+
             self.object = booking
             self.model = booking.__class__
 
