@@ -3170,13 +3170,18 @@ class VisitSearchView(VisitListView):
     def get_form(self):
         if not self.form:
             # Make new form object
+            qdict = self.request.GET.copy()
+            if 'q' in qdict:
+                qdict['q'] = urllib.unquote(qdict['q']).strip()
             self.form = VisitSearchForm(
-                self.request.GET,
+                qdict,
                 user=self.request.user
             )
             # Process the form
             self.form.is_valid()
         return self.form
+
+
 
     def get_queryset(self):
         form = self.get_form()
