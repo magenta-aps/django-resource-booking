@@ -21,8 +21,10 @@
                             <dd>{{ booking.booker.email }}</dd>
                             <dt class="text-muted">{% trans 'Antal:' %}</dt>
                             <dd>{{ booking.booker.attendee_count }}</dd>
-                            <dt class="text-muted">{% trans 'Antal lærere:' %}</dt>
-                            <dd>{{ booking.booker.teacher_count|default_if_none:0 }}</dd>
+                            {% if booking.booker.teacher_count != None %}
+                                <dt class="text-muted">{% trans 'Antal lærere:' %}</dt>
+                                <dd>{{ booking.booker.teacher_count }}</dd>
+                            {% endif %}
                             {% if booking.notes %}
                                 <dt class="text-muted">{% trans 'Kommentar:' %}</dt>
                                 <dd>{{ booking.notes }}</dd>
