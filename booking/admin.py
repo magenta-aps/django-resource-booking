@@ -28,6 +28,7 @@ CLASSES_BY_ROLE[FACULTY_EDITOR] = set([
     booking_models.Visit,
     booking_models.Product,
     booking_models.Autosend,
+    booking_models.VisitAutosend,
     booking_models.ProductAutosend,
     booking_models.EventTime,
     booking_models.BookingGrundskoleSubjectLevel
