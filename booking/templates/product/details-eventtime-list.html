@@ -3,22 +3,22 @@
 <ul class="list-unstyled" id="dato">
 {% for eventtime in eventtime_list|slice:":10" %}
     <li>
-        {{ eventtime.interval_display }}
+        {{ eventtime.interval_display }} - 
         {% if eventtime.available_seats > 1000000 %}
-            ({% trans 'ingen begrænsning' %})
+            {% trans 'ingen begrænsning' %}
         {% else %}
-            ({% blocktrans count available=eventtime.available_seats %}1 ledig plads{% plural %}{{ available }} ledige pladser{% endblocktrans %})
+            {% blocktrans count available=eventtime.available_seats %}1 ledig plads{% plural %}{{ available }} ledige pladser{% endblocktrans %}
         {% endif %}
     </li>
 {% endfor %}
 {% if eventtime_list.count > 10 %}
     {% for eventtime in eventtime_list|slice:"10:" %}
         <li class="hidden default-hidden">
-            {{ eventtime.interval_display }}
+            {{ eventtime.interval_display }} -
             {% if eventtime.available_seats > 1000000 %}
-                ({% trans 'ingen begrænsning' %})
+                {% trans 'ingen begrænsning' %}
             {% else %}
-                ({% blocktrans count available=eventtime.available_seats %}1 ledig plads{% plural %}{{ available }} ledige pladser{% endblocktrans %})
+                {% blocktrans count available=eventtime.available_seats %}1 ledig plads{% plural %}{{ available }} ledige pladser{% endblocktrans %}
             {% endif %}
         </li>
     {% endfor %}
