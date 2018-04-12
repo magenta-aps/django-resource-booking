@@ -27,6 +27,7 @@ from django.forms import formset_factory, inlineformset_factory
 from django.forms import TextInput, NumberInput, DateInput, Textarea, Select
 from django.forms import HiddenInput
 from django.utils.translation import ugettext_lazy as _
+from django.utils.dates import MONTHS
 
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from .fields import ExtensibleMultipleChoiceField, VisitEventTimeField
@@ -811,6 +812,7 @@ class BookingForm(forms.ModelForm):
         if self.scheduled:
             choices = [(None, BLANK_LABEL)]
             qs = product.future_bookable_times.order_by('start', 'end')
+            options = {}
             for eventtime in qs:
                 date = eventtime.interval_display
 
@@ -827,7 +829,7 @@ class BookingForm(forms.ModelForm):
                     bookings = 0
 
                 if available_seats is None or available_seats == sys.maxint:
-                    choices.append((eventtime.pk, date))
+                    option = (eventtime.pk, date)
                 else:
                     if bookings == 0:
                         # There are no bookings at all - yet
@@ -851,9 +853,21 @@ class BookingForm(forms.ModelForm):
                             # There's no room at all
                             continue
 
-                    choices.append(
-                        (eventtime.pk, "%s - %s" % (date, capacity_text))
-                    )
+                    option = (eventtime.pk, "%s - %s" % (date, capacity_text))
+                month = (eventtime.start.month, eventtime.start.year) \
+                    if eventtime.start else None
+                if month not in options:
+                    options[month] = []
+                options[month].append(option)
+
+            for (month, optionlist) in options.iteritems():
+                if month is None:
+                    choices.extend(optionlist)
+                else:
+                    choices.append((
+                        ("%s %d" % (MONTHS[month[0]], month[1])).title(),
+                        optionlist
+                    ))
 
             self.fields['eventtime'].choices = choices
             self.fields['eventtime'].required = True
