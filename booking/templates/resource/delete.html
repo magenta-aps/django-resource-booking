@@ -46,13 +46,12 @@
                 </ul>
             </dd>
         </dl>
+    
         {% if object.resourcepool_set.count > 0 %}
             <p>{% trans 'Ressourcens grupper vil ikke blive slettet.' %}</p>
         {% endif %}
 
-        <div class="divider"></div>
-        <button type="submit" class="btn btn-danger pull-right">{% trans 'Slet' %}</button>
-        <a class="btn btn-default" href="{% if oncancel %}{{ oncancel }}{% else %}javascript:history.back(){% endif %}">{% trans 'Annullér' %}</a>
+        {% include "common/delete_cancel.html" %}
     </form>
 
 {% endblock %}
