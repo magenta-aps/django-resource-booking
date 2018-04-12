@@ -381,15 +381,15 @@
                     {% if request.user.userprofile.is_host or request.user.userprofile.is_teacher %}
                         <div class="row row-border">
                             <strong class="{{ left_class }}">
-                                {% blocktrans count object.organizationalunit.get_editors|length as editorcount %}
-                                    Fakultetsredaktør
-                                    {% plural %}
-                                    Fakultetsredaktører
+                                {% blocktrans count object.organizationalunit.get_coordinators|length as editorcount %}
+                                    Koordinator
+                                {% plural %}
+                                    Koordinatorer
                                 {% endblocktrans %}
                             </strong>
                             <div class="{{ center_class }}">
                                 <ul class="list-unstyled">
-                                    {% for editor in object.organizationalunit.get_editors %}
+                                    {% for editor in object.organizationalunit.get_coordinators %}
                                         <li>
                                             {{ editor.get_full_name }}
                                             {% if editor.email %} - <a href="mailto:{{ editor.email }}">{{ editor.email }}</a>{% endif %}

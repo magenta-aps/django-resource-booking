@@ -253,6 +253,9 @@ class OrganizationalUnit(models.Model):
     def get_teachers(self):
         return self.get_users(TEACHER)
 
+    def get_coordinators(self):
+        return self.get_users(COORDINATOR)
+
     def get_editors(self):
 
         # Try using all available coordinators
