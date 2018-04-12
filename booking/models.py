@@ -3736,7 +3736,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
             if not only_these_recipients and template_type.send_to_booker:
                 for booking in self.bookings.all():
-                    if not booking.is_waiting() or \
+                    if not booking.is_waiting or \
                             template_type.send_to_booker_on_waitinglist:
                         KUEmailMessage.send_email(
                             template_type,
@@ -4417,7 +4417,7 @@ class MultiProductVisit(Visit):
 
             if not only_these_recipients and template_type.send_to_booker:
                 for booking in self.bookings.all():
-                    if not booking.is_waiting() or \
+                    if not booking.is_waiting or \
                             template_type.send_to_booker_on_waitinglist:
                         KUEmailMessage.send_email(
                             template_type,
@@ -5206,7 +5206,7 @@ class Booking(models.Model):
     def get_recipients(self, template_type):
         recipients = self.visit.get_recipients(template_type)
         if template_type.send_to_booker and (
-                not self.is_waiting() or
+                not self.is_waiting or
                 template_type.send_to_booker_on_waitinglist
         ):
             recipients.append(self.booker)
