@@ -1,0 +1,12 @@
+{% load i18n %}
+<div class="row">
+    <div class="col-sm-12">
+        <a class="btn btn-default pull-right"
+           href="{% if oncancel %}{{ oncancel }}{% else %}javascript:history.back(){% endif %}">
+            {% trans 'Annullér' %}
+        </a>
+        <button type="submit" class="btn btn-primary pull-right btn-danger">
+            {% trans 'Slet' %}
+        </button>
+    </div>
+</div>
