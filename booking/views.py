@@ -2684,6 +2684,9 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
             booking.autosend(
                 EmailTemplateType.notify_editors__booking_created
             )
+            booking.autosend(
+                EmailTemplateType.notify_host__req_room
+            )
 
             if booking.visit.needs_teachers or \
                     booking.visit.product.is_resource_controlled:
@@ -2873,6 +2876,8 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
         )
 
         object.autosend(EmailTemplateType.notify_editors__booking_created)
+
+        object.autosend(EmailTemplateType.notify_host__req_room)
 
         return redirect(
             reverse(
