@@ -28,6 +28,7 @@ from django.shortcuts import render, redirect
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.http import urlquote
+from django.utils.http import urlunquote_plus
 from django.utils.translation import ugettext as _
 from django.views.generic import View, TemplateView, ListView, DetailView
 from django.views.generic.base import ContextMixin, RedirectView
@@ -724,7 +725,7 @@ class SearchView(BreadcrumbMixin, ListView):
         if self.request.method.lower() != 'get':
             return None
 
-        q = self.request.GET.get("q", "").strip()
+        q = self.get_query_string()
         if re.match('^#?\d+$', q):
             if q[0] == "#":
                 q = q[1:]
@@ -738,8 +739,10 @@ class SearchView(BreadcrumbMixin, ListView):
     def get_admin_form(self):
         if self.admin_form is None:
             if self.request.user.is_authenticated():
+                qdict = self.request.GET.copy()
+                qdict['q'] = self.get_query_string()
                 self.admin_form = AdminProductSearchForm(
-                    self.request.GET,
+                    qdict,
                     user=self.request.user
                 )
                 self.admin_form.is_valid()
@@ -759,11 +762,14 @@ class SearchView(BreadcrumbMixin, ListView):
             val = None
         return val
 
+    def get_query_string(self):
+        return urlunquote_plus(self.request.GET.get("q", "")).strip()
+
     search_prune = re.compile(u"[^\s\wæøåÆØÅ]+")
 
     def get_base_queryset(self):
         if self.base_queryset is None:
-            searchexpression = self.request.GET.get("q", "").strip()
+            searchexpression = self.get_query_string()
             if searchexpression:
                 searchexpression = SearchView.search_prune.sub(
                     '', searchexpression
@@ -1110,6 +1116,7 @@ class SearchView(BreadcrumbMixin, ListView):
         if "pagesize" in qdict:
             qdict.pop("pagesize")
         context["qstring"] = qdict.urlencode()
+        context["q"] = self.get_query_string()
 
         context['pagesizes'] = [5, 10, 15, 20]
 
@@ -3163,8 +3170,11 @@ class VisitSearchView(VisitListView):
     def get_form(self):
         if not self.form:
             # Make new form object
+            qdict = self.request.GET.copy()
+            if 'q' in qdict:
+                qdict['q'] = urllib.unquote(qdict['q']).strip()
             self.form = VisitSearchForm(
-                self.request.GET,
+                qdict,
                 user=self.request.user
             )
             # Process the form
