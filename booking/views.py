@@ -28,6 +28,7 @@ from django.shortcuts import render, redirect
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.http import urlquote
+from django.utils.http import urlunquote_plus
 from django.utils.translation import ugettext as _
 from django.views.generic import View, TemplateView, ListView, DetailView
 from django.views.generic.base import ContextMixin, RedirectView
@@ -762,7 +763,7 @@ class SearchView(BreadcrumbMixin, ListView):
         return val
 
     def get_query_string(self):
-        return urllib.unquote(self.request.GET.get("q", "")).strip()
+        return urlunquote_plus(self.request.GET.get("q", "")).strip()
 
     search_prune = re.compile(u"[^\s\wæøåÆØÅ]+")
 
@@ -770,7 +771,6 @@ class SearchView(BreadcrumbMixin, ListView):
         if self.base_queryset is None:
             searchexpression = self.get_query_string()
             if searchexpression:
-                searchexpression = urllib.unquote(searchexpression)
                 searchexpression = SearchView.search_prune.sub(
                     '', searchexpression
                 )
