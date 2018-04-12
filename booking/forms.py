@@ -1,34 +1,35 @@
 # -*- coding: utf-8 -*-
 import sys
 
-from booking.models import StudyMaterial, ProductAutosend, Booking, \
-    EvaluationGuest
-from booking.models import Subject, BookingGrundskoleSubjectLevel
-from booking.models import Locality, OrganizationalUnitType, OrganizationalUnit
-from booking.models import Product
-from booking.models import Guest, Region, PostCode, School
-from booking.models import ClassBooking, TeacherBooking, \
-    BookingGymnasieSubjectLevel
-from booking.models import EmailTemplate, EmailTemplateType
-from booking.models import Visit
-from booking.models import MultiProductVisitTemp, MultiProductVisitTempProduct
-from booking.models import Evaluation
-from booking.models import BLANK_LABEL, BLANK_OPTION
-from booking.widgets import OrderedMultipleHiddenChooser
-from booking.utils import binary_or, binary_and
+from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from django import forms
 from django.core import validators
 from django.db.models import Q
 from django.db.models.expressions import OrderBy
 from django.forms import CheckboxSelectMultiple, CheckboxInput
-from django.forms import ModelMultipleChoiceField
 from django.forms import EmailInput
-from django.forms import formset_factory, inlineformset_factory
-from django.forms import TextInput, NumberInput, DateInput, Textarea, Select
 from django.forms import HiddenInput
+from django.forms import ModelMultipleChoiceField
+from django.forms import TextInput, NumberInput, DateInput, Textarea, Select
+from django.forms import formset_factory, inlineformset_factory
+from django.template import TemplateSyntaxError
 from django.utils.translation import ugettext_lazy as _
 
-from ckeditor_uploader.widgets import CKEditorUploadingWidget
+from booking.models import BLANK_LABEL, BLANK_OPTION
+from booking.models import ClassBooking, TeacherBooking, \
+    BookingGymnasieSubjectLevel
+from booking.models import EmailTemplate, EmailTemplateType
+from booking.models import Evaluation
+from booking.models import EvaluationGuest
+from booking.models import Guest, Region, PostCode, School
+from booking.models import Locality, OrganizationalUnitType, OrganizationalUnit
+from booking.models import MultiProductVisitTemp, MultiProductVisitTempProduct
+from booking.models import Product
+from booking.models import StudyMaterial, ProductAutosend, Booking
+from booking.models import Subject, BookingGrundskoleSubjectLevel
+from booking.models import Visit
+from booking.utils import binary_or, binary_and, TemplateSplit
+from booking.widgets import OrderedMultipleHiddenChooser
 from .fields import ExtensibleMultipleChoiceField, VisitEventTimeField
 from .fields import OrderedModelMultipleChoiceField
 
@@ -1391,13 +1392,79 @@ BookingGrundskoleSubjectLevelForm = \
 
 class EmailTemplateForm(forms.ModelForm):
 
+    field_attrs = {'attrs': {'class': 'form-control enable-field-insert'}}
+    area_attrs = {
+        'attrs': {'class': 'form-control enable-field-insert', 'rows': 20}
+    }
+
     class Meta:
         model = EmailTemplate
         fields = ('type', 'subject', 'body', 'organizationalunit')
         widgets = {
-            'subject': TextInput(attrs={'class': 'form-control'}),
-            'body': Textarea(attrs={'class': 'form-control'}),
+            'type': Select(attrs={'class': 'form-control'}),
+            'organizationalunit': Select(attrs={'class': 'form-control'}),
+            'subject': TextInput(
+                attrs={'class': 'form-control enable-field-insert'}
+            ),
+            'body': Textarea(
+                attrs={'class': 'form-control enable-field-insert', 'rows': 20}
+            ),
         }
+
+    subject_guest = forms.CharField(
+        widget=TextInput(**field_attrs),
+        label=_(u'Emne til gæster'),
+        help_text=_(u'Hvis feltet er tomt, vil indholdet af '
+                    u'"Emne til andre" blive sendt i stedet'),
+        required=False
+    )
+    body_guest = forms.CharField(
+        widget=Textarea(**area_attrs),
+        label=_(u'Tekst til gæster'),
+        help_text=_(u'Hvis feltet er tomt, vil indholdet af '
+                    u'"Tekst til andre" blive sendt i stedet'),
+        required=False
+    )
+    subject_teacher = forms.CharField(
+        widget=TextInput(**field_attrs),
+        label=_(u'Emne til undervisere'),
+        help_text=_(u'Hvis feltet er tomt, vil indholdet af '
+                    u'"Emne til andre" blive sendt i stedet'),
+        required=False
+    )
+    body_teacher = forms.CharField(
+        widget=Textarea(**area_attrs),
+        label=_(u'Tekst til undervisere'),
+        help_text=_(u'Hvis feltet er tomt, vil indholdet af '
+                    u'"Tekst til andre" blive sendt i stedet'),
+        required=False
+    )
+    subject_host = forms.CharField(
+        widget=TextInput(**field_attrs),
+        label=_(u'Emne til værter'),
+        help_text=_(u'Hvis feltet er tomt, vil indholdet af '
+                    u'"Emne til andre" blive sendt i stedet'),
+        required=False
+    )
+    body_host = forms.CharField(
+        widget=Textarea(**area_attrs),
+        label=_(u'Tekst til værter'),
+        help_text=_(u'Hvis feltet er tomt, vil indholdet af '
+                    u'"Tekst til andre" blive sendt i stedet'),
+        required=False
+    )
+    subject_other = forms.CharField(
+        widget=TextInput(**field_attrs),
+        label=_(u'Emne til andre'),
+        help_text=_(u'Hvis feltet er tomt, vil indholdet af '
+                    u'"Emne til andre" blive sendt i stedet'),
+        required=False
+    )
+    body_other = forms.CharField(
+        widget=Textarea(**area_attrs),
+        label=_(u'Tekst til andre'),
+        required=False
+    )
 
     def __init__(self, user, *args, **kwargs):
         super(EmailTemplateForm, self).__init__(*args, **kwargs)
@@ -1405,29 +1472,149 @@ class EmailTemplateForm(forms.ModelForm):
             (x.pk, unicode(x))
             for x in user.userprofile.get_unit_queryset()]
 
+        self.split = {}
+        for field in ['subject', 'body']:
+            block = None
+            full_text = getattr(self.instance, field)
+            split = TemplateSplit(full_text)
+
+            guest_block = split.get_subblock_containing("recipient.guest")
+            teacher_block = split.get_subblock_containing(
+                "recipient.user.userprofile.is_teacher"
+            )
+            host_block = split.get_subblock_containing(
+                "recipient.user.userprofile.is_host"
+            )
+            try:
+                block = next(
+                    subblock.block
+                    for subblock in [guest_block, teacher_block, host_block]
+                    if subblock is not None
+                )
+            except StopIteration:
+                pass
+
+            if block is None:
+                # There is no branching;
+                # all body text goes in the 'body' field
+                self.fields[field + '_guest'].widget = HiddenInput()
+                self.fields[field + '_teacher'].widget = HiddenInput()
+                self.fields[field + '_host'].widget = HiddenInput()
+                self.fields[field + '_other'].widget = HiddenInput()
+                self.split[field] = False
+
+            else:
+                # There is branching - body text is split up in separate fields
+                else_block = block.get_else_subblock()
+
+                if guest_block is not None:
+                    self.fields[field + '_guest'].initial = \
+                        (guest_block.block.text_before + guest_block.text +
+                         guest_block.block.text_after).strip()
+                if teacher_block is not None:
+                    self.fields[field + '_teacher'].initial = \
+                        (teacher_block.block.text_before + teacher_block.text +
+                         teacher_block.block.text_after).strip()
+                if host_block is not None:
+                    self.fields[field + '_host'].initial = \
+                        (host_block.block.text_before + host_block.text +
+                         host_block.block.text_after).strip()
+                if else_block is not None:
+                    self.fields[field + '_other'].initial = \
+                        (else_block.block.text_before + else_block.text +
+                         else_block.block.text_after).strip()
+
+                self.fields[field].widget = HiddenInput()
+
+                self.split[field] = True
+
+    def clean_text_field(self, fieldname):
+        body = self.cleaned_data[fieldname]
+        try:
+            EmailTemplate._expand(body, {}, True)
+        except TemplateSyntaxError as e:
+            raise forms.ValidationError(
+                _(u'Syntaksfejl i skabelon: ') + "\n%s" % e.message
+            )
+        return body
+
+    def clean_subject_guest(self):
+        return self.clean_text_field('subject_guest')
+
+    def clean_body_guest(self):
+        return self.clean_text_field('body_guest')
+
+    def clean_subject_teacher(self):
+        return self.clean_text_field('subject_teacher')
+
+    def clean_body_teacher(self):
+        return self.clean_text_field('body_teacher')
+
+    def clean_subject_host(self):
+        return self.clean_text_field('subject_host')
+
+    def clean_body_host(self):
+        return self.clean_text_field('body_host')
+
+    def clean_body_other(self):
+        return self.clean_text_field('body_other')
+
+    def clean_subject_other(self):
+        return self.clean_text_field('subject_other')
+
+    def clean_subject(self):
+        return self.clean_text_field('subject')
+
+    def clean_body(self):
+        return self.clean_text_field('body')
+
+    def clean(self):
+        cleaned_data = super(EmailTemplateForm, self).clean()
+        for field in ['subject', 'body']:
+            sep = '\r\n' if field == 'body' else ''
+            if self.split[field]:
+                text = []
+                first = True
+                for condition, fieldname in [
+                    ("recipient.guest", field + "_guest"),
+                    ("recipient.user.userprofile.is_teacher",
+                     field + "_teacher"),
+                    ("recipient.user.userprofile.is_host", field + "_host")
+                ]:
+                    sub_text = cleaned_data.get(fieldname, "").strip()
+                    if len(sub_text) > 0:
+                        text.append(
+                            "%s{%% %s %s %%}%s%s" %
+                            (sep, "if" if first else "elif",
+                             condition, sep, sub_text)
+                        )
+                        first = False
+
+                sub_text = (cleaned_data[field + "_other"] or "").strip()
+                text.append("%s{%% else %%}%s%s" % (sep, sep, sub_text))
+                text.append("%s{%% endif %%}" % (sep,))
+                cleaned_data[field] = ''.join(text)
+        return cleaned_data
+
 
 class EmailTemplatePreviewContextEntryForm(forms.Form):
+
+    classes = {
+        'OrganizationalUnit': OrganizationalUnit,
+        'Product': Product,
+        'Visit': Visit,
+        'Booking': Booking,
+        'Guest': Guest,
+    }
+
     key = forms.CharField(
         max_length=256,
-        widget=TextInput(attrs={'class': 'form-control emailtemplate-key'})
+        widget=HiddenInput(attrs={
+            'class': 'form-control emailtemplate-key',
+        })
     )
-    type = forms.ChoiceField(
-        choices=(
-            ('string', _(u'Tekst')),
-            ('OrganizationalUnit', _(u'Enhed')),
-            ('Product', _(u'Tilbud')),
-            ('Visit', _(u'Besøg')),
-            # ('StudyMaterial', StudyMaterial),
-            # ('Product',Product),
-            # ('Subject', Subject),
-            # ('GymnasieLevel', GymnasieLevel),
-            # ('Room', Room),
-            # ('PostCode', PostCode),
-            # ('School', School),
-            ('Booking', _(u'Tilmelding')),
-            ('Recipient', _(u'Modtager')),
-        ),
-        widget=Select(attrs={'class': 'form-control emailtemplate-type'})
+    type = forms.CharField(
+        widget=HiddenInput(attrs={'class': 'emailtemplate-type'})
     )
     value = forms.CharField(
         max_length=1024,
@@ -1439,8 +1626,39 @@ class EmailTemplatePreviewContextEntryForm(forms.Form):
         )
     )
 
+    def __init__(self, *args, **kwargs):
+        super(EmailTemplatePreviewContextEntryForm, self).__init__(
+            *args, **kwargs
+        )
+        if 'initial' in kwargs:
+            initial = kwargs['initial']
+            type = initial['type']
+            if type in self.classes:
+                clazz = self.classes[type]
+                valuefield = self.fields['value']
+                valuefield.widget = Select(
+                    attrs={
+                        "class": "form-control emailtemplate-value "
+                                 "emailtemplate-type-%s" % type
+                    },
+                    choices=[
+                        (object.id, unicode(object))
+                        for object in clazz.objects.order_by('id')
+                    ]
+                )
+            if type == "Recipient":
+                valuefield = self.fields['value']
+                valuefield.widget = Select(
+                    attrs={
+                        "class": "form-control emailtemplate-value "
+                                 "emailtemplate-type-%s" % type
+                    }
+                )
+
+
 EmailTemplatePreviewContextForm = formset_factory(
-    EmailTemplatePreviewContextEntryForm
+    EmailTemplatePreviewContextEntryForm,
+    extra=0
 )
 
 
