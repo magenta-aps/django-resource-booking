@@ -60,10 +60,12 @@
             {% elif object.product %}
             <a href="{% url 'product-view' object.product.id %}" role="button" class="btn btn-primary margin-top-10-mobile">{% trans 'Gå til tilbud' %}</a>
             {% endif %}
+            {% if object.can_create_events %}
             <a href="{% url reverses.calendar_event_create view.rel_obj.pk %}" role="button" class="btn btn-primary margin-top-10-mobile">
                 <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
                 {% trans 'Opret tid i kalender' %}
             </a>
+            {% endif %}
         </p>
     </div>
 

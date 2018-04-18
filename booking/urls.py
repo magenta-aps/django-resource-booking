@@ -87,6 +87,11 @@ product_calendar_kwargs = {
 product_calendarevent_kwargs = product_calendar_kwargs.copy()
 product_calendarevent_kwargs['related_kwargs_name'] = 'prod'
 
+resourcepool_calendar_kwargs = {
+    'related_model': booking.models.ResourcePool,
+    'reverse_prefix': 'resourcepool-'
+}
+
 urlpatterns = patterns(
 
     '',
@@ -345,6 +350,11 @@ urlpatterns = patterns(
         booking.views.CalendarEventDeleteView.as_view(),
         calendarevent_kwargs,
         name='calendar-event-delete'),
+
+    url(r'^resourcepool/(?P<pk>[0-9]+)/calendar/?$',
+        booking.views.CalendarView.as_view(),
+        resourcepool_calendar_kwargs,
+        name='resourcepool-calendar'),
 
     url(r'^product/(?P<pk>[0-9]+)/calendar/?$',
         booking.views.CalendarView.as_view(),
