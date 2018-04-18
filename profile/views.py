@@ -6,7 +6,7 @@ from booking.models import EmailTemplateType, KUEmailMessage
 from booking.models import VisitComment
 from booking.utils import UnicodeWriter
 from django.contrib import messages
-from django.db.models import Q
+from django.db.models import Q, Case, When
 from django.db.models.aggregates import Count, Sum
 from django.db.models.functions import Coalesce
 from django.contrib.auth import login, logout, authenticate
@@ -34,6 +34,7 @@ from profile.models import FACULTY_EDITOR, COORDINATOR, user_role_choices
 
 import warnings
 import profile.models as profile_models
+import sys
 
 
 class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
@@ -359,6 +360,35 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
         ]
 
 
+class ListAjaxView(TemplateView):
+    template_name = 'profile/item_list.html'
+
+    def post(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        return self.render_to_response(context)
+
+    type_map = {
+        'Visit': Visit,
+        'Product': Product
+    }
+
+    def get_context_data(self, **kwargs):
+        type = self.kwargs['type']
+        cls = self.type_map[type]
+        ids = self.request.POST.getlist('id[]')
+        ordering = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(ids)])
+        context = {
+            'headerless': True,
+            'list': {
+                'type': type,
+                'limit': sys.maxint,
+                'queryset': cls.objects.filter(id__in=ids).order_by(ordering)
+            }
+        }
+        context.update(kwargs)
+        return super(ListAjaxView, self).get_context_data(**context)
+
+
 class CreateUserView(BreadcrumbMixin, FormView, UpdateView):
     model = User
     form_class = UserCreateForm
@@ -580,8 +610,9 @@ class UserListView(BreadcrumbMixin, EditorRequriedMixin, ListView):
 
         qs = self.model.objects.filter(
             userprofile__organizationalunit__in=unit_qs
+        ).exclude(
+             userprofile__user_role__role=NONE
         )
-
         try:
             self.selected_unit = int(
                 self.request.GET.get("unit", None)
@@ -620,7 +651,9 @@ class UserListView(BreadcrumbMixin, EditorRequriedMixin, ListView):
         ]
 
         context['selected_role'] = self.selected_role
-        context['possible_roles'] = user_role_choices
+        context['possible_roles'] = [
+            (id, label) for (id, label) in user_role_choices if id != NONE
+        ]
 
         context.update(kwargs)
         return super(UserListView, self).get_context_data(**context)
@@ -684,13 +717,25 @@ class StatisticsView(EditorRequriedMixin, BreadcrumbMixin, TemplateView):
                                   '__subject')\
                 .prefetch_related('bookinggrundskolesubjectlevel_set__level') \
                 .filter(
-                    visit__eventtime__product__organizationalunit=self
-                    .organizationalunits
+                    Q(**{
+                        'visit__eventtime__product__'
+                        'organizationalunit': self.organizationalunits
+                    }) |
+                    Q(**{
+                        'visit__cancelled_eventtime__product__'
+                        'organizationalunit': self.organizationalunits
+                    })
                 )
             if from_date:
-                qs = qs.filter(visit__eventtime__start__gte=from_date)
+                qs = qs.filter(
+                    Q(visit__eventtime__start__gte=from_date) |
+                    Q(visit__cancelled_eventtime__start__gte=from_date)
+                )
             if to_date:
-                qs = qs.filter(visit__eventtime__end__lt=to_date)
+                qs = qs.filter(
+                    Q(visit__eventtime__end__lt=to_date) |
+                    Q(visit__cancelled_eventtime__end__lt=to_date)
+                )
             qs = qs.order_by('visit__eventtime__product__pk')
             context['bookings'] = qs
         context.update(kwargs)
@@ -738,11 +783,13 @@ class StatisticsView(EditorRequriedMixin, BreadcrumbMixin, TemplateView):
         # Heading
         writer.writerow([
             _(u"Enhed"), _(u"Tilmelding"), _(u"Type"), _(u"Tilbud"),
-            _(u"Besøgsdato"), _(u"Klassetrin/Niveau"), _(u"Antal deltagere"),
-            _(u"Oplæg om uddannelser"), _(u"Rundvisning"), _(u"Andet"),
-            _(u"Region"), _(u"Skole"), _(u"Postnummer og by"), _(u"Adresse"),
-            _(u"Lærer"), _(u"Lærer email"), _(u"Bemærkninger fra koordinator"),
-            _(u"Bemærkninger fra lærer"), _(u"Værter"), _(u"Undervisere")
+            _(u"Besøgsdato"), _(u"Klassetrin"), _(u"Niveau"),
+            _(u"Antal deltagere"), _(u"Oplæg om uddannelser"),
+            _(u"Rundvisning"), _(u"Andet"), _(u"Region"), _(u"Skole"),
+            _(u"Postnummer og by"), _(u"Adresse"), _(u"Lærer"),
+            _(u"Lærer email"), _(u"Bemærkninger på tilbud"),
+            _(u"Bemærkninger fra koordinator"), _(u"Bemærkninger fra lærer"),
+            _(u"Værter"), _(u"Undervisere")
         ])
         # Rows
         for booking in context['bookings']:
@@ -765,36 +812,69 @@ class StatisticsView(EditorRequriedMixin, BreadcrumbMixin, TemplateView):
                 if booking.classbooking.custom_desired:
                     custom_desired = booking.visit.product.custom_name
 
+            # Figure out which eventtime to use
+            if hasattr(booking.visit, 'eventtime'):
+                eventtime = booking.visit.eventtime
+                time_extra = ""
+            else:
+                eventtime = booking.visit.cancelled_eventtime
+                time_extra = " (aflyst)"
+
+            timetext = " til " .join([x.strip() for x in [
+                str(eventtime.l10n_start or "")[0:16],
+                str(eventtime.l10n_end or "")[0:16]
+            ] if len(x.strip()) > 0])
+
+            try:
+                postalregion = booking.booker.school.\
+                                     postcode.region.name or ""
+            except:
+                postalregion = ""
+            try:
+                postalcode = booking.booker.school.postcode.number or ""
+            except:
+                postalcode = ""
+            try:
+                postalcity = booking.booker.school.postcode.city or ""
+            except:
+                postalcity = ""
+
+            leveltext = u", ".join(
+                [
+                    u"%s - %s" % (x.subject, x.level)
+                    for x in booking.bookinggrundskolesubjectlevel_set.all()
+                ] + [
+                    u"%s - niveau %s" % (
+                        x.subject, x.level.get_level_display()
+                    )
+                    for x in
+                    booking.bookinggymnasiesubjectlevel_set.all()
+                ]
+            )
+
             writer.writerow([
                 booking.visit.product.organizationalunit.name,
                 booking.__unicode__(),
                 booking.visit.product.get_type_display(),
                 booking.visit.product.title,
-                str(booking.visit.eventtime.start or "") + " til " +
-                str(booking.visit.eventtime.end or ""),
-                u", ".join([
-                    u'%s/%s' % (x.subject, x.level)
-                    for x in booking.bookinggrundskolesubjectlevel_set.all()
-                ]) +
-                u", ".join([
-                    u'%s/%s' % (x.subject, x.level)
-                    for x in
-                    booking.bookinggymnasiesubjectlevel_set.all()
-                ]),
+                timetext + time_extra,
+                booking.booker.get_level_display(),
+                leveltext,
                 str(booking.booker.attendee_count or 0),
                 presentation_desired,
                 tour_desired,
                 custom_desired,
-                booking.booker.school.postcode.region.name or "",
+                postalregion,
                 (booking.booker.school.name or "") + "(" +
                 booking.booker.school.get_type_display() + ")",
-                str(booking.booker.school.postcode.number or "") + " " +
-                booking.booker.school.postcode.city or "",
+                str(postalcode) + " " +
+                postalcity,
                 unicode(booking.booker.school.address or ""),
                 booking.booker.get_full_name() or "",
                 booking.booker.get_email() or "",
                 booking.visit.product.comment or "",
-                booking.comments or "",
+                booking.visit.comments or "",
+                booking.notes or "",
                 u", ".join([
                     u'%s' % (x.get_full_name())
                     for x in
@@ -813,7 +893,7 @@ class StatisticsView(EditorRequriedMixin, BreadcrumbMixin, TemplateView):
     def build_breadcrumbs():
         return [{
             'url': reverse('statistics'),
-            'text': _(u'Statistik over evalueringer')
+            'text': _(u'Statistik over tilmeldinger')
         }]
 
 
@@ -870,7 +950,7 @@ class EmailLoginView(DetailView):
         return redirect(self.get_dest(request, *args, **kwargs))
 
 
-class EditMyProductsView(EditorRequriedMixin, UpdateView):
+class EditMyProductsView(EditorRequriedMixin, BreadcrumbMixin, UpdateView):
     model = UserProfile
     form_class = EditMyProductsForm
     template_name = 'profile/my_resources.html'
@@ -897,6 +977,13 @@ class EditMyProductsView(EditorRequriedMixin, UpdateView):
 
     def get_success_url(self):
         return reverse('user_profile')
+
+    @staticmethod
+    def build_breadcrumbs():
+        return [{
+            'url': reverse('my-resources'),
+            'text': _(u'Mine tilbud')
+        }]
 
 
 class AvailabilityView(LoginRequiredMixin, DetailView):

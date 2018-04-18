@@ -6,6 +6,7 @@ from django.core.files.storage import FileSystemStorage
 from subprocess import Popen, PIPE
 import os
 import sys
+import re
 
 import csv
 import codecs
@@ -303,3 +304,191 @@ class DummyRecipient(object):
 
     def get_email(self):
         return "email@example.com"
+
+
+class TemplateSplit(object):
+
+    if_re = r'{%\s*if[^}]+}'
+    elif_re = r'{%\s*elif[^}]+}'
+    else_re = r'{%\s*else[^}]+}'
+    endif_re = r'{%\s*endif[^}]+}'
+
+    class SubBlock(object):
+        def __init__(self, block, t_start, t_end):
+            self.t_start = t_start
+            self.t_end = t_end
+            self.block = block
+
+        def contains(self, index):
+            return self.t_start[0] <= index < self.t_end[1]
+
+        @property
+        def condition(self):
+            return self.block.templatesplit.text[
+                   self.t_start[0]:self.t_start[1]
+            ]
+
+        def has_condition(self, condition):
+            return condition in self.condition
+
+        @property
+        def text(self, inclusive=False):
+            start = self.t_start[0 if inclusive else 1]
+            end = self.t_end[1 if inclusive else 0]
+            return self.block.templatesplit.text[start:end]
+
+        def __str__(self):
+            return "SubBlock from %s to %s" % (self.t_start, self.t_end)
+
+    class Block(object):
+        def __init__(
+                self, templatesplit, t_if, t_endif, t_else=None, l_elif=None
+        ):
+            self.t_if = t_if
+            self.t_endif = t_endif
+            self.t_else = t_else
+            self.l_elif = l_elif
+            self.subblocks = []
+            self.templatesplit = templatesplit
+
+            idx_list = [t_if]
+            if l_elif is not None and len(l_elif) > 0:
+                idx_list.extend(l_elif)
+            if t_else is not None:
+                idx_list.append(t_else)
+            idx_list.append(t_endif)
+
+            for idx, tup in enumerate(idx_list):
+                if idx < len(idx_list) - 1:
+                    next = idx_list[idx+1]
+                    self.subblocks.append(
+                        TemplateSplit.SubBlock(self, tup, next)
+                    )
+
+        def get_subblock_containing(self, index):
+            for subblock in self.subblocks:
+                if subblock.contains(index):
+                    return subblock
+
+        def get_subblock_with_condition(self, condition):
+            for subblock in self.subblocks:
+                if subblock.has_condition(condition):
+                    return subblock
+
+        def get_else_subblock(self):
+            for subblock in self.subblocks:
+                if subblock.t_start == self.t_else:
+                    return subblock
+
+        @property
+        def text(self, inclusive=False):
+            start = self.t_if[0 if inclusive else 1]
+            end = self.t_endif[1 if inclusive else 0]
+            return self.templatesplit.text[start:end]
+
+        @property
+        def text_before(self):
+            end = self.t_if[0]
+            return self.templatesplit.text[0:end]
+
+        @property
+        def text_after(self):
+            start = self.t_endif[1]
+            return self.templatesplit.text[start:]
+
+    def __init__(self, text):
+        self.text = text
+        if_locations = list([
+            match.span(0) for match in re.finditer(self.if_re, text)
+        ])
+        elif_locations = list([
+            match.span(0) for match in re.finditer(self.elif_re, text)
+        ])
+        else_locations = list([
+            match.span(0) for match in re.finditer(self.else_re, text)
+        ])
+        endif_locations = list([
+            match.span(0) for match in re.finditer(self.endif_re, text)
+        ])
+
+        self.blocks = []
+        while True:
+            len_ifs = len(if_locations)
+            found_complete_blocks = []
+            for index, found_if in enumerate(if_locations):
+                next_if = if_locations[index+1] if index < len_ifs-1 else None
+                found_endif = self.find_next(
+                    endif_locations,
+                    found_if[1],
+                    next_if[0] if next_if else None
+                )
+                found_else = self.find_next(
+                    else_locations,
+                    found_if[1],
+                    found_endif[0] if found_endif else None
+                )
+                found_elif = self.find_all_next(
+                    elif_locations,
+                    found_if[1],
+                    found_else[1] if found_else else (
+                        found_endif[0] if found_endif else None
+                    )
+                )
+                if found_endif:
+                    found_complete_blocks.append(
+                        TemplateSplit.Block(
+                            self, found_if, found_endif,
+                            found_else, found_elif
+                        )
+                    )
+
+            if len(found_complete_blocks) > 0:
+                self.blocks.extend(found_complete_blocks)
+                for block in found_complete_blocks:
+                    if_locations.remove(block.t_if)
+                    endif_locations.remove(block.t_endif)
+                    for t_elif in block.l_elif:
+                        elif_locations.remove(t_elif)
+            else:
+                break
+
+    def get_subblock_containing(self, c):
+        candidates = []
+        for block in self.blocks:
+            if isinstance(c, basestring):
+                subblock = block.get_subblock_with_condition(c)
+            else:
+                subblock = block.get_subblock_containing(c)
+            if subblock is not None:
+                candidates.append(subblock)
+        if len(candidates) > 0:
+            best_candidate = None
+            for candidate in candidates:
+                if best_candidate is None or \
+                        candidate.t_start[0] > best_candidate.t_start[0]:
+                    best_candidate = candidate
+            return best_candidate
+
+    def get_blocktext_containing(self, c, inclusive=False):
+        block = self.get_subblock_containing(c)
+        if block is not None:
+            return block.text(inclusive)
+
+    @staticmethod
+    def find_next(locations, start, before=None):
+        for (begin, end) in locations:
+            if begin >= start:
+                if before is not None and begin >= before:
+                    return None
+                return (begin, end)
+
+    @staticmethod
+    def find_all_next(locations, start, before=None):
+        all = []
+        while 1:
+            found = TemplateSplit.find_next(locations, start, before)
+            if found:
+                all.append(found)
+                start = found[1]
+            else:
+                return all

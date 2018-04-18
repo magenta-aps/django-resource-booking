@@ -56,10 +56,7 @@
             </label>
         {% endif %}
 
-        <div class="divider"></div>
-        <button type="submit" class="btn btn-primary">{% trans 'Ja slet' %}</button>
-        <a class="btn btn-default" href="{% if oncancel %}{{ oncancel }}{% else %}javascript:history.back(){% endif %}">{% trans 'Nej' %}</a>
-        <div class="divider"></div>
+        {% include "common/delete_cancel.html" %}
     </form>
 
 {% endblock %}

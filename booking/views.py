@@ -28,6 +28,7 @@ from django.shortcuts import render, redirect
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.http import urlquote
+from django.utils.http import urlunquote_plus
 from django.utils.translation import ugettext as _
 from django.views.generic import View, TemplateView, ListView, DetailView
 from django.views.generic.base import ContextMixin, RedirectView
@@ -58,7 +59,9 @@ from booking.models import MultiProductVisit
 from booking.models import MultiProductVisitTemp, MultiProductVisitTempProduct
 from booking.models import Evaluation, EvaluationGuest
 
-from booking.forms import ProductInitialForm, ProductForm
+from booking.forms import ProductInitialForm, ProductForm, EditBookerForm, \
+    ClassBookingBaseForm, TeacherBookingBaseForm, \
+    StudentForADayBookingBaseForm, StudyProjectBookingBaseForm
 from booking.forms import GuestEmailComposeForm, StudentForADayBookingForm
 from booking.forms import OtherProductForm, StudyProjectBookingForm
 from booking.forms import BookingGrundskoleSubjectLevelForm, BookingListForm
@@ -84,7 +87,7 @@ from booking.forms import MultiProductVisitTempDateForm
 from booking.forms import MultiProductVisitTempProductsForm
 from booking.forms import EvaluationForm, EvaluationStatisticsForm
 
-from booking.utils import full_email, get_model_field_map
+from booking.utils import full_email, get_model_field_map, TemplateSplit
 from booking.utils import get_related_content_types, merge_dicts
 from booking.utils import DummyRecipient
 
@@ -722,7 +725,7 @@ class SearchView(BreadcrumbMixin, ListView):
         if self.request.method.lower() != 'get':
             return None
 
-        q = self.request.GET.get("q", "").strip()
+        q = self.get_query_string()
         if re.match('^#?\d+$', q):
             if q[0] == "#":
                 q = q[1:]
@@ -736,8 +739,10 @@ class SearchView(BreadcrumbMixin, ListView):
     def get_admin_form(self):
         if self.admin_form is None:
             if self.request.user.is_authenticated():
+                qdict = self.request.GET.copy()
+                qdict['q'] = self.get_query_string()
                 self.admin_form = AdminProductSearchForm(
-                    self.request.GET,
+                    qdict,
                     user=self.request.user
                 )
                 self.admin_form.is_valid()
@@ -757,11 +762,14 @@ class SearchView(BreadcrumbMixin, ListView):
             val = None
         return val
 
+    def get_query_string(self):
+        return urlunquote_plus(self.request.GET.get("q", "")).strip()
+
     search_prune = re.compile(u"[^\s\wæøåÆØÅ]+")
 
     def get_base_queryset(self):
         if self.base_queryset is None:
-            searchexpression = self.request.GET.get("q", "").strip()
+            searchexpression = self.get_query_string()
             if searchexpression:
                 searchexpression = SearchView.search_prune.sub(
                     '', searchexpression
@@ -1108,6 +1116,7 @@ class SearchView(BreadcrumbMixin, ListView):
         if "pagesize" in qdict:
             qdict.pop("pagesize")
         context["qstring"] = qdict.urlencode()
+        context["q"] = self.get_query_string()
 
         context['pagesizes'] = [5, 10, 15, 20]
 
@@ -1401,6 +1410,12 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
             self.get_context_data(**self.get_forms())
         )
 
+    def form_valid(self, form):
+        response = super(EditProductBaseView, self).form_valid(form)
+        if hasattr(self, 'original'):
+            self.update_clone(self.original, self.object)
+        return response
+
     def set_object(self, pk, request, is_cloning=False):
         if is_cloning or not hasattr(self, 'object') or self.object is None:
             if pk is None:
@@ -1415,6 +1430,7 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
                 try:
                     self.object = self.model.objects.get(id=pk)
                     if is_cloning:
+                        self.original = self.model.objects.get(id=pk)
                         self.object.pk = None
                         self.object.id = None
                         self.object.calendar = None
@@ -1448,8 +1464,8 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
 
     def gymnasiefag_selected(self):
         result = []
-        obj = self.object
         if self.request.method == 'GET':
+            obj = getattr(self, 'original', self.object)
             if obj and obj.pk:
                 for x in obj.productgymnasiefag_set.all():
                     result.append({
@@ -1474,8 +1490,8 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
 
     def grundskolefag_selected(self):
         result = []
-        obj = self.object
         if self.request.method == 'GET':
+            obj = getattr(self, 'original', self.object)
             if obj and obj.pk:
                 for x in obj.productgrundskolefag_set.all():
                     result.append({
@@ -1549,6 +1565,27 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
         # resources.
         if self.is_creating:
             self.request.user.userprofile.my_resources.add(self.object)
+
+    def update_clone(self, original, clone):
+        for teacher in original.potentielle_undervisere.all():
+            clone.potentielle_undervisere.add(teacher)
+        for host in original.potentielle_vaerter.all():
+            clone.potentielle_vaerter.add(host)
+        for room in original.rooms.all():
+            clone.rooms.add(room)
+        for roomresponsible in original.roomresponsible.all():
+            clone.roomresponsible.add(roomresponsible)
+        for link in original.links.all():
+            clone.links.add(link)
+        for tag in original.tags.all():
+            clone.tags.add(tag)
+        for topic in original.topics.all():
+            clone.topics.add(topic)
+        clone.save()
+
+        for resource_requirement in original.resourcerequirement_set.all():
+            cloned_requirement = resource_requirement.clone_to_product(clone)
+            cloned_requirement.save()
 
 
 class EditProductView(BreadcrumbMixin, EditProductBaseView):
@@ -2647,6 +2684,9 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
             booking.autosend(
                 EmailTemplateType.notify_editors__booking_created
             )
+            booking.autosend(
+                EmailTemplateType.notify_host__req_room
+            )
 
             if booking.visit.needs_teachers or \
                     booking.visit.product.is_resource_controlled:
@@ -2658,6 +2698,18 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
                     booking.visit.product.is_resource_controlled:
                 booking.autosend(
                     EmailTemplateType.notify_host__req_host_volunteer
+                )
+
+            # If the visit is already planned, send message to guest
+            if booking.visit.workflow_status in [
+                Visit.WORKFLOW_STATUS_PLANNED,
+                Visit.WORKFLOW_STATUS_CONFIRMED,
+                Visit.WORKFLOW_STATUS_REMINDED
+            ]:
+                booking.autosend(
+                    EmailTemplateType.notify_all__booking_complete,
+                    [booking.booker],
+                    True
                 )
 
             self.object = booking
@@ -2837,6 +2889,8 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
 
         object.autosend(EmailTemplateType.notify_editors__booking_created)
 
+        object.autosend(EmailTemplateType.notify_host__req_room)
+
         return redirect(
             reverse(
                 'visit-booking-success',
@@ -2917,6 +2971,104 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
         }
         context.update(kwargs)
         return super(VisitBookingCreateView, self).get_context_data(**context)
+
+
+class BookingEditView(BreadcrumbMixin, EditorRequriedMixin, UpdateView):
+    template_name = "booking/edit.html"
+    model = Booking
+
+    def get_forms(self, data=None):
+        products = self.object.visit.products
+        primary_product = products[0]
+
+        bookerform = EditBookerForm(
+            data,
+            instance=self.object.booker,
+            products=products
+        )
+        type = primary_product.type
+        form_class = BookingForm
+        if type == Product.GROUP_VISIT:
+            try:
+                self.object = self.object.classbooking
+                form_class = ClassBookingBaseForm
+            except:
+                pass
+
+            # if primary_product.productgymnasiefag_set.count() > 0:
+            #     forms['subjectform'] = BookingGymnasieSubjectLevelForm(data)
+            # if primary_product.productgrundskolefag_set.count() > 0:
+            #     forms['grundskolesubjectform'] = \
+            #         BookingGrundskoleSubjectLevelForm(data)
+
+        elif type == Product.TEACHER_EVENT:
+            try:
+                self.object = self.object.teacherbooking
+                form_class = TeacherBookingBaseForm
+            except:
+                pass
+
+        elif type == Product.STUDENT_FOR_A_DAY:
+            form_class = StudentForADayBookingBaseForm
+
+        elif type == Product.STUDY_PROJECT:
+            form_class = StudyProjectBookingBaseForm
+
+        bookingform = form_class(
+            data,
+            instance=self.object,
+            product=primary_product
+        )
+        if self.object.visit.is_multiproductvisit and \
+                'desired_time' in bookingform.fields:
+            del bookingform.fields['desired_time']
+
+        forms = {
+            'bookerform': bookerform,
+            'bookingform': bookingform
+        }
+        return forms
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        return self.render_to_response(
+            self.get_context_data(**self.get_forms())
+        )
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        forms = self.get_forms(request.POST)
+        bookerform = forms['bookerform']
+        bookingform = forms['bookingform']
+        bookerform.full_clean()
+        bookingform.full_clean()
+        if bookerform.is_valid() and bookingform.is_valid():
+            self.object = bookingform.save()
+            self.object.booker = bookerform.save()
+            return redirect(reverse('booking-view', args=[self.object.pk]))
+        return self.render_to_response(
+            self.get_context_data(**forms)
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super(BookingEditView, self).get_context_data(**kwargs)
+        context['oncancel'] = reverse('booking-view', args=[self.object.pk])
+        context['formname'] = "bookingform"
+        context['level_map'] = Guest.level_map
+        context['editing'] = True
+        return context
+
+    def get_breadcrumb_args(self):
+        return [self.object]
+
+    @staticmethod
+    def build_breadcrumbs(booking):
+        return BookingDetailView.build_breadcrumbs(booking) + [
+            {
+                'text': _(u'Redigér'),
+                'url': reverse('booking-edit-view', args=[booking.id])
+            }
+        ]
 
 
 class EmbedcodesView(BreadcrumbMixin, AdminRequiredMixin, TemplateView):
@@ -3035,8 +3187,11 @@ class VisitSearchView(VisitListView):
     def get_form(self):
         if not self.form:
             # Make new form object
+            qdict = self.request.GET.copy()
+            if 'q' in qdict:
+                qdict['q'] = urllib.unquote(qdict['q']).strip()
             self.form = VisitSearchForm(
-                self.request.GET,
+                qdict,
                 user=self.request.user
             )
             # Process the form
@@ -3231,9 +3386,11 @@ class BookingDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
         context['modal'] = BookingNotifyView.modal
 
         user = self.request.user
-        if hasattr(user, 'userprofile') and \
-                user.userprofile.can_notify(self.object):
-            context['can_notify'] = True
+        if hasattr(user, 'userprofile'):
+            if user.userprofile.can_notify(self.object):
+                context['can_notify'] = True
+            if user.userprofile.can_edit(self.object):
+                context['can_edit'] = True
 
         if self.object.visit.is_multiproductvisit:
             context['emailtemplates'] = EmailTemplateType.get_choices(
@@ -3454,6 +3611,11 @@ class EmailTemplateEditView(LoginRequiredMixin, UnitAccessRequiredMixin,
             self.object = form.save()
             self.object.key = self.object.type.key
             self.object.save()
+            if u'continue' in request.POST:
+                self.just_preserve_back = True
+                return self.redirect(
+                    reverse('emailtemplate-edit', args=[self.object.pk])
+                )
             return self.redirect(reverse('emailtemplate-list'))
 
         return self.render_to_response(
@@ -3502,20 +3664,24 @@ class EmailTemplateEditView(LoginRequiredMixin, UnitAccessRequiredMixin,
 class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
     template_name = 'email/preview.html'
 
-    classes = {'OrganizationalUnit': OrganizationalUnit,
-               'Product': Product,
-               'Visit': Visit,
-               # 'StudyMaterial': StudyMaterial,
-               # 'Product': Product,
-               # 'Subject': Subject,
-               # 'GymnasieLevel': GymnasieLevel,
-               # 'Room': Room,
-               # 'PostCode': PostCode,
-               # 'School': School,
-               'Booking': Booking,
-               # 'ProductGymnasieFag': ProductGymnasieFag,
-               # 'ProductGrundskoleFag': ProductGrundskoleFag
-               }
+    classes = {
+        'OrganizationalUnit': OrganizationalUnit,
+        'Product': Product,
+        'Visit': Visit,
+        # 'StudyMaterial': StudyMaterial,
+        # 'Product': Product,
+        # 'Subject': Subject,
+        # 'GymnasieLevel': GymnasieLevel,
+        # 'Room': Room,
+        # 'PostCode': PostCode,
+        # 'School': School,
+        'Booking': Booking,
+        'Guest': Guest,
+        # 'ProductGymnasieFag': ProductGymnasieFag,
+        # 'ProductGrundskoleFag': ProductGrundskoleFag
+    }
+
+    object = None
 
     def get_recipient_choices(self):
         result = []
@@ -3564,7 +3730,7 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
             ]
             for key, type in EmailTemplateDetailView.classes.items()
         }
-        result['Recipient'] = self.get_recipient_choices()
+        # result['Recipient'] = self.get_recipient_choices()
         return json.dumps(result)
 
     def update_context_with_recipient(self, selected, ctx):
@@ -3596,68 +3762,102 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
 
     def extend_context(self, context):
         # Get product from visit if only visit is present
-        if ("product" not in context and "visit" in context and
-                hasattr(context["visit"], "product")):
+        if "product" not in context and "visit" in context and \
+                hasattr(context["visit"], "product"):
             context["product"] = context["visit"].product
         if "besoeg" not in context and "visit" in context:
             context["besoeg"] = context["visit"]
+        if "booker" not in context and "booking" in context:
+            context["booker"] = context["booking"].booker
 
     @method_decorator(login_required)
     def get(self, request, *args, **kwargs):
         pk = kwargs.get("pk")
-        formset = EmailTemplatePreviewContextForm()
         self.object = EmailTemplate.objects.get(pk=pk)
 
-        context = {}
-        if self.object is not None:
-            variables = self.object.get_template_variables()
-            # alias booker to needing a booking
-            if "booking" not in variables:
-                for x in variables:
-                    if x.split(".")[0] == "booker":
-                        variables.append("booking")
-                        break
-            formset.initial = []
-            lookup = {
-                key.lower(): key
-                for key in self.classes.keys()
-            }
-            for variable in variables:
-                base_variable = variable.split(".")[0]
-                if base_variable not in context:
-                    variable = base_variable.lower()
-                    if variable in lookup:
-                        type = lookup[variable]
-                        clazz = self.classes[type]
-                        try:
-                            value = clazz.objects.last()
-                            context[base_variable] = value
-                            formset.initial.append({
-                                'key': base_variable,
-                                'type': type,
-                                'value': value.id
-                            })
-                        except clazz.DoesNotExist:
-                            pass
-            rcpt_choices = self.get_recipient_choices()
-            rcpt_selected = rcpt_choices[0].get("value")
-            formset.initial.append({
-                'key': 'recipient',
-                'type': 'Recipient',
-                'value': rcpt_selected
+        vars = [
+            ('booking', "Booking"),
+            ('visit', "Visit"),
+            ('product', "Product")
+        ]
+        initial = []
+        for v in vars:
+            key = v[0]
+            className = v[1]
+            clazz = self.classes[className]
+            initial.append({
+                'key': key,
+                'type': className,
+                'value': clazz.objects.order_by('id').first().id
             })
-            self.update_context_with_recipient(rcpt_selected, context)
-            self.extend_context(context)
+        formset = EmailTemplatePreviewContextForm(initial=initial)
 
-        data = {'form': formset,
-                'subject': self.object.expand_subject(context, True),
-                'body': self.object.expand_body(context, True),
-                'objects': self._getObjectJson(),
-                'template': self.object
-                }
+        context = {
+            'form': formset,
+            'objects': self._getObjectJson(),
+            'template': self.object
+        }
 
-        data.update(self.get_context_data())
-        return render(request, self.template_name, data)
+        split = TemplateSplit(self.object.body)
+        has_guest_block = split.get_subblock_containing(
+            "recipient.guest"
+        ) is not None
+        has_teacher_block = split.get_subblock_containing(
+            "recipient.user.userprofile.is_teacher"
+        ) is not None
+        has_host_block = split.get_subblock_containing(
+            "recipient.user.userprofile.is_host"
+        ) is not None
+
+        recipient_output = []
+        recipient_input = []
+        if has_guest_block:
+            recipient_input.append(('guest', _(u'gæst')))
+        if has_teacher_block:
+            recipient_input.append(('teacher', _(u'underviser')))
+        if has_host_block:
+            recipient_input.append(('host', _(u'vært')))
+
+        recipient_input.append(
+            ('others', _(u'andre') if len(recipient_input) > 0 else None)
+        )
+
+        for key, label in recipient_input:
+            recplist = [
+                {'type': 'Recipient', 'value': key, 'key': 'recipient'}
+            ]
+            recplist.extend(initial)
+            template = self.get_filled_template(recplist)
+            item = {'key': key, 'label': label}
+            item.update(template)
+            recipient_output.append(item)
+        context['recipient_output'] = recipient_output
+
+        context.update(self.get_context_data())
+        return render(request, self.template_name, context)
+
+    def get_filled_template(self, items):
+        context = {}
+        for item in items:
+            key = item['key']
+            type = item['type']
+            value = item['value']
+            if type in self.classes.keys():
+                clazz = self.classes[type]
+                try:
+                    value = clazz.objects.get(pk=value)
+                except clazz.DoesNotExist:
+                    pass
+            elif type == "Recipient":
+                self.update_context_with_recipient(value, context)
+                continue
+            context[key] = value
+
+        self.extend_context(context)
+        return {
+            'subject': self.object.expand_subject(context, True),
+            'body': self.object.expand_body(context, True)
+        }
 
     @method_decorator(login_required)
     def post(self, request, *args, **kwargs):
@@ -3665,34 +3865,15 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
         formset = EmailTemplatePreviewContextForm(request.POST)
         self.object = EmailTemplate.objects.get(pk=pk)
 
-        context = {}
         formset.full_clean()
+        items = []
 
         for form in formset:
             if form.is_valid():
-                type = form.cleaned_data['type']
-                value = form.cleaned_data['value']
-                if type in self.classes.keys():
-                    clazz = self.classes[type]
-                    try:
-                        value = clazz.objects.get(pk=value)
-                    except clazz.DoesNotExist:
-                        pass
-                elif type == "Recipient":
-                    self.update_context_with_recipient(value, context)
-                    continue
-                context[form.cleaned_data['key']] = value
+                if len(form.cleaned_data):
+                    items.append(form.cleaned_data)
 
-        self.extend_context(context)
-        data = {'form': formset,
-                'subject': self.object.expand_subject(context, True),
-                'body': self.object.expand_body(context, True),
-                'objects': self._getObjectJson(),
-                'template': self.object
-                }
-        data.update(self.get_context_data())
-
-        return render(request, self.template_name, data)
+        return HttpResponse(json.dumps(self.get_filled_template(items)))
 
     def get_breadcrumb_args(self):
         return [self.object]

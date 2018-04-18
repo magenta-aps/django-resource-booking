@@ -31,6 +31,9 @@ window.modal = {
             this.documentHeight = height;
             this.setHeight(height);
         }
+    },
+    on: function (event, fct) {
+        this.parent.on(this.id, event, fct);
     }
 };
 (function(){

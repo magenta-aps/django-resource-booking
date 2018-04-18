@@ -438,16 +438,22 @@ class Locality(models.Model):
         null=True,
         on_delete=models.SET_NULL,
     )
+    # Used to signify special addreses with no pre-known location, such as
+    # the booker's own location
+    no_address = models.BooleanField(default=False)
 
     def __unicode__(self):
         return self.name
 
     @property
     def name_and_address(self):
+        if self.no_address:
+            return self.name
         return "%s (%s)" % (
             unicode(self.name),
             ", ".join([
-                unicode(x) for x in [self.address_line, self.zip_city] if x
+                unicode(x) for x in [self.address_line, self.zip_city]
+                if len(x.strip()) > 0
             ])
         )
 
@@ -456,7 +462,7 @@ class Locality(models.Model):
         return " ".join([
             unicode(x)
             for x in (self.name, self.address_line, self.zip_city)
-            if x
+            if len(x.strip()) > 0
         ])
 
     @property
@@ -470,6 +476,16 @@ class Locality(models.Model):
         # return "http://www.findvej.dk/%s,%s" % \
         return "https://maps.google.dk/maps/place/%s,%s" % \
                (self.address_line, self.zip_city)
+
+    @staticmethod
+    def create_defaults():
+        from booking.data import localities
+        data = localities.localities
+        for item in data:
+            try:
+                Locality.objects.get(name=item['name'])
+            except Locality.DoesNotExist:
+                Locality(**item).save()
 
 
 class EmailTemplateTypeMeta(ModelBase):
@@ -602,6 +618,9 @@ class EmailTemplateType(
 
     # Template will be autosent to teachers when they are added to a visit
     send_to_visit_added_teacher = models.BooleanField(default=False)
+
+    # Template will be autosent to room responsible of the product
+    send_to_room_responsible = models.BooleanField(default=False)
 
     # Does the "days" field make sense?
     enable_days = models.BooleanField(default=False)
@@ -840,6 +859,7 @@ class EmailTemplateType(
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_HOST__REQ_ROOM,
             name_da=u'Besked til lokaleansvarlig',
+            send_to_room_responsible=True,
             manual_sending_visit_enabled=True,
             manual_sending_mpv_sub_enabled=True,
             enable_autosend=True,
@@ -854,6 +874,7 @@ class EmailTemplateType(
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
             send_to_contactperson=True,
+            send_to_room_responsible=True,
             send_to_booker=True,
             send_to_booker_on_waitinglist=False,
             send_to_visit_hosts=True,
@@ -870,6 +891,7 @@ class EmailTemplateType(
             manual_sending_visit_enabled=True,
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
+            send_to_room_responsible=True,
             send_to_booker=True,
             send_to_booker_on_waitinglist=False,
             send_to_visit_hosts=True,
@@ -887,6 +909,7 @@ class EmailTemplateType(
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
             send_to_contactperson=True,
+            send_to_room_responsible=True,
             send_to_booker=True,
             send_to_booker_on_waitinglist=False,
             send_to_visit_hosts=True,
@@ -1112,7 +1135,7 @@ class EmailTemplate(models.Model):
         return self.type.name
 
     def expand_subject(self, context, keep_placeholders=False):
-        return self._expand(self.subject, context, keep_placeholders)
+        return self._expand(self.subject, context, keep_placeholders, False)
 
     def expand_body(self, context, keep_placeholders=False, encapsulate=False):
         body = self._expand(self.body, context, keep_placeholders)
@@ -1129,12 +1152,16 @@ class EmailTemplate(models.Model):
     ]
 
     @staticmethod
-    def get_template_object(template_text):
+    def get_template_object(template_text, escape=True):
         # Add default includes and encapsulate in danish
-        encapsulated = "\n".join(EmailTemplate.default_includes) + \
-            "{% language 'da' %}\n" + \
-            unicode(template_text) + \
-            "{% endlanguage %}\n"
+        lines = [] + EmailTemplate.default_includes + ["{% language 'da' %}"]
+        if not escape:
+            lines.append("{% autoescape off %}")
+        lines.append(unicode(template_text))
+        if not escape:
+            lines.append("{% endautoescape %}")
+        lines.append("{% endlanguage %}")
+        encapsulated = "\n".join(lines)
         try:
             return Template(encapsulated)
         except TemplateSyntaxError as e:
@@ -1142,8 +1169,8 @@ class EmailTemplate(models.Model):
             raise e
 
     @staticmethod
-    def _expand(text, context, keep_placeholders=False):
-        template = EmailTemplate.get_template_object(text)
+    def _expand(text, context, keep_placeholders=False, escape=True):
+        template = EmailTemplate.get_template_object(text, escape)
 
         if isinstance(context, dict):
             context = make_context(context)
@@ -1530,7 +1557,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         (STUDENT_FOR_A_DAY, _(u"Studerende for en dag")),
         (STUDIEPRAKTIK, _(u"Studiepraktik")),
         (OPEN_HOUSE, _(u"Åbent hus")),
-        (TEACHER_EVENT, _(u"Lærerarrangement")),
+        (TEACHER_EVENT, _(u"Tilbud til undervisere")),
         (GROUP_VISIT, _(u"Besøg med klassen")),
         (STUDY_PROJECT, _(u"Studieretningsprojekt")),
         (ASSIGNMENT_HELP, _(u"Lektiehjælp")),
@@ -1643,6 +1670,10 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         )),
         TEACHER_EVENT: set((
             TIME_MODE_SPECIFIC,
+            TIME_MODE_GUEST_SUGGESTED,
+            TIME_MODE_RESOURCE_CONTROLLED,
+            TIME_MODE_NONE,
+            TIME_MODE_NO_BOOKING,
         )),
         GROUP_VISIT: set((
             TIME_MODE_SPECIFIC,
@@ -1700,7 +1731,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     tilbudsansvarlig = models.ForeignKey(
         User,
-        verbose_name=_(u'Tilbudsansvarlig'),
+        verbose_name=_(u'Koordinator'),
         related_name='tilbudsansvarlig_for_set',
         blank=True,
         null=True,
@@ -2263,6 +2294,9 @@ class Product(AvailabilityUpdaterMixin, models.Model):
                 contacts.append(self.inquire_user)
             recipients.extend(contacts)
 
+        if template_type.send_to_room_responsible:
+            recipients.extend(self.roomresponsible.all())
+
         return recipients
 
     def get_reply_recipients(self, template_type):
@@ -2312,33 +2346,39 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     @staticmethod
     def get_latest_created(user=None):
-        qs = Product.objects.filter(statistics__isnull=False).\
-            order_by('-statistics__created_time')
+        qs = Product.objects.filter(statistics__isnull=False)
 
         if user and not user.is_authenticated():
-            return Product.filter_public_bookable(qs).distinct()
-        else:
-            return qs
+            # subselect-instead-of-distinct trick
+            qs = Product.objects.filter(
+                pk__in=Product.filter_public_bookable(qs).only("pk")
+            )
+
+        return qs.order_by('-statistics__created_time')
 
     @staticmethod
     def get_latest_updated(user=None):
-        qs = Product.objects.filter(statistics__isnull=False).\
-            order_by('-statistics__updated_time')
+        qs = Product.objects.filter(statistics__isnull=False)
 
         if user and not user.is_authenticated():
-            return Product.filter_public_bookable(qs).distinct()
-        else:
-            return qs
+            # subselect-instead-of-distinct trick
+            qs = Product.objects.filter(
+                pk__in=Product.filter_public_bookable(qs).only("pk")
+            )
+
+        return qs.order_by('-statistics__updated_time')
 
     @staticmethod
     def get_latest_displayed(user=None):
-        qs = Product.objects.filter(statistics__isnull=False).\
-            order_by('-statistics__visited_time')
+        qs = Product.objects.filter(statistics__isnull=False)
 
         if user and not user.is_authenticated():
-            return Product.filter_public_bookable(qs).distinct()
-        else:
-            return qs
+            # subselect-instead-of-distinct trick
+            qs = Product.objects.filter(
+                pk__in=Product.filter_public_bookable(qs).only("pk")
+            )
+
+        return qs.order_by('-statistics__visited_time')
 
     @classmethod
     def filter_public_bookable(cls, queryset):
@@ -2526,14 +2566,16 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     def get_latest_booked(user=None):
         qs = Product.objects.filter(
             eventtime__visit__bookings__statistics__created_time__isnull=False
-        ).annotate(latest_booking=Max(
-            'eventtime__visit__bookings__statistics__created_time'
-        )).order_by("-latest_booking")
+        )
 
         if user and not user.is_authenticated():
-            return Product.filter_public_bookable(qs).distinct()
-        else:
-            return qs
+            qs = Product.objects.filter(
+                pk__in=Product.filter_public_bookable(qs).only("pk")
+            )
+
+        return qs.annotate(latest_booking=Max(
+            'eventtime__visit__bookings__statistics__created_time'
+        )).order_by("-latest_booking")
 
     @property
     def room_responsible_users(self):
@@ -2792,6 +2834,15 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         verbose_name=_(u'Besøgets ressourcer')
     )
 
+    cancelled_eventtime = models.ForeignKey(
+        'EventTime',
+        verbose_name=_(u"Tidspunkt for aflyst besøg"),
+        related_name='cancelled_visits',
+        blank=True,
+        null=True,
+        default=None
+    )
+
     WORKFLOW_STATUS_BEING_PLANNED = 0
     WORKFLOW_STATUS_REJECTED = 1
     WORKFLOW_STATUS_PLANNED = 2
@@ -2935,9 +2986,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         WORKFLOW_STATUS_EVALUATED: [
             WORKFLOW_STATUS_BEING_PLANNED,
         ],
-        WORKFLOW_STATUS_CANCELLED: [
-            WORKFLOW_STATUS_BEING_PLANNED,
-        ],
+        WORKFLOW_STATUS_CANCELLED: [],
         WORKFLOW_STATUS_NOSHOW: [
             WORKFLOW_STATUS_BEING_PLANNED,
         ],
@@ -3020,6 +3069,22 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
         return result
 
+    @property
+    def is_cancelled(self):
+        return self.workflow_status == Visit.WORKFLOW_STATUS_CANCELLED
+
+    def cancel_visit(self):
+        self.workflow_status = Visit.WORKFLOW_STATUS_CANCELLED
+
+        if(hasattr(self, 'eventtime')):
+            # Break relation to the eventtime
+            eventtime = self.eventtime
+            self.eventtime.visit = None
+            eventtime.save()
+            # Register as a cancelled visit for the given time
+            self.cancelled_eventtime = eventtime
+            self.save()
+
     @classmethod
     def workflow_status_name(cls, workflow_status):
         for value, label in cls.workflow_status_choices:
@@ -3048,10 +3113,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         if last_workflow_status is None or \
                 last_workflow_status != self.workflow_status:
             self.last_workflow_update = timezone.now()
-            if self.workflow_status == self.WORKFLOW_STATUS_EXECUTED:
-                for product in self.products:
-                    for evaluation in product.evaluations:
-                        evaluation.send_first_notification(self)
 
     @property
     # QuerySet that finds EventTimes that will be affected by resource changes
@@ -3075,7 +3136,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def affected_calendars(self):
         return Calendar.objects.filter(
             Q(resource__teacherresource__user__in=self.teachers.all()) |
-            Q(resource__hostresource__user__in=self.hosts.all())
+            Q(resource__hostresource__user__in=self.hosts.all()) |
+            Q(resource__roomresource__room__in=self.rooms.all()) |
+            Q(resource__in=self.resources.all())
         )
 
     def update_availability(self):
@@ -3152,24 +3215,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def display_value(self):
         if not hasattr(self, 'eventtime') or not self.eventtime.start:
             return _(u'ikke-fastlagt tidspunkt')
-
-        start = timezone.localtime(self.eventtime.start)
-        result = formats.date_format(start, "DATETIME_FORMAT")
-
-        if self.duration:
-            try:
-                (hours, mins) = self.duration.split(":", 2)
-                if int(hours) > 0 or int(mins) > 0:
-                    endtime = start + timedelta(
-                        hours=int(hours), minutes=int(mins)
-                    )
-                    result += " - " + formats.date_format(
-                        endtime, "TIME_FORMAT"
-                    )
-            except Exception as e:
-                print e
-
-        return result
+        return self.eventtime.interval_display
 
     @property
     def id_display(self):
@@ -3203,12 +3249,19 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def interval_display(self):
-        return self.eventtime.interval_display
+        if hasattr(self, 'eventtime'):
+            return self.eventtime.interval_display
+        elif self.cancelled_eventtime:
+            return self.cancelled_eventtime.interval_display
+        else:
+            return ""
 
     @property
     def start_datetime(self):
         if hasattr(self, 'eventtime'):
             return self.eventtime.start
+        elif self.cancelled_eventtime:
+            return self.cancelled_eventtime.start
         else:
             return None
 
@@ -3216,6 +3269,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def end_datetime(self):
         if hasattr(self, 'eventtime'):
             return self.eventtime.end
+        elif self.cancelled_eventtime:
+            return self.cancelled_eventtime.end
         else:
             return None
 
@@ -3507,15 +3562,26 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 'title': unicode(self.real.display_title),
                 'time': unicode(self.eventtime.interval_display)
             }
+        elif self.cancelled_eventtime:
+            return _(u'Besøg %(id)s - %(title)s - %(time)s (aflyst)') % {
+                'id': self.pk,
+                'title': unicode(self.real.display_title),
+                'time': unicode(self.cancelled_eventtime.interval_display)
+            }
         else:
             return unicode(_(u'Besøg %s - uden tidspunkt') % self.pk)
 
     @property
     def product(self):
-        if hasattr(self, 'eventtime'):
+        try:
             return self.eventtime.product
-        else:
-            return None
+        except:
+            pass
+        try:
+            return self.cancelled_eventtime.product
+        except:
+            pass
+        return None
 
     def get_override_attr(self, attrname):
         result = getattr(self, 'override_' + attrname, None)
@@ -3755,7 +3821,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     def get_autosend_display(self):
         autosends = self.get_autosends(True, False, False)
-        return ', '.join([autosend.get_name() for autosend in autosends])
+        return [autosend.get_name() for autosend in autosends]
 
     def update_endtime(self):
         if self.deprecated_start_datetime is not None:
@@ -5336,8 +5402,8 @@ class ClassBooking(Booking):
 class TeacherBooking(Booking):
 
     class Meta:
-        verbose_name = _(u'booking for lærerarrangement')
-        verbose_name_plural = _(u'bookinger for lærerarrangementer')
+        verbose_name = _(u'booking for tilbud til undervisere')
+        verbose_name_plural = _(u'bookinger for tilbud til undervisere')
 
     subjects = models.ManyToManyField(
         Subject,
