@@ -169,6 +169,13 @@ class VisitSearchForm(forms.Form):
         widget=forms.widgets.NumberInput
     )
 
+    b = forms.CharField(
+        label=_(u'Besøgs-ID'),
+        max_length=10,
+        required=False,
+        widget=forms.widgets.NumberInput
+    )
+
     MY_UNIT = -1
     MY_FACULTY = -2
     MY_UNITS = -3
