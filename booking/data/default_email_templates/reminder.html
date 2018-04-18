@@ -45,6 +45,18 @@
         Du kan læse yderligere om besøget på adressen
         <a href="{% full_url 'product-view' product.pk %}">{% full_url 'product-view' product.pk %}</a>
     </p>
+    <p>
+        {% include 'booking/email/snippets/coordinators.html' %}
+    </p>
+    <p>
+        Detaljer for tilmelding(er):
+    </p>
+    <p>
+        {% include 'booking/email/snippets/preparation.html' %}
+    </p>
+    <p>
+        {% include 'booking/email/snippets/booking_list.html' %}
+    </p>
 
 {% endif %}
 
