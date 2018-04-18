@@ -3242,6 +3242,7 @@ class VisitSearchView(VisitListView):
         for filter_method in (
             self.filter_multiproduct_subs_off,
             self.filter_by_resource_id,
+            self.filter_by_visit_id,
             self.filter_by_unit,
             self.filter_by_date,
             self.filter_by_workflow,
@@ -3270,7 +3271,18 @@ class VisitSearchView(VisitListView):
             qs = qs.filter(eventtime__product__pk=t)
         elif t:
             qs = self.model.objects.none()
+        return qs
 
+    def filter_by_visit_id(self, qs):
+        form = self.get_form()
+        b = form.cleaned_data.get("b", "").strip()
+
+        if re.match('^#?\d+$', b):
+            if b[0] == "#":
+                b = b[1:]
+            qs = qs.filter(pk=b)
+        elif b:
+            qs = self.model.objects.none()
         return qs
 
     def filter_by_unit(self, qs):
