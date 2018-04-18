@@ -5139,6 +5139,13 @@ class Guest(models.Model):
         validators=[validators.MinValueValidator(int(1))]
     )
 
+    teacher_count = models.IntegerField(
+        blank=True,
+        null=True,
+        default=None,
+        verbose_name=u'Heraf lærere'
+    )
+
     def as_searchtext(self):
         return " ".join([unicode(x) for x in [
             self.firstname,

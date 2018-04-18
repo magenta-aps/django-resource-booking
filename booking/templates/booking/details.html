@@ -141,6 +141,11 @@
                 <dt>{% trans 'Antal deltagere:' %}</dt>
                 <dd>{{ object.booker.attendee_count|default_if_none:0 }}</dd>
 
+                {% if object.booker.teacher_count != None %}
+                    <dt>{% trans 'Heraf lærere:' %}</dt>
+                    <dd>{{ object.booker.teacher_count }}</dd>
+                {% endif %}
+
                 <dt>{% trans 'Kommentar:' %}</dt>
                 <dd>{{ object.notes }}</dd>
 
