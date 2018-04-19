@@ -115,6 +115,8 @@ class EventTime(models.Model):
         default=False
     )
 
+    can_create_events = True
+
     def set_calculated_end_time(self):
         # Don't calculate if already set
         if self.end is None:
@@ -1336,6 +1338,33 @@ class CalendarEvent(AvailabilityUpdaterMixin, models.Model):
         ] if x)
 
 
+class CombinedCalendar(object):
+
+    def __init__(self, calendars):
+        self.calendars = calendars
+
+    def available_list(self, start_dt, end_dt):
+        available = []
+        for subcal in self.calendars:
+            available.extend(subcal.available_list(start_dt, end_dt))
+        return available
+
+    def unavailable_list(self, start_dt, end_dt):
+        unavailable = []
+        for subcal in self.calendars:
+            unavailable.extend(subcal.unavailable_list(start_dt, end_dt))
+        return unavailable
+
+    @property
+    def calendarevent_set(self):
+        events = CalendarEvent.objects.none()
+        for subcal in self.calendars:
+            events |= subcal.calendarevent_set.all()
+        return events
+
+    can_create_events = False
+
+
 class ResourceType(models.Model):
     RESOURCE_TYPE_ITEM = 1
     RESOURCE_TYPE_VEHICLE = 2
@@ -1845,6 +1874,14 @@ class ResourcePool(AvailabilityUpdaterMixin, models.Model):
             )
 
         EventTime.update_resource_status_for_qs(qs)
+
+    @property
+    def calendar(self):
+        return CombinedCalendar([
+            resource.calendar
+            for resource in self.resources.all()
+            if resource.calendar is not None
+        ])
 
 
 class ResourceRequirement(AvailabilityUpdaterMixin, models.Model):
