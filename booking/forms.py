@@ -169,6 +169,13 @@ class VisitSearchForm(forms.Form):
         widget=forms.widgets.NumberInput
     )
 
+    b = forms.CharField(
+        label=_(u'Besøgs-ID'),
+        max_length=10,
+        required=False,
+        widget=forms.widgets.NumberInput
+    )
+
     MY_UNIT = -1
     MY_FACULTY = -2
     MY_UNITS = -3
@@ -655,8 +662,10 @@ class ProductAutosendForm(forms.ModelForm):
         if template_type is not None:
             if not template_type.enable_days:
                 self.fields['days'].widget = forms.HiddenInput()
-            elif template_type.key == \
-                    EmailTemplateType.NOTITY_ALL__BOOKING_REMINDER:
+            elif template_type.key in [
+                EmailTemplateType.NOTITY_ALL__BOOKING_REMINDER,
+                EmailTemplateType.NOTIFY_GUEST_REMINDER
+            ]:
                 self.fields['days'].help_text = _(u'Notifikation vil blive '
                                                   u'afsendt dette antal dage '
                                                   u'før besøget')
@@ -885,7 +894,7 @@ class BookerForm(forms.ModelForm):
     class Meta:
         model = Guest
         fields = ('firstname', 'lastname', 'email', 'phone', 'line',
-                  'level', 'attendee_count')
+                  'level', 'attendee_count', 'teacher_count')
         widgets = {
             'firstname': TextInput(
                 attrs={'class': 'form-control input-sm',
@@ -911,6 +920,9 @@ class BookerForm(forms.ModelForm):
                 attrs={'class': 'selectpicker form-control'}
             ),
             'attendee_count': NumberInput(
+                attrs={'class': 'form-control input-sm', 'min': 0}
+            ),
+            'teacher_count': NumberInput(
                 attrs={'class': 'form-control input-sm', 'min': 0}
             ),
         }

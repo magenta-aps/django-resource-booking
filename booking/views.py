@@ -1672,7 +1672,9 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
 
         if self.request.method == 'POST':
             forms['autosendformset'] = ProductAutosendFormSet(
-                self.request.POST, instance=self.object
+                self.request.POST,
+                instance=self.object,
+                initial=self.get_initial_autosends()
             )
         return forms
 
@@ -2700,6 +2702,18 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
                     EmailTemplateType.notify_host__req_host_volunteer
                 )
 
+            # If the visit is already planned, send message to guest
+            if booking.visit.workflow_status in [
+                Visit.WORKFLOW_STATUS_PLANNED,
+                Visit.WORKFLOW_STATUS_CONFIRMED,
+                Visit.WORKFLOW_STATUS_REMINDED
+            ] and not booking.is_waiting:
+                booking.autosend(
+                    EmailTemplateType.notify_all__booking_complete,
+                    [booking.booker],
+                    True
+                )
+
             self.object = booking
             self.model = booking.__class__
 
@@ -3197,6 +3211,7 @@ class VisitSearchView(VisitListView):
         for filter_method in (
             self.filter_multiproduct_subs_off,
             self.filter_by_resource_id,
+            self.filter_by_visit_id,
             self.filter_by_unit,
             self.filter_by_date,
             self.filter_by_workflow,
@@ -3225,7 +3240,18 @@ class VisitSearchView(VisitListView):
             qs = qs.filter(eventtime__product__pk=t)
         elif t:
             qs = self.model.objects.none()
+        return qs
 
+    def filter_by_visit_id(self, qs):
+        form = self.get_form()
+        b = form.cleaned_data.get("b", "").strip()
+
+        if re.match('^#?\d+$', b):
+            if b[0] == "#":
+                b = b[1:]
+            qs = qs.filter(pk=b)
+        elif b:
+            qs = self.model.objects.none()
         return qs
 
     def filter_by_unit(self, qs):

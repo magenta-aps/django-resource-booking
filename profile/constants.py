@@ -28,6 +28,12 @@ user_role_choices = (
     (NONE, _(u"Ingen"))
 )
 
+
+def get_role_name(role):
+    for id, label in user_role_choices:
+        if id == role:
+            return label
+
 # Which roles are available for editing?
 # E.g. a faculty editor can create, edit and delete coordinators but not admins
 available_roles = {

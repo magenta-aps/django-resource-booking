@@ -37,7 +37,7 @@ from resource_booking import settings
 from datetime import timedelta, datetime, date, time
 
 
-from profile.constants import TEACHER, HOST
+from profile.constants import TEACHER, HOST, NONE, get_role_name
 from profile.constants import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
 
 import djorm_pgfulltext.fields
@@ -252,6 +252,9 @@ class OrganizationalUnit(models.Model):
 
     def get_teachers(self):
         return self.get_users(TEACHER)
+
+    def get_coordinators(self):
+        return self.get_users(COORDINATOR)
 
     def get_editors(self):
 
@@ -592,6 +595,9 @@ class EmailTemplateType(
     # Template will be autosent to booker
     send_to_booker = models.BooleanField(default=False)
 
+    # Template will be autosent to booker on waitinglist
+    send_to_booker_on_waitinglist = models.BooleanField(default=False)
+
     # Template will be autosent to all hosts in the unit
     send_to_unit_hosts = models.BooleanField(default=False)
 
@@ -675,6 +681,7 @@ class EmailTemplateType(
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
             send_to_booker=True,
+            send_to_booker_on_waitinglist=True,
             enable_booking=True,
             is_default=True,
             enable_autosend=True,
@@ -689,6 +696,7 @@ class EmailTemplateType(
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
             send_to_booker=True,
+            send_to_booker_on_waitinglist=True,
             enable_booking=True,
             is_default=True,
             enable_autosend=True,
@@ -703,6 +711,7 @@ class EmailTemplateType(
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
             send_to_booker=True,
+            send_to_booker_on_waitinglist=True,
             enable_booking=True,
             enable_autosend=True,
             form_show=True,
@@ -718,7 +727,7 @@ class EmailTemplateType(
             manual_sending_booking_mpv_enabled=True,
             enable_booking=True,
             enable_autosend=True,
-            form_show=True,
+            form_show=False,
             ordering=4
         )
 
@@ -729,14 +738,16 @@ class EmailTemplateType(
             manual_sending_visit_enabled=True,
             enable_booking=True,
             enable_autosend=True,
-            form_show=True,
+            form_show=False,
             ordering=5
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__SPOT_ACCEPTED,
             name_da=u'Besked til gæst ved accept af plads (fra venteliste)',
+            manual_sending_visit_enabled=True,
             send_to_booker=True,
+            send_to_booker_on_waitinglist=True,
             enable_booking=True,
             enable_autosend=True,
             is_default=True,
@@ -747,7 +758,9 @@ class EmailTemplateType(
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__SPOT_REJECTED,
             name_da=u'Besked til gæst ved afvisning af plads (fra venteliste)',
+            manual_sending_visit_enabled=True,
             send_to_booker=True,
+            send_to_booker_on_waitinglist=True,
             enable_booking=True,
             enable_autosend=False,
             form_show=False,
@@ -760,6 +773,9 @@ class EmailTemplateType(
             manual_sending_visit_enabled=True,
             manual_sending_booking_enabled=True,
             manual_sending_booking_mpv_enabled=True,
+            send_to_booker=True,
+            send_to_booker_on_waitinglist=False,
+            enable_days=True,
             enable_autosend=True,
             form_show=True,
             ordering=8
@@ -768,6 +784,7 @@ class EmailTemplateType(
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_EDITORS__BOOKING_CREATED,
             name_da=u'Besked til koordinator, når gæst har tilmeldt sig besøg',
+            manual_sending_visit_enabled=False,
             send_to_contactperson=True,
             enable_booking=True,
             is_default=True,
@@ -780,6 +797,7 @@ class EmailTemplateType(
             EmailTemplateType.NOTIFY_EDITORS__SPOT_REJECTED,
             name_da=u'Besked til koordinatorer ved afvisning '
                     u'af plads (fra venteliste)',
+            manual_sending_visit_enabled=False,
             send_to_contactperson=True,
             enable_booking=True,
             enable_autosend=True,
@@ -839,6 +857,7 @@ class EmailTemplateType(
             EmailTemplateType.NOTIFY_HOST__HOSTROLE_IDLE,
             name_da=u'Notifikation til koordinatorer om '
                     u'ledig værtsrolle på besøg',
+            manual_sending_visit_enabled=False,
             send_to_editors=True,
             enable_days=True,
             enable_autosend=True,
@@ -866,6 +885,7 @@ class EmailTemplateType(
             send_to_contactperson=True,
             send_to_room_responsible=True,
             send_to_booker=True,
+            send_to_booker_on_waitinglist=False,
             send_to_visit_hosts=True,
             send_to_visit_teachers=True,
             enable_booking=True,
@@ -882,6 +902,7 @@ class EmailTemplateType(
             manual_sending_booking_mpv_enabled=True,
             send_to_room_responsible=True,
             send_to_booker=True,
+            send_to_booker_on_waitinglist=False,
             send_to_visit_hosts=True,
             send_to_visit_teachers=True,
             enable_booking=True,
@@ -899,6 +920,7 @@ class EmailTemplateType(
             send_to_contactperson=True,
             send_to_room_responsible=True,
             send_to_booker=True,
+            send_to_booker_on_waitinglist=False,
             send_to_visit_hosts=True,
             send_to_visit_teachers=True,
             enable_days=True,
@@ -912,13 +934,14 @@ class EmailTemplateType(
             name_da=u'Besked til alle om evaluering',
             manual_sending_visit_enabled=True,
             enable_autosend=True,
-            form_show=True,
+            form_show=False,
             ordering=20
         )
 
         EmailTemplateType.set_default(
             EmailTemplateType.SYSTEM__BASICMAIL_ENVELOPE,
             name_da=u'Besked til tilbudsansvarlig',
+            manual_sending_visit_enabled=True,
             enable_autosend=False,
             form_show=False,
             ordering=21
@@ -926,7 +949,8 @@ class EmailTemplateType(
 
         EmailTemplateType.set_default(
             EmailTemplateType.SYSTEM__EMAIL_REPLY,
-            name_da=u'Svar på e-mail fra systemet',
+            # name_da=u'Svar på e-mail fra systemet',
+            name_da=u'Skabelon med informationer om tilmelding fra gæst',
             enable_autosend=False,
             form_show=False,
             ordering=22
@@ -935,6 +959,7 @@ class EmailTemplateType(
         EmailTemplateType.set_default(
             EmailTemplateType.SYSTEM__USER_CREATED,
             name_da=u'Besked til bruger ved brugeroprettelse',
+            manual_sending_visit_enabled=True,
             form_show=False,
             ordering=23
         )
@@ -942,8 +967,10 @@ class EmailTemplateType(
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST,
             name_da=u'Besked til bruger angående evaluering (første besked)',
+            manual_sending_visit_enabled=True,
             form_show=True,
             send_to_booker=True,
+            send_to_booker_on_waitinglist=False,
             enable_autosend=True,
             enable_booking=True,
             is_default=True,
@@ -951,10 +978,26 @@ class EmailTemplateType(
         )
 
         EmailTemplateType.set_default(
-            EmailTemplateType.NOTIFY_GUEST__EVALUATION_SECOND,
-            name_da=u'Besked til bruger angående evaluering (anden besked)',
+            EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST_STUDENTS,
+            name_da=u'Besked til bruger angående evaluering (første besked), '
+                    u'for videresendelse til elever',
+            manual_sending_visit_enabled=True,
             form_show=True,
             send_to_booker=True,
+            send_to_booker_on_waitinglist=False,
+            enable_autosend=True,
+            enable_booking=True,
+            is_default=True,
+            ordering=25
+        )
+
+        EmailTemplateType.set_default(
+            EmailTemplateType.NOTIFY_GUEST__EVALUATION_SECOND,
+            name_da=u'Besked til bruger angående evaluering (anden besked)',
+            manual_sending_visit_enabled=True,
+            form_show=True,
+            send_to_booker=True,
+            send_to_booker_on_waitinglist=False,
             enable_autosend=True,
             enable_booking=True,
             enable_days=True,
@@ -971,7 +1014,7 @@ class EmailTemplateType(
 
     @staticmethod
     def get_choices(**kwargs):
-        types = EmailTemplateType.objects.filter(**kwargs)
+        types = EmailTemplateType.objects.filter(**kwargs).order_by('ordering')
         return [
             (type.id, type.name) for type in types
         ]
@@ -3773,20 +3816,22 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
             if not only_these_recipients and template_type.send_to_booker:
                 for booking in self.bookings.all():
-                    KUEmailMessage.send_email(
-                        template_type,
-                        {
-                            'visit': self,
-                            'besoeg': self,
-                            'product': product,
-                            'booking': booking,
-                            'booker': booking.booker
-                        },
-                        booking.booker,
-                        self,
-                        unit,
-                        original_from_email=reply_recipients
-                    )
+                    if not booking.is_waiting or \
+                            template_type.send_to_booker_on_waitinglist:
+                        KUEmailMessage.send_email(
+                            template_type,
+                            {
+                                'visit': self,
+                                'besoeg': self,
+                                'product': product,
+                                'booking': booking,
+                                'booker': booking.booker
+                            },
+                            booking.booker,
+                            self,
+                            unit,
+                            original_from_email=reply_recipients
+                        )
 
     def get_autosend_display(self):
         autosends = self.get_autosends(True, False, False)
@@ -4452,17 +4497,19 @@ class MultiProductVisit(Visit):
 
             if not only_these_recipients and template_type.send_to_booker:
                 for booking in self.bookings.all():
-                    KUEmailMessage.send_email(
-                        template_type,
-                        merge_dicts(params, {
-                            'booking': booking,
-                            'booker': booking.booker
-                        }),
-                        booking.booker,
-                        self,
-                        unit,
-                        original_from_email=reply_recipients
-                    )
+                    if not booking.is_waiting or \
+                            template_type.send_to_booker_on_waitinglist:
+                        KUEmailMessage.send_email(
+                            template_type,
+                            merge_dicts(params, {
+                                'booking': booking,
+                                'booker': booking.booker
+                            }),
+                            booking.booker,
+                            self,
+                            unit,
+                            original_from_email=reply_recipients
+                        )
 
     def autoassign_resources(self):
         for visit in self.subvisits_unordered:
@@ -5136,6 +5183,13 @@ class Guest(models.Model):
         validators=[validators.MinValueValidator(int(1))]
     )
 
+    teacher_count = models.IntegerField(
+        blank=True,
+        null=True,
+        default=None,
+        verbose_name=u'Heraf lærere'
+    )
+
     def as_searchtext(self):
         return " ".join([unicode(x) for x in [
             self.firstname,
@@ -5238,7 +5292,10 @@ class Booking(models.Model):
 
     def get_recipients(self, template_type):
         recipients = self.visit.get_recipients(template_type)
-        if template_type.send_to_booker:
+        if template_type.send_to_booker and (
+                not self.is_waiting or
+                template_type.send_to_booker_on_waitinglist
+        ):
             recipients.append(self.booker)
         return recipients
 
@@ -5513,6 +5570,16 @@ class KUEmailMessage(models.Model):
                     email['full'] = address
 
                 email['get_full_name'] = email.get('name', email['full'])
+
+                if guest is not None:
+                    email['type'] = u'Gæst'
+                elif user is not None:
+                    role = user.userprofile.get_role()
+                    if role != NONE:
+                        email['type'] = get_role_name(role)
+                if 'type' not in email:
+                    email['type'] = u'Anden'
+
                 emails.append(email)
         return emails
 
@@ -5638,7 +5705,7 @@ class KUEmailMessage(models.Model):
                 _(u"Template: %s") % template.type.name
                 if template.type else "None",
                 _(u"Modtagere: %s") % ", ".join(
-                    [x['full'] for x in emails]
+                    ["%s (%s)" % (x['full'], x['type']) for x in emails]
                 )
             ]
             ctxmsg = context.get('log_message', None)
