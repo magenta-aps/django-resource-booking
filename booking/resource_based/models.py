@@ -1022,6 +1022,17 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
         else:
             return EventTime.objects.none()
 
+    @property
+    def available_actions(self):
+        return [
+            'calendar',
+            'calendar-create',
+            'calendar-delete',
+            'calendar-event-create',
+            'calendar-event-edit',
+            'calendar-event-delete'
+        ]
+
 
 class CalendarCalculatedAvailable(models.Model):
 
@@ -1340,8 +1351,9 @@ class CalendarEvent(AvailabilityUpdaterMixin, models.Model):
 
 class CombinedCalendar(object):
 
-    def __init__(self, calendars):
+    def __init__(self, calendars, itemname):
         self.calendars = calendars
+        self.itemname = itemname
 
     def available_list(self, start_dt, end_dt):
         available = []
@@ -1363,6 +1375,14 @@ class CombinedCalendar(object):
         return events
 
     can_create_events = False
+
+    @property
+    def available_actions(self):
+        return [
+            'calendar',
+            'calendar-event-edit',
+            'calendar-event-delete'
+        ]
 
 
 class ResourceType(models.Model):
@@ -1881,7 +1901,7 @@ class ResourcePool(AvailabilityUpdaterMixin, models.Model):
             resource.calendar
             for resource in self.resources.all()
             if resource.calendar is not None
-        ])
+        ], self.name)
 
 
 class ResourceRequirement(AvailabilityUpdaterMixin, models.Model):

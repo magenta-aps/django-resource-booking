@@ -56,15 +56,15 @@
         </h1>
         <p class="col-sm-6 text-right">
             {% if object.resource %}
-            <a href="{% url 'resource-view' object.resource.id %}" role="button" class="btn btn-primary">{% trans 'Gå til ressource' %}</a>
+                <a href="{% url 'resource-view' object.resource.id %}" role="button" class="btn btn-primary">{% trans 'Gå til ressource' %}</a>
             {% elif object.product %}
-            <a href="{% url 'product-view' object.product.id %}" role="button" class="btn btn-primary margin-top-10-mobile">{% trans 'Gå til tilbud' %}</a>
+                <a href="{% url 'product-view' object.product.id %}" role="button" class="btn btn-primary margin-top-10-mobile">{% trans 'Gå til tilbud' %}</a>
             {% endif %}
-            {% if object.can_create_events %}
-            <a href="{% url reverses.calendar_event_create view.rel_obj.pk %}" role="button" class="btn btn-primary margin-top-10-mobile">
-                <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
-                {% trans 'Opret tid i kalender' %}
-            </a>
+            {% if reverses.calendar_event_create %}
+                <a href="{% url reverses.calendar_event_create view.rel_obj.pk %}" role="button" class="btn btn-primary margin-top-10-mobile">
+                    <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                    {% trans 'Opret tid i kalender' %}
+                </a>
             {% endif %}
         </p>
     </div>
@@ -80,10 +80,18 @@
             <ul>
                 {% for event in available %}
                     <li>
-                        <a href="{% url reverses.calendar_event_edit view.rel_obj.pk event.pk %}">{{ event.title }}</a>
+                        {% if reverses.calendar_event_edit %}
+                            <a href="{% url reverses.calendar_event_edit view.rel_obj.pk event.pk %}">{{ event.title }}</a>
+                        {% else %}
+                            {{ event.title }}
+                        {% endif %}
                         {{ event.interval_display }}
-                        {% if event.recurrences %}{% trans "(med gentagelser)" %}{% endif %}
-                        <a href="{% url reverses.calendar_event_delete view.rel_obj.pk event.pk %}"><span class="glyphicon glyphicon-remove"></span></a>
+                        {% if event.recurrences %}
+                            {% trans "(med gentagelser)" %}
+                        {% endif %}
+                        {% if reverses.calendar_event_delete %}
+                            <a href="{% url reverses.calendar_event_delete view.rel_obj.pk event.pk %}"><span class="glyphicon glyphicon-remove"></span></a>
+                        {% endif %}
                     </li>
                 {% endfor %}
             </ul>
@@ -92,9 +100,15 @@
             <ul>
                 {% for event in unavailable %}
                     <li>
-                        <a href="{% url reverses.calendar_event_edit view.rel_obj.pk event.pk %}">{{ event.title }}</a>
+                        {% if reverses.calendar_event_edit %}
+                            <a href="{% url reverses.calendar_event_edit view.rel_obj.pk event.pk %}">{{ event.title }}</a>
+                        {% else %}
+                            {{ event.title }}
+                        {% endif %}
                         {{ event.interval_display }}
-                        <a href="{% url reverses.calendar_event_delete view.rel_obj.pk event.pk %}"><span class="glyphicon glyphicon-remove"></span></a>
+                        {% if reverses.calendar_event_delete %}
+                            <a href="{% url reverses.calendar_event_delete view.rel_obj.pk event.pk %}"><span class="glyphicon glyphicon-remove"></span></a>
+                        {% endif %}
                     </li>
                 {% endfor %}
             </ul>
@@ -160,12 +174,13 @@
             </table>
         </div>
     </div>
-    <div class="row">
-        <div class="col-md-12">
-            <a href="{% url reverses.calendar_delete view.rel_obj.pk %}" role="button" class="btn btn-danger pull-right">{% trans 'Slet denne kalender' %}</a>
+    {% if reverses.calendar_delete %}
+        <div class="row">
+            <div class="col-md-12">
+                <a href="{% url reverses.calendar_delete view.rel_obj.pk %}" role="button" class="btn btn-danger pull-right">{% trans 'Slet denne kalender' %}</a>
+            </div>
         </div>
-    </div>
-    <div class="divider"></div>
+    {% endif %}
 
 {% endblock %}
 
