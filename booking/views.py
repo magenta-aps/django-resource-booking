@@ -2707,7 +2707,7 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
                 Visit.WORKFLOW_STATUS_PLANNED,
                 Visit.WORKFLOW_STATUS_CONFIRMED,
                 Visit.WORKFLOW_STATUS_REMINDED
-            ]:
+            ] and not booking.is_waiting:
                 booking.autosend(
                     EmailTemplateType.notify_all__booking_complete,
                     [booking.booker],
