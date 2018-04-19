@@ -662,8 +662,10 @@ class ProductAutosendForm(forms.ModelForm):
         if template_type is not None:
             if not template_type.enable_days:
                 self.fields['days'].widget = forms.HiddenInput()
-            elif template_type.key == \
-                    EmailTemplateType.NOTITY_ALL__BOOKING_REMINDER:
+            elif template_type.key in [
+                EmailTemplateType.NOTITY_ALL__BOOKING_REMINDER,
+                EmailTemplateType.NOTIFY_GUEST_REMINDER
+            ]:
                 self.fields['days'].help_text = _(u'Notifikation vil blive '
                                                   u'afsendt dette antal dage '
                                                   u'før besøget')
