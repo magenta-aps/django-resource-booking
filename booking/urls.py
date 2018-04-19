@@ -78,7 +78,9 @@ js_info_dict = {
     'packages': ('recurrence', ),
 }
 
-calendarevent_kwargs = {'related_kwargs_name': 'res'}
+calendarevent_kwargs = {
+    'related_kwargs_name': 'res'
+}
 product_calendar_kwargs = {
     'related_model': booking.models.Product,
     'reverse_prefix': 'product-'
@@ -90,6 +92,9 @@ resourcepool_calendar_kwargs = {
     'related_model': booking.models.ResourcePool,
     'reverse_prefix': 'resourcepool-'
 }
+resourcepool_calendarevent_kwargs = resourcepool_calendar_kwargs.copy()
+resourcepool_calendarevent_kwargs['related_kwargs_name'] = 'pool'
+
 
 urlpatterns = patterns(
 
@@ -342,6 +347,13 @@ urlpatterns = patterns(
         booking.views.CalendarEventUpdateView.as_view(),
         calendarevent_kwargs,
         name='calendar-event-edit'),
+
+
+    url(r'^calendar/edit-event/(?P<pk>[0-9]+)/?$',
+        booking.views.CalendarEventUpdateView.as_view(),
+        calendarevent_kwargs,
+        name='calendar-event-edit'),
+
     url(r'^resource/(?P<res>[0-9]+)/calendar/delete-event/(?P<pk>[0-9]+)/?$',
         booking.views.CalendarEventDeleteView.as_view(),
         calendarevent_kwargs,
@@ -351,6 +363,15 @@ urlpatterns = patterns(
         booking.views.CalendarView.as_view(),
         resourcepool_calendar_kwargs,
         name='resourcepool-calendar'),
+
+    url(r'^resourcepool/(?P<pool>[0-9]+)/calendar/edit-event/(?P<pk>[0-9]+)/?$',
+        booking.views.CalendarEventUpdateView.as_view(),
+        resourcepool_calendarevent_kwargs,
+        name='resourcepool-calendar-event-edit'),
+    url(r'^resourcepool/(?P<pool>[0-9]+)/calendar/delete-event/(?P<pk>[0-9]+)/?$',
+        booking.views.CalendarEventDeleteView.as_view(),
+        resourcepool_calendarevent_kwargs,
+        name='resourcepool-calendar-event-delete'),
 
     url(r'^product/(?P<pk>[0-9]+)/calendar/?$',
         booking.views.CalendarView.as_view(),

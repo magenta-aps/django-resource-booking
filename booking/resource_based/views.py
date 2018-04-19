@@ -1206,8 +1206,11 @@ class CalRelatedMixin(object):
         related_model = self.kwargs.get(
             'related_model', booking_models.Resource
         )
+        print "related_kwargs_name: %s" % related_kwargs_name
         pk = self.kwargs.get(related_kwargs_name)
         queryset = related_model.objects.filter(pk=pk)
+        print pk
+        print related_model
         try:
             # Get the single item from the filtered queryset
             self.rel_obj = queryset.get()
@@ -1219,17 +1222,12 @@ class CalRelatedMixin(object):
 
     def get_context_data(self, **kwargs):
         prefix = self.kwargs.get('reverse_prefix', '')
+        calendar = self.get_calendar()
 
         return super(CalRelatedMixin, self).get_context_data(
             reverses={
-                x.replace('-', '_'): prefix + x for x in (
-                    'calendar',
-                    'calendar-create',
-                    'calendar-delete',
-                    'calendar-event-create',
-                    'calendar-event-edit',
-                    'calendar-event-delete',
-                )
+                x.replace('-', '_'): prefix + x
+                for x in calendar.available_actions
             },
             **kwargs
         )
@@ -1254,6 +1252,8 @@ class CalRelatedMixin(object):
             return ProductDetailView.build_breadcrumbs(object, request)
         elif isinstance(object, Resource):
             return ResourceDetailView.build_breadcrumbs(object)
+        elif isinstance(object, ResourcePool):
+            return ResourcePoolDetailView.build_breadcrumbs(object)
         return []
 
 
@@ -1353,6 +1353,8 @@ class CalendarView(
             itemname = prod.title
         elif res is not None and res.subclass_instance is not None:
             itemname = res.subclass_instance.get_name()
+        elif hasattr(calendar, 'itemname'):
+            itemname = calendar.itemname
 
         if hasattr(calendar, 'resource'):
             bt = calendar.resource.occupied_eventtimes(start_dt, end_dt)
@@ -1548,6 +1550,11 @@ class CalendarEventUpdateView(
     end_str = ""
 
     def get_object(self, *args, **kwargs):
+        print "CalendarEventUpdateView.get_object"
+        print args
+        print kwargs
+        print self.args
+        print self.kwargs
         self.rel_obj = self.get_calendar_rel_object()
 
         return super(CalendarEventUpdateView, self).get_object(*args, **kwargs)
