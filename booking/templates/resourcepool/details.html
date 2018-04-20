@@ -14,6 +14,7 @@
         <a href="{% url 'resourcepool-delete' object.id %}?back={% url 'resourcepool-view' object.id %}" class="btn btn-danger" role="button">{% trans 'Slet ressourcegruppen' %}</a>
         {% endif %}
         <a href="{% url 'resourcepool-edit' object.id %}?back={% url 'resourcepool-view' object.id %}" role="button" class="btn btn-primary" role="button">{% trans 'Redigér' %}</a>
+        <a href="{% url 'resourcepool-calendar' object.id %}" role="button" class="btn btn-primary" role="button">{% trans 'Kalender' %}</a>
     </div>
 
     <h1>{{ object.name }}</h1>

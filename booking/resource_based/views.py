@@ -1206,11 +1206,8 @@ class CalRelatedMixin(object):
         related_model = self.kwargs.get(
             'related_model', booking_models.Resource
         )
-        print "related_kwargs_name: %s" % related_kwargs_name
         pk = self.kwargs.get(related_kwargs_name)
         queryset = related_model.objects.filter(pk=pk)
-        print pk
-        print related_model
         try:
             # Get the single item from the filtered queryset
             self.rel_obj = queryset.get()
@@ -1368,6 +1365,7 @@ class CalendarView(
             resource=res,
             product=prod,
             itemname=itemname,
+            reference=getattr(calendar, 'reference'),
             month=first_of_the_month,
             next_month=first_of_the_month + datetime.timedelta(days=31),
             prev_month=first_of_the_month - datetime.timedelta(days=1),

@@ -1351,9 +1351,10 @@ class CalendarEvent(AvailabilityUpdaterMixin, models.Model):
 
 class CombinedCalendar(object):
 
-    def __init__(self, calendars, itemname):
+    def __init__(self, calendars, itemname, reference=None):
         self.calendars = calendars
         self.itemname = itemname
+        self.reference = reference
 
     def available_list(self, start_dt, end_dt):
         available = []
@@ -1897,11 +1898,15 @@ class ResourcePool(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def calendar(self):
-        return CombinedCalendar([
-            resource.calendar
-            for resource in self.resources.all()
-            if resource.calendar is not None
-        ], self.name)
+        return CombinedCalendar(
+            [
+                resource.calendar
+                for resource in self.resources.all()
+                if resource.calendar is not None
+            ],
+            unicode(self),
+            reverse('resourcepool-view', args=[self.pk])
+        )
 
 
 class ResourceRequirement(AvailabilityUpdaterMixin, models.Model):
