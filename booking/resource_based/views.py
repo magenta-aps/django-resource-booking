@@ -1365,7 +1365,7 @@ class CalendarView(
             resource=res,
             product=prod,
             itemname=itemname,
-            reference=getattr(calendar, 'reference'),
+            reference=getattr(calendar, 'reference', None),
             month=first_of_the_month,
             next_month=first_of_the_month + datetime.timedelta(days=31),
             prev_month=first_of_the_month - datetime.timedelta(days=1),
@@ -1548,13 +1548,7 @@ class CalendarEventUpdateView(
     end_str = ""
 
     def get_object(self, *args, **kwargs):
-        print "CalendarEventUpdateView.get_object"
-        print args
-        print kwargs
-        print self.args
-        print self.kwargs
         self.rel_obj = self.get_calendar_rel_object()
-
         return super(CalendarEventUpdateView, self).get_object(*args, **kwargs)
 
     def get_context_data(self, **kwargs):
