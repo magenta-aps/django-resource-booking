@@ -49,7 +49,11 @@
     <div class="row">
         <h1 class="col-sm-6">
             {% if itemname %}
-                {% blocktrans with itemname=itemname %}Kalender for {{ itemname }}{% endblocktrans %}
+                {% if reference %}
+                    {% blocktrans with itemname=itemname reference=reference %}Kalender for <a href="{{ reference }}">{{ itemname }}</a>{% endblocktrans %}
+                {% else %}
+                    {% blocktrans with itemname=itemname %}Kalender for {{ itemname }}{% endblocktrans %}
+                {% endif %}
             {% else %}
                 {% trans "Kalender" %}
             {% endif %}

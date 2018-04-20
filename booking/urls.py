@@ -347,31 +347,14 @@ urlpatterns = patterns(
         booking.views.CalendarEventUpdateView.as_view(),
         calendarevent_kwargs,
         name='calendar-event-edit'),
-
-
     url(r'^calendar/edit-event/(?P<pk>[0-9]+)/?$',
         booking.views.CalendarEventUpdateView.as_view(),
         calendarevent_kwargs,
         name='calendar-event-edit'),
-
     url(r'^resource/(?P<res>[0-9]+)/calendar/delete-event/(?P<pk>[0-9]+)/?$',
         booking.views.CalendarEventDeleteView.as_view(),
         calendarevent_kwargs,
         name='calendar-event-delete'),
-
-    url(r'^resourcepool/(?P<pk>[0-9]+)/calendar/?$',
-        booking.views.CalendarView.as_view(),
-        resourcepool_calendar_kwargs,
-        name='resourcepool-calendar'),
-
-    url(r'^resourcepool/(?P<pool>[0-9]+)/calendar/edit-event/(?P<pk>[0-9]+)/?$',
-        booking.views.CalendarEventUpdateView.as_view(),
-        resourcepool_calendarevent_kwargs,
-        name='resourcepool-calendar-event-edit'),
-    url(r'^resourcepool/(?P<pool>[0-9]+)/calendar/delete-event/(?P<pk>[0-9]+)/?$',
-        booking.views.CalendarEventDeleteView.as_view(),
-        resourcepool_calendarevent_kwargs,
-        name='resourcepool-calendar-event-delete'),
 
     url(r'^product/(?P<pk>[0-9]+)/calendar/?$',
         booking.views.CalendarView.as_view(),
@@ -426,6 +409,20 @@ urlpatterns = patterns(
     url(r'^resourcepool/(?P<pk>[0-9]+)/delete/?$',
         ResourcePoolDeleteView.as_view(),
         name='resourcepool-delete'),
+    url(r'^resourcepool/(?P<pk>[0-9]+)/calendar/?$',
+        booking.views.CalendarView.as_view(),
+        resourcepool_calendar_kwargs,
+        name='resourcepool-calendar'),
+    url(r'^resourcepool/(?P<pool>[0-9]+)/'
+        r'calendar/edit-event/(?P<pk>[0-9]+)/?$',
+        booking.views.CalendarEventUpdateView.as_view(),
+        resourcepool_calendarevent_kwargs,
+        name='resourcepool-calendar-event-edit'),
+    url(r'^resourcepool/(?P<pool>[0-9]+)/'
+        r'calendar/delete-event/(?P<pk>[0-9]+)/?$',
+        booking.views.CalendarEventDeleteView.as_view(),
+        resourcepool_calendarevent_kwargs,
+        name='resourcepool-calendar-event-delete'),
 
     url(r'^product/(?P<product>[0-9]+)/resourcerequirement/create/?$',
         ResourceRequirementCreateView.as_view(),
