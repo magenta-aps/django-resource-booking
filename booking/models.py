@@ -2521,6 +2521,15 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             if start_time is None:
                 return True
 
+            # We don't accept bookings made later
+            # than x days before visit start
+            cutoff = self.booking_cutoff
+            if cutoff is not None:
+                start_date = start_time if isinstance(start_time, date) \
+                    else start_time.date()
+                if start_date < timezone.now().date() + cutoff:
+                    return False
+
             # If start_time is a date and there is no end_date assume
             # midnight-to-midnight on the given date in the current timezone.
             if end_time is None and isinstance(start_time, date):
@@ -2530,7 +2539,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
                 )
                 end_time = start_time + timedelta(hours=24)
 
-            # Check if we has an available time in our calendar within the
+            # Check if we have an available time in our calendar within the
             # specified interval.
             return self.has_available_calendar_time(start_time, end_time)
 
