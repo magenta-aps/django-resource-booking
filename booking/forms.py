@@ -860,7 +860,10 @@ class BookingForm(forms.ModelForm):
                     options[month] = []
                 options[month].append(option)
 
-            for (month, optionlist) in options.iteritems():
+            months = options.keys()
+            months.sort(key=lambda month: "%04d%02d" % (month[1], month[0]))
+            for month in months:
+                optionlist = options[month]
                 if month is None:
                     choices.extend(optionlist)
                 else:
