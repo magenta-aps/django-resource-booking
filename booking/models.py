@@ -2063,6 +2063,10 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             return 1
 
     @property
+    def booking_cutoff(self):
+        return timedelta(days=6)
+
+    @property
     def bookable_times(self):
         qs = self.eventtime_set.filter(
             Q(bookable=True) &
@@ -2096,7 +2100,9 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def future_bookable_times(self):
-        return self.bookable_times.filter(start__gte=timezone.now())
+        return self.bookable_times.filter(
+            start__gte=timezone.now()+self.booking_cutoff
+        )
 
     @property
     # QuerySet that finds all EventTimes that will be affected by a change
