@@ -1,28 +1,32 @@
 {% load i18n %}
 
-<ul class="list-unstyled" id="dato">
+<ul class="product-time-list" id="dato">
 {% for eventtime in eventtime_list|slice:":10" %}
     <li>
-        {{ eventtime.interval_display }} - 
+        {{ eventtime.interval_display }}
+        <span class="product-time-availability">
         {% if eventtime.available_seats > 1000000 %}
             {% trans 'ingen begrænsning' %}
         {% else %}
             {% blocktrans count available=eventtime.available_seats %}1 ledig plads{% plural %}{{ available }} ledige pladser{% endblocktrans %}
         {% endif %}
+        </span>
     </li>
 {% endfor %}
 {% if eventtime_list.count > 10 %}
     {% for eventtime in eventtime_list|slice:"10:" %}
         <li class="hidden default-hidden">
-            {{ eventtime.interval_display }} -
+            {{ eventtime.interval_display }}
+            <span class="product-time-availability">
             {% if eventtime.available_seats > 1000000 %}
                 {% trans 'ingen begrænsning' %}
             {% else %}
                 {% blocktrans count available=eventtime.available_seats %}1 ledig plads{% plural %}{{ available }} ledige pladser{% endblocktrans %}
             {% endif %}
+            </span>
         </li>
     {% endfor %}
-    <li>
+    <li id="product-time-list-expand">
         <span id="show_all_times" class="btn btn-default btn-xs pull-right">{% trans 'Vis alle' %} ({{eventtime_list.count}})</span>
         <span id="hide_extra_times" class="btn btn-default btn-xs pull-right hidden">{% trans 'Skjul ekstra' %}</span>
     </li>
