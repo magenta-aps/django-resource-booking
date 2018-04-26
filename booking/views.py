@@ -61,7 +61,7 @@ from booking.models import Evaluation, EvaluationGuest
 
 from booking.forms import ProductInitialForm, ProductForm, EditBookerForm, \
     ClassBookingBaseForm, TeacherBookingBaseForm, \
-    StudentForADayBookingBaseForm, StudyProjectBookingBaseForm
+    StudentForADayBookingBaseForm, StudyProjectBookingBaseForm, ConfirmForm
 from booking.forms import GuestEmailComposeForm, StudentForADayBookingForm
 from booking.forms import OtherProductForm, StudyProjectBookingForm
 from booking.forms import BookingGrundskoleSubjectLevelForm, BookingListForm
@@ -3428,6 +3428,45 @@ class BookingDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
             {
                 'url': reverse('booking-view', args=[booking.id]),
                 'text': booking
+            }
+        ]
+
+
+class BookingCancelView(BreadcrumbMixin, ProductBookingUpdateView):
+
+    template_name = "booking/cancel.html"
+    model = Booking
+    form_class = ConfirmForm
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form = self.get_form()
+        if form.is_valid():
+            self.object.cancelled = True
+            self.object.save()
+            return redirect(
+                reverse('booking-view', args=[self.object.pk])
+            )
+        return self.render_to_response(
+            self.get_context_data(form=form)
+        )
+
+    def get_context_data(self, **kwargs):
+        context = {
+            'oncancel': reverse('booking-view', args=[self.object.id])
+        }
+        context.update(kwargs)
+        return super(BookingCancelView, self).get_context_data(**context)
+
+    def get_breadcrumb_args(self):
+        return [self.object]
+
+    @staticmethod
+    def build_breadcrumbs(booking):
+        return BookingDetailView.build_breadcrumbs(booking) + [
+            {
+                'url': reverse('booking-cancel', args=[booking.id]),
+                'text': _(u'Aflys')
             }
         ]
 

@@ -5251,6 +5251,11 @@ class Booking(models.Model):
         on_delete=models.SET_NULL,
     )
 
+    cancelled = models.BooleanField(
+        default=False,
+        verbose_name=u'Aflyst'
+    )
+
     def get_visit_attr(self, attrname):
         if not self.visit:
             return None
