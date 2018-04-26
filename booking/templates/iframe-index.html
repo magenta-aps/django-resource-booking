@@ -8,6 +8,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
         <title>foKUs{% block htmltitle %} - {% trans 'søg i tilbud' %}{% endblock %}</title>
+        {% include 'common/google_tag_manager/script.html' %}
+        {% include 'common/google_tag_manager/analytics.html' %}
         <!-- Bootstrap -->
         <link href="{% static 'thirdparty/bootstrap/dist/css/bootstrap.min.css' %}" rel="stylesheet">
         <!-- Our own stylesheet -->
@@ -55,6 +57,7 @@
       </script>
     </head>
     <body>
+        {% include 'common/google_tag_manager/noscript.html' %}
         {% block header %}{% endblock %}
         {% block content %}
         <div class="container-fluid container-iframe">
