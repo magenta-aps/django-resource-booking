@@ -3223,7 +3223,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def display_title(self):
-        return self.product.title
+        return self.product.title if self.product \
+            else _(u"Besøg #%d") % self.id
 
     @property
     def display_value(self):
