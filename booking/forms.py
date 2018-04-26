@@ -1958,3 +1958,10 @@ class EvaluationStatisticsForm(forms.Form):
         label=_(u'Enhed'),
         queryset=OrganizationalUnit.objects.all()
     )
+
+
+class ConfirmForm(forms.Form):
+
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('instance')
+        super(ConfirmForm, self).__init__(*args, **kwargs)
