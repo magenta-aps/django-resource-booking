@@ -2636,6 +2636,8 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
             put_in_waitinglist = False
 
             attendee_count = booking.booker.attendee_count
+
+
             if booking.visit.product.do_create_waiting_list and \
                     attendee_count > available_seats:
                 # Put in waiting list
@@ -2662,7 +2664,6 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
 
                 booking.waitinglist_spot = \
                     booking.visit.next_waiting_list_spot
-
             booking.save()
 
             for formname in ['gymnasiesubjectform', 'grundskolesubjectform']:
@@ -3549,6 +3550,7 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
 
         context['bookinglistform'] = self.get_bookinglist_form()
         context['waitinglistform'] = self.get_waitinglist_form()
+        context['cancelledlistform'] = self.get_cancelledlist_form()
         context['waitingattendees'] = {
             booking.id: booking.booker.attendee_count
             for booking in self.object.waiting_list
@@ -3576,6 +3578,13 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
             (booking.id, booking.id) for booking in self.object.waiting_list
             ]
         return waitinglistform
+
+    def get_cancelledlist_form(self, **kwargs):
+        cancelledlist = BookingListForm(data=kwargs)
+        cancelledlist.fields['bookings'].choices = [
+            (booking.id, booking.id) for booking in self.object.cancelled_list
+        ]
+        return cancelledlist
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
