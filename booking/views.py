@@ -2625,7 +2625,6 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
 
             attendee_count = booking.booker.attendee_count
 
-
             if booking.visit.product.do_create_waiting_list and \
                     attendee_count > available_seats:
                 # Put in waiting list

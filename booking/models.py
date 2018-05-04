@@ -1,50 +1,46 @@
 # encoding: utf-8
+import math
+import random
+import sys
+import uuid
+from datetime import timedelta, datetime, date, time
+
+import djorm_pgfulltext.fields
+from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
+from django.contrib.auth.models import User
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.core import validators
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMultiAlternatives
+from django.core.urlresolvers import reverse
 from django.db import models
-from django.db.models import Count, Case, When, Value
+from django.db.models import Count, Case, When
 from django.db.models import F
 from django.db.models import Max
-from django.db.models import Sum
 from django.db.models import Q
+from django.db.models import Sum
 from django.db.models.base import ModelBase
 from django.db.models.functions import Coalesce
 from django.template import TemplateSyntaxError
-from django.utils import six
-from django.template.context import make_context
-from django.utils import timezone
-from django.utils.crypto import get_random_string
-from djorm_pgfulltext.models import SearchManager
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
-from django.contrib.auth.models import User
-from django.core.urlresolvers import reverse
-from django.utils import formats
-from django.utils.translation import ugettext_lazy as _, ungettext_lazy as __
 from django.template.base import Template, VariableNode
+from django.template.context import make_context
 from django.template.loader import get_template
 from django.template.loader_tags import IncludeNode
+from django.utils import formats
+from django.utils import six
+from django.utils import timezone
+from django.utils.crypto import get_random_string
+from django.utils.translation import ugettext_lazy as _, ungettext_lazy as __
+from djorm_pgfulltext.models import SearchManager
 
 from booking.mixins import AvailabilityUpdaterMixin
 from booking.utils import ClassProperty, full_email, CustomStorage, html2text
-from booking.utils import get_related_content_types, INFINITY, merge_dicts
 from booking.utils import flatten
-
-from resource_booking import settings
-
-from datetime import timedelta, datetime, date, time
-
-
-from profile.constants import TEACHER, HOST, NONE, get_role_name
+from booking.utils import get_related_content_types, INFINITY, merge_dicts
 from profile.constants import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
-
-import djorm_pgfulltext.fields
-import math
-import uuid
-import random
-import sys
+from profile.constants import TEACHER, HOST, NONE, get_role_name
+from resource_booking import settings
 
 BLANK_LABEL = '---------'
 BLANK_OPTION = (None, BLANK_LABEL,)
@@ -2084,7 +2080,10 @@ class Product(AvailabilityUpdaterMixin, models.Model):
                 attendees=Coalesce(
                     Sum(
                         Case(
-                            When(visit__bookings__cancelled=False, then='visit__bookings__booker__attendee_count')
+                            When(
+                                visit__bookings__cancelled=False,
+                                then='visit__bookings__booker__attendee_count'
+                            )
                         )
                     ),
                     0
