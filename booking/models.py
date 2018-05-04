@@ -3,7 +3,7 @@ from django.core import validators
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMultiAlternatives
 from django.db import models
-from django.db.models import Count
+from django.db.models import Count, Case, When, Value
 from django.db.models import F
 from django.db.models import Max
 from django.db.models import Sum
@@ -2079,15 +2079,21 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         if self.maximum_number_of_visitors is not None:
             max = (self.maximum_number_of_visitors +
                    (self.waiting_list_length or 0))
+
             qs = qs.annotate(
                 attendees=Coalesce(
-                    Sum('visit__bookings__booker__attendee_count'),
+                    Sum(
+                        Case(
+                            When(visit__bookings__cancelled=False, then='visit__bookings__booker__attendee_count')
+                        )
+                    ),
                     0
                 )
             ).filter(
                 Q(visit__isnull=True) |
                 Q(attendees__lt=max)
             )
+
         return qs
 
     @property
@@ -3479,18 +3485,41 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             return False
         return True
 
-    def get_bookings(self, include_waitinglist=False, include_regular=True):
-        if include_regular:  # Include non-waitinglist bookings
-            if include_waitinglist:
-                return self.bookings.all()
-            else:
-                return self.bookings.filter(waitinglist_spot=0)
-        else:
-            if include_waitinglist:
-                return self.bookings.filter(waitinglist_spot__gt=0). \
-                    order_by("waitinglist_spot")
-            else:
-                return self.bookings.none()
+    def get_bookings(self, include_waiting=False, include_non_waiting=True,
+                     include_cancelled=False, include_non_cancelled=True):
+
+        # The code is easier to read and understand with these inversions
+        exclude_cancelled = not include_cancelled
+        exclude_non_cancelled = not include_non_cancelled
+        exclude_waiting = not include_waiting
+        exclude_non_waiting = not include_non_waiting
+
+        if exclude_waiting and exclude_non_waiting:
+            return self.bookings.none()
+
+        if exclude_cancelled and exclude_non_cancelled:
+            return self.bookings.none()
+
+        qs = self.bookings.all()
+
+        if exclude_waiting:  # Only accept non-waiting
+            qs = qs.filter(waitinglist_spot=0)
+        elif exclude_non_waiting:  # Only accept waiting
+            qs = qs.filter(waitinglist_spot__gt=0)
+        # else:       Accept both waiting and non-waiting
+        #     pass    no change to qs
+
+        if exclude_cancelled:  # Only accept non-cancelled
+            qs = qs.filter(cancelled=False)
+        elif exclude_non_cancelled:  # Only accept cancelled
+            qs = qs.filter(cancelled=True)
+        # else:       Accept cancelled and non-cancelled
+        #     pass    no change to qs
+
+        if include_waiting:
+            qs = qs.order_by("waitinglist_spot")
+
+        return qs
 
     def set_needs_attention(self, since=None):
         if since is None:
@@ -3515,10 +3544,17 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def waiting_list(self):
         return self.get_bookings(True, False)
 
-    def get_attendee_count(self,
-                           include_waitinglist=False, include_regular=True):
+    @property
+    def cancelled_list(self):
+        return self.get_bookings(True, True, True, False)
+
+    def get_attendee_count(
+            self, include_waiting=False, include_non_waiting=True,
+            include_cancelled=False, include_non_cancelled=True
+    ):
         return self.get_bookings(
-            include_waitinglist, include_regular
+            include_waiting, include_non_waiting,
+            include_cancelled, include_non_cancelled
         ).aggregate(
             Sum('booker__attendee_count')
         )['booker__attendee_count__sum'] or 0
@@ -3530,6 +3566,10 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     @property
     def nr_waiting(self):
         return self.get_attendee_count(True, False)
+
+    @property
+    def nr_cancelled_attendees(self):
+        return self.get_attendee_count(True, True, True, False)
 
     @property
     def available_seats(self):

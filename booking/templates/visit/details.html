@@ -542,6 +542,22 @@
     </div>
     {% endif %}
 
+    {% if not object.is_multi_sub %}
+        <div class="row cancelled-attendees">
+            <div class="col-sm-12 col-md-10 col-md-offset-2">
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <h2>
+                            {% trans 'Aflyste' %}
+                            ({{ object.nr_cancelled_attendees }})
+                        </h2>
+                        {% include "booking/snippets/list.html" with list=object.cancelled_list form=cancelledlistform listname='cancelled' %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
     <div class="row activitylog">
         <div class="col-sm-12 col-md-10 col-md-offset-2">
             <div class="panel panel-default">
