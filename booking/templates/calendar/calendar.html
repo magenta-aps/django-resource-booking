@@ -85,8 +85,12 @@
                 {% for event in available %}
                     <li>
                         {% if reverses.calendar_event_edit %}
-                            <a href="{% url reverses.calendar_event_edit view.rel_obj.pk event.pk %}">{{ event.title }}</a>
+                            <a href="{% url reverses.calendar_event_edit view.rel_obj.pk event.pk %}">
+                                {% if object.combined %}{{ event.calendar.resource.subclass_instance.get_name|suffix:":" }}{% endif %}
+                                {{ event.title }}
+                            </a>
                         {% else %}
+                            {% if object.combined %}{{ event.calendar.resource.subclass_instance.get_name|suffix:":" }}{% endif %}
                             {{ event.title }}
                         {% endif %}
                         {{ event.interval_display }}
@@ -105,8 +109,12 @@
                 {% for event in unavailable %}
                     <li>
                         {% if reverses.calendar_event_edit %}
-                            <a href="{% url reverses.calendar_event_edit view.rel_obj.pk event.pk %}">{{ event.title }}</a>
+                            <a href="{% url reverses.calendar_event_edit view.rel_obj.pk event.pk %}">
+                                {% if object.combined %}{{ event.calendar.resource.subclass_instance.get_name|suffix:":" }}{% endif %}
+                                {{ event.title }}
+                            </a>
                         {% else %}
+                            {% if object.combined %}{{ event.calendar.resource.subclass_instance.get_name|suffix:":" }}{% endif %}
                             {{ event.title }}
                         {% endif %}
                         {{ event.interval_display }}
@@ -165,7 +173,10 @@
                                 <div class="marker {{ marker.available_class }}" style="top: {{ marker.top_offset }}em; height: {{ marker.height }}em;">
                                     <a href="{{ marker.event.source.calendar_event_link }}">
                                         <div>{{ marker.time_interval }}</div>
-                                        <div>{{ marker.event.source.calender_event_title }}</div>
+                                        <div>
+                                            {% if object.combined %}{{ marker.event.source.calendar.resource.subclass_instance.get_name|suffix:":" }}{% endif %}
+                                            {{ marker.event.source.calender_event_title }}
+                                        </div>
                                     </a>
                                 </div>
                                 {% endfor %}

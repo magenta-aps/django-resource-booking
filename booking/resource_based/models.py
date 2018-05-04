@@ -1351,6 +1351,8 @@ class CalendarEvent(AvailabilityUpdaterMixin, models.Model):
 
 class CombinedCalendar(object):
 
+    combined = True
+
     def __init__(self, calendars, itemname, reference=None):
         self.calendars = calendars
         self.itemname = itemname

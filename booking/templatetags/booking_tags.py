@@ -159,6 +159,13 @@ def gte(a, b):
     return a >= b
 
 
+@register.filter
+def suffix(obj, suffix):
+    if obj is None or len(obj) == 0:
+        return obj
+    return "%s%s" % (obj, suffix)
+
+
 class FullURLNode(defaulttags.Node):
 
     TOKEN_USER_KEY = 'token_user'
