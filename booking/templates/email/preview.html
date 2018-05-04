@@ -72,11 +72,11 @@
                 <div class="panel-body">
                     {% if item.subject %}
                         <h3>{% trans 'Beskedens emne' %}</h3>
-                        <blockquote id="subject">{{ item.subject }}</blockquote>
+                        <blockquote id="{{ item.key }}_subject">{{ item.subject }}</blockquote>
                     {% endif %}
                     {% if item.body %}
                         <h3>{% trans 'Beskedens tekst' %}</h3>
-                        <blockquote id="body">
+                        <blockquote id="{{ item.key }}_body">
                             {% autoescape off %}
                                 {{ item.body }}
                             {% endautoescape %}
@@ -97,31 +97,55 @@
         var url = "{{ request.get_full_path }}";
         var processingMessage = "{% trans 'Arbejder...' %}";
         var errorMessage = "{% trans 'Fejl i template' %}";
+        var recipientTypes = [
+        {% for item in recipient_output %}
+            "{{ item.key }}",
+        {% endfor %}
+        ];
         {% autoescape off %}
         $(function(){
-            var objects = {{ objects }};
+            var objects = {{ objects|jsonify }};
             var typeClassMap = {'string': 'emailtemplate-type-string'};
             for (var type in objects) {
                 typeClassMap[type] = 'emailtemplate-type-' + type;
             }
 
+            var form = $("#previewForm");
+            var counter = form.find("#id_form-TOTAL_FORMS");
+            var recipientFieldId = "id_form-" + counter.val() + "-";
+            var recipientFieldName = "form-" + counter.val() + "-";
+            var recipientTypeField = $("<input>").attr({id: recipientFieldId+"type", name:recipientFieldName+"type", type:"hidden"}).val("Recipient").appendTo(form);
+            var recipientKeyField = $("<input>").attr({id: recipientFieldId+"key", name:recipientFieldName+"key", type:"hidden"}).val("recipient").appendTo(form);
+            var recipientValueField = $("<input>").attr({id: recipientFieldId+"value", name:recipientFieldName+"value", type:"hidden"}).appendTo(form);
+            counter.val(parseInt(counter.val(), 10) + 1);
+
             var update = function() {
-                $("#subject").text(processingMessage);
-                $("#body").text(processingMessage);
-                $.ajax({
-                    type: "POST",
-                    url: url,
-                    data: $("#previewForm").serialize(),
-                    dataType: "json",
-                    success: function(data) {
-                        $("#subject").text(data['subject']);
-                        $("#body").html(data['body']);
-                    },
-                    error: function() {
-                        $("#subject").text(errorMessage);
-                        $("#body").text(errorMessage);
-                    }
-                });
+
+                for (var i=0; i<recipientTypes.length; i++) {
+                    var recpType = recipientTypes[i];
+                    recipientValueField.val(recpType);
+
+                    $("#"+recpType+"_subject").text(processingMessage);
+                    $("#"+recpType+"_body").text(processingMessage);
+                    $.ajax({
+                        type: "POST",
+                        url: url,
+                        data: $("#previewForm").serialize(),
+                        dataType: "json",
+                        success: (function(r){
+                            return function (data) {
+                                $("#"+r+"_subject").text(data['subject']);
+                                $("#"+r+"_body").html(data['body']);
+                            }
+                        })(recpType),
+                        error: (function(r){
+                            return function () {
+                                $("#"+r+"_subject").text(errorMessage);
+                                $("#"+r+"_body").text(errorMessage);
+                            }
+                        })(recpType)
+                    });
+                }
             };
 
             $("#rowcontainer").change(update);
