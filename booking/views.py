@@ -1037,7 +1037,7 @@ class SearchView(BreadcrumbMixin, ListView):
             self.filters["organizationalunit__pk"] = u
 
     def get_facet_queryset(self):
-        if not self.facet_queryset:
+        if self.facet_queryset is None:
             self.facet_queryset = Product.objects.filter(
                 pk__in=[x["pk"] for x in self.get_base_queryset().values("pk")]
             )
@@ -1056,6 +1056,8 @@ class SearchView(BreadcrumbMixin, ListView):
         }
         qs = qs.filter(*filter_args, **filter_kwargs)
         qs = self.annotate(qs)
+
+        qs = qs.prefetch_related('productgymnasiefag_set', 'productgrundskolefag_set')
 
         return qs
 
