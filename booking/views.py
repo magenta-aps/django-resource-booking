@@ -1057,7 +1057,9 @@ class SearchView(BreadcrumbMixin, ListView):
         qs = qs.filter(*filter_args, **filter_kwargs)
         qs = self.annotate(qs)
 
-        qs = qs.prefetch_related('productgymnasiefag_set', 'productgrundskolefag_set')
+        qs = qs.prefetch_related(
+            'productgymnasiefag_set', 'productgrundskolefag_set'
+        )
 
         return qs
 
