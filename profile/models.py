@@ -237,7 +237,7 @@ class UserProfile(models.Model):
             return OrganizationalUnit.objects.none()
 
         if role == ADMINISTRATOR:
-            return OrganizationalUnit.objects.all()
+            return OrganizationalUnit.objects.all().select_related('type')
 
         unit = self.organizationalunit
 
@@ -247,11 +247,13 @@ class UserProfile(models.Model):
         # Faculty editors gets everything that has their unit as a parent
         # as well as the unit itself
         if role == FACULTY_EDITOR:
-            return OrganizationalUnit.objects.filter(Q(parent=unit) |
-                                                     Q(pk=unit.pk))
+            return OrganizationalUnit.objects\
+                .filter(Q(parent=unit) | Q(pk=unit.pk))\
+                .select_related('type')
 
         # Everyone else just get access to their own group
-        return OrganizationalUnit.objects.filter(pk=unit.pk)
+        return OrganizationalUnit.objects.filter(pk=unit.pk)\
+            .select_related('type')
 
     def get_faculty(self):
         unit = self.organizationalunit
