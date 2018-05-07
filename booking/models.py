@@ -1324,6 +1324,11 @@ class ProductGymnasieFag(models.Model):
         }
     )
 
+    display_value_cached = models.CharField(
+        null=True,
+        max_length=100
+    )
+
     level = models.ManyToManyField('GymnasieLevel')
 
     @classmethod
@@ -1348,11 +1353,11 @@ class ProductGymnasieFag(models.Model):
         return u"%s (for '%s')" % (self.display_value(), self.product.title)
 
     def ordered_levels(self):
-        return [x for x in self.level.all().order_by('level')]
+        return self.level.all().order_by('level')
 
     @classmethod
     def display(cls, subject, levels):
-        levels = [unicode(x) for x in levels]
+        levels = [unicode(x) for x in levels.all()]
 
         nr_levels = len(levels)
         if nr_levels == 1:
@@ -1371,13 +1376,16 @@ class ProductGymnasieFag(models.Model):
             return unicode(subject.name)
 
     def display_value(self):
-        return ProductGymnasieFag.display(
-            self.subject, self.ordered_levels()
-        )
+        if self.display_value_cached is None:
+            self.display_value_cached = ProductGymnasieFag.display(
+                self.subject, self.ordered_levels()
+            )
+            self.save()
+        return self.display_value_cached
 
     def as_submitvalue(self):
         res = unicode(self.subject.pk)
-        levels = ",".join([unicode(x.pk) for x in self.ordered_levels()])
+        levels = ",".join([unicode(x.pk) for x in self.ordered_levels().all()])
 
         if levels:
             res = ",".join([res, levels])
