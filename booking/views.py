@@ -18,7 +18,7 @@ from django.utils.translation.trans_real import get_languages
 from django.db.models import Count
 from django.db.models import Q
 from django.db.models import Sum
-from django.db.models.expressions import RawSQL
+from django.db.models.expressions import RawSQL, F
 from django.db.models.functions import Coalesce
 from django.forms.models import model_to_dict
 from django.http import Http404
@@ -697,6 +697,7 @@ class SearchView(BreadcrumbMixin, ListView):
     admin_form = None
     facet_queryset = None
     needs_num_bookings = False
+    sort_num_fag = False
     t_from = None
     t_to = None
     is_public = True
@@ -893,6 +894,17 @@ class SearchView(BreadcrumbMixin, ListView):
             qs = qs.annotate(num_bookings=RawSQL(sql, tuple()))
             self.needs_num_bookings = False
 
+        qs = qs.annotate(
+            num_gymnasiefag=Count('gymnasiefag'),
+            num_grundskolefag=Count('grundskolefag')
+        ).annotate(
+            num_fag=F('num_gymnasiefag') + F('num_grundskolefag')
+        )
+
+        if self.sort_num_fag:
+            qs = qs.order_by(
+                '-num_fag'
+            )
         return qs
 
     def annotate(self, qs):
@@ -944,12 +956,16 @@ class SearchView(BreadcrumbMixin, ListView):
     def filter_by_gymnasiefag(self):
         f = set(self.request.GET.getlist("f"))
         if f:
-            self.filters["gymnasiefag__in"] = f
+            self.filters["__gymnasiefag"] = \
+                Q(gymnasiefag__in=f) | Q(num_fag=0)
+            self.sort_num_fag = True
 
     def filter_by_grundskolefag(self):
         g = self.request.GET.getlist("g")
         if g:
-            self.filters["grundskolefag__in"] = g
+            self.filters["__grundskolefag"] = \
+                Q(grundskolefag__in=g) | Q(num_fag=0)
+            self.sort_num_fag = True
 
     def filter_for_admin_view(self, form):
         for filter_method in (
@@ -1033,9 +1049,14 @@ class SearchView(BreadcrumbMixin, ListView):
     def get_queryset(self):
         filters = self.get_filters()
         qs = self.get_facet_queryset()
-        qs = self.annotate_for_filters(qs)
-        qs = qs.filter(**filters)
+        # qs = self.annotate_for_filters(qs)
+        filter_args = [v for k, v in filters.iteritems() if k.startswith('__')]
+        filter_kwargs = {
+            k: v for k, v in filters.iteritems() if not k.startswith('__')
+        }
+        qs = qs.filter(*filter_args, **filter_kwargs)
         qs = self.annotate(qs)
+
         return qs
 
     def make_facet(self, facet_field, choice_tuples, selected,
@@ -1045,14 +1066,27 @@ class SearchView(BreadcrumbMixin, ListView):
         hits = {}
 
         # Remove filter for the field we want to facetize
-        new_filters = {}
-        for k, v in self.get_filters().iteritems():
-            if not k.startswith(facet_field):
-                new_filters[k] = v
+        filters = self.get_filters()
+        new_filter_args = [
+            v for k, v in filters.iteritems()
+            if k.startswith('__') and not k.startswith('__' + facet_field)
+        ]
+        new_filter_kwargs = {
+            k: v for k, v in filters.iteritems()
+            if not k.startswith(facet_field) and not k.startswith('__')
+        }
 
         facet_qs = Product.objects.filter(
-            pk__in=self.get_facet_queryset().filter(**new_filters)
+            pk__in=self.get_facet_queryset().filter(
+                *new_filter_args,
+                **new_filter_kwargs
+            )
         )
+
+        if facet_field in ['gymnasiefag', 'grundskolefag']:
+            no_subjects = self.get_facet_queryset().filter(num_fag=0).count()
+        else:
+            no_subjects = None
 
         qs = facet_qs.values(facet_field).annotate(hits=Count("pk"))
 
@@ -1078,10 +1112,10 @@ class SearchView(BreadcrumbMixin, ListView):
                 else:
                     hits[v] = to_add
 
-        return self.choices_from_hits(choice_tuples, hits, selected,
-                                      selected_value=selected_value)
+        return self.choices_from_hits(choice_tuples, hits, no_subjects,
+                                      selected, selected_value=selected_value)
 
-    def choices_from_hits(self, choice_tuples, hits, selected,
+    def choices_from_hits(self, choice_tuples, hits, additional, selected,
                           selected_value='checked="checked"'):
         selected = set(selected)
         choices = []
@@ -1099,7 +1133,8 @@ class SearchView(BreadcrumbMixin, ListView):
                 'label': name,
                 'value': value,
                 'selected': sel,
-                'hits': hits[value]
+                'hits': hits[value],
+                'additional': additional
             })
 
         return choices
