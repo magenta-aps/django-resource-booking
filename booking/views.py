@@ -1061,7 +1061,7 @@ class SearchView(BreadcrumbMixin, ListView):
 
     def make_facet(self, facet_field, choice_tuples, selected,
                    selected_value='checked="checked"',
-                   add_to_all=None):
+                   add_to_all=None, unsubjected=None):
 
         hits = {}
 
@@ -1082,11 +1082,6 @@ class SearchView(BreadcrumbMixin, ListView):
                 **new_filter_kwargs
             )
         )
-
-        if facet_field in ['gymnasiefag', 'grundskolefag']:
-            no_subjects = self.get_facet_queryset().filter(num_fag=0).count()
-        else:
-            no_subjects = None
 
         qs = facet_qs.values(facet_field).annotate(hits=Count("pk"))
 
@@ -1112,7 +1107,7 @@ class SearchView(BreadcrumbMixin, ListView):
                 else:
                     hits[v] = to_add
 
-        return self.choices_from_hits(choice_tuples, hits, no_subjects,
+        return self.choices_from_hits(choice_tuples, hits, unsubjected,
                                       selected, selected_value=selected_value)
 
     def choices_from_hits(self, choice_tuples, hits, additional, selected,
@@ -1139,8 +1134,13 @@ class SearchView(BreadcrumbMixin, ListView):
 
         return choices
 
+    def get_unsubjected_count(self):
+        return self.get_facet_queryset().filter(num_fag=0).count()
+
     def get_context_data(self, **kwargs):
         context = {}
+
+        unsubjected = self.get_unsubjected_count()
 
         context['adminform'] = self.get_admin_form()
 
@@ -1210,6 +1210,7 @@ class SearchView(BreadcrumbMixin, ListView):
             "gymnasiefag",
             gym_subject_choices,
             gym_selected,
+            unsubjected=unsubjected
         )
 
         gs_selected = self.request.GET.getlist("g")
@@ -1218,6 +1219,7 @@ class SearchView(BreadcrumbMixin, ListView):
             "grundskolefag",
             gs_subject_choices,
             gs_selected,
+            unsubjected=unsubjected
         )
 
         context['from_datetime'] = self.from_datetime
