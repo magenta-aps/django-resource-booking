@@ -1341,7 +1341,8 @@ class CalendarView(
                 key = date.isoformat()
                 if key in events_by_date:
                     marker = x.day_marker(date)
-                    events_by_date[key].append(marker)
+                    if marker is not None:
+                        events_by_date[key].append(marker)
                 date = date + datetime.timedelta(days=1)
                 date_midnight = date_midnight + datetime.timedelta(days=1)
 
