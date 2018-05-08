@@ -1074,7 +1074,8 @@ class CalendarEventInstance(object):
     SECONDS_IN_DAY = 24 * 60 * 60
     SECONDS_PER_EM = SECONDS_IN_DAY / EMS_IN_DAY
 
-    def __init__(self, start, end, available=False, source=None, calendar=None):
+    def __init__(self, start, end, available=False,
+                 source=None, calendar=None):
         if not timezone.is_aware(start):
             start = timezone.make_aware(start)
 
