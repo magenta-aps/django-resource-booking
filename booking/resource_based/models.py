@@ -753,7 +753,8 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
                         x.start,
                         x.end,
                         available=False,
-                        source=x.visit
+                        source=x.visit,
+                        calendar=self
                     )
 
     def generate_assigned_to_visits(self, from_dt, to_dt):
@@ -774,7 +775,8 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
                     x.eventtime.start,
                     x.eventtime.end,
                     available=False,
-                    source=x
+                    source=x,
+                    calendar=self
                 )
 
     def generate_product_unavailalbe(self, from_dt, to_dt):
@@ -786,7 +788,8 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
                     x.start,
                     x.end,
                     available=False,
-                    source=x.visit
+                    source=x.visit,
+                    calendar=self
                 )
 
     def unavailable_list(self, from_dt, to_dt):
@@ -1064,12 +1067,14 @@ class CalendarEventInstance(object):
     end = None
     available = False
     source = None
+    calendar = None
+    combined_calendar = None
 
     EMS_IN_DAY = 12
     SECONDS_IN_DAY = 24 * 60 * 60
     SECONDS_PER_EM = SECONDS_IN_DAY / EMS_IN_DAY
 
-    def __init__(self, start, end, available=False, source=None):
+    def __init__(self, start, end, available=False, source=None, calendar=None):
         if not timezone.is_aware(start):
             start = timezone.make_aware(start)
 
@@ -1080,6 +1085,7 @@ class CalendarEventInstance(object):
         self.end = end
         self.available = available
         self.source = source
+        self.calendar = calendar
 
     def day_marker(self, date):
         day_start = timezone.make_aware(
@@ -1090,7 +1096,7 @@ class CalendarEventInstance(object):
         obj = {
             'event': self,
             'start': max(self.start, day_start),
-            'end': min(self.end, day_end),
+            'end': min(self.end, day_end)
         }
 
         if obj['end'] == day_end:
@@ -1113,6 +1119,10 @@ class CalendarEventInstance(object):
             obj['available_class'] = 'available'
         else:
             obj['available_class'] = 'unavailable'
+
+        if self.calendar is not None and self.combined_calendar is not None:
+            index = self.combined_calendar.subcalendar_index(self.calendar)
+            obj['available_class'] += " calendar%d" % index
 
         # Calculate offset from top of day in 5 minute intervals
         top_offset_seconds = (obj['start'] - day_start).total_seconds()
@@ -1138,7 +1148,7 @@ class CalendarEventInstance(object):
         return 'CalendarEventInstance: %s %s - %s' % (
             "Available" if self.available else "Unavailable",
             self.start,
-            self.end
+            self.end,
         )
 
     def __repr__(self):
@@ -1158,7 +1168,6 @@ class CalendarEvent(AvailabilityUpdaterMixin, models.Model):
         null=False,
         blank=False,
         verbose_name=_('Kalender')
-
     )
 
     AVAILABLE = 0
@@ -1226,7 +1235,8 @@ class CalendarEvent(AvailabilityUpdaterMixin, models.Model):
                         available=(
                             self.availability == CalendarEvent.AVAILABLE
                         ),
-                        source=self
+                        source=self,
+                        calendar=self.calendar
                     )
         else:
             if self.end > from_dt and self.start < to_dt:
@@ -1234,7 +1244,8 @@ class CalendarEvent(AvailabilityUpdaterMixin, models.Model):
                     self.start,
                     self.end,
                     available=(self.availability == CalendarEvent.AVAILABLE),
-                    source=self
+                    source=self,
+                    calendar=self.calendar
                 )
 
     @property
@@ -1361,13 +1372,17 @@ class CombinedCalendar(object):
     def available_list(self, start_dt, end_dt):
         available = []
         for subcal in self.calendars:
-            available.extend(subcal.available_list(start_dt, end_dt))
+            for eventinstance in subcal.available_list(start_dt, end_dt):
+                eventinstance.combined_calendar = self
+                available.append(eventinstance)
         return available
 
     def unavailable_list(self, start_dt, end_dt):
         unavailable = []
         for subcal in self.calendars:
-            unavailable.extend(subcal.unavailable_list(start_dt, end_dt))
+            for eventinstance in subcal.unavailable_list(start_dt, end_dt):
+                eventinstance.combined_calendar = self
+                unavailable.append(eventinstance)
         return unavailable
 
     @property
@@ -1386,6 +1401,9 @@ class CombinedCalendar(object):
             'calendar-event-edit',
             'calendar-event-delete'
         ]
+
+    def subcalendar_index(self, calendar):
+        return self.calendars.index(calendar)
 
 
 class ResourceType(models.Model):

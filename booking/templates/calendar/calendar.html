@@ -11,34 +11,7 @@
 {% endblock %}
 
 {% block head %}
-<style type="text/css">
-    table.ressource-kalender div.marker-container {
-        height: 12em;
-        position: relative;
-    }
-    table.ressource-kalender div.marker {
-        padding: 0 0.5em 0 0.5em;
-        overflow: hidden;
-        position: absolute;
-        width: 100%;
-    }
-    table.ressource-kalender div.marker:hover {
-        height: 100% !important;
-    }
-    table.ressource-kalender div.marker a {
-        color: white;
-    }
-    table.ressource-kalender div.marker.available {
-        background-color: #669966;
-    }
-    table.ressource-kalender div.marker.unavailable {
-        z-index: 10;
-        background-color: #cc3333;
-    }
-    table.ressource-kalender td:not([colspan]) {
-        width: 14.25%;
-    }
-</style>
+<link rel="stylesheet" type="text/css" href="{% static 'css/calendar.css' %}"/>
 {% endblock %}
 
 
@@ -170,7 +143,10 @@
                             {{ day.date.day }}.
                             <div class="marker-container">
                                 {% for marker in day.events %}
-                                <div class="marker {{ marker.available_class }}" style="top: {{ marker.top_offset }}em; height: {{ marker.height }}em;">
+
+                                    {{ marker.calendar }}
+
+                                <div class="marker {{ marker.available_class }}" style="top: {{ marker.top_offset }}em; height: {{ marker.height }}em;" title="{{ marker.time_interval }}: {{ marker.event.source.calender_event_title }}">
                                     <a href="{{ marker.event.source.calendar_event_link }}">
                                         <div>{{ marker.time_interval }}</div>
                                         <div>
@@ -200,4 +176,5 @@
 {% endblock %}
 
 {% block extra_scripts %}
+    <script type="text/javascript" src="{% static 'js/calendar.js' %}"></script>
 {% endblock %}
