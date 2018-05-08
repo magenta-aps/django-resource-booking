@@ -1099,6 +1099,8 @@ class CalendarEventInstance(object):
             'start': max(self.start, day_start),
             'end': min(self.end, day_end)
         }
+        if obj['start'] == obj['end']:
+            return None
 
         if obj['end'] == day_end:
             obj['time_interval'] = "%s - 24:00" % (
