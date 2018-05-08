@@ -356,6 +356,24 @@ class Subject(models.Model):
             ]
         )
 
+    ALL_NAME = u'Alle'
+
+    @classmethod
+    def get_all(cls):
+        try:
+            return Subject.objects.get(name=Subject.ALL_NAME)
+        except Subject.DoesNotExist:
+            subject = Subject(
+                name=Subject.ALL_NAME,
+                subject_type=cls.SUBJECT_TYPE_BOTH,
+                description=u'Placeholder for "alle fag"'
+            )
+            subject.save()
+            return subject
+
+    def is_all(self):
+        return self.name == Subject.ALL_NAME
+
 
 class Link(models.Model):
     """"An URL and relevant metadata."""
@@ -1358,6 +1376,7 @@ class ProductGymnasieFag(models.Model):
     @classmethod
     def display(cls, subject, levels):
         levels = [unicode(x) for x in levels.all()]
+        levels_desc = None
 
         nr_levels = len(levels)
         if nr_levels == 1:
@@ -1429,8 +1448,8 @@ class ProductGrundskoleFag(models.Model):
         # First element in value list is pk of subject
         f.subject = Subject.objects.get(pk=values.pop(0))
 
-        f.class_level_min = values.pop(0) or 0
-        f.class_level_max = values.pop(0) or 0
+        f.class_level_min = values.pop(0) or 0 if values else 0
+        f.class_level_max = values.pop(0) or 0 if values else 0
 
         f.save()
 
@@ -2250,9 +2269,18 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     def all_subjects(self):
         return (
-            [x for x in self.productgymnasiefag_set.all()] +
-            [x for x in self.productgrundskolefag_set.all()]
+                [x for x in self.productgymnasiefag_set.all()] +
+                [x for x in self.productgrundskolefag_set.all()]
         )
+
+    def all_subjects_except_default(self):
+        return [
+            x for x in self.productgymnasiefag_set
+                .exclude(subject__name=Subject.ALL_NAME)
+        ] + [
+            x for x in self.productgrundskolefag_set
+                .exclude(subject__name=Subject.ALL_NAME)
+        ]
 
     def display_locality(self):
         try:

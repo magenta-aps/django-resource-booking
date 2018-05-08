@@ -697,7 +697,8 @@ class SearchView(BreadcrumbMixin, ListView):
     admin_form = None
     facet_queryset = None
     needs_num_bookings = False
-    sort_num_fag = False
+    sort_grundskole_fag = False
+    sort_gymnasie_fag = False
     t_from = None
     t_to = None
     is_public = True
@@ -894,17 +895,15 @@ class SearchView(BreadcrumbMixin, ListView):
             qs = qs.annotate(num_bookings=RawSQL(sql, tuple()))
             self.needs_num_bookings = False
 
-        qs = qs.annotate(
-            num_gymnasiefag=Count('gymnasiefag'),
-            num_grundskolefag=Count('grundskolefag')
-        ).annotate(
-            num_fag=F('num_gymnasiefag') + F('num_grundskolefag')
-        )
+        if self.sort_grundskole_fag:
+            qs = qs.annotate(
+                num_grundskolefag=Count('grundskolefag')
+            ).order_by('-num_grundskolefag')
+        elif self.sort_gymnasie_fag:
+            qs = qs.annotate(
+                num_gymnasiefag=Count('gymnasiefag')
+            ).order_by('-num_gymnasiefag')
 
-        if self.sort_num_fag:
-            qs = qs.order_by(
-                '-num_fag'
-            )
         return qs
 
     def annotate(self, qs):
@@ -954,18 +953,16 @@ class SearchView(BreadcrumbMixin, ListView):
             self.filters["type__in"] = t
 
     def filter_by_gymnasiefag(self):
-        f = set(self.request.GET.getlist("f"))
+        f = self.request.GET.getlist("f")
         if f:
-            self.filters["__gymnasiefag"] = \
-                Q(gymnasiefag__in=f) | Q(num_fag=0)
-            self.sort_num_fag = True
+            self.filters["gymnasiefag__in"] = f + [Subject.get_all().pk]
+            self.sort_gymnasie_fag = True
 
     def filter_by_grundskolefag(self):
         g = self.request.GET.getlist("g")
         if g:
-            self.filters["__grundskolefag"] = \
-                Q(grundskolefag__in=g) | Q(num_fag=0)
-            self.sort_num_fag = True
+            self.filters["grundskolefag__in"] = g + [Subject.get_all().pk]
+            self.sort_grundskole_fag = True
 
     def filter_for_admin_view(self, form):
         for filter_method in (
@@ -1138,13 +1135,8 @@ class SearchView(BreadcrumbMixin, ListView):
 
         return choices
 
-    def get_unsubjected_count(self):
-        return self.get_facet_queryset().filter(num_fag=0).count()
-
     def get_context_data(self, **kwargs):
         context = {}
-
-        unsubjected = self.get_unsubjected_count()
 
         context['adminform'] = self.get_admin_form()
 
@@ -1199,7 +1191,7 @@ class SearchView(BreadcrumbMixin, ListView):
         gym_subject_choices = []
         gs_subject_choices = []
 
-        for s in Subject.objects.all():
+        for s in Subject.objects.exclude(name=Subject.ALL_NAME):
             val = (s.pk, s.name)
 
             if s.subject_type & Subject.SUBJECT_TYPE_GYMNASIE:
@@ -1214,7 +1206,9 @@ class SearchView(BreadcrumbMixin, ListView):
             "gymnasiefag",
             gym_subject_choices,
             gym_selected,
-            unsubjected=unsubjected
+            unsubjected=self.get_facet_queryset().filter(
+                gymnasiefag=Subject.get_all()
+            ).count()
         )
 
         gs_selected = self.request.GET.getlist("g")
@@ -1223,7 +1217,9 @@ class SearchView(BreadcrumbMixin, ListView):
             "grundskolefag",
             gs_subject_choices,
             gs_selected,
-            unsubjected=unsubjected
+            unsubjected=self.get_facet_queryset().filter(
+                grundskolefag=Subject.get_all()
+            ).count()
         )
 
         context['from_datetime'] = self.from_datetime
@@ -1508,7 +1504,9 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
         if self.request.method == 'GET':
             obj = getattr(self, 'original', self.object)
             if obj and obj.pk:
-                for x in obj.productgymnasiefag_set.all():
+                for x in obj.productgymnasiefag_set.exclude(
+                    subject__name=Subject.ALL_NAME
+                ):
                     result.append({
                         'submitvalue': x.as_submitvalue(),
                         'description': x.display_value()
@@ -1534,7 +1532,9 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
         if self.request.method == 'GET':
             obj = getattr(self, 'original', self.object)
             if obj and obj.pk:
-                for x in obj.productgrundskolefag_set.all():
+                for x in obj.productgrundskolefag_set.exclude(
+                    subject__name=Subject.ALL_NAME
+                ):
                     result.append({
                         'submitvalue': x.as_submitvalue(),
                         'description': x.display_value()
@@ -1571,35 +1571,90 @@ class EditProductBaseView(LoginRequiredMixin, RoleRequiredMixin,
                     pass
 
     def save_subjects(self):
-        existing_gym_fag = {}
-        for x in self.object.productgymnasiefag_set.all():
-            existing_gym_fag[x.as_submitvalue()] = x
 
-        for gval in self.request.POST.getlist('gymnasiefag', []):
-            if gval in existing_gym_fag:
-                del existing_gym_fag[gval]
-            else:
-                ProductGymnasieFag.create_from_submitvalue(self.object, gval)
+        all = Subject.get_all()
 
-        # Delete any remaining values that were not submitted
-        for x in existing_gym_fag.itervalues():
-            x.delete()
+        if self.object.institution_level & Subject.SUBJECT_TYPE_GYMNASIE:
 
-        existing_gs_fag = {}
-        for x in self.object.productgrundskolefag_set.all():
-            existing_gs_fag[x.as_submitvalue()] = x
+            existing_gym_fag = {}
+            for x in self.object.productgymnasiefag_set.all():
+                if x.as_submitvalue() in existing_gym_fag:
+                    # Remove duplicate
+                    x.delete()
+                else:
+                    existing_gym_fag[x.as_submitvalue()] = x
 
-        for gval in self.request.POST.getlist('grundskolefag', []):
-            if gval in existing_gs_fag:
-                del existing_gs_fag[gval]
-            else:
-                ProductGrundskoleFag.create_from_submitvalue(
-                    self.object, gval
-                )
+            created = set()
+            for gval in self.request.POST.getlist('gymnasiefag', []):
+                if gval in existing_gym_fag:
+                    if existing_gym_fag[gval].subject.is_all():
+                        # Do not add 'all' to created
+                        continue
+                    # Unschedule submitted from deletion
+                    del existing_gym_fag[gval]
+                # create submitted
+                elif gval not in created:
+                    ProductGymnasieFag.create_from_submitvalue(
+                        self.object, gval
+                    )
+                created.add(gval)
 
-        # Delete any remaining values that were not submitted
-        for x in existing_gs_fag.itervalues():
-            x.delete()
+            if not created:
+                found = False
+                for x in existing_gym_fag.keys():
+                    if existing_gym_fag[x].subject.is_all():
+                        # Unschedule 'all' from deletion
+                        del existing_gym_fag[x]
+                        found = True
+                if not found:
+                    # Create new 'all' subject
+                    ProductGymnasieFag.create_from_submitvalue(
+                        self.object, str(all.id)
+                    )
+
+            # Delete any remaining values that were not submitted
+            for x in existing_gym_fag.itervalues():
+                x.delete()
+
+        if self.object.institution_level & Subject.SUBJECT_TYPE_GRUNDSKOLE:
+            existing_gs_fag = {}
+            for x in self.object.productgrundskolefag_set.all():
+                if x.as_submitvalue() in existing_gs_fag:
+                    # Remove saved duplicate
+                    x.delete()
+                else:
+                    existing_gs_fag[x.as_submitvalue()] = x
+
+            created = set()
+            for gval in self.request.POST.getlist('grundskolefag', []):
+                if gval in existing_gs_fag:
+                    if existing_gs_fag[gval].subject.is_all():
+                        # Do not add 'all' to created
+                        continue
+                    # Unschedule submitted from deletion
+                    del existing_gs_fag[gval]
+                elif gval not in created:
+                    ProductGrundskoleFag.create_from_submitvalue(
+                        self.object, gval
+                    )
+                created.add(gval)
+
+            if not created:
+                found = False
+                for x in existing_gs_fag.keys():
+                    if existing_gs_fag[x].subject.is_all():
+                        # Unschedule 'all' from deletion
+                        del existing_gs_fag[x]
+                        found = True
+                if not found:
+                    # Create new 'all' subject
+                    ProductGrundskoleFag.create_from_submitvalue(
+                        self.object, str(all.id)
+                    )
+
+            # Delete any remaining values that were not submitted
+            for x in existing_gs_fag.itervalues():
+                x.delete()
 
     def add_to_my_resources(self):
         # Newly created objects should be added to the users list of
@@ -1805,8 +1860,10 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
     def get_context_data(self, **kwargs):
         context = {}
 
-        context['gymnasiefag_choices'] = Subject.gymnasiefag_qs()
-        context['grundskolefag_choices'] = Subject.grundskolefag_qs()
+        context['gymnasiefag_choices'] = Subject.gymnasiefag_qs()\
+            .exclude(name=Subject.ALL_NAME)
+        context['grundskolefag_choices'] = Subject.grundskolefag_qs()\
+            .exclude(name=Subject.ALL_NAME)
         context['gymnasie_level_choices'] = \
             GymnasieLevel.objects.all().order_by('level')
 
