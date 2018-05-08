@@ -18,7 +18,7 @@ from django.utils.translation.trans_real import get_languages
 from django.db.models import Count
 from django.db.models import Q
 from django.db.models import Sum
-from django.db.models.expressions import RawSQL, F
+from django.db.models.expressions import RawSQL
 from django.db.models.functions import Coalesce
 from django.forms.models import model_to_dict
 from django.http import Http404

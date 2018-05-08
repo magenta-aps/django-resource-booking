@@ -2275,11 +2275,13 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     def all_subjects_except_default(self):
         return [
-            x for x in self.productgymnasiefag_set
-                .exclude(subject__name=Subject.ALL_NAME)
+            x for x in self.productgymnasiefag_set.exclude(
+                subject__name=Subject.ALL_NAME
+            )
         ] + [
-            x for x in self.productgrundskolefag_set
-                .exclude(subject__name=Subject.ALL_NAME)
+            x for x in self.productgrundskolefag_set.exclude(
+                subject__name=Subject.ALL_NAME
+            )
         ]
 
     def display_locality(self):
@@ -4244,7 +4246,6 @@ Visit.add_override_property('locality')
 
 
 class MultiProductVisit(Visit):
-
     date = models.DateField(
         null=True,
         blank=False,
