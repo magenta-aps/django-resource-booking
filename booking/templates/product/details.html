@@ -162,7 +162,13 @@
                                 </dd>
                             {% endif %}
 
-                            <dt>{% trans 'Arrangør' %}:</dt>
+                            <dt>
+                                {% if object.type == object.STUDY_MATERIAL %}
+                                    {% trans 'Udgivet af:' %}
+                                {% else %}
+                                    {% trans 'Arrangør:' %}
+                                {% endif %}
+                            </dt>
                             <dd>
                                 {% if object.organizationalunit.url %}
                                     <a href="{{ object.organizationalunit.url }}" target="_blank">
