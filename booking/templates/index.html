@@ -7,11 +7,12 @@
 <!DOCTYPE html>
 <html lang="da">
     <head>
-        {% include 'google_analytics.html' %}
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+        {% include 'common/google_tag_manager/script.html' %}
+        {% include 'common/google_tag_manager/analytics.html' %}
         <title>FOKUS{% block htmltitle %} - {% trans 'søg i tilbud' %}{% endblock %}</title>
         {% if not view.kwargs.embed %}
             <!-- 3rd party stylesheets -->
@@ -34,6 +35,7 @@
         {% endif %}
     </head>
     <body class="{% if view.kwargs.embed %}embedded{% endif %}">
+    {% include 'common/google_tag_manager/noscript.html' %}
     {% if view.kwargs.embed %}
         <!-- 3rd party stylesheets -->
         <link href="{% static 'thirdparty/bootstrap/dist/css/bootstrap.min.css' %}" rel="stylesheet"/>

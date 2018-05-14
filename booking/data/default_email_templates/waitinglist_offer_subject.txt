@@ -1,1 +1,1 @@
-Tilbud om plads på "{{ product.title }}"
+Tilbud om plads på {{ product.title }}
