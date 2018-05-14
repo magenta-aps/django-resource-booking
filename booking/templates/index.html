@@ -14,8 +14,6 @@
         {% include 'common/google_tag_manager/script.html' %}
         {% include 'common/google_tag_manager/analytics.html' %}
         <title>FOKUS{% block htmltitle %} - {% trans 'søg i tilbud' %}{% endblock %}</title>
-        {% include 'common/google_tag_manager/script.html' %}
-        {% include 'common/google_tag_manager/analytics.html' %}
         {% if not view.kwargs.embed %}
             <!-- 3rd party stylesheets -->
             <link href="{% static 'thirdparty/bootstrap/dist/css/bootstrap.min.css' %}" rel="stylesheet"/>
