@@ -387,6 +387,9 @@ class ProductForm(forms.ModelForm):
             'time_mode': Select(attrs={'class': 'form-control input-sm'}),
             'tilbudsansvarlig': Select(
                 attrs={'class': 'form-control input-sm'}
+            ),
+            'booking_close_days_before': NumberInput(
+                attrs={'class': 'form-control input-sm', 'min': 0},
             )
         }
         labels = {
@@ -527,7 +530,7 @@ class StudentForADayForm(ProductForm):
                   'institution_level', 'topics',
                   'time_mode', 'duration', 'locality',
                   'tilbudsansvarlig', 'organizationalunit',
-                  'preparation_time', 'comment',
+                  'preparation_time', 'comment', 'booking_close_days_before',
                   )
         widgets = ProductForm.Meta.widgets
 
@@ -566,7 +569,7 @@ class TeacherProductForm(ProductForm):
                   'waiting_list_deadline_days', 'waiting_list_deadline_hours',
                   'time_mode', 'duration', 'locality',
                   'tilbudsansvarlig', 'roomresponsible', 'organizationalunit',
-                  'preparation_time', 'comment',
+                  'preparation_time', 'comment', 'booking_close_days_before',
                   )
         widgets = ProductForm.Meta.widgets
 
@@ -583,7 +586,8 @@ class ClassProductForm(ProductForm):
                   'tour_available', 'catering_available',
                   'presentation_available', 'custom_available', 'custom_name',
                   'tilbudsansvarlig', 'roomresponsible', 'organizationalunit',
-                  'preparation_time', 'comment', 'only_one_guest_per_visit'
+                  'preparation_time', 'comment', 'only_one_guest_per_visit',
+                  'booking_close_days_before',
                   )
         widgets = ProductForm.Meta.widgets
         labels = ProductForm.Meta.labels
@@ -597,7 +601,7 @@ class StudyProjectForm(ProductForm):
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'time_mode', 'locality',
                   'tilbudsansvarlig', 'organizationalunit',
-                  'preparation_time', 'comment',
+                  'preparation_time', 'comment', 'booking_close_days_before',
                   )
         widgets = ProductForm.Meta.widgets
 

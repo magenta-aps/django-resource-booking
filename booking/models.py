@@ -2016,6 +2016,13 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         verbose_name=_(u'Der tillades kun 1 tilmelding pr. besøg')
     )
 
+    booking_close_days_before = models.IntegerField(
+        default=6,
+        verbose_name=_(u'Antal dage før afholdelse, '
+                       u'hvor der lukkes for tilmeldinger'),
+        blank=True
+    )
+
     def available_time_modes(self, unit=None):
         if self.type is None:
             return Product.time_mode_choices
@@ -2064,7 +2071,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def booking_cutoff(self):
-        return timedelta(days=6)
+        return timedelta(days=self.booking_close_days_before)
 
     @property
     def bookable_times(self):
