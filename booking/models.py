@@ -2048,6 +2048,11 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         blank=True
     )
 
+    inquire_enabled = models.BooleanField(
+        default=True,
+        verbose_name=_(u'"Spørg om tilbud" aktiveret')
+    )
+
     evaluation_link = models.CharField(
         max_length=1024,
         verbose_name=_(u'Link til evaluering'),
@@ -2633,7 +2638,9 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def can_inquire(self):
-        return self.type in Product.askable_types and self.inquire_user
+        return self.type in Product.askable_types \
+               and self.inquire_user \
+               and self.inquire_enabled
 
     @property
     def duration_as_timedelta(self):
