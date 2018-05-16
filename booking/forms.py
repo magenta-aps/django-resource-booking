@@ -351,7 +351,6 @@ class ProductForm(forms.ModelForm):
             ),
             'do_create_waiting_list': CheckboxInput(
                 attrs={
-                    'class': 'form-control input-sm',
                     'data-toggle': 'hide',
                     'data-target': '!.waitinglist-dependent'
                 }
