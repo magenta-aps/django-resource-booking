@@ -781,7 +781,9 @@ class SearchView(BreadcrumbMixin, ListView):
                 searchexpression = " & ".join(
                     ["%s:*" % x for x in searchexpression.split()]
                 )
-                qs = self.model.objects.search(searchexpression, raw=True)
+                qs = self.model.objects.search(
+                    searchexpression, raw=True, rank_field='rank'
+                )
             else:
                 qs = self.model.objects.all()
 
@@ -1045,7 +1047,7 @@ class SearchView(BreadcrumbMixin, ListView):
 
     def get_queryset(self):
         filters = self.get_filters()
-        qs = self.get_facet_queryset()
+        qs = self.get_base_queryset()
         # qs = self.annotate_for_filters(qs)
         filter_args = [v for k, v in filters.iteritems() if k.startswith('__')]
         filter_kwargs = {
