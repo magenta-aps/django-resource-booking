@@ -1072,7 +1072,8 @@ class CalendarEventInstance(object):
 
     EMS_IN_DAY = 12
     SECONDS_IN_DAY = 24 * 60 * 60
-    SECONDS_PER_EM = SECONDS_IN_DAY / EMS_IN_DAY
+    SECONDS_IN_DISPLAYED_DAY = 12 * 60 * 60
+    SECONDS_PER_EM = SECONDS_IN_DISPLAYED_DAY / EMS_IN_DAY
 
     def __init__(self, start, end, available=False,
                  source=None, calendar=None):
@@ -1127,12 +1128,17 @@ class CalendarEventInstance(object):
             index = self.combined_calendar.subcalendar_index(self.calendar)
             obj['available_class'] += " calendar%d" % index
 
+        limit_start = day_start + datetime.timedelta(hours=8)
+        limit_end = day_start + datetime.timedelta(hours=20)
+
+
+
         # Calculate offset from top of day in 5 minute intervals
-        top_offset_seconds = (obj['start'] - day_start).total_seconds()
+        top_offset_seconds = max(0, (obj['start'] - limit_start).total_seconds())
         obj['top_offset'] = '%.2f' % (
             top_offset_seconds / CalendarEventInstance.SECONDS_PER_EM
         )
-        marker_duration = (obj['end'] - obj['start']).total_seconds()
+        marker_duration = min(43200, (obj['end'] - obj['start']).total_seconds())
         obj['height'] = '%.2f' % (
             marker_duration / CalendarEventInstance.SECONDS_PER_EM
         )

@@ -7,10 +7,10 @@ table.ressource-kalender div.marker {
     overflow: hidden;
     position: absolute;
     width: 100%;
-    font-size: 0.9em;
 }
 table.ressource-kalender div.marker a {
     color: white;
+    font-size: 0.9em;
 }
 table.ressource-kalender div.marker.available {
     background-color: #669966;

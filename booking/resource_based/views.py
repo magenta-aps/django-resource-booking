@@ -9,8 +9,9 @@ from django.views.generic import TemplateView, ListView, DetailView
 from django.views.generic import RedirectView
 from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic.edit import FormView, DeleteView
+from django.forms import models as forms_models
 
-from django.forms.widgets import TextInput, HiddenInput
+from django.forms.widgets import TextInput, HiddenInput, Select
 from booking.models import OrganizationalUnit, Product, Visit
 from booking.resource_based.forms import ResourceTypeForm, EditResourceForm
 from booking.resource_based.forms import ResourcePoolTypeForm
@@ -1545,8 +1546,22 @@ class CalendarEventUpdateView(
         'calendar'
     )
 
+    widgets = {
+        'title': TextInput(
+            attrs={'class': 'titlefield form-control input-sm'}
+        ),
+        'availability': Select(attrs={'class': 'form-control'})
+    }
+
     start_str = ""
     end_str = ""
+
+    def get_form_class(self):
+        return forms_models.modelform_factory(
+            self.model,
+            fields=self.fields,
+            widgets=self.widgets
+        )
 
     def get_object(self, *args, **kwargs):
         self.rel_obj = self.get_calendar_rel_object()
