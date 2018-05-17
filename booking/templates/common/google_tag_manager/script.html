@@ -13,7 +13,7 @@
 
     window.dataLayer = window.dataLayer || [];
     var recordClick = function(eventName, eventCategory, eventAction, eventLabel) {
-        dataLayer.push({
+        window.dataLayer.push({
             'event': eventName,
             'ec': eventCategory,
             'ea': eventAction,
