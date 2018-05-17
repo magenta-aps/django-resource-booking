@@ -1465,7 +1465,10 @@ class CalendarEventCreateView(
 
     widgets = {
         'title': TextInput(attrs={'class': 'form-control input-sm'}),
-        'availability': Select(attrs={'class': 'form-control'})
+        'availability': Select(
+            attrs={'class': 'form-control'},
+            choices=model.availability_choices
+        )
     }
 
     def get_form(self, form_class=None):
