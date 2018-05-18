@@ -35,7 +35,9 @@ CLASSES_BY_ROLE[FACULTY_EDITOR] = set([
     booking_models.ProductAutosend,
     booking_models.EventTime,
     booking_models.BookingGrundskoleSubjectLevel,
-    booking_models.BookingGymnasieSubjectLevel
+    booking_models.BookingGymnasieSubjectLevel,
+    booking_models.ProductGymnasieFag,
+    booking_models.ProductGrundskoleFag
 ])
 
 # Faculty editors will always have access to the same things as
