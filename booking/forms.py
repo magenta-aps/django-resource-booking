@@ -312,7 +312,7 @@ class ProductForm(forms.ModelForm):
                   'tour_available', 'catering_available',
                   'presentation_available', 'custom_available', 'custom_name',
                   'tilbudsansvarlig', 'organizationalunit',
-                  'preparation_time', 'comment', 'only_one_guest_per_visit'
+                  'preparation_time', 'comment', 'only_one_guest_per_visit',
                   )
 
         widgets = {
@@ -389,7 +389,8 @@ class ProductForm(forms.ModelForm):
             ),
             'booking_close_days_before': NumberInput(
                 attrs={'class': 'form-control input-sm', 'min': 0},
-            )
+            ),
+            'inquire_enabled': CheckboxInput()
         }
         labels = {
             'custom_name': _('Navn')
@@ -530,6 +531,7 @@ class StudentForADayForm(ProductForm):
                   'time_mode', 'duration', 'locality',
                   'tilbudsansvarlig', 'organizationalunit',
                   'preparation_time', 'comment', 'booking_close_days_before',
+                  'inquire_enabled',
                   )
         widgets = ProductForm.Meta.widgets
 
@@ -541,7 +543,7 @@ class InternshipForm(ProductForm):
                   'institution_level', 'topics',
                   'time_mode', 'locality',
                   'tilbudsansvarlig', 'organizationalunit',
-                  'preparation_time', 'comment',
+                  'preparation_time', 'comment', 'inquire_enabled',
                   )
         widgets = ProductForm.Meta.widgets
 
@@ -553,7 +555,7 @@ class OpenHouseForm(ProductForm):
                   'institution_level', 'topics',
                   'time_mode', 'locality',
                   'tilbudsansvarlig', 'organizationalunit',
-                  'preparation_time', 'comment',
+                  'preparation_time', 'comment', 'inquire_enabled',
                   )
         widgets = ProductForm.Meta.widgets
 
@@ -569,6 +571,7 @@ class TeacherProductForm(ProductForm):
                   'time_mode', 'duration', 'locality',
                   'tilbudsansvarlig', 'roomresponsible', 'organizationalunit',
                   'preparation_time', 'comment', 'booking_close_days_before',
+                  'inquire_enabled',
                   )
         widgets = ProductForm.Meta.widgets
 
@@ -586,7 +589,7 @@ class ClassProductForm(ProductForm):
                   'presentation_available', 'custom_available', 'custom_name',
                   'tilbudsansvarlig', 'roomresponsible', 'organizationalunit',
                   'preparation_time', 'comment', 'only_one_guest_per_visit',
-                  'booking_close_days_before',
+                  'booking_close_days_before', 'inquire_enabled',
                   )
         widgets = ProductForm.Meta.widgets
         labels = ProductForm.Meta.labels
@@ -601,6 +604,7 @@ class StudyProjectForm(ProductForm):
                   'time_mode', 'locality',
                   'tilbudsansvarlig', 'organizationalunit',
                   'preparation_time', 'comment', 'booking_close_days_before',
+                  'inquire_enabled',
                   )
         widgets = ProductForm.Meta.widgets
 
@@ -612,7 +616,7 @@ class AssignmentHelpForm(ProductForm):
                   'institution_level', 'topics',
                   'time_mode',
                   'tilbudsansvarlig', 'organizationalunit',
-                  'comment',
+                  'comment', 'inquire_enabled',
                   )
         widgets = ProductForm.Meta.widgets
 
@@ -624,7 +628,7 @@ class StudyMaterialForm(ProductForm):
                   'institution_level', 'topics',
                   'time_mode',
                   'tilbudsansvarlig', 'organizationalunit',
-                  'comment'
+                  'comment',
                   )
         widgets = ProductForm.Meta.widgets
 

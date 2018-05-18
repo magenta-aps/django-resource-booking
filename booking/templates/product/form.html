@@ -156,6 +156,7 @@
                 {% if not object.pk or form.contacts.errors %}in{% endif %}
                 " aria-labelledby="headingContact" role="tabpanel" aria-expanded="false" style="">
                     <div class="panel-body">
+                        {% include 'common/fields/generic_field.html' with field=form.inquire_enabled %}
                         {% include 'product/fields/contact.html' %}
                         {% include 'product/fields/room_contact.html' %}
                     </div>

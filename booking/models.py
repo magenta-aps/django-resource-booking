@@ -2023,6 +2023,11 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         blank=True
     )
 
+    inquire_enabled = models.BooleanField(
+        default=True,
+        verbose_name=_(u'"Spørg om tilbud" aktiveret')
+    )
+
     def available_time_modes(self, unit=None):
         if self.type is None:
             return Product.time_mode_choices
@@ -2564,7 +2569,9 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def can_inquire(self):
-        return self.type in Product.askable_types and self.inquire_user
+        return self.type in Product.askable_types \
+               and self.inquire_user \
+               and self.inquire_enabled
 
     @property
     def duration_as_timedelta(self):
