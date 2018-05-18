@@ -2016,6 +2016,18 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         verbose_name=_(u'Der tillades kun 1 tilmelding pr. besøg')
     )
 
+    booking_close_days_before = models.IntegerField(
+        default=6,
+        verbose_name=_(u'Antal dage før afholdelse, '
+                       u'hvor der lukkes for tilmeldinger'),
+        blank=True
+    )
+
+    inquire_enabled = models.BooleanField(
+        default=True,
+        verbose_name=_(u'"Spørg om tilbud" aktiveret')
+    )
+
     def available_time_modes(self, unit=None):
         if self.type is None:
             return Product.time_mode_choices
@@ -2063,6 +2075,10 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             return 1
 
     @property
+    def booking_cutoff(self):
+        return timedelta(days=self.booking_close_days_before)
+
+    @property
     def bookable_times(self):
         qs = self.eventtime_set.filter(
             Q(bookable=True) &
@@ -2096,7 +2112,9 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def future_bookable_times(self):
-        return self.bookable_times.filter(start__gte=timezone.now())
+        return self.bookable_times.filter(
+            start__gte=timezone.now()+self.booking_cutoff
+        )
 
     @property
     # QuerySet that finds all EventTimes that will be affected by a change
@@ -2489,6 +2507,15 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             if start_time is None:
                 return True
 
+            # We don't accept bookings made later
+            # than x days before visit start
+            cutoff = self.booking_cutoff
+            if cutoff is not None:
+                start_date = start_time if isinstance(start_time, date) \
+                    else start_time.date()
+                if start_date < timezone.now().date() + cutoff:
+                    return False
+
             # If start_time is a date and there is no end_date assume
             # midnight-to-midnight on the given date in the current timezone.
             if end_time is None and isinstance(start_time, date):
@@ -2498,7 +2525,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
                 )
                 end_time = start_time + timedelta(hours=24)
 
-            # Check if we has an available time in our calendar within the
+            # Check if we have an available time in our calendar within the
             # specified interval.
             return self.has_available_calendar_time(start_time, end_time)
 
@@ -2542,7 +2569,9 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def can_inquire(self):
-        return self.type in Product.askable_types and self.inquire_user
+        return self.type in Product.askable_types \
+               and self.inquire_user \
+               and self.inquire_enabled
 
     @property
     def duration_as_timedelta(self):

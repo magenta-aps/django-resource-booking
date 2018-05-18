@@ -14,6 +14,7 @@ from django.forms import TextInput, NumberInput, DateInput, Textarea, Select
 from django.forms import formset_factory, inlineformset_factory
 from django.template import TemplateSyntaxError
 from django.utils.translation import ugettext_lazy as _
+from django.utils.dates import MONTHS
 
 from booking.models import BLANK_LABEL, BLANK_OPTION
 from booking.models import ClassBooking, TeacherBooking, \
@@ -312,7 +313,7 @@ class ProductForm(forms.ModelForm):
                   'tour_available', 'catering_available',
                   'presentation_available', 'custom_available', 'custom_name',
                   'tilbudsansvarlig', 'organizationalunit',
-                  'preparation_time', 'comment', 'only_one_guest_per_visit'
+                  'preparation_time', 'comment', 'only_one_guest_per_visit',
                   )
 
         widgets = {
@@ -352,7 +353,6 @@ class ProductForm(forms.ModelForm):
             ),
             'do_create_waiting_list': CheckboxInput(
                 attrs={
-                    'class': 'form-control input-sm',
                     'data-toggle': 'hide',
                     'data-target': '!.waitinglist-dependent'
                 }
@@ -387,7 +387,11 @@ class ProductForm(forms.ModelForm):
             'time_mode': Select(attrs={'class': 'form-control input-sm'}),
             'tilbudsansvarlig': Select(
                 attrs={'class': 'form-control input-sm'}
-            )
+            ),
+            'booking_close_days_before': NumberInput(
+                attrs={'class': 'form-control input-sm', 'min': 0},
+            ),
+            'inquire_enabled': CheckboxInput()
         }
         labels = {
             'custom_name': _('Navn')
@@ -527,7 +531,8 @@ class StudentForADayForm(ProductForm):
                   'institution_level', 'topics',
                   'time_mode', 'duration', 'locality',
                   'tilbudsansvarlig', 'organizationalunit',
-                  'preparation_time', 'comment',
+                  'preparation_time', 'comment', 'booking_close_days_before',
+                  'inquire_enabled',
                   )
         widgets = ProductForm.Meta.widgets
 
@@ -539,7 +544,7 @@ class InternshipForm(ProductForm):
                   'institution_level', 'topics',
                   'time_mode', 'locality',
                   'tilbudsansvarlig', 'organizationalunit',
-                  'preparation_time', 'comment',
+                  'preparation_time', 'comment', 'inquire_enabled',
                   )
         widgets = ProductForm.Meta.widgets
 
@@ -551,7 +556,7 @@ class OpenHouseForm(ProductForm):
                   'institution_level', 'topics',
                   'time_mode', 'locality',
                   'tilbudsansvarlig', 'organizationalunit',
-                  'preparation_time', 'comment',
+                  'preparation_time', 'comment', 'inquire_enabled',
                   )
         widgets = ProductForm.Meta.widgets
 
@@ -566,7 +571,8 @@ class TeacherProductForm(ProductForm):
                   'waiting_list_deadline_days', 'waiting_list_deadline_hours',
                   'time_mode', 'duration', 'locality',
                   'tilbudsansvarlig', 'roomresponsible', 'organizationalunit',
-                  'preparation_time', 'comment',
+                  'preparation_time', 'comment', 'booking_close_days_before',
+                  'inquire_enabled',
                   )
         widgets = ProductForm.Meta.widgets
 
@@ -583,7 +589,8 @@ class ClassProductForm(ProductForm):
                   'tour_available', 'catering_available',
                   'presentation_available', 'custom_available', 'custom_name',
                   'tilbudsansvarlig', 'roomresponsible', 'organizationalunit',
-                  'preparation_time', 'comment', 'only_one_guest_per_visit'
+                  'preparation_time', 'comment', 'only_one_guest_per_visit',
+                  'booking_close_days_before', 'inquire_enabled',
                   )
         widgets = ProductForm.Meta.widgets
         labels = ProductForm.Meta.labels
@@ -597,7 +604,8 @@ class StudyProjectForm(ProductForm):
                   'minimum_number_of_visitors', 'maximum_number_of_visitors',
                   'time_mode', 'locality',
                   'tilbudsansvarlig', 'organizationalunit',
-                  'preparation_time', 'comment',
+                  'preparation_time', 'comment', 'booking_close_days_before',
+                  'inquire_enabled',
                   )
         widgets = ProductForm.Meta.widgets
 
@@ -609,7 +617,7 @@ class AssignmentHelpForm(ProductForm):
                   'institution_level', 'topics',
                   'time_mode',
                   'tilbudsansvarlig', 'organizationalunit',
-                  'comment',
+                  'comment', 'inquire_enabled',
                   )
         widgets = ProductForm.Meta.widgets
 
@@ -621,7 +629,7 @@ class StudyMaterialForm(ProductForm):
                   'institution_level', 'topics',
                   'time_mode',
                   'tilbudsansvarlig', 'organizationalunit',
-                  'comment'
+                  'comment',
                   )
         widgets = ProductForm.Meta.widgets
 
@@ -821,6 +829,7 @@ class BookingForm(forms.ModelForm):
         if self.scheduled:
             choices = [(None, BLANK_LABEL)]
             qs = product.future_bookable_times.order_by('start', 'end')
+            options = {}
             for eventtime in qs:
                 date = eventtime.interval_display
 
@@ -837,7 +846,7 @@ class BookingForm(forms.ModelForm):
                     bookings = 0
 
                 if available_seats is None or available_seats == sys.maxint:
-                    choices.append((eventtime.pk, date))
+                    option = (eventtime.pk, date)
                 else:
                     if bookings == 0:
                         # There are no bookings at all - yet
@@ -861,9 +870,24 @@ class BookingForm(forms.ModelForm):
                             # There's no room at all
                             continue
 
-                    choices.append(
-                        (eventtime.pk, "%s - %s" % (date, capacity_text))
-                    )
+                    option = (eventtime.pk, "%s - %s" % (date, capacity_text))
+                month = (eventtime.start.month, eventtime.start.year) \
+                    if eventtime.start else None
+                if month not in options:
+                    options[month] = []
+                options[month].append(option)
+
+            months = options.keys()
+            months.sort(key=lambda month: "%04d%02d" % (month[1], month[0]))
+            for month in months:
+                optionlist = options[month]
+                if month is None:
+                    choices.extend(optionlist)
+                else:
+                    choices.append((
+                        ("%s %d" % (MONTHS[month[0]], month[1])).title(),
+                        optionlist
+                    ))
 
             self.fields['eventtime'].choices = choices
             self.fields['eventtime'].required = True

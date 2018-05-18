@@ -9,8 +9,9 @@ from django.views.generic import TemplateView, ListView, DetailView
 from django.views.generic import RedirectView
 from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic.edit import FormView, DeleteView
+from django.forms import models as forms_models
 
-from django.forms.widgets import TextInput, HiddenInput
+from django.forms.widgets import TextInput, HiddenInput, Select
 from booking.models import OrganizationalUnit, Product, Visit
 from booking.resource_based.forms import ResourceTypeForm, EditResourceForm
 from booking.resource_based.forms import ResourcePoolTypeForm
@@ -1219,17 +1220,12 @@ class CalRelatedMixin(object):
 
     def get_context_data(self, **kwargs):
         prefix = self.kwargs.get('reverse_prefix', '')
+        calendar = self.get_calendar()
 
         return super(CalRelatedMixin, self).get_context_data(
             reverses={
-                x.replace('-', '_'): prefix + x for x in (
-                    'calendar',
-                    'calendar-create',
-                    'calendar-delete',
-                    'calendar-event-create',
-                    'calendar-event-edit',
-                    'calendar-event-delete',
-                )
+                x.replace('-', '_'): prefix + x
+                for x in calendar.available_actions
             },
             **kwargs
         )
@@ -1254,6 +1250,8 @@ class CalRelatedMixin(object):
             return ProductDetailView.build_breadcrumbs(object, request)
         elif isinstance(object, Resource):
             return ResourceDetailView.build_breadcrumbs(object)
+        elif isinstance(object, ResourcePool):
+            return ResourcePoolDetailView.build_breadcrumbs(object)
         return []
 
 
@@ -1341,7 +1339,8 @@ class CalendarView(
                 key = date.isoformat()
                 if key in events_by_date:
                     marker = x.day_marker(date)
-                    events_by_date[key].append(marker)
+                    if marker is not None:
+                        events_by_date[key].append(marker)
                 date = date + datetime.timedelta(days=1)
                 date_midnight = date_midnight + datetime.timedelta(days=1)
 
@@ -1353,6 +1352,8 @@ class CalendarView(
             itemname = prod.title
         elif res is not None and res.subclass_instance is not None:
             itemname = res.subclass_instance.get_name()
+        elif hasattr(calendar, 'itemname'):
+            itemname = calendar.itemname
 
         if hasattr(calendar, 'resource'):
             bt = calendar.resource.occupied_eventtimes(start_dt, end_dt)
@@ -1366,6 +1367,7 @@ class CalendarView(
             resource=res,
             product=prod,
             itemname=itemname,
+            reference=getattr(calendar, 'reference', None),
             month=first_of_the_month,
             next_month=first_of_the_month + datetime.timedelta(days=31),
             prev_month=first_of_the_month - datetime.timedelta(days=1),
@@ -1462,7 +1464,11 @@ class CalendarEventCreateView(
     }
 
     widgets = {
-        'title': TextInput(attrs={'class': 'form-control input-sm'})
+        'title': TextInput(attrs={'class': 'form-control input-sm'}),
+        'availability': Select(
+            attrs={'class': 'form-control'},
+            choices=model.availability_choices
+        )
     }
 
     def get_form(self, form_class=None):
@@ -1544,12 +1550,25 @@ class CalendarEventUpdateView(
         'calendar'
     )
 
+    widgets = {
+        'title': TextInput(
+            attrs={'class': 'titlefield form-control input-sm'}
+        ),
+        'availability': Select(attrs={'class': 'form-control'})
+    }
+
     start_str = ""
     end_str = ""
 
+    def get_form_class(self):
+        return forms_models.modelform_factory(
+            self.model,
+            fields=self.fields,
+            widgets=self.widgets
+        )
+
     def get_object(self, *args, **kwargs):
         self.rel_obj = self.get_calendar_rel_object()
-
         return super(CalendarEventUpdateView, self).get_object(*args, **kwargs)
 
     def get_context_data(self, **kwargs):

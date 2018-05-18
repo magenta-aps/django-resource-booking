@@ -1,6 +1,6 @@
 Koordinatorer for besøget:
 <ul>
-    {% for editor in visit.organizationalunit.get_editors %}
+    {% for editor in product.get_responsible_persons %}
         <li>
             {{ editor.get_full_name }}
             {% if editor.email %} - <a href="mailto:{{ editor.email }}">{{ editor.email }}</a>{% endif %}
