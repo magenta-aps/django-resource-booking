@@ -1220,17 +1220,12 @@ class CalRelatedMixin(object):
 
     def get_context_data(self, **kwargs):
         prefix = self.kwargs.get('reverse_prefix', '')
+        calendar = self.get_calendar()
 
         return super(CalRelatedMixin, self).get_context_data(
             reverses={
-                x.replace('-', '_'): prefix + x for x in (
-                    'calendar',
-                    'calendar-create',
-                    'calendar-delete',
-                    'calendar-event-create',
-                    'calendar-event-edit',
-                    'calendar-event-delete',
-                )
+                x.replace('-', '_'): prefix + x
+                for x in calendar.available_actions
             },
             **kwargs
         )
@@ -1255,6 +1250,8 @@ class CalRelatedMixin(object):
             return ProductDetailView.build_breadcrumbs(object, request)
         elif isinstance(object, Resource):
             return ResourceDetailView.build_breadcrumbs(object)
+        elif isinstance(object, ResourcePool):
+            return ResourcePoolDetailView.build_breadcrumbs(object)
         return []
 
 
@@ -1355,6 +1352,8 @@ class CalendarView(
             itemname = prod.title
         elif res is not None and res.subclass_instance is not None:
             itemname = res.subclass_instance.get_name()
+        elif hasattr(calendar, 'itemname'):
+            itemname = calendar.itemname
 
         if hasattr(calendar, 'resource'):
             bt = calendar.resource.occupied_eventtimes(start_dt, end_dt)
@@ -1368,6 +1367,7 @@ class CalendarView(
             resource=res,
             product=prod,
             itemname=itemname,
+            reference=getattr(calendar, 'reference', None),
             month=first_of_the_month,
             next_month=first_of_the_month + datetime.timedelta(days=31),
             prev_month=first_of_the_month - datetime.timedelta(days=1),
@@ -1569,7 +1569,6 @@ class CalendarEventUpdateView(
 
     def get_object(self, *args, **kwargs):
         self.rel_obj = self.get_calendar_rel_object()
-
         return super(CalendarEventUpdateView, self).get_object(*args, **kwargs)
 
     def get_context_data(self, **kwargs):

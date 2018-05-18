@@ -115,6 +115,8 @@ class EventTime(models.Model):
         default=False
     )
 
+    can_create_events = True
+
     def set_calculated_end_time(self):
         # Don't calculate if already set
         if self.end is None:
@@ -1023,6 +1025,17 @@ class Calendar(AvailabilityUpdaterMixin, models.Model):
         else:
             return EventTime.objects.none()
 
+    @property
+    def available_actions(self):
+        return [
+            'calendar',
+            'calendar-create',
+            'calendar-delete',
+            'calendar-event-create',
+            'calendar-event-edit',
+            'calendar-event-delete'
+        ]
+
 
 class CalendarCalculatedAvailable(models.Model):
 
@@ -1912,6 +1925,18 @@ class ResourcePool(AvailabilityUpdaterMixin, models.Model):
             )
 
         EventTime.update_resource_status_for_qs(qs)
+
+    @property
+    def calendar(self):
+        return CombinedCalendar(
+            [
+                resource.calendar
+                for resource in self.resources.all()
+                if resource.calendar is not None
+            ],
+            unicode(self),
+            reverse('resourcepool-view', args=[self.pk])
+        )
 
 
 class ResourceRequirement(AvailabilityUpdaterMixin, models.Model):
