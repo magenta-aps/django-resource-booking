@@ -33,6 +33,7 @@
         <div class="divider"></div>
 
         <h2>{% trans 'Mine besøg' %}</h2>
+        <p class="helptext">{% trans 'I prioriteret rækkefølge' %}</p>
 
         <div class="row form-group">
             <div class="col-sm-9">
@@ -56,6 +57,7 @@
         </div>
 
         <h2>{% trans 'Vælg besøg' %}</h2>
+        <p class="helptext">{% trans 'Listen indeholder udelukkende besøg, hvor du selv kan foreslå et tidspunkt' %}</p>
 
         <div class="row form-group">
             <div class="col-sm-9">
@@ -71,6 +73,7 @@
                     <li id="product_prototype" class="list-group-item">
                         <span class="glyphicon glyphicon-move movebutton"></span>
                         <a class="btn btn-default pull-right selectbutton">{% trans 'Vælg' %}</a>
+                        <a class="btn btn-default pull-right">{% trans 'Læs mere' %}</a>
                         <h2 class="title"></h2>
                         <p class="teaser"></p>
                         <a class="deselectbutton">
@@ -80,7 +83,9 @@
                 </ul>
             </div>
             <div class="col-sm-3">
-                <p class="helptext">{% trans 'Bemærk: Listen viser besøg uden faste tider, som kan lade sig gøre på den valgte dag. Savner du et besøg på listen, skal det muligvis tilmeldes separat.' %}</p>
+                <p class="helptext">
+                    {% trans 'Bemærk: Listen viser besøg uden faste tider, som kan lade sig gøre på den valgte dag. Savner du et besøg på listen, skal det muligvis tilmeldes separat.' %}
+                </p>
             </div>
         </div>
 

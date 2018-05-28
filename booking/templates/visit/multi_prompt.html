@@ -23,7 +23,7 @@
             {% trans "Tilbage" %}
         </a>
         <a class="btn btn-primary margin-bottom-5-mobile" href="{% url 'product-book' object.id %}">
-            {% trans "Tilmeld med ønske om tidspunkt " %}
+            {% trans "Tilmeld ét besøg" %}
         </a>
         <a class="btn btn-primary margin-bottom-5-mobile" href="{% url 'mpv-create' %}?back={{ request.get_full_path | urlencode }}&base={{ object.id }}">
             {% trans "Tilmeld flere besøg på samme dag" %}

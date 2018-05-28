@@ -1516,11 +1516,16 @@ a.template-overridden, a.template-overridden:hover, a.template-overridden:active
 
 /* MultiProductVisit BEGIN */
 
-#deselected-product-list li .movebutton, #deselected-product-list li .deselectbutton, #confirm-product-list li .movebutton, #confirm-product-list li .deselectbutton {
+#deselected-product-list li .movebutton,
+#deselected-product-list li .deselectbutton,
+#confirm-product-list li .movebutton,
+#confirm-product-list li .deselectbutton {
   display: none;
 }
 
-#deselected-product-list, #selected-product-list, #confirm-product-list {
+#deselected-product-list,
+#selected-product-list,
+#confirm-product-list {
   font-size: 1.5em;
   list-style-type: none;
 }
@@ -1533,7 +1538,12 @@ a.template-overridden, a.template-overridden:hover, a.template-overridden:active
   cursor: move;
 }
 
-#selected-product-list li .selectbutton, #selected-product-list li .teaser, #confirm-product-list li .selectbutton, #confirm-product-list li .teaser {
+#selected-product-list li .selectbutton,
+#selected-product-list li .teaser,
+#selected-product-list li .readmore,
+#confirm-product-list li .selectbutton,
+#confirm-product-list li .teaser,
+#confirm-product-list li .readmore {
   display: none;
 }
 
