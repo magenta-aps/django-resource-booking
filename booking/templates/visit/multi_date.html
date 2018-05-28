@@ -15,6 +15,13 @@
 
     <h1>{% blocktrans %}Bestil flere besøg på den samme dag{% endblocktrans %}</h1>
 
+    <p>
+        {% blocktrans %}
+            Vær opmærksom på at det kun er de besøg, hvor du selv kan foreslå et tidspunkt, du får adgang til via datovælgeren.
+            Alle besøg med fast tidspunkt, skal du melde dig til via det enkelte besøg.
+        {% endblocktrans %}
+    </p>
+
     <form id="mpvform" action="" class="form-horizontal clearfix" method="post" enctype="multipart/form-data">
         <ul class="nav nav-tabs step-anchor">
             {% if object and object.id %}
