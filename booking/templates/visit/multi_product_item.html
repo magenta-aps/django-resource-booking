@@ -9,21 +9,4 @@
     <h2 class="title">{{ product.title }}</h2>
     <p class="teaser">{{ product.teaser }}</p>
     <p class="institution">{% blocktrans with institution_level=product.get_institution_level_display|lower %}Henvendt til {{ institution_level }}{% endblocktrans %}</p>
-
-    <div class="modal fade" id="modal_{{ product.id }}" tabindex="-1" role="dialog" aria-labelledby="modal_{{ product.id }}_label">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="{% trans 'Luk' %}"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title" id="modal_{{ product.id }}_label">{{ product.title }}</h4>
-                </div>
-                <div class="modal-body">
-                    <p class="teaser">{{ product.teaser }}</p>
-                    {% autoescape off %}
-                        {{ product.description }}
-                    {% endautoescape %}
-                </div>
-            </div>
-        </div>
-    </div>
 </li>
