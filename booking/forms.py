@@ -1853,19 +1853,19 @@ class MultiProductVisitTempDateForm(forms.ModelForm):
                 if bookability == Product.NONBOOKABLE_REASON__BOOKING_CUTOFF:
                     reason += unicode(
                         _(u'Der er lukket for tilmelding '
-                          u'%d dage før afholdelse') % product.booking_cutoff
+                          u'%d dage før afholdelse.') % product.booking_cutoff
                     )
                 elif bookability == \
                         Product.NONBOOKABLE_REASON__HAS_NO_BOOKABLE_VISITS:
-                    reason += unicode(_(u'Der er ingen ledige besøg'))
+                    reason += unicode(_(u'Der er ingen ledige besøg.'))
                 elif bookability == \
                         Product.NONBOOKABLE_REASON__NO_CALENDAR_TIME:
-                    reason += unicode(_(u'Der er ikke er flere ledige tider'))
+                    reason += unicode(_(u'Der er ikke er flere ledige tider.'))
                 elif bookability == Product.NONBOOKABLE_REASON__NOT_ACTIVE:
-                    reason += unicode(_(u'Tilbuddet er ikke aktivt'))
+                    reason += unicode(_(u'Tilbuddet er ikke aktivt.'))
                 elif bookability == \
                         Product.NONBOOKABLE_REASON__TYPE_NOT_BOOKABLE:
-                    reason += unicode(_(u'Tilbudstypen kan ikke tilmeldes'))
+                    reason += unicode(_(u'Tilbudstypen kan ikke tilmeldes.'))
 
                 raise forms.ValidationError({'date': reason})
         return super(MultiProductVisitTempDateForm, self).clean()
