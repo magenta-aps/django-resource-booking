@@ -19,7 +19,7 @@ from booking.models import BLANK_LABEL, BLANK_OPTION
 from booking.models import ClassBooking, TeacherBooking, \
     BookingGymnasieSubjectLevel
 from booking.models import EmailTemplate, EmailTemplateType
-from booking.models import Evaluation
+from booking.models import SurveyXactEvaluation
 from booking.models import Guest, Region, PostCode, School
 from booking.models import Locality, OrganizationalUnitType, OrganizationalUnit
 from booking.models import MultiProductVisitTemp, MultiProductVisitTempProduct
@@ -1929,15 +1929,12 @@ class MultiProductVisitTempProductsForm(forms.ModelForm):
 class EvaluationForm(forms.ModelForm):
 
     class Meta:
-        model = Evaluation
-        fields = ['url', 'secondary']
+        model = SurveyXactEvaluation
+        fields = ['surveyId', 'for_students', 'for_teachers']
         widgets = {
-            'url': Textarea(attrs={
-                'class': 'form-control input-sm',
-                'rows': '4',
-                'readonly': 'readonly'
-            }),
-            'secondary': HiddenInput()
+            'surveyId': NumberInput(),
+            'for_students': HiddenInput(),
+            'for_teachers': HiddenInput()
         }
 
     def __init__(self, product, *args, **kwargs):
@@ -1945,7 +1942,7 @@ class EvaluationForm(forms.ModelForm):
         super(EvaluationForm, self).__init__(*args, **kwargs)
 
     def get_queryset(self):
-        return Evaluation.objects.filter(product=self.product)
+        return SurveyXactEvaluation.objects.filter(product=self.product)
 
     def save(self, commit=True):
         self.instance.product = self.product

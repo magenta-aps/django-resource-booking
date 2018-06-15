@@ -73,15 +73,15 @@
                             <td><a href="{% url 'visit-view' res.pk %}">{{ res.display_value }}</a></td>
                             <td>
                                 {% if res.product.is_group_visit %}
-                                    {% if res.product.primary_evaluation %}
-                                        <a href="{% url 'evaluation-view' res.product.primary_evaluation.id %}">{% trans 'Til lærere' %}</a>
+                                    {% if res.product.student_evaluation %}
+                                        <a href="{% url 'evaluation-view' res.product.student_evaluation.id %}">{% trans 'Til elever' %}</a>
                                     {% endif %}
-                                    {% if res.product.secondary_evaluation %}
-                                        <a href="{% url 'evaluation-view' res.product.secondary_evaluation.id %}">{% trans 'Til elever' %}</a>
+                                    {% if res.product.teacher_evaluation %}
+                                        <a href="{% url 'evaluation-view' res.product.teacher_evaluation.id %}">{% trans 'Til lærere' %}</a>
                                     {% endif %}
                                 {% else %}
-                                    {% if res.product.primary_evaluation %}
-                                        <a href="{% url 'evaluation-view' res.product.primary_evaluation.id %}">{% trans 'Til alle' %}</a>
+                                    {% if res.product.student_evaluation %}
+                                        <a href="{% url 'evaluation-view' res.product.student_evaluation.id %}">{% trans 'Til alle' %}</a>
                                     {% endif %}
                                 {% endif %}
                             </td>

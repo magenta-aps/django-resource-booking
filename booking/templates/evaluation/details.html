@@ -36,10 +36,10 @@
 
                     <div class="row row-border">
                         <strong class="col-sm-2">
-                            {% trans 'URL' %}
+                            {% trans 'SurveyID' %}
                         </strong>
                         <div class="col-sm-10">
-                            {{ object.url }}
+                            {{ object.surveyId }}
                         </div>
                     </div>
 
@@ -55,15 +55,20 @@
                                     <th>{% trans 'E-mail' %}</th>
                                     <th>{% trans 'Status' %}</th>
                                     <th>{% trans 'Evaluerings-URL' %}</th>
+                                    <th>{% trans 'Handlinger' %}</th>
                                 </tr>
                                 </thead>
                                 <tbody>
-                                {% for participant in object.product.evaluationguest_set.all %}
+                                {% for participant in object.surveyxactevaluationguest_set.all %}
                                     <tr>
                                         <td>{{ participant.guest.get_name }}</td>
                                         <td>{{ participant.guest.get_email }}</td>
                                         <td>{{ participant.status_display }}</td>
                                         <td>{{ participant.url }}</td>
+                                    <td>
+                                        <a href="{% url 'evaluation-view-send' object.id participant.id 1 %}">Send første</a>
+                                        <a href="{% url 'evaluation-view-send' object.id participant.id 2 %}">Send anden</a>
+                                    </td>
                                     </tr>
                                 {% empty %}
                                     <tr>

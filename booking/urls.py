@@ -469,6 +469,9 @@ urlpatterns = patterns(
     url(r'^evaluation/(?P<pk>[0-9]+)/?$',
         EvaluationDetailView.as_view(),
         name='evaluation-view'),
+    url(r'^evaluation/(?P<pk>[0-9]+)/(?P<g>[0-9]+)/(?P<i>[0-9]+)/?$',
+        EvaluationDetailView.as_view(),
+        name='evaluation-view-send'),
 
     url(r'^e/(?P<linkid>[a-zA-Z0-9]+(_s)?)$',
         EvaluationRedirectView.as_view(),

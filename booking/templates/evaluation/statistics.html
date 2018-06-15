@@ -75,11 +75,11 @@
                     <td>
                         <a href="{% url 'visit-view' visit.id %}">{{ visit.date_display }}</a>
                     </td>
-                    <td>{{ visit.evaluation.no_participation_count }}</td>
-                    <td>{{ visit.evaluation.not_sent_count }}</td>
-                    <td>{{ visit.evaluation.first_sent_count }}</td>
-                    <td>{{ visit.evaluation.second_sent_count }}</td>
-                    <td>{{ visit.evaluation.link_clicked_count }}</td>
+                    <td>{{ visit.evaluation_no_participation.count }}</td>
+                    <td>{{ visit.evaluation_not_sent.count }}</td>
+                    <td>{{ visit.evaluation_first_sent.count }}</td>
+                    <td>{{ visit.evaluation_second_sent.count }}</td>
+                    <td>{{ visit.evaluation_link_clicked.count }}</td>
                 </tr>
             {% endfor %}
         </tbody>
