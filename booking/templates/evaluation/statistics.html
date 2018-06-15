@@ -15,8 +15,6 @@
 
     <h1>{% trans "Statistik over evalueringer" %}</h1>
 
-    <div id="accordion" class="panel-group" aria-multiselectable="true" role="tablist">
-
     <a id="controlFilter" aria-controls="collapseFilter" aria-expanded="{% if has_filter %}true{% else %}false{% endif %}" href="#collapseFilter" data-parent="#accordion" data-toggle="collapse" role="button">
         {% trans "Filtrér" %}
         <span class="{% if has_filter %}caret-up{% else %}caret{% endif %}"></span>
@@ -54,13 +52,13 @@
                 <th rowspan="2" class="text-center text-top">{% trans 'Dato' %}</th>
                 <th colspan="5" class="text-center">{% trans 'Status' %}</th>
             </tr>
-        <tr>
-            <th class="text-center">{% trans 'Ikke deltagende' %}</th>
-            <th class="text-center">{% trans 'Ikke afholdt' %}</th>
-            <th class="text-center">{% trans 'Sendt første gang' %}</th>
-            <th class="text-center">{% trans 'Sendt anden gang' %}</th>
-            <th class="text-center">{% trans 'Har klikket på link' %}</th>
-        </tr>
+            <tr>
+                <th class="text-center">{% trans 'Ikke deltagende' %}</th>
+                <th class="text-center">{% trans 'Ikke afholdt' %}</th>
+                <th class="text-center">{% trans 'Sendt første gang' %}</th>
+                <th class="text-center">{% trans 'Sendt anden gang' %}</th>
+                <th class="text-center">{% trans 'Har klikket på link' %}</th>
+            </tr>
         </thead>
         <tbody>
             {% for visit in visits %}
@@ -75,11 +73,11 @@
                     <td>
                         <a href="{% url 'visit-view' visit.id %}">{{ visit.date_display }}</a>
                     </td>
-                    <td>{{ visit.evaluation.no_participation_count }}</td>
-                    <td>{{ visit.evaluation.not_sent_count }}</td>
-                    <td>{{ visit.evaluation.first_sent_count }}</td>
-                    <td>{{ visit.evaluation.second_sent_count }}</td>
-                    <td>{{ visit.evaluation.link_clicked_count }}</td>
+                    <td>{{ visit.evaluation_no_participation.count }}</td>
+                    <td>{{ visit.evaluation_not_sent.count }}</td>
+                    <td>{{ visit.evaluation_first_sent.count }}</td>
+                    <td>{{ visit.evaluation_second_sent.count }}</td>
+                    <td>{{ visit.evaluation_link_clicked.count }}</td>
                 </tr>
             {% endfor %}
         </tbody>

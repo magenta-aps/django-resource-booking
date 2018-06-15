@@ -74,8 +74,23 @@
                             <td><a href="{% url 'product-view' res.product.pk %}">{{ res.product.title }}</a></td>
                             <td><a href="{% url 'visit-view' res.pk %}">#{{ res.pk }}</a></td>
                             <td><a href="{% url 'visit-view' res.pk %}">{{ res.display_value }}</a></td>
-                            <td><a href="{{ res.evaluation_link }}">{{ res.evaluation_link }}</a></td>
-                            <td><span class="label label-{{ res.get_workflow_status_class }}">{{ res.get_workflow_status_display }}</span></td>
+                            <td>
+                                {% if res.product.is_group_visit %}
+                                    {% if res.product.student_evaluation %}
+                                        <a href="{% url 'evaluation-view' res.product.student_evaluation.id %}">{% trans 'Til elever' %}</a>
+                                    {% endif %}
+                                    {% if res.product.teacher_evaluation %}
+                                        <a href="{% url 'evaluation-view' res.product.teacher_evaluation.id %}">{% trans 'Til lærere' %}</a>
+                                    {% endif %}
+                                {% else %}
+                                    {% if res.product.student_evaluation %}
+                                        <a href="{% url 'evaluation-view' res.product.student_evaluation.id %}">{% trans 'Til alle' %}</a>
+                                    {% endif %}
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="label label-{{ res.get_workflow_status_class }}">{{ res.get_workflow_status_display }}</span>
+                            </td>
                         </tr>
                     {% endfor %}
                     </tbody>

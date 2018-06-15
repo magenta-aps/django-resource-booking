@@ -460,21 +460,28 @@ urlpatterns = patterns(
         VisitResourceEditView.as_view(),
         name='visit-resources-edit'),
 
-    url(r'^visit/(?P<visit>[0-9]+)/evaluation/create/?$',
+    url(r'^evaluation/create/(?P<product>[0-9]+)/?$',
         EvaluationEditView.as_view(),
-        name='visit-evaluation-create'),
-    url(r'^visit/(?P<visit>[0-9]+)/evaluation/(?P<pk>[0-9]+)/edit/?$',
+        name='evaluation-create'),
+
+    url(r'^evaluation/(?P<pk>[0-9]+)/edit/?$',
         EvaluationEditView.as_view(),
-        name='visit-evaluation-edit'),
-    url(r'^visit/(?P<visit>[0-9]+)/evaluation/(?P<pk>[0-9]+)/?$',
+        name='evaluation-edit'),
+
+    url(r'^evaluation/(?P<pk>[0-9]+)/?$',
         EvaluationDetailView.as_view(),
-        name='visit-evaluation-view'),
-    url(r'^e/(?P<linkid>[a-zA-Z0-9]+)$',
+        name='evaluation-view'),
+    url(r'^evaluation/(?P<pk>[0-9]+)/(?P<g>[0-9]+)/(?P<i>[0-9]+)/?$',
+        EvaluationDetailView.as_view(),
+        name='evaluation-view-send'),
+
+    url(r'^e/(?P<linkid>[a-zA-Z0-9]+(_s)?)$',
         EvaluationRedirectView.as_view(),
-        name='visit-evaluation-redirect'),
-    url(r'^visit/evaluations/?$',
+        name='evaluation-redirect'),
+
+    url(r'^evaluation/statistics/?$',
         EvaluationStatisticsView.as_view(),
-        name='visit-evaluation-statistics'),
+        name='evaluation-statistics'),
 
     url(r'^ajax/list/(?P<type>[A-Za-z]+)/?$',
         ListAjaxView.as_view(),

@@ -2028,6 +2028,36 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         verbose_name=_(u'"Spørg om tilbud" aktiveret')
     )
 
+    evaluation_link = models.CharField(
+        max_length=1024,
+        verbose_name=_(u'Link til evaluering'),
+        blank=True,
+        default='',
+    )
+
+    @property
+    def student_evaluation(self):
+        return self.surveyxactevaluation_set.filter(for_students=True).first()
+
+    @property
+    def teacher_evaluation(self):
+        return self.surveyxactevaluation_set.filter(for_teachers=True).first()
+
+    @property
+    def common_evaluation(self):
+        return self.surveyxactevaluation_set.filter(
+            for_students=True, for_teachers=True
+        ).first()
+
+    @property
+    def evaluations(self):
+        return [
+            evaluation for evaluation in [
+                self.student_evaluation, self.teacher_evaluation
+            ]
+            if evaluation is not None
+        ]
+
     def available_time_modes(self, unit=None):
         if self.type is None:
             return Product.time_mode_choices
@@ -4231,6 +4261,45 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                         ).save()
             self.resources_updated()
 
+    @property
+    def student_evaluation_guests(self):
+        return self.product.student_evaluation.surveyxactevaluationguest_set
+
+    @property
+    def evaluation_student_no_participation(self):
+        return SurveyXactEvaluationGuest.filter_status(
+            self.student_evaluation_guests,
+            SurveyXactEvaluationGuest.STATUS_NO_PARTICIPATION
+        )
+
+    @property
+    def evaluation_not_sent(self):
+        return SurveyXactEvaluationGuest.filter_status(
+            self.student_evaluation_guests,
+            SurveyXactEvaluationGuest.STATUS_NOT_SENT
+        )
+
+    @property
+    def evaluation_first_sent(self):
+        return SurveyXactEvaluationGuest.filter_status(
+            self.student_evaluation_guests,
+            SurveyXactEvaluationGuest.STATUS_FIRST_SENT
+        )
+
+    @property
+    def evaluation_second_sent(self):
+        return SurveyXactEvaluationGuest.filter_status(
+            self.student_evaluation_guests,
+            SurveyXactEvaluationGuest.STATUS_SECOND_SENT
+        )
+
+    @property
+    def evaluation_link_clicked(self):
+        return SurveyXactEvaluationGuest.filter_status(
+            self.student_evaluation_guests,
+            SurveyXactEvaluationGuest.STATUS_LINK_CLICKED
+        )
+
 
 Visit.add_override_property('duration')
 Visit.add_override_property('locality')
@@ -5254,7 +5323,7 @@ class Booking(models.Model):
         verbose_name = _(u'booking')
         verbose_name_plural = _(u'bookinger')
 
-    booker = models.ForeignKey(Guest)
+    booker = models.OneToOneField(Guest)
 
     visit = models.ForeignKey(
         Visit,
@@ -5813,77 +5882,72 @@ class BookerResponseNonce(models.Model):
         return cls.objects.create(**attrs)
 
 
-class Evaluation(models.Model):
-    url = models.CharField(
-        max_length=1024,
-        verbose_name=u'Evaluerings-URL'
-    )
-    visit = models.OneToOneField(
-        Visit,
-        null=False,
-        blank=False
-    )
+class SurveyXactEvaluation(models.Model):
+
+    DEFAULT_STUDENT_SURVEY_ID = 946435
+    DEFAULT_TEACHER_SURVEY_ID = 946493
+
+    surveyId = models.IntegerField()
+
     guests = models.ManyToManyField(
         Guest,
-        through='EvaluationGuest'
+        through='SurveyXactEvaluationGuest'
     )
+
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        null=True
+    )
+
+    for_students = models.BooleanField()
+    for_teachers = models.BooleanField()
 
     def send_notification(self, template_type, new_status, filter=None):
         qs = self.evaluationguest_set.all()
         if filter is not None:
             qs = qs.filter(**filter)
         for evalguest in qs:
-            for booking in evalguest.guest.booking_set.filter(
-                visit=self.visit
-            ):
-                # There really should be only one here
-                try:
-                    sent = booking.autosend(
-                        template_type
-                    )
-                    if sent:
-                        evalguest.status = new_status
-                        evalguest.save()
-                except Exception as e:
-                    print e
+            try:
+                sent = evalguest.booking.autosend(
+                    template_type
+                )
+                if sent:
+                    evalguest.status = new_status
+                    evalguest.save()
+            except Exception as e:
+                print e
 
-    def send_first_notification(self):
+    def send_first_notification(self, visit):
+        print "send first notification pertaining to visit %d" % visit.id
+        template = EmailTemplateType.notify_guest__evaluation_first_students \
+            if self.for_students \
+            else EmailTemplateType.notify_guest__evaluation_first
         self.send_notification(
-            EmailTemplateType.notify_guest__evaluation_first,
-            EvaluationGuest.STATUS_FIRST_SENT
+            template,
+            SurveyXactEvaluationGuest.STATUS_FIRST_SENT,
+            {
+                'guest__booking__visit': visit
+            }
         )
 
-    def send_second_notification(self):
+    def send_second_notification(self, visit):
+        print "send second notification pertaining to visit %d" % visit.id
         self.send_notification(
             EmailTemplateType.notify_guest__evaluation_second,
-            EvaluationGuest.STATUS_SECOND_SENT,
-            {'status': EvaluationGuest.STATUS_FIRST_SENT}
+            SurveyXactEvaluationGuest.STATUS_SECOND_SENT,
+            {
+                'status': SurveyXactEvaluationGuest.STATUS_FIRST_SENT,
+                'guest__booking__visit': visit
+            }
         )
 
-    def status_count(self, status):
-        return self.evaluationguest_set.filter(status=status).count()
 
-    def no_participation_count(self):
-        return self.status_count(EvaluationGuest.STATUS_NO_PARTICIPATION)
-
-    def not_sent_count(self):
-        return self.status_count(EvaluationGuest.STATUS_NOT_SENT)
-
-    def first_sent_count(self):
-        return self.status_count(EvaluationGuest.STATUS_FIRST_SENT)
-
-    def second_sent_count(self):
-        return self.status_count(EvaluationGuest.STATUS_SECOND_SENT)
-
-    def link_clicked_count(self):
-        return self.status_count(EvaluationGuest.STATUS_LINK_CLICKED)
-
-
-class EvaluationGuest(models.Model):
+class SurveyXactEvaluationGuest(models.Model):
     evaluation = models.ForeignKey(
-        Evaluation,
-        null=False,
-        blank=False
+        SurveyXactEvaluation,
+        null=True,
+        blank=True
     )
     guest = models.OneToOneField(
         Guest,
@@ -5904,15 +5968,34 @@ class EvaluationGuest(models.Model):
     ]
     status = models.SmallIntegerField(
         choices=status_choices,
-        verbose_name=u'status'
+        verbose_name=u'status',
+        default=STATUS_NOT_SENT
     )
     shortlink_id = models.CharField(
         max_length=16,
     )
+    url = models.URLField(
+        null=True
+    )
+
+    @staticmethod
+    def filter_status(qs, status):
+        return qs.filter(status=status)
+
+    @staticmethod
+    def filter_visit(qs, visit):
+        qs.filter(guest__booking__visit=visit)
 
     @property
-    def shortlink(self):
-        return "http://localhost:8000/l/%s" % self.shortlink_id
+    def link(self):
+        return self.link_obtain(self.shortlink_id)
+
+    @staticmethod
+    def link_obtain(shortlink_id):
+        return settings.PUBLIC_URL + reverse(
+            'evaluation-redirect',
+            args=[shortlink_id]
+        )
 
     @property
     def status_display(self):
@@ -5923,31 +6006,58 @@ class EvaluationGuest(models.Model):
     def save(self, *args, **kwargs):
         if self.shortlink_id is None or len(self.shortlink_id) == 0:
             self.shortlink_id = ''.join(get_random_string(length=13))
-        return super(EvaluationGuest, self).save(*args, **kwargs)
+        return super(SurveyXactEvaluationGuest, self).save(*args, **kwargs)
 
     @property
-    def url(self):
-        template = Template(
-            "{% load booking_tags %}" +
-            "{% load i18n %}" +
-            "{% language 'da' %}\n" +
-            unicode(self.evaluation.url) +
-            "{% endlanguage %}\n"
-        )
-        context = make_context({
-            'evaluation': self.evaluation,
-            'guest': self.guest,
-            'visit': self.evaluation.visit
-        })
+    def booking(self):
+        return self.guest.booking
 
-        rendered = template.render(context)
-        return rendered
+    @property
+    def visit(self):
+        return self.guest.booking.visit
 
-        # return self.evaluation.url
+    @property
+    def product(self):
+        return self.evaluation.product
+
+    def find_url(self):
+        self.url = "https://magenta.dk"
+
+    @staticmethod
+    def get_redirect_url(shortlink_id, set_link_click=False):
+        try:
+            evalguest = SurveyXactEvaluationGuest.objects.get(
+                shortlink_id=shortlink_id,
+            )
+        except:
+            return None
+        url = evalguest.url
+        if url is None or 'error' in url:
+            return None
+        if set_link_click:
+            evalguest.link_clicked()
+        return url
 
     def link_clicked(self):
         self.status = self.STATUS_LINK_CLICKED
         self.save()
+
+    def send(self, first=True):
+        if first:
+            if self.evaluation.for_students:
+                template = EmailTemplateType.\
+                    notify_guest__evaluation_first_students
+            else:
+                template = EmailTemplateType.notify_guest__evaluation_first
+            new_status = SurveyXactEvaluationGuest.STATUS_FIRST_SENT
+        else:
+            template = EmailTemplateType.notify_guest__evaluation_second
+            new_status = SurveyXactEvaluationGuest.STATUS_SECOND_SENT
+
+        sent = self.booking.autosend(template)
+        if sent:
+            self.status = new_status
+            self.save()
 
 
 from booking.resource_based import models as rb_models  # noqa

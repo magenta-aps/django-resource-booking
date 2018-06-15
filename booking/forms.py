@@ -20,8 +20,7 @@ from booking.models import BLANK_LABEL, BLANK_OPTION
 from booking.models import ClassBooking, TeacherBooking, \
     BookingGymnasieSubjectLevel
 from booking.models import EmailTemplate, EmailTemplateType
-from booking.models import Evaluation
-from booking.models import EvaluationGuest
+from booking.models import SurveyXactEvaluation
 from booking.models import Guest, Region, PostCode, School
 from booking.models import Locality, OrganizationalUnitType, OrganizationalUnit
 from booking.models import MultiProductVisitTemp, MultiProductVisitTempProduct
@@ -1914,19 +1913,21 @@ class MultiProductVisitTempProductsForm(forms.ModelForm):
 
 class EvaluationForm(forms.ModelForm):
 
-    class Meta:
-        model = Evaluation
-        fields = ['url']
-        widgets = {'url': TextInput(attrs={
-            'class': 'form-control input-sm',
-            'readonly': 'readonly'
-        })}
+    # nonparticipating_guests = ModelMultipleChoiceField(
+    #     queryset=Guest.objects.all(),
+    #     required=False,
+    #     label=_(u'Deltagere uden spørgeskema')
+    # )
 
-    nonparticipating_guests = ModelMultipleChoiceField(
-        queryset=Guest.objects.all(),
-        required=False,
-        label=_(u'Deltagere uden spørgeskema')
-    )
+    class Meta:
+
+        model = SurveyXactEvaluation
+        fields = ['surveyId', 'for_students', 'for_teachers']
+        widgets = {
+            'surveyId': NumberInput(),
+            'for_students': HiddenInput(),
+            'for_teachers': HiddenInput()
+        }
 
     def __init__(self, visit, *args, **kwargs):
         self.instance = kwargs.get('instance')
@@ -1936,7 +1937,7 @@ class EvaluationForm(forms.ModelForm):
                 evaluationguest.guest
                 for evaluationguest
                 in self.instance.evaluationguest_set.filter(
-                    status=EvaluationGuest.STATUS_NO_PARTICIPATION
+                    status=SurveyXactEvaluationGuest.STATUS_NO_PARTICIPATION
                 )
             ]
         super(EvaluationForm, self).__init__(*args, **kwargs)
@@ -1945,10 +1946,10 @@ class EvaluationForm(forms.ModelForm):
         )
 
     def get_queryset(self):
-        return Evaluation.objects.filter(visit=self.visit)
+        return SurveyXactEvaluation.objects.filter(product=self.product)
 
     def save(self, commit=True):
-        self.instance.visit = self.visit
+        self.instance.product = self.product
         super(EvaluationForm, self).save(commit)
         existing_guests = {
             evalguest.guest: evalguest
@@ -1956,14 +1957,14 @@ class EvaluationForm(forms.ModelForm):
         }
         for booking in self.visit.booking_list:
             guest = booking.booker
-            status = EvaluationGuest.STATUS_NO_PARTICIPATION
+            status = SurveyXactEvaluationGuest.STATUS_NO_PARTICIPATION
             if guest not in self.cleaned_data['nonparticipating_guests']:
-                status = EvaluationGuest.STATUS_NOT_SENT
+                status = SurveyXactEvaluationGuest.STATUS_NOT_SENT
             if guest in existing_guests:
                 evalguest = existing_guests[guest]
                 evalguest.status = status
             else:
-                evalguest = EvaluationGuest(
+                evalguest = SurveyXactEvaluationGuest(
                     evaluation=self.instance,
                     guest=guest,
                     status=status
