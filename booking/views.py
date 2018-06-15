@@ -4083,9 +4083,6 @@ class EvaluationOverviewView(LoginRequiredMixin, BreadcrumbMixin, ListView):
             qs = self.model.objects.filter(
                 eventtime__product__organizationalunit__in=form.user
                 .userprofile.get_unit_queryset(),
-                evaluation_link__isnull=False,
-            ).exclude(
-                evaluation_link="",
             )
             unit_limit = formdata.get('organizationalunit', [])
             if unit_limit:

@@ -1,40 +1,39 @@
 # -*- coding: utf-8 -*-
-from django.db.models.expressions import OrderBy
-from django.db.models import Q
 from django.core.urlresolvers import reverse
+from django.db.models import Q
+from django.db.models.expressions import OrderBy
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import redirect
 from django.utils import formats, timezone
 from django.utils.translation import ugettext as _
 from django.views.generic import UpdateView, FormView
+from django.views.generic.base import ContextMixin
+
+import booking.models
+from booking.booking_workflows.forms import ChangeVisitCommentsForm
+from booking.booking_workflows.forms import ChangeVisitHostsForm
+from booking.booking_workflows.forms import ChangeVisitResponsibleForm
+from booking.booking_workflows.forms import ChangeVisitRoomsForm
 from booking.booking_workflows.forms import ChangeVisitStatusForm, \
     BecomeSomethingForm
-from booking.booking_workflows.forms import VisitAutosendFormSet
-from booking.booking_workflows.forms import ChangeVisitResponsibleForm
 from booking.booking_workflows.forms import ChangeVisitTeachersForm
-from booking.booking_workflows.forms import ChangeVisitHostsForm
-from booking.booking_workflows.forms import ChangeVisitRoomsForm
-from booking.booking_workflows.forms import ChangeVisitCommentsForm
-from booking.booking_workflows.forms import ChangeVisitEvalForm
-from booking.booking_workflows.forms import VisitAddLogEntryForm
-from booking.booking_workflows.forms import VisitAddCommentForm
 from booking.booking_workflows.forms import ResetVisitChangesForm
-from booking.models import TeacherResource, HostResource
-from booking.models import Visit
+from booking.booking_workflows.forms import VisitAddCommentForm
+from booking.booking_workflows.forms import VisitAddLogEntryForm
+from booking.booking_workflows.forms import VisitAutosendFormSet
 from booking.models import EmailTemplateType
 from booking.models import EventTime
-from booking.models import Locality
 from booking.models import LOGACTION_MANUAL_ENTRY
-from booking.models import log_action
-from booking.models import Room
+from booking.models import Locality
 from booking.models import MultiProductVisit
+from booking.models import Room
+from booking.models import TeacherResource, HostResource
+from booking.models import Visit
+from booking.models import log_action
 from booking.views import AutologgerMixin
 from booking.views import RoleRequiredMixin, EditorRequriedMixin
 from booking.views import VisitDetailView
-from django.views.generic.base import ContextMixin
 from profile.models import TEACHER, HOST, EDIT_ROLES
-
-import booking.models
 
 
 class VisitBreadcrumbMixin(ContextMixin):
@@ -351,13 +350,6 @@ class ChangeVisitCommentsView(AutologgerMixin, UpdateWithCancelView):
     form_class = ChangeVisitCommentsForm
     template_name = "booking/workflow/change_comments.html"
     view_title = _(u'Redigér kommentarer')
-
-
-class ChangeVisitEvalView(AutologgerMixin, UpdateWithCancelView):
-    model = Visit
-    form_class = ChangeVisitEvalForm
-    template_name = "booking/workflow/change_eval_link.html"
-    view_title = _(u'Redigér evalueringslink')
 
 
 class VisitAddLogEntryView(VisitBreadcrumbMixin, FormView):

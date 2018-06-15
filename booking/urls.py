@@ -1,78 +1,67 @@
+from django.conf import settings
 from django.conf.urls import patterns, url, include
 from django.conf.urls.static import static
-from django.conf import settings
 from django.core.urlresolvers import RegexURLPattern
 from django.views.decorators.clickjacking import xframe_options_exempt
+from django.views.generic import TemplateView
 
-from booking.views import MainPageView, VisitNotifyView
-
-from booking.views import PostcodeView, SchoolView, ProductInquireView
-from booking.views import RrulestrView
-from booking.views import ProductCustomListView
-from booking.views import EditProductInitialView
-from booking.views import BookingView, BookingSuccessView
-from booking.views import VisitSearchView
-from booking.views import EditProductView, ProductDetailView
-from booking.views import EmailSuccessView, ProductInquireSuccessView
-from booking.views import SearchView, EmbedcodesView
-
-from booking.views import BookingNotifyView, BookingDetailView
-from booking.views import BookingAcceptView, BookingEditView
-from booking.views import EmailTemplateListView, EmailTemplateEditView
-from booking.views import EmailTemplateDetailView, EmailTemplateDeleteView
-from booking.views import ChangeVisitEvalView
-from booking.views import ChangeVisitStatusView
-from booking.views import ChangeVisitStartTimeView
-from booking.views import ChangeVisitResponsibleView
-from booking.views import ChangeVisitTeachersView
-from booking.views import ChangeVisitHostsView
-from booking.views import ChangeVisitRoomsView
-from booking.views import ChangeVisitCommentsView
-from booking.views import ChangeVisitAutosendView
-from booking.views import ResetVisitChangesView
-from booking.views import BecomeTeacherView
-from booking.views import DeclineTeacherView
-from booking.views import BecomeHostView
-from booking.views import DeclineHostView
-from booking.views import EmailReplyView
-from booking.views import VisitAddLogEntryView
-from booking.views import VisitAddCommentView
-from booking.views import VisitDetailView
-from booking.views import VisitCustomListView
-from booking.views import EvaluationOverviewView
-from booking.views import VisitBookingCreateView
-from booking.views import MultiProductVisitPromptView
-from booking.views import MultiProductVisitTempCreateView
-from booking.views import MultiProductVisitTempUpdateView
-from booking.views import MultiProductVisitTempProductsView
-from booking.views import MultiProductVisitTempConfirmView
-from booking.views import EvaluationEditView, EvaluationDetailView
-from booking.views import EvaluationRedirectView, EvaluationStatisticsView
-
+import booking.models
 from booking.resource_based.views import ResourceCreateView, ResourceDetailView
-from booking.resource_based.views import ResourceListView, ResourceUpdateView
 from booking.resource_based.views import ResourceDeleteView
-
+from booking.resource_based.views import ResourceListView, ResourceUpdateView
 from booking.resource_based.views import ResourcePoolCreateView
+from booking.resource_based.views import ResourcePoolDeleteView
 from booking.resource_based.views import ResourcePoolDetailView
 from booking.resource_based.views import ResourcePoolListView
 from booking.resource_based.views import ResourcePoolUpdateView
-from booking.resource_based.views import ResourcePoolDeleteView
-
-from booking.resource_based.views import ResourceRequirementCreateView
 from booking.resource_based.views import ResourceRequirementCreateConfirmView
-from booking.resource_based.views import ResourceRequirementUpdateView
-from booking.resource_based.views import ResourceRequirementUpdateConfirmView
-from booking.resource_based.views import ResourceRequirementListView
+from booking.resource_based.views import ResourceRequirementCreateView
 from booking.resource_based.views import ResourceRequirementDeleteView
-
+from booking.resource_based.views import ResourceRequirementListView
+from booking.resource_based.views import ResourceRequirementUpdateConfirmView
+from booking.resource_based.views import ResourceRequirementUpdateView
 from booking.resource_based.views import VisitResourceEditView
-
-import booking.views
-import booking.models
-
-from django.views.generic import TemplateView
-
+from booking.views import BecomeHostView
+from booking.views import BecomeTeacherView
+from booking.views import BookingAcceptView, BookingEditView
+from booking.views import BookingNotifyView, BookingDetailView
+from booking.views import BookingView, BookingSuccessView
+from booking.views import ChangeVisitAutosendView
+from booking.views import ChangeVisitCommentsView
+from booking.views import ChangeVisitHostsView
+from booking.views import ChangeVisitResponsibleView
+from booking.views import ChangeVisitRoomsView
+from booking.views import ChangeVisitStartTimeView
+from booking.views import ChangeVisitStatusView
+from booking.views import ChangeVisitTeachersView
+from booking.views import DeclineHostView
+from booking.views import DeclineTeacherView
+from booking.views import EditProductInitialView
+from booking.views import EditProductView, ProductDetailView
+from booking.views import EmailReplyView
+from booking.views import EmailSuccessView, ProductInquireSuccessView
+from booking.views import EmailTemplateDetailView, EmailTemplateDeleteView
+from booking.views import EmailTemplateListView, EmailTemplateEditView
+from booking.views import EvaluationEditView, EvaluationDetailView
+from booking.views import EvaluationOverviewView
+from booking.views import EvaluationRedirectView, EvaluationStatisticsView
+from booking.views import MainPageView, VisitNotifyView
+from booking.views import MultiProductVisitPromptView
+from booking.views import MultiProductVisitTempConfirmView
+from booking.views import MultiProductVisitTempCreateView
+from booking.views import MultiProductVisitTempProductsView
+from booking.views import MultiProductVisitTempUpdateView
+from booking.views import PostcodeView, SchoolView, ProductInquireView
+from booking.views import ProductCustomListView
+from booking.views import ResetVisitChangesView
+from booking.views import RrulestrView
+from booking.views import SearchView, EmbedcodesView
+from booking.views import VisitAddCommentView
+from booking.views import VisitAddLogEntryView
+from booking.views import VisitBookingCreateView
+from booking.views import VisitCustomListView
+from booking.views import VisitDetailView
+from booking.views import VisitSearchView
 from profile.views import ListAjaxView
 
 js_info_dict = {
@@ -222,9 +211,6 @@ urlpatterns = patterns(
     url(r'^visit/(?P<pk>[0-9]+)/change_comments/?$',
         ChangeVisitCommentsView.as_view(),
         name='change-visit-comments'),
-    url(r'^visit/(?P<pk>[0-9]+)/change_evaluation_link/?$',
-        ChangeVisitEvalView.as_view(),
-        name='change-visit-eval'),
     url(r'^visit/(?P<pk>[0-9]+)/add_logentry/?$',
         VisitAddLogEntryView.as_view(),
         name='visit-add-logentry'),

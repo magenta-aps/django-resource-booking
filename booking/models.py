@@ -2028,13 +2028,6 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         verbose_name=_(u'"Spørg om tilbud" aktiveret')
     )
 
-    evaluation_link = models.CharField(
-        max_length=1024,
-        verbose_name=_(u'Link til evaluering'),
-        blank=True,
-        default='',
-    )
-
     @property
     def student_evaluation(self):
         return self.surveyxactevaluation_set.filter(for_students=True).first()
@@ -2983,13 +2976,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         blank=True,
         default='',
         verbose_name=_(u'Interne kommentarer')
-    )
-
-    evaluation_link = models.CharField(
-        max_length=1024,
-        verbose_name=_(u'Link til evaluering'),
-        blank=True,
-        default='',
     )
 
     # ts_vector field for fulltext search
