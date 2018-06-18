@@ -1,26 +1,22 @@
 # -*- coding: utf-8 -*-
 
 import json
+import re
 import urllib
-
 from datetime import datetime, timedelta
 
 from dateutil.rrule import rrulestr
 from django.contrib import messages
-from django.contrib.admin.models import LogEntry
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse, reverse_lazy
-from django.utils.translation.trans_real import get_languages
 from django.db.models import Count
 from django.db.models import Q
 from django.db.models import Sum
 from django.db.models.expressions import RawSQL
 from django.db.models.functions import Coalesce
-from django.forms.models import model_to_dict
 from django.http import Http404
 from django.http import HttpResponse
 from django.http import JsonResponse
@@ -30,71 +26,99 @@ from django.utils.decorators import method_decorator
 from django.utils.http import urlquote
 from django.utils.http import urlunquote_plus
 from django.utils.translation import ugettext as _
+from django.utils.translation.trans_real import get_languages
+from django.views.defaults import bad_request
 from django.views.generic import View, TemplateView, ListView, DetailView
-from django.views.generic.base import ContextMixin, RedirectView
+from django.views.generic.base import RedirectView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.edit import FormMixin, ModelFormMixin
 from django.views.generic.edit import FormView, ProcessFormView
-from django.views.defaults import bad_request
-
-
-from profile.models import EDIT_ROLES, ADMINISTRATOR
-from profile.models import role_to_text
-from booking.models import Product, Visit, StudyMaterial
-from booking.models import KUEmailMessage
-from booking.models import Subject
-from booking.models import OrganizationalUnit
-from booking.models import GymnasieLevel
-from booking.models import Room
-from booking.models import PostCode, School
-from booking.models import Booking, Guest
-from booking.models import ProductGymnasieFag, ProductGrundskoleFag
-from booking.models import EmailTemplateType, EmailTemplate
-from booking.models import log_action
-from booking.models import LOGACTION_CREATE, LOGACTION_CHANGE
-from booking.models import RoomResponsible
-from booking.models import BookerResponseNonce
-from booking.models import CalendarEvent
-from booking.models import MultiProductVisit
-from booking.models import MultiProductVisitTemp, MultiProductVisitTempProduct
-from booking.models import Evaluation, EvaluationGuest
-
-from booking.forms import ProductInitialForm, ProductForm, EditBookerForm, \
-    ClassBookingBaseForm, TeacherBookingBaseForm, \
-    StudentForADayBookingBaseForm, StudyProjectBookingBaseForm
-from booking.forms import GuestEmailComposeForm, StudentForADayBookingForm
-from booking.forms import OtherProductForm, StudyProjectBookingForm
-from booking.forms import BookingGrundskoleSubjectLevelForm, BookingListForm
-from booking.forms import StudentForADayForm, InternshipForm, OpenHouseForm
-from booking.forms import TeacherProductForm, ClassProductForm
-from booking.forms import StudyProjectForm, AssignmentHelpForm
-from booking.forms import StudyMaterialForm
-
-from booking.forms import BookingForm
-from booking.forms import ClassBookingForm, TeacherBookingForm
-from booking.forms import ProductStudyMaterialForm, \
-    BookingGymnasieSubjectLevelForm
-from booking.forms import BookerForm
-from booking.forms import EmailTemplateForm, EmailTemplatePreviewContextForm
-from booking.forms import EmailComposeForm
-from booking.forms import EmailReplyForm
-from booking.forms import EvaluationOverviewForm
-from booking.forms import AdminProductSearchForm
-from booking.forms import ProductAutosendFormSet
-from booking.forms import VisitSearchForm
-from booking.forms import AcceptBookingForm
-from booking.forms import MultiProductVisitTempDateForm
-from booking.forms import MultiProductVisitTempProductsForm
-from booking.forms import EvaluationForm, EvaluationStatisticsForm
-
-from booking.utils import full_email, get_model_field_map, TemplateSplit
-from booking.utils import get_related_content_types, merge_dicts
-from booking.utils import DummyRecipient
-
 
 import booking.models as booking_models
-import re
 import urls
+from booking.constants import LOGACTION_CREATE
+from booking.forms import AcceptBookingForm
+from booking.forms import AdminProductSearchForm
+from booking.forms import AssignmentHelpForm
+from booking.forms import BookerForm
+from booking.forms import BookingForm
+from booking.forms import BookingGrundskoleSubjectLevelForm
+from booking.forms import BookingGymnasieSubjectLevelForm
+from booking.forms import BookingListForm
+from booking.forms import ClassBookingBaseForm
+from booking.forms import ClassBookingForm
+from booking.forms import ClassProductForm
+from booking.forms import EditBookerForm
+from booking.forms import EmailComposeForm
+from booking.forms import EmailReplyForm
+from booking.forms import EmailTemplateForm
+from booking.forms import EmailTemplatePreviewContextForm
+from booking.forms import EvaluationForm
+from booking.forms import EvaluationOverviewForm
+from booking.forms import EvaluationStatisticsForm
+from booking.forms import GuestEmailComposeForm
+from booking.forms import InternshipForm
+from booking.forms import MultiProductVisitTempDateForm
+from booking.forms import MultiProductVisitTempProductsForm
+from booking.forms import OpenHouseForm
+from booking.forms import OtherProductForm
+from booking.forms import ProductAutosendFormSet
+from booking.forms import ProductForm
+from booking.forms import ProductInitialForm
+from booking.forms import ProductStudyMaterialForm
+from booking.forms import StudentForADayBookingBaseForm
+from booking.forms import StudentForADayBookingForm
+from booking.forms import StudentForADayForm
+from booking.forms import StudyMaterialForm
+from booking.forms import StudyProjectBookingBaseForm
+from booking.forms import StudyProjectBookingForm
+from booking.forms import StudyProjectForm
+from booking.forms import TeacherBookingBaseForm
+from booking.forms import TeacherBookingForm
+from booking.forms import TeacherProductForm
+from booking.forms import VisitSearchForm
+from booking.logging import log_action
+from booking.mixins import AccessDenied
+from booking.mixins import AdminRequiredMixin
+from booking.mixins import AutologgerMixin
+from booking.mixins import BackMixin
+from booking.mixins import BreadcrumbMixin
+from booking.mixins import EditorRequriedMixin
+from booking.mixins import HasBackButtonMixin
+from booking.mixins import LoggedViewMixin
+from booking.mixins import LoginRequiredMixin
+from booking.mixins import ModalMixin
+from booking.mixins import RoleRequiredMixin
+from booking.mixins import UnitAccessRequiredMixin
+from booking.models import BookerResponseNonce
+from booking.models import Booking, Guest
+from booking.models import CalendarEvent
+from booking.models import EmailTemplate
+from booking.models import EmailTemplateType
+from booking.models import Evaluation
+from booking.models import EvaluationGuest
+from booking.models import GymnasieLevel
+from booking.models import KUEmailMessage
+from booking.models import MultiProductVisit
+from booking.models import MultiProductVisitTemp
+from booking.models import MultiProductVisitTempProduct
+from booking.models import OrganizationalUnit
+from booking.models import PostCode
+from booking.models import Product
+from booking.models import ProductGrundskoleFag
+from booking.models import ProductGymnasieFag
+from booking.models import Room
+from booking.models import RoomResponsible
+from booking.models import School
+from booking.models import StudyMaterial
+from booking.models import Subject
+from booking.models import Visit
+from booking.utils import DummyRecipient
+from booking.utils import TemplateSplit
+from booking.utils import full_email
+from booking.utils import get_model_field_map
+from booking.utils import merge_dicts
+from profile.models import EDIT_ROLES
 
 i18n_test = _(u"Dette tester oversættelses-systemet")
 
@@ -177,128 +201,6 @@ class MainPageView(TemplateView):
 
         context.update(kwargs)
         return super(MainPageView, self).get_context_data(**context)
-
-
-class LoginRequiredMixin(object):
-    """Include this mixin to require login.
-
-    Mainly useful for users who are not coordinators or administrators.
-    """
-
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        """Check that user is logged in and dispatch."""
-        return super(LoginRequiredMixin, self).dispatch(*args, **kwargs)
-
-
-class AccessDenied(PermissionDenied):
-    def __init__(self, text, *args, **kwargs):
-        _text = text
-        print _text.encode('utf-8')
-        return super(AccessDenied, self).__init__(text, *args, **kwargs)
-
-    def __unicode__(self):
-        print self._text.encode('utf-8')
-        return unicode(self._text)
-
-
-class RoleRequiredMixin(object):
-    """Require that user has any of a number of roles."""
-
-    # Roles is a list of required roles - maybe only one.
-    # Each user can have only one role, and the condition is fulfilled
-    # if one is found.
-
-    roles = []  # Specify in subclass.
-
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        current_user = self.request.user
-        if hasattr(current_user, 'userprofile'):
-            role = current_user.userprofile.get_role()
-            if role in self.roles:
-                return super(RoleRequiredMixin, self).dispatch(*args, **kwargs)
-        else:
-            pass
-        txts = map(role_to_text, self.roles)
-        # TODO: Render this with the error message!
-        raise AccessDenied(
-            u"Kun brugere med disse roller kan logge ind: " +
-            u",".join(txts)
-        )
-
-
-class HasBackButtonMixin(ContextMixin):
-
-    def get_context_data(self, **kwargs):
-        context = super(HasBackButtonMixin, self).get_context_data(**kwargs)
-        context['oncancel'] = self.request.GET.get('back')
-        return context
-
-
-class BackMixin(ContextMixin):
-    backparam = "back"
-    just_preserve_back = False
-    back_on_success = True
-    back_on_cancel = True
-
-    def redirect(self, regular):
-        if self.backparam in self.request.GET:
-            back = self.request.GET[self.backparam]
-            if self.just_preserve_back:
-                url = regular + ('?' if '?' not in regular else '&') + \
-                    "back=%s" % back
-            else:
-                url = back
-        else:
-            url = regular
-        return redirect(url)
-
-    def get_success_url(self, regular=None):
-        if self.back_on_success:
-            if regular is None:
-                regular = self.success_url
-            if self.backparam in self.request.GET:
-                back = self.request.GET[self.backparam]
-                if self.just_preserve_back:
-                    return regular + ('?' if '?' not in regular else '&') + \
-                        "back=%s" % back
-                else:
-                    return back
-            else:
-                return regular
-        elif hasattr(self, 'success_url') and self.success_url is not None:
-            return self.success_url
-        else:
-            return super(BackMixin, self).get_success_url()
-
-    def get_context_data(self, **kwargs):
-        context = super(BackMixin, self).get_context_data(**kwargs)
-        if self.back_on_cancel:
-            context['oncancel'] = self.request.GET.get('back')
-        return context
-
-
-class ModalMixin(object):
-    modalid = None
-
-    def dispatch(self, request, *args, **kwargs):
-        try:
-            self.modalid = request.GET["modalid"]
-        except:
-            try:
-                self.modalid = request.POST["modalid"]
-            except:
-                pass
-        return super(ModalMixin, self).dispatch(request, *args, **kwargs)
-
-    def get_hash(self):
-        return "id=" + self.modalid if self.modalid is not None else ""
-
-    def modalurl(self, url):
-        url += ";" if "#" in url else "#"
-        url += self.get_hash()
-        return url
 
 
 class ProductBookingDetailView(DetailView):
@@ -511,177 +413,6 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
 
 class EmailSuccessView(TemplateView):
     template_name = "email/success.html"
-
-
-class EditorRequriedMixin(RoleRequiredMixin):
-    roles = EDIT_ROLES
-
-
-class AdminRequiredMixin(RoleRequiredMixin):
-    roles = [ADMINISTRATOR]
-
-
-class UnitAccessRequiredMixin(object):
-
-    def check_item(self, item):
-        current_user = self.request.user
-        if hasattr(current_user, 'userprofile'):
-            if current_user.userprofile.can_edit(item):
-                return
-        raise AccessDenied(_(u"You cannot edit an object for a unit "
-                             u"that you don't belong to"))
-
-    def check_unit(self, unit):
-        current_user = self.request.user
-        if hasattr(current_user, 'userprofile'):
-            if current_user.userprofile.unit_access(unit):
-                return
-        raise AccessDenied(_(u"You cannot edit an object for a unit "
-                             u"that you don't belong to"))
-
-
-class AutologgerMixin(object):
-    _old_state = {}
-
-    def _as_state(self, obj=None):
-        if obj is None:
-            obj = self.object
-        if obj and obj.pk:
-            return model_to_dict(obj)
-        else:
-            return {}
-
-    def _get_changed_fields(self, compare_state):
-        new_state = self._as_state()
-
-        result = {}
-
-        for key in compare_state:
-            if key in new_state:
-                if compare_state[key] != new_state[key]:
-                    result[key] = (compare_state[key], new_state[key])
-                del new_state[key]
-            else:
-                result[key] = (compare_state[key], None)
-
-        for key in new_state:
-            result[key] = (None, new_state[key])
-
-        return result
-
-    def _field_value_to_display(self, fieldname, value):
-        field = self.model._meta.get_field(fieldname)
-        fname = field.verbose_name
-
-        if value is None:
-            return (fname, unicode(value))
-
-        if field.many_to_one:
-            try:
-                o = field.related_model.objects.get(pk=value)
-                return (fname, unicode(o))
-            except:
-                return (fname, unicode(value))
-
-        if field.many_to_many or field.one_to_many:
-            res = []
-            for x in value:
-                try:
-                    o = field.related_model.objects.get(pk=x)
-                    res.append(unicode(o))
-                except:
-                    res.append(unicode(x))
-            return (fname, ", ".join(res))
-
-        if field.choices:
-            d = dict(field.choices)
-            if value in d:
-                return (fname, unicode(d[value]))
-
-        return (fname, unicode(value))
-
-    def _changes_to_text(self, changes):
-        if not changes:
-            return ""
-
-        result = {}
-        for key, val in changes.iteritems():
-            name, value = self._field_value_to_display(key, val[1])
-            result[name] = value
-
-        return "\n".join([
-            u"%s: >>>%s<<<" % (x, result[x]) for x in sorted(result)
-        ])
-
-    def _log_changes(self):
-        if self._old_state:
-            action = LOGACTION_CHANGE
-            msg = _(u"Ændrede felter:\n%s")
-        else:
-            action = LOGACTION_CREATE
-            msg = _(u"Oprettet med felter:\n%s")
-
-        changeset = self._get_changed_fields(self._old_state)
-
-        log_action(
-            self.request.user,
-            self.object,
-            action,
-            msg % self._changes_to_text(changeset)
-        )
-
-    def get_object(self, queryset=None):
-        res = super(AutologgerMixin, self).get_object(queryset)
-
-        self._old_state = self._as_state(res)
-
-        return res
-
-    def form_valid(self, form):
-        res = super(AutologgerMixin, self).form_valid(form)
-
-        self._log_changes()
-
-        return res
-
-
-class LoggedViewMixin(object):
-    def get_log_queryset(self):
-        types = get_related_content_types(self.model)
-
-        qs = LogEntry.objects.filter(
-            object_id=self.object.pk,
-            content_type__in=types
-        ).order_by('-action_time')
-
-        return qs
-
-    def get_context_data(self, **kwargs):
-        return super(LoggedViewMixin, self).get_context_data(
-            log_entries=self.get_log_queryset(),
-            **kwargs
-        )
-
-
-class BreadcrumbMixin(ContextMixin):
-
-    def get_breadcrumbs(self):
-        try:
-            return self.build_breadcrumbs(*self.get_breadcrumb_args())
-        except Exception as e:
-            print e
-            return []
-
-    def get_breadcrumb_args(self):
-        return []
-
-    def get_context_data(self, **kwargs):
-        breadcrumbs = self.get_breadcrumbs()
-        if len(breadcrumbs) > 0 and 'url' in breadcrumbs[-1]:
-            del breadcrumbs[-1]['url']
-        context = {'breadcrumbs': breadcrumbs}
-        context.update(kwargs)
-        return super(BreadcrumbMixin, self).get_context_data(**context)
 
 
 class SearchView(BreadcrumbMixin, ListView):
@@ -4103,13 +3834,6 @@ class EvaluationOverviewView(LoginRequiredMixin, BreadcrumbMixin, ListView):
         }]
 
 
-import booking_workflows.views  # noqa
-import_views(booking_workflows.views)
-
-import resource_based.views  # noqa
-import_views(resource_based.views)
-
-
 class BookingAcceptView(BreadcrumbMixin, FormView):
     template_name = "booking/accept_spot.html"
     form_class = AcceptBookingForm
@@ -4505,3 +4229,10 @@ class EvaluationStatisticsView(BreadcrumbMixin, TemplateView):
             'url': reverse('evaluation-statistics'),
             'text': _(u'Statistik over evalueringer')
         }]
+
+
+import booking_workflows.views  # noqa
+import_views(booking_workflows.views)
+
+import resource_based.views  # noqa
+import_views(resource_based.views)
