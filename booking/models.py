@@ -6,7 +6,7 @@ import uuid
 from datetime import timedelta, datetime, date, time
 
 import djorm_pgfulltext.fields
-from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
+from django.contrib.admin.models import LogEntry
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
@@ -34,6 +34,8 @@ from django.utils.crypto import get_random_string
 from django.utils.translation import ugettext_lazy as _, ungettext_lazy as __
 from djorm_pgfulltext.models import SearchManager
 
+from booking.constants import LOGACTION_MAIL_SENT
+from booking.logging import log_action
 from booking.mixins import AvailabilityUpdaterMixin
 from booking.utils import ClassProperty, full_email, CustomStorage, html2text
 from booking.utils import flatten
@@ -44,57 +46,6 @@ from resource_booking import settings
 
 BLANK_LABEL = '---------'
 BLANK_OPTION = (None, BLANK_LABEL,)
-
-LOGACTION_CREATE = ADDITION
-LOGACTION_CHANGE = CHANGE
-LOGACTION_DELETE = DELETION
-# If we need to add additional values make sure they do not conflict with
-# system defined ones by adding 128 to the value.
-LOGACTION_MAIL_SENT = 128 + 1
-LOGACTION_CUSTOM2 = 128 + 2
-LOGACTION_MANUAL_ENTRY = 128 + 64 + 1
-
-LOGACTION_DISPLAY_MAP = {
-    LOGACTION_CREATE: _(u'Oprettet'),
-    LOGACTION_CHANGE: _(u'Ændret'),
-    LOGACTION_DELETE: _(u'Slettet'),
-    LOGACTION_MAIL_SENT: _(u'Mail sendt'),
-    LOGACTION_MANUAL_ENTRY: _(u'Log-post tilføjet manuelt')
-}
-
-
-def log_action(user, obj, action_flag, change_message=''):
-    if user and hasattr(user, "pk") and user.pk:
-        user_id = user.pk
-    else:
-        # Late import due to mutual import conflicts
-        from profile.models import get_public_web_user  # noqa
-        pw_user = get_public_web_user()
-        user_id = pw_user.pk
-
-    content_type_id = None
-    object_id = None
-    object_repr = ""
-    if obj:
-        ctype = ContentType.objects.get_for_model(obj)
-        content_type_id = ctype.pk
-        try:
-            object_id = obj.pk
-        except:
-            pass
-        try:
-            object_repr = unicode(obj)
-        except:
-            pass
-
-    LogEntry.objects.log_action(
-        user_id,
-        content_type_id,
-        object_id,
-        object_repr,
-        action_flag,
-        change_message
-    )
 
 
 class VectorField(djorm_pgfulltext.fields.VectorField):
@@ -2012,6 +1963,18 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         verbose_name=_(u'Der tillades kun 1 tilmelding pr. besøg')
     )
 
+    booking_close_days_before = models.IntegerField(
+        default=6,
+        verbose_name=_(u'Antal dage før afholdelse, '
+                       u'hvor der lukkes for tilmeldinger'),
+        blank=True
+    )
+
+    inquire_enabled = models.BooleanField(
+        default=True,
+        verbose_name=_(u'"Spørg om tilbud" aktiveret')
+    )
+
     def available_time_modes(self, unit=None):
         if self.type is None:
             return Product.time_mode_choices
@@ -2059,6 +2022,10 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             return 1
 
     @property
+    def booking_cutoff(self):
+        return timedelta(days=self.booking_close_days_before)
+
+    @property
     def bookable_times(self):
         qs = self.eventtime_set.filter(
             Q(bookable=True) &
@@ -2101,7 +2068,9 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def future_bookable_times(self):
-        return self.bookable_times.filter(start__gte=timezone.now())
+        return self.bookable_times.filter(
+            start__gte=timezone.now()+self.booking_cutoff
+        )
 
     @property
     # QuerySet that finds all EventTimes that will be affected by a change
@@ -2494,6 +2463,15 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             if start_time is None:
                 return True
 
+            # We don't accept bookings made later
+            # than x days before visit start
+            cutoff = self.booking_cutoff
+            if cutoff is not None:
+                start_date = start_time if isinstance(start_time, date) \
+                    else start_time.date()
+                if start_date < timezone.now().date() + cutoff:
+                    return False
+
             # If start_time is a date and there is no end_date assume
             # midnight-to-midnight on the given date in the current timezone.
             if end_time is None and isinstance(start_time, date):
@@ -2503,7 +2481,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
                 )
                 end_time = start_time + timedelta(hours=24)
 
-            # Check if we has an available time in our calendar within the
+            # Check if we have an available time in our calendar within the
             # specified interval.
             return self.has_available_calendar_time(start_time, end_time)
 
@@ -2547,7 +2525,9 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def can_inquire(self):
-        return self.type in Product.askable_types and self.inquire_user
+        return self.type in Product.askable_types \
+               and self.inquire_user \
+               and self.inquire_enabled
 
     @property
     def duration_as_timedelta(self):

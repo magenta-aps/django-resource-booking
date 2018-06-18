@@ -3,13 +3,13 @@
 <!DOCTYPE html>
 <html lang="da">
     <head>
-
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+        {% include 'common/google_tag_manager/script.html' %}
+        {% include 'common/google_tag_manager/analytics.html' %}
         <title>foKUs{% block htmltitle %}{% endblock %}</title>
-
         <!-- Bootstrap -->
         <link href="{% static 'thirdparty/bootstrap/dist/css/bootstrap.min.css' %}" rel="stylesheet">
 
@@ -29,9 +29,9 @@
 
         <script type="text/javascript" src="/jsi18n/"></script>
         <link href="{% static 'img/favicon.ico' %}" rel="shortcut icon">
-
     </head>
     <body class="lightbox">
+        {% include 'common/google_tag_manager/noscript.html' %}
 
         {% block header %}
         {% endblock %}

@@ -11,34 +11,7 @@
 {% endblock %}
 
 {% block head %}
-<style type="text/css">
-    table.ressource-kalender div.marker-container {
-        height: 12em;
-        position: relative;
-    }
-    table.ressource-kalender div.marker {
-        padding: 0 0.5em 0 0.5em;
-        overflow: hidden;
-        position: absolute;
-        width: 100%;
-    }
-    table.ressource-kalender div.marker:hover {
-        height: 100% !important;
-    }
-    table.ressource-kalender div.marker a {
-        color: white;
-    }
-    table.ressource-kalender div.marker.available {
-        background-color: #669966;
-    }
-    table.ressource-kalender div.marker.unavailable {
-        z-index: 10;
-        background-color: #cc3333;
-    }
-    table.ressource-kalender td:not([colspan]) {
-        width: 14.25%;
-    }
-</style>
+<link rel="stylesheet" type="text/css" href="{% static 'css/calendar.css' %}"/>
 {% endblock %}
 
 
@@ -49,21 +22,27 @@
     <div class="row">
         <h1 class="col-sm-6">
             {% if itemname %}
-                {% blocktrans with itemname=itemname %}Kalender for {{ itemname }}{% endblocktrans %}
+                {% if reference %}
+                    {% blocktrans with itemname=itemname reference=reference %}Kalender for <a href="{{ reference }}">{{ itemname }}</a>{% endblocktrans %}
+                {% else %}
+                    {% blocktrans with itemname=itemname %}Kalender for {{ itemname }}{% endblocktrans %}
+                {% endif %}
             {% else %}
                 {% trans "Kalender" %}
             {% endif %}
         </h1>
         <p class="col-sm-6 text-right">
             {% if object.resource %}
-            <a href="{% url 'resource-view' object.resource.id %}" role="button" class="btn btn-primary">{% trans 'Gå til ressource' %}</a>
+                <a href="{% url 'resource-view' object.resource.id %}" role="button" class="btn btn-primary">{% trans 'Gå til ressource' %}</a>
             {% elif object.product %}
-            <a href="{% url 'product-view' object.product.id %}" role="button" class="btn btn-primary margin-top-10-mobile">{% trans 'Gå til tilbud' %}</a>
+                <a href="{% url 'product-view' object.product.id %}" role="button" class="btn btn-primary margin-top-10-mobile">{% trans 'Gå til tilbud' %}</a>
             {% endif %}
-            <a href="{% url reverses.calendar_event_create view.rel_obj.pk %}" role="button" class="btn btn-primary margin-top-10-mobile">
-                <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
-                {% trans 'Opret tid i kalender' %}
-            </a>
+            {% if reverses.calendar_event_create %}
+                <a href="{% url reverses.calendar_event_create view.rel_obj.pk %}" role="button" class="btn btn-primary margin-top-10-mobile">
+                    <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                    {% trans 'Opret tid i kalender' %}
+                </a>
+            {% endif %}
         </p>
     </div>
 
@@ -78,10 +57,22 @@
             <ul>
                 {% for event in available %}
                     <li>
-                        <a href="{% url reverses.calendar_event_edit view.rel_obj.pk event.pk %}">{{ event.title }}</a>
+                        {% if reverses.calendar_event_edit %}
+                            <a href="{% url reverses.calendar_event_edit view.rel_obj.pk event.pk %}">
+                                {% if object.combined %}{{ event.calendar.resource.subclass_instance.get_name|suffix:":" }}{% endif %}
+                                {{ event.title }}
+                            </a>
+                        {% else %}
+                            {% if object.combined %}{{ event.calendar.resource.subclass_instance.get_name|suffix:":" }}{% endif %}
+                            {{ event.title }}
+                        {% endif %}
                         {{ event.interval_display }}
-                        {% if event.recurrences %}{% trans "(med gentagelser)" %}{% endif %}
-                        <a href="{% url reverses.calendar_event_delete view.rel_obj.pk event.pk %}"><span class="glyphicon glyphicon-remove"></span></a>
+                        {% if event.recurrences %}
+                            {% trans "(med gentagelser)" %}
+                        {% endif %}
+                        {% if reverses.calendar_event_delete %}
+                            <a href="{% url reverses.calendar_event_delete view.rel_obj.pk event.pk %}"><span class="glyphicon glyphicon-remove"></span></a>
+                        {% endif %}
                     </li>
                 {% endfor %}
             </ul>
@@ -90,9 +81,19 @@
             <ul>
                 {% for event in unavailable %}
                     <li>
-                        <a href="{% url reverses.calendar_event_edit view.rel_obj.pk event.pk %}">{{ event.title }}</a>
+                        {% if reverses.calendar_event_edit %}
+                            <a href="{% url reverses.calendar_event_edit view.rel_obj.pk event.pk %}">
+                                {% if object.combined %}{{ event.calendar.resource.subclass_instance.get_name|suffix:":" }}{% endif %}
+                                {{ event.title }}
+                            </a>
+                        {% else %}
+                            {% if object.combined %}{{ event.calendar.resource.subclass_instance.get_name|suffix:":" }}{% endif %}
+                            {{ event.title }}
+                        {% endif %}
                         {{ event.interval_display }}
-                        <a href="{% url reverses.calendar_event_delete view.rel_obj.pk event.pk %}"><span class="glyphicon glyphicon-remove"></span></a>
+                        {% if reverses.calendar_event_delete %}
+                            <a href="{% url reverses.calendar_event_delete view.rel_obj.pk event.pk %}"><span class="glyphicon glyphicon-remove"></span></a>
+                        {% endif %}
                     </li>
                 {% endfor %}
             </ul>
@@ -142,10 +143,16 @@
                             {{ day.date.day }}.
                             <div class="marker-container">
                                 {% for marker in day.events %}
-                                <div class="marker {{ marker.available_class }}" style="top: {{ marker.top_offset }}em; height: {{ marker.height }}em;">
+
+                                    {{ marker.calendar }}
+
+                                <div class="marker {{ marker.available_class }}" style="top: {{ marker.top_offset }}em; height: {{ marker.height }}em;" title="{{ marker.time_interval }}: {{ marker.event.source.calender_event_title }}">
                                     <a href="{{ marker.event.source.calendar_event_link }}">
                                         <div>{{ marker.time_interval }}</div>
-                                        <div>{{ marker.event.source.calender_event_title }}</div>
+                                        <div>
+                                            {% if object.combined %}{{ marker.event.source.calendar.resource.subclass_instance.get_name|suffix:":" }}{% endif %}
+                                            {{ marker.event.source.calender_event_title }}
+                                        </div>
                                     </a>
                                 </div>
                                 {% endfor %}
@@ -158,14 +165,16 @@
             </table>
         </div>
     </div>
-    <div class="row">
-        <div class="col-md-12">
-            <a href="{% url reverses.calendar_delete view.rel_obj.pk %}" role="button" class="btn btn-danger pull-right">{% trans 'Slet denne kalender' %}</a>
+    {% if reverses.calendar_delete %}
+        <div class="row">
+            <div class="col-md-12">
+                <a href="{% url reverses.calendar_delete view.rel_obj.pk %}" role="button" class="btn btn-danger pull-right">{% trans 'Slet denne kalender' %}</a>
+            </div>
         </div>
-    </div>
-    <div class="divider"></div>
+    {% endif %}
 
 {% endblock %}
 
 {% block extra_scripts %}
+    <script type="text/javascript" src="{% static 'js/calendar.js' %}"></script>
 {% endblock %}
