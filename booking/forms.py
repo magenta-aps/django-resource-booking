@@ -19,7 +19,7 @@ from booking.models import BLANK_LABEL, BLANK_OPTION
 from booking.models import ClassBooking, TeacherBooking, \
     BookingGymnasieSubjectLevel
 from booking.models import EmailTemplate, EmailTemplateType
-from booking.models import SurveyXactEvaluation
+from booking.models import SurveyXactEvaluation, SurveyXactEvaluationGuest
 from booking.models import Guest, Region, PostCode, School
 from booking.models import Locality, OrganizationalUnitType, OrganizationalUnit
 from booking.models import MultiProductVisitTemp, MultiProductVisitTempProduct
@@ -1928,6 +1928,12 @@ class MultiProductVisitTempProductsForm(forms.ModelForm):
 
 class EvaluationForm(forms.ModelForm):
 
+    # nonparticipating_guests = ModelMultipleChoiceField(
+    #     queryset=Guest.objects.all(),
+    #     required=False,
+    #     label=_(u'Deltagere uden spørgeskema')
+    # )
+
     class Meta:
         model = SurveyXactEvaluation
         fields = ['surveyId', 'for_students', 'for_teachers']
@@ -1937,8 +1943,17 @@ class EvaluationForm(forms.ModelForm):
             'for_teachers': HiddenInput()
         }
 
-    def __init__(self, product, *args, **kwargs):
-        self.product = product
+    def __init__(self, visit, *args, **kwargs):
+        self.instance = kwargs.get('instance')
+        self.visit = visit
+        if self.instance:
+            kwargs['initial']['nonparticipating_guests'] = [
+                evaluationguest.guest
+                for evaluationguest
+                in self.instance.evaluationguest_set.filter(
+                    status=SurveyXactEvaluationGuest.STATUS_NO_PARTICIPATION
+                )
+            ]
         super(EvaluationForm, self).__init__(*args, **kwargs)
 
     def get_queryset(self):
@@ -1947,6 +1962,25 @@ class EvaluationForm(forms.ModelForm):
     def save(self, commit=True):
         self.instance.product = self.product
         super(EvaluationForm, self).save(commit)
+        existing_guests = {
+            evalguest.guest: evalguest
+            for evalguest in self.instance.evaluationguest_set.all()
+        }
+        for booking in self.visit.booking_list:
+            guest = booking.booker
+            status = SurveyXactEvaluationGuest.STATUS_NO_PARTICIPATION
+            if guest not in self.cleaned_data['nonparticipating_guests']:
+                status = SurveyXactEvaluationGuest.STATUS_NOT_SENT
+            if guest in existing_guests:
+                evalguest = existing_guests[guest]
+                evalguest.status = status
+            else:
+                evalguest = SurveyXactEvaluationGuest(
+                    evaluation=self.instance,
+                    guest=guest,
+                    status=status
+                )
+            evalguest.save()
         return self.instance
 
 

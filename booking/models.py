@@ -2053,13 +2053,6 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         verbose_name=_(u'"Spørg om tilbud" aktiveret')
     )
 
-    evaluation_link = models.CharField(
-        max_length=1024,
-        verbose_name=_(u'Link til evaluering'),
-        blank=True,
-        default='',
-    )
-
     @property
     def student_evaluation(self):
         return self.surveyxactevaluation_set.filter(for_students=True).first()
@@ -6021,6 +6014,7 @@ class SurveyXactEvaluation(models.Model):
         Guest,
         through='SurveyXactEvaluationGuest'
     )
+
     product = models.ForeignKey(
         Product,
         on_delete=models.CASCADE,
@@ -6181,11 +6175,10 @@ class SurveyXactEvaluationGuest(models.Model):
             template = EmailTemplateType.notify_guest__evaluation_second
             new_status = SurveyXactEvaluationGuest.STATUS_SECOND_SENT
 
-        sent = self.guest.booking.autosend(template)
+        sent = self.booking.autosend(template)
         if sent:
             self.status = new_status
             self.save()
-
 
 class Guide(models.Model):
     value = models.IntegerField(
