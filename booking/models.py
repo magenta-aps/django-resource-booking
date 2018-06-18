@@ -5991,8 +5991,12 @@ class SurveyXactEvaluation(models.Model):
     for_students = models.BooleanField()
     for_teachers = models.BooleanField()
 
+    @property
+    def evaluationguests(self):
+        return self.surveyxactevaluationguest_set.all()
+
     def send_notification(self, template_type, new_status, filter=None):
-        qs = self.evaluationguest_set.all()
+        qs = self.evaluationguests
         if filter is not None:
             qs = qs.filter(**filter)
         for evalguest in qs:

@@ -15,9 +15,16 @@
         {% csrf_token %}
         {{ form.non_field_errors }}
         <table class="table">
-            <tr><td>
-                {% include 'common/fields/generic_field.html' with field=form.surveyId %}
-            </td></tr>
+            <tr>
+                <td>
+                    {% include 'common/fields/generic_field.html' with field=form.surveyId %}
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    {% include 'common/fields/generic_field.html' with field=form.nonparticipating_guests %}
+                </td>
+            </tr>
         </table>
         {{ form.for_students }}
         {{ form.for_teachers }}

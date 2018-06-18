@@ -6,7 +6,8 @@ from django import forms
 from django.core import validators
 from django.db.models import Q
 from django.db.models.expressions import OrderBy
-from django.forms import CheckboxSelectMultiple, CheckboxInput
+from django.forms import CheckboxSelectMultiple, CheckboxInput, \
+    ModelMultipleChoiceField
 from django.forms import EmailInput
 from django.forms import HiddenInput
 from django.forms import TextInput, NumberInput, DateInput, Textarea, Select
@@ -1928,11 +1929,11 @@ class MultiProductVisitTempProductsForm(forms.ModelForm):
 
 class EvaluationForm(forms.ModelForm):
 
-    # nonparticipating_guests = ModelMultipleChoiceField(
-    #     queryset=Guest.objects.all(),
-    #     required=False,
-    #     label=_(u'Deltagere uden spørgeskema')
-    # )
+    nonparticipating_guests = ModelMultipleChoiceField(
+        queryset=Guest.objects.all(),
+        required=False,
+        label=_(u'Deltagere uden spørgeskema')
+    )
 
     class Meta:
         model = SurveyXactEvaluation
@@ -1943,14 +1944,13 @@ class EvaluationForm(forms.ModelForm):
             'for_teachers': HiddenInput()
         }
 
-    def __init__(self, visit, *args, **kwargs):
+    def __init__(self, product, *args, **kwargs):
         self.instance = kwargs.get('instance')
-        self.visit = visit
+        self.product = product
         if self.instance:
             kwargs['initial']['nonparticipating_guests'] = [
                 evaluationguest.guest
-                for evaluationguest
-                in self.instance.evaluationguest_set.filter(
+                for evaluationguest in self.instance.evaluationguests.filter(
                     status=SurveyXactEvaluationGuest.STATUS_NO_PARTICIPATION
                 )
             ]

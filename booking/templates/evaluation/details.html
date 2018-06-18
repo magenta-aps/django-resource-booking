@@ -51,6 +51,7 @@
                             <table class="table">
                                 <thead>
                                 <tr>
+                                    <th>ID</th>
                                     <th>{% trans 'Navn' %}</th>
                                     <th>{% trans 'E-mail' %}</th>
                                     <th>{% trans 'Status' %}</th>
@@ -61,6 +62,7 @@
                                 <tbody>
                                 {% for participant in object.surveyxactevaluationguest_set.all %}
                                     <tr>
+                                        <td>{{ participant.id }}</td>
                                         <td>{{ participant.guest.get_name }}</td>
                                         <td>{{ participant.guest.get_email }}</td>
                                         <td>{{ participant.status_display }}</td>
