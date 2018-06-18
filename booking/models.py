@@ -1,4 +1,15 @@
 # encoding: utf-8
+import math
+import random
+import sys
+import uuid
+from datetime import timedelta, datetime, date, time
+
+import djorm_pgfulltext.fields
+from django.contrib.admin.models import LogEntry
+from django.contrib.auth.models import User
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.core import validators
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMultiAlternatives
@@ -27,6 +38,8 @@ from django.template.base import Template, VariableNode
 from django.template.loader import get_template
 from django.template.loader_tags import IncludeNode
 
+from booking.constants import LOGACTION_MAIL_SENT
+from booking.logging import log_action
 from booking.mixins import AvailabilityUpdaterMixin
 from booking.utils import ClassProperty, full_email, CustomStorage, html2text
 from booking.utils import get_related_content_types, INFINITY, merge_dicts
@@ -48,57 +61,6 @@ import sys
 
 BLANK_LABEL = '---------'
 BLANK_OPTION = (None, BLANK_LABEL,)
-
-LOGACTION_CREATE = ADDITION
-LOGACTION_CHANGE = CHANGE
-LOGACTION_DELETE = DELETION
-# If we need to add additional values make sure they do not conflict with
-# system defined ones by adding 128 to the value.
-LOGACTION_MAIL_SENT = 128 + 1
-LOGACTION_CUSTOM2 = 128 + 2
-LOGACTION_MANUAL_ENTRY = 128 + 64 + 1
-
-LOGACTION_DISPLAY_MAP = {
-    LOGACTION_CREATE: _(u'Oprettet'),
-    LOGACTION_CHANGE: _(u'Ændret'),
-    LOGACTION_DELETE: _(u'Slettet'),
-    LOGACTION_MAIL_SENT: _(u'Mail sendt'),
-    LOGACTION_MANUAL_ENTRY: _(u'Log-post tilføjet manuelt')
-}
-
-
-def log_action(user, obj, action_flag, change_message=''):
-    if user and hasattr(user, "pk") and user.pk:
-        user_id = user.pk
-    else:
-        # Late import due to mutual import conflicts
-        from profile.models import get_public_web_user  # noqa
-        pw_user = get_public_web_user()
-        user_id = pw_user.pk
-
-    content_type_id = None
-    object_id = None
-    object_repr = ""
-    if obj:
-        ctype = ContentType.objects.get_for_model(obj)
-        content_type_id = ctype.pk
-        try:
-            object_id = obj.pk
-        except:
-            pass
-        try:
-            object_repr = unicode(obj)
-        except:
-            pass
-
-    LogEntry.objects.log_action(
-        user_id,
-        content_type_id,
-        object_id,
-        object_repr,
-        action_flag,
-        change_message
-    )
 
 
 class VectorField(djorm_pgfulltext.fields.VectorField):
