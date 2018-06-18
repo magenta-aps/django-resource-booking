@@ -7,11 +7,12 @@
 <!DOCTYPE html>
 <html lang="da">
     <head>
-        {% include 'google_analytics.html' %}
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+        {% include 'common/google_tag_manager/script.html' %}
+        {% include 'common/google_tag_manager/analytics.html' %}
         <title>FOKUS{% block htmltitle %} - {% trans 'søg i tilbud' %}{% endblock %}</title>
         {% if not view.kwargs.embed %}
             <!-- 3rd party stylesheets -->
@@ -34,6 +35,7 @@
         {% endif %}
     </head>
     <body class="{% if view.kwargs.embed %}embedded{% endif %}">
+    {% include 'common/google_tag_manager/noscript.html' %}
     {% if view.kwargs.embed %}
         <!-- 3rd party stylesheets -->
         <link href="{% static 'thirdparty/bootstrap/dist/css/bootstrap.min.css' %}" rel="stylesheet"/>
@@ -55,21 +57,23 @@
         <nav class="navbar navbar-default">
             <div class="container">
                 <div class="navbar-header">
-                    <a class="navbar-brand" href="http://www.ku.dk/" title="{% trans 'Københavns Universitet' %}"><img src="https://cms.secure.ku.dk/grafik/globalmenu/navnetraek_DK_neg.svg" alt="Københavns Universitet"></a>
+                    <a class="navbar-brand" href="http://www.ku.dk/" title="{% trans 'Københavns Universitet' %}" onclick="recordFooterClick('Københavns Universitet')">
+                        <img src="https://cms.secure.ku.dk/grafik/globalmenu/navnetraek_DK_neg.svg" alt="Københavns Universitet">
+                    </a>
                 </div>
                 <div id="navbar" class="navbar-collapse collapse">
                     <ul class="nav navbar-nav navbar-right">
                       {% if user.is_authenticated %}
-                        <li class="login"><a href="{% url 'logout' %}">{% trans 'Log ud' %}</a></li>
+                        <li class="login"><a href="{% url 'logout' %}" onclick="recordFooterClick('Log ud')">{% trans 'Log ud' %}</a></li>
                         {% else %}
-                        <li class="login"><a href="{% url 'standard_login' %}">{% trans 'Log ind' %}</a></li>
+                        <li class="login"><a href="{% url 'standard_login' %}" onclick="recordFooterClick('Log ind')">{% trans 'Log ind' %}</a></li>
                       {% endif %}
-                        <li><a href="http://kalender.ku.dk">{% trans 'Kalender' %}</a></li>
-                        <li><a href="http://findvej.ku.dk">{% trans 'Find vej' %}</a></li>
-                        <li><a href="http://www.ku.dk/vejviser/">{% trans 'Telefonbog' %}</a></li>
-                        <li><a href="http://jobportal.ku.dk/">{% trans 'Job' %}</a></li>
-                        <li><a href="http://velkommen.ku.dk/indeks/">{% trans 'A-Å-indeks' %}</a></li>
-                        <li><a href="https://intranet.ku.dk/">{% trans 'KUnet' %}</a></li>
+                        <li><a href="http://kalender.ku.dk" onclick="recordFooterClick('Kalender')">{% trans 'Kalender' %}</a></li>
+                        <li><a href="http://findvej.ku.dk" onclick="recordFooterClick('Find vej')">{% trans 'Find vej' %}</a></li>
+                        <li><a href="http://www.ku.dk/vejviser/" onclick="recordFooterClick('Telefonbog')">{% trans 'Telefonbog' %}</a></li>
+                        <li><a href="http://jobportal.ku.dk/" onclick="recordFooterClick('Job')">{% trans 'Job' %}</a></li>
+                        <li><a href="http://velkommen.ku.dk/indeks/" onclick="recordFooterClick('A-Å-indeks')">{% trans 'A-Å-indeks' %}</a></li>
+                        <li><a href="https://intranet.ku.dk/" onclick="recordFooterClick('KUnet')">{% trans 'KUnet' %}</a></li>
                     </ul>
                 </div>
             </div>
@@ -141,88 +145,88 @@
               <h3 data-heading="toggle" class="footer-heading hidden-xs">Københavns Universitet</h3>
               <h3 data-heading="toggle" class="footer-heading visible-xs-block">Organisation</h3>
               <ul class="footerlinks" role="menu">
-                <li role="menuitem"><a href="http://velkommen.ku.dk/organisation/ledelse">Ledelse</a></li>
-                <li role="menuitem"><a href="http://velkommen.ku.dk/organisation/administration">Administration</a></li>
-                <li role="menuitem"><a href="http://velkommen.ku.dk/organisation/fakulteter">Fakulteter</a></li>
-                <li role="menuitem"><a href="http://velkommen.ku.dk/organisation/institutter">Institutter</a></li>
-                <li role="menuitem"><a href="http://forskning.ku.dk/centre">Forskningscentre</a></li>
-                <li role="menuitem"><a href="http://vetschool.ku.dk/om/VetOmDyrehospitaler">Dyrehospitaler</a></li>
-                <li role="menuitem"><a href="http://odont.ku.dk/for_patienter">Tandlægeskolen</a></li>
-                <li role="menuitem"><a href="http://kubis.ku.dk">Biblioteker</a></li>
-                <li role="menuitem"><a href="http://velkommen.ku.dk/besoeg/museer">Museer</a></li>
+                <li role="menuitem"><a href="http://velkommen.ku.dk/organisation/ledelse" onclick="recordFooterClick('Ledelse')">Ledelse</a></li>
+                <li role="menuitem"><a href="http://velkommen.ku.dk/organisation/administration" onclick="recordFooterClick('Administration')">Administration</a></li>
+                <li role="menuitem"><a href="http://velkommen.ku.dk/organisation/fakulteter" onclick="recordFooterClick('Fakulteter')">Fakulteter</a></li>
+                <li role="menuitem"><a href="http://velkommen.ku.dk/organisation/institutter" onclick="recordFooterClick('Institutter')">Institutter</a></li>
+                <li role="menuitem"><a href="http://forskning.ku.dk/centre" onclick="recordFooterClick('Forskningscentre')">Forskningscentre</a></li>
+                <li role="menuitem"><a href="http://vetschool.ku.dk/om/VetOmDyrehospitaler" onclick="recordFooterClick('Dyrehospitaler')">Dyrehospitaler</a></li>
+                <li role="menuitem"><a href="http://odont.ku.dk/for_patienter" onclick="recordFooterClick('Tandlægeskolen')">Tandlægeskolen</a></li>
+                <li role="menuitem"><a href="http://kubis.ku.dk" onclick="recordFooterClick('Biblioteker')">Biblioteker</a></li>
+                <li role="menuitem"><a href="http://velkommen.ku.dk/besoeg/museer" onclick="recordFooterClick('Museer')">Museer</a></li>
               </ul>
             </div>
             <div class="col-xs-3 footercolumn">
               <h3 data-heading="toggle" class="footer-heading">Kontakt</h3>
               <ul class="footerlinks" role="menu">
-                <li role="menuitem"><a href="http://findvej.ku.dk">Find vej</a></li>
-                <li role="menuitem"><a href="http://ku.dk/vejviser">Find en medarbejder</a></li>
-                <li role="menuitem"><a href="http://velkommen.ku.dk/kontakt">Kontakt KU</a></li>
+                <li role="menuitem"><a href="http://findvej.ku.dk" onclick="recordFooterClick('Find vej')">Find vej</a></li>
+                <li role="menuitem"><a href="http://ku.dk/vejviser" onclick="recordFooterClick('Find en medarbejder')">Find en medarbejder</a></li>
+                <li role="menuitem"><a href="http://velkommen.ku.dk/kontakt" onclick="recordFooterClick('Kontakt KU')">Kontakt KU</a></li>
               </ul>
               <h3 data-heading="toggle" class="footer-heading">Services</h3>
               <ul class="footerlinks" role="menu">
-                <li role="menuitem"><a href="http://nyheder.ku.dk/presseservice">Presseservice</a></li>
-                <li role="menuitem"><a href="http://designguide.ku.dk">Designguide</a></li>
-                <li role="menuitem"><a href="http://ku-shop.dk">Merchandise</a></li>
-                <li role="menuitem"><a href="http://it.ku.dk/kontakt/support_KU">IT-support</a></li>
-                <li role="menuitem"><a href="http://oko.ku.dk">CVR, EAN og bankoplysninger</a></li>
+                <li role="menuitem"><a href="http://nyheder.ku.dk/presseservice" onclick="recordFooterClick('Presseservice')">Presseservice</a></li>
+                <li role="menuitem"><a href="http://designguide.ku.dk" onclick="recordFooterClick('Designguide')">Designguide</a></li>
+                <li role="menuitem"><a href="http://ku-shop.dk" onclick="recordFooterClick('Merchandise')">Merchandise</a></li>
+                <li role="menuitem"><a href="http://it.ku.dk/kontakt/support_KU" onclick="recordFooterClick('IT-support')">IT-support</a></li>
+                <li role="menuitem"><a href="http://oko.ku.dk" onclick="recordFooterClick('CVR, EAN og bankoplysninger')">CVR, EAN og bankoplysninger</a></li>
               </ul>
             </div>
             <div class="col-xs-3 footercolumn">
               <h3 data-heading="toggle" class="footer-heading">For studerende og ansatte</h3>
               <ul class="footerlinks" role="menu">
-                <li role="menuitem"><a class="padlock" href="http://intranet.ku.dk">KUnet</a></li>
+                <li role="menuitem"><a class="padlock" href="http://intranet.ku.dk" onclick="recordFooterClick('KUnet')">KUnet</a></li>
               </ul>
               <h3 data-heading="toggle" class="footer-heading">Job og karriere</h3>
               <ul class="footerlinks" role="menu">
-                <li role="menuitem"><a href="http://jobportal.ku.dk">Jobportalen</a></li>
-                <li role="menuitem"><a href="http://mangfoldighed.ku.dk">Mangfoldighed</a></li>
-                <li role="menuitem"><a href="http://alumni.ku.dk">Alumne</a></li>
+                <li role="menuitem"><a href="http://jobportal.ku.dk" onclick="recordFooterClick('Jobportalen')">Jobportalen</a></li>
+                <li role="menuitem"><a href="http://mangfoldighed.ku.dk" onclick="recordFooterClick('Mangfoldighed')">Mangfoldighed</a></li>
+                <li role="menuitem"><a href="http://alumni.ku.dk" onclick="recordFooterClick('Alumne')">Alumne</a></li>
               </ul>
               <h3 data-heading="toggle" class="footer-heading">Nødsituationer</h3>
               <ul class="footerlinks">
-                <li role="menuitem"><a href="http://akut.ku.dk">KU's sikkerhedsberedskab</a></li>
+                <li role="menuitem"><a href="http://akut.ku.dk" onclick="recordFooterClick('KU\'s sikkerhedsberedskab')">KU's sikkerhedsberedskab</a></li>
               </ul>
             </div>
             <div class="col-xs-3 footercolumn">
               <h3 data-heading="toggle" class="footer-heading">Web</h3>
               <ul class="footerlinks" role="menu">
-                <li role="menuitem"><a href="http://velkommen.ku.dk/om-webstedet">Om websitet</a></li>
-                <li role="menuitem"><a href="http://velkommen.ku.dk/om-webstedet/cookie-og-privatlivspolitik">Cookies og privatlivspolitik</a></li>
-                <li role="menuitem"><a href="http://informationssikkerhed.ku.dk">Informationssikkerhed</a></li>
-                <li><a href="http://velkommen.ku.dk/indeks">A-Å-indeks</a></li>
+                <li role="menuitem"><a href="http://velkommen.ku.dk/om-webstedet" onclick="recordFooterClick('Om websitet')">Om websitet</a></li>
+                <li role="menuitem"><a href="http://velkommen.ku.dk/om-webstedet/cookie-og-privatlivspolitik" onclick="recordFooterClick('Cookies og privatlivspolitik')">Cookies og privatlivspolitik</a></li>
+                <li role="menuitem"><a href="http://informationssikkerhed.ku.dk" onclick="recordFooterClick('Informationssikkerhed')">Informationssikkerhed</a></li>
+                <li><a href="http://velkommen.ku.dk/indeks" onclick="recordFooterClick('A-Å-indeks')">A-Å-indeks</a></li>
               </ul>
               <div class="social-items">
                 <h3 data-heading="open" class="footer-heading">Mød KU på</h3>
                 <div class="social-item">
-                  <a target="_blank" href="https://www.facebook.com/universitet" class="social-icon facebook" title="Facebook"></a>
+                  <a target="_blank" href="https://www.facebook.com/universitet" class="social-icon facebook" title="Facebook" onclick="recordFooterClick('Facebook')"></a>
                 </div>
                 <div class="social-item">
-                  <a target="_blank" href="https://www.linkedin.com/edu/k%C3%B8benhavns-universitet-12012" class="social-icon linkedin" title="LinkedIn"></a>
+                  <a target="_blank" href="https://www.linkedin.com/edu/k%C3%B8benhavns-universitet-12012" class="social-icon linkedin" title="LinkedIn" onclick="recordFooterClick('LinkedIn')"></a>
                 </div>
                 <div class="social-item">
-                    <a target="_blank" href="https://www.instagram.com/university_of_copenhagen/" class="social-icon instagram icon icon-phone" title="Instagram" onclick="_gaq.push(['mainTracker._trackEvent', 'Footer-dk', 'klik', 'Instagram']);"></a>
+                    <a target="_blank" href="https://www.instagram.com/university_of_copenhagen/" class="social-icon instagram icon icon-phone" title="Instagram" onclick="_gaq.push(['mainTracker._trackEvent', 'Footer-dk', 'klik', 'Instagram']);recordFooterClick('Instagram')"></a>
                 </div>
                 <div class="social-item">
-                  <a target="_blank" href="https://twitter.com/koebenhavns_uni" class="social-icon twitter" title="Twitter"></a>
+                  <a target="_blank" href="https://twitter.com/koebenhavns_uni" class="social-icon twitter" title="Twitter" onclick="recordFooterClick('Twitter')"></a>
                 </div>
                 <div class="social-item">
-                  <a target="_blank" href="http://video.ku.dk" class="social-icon ku_video" title="KU Videoportal"></a>
+                  <a target="_blank" href="http://video.ku.dk" class="social-icon ku_video" title="KU Videoportal" onclick="recordFooterClick('KU Videoportal')"></a>
                 </div>
                 <div class="social-item">
-                  <a target="_blank" href="http://velkommen.ku.dk/apps" class="social-icon app" title="KU Apps"></a>
+                  <a target="_blank" href="http://velkommen.ku.dk/apps" class="social-icon app" title="KU Apps" onclick="recordFooterClick('KU Apps')"></a>
                 </div>
                 <div class="social-item">
-                  <a target="_blank" href="https://www.youtube.com/user/CopenhagenUniversity" class="social-icon youtube" title="YouTube"></a>
+                  <a target="_blank" href="https://www.youtube.com/user/CopenhagenUniversity" class="social-icon youtube" title="YouTube" onclick="recordFooterClick('YouTube')"></a>
                 </div>
                 <div class="social-item">
-                  <a target="_blank" href="http://www.futurity.org/university/university-of-copenhagen" class="social-icon futurity" title="futurity"></a>
+                  <a target="_blank" href="http://www.futurity.org/university/university-of-copenhagen" class="social-icon futurity" title="futurity" onclick="recordFooterClick('Futurity')"></a>
                 </div>
                 <div class="social-item">
-                  <a target="_blank" href="http://theconversation.com/institutions/university-of-copenhagen" class="social-icon the_conversation" title="The Conversation"></a>
+                  <a target="_blank" href="http://theconversation.com/institutions/university-of-copenhagen" class="social-icon the_conversation" title="The Conversation" onclick="recordFooterClick('The Conversation')"></a>
                 </div>
                 <div class="social-item">
-                  <a target="_blank" href="https://www.coursera.org/ucph" class="social-icon coursera" title="Coursera"></a>
+                  <a target="_blank" href="https://www.coursera.org/ucph" class="social-icon coursera" title="Coursera" onclick="recordFooterClick('Coursera')"></a>
                 </div>
               </div>
             </div>

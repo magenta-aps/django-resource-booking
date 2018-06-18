@@ -10,7 +10,8 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
 from timedelta.helpers import parse, nice_repr
-from booking.models import LOGACTION_DISPLAY_MAP, Guest, BookerResponseNonce
+from booking.models import Guest, BookerResponseNonce
+from booking.constants import LOGACTION_DISPLAY_MAP
 from profile.models import EmailLoginURL, UserProfile
 import datetime
 import re
@@ -157,6 +158,13 @@ def get(obj, key):
 @register.filter
 def gte(a, b):
     return a >= b
+
+
+@register.filter
+def suffix(obj, suffix):
+    if obj is None or len(obj) == 0:
+        return obj
+    return "%s%s" % (obj, suffix)
 
 
 class FullURLNode(defaulttags.Node):

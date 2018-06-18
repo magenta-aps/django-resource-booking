@@ -1885,9 +1885,6 @@ body.lightbox {
   margin: .5em .3em 0 0;
 }
 
-
-/* MultiProductVisit END */
-
 .cke_dialog_ui_file .cke_dialog_ui_input_file {
   height: 2.5em;
 }
@@ -2340,4 +2337,17 @@ body.lightbox {
 .ku-filters {
   color: #252525;
   font-weight: 400;
+}
+
+ul.product-time-list {
+  padding-left: 1.1em;
+}
+
+.product-time-availability {
+  display: block;
+  font-size: smaller;
+}
+
+li#product-time-list-expand {
+  list-style-type: none;
 }

@@ -19,7 +19,8 @@ from booking.models import OrganizationalUnit, Product, Visit
 from booking.utils import get_related_content_types, full_email
 
 # User roles
-from profile.constants import TEACHER, HOST, COORDINATOR, ADMINISTRATOR
+from profile.constants import TEACHER, HOST, COORDINATOR, ADMINISTRATOR, \
+    role_to_text
 from profile.constants import FACULTY_EDITOR, NONE
 from profile.constants import EDIT_ROLES, user_role_choices, available_roles
 
@@ -54,14 +55,6 @@ def get_public_web_user():
         profile.save()
 
     return user
-
-
-def role_to_text(role):
-    """Return text representation of role code."""
-    for r, t in user_role_choices:
-        if r == role:
-            return unicode(t)
-    return ""
 
 
 class AbsDateDist(Aggregate):
