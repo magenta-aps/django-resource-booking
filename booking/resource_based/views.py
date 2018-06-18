@@ -1,34 +1,35 @@
 # encoding: utf-8
 
-import booking.constants
-import booking.logging
-import booking.mixins
-
 import datetime
+from itertools import chain
+
 from django.core.urlresolvers import reverse, reverse_lazy
+from django.forms import models as forms_models
+from django.forms.widgets import TextInput, HiddenInput, Select
 from django.http import Http404
 from django.shortcuts import redirect
 from django.utils import timezone
 from django.utils.translation import ugettext as _
-from django.views.generic import TemplateView, ListView, DetailView
 from django.views.generic import RedirectView
+from django.views.generic import TemplateView, ListView, DetailView
 from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic.edit import FormView, DeleteView
-from django.forms import models as forms_models
-from django.forms.widgets import TextInput, HiddenInput, Select
 
+import booking.constants
+import booking.logging
 import booking.models as booking_models
+import booking.resource_based.forms as rb_forms
+from booking.mixins import BackMixin
 from booking.mixins import BreadcrumbMixin
-from booking.resource_based.models import Resource, ResourceType
-from booking.resource_based.models import ItemResource, RoomResource
-from booking.resource_based.models import TeacherResource, HostResource
-from booking.resource_based.models import VehicleResource
+from booking.mixins import EditorRequriedMixin
+from booking.mixins import LoginRequiredMixin
 from booking.resource_based.models import CustomResource
+from booking.resource_based.models import ItemResource, RoomResource
+from booking.resource_based.models import Resource, ResourceType
 from booking.resource_based.models import ResourcePool
 from booking.resource_based.models import ResourceRequirement
-from itertools import chain
-
-import booking.resource_based.forms as rb_forms
+from booking.resource_based.models import TeacherResource, HostResource
+from booking.resource_based.models import VehicleResource
 
 
 class ManageTimesView(BreadcrumbMixin, DetailView):
@@ -419,8 +420,7 @@ class CancelledVisitsView(DetailView):
     template_name = 'eventtime/cancelled_visits.html'
 
 
-class ResourceCreateView(booking.mixins.BackMixin,
-                         BreadcrumbMixin, booking.mixins.EditorRequriedMixin,
+class ResourceCreateView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
                          FormView):
     template_name = "resource/typeform.html"
     form_class = rb_forms.ResourceTypeForm
@@ -455,7 +455,7 @@ class ResourceCreateView(booking.mixins.BackMixin,
         return breadcrumbs
 
 
-class ResourceDetailView(BreadcrumbMixin, booking.mixins.EditorRequriedMixin, TemplateView):
+class ResourceDetailView(BreadcrumbMixin, EditorRequriedMixin, TemplateView):
     template_name = "resource/details.html"
 
     def dispatch(self, request, *args, **kwargs):
@@ -488,7 +488,7 @@ class ResourceDetailView(BreadcrumbMixin, booking.mixins.EditorRequriedMixin, Te
         return super(ResourceDetailView, self).get_context_data(**context)
 
 
-class ResourceListView(BreadcrumbMixin, booking.mixins.EditorRequriedMixin, ListView):
+class ResourceListView(BreadcrumbMixin, EditorRequriedMixin, ListView):
     model = Resource
     template_name = "resource/list.html"
 
@@ -526,8 +526,7 @@ class ResourceListView(BreadcrumbMixin, booking.mixins.EditorRequriedMixin, List
         }]
 
 
-class ResourceUpdateView(booking.mixins.BackMixin,
-                         BreadcrumbMixin, booking.mixins.EditorRequriedMixin,
+class ResourceUpdateView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
                          UpdateView):
     template_name = "resource/form.html"
     object = None
@@ -619,8 +618,7 @@ class ResourceUpdateView(booking.mixins.BackMixin,
             self.object.created_by = self.request.user
 
 
-class ResourceDeleteView(booking.mixins.BackMixin,
-                         BreadcrumbMixin, booking.mixins.EditorRequriedMixin,
+class ResourceDeleteView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
                          DeleteView):
     success_url = reverse_lazy('resource-list')
     back_on_success = False
@@ -641,9 +639,7 @@ class ResourceDeleteView(booking.mixins.BackMixin,
         return breadcrumbs
 
 
-class ResourcePoolCreateView(booking.mixins.BackMixin,
-                             BreadcrumbMixin,
-                             booking.mixins.EditorRequriedMixin,
+class ResourcePoolCreateView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
                              FormView):
     template_name = "resourcepool/typeform.html"
     form_class = rb_forms.ResourcePoolTypeForm
@@ -680,8 +676,7 @@ class ResourcePoolCreateView(booking.mixins.BackMixin,
         return breadcrumbs
 
 
-class ResourcePoolDetailView(BreadcrumbMixin,
-                             booking.mixins.EditorRequriedMixin, DetailView):
+class ResourcePoolDetailView(BreadcrumbMixin, EditorRequriedMixin, DetailView):
     template_name = "resourcepool/details.html"
     model = ResourcePool
 
@@ -698,7 +693,7 @@ class ResourcePoolDetailView(BreadcrumbMixin,
         return breadcrumbs
 
 
-class ResourcePoolListView(BreadcrumbMixin, booking.mixins.EditorRequriedMixin, ListView):
+class ResourcePoolListView(BreadcrumbMixin, EditorRequriedMixin, ListView):
     model = ResourcePool
     template_name = "resourcepool/list.html"
 
@@ -720,9 +715,7 @@ class ResourcePoolListView(BreadcrumbMixin, booking.mixins.EditorRequriedMixin, 
         }]
 
 
-class ResourcePoolUpdateView(booking.mixins.BackMixin,
-                             BreadcrumbMixin,
-                             booking.mixins.EditorRequriedMixin,
+class ResourcePoolUpdateView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
                              UpdateView):
     template_name = "resourcepool/form.html"
     object = None
@@ -793,7 +786,9 @@ class ResourcePoolUpdateView(booking.mixins.BackMixin,
                     )
                 if 'unit' in self.kwargs:
                     self.object.organizationalunit = \
-                        booking_models.OrganizationalUnit.objects.get(id=self.kwargs['unit'])
+                        booking_models.OrganizationalUnit.objects.get(
+                            id=self.kwargs['unit']
+                        )
             else:
                 try:
                     self.object = ResourcePool.objects.get(pk=pk)
@@ -810,9 +805,7 @@ class ResourcePoolUpdateView(booking.mixins.BackMixin,
             self.object.created_by = self.request.user
 
 
-class ResourcePoolDeleteView(booking.mixins.BackMixin,
-                             BreadcrumbMixin,
-                             booking.mixins.EditorRequriedMixin,
+class ResourcePoolDeleteView(BackMixin, BreadcrumbMixin, EditorRequriedMixin,
                              DeleteView):
     success_url = reverse_lazy('resourcepool-list')
     model = ResourcePool
@@ -915,16 +908,17 @@ class ResourceRequirementConfirmMixin(object):
         return 0
 
 
-class ResourceRequirementCreateView(booking.mixins.BackMixin,
-                                    BreadcrumbMixin,
-                                    booking.mixins.EditorRequriedMixin, CreateView):
+class ResourceRequirementCreateView(BackMixin, BreadcrumbMixin,
+                                    EditorRequriedMixin, CreateView):
     model = ResourceRequirement
     form_class = rb_forms.EditResourceRequirementForm
     just_preserve_back = True
     template_name = 'resourcerequirement/form.html'
 
     def dispatch(self, request, *args, **kwargs):
-        self.product = booking_models.Product.objects.get(id=self.kwargs['product'])
+        self.product = booking_models.Product.objects.get(
+            id=self.kwargs['product']
+        )
         return super(ResourceRequirementCreateView, self).dispatch(
             request, *args, **kwargs
         )
@@ -968,7 +962,9 @@ class ResourceRequirementCreateView(booking.mixins.BackMixin,
 
     @staticmethod
     def build_breadcrumbs(product, request):
-        breadcrumbs = ProductDetailView.build_breadcrumbs(product, request)
+        breadcrumbs = booking.views.ProductDetailView.build_breadcrumbs(
+            product, request
+        )
         breadcrumbs.append({
             'text': _(u'Opret ressourcebehov'),
             'url': reverse('resourcerequirement-create', args=[product.id])
@@ -982,9 +978,8 @@ class ResourceRequirementCreateConfirmView(
     pass
 
 
-class ResourceRequirementUpdateView(booking.mixins.BackMixin,
-                                    BreadcrumbMixin,
-                                    booking.mixins.EditorRequriedMixin, UpdateView):
+class ResourceRequirementUpdateView(BackMixin, BreadcrumbMixin,
+                                    EditorRequriedMixin, UpdateView):
     model = ResourceRequirement
     form_class = rb_forms.EditResourceRequirementForm
     just_preserve_back = True
@@ -1044,7 +1039,7 @@ class ResourceRequirementUpdateView(booking.mixins.BackMixin,
 
     @staticmethod
     def build_breadcrumbs(object, request):
-        breadcrumbs = ProductDetailView.build_breadcrumbs(
+        breadcrumbs = booking.views.ProductDetailView.build_breadcrumbs(
             object.product, request
         )
         breadcrumbs.append({
@@ -1066,14 +1061,15 @@ class ResourceRequirementUpdateConfirmView(
         return visit.resources_assigned(self.object).count()
 
 
-class ResourceRequirementListView(BreadcrumbMixin,
-                                  booking.mixins.EditorRequriedMixin,
+class ResourceRequirementListView(BreadcrumbMixin, EditorRequriedMixin,
                                   ListView):
     model = ResourceRequirement
     template_name = "resourcerequirement/list.html"
 
     def dispatch(self, request, *args, **kwargs):
-        self.product = booking_models.Product.objects.get(id=self.kwargs['product'])
+        self.product = booking_models.Product.objects.get(
+            id=self.kwargs['product']
+        )
         return super(ResourceRequirementListView, self).dispatch(
             request, *args, **kwargs
         )
@@ -1097,7 +1093,9 @@ class ResourceRequirementListView(BreadcrumbMixin,
 
     @staticmethod
     def build_breadcrumbs(product, request):
-        breadcrumbs = ProductDetailView.build_breadcrumbs(product, request)
+        breadcrumbs = booking.views.ProductDetailView.build_breadcrumbs(
+            product, request
+        )
         breadcrumbs.append({
             'text': _(u'Ressourcebehov'),
             'url': reverse(
@@ -1107,9 +1105,8 @@ class ResourceRequirementListView(BreadcrumbMixin,
         return breadcrumbs
 
 
-class ResourceRequirementDeleteView(booking.mixins.BackMixin,
-                                    BreadcrumbMixin,
-                                    booking.mixins.EditorRequriedMixin, DeleteView):
+class ResourceRequirementDeleteView(BackMixin, BreadcrumbMixin,
+                                    EditorRequriedMixin, DeleteView):
     model = ResourceRequirement
     success_url = reverse_lazy('resourcerequirement-list')
     back_on_success = False
@@ -1128,7 +1125,7 @@ class ResourceRequirementDeleteView(booking.mixins.BackMixin,
 
     @staticmethod
     def build_breadcrumbs(object, request):
-        breadcrumbs = ProductDetailView.build_breadcrumbs(
+        breadcrumbs = booking.views.ProductDetailView.build_breadcrumbs(
             object.product, request
         )
         breadcrumbs.append({
@@ -1151,8 +1148,7 @@ class ResourceRequirementDeleteView(booking.mixins.BackMixin,
         return response
 
 
-class VisitResourceEditView(booking.mixins.EditorRequriedMixin,
-                            BreadcrumbMixin, FormView):
+class VisitResourceEditView(EditorRequriedMixin, BreadcrumbMixin, FormView):
     template_name = "visit/resources.html"
     form_class = rb_forms.EditVisitResourcesForm
 
@@ -1261,7 +1257,9 @@ class CalRelatedMixin(object):
     @staticmethod
     def build_breadcrumbs(calendar, object, request, kwargs):
         if isinstance(object, booking_models.Product):
-            return ProductDetailView.build_breadcrumbs(object, request)
+            return booking.views.ProductDetailView.build_breadcrumbs(
+                object, request
+            )
         elif isinstance(object, Resource):
             return ResourceDetailView.build_breadcrumbs(object)
         elif isinstance(object, ResourcePool):
@@ -1270,8 +1268,7 @@ class CalRelatedMixin(object):
 
 
 class CalendarView(
-    booking.mixins.LoginRequiredMixin, CalRelatedMixin,
-    BreadcrumbMixin, DetailView
+    LoginRequiredMixin, CalRelatedMixin, BreadcrumbMixin, DetailView
 ):
     template_name = 'calendar/calendar.html'
     rel_model_class = booking_models.Resource
@@ -1412,7 +1409,7 @@ class CalendarView(
         return breadcrumbs
 
 
-class CalendarCreateView(booking.mixins.LoginRequiredMixin, CalRelatedMixin, RedirectView):
+class CalendarCreateView(LoginRequiredMixin, CalRelatedMixin, RedirectView):
     permanent = False
 
     def get_redirect_url(self, *args, **kwargs):
@@ -1428,8 +1425,7 @@ class CalendarCreateView(booking.mixins.LoginRequiredMixin, CalRelatedMixin, Red
 
 
 class CalendarDeleteView(
-    booking.mixins.LoginRequiredMixin, CalRelatedMixin,
-    BreadcrumbMixin, DeleteView
+    LoginRequiredMixin, CalRelatedMixin, BreadcrumbMixin, DeleteView
 ):
     template_name = 'calendar/delete.html'
 
@@ -1461,8 +1457,7 @@ class CalendarDeleteView(
 
 
 class CalendarEventCreateView(
-    booking.mixins.LoginRequiredMixin, CalRelatedMixin,
-    BreadcrumbMixin, CreateView
+    LoginRequiredMixin, CalRelatedMixin, BreadcrumbMixin, CreateView
 ):
     model = booking_models.CalendarEvent
     template_name = 'calendar/calendar_event.html'
@@ -1553,8 +1548,7 @@ class CalendarEventCreateView(
 
 
 class CalendarEventUpdateView(
-    booking.mixins.LoginRequiredMixin, CalRelatedMixin,
-    BreadcrumbMixin, UpdateView
+    LoginRequiredMixin, CalRelatedMixin, BreadcrumbMixin, UpdateView
 ):
     model = booking_models.CalendarEvent
     template_name = 'calendar/calendar_event.html'
@@ -1624,8 +1618,7 @@ class CalendarEventUpdateView(
 
 
 class CalendarEventDeleteView(
-    booking.mixins.LoginRequiredMixin, CalRelatedMixin,
-    BreadcrumbMixin, DeleteView
+    LoginRequiredMixin, CalRelatedMixin, BreadcrumbMixin, DeleteView
 ):
     model = booking_models.CalendarEvent
     template_name = 'calendar_event_confirm_delete.html'
@@ -1660,5 +1653,3 @@ class CalendarEventDeleteView(
             'text': _(u'Slet tid')
         })
         return breadcrumbs
-
-print "finish loading resource_based.views"

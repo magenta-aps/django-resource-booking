@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import json
+import re
 import urllib
-
 from datetime import datetime, timedelta
 
 from dateutil.rrule import rrulestr
@@ -12,7 +12,6 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse, reverse_lazy
-from django.utils.translation.trans_real import get_languages
 from django.db.models import Count
 from django.db.models import Q
 from django.db.models import Sum
@@ -27,73 +26,99 @@ from django.utils.decorators import method_decorator
 from django.utils.http import urlquote
 from django.utils.http import urlunquote_plus
 from django.utils.translation import ugettext as _
+from django.utils.translation.trans_real import get_languages
+from django.views.defaults import bad_request
 from django.views.generic import View, TemplateView, ListView, DetailView
 from django.views.generic.base import RedirectView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.edit import FormMixin, ModelFormMixin
 from django.views.generic.edit import FormView, ProcessFormView
-from django.views.defaults import bad_request
-
-from profile.models import EDIT_ROLES
-from booking.models import Product, Visit, StudyMaterial
-from booking.models import KUEmailMessage
-from booking.models import Subject
-from booking.models import OrganizationalUnit
-from booking.models import GymnasieLevel
-from booking.models import Room
-from booking.models import PostCode, School
-from booking.models import Booking, Guest
-from booking.models import ProductGymnasieFag, ProductGrundskoleFag
-from booking.models import EmailTemplateType, EmailTemplate
-from booking.logging import log_action
-from booking.constants import LOGACTION_CREATE
-from booking.models import RoomResponsible
-from booking.models import BookerResponseNonce
-from booking.models import CalendarEvent
-from booking.models import MultiProductVisit
-from booking.models import MultiProductVisitTemp, MultiProductVisitTempProduct
-from booking.models import Evaluation, EvaluationGuest
-
-from booking.forms import ProductInitialForm, ProductForm, EditBookerForm, \
-    ClassBookingBaseForm, TeacherBookingBaseForm, \
-    StudentForADayBookingBaseForm, StudyProjectBookingBaseForm
-from booking.forms import GuestEmailComposeForm, StudentForADayBookingForm
-from booking.forms import OtherProductForm, StudyProjectBookingForm
-from booking.forms import BookingGrundskoleSubjectLevelForm, BookingListForm
-from booking.forms import StudentForADayForm, InternshipForm, OpenHouseForm
-from booking.forms import TeacherProductForm, ClassProductForm
-from booking.forms import StudyProjectForm, AssignmentHelpForm
-from booking.forms import StudyMaterialForm
-
-from booking.forms import BookingForm
-from booking.forms import ClassBookingForm, TeacherBookingForm
-from booking.forms import ProductStudyMaterialForm, \
-    BookingGymnasieSubjectLevelForm
-from booking.forms import BookerForm
-from booking.forms import EmailTemplateForm, EmailTemplatePreviewContextForm
-from booking.forms import EmailComposeForm
-from booking.forms import EmailReplyForm
-from booking.forms import EvaluationOverviewForm
-from booking.forms import AdminProductSearchForm
-from booking.forms import ProductAutosendFormSet
-from booking.forms import VisitSearchForm
-from booking.forms import AcceptBookingForm
-from booking.forms import MultiProductVisitTempDateForm
-from booking.forms import MultiProductVisitTempProductsForm
-from booking.forms import EvaluationForm, EvaluationStatisticsForm
-
-from booking.utils import full_email, get_model_field_map, TemplateSplit
-from booking.utils import merge_dicts
-from booking.utils import DummyRecipient
-
-from booking.mixins import BreadcrumbMixin, LoginRequiredMixin, \
-    RoleRequiredMixin, HasBackButtonMixin, BackMixin, AccessDenied, ModalMixin, \
-    EditorRequriedMixin, AdminRequiredMixin, UnitAccessRequiredMixin, \
-    AutologgerMixin, LoggedViewMixin
 
 import booking.models as booking_models
-import re
 import urls
+from booking.constants import LOGACTION_CREATE
+from booking.forms import AcceptBookingForm
+from booking.forms import AdminProductSearchForm
+from booking.forms import AssignmentHelpForm
+from booking.forms import BookerForm
+from booking.forms import BookingForm
+from booking.forms import BookingGrundskoleSubjectLevelForm
+from booking.forms import BookingGymnasieSubjectLevelForm
+from booking.forms import BookingListForm
+from booking.forms import ClassBookingBaseForm
+from booking.forms import ClassBookingForm
+from booking.forms import ClassProductForm
+from booking.forms import EditBookerForm
+from booking.forms import EmailComposeForm
+from booking.forms import EmailReplyForm
+from booking.forms import EmailTemplateForm
+from booking.forms import EmailTemplatePreviewContextForm
+from booking.forms import EvaluationForm
+from booking.forms import EvaluationOverviewForm
+from booking.forms import EvaluationStatisticsForm
+from booking.forms import GuestEmailComposeForm
+from booking.forms import InternshipForm
+from booking.forms import MultiProductVisitTempDateForm
+from booking.forms import MultiProductVisitTempProductsForm
+from booking.forms import OpenHouseForm
+from booking.forms import OtherProductForm
+from booking.forms import ProductAutosendFormSet
+from booking.forms import ProductForm
+from booking.forms import ProductInitialForm
+from booking.forms import ProductStudyMaterialForm
+from booking.forms import StudentForADayBookingBaseForm
+from booking.forms import StudentForADayBookingForm
+from booking.forms import StudentForADayForm
+from booking.forms import StudyMaterialForm
+from booking.forms import StudyProjectBookingBaseForm
+from booking.forms import StudyProjectBookingForm
+from booking.forms import StudyProjectForm
+from booking.forms import TeacherBookingBaseForm
+from booking.forms import TeacherBookingForm
+from booking.forms import TeacherProductForm
+from booking.forms import VisitSearchForm
+from booking.logging import log_action
+from booking.mixins import AccessDenied
+from booking.mixins import AdminRequiredMixin
+from booking.mixins import AutologgerMixin
+from booking.mixins import BackMixin
+from booking.mixins import BreadcrumbMixin
+from booking.mixins import EditorRequriedMixin
+from booking.mixins import HasBackButtonMixin
+from booking.mixins import LoggedViewMixin
+from booking.mixins import LoginRequiredMixin
+from booking.mixins import ModalMixin
+from booking.mixins import RoleRequiredMixin
+from booking.mixins import UnitAccessRequiredMixin
+from booking.models import BookerResponseNonce
+from booking.models import Booking, Guest
+from booking.models import CalendarEvent
+from booking.models import EmailTemplate
+from booking.models import EmailTemplateType
+from booking.models import Evaluation
+from booking.models import EvaluationGuest
+from booking.models import GymnasieLevel
+from booking.models import KUEmailMessage
+from booking.models import MultiProductVisit
+from booking.models import MultiProductVisitTemp
+from booking.models import MultiProductVisitTempProduct
+from booking.models import OrganizationalUnit
+from booking.models import PostCode
+from booking.models import Product
+from booking.models import ProductGrundskoleFag
+from booking.models import ProductGymnasieFag
+from booking.models import Room
+from booking.models import RoomResponsible
+from booking.models import School
+from booking.models import StudyMaterial
+from booking.models import Subject
+from booking.models import Visit
+from booking.utils import DummyRecipient
+from booking.utils import TemplateSplit
+from booking.utils import full_email
+from booking.utils import get_model_field_map
+from booking.utils import merge_dicts
+from profile.models import EDIT_ROLES
 
 i18n_test = _(u"Dette tester oversættelses-systemet")
 
