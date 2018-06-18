@@ -1,8 +1,12 @@
 {% extends "index.html" %}
 {% load i18n %}
 
+{% block htmltitle %} -
+    {% trans 'mine tilbud' %}
+{% endblock %}
+
 {% block content %}
-    <div class="divider"></div>
+    {% include 'common/breadcrumbrow.html' %}
 
     <h1>{% trans "Ret i 'Mine tilbud'" %}</h1>
 

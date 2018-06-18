@@ -28,15 +28,29 @@ user_role_choices = (
     (NONE, _(u"Ingen"))
 )
 
+
+def get_role_name(role):
+    for id, label in user_role_choices:
+        if id == role:
+            return label
+
 # Which roles are available for editing?
 # E.g. a faculty editor can create, edit and delete coordinators but not admins
 available_roles = {
     NONE: [],
     TEACHER: [],
     HOST: [],
-    COORDINATOR: [NONE, TEACHER, HOST, COORDINATOR],
-    FACULTY_EDITOR: [NONE, TEACHER, HOST, COORDINATOR, FACULTY_EDITOR],
+    COORDINATOR: [TEACHER, HOST, COORDINATOR],
+    FACULTY_EDITOR: [TEACHER, HOST, COORDINATOR, FACULTY_EDITOR],
     ADMINISTRATOR: [
-        NONE, TEACHER, HOST, COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
+        TEACHER, HOST, COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
     ]
 }
+
+
+def role_to_text(role):
+    """Return text representation of role code."""
+    for r, t in user_role_choices:
+        if r == role:
+            return unicode(t)
+    return ""

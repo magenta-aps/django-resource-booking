@@ -2,7 +2,7 @@
 {% load i18n %}
 
 {% block htmltitle %} -
-{% trans 'opret ny bruger' %}
+{% trans 'statistik' %}
 {% endblock %}
 
 {% block head %}
@@ -12,7 +12,7 @@
 
 {% block content %}
 
-<div class="divider"></div>
+    {% include 'common/breadcrumbrow.html' %}
 
 <h1>{% trans 'Statistik' %}</h1>
 
@@ -72,8 +72,10 @@
                     <th>{% trans 'Type' %}</th>
                     <th>{% trans 'Tilbud' %}</th>
                     <th>{% trans 'Besøgsdato' %}</th>
-                    <th>{% trans 'Klassetrin/Niveau' %}</th>
-                    <th>{% trans 'Antal deltagere' %}</th>
+                    <th>{% trans 'Klassetrin' %}</th>
+                    <th>{% trans 'Fag/Niveau' %}</th>
+                    <th>{% trans 'Totalt antal deltagere' %}</th>
+                    <th>{% trans 'Antal lærere' %}</th>
                     <th>{% trans 'Oplæg om uddannelser' %}</th>
                     <th>{% trans 'Rundvisning' %}</th>
                     <th>{% trans 'Andet' %}</th>
@@ -87,7 +89,7 @@
                     <th>{% trans 'Bemærkninger fra lærer' %}</th>
                     <th>{% trans 'Værter' %}</th>
                     <th>{% trans 'Undervisere' %}</th>
-
+                    <th>{% trans 'Sorteringsdato' %}</th>
                 </tr>
             </thead>
             <tbody>
@@ -97,17 +99,29 @@
                     <td><a href="{% url 'booking-view' booking.id %}">{{ booking }}</a></td>
                     <td>{{ booking.visit.product.get_type_display }}</td>
                     <td><a href="{% url 'product-view' booking.visit.product.pk %}">{{ booking.visit.product.title }}</a></td>
-                    <td>{{ booking.visit.interval_display }}</td>
+                    <td>
+                        {{ booking.visit.interval_display }}
+                        {% if booking.visit.is_cancelled %}
+                        ({% trans 'aflyst' %})
+                        {% endif %}
+                    </td>
+                    <td>{{ booking.booker.get_level_display }}</td>
                     <td>
                         {% for bookingsubjectlevel in booking.bookinggrundskolesubjectlevel_set.all %}
-                            {{ bookingsubjectlevel.subject }}/{{ bookingsubjectlevel.level }},
+                            {% blocktrans with subject=bookingsubjectlevel.subject level=bookingsubjectlevel.level %}
+                                {{ subject }}, {{ level }}
+                            {% endblocktrans %}
+                            {% if not forloop.last %}<br/>{% endif %}
                         {% endfor %}
-
                         {% for bookingsubjectlevel in booking.bookinggymnasiesubjectlevel_set.all %}
-                            {{ bookingsubjectlevel.subject }}/{{ bookingsubjectlevel.level }},
+                            {% blocktrans with subject=bookingsubjectlevel.subject level=bookingsubjectlevel.level class=booking.booker.get_level_display %}
+                                {{ subject }} niveau {{ level }}, {{ class }}
+                            {% endblocktrans %}
+                            {% if not forloop.last %}<br/>{% endif %}
                         {% endfor %}
                     </td>
                     <td>{{ booking.booker.attendee_count|default:"0" }}</td>
+                    <td>{{ booking.booker.teacher_count|default:"0" }}</td>
                     <td>{{ booking.classbooking.presentation_desired|yesno|capfirst }}</td>
                     <td>{{ booking.classbooking.tour_desired|yesno|capfirst }}</td>
                     <td>
@@ -124,7 +138,7 @@
                     <td>{{ booking.booker.get_full_name }} </td>
                     <td>{{ booking.booker.get_email }} </td>
                     <td>{{ booking.visit.product.comment }} </td>
-                    <td>{{ booking.comments }} </td>
+                    <td>{{ booking.notes }} </td>
                     <td>
                         {% if booking.hosts %}
                             {% for host in booking.visit.assigned_hosts.all %}
@@ -139,6 +153,7 @@
                             {% endfor %}
                         {% endif %}
                     </td>
+                    <td>{{ booking.visit.start_datetime|date:"omdHis" }}</td>
                 </tr>
             {% endfor %}
             </tbody>
@@ -149,15 +164,29 @@
 
 {% block extra_scripts %}
     {% include 'common/resources/datepicker_script.html' %}
+    <script type="text/javascript">
+    <!--
+    jQuery(function($) {
+        $('#id_from_date').datepicker('setStartDate', null);
+        $('#id_to_date').datepicker('setStartDate', null);
+    });
+    //-->
+    </script>
     {% include 'common/resources/datatables_script.html' %}
     <script type="text/javascript">
+    <!--
         $(function() {
             $('#statistics_table').DataTable({
                 paging: false,
                 info: false,
                 responsive: true,
-                order: [[1, "asc"]]
+                order: [[1, "asc"]],
+                "columnDefs": [
+                    {targets: 4, orderData:21},
+                    {#{targets: 19, visible: false}#}
+                ]
             });
         });
+    //-->
     </script>
 {% endblock %}

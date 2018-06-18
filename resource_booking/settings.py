@@ -24,6 +24,8 @@ SECRET_KEY = 'lfr72r#z^)_z=$-@b&0!eeu(rs5vd#ozlx__&u$wptk^cb3=6r'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+ENABLE_DEBUG_TOOLBAR = False
+INTERNAL_IPS = ()
 
 ALLOWED_HOSTS = []
 
@@ -50,6 +52,8 @@ INSTALLED_APPS = (
     'ckeditor',
     'ckeditor_uploader'
 )
+# INSTALLED_APPS might be extended with the debug toolbar
+
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -256,6 +260,9 @@ PUBLIC_URL = "".join([
     ":".join([str(x) for x in (PUBLIC_URL_HOSTNAME, PUBLIC_URL_PORT) if x])
 ])
 
+# By default allow access using all hostnames
+ALLOWED_HOSTS = ["*"]
+
 # Include SAML setup if the local settings specify it:
 # if USE_SAML:
 #     from saml_settings import *  # noqa
@@ -273,3 +280,11 @@ CRON_CLASSES = [
     "booking.cron.NotifyEventTimeJob",
     "booking.cron.EvaluationReminderJob"
 ]
+
+if ENABLE_DEBUG_TOOLBAR:
+    INSTALLED_APPS = INSTALLED_APPS + ("debug_toolbar",)
+    MIDDLEWARE_CLASSES = (
+        "debug_toolbar.middleware.DebugToolbarMiddleware",
+    ) + MIDDLEWARE_CLASSES
+    if "127.0.0.1" not in INTERNAL_IPS:
+        INTERNAL_IPS = INTERNAL_IPS + ("127.0.0.1",)

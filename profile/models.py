@@ -15,11 +15,12 @@ from django.utils.translation import ugettext_lazy as _
 
 import booking.models
 
-from booking.models import OrganizationalUnit, Product
+from booking.models import OrganizationalUnit, Product, Visit
 from booking.utils import get_related_content_types, full_email
 
 # User roles
-from profile.constants import TEACHER, HOST, COORDINATOR, ADMINISTRATOR
+from profile.constants import TEACHER, HOST, COORDINATOR, ADMINISTRATOR, \
+    role_to_text
 from profile.constants import FACULTY_EDITOR, NONE
 from profile.constants import EDIT_ROLES, user_role_choices, available_roles
 
@@ -54,14 +55,6 @@ def get_public_web_user():
         profile.save()
 
     return user
-
-
-def role_to_text(role):
-    """Return text representation of role code."""
-    for r, t in user_role_choices:
-        if r == role:
-            return unicode(t)
-    return ""
 
 
 class AbsDateDist(Aggregate):
@@ -214,6 +207,21 @@ class UserProfile(models.Model):
 
     def can_edit_units(self):
         return self.get_role() in (ADMINISTRATOR, FACULTY_EDITOR)
+
+    def can_edit_model_instance(self, model):
+        role = self.get_role()
+        if role == ADMINISTRATOR:
+            return True
+        available_classes = CLASSES_BY_ROLE.get(role, None)
+        if available_classes is None:
+            return False
+        return model in available_classes
+
+    def can_edit_product(self):
+        return self.can_edit_model_instance(Product)
+
+    def can_edit_visit(self):
+        return self.can_edit_model_instance(Visit)
 
     def get_unit_queryset(self):
         role = self.get_role()

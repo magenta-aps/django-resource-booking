@@ -6,7 +6,7 @@
     {% if not object.visit.is_multi_product_visit %}
         {{ object.visit.product.title }} - {{ object.visit.date_display }} -
     {% endif %}
-    {% blocktrans with id=object.id %}Booking #{{ id }}{% endblocktrans %}
+    {% blocktrans with id=object.id %}Tilmelding #{{ id }}{% endblocktrans %}
 {% endblock %}
 
 {% block content %}
@@ -15,7 +15,7 @@
 
     <div class="row titlebar hidden-print">
         <div class="col-sm-12 col-md-9">
-            <h1>{% blocktrans with id=object.id %}Booking #{{ id }}{% endblocktrans %}</h1>
+            <h1>{% blocktrans with id=object.id %}Tilmelding #{{ id }}{% endblocktrans %}</h1>
         </div>
         <div class="divider"></div>
     </div>
@@ -47,32 +47,40 @@
                 </div>
             </div>
 
-            {% if can_notify %}
-                <div class="pull-right dropdown">
-                    <button class="btn btn-primary dropdown-toggle" type="button" id="sendNotification" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        {% trans 'Send besked' %}
-                        <span class="caret"/>
-                    </button>
-                    <ul class="dropdown-menu" aria-labelledby="sendNotification">
-                        <li><a data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'booking-notify' object.pk %}">{% trans 'Ingen skabelon' %}</a></li>
-                        {% if emailtemplates %}
+            {% if can_edit or can_notify %}
+                <div class="booking-actions pull-right">
+                {% if can_edit %}
+                    <a href="{% url 'booking-edit-view' object.id %}" class="btn btn-primary" type="button" id="editBooking">
+                        {% trans 'Redigér' %}
+                    </a>
+                {% endif %}
+                {% if can_notify %}
+                    <div class="dropdown">
+                        <button class="btn btn-primary dropdown-toggle" type="button" id="sendNotification" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            {% trans 'Send besked' %}
+                            <span class="caret"/>
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="sendNotification">
+                            <li><a data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'booking-notify' object.pk %}">{% trans 'Ingen skabelon' %}</a></li>
+                            {% if emailtemplates %}
+                                <li role="separator" class="divider"></li>
+                                {% for id, label in emailtemplates %}
+                                    <li>
+                                        {% if modal %}
+                                            <a data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'booking-notify' object.pk %}?template={{ id }}">{{ label }}</a>
+                                        {% else %}
+                                            <a href="{% url 'booking-notify' object.pk %}?template={{ id }}&back={{ request.get_full_path | urlencode }}">{{ label }}</a>
+                                        {% endif %}
+                                    </li>
+                                {% endfor %}
+                            {% endif %}
                             <li role="separator" class="divider"></li>
-                            {% for id, label in emailtemplates %}
-                                <li>
-                                    {% if modal %}
-                                        <a data-toggle="modal" data-target="#modalhost" data-modal-href="{% url 'booking-notify' object.pk %}?template={{ id }}">{{ label }}</a>
-                                    {% else %}
-                                        <a href="{% url 'booking-notify' object.pk %}?template={{ id }}&back={{ request.get_full_path | urlencode }}">{{ label }}</a>
-                                    {% endif %}
-                                </li>
-                            {% endfor %}
-                        {% endif %}
-                        <li role="separator" class="divider"></li>
-                        <li><a href="{% url 'emailtemplate-list' %}" target="_blank">{% trans 'Redigér skabeloner' %}</a></li>
-                    </ul>
+                            <li><a href="{% url 'emailtemplate-list' %}" target="_blank">{% trans 'Redigér skabeloner' %}</a></li>
+                        </ul>
+                    </div>
+                {% endif %}
                 </div>
             {% endif %}
-
 
             <h2>{% trans 'Information om tilmeldingen' %}</h2>
 
@@ -131,7 +139,12 @@
                 <dd>{{ object.booker.get_level_display }}</dd>
 
                 <dt>{% trans 'Antal deltagere:' %}</dt>
-                <dd>{{ object.booker.attendee_count }}</dd>
+                <dd>{{ object.booker.attendee_count|default_if_none:0 }}</dd>
+
+                {% if object.booker.teacher_count != None %}
+                    <dt>{% trans 'Heraf lærere:' %}</dt>
+                    <dd>{{ object.booker.teacher_count }}</dd>
+                {% endif %}
 
                 <dt>{% trans 'Kommentar:' %}</dt>
                 <dd>{{ object.notes }}</dd>
@@ -192,7 +205,9 @@
                     {% endif %}
                 </div>
 
-                {% include 'common/map.html' with locality=object.product.locality %}
+                {% if object.product.locality %}
+                    {% include 'common/map.html' with locality=object.product.locality %}
+                {% endif %}
             </form>
         </div>
     </div>

@@ -17,6 +17,7 @@
             {% include "booking/fields/time.html" %}
             {% include "booking/fields/location.html" %}
             {% include "booking/fields/notes.html" %}
+            {{ bookerform.attendee_count.as_hidden }}
         </div>
         {% include 'booking/snippets/footer.html' %}
     </form>
@@ -29,5 +30,6 @@
     {% include 'booking/fields/school_script.html' %}
     {% include "booking/fields/time_script.html" %}
     <script type="text/javascript" src="{% static 'js/ieform.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/booking-form.js' %}"></script>
 
 {% endblock %}

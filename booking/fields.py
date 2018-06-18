@@ -147,10 +147,13 @@ class VisitEventTimeField(ChoiceField):
         try:
             eventtime = self.model.objects.get(pk=value)
             if eventtime.visit is not None:
-                if not eventtime.visit.is_bookable:
+                if not eventtime.visit.is_bookable and \
+                        not eventtime.visit.can_join_waitinglist:
                     raise ValidationError(
                         _(u'Det valgte tidspunkt er blevet lukket for booking')
                     )
         except self.model.DoesNotExist:
+            pass
+        except ValueError:
             pass
         return super(ChoiceField, self).clean(value)

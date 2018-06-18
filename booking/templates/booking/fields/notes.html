@@ -8,12 +8,17 @@
         {{ bookingform.notes }}
     </div>
     <div class="col-sm-4 help-block with-errors">
+        <p>
+            {% trans 'Angiv venligst her:' %}
+            <ul>
+                <li>{% trans 'Hvis dine elever har særlige forudsætninger som underviserne skal kende til' %}</li>
+                <li>{% trans 'Hvis du har tilmeldt dig andre besøg på samme dag' %}
+            </ul>
+        </p>
         {% if bookingform.notes.errors %}
+        <p>
             {{ bookingform.notes.errors }}
-        {% elif visit_multiple %}
-            {% trans 'Hvis du har tilmeldt dig andre besøg på samme dag end de besøg, du er ved at bestille, da angiv dem venligst i kommentarfeltet.' %}
-        {% else %}
-            {% trans 'Hvis du tidligere har tilmeldt dig andre besøg på samme dag, da angiv det venligst i kommentarfeltet.' %}
+        </p>
         {% endif %}
     </div>
 </div>

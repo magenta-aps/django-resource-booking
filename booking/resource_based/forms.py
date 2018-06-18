@@ -114,10 +114,11 @@ class EditResourceForm(forms.ModelForm):
         old_save_m2m = self.save_m2m
 
         def save_m2m():
+            values = tuple(self.cleaned_data['resourcepools'])
+
             old_save_m2m()
             instance.resourcepool_set.clear()
-            for resourcepool in self.cleaned_data['resourcepools']:
-                instance.resourcepool_set.add(resourcepool)
+            instance.resourcepool_set.add(*values)
 
         self.save_m2m = save_m2m
         if commit:
@@ -213,14 +214,18 @@ class EditResourcePoolForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(EditResourcePoolForm, self).__init__(*args, **kwargs)
         # Limit choices to the same unit and type
-        self.fields['resources'].choices = [
-            (resource.subclass_instance.id,
-             resource.subclass_instance.get_name())
-            for resource in Resource.objects.filter(
-                organizationalunit=self.instance.organizationalunit,
-                resource_type=self.instance.resource_type
-            )
-        ]
+        choices = []
+        for resource in Resource.objects.filter(
+            organizationalunit=self.instance.organizationalunit,
+            resource_type=self.instance.resource_type
+        ):
+            try:
+                # This lookup might fail, see ticket #20705
+                si = resource.subclass_instance
+                choices.append((si.id, si.get_name()))
+            except:
+                pass
+        self.fields['resources'].choices = choices
 
 
 class EditResourceRequirementForm(forms.ModelForm):

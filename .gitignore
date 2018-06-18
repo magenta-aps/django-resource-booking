@@ -1,4 +1,5 @@
 *~
+/booking/management/commands/local_*
 /booking/migrations/0*.py
 /booking/migrations/*_auto_*
 /build
@@ -28,4 +29,4 @@ python-env
 *.swp
 /thirdparty/node_modules/
 /cron.log
-
+/*.sql
