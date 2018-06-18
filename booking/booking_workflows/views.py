@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-print "loading booking_workflows.views"
-
 from django.db.models.expressions import OrderBy
 from django.db.models import Q
 from django.core.urlresolvers import reverse
@@ -684,5 +682,3 @@ class ResetVisitChangesView(UpdateWithCancelView):
         self.object.last_workflow_update = timezone.now()
         self.object.save()
         return HttpResponseRedirect(self.get_success_url())
-
-print "finish loading booking_workflows.views"

@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-print "loading booking.views"
 import json
 import urllib
 
@@ -4442,16 +4441,8 @@ class EvaluationStatisticsView(BreadcrumbMixin, TemplateView):
         }]
 
 
-print "finish loading booking.views"
-
-print "1"
 import booking_workflows.views  # noqa
-print dir(booking_workflows)
 import_views(booking_workflows.views)
 
-print "2"
 import resource_based.views  # noqa
-print dir(resource_based)
 import_views(resource_based.views)
-
-print "3"

@@ -4,7 +4,6 @@ import booking.constants
 import booking.logging
 import booking.mixins
 
-print "loading resource_based.views"
 import datetime
 from django.core.urlresolvers import reverse, reverse_lazy
 from django.http import Http404
@@ -16,7 +15,6 @@ from django.views.generic import RedirectView
 from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic.edit import FormView, DeleteView
 from django.forms import models as forms_models
-
 from django.forms.widgets import TextInput, HiddenInput, Select
 
 import booking.models as booking_models
@@ -43,7 +41,9 @@ class ManageTimesView(BreadcrumbMixin, DetailView):
 
     @staticmethod
     def build_breadcrumbs(object, request):
-        breadcrumbs = ProductDetailView.build_breadcrumbs(object, request)
+        breadcrumbs = booking.views.ProductDetailView.build_breadcrumbs(
+            object, request
+        )
         breadcrumbs.append({
             'url': reverse('manage-times', args=[object.id]),
             'text': _(u'Administrér tidspunkter')
@@ -1198,7 +1198,7 @@ class VisitResourceEditView(booking.mixins.EditorRequriedMixin,
 
     @staticmethod
     def build_breadcrumbs(object):
-        breadcrumbs = VisitDetailView.build_breadcrumbs(object)
+        breadcrumbs = booking.views.VisitDetailView.build_breadcrumbs(object)
         breadcrumbs.append({
             'url': reverse('visit-resources-edit', args=[object.pk]),
             'text': _(u'Redigér ressourcer')
