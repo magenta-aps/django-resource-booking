@@ -18,7 +18,6 @@ from django.forms import models as forms_models
 from django.forms.widgets import TextInput, HiddenInput, Select
 
 import booking.models as booking_models
-from booking.views import ProductDetailView, VisitDetailView
 from booking.mixins import BreadcrumbMixin
 from booking.resource_based.models import Resource, ResourceType
 from booking.resource_based.models import ItemResource, RoomResource
