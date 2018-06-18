@@ -9,7 +9,6 @@ from django.db.models.expressions import OrderBy
 from django.forms import CheckboxSelectMultiple, CheckboxInput
 from django.forms import EmailInput
 from django.forms import HiddenInput
-from django.forms import ModelMultipleChoiceField
 from django.forms import TextInput, NumberInput, DateInput, Textarea, Select
 from django.forms import formset_factory, inlineformset_factory
 from django.template import TemplateSyntaxError
@@ -20,7 +19,7 @@ from booking.models import BLANK_LABEL, BLANK_OPTION
 from booking.models import ClassBooking, TeacherBooking, \
     BookingGymnasieSubjectLevel
 from booking.models import EmailTemplate, EmailTemplateType
-from booking.models import SurveyXactEvaluation
+from booking.models import SurveyXactEvaluation, SurveyXactEvaluationGuest
 from booking.models import Guest, Region, PostCode, School
 from booking.models import Locality, OrganizationalUnitType, OrganizationalUnit
 from booking.models import MultiProductVisitTemp, MultiProductVisitTempProduct

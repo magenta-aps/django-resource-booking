@@ -4450,6 +4450,7 @@ class EvaluationEditView(BreadcrumbMixin, UpdateView):
         return super(EvaluationEditView, self).get_context_data(
             **context
         )
+
     def get_success_url(self):
         return reverse(
             'evaluation-view', args=[
