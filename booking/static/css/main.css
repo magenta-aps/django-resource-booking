@@ -2339,6 +2339,13 @@ body.lightbox {
   font-weight: 400;
 }
 
+#evaluationform .tooltip,
+#evaluationform .tooltip .tooltip-inner {
+  width: 400px;
+  max-width: 400px;
+  text-align: left;
+}
+
 ul.product-time-list {
   padding-left: 1.1em;
 }

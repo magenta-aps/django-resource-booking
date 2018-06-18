@@ -4189,7 +4189,6 @@ class EvaluationEditView(BreadcrumbMixin, UpdateView):
         for visit in self.object.product.get_visits():
             for booking in visit.booking_list:
                 guest = booking.booker
-                print guest.id
                 evaluationguest = SurveyXactEvaluationGuest.objects.filter(
                     evaluation=self.object,
                     guest=guest

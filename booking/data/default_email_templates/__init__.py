@@ -35,6 +35,7 @@ IMPORT_MAP = {
     EmailTemplateType.NOTIFY_EDITORS__SPOT_REJECTED:
         'waitinglist_rejected_coordinator',
     EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST: 'evaluation1',
+    EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST_STUDENTS: 'evaluation1_students',
     EmailTemplateType.NOTIFY_GUEST__EVALUATION_SECOND: 'evaluation2',
 }
 

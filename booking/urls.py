@@ -23,7 +23,8 @@ from booking.resource_based.views import ResourceRequirementUpdateView
 from booking.resource_based.views import VisitResourceEditView
 from booking.views import BecomeHostView
 from booking.views import BecomeTeacherView
-from booking.views import BookingAcceptView, BookingEditView
+from booking.views import BookingAcceptView
+from booking.views import BookingEditView
 from booking.views import BookingNotifyView, BookingDetailView
 from booking.views import BookingSuccessView
 from booking.views import BookingView
@@ -464,7 +465,6 @@ urlpatterns = patterns(
         r'requirement/(?P<pk>[0-9]+)/delete/?$',
         ResourceRequirementDeleteView.as_view(),
         name='resourcerequirement-delete'),
-
     url(r'^visit/(?P<pk>[0-9]+)/resources/?$',
         VisitResourceEditView.as_view(),
         name='visit-resources-edit'),
@@ -495,8 +495,6 @@ urlpatterns = patterns(
     url(r'^ajax/list/(?P<type>[A-Za-z]+)/?$',
         ListAjaxView.as_view(),
         name='ajax-list')
-
-
 
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

@@ -481,6 +481,7 @@ class EmailTemplateType(
     NOTIFY_ALL_EVALUATION = 22  # Ticket 15701
     NOTIFY_GUEST__BOOKING_CREATED_UNTIMED = 23  # Ticket 16914
     NOTIFY_GUEST__EVALUATION_FIRST = 24  # Ticket 13819
+    NOTIFY_GUEST__EVALUATION_FIRST_STUDENTS = 26  # Ticket 13819
     NOTIFY_GUEST__EVALUATION_SECOND = 25  # Ticket 13819
 
     @staticmethod
@@ -948,9 +949,9 @@ class EmailTemplateType(
             send_to_booker_on_waitinglist=False,
             enable_autosend=True,
             enable_booking=True,
-            enable_days=True,
+            enable_days=False,
             is_default=True,
-            ordering=25
+            ordering=26
         )
 
     @staticmethod
@@ -1013,7 +1014,7 @@ class EmailTemplateType(
                     template_type=template_type
                 )
                 if qs.count() == 0:
-                    print "    create autosend type %d for product %d" % \
+                    print "    creating autosend type %d for product %d" % \
                           (template_type.key, product.id)
                     autosend = ProductAutosend(
                         template_key=template_type.key,
@@ -1963,6 +1964,30 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         default=False,
         verbose_name=_(u'Der tillades kun 1 tilmelding pr. besøg')
     )
+
+    evaluation_link = models.CharField(
+        max_length=1024,
+        verbose_name=_(u'Link til evaluering'),
+        blank=True,
+        default='',
+    )
+
+    @property
+    def primary_evaluation(self):
+        return self.evaluation_set.filter(secondary=False).first()
+
+    @property
+    def secondary_evaluation(self):
+        return self.evaluation_set.filter(secondary=True).first()
+
+    @property
+    def evaluations(self):
+        return [
+            evaluation for evaluation in [
+                self.primary_evaluation, self.secondary_evaluation
+            ]
+            if evaluation is not None
+        ]
 
     booking_close_days_before = models.IntegerField(
         default=6,
@@ -3120,6 +3145,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         if last_workflow_status is None or \
                 last_workflow_status != self.workflow_status:
             self.last_workflow_update = timezone.now()
+            if self.workflow_status == self.WORKFLOW_STATUS_EXECUTED:
+                for evaluation in self.product.evaluations:
+                    evaluation.send_first_notification(self)
 
     @property
     # QuerySet that finds EventTimes that will be affected by resource changes
@@ -5216,6 +5244,18 @@ class Guest(models.Model):
         validators=[validators.MinValueValidator(int(1))]
     )
 
+    def get_booking(self):
+        try:
+            return self.booking
+        except:
+            return None
+
+    def get_evaluationguest(self):
+        try:
+            return self.evaluationguest
+        except:
+            return None
+
     teacher_count = models.IntegerField(
         blank=True,
         null=True,
@@ -5373,7 +5413,6 @@ class Booking(models.Model):
                 recipients = set(recipients)
             if not only_these_recipients:
                 recipients.update(self.get_recipients(template_type))
-
             KUEmailMessage.send_email(
                 template_type,
                 {
@@ -5858,6 +5897,14 @@ class SurveyXactEvaluation(models.Model):
         on_delete=models.CASCADE,
         null=True
     )
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        null=True
+    )
+    secondary = models.BooleanField(
+        default=False
+    )
 
     for_students = models.BooleanField()
     for_teachers = models.BooleanField()
@@ -5866,6 +5913,7 @@ class SurveyXactEvaluation(models.Model):
         qs = self.evaluationguest_set.all()
         if filter is not None:
             qs = qs.filter(**filter)
+        print qs
         for evalguest in qs:
             try:
                 sent = evalguest.booking.autosend(
@@ -5908,10 +5956,21 @@ class SurveyXactEvaluationGuest(models.Model):
         null=True,
         blank=True
     )
-    guest = models.OneToOneField(
+
+    product = models.ForeignKey(
+        Product,
+        null=True,
+        blank=True
+    )
+    guest = models.ForeignKey(
         Guest,
         null=False,
         blank=False
+    )
+    # deprecate
+    visit = models.ForeignKey(
+        Visit,
+        null=False
     )
     STATUS_NO_PARTICIPATION = 0
     STATUS_NOT_SENT = 1
@@ -6017,6 +6076,51 @@ class SurveyXactEvaluationGuest(models.Model):
         if sent:
             self.status = new_status
             self.save()
+
+
+class Guide(models.Model):
+    value = models.IntegerField(
+        null=False
+    )
+    name = models.CharField(
+        null=False,
+        max_length=64
+    )
+
+    def __str__(self):
+        return self.name
+
+    @staticmethod
+    def create_defaults():
+        from booking.data import guides
+        for value, name in guides.guides.items():
+            if Guide.objects.filter(value=value).count() == 0:
+                guide = Guide(value=value, name=name)
+                guide.save()
+
+
+class ExercisePresentation(models.Model):
+    value = models.IntegerField(
+        null=False
+    )
+    name = models.CharField(
+        null=False,
+        max_length=256
+    )
+
+    def __str__(self):
+        return self.name
+
+    @staticmethod
+    def create_defaults():
+        from booking.data import exercises_presentations
+        for value, name in exercises_presentations.\
+                exercises_presentations.items():
+            if ExercisePresentation.objects.filter(value=value).count() == 0:
+                exercise_presentation = ExercisePresentation(
+                    value=value, name=name
+                )
+                exercise_presentation.save()
 
 
 from booking.resource_based import models as rb_models  # noqa

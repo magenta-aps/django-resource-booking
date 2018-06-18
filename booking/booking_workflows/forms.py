@@ -233,7 +233,12 @@ class VisitAutosendForm(forms.ModelForm):
         return self.template_type.name
 
     def inherit_from(self):
-        return self.associated_visit.product.get_autosend(self.template_type)
+        visit = self.associated_visit
+        for product in visit.products:
+            autosend = product.get_autosend(self.template_type)
+            if autosend is not None:
+                return autosend
+        # return self.associated_visit.product.get_autosend(self.template_type)
 
 
 VisitAutosendFormSetBase = inlineformset_factory(
