@@ -3,7 +3,7 @@
 {% load booking_tags %}
 {% load i18n %}
 
-{% block htmltitle %} - {% trans 'overblik over evalueringer' %}{% endblock %}
+{% block htmltitle %} - {% if object.pk %}{% trans "Redigér evaluering" %}{% else %}{% trans "Opret evaluering" %}{% endif %}{% endblock %}
 
 {% block content %}
 

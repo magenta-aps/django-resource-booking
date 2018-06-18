@@ -15,6 +15,7 @@
 
     <h1>{% trans "Statistik over evalueringer" %}</h1>
 
+    <div id="accordion" class="panel-group" aria-multiselectable="true" role="tablist">
     <a id="controlFilter" aria-controls="collapseFilter" aria-expanded="{% if has_filter %}true{% else %}false{% endif %}" href="#collapseFilter" data-parent="#accordion" data-toggle="collapse" role="button">
         {% trans "Filtrér" %}
         <span class="{% if has_filter %}caret-up{% else %}caret{% endif %}"></span>
@@ -52,13 +53,13 @@
                 <th rowspan="2" class="text-center text-top">{% trans 'Dato' %}</th>
                 <th colspan="5" class="text-center">{% trans 'Status' %}</th>
             </tr>
-            <tr>
-                <th class="text-center">{% trans 'Ikke deltagende' %}</th>
-                <th class="text-center">{% trans 'Ikke afholdt' %}</th>
-                <th class="text-center">{% trans 'Sendt første gang' %}</th>
-                <th class="text-center">{% trans 'Sendt anden gang' %}</th>
-                <th class="text-center">{% trans 'Har klikket på link' %}</th>
-            </tr>
+        <tr>
+            <th class="text-center">{% trans 'Ikke deltagende' %}</th>
+            <th class="text-center">{% trans 'Ikke afholdt' %}</th>
+            <th class="text-center">{% trans 'Sendt første gang' %}</th>
+            <th class="text-center">{% trans 'Sendt anden gang' %}</th>
+            <th class="text-center">{% trans 'Har klikket på link' %}</th>
+        </tr>
         </thead>
         <tbody>
             {% for visit in visits %}

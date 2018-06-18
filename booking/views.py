@@ -4080,27 +4080,34 @@ class EvaluationOverviewView(LoginRequiredMixin, BreadcrumbMixin, ListView):
 
         if form.is_valid():
             formdata = form.cleaned_data
-            qs = self.model.objects.filter(
-                eventtime__product__organizationalunit__in=form.user
-                .userprofile.get_unit_queryset(),
+            product_qs = Product.objects.filter(
+                organizationalunit=form.user.userprofile.get_unit_queryset(),
+                evaluation__isnull=False
             )
+            visit_qs = Visit.objects.all()
             unit_limit = formdata.get('organizationalunit', [])
             if unit_limit:
-                qs = qs.filter(
-                    eventtime__product__organizationalunit__in=unit_limit
+                product_qs = product_qs.filter(
+                    organizationalunit__in=unit_limit
                 )
             if formdata.get('limit_to_personal'):
                 user = self.request.user
-                qs = qs.filter(
-                    Q(eventtime__product__created_by=user) |
+                visits = visit_qs.filter(
                     Q(teachers=user) |
-                    Q(hosts=user) |
-                    Q(eventtime__product__tilbudsansvarlig=user)
+                    Q(hosts=user)
                 )
+                product_qs = product_qs.filter(
+                    Q(created_by=user) |
+                    Q(eventtime__visit=visits) |
+                    Q(tilbudsansvarlig=user)
+                )
+            visit_qs = visit_qs.filter(
+                eventtime__product=product_qs
+            )
         else:
-            qs = self.model.objects.none()
+            visit_qs = self.model.objects.none()
 
-        return qs.order_by('-eventtime__start', '-eventtime__end')
+        return visit_qs.order_by('-eventtime__start', '-eventtime__end')
 
     def get_context_data(self, **kwargs):
         return super(EvaluationOverviewView, self).get_context_data(

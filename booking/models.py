@@ -5275,6 +5275,12 @@ class Guest(models.Model):
         verbose_name=u'Heraf lærere'
     )
 
+    def get_evaluationguest(self):
+        try:
+            return self.evaluationguest
+        except:
+            return None
+
     def as_searchtext(self):
         return " ".join([unicode(x) for x in [
             self.firstname,
@@ -5391,7 +5397,26 @@ class Booking(models.Model):
                  only_these_recipients=False):
 
         visit = self.visit.real
-        if visit.autosend_enabled(template_type):
+        enabled = visit.autosend_enabled(template_type)
+        # print "Template type %s is %senabled for visit %d" % (
+        #     template_type,
+        #     "" if visit.autosend_enabled(template_type) else "not ",
+        #     visit.id
+        # )
+
+        if visit.is_multiproductvisit and template_type.key in [
+            EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST,
+            EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST_STUDENTS,
+            EmailTemplateType.NOTIFY_GUEST__EVALUATION_SECOND
+        ]:
+            for product in visit.products:
+                if product.autosend_enabled(template_type):
+                    # print "Making exception for evaluation " \
+                    #       "mail with product %d" % product.id
+                    enabled = True
+                    break
+
+        if enabled:
             product = visit.product
             unit = visit.organizationalunit
             if recipients is None:
