@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
 
+import profile.constants
 from booking.models import OrganizationalUnit, Product, Visit, Booking
 from booking.models import EmailTemplateType, KUEmailMessage
 from booking.models import VisitComment
@@ -23,8 +24,9 @@ from django.utils.translation import ugettext as _, ungettext_lazy
 from django.views.generic import TemplateView, DetailView
 from django.views.generic.edit import UpdateView, FormView, DeleteView
 
-from booking.views import LoginRequiredMixin, AccessDenied, BreadcrumbMixin
-from booking.views import EditorRequriedMixin, VisitCustomListView
+from booking.mixins import BreadcrumbMixin, LoginRequiredMixin, AccessDenied, \
+    EditorRequriedMixin
+from booking.views import VisitCustomListView
 from django.views.generic.list import ListView
 from profile.forms import UserCreateForm, EditMyProductsForm, StatisticsForm
 from profile.models import EmailLoginURL
@@ -451,7 +453,7 @@ class CreateUserView(BreadcrumbMixin, FormView, UpdateView):
                     raise AccessDenied(
                         _(u"Du har ikke rettigheder til at redigere brugere "
                           u"med rollen \"%s\""
-                          % profile_models.role_to_text(object_role))
+                          % profile.constants.role_to_text(object_role))
                     )
             return result
         else:

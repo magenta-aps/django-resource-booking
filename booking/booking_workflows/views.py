@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 from django.db.models.expressions import OrderBy
 from django.db.models import Q
 from django.core.urlresolvers import reverse
@@ -24,12 +25,12 @@ from booking.models import Visit
 from booking.models import EmailTemplateType
 from booking.models import EventTime
 from booking.models import Locality
-from booking.models import LOGACTION_MANUAL_ENTRY
-from booking.models import log_action
+from booking.constants import LOGACTION_MANUAL_ENTRY
+from booking.logging import log_action
 from booking.models import Room
 from booking.models import MultiProductVisit
-from booking.views import AutologgerMixin
-from booking.views import RoleRequiredMixin, EditorRequriedMixin
+from booking.mixins import RoleRequiredMixin, EditorRequriedMixin, \
+    AutologgerMixin
 from booking.views import VisitDetailView
 from django.views.generic.base import ContextMixin
 from profile.models import TEACHER, HOST, EDIT_ROLES
