@@ -6147,6 +6147,7 @@ class SurveyXactEvaluationGuest(models.Model):
             self.status = new_status
             self.save()
 
+
 class Guide(models.Model):
     value = models.IntegerField(
         null=False

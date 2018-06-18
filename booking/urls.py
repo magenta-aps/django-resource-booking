@@ -39,7 +39,6 @@ from booking.views import CalendarView
 from booking.views import CancelledVisitsView
 from booking.views import ChangeVisitAutosendView
 from booking.views import ChangeVisitCommentsView
-from booking.views import ChangeVisitEvalView
 from booking.views import ChangeVisitHostsView
 from booking.views import ChangeVisitResponsibleView
 from booking.views import ChangeVisitRoomsView
@@ -501,8 +500,6 @@ urlpatterns = patterns(
     url(r'^ajax/list/(?P<type>[A-Za-z]+)/?$',
         ListAjaxView.as_view(),
         name='ajax-list')
-
-
 
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

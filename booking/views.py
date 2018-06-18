@@ -2553,13 +2553,6 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
                     )
                     evaluationguest.save()
 
-            for evaluation in self.product.evaluations:
-                if evaluation is not None:
-                    evaluationguest = SurveyXactEvaluationGuest(
-                        guest=booking.booker,
-                        evaluation=evaluation
-                    )
-                    evaluationguest.save()
             self.object = booking
             self.model = booking.__class__
 
@@ -4348,7 +4341,6 @@ class EvaluationEditView(BreadcrumbMixin, UpdateView):
         for visit in self.object.product.get_visits():
             for booking in visit.booking_list:
                 guest = booking.booker
-                print guest.id
                 evaluationguest = SurveyXactEvaluationGuest.objects.filter(
                     evaluation=self.object,
                     guest=guest
