@@ -2015,15 +2015,6 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             for_students=True, for_teachers=True
         ).first()
 
-    @property
-    def evaluations(self):
-        return [
-            evaluation for evaluation in [
-                self.student_evaluation, self.teacher_evaluation
-            ]
-            if evaluation is not None
-        ]
-
     def available_time_modes(self, unit=None):
         if self.type is None:
             return Product.time_mode_choices
@@ -5244,24 +5235,18 @@ class Guest(models.Model):
         validators=[validators.MinValueValidator(int(1))]
     )
 
-    def get_booking(self):
-        try:
-            return self.booking
-        except:
-            return None
-
-    def get_evaluationguest(self):
-        try:
-            return self.evaluationguest
-        except:
-            return None
-
     teacher_count = models.IntegerField(
         blank=True,
         null=True,
         default=None,
         verbose_name=u'Heraf lærere'
     )
+
+    def get_booking(self):
+        try:
+            return self.booking
+        except:
+            return None
 
     def get_evaluationguest(self):
         try:
