@@ -2028,6 +2028,18 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             if evaluation is not None
         ]
 
+    booking_close_days_before = models.IntegerField(
+        default=6,
+        verbose_name=_(u'Antal dage før afholdelse, '
+                       u'hvor der lukkes for tilmeldinger'),
+        blank=True
+    )
+
+    inquire_enabled = models.BooleanField(
+        default=True,
+        verbose_name=_(u'"Spørg om tilbud" aktiveret')
+    )
+
     def available_time_modes(self, unit=None):
         if self.type is None:
             return Product.time_mode_choices
@@ -3183,6 +3195,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         if last_workflow_status is None or \
                 last_workflow_status != self.workflow_status:
             self.last_workflow_update = timezone.now()
+            if self.workflow_status == self.WORKFLOW_STATUS_EXECUTED:
+                for evaluation in self.product.evaluations:
+                    evaluation.send_first_notification(self)
 
     @property
     # QuerySet that finds EventTimes that will be affected by resource changes

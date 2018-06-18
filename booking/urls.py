@@ -23,7 +23,8 @@ from booking.resource_based.views import ResourceRequirementUpdateView
 from booking.resource_based.views import VisitResourceEditView
 from booking.views import BecomeHostView
 from booking.views import BecomeTeacherView
-from booking.views import BookingAcceptView, BookingEditView
+from booking.views import BookingAcceptView
+from booking.views import BookingEditView
 from booking.views import BookingNotifyView, BookingDetailView
 from booking.views import BookingSuccessView
 from booking.views import BookingView

@@ -12,8 +12,8 @@ from django.forms import HiddenInput
 from django.forms import TextInput, NumberInput, DateInput, Textarea, Select
 from django.forms import formset_factory, inlineformset_factory
 from django.template import TemplateSyntaxError
-from django.utils.translation import ugettext_lazy as _
 from django.utils.dates import MONTHS
+from django.utils.translation import ugettext_lazy as _
 
 from booking.models import BLANK_LABEL, BLANK_OPTION
 from booking.models import ClassBooking, TeacherBooking, \
