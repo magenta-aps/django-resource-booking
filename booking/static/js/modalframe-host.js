@@ -15,6 +15,11 @@ window.modal = {
         var id = modal.attr("id") || ("m" + window.modalId++);
         this.modals[id] = modal;
         return id;
+    },
+    on: function(id, event, fct) {
+        if (modal.modals[id]) {
+            $(modal.modals[id]).on(event, fct);
+        }
     }
 };
 

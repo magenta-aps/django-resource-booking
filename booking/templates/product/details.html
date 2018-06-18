@@ -150,15 +150,25 @@
                             {% if object.locality %}
                                 <dt>{% trans 'Hvor' %}:</dt>
                                 <dd>
-                                <a href="{{ object.locality.location_url }}" target="_blank">
-                                    {{ object.locality.name }}<br>
-                                    {{ object.locality.address_line }}<br>
-                                    {{ object.locality.zip_city }}
-                                </a> <span class="glyphicon glyphicon-new-window"></span>
+                                    {% if object.locality.no_address %}
+                                        {{ object.locality.name }}
+                                    {% else %}
+                                        <a href="{{ object.locality.location_url }}" target="_blank">
+                                        {{ object.locality.name }}<br>
+                                        {{ object.locality.address_line }}<br>
+                                        {{ object.locality.zip_city }}
+                                        </a> <span class="glyphicon glyphicon-new-window"></span>
+                                    {% endif %}
                                 </dd>
                             {% endif %}
 
-                            <dt>{% trans 'Arrangør' %}:</dt>
+                            <dt>
+                                {% if object.type == object.STUDY_MATERIAL %}
+                                    {% trans 'Udgivet af:' %}
+                                {% else %}
+                                    {% trans 'Arrangør:' %}
+                                {% endif %}
+                            </dt>
                             <dd>
                                 {% if object.organizationalunit.url %}
                                     <a href="{{ object.organizationalunit.url }}" target="_blank">
@@ -213,8 +223,10 @@
                             {% endif %}
 
                             {% if object.duration and object.duration != '00:00' %}
+                                {% if object.is_guest_time_suggested or not object.time_mode == view.model.TIME_MODE_NO_BOOKING and not object.future_bookable_times %}
                                 <dt>{% trans 'Varighed' %}:</dt>
                                 <dd>{{ object.duration|timedelta_i18n }}</dd>
+                                {% endif %}
                             {% endif %}
 
                             {% if object.price %}

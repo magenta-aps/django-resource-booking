@@ -33,9 +33,13 @@
         {% if product.locality %}
             <dt>{% trans 'Hvor:' %}</dt>
             <dd>
-                {{ product.locality.name }},<br/>
-                {{ product.locality.address_line }},<br/>
-                {{ product.locality.zip_city }}
+                {% if product.locality.no_address %}
+                    {{ product.locality.name }}
+                {% else %}
+                    {{ product.locality.name }},<br/>
+                    {{ product.locality.address_line }},<br/>
+                    {{ product.locality.zip_city }}
+                {% endif %}
             </dd>
         {% endif %}
 

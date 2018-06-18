@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 from django.db.models.expressions import OrderBy
 from django.db.models import Q
 from django.core.urlresolvers import reverse
@@ -24,12 +25,12 @@ from booking.models import Visit
 from booking.models import EmailTemplateType
 from booking.models import EventTime
 from booking.models import Locality
-from booking.models import LOGACTION_MANUAL_ENTRY
-from booking.models import log_action
+from booking.constants import LOGACTION_MANUAL_ENTRY
+from booking.logging import log_action
 from booking.models import Room
 from booking.models import MultiProductVisit
-from booking.views import AutologgerMixin
-from booking.views import RoleRequiredMixin, EditorRequriedMixin
+from booking.mixins import RoleRequiredMixin, EditorRequriedMixin, \
+    AutologgerMixin
 from booking.views import VisitDetailView
 from django.views.generic.base import ContextMixin
 from profile.models import TEACHER, HOST, EDIT_ROLES
@@ -126,10 +127,14 @@ class ChangeVisitStatusView(AutologgerMixin, UpdateWithCancelView):
                 EmailTemplateType.notify_all__booking_complete
             )
         if status == Visit.WORKFLOW_STATUS_CANCELLED:
-            # Booking is cancelled
+            # Adjust relations to make the visit list as a cancelled visit
+            self.object.cancel_visit()
+
+            # Send out e-mail notifying everyone that the visit is cancelled
             self.object.autosend(
                 EmailTemplateType.notify_all__booking_canceled
             )
+
         return response
 
 

@@ -772,7 +772,8 @@ mark, .matched-search-phrase {
   padding: 15px 0;
 }
 
-.offer-actions {
+.offer-actions,
+.booking-actions {
   padding: 10px 0;
   text-align: right;
 }
@@ -782,9 +783,20 @@ mark, .matched-search-phrase {
   margin-top: 20px;
 }
 
-.offer-actions .btn, .order-buttons .btn {
+.offer-actions .btn,
+.order-buttons .btn,
+.booking-actions .btn {
   margin-left: 10px;
   margin-bottom: 5px;
+}
+
+.offer-actions .dropdown,
+.offer-actions .dropup,
+.order-buttons .dropdown,
+.order-buttons .dropup,
+.booking-actions .dropdown,
+.booking-actions .dropup {
+  display: inline-block;
 }
 
 .order-buttons::after, .offer-actions::after {
@@ -884,6 +896,13 @@ hr {
   text-align: center;
   background-color: #fff;
   border: none;
+}
+
+.page-count {
+  text-align: center;
+  font-size: 12px;
+  margin: 20px 0;
+  color: #555;
 }
 
 .pagination, .pagination>li:first-child>a, .pagination>li:first-child>span, .pagination>li:last-child>a, .pagination>li:last-child>span {
@@ -1011,7 +1030,7 @@ hr {
 /* Firefox-specific beautification of select dropdown buttons - rather than have an ugly grey box, put in a nice arrow */
 
 @-moz-document url-prefix() {
-  select.form-control {
+  select.form-control:not([multiple]) {
     padding-right: 25px;
     background-image: url("data:image/svg+xml,\
             <svg version='1.1' xmlns='http://www.w3.org/2000/svg' width='10px' height='10px' viewBox='0 0 1000 1000' fill='rgb(51,51,51)'>\
@@ -1337,6 +1356,14 @@ a.template-overridden, a.template-overridden:hover, a.template-overridden:active
 
 /* > Visitoccurrence-search end */
 
+#visit_volunteer_buttons {
+  text-align: center;
+  margin-bottom: 1em;
+}
+
+#visit_volunteer_buttons .btn:not(:first-child) {
+  margin-left: 5mm;
+}
 
 /* frontpage lists */
 
@@ -1772,7 +1799,7 @@ body.lightbox {
   width: 430px;
   height: 430px;
   content: ' ';
-  background: url('http://cms.ku.dk/grafik/images/social-icons/footersegl.svg') no-repeat;
+  background: url('https://cms.secure.ku.dk/grafik/images/social-icons/footersegl.svg') no-repeat;
   background-size: cover;
   opacity: .1;
 }
@@ -1839,7 +1866,7 @@ body.lightbox {
   width: 10px;
   height: 14px;
   content: " ";
-  background: url('http://cms.ku.dk/grafik/images/social-icons/padlock.svg') no-repeat;
+  background: url('https://cms.secure.ku.dk/grafik/images/social-icons/padlock.svg') no-repeat;
   background-size: cover;
 }
 
@@ -1857,9 +1884,6 @@ body.lightbox {
   display: inline-block;
   margin: .5em .3em 0 0;
 }
-
-
-/* MultiProductVisit END */
 
 .cke_dialog_ui_file .cke_dialog_ui_input_file {
   height: 2.5em;
@@ -1884,7 +1908,7 @@ body.lightbox {
 }
 
 .globalfooter .social-items .social-item .social-icon.facebook {
-  background-image: url('http://cms.ku.dk/grafik/images/social-icons/social_icon_facebook.svg');
+  background-image: url('https://cms.secure.ku.dk/grafik/images/social-icons/social_icon_facebook.svg');
 }
 
 .globalfooter .social-items .social-item .social-icon.facebook:hover {
@@ -1892,7 +1916,7 @@ body.lightbox {
 }
 
 .globalfooter .social-items .social-item .social-icon.instagram {
-  background-image: url('http://cms.ku.dk/grafik/images/social-icons/social_icon_instagram.svg');
+  background-image: url('https://cms.secure.ku.dk/grafik/images/social-icons/social_icon_instagram.svg');
 }
 
 .globalfooter .social-items .social-item .social-icon.instagram:hover {
@@ -1900,7 +1924,7 @@ body.lightbox {
 }
 
 .globalfooter .social-items .social-item .social-icon.twitter {
-  background-image: url('http://cms.ku.dk/grafik/images/social-icons/social_icon_twitter.svg');
+  background-image: url('https://cms.secure.ku.dk/grafik/images/social-icons/social_icon_twitter.svg');
 }
 
 .globalfooter .social-items .social-item .social-icon.twitter:hover {
@@ -1908,7 +1932,7 @@ body.lightbox {
 }
 
 .globalfooter .social-items .social-item .social-icon.app {
-  background-image: url('http://cms.ku.dk/grafik/images/social-icons/social_icon_app.svg');
+  background-image: url('https://cms.secure.ku.dk/grafik/images/social-icons/social_icon_app.svg');
 }
 
 .globalfooter .social-items .social-item .social-icon.app:hover {
@@ -1916,7 +1940,7 @@ body.lightbox {
 }
 
 .globalfooter .social-items .social-item .social-icon.coursera {
-  background-image: url('http://cms.ku.dk/grafik/images/social-icons/social_icon_coursera.svg');
+  background-image: url('https://cms.secure.ku.dk/grafik/images/social-icons/social_icon_coursera.svg');
 }
 
 .globalfooter .social-items .social-item .social-icon.coursera:hover {
@@ -1924,7 +1948,7 @@ body.lightbox {
 }
 
 .globalfooter .social-items .social-item .social-icon.futurity {
-  background-image: url('http://cms.ku.dk/grafik/images/social-icons/social_icon_futurity.svg');
+  background-image: url('https://cms.secure.ku.dk/grafik/images/social-icons/social_icon_futurity.svg');
 }
 
 .globalfooter .social-items .social-item .social-icon.futurity:hover {
@@ -1932,7 +1956,7 @@ body.lightbox {
 }
 
 .globalfooter .social-items .social-item .social-icon.ku_video {
-  background-image: url('http://cms.ku.dk/grafik/images/social-icons/social_icon_ku_video.svg');
+  background-image: url('https://cms.secure.ku.dk/grafik/images/social-icons/social_icon_ku_video.svg');
 }
 
 .globalfooter .social-items .social-item .social-icon.ku_video:hover {
@@ -1940,7 +1964,7 @@ body.lightbox {
 }
 
 .globalfooter .social-items .social-item .social-icon.linkedin {
-  background-image: url('http://cms.ku.dk/grafik/images/social-icons/social_icon_linkedin.svg');
+  background-image: url('https://cms.secure.ku.dk/grafik/images/social-icons/social_icon_linkedin.svg');
 }
 
 .globalfooter .social-items .social-item .social-icon.linkedin:hover {
@@ -1948,7 +1972,7 @@ body.lightbox {
 }
 
 .globalfooter .social-items .social-item .social-icon.rss {
-  background-image: url('http://cms.ku.dk/grafik/images/social-icons/social_icon_rss.svg');
+  background-image: url('https://cms.secure.ku.dk/grafik/images/social-icons/social_icon_rss.svg');
 }
 
 .globalfooter .social-items .social-item .social-icon.rss:hover {
@@ -1956,7 +1980,7 @@ body.lightbox {
 }
 
 .globalfooter .social-items .social-item .social-icon.the_conversation {
-  background-image: url('http://cms.ku.dk/grafik/images/social-icons/social_icon_the_conversation.svg');
+  background-image: url('https://cms.secure.ku.dk/grafik/images/social-icons/social_icon_the_conversation.svg');
 }
 
 .globalfooter .social-items .social-item .social-icon.the_conversation:hover {
@@ -1964,14 +1988,12 @@ body.lightbox {
 }
 
 
-/* MultiProductVisit END */
-
 .cke_dialog_ui_file .cke_dialog_ui_input_file {
   height: 2.5em;
 }
 
 .globalfooter .social-items .social-item .social-icon.vimeo {
-  background-image: url('http://cms.ku.dk/grafik/images/social-icons/social_icon_vimeo.svg');
+  background-image: url('https://cms.secure.ku.dk/grafik/images/social-icons/social_icon_vimeo.svg');
 }
 
 .globalfooter .social-items .social-item .social-icon.vimeo:hover {
@@ -1979,7 +2001,7 @@ body.lightbox {
 }
 
 .globalfooter .social-items .social-item .social-icon.youtube {
-  background-image: url('http://cms.ku.dk/grafik/images/social-icons/social_icon_youtube.svg');
+  background-image: url('https://cms.secure.ku.dk/grafik/images/social-icons/social_icon_youtube.svg');
 }
 
 .globalfooter .social-items .social-item .social-icon.youtube:hover {
@@ -2315,4 +2337,17 @@ body.lightbox {
 .ku-filters {
   color: #252525;
   font-weight: 400;
+}
+
+ul.product-time-list {
+  padding-left: 1.1em;
+}
+
+.product-time-availability {
+  display: block;
+  font-size: smaller;
+}
+
+li#product-time-list-expand {
+  list-style-type: none;
 }

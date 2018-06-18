@@ -3,7 +3,7 @@
     {% if bookingform.eventtime %}
         <div class="form-group">
             <div class="col-sm-2">
-                <label class="control-label" for="{{ bookingform.eventtime.id_for_label }}">{{ bookingform.eventtime.label }}{% if bookingform.eventtime.field.required %}*{% endif %}</label>
+                <label class="control-label required" for="{{ bookingform.eventtime.id_for_label }}">{{ bookingform.eventtime.label }}{% if bookingform.eventtime.field.required %}{% endif %}</label>
             </div>
             <div class="col-sm-6{% if bookingform.eventtime.errors %} has-error{% endif %}">
                 {{ bookingform.eventtime }}
@@ -17,7 +17,7 @@
     {% if bookingform.desired_time %}
         <div class="form-group">
             <div class="col-sm-2">
-                <label class="control-label" for="{{ bookingform.desired_time.id_for_label }}">{% trans "Ønsket tidspunkt" %}{% if bookingform.desired_time.field.required %}*{% endif %}</label>
+                <label class="control-label required" for="{{ bookingform.desired_time.id_for_label }}">{% trans "Ønsket tidspunkt" %}{% if bookingform.desired_time.field.required %}{% endif %}</label>
             </div>
             <div class="col-sm-6{% if bookingform.desired_time.errors %} has-error{% endif %}">
                 {{ bookingform.desired_time }}

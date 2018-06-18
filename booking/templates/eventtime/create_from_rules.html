@@ -13,7 +13,8 @@
 
 {% block content %}
     {% timezone "Europe/Copenhagen" %}
-    <div class="divider"></div>
+    {% include 'common/breadcrumbrow.html' %}
+
     <h1>
         {% trans "Opret tidspunkter for" %}
         '<a href="{% url 'product-view' product.pk %}">{{ product.title }}</a>'
@@ -106,7 +107,7 @@
                     {% trans 'På dato' %}
                     <input id="input-until" name="until" type="text" class="form-control" placeholder="{% trans 'Dato' %}">
                     <label class="label-unstyled" for="input-count">
-                        {% blocktrans with box='<input id="input-count" name="count" type="text" class="form-control" placeholder="0" value="1">' %}
+                        {% blocktrans with box='<input id="input-count" name="count" type="text" class="form-control" placeholder="0" value="10">' %}
                         eller efter {{ box }} forekomster
                         {% endblocktrans %}
                     </label>

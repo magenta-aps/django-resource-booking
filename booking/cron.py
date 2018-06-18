@@ -52,9 +52,13 @@ class ReminderJob(KuCronJob):
     description = "sends reminder emails"
 
     def run(self):
+        emailtemplatetypes = [
+            EmailTemplateType.notity_all__booking_reminder,
+            EmailTemplateType.notify_guest_reminder
+        ]
         autosends = list(VisitAutosend.objects.filter(
             enabled=True,
-            template_type=EmailTemplateType.notity_all__booking_reminder,
+            template_type__in=emailtemplatetypes,
             days__isnull=False,
             inherit=False,
             visit__eventtime__start__isnull=False,
@@ -64,7 +68,9 @@ class ReminderJob(KuCronJob):
 
         inheriting_autosends = list(VisitAutosend.objects.filter(
             inherit=True,
-            template_type=EmailTemplateType.notity_all__booking_reminder,
+            template_type__in=emailtemplatetypes,
+            visit__eventtime__start__isnull=False,
+            visit__eventtime__start__gte=timezone.now()
         ).all())
 
         extra = []
@@ -96,7 +102,7 @@ class ReminderJob(KuCronJob):
                         if reminderday == today:
                             print "    That's today; send reminder now"
                             autosend.visit.autosend(
-                                EmailTemplateType.notity_all__booking_reminder
+                                autosend.template_type
                             )
                         else:
                             print "    That's not today. Not sending reminder"
