@@ -1939,6 +1939,9 @@ class EvaluationForm(forms.ModelForm):
                 )
             ]
         super(EvaluationForm, self).__init__(*args, **kwargs)
+        if self.instance:
+            self.fields['nonparticipating_guests'].queryset = \
+                self.instance.guests
 
     def get_queryset(self):
         return SurveyXactEvaluation.objects.filter(product=self.product)
@@ -1948,23 +1951,28 @@ class EvaluationForm(forms.ModelForm):
         super(EvaluationForm, self).save(commit)
         existing_guests = {
             evalguest.guest: evalguest
-            for evalguest in self.instance.evaluationguest_set.all()
+            for evalguest in self.instance.evaluationguests
         }
-        for booking in self.visit.booking_list:
-            guest = booking.booker
-            status = SurveyXactEvaluationGuest.STATUS_NO_PARTICIPATION
-            if guest not in self.cleaned_data['nonparticipating_guests']:
-                status = SurveyXactEvaluationGuest.STATUS_NOT_SENT
-            if guest in existing_guests:
-                evalguest = existing_guests[guest]
-                evalguest.status = status
-            else:
-                evalguest = SurveyXactEvaluationGuest(
-                    evaluation=self.instance,
-                    guest=guest,
-                    status=status
-                )
-            evalguest.save()
+        for visit in self.product.get_visits():
+            for booking in visit.booking_list:
+                guest = booking.booker
+                status = None
+                if guest in self.cleaned_data['nonparticipating_guests']:
+                    status = SurveyXactEvaluationGuest.STATUS_NO_PARTICIPATION
+
+                if guest in existing_guests:
+                    evalguest = existing_guests[guest]
+                    if status is not None:
+                        evalguest.status = status
+                else:
+                    if status is None:
+                        status = SurveyXactEvaluationGuest.STATUS_NOT_SENT
+                    evalguest = SurveyXactEvaluationGuest(
+                        evaluation=self.instance,
+                        guest=guest,
+                        status=status
+                    )
+                evalguest.save()
         return self.instance
 
 

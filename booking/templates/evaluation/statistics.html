@@ -49,37 +49,43 @@
     <table class="table table-bordered">
         <thead>
             <tr>
-                <th rowspan="2" class="text-center text-top">{% trans 'Tilbud' %}</th>
+                <th rowspan="2" class="text-center text-top">{% trans 'Enhed' %}</th>
+                <th rowspan="2" class="text-center text-top">{% trans 'Titel' %}</th>
                 <th rowspan="2" class="text-center text-top">{% trans 'Dato' %}</th>
+                <th rowspan="2" class="text-center text-top">{% trans 'Type' %}</th>
                 <th colspan="5" class="text-center">{% trans 'Status' %}</th>
             </tr>
         <tr>
-            <th class="text-center">{% trans 'Ikke deltagende' %}</th>
-            <th class="text-center">{% trans 'Ikke afholdt' %}</th>
-            <th class="text-center">{% trans 'Sendt første gang' %}</th>
-            <th class="text-center">{% trans 'Sendt anden gang' %}</th>
-            <th class="text-center">{% trans 'Har klikket på link' %}</th>
+            {% for label in labels %}
+            <th class="text-center">{{ label }}</th>
+            {% endfor %}
         </tr>
         </thead>
         <tbody>
             {% for visit in visits %}
-                <tr>
-                    <td>
-                        {% if visit.is_multiproductvisit %}
-                        {{ visit.display_title }}
-                        {% else %}
-                        <a href="{% url 'product-view' visit.product.id %}">{{ visit.display_title }}</a>
+                {% for label, data in visit.evaluation_guestset.items %}
+                    <tr>
+                        {% if forloop.first %}
+                            <td rowspan="{{ visit.evaluation_guestset|length }}">
+                                {{ visit.organizationalunit.name }}
+                            </td>
+                            <td rowspan="{{ visit.evaluation_guestset|length }}">
+                                {% if visit.is_multiproductvisit %}
+                                {{ visit.display_title }}
+                                {% else %}
+                                <a href="{% url 'product-view' visit.product.id %}">{{ visit.display_title }}</a>
+                                {% endif %}
+                            </td>
+                            <td rowspan="{{ visit.evaluation_guestset|length }}">
+                                <a href="{% url 'visit-view' visit.id %}">{{ visit.date_display }}</a>
+                            </td>
                         {% endif %}
-                    </td>
-                    <td>
-                        <a href="{% url 'visit-view' visit.id %}">{{ visit.date_display }}</a>
-                    </td>
-                    <td>{{ visit.evaluation_no_participation.count }}</td>
-                    <td>{{ visit.evaluation_not_sent.count }}</td>
-                    <td>{{ visit.evaluation_first_sent.count }}</td>
-                    <td>{{ visit.evaluation_second_sent.count }}</td>
-                    <td>{{ visit.evaluation_link_clicked.count }}</td>
-                </tr>
+                        <td>{{ label }}</td>
+                        {% for item in data %}
+                            <td>{{ item }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
             {% endfor %}
         </tbody>
     </table>

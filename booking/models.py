@@ -4216,40 +4216,73 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def student_evaluation_guests(self):
+        if self.product.student_evaluation is None:
+            return SurveyXactEvaluationGuest.objects.none()
         return self.product.student_evaluation.surveyxactevaluationguest_set
 
     @property
-    def evaluation_student_no_participation(self):
-        return SurveyXactEvaluationGuest.filter_status(
-            self.student_evaluation_guests,
+    def teacher_evaluation_guests(self):
+        if self.product.teacher_evaluation is None:
+            return SurveyXactEvaluationGuest.objects.none()
+        return self.product.teacher_evaluation.surveyxactevaluationguest_set
+
+    # Used by evaluation statistics page
+    def evaluation_guestset(self):
+        statuslist = [
+            key for (key, label) in
+            SurveyXactEvaluationGuest.status_choices
+        ]
+        output = {}
+        if self.product.student_evaluation is not None:
+            output[_(u'Elever')] = [
+                SurveyXactEvaluationGuest.filter_status(
+                    self.student_evaluation_guests, status
+                ).count()
+                for status in statuslist
+            ]
+        if self.product.teacher_evaluation is not None:
+            output[_(u'Lærere')] = [
+                SurveyXactEvaluationGuest.filter_status(
+                    self.teacher_evaluation_guests, status
+                ).count()
+                for status in statuslist
+            ]
+        return output
+
+    @staticmethod
+    def evaluation_guestset_labels(self):
+        return [
+            label for (key, label) in
+            SurveyXactEvaluationGuest.status_choices
+        ]
+
+    @property
+    def evaluation_no_participation(self):
+        return self.evaluation_guestset(
             SurveyXactEvaluationGuest.STATUS_NO_PARTICIPATION
         )
 
     @property
     def evaluation_not_sent(self):
-        return SurveyXactEvaluationGuest.filter_status(
-            self.student_evaluation_guests,
+        return self.evaluation_guestset(
             SurveyXactEvaluationGuest.STATUS_NOT_SENT
         )
 
     @property
     def evaluation_first_sent(self):
-        return SurveyXactEvaluationGuest.filter_status(
-            self.student_evaluation_guests,
+        return self.evaluation_guestset(
             SurveyXactEvaluationGuest.STATUS_FIRST_SENT
         )
 
     @property
     def evaluation_second_sent(self):
-        return SurveyXactEvaluationGuest.filter_status(
-            self.student_evaluation_guests,
+        return self.evaluation_guestset(
             SurveyXactEvaluationGuest.STATUS_SECOND_SENT
         )
 
     @property
     def evaluation_link_clicked(self):
-        return SurveyXactEvaluationGuest.filter_status(
-            self.student_evaluation_guests,
+        return self.evaluation_guestset(
             SurveyXactEvaluationGuest.STATUS_LINK_CLICKED
         )
 
@@ -5940,6 +5973,7 @@ class SurveyXactEvaluation(models.Model):
 
 
 class SurveyXactEvaluationGuest(models.Model):
+
     evaluation = models.ForeignKey(
         SurveyXactEvaluation,
         null=True,
@@ -6013,6 +6047,8 @@ class SurveyXactEvaluationGuest(models.Model):
     def save(self, *args, **kwargs):
         if self.shortlink_id is None or len(self.shortlink_id) == 0:
             self.shortlink_id = ''.join(get_random_string(length=13))
+        if self.url is None:
+            self.find_url()
         return super(SurveyXactEvaluationGuest, self).save(*args, **kwargs)
 
     @property
