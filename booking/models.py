@@ -5966,29 +5966,17 @@ class SurveyXactEvaluation(models.Model):
                 print e
 
     def send_first_notification(self, visit):
-        template = EmailTemplateType.notify_guest__evaluation_first_students \
-            if self.for_students \
-            else EmailTemplateType.notify_guest__evaluation_first
-        self.send_notification(
-            template,
-            SurveyXactEvaluationGuest.STATUS_FIRST_SENT,
-            {
-                'guest__booking__visit': visit
-            }
-        )
+        qs = self.evaluationguests.filter(guest__booking__visit=visit)
+        for evalguest in qs:
+            evalguest.send(True)
 
     def send_second_notification(self, visit):
-        template = EmailTemplateType.notify_guest__evaluation_second_students \
-            if self.for_students \
-            else EmailTemplateType.notify_guest__evaluation_second
-        self.send_notification(
-            template,
-            SurveyXactEvaluationGuest.STATUS_SECOND_SENT,
-            {
-                'status': SurveyXactEvaluationGuest.STATUS_FIRST_SENT,
-                'guest__booking__visit': visit
-            }
+        qs = self.evaluationguests.filter(
+            status=SurveyXactEvaluationGuest.STATUS_FIRST_SENT,
+            guest__booking__visit=visit
         )
+        for evalguest in qs:
+            evalguest.send(True)
 
 
 class SurveyXactEvaluationGuest(models.Model):
