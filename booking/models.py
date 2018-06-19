@@ -4345,7 +4345,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         return output
 
     @staticmethod
-    def evaluation_guestset_labels(self):
+    def evaluation_guestset_labels():
         return [
             label for (key, label) in
             SurveyXactEvaluationGuest.status_choices
