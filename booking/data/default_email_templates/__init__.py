@@ -37,6 +37,7 @@ IMPORT_MAP = {
     EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST: 'evaluation1',
     EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST_STUDENTS: 'evaluation1_students',
     EmailTemplateType.NOTIFY_GUEST__EVALUATION_SECOND: 'evaluation2',
+    EmailTemplateType.NOTIFY_GUEST__EVALUATION_SECOND_STUDENTS: 'evaluation2_students',
 }
 
 

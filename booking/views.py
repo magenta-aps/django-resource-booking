@@ -3959,7 +3959,7 @@ class EvaluationOverviewView(LoginRequiredMixin, BreadcrumbMixin, ListView):
             formdata = form.cleaned_data
             product_qs = Product.objects.filter(
                 organizationalunit=form.user.userprofile.get_unit_queryset(),
-                evaluation__isnull=False
+                surveyxactevaluation__isnull=False
             )
             visit_qs = Visit.objects.all()
             unit_limit = formdata.get('organizationalunit', [])

@@ -501,6 +501,7 @@ class EmailTemplateType(
     NOTIFY_GUEST__EVALUATION_FIRST = 24  # Ticket 13819
     NOTIFY_GUEST__EVALUATION_FIRST_STUDENTS = 26  # Ticket 13819
     NOTIFY_GUEST__EVALUATION_SECOND = 25  # Ticket 13819
+    NOTIFY_GUEST__EVALUATION_SECOND_STUDENTS = 27  # Ticket 13819
 
     @staticmethod
     def get(template_key):
@@ -971,6 +972,20 @@ class EmailTemplateType(
             enable_days=False,
             is_default=True,
             ordering=26
+        )
+
+        EmailTemplateType.set_default(
+            EmailTemplateType.NOTIFY_GUEST__EVALUATION_SECOND_STUDENTS,
+            name_da=u'Besked til bruger angående evaluering (anden besked), '
+                    u'for videresendelse til elever',
+            manual_sending_visit_enabled=True,
+            form_show=True,
+            send_to_booker=True,
+            send_to_booker_on_waitinglist=False,
+            enable_autosend=True,
+            enable_booking=True,
+            is_default=True,
+            ordering=27
         )
 
     @staticmethod
@@ -5379,9 +5394,19 @@ class Guest(models.Model):
         except:
             return None
 
-    def get_evaluationguest(self):
+    def evaluationguest_student(self):
         try:
-            return self.evaluationguest
+            return self.surveyxactevaluationguest_set.filter(
+                evaluation__for_students=True, evaluation__for_teachers=False
+            ).first()
+        except:
+            return None
+
+    def evaluationguest_teacher(self):
+        try:
+            return self.surveyxactevaluationguest_set.filter(
+                evaluation__for_students=False, evaluation__for_teachers=True
+            ).first()
         except:
             return None
 
@@ -5518,7 +5543,8 @@ class Booking(models.Model):
         if visit.is_multiproductvisit and template_type.key in [
             EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST,
             EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST_STUDENTS,
-            EmailTemplateType.NOTIFY_GUEST__EVALUATION_SECOND
+            EmailTemplateType.NOTIFY_GUEST__EVALUATION_SECOND,
+            EmailTemplateType.NOTIFY_GUEST__EVALUATION_SECOND_STUDENTS
         ]:
             for product in visit.products:
                 if product.autosend_enabled(template_type):
@@ -5901,6 +5927,8 @@ class KUEmailMessage(models.Model):
                 htmlbody = None
                 textbody = body
 
+            print body
+
             message = EmailMultiAlternatives(
                 subject=subject,
                 body=textbody,
@@ -5999,7 +6027,6 @@ class BookerResponseNonce(models.Model):
             'booker': booker,
         }
         attrs.update(kwargs)
-
         return cls.objects.create(**attrs)
 
 
@@ -6026,7 +6053,7 @@ class SurveyXactEvaluation(models.Model):
 
     @property
     def evaluationguests(self):
-        return self.surveyxactevaluationguest_set.all()
+        return self.surveyxactevaluationguest_set.all().order_by('id')
 
     def send_notification(self, template_type, new_status, filter=None):
         qs = self.evaluationguests
@@ -6044,7 +6071,6 @@ class SurveyXactEvaluation(models.Model):
                 print e
 
     def send_first_notification(self, visit):
-        print "send first notification pertaining to visit %d" % visit.id
         template = EmailTemplateType.notify_guest__evaluation_first_students \
             if self.for_students \
             else EmailTemplateType.notify_guest__evaluation_first
@@ -6057,9 +6083,11 @@ class SurveyXactEvaluation(models.Model):
         )
 
     def send_second_notification(self, visit):
-        print "send second notification pertaining to visit %d" % visit.id
+        template = EmailTemplateType.notify_guest__evaluation_second_students \
+            if self.for_students \
+            else EmailTemplateType.notify_guest__evaluation_second
         self.send_notification(
-            EmailTemplateType.notify_guest__evaluation_second,
+            template,
             SurveyXactEvaluationGuest.STATUS_SECOND_SENT,
             {
                 'status': SurveyXactEvaluationGuest.STATUS_FIRST_SENT,
@@ -6075,7 +6103,8 @@ class SurveyXactEvaluationGuest(models.Model):
         null=True,
         blank=True
     )
-    guest = models.OneToOneField(
+
+    guest = models.ForeignKey(
         Guest,
         null=False,
         blank=False
@@ -6118,10 +6147,11 @@ class SurveyXactEvaluationGuest(models.Model):
 
     @staticmethod
     def link_obtain(shortlink_id):
-        return settings.PUBLIC_URL + reverse(
+        s = settings.PUBLIC_URL + reverse(
             'evaluation-redirect',
             args=[shortlink_id]
         )
+        return s
 
     @property
     def status_display(self):
@@ -6179,7 +6209,11 @@ class SurveyXactEvaluationGuest(models.Model):
                 template = EmailTemplateType.notify_guest__evaluation_first
             new_status = SurveyXactEvaluationGuest.STATUS_FIRST_SENT
         else:
-            template = EmailTemplateType.notify_guest__evaluation_second
+            if self.evaluation.for_students:
+                template = EmailTemplateType.\
+                    notify_guest__evaluation_second_students
+            else:
+                template = EmailTemplateType.notify_guest__evaluation_second
             new_status = SurveyXactEvaluationGuest.STATUS_SECOND_SENT
 
         sent = self.booking.autosend(template)

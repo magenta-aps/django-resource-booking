@@ -335,10 +335,6 @@ urlpatterns = patterns(
         EmailReplyView.as_view(),
         name='reply-to-email'),
 
-    url(r'^evaluations/?',
-        EvaluationOverviewView.as_view(),
-        name='evaluations'),
-
     url(r'^resource/create/?$',
         ResourceCreateView.as_view(),
         name='resource-create'),
@@ -477,25 +473,26 @@ urlpatterns = patterns(
     url(r'^evaluation/create/(?P<product>[0-9]+)/?$',
         EvaluationEditView.as_view(),
         name='evaluation-create'),
-
     url(r'^evaluation/(?P<pk>[0-9]+)/edit/?$',
         EvaluationEditView.as_view(),
         name='evaluation-edit'),
-
     url(r'^evaluation/(?P<pk>[0-9]+)/?$',
         EvaluationDetailView.as_view(),
         name='evaluation-view'),
     url(r'^evaluation/(?P<pk>[0-9]+)/(?P<g>[0-9]+)/(?P<i>[0-9]+)/?$',
         EvaluationDetailView.as_view(),
         name='evaluation-view-send'),
-
     url(r'^e/(?P<linkid>[a-zA-Z0-9]+(_s)?)$',
         EvaluationRedirectView.as_view(),
         name='evaluation-redirect'),
-
     url(r'^evaluation/statistics/?$',
         EvaluationStatisticsView.as_view(),
         name='evaluation-statistics'),
+
+    # Maybe obsolete?
+    url(r'^evaluations/?',
+        EvaluationOverviewView.as_view(),
+        name='evaluations'),
 
     url(r'^ajax/list/(?P<type>[A-Za-z]+)/?$',
         ListAjaxView.as_view(),
