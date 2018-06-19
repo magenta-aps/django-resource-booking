@@ -1929,9 +1929,9 @@ class EvaluationForm(forms.ModelForm):
         }
 
     def __init__(self, product, *args, **kwargs):
-        self.instance = kwargs.get('instance')
+        self.instance = instance = kwargs.get('instance')
         self.product = product
-        if self.instance:
+        if self.instance is not None:
             kwargs['initial']['nonparticipating_guests'] = [
                 evaluationguest.guest
                 for evaluationguest in self.instance.evaluationguests.filter(
@@ -1939,9 +1939,10 @@ class EvaluationForm(forms.ModelForm):
                 )
             ]
         super(EvaluationForm, self).__init__(*args, **kwargs)
-        if self.instance:
-            self.fields['nonparticipating_guests'].queryset = \
-                self.instance.guests
+        if instance is None:
+            self.fields['nonparticipating_guests'].widget = HiddenInput()
+        else:
+            self.fields['nonparticipating_guests'].queryset = instance.guests
 
     def get_queryset(self):
         return SurveyXactEvaluation.objects.filter(product=self.product)
