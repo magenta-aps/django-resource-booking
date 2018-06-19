@@ -2724,15 +2724,14 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
             object.booker = forms['bookerform'].save()
         object.save()
 
-        for product in self.visit.products:
-            for evaluation in product.evaluations:
-                if evaluation is not None:
-                    evaluationguest = SurveyXactEvaluationGuest(
-                        product=product,
-                        evaluation=evaluation,
-                        guest=object.booker
-                    )
-                    evaluationguest.save()
+        # for product in self.visit.products:
+        #     for evaluation in product.evaluations:
+        #         if evaluation is not None:
+        #             evaluationguest = SurveyXactEvaluationGuest(
+        #                 evaluation=evaluation,
+        #                 guest=object.booker
+        #             )
+        #             evaluationguest.save()
 
         object.autosend(
             EmailTemplateType.notify_guest__booking_created_untimed
@@ -4450,7 +4449,8 @@ class EvaluationStatisticsView(BreadcrumbMixin, TemplateView):
         context = {
             'has_filter': has_filter,
             'visits': queryset,
-            'form': form
+            'form': form,
+            'labels': Visit.evaluation_guestset_labels
         }
         context.update(kwargs)
         return super(EvaluationStatisticsView, self).get_context_data(
