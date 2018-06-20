@@ -6120,9 +6120,6 @@ class SurveyXactEvaluationGuest(models.Model):
     shortlink_id = models.CharField(
         max_length=16,
     )
-    url = models.URLField(
-        null=True
-    )
 
     @staticmethod
     def filter_status(qs, status):
@@ -6153,8 +6150,6 @@ class SurveyXactEvaluationGuest(models.Model):
     def save(self, *args, **kwargs):
         if self.shortlink_id is None or len(self.shortlink_id) == 0:
             self.shortlink_id = ''.join(get_random_string(length=13))
-        # if self.url is None:
-        #     self.find_url()
         return super(SurveyXactEvaluationGuest, self).save(*args, **kwargs)
 
     @property
@@ -6169,19 +6164,6 @@ class SurveyXactEvaluationGuest(models.Model):
     def product(self):
         return self.evaluation.product
 
-    def find_url(self):
-        preload_data = {
-            'email': self.guest.email,
-            'id': str(self.product.id),
-            'rundv_1': str(bool2int(
-                getattr(self.visit, 'tour_desired', False)
-            )),
-            'titel': self.product.title,
-            'undervis': self.visit.assigned_teachers.first() or ''
-        }
-        self.url = surveyxact_upload(self.evaluation.surveyId, preload_data)
-        return self.url
-
     @staticmethod
     def get_redirect_url(shortlink_id, set_link_click=False):
         try:
@@ -6190,7 +6172,16 @@ class SurveyXactEvaluationGuest(models.Model):
             )
         except:
             return None
-        url = evalguest.find_url()
+        preload_data = {
+            'email': evalguest.guest.email,
+            'id': str(evalguest.product.id),
+            'rundv_1': str(bool2int(
+                getattr(evalguest.visit, 'tour_desired', False)
+            )),
+            'titel': evalguest.product.title,
+            'undervis': evalguest.visit.assigned_teachers.first() or ''
+        }
+        url = surveyxact_upload(evalguest.evaluation.surveyId, preload_data)
         if url is None or 'error' in url:
             return None
         if set_link_click:
@@ -6202,7 +6193,6 @@ class SurveyXactEvaluationGuest(models.Model):
         self.save()
 
     def send(self, first=True):
-        self.find_url()
         if first:
             if self.evaluation.for_students:
                 template = EmailTemplateType.\
