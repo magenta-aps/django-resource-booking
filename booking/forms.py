@@ -1853,7 +1853,8 @@ class MultiProductVisitTempDateForm(forms.ModelForm):
                 if bookability == Product.NONBOOKABLE_REASON__BOOKING_CUTOFF:
                     reason += unicode(
                         _(u'Der er lukket for tilmelding '
-                          u'%d dage før afholdelse.') % product.booking_cutoff
+                          u'%d dage før afholdelse.') %
+                        product.booking_close_days_before
                     )
                 elif bookability == \
                         Product.NONBOOKABLE_REASON__HAS_NO_BOOKABLE_VISITS:
