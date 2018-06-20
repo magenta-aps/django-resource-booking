@@ -6073,15 +6073,15 @@ class SurveyXactEvaluationGuest(models.Model):
         except:
             return None
         preload_data = {
-            'email': self.guest.email,
-            'id': str(self.product.id),
+            'email': evalguest.guest.email,
+            'id': str(evalguest.product.id),
             'rundv_1': str(bool2int(
-                getattr(self.visit, 'tour_desired', False)
+                getattr(evalguest.visit, 'tour_desired', False)
             )),
-            'titel': self.product.title,
-            'undervis': self.visit.assigned_teachers.first() or ''
+            'titel': evalguest.product.title,
+            'undervis': evalguest.visit.assigned_teachers.first() or ''
         }
-        url = surveyxact_upload(self.evaluation.surveyId, preload_data)
+        url = surveyxact_upload(evalguest.evaluation.surveyId, preload_data)
         if url is None or 'error' in url:
             return None
         if set_link_click:
