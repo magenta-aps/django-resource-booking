@@ -244,12 +244,7 @@ PUBLIC_URL_PROTOCOL = 'http'
 PUBLIC_URL_HOSTNAME = 'fokusku.dk'
 PUBLIC_URL_PORT = None
 
-local_settings_file = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)),
-    'local_settings.py'
-)
-if os.path.exists(local_settings_file):
-    from local_settings import *  # noqa
+SURVEYXACT = {}
 
 # Add extra middleware defined in the local settings file to the ones
 # already specified.
@@ -288,3 +283,12 @@ if ENABLE_DEBUG_TOOLBAR:
     ) + MIDDLEWARE_CLASSES
     if "127.0.0.1" not in INTERNAL_IPS:
         INTERNAL_IPS = INTERNAL_IPS + ("127.0.0.1",)
+
+
+# Keep this in the end of the file
+local_settings_file = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    'local_settings.py'
+)
+if os.path.exists(local_settings_file):
+    from local_settings import *  # noqa

@@ -1,17 +1,19 @@
 # encoding: utf-8
-from django.contrib.contenttypes.models import ContentType
+import cStringIO
+import codecs
+import csv
+import os
+import re
+import sys
+from itertools import chain
+from subprocess import Popen, PIPE
+
+import requests
+from django.conf import settings
 from django.contrib.admin.models import LogEntry, DELETION, ADDITION, CHANGE
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import SuspiciousFileOperation
 from django.core.files.storage import FileSystemStorage
-from subprocess import Popen, PIPE
-import os
-import sys
-import re
-
-import csv
-import codecs
-import cStringIO
-from itertools import chain
 
 
 class LogAction(object):
@@ -492,3 +494,46 @@ class TemplateSplit(object):
                 start = found[1]
             else:
                 return all
+
+
+def surveyxact_upload(survey_id, data):
+    config = settings.SURVEYXACT
+    csv_prefix = '\xff\xfe'
+    csv_suffix = '\x0a\x00'
+    header = []
+    body = []
+    for key, value in data.iteritems():
+        header.append(unicode(key))
+        body.append(unicode(value))
+    csv_body = u"%s\t\n%s\t" % ('\t'.join(header), '\t'.join(body))
+
+    response = requests.post(
+        config['url'],
+        headers={
+            'Expect': '100-continue'
+        },
+        data={
+            'username': config['username'],
+            'password': config['password'],
+            'surveyId': str(survey_id)
+        },
+        files={
+            'dataFile': (
+                'data.csv',
+                csv_prefix + csv_body.encode('UTF-16LE') + csv_suffix
+            )
+        }
+    )
+    if response.status_code != 200:
+        print "Error creating respondent with data:"
+        print body
+    else:
+        m = re.search(r'<collecturl>([^<]*)</collecturl>', response.text)
+        if m is not None:
+            return m.group(1)
+        else:
+            print "Didn't find collecturl in %s" % response.text
+
+
+def bool2int(bool):
+    return 1 if bool else 0
