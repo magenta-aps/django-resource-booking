@@ -7,6 +7,7 @@ import uuid
 from datetime import timedelta, datetime, date, time
 
 import djorm_pgfulltext.fields
+from django.conf import settings
 from django.contrib.admin.models import LogEntry
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -38,12 +39,16 @@ from djorm_pgfulltext.models import SearchManager
 from booking.constants import LOGACTION_MAIL_SENT
 from booking.logging import log_action
 from booking.mixins import AvailabilityUpdaterMixin
-from booking.utils import ClassProperty, full_email, CustomStorage, html2text
+from booking.utils import ClassProperty
+from booking.utils import CustomStorage
+from booking.utils import bool2int
 from booking.utils import flatten
+from booking.utils import full_email
 from booking.utils import get_related_content_types, INFINITY, merge_dicts
+from booking.utils import html2text
+from booking.utils import surveyxact_upload
 from profile.constants import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
 from profile.constants import TEACHER, HOST, NONE, get_role_name
-from resource_booking import settings
 
 BLANK_LABEL = '---------'
 BLANK_OPTION = (None, BLANK_LABEL,)
@@ -5927,8 +5932,6 @@ class KUEmailMessage(models.Model):
                 htmlbody = None
                 textbody = body
 
-            print body
-
             message = EmailMultiAlternatives(
                 subject=subject,
                 body=textbody,
@@ -6150,8 +6153,8 @@ class SurveyXactEvaluationGuest(models.Model):
     def save(self, *args, **kwargs):
         if self.shortlink_id is None or len(self.shortlink_id) == 0:
             self.shortlink_id = ''.join(get_random_string(length=13))
-        if self.url is None:
-            self.find_url()
+        # if self.url is None:
+        #     self.find_url()
         return super(SurveyXactEvaluationGuest, self).save(*args, **kwargs)
 
     @property
@@ -6167,7 +6170,17 @@ class SurveyXactEvaluationGuest(models.Model):
         return self.evaluation.product
 
     def find_url(self):
-        self.url = "https://magenta.dk"
+        preload_data = {
+            'email': self.guest.email,
+            'id': str(self.product.id),
+            'rundv_1': str(bool2int(
+                getattr(self.visit, 'tour_desired', False)
+            )),
+            'titel': self.product.title,
+            'undervis': self.visit.assigned_teachers.first() or ''
+        }
+        self.url = surveyxact_upload(self.evaluation.surveyId, preload_data)
+        return self.url
 
     @staticmethod
     def get_redirect_url(shortlink_id, set_link_click=False):
@@ -6177,7 +6190,7 @@ class SurveyXactEvaluationGuest(models.Model):
             )
         except:
             return None
-        url = evalguest.url
+        url = evalguest.find_url()
         if url is None or 'error' in url:
             return None
         if set_link_click:
@@ -6189,6 +6202,7 @@ class SurveyXactEvaluationGuest(models.Model):
         self.save()
 
     def send(self, first=True):
+        self.find_url()
         if first:
             if self.evaluation.for_students:
                 template = EmailTemplateType.\
