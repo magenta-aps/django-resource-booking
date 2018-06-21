@@ -207,6 +207,7 @@ def get_model_field_map(model, visited_models=None):
         map[(field.name, label)] = value
     return map
 
+
 INFINITY = float("inf")
 
 
@@ -504,7 +505,11 @@ def surveyxact_upload(survey_id, data):
     body = []
     for key, value in data.iteritems():
         header.append(unicode(key))
-        body.append(unicode(value))
+        if value is None:
+            value = ''
+        if not isinstance(value, basestring):
+            value = unicode(value)
+        body.append(value)
     csv_body = u"%s\t\n%s\t" % ('\t'.join(header), '\t'.join(body))
 
     response = requests.post(
@@ -537,3 +542,19 @@ def surveyxact_upload(survey_id, data):
 
 def bool2int(bool):
     return 1 if bool else 0
+
+
+def prune_list(l, prune_empty_string=False):
+    return [
+        x for x in l
+        if x is not None and not (prune_empty_string and x == '')
+    ]
+
+
+def getattr_long(object, path, default=None):
+    for p in path.split('.'):
+        try:
+            object = getattr(object, p)
+        except AttributeError:
+            return default
+    return object
