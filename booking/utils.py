@@ -550,6 +550,7 @@ def prune_list(l, prune_empty_string=False):
         if x is not None and not (prune_empty_string and x == '')
     ]
 
+
 def getattr_long(object, path, default=None):
     for p in path.split('.'):
         try:

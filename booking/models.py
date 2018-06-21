@@ -6105,10 +6105,10 @@ class SurveyXactEvaluationGuest(models.Model):
             'enhed': getattr_long(product, 'organizationalunit.id'),
             'type': product.type,
             'tid': visit.start_datetime.strftime('%Y.%m.%d %H:%M:%S')
-                if visit.start_datetime is not None else None,
+            if visit.start_datetime is not None else None,
             'niveau': Guest.grundskole_level_conversion[self.guest.level]
-                if guest.line is None
-                else Guest.sx_line_conversion[guest.line],
+            if guest.line is None
+            else Guest.sx_line_conversion[guest.line],
             'antal': guest.attendee_count,
             'oplaeg': bool2int(
                 getattr(visit, 'presentation_desired', False)
