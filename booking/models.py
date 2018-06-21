@@ -41,11 +41,15 @@ from booking.logging import log_action
 from booking.mixins import AvailabilityUpdaterMixin
 from booking.utils import ClassProperty
 from booking.utils import CustomStorage
+from booking.utils import INFINITY
 from booking.utils import bool2int
 from booking.utils import flatten
 from booking.utils import full_email
-from booking.utils import get_related_content_types, INFINITY, merge_dicts
+from booking.utils import get_related_content_types
+from booking.utils import getattr_long
 from booking.utils import html2text
+from booking.utils import merge_dicts
+from booking.utils import prune_list
 from booking.utils import surveyxact_upload
 from profile.constants import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
 from profile.constants import TEACHER, HOST, NONE, get_role_name
@@ -5203,6 +5207,13 @@ class Guest(models.Model):
         null=True,
         verbose_name=u'Linje',
     )
+    sx_line_conversion = {
+        stx: 21,
+        hf: 22,
+        htx: 23,
+        eux: 24,
+        hhx: 25
+    }
 
     g1 = 1
     g2 = 2
@@ -5958,15 +5969,12 @@ class SurveyXactEvaluation(models.Model):
         if filter is not None:
             qs = qs.filter(**filter)
         for evalguest in qs:
-            try:
-                sent = evalguest.booking.autosend(
-                    template_type
-                )
-                if sent:
-                    evalguest.status = new_status
-                    evalguest.save()
-            except Exception as e:
-                print e
+            sent = evalguest.booking.autosend(
+                template_type
+            )
+            if sent:
+                evalguest.status = new_status
+                evalguest.save()
 
     def send_first_notification(self, visit):
         qs = self.evaluationguests.filter(guest__booking__visit=visit)
@@ -6072,21 +6080,46 @@ class SurveyXactEvaluationGuest(models.Model):
             )
         except:
             return None
-        preload_data = {
-            'email': evalguest.guest.email,
-            'id': str(evalguest.product.id),
-            'rundv_1': str(bool2int(
-                getattr(evalguest.visit, 'tour_desired', False)
-            )),
-            'titel': evalguest.product.title,
-            'undervis': evalguest.visit.assigned_teachers.first() or ''
-        }
-        url = surveyxact_upload(evalguest.evaluation.surveyId, preload_data)
+        url = surveyxact_upload(
+            evalguest.evaluation.surveyId, evalguest.get_surveyxact_data()
+        )
         if url is None or 'error' in url:
             return None
         if set_link_click:
             evalguest.link_clicked()
         return url
+
+    def get_surveyxact_data(self):
+        product = self.product
+        visit = self.visit
+        guest = self.guest
+        return {
+            'email': guest.email,
+            'id': product.id,
+            'rundv_1': bool2int(
+                getattr(visit, 'tour_desired', False)
+            ),
+            'titel': product.title,
+            'undervis': visit.assigned_teachers.first(),
+
+            'enhed': getattr_long(product, 'organizationalunit.id'),
+            'type': product.type,
+            'tid': visit.start_datetime.strftime('%Y.%m.%d %H:%M:%S')
+                if visit.start_datetime is not None else None,
+            'niveau': Guest.grundskole_level_conversion[self.guest.level]
+                if guest.line is None
+                else Guest.sx_line_conversion[guest.line],
+            'antal': guest.attendee_count,
+            'oplaeg': bool2int(
+                getattr(visit, 'presentation_desired', False)
+            ),
+            'region': getattr_long(guest, 'school.municipality.region.id'),
+            'school': getattr_long(guest, 'school.id'),
+            'postcode': getattr_long(guest, 'school.postcode.number'),
+            'gaest': ' '.join(
+                prune_list([guest.firstname, guest.lastname], True)
+            )
+        }
 
     def link_clicked(self):
         self.status = self.STATUS_LINK_CLICKED
