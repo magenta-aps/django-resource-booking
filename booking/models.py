@@ -6102,36 +6102,36 @@ class SurveyXactEvaluationGuest(models.Model):
         guest = self.guest
         teachers = list(visit.assigned_teachers)
         return {
-            'email': guest.email,
-            'ID': product.id,
-            'enhed': getattr_long(product, 'organizationalunit.id'),
-            'type': product.type,
-            'titel': product.title,
-            'tid': visit.start_datetime.strftime('%Y.%m.%d %H:%M:%S')
+            u'email': guest.email,
+            u'ID': product.id,
+            u'enhed': getattr_long(product, 'organizationalunit.id'),
+            u'type': product.type,
+            u'titel': product.title,
+            u'tid': visit.start_datetime.strftime('%Y.%m.%d %H:%M:%S')
             if visit.start_datetime is not None else None,
-            'niveau': Guest.grundskole_level_conversion[self.guest.level]
+            u'niveau': Guest.grundskole_level_conversion[self.guest.level]
             if guest.line is None
             else Guest.sx_line_conversion[guest.line],
-            'antal': guest.attendee_count,
-            'antal_elever': guest.student_count,
-            'antal_lærere': guest.teacher_count or 0,
-            'oplæg': bool2int(
+            u'antal': guest.attendee_count,
+            u'antal_elever': guest.student_count,
+            u'antal_lærere': guest.teacher_count or 0,
+            u'oplæg': bool2int(
                 getattr(visit, 'presentation_desired', False)
             ),
-            'rundvisning': bool2int(
+            u'rundvisning': bool2int(
                 getattr(visit, 'tour_desired', False)
             ),
-            'region': getattr_long(guest, 'school.municipality.region.id'),
-            'skole': getattr_long(guest, 'school.name'),
-            'skole_id': getattr_long(guest, 'school.id'),
-            'postnummer': getattr_long(guest, 'school.postcode.number'),
-            'gæst': ' '.join(
+            u'region': getattr_long(guest, 'school.municipality.region.id'),
+            u'skole': getattr_long(guest, 'school.name'),
+            u'skole_id': getattr_long(guest, 'school.id'),
+            u'postnummer': getattr_long(guest, 'school.postcode.number'),
+            u'gæst': ' '.join(
                 prune_list([guest.firstname, guest.lastname], True)
             ),
-            'undervisere': ', '.join([
+            u'undervisere': ', '.join([
                 teacher.get_full_name() for teacher in teachers
             ]),
-            'undervisere_email': ', '.join([
+            u'undervisere_email': ', '.join([
                 teacher.email for teacher in teachers
             ])
         }
