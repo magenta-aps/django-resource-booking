@@ -512,6 +512,8 @@ def surveyxact_upload(survey_id, data):
         body.append(value)
     csv_body = u"%s\t\n%s\t" % ('\t'.join(header), '\t'.join(body))
 
+    print csv_body
+
     response = requests.post(
         config['url'],
         headers={
