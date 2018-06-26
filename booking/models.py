@@ -6213,25 +6213,25 @@ class SurveyXactEvaluationGuest(models.Model):
             if guest.line is None
             else Guest.sx_line_conversion[guest.line],
             u'antal': guest.attendee_count,
-            u'antal_elever': guest.student_count,
-            u'antal_lærere': guest.teacher_count or 0,
+            u'elever': guest.student_count,
+            u'lærere': guest.teacher_count or 0,
             u'oplæg': bool2int(
                 getattr(visit, 'presentation_desired', False)
             ),
-            u'rundvisning': bool2int(
+            u'rundvis': bool2int(
                 getattr(visit, 'tour_desired', False)
             ),
             u'region': getattr_long(guest, 'school.municipality.region.id'),
             u'skole': getattr_long(guest, 'school.name'),
             u'skole_id': getattr_long(guest, 'school.id'),
-            u'postnummer': getattr_long(guest, 'school.postcode.number'),
+            u'postnr': getattr_long(guest, 'school.postcode.number'),
             u'gæst': ' '.join(
                 prune_list([guest.firstname, guest.lastname], True)
             ),
-            u'undervisere': ', '.join([
+            u'underv': ', '.join([
                 teacher.get_full_name() for teacher in teachers
             ]),
-            u'undervisere_email': ', '.join([
+            u'underv_m': ', '.join([
                 teacher.email for teacher in teachers
             ])
         }
