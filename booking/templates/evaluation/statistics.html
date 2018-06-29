@@ -15,36 +15,37 @@
 
     <h1>{% trans "Statistik over evalueringer" %}</h1>
 
-    <div id="accordion" class="panel-group" aria-multiselectable="true" role="tablist">
-    <a id="controlFilter" aria-controls="collapseFilter" aria-expanded="{% if has_filter %}true{% else %}false{% endif %}" href="#collapseFilter" data-parent="#accordion" data-toggle="collapse" role="button">
-        {% trans "Filtrér" %}
-        <span class="{% if has_filter %}caret-up{% else %}caret{% endif %}"></span>
-    </a>
-    <div id="collapseFilter" class="panel-collapse collapse {% if has_filter %}in{% endif %}" aria-labelledby="controlFilter" role="tabpanel">
         <form id="evaluationstatisicsform" action="" class="form-horizontal clearfix" method="get">
             <div class="form-group row">
-                <div class="col-sm-8 col-sm-offset-2">
+                <div class="col-sm-2">
                     <label for="{{ form.unit.id_for_label }}">{{ form.unit.label }}</label>
+                </div>
+                <div class="col-sm-6">
                     {{ form.unit }}
                 </div>
             </div>
             <div class="form-group row">
-                <div class="col-sm-4 col-sm-offset-2">
+                <div class="col-sm-2">
                     <label for="{{ form.from_date.id_for_label }}">{{ form.from_date.label }}</label>
+                </div>
+                <div class="col-sm-6">
                     {{ form.from_date }}
                 </div>
-                <div class="col-sm-4">
+            </div>
+            <div class="form-group row">
+                <div class="col-sm-2">
                     <label for="{{ form.to_date.id_for_label }}">{{ form.to_date.label }}</label>
+                </div>
+                <div class="col-sm-6">
                     {{ form.to_date }}
                 </div>
             </div>
             <div class="form-group row">
-                <div class="col-sm-2 col-sm-offset-8">
+                <div class="col-sm-8">
                     <button class="btn btn-primary pull-right" type="submit">{% trans 'Opdater' %}</button>
                 </div>
             </div>
         </form>
-    </div>
 
     <table class="table table-bordered">
         <thead>
@@ -88,7 +89,7 @@
                             <a href="{% url 'evaluation-view' evaluation.id %}">{{ label }}</a>
                         </td>
                         {% for item in data %}
-                            <td>{{ item }}</td>
+                            <td title="{% blocktrans count c=item %}1 tilmelding{% plural %}{{ c }} tilmeldinger{% endblocktrans %}">{{ item }}</td>
                         {% endfor %}
                     </tr>
                 {% endfor %}
