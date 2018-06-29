@@ -194,7 +194,6 @@ urlpatterns = patterns(
     url(r'^visit/(?P<pk>[0-9]+)/notify/success/?$',
         EmailSuccessView.as_view(),
         name='visit-notify-success'),
-
     url(r'^visit/(?P<pk>[0-9]+)/(?P<usertype>teacher|host+)?/?$',
         VisitDetailView.as_view(),
         name='visit-view'),
@@ -211,7 +210,6 @@ urlpatterns = patterns(
     url(r'^booking/accept/(?P<token>[0-9a-f-]+)/?$',
         BookingAcceptView.as_view(),
         name='booking-accept-view'),
-
     url(r'^booking/(?P<pk>[0-9]+)/edit/?$',
         BookingEditView.as_view(),
         name='booking-edit-view'),
@@ -278,7 +276,6 @@ urlpatterns = patterns(
         EmailSuccessView.as_view(),
         name='booking-notify-success'),
 
-
     url(r'^mpv/create/?$',
         MultiProductVisitTempCreateView.as_view(),
         name='mpv-create'),
@@ -344,7 +341,6 @@ urlpatterns = patterns(
     url(r'^resource/(?P<pk>[0-9]+)/?$',
         ResourceDetailView.as_view(),
         name='resource-view'),
-
     url(r'^resource/(?P<pk>[0-9]+)/calendar/?$',
         CalendarView.as_view(),
         name='calendar'),
@@ -445,20 +441,14 @@ urlpatterns = patterns(
     url(r'^product/(?P<product>[0-9]+)/resourcerequirement/create/confirm/?$',
         ResourceRequirementCreateConfirmView.as_view(),
         name='resourcerequirement-create-confirm'),
-
-
-
     url(r'^product/(?P<product>[0-9]+)/resource'
         r'requirement/(?P<pk>[0-9]+)/edit/?$',
         ResourceRequirementUpdateView.as_view(),
         name='resourcerequirement-edit'),
-
-
     url(r'^product/(?P<product>[0-9]+)/resource'
         r'requirement/(?P<pk>[0-9]+)/edit/confirm/?$',
         ResourceRequirementUpdateConfirmView.as_view(),
         name='resourcerequirement-edit-confirm'),
-
     url(r'^product/(?P<product>[0-9]+)/resourcerequirement/?$',
         ResourceRequirementListView.as_view(),
         name='resourcerequirement-list'),

@@ -1940,7 +1940,7 @@ class EvaluationForm(forms.ModelForm):
         model = SurveyXactEvaluation
         fields = ['surveyId', 'for_students', 'for_teachers']
         widgets = {
-            'surveyId': NumberInput(),
+            'surveyId': NumberInput(attrs={'class': 'form-control'}),
             'for_students': HiddenInput(),
             'for_teachers': HiddenInput()
         }
@@ -2020,7 +2020,12 @@ class EvaluationStatisticsForm(forms.Form):
 
     unit = forms.ModelChoiceField(
         label=_(u'Enhed'),
-        queryset=OrganizationalUnit.objects.all()
+        queryset=OrganizationalUnit.objects.all(),
+        widget=forms.Select(
+            attrs={
+                'class': 'form-control'
+            }
+        )
     )
 
 
