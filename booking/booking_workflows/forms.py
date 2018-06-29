@@ -270,7 +270,9 @@ class VisitAutosendFormSet(VisitAutosendFormSetBase):
                     autosend.template_type for autosend in visit_autosends
                 ]
                 for type in all_types:
-                    if type.key not in existing_types:
+                    if type.key not in existing_types and \
+                            instance.product.type not in \
+                            type.disabled_product_types:
                         initial.append({
                             'template_type': type,
                             'enabled': False,

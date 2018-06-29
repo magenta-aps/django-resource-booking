@@ -616,6 +616,8 @@ class EmailTemplateType(
 
     form_show = models.BooleanField(default=False)
 
+    disabled_for_product_types = models.TextField(default=None, null=True)
+
     @property
     def reply_to_product_responsible(self):
         for x in [
@@ -633,6 +635,17 @@ class EmailTemplateType(
     def reply_to_unit_responsible(self):
         return False
 
+    @property
+    def disabled_product_types(self):
+        if self.disabled_for_product_types is None:
+            return []
+        return [int(p) for p in self.disabled_for_product_types.split(' ')]
+
+    def set_disabled_product_types(self, product_types):
+        self.disabled_for_product_types = ' '.join([
+            str(p) for p in product_types
+        ])
+
     @staticmethod
     def set_default(key, **kwargs):
         try:
@@ -641,7 +654,10 @@ class EmailTemplateType(
             template_type = EmailTemplateType(key=key)
         for attr in template_type._meta.fields:
             if attr.name in kwargs:
-                setattr(template_type, attr.name, kwargs[attr.name])
+                if attr.name == 'disabled_for_product_types':
+                    template_type.set_disabled_product_types(kwargs[attr.name])
+                else:
+                    setattr(template_type, attr.name, kwargs[attr.name])
             elif isinstance(attr, models.BooleanField):
                 setattr(template_type, attr.name, False)
         #    if hasattr(template_type, arg):
@@ -942,6 +958,12 @@ class EmailTemplateType(
             ordering=23
         )
 
+        evaluation_disabled_for = [
+            key
+            for key, label in Product.resource_type_choices
+            if key not in Product.evaluation_autosends_enabled
+        ]
+
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST,
             name_da=u'Besked til bruger angående evaluering (første besked)',
@@ -952,7 +974,8 @@ class EmailTemplateType(
             enable_autosend=True,
             enable_booking=True,
             is_default=True,
-            ordering=24
+            ordering=24,
+            disabled_for_product_types=evaluation_disabled_for
         )
 
         EmailTemplateType.set_default(
@@ -966,7 +989,8 @@ class EmailTemplateType(
             enable_autosend=True,
             enable_booking=True,
             is_default=True,
-            ordering=25
+            ordering=25,
+            disabled_for_product_types=evaluation_disabled_for
         )
 
         EmailTemplateType.set_default(
@@ -980,7 +1004,8 @@ class EmailTemplateType(
             enable_booking=True,
             enable_days=False,
             is_default=True,
-            ordering=26
+            ordering=26,
+            disabled_for_product_types=evaluation_disabled_for
         )
 
         EmailTemplateType.set_default(
@@ -994,7 +1019,8 @@ class EmailTemplateType(
             enable_autosend=True,
             enable_booking=True,
             is_default=True,
-            ordering=27
+            ordering=27,
+            disabled_for_product_types=evaluation_disabled_for
         )
 
     @staticmethod
@@ -1056,7 +1082,8 @@ class EmailTemplateType(
                 qs = product.productautosend_set.filter(
                     template_type=template_type
                 )
-                if qs.count() == 0:
+                if qs.count() == 0 and product.type not in \
+                        template_type.disabled_product_types:
                     print "    creating autosend type %d for product %d" % \
                           (template_type.key, product.id)
                     autosend = ProductAutosend(
@@ -1080,7 +1107,8 @@ class EmailTemplateType(
                     qs = visit.visitautosend_set.filter(
                         template_type=template_type
                     )
-                    if qs.count() == 0:
+                    if qs.count() == 0 and visit.product.type not in \
+                            template_type.disabled_product_types:
                         print "    creating autosend type %d for visit %d" % \
                               (template_type.key, visit.id)
                         visitautosend = VisitAutosend(
@@ -1579,6 +1607,11 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         (OTHER_OFFERS,  _(u"Andre tilbud")),
         (STUDY_MATERIAL, _(u"Undervisningsmateriale"))
     )
+
+    evaluation_autosends_enabled = [
+        GROUP_VISIT,
+        OTHER_OFFERS
+    ]
 
     # Institution choice - primary or secondary school.
     PRIMARY = 0
