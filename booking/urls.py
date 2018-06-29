@@ -474,11 +474,6 @@ urlpatterns = patterns(
         EvaluationStatisticsView.as_view(),
         name='evaluation-statistics'),
 
-    # Maybe obsolete?
-    url(r'^evaluations/?',
-        EvaluationOverviewView.as_view(),
-        name='evaluations'),
-
     url(r'^ajax/list/(?P<type>[A-Za-z]+)/?$',
         ListAjaxView.as_view(),
         name='ajax-list')
