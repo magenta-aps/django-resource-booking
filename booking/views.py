@@ -54,7 +54,6 @@ from booking.forms import EmailReplyForm
 from booking.forms import EmailTemplateForm
 from booking.forms import EmailTemplatePreviewContextForm
 from booking.forms import EvaluationForm
-from booking.forms import EvaluationOverviewForm
 from booking.forms import EvaluationStatisticsForm
 from booking.forms import GuestEmailComposeForm
 from booking.forms import InternshipForm

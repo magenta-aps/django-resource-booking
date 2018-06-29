@@ -61,7 +61,6 @@ from booking.views import EmailTemplateListView
 from booking.views import EmbedcodesView
 from booking.views import EvaluationDetailView
 from booking.views import EvaluationEditView
-from booking.views import EvaluationOverviewView
 from booking.views import EvaluationRedirectView
 from booking.views import EvaluationStatisticsView
 from booking.views import LocaleRedirectView, SimpleRessourcesView
