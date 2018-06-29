@@ -63,7 +63,6 @@ from booking.views import EmailTemplateListView
 from booking.views import EmbedcodesView
 from booking.views import EvaluationDetailView
 from booking.views import EvaluationEditView
-from booking.views import EvaluationOverviewView
 from booking.views import EvaluationRedirectView
 from booking.views import EvaluationStatisticsView
 from booking.views import LocaleRedirectView, SimpleRessourcesView
@@ -478,11 +477,6 @@ urlpatterns = patterns(
     url(r'^evaluation/statistics/?$',
         EvaluationStatisticsView.as_view(),
         name='evaluation-statistics'),
-
-    # Maybe obsolete?
-    url(r'^evaluations/?',
-        EvaluationOverviewView.as_view(),
-        name='evaluations'),
 
     url(r'^ajax/list/(?P<type>[A-Za-z]+)/?$',
         ListAjaxView.as_view(),

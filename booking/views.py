@@ -55,7 +55,6 @@ from booking.forms import EmailReplyForm
 from booking.forms import EmailTemplateForm
 from booking.forms import EmailTemplatePreviewContextForm
 from booking.forms import EvaluationForm
-from booking.forms import EvaluationOverviewForm
 from booking.forms import EvaluationStatisticsForm
 from booking.forms import GuestEmailComposeForm
 from booking.forms import InternshipForm
@@ -3960,70 +3959,6 @@ class EmailReplyHtmlBodyView(DetailView):
         response.write(self.object.htmlbody)
 
         return response
-
-
-class EvaluationOverviewView(LoginRequiredMixin, BreadcrumbMixin, ListView):
-    model = Visit
-    template_name = "evaluation/list.html"
-    context_object_name = "results"
-    form = None
-
-    def get_form(self):
-        if not self.form:
-            self.form = EvaluationOverviewForm(
-                self.request.GET,
-                user=self.request.user
-            )
-            self.form.is_valid()
-
-        return self.form
-
-    def get_queryset(self):
-        form = self.get_form()
-
-        if form.is_valid():
-            formdata = form.cleaned_data
-            product_qs = Product.objects.filter(
-                organizationalunit=form.user.userprofile.get_unit_queryset(),
-                surveyxactevaluation__isnull=False
-            )
-            visit_qs = Visit.objects.all()
-            unit_limit = formdata.get('organizationalunit', [])
-            if unit_limit:
-                product_qs = product_qs.filter(
-                    organizationalunit__in=unit_limit
-                )
-            if formdata.get('limit_to_personal'):
-                user = self.request.user
-                visits = visit_qs.filter(
-                    Q(teachers=user) |
-                    Q(hosts=user)
-                )
-                product_qs = product_qs.filter(
-                    Q(created_by=user) |
-                    Q(eventtime__visit=visits) |
-                    Q(tilbudsansvarlig=user)
-                )
-            visit_qs = visit_qs.filter(
-                eventtime__product=product_qs
-            )
-        else:
-            visit_qs = self.model.objects.none()
-
-        return visit_qs.order_by('-eventtime__start', '-eventtime__end')
-
-    def get_context_data(self, **kwargs):
-        return super(EvaluationOverviewView, self).get_context_data(
-            form=self.get_form(),
-            **kwargs
-        )
-
-    @staticmethod
-    def build_breadcrumbs():
-        return [{
-            'url': reverse('evaluations'),
-            'text': _(u'Oversigt over evalueringer')
-        }]
 
 
 class BookingAcceptView(BreadcrumbMixin, FormView):
