@@ -52,6 +52,7 @@
                 <th rowspan="2" class="text-center text-top">{% trans 'Enhed' %}</th>
                 <th rowspan="2" class="text-center text-top">{% trans 'Titel' %}</th>
                 <th rowspan="2" class="text-center text-top">{% trans 'Dato' %}</th>
+                <th rowspan="2" class="text-center text-top">{% trans 'Status' %}</th>
                 <th rowspan="2" class="text-center text-top">{% trans 'Type' %}</th>
                 <th colspan="5" class="text-center">{% trans 'Status' %}</th>
             </tr>
@@ -63,7 +64,7 @@
         </thead>
         <tbody>
             {% for visit in visits %}
-                {% for label, data in visit.evaluation_guestset.items %}
+                {% for label, evaluation, data in visit.evaluation_guestset %}
                     <tr>
                         {% if forloop.first %}
                             <td rowspan="{{ visit.evaluation_guestset|length }}">
@@ -77,10 +78,15 @@
                                 {% endif %}
                             </td>
                             <td rowspan="{{ visit.evaluation_guestset|length }}">
-                                <a href="{% url 'visit-view' visit.id %}">{{ visit.date_display }}</a>
+                                <a href="{% url 'visit-view' visit.id %}">{{ visit.display_value|capfirst }}</a>
+                            </td>
+                            <td rowspan="{{ visit.evaluation_guestset|length }}">
+                                <span class="label label-{{ visit.get_workflow_status_class }}">{{ visit.get_workflow_status_display }}</span>
                             </td>
                         {% endif %}
-                        <td>{{ label }}</td>
+                        <td>
+                            <a href="{% url 'evaluation-view' evaluation.id %}">{{ label }}</a>
+                        </td>
                         {% for item in data %}
                             <td>{{ item }}</td>
                         {% endfor %}

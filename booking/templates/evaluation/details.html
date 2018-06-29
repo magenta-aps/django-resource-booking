@@ -39,25 +39,49 @@
                             {% trans 'For elever' %}
                         </strong>
                         <div class="col-sm-10">
-                            {{ object.for_students|yesno }}
+                            {{ object.for_students|yesno|capfirst }}
                         </div>
                     </div>
+
+                    {% if object.for_students %}
+                    <div class="row row-border">
+                        <strong class="col-sm-2">
+                            {% trans 'Automatisk email' %}
+                        </strong>
+                        <div class="col-sm-10">
+                            {% if object.product_autosend_activated_data.student_first %}<span class="label label-info">{% trans 'Første reminder' %}</span>{% endif %}
+                            {% if object.product_autosend_activated_data.student_second %}<span class="label label-info">{% trans 'Anden reminder' %}</span>{% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
 
                     <div class="row row-border">
                         <strong class="col-sm-2">
                             {% trans 'For lærere' %}
                         </strong>
                         <div class="col-sm-10">
-                            {{ object.for_teachers|yesno }}
+                            {{ object.for_teachers|yesno|capfirst }}
                         </div>
                     </div>
 
+                    {% if object.for_teachers %}
                     <div class="row row-border">
                         <strong class="col-sm-2">
-                            {% trans 'SurveyID' %}
+                            {% trans 'Automatisk email' %}
                         </strong>
                         <div class="col-sm-10">
-                            {{ object.surveyId }}
+                            {% if object.product_autosend_activated_data.teacher_first %}<span class="label label-info">{% trans 'Første reminder' %}</span>{% endif %}
+                            {% if object.product_autosend_activated_data.teacher_second %}<span class="label label-info">{% trans 'Anden reminder' %}</span>{% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="row row-border">
+                        <strong class="col-sm-2">
+                            {% trans 'Email-udsendelse' %}
+                        </strong>
+                        <div class="col-sm-10">
+                            {{ object.product. }}
                         </div>
                     </div>
 
@@ -69,7 +93,7 @@
                             <table class="table">
                                 <thead>
                                 <tr>
-                                    <th>ID</th>
+                                    <th>{% trans 'Dato' %}</th>
                                     <th>{% trans 'Navn' %}</th>
                                     <th>{% trans 'E-mail' %}</th>
                                     <th>{% trans 'Status' %}</th>
@@ -79,14 +103,14 @@
                                 <tbody>
                                 {% for participant in object.evaluationguests %}
                                     <tr>
-                                        <td>{{ participant.id }}</td>
+                                        <td><a href="{% url 'visit-view' participant.visit.id %}">{{ participant.visit.date_display }}</a></td>
                                         <td>{{ participant.guest.get_name }}</td>
                                         <td>{{ participant.guest.get_email }}</td>
-                                        <td>{{ participant.status_display }}</td>
-                                    <td>
-                                        <a href="{% url 'evaluation-view-send' object.id participant.id 1 %}">Send første</a>
-                                        <a href="{% url 'evaluation-view-send' object.id participant.id 2 %}">Send anden</a>
-                                    </td>
+                                        <td>{{ participant.status_display }}</td> <!-- TODO: gennemgå status -->
+                                        <td>
+                                            <a href="{% url 'evaluation-view-send' object.id participant.id 1 %}">Send første</a>
+                                            <a href="{% url 'evaluation-view-send' object.id participant.id 2 %}">Send anden</a>
+                                        </td>
                                     </tr>
                                 {% empty %}
                                     <tr>

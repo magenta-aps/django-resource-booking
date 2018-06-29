@@ -1482,6 +1482,8 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
 
             self.add_to_my_resources()
 
+            self.update_evaluations()
+
             messages.add_message(
                 request,
                 messages.INFO,
@@ -1577,6 +1579,30 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
                     'enabled': template_type.is_default
                 }
             )
+
+    def update_evaluations(self):
+        teacher_ev = EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST
+        student_ev = EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST_STUDENTS
+        if self.object.productautosend_set.filter(
+                template_type__key=teacher_ev
+        ).count() > 0 and \
+                self.object.teacher_evaluation is None:
+            evaluation = SurveyXactEvaluation(
+                product=self.object,
+                surveyId=SurveyXactEvaluation.DEFAULT_STUDENT_SURVEY_ID,
+                for_teachers=True
+            )
+            evaluation.save()
+        if self.object.productautosend_set.filter(
+                template_type__key=student_ev
+        ).count() > 0 and \
+                self.object.student_evaluation is None:
+            evaluation = SurveyXactEvaluation(
+                product=self.object,
+                surveyId=SurveyXactEvaluation.DEFAULT_STUDENT_SURVEY_ID,
+                for_students=True
+            )
+            evaluation.save()
 
     def get_success_url(self):
         try:

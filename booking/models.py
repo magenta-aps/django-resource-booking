@@ -4256,21 +4256,22 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             key for (key, label) in
             SurveyXactEvaluationGuest.status_choices
         ]
-        output = {}
+        output = []
         if self.product.student_evaluation is not None:
-            output[_(u'Elever')] = [
+            # TODO: afdæk hvad tallet betyder, og skriv det i hover-tekst
+            output.append((_(u'Elever'), self.product.student_evaluation, [
                 SurveyXactEvaluationGuest.filter_status(
                     self.student_evaluation_guests, status
                 ).count()
                 for status in statuslist
-            ]
+            ]))
         if self.product.teacher_evaluation is not None:
-            output[_(u'Lærere')] = [
+            output.append((_(u'Lærere'), self.product.teacher_evaluation, [
                 SurveyXactEvaluationGuest.filter_status(
                     self.teacher_evaluation_guests, status
                 ).count()
                 for status in statuslist
-            ]
+            ]))
         return output
 
     @staticmethod
@@ -4279,36 +4280,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             label for (key, label) in
             SurveyXactEvaluationGuest.status_choices
         ]
-
-    @property
-    def evaluation_no_participation(self):
-        return self.evaluation_guestset(
-            SurveyXactEvaluationGuest.STATUS_NO_PARTICIPATION
-        )
-
-    @property
-    def evaluation_not_sent(self):
-        return self.evaluation_guestset(
-            SurveyXactEvaluationGuest.STATUS_NOT_SENT
-        )
-
-    @property
-    def evaluation_first_sent(self):
-        return self.evaluation_guestset(
-            SurveyXactEvaluationGuest.STATUS_FIRST_SENT
-        )
-
-    @property
-    def evaluation_second_sent(self):
-        return self.evaluation_guestset(
-            SurveyXactEvaluationGuest.STATUS_SECOND_SENT
-        )
-
-    @property
-    def evaluation_link_clicked(self):
-        return self.evaluation_guestset(
-            SurveyXactEvaluationGuest.STATUS_LINK_CLICKED
-        )
 
 
 Visit.add_override_property('duration')
@@ -5964,8 +5935,12 @@ class SurveyXactEvaluation(models.Model):
         null=True
     )
 
-    for_students = models.BooleanField()
-    for_teachers = models.BooleanField()
+    for_students = models.BooleanField(
+        default=False
+    )
+    for_teachers = models.BooleanField(
+        default=False
+    )
 
     @property
     def evaluationguests(self):
@@ -5995,6 +5970,34 @@ class SurveyXactEvaluation(models.Model):
         )
         for evalguest in qs:
             evalguest.send(True)
+
+    def product_autosend_activated(self):
+        return self.product.get_autosends().filter(
+            template_type__key__in=[
+                EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST,
+                EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST_STUDENTS,
+                EmailTemplateType.NOTIFY_GUEST__EVALUATION_SECOND,
+                EmailTemplateType.NOTIFY_GUEST__EVALUATION_SECOND_STUDENTS
+            ]
+        )
+
+    def product_autosend_activated_data(self):
+        autosends = set([
+            autosend.template_type.key
+            for autosend in self.product_autosend_activated()
+        ])
+        return {
+            'teacher_first':
+                EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST in autosends,
+            'teacher_second':
+                EmailTemplateType.NOTIFY_GUEST__EVALUATION_SECOND in autosends,
+            'student_first':
+                EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST_STUDENTS
+                in autosends,
+            'student_second':
+                EmailTemplateType.NOTIFY_GUEST__EVALUATION_SECOND_STUDENTS
+                in autosends
+        }
 
 
 class SurveyXactEvaluationGuest(models.Model):
