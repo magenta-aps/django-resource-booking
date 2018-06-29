@@ -4335,15 +4335,17 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def student_evaluation_guests(self):
-        if self.product.student_evaluation is None:
-            return SurveyXactEvaluationGuest.objects.none()
-        return self.product.student_evaluation.surveyxactevaluationguest_set
+        return SurveyXactEvaluationGuest.objects.filter(
+            guest__booking__visit=self,
+            evaluation__for_students=True
+        )
 
     @property
     def teacher_evaluation_guests(self):
-        if self.product.teacher_evaluation is None:
-            return SurveyXactEvaluationGuest.objects.none()
-        return self.product.teacher_evaluation.surveyxactevaluationguest_set
+        return SurveyXactEvaluationGuest.objects.filter(
+            guest__booking__visit=self,
+            evaluation__for_students=False
+        )
 
     # Used by evaluation statistics page
     def evaluation_guestset(self):
@@ -4353,7 +4355,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         ]
         output = []
         if self.product.student_evaluation is not None:
-            # TODO: afdæk hvad tallet betyder, og skriv det i hover-tekst
             output.append((_(u'Elever'), self.product.student_evaluation, [
                 SurveyXactEvaluationGuest.filter_status(
                     self.student_evaluation_guests, status
