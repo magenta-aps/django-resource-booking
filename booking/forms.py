@@ -753,7 +753,8 @@ class ProductAutosendFormSet(ProductAutosendFormSetBase):
                 autosend.template_type for autosend in product_autosends
             ]
             for type in all_types:
-                if type not in existing_types:
+                if type not in existing_types and \
+                        instance.type not in type.disabled_product_types:
                     initial.append({
                         'template_type': type,
                         'enabled': type.is_default,

@@ -1380,6 +1380,7 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
                 for x in EmailTemplateType.objects.filter(
                     enable_autosend=True, form_show=True
                 )
+                if self.object.type not in x.disabled_product_types
             ]
         else:
             # Existing objects being edited should just use the existing set
@@ -1583,7 +1584,8 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
         teacher_ev = EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST
         student_ev = EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST_STUDENTS
         if self.object.productautosend_set.filter(
-                template_type__key=teacher_ev
+                template_type__key=teacher_ev,
+                enabled=True
         ).count() > 0 and \
                 self.object.teacher_evaluation is None:
             evaluation = SurveyXactEvaluation(
@@ -1593,7 +1595,8 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
             )
             evaluation.save()
         if self.object.productautosend_set.filter(
-                template_type__key=student_ev
+                template_type__key=student_ev,
+                enabled=True
         ).count() > 0 and \
                 self.object.student_evaluation is None:
             evaluation = SurveyXactEvaluation(
