@@ -4241,7 +4241,7 @@ class EvaluationStatisticsView(BreadcrumbMixin, TemplateView):
             bookings=Booking.objects.filter(
                 booker__surveyxactevaluationguest__isnull=False
             )
-        )
+        ).order_by("-eventtime__start")
 
         unit = data.get("unit")
         if unit is not None:
