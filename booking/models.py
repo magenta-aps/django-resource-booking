@@ -4293,19 +4293,23 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         ]
         output = []
         if self.product.student_evaluation is not None:
-            output.append((_(u'Elever'), self.product.student_evaluation, [
-                SurveyXactEvaluationGuest.filter_status(
-                    self.student_evaluation_guests, status
-                ).count()
-                for status in statuslist
-            ]))
+            student_status = {status: 0 for status in statuslist}
+            for student in self.student_evaluation_guests.all():
+                student_status[student.status] += 1
+            output.append((
+                _(u'Elever'),
+                self.product.student_evaluation,
+                [student_status[key] for key in statuslist]
+            ))
         if self.product.teacher_evaluation is not None:
-            output.append((_(u'Lærere'), self.product.teacher_evaluation, [
-                SurveyXactEvaluationGuest.filter_status(
-                    self.teacher_evaluation_guests, status
-                ).count()
-                for status in statuslist
-            ]))
+            teacher_status = {status: 0 for status in statuslist}
+            for teacher in self.teacher_evaluation_guests.all():
+                teacher_status[teacher.status] += 1
+            output.append((
+                _(u'Lærere'),
+                self.product.teacher_evaluation,
+                [teacher_status[key] for key in statuslist]
+            ))
         return output
 
     @staticmethod
