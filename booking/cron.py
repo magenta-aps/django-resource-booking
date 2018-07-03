@@ -246,7 +246,10 @@ class EvaluationReminderJob(KuCronJob):
     days = 5
 
     def run(self):
-        emailtemplate = EmailTemplateType.notify_guest__evaluation_second
+        emailtemplate = [
+            EmailTemplateType.notify_guest__evaluation_second,
+            EmailTemplateType.notify_guest__evaluation_second_students
+        ]
         filter = {
             'template_type': emailtemplate,
         }
