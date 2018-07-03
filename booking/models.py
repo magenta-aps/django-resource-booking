@@ -3194,7 +3194,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                 last_workflow_status != self.workflow_status:
             self.last_workflow_update = timezone.now()
             if self.workflow_status == self.WORKFLOW_STATUS_EXECUTED:
-                for evaluation in self.product.evaluations:
+                product = self.products[0]
+                for evaluation in product.evaluations:
                     evaluation.send_first_notification(self)
 
     @property
@@ -3420,7 +3421,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def total_required_hosts(self):
         if self.override_needed_hosts is not None:
             return self.override_needed_hosts
-
         return self.product.total_required_hosts
 
     @property
