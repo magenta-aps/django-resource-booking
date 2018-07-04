@@ -3119,7 +3119,8 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             self.eventtime.start and
             self.eventtime.end
         ):
-            return self.product.affected_eventtimes.filter(
+            return EventTime.objects.filter(
+                product__in=self.products,
                 start__lt=self.eventtime.end,
                 end__gt=self.eventtime.start
             )
