@@ -2182,7 +2182,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     def future_bookable_times(self):
         cutoff = self.booking_cutoff
         if cutoff is None:
-            cutoff = 0
+            cutoff = timedelta()
         return self.bookable_times.filter(
             start__gte=timezone.now() + cutoff
         )
