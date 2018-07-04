@@ -1,1 +1,10 @@
-<strong>Forberedelsestid</strong>: {{ product.preparation_time|default:"Ingen" }}
+{% if visit.is_multiproductvisit %}
+    <strong>Forberedelsestid</strong>:
+    <ul>
+        {% for product in visit.products %}
+            <li>{% product.title %}: {{ product.preparation_time|default:"Ingen" }}</li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <strong>Forberedelsestid</strong>: {{ product.preparation_time|default:"Ingen" }}
+{% endif %}

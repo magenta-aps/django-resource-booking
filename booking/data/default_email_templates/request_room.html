@@ -1,8 +1,7 @@
 <p>Kære {{ recipient.get_full_name }}.</p>
 
 <p>
-    En eller flere gæster har tilmeldt sig besøg
-    <a href="{% full_url 'product-view' product.pk %}">{{ visit.display_title }}</a>{% include 'booking/email/snippets/visit_time.html' %}.
+    En eller flere gæster har tilmeldt sig besøg <a href="{% full_url 'visit-view' visit.pk %}">{{ visit.display_title }}</a>{% include 'booking/email/snippets/visit_time.html' %}.
     Vil du sørge for at booke et lokale, hvor besøget kan afholdes?
 </p>
 
