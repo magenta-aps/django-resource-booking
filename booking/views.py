@@ -1691,7 +1691,7 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
                 self.object.teacher_evaluation is None:
             evaluation = SurveyXactEvaluation(
                 product=self.object,
-                surveyId=SurveyXactEvaluation.DEFAULT_STUDENT_SURVEY_ID,
+                surveyId=SurveyXactEvaluation.DEFAULT_TEACHER_SURVEY_ID,
                 for_teachers=True
             )
             evaluation.save()
