@@ -19,7 +19,7 @@
         Detaljer for tilmelding:
     </p>
     <p>
-        <strong>Forberedelsestid: </strong>{{ product.preparation_time|default:'Ingen' }}
+        {% include 'booking/email/snippets/preparation.html' %}
     </p>
     <p>
         {% include 'booking/email/snippets/booking_info.html' with booking=booking booker=booking.booker %}

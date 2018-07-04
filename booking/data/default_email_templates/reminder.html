@@ -6,11 +6,14 @@
 
     <p>
         Vi glæder os til at se dig til
-        <a href="{% full_url 'product-view' product.pk %}">{{ visit.display_title }}</a>
+        {% for product in visit.products %}
+            {% if not forloop.first %}{% if forloop.last %} og {% else %}, {% endif %}{% endif %}
+            <a href="{% full_url 'product-view' product.pk %}">{{ product.title }}</a>
+        {% endfor %}
         {% include 'booking/email/snippets/visit_time.html' %}
         på Københavns Universitet:
         {% include 'booking/email/snippets/product_maplink.html' %}.
-        {% include 'booking/email/snippets/contact_addresses.html' with product=product vedr=1 %}
+        {% include 'booking/email/snippets/contact_addresses.html' with product=visit.products|get:0 vedr=1 %}
     </p>
     <p>
         Detaljer for din tilmelding:
@@ -35,8 +38,11 @@
     <p>Kære {{ recipient.get_full_name }}.</p>
 
     <p>
-        Dette er en påmindelse om at besøget
-        <a href="{% full_url 'product-view' product.pk %}">{{ product.title }}</a>
+        Dette er en påmindelse om at {% blocktrans count c=visit.products.count %}besøget{% plural %}besøgene{% endblocktrans %}
+        {% for product in visit.products %}
+            {% if not forloop.first %}{% if forloop.last %} og {% else %}, {% endif %}{% endif %}
+            <a href="{% full_url 'product-view' product.pk %}">{{ product.title }}</a>
+        {% endfor %}
         afholdes
         {% include 'booking/email/snippets/visit_time.html' %}
         på Københavns Universitet:
