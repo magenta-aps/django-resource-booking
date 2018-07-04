@@ -1968,7 +1968,8 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         default=6,
         verbose_name=_(u'Antal dage før afholdelse, '
                        u'hvor der lukkes for tilmeldinger'),
-        blank=True
+        blank=True,
+        null=True
     )
 
     inquire_enabled = models.BooleanField(
@@ -2024,7 +2025,8 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def booking_cutoff(self):
-        return timedelta(days=self.booking_close_days_before)
+        return timedelta(days=self.booking_close_days_before) \
+            if self.booking_close_days_before is not None else None
 
     @property
     def bookable_times(self):
@@ -2060,8 +2062,11 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def future_bookable_times(self):
+        cutoff = self.booking_cutoff
+        if cutoff is None:
+            cutoff = 0
         return self.bookable_times.filter(
-            start__gte=timezone.now()+self.booking_cutoff
+            start__gte=timezone.now() + cutoff
         )
 
     @property
