@@ -1968,7 +1968,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         default=6,
         verbose_name=_(u'Antal dage før afholdelse, '
                        u'hvor der lukkes for tilmeldinger'),
-        blank=True,
+        blank=False,
         null=True
     )
 
