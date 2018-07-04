@@ -2086,18 +2086,6 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             if evaluation is not None
         ]
 
-    booking_close_days_before = models.IntegerField(
-        default=6,
-        verbose_name=_(u'Antal dage før afholdelse, '
-                       u'hvor der lukkes for tilmeldinger'),
-        blank=True
-    )
-
-    inquire_enabled = models.BooleanField(
-        default=True,
-        verbose_name=_(u'"Spørg om tilbud" aktiveret')
-    )
-
     def available_time_modes(self, unit=None):
         if self.type is None:
             return Product.time_mode_choices
