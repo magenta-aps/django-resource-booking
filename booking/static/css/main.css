@@ -1103,7 +1103,7 @@ ul.errorlist {
   border: 1px solid #a94442;
   padding: 10px;
   display: inline-block;
-  list-style-position: inside;
+  list-style-type: none;
   max-width: 70%;
 }
 
@@ -1113,7 +1113,7 @@ ul.warninglist {
   border: 1px solid #8a6d3b;
   padding: 10px;
   display: inline-block;
-  list-style-position: inside;
+  list-style-type: none;
   max-width: 70%;
 }
 

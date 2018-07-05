@@ -1263,13 +1263,19 @@ class ClassBookingBaseForm(forms.ModelForm):
             })
         }
 
-    def __init__(self, data=None, product=None, *args, **kwargs):
-        self.product = product
+    def __init__(self, data=None, products=None, *args, **kwargs):
         super(ClassBookingBaseForm, self).__init__(data, *args, **kwargs)
-        if product is not None:
-            for service in ['tour', 'catering', 'presentation', 'custom']:
-                if not getattr(self.product, service + '_available'):
-                    del self.fields[service + '_desired']
+        self.products = products
+        if products is not None:
+            r_services = ['tour', 'catering', 'presentation', 'custom']
+            for product in products:
+                r_services = [
+                    service
+                    for service in r_services
+                    if not getattr(product, service + '_available')
+                ]
+            for service in r_services:
+                del self.fields[service + '_desired']
 
 
 class ClassBookingForm(ClassBookingBaseForm, BookingForm):
@@ -1293,8 +1299,8 @@ class TeacherBookingBaseForm(forms.ModelForm):
             })
         }
 
-    def __init__(self, data=None, product=None, *args, **kwargs):
-        self.product = product
+    def __init__(self, data=None, products=None, *args, **kwargs):
+        self.products = products
         super(TeacherBookingBaseForm, self).__init__(data, *args, **kwargs)
 
 
@@ -1317,8 +1323,8 @@ class StudentForADayBookingBaseForm(forms.ModelForm):
             })
         }
 
-    def __init__(self, data=None, product=None, *args, **kwargs):
-        self.product = product
+    def __init__(self, data=None, products=None, *args, **kwargs):
+        self.products = products
         super(StudentForADayBookingBaseForm, self).__init__(
             data, *args, **kwargs
         )
@@ -1343,11 +1349,11 @@ class StudyProjectBookingBaseForm(forms.ModelForm):
             })
         }
 
-    def __init__(self, data=None, product=None, *args, **kwargs):
+    def __init__(self, data=None, products=None, *args, **kwargs):
         super(StudyProjectBookingBaseForm, self).__init__(
             data, *args, **kwargs
         )
-        self.product = product
+        self.products = products
 
 
 class StudyProjectBookingForm(StudyProjectBookingBaseForm, BookingForm):
@@ -1410,8 +1416,8 @@ BookingGymnasieSubjectLevelForm = \
         BookingGymnasieSubjectLevel,
         form=BookingGymnasieSubjectLevelFormBase,
         can_delete=True,
-        extra=0,
-        min_num=1
+        extra=1,
+        min_num=0
     )
 
 
@@ -1421,8 +1427,8 @@ BookingGrundskoleSubjectLevelForm = \
         BookingGrundskoleSubjectLevel,
         form=BookingGrundskoleSubjectLevelFormBase,
         can_delete=True,
-        extra=0,
-        min_num=1
+        extra=1,
+        min_num=0
     )
 
 

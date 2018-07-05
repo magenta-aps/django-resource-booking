@@ -2482,7 +2482,7 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
             if type == Product.GROUP_VISIT:
                 forms['bookingform'] = ClassBookingForm(
                     data,
-                    product=self.product
+                    products=[self.product]
                 )
                 if self.product.productgymnasiefag_set.count() > 0:
                     forms['gymnasiesubjectform'] = \
@@ -2493,14 +2493,18 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
                         BookingGrundskoleSubjectLevelForm(data)
 
             elif type == Product.TEACHER_EVENT:
-                forms['bookingform'] = TeacherBookingForm(data,
-                                                          product=self.product)
+                forms['bookingform'] = TeacherBookingForm(
+                    data,
+                    product=self.product
+                )
             elif type == Product.STUDENT_FOR_A_DAY:
-                forms['bookingform'] = \
-                    StudentForADayBookingForm(data, product=self.product)
+                forms['bookingform'] = StudentForADayBookingForm(
+                    data, product=self.product
+                )
             elif type == Product.STUDY_PROJECT:
-                forms['bookingform'] = \
-                    StudyProjectBookingForm(data, product=self.product)
+                forms['bookingform'] = StudyProjectBookingForm(
+                    data, product=self.product
+                )
         return forms
 
     def get_template_names(self):
@@ -2653,13 +2657,23 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
         if self.product:
             type = self.product.type
 
-        if type == Product.GROUP_VISIT:
-            bookingform = ClassBookingForm(data, product=self.product)
-            if self.product.productgymnasiefag_set.count() > 0:
-                forms['subjectform'] = BookingGymnasieSubjectLevelForm(data)
-            if self.product.productgrundskolefag_set.count() > 0:
-                forms['grundskolesubjectform'] = \
-                    BookingGrundskoleSubjectLevelForm(data)
+        types = [product.type for product in self.visit.products]
+
+        if Product.GROUP_VISIT in types:
+            bookingform = ClassBookingForm(data, products=self.visit.products)
+            for product in self.visit.products:
+                if product.productgymnasiefag_set.count() > 0:
+                    forms['gymnasiesubjectform'] = \
+                        BookingGymnasieSubjectLevelForm(data)
+                    break
+            for product in self.visit.products:
+                if product.productgrundskolefag_set.count() > 0:
+                    forms['grundskolesubjectform'] = \
+                        BookingGrundskoleSubjectLevelForm(data)
+                    break
+            if self.visit.is_multiproductvisit and \
+                    'custom_desired' in bookingform.fields:
+                del bookingform.fields['custom_desired']
 
         elif type == Product.TEACHER_EVENT:
             bookingform = TeacherBookingForm(data, product=self.product)
@@ -2750,7 +2764,7 @@ class BookingEditView(BreadcrumbMixin, EditorRequriedMixin, UpdateView):
         bookingform = form_class(
             data,
             instance=self.object,
-            product=primary_product
+            products=products
         )
         if self.object.visit.is_multiproductvisit and \
                 'desired_time' in bookingform.fields:
