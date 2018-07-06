@@ -6032,7 +6032,8 @@ class KUEmailMessage(models.Model):
 
     @property
     def replies(self):
-        return KUEmailMessage.objects.filter(reply_to_message=self)
+        return KUEmailMessage.objects.filter(reply_to_message=self)\
+            .order_by('-created')
 
 
 class KUEmailRecipient(models.Model):

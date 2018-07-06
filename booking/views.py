@@ -1913,7 +1913,7 @@ class ProductDetailView(BreadcrumbMixin, ProductBookingDetailView):
 
         if can_edit:
             context['emails'] = KUEmailMessage\
-                .get_by_instance(self.object).order_by('created')
+                .get_by_instance(self.object).order_by('-created')
 
         context.update(kwargs)
 
@@ -3308,7 +3308,8 @@ class BookingDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
             context['emailtemplates'] = EmailTemplateType.get_choices(
                 manual_sending_booking_enabled=True
             ),
-        context['emails'] = KUEmailMessage.get_by_instance(self.object)
+        context['emails'] = KUEmailMessage.get_by_instance(self.object)\
+            .order_by('-created')
 
         context.update(kwargs)
 
@@ -3425,7 +3426,7 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
         context['emails'] = KUEmailMessage.objects.filter(
             content_type=ContentType.objects.get_for_model(self.object),
             object_id=self.object.id
-        ).order_by('created')
+        ).order_by('-created')
 
         context.update(kwargs)
 
