@@ -1,6 +1,5 @@
 {% load i18n %}
 {% load static %}
-
 <dl class="emaildisplay dl-horizontal">
     <dt>{% trans 'Sendt' %}:</dt>
     <dd>{{ email.created }}</dd>
@@ -13,9 +12,11 @@
     {% if email.replies %}
         <dt>{% trans 'Svar' %}:</dt>
         <dd>
+            <ul class="list-unstyled">
             {% for reply in email.replies %}
-                {% include 'email/display.html' with email=reply %}
+                <li>{% include 'email/display.html' with email=reply %}</li>
             {% endfor %}
+            </ul>
         </dd>
     {% endif %}
 </dl>
