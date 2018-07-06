@@ -896,7 +896,7 @@ class BookingForm(forms.ModelForm):
 
         if 'subjects' in self.fields:
             institution_level = binary_or([
-                product.institution_level for product in products
+                p.institution_level for p in products
             ])
             if institution_level != Subject.SUBJECT_TYPE_BOTH:
                 qs = None
