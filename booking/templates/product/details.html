@@ -99,6 +99,26 @@
             {% if object.is_bookable %}
                 <div class="disclaimer">{% trans 'Bemærk at din bestilling først er bindende, når du har modtaget en bekræftelse fra den ansvarlige arrangør fra Københavns Universitet.' %}</div>
             {% endif %}
+            {% if can_edit %}
+                <div class="row mails">
+                    <div class="col-sm-12 col-md-12">
+                        <div class="panel panel-default">
+                            <h2>{% trans 'Emails' %}</h2>
+                            <ul class="list-unstyled scroll-400">
+                                {% for email in emails %}
+                                    <li>
+                                        {% include 'email/display.html' with email=email %}
+                                    </li>
+                                    {% empty %}
+                                    <li>
+                                        {% trans 'Ingen emails' %}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
             <div class="go-back">
                 {% url 'search' as basesearch %}
                 <a href="{{ searchurl }}" class="btn btn-default">

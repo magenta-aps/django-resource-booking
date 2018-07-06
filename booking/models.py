@@ -5718,6 +5718,17 @@ class KUEmailMessage(models.Model):
                 )
                 email.save()
 
+    @staticmethod
+    def get_by_instance(instance):
+        return KUEmailMessage.objects.filter(
+            content_type=ContentType.objects.get_for_model(instance),
+            object_id=instance.id
+        )
+
+    @property
+    def replies(self):
+        return KUEmailMessage.get_by_instance(self)
+
 
 class KUEmailRecipient(models.Model):
     email_message = models.ForeignKey(KUEmailMessage)
