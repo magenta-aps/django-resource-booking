@@ -5736,8 +5736,7 @@ class KUEmailMessage(models.Model):
 
     @property
     def replies(self):
-        return self.reply_to_message_set
-        # return KUEmailMessage.objects.filter(reply_to_message=self)
+        return KUEmailMessage.objects.filter(reply_to_message=self)
 
 
 class KUEmailRecipient(models.Model):
