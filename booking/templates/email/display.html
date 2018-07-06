@@ -1,0 +1,21 @@
+{% load i18n %}
+{% load static %}
+
+<dl class="emaildisplay dl-horizontal">
+    <dt>{% trans 'Sendt' %}:</dt>
+    <dd>{{ email.created }}</dd>
+    <dt>{% trans 'Til' %}:</dt>
+    <dd>{{ email.recipients }}</dd>
+    <dt>{% trans 'Emne' %}:</dt>
+    <dd>{{ email.subject }}</dd>
+    <dt>{% trans 'Tekst' %}:</dt>
+    <dd><pre>{{ email.body }}</pre></dd>
+    {% if email.replies %}
+        <dt>{% trans 'Svar' %}:</dt>
+        <dd>
+            {% for reply in email.replies %}
+                {% include 'email/display.html' with email=reply %}
+            {% endfor %}
+        </dd>
+    {% endif %}
+</dl>

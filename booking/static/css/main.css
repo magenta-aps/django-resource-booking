@@ -1134,6 +1134,10 @@ ul.warninglist {
   display: block;
 }
 
+dl.emaildisplay {
+  border-top: 1px solid #ddd;
+}
+
 
 /* gymnasiefag-edit & grundskolefag-edit */
 

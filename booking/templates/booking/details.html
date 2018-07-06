@@ -192,6 +192,23 @@
                 {% endif %}
             </dl>
 
+            <div class="row mails">
+                <div class="col-sm-12 col-md-10 col-md-offset-2">
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <h2>{% trans 'Emails' %}</h2>
+                            <ul class="list-unstyled scroll-400">
+                                {% for email in emails %}
+                                    <li>
+                                        {% include 'email/display.html' with email=email %}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="divider"></div>
 
             <div class="go-back">
