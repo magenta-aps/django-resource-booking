@@ -3948,6 +3948,7 @@ class EmailReplyView(BreadcrumbMixin, DetailView):
                 orig_obj,
                 organizationalunit=unit,
                 original_from_email=orig_message.recipients,
+                reply_to_message=orig_message
             )
             result_url = reverse(
                 'reply-to-email', args=[self.object.reply_nonce]
