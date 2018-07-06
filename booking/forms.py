@@ -1266,12 +1266,11 @@ class ClassBookingBaseForm(forms.ModelForm):
             })
         }
 
-    def __init__(self, data=None, products=None, *args, **kwargs):
+    def __init__(self, data=None, *args, **kwargs):
         super(ClassBookingBaseForm, self).__init__(data, *args, **kwargs)
-        self.products = products
-        if products is not None:
+        if self.products is not None:
             r_services = ['tour', 'catering', 'presentation', 'custom']
-            for product in products:
+            for product in self.products:
                 r_services = [
                     service
                     for service in r_services
