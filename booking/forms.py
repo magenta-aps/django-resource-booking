@@ -784,7 +784,7 @@ class ProductAutosendFormSet(ProductAutosendFormSetBase):
 class BookingForm(forms.ModelForm):
 
     scheduled = False
-    product = None
+    products = []
 
     eventtime = VisitEventTimeField(
         required=False,
@@ -812,21 +812,21 @@ class BookingForm(forms.ModelForm):
             })
         }
 
-    def __init__(self, data=None, product=None, *args, **kwargs):
+    def __init__(self, data=None, products=[], *args, **kwargs):
         super(BookingForm, self).__init__(data, *args, **kwargs)
 
-        if product is None:
-            product = self.product
+        if products is None:
+            products = self.products
         else:
-            self.product = product
+            self.products = products
 
         # self.scheduled = visit is not None and \
         #    visit.type == Product.FIXED_SCHEDULE_GROUP_VISIT
-        self.scheduled = (
-            product is not None and
-            product.time_mode != Product.TIME_MODE_GUEST_SUGGESTED
-        )
+        self.scheduled = Product.TIME_MODE_GUEST_SUGGESTED not in [
+            product.time_mode for product in products
+        ]
         if self.scheduled:
+            product = products[0]
             choices = [(None, BLANK_LABEL)]
             qs = product.future_bookable_times.order_by('start', 'end')
             options = {}
@@ -894,17 +894,20 @@ class BookingForm(forms.ModelForm):
         else:
             self.fields['desired_time'].required = True
 
-        if product is not None and 'subjects' in self.fields and \
-                product.institution_level != Subject.SUBJECT_TYPE_BOTH:
-            qs = None
-            if product.institution_level == Subject.SUBJECT_TYPE_GRUNDSKOLE:
-                qs = Subject.grundskolefag_qs()
-            elif product.institution_level == Subject.SUBJECT_TYPE_GYMNASIE:
-                qs = Subject.gymnasiefag_qs()
-            if qs:
-                self.fields['subjects'].choices = [
-                    (subject.id, subject.name) for subject in qs
-                ]
+        if 'subjects' in self.fields:
+            institution_level = binary_or([
+                product.institution_level for product in products
+            ])
+            if institution_level != Subject.SUBJECT_TYPE_BOTH:
+                qs = None
+                if institution_level == Subject.SUBJECT_TYPE_GRUNDSKOLE:
+                    qs = Subject.grundskolefag_qs()
+                elif institution_level == Subject.SUBJECT_TYPE_GYMNASIE:
+                    qs = Subject.gymnasiefag_qs()
+                if qs:
+                    self.fields['subjects'].choices = [
+                        (subject.id, subject.name) for subject in qs
+                    ]
 
     def save(self, commit=True, *args, **kwargs):
         booking = super(BookingForm, self).save(commit, *args, **kwargs)
@@ -1293,8 +1296,7 @@ class TeacherBookingBaseForm(forms.ModelForm):
             })
         }
 
-    def __init__(self, data=None, product=None, *args, **kwargs):
-        self.product = product
+    def __init__(self, data=None, *args, **kwargs):
         super(TeacherBookingBaseForm, self).__init__(data, *args, **kwargs)
 
 
@@ -1317,8 +1319,7 @@ class StudentForADayBookingBaseForm(forms.ModelForm):
             })
         }
 
-    def __init__(self, data=None, product=None, *args, **kwargs):
-        self.product = product
+    def __init__(self, data=None, *args, **kwargs):
         super(StudentForADayBookingBaseForm, self).__init__(
             data, *args, **kwargs
         )
@@ -1343,11 +1344,10 @@ class StudyProjectBookingBaseForm(forms.ModelForm):
             })
         }
 
-    def __init__(self, data=None, product=None, *args, **kwargs):
+    def __init__(self, data=None, *args, **kwargs):
         super(StudyProjectBookingBaseForm, self).__init__(
             data, *args, **kwargs
         )
-        self.product = product
 
 
 class StudyProjectBookingForm(StudyProjectBookingBaseForm, BookingForm):

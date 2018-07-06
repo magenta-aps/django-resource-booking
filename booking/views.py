@@ -2497,14 +2497,18 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
                         BookingGrundskoleSubjectLevelForm(data)
 
             elif type == Product.TEACHER_EVENT:
-                forms['bookingform'] = TeacherBookingForm(data,
-                                                          product=self.product)
+                forms['bookingform'] = TeacherBookingForm(
+                    data,
+                    products=[self.product]
+                )
             elif type == Product.STUDENT_FOR_A_DAY:
-                forms['bookingform'] = \
-                    StudentForADayBookingForm(data, product=self.product)
+                forms['bookingform'] = StudentForADayBookingForm(
+                    data, products=[self.product]
+                )
             elif type == Product.STUDY_PROJECT:
-                forms['bookingform'] = \
-                    StudyProjectBookingForm(data, product=self.product)
+                forms['bookingform'] = StudyProjectBookingForm(
+                    data, products=[self.product]
+                )
         return forms
 
     def get_template_names(self):
@@ -2666,13 +2670,19 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
                     BookingGrundskoleSubjectLevelForm(data)
 
         elif type == Product.TEACHER_EVENT:
-            bookingform = TeacherBookingForm(data, product=self.product)
+            bookingform = TeacherBookingForm(
+                data, products=self.visit.products
+            )
 
         elif type == Product.STUDENT_FOR_A_DAY:
-            bookingform = StudentForADayBookingForm(data, product=self.product)
+            bookingform = StudentForADayBookingForm(
+                data, products=self.visit.products
+            )
 
         elif type == Product.STUDY_PROJECT:
-            bookingform = StudyProjectBookingForm(data, product=self.product)
+            bookingform = StudyProjectBookingForm(
+                data, products=self.visit.products
+            )
 
         else:
             bookingform = BookingForm(data)
