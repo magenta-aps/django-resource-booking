@@ -2,7 +2,7 @@
     <strong>Forberedelsestid</strong>:
     <ul>
         {% for product in visit.products %}
-            <li>{% product.title %}: {{ product.preparation_time|default:"Ingen" }}</li>
+            <li>{{ product.title }}: {{ product.preparation_time|default:"Ingen" }}</li>
         {% endfor %}
     </ul>
 {% else %}
