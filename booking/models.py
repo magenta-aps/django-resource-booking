@@ -45,6 +45,7 @@ from booking.utils import full_email
 from booking.utils import get_related_content_types
 from booking.utils import html2text
 from booking.utils import INFINITY
+from booking.utils import lcfirst
 from booking.utils import merge_dicts
 from booking.utils import prose_list_join
 from profile.constants import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
@@ -5419,8 +5420,8 @@ class ClassBooking(Booking):
             desires.append(_(u'oplæg om uddannelse'))
         if self.custom_desired:
             try:
-                desires.append(self.visit.product.custom_name)
-            except AttributeError:
+                desires.append(lcfirst(self.visit.product.custom_name.lower()))
+            except:
                 pass
         return prose_list_join(desires, ', ', _(' og '))
 
