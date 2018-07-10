@@ -2741,10 +2741,14 @@ class BookingEditView(BreadcrumbMixin, EditorRequriedMixin, UpdateView):
         )
         type = primary_product.type
         form_class = BookingForm
+        kwargs = {
+            'instance': self.object
+        }
         if type == Product.GROUP_VISIT:
             try:
                 self.object = self.object.classbooking
                 form_class = ClassBookingBaseForm
+                kwargs['products'] = products
             except:
                 pass
 
@@ -2769,8 +2773,7 @@ class BookingEditView(BreadcrumbMixin, EditorRequriedMixin, UpdateView):
 
         bookingform = form_class(
             data,
-            instance=self.object,
-            products=products
+            **kwargs
         )
         if self.object.visit.is_multiproductvisit and \
                 'desired_time' in bookingform.fields:
