@@ -2812,6 +2812,10 @@ class BookingEditView(BreadcrumbMixin, EditorRequriedMixin, UpdateView):
         context['formname'] = "bookingform"
         context['level_map'] = Guest.level_map
         context['editing'] = True
+        try:
+            context['product'] = self.object.visit.products[0]
+        except IndexError:
+            pass
         return context
 
     def get_breadcrumb_args(self):
