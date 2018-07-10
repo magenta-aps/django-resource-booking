@@ -45,7 +45,6 @@ from booking.utils import full_email
 from booking.utils import get_related_content_types
 from booking.utils import html2text
 from booking.utils import INFINITY
-from booking.utils import lcfirst
 from booking.utils import merge_dicts
 from booking.utils import prose_list_join
 from profile.constants import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
