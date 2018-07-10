@@ -3320,7 +3320,7 @@ class BookingDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
         else:
             context['emailtemplates'] = EmailTemplateType.get_choices(
                 manual_sending_booking_enabled=True
-            ),
+            )
         context['emails'] = KUEmailMessage.get_by_instance(self.object)\
             .order_by('-created')
 
