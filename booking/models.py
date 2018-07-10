@@ -5420,7 +5420,7 @@ class ClassBooking(Booking):
             desires.append(_(u'oplæg om uddannelse'))
         if self.custom_desired:
             try:
-                desires.append(lcfirst(self.visit.product.custom_name.lower()))
+                desires.append(self.visit.product.custom_name.lower())
             except:
                 pass
         return prose_list_join(desires, ', ', _(' og '))
