@@ -38,9 +38,15 @@ from djorm_pgfulltext.models import SearchManager
 from booking.constants import LOGACTION_MAIL_SENT
 from booking.logging import log_action
 from booking.mixins import AvailabilityUpdaterMixin
-from booking.utils import ClassProperty, full_email, CustomStorage, html2text
+from booking.utils import ClassProperty
+from booking.utils import CustomStorage
 from booking.utils import flatten
-from booking.utils import get_related_content_types, INFINITY, merge_dicts
+from booking.utils import full_email
+from booking.utils import get_related_content_types
+from booking.utils import html2text
+from booking.utils import INFINITY
+from booking.utils import merge_dicts
+from booking.utils import prose_list_join
 from profile.constants import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
 from profile.constants import TEACHER, HOST, NONE, get_role_name
 from resource_booking import settings
