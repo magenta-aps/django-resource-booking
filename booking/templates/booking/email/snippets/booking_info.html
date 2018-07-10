@@ -8,6 +8,18 @@
 <strong>By</strong>: {{ booker.school.postcode.city|default:"Ikke angivet" }}<br />
 <strong>Region</strong>: {{ booker.school.postcode.region|default:"Ikke angivet" }}<br />
 <strong>Antal deltagere</strong>: {{ booker.attendee_count|default:"0" }}<br />
+{% if booking.classbooking.tour_desired %}
+    <strong>Ønske om rundvisning</strong>: Ja<br/>
+{% endif %}
+{% if booking.classbooking.catering_desired %}
+    <strong>Ønske om forplejning</strong>: Ja<br/>
+{% endif %}
+{% if booking.classbooking.presentation_desired %}
+    <strong>Ønske om oplæg om uddannelse</strong>: Ja<br/>
+{% endif %}
+{% if booking.classbooking.custom_desired and booking.visit.product.custom_name %}
+    <strong>Ønske om {{ booking.visit.product.custom_name }}</strong>: Ja<br/>
+{% endif %}
 {% if booking.notes %}
 <strong>Kommentarer:</strong>
 <div style="white-space: pre; margin: 0; padding: 0;">{{ booking.notes }}</div>
