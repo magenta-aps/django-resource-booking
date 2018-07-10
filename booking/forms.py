@@ -1857,7 +1857,7 @@ class MultiProductVisitTempDateForm(forms.ModelForm):
         if 'date' in self.cleaned_data:
             date = self.cleaned_data['date']
             product = self.cleaned_data['baseproduct']
-            bookability = product.is_bookable(date, return_reason=True)
+            bookability = product.is_bookable(date, return_reason=False)
             if bookability is not True:
                 reason = unicode(
                     _(u'Det er desværre ikke muligt at '
