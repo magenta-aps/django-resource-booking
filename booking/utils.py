@@ -492,3 +492,7 @@ class TemplateSplit(object):
                 start = found[1]
             else:
                 return all
+
+
+def prose_list_join(items, sep, lsep):
+    return sep.join([unicode(item) for item in items[:-1]]) + unicode(lsep) + unicode(items[-1])

@@ -5403,6 +5403,21 @@ class ClassBooking(Booking):
         default=False
     )
 
+    def verbose_desires(self):
+        desires = []
+        if self.tour_desired:
+            desires.append(_(u'rundvisning'))
+        if self.catering_desired:
+            desires.append(_(u'forplejning'))
+        if self.presentation_desired:
+            desires.append(_(u'oplæg om uddannelse'))
+        if self.custom_desired:
+            try:
+                desires.append(self.visit.product.custom_name)
+            except AttributeError:
+                pass
+        return prose_list_join(desires, ', ', _(' og '))
+
 
 class TeacherBooking(Booking):
 
