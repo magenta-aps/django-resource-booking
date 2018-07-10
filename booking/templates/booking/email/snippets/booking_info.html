@@ -18,7 +18,7 @@
     <strong>Ønske om oplæg om uddannelse</strong>: Ja<br/>
 {% endif %}
 {% if booking.classbooking.custom_desired and booking.visit.product.custom_name %}
-    <strong>Ønske om {{ booking.visit.product.custom_name }}</strong>: Ja<br/>
+    <strong>Ønske om {{ booking.visit.product.custom_name|lower }}</strong>: Ja<br/>
 {% endif %}
 {% if booking.notes %}
 <strong>Kommentarer:</strong>
