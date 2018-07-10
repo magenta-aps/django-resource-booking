@@ -50,6 +50,8 @@ from booking.utils import html2text
 from booking.utils import INFINITY
 from booking.utils import merge_dicts
 from booking.utils import prose_list_join
+from booking.utils import prune_list
+from booking.utils import surveyxact_upload
 from profile.constants import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
 from profile.constants import TEACHER, HOST, NONE, get_role_name
 
