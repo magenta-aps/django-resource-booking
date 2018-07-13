@@ -7,6 +7,7 @@ import uuid
 from datetime import timedelta, datetime, date, time
 
 import djorm_pgfulltext.fields
+from django.conf import settings
 from django.contrib.admin.models import LogEntry
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -38,12 +39,20 @@ from djorm_pgfulltext.models import SearchManager
 from booking.constants import LOGACTION_MAIL_SENT
 from booking.logging import log_action
 from booking.mixins import AvailabilityUpdaterMixin
-from booking.utils import ClassProperty, full_email, CustomStorage, html2text
+from booking.utils import ClassProperty
+from booking.utils import CustomStorage
+from booking.utils import INFINITY
+from booking.utils import bool2int
 from booking.utils import flatten
-from booking.utils import get_related_content_types, INFINITY, merge_dicts
+from booking.utils import full_email
+from booking.utils import get_related_content_types
+from booking.utils import getattr_long
+from booking.utils import html2text
+from booking.utils import merge_dicts
+from booking.utils import prune_list
+from booking.utils import surveyxact_upload
 from profile.constants import COORDINATOR, FACULTY_EDITOR, ADMINISTRATOR
 from profile.constants import TEACHER, HOST, NONE, get_role_name
-from resource_booking import settings
 
 BLANK_LABEL = '---------'
 BLANK_OPTION = (None, BLANK_LABEL,)
@@ -481,7 +490,9 @@ class EmailTemplateType(
     NOTIFY_ALL_EVALUATION = 22  # Ticket 15701
     NOTIFY_GUEST__BOOKING_CREATED_UNTIMED = 23  # Ticket 16914
     NOTIFY_GUEST__EVALUATION_FIRST = 24  # Ticket 13819
+    NOTIFY_GUEST__EVALUATION_FIRST_STUDENTS = 26  # Ticket 13819
     NOTIFY_GUEST__EVALUATION_SECOND = 25  # Ticket 13819
+    NOTIFY_GUEST__EVALUATION_SECOND_STUDENTS = 27  # Ticket 13819
 
     @staticmethod
     def get(template_key):
@@ -587,6 +598,8 @@ class EmailTemplateType(
 
     form_show = models.BooleanField(default=False)
 
+    disabled_for_product_types = models.TextField(default=None, null=True)
+
     @property
     def reply_to_product_responsible(self):
         for x in [
@@ -604,6 +617,17 @@ class EmailTemplateType(
     def reply_to_unit_responsible(self):
         return False
 
+    @property
+    def disabled_product_types(self):
+        if self.disabled_for_product_types is None:
+            return []
+        return [int(p) for p in self.disabled_for_product_types.split(' ')]
+
+    def set_disabled_product_types(self, product_types):
+        self.disabled_for_product_types = ' '.join([
+            str(p) for p in product_types
+        ])
+
     @staticmethod
     def set_default(key, **kwargs):
         try:
@@ -612,7 +636,10 @@ class EmailTemplateType(
             template_type = EmailTemplateType(key=key)
         for attr in template_type._meta.fields:
             if attr.name in kwargs:
-                setattr(template_type, attr.name, kwargs[attr.name])
+                if attr.name == 'disabled_for_product_types':
+                    template_type.set_disabled_product_types(kwargs[attr.name])
+                else:
+                    setattr(template_type, attr.name, kwargs[attr.name])
             elif isinstance(attr, models.BooleanField):
                 setattr(template_type, attr.name, False)
         #    if hasattr(template_type, arg):
@@ -912,6 +939,12 @@ class EmailTemplateType(
             ordering=23
         )
 
+        evaluation_disabled_for = [
+            key
+            for key, label in Product.resource_type_choices
+            if key not in Product.evaluation_autosends_enabled
+        ]
+
         EmailTemplateType.set_default(
             EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST,
             name_da=u'Besked til bruger angående evaluering (første besked)',
@@ -922,7 +955,8 @@ class EmailTemplateType(
             enable_autosend=True,
             enable_booking=True,
             is_default=True,
-            ordering=24
+            ordering=24,
+            disabled_for_product_types=evaluation_disabled_for
         )
 
         EmailTemplateType.set_default(
@@ -936,7 +970,8 @@ class EmailTemplateType(
             enable_autosend=True,
             enable_booking=True,
             is_default=True,
-            ordering=25
+            ordering=25,
+            disabled_for_product_types=evaluation_disabled_for
         )
 
         EmailTemplateType.set_default(
@@ -948,9 +983,25 @@ class EmailTemplateType(
             send_to_booker_on_waitinglist=False,
             enable_autosend=True,
             enable_booking=True,
-            enable_days=True,
+            enable_days=False,
             is_default=True,
-            ordering=25
+            ordering=26,
+            disabled_for_product_types=evaluation_disabled_for
+        )
+
+        EmailTemplateType.set_default(
+            EmailTemplateType.NOTIFY_GUEST__EVALUATION_SECOND_STUDENTS,
+            name_da=u'Besked til bruger angående evaluering (anden besked), '
+                    u'for videresendelse til elever',
+            manual_sending_visit_enabled=True,
+            form_show=True,
+            send_to_booker=True,
+            send_to_booker_on_waitinglist=False,
+            enable_autosend=True,
+            enable_booking=True,
+            is_default=True,
+            ordering=27,
+            disabled_for_product_types=evaluation_disabled_for
         )
 
     @staticmethod
@@ -1012,8 +1063,9 @@ class EmailTemplateType(
                 qs = product.productautosend_set.filter(
                     template_type=template_type
                 )
-                if qs.count() == 0:
-                    print "    create autosend type %d for product %d" % \
+                if qs.count() == 0 and product.type not in \
+                        template_type.disabled_product_types:
+                    print "    creating autosend type %d for product %d" % \
                           (template_type.key, product.id)
                     autosend = ProductAutosend(
                         template_key=template_type.key,
@@ -1036,7 +1088,8 @@ class EmailTemplateType(
                     qs = visit.visitautosend_set.filter(
                         template_type=template_type
                     )
-                    if qs.count() == 0:
+                    if qs.count() == 0 and visit.product.type not in \
+                            template_type.disabled_product_types:
                         print "    creating autosend type %d for visit %d" % \
                               (template_type.key, visit.id)
                         visitautosend = VisitAutosend(
@@ -1527,6 +1580,11 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         (STUDY_MATERIAL, _(u"Undervisningsmateriale"))
     )
 
+    evaluation_autosends_enabled = [
+        GROUP_VISIT,
+        OTHER_OFFERS
+    ]
+
     # Institution choice - primary or secondary school.
     PRIMARY = 0
     SECONDARY = 1
@@ -1964,6 +2022,30 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         verbose_name=_(u'Der tillades kun 1 tilmelding pr. besøg')
     )
 
+    evaluation_link = models.CharField(
+        max_length=1024,
+        verbose_name=_(u'Link til evaluering'),
+        blank=True,
+        default='',
+    )
+
+    @property
+    def primary_evaluation(self):
+        return self.evaluation_set.filter(secondary=False).first()
+
+    @property
+    def secondary_evaluation(self):
+        return self.evaluation_set.filter(secondary=True).first()
+
+    @property
+    def evaluations(self):
+        return [
+            evaluation for evaluation in [
+                self.primary_evaluation, self.secondary_evaluation
+            ]
+            if evaluation is not None
+        ]
+
     booking_close_days_before = models.IntegerField(
         default=6,
         verbose_name=_(u'Antal dage før afholdelse, '
@@ -1976,6 +2058,20 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         default=True,
         verbose_name=_(u'"Spørg om tilbud" aktiveret')
     )
+
+    @property
+    def student_evaluation(self):
+        return self.surveyxactevaluation_set.filter(for_students=True).first()
+
+    @property
+    def teacher_evaluation(self):
+        return self.surveyxactevaluation_set.filter(for_teachers=True).first()
+
+    @property
+    def common_evaluation(self):
+        return self.surveyxactevaluation_set.filter(
+            for_students=True, for_teachers=True
+        ).first()
 
     def available_time_modes(self, unit=None):
         if self.type is None:
@@ -2908,13 +3004,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         verbose_name=_(u'Interne kommentarer')
     )
 
-    evaluation_link = models.CharField(
-        max_length=1024,
-        verbose_name=_(u'Link til evaluering'),
-        blank=True,
-        default='',
-    )
-
     # ts_vector field for fulltext search
     search_index = VectorField(
         db_index=False
@@ -3109,6 +3198,10 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         if last_workflow_status is None or \
                 last_workflow_status != self.workflow_status:
             self.last_workflow_update = timezone.now()
+            if self.workflow_status == self.WORKFLOW_STATUS_EXECUTED:
+                product = self.products[0]
+                for evaluation in product.evaluations:
+                    evaluation.send_first_notification(self)
 
     @property
     # QuerySet that finds EventTimes that will be affected by resource changes
@@ -3334,7 +3427,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
     def total_required_hosts(self):
         if self.override_needed_hosts is not None:
             return self.override_needed_hosts
-
         return self.product.total_required_hosts
 
     @property
@@ -4184,6 +4276,54 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                             resource_requirement=requirement
                         ).save()
             self.resources_updated()
+
+    @property
+    def student_evaluation_guests(self):
+        return SurveyXactEvaluationGuest.objects.filter(
+            guest__booking__visit=self,
+            evaluation__for_students=True
+        )
+
+    @property
+    def teacher_evaluation_guests(self):
+        return SurveyXactEvaluationGuest.objects.filter(
+            guest__booking__visit=self,
+            evaluation__for_students=False
+        )
+
+    # Used by evaluation statistics page
+    def evaluation_guestset(self):
+        statuslist = [
+            key for (key, label) in
+            SurveyXactEvaluationGuest.status_choices
+        ]
+        output = []
+        if self.product.student_evaluation is not None:
+            student_status = {status: 0 for status in statuslist}
+            for student in self.student_evaluation_guests.all():
+                student_status[student.status] += 1
+            output.append((
+                _(u'Elever'),
+                self.product.student_evaluation,
+                [student_status[key] for key in statuslist]
+            ))
+        if self.product.teacher_evaluation is not None:
+            teacher_status = {status: 0 for status in statuslist}
+            for teacher in self.teacher_evaluation_guests.all():
+                teacher_status[teacher.status] += 1
+            output.append((
+                _(u'Lærere'),
+                self.product.teacher_evaluation,
+                [teacher_status[key] for key in statuslist]
+            ))
+        return output
+
+    @staticmethod
+    def evaluation_guestset_labels():
+        return [
+            label for (key, label) in
+            SurveyXactEvaluationGuest.status_choices
+        ]
 
 
 Visit.add_override_property('duration')
@@ -5082,6 +5222,13 @@ class Guest(models.Model):
         null=True,
         verbose_name=u'Linje',
     )
+    sx_line_conversion = {
+        stx: 21,
+        hf: 22,
+        htx: 23,
+        eux: 24,
+        hhx: 25
+    }
 
     g1 = 1
     g2 = 2
@@ -5174,6 +5321,35 @@ class Guest(models.Model):
         verbose_name=u'Heraf lærere'
     )
 
+    @property
+    def student_count(self):
+        try:
+            return self.attendee_count - (self.teacher_count or 0)
+        except:
+            return 0
+
+    def get_booking(self):
+        try:
+            return self.booking
+        except:
+            return None
+
+    def evaluationguest_student(self):
+        try:
+            return self.surveyxactevaluationguest_set.filter(
+                evaluation__for_students=True, evaluation__for_teachers=False
+            ).first()
+        except:
+            return None
+
+    def evaluationguest_teacher(self):
+        try:
+            return self.surveyxactevaluationguest_set.filter(
+                evaluation__for_students=False, evaluation__for_teachers=True
+            ).first()
+        except:
+            return None
+
     def as_searchtext(self):
         return " ".join([unicode(x) for x in [
             self.firstname,
@@ -5208,7 +5384,7 @@ class Booking(models.Model):
         verbose_name = _(u'booking')
         verbose_name_plural = _(u'bookinger')
 
-    booker = models.ForeignKey(Guest)
+    booker = models.OneToOneField(Guest)
 
     visit = models.ForeignKey(
         Visit,
@@ -5290,7 +5466,27 @@ class Booking(models.Model):
                  only_these_recipients=False):
 
         visit = self.visit.real
-        if visit.autosend_enabled(template_type):
+        enabled = visit.autosend_enabled(template_type)
+        # print "Template type %s is %senabled for visit %d" % (
+        #     template_type,
+        #     "" if visit.autosend_enabled(template_type) else "not ",
+        #     visit.id
+        # )
+
+        if visit.is_multiproductvisit and template_type.key in [
+            EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST,
+            EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST_STUDENTS,
+            EmailTemplateType.NOTIFY_GUEST__EVALUATION_SECOND,
+            EmailTemplateType.NOTIFY_GUEST__EVALUATION_SECOND_STUDENTS
+        ]:
+            for product in visit.products:
+                if product.autosend_enabled(template_type):
+                    # print "Making exception for evaluation " \
+                    #       "mail with product %d" % product.id
+                    enabled = True
+                    break
+
+        if enabled:
             product = visit.product
             unit = visit.organizationalunit
             if recipients is None:
@@ -5299,7 +5495,6 @@ class Booking(models.Model):
                 recipients = set(recipients)
             if not only_these_recipients:
                 recipients.update(self.get_recipients(template_type))
-
             KUEmailMessage.send_email(
                 template_type,
                 {
@@ -5763,86 +5958,109 @@ class BookerResponseNonce(models.Model):
             'booker': booker,
         }
         attrs.update(kwargs)
-
         return cls.objects.create(**attrs)
 
 
-class Evaluation(models.Model):
-    url = models.CharField(
-        max_length=1024,
-        verbose_name=u'Evaluerings-URL'
-    )
-    visit = models.OneToOneField(
-        Visit,
-        null=False,
-        blank=False
-    )
+class SurveyXactEvaluation(models.Model):
+
+    DEFAULT_STUDENT_SURVEY_ID = 946435
+    DEFAULT_TEACHER_SURVEY_ID = 946493
+
+    surveyId = models.IntegerField()
+
     guests = models.ManyToManyField(
         Guest,
-        through='EvaluationGuest'
+        through='SurveyXactEvaluationGuest'
     )
 
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        null=True
+    )
+
+    for_students = models.BooleanField(
+        default=False
+    )
+    for_teachers = models.BooleanField(
+        default=False
+    )
+
+    @property
+    def evaluationguests(self):
+        return self.surveyxactevaluationguest_set.all().order_by('id')
+
     def send_notification(self, template_type, new_status, filter=None):
-        qs = self.evaluationguest_set.all()
+        qs = self.evaluationguests
         if filter is not None:
             qs = qs.filter(**filter)
         for evalguest in qs:
-            for booking in evalguest.guest.booking_set.filter(
-                visit=self.visit
-            ):
-                # There really should be only one here
-                try:
-                    sent = booking.autosend(
-                        template_type
-                    )
-                    if sent:
-                        evalguest.status = new_status
-                        evalguest.save()
-                except Exception as e:
-                    print e
+            sent = evalguest.booking.autosend(
+                template_type
+            )
+            if sent:
+                evalguest.status = new_status
+                evalguest.save()
 
-    def send_first_notification(self):
-        self.send_notification(
-            EmailTemplateType.notify_guest__evaluation_first,
-            EvaluationGuest.STATUS_FIRST_SENT
+    def send_first_notification(self, visit):
+        qs = self.evaluationguests.filter(guest__booking__visit=visit)
+        for evalguest in qs:
+            evalguest.send(True)
+
+    def send_second_notification(self, visit):
+        qs = self.evaluationguests.filter(
+            status=SurveyXactEvaluationGuest.STATUS_FIRST_SENT,
+            guest__booking__visit=visit
+        )
+        for evalguest in qs:
+            evalguest.send(True)
+
+    def product_autosend_activated(self):
+        return self.product.get_autosends().filter(
+            template_type__key__in=[
+                EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST,
+                EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST_STUDENTS,
+                EmailTemplateType.NOTIFY_GUEST__EVALUATION_SECOND,
+                EmailTemplateType.NOTIFY_GUEST__EVALUATION_SECOND_STUDENTS
+            ]
         )
 
-    def send_second_notification(self):
-        self.send_notification(
-            EmailTemplateType.notify_guest__evaluation_second,
-            EvaluationGuest.STATUS_SECOND_SENT,
-            {'status': EvaluationGuest.STATUS_FIRST_SENT}
-        )
-
-    def status_count(self, status):
-        return self.evaluationguest_set.filter(status=status).count()
-
-    def no_participation_count(self):
-        return self.status_count(EvaluationGuest.STATUS_NO_PARTICIPATION)
-
-    def not_sent_count(self):
-        return self.status_count(EvaluationGuest.STATUS_NOT_SENT)
-
-    def first_sent_count(self):
-        return self.status_count(EvaluationGuest.STATUS_FIRST_SENT)
-
-    def second_sent_count(self):
-        return self.status_count(EvaluationGuest.STATUS_SECOND_SENT)
-
-    def link_clicked_count(self):
-        return self.status_count(EvaluationGuest.STATUS_LINK_CLICKED)
+    def product_autosend_activated_data(self):
+        autosends = set([
+            autosend.template_type.key
+            for autosend in self.product_autosend_activated()
+        ])
+        return {
+            'teacher_first':
+                EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST in autosends,
+            'teacher_second':
+                EmailTemplateType.NOTIFY_GUEST__EVALUATION_SECOND in autosends,
+            'student_first':
+                EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST_STUDENTS
+                in autosends,
+            'student_second':
+                EmailTemplateType.NOTIFY_GUEST__EVALUATION_SECOND_STUDENTS
+                in autosends
+        }
 
 
-class EvaluationGuest(models.Model):
+class SurveyXactEvaluationGuest(models.Model):
+
     evaluation = models.ForeignKey(
-        Evaluation,
-        null=False,
-        blank=False
+        SurveyXactEvaluation,
+        null=True,
+        blank=True
     )
-    guest = models.OneToOneField(
+
+    guest = models.ForeignKey(
         Guest,
         null=False,
         blank=False
+    )
+    # deprecate
+    visit = models.ForeignKey(
+        Visit,
+        null=False
     )
     STATUS_NO_PARTICIPATION = 0
     STATUS_NOT_SENT = 1
@@ -5858,15 +6076,32 @@ class EvaluationGuest(models.Model):
     ]
     status = models.SmallIntegerField(
         choices=status_choices,
-        verbose_name=u'status'
+        verbose_name=u'status',
+        default=STATUS_NOT_SENT
     )
     shortlink_id = models.CharField(
         max_length=16,
     )
 
+    @staticmethod
+    def filter_status(qs, status):
+        return qs.filter(status=status)
+
+    @staticmethod
+    def filter_visit(qs, visit):
+        qs.filter(guest__booking__visit=visit)
+
     @property
-    def shortlink(self):
-        return "http://localhost:8000/l/%s" % self.shortlink_id
+    def link(self):
+        return self.link_obtain(self.shortlink_id)
+
+    @staticmethod
+    def link_obtain(shortlink_id):
+        s = settings.PUBLIC_URL + reverse(
+            'evaluation-redirect',
+            args=[shortlink_id]
+        )
+        return s
 
     @property
     def status_display(self):
@@ -5877,31 +6112,146 @@ class EvaluationGuest(models.Model):
     def save(self, *args, **kwargs):
         if self.shortlink_id is None or len(self.shortlink_id) == 0:
             self.shortlink_id = ''.join(get_random_string(length=13))
-        return super(EvaluationGuest, self).save(*args, **kwargs)
+        return super(SurveyXactEvaluationGuest, self).save(*args, **kwargs)
 
     @property
-    def url(self):
-        template = Template(
-            "{% load booking_tags %}" +
-            "{% load i18n %}" +
-            "{% language 'da' %}\n" +
-            unicode(self.evaluation.url) +
-            "{% endlanguage %}\n"
+    def booking(self):
+        return self.guest.booking
+
+    @property
+    def visit(self):
+        return self.guest.booking.visit
+
+    @property
+    def product(self):
+        return self.evaluation.product
+
+    @staticmethod
+    def get_redirect_url(shortlink_id, set_link_click=False):
+        try:
+            evalguest = SurveyXactEvaluationGuest.objects.get(
+                shortlink_id=shortlink_id,
+            )
+        except:
+            return None
+        url = surveyxact_upload(
+            evalguest.evaluation.surveyId, evalguest.get_surveyxact_data()
         )
-        context = make_context({
-            'evaluation': self.evaluation,
-            'guest': self.guest,
-            'visit': self.evaluation.visit
-        })
+        if url is None or 'error' in url:
+            return None
+        if set_link_click:
+            evalguest.link_clicked()
+        return url
 
-        rendered = template.render(context)
-        return rendered
-
-        # return self.evaluation.url
+    def get_surveyxact_data(self):
+        product = self.product
+        visit = self.visit
+        guest = self.guest
+        teachers = list(visit.assigned_teachers)
+        return {
+            u'email': guest.email,
+            u'ID': product.id,
+            u'enhed': getattr_long(product, 'organizationalunit.id'),
+            u'type': product.type,
+            u'titel': product.title,
+            u'tid': visit.start_datetime.strftime('%Y.%m.%d %H:%M:%S')
+            if visit.start_datetime is not None else None,
+            u'niveau': Guest.grundskole_level_conversion[self.guest.level]
+            if guest.line is None
+            else Guest.sx_line_conversion[guest.line],
+            u'antal': guest.attendee_count,
+            u'elever': guest.student_count,
+            u'lærere': guest.teacher_count or 0,
+            u'oplæg': bool2int(
+                getattr(visit, 'presentation_desired', False)
+            ),
+            u'rundvis': bool2int(
+                getattr(visit, 'tour_desired', False)
+            ),
+            u'region': getattr_long(guest, 'school.municipality.region.id'),
+            u'skole': getattr_long(guest, 'school.name'),
+            u'skole_id': getattr_long(guest, 'school.id'),
+            u'postnr': getattr_long(guest, 'school.postcode.number'),
+            u'gæst': ' '.join(
+                prune_list([guest.firstname, guest.lastname], True)
+            ),
+            u'underv': ', '.join([
+                teacher.get_full_name() for teacher in teachers
+            ]),
+            u'underv_m': ', '.join([
+                teacher.email for teacher in teachers
+            ])
+        }
 
     def link_clicked(self):
         self.status = self.STATUS_LINK_CLICKED
         self.save()
+
+    def send(self, first=True):
+        if first:
+            if self.evaluation.for_students:
+                template = EmailTemplateType.\
+                    notify_guest__evaluation_first_students
+            else:
+                template = EmailTemplateType.notify_guest__evaluation_first
+            new_status = SurveyXactEvaluationGuest.STATUS_FIRST_SENT
+        else:
+            if self.evaluation.for_students:
+                template = EmailTemplateType.\
+                    notify_guest__evaluation_second_students
+            else:
+                template = EmailTemplateType.notify_guest__evaluation_second
+            new_status = SurveyXactEvaluationGuest.STATUS_SECOND_SENT
+
+        sent = self.booking.autosend(template)
+        if sent:
+            self.status = new_status
+            self.save()
+
+
+class Guide(models.Model):
+    value = models.IntegerField(
+        null=False
+    )
+    name = models.CharField(
+        null=False,
+        max_length=64
+    )
+
+    def __str__(self):
+        return self.name
+
+    @staticmethod
+    def create_defaults():
+        from booking.data import guides
+        for value, name in guides.guides.items():
+            if Guide.objects.filter(value=value).count() == 0:
+                guide = Guide(value=value, name=name)
+                guide.save()
+
+
+class ExercisePresentation(models.Model):
+    value = models.IntegerField(
+        null=False
+    )
+    name = models.CharField(
+        null=False,
+        max_length=256
+    )
+
+    def __str__(self):
+        return self.name
+
+    @staticmethod
+    def create_defaults():
+        from booking.data import exercises_presentations
+        for value, name in exercises_presentations.\
+                exercises_presentations.items():
+            if ExercisePresentation.objects.filter(value=value).count() == 0:
+                exercise_presentation = ExercisePresentation(
+                    value=value, name=name
+                )
+                exercise_presentation.save()
 
 
 from booking.resource_based import models as rb_models  # noqa

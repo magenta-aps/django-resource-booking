@@ -313,3 +313,31 @@ class CustomStaticNode(StaticNode):
 @register.tag('static')
 def do_static(parser, token):
     return CustomStaticNode.handle_token(parser, token)
+
+
+@register.filter
+def evaluation_boolean(value):
+    b = False
+    if value is not None:
+        if isinstance(value, bool):
+            b = value
+        elif isinstance(value, basestring):
+            b = value.lower() in ['true', '1', 'y', 'yes', 'ja']
+        elif isinstance(value, (int, long, float, complex)):
+            b = value > 0
+    return 1 if b else 2
+
+
+kt_conversion = Guest.grundskole_level_conversion.copy()
+kt_conversion.update({
+    Guest.g1: 11,
+    Guest.g2: 12,
+    Guest.g3: 13,
+    Guest.student: 15,
+    Guest.other: 16
+})
+
+
+@register.filter
+def evaluation_classlevel(value):
+    return kt_conversion.get(value)

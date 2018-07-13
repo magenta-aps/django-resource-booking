@@ -163,7 +163,7 @@
 
     <div class="row status">
         <div class="col-sm-12 col-md-10 col-md-offset-2">
-            {% with left_class="col-sm-3" center_class="col-sm-6" right_class="col-sm-3" %}
+            {% with left_class="col-sm-3" center_class="col-sm-7" right_class="col-sm-2" %}
             <div class="panel panel-default">
                 <div class="panel-body">
                     <h2>{% trans 'Statusoverblik' %}</h2>
@@ -373,24 +373,6 @@
 
                     <div class="row row-border">
                         <strong class="{{ left_class }}">
-                            {% trans 'Link til evaluering' %}
-                        </strong>
-                        <div class="{{ center_class }}">
-                            {% if object.evaluation_link %}
-                                <a href="{{ object.evaluation_link }}">{{ object.evaluation_link }}</a>
-                            {% else %}
-                                {% trans 'Ikke angivet' %}
-                            {% endif %}
-                        </div>
-                        {% if can_edit %}
-                            <div class="{{ right_class }}">
-                                <a href="{% url 'change-visit-eval' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Redigér' %}</a>
-                            </div>
-                        {% endif %}
-                    </div>
-
-                    <div class="row row-border">
-                        <strong class="{{ left_class }}">
                             {% trans 'Vigtig bemærkning' %}
                         </strong>
                         <div class="{{ center_class }}">
@@ -451,47 +433,7 @@
                             </div>
                         </div>
                     {% endif %}
-
-                    {% if can_edit %}
-                        <div class="row row-border">
-                            <strong class="{{ left_class }}">
-                                {% trans 'Evaluering' %}
-                            </strong>
-                            <div class="{{ center_class }}">
-                                {% if object.evaluation %}
-                                    {{ object.evaluation.url }}
-                                {% else %}
-                                    {% trans 'Ingen evaluering oprettet' %}
-                                {% endif %}
-                            </div>
-                            <div class="{{ right_class }}">
-                                {% if object.evaluation %}
-                                    <a href="{% url 'visit-evaluation-view' object.pk object.evaluation.id %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Vis evaluering' %}</a>
-                                {% else %}
-                                    <a href="{% url 'visit-evaluation-create' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Opret evaluering' %}</a>
-                                {% endif %}
-                            </div>
-                        </div>
-
-
-                    {% endif %}
-
-{#                    Deaktiveret jf. #20680 #}
-{#                    {% if can_edit and object.has_changes_after_planned %} #}
-{#                        <div class="row row-border"> #}
-{#                            <strong class="{{ left_class }}"> #}
-{#                                {% trans 'Nylige ændringer' %} #}
-{#                            </strong> #}
-{#                            <div class="{{ center_class }}"> #}
-{#                                <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span> #}
-{#                                {% trans 'Dette besøg er markeret som havende nylige ændringer' %}. #}
-{#                            </div> #}
-{#                            <div class="{{ right_class }}"> #}
-{#                                <a href="{% url 'visit-reset-changes-marker' object.pk %}" role="button" class="btn btn-primary btn-xs pull-right">{% trans 'Klik her for at fjerne markeringen' %}</a> #}
-{#                            </div> #}
-{#                        </div> #}
-{#                    {% endif %} #}
-
+                
                 </div>
             </div>
             {% endwith %}

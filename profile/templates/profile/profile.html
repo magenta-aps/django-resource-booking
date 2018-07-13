@@ -91,12 +91,6 @@
                             <span class="glyphicon glyphicon-question-sign pull-right" data-toggle="tooltip" data-placement="right" title="{% trans 'Opret og redigér ressourcegrupper som tilbud kan behøve.' %}"></span>
                         </h4>
                     </a>
-                    <a class="list-group-item" href="{% url 'evaluations' %}">
-                        <h4 class="list-group-item-heading">
-                            {% trans 'Overblik over evalueringer' %}
-                            <span class="glyphicon glyphicon-question-sign pull-right" data-toggle="tooltip" data-placement="right" title="{% trans 'Her kan du se et overblik over besøg med tilknyttede evalueringer.' %}"></span>
-                        </h4>
-                    </a>
                     <a class="list-group-item" href="{% url 'statistics' %}">
                         <h4 class="list-group-item-heading">
                             {% trans 'Statistik' %}
@@ -111,7 +105,7 @@
                             </h4>
                         </a>
                     {% endif %}
-                    <a class="list-group-item" href="{% url 'visit-evaluation-statistics' %}">
+                    <a class="list-group-item" href="{% url 'evaluation-statistics' %}">
                         <h4 class="list-group-item-heading">
                             {% trans 'Evalueringer' %}
                             <span class="glyphicon glyphicon-question-sign pull-right" data-toggle="tooltip" data-placement="right" title="{% trans 'Her kan du se statistik over evalueringer' %}"></span>

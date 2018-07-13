@@ -40,8 +40,27 @@
                 {% else %}
                     <a class="btn btn-primary" href="{% url 'product-simple-ressources' object.pk %}">{% trans 'Redigér ressourcer' %}</a>
                 {% endif %}
+
+                {% if object.type == object.GROUP_VISIT %}
+                    {% if object.student_evaluation %}
+                        <a href="{% url 'evaluation-view' object.student_evaluation.pk %}" role="button" class="btn btn-primary">{% trans 'Vis evaluering for elever' %}</a>
+                    {% else %}
+                        <a href="{% url 'evaluation-create' object.pk %}?s=1" role="button" class="btn btn-primary">{% trans 'Opret evaluering for elever' %}</a>
+                    {% endif %}
+                    {% if object.teacher_evaluation %}
+                        <a href="{% url 'evaluation-view' object.teacher_evaluation.pk %}" role="button" class="btn btn-primary">{% trans 'Vis evaluering for lærere' %}</a>
+                    {% else %}
+                        <a href="{% url 'evaluation-create' object.pk %}?t=1" role="button" class="btn btn-primary">{% trans 'Opret evaluering for lærere' %}</a>
+                    {% endif %}
+                {% else %}
+                    {% if object.common_evaluation %}
+                        <a href="{% url 'evaluation-view' object.common_evaluation.pk %}" role="button" class="btn btn-primary">{% trans 'Vis evaluering' %}</a>
+                    {% else %}
+                        <a href="{% url 'evaluation-create' object.pk %}&s=1&t=1" role="button" class="btn btn-primary">{% trans 'Opret evaluering' %}</a>
+                    {% endif %}
+                {% endif %}
             {% endif %}
-          </div>
+            </div>
             <h1>{{ object.title }}</h1>
             <div class="well">
                 {% autoescape off %}

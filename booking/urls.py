@@ -23,7 +23,8 @@ from booking.resource_based.views import ResourceRequirementUpdateView
 from booking.resource_based.views import VisitResourceEditView
 from booking.views import BecomeHostView
 from booking.views import BecomeTeacherView
-from booking.views import BookingAcceptView, BookingEditView
+from booking.views import BookingAcceptView
+from booking.views import BookingEditView
 from booking.views import BookingNotifyView, BookingDetailView
 from booking.views import BookingSuccessView
 from booking.views import BookingView
@@ -36,7 +37,6 @@ from booking.views import CalendarView
 from booking.views import CancelledVisitsView
 from booking.views import ChangeVisitAutosendView
 from booking.views import ChangeVisitCommentsView
-from booking.views import ChangeVisitEvalView
 from booking.views import ChangeVisitHostsView
 from booking.views import ChangeVisitResponsibleView
 from booking.views import ChangeVisitRoomsView
@@ -61,7 +61,6 @@ from booking.views import EmailTemplateListView
 from booking.views import EmbedcodesView
 from booking.views import EvaluationDetailView
 from booking.views import EvaluationEditView
-from booking.views import EvaluationOverviewView
 from booking.views import EvaluationRedirectView
 from booking.views import EvaluationStatisticsView
 from booking.views import LocaleRedirectView, SimpleRessourcesView
@@ -192,7 +191,6 @@ urlpatterns = patterns(
     url(r'^visit/(?P<pk>[0-9]+)/notify/success/?$',
         EmailSuccessView.as_view(),
         name='visit-notify-success'),
-
     url(r'^visit/(?P<pk>[0-9]+)/(?P<usertype>teacher|host+)?/?$',
         VisitDetailView.as_view(),
         name='visit-view'),
@@ -209,7 +207,6 @@ urlpatterns = patterns(
     url(r'^booking/accept/(?P<token>[0-9a-f-]+)/?$',
         BookingAcceptView.as_view(),
         name='booking-accept-view'),
-
     url(r'^booking/(?P<pk>[0-9]+)/edit/?$',
         BookingEditView.as_view(),
         name='booking-edit-view'),
@@ -235,9 +232,6 @@ urlpatterns = patterns(
     url(r'^visit/(?P<pk>[0-9]+)/change_comments/?$',
         ChangeVisitCommentsView.as_view(),
         name='change-visit-comments'),
-    url(r'^visit/(?P<pk>[0-9]+)/change_evaluation_link/?$',
-        ChangeVisitEvalView.as_view(),
-        name='change-visit-eval'),
     url(r'^visit/(?P<pk>[0-9]+)/add_logentry/?$',
         VisitAddLogEntryView.as_view(),
         name='visit-add-logentry'),
@@ -275,7 +269,6 @@ urlpatterns = patterns(
     url(r'^booking/(?P<product>[0-9]+)/notify/success$',
         EmailSuccessView.as_view(),
         name='booking-notify-success'),
-
 
     url(r'^mpv/create/?$',
         MultiProductVisitTempCreateView.as_view(),
@@ -333,10 +326,6 @@ urlpatterns = patterns(
         EmailReplyView.as_view(),
         name='reply-to-email'),
 
-    url(r'^evaluations/?',
-        EvaluationOverviewView.as_view(),
-        name='evaluations'),
-
     url(r'^resource/create/?$',
         ResourceCreateView.as_view(),
         name='resource-create'),
@@ -346,7 +335,6 @@ urlpatterns = patterns(
     url(r'^resource/(?P<pk>[0-9]+)/?$',
         ResourceDetailView.as_view(),
         name='resource-view'),
-
     url(r'^resource/(?P<pk>[0-9]+)/calendar/?$',
         CalendarView.as_view(),
         name='calendar'),
@@ -447,20 +435,14 @@ urlpatterns = patterns(
     url(r'^product/(?P<product>[0-9]+)/resourcerequirement/create/confirm/?$',
         ResourceRequirementCreateConfirmView.as_view(),
         name='resourcerequirement-create-confirm'),
-
-
-
     url(r'^product/(?P<product>[0-9]+)/resource'
         r'requirement/(?P<pk>[0-9]+)/edit/?$',
         ResourceRequirementUpdateView.as_view(),
         name='resourcerequirement-edit'),
-
-
     url(r'^product/(?P<product>[0-9]+)/resource'
         r'requirement/(?P<pk>[0-9]+)/edit/confirm/?$',
         ResourceRequirementUpdateConfirmView.as_view(),
         name='resourcerequirement-edit-confirm'),
-
     url(r'^product/(?P<product>[0-9]+)/resourcerequirement/?$',
         ResourceRequirementListView.as_view(),
         name='resourcerequirement-list'),
@@ -468,32 +450,32 @@ urlpatterns = patterns(
         r'requirement/(?P<pk>[0-9]+)/delete/?$',
         ResourceRequirementDeleteView.as_view(),
         name='resourcerequirement-delete'),
-
     url(r'^visit/(?P<pk>[0-9]+)/resources/?$',
         VisitResourceEditView.as_view(),
         name='visit-resources-edit'),
 
-    url(r'^visit/(?P<visit>[0-9]+)/evaluation/create/?$',
+    url(r'^evaluation/create/(?P<product>[0-9]+)/?$',
         EvaluationEditView.as_view(),
-        name='visit-evaluation-create'),
-    url(r'^visit/(?P<visit>[0-9]+)/evaluation/(?P<pk>[0-9]+)/edit/?$',
+        name='evaluation-create'),
+    url(r'^evaluation/(?P<pk>[0-9]+)/edit/?$',
         EvaluationEditView.as_view(),
-        name='visit-evaluation-edit'),
-    url(r'^visit/(?P<visit>[0-9]+)/evaluation/(?P<pk>[0-9]+)/?$',
+        name='evaluation-edit'),
+    url(r'^evaluation/(?P<pk>[0-9]+)/?$',
         EvaluationDetailView.as_view(),
-        name='visit-evaluation-view'),
-    url(r'^e/(?P<linkid>[a-zA-Z0-9]+)$',
+        name='evaluation-view'),
+    url(r'^evaluation/(?P<pk>[0-9]+)/(?P<g>[0-9]+)/(?P<i>[0-9]+)/?$',
+        EvaluationDetailView.as_view(),
+        name='evaluation-view-send'),
+    url(r'^e/(?P<linkid>[a-zA-Z0-9]+(_s)?)$',
         EvaluationRedirectView.as_view(),
-        name='visit-evaluation-redirect'),
-    url(r'^visit/evaluations/?$',
+        name='evaluation-redirect'),
+    url(r'^evaluation/statistics/?$',
         EvaluationStatisticsView.as_view(),
-        name='visit-evaluation-statistics'),
+        name='evaluation-statistics'),
 
     url(r'^ajax/list/(?P<type>[A-Za-z]+)/?$',
         ListAjaxView.as_view(),
         name='ajax-list')
-
-
 
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

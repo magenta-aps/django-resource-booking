@@ -10,13 +10,12 @@
 
             {% include 'common/breadcrumbrow.html' %}
 
-            <h1>Besøg med tilknyttede evalueringer</h1>
+            <h1>{% trans 'Besøg med tilknyttede evalueringer' %}</h1>
 
             <div class="divider"></div>
 
-            <h2>Filtrér listen</h2>
-            <form name="evaluationoverviewform" id="evaluationoverviewform"
-                  action="{{ request.uri }}" method="get">
+            <h2>{% trans 'Filtrér listen' %}</h2>
+            <form name="evaluationoverviewform" id="evaluationoverviewform" action="{{ request.uri }}" method="get">
                 <div>
                     {% include 'common/fields/generic_field.html' with field=form.organizationalunit %}
                     <div class="row form-group">
@@ -26,10 +25,8 @@
                                 <input id="{{ form.limit_to_personal.id_for_label }}"
                                        name="limit_to_personal"
                                        type="checkbox"
-                                       {% if form.limit_to_personal.value %}
-                                       checked="checked"
-                                       {% endif %}
-                                >
+                                       {% if form.limit_to_personal.value %}checked="checked"{% endif %}
+                                />
                                 {{ form.limit_to_personal.label }}
                             </label>
                         </div>
@@ -58,12 +55,12 @@
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>Tilbud-id</th>
-                            <th>Tilbud</th>
-                            <th>Besøg-id</th>
-                            <th>Besøgstidspunkt</th>
-                            <th>Link til evaluering</th>
-                            <th>Status</th>
+                            <th>{% trans 'Tilbud-id' %}</th>
+                            <th>{% trans 'Tilbud' %}</th>
+                            <th>{% trans 'Besøg-id' %}</th>
+                            <th>{% trans 'Besøgstidspunkt' %}</th>
+                            <th>{% trans 'Evaluering' %}</th>
+                            <th>{% trans 'Status' %}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -74,8 +71,23 @@
                             <td><a href="{% url 'product-view' res.product.pk %}">{{ res.product.title }}</a></td>
                             <td><a href="{% url 'visit-view' res.pk %}">#{{ res.pk }}</a></td>
                             <td><a href="{% url 'visit-view' res.pk %}">{{ res.display_value }}</a></td>
-                            <td><a href="{{ res.evaluation_link }}">{{ res.evaluation_link }}</a></td>
-                            <td><span class="label label-{{ res.get_workflow_status_class }}">{{ res.get_workflow_status_display }}</span></td>
+                            <td>
+                                {% if res.product.is_group_visit %}
+                                    {% if res.product.student_evaluation %}
+                                        <a href="{% url 'evaluation-view' res.product.student_evaluation.id %}">{% trans 'Til elever' %}</a>
+                                    {% endif %}
+                                    {% if res.product.teacher_evaluation %}
+                                        <a href="{% url 'evaluation-view' res.product.teacher_evaluation.id %}">{% trans 'Til lærere' %}</a>
+                                    {% endif %}
+                                {% else %}
+                                    {% if res.product.student_evaluation %}
+                                        <a href="{% url 'evaluation-view' res.product.student_evaluation.id %}">{% trans 'Til alle' %}</a>
+                                    {% endif %}
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="label label-{{ res.get_workflow_status_class }}">{{ res.get_workflow_status_display }}</span>
+                            </td>
                         </tr>
                     {% endfor %}
                     </tbody>

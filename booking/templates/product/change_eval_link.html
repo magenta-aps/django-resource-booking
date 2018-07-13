@@ -14,7 +14,7 @@
     </div>
     <div class="row">
         <div class="col-sm-12 col-md-8">
-            <form name="changeevalform" id="changeevalform" action="{% url 'change-visit-eval' object.pk %}" method="post">
+            <form name="changeevalform" id="changeevalform" action="{% url 'change-product-eval' object.pk %}" method="post">
                 {% csrf_token %}
                 {{ form }}
                 <div class="clearfix">

@@ -54,7 +54,6 @@ from booking.forms import EmailReplyForm
 from booking.forms import EmailTemplateForm
 from booking.forms import EmailTemplatePreviewContextForm
 from booking.forms import EvaluationForm
-from booking.forms import EvaluationOverviewForm
 from booking.forms import EvaluationStatisticsForm
 from booking.forms import GuestEmailComposeForm
 from booking.forms import InternshipForm
@@ -95,8 +94,6 @@ from booking.models import Booking, Guest
 from booking.models import CalendarEvent
 from booking.models import EmailTemplate
 from booking.models import EmailTemplateType
-from booking.models import Evaluation
-from booking.models import EvaluationGuest
 from booking.models import GymnasieLevel
 from booking.models import KUEmailMessage
 from booking.models import MultiProductVisit
@@ -112,6 +109,7 @@ from booking.models import RoomResponsible
 from booking.models import School
 from booking.models import StudyMaterial
 from booking.models import Subject
+from booking.models import SurveyXactEvaluation, SurveyXactEvaluationGuest
 from booking.models import Visit
 from booking.utils import DummyRecipient
 from booking.utils import TemplateSplit
@@ -1382,6 +1380,7 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
                 for x in EmailTemplateType.objects.filter(
                     enable_autosend=True, form_show=True
                 )
+                if self.object.type not in x.disabled_product_types
             ]
         else:
             # Existing objects being edited should just use the existing set
@@ -1483,6 +1482,8 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
 
             self.add_to_my_resources()
 
+            self.update_evaluations()
+
             messages.add_message(
                 request,
                 messages.INFO,
@@ -1578,6 +1579,32 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
                     'enabled': template_type.is_default
                 }
             )
+
+    def update_evaluations(self):
+        teacher_ev = EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST
+        student_ev = EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST_STUDENTS
+        if self.object.productautosend_set.filter(
+                template_type__key=teacher_ev,
+                enabled=True
+        ).count() > 0 and \
+                self.object.teacher_evaluation is None:
+            evaluation = SurveyXactEvaluation(
+                product=self.object,
+                surveyId=SurveyXactEvaluation.DEFAULT_TEACHER_SURVEY_ID,
+                for_teachers=True
+            )
+            evaluation.save()
+        if self.object.productautosend_set.filter(
+                template_type__key=student_ev,
+                enabled=True
+        ).count() > 0 and \
+                self.object.student_evaluation is None:
+            evaluation = SurveyXactEvaluation(
+                product=self.object,
+                surveyId=SurveyXactEvaluation.DEFAULT_STUDENT_SURVEY_ID,
+                for_students=True
+            )
+            evaluation.save()
 
     def get_success_url(self):
         try:
@@ -2445,6 +2472,14 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
                     True
                 )
 
+            for evaluation in self.product.evaluations:
+                if evaluation is not None:
+                    evaluationguest = SurveyXactEvaluationGuest(
+                        guest=booking.booker,
+                        evaluation=evaluation
+                    )
+                    evaluationguest.save()
+
             self.object = booking
             self.model = booking.__class__
 
@@ -2615,6 +2650,15 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
         if 'bookerform' in forms:
             object.booker = forms['bookerform'].save()
         object.save()
+
+        # for product in self.visit.products:
+        #     for evaluation in product.evaluations:
+        #         if evaluation is not None:
+        #             evaluationguest = SurveyXactEvaluationGuest(
+        #                 evaluation=evaluation,
+        #                 guest=object.booker
+        #             )
+        #             evaluationguest.save()
 
         object.autosend(
             EmailTemplateType.notify_guest__booking_created_untimed
@@ -3772,66 +3816,6 @@ class EmailReplyHtmlBodyView(DetailView):
         return response
 
 
-class EvaluationOverviewView(LoginRequiredMixin, BreadcrumbMixin, ListView):
-    model = Visit
-    template_name = "evaluation/list.html"
-    context_object_name = "results"
-    form = None
-
-    def get_form(self):
-        if not self.form:
-            self.form = EvaluationOverviewForm(
-                self.request.GET,
-                user=self.request.user
-            )
-            self.form.is_valid()
-
-        return self.form
-
-    def get_queryset(self):
-        form = self.get_form()
-
-        if form.is_valid():
-            formdata = form.cleaned_data
-            qs = self.model.objects.filter(
-                eventtime__product__organizationalunit__in=form.user
-                .userprofile.get_unit_queryset(),
-                evaluation_link__isnull=False,
-            ).exclude(
-                evaluation_link="",
-            )
-            unit_limit = formdata.get('organizationalunit', [])
-            if unit_limit:
-                qs = qs.filter(
-                    eventtime__product__organizationalunit__in=unit_limit
-                )
-            if formdata.get('limit_to_personal'):
-                user = self.request.user
-                qs = qs.filter(
-                    Q(eventtime__product__created_by=user) |
-                    Q(teachers=user) |
-                    Q(hosts=user) |
-                    Q(eventtime__product__tilbudsansvarlig=user)
-                )
-        else:
-            qs = self.model.objects.none()
-
-        return qs.order_by('-eventtime__start', '-eventtime__end')
-
-    def get_context_data(self, **kwargs):
-        return super(EvaluationOverviewView, self).get_context_data(
-            form=self.get_form(),
-            **kwargs
-        )
-
-    @staticmethod
-    def build_breadcrumbs():
-        return [{
-            'url': reverse('evaluations'),
-            'text': _(u'Oversigt over evalueringer')
-        }]
-
-
 class BookingAcceptView(BreadcrumbMixin, FormView):
     template_name = "booking/accept_spot.html"
     form_class = AcceptBookingForm
@@ -4103,11 +4087,18 @@ class EvaluationEditView(BreadcrumbMixin, UpdateView):
 
     form_class = EvaluationForm
     template_name = "evaluation/form.html"
-    model = Evaluation
+    model = SurveyXactEvaluation
 
-    def get_object(self, queryset=None):
-        if 'pk' in self.kwargs:
-            return super(EvaluationEditView, self).get_object(queryset)
+    def get_object(self, **kwargs):
+        if 'product' in self.kwargs and 'id' not in self.kwargs:
+            return None
+        return super(EvaluationEditView, self).get_object()
+
+    def get_product(self, queryset=None):
+        if 'product' in self.kwargs:
+            return Product.objects.get(pk=self.kwargs['product'])
+        if self.object is not None:
+            return self.object.product
 
     def get_visit(self):
         if self.object:
@@ -4116,25 +4107,72 @@ class EvaluationEditView(BreadcrumbMixin, UpdateView):
 
     def get_form_kwargs(self):
         kwargs = super(EvaluationEditView, self).get_form_kwargs()
-        kwargs['visit'] = Visit.objects.get(id=self.kwargs.get('visit'))
+        kwargs['product'] = self.get_product()
+        if self.object is None:
+            initial = kwargs['initial']
+            if 'initial' not in kwargs:
+                initial = kwargs['initial'] = {}
+            if self.request.GET.get('s', '0') == '1':
+                initial['for_students'] = 1
+                initial['surveyId'] = \
+                    SurveyXactEvaluation.DEFAULT_STUDENT_SURVEY_ID
+            if self.request.GET.get('t', '0') == '1':
+                initial['for_teachers'] = 1
+                initial['surveyId'] = \
+                    SurveyXactEvaluation.DEFAULT_TEACHER_SURVEY_ID
         return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = {}
+        context['guides'] = {
+            guide.value: guide.name
+            for guide in booking_models.Guide.objects.all()
+        }
+        context['exercises_presentations'] = {
+            e.value: e.name
+            for e in booking_models.ExercisePresentation.objects.all()
+        }
+        context.update(kwargs)
+        return super(EvaluationEditView, self).get_context_data(
+            **context
+        )
 
     def get_success_url(self):
         return reverse(
-            'visit-evaluation-view', args=[
-                self.object.visit.id, self.object.id
+            'evaluation-view', args=[
+                self.object.id
             ]
         )
 
+    def form_valid(self, form):
+        response = super(EvaluationEditView, self).form_valid(form)
+        if self.object.product is None:
+            self.object.product = self.get_product()
+            self.object.save()
+        for visit in self.object.product.get_visits():
+            for booking in visit.booking_list:
+                guest = booking.booker
+                evaluationguest = SurveyXactEvaluationGuest.objects.filter(
+                    evaluation=self.object,
+                    guest=guest
+                ).first()
+                if evaluationguest is None:
+                    evaluationguest = SurveyXactEvaluationGuest(
+                        evaluation=self.object,
+                        guest=guest
+                    )
+                    evaluationguest.save()
+        return response
+
     def get_breadcrumb_args(self):
-        return [self.object, self.get_visit()]
+        return [self.object, self.get_product()]
 
     @staticmethod
-    def build_breadcrumbs(evaluation, visit=None):
-        if visit is None:
-            visit = evaluation.visit
+    def build_breadcrumbs(evaluation, product=None):
+        if product is None:
+            product = evaluation.product
         if evaluation is None:
-            return VisitDetailView.build_breadcrumbs(visit) + [
+            return ProductDetailView.build_breadcrumbs(product) + [
                 {'text': _(u'Opret evaluering')}
             ]
         else:
@@ -4146,19 +4184,29 @@ class EvaluationEditView(BreadcrumbMixin, UpdateView):
 class EvaluationDetailView(BreadcrumbMixin, DetailView):
 
     template_name = "evaluation/details.html"
-    model = Evaluation
+    model = SurveyXactEvaluation
+
+    def get(self, request, *args, **kwargs):
+        participant_id = kwargs.get('g', None)
+        message_id = kwargs.get('i', 1)
+        if participant_id is not None:
+            participant = SurveyXactEvaluationGuest.objects.get(
+                id=participant_id
+            )
+            participant.send(message_id != '2')
+        return super(EvaluationDetailView, self).get(request, *args, **kwargs)
 
     def get_breadcrumb_args(self):
         return [self.object]
 
     @staticmethod
     def build_breadcrumbs(evaluation):
-        return VisitDetailView.build_breadcrumbs(evaluation.visit) + [
+        return ProductDetailView.build_breadcrumbs(evaluation.product) + [
             {
                 'text': _(u'Evaluering'),
                 'url': reverse(
-                    'visit-evaluation-view',
-                    args=[evaluation.visit.id, evaluation.id]
+                    'evaluation-view',
+                    args=[evaluation.id]
                 )
             }
         ]
@@ -4169,16 +4217,11 @@ class EvaluationRedirectView(RedirectView):
     permanent = False
 
     def get_redirect_url(self, *args, **kwargs):
-        try:
-            evalguest = EvaluationGuest.objects.get(
-                shortlink_id=kwargs['linkid']
-            )
-        except:
-            raise Http404
-        url = evalguest.url
+        url = SurveyXactEvaluationGuest.get_redirect_url(
+            kwargs['linkid'], True
+        )
         if url is None:
             raise Http404
-        evalguest.link_clicked()
         return url
 
 
@@ -4194,7 +4237,11 @@ class EvaluationStatisticsView(BreadcrumbMixin, TemplateView):
         form.full_clean()
         data = form.clean()
         has_filter = False
-        queryset = Visit.objects.filter(evaluation__isnull=False)
+        queryset = Visit.objects.filter(
+            bookings=Booking.objects.filter(
+                booker__surveyxactevaluationguest__isnull=False
+            )
+        ).order_by("-eventtime__start")
 
         unit = data.get("unit")
         if unit is not None:
@@ -4214,7 +4261,8 @@ class EvaluationStatisticsView(BreadcrumbMixin, TemplateView):
         context = {
             'has_filter': has_filter,
             'visits': queryset,
-            'form': form
+            'form': form,
+            'labels': Visit.evaluation_guestset_labels
         }
         context.update(kwargs)
         return super(EvaluationStatisticsView, self).get_context_data(

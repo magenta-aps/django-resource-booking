@@ -6,22 +6,21 @@ from django import forms
 from django.core import validators
 from django.db.models import Q
 from django.db.models.expressions import OrderBy
-from django.forms import CheckboxSelectMultiple, CheckboxInput
+from django.forms import CheckboxSelectMultiple, CheckboxInput, \
+    ModelMultipleChoiceField
 from django.forms import EmailInput
 from django.forms import HiddenInput
-from django.forms import ModelMultipleChoiceField
 from django.forms import TextInput, NumberInput, DateInput, Textarea, Select
 from django.forms import formset_factory, inlineformset_factory
 from django.template import TemplateSyntaxError
-from django.utils.translation import ugettext_lazy as _
 from django.utils.dates import MONTHS
+from django.utils.translation import ugettext_lazy as _
 
 from booking.models import BLANK_LABEL, BLANK_OPTION
 from booking.models import ClassBooking, TeacherBooking, \
     BookingGymnasieSubjectLevel
 from booking.models import EmailTemplate, EmailTemplateType
-from booking.models import Evaluation
-from booking.models import EvaluationGuest
+from booking.models import SurveyXactEvaluation, SurveyXactEvaluationGuest
 from booking.models import Guest, Region, PostCode, School
 from booking.models import Locality, OrganizationalUnitType, OrganizationalUnit
 from booking.models import MultiProductVisitTemp, MultiProductVisitTempProduct
@@ -754,7 +753,8 @@ class ProductAutosendFormSet(ProductAutosendFormSetBase):
                 autosend.template_type for autosend in product_autosends
             ]
             for type in all_types:
-                if type not in existing_types:
+                if type not in existing_types and \
+                        instance.type not in type.disabled_product_types:
                     initial.append({
                         'template_type': type,
                         'enabled': type.is_default,
@@ -1914,61 +1914,67 @@ class MultiProductVisitTempProductsForm(forms.ModelForm):
 
 class EvaluationForm(forms.ModelForm):
 
-    class Meta:
-        model = Evaluation
-        fields = ['url']
-        widgets = {'url': TextInput(attrs={
-            'class': 'form-control input-sm',
-            'readonly': 'readonly'
-        })}
-
     nonparticipating_guests = ModelMultipleChoiceField(
         queryset=Guest.objects.all(),
         required=False,
         label=_(u'Deltagere uden spørgeskema')
     )
 
-    def __init__(self, visit, *args, **kwargs):
-        self.instance = kwargs.get('instance')
-        self.visit = visit
-        if self.instance:
+    class Meta:
+        model = SurveyXactEvaluation
+        fields = ['surveyId', 'for_students', 'for_teachers']
+        widgets = {
+            'surveyId': NumberInput(attrs={'class': 'form-control'}),
+            'for_students': HiddenInput(),
+            'for_teachers': HiddenInput()
+        }
+
+    def __init__(self, product, *args, **kwargs):
+        self.instance = instance = kwargs.get('instance')
+        self.product = product
+        if self.instance is not None:
             kwargs['initial']['nonparticipating_guests'] = [
                 evaluationguest.guest
-                for evaluationguest
-                in self.instance.evaluationguest_set.filter(
-                    status=EvaluationGuest.STATUS_NO_PARTICIPATION
+                for evaluationguest in self.instance.evaluationguests.filter(
+                    status=SurveyXactEvaluationGuest.STATUS_NO_PARTICIPATION
                 )
             ]
         super(EvaluationForm, self).__init__(*args, **kwargs)
-        self.fields['nonparticipating_guests'].queryset = Guest.objects.filter(
-            booking__in=self.visit.booking_list
-        )
+        if instance is None:
+            self.fields['nonparticipating_guests'].widget = HiddenInput()
+        else:
+            self.fields['nonparticipating_guests'].queryset = instance.guests
 
     def get_queryset(self):
-        return Evaluation.objects.filter(visit=self.visit)
+        return SurveyXactEvaluation.objects.filter(product=self.product)
 
     def save(self, commit=True):
-        self.instance.visit = self.visit
+        self.instance.product = self.product
         super(EvaluationForm, self).save(commit)
         existing_guests = {
             evalguest.guest: evalguest
-            for evalguest in self.instance.evaluationguest_set.all()
+            for evalguest in self.instance.evaluationguests
         }
-        for booking in self.visit.booking_list:
-            guest = booking.booker
-            status = EvaluationGuest.STATUS_NO_PARTICIPATION
-            if guest not in self.cleaned_data['nonparticipating_guests']:
-                status = EvaluationGuest.STATUS_NOT_SENT
-            if guest in existing_guests:
-                evalguest = existing_guests[guest]
-                evalguest.status = status
-            else:
-                evalguest = EvaluationGuest(
-                    evaluation=self.instance,
-                    guest=guest,
-                    status=status
-                )
-            evalguest.save()
+        for visit in self.product.get_visits():
+            for booking in visit.booking_list:
+                guest = booking.booker
+                status = None
+                if guest in self.cleaned_data['nonparticipating_guests']:
+                    status = SurveyXactEvaluationGuest.STATUS_NO_PARTICIPATION
+
+                if guest in existing_guests:
+                    evalguest = existing_guests[guest]
+                    if status is not None:
+                        evalguest.status = status
+                else:
+                    if status is None:
+                        status = SurveyXactEvaluationGuest.STATUS_NOT_SENT
+                    evalguest = SurveyXactEvaluationGuest(
+                        evaluation=self.instance,
+                        guest=guest,
+                        status=status
+                    )
+                evalguest.save()
         return self.instance
 
 
@@ -1998,5 +2004,10 @@ class EvaluationStatisticsForm(forms.Form):
 
     unit = forms.ModelChoiceField(
         label=_(u'Enhed'),
-        queryset=OrganizationalUnit.objects.all()
+        queryset=OrganizationalUnit.objects.all(),
+        widget=forms.Select(
+            attrs={
+                'class': 'form-control'
+            }
+        )
     )
