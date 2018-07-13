@@ -2539,14 +2539,25 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         else:
             return None
 
-    def is_bookable(self, start_time=None, end_time=None):
+    NONBOOKABLE_REASON__TYPE_NOT_BOOKABLE = 1
+    NONBOOKABLE_REASON__NOT_ACTIVE = 2
+    NONBOOKABLE_REASON__HAS_NO_BOOKABLE_VISITS = 3
+    NONBOOKABLE_REASON__BOOKING_CUTOFF = 4
+    NONBOOKABLE_REASON__NO_CALENDAR_TIME = 5
 
-        if not(
-            self.is_type_bookable and
-            self.state == Product.ACTIVE and
-            self.has_bookable_visits
-        ):
-            return False
+    def is_bookable(self, start_time=None, end_time=None, return_reason=False):
+
+        if not self.is_type_bookable:
+            return self.NONBOOKABLE_REASON__TYPE_NOT_BOOKABLE \
+                if return_reason else False
+
+        if self.state != Product.ACTIVE:
+            return self.NONBOOKABLE_REASON__NOT_ACTIVE \
+                if return_reason else False
+
+        if not self.has_bookable_visits:
+            return self.NONBOOKABLE_REASON__HAS_NO_BOOKABLE_VISITS \
+                if return_reason else False
 
         # Special case for calendar-controlled products where guest suggests
         # a date
@@ -2563,7 +2574,8 @@ class Product(AvailabilityUpdaterMixin, models.Model):
                 start_date = start_time if isinstance(start_time, date) \
                     else start_time.date()
                 if start_date < timezone.now().date() + cutoff:
-                    return False
+                    return self.NONBOOKABLE_REASON__BOOKING_CUTOFF \
+                        if return_reason else False
 
             # If start_time is a date and there is no end_date assume
             # midnight-to-midnight on the given date in the current timezone.
@@ -2576,7 +2588,9 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
             # Check if we have an available time in our calendar within the
             # specified interval.
-            return self.has_available_calendar_time(start_time, end_time)
+            if not self.has_available_calendar_time(start_time, end_time):
+                return self.NONBOOKABLE_REASON__NO_CALENDAR_TIME \
+                    if return_reason else False
 
         return True
 
