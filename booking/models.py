@@ -3597,6 +3597,12 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             self.save()
 
     @property
+    def multi_top(self):
+        if self.is_multi_sub:
+            return self.multi_master
+        return self
+
+    @property
     def booking_list(self):
         return self.get_bookings(False, True)
 
