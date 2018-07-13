@@ -1727,7 +1727,7 @@ class EmailComposeForm(BaseEmailComposeForm):
         })
     )
 
-    subject_max_length = 77
+    subject_max_length = 998
 
     def clean_subject(self):
         subject = self.cleaned_data['subject']
