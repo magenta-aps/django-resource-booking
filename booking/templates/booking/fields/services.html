@@ -44,7 +44,7 @@
 {% if bookingform.custom_desired %}
     <div class="form-group">
         <div class="col-sm-2">
-            <label class="control-label" for="{{ bookingform.custom_desired.id_for_label }}">{% blocktrans with service=product.custom_name %}{{ service }} ønskes{% endblocktrans %}</label>
+            <label class="control-label" for="{{ bookingform.custom_desired.id_for_label }}">{% blocktrans with service=product.custom_name|capfirst %}{{ service }} ønskes{% endblocktrans %}</label>
         </div>
         <div class="col-sm-6{% if bookingform.custom_desired.errors %} has-error{% endif %}">
             {{ bookingform.custom_desired }}

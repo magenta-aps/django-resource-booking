@@ -2521,7 +2521,7 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
             if type == Product.GROUP_VISIT:
                 forms['bookingform'] = ClassBookingForm(
                     data,
-                    product=self.product
+                    products=[self.product]
                 )
                 if self.product.productgymnasiefag_set.count() > 0:
                     forms['gymnasiesubjectform'] = \
@@ -2705,13 +2705,23 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
         if self.product:
             type = self.product.type
 
-        if type == Product.GROUP_VISIT:
-            bookingform = ClassBookingForm(data, product=self.product)
-            if self.product.productgymnasiefag_set.count() > 0:
-                forms['subjectform'] = BookingGymnasieSubjectLevelForm(data)
-            if self.product.productgrundskolefag_set.count() > 0:
-                forms['grundskolesubjectform'] = \
-                    BookingGrundskoleSubjectLevelForm(data)
+        types = [product.type for product in self.visit.products]
+
+        if Product.GROUP_VISIT in types:
+            bookingform = ClassBookingForm(data, products=self.visit.products)
+            for product in self.visit.products:
+                if product.productgymnasiefag_set.count() > 0:
+                    forms['gymnasiesubjectform'] = \
+                        BookingGymnasieSubjectLevelForm(data)
+                    break
+            for product in self.visit.products:
+                if product.productgrundskolefag_set.count() > 0:
+                    forms['grundskolesubjectform'] = \
+                        BookingGrundskoleSubjectLevelForm(data)
+                    break
+            if self.visit.is_multiproductvisit and \
+                    'custom_desired' in bookingform.fields:
+                del bookingform.fields['custom_desired']
 
         elif type == Product.TEACHER_EVENT:
             bookingform = TeacherBookingForm(
@@ -2779,6 +2789,10 @@ class BookingEditView(BreadcrumbMixin, EditorRequriedMixin, UpdateView):
         )
         type = primary_product.type
         form_class = BookingForm
+        kwargs = {
+            'instance': self.object,
+            'products': products
+        }
         if type == Product.GROUP_VISIT:
             try:
                 self.object = self.object.classbooking
@@ -2807,8 +2821,7 @@ class BookingEditView(BreadcrumbMixin, EditorRequriedMixin, UpdateView):
 
         bookingform = form_class(
             data,
-            instance=self.object,
-            product=primary_product
+            **kwargs
         )
         if self.object.visit.is_multiproductvisit and \
                 'desired_time' in bookingform.fields:
@@ -2847,6 +2860,10 @@ class BookingEditView(BreadcrumbMixin, EditorRequriedMixin, UpdateView):
         context['formname'] = "bookingform"
         context['level_map'] = Guest.level_map
         context['editing'] = True
+        try:
+            context['product'] = self.object.visit.products[0]
+        except IndexError:
+            pass
         return context
 
     def get_breadcrumb_args(self):

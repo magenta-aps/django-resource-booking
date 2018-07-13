@@ -825,7 +825,7 @@ class BookingForm(forms.ModelForm):
         self.scheduled = Product.TIME_MODE_GUEST_SUGGESTED not in [
             product.time_mode for product in products
         ]
-        if self.scheduled:
+        if self.scheduled and len(products) > 0:
             product = products[0]
             choices = [(None, BLANK_LABEL)]
             qs = product.future_bookable_times.order_by('start', 'end')
@@ -1266,13 +1266,20 @@ class ClassBookingBaseForm(forms.ModelForm):
             })
         }
 
-    def __init__(self, data=None, product=None, *args, **kwargs):
-        self.product = product
+    def __init__(self, data=None, products=[], *args, **kwargs):
+        if isinstance(self, BookingForm):
+            kwargs['products'] = products
         super(ClassBookingBaseForm, self).__init__(data, *args, **kwargs)
-        if product is not None:
-            for service in ['tour', 'catering', 'presentation', 'custom']:
-                if not getattr(self.product, service + '_available'):
-                    del self.fields[service + '_desired']
+        if products is not None:
+            r_services = ['tour', 'catering', 'presentation', 'custom']
+            for product in products:
+                r_services = [
+                    service
+                    for service in r_services
+                    if not getattr(product, service + '_available')
+                ]
+            for service in r_services:
+                del self.fields[service + '_desired']
 
 
 class ClassBookingForm(ClassBookingBaseForm, BookingForm):
@@ -1296,7 +1303,9 @@ class TeacherBookingBaseForm(forms.ModelForm):
             })
         }
 
-    def __init__(self, data=None, *args, **kwargs):
+    def __init__(self, data=None, products=[], *args, **kwargs):
+        if isinstance(self, BookingForm):
+            kwargs['products'] = products
         super(TeacherBookingBaseForm, self).__init__(data, *args, **kwargs)
 
 
@@ -1319,7 +1328,9 @@ class StudentForADayBookingBaseForm(forms.ModelForm):
             })
         }
 
-    def __init__(self, data=None, *args, **kwargs):
+    def __init__(self, data=None, products=[], *args, **kwargs):
+        if isinstance(self, BookingForm):
+            kwargs['products'] = products
         super(StudentForADayBookingBaseForm, self).__init__(
             data, *args, **kwargs
         )
@@ -1344,7 +1355,9 @@ class StudyProjectBookingBaseForm(forms.ModelForm):
             })
         }
 
-    def __init__(self, data=None, *args, **kwargs):
+    def __init__(self, data=None, products=[], *args, **kwargs):
+        if isinstance(self, BookingForm):
+            kwargs['products'] = products
         super(StudyProjectBookingBaseForm, self).__init__(
             data, *args, **kwargs
         )
@@ -1410,8 +1423,8 @@ BookingGymnasieSubjectLevelForm = \
         BookingGymnasieSubjectLevel,
         form=BookingGymnasieSubjectLevelFormBase,
         can_delete=True,
-        extra=0,
-        min_num=1
+        extra=1,
+        min_num=0
     )
 
 
@@ -1421,8 +1434,8 @@ BookingGrundskoleSubjectLevelForm = \
         BookingGrundskoleSubjectLevel,
         form=BookingGrundskoleSubjectLevelFormBase,
         can_delete=True,
-        extra=0,
-        min_num=1
+        extra=1,
+        min_num=0
     )
 
 
