@@ -1,26 +1,22 @@
 # -*- coding: utf-8 -*-
 
 import json
+import re
 import urllib
-
 from datetime import datetime, timedelta
 
 from dateutil.rrule import rrulestr
 from django.contrib import messages
-from django.contrib.admin.models import LogEntry
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse, reverse_lazy
-from django.utils.translation.trans_real import get_languages
 from django.db.models import Count
 from django.db.models import Q
 from django.db.models import Sum
 from django.db.models.expressions import RawSQL
 from django.db.models.functions import Coalesce
-from django.forms.models import model_to_dict
 from django.http import Http404
 from django.http import HttpResponse
 from django.http import JsonResponse
@@ -30,71 +26,97 @@ from django.utils.decorators import method_decorator
 from django.utils.http import urlquote
 from django.utils.http import urlunquote_plus
 from django.utils.translation import ugettext as _
+from django.utils.translation.trans_real import get_languages
+from django.views.defaults import bad_request
 from django.views.generic import View, TemplateView, ListView, DetailView
-from django.views.generic.base import ContextMixin, RedirectView
+from django.views.generic.base import RedirectView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.edit import FormMixin, ModelFormMixin
 from django.views.generic.edit import FormView, ProcessFormView
-from django.views.defaults import bad_request
-
-
-from profile.models import EDIT_ROLES, ADMINISTRATOR
-from profile.models import role_to_text
-from booking.models import Product, Visit, StudyMaterial
-from booking.models import KUEmailMessage
-from booking.models import Subject
-from booking.models import OrganizationalUnit
-from booking.models import GymnasieLevel
-from booking.models import Room
-from booking.models import PostCode, School
-from booking.models import Booking, Guest
-from booking.models import ProductGymnasieFag, ProductGrundskoleFag
-from booking.models import EmailTemplateType, EmailTemplate
-from booking.models import log_action
-from booking.models import LOGACTION_CREATE, LOGACTION_CHANGE
-from booking.models import RoomResponsible
-from booking.models import BookerResponseNonce
-from booking.models import CalendarEvent
-from booking.models import MultiProductVisit
-from booking.models import MultiProductVisitTemp, MultiProductVisitTempProduct
-from booking.models import Evaluation, EvaluationGuest
-
-from booking.forms import ProductInitialForm, ProductForm, EditBookerForm, \
-    ClassBookingBaseForm, TeacherBookingBaseForm, \
-    StudentForADayBookingBaseForm, StudyProjectBookingBaseForm
-from booking.forms import GuestEmailComposeForm, StudentForADayBookingForm
-from booking.forms import OtherProductForm, StudyProjectBookingForm
-from booking.forms import BookingGrundskoleSubjectLevelForm, BookingListForm
-from booking.forms import StudentForADayForm, InternshipForm, OpenHouseForm
-from booking.forms import TeacherProductForm, ClassProductForm
-from booking.forms import StudyProjectForm, AssignmentHelpForm
-from booking.forms import StudyMaterialForm
-
-from booking.forms import BookingForm
-from booking.forms import ClassBookingForm, TeacherBookingForm
-from booking.forms import ProductStudyMaterialForm, \
-    BookingGymnasieSubjectLevelForm
-from booking.forms import BookerForm
-from booking.forms import EmailTemplateForm, EmailTemplatePreviewContextForm
-from booking.forms import EmailComposeForm
-from booking.forms import EmailReplyForm
-from booking.forms import EvaluationOverviewForm
-from booking.forms import AdminProductSearchForm
-from booking.forms import ProductAutosendFormSet
-from booking.forms import VisitSearchForm
-from booking.forms import AcceptBookingForm
-from booking.forms import MultiProductVisitTempDateForm
-from booking.forms import MultiProductVisitTempProductsForm
-from booking.forms import EvaluationForm, EvaluationStatisticsForm
-
-from booking.utils import full_email, get_model_field_map, TemplateSplit
-from booking.utils import get_related_content_types, merge_dicts
-from booking.utils import DummyRecipient
-
 
 import booking.models as booking_models
-import re
 import urls
+from booking.constants import LOGACTION_CREATE
+from booking.forms import AcceptBookingForm
+from booking.forms import AdminProductSearchForm
+from booking.forms import AssignmentHelpForm
+from booking.forms import BookerForm
+from booking.forms import BookingForm
+from booking.forms import BookingGrundskoleSubjectLevelForm
+from booking.forms import BookingGymnasieSubjectLevelForm
+from booking.forms import BookingListForm
+from booking.forms import ClassBookingBaseForm
+from booking.forms import ClassBookingForm
+from booking.forms import ClassProductForm
+from booking.forms import EditBookerForm
+from booking.forms import EmailComposeForm
+from booking.forms import EmailReplyForm
+from booking.forms import EmailTemplateForm
+from booking.forms import EmailTemplatePreviewContextForm
+from booking.forms import EvaluationForm
+from booking.forms import EvaluationStatisticsForm
+from booking.forms import GuestEmailComposeForm
+from booking.forms import InternshipForm
+from booking.forms import MultiProductVisitTempDateForm
+from booking.forms import MultiProductVisitTempProductsForm
+from booking.forms import OpenHouseForm
+from booking.forms import OtherProductForm
+from booking.forms import ProductAutosendFormSet
+from booking.forms import ProductForm
+from booking.forms import ProductInitialForm
+from booking.forms import ProductStudyMaterialForm
+from booking.forms import StudentForADayBookingBaseForm
+from booking.forms import StudentForADayBookingForm
+from booking.forms import StudentForADayForm
+from booking.forms import StudyMaterialForm
+from booking.forms import StudyProjectBookingBaseForm
+from booking.forms import StudyProjectBookingForm
+from booking.forms import StudyProjectForm
+from booking.forms import TeacherBookingBaseForm
+from booking.forms import TeacherBookingForm
+from booking.forms import TeacherProductForm
+from booking.forms import VisitSearchForm
+from booking.logging import log_action
+from booking.mixins import AccessDenied
+from booking.mixins import AdminRequiredMixin
+from booking.mixins import AutologgerMixin
+from booking.mixins import BackMixin
+from booking.mixins import BreadcrumbMixin
+from booking.mixins import EditorRequriedMixin
+from booking.mixins import HasBackButtonMixin
+from booking.mixins import LoggedViewMixin
+from booking.mixins import LoginRequiredMixin
+from booking.mixins import ModalMixin
+from booking.mixins import RoleRequiredMixin
+from booking.mixins import UnitAccessRequiredMixin
+from booking.models import BookerResponseNonce
+from booking.models import Booking, Guest
+from booking.models import CalendarEvent
+from booking.models import EmailTemplate
+from booking.models import EmailTemplateType
+from booking.models import GymnasieLevel
+from booking.models import KUEmailMessage
+from booking.models import MultiProductVisit
+from booking.models import MultiProductVisitTemp
+from booking.models import MultiProductVisitTempProduct
+from booking.models import OrganizationalUnit
+from booking.models import PostCode
+from booking.models import Product
+from booking.models import ProductGrundskoleFag
+from booking.models import ProductGymnasieFag
+from booking.models import Room
+from booking.models import RoomResponsible
+from booking.models import School
+from booking.models import StudyMaterial
+from booking.models import Subject
+from booking.models import SurveyXactEvaluation, SurveyXactEvaluationGuest
+from booking.models import Visit
+from booking.utils import DummyRecipient
+from booking.utils import TemplateSplit
+from booking.utils import full_email
+from booking.utils import get_model_field_map
+from booking.utils import merge_dicts
+from profile.models import EDIT_ROLES
 
 i18n_test = _(u"Dette tester oversættelses-systemet")
 
@@ -177,128 +199,6 @@ class MainPageView(TemplateView):
 
         context.update(kwargs)
         return super(MainPageView, self).get_context_data(**context)
-
-
-class LoginRequiredMixin(object):
-    """Include this mixin to require login.
-
-    Mainly useful for users who are not coordinators or administrators.
-    """
-
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        """Check that user is logged in and dispatch."""
-        return super(LoginRequiredMixin, self).dispatch(*args, **kwargs)
-
-
-class AccessDenied(PermissionDenied):
-    def __init__(self, text, *args, **kwargs):
-        _text = text
-        print _text.encode('utf-8')
-        return super(AccessDenied, self).__init__(text, *args, **kwargs)
-
-    def __unicode__(self):
-        print self._text.encode('utf-8')
-        return unicode(self._text)
-
-
-class RoleRequiredMixin(object):
-    """Require that user has any of a number of roles."""
-
-    # Roles is a list of required roles - maybe only one.
-    # Each user can have only one role, and the condition is fulfilled
-    # if one is found.
-
-    roles = []  # Specify in subclass.
-
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        current_user = self.request.user
-        if hasattr(current_user, 'userprofile'):
-            role = current_user.userprofile.get_role()
-            if role in self.roles:
-                return super(RoleRequiredMixin, self).dispatch(*args, **kwargs)
-        else:
-            pass
-        txts = map(role_to_text, self.roles)
-        # TODO: Render this with the error message!
-        raise AccessDenied(
-            u"Kun brugere med disse roller kan logge ind: " +
-            u",".join(txts)
-        )
-
-
-class HasBackButtonMixin(ContextMixin):
-
-    def get_context_data(self, **kwargs):
-        context = super(HasBackButtonMixin, self).get_context_data(**kwargs)
-        context['oncancel'] = self.request.GET.get('back')
-        return context
-
-
-class BackMixin(ContextMixin):
-    backparam = "back"
-    just_preserve_back = False
-    back_on_success = True
-    back_on_cancel = True
-
-    def redirect(self, regular):
-        if self.backparam in self.request.GET:
-            back = self.request.GET[self.backparam]
-            if self.just_preserve_back:
-                url = regular + ('?' if '?' not in regular else '&') + \
-                    "back=%s" % back
-            else:
-                url = back
-        else:
-            url = regular
-        return redirect(url)
-
-    def get_success_url(self, regular=None):
-        if self.back_on_success:
-            if regular is None:
-                regular = self.success_url
-            if self.backparam in self.request.GET:
-                back = self.request.GET[self.backparam]
-                if self.just_preserve_back:
-                    return regular + ('?' if '?' not in regular else '&') + \
-                        "back=%s" % back
-                else:
-                    return back
-            else:
-                return regular
-        elif hasattr(self, 'success_url') and self.success_url is not None:
-            return self.success_url
-        else:
-            return super(BackMixin, self).get_success_url()
-
-    def get_context_data(self, **kwargs):
-        context = super(BackMixin, self).get_context_data(**kwargs)
-        if self.back_on_cancel:
-            context['oncancel'] = self.request.GET.get('back')
-        return context
-
-
-class ModalMixin(object):
-    modalid = None
-
-    def dispatch(self, request, *args, **kwargs):
-        try:
-            self.modalid = request.GET["modalid"]
-        except:
-            try:
-                self.modalid = request.POST["modalid"]
-            except:
-                pass
-        return super(ModalMixin, self).dispatch(request, *args, **kwargs)
-
-    def get_hash(self):
-        return "id=" + self.modalid if self.modalid is not None else ""
-
-    def modalurl(self, url):
-        url += ";" if "#" in url else "#"
-        url += self.get_hash()
-        return url
 
 
 class ProductBookingDetailView(DetailView):
@@ -511,177 +411,6 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
 
 class EmailSuccessView(TemplateView):
     template_name = "email/success.html"
-
-
-class EditorRequriedMixin(RoleRequiredMixin):
-    roles = EDIT_ROLES
-
-
-class AdminRequiredMixin(RoleRequiredMixin):
-    roles = [ADMINISTRATOR]
-
-
-class UnitAccessRequiredMixin(object):
-
-    def check_item(self, item):
-        current_user = self.request.user
-        if hasattr(current_user, 'userprofile'):
-            if current_user.userprofile.can_edit(item):
-                return
-        raise AccessDenied(_(u"You cannot edit an object for a unit "
-                             u"that you don't belong to"))
-
-    def check_unit(self, unit):
-        current_user = self.request.user
-        if hasattr(current_user, 'userprofile'):
-            if current_user.userprofile.unit_access(unit):
-                return
-        raise AccessDenied(_(u"You cannot edit an object for a unit "
-                             u"that you don't belong to"))
-
-
-class AutologgerMixin(object):
-    _old_state = {}
-
-    def _as_state(self, obj=None):
-        if obj is None:
-            obj = self.object
-        if obj and obj.pk:
-            return model_to_dict(obj)
-        else:
-            return {}
-
-    def _get_changed_fields(self, compare_state):
-        new_state = self._as_state()
-
-        result = {}
-
-        for key in compare_state:
-            if key in new_state:
-                if compare_state[key] != new_state[key]:
-                    result[key] = (compare_state[key], new_state[key])
-                del new_state[key]
-            else:
-                result[key] = (compare_state[key], None)
-
-        for key in new_state:
-            result[key] = (None, new_state[key])
-
-        return result
-
-    def _field_value_to_display(self, fieldname, value):
-        field = self.model._meta.get_field(fieldname)
-        fname = field.verbose_name
-
-        if value is None:
-            return (fname, unicode(value))
-
-        if field.many_to_one:
-            try:
-                o = field.related_model.objects.get(pk=value)
-                return (fname, unicode(o))
-            except:
-                return (fname, unicode(value))
-
-        if field.many_to_many or field.one_to_many:
-            res = []
-            for x in value:
-                try:
-                    o = field.related_model.objects.get(pk=x)
-                    res.append(unicode(o))
-                except:
-                    res.append(unicode(x))
-            return (fname, ", ".join(res))
-
-        if field.choices:
-            d = dict(field.choices)
-            if value in d:
-                return (fname, unicode(d[value]))
-
-        return (fname, unicode(value))
-
-    def _changes_to_text(self, changes):
-        if not changes:
-            return ""
-
-        result = {}
-        for key, val in changes.iteritems():
-            name, value = self._field_value_to_display(key, val[1])
-            result[name] = value
-
-        return "\n".join([
-            u"%s: >>>%s<<<" % (x, result[x]) for x in sorted(result)
-        ])
-
-    def _log_changes(self):
-        if self._old_state:
-            action = LOGACTION_CHANGE
-            msg = _(u"Ændrede felter:\n%s")
-        else:
-            action = LOGACTION_CREATE
-            msg = _(u"Oprettet med felter:\n%s")
-
-        changeset = self._get_changed_fields(self._old_state)
-
-        log_action(
-            self.request.user,
-            self.object,
-            action,
-            msg % self._changes_to_text(changeset)
-        )
-
-    def get_object(self, queryset=None):
-        res = super(AutologgerMixin, self).get_object(queryset)
-
-        self._old_state = self._as_state(res)
-
-        return res
-
-    def form_valid(self, form):
-        res = super(AutologgerMixin, self).form_valid(form)
-
-        self._log_changes()
-
-        return res
-
-
-class LoggedViewMixin(object):
-    def get_log_queryset(self):
-        types = get_related_content_types(self.model)
-
-        qs = LogEntry.objects.filter(
-            object_id=self.object.pk,
-            content_type__in=types
-        ).order_by('-action_time')
-
-        return qs
-
-    def get_context_data(self, **kwargs):
-        return super(LoggedViewMixin, self).get_context_data(
-            log_entries=self.get_log_queryset(),
-            **kwargs
-        )
-
-
-class BreadcrumbMixin(ContextMixin):
-
-    def get_breadcrumbs(self):
-        try:
-            return self.build_breadcrumbs(*self.get_breadcrumb_args())
-        except Exception as e:
-            print e
-            return []
-
-    def get_breadcrumb_args(self):
-        return []
-
-    def get_context_data(self, **kwargs):
-        breadcrumbs = self.get_breadcrumbs()
-        if len(breadcrumbs) > 0 and 'url' in breadcrumbs[-1]:
-            del breadcrumbs[-1]['url']
-        context = {'breadcrumbs': breadcrumbs}
-        context.update(kwargs)
-        return super(BreadcrumbMixin, self).get_context_data(**context)
 
 
 class SearchView(BreadcrumbMixin, ListView):
@@ -1651,6 +1380,7 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
                 for x in EmailTemplateType.objects.filter(
                     enable_autosend=True, form_show=True
                 )
+                if self.object.type not in x.disabled_product_types
             ]
         else:
             # Existing objects being edited should just use the existing set
@@ -1752,6 +1482,8 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
 
             self.add_to_my_resources()
 
+            self.update_evaluations()
+
             messages.add_message(
                 request,
                 messages.INFO,
@@ -1847,6 +1579,32 @@ class EditProductView(BreadcrumbMixin, EditProductBaseView):
                     'enabled': template_type.is_default
                 }
             )
+
+    def update_evaluations(self):
+        teacher_ev = EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST
+        student_ev = EmailTemplateType.NOTIFY_GUEST__EVALUATION_FIRST_STUDENTS
+        if self.object.productautosend_set.filter(
+                template_type__key=teacher_ev,
+                enabled=True
+        ).count() > 0 and \
+                self.object.teacher_evaluation is None:
+            evaluation = SurveyXactEvaluation(
+                product=self.object,
+                surveyId=SurveyXactEvaluation.DEFAULT_TEACHER_SURVEY_ID,
+                for_teachers=True
+            )
+            evaluation.save()
+        if self.object.productautosend_set.filter(
+                template_type__key=student_ev,
+                enabled=True
+        ).count() > 0 and \
+                self.object.student_evaluation is None:
+            evaluation = SurveyXactEvaluation(
+                product=self.object,
+                surveyId=SurveyXactEvaluation.DEFAULT_STUDENT_SURVEY_ID,
+                for_students=True
+            )
+            evaluation.save()
 
     def get_success_url(self):
         try:
@@ -2029,9 +1787,10 @@ class ProductDetailView(BreadcrumbMixin, ProductBookingDetailView):
 
         user = self.request.user
 
+        can_edit = False
         if hasattr(user, 'userprofile'):
             if user.userprofile.can_edit(self.object):
-                context['can_edit'] = True
+                can_edit = True
             if user.userprofile.can_create:
                 context['nr_bookable'] = len(
                     self.object.future_bookable_times
@@ -2042,8 +1801,7 @@ class ProductDetailView(BreadcrumbMixin, ProductBookingDetailView):
                 context['nr_visits'] = len(
                     self.object.get_visits()
                 )
-        else:
-            context['can_edit'] = False
+        context['can_edit'] = can_edit
 
         context['searchurl'] = self.request.GET.get(
             "search",
@@ -2051,6 +1809,10 @@ class ProductDetailView(BreadcrumbMixin, ProductBookingDetailView):
         )
 
         context['EmailTemplate'] = EmailTemplate
+
+        if can_edit:
+            context['emails'] = KUEmailMessage\
+                .get_by_instance(self.object).order_by('-created')
 
         context.update(kwargs)
 
@@ -2714,6 +2476,14 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
                     True
                 )
 
+            for evaluation in self.product.evaluations:
+                if evaluation is not None:
+                    evaluationguest = SurveyXactEvaluationGuest(
+                        guest=booking.booker,
+                        evaluation=evaluation
+                    )
+                    evaluationguest.save()
+
             self.object = booking
             self.model = booking.__class__
 
@@ -2751,7 +2521,7 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
             if type == Product.GROUP_VISIT:
                 forms['bookingform'] = ClassBookingForm(
                     data,
-                    product=self.product
+                    products=[self.product]
                 )
                 if self.product.productgymnasiefag_set.count() > 0:
                     forms['gymnasiesubjectform'] = \
@@ -2762,14 +2532,18 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
                         BookingGrundskoleSubjectLevelForm(data)
 
             elif type == Product.TEACHER_EVENT:
-                forms['bookingform'] = TeacherBookingForm(data,
-                                                          product=self.product)
+                forms['bookingform'] = TeacherBookingForm(
+                    data,
+                    products=[self.product]
+                )
             elif type == Product.STUDENT_FOR_A_DAY:
-                forms['bookingform'] = \
-                    StudentForADayBookingForm(data, product=self.product)
+                forms['bookingform'] = StudentForADayBookingForm(
+                    data, products=[self.product]
+                )
             elif type == Product.STUDY_PROJECT:
-                forms['bookingform'] = \
-                    StudyProjectBookingForm(data, product=self.product)
+                forms['bookingform'] = StudyProjectBookingForm(
+                    data, products=[self.product]
+                )
         return forms
 
     def get_template_names(self):
@@ -2885,6 +2659,15 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
             object.booker = forms['bookerform'].save()
         object.save()
 
+        # for product in self.visit.products:
+        #     for evaluation in product.evaluations:
+        #         if evaluation is not None:
+        #             evaluationguest = SurveyXactEvaluationGuest(
+        #                 evaluation=evaluation,
+        #                 guest=object.booker
+        #             )
+        #             evaluationguest.save()
+
         object.autosend(
             EmailTemplateType.notify_guest__booking_created_untimed
         )
@@ -2922,22 +2705,38 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
         if self.product:
             type = self.product.type
 
-        if type == Product.GROUP_VISIT:
-            bookingform = ClassBookingForm(data, product=self.product)
-            if self.product.productgymnasiefag_set.count() > 0:
-                forms['subjectform'] = BookingGymnasieSubjectLevelForm(data)
-            if self.product.productgrundskolefag_set.count() > 0:
-                forms['grundskolesubjectform'] = \
-                    BookingGrundskoleSubjectLevelForm(data)
+        types = [product.type for product in self.visit.products]
+
+        if Product.GROUP_VISIT in types:
+            bookingform = ClassBookingForm(data, products=self.visit.products)
+            for product in self.visit.products:
+                if product.productgymnasiefag_set.count() > 0:
+                    forms['gymnasiesubjectform'] = \
+                        BookingGymnasieSubjectLevelForm(data)
+                    break
+            for product in self.visit.products:
+                if product.productgrundskolefag_set.count() > 0:
+                    forms['grundskolesubjectform'] = \
+                        BookingGrundskoleSubjectLevelForm(data)
+                    break
+            if self.visit.is_multiproductvisit and \
+                    'custom_desired' in bookingform.fields:
+                del bookingform.fields['custom_desired']
 
         elif type == Product.TEACHER_EVENT:
-            bookingform = TeacherBookingForm(data, product=self.product)
+            bookingform = TeacherBookingForm(
+                data, products=self.visit.products
+            )
 
         elif type == Product.STUDENT_FOR_A_DAY:
-            bookingform = StudentForADayBookingForm(data, product=self.product)
+            bookingform = StudentForADayBookingForm(
+                data, products=self.visit.products
+            )
 
         elif type == Product.STUDY_PROJECT:
-            bookingform = StudyProjectBookingForm(data, product=self.product)
+            bookingform = StudyProjectBookingForm(
+                data, products=self.visit.products
+            )
 
         else:
             bookingform = BookingForm(data)
@@ -2990,6 +2789,10 @@ class BookingEditView(BreadcrumbMixin, EditorRequriedMixin, UpdateView):
         )
         type = primary_product.type
         form_class = BookingForm
+        kwargs = {
+            'instance': self.object,
+            'products': products
+        }
         if type == Product.GROUP_VISIT:
             try:
                 self.object = self.object.classbooking
@@ -3018,8 +2821,7 @@ class BookingEditView(BreadcrumbMixin, EditorRequriedMixin, UpdateView):
 
         bookingform = form_class(
             data,
-            instance=self.object,
-            product=primary_product
+            **kwargs
         )
         if self.object.visit.is_multiproductvisit and \
                 'desired_time' in bookingform.fields:
@@ -3058,6 +2860,10 @@ class BookingEditView(BreadcrumbMixin, EditorRequriedMixin, UpdateView):
         context['formname'] = "bookingform"
         context['level_map'] = Guest.level_map
         context['editing'] = True
+        try:
+            context['product'] = self.object.visit.products[0]
+        except IndexError:
+            pass
         return context
 
     def get_breadcrumb_args(self):
@@ -3414,6 +3220,8 @@ class BookingDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
             context['emailtemplates'] = EmailTemplateType.get_choices(
                 manual_sending_booking_enabled=True
             )
+        context['emails'] = KUEmailMessage.get_by_instance(self.object)\
+            .order_by('-created')
 
         context.update(kwargs)
 
@@ -3486,6 +3294,11 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
 
         context['teacher'] = usertype == 'teacher'
         context['host'] = usertype == 'host'
+
+        context['emails'] = KUEmailMessage.objects.filter(
+            content_type=ContentType.objects.get_for_model(self.object),
+            object_id=self.object.id
+        ).order_by('-created')
 
         context.update(kwargs)
 
@@ -4001,6 +3814,7 @@ class EmailReplyView(BreadcrumbMixin, DetailView):
                 orig_obj,
                 organizationalunit=unit,
                 original_from_email=orig_message.recipients,
+                reply_to_message=orig_message
             )
             result_url = reverse(
                 'reply-to-email', args=[self.object.reply_nonce]
@@ -4039,73 +3853,6 @@ class EmailReplyHtmlBodyView(DetailView):
         response.write(self.object.htmlbody)
 
         return response
-
-
-class EvaluationOverviewView(LoginRequiredMixin, BreadcrumbMixin, ListView):
-    model = Visit
-    template_name = "evaluation/list.html"
-    context_object_name = "results"
-    form = None
-
-    def get_form(self):
-        if not self.form:
-            self.form = EvaluationOverviewForm(
-                self.request.GET,
-                user=self.request.user
-            )
-            self.form.is_valid()
-
-        return self.form
-
-    def get_queryset(self):
-        form = self.get_form()
-
-        if form.is_valid():
-            formdata = form.cleaned_data
-            qs = self.model.objects.filter(
-                eventtime__product__organizationalunit__in=form.user
-                .userprofile.get_unit_queryset(),
-                evaluation_link__isnull=False,
-            ).exclude(
-                evaluation_link="",
-            )
-            unit_limit = formdata.get('organizationalunit', [])
-            if unit_limit:
-                qs = qs.filter(
-                    eventtime__product__organizationalunit__in=unit_limit
-                )
-            if formdata.get('limit_to_personal'):
-                user = self.request.user
-                qs = qs.filter(
-                    Q(eventtime__product__created_by=user) |
-                    Q(teachers=user) |
-                    Q(hosts=user) |
-                    Q(eventtime__product__tilbudsansvarlig=user)
-                )
-        else:
-            qs = self.model.objects.none()
-
-        return qs.order_by('-eventtime__start', '-eventtime__end')
-
-    def get_context_data(self, **kwargs):
-        return super(EvaluationOverviewView, self).get_context_data(
-            form=self.get_form(),
-            **kwargs
-        )
-
-    @staticmethod
-    def build_breadcrumbs():
-        return [{
-            'url': reverse('evaluations'),
-            'text': _(u'Oversigt over evalueringer')
-        }]
-
-
-import booking_workflows.views  # noqa
-import_views(booking_workflows.views)
-
-import resource_based.views  # noqa
-import_views(resource_based.views)
 
 
 class BookingAcceptView(BreadcrumbMixin, FormView):
@@ -4321,12 +4068,16 @@ class MultiProductVisitTempProductsView(BreadcrumbMixin, UpdateView):
                 'state': Product.ACTIVE,
                 'time_mode': Product.TIME_MODE_GUEST_SUGGESTED,
             }
+            exclude = {
+                'type': Product.STUDENT_FOR_A_DAY
+            }
             institution_level = self.object.baseproduct.institution_level
             if institution_level != Subject.SUBJECT_TYPE_BOTH:
                 filter['institution_level'] = institution_level
+            products = Product.objects.filter(**filter).exclude(**exclude)
             self._available_products = [
                 product
-                for product in Product.objects.filter(**filter)
+                for product in products
                 if product.is_bookable(self.object.date)
             ]
         return self._available_products
@@ -4379,11 +4130,18 @@ class EvaluationEditView(BreadcrumbMixin, UpdateView):
 
     form_class = EvaluationForm
     template_name = "evaluation/form.html"
-    model = Evaluation
+    model = SurveyXactEvaluation
 
-    def get_object(self, queryset=None):
-        if 'pk' in self.kwargs:
-            return super(EvaluationEditView, self).get_object(queryset)
+    def get_object(self, **kwargs):
+        if 'product' in self.kwargs and 'id' not in self.kwargs:
+            return None
+        return super(EvaluationEditView, self).get_object()
+
+    def get_product(self, queryset=None):
+        if 'product' in self.kwargs:
+            return Product.objects.get(pk=self.kwargs['product'])
+        if self.object is not None:
+            return self.object.product
 
     def get_visit(self):
         if self.object:
@@ -4392,25 +4150,72 @@ class EvaluationEditView(BreadcrumbMixin, UpdateView):
 
     def get_form_kwargs(self):
         kwargs = super(EvaluationEditView, self).get_form_kwargs()
-        kwargs['visit'] = Visit.objects.get(id=self.kwargs.get('visit'))
+        kwargs['product'] = self.get_product()
+        if self.object is None:
+            initial = kwargs['initial']
+            if 'initial' not in kwargs:
+                initial = kwargs['initial'] = {}
+            if self.request.GET.get('s', '0') == '1':
+                initial['for_students'] = 1
+                initial['surveyId'] = \
+                    SurveyXactEvaluation.DEFAULT_STUDENT_SURVEY_ID
+            if self.request.GET.get('t', '0') == '1':
+                initial['for_teachers'] = 1
+                initial['surveyId'] = \
+                    SurveyXactEvaluation.DEFAULT_TEACHER_SURVEY_ID
         return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = {}
+        context['guides'] = {
+            guide.value: guide.name
+            for guide in booking_models.Guide.objects.all()
+        }
+        context['exercises_presentations'] = {
+            e.value: e.name
+            for e in booking_models.ExercisePresentation.objects.all()
+        }
+        context.update(kwargs)
+        return super(EvaluationEditView, self).get_context_data(
+            **context
+        )
 
     def get_success_url(self):
         return reverse(
-            'visit-evaluation-view', args=[
-                self.object.visit.id, self.object.id
+            'evaluation-view', args=[
+                self.object.id
             ]
         )
 
+    def form_valid(self, form):
+        response = super(EvaluationEditView, self).form_valid(form)
+        if self.object.product is None:
+            self.object.product = self.get_product()
+            self.object.save()
+        for visit in self.object.product.get_visits():
+            for booking in visit.booking_list:
+                guest = booking.booker
+                evaluationguest = SurveyXactEvaluationGuest.objects.filter(
+                    evaluation=self.object,
+                    guest=guest
+                ).first()
+                if evaluationguest is None:
+                    evaluationguest = SurveyXactEvaluationGuest(
+                        evaluation=self.object,
+                        guest=guest
+                    )
+                    evaluationguest.save()
+        return response
+
     def get_breadcrumb_args(self):
-        return [self.object, self.get_visit()]
+        return [self.object, self.get_product()]
 
     @staticmethod
-    def build_breadcrumbs(evaluation, visit=None):
-        if visit is None:
-            visit = evaluation.visit
+    def build_breadcrumbs(evaluation, product=None):
+        if product is None:
+            product = evaluation.product
         if evaluation is None:
-            return VisitDetailView.build_breadcrumbs(visit) + [
+            return ProductDetailView.build_breadcrumbs(product) + [
                 {'text': _(u'Opret evaluering')}
             ]
         else:
@@ -4422,19 +4227,29 @@ class EvaluationEditView(BreadcrumbMixin, UpdateView):
 class EvaluationDetailView(BreadcrumbMixin, DetailView):
 
     template_name = "evaluation/details.html"
-    model = Evaluation
+    model = SurveyXactEvaluation
+
+    def get(self, request, *args, **kwargs):
+        participant_id = kwargs.get('g', None)
+        message_id = kwargs.get('i', 1)
+        if participant_id is not None:
+            participant = SurveyXactEvaluationGuest.objects.get(
+                id=participant_id
+            )
+            participant.send(message_id != '2')
+        return super(EvaluationDetailView, self).get(request, *args, **kwargs)
 
     def get_breadcrumb_args(self):
         return [self.object]
 
     @staticmethod
     def build_breadcrumbs(evaluation):
-        return VisitDetailView.build_breadcrumbs(evaluation.visit) + [
+        return ProductDetailView.build_breadcrumbs(evaluation.product) + [
             {
                 'text': _(u'Evaluering'),
                 'url': reverse(
-                    'visit-evaluation-view',
-                    args=[evaluation.visit.id, evaluation.id]
+                    'evaluation-view',
+                    args=[evaluation.id]
                 )
             }
         ]
@@ -4445,16 +4260,11 @@ class EvaluationRedirectView(RedirectView):
     permanent = False
 
     def get_redirect_url(self, *args, **kwargs):
-        try:
-            evalguest = EvaluationGuest.objects.get(
-                shortlink_id=kwargs['linkid']
-            )
-        except:
-            raise Http404
-        url = evalguest.url
+        url = SurveyXactEvaluationGuest.get_redirect_url(
+            kwargs['linkid'], True
+        )
         if url is None:
             raise Http404
-        evalguest.link_clicked()
         return url
 
 
@@ -4470,7 +4280,11 @@ class EvaluationStatisticsView(BreadcrumbMixin, TemplateView):
         form.full_clean()
         data = form.clean()
         has_filter = False
-        queryset = Visit.objects.filter(evaluation__isnull=False)
+        queryset = Visit.objects.filter(
+            bookings=Booking.objects.filter(
+                booker__surveyxactevaluationguest__isnull=False
+            )
+        ).order_by("-eventtime__start")
 
         unit = data.get("unit")
         if unit is not None:
@@ -4490,7 +4304,8 @@ class EvaluationStatisticsView(BreadcrumbMixin, TemplateView):
         context = {
             'has_filter': has_filter,
             'visits': queryset,
-            'form': form
+            'form': form,
+            'labels': Visit.evaluation_guestset_labels
         }
         context.update(kwargs)
         return super(EvaluationStatisticsView, self).get_context_data(
@@ -4503,3 +4318,10 @@ class EvaluationStatisticsView(BreadcrumbMixin, TemplateView):
             'url': reverse('evaluation-statistics'),
             'text': _(u'Statistik over evalueringer')
         }]
+
+
+import booking_workflows.views  # noqa
+import_views(booking_workflows.views)
+
+import resource_based.views  # noqa
+import_views(resource_based.views)

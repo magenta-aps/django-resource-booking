@@ -1,9 +1,7 @@
 {% load i18n %}
-
 {% if gymnasiesubjectform %}
     <div class="subjectform" id="gymnasiesubjectform">
-    {{ gymnasiesubjectform.management_form }}
-    {% if product.productgymnasiefag_set.count > 0 %}
+        {{ gymnasiesubjectform.management_form }}
         <div id="gymnasiefag" class="rowcontainer institution_level_dependent" data-display-value="1">
             {% for form in gymnasiesubjectform %}
                 {{ form.id }}
@@ -31,14 +29,12 @@
                 </div>
             {% endfor %}
         </div>
-    {% endif %}
     </div>
 {% endif %}
 
 {% if grundskolesubjectform %}
     <div class="subjectform" id="grundskolesubjectform">
-    {{ grundskolesubjectform.management_form }}
-    {% if product.productgrundskolefag_set.count > 0 %}
+        {{ grundskolesubjectform.management_form }}
         <div id="grundskolefag" class="rowcontainer institution_level_dependent" data-display-value="2">
             {% for form in grundskolesubjectform %}
                 {{ form.id }}
@@ -70,7 +66,6 @@
                 </div>
             {% endfor %}
         </div>
-    {% endif %}
     </div>
 {% endif %}
 

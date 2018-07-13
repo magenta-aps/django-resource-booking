@@ -1,5 +1,5 @@
 <ul>
-{% for x in visit.bookings.all %}
+{% for x in visit.multi_top.bookings.all %}
     <li>
     {% include 'booking/email/snippets/booking_info.html' with booking=x booker=x.booker %}
     </li>

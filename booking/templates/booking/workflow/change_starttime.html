@@ -20,9 +20,6 @@
     <div class="divider"></div>
     <div class="row">
         <div class="col-md-12">
-            <div>
-                {{form.errors}}
-            </div>
             <form action="{% url 'change-visit-starttime' object.visit.pk %}" id="update-time-form" method="POST">
                 {% csrf_token %}
 

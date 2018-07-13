@@ -183,6 +183,17 @@
 
             <div class="divider"></div>
 
+            <h2>{% trans 'Emails' %}</h2>
+            <ul class="list-unstyled scroll-400">
+                {% for email in emails %}
+                    <li>
+                        {% include 'email/display.html' with email=email %}
+                    </li>
+                {% endfor %}
+            </ul>
+
+            <div class="divider"></div>
+
             <div class="go-back">
                 <a href="{% url 'visit-search' %}" class="btn btn-default"><span class="glyphicon glyphicon-chevron-left"></span> {% trans 'Søg i besøg' %}</a>
             </div>

@@ -106,12 +106,12 @@
                     <h4 class="panel-title">
                         <a class="" aria-controls="collapseTimeDuration" aria-expanded="false" href="#collapseTimeDuration" data-parent="#accordion" data-toggle="collapse" role="button">
                             {% trans "Tidspunkt og varighed" %}
-                            <span class="{% if not object.pk or form.time.errors or form.duration.errors %}caret-up{% else %}caret{% endif %}"></span>
+                            <span class="{% if not object.pk or form.time.errors or form.duration.errors or form.booking_close_days_before.errors %}caret-up{% else %}caret{% endif %}"></span>
                         </a>
                     </h4>
                 </div>
                 <div id="collapseTimeDuration" class="panel-collapse collapse
-                {% if not object.pk or form.time.errors or form.duration.errors %}in{% endif %}
+                {% if not object.pk or form.time.errors or form.duration.errors or form.booking_close_days_before.errors %}in{% endif %}
                 " aria-labelledby="headingTimeDuration" role="tabpanel" aria-expanded="false" style="">
                     <div class="panel-body">
                         {% include 'common/fields/generic_field.html' with field=form.time_mode %}
@@ -186,6 +186,7 @@
                 </div>
             </div>
             {% endif %}
+
         </div>
         {% include 'common/save_cancel.html' %}
         <div class="divider"></div>

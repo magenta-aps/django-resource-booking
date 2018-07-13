@@ -6,22 +6,21 @@ from django import forms
 from django.core import validators
 from django.db.models import Q
 from django.db.models.expressions import OrderBy
-from django.forms import CheckboxSelectMultiple, CheckboxInput
+from django.forms import CheckboxSelectMultiple, CheckboxInput, \
+    ModelMultipleChoiceField
 from django.forms import EmailInput
 from django.forms import HiddenInput
-from django.forms import ModelMultipleChoiceField
 from django.forms import TextInput, NumberInput, DateInput, Textarea, Select
 from django.forms import formset_factory, inlineformset_factory
 from django.template import TemplateSyntaxError
-from django.utils.translation import ugettext_lazy as _
 from django.utils.dates import MONTHS
+from django.utils.translation import ugettext_lazy as _
 
 from booking.models import BLANK_LABEL, BLANK_OPTION
 from booking.models import ClassBooking, TeacherBooking, \
     BookingGymnasieSubjectLevel
 from booking.models import EmailTemplate, EmailTemplateType
-from booking.models import Evaluation
-from booking.models import EvaluationGuest
+from booking.models import SurveyXactEvaluation, SurveyXactEvaluationGuest
 from booking.models import Guest, Region, PostCode, School
 from booking.models import Locality, OrganizationalUnitType, OrganizationalUnit
 from booking.models import MultiProductVisitTemp, MultiProductVisitTempProduct
@@ -754,7 +753,8 @@ class ProductAutosendFormSet(ProductAutosendFormSetBase):
                 autosend.template_type for autosend in product_autosends
             ]
             for type in all_types:
-                if type not in existing_types:
+                if type not in existing_types and \
+                        instance.type not in type.disabled_product_types:
                     initial.append({
                         'template_type': type,
                         'enabled': type.is_default,
@@ -784,7 +784,7 @@ class ProductAutosendFormSet(ProductAutosendFormSetBase):
 class BookingForm(forms.ModelForm):
 
     scheduled = False
-    product = None
+    products = []
 
     eventtime = VisitEventTimeField(
         required=False,
@@ -812,21 +812,21 @@ class BookingForm(forms.ModelForm):
             })
         }
 
-    def __init__(self, data=None, product=None, *args, **kwargs):
+    def __init__(self, data=None, products=[], *args, **kwargs):
         super(BookingForm, self).__init__(data, *args, **kwargs)
 
-        if product is None:
-            product = self.product
+        if products is None:
+            products = self.products
         else:
-            self.product = product
+            self.products = products
 
         # self.scheduled = visit is not None and \
         #    visit.type == Product.FIXED_SCHEDULE_GROUP_VISIT
-        self.scheduled = (
-            product is not None and
-            product.time_mode != Product.TIME_MODE_GUEST_SUGGESTED
-        )
-        if self.scheduled:
+        self.scheduled = Product.TIME_MODE_GUEST_SUGGESTED not in [
+            product.time_mode for product in products
+        ]
+        if self.scheduled and len(products) > 0:
+            product = products[0]
             choices = [(None, BLANK_LABEL)]
             qs = product.future_bookable_times.order_by('start', 'end')
             options = {}
@@ -894,17 +894,20 @@ class BookingForm(forms.ModelForm):
         else:
             self.fields['desired_time'].required = True
 
-        if product is not None and 'subjects' in self.fields and \
-                product.institution_level != Subject.SUBJECT_TYPE_BOTH:
-            qs = None
-            if product.institution_level == Subject.SUBJECT_TYPE_GRUNDSKOLE:
-                qs = Subject.grundskolefag_qs()
-            elif product.institution_level == Subject.SUBJECT_TYPE_GYMNASIE:
-                qs = Subject.gymnasiefag_qs()
-            if qs:
-                self.fields['subjects'].choices = [
-                    (subject.id, subject.name) for subject in qs
-                ]
+        if 'subjects' in self.fields:
+            institution_level = binary_or([
+                p.institution_level for p in products
+            ])
+            if institution_level != Subject.SUBJECT_TYPE_BOTH:
+                qs = None
+                if institution_level == Subject.SUBJECT_TYPE_GRUNDSKOLE:
+                    qs = Subject.grundskolefag_qs()
+                elif institution_level == Subject.SUBJECT_TYPE_GYMNASIE:
+                    qs = Subject.gymnasiefag_qs()
+                if qs:
+                    self.fields['subjects'].choices = [
+                        (subject.id, subject.name) for subject in qs
+                    ]
 
     def save(self, commit=True, *args, **kwargs):
         booking = super(BookingForm, self).save(commit, *args, **kwargs)
@@ -1263,13 +1266,20 @@ class ClassBookingBaseForm(forms.ModelForm):
             })
         }
 
-    def __init__(self, data=None, product=None, *args, **kwargs):
-        self.product = product
+    def __init__(self, data=None, products=[], *args, **kwargs):
+        if isinstance(self, BookingForm):
+            kwargs['products'] = products
         super(ClassBookingBaseForm, self).__init__(data, *args, **kwargs)
-        if product is not None:
-            for service in ['tour', 'catering', 'presentation', 'custom']:
-                if not getattr(self.product, service + '_available'):
-                    del self.fields[service + '_desired']
+        if products is not None:
+            r_services = ['tour', 'catering', 'presentation', 'custom']
+            for product in products:
+                r_services = [
+                    service
+                    for service in r_services
+                    if not getattr(product, service + '_available')
+                ]
+            for service in r_services:
+                del self.fields[service + '_desired']
 
 
 class ClassBookingForm(ClassBookingBaseForm, BookingForm):
@@ -1293,8 +1303,9 @@ class TeacherBookingBaseForm(forms.ModelForm):
             })
         }
 
-    def __init__(self, data=None, product=None, *args, **kwargs):
-        self.product = product
+    def __init__(self, data=None, products=[], *args, **kwargs):
+        if isinstance(self, BookingForm):
+            kwargs['products'] = products
         super(TeacherBookingBaseForm, self).__init__(data, *args, **kwargs)
 
 
@@ -1317,8 +1328,9 @@ class StudentForADayBookingBaseForm(forms.ModelForm):
             })
         }
 
-    def __init__(self, data=None, product=None, *args, **kwargs):
-        self.product = product
+    def __init__(self, data=None, products=[], *args, **kwargs):
+        if isinstance(self, BookingForm):
+            kwargs['products'] = products
         super(StudentForADayBookingBaseForm, self).__init__(
             data, *args, **kwargs
         )
@@ -1343,11 +1355,12 @@ class StudyProjectBookingBaseForm(forms.ModelForm):
             })
         }
 
-    def __init__(self, data=None, product=None, *args, **kwargs):
+    def __init__(self, data=None, products=[], *args, **kwargs):
+        if isinstance(self, BookingForm):
+            kwargs['products'] = products
         super(StudyProjectBookingBaseForm, self).__init__(
             data, *args, **kwargs
         )
-        self.product = product
 
 
 class StudyProjectBookingForm(StudyProjectBookingBaseForm, BookingForm):
@@ -1410,8 +1423,8 @@ BookingGymnasieSubjectLevelForm = \
         BookingGymnasieSubjectLevel,
         form=BookingGymnasieSubjectLevelFormBase,
         can_delete=True,
-        extra=0,
-        min_num=1
+        extra=1,
+        min_num=0
     )
 
 
@@ -1421,8 +1434,8 @@ BookingGrundskoleSubjectLevelForm = \
         BookingGrundskoleSubjectLevel,
         form=BookingGrundskoleSubjectLevelFormBase,
         can_delete=True,
-        extra=0,
-        min_num=1
+        extra=1,
+        min_num=0
     )
 
 
@@ -1727,7 +1740,7 @@ class EmailComposeForm(BaseEmailComposeForm):
         })
     )
 
-    subject_max_length = 77
+    subject_max_length = 998
 
     def clean_subject(self):
         subject = self.cleaned_data['subject']
@@ -1844,14 +1857,31 @@ class MultiProductVisitTempDateForm(forms.ModelForm):
         if 'date' in self.cleaned_data:
             date = self.cleaned_data['date']
             product = self.cleaned_data['baseproduct']
-            if not product.is_bookable(date):
-                raise forms.ValidationError(
-                    {'date': _(u'Det er desværre ikke muligt at bestille '
-                               u'besøget på den valgte dato. Der kan være '
-                               u'begrænsninger for hvilke dage, besøget kan '
-                               u'lade sig gøre - se beskrivelse af besøget.')
-                     }
+            bookability = product.is_bookable(date, return_reason=False)
+            if bookability is not True:
+                reason = unicode(
+                    _(u'Det er desværre ikke muligt at '
+                      u'bestille besøget på den valgte dato.\n')
                 )
+                if bookability == Product.NONBOOKABLE_REASON__BOOKING_CUTOFF:
+                    reason += unicode(
+                        _(u'Der er lukket for tilmelding '
+                          u'%d dage før afholdelse.') %
+                        product.booking_close_days_before
+                    )
+                elif bookability == \
+                        Product.NONBOOKABLE_REASON__HAS_NO_BOOKABLE_VISITS:
+                    reason += unicode(_(u'Der er ingen ledige besøg.'))
+                elif bookability == \
+                        Product.NONBOOKABLE_REASON__NO_CALENDAR_TIME:
+                    reason += unicode(_(u'Der er ikke er flere ledige tider.'))
+                elif bookability == Product.NONBOOKABLE_REASON__NOT_ACTIVE:
+                    reason += unicode(_(u'Tilbuddet er ikke aktivt.'))
+                elif bookability == \
+                        Product.NONBOOKABLE_REASON__TYPE_NOT_BOOKABLE:
+                    reason += unicode(_(u'Tilbudstypen kan ikke tilmeldes.'))
+
+                raise forms.ValidationError({'date': reason})
         return super(MultiProductVisitTempDateForm, self).clean()
 
 
@@ -1914,61 +1944,67 @@ class MultiProductVisitTempProductsForm(forms.ModelForm):
 
 class EvaluationForm(forms.ModelForm):
 
-    class Meta:
-        model = Evaluation
-        fields = ['url']
-        widgets = {'url': TextInput(attrs={
-            'class': 'form-control input-sm',
-            'readonly': 'readonly'
-        })}
-
     nonparticipating_guests = ModelMultipleChoiceField(
         queryset=Guest.objects.all(),
         required=False,
         label=_(u'Deltagere uden spørgeskema')
     )
 
-    def __init__(self, visit, *args, **kwargs):
-        self.instance = kwargs.get('instance')
-        self.visit = visit
-        if self.instance:
+    class Meta:
+        model = SurveyXactEvaluation
+        fields = ['surveyId', 'for_students', 'for_teachers']
+        widgets = {
+            'surveyId': NumberInput(attrs={'class': 'form-control'}),
+            'for_students': HiddenInput(),
+            'for_teachers': HiddenInput()
+        }
+
+    def __init__(self, product, *args, **kwargs):
+        self.instance = instance = kwargs.get('instance')
+        self.product = product
+        if self.instance is not None:
             kwargs['initial']['nonparticipating_guests'] = [
                 evaluationguest.guest
-                for evaluationguest
-                in self.instance.evaluationguest_set.filter(
-                    status=EvaluationGuest.STATUS_NO_PARTICIPATION
+                for evaluationguest in self.instance.evaluationguests.filter(
+                    status=SurveyXactEvaluationGuest.STATUS_NO_PARTICIPATION
                 )
             ]
         super(EvaluationForm, self).__init__(*args, **kwargs)
-        self.fields['nonparticipating_guests'].queryset = Guest.objects.filter(
-            booking__in=self.visit.booking_list
-        )
+        if instance is None:
+            self.fields['nonparticipating_guests'].widget = HiddenInput()
+        else:
+            self.fields['nonparticipating_guests'].queryset = instance.guests
 
     def get_queryset(self):
-        return Evaluation.objects.filter(visit=self.visit)
+        return SurveyXactEvaluation.objects.filter(product=self.product)
 
     def save(self, commit=True):
-        self.instance.visit = self.visit
+        self.instance.product = self.product
         super(EvaluationForm, self).save(commit)
         existing_guests = {
             evalguest.guest: evalguest
-            for evalguest in self.instance.evaluationguest_set.all()
+            for evalguest in self.instance.evaluationguests
         }
-        for booking in self.visit.booking_list:
-            guest = booking.booker
-            status = EvaluationGuest.STATUS_NO_PARTICIPATION
-            if guest not in self.cleaned_data['nonparticipating_guests']:
-                status = EvaluationGuest.STATUS_NOT_SENT
-            if guest in existing_guests:
-                evalguest = existing_guests[guest]
-                evalguest.status = status
-            else:
-                evalguest = EvaluationGuest(
-                    evaluation=self.instance,
-                    guest=guest,
-                    status=status
-                )
-            evalguest.save()
+        for visit in self.product.get_visits():
+            for booking in visit.booking_list:
+                guest = booking.booker
+                status = None
+                if guest in self.cleaned_data['nonparticipating_guests']:
+                    status = SurveyXactEvaluationGuest.STATUS_NO_PARTICIPATION
+
+                if guest in existing_guests:
+                    evalguest = existing_guests[guest]
+                    if status is not None:
+                        evalguest.status = status
+                else:
+                    if status is None:
+                        status = SurveyXactEvaluationGuest.STATUS_NOT_SENT
+                    evalguest = SurveyXactEvaluationGuest(
+                        evaluation=self.instance,
+                        guest=guest,
+                        status=status
+                    )
+                evalguest.save()
         return self.instance
 
 
@@ -1998,5 +2034,10 @@ class EvaluationStatisticsForm(forms.Form):
 
     unit = forms.ModelChoiceField(
         label=_(u'Enhed'),
-        queryset=OrganizationalUnit.objects.all()
+        queryset=OrganizationalUnit.objects.all(),
+        widget=forms.Select(
+            attrs={
+                'class': 'form-control'
+            }
+        )
     )

@@ -13,14 +13,14 @@
     <div class="row titlebar hidden-print">
         <div class="col-sm-12 col-md-9">
             <h1>
-                {% url 'visit-view' object.visit.pk as visit_url %}
-                {% blocktrans with title=object.visit.display_title on_date=object.visit.date_display_context %}
-                    Evaluering af <a href="{{ visit_url }}">{{ title }} {{ on_date }}</a>
+                {% url 'product-view' object.product.pk as product_url %}
+                {% blocktrans with title=object.product.title %}
+                    Evaluering af <a href="{{ product_url }}">{{ title }}</a>
                 {% endblocktrans %}
             </h1>
         </div>
         <div class="pull-right">
-            <a class="btn btn-primary dropdown-toggle" href="{% url 'visit-evaluation-edit' object.visit.pk object.id %}">
+            <a class="btn btn-primary dropdown-toggle" href="{% url 'evaluation-edit' object.id %}">
                 {% trans 'Rediger evaluering' %}
             </a>
         </div>
@@ -36,10 +36,52 @@
 
                     <div class="row row-border">
                         <strong class="col-sm-2">
-                            {% trans 'URL' %}
+                            {% trans 'For elever' %}
                         </strong>
                         <div class="col-sm-10">
-                            {{ object.url }}
+                            {{ object.for_students|yesno|capfirst }}
+                        </div>
+                    </div>
+
+                    {% if object.for_students %}
+                    <div class="row row-border">
+                        <strong class="col-sm-2">
+                            {% trans 'Automatisk email' %}
+                        </strong>
+                        <div class="col-sm-10">
+                            {% if object.product_autosend_activated_data.student_first %}<span class="label label-info">{% trans 'Første reminder' %}</span>{% endif %}
+                            {% if object.product_autosend_activated_data.student_second %}<span class="label label-info">{% trans 'Anden reminder' %}</span>{% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="row row-border">
+                        <strong class="col-sm-2">
+                            {% trans 'For lærere' %}
+                        </strong>
+                        <div class="col-sm-10">
+                            {{ object.for_teachers|yesno|capfirst }}
+                        </div>
+                    </div>
+
+                    {% if object.for_teachers %}
+                    <div class="row row-border">
+                        <strong class="col-sm-2">
+                            {% trans 'Automatisk email' %}
+                        </strong>
+                        <div class="col-sm-10">
+                            {% if object.product_autosend_activated_data.teacher_first %}<span class="label label-info">{% trans 'Første reminder' %}</span>{% endif %}
+                            {% if object.product_autosend_activated_data.teacher_second %}<span class="label label-info">{% trans 'Anden reminder' %}</span>{% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="row row-border">
+                        <strong class="col-sm-2">
+                            {% trans 'Email-udsendelse' %}
+                        </strong>
+                        <div class="col-sm-10">
+                            {{ object.product. }}
                         </div>
                     </div>
 
@@ -51,19 +93,24 @@
                             <table class="table">
                                 <thead>
                                 <tr>
+                                    <th>{% trans 'Dato' %}</th>
                                     <th>{% trans 'Navn' %}</th>
                                     <th>{% trans 'E-mail' %}</th>
                                     <th>{% trans 'Status' %}</th>
-                                    <th>{% trans 'Evaluerings-URL' %}</th>
+                                    <th>{% trans 'Handlinger' %}</th>
                                 </tr>
                                 </thead>
                                 <tbody>
-                                {% for participant in object.evaluationguest_set.all %}
+                                {% for participant in object.evaluationguests %}
                                     <tr>
+                                        <td><a href="{% url 'visit-view' participant.visit.id %}">{{ participant.visit.date_display }}</a></td>
                                         <td>{{ participant.guest.get_name }}</td>
                                         <td>{{ participant.guest.get_email }}</td>
-                                        <td>{{ participant.status_display }}</td>
-                                        <td>{{ participant.url }}</td>
+                                        <td>{{ participant.status_display }}</td> <!-- TODO: gennemgå status -->
+                                        <td>
+                                            <a href="{% url 'evaluation-view-send' object.id participant.id 1 %}">Send første</a>
+                                            <a href="{% url 'evaluation-view-send' object.id participant.id 2 %}">Send anden</a>
+                                        </td>
                                     </tr>
                                 {% empty %}
                                     <tr>
@@ -79,7 +126,6 @@
             </div>
         </div>
     </div>
-
 
 {% endblock %}
 

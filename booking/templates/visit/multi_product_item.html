@@ -2,6 +2,7 @@
 <li id="product_{{ product.id }}" class="list-group-item" data-product="{{ product.id }}">
     <span class="glyphicon glyphicon-move movebutton"></span>
     <a class="btn btn-default pull-right selectbutton">{% trans 'Vælg' %}</a>
+    <a class="btn btn-default pull-right readmore" data-toggle="modal" data-target="#modal_{{ product.id }}">{% trans 'Læs mere' %}</a>
     <a class="deselectbutton pull-right">
         <span class="glyphicon glyphicon-remove"></span>
     </a>
