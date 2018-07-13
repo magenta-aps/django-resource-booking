@@ -5740,6 +5740,12 @@ class KUEmailMessage(models.Model):
         null=True,
         blank=True
     )
+    reply_to_message = models.ForeignKey(
+        'KUEmailMessage',
+        verbose_name=u'Reply to',
+        null=True,
+        blank=True
+    )
 
     @staticmethod
     def extract_addresses(recipients):
@@ -5799,9 +5805,10 @@ class KUEmailMessage(models.Model):
         return emails
 
     @staticmethod
-    def save_email(email_message, instance,
-                   reply_nonce=None, htmlbody=None,
-                   template_type=None, original_from_email=None):
+    def save_email(
+            email_message, instance, reply_nonce=None, htmlbody=None,
+            template_type=None, original_from_email=None, reply_to_message=None
+    ):
         """
         :param email_message: An instance of
         django.core.mail.message.EmailMessage
@@ -5832,7 +5839,8 @@ class KUEmailMessage(models.Model):
             object_id=instance.id,
             reply_nonce=reply_nonce,
             template_type=template_type,
-            template_key=template_key
+            template_key=template_key,
+            reply_to_message=reply_to_message
         )
         ku_email_message.save()
 
@@ -5841,7 +5849,7 @@ class KUEmailMessage(models.Model):
     @staticmethod
     def send_email(template, context, recipients, instance,
                    organizationalunit=None, original_from_email=None,
-                   **kwargs):
+                   reply_to_message=None, **kwargs):
         if isinstance(template, EmailTemplateType):
             key = template.key
             template = EmailTemplate.get_template(
@@ -5910,7 +5918,8 @@ class KUEmailMessage(models.Model):
             msg_obj = KUEmailMessage.save_email(
                 message, instance, reply_nonce=nonce,
                 template_type=template.type,
-                original_from_email=original_from_email
+                original_from_email=original_from_email,
+                reply_to_message=reply_to_message
             )
             KUEmailRecipient.register(msg_obj, email)
 
@@ -5948,6 +5957,18 @@ class KUEmailMessage(models.Model):
                     email.template_key
                 )
                 email.save()
+
+    @staticmethod
+    def get_by_instance(instance):
+        return KUEmailMessage.objects.filter(
+            content_type=ContentType.objects.get_for_model(instance),
+            object_id=instance.id
+        )
+
+    @property
+    def replies(self):
+        return KUEmailMessage.objects.filter(reply_to_message=self)\
+            .order_by('-created')
 
 
 class KUEmailRecipient(models.Model):

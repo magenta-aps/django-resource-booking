@@ -1787,9 +1787,10 @@ class ProductDetailView(BreadcrumbMixin, ProductBookingDetailView):
 
         user = self.request.user
 
+        can_edit = False
         if hasattr(user, 'userprofile'):
             if user.userprofile.can_edit(self.object):
-                context['can_edit'] = True
+                can_edit = True
             if user.userprofile.can_create:
                 context['nr_bookable'] = len(
                     self.object.future_bookable_times
@@ -1800,8 +1801,7 @@ class ProductDetailView(BreadcrumbMixin, ProductBookingDetailView):
                 context['nr_visits'] = len(
                     self.object.get_visits()
                 )
-        else:
-            context['can_edit'] = False
+        context['can_edit'] = can_edit
 
         context['searchurl'] = self.request.GET.get(
             "search",
@@ -1809,6 +1809,10 @@ class ProductDetailView(BreadcrumbMixin, ProductBookingDetailView):
         )
 
         context['EmailTemplate'] = EmailTemplate
+
+        if can_edit:
+            context['emails'] = KUEmailMessage\
+                .get_by_instance(self.object).order_by('-created')
 
         context.update(kwargs)
 
@@ -2528,14 +2532,18 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
                         BookingGrundskoleSubjectLevelForm(data)
 
             elif type == Product.TEACHER_EVENT:
-                forms['bookingform'] = TeacherBookingForm(data,
-                                                          product=self.product)
+                forms['bookingform'] = TeacherBookingForm(
+                    data,
+                    products=[self.product]
+                )
             elif type == Product.STUDENT_FOR_A_DAY:
-                forms['bookingform'] = \
-                    StudentForADayBookingForm(data, product=self.product)
+                forms['bookingform'] = StudentForADayBookingForm(
+                    data, products=[self.product]
+                )
             elif type == Product.STUDY_PROJECT:
-                forms['bookingform'] = \
-                    StudyProjectBookingForm(data, product=self.product)
+                forms['bookingform'] = StudyProjectBookingForm(
+                    data, products=[self.product]
+                )
         return forms
 
     def get_template_names(self):
@@ -2706,13 +2714,19 @@ class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
                     BookingGrundskoleSubjectLevelForm(data)
 
         elif type == Product.TEACHER_EVENT:
-            bookingform = TeacherBookingForm(data, product=self.product)
+            bookingform = TeacherBookingForm(
+                data, products=self.visit.products
+            )
 
         elif type == Product.STUDENT_FOR_A_DAY:
-            bookingform = StudentForADayBookingForm(data, product=self.product)
+            bookingform = StudentForADayBookingForm(
+                data, products=self.visit.products
+            )
 
         elif type == Product.STUDY_PROJECT:
-            bookingform = StudyProjectBookingForm(data, product=self.product)
+            bookingform = StudyProjectBookingForm(
+                data, products=self.visit.products
+            )
 
         else:
             bookingform = BookingForm(data)
@@ -3189,6 +3203,8 @@ class BookingDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
             context['emailtemplates'] = EmailTemplateType.get_choices(
                 manual_sending_booking_enabled=True
             )
+        context['emails'] = KUEmailMessage.get_by_instance(self.object)\
+            .order_by('-created')
 
         context.update(kwargs)
 
@@ -3261,6 +3277,11 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
 
         context['teacher'] = usertype == 'teacher'
         context['host'] = usertype == 'host'
+
+        context['emails'] = KUEmailMessage.objects.filter(
+            content_type=ContentType.objects.get_for_model(self.object),
+            object_id=self.object.id
+        ).order_by('-created')
 
         context.update(kwargs)
 
@@ -3776,6 +3797,7 @@ class EmailReplyView(BreadcrumbMixin, DetailView):
                 orig_obj,
                 organizationalunit=unit,
                 original_from_email=orig_message.recipients,
+                reply_to_message=orig_message
             )
             result_url = reverse(
                 'reply-to-email', args=[self.object.reply_nonce]
