@@ -2030,23 +2030,6 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         default='',
     )
 
-    @property
-    def primary_evaluation(self):
-        return self.evaluation_set.filter(secondary=False).first()
-
-    @property
-    def secondary_evaluation(self):
-        return self.evaluation_set.filter(secondary=True).first()
-
-    @property
-    def evaluations(self):
-        return [
-            evaluation for evaluation in [
-                self.primary_evaluation, self.secondary_evaluation
-            ]
-            if evaluation is not None
-        ]
-
     booking_close_days_before = models.IntegerField(
         default=6,
         verbose_name=_(u'Antal dage før afholdelse, '
@@ -3215,7 +3198,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             self.last_workflow_update = timezone.now()
             if self.workflow_status == self.WORKFLOW_STATUS_EXECUTED:
                 product = self.products[0]
-                for evaluation in product.evaluations:
+                for evaluation in product.surveyxactevaluation_set.all():
                     evaluation.send_first_notification(self)
 
     @property
