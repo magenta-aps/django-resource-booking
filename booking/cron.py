@@ -295,7 +295,8 @@ class EvaluationReminderJob(KuCronJob):
                             print "    That's today; sending messages now"
                             product = visit.product
                             if product is not None:
-                                for evaluation in product.evaluations:
+                                evals = product.surveyxactevaluation_set.all()
+                                for evaluation in evals:
                                     evaluation.send_second_notification(visit)
 
                         else:
