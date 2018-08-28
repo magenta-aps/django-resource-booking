@@ -3256,7 +3256,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             self.last_workflow_update = timezone.now()
             if self.workflow_status == self.WORKFLOW_STATUS_EXECUTED:
                 product = self.products[0]
-                for evaluation in product.evaluations:
+                for evaluation in product.surveyxactevaluation_set.all():
                     evaluation.send_first_notification(self)
 
     @property

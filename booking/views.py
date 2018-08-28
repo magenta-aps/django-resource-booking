@@ -2577,7 +2577,7 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
                     True
                 )
 
-            for evaluation in self.product.evaluations:
+            for evaluation in self.product.surveyxactevaluation_set.all():
                 if evaluation is not None:
                     evaluationguest = SurveyXactEvaluationGuest(
                         guest=booking.booker,
