@@ -332,7 +332,7 @@ class UserProfile(models.Model):
         )
 
         if exclude_accepted:
-            accepted_qs = self.user.hosted_visits.all()
+            accepted_qs = self.all_assigned_visits()
             mail_qs = mail_qs.exclude(email_message__object_id__in=accepted_qs)
 
         qs = bm.Visit.objects.filter(
