@@ -17,6 +17,7 @@
             {% include "booking/fields/basedata.html" %}
             {% include "booking/fields/subjects.html" %}
             {% include "booking/fields/school.html" %}
+            {% include "booking/fields/location.html" %}
             {% include "booking/fields/time.html" %}
             {% include "booking/fields/attendees.html" %}
             {% include "booking/fields/notes.html" %}
@@ -28,6 +29,7 @@
 
 {% block extra_scripts %}
 
+    {% include 'booking/fields/location_script.html' %}
     {% include 'booking/fields/school_script.html' %}
     {% include "booking/fields/time_script.html" %}
 
