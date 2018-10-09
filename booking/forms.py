@@ -1131,12 +1131,15 @@ class BookerForm(forms.ModelForm):
         booker = super(BookerForm, self).save(commit=False)
         data = self.cleaned_data
         schoolname = data.get('school')
-        try:
-            school = School.objects.get(name__iexact=schoolname)
-        except:
+        postcode = PostCode.objects.filter(number=data.get('postcode')).first()
+        school = School.objects.filter(
+            name__iexact=schoolname,
+            postcode=postcode
+        ).first()
+        if school is None:
             school = School()
             school.name = schoolname
-            school.postcode = PostCode.objects.get(number=data.get('postcode'))
+            school.postcode = postcode
             school.save()
         booker.school = school
         booker.save()
