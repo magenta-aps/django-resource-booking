@@ -67,27 +67,27 @@
         <table id="statistics_table" class="table table-striped">
             <thead>
                 <tr>
-                    <th>{% trans 'Enhed' %}</th>
+                    <th>{% trans 'Enhed' %}</th>{# 0 #}
                     <th>{% trans 'Tilmelding' %}</th>
                     <th>{% trans 'Type' %}</th>
                     <th>{% trans 'Tilbud' %}</th>
                     <th>{% trans 'Besøgsdato' %}</th>
-                    <th>{% trans 'Klassetrin' %}</th>
+                    <th>{% trans 'Klassetrin' %}</th>{# 5 #}
                     <th>{% trans 'Fag/Niveau' %}</th>
                     <th>{% trans 'Totalt antal deltagere' %}</th>
                     <th>{% trans 'Antal lærere' %}</th>
                     <th>{% trans 'Oplæg om uddannelser' %}</th>
-                    <th>{% trans 'Rundvisning' %}</th>
+                    <th>{% trans 'Rundvisning' %}</th>{# 10 #}
                     <th>{% trans 'Andet' %}</th>
                     <th>{% trans 'Region' %}</th>
                     <th>{% trans 'Skole' %}</th>
                     <th>{% trans 'Postnummer og by' %}</th>
-                    <th>{% trans 'Adresse' %}</th>
+                    <th>{% trans 'Adresse' %}</th>{# 15 #}
                     <th>{% trans 'Lærer' %}</th>
                     <th>{% trans 'Lærers e-mail' %}</th>
                     <th>{% trans 'Bemærkninger fra koordinator' %}</th>
                     <th>{% trans 'Bemærkninger fra lærer' %}</th>
-                    <th>{% trans 'Værter' %}</th>
+                    <th>{% trans 'Værter' %}</th>{# 20 #}
                     <th>{% trans 'Undervisere' %}</th>
                     <th>{% trans 'Sorteringsdato' %}</th>
                 </tr>
@@ -182,8 +182,8 @@
                 responsive: true,
                 order: [[1, "asc"]],
                 "columnDefs": [
-                    {targets: 4, orderData:21},
-                    {#{targets: 19, visible: false}#}
+                    {# targets: søjle som skal sorteres, orderData: søjle med de reelle data som sorteres ud fra #}
+                    {targets: 4, orderData: 22}
                 ]
             });
         });
