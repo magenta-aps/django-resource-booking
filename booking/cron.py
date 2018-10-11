@@ -251,7 +251,7 @@ class EvaluationReminderJob(KuCronJob):
             EmailTemplateType.notify_guest__evaluation_second_students
         ]
         filter = {
-            'template_type': emailtemplate,
+            'template_type__in': emailtemplate,
         }
 
         autosends = list(VisitAutosend.objects.filter(
@@ -283,7 +283,8 @@ class EvaluationReminderJob(KuCronJob):
                     print "Autosend %d for Visit %d:" % \
                           (autosend.id, visit.id)
                     if visit.end_datetime is None:
-                        print "Visit %d has no apparent end_datetime"
+                        print "Visit %d has no apparent end_datetime" %\
+                              visit.id
                     else:
                         print "    Visit ends on %s" % \
                               unicode(visit.end_datetime.date())
