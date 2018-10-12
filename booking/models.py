@@ -1220,7 +1220,7 @@ class EmailTemplate(models.Model):
                     templates.append(template)
             except:
                 pass
-            unit = unit.parent
+            unit = unit.parent if unit.parent != unit else None
         if include_overridden or len(templates) == 0:
             try:
                 template = EmailTemplate.objects.filter(
