@@ -5178,6 +5178,26 @@ class School(models.Model):
                     print "Warning: Postcode %d not found in database. " \
                           "Not adding school %s" % (postcode, name)
 
+    @staticmethod
+    def dedup():
+        remove = {}
+        for school in School.objects.filter(postcode__isnull=False):
+            if school.id not in remove:
+                others = School.objects.filter(
+                    name=school.name,
+                    postcode=school.postcode
+                ).exclude(id=school.id).order_by('id')
+                for other in others:
+                    for booker in other.guest_set.all():
+                        print "wire booker to %d instead of %d" % \
+                              (school.id, other.id)
+                        booker.school = school
+                        booker.save()
+                    remove[other.id] = True
+                    print "remove school %d (%s)" % (other.id, other.name)
+        r = School.objects.filter(id__in=remove.keys())
+        r.delete()
+
 
 class Guest(models.Model):
 
