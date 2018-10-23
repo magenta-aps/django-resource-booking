@@ -50,7 +50,9 @@ INSTALLED_APPS = (
     'django_cron',
     'macros',
     'ckeditor',
-    'ckeditor_uploader'
+    'ckeditor_uploader',
+    'hijack',
+    'compat'
 )
 # INSTALLED_APPS might be extended with the debug toolbar
 
@@ -275,6 +277,8 @@ CRON_CLASSES = [
     "booking.cron.NotifyEventTimeJob",
     "booking.cron.EvaluationReminderJob"
 ]
+
+HIJACK_USE_BOOTSTRAP = True
 
 if ENABLE_DEBUG_TOOLBAR:
     INSTALLED_APPS = INSTALLED_APPS + ("debug_toolbar",)

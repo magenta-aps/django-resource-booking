@@ -1,5 +1,6 @@
 {% load i18n %}
 {% load booking_tags %}
+{% load hijack_tags %}
 {% load macros %}
 {% macro head_block %}
     {% block head %}{% endblock %}
@@ -31,10 +32,12 @@
             <![endif]-->
             <script type="text/javascript" src="/jsi18n"></script>
             <link href="{% static 'img/favicon.ico' %}" rel="shortcut icon"/>
+            <link rel="stylesheet" type="text/css" href="{% static 'hijack/hijack-styles.css' %}" />
         {% endif %}
     </head>
     <body class="{% if view.kwargs.embed %}embedded{% endif %}">
     {% include 'common/google_tag_manager/noscript.html' %}
+    {% hijack_notification %}
     {% if view.kwargs.embed %}
         <!-- 3rd party stylesheets -->
         <link href="{% static 'thirdparty/bootstrap/dist/css/bootstrap.min.css' %}" rel="stylesheet"/>

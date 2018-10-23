@@ -145,6 +145,10 @@ strong, .bold {
   filter: progid: DXImageTransform.Microsoft.gradient( startColorstr='#fafafa', endColorstr='#e6e6e6', GradientType=0);
 }
 
+.btn-link {
+  padding: 0;
+}
+
 .label {
   font-size: 90%;
   padding: .3em .6em .3em;
