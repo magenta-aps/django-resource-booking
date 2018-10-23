@@ -6212,6 +6212,9 @@ class SurveyXactEvaluationGuest(models.Model):
             u'email': guest.email,
             u'ID': product.id,
             u'enhed': getattr_long(product, 'organizationalunit.id'),
+            u'overenhed': getattr_long(
+                product, 'organizationalunit.parent.id'
+            ),
             u'type': product.type,
             u'titel': product.title,
             u'tid': visit.start_datetime.strftime('%Y.%m.%d %H:%M:%S')
