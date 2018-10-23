@@ -25,6 +25,7 @@ urlpatterns = [
     # Booking URLs:
     url(r'^', include('booking.urls')),
     url(r'^profile/', include('profile.urls')),
+    url(r'^hijack/', include('hijack.urls', namespace='hijack')),
 ]
 # Allow setting language explicitly in url
 # 2017-09-26, ticket #18859: Disabled for now
