@@ -6212,7 +6212,7 @@ class SurveyXactEvaluationGuest(models.Model):
             u'email': guest.email,
             u'ID': product.id,
             u'enhed': getattr_long(product, 'organizationalunit.id'),
-            u'overenhed': getattr_long(
+            u'oenhed': getattr_long(
                 product, 'organizationalunit.parent.id'
             ),
             u'type': product.type,
