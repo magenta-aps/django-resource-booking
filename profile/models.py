@@ -446,6 +446,7 @@ class UserProfile(models.Model):
                     COUNT("booking_visitresource"."id") <
                         "booking_resourcerequirement"."required_amount"
             ''', [resource.pk, resource.pk, timezone.now()])
+
             # Turn it into a Django query
             qs1 = booking.models.Visit.objects.filter(
                 pk__in=[x.pk for x in qs1],
@@ -460,7 +461,10 @@ class UserProfile(models.Model):
             qs2 = booking.models.Visit.objects.annotate(
                 num_assigned=Count('teachers')
             ).filter(
-                eventtime__product__time_mode=Product.TIME_MODE_SPECIFIC,
+                eventtime__product__time_mode__in=[
+                    Product.TIME_MODE_SPECIFIC,
+                    Product.TIME_MODE_GUEST_SUGGESTED
+                ],
                 eventtime__start__gt=timezone.now(),
                 eventtime__product__organizationalunit=unit_qs,
                 num_assigned__lt=Coalesce(
@@ -475,7 +479,10 @@ class UserProfile(models.Model):
             qs2 = booking.models.Visit.objects.annotate(
                 num_assigned=Count('hosts')
             ).filter(
-                eventtime__product__time_mode=Product.TIME_MODE_SPECIFIC,
+                eventtime__product__time_mode__in=[
+                    Product.TIME_MODE_SPECIFIC,
+                    Product.TIME_MODE_GUEST_SUGGESTED
+                ],
                 eventtime__start__gt=timezone.now(),
                 eventtime__product__organizationalunit=unit_qs,
                 num_assigned__lt=Coalesce(
