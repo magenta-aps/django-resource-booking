@@ -1029,7 +1029,7 @@ hr {
 
 /* Firefox-specific beautification of select dropdown buttons - rather than have an ugly grey box, put in a nice arrow */
 
-@-moz-document url-prefix() {
+@media screen and (min--moz-device-pixel-ratio:0) {
   select.form-control:not([multiple]) {
     padding-right: 25px;
     background-image: url("data:image/svg+xml,\
