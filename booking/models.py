@@ -3285,12 +3285,10 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     def on_expire(self):
         if self.workflow_status in [
-            self.WORKFLOW_STATUS_BEING_PLANNED,
             self.WORKFLOW_STATUS_PLANNED,
             self.WORKFLOW_STATUS_PLANNED_NO_BOOKING,
             self.WORKFLOW_STATUS_CONFIRMED,
-            self.WORKFLOW_STATUS_REMINDED,
-            self.WORKFLOW_STATUS_AUTOASSIGN_FAILED
+            self.WORKFLOW_STATUS_REMINDED
         ]:
             self.workflow_status = self.WORKFLOW_STATUS_EXECUTED
             self.save()
