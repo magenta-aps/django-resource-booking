@@ -3895,7 +3895,11 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             )
 
             if not only_these_recipients and template_type.send_to_booker:
-                for booking in self.bookings.all():
+                if self.is_multi_sub:
+                    bookings = self.multi_master.bookings.all()
+                else:
+                    bookings = self.bookings.all()
+                for booking in bookings:
                     if not booking.is_waiting or \
                             template_type.send_to_booker_on_waitinglist:
                         KUEmailMessage.send_email(
