@@ -4396,9 +4396,6 @@ class MultiProductVisit(Visit):
             userprofile__organizationalunit=units
         )
 
-    def planned_status_is_blocked(self):
-        return True
-
     def resources_assigned(self, requirement):
         resource_list = []
         for visit in self.subvisits_unordered:
