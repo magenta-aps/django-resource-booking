@@ -3895,27 +3895,26 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             )
 
             if not only_these_recipients and template_type.send_to_booker:
-                if self.is_multi_sub:
-                    bookings = self.multi_master.bookings.all()
-                else:
+                # Mails to bookers on MPVs are sent from the parent visit
+                if not self.is_multi_sub:
                     bookings = self.bookings.all()
-                for booking in bookings:
-                    if not booking.is_waiting or \
-                            template_type.send_to_booker_on_waitinglist:
-                        KUEmailMessage.send_email(
-                            template_type,
-                            {
-                                'visit': self,
-                                'besoeg': self,
-                                'product': product,
-                                'booking': booking,
-                                'booker': booking.booker
-                            },
-                            booking.booker,
-                            self,
-                            unit,
-                            original_from_email=reply_recipients
-                        )
+                    for booking in bookings:
+                        if not booking.is_waiting or \
+                                template_type.send_to_booker_on_waitinglist:
+                            KUEmailMessage.send_email(
+                                template_type,
+                                {
+                                    'visit': self,
+                                    'besoeg': self,
+                                    'product': product,
+                                    'booking': booking,
+                                    'booker': booking.booker
+                                },
+                                booking.booker,
+                                self,
+                                unit,
+                                original_from_email=reply_recipients
+                            )
 
     def get_autosend_display(self):
         autosends = self.get_autosends(True, False, False)
@@ -4583,6 +4582,12 @@ class MultiProductVisit(Visit):
                 template_type
             )
 
+    def autosend_enabled_booker_only(self, template_type):
+        if template_type.key in [
+            EmailTemplateType.NOTIFY_ALL__BOOKING_COMPLETE
+        ]:
+            return True
+
     def get_autosend(self, template_type, follow_inherit=True,
                      include_disabled=False):
         return None
@@ -4601,8 +4606,9 @@ class MultiProductVisit(Visit):
     # Sends a message to defined recipients pertaining to the Visit
     def autosend(self, template_type, recipients=None,
                  only_these_recipients=False):
+        unit = None  # TODO: What should the unit be?
+        params = {'visit': self, 'products': self.products}
         if self.autosend_enabled(template_type):
-            unit = None  # TODO: What should the unit be?
             if recipients is None:
                 recipients = set()
             else:
@@ -4610,35 +4616,37 @@ class MultiProductVisit(Visit):
             if not only_these_recipients:
                 recipients.update(self.get_recipients(template_type))
 
-            # People who will receive any replies to the mail
-            reply_recipients = self.get_reply_recipients(template_type)
-
-            params = {'visit': self, 'products': self.products}
-
             KUEmailMessage.send_email(
                 template_type,
                 params,
                 list(recipients),
                 self,
                 unit,
-                original_from_email=reply_recipients
+                original_from_email=self.get_reply_recipients(template_type)
             )
 
-            if not only_these_recipients and template_type.send_to_booker:
-                for booking in self.bookings.all():
-                    if not booking.is_waiting or \
-                            template_type.send_to_booker_on_waitinglist:
-                        KUEmailMessage.send_email(
-                            template_type,
-                            merge_dicts(params, {
-                                'booking': booking,
-                                'booker': booking.booker
-                            }),
-                            booking.booker,
-                            self,
-                            unit,
-                            original_from_email=reply_recipients
+        if not only_these_recipients and template_type.send_to_booker and (
+                self.autosend_enabled(template_type) or
+                self.autosend_enabled_booker_only(template_type)
+        ):
+            for booking in self.bookings.all():
+                if (
+                        not booking.is_waiting or
+                        template_type.send_to_booker_on_waitinglist
+                ):
+                    KUEmailMessage.send_email(
+                        template_type,
+                        merge_dicts(params, {
+                            'booking': booking,
+                            'booker': booking.booker
+                        }),
+                        booking.booker,
+                        self,
+                        unit,
+                        original_from_email=self.get_reply_recipients(
+                            template_type
                         )
+                    )
 
     def autoassign_resources(self):
         for visit in self.subvisits_unordered:
