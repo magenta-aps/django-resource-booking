@@ -506,7 +506,6 @@ class EmailTemplateType(
     NOTIFY_EDITORS__SPOT_REJECTED = 19  # Ticket 13804
     NOTIFY_GUEST__BOOKING_CREATED_WAITING = 20  # ticket 13804
     NOTIFY_TEACHER__ASSOCIATED = 21  # Ticket 15701
-    NOTIFY_ALL_EVALUATION = 22  # Ticket 15701
     NOTIFY_GUEST__BOOKING_CREATED_UNTIMED = 23  # Ticket 16914
     NOTIFY_GUEST__EVALUATION_FIRST = 24  # Ticket 13819
     NOTIFY_GUEST__EVALUATION_FIRST_STUDENTS = 26  # Ticket 13819
@@ -927,15 +926,6 @@ class EmailTemplateType(
             enable_autosend=True,
             form_show=True,
             ordering=19
-        )
-
-        EmailTemplateType.set_default(
-            EmailTemplateType.NOTIFY_ALL_EVALUATION,
-            name_da=u'Besked til alle om evaluering',
-            manual_sending_visit_enabled=True,
-            enable_autosend=True,
-            form_show=False,
-            ordering=20
         )
 
         EmailTemplateType.set_default(
