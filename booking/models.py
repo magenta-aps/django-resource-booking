@@ -4256,6 +4256,13 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
         return [self.product]
 
     @property
+    def products_unique_address(self):
+        addresses = {
+            product.locality.id: product for product in self.products
+        }
+        return addresses.values()
+
+    @property
     def calendar_event_link(self):
         return reverse('visit-view', args=[self.pk])
 

@@ -1,5 +1,4 @@
 {% if recipient.guest %}
-
     {# Denne besked sendes til gæster #}
 
     <p>Kære {{ recipient.get_full_name }}.</p>
@@ -12,7 +11,15 @@
         {% endfor %}
         {% include 'booking/email/snippets/visit_time.html' %}
         på Københavns Universitet:
-        {% include 'booking/email/snippets/product_maplink.html' %}.
+        {% if visit.products_unique_address|length < 2 %}
+            {% include 'booking/email/snippets/product_maplink.html' %}.
+        {% else %}
+            <ul>
+            {% for p in visit.products_unique_address %}
+                <li>{% include 'booking/email/snippets/product_maplink.html' with product=p %}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
         {% include 'booking/email/snippets/contact_addresses.html' with product=visit.products|get:0 vedr=1 %}
     </p>
     <p>
