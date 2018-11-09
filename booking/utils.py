@@ -343,7 +343,6 @@ class TemplateSplit(object):
         def __str__(self):
             return "SubBlock from %s to %s" % (self.t_start, self.t_end)
 
-
     class Block(object):
         def __init__(
                 self, templatesplit, t_if, t_endif, t_else=None, l_elif=None
