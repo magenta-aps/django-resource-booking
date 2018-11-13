@@ -3809,8 +3809,10 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             new_recipients = []
             for recipient in recipients:
                 user = recipient.user
-                if user is None or (user not in self.hosts.all() and
-                        user not in self.teachers.all()):
+                if user is None or (
+                        user not in self.hosts.all() and
+                        user not in self.teachers.all()
+                ):
                     new_recipients.append(recipient)
             recipients = new_recipients
         return recipients
