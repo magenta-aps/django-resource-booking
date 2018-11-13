@@ -25,7 +25,7 @@ from booking.logging import log_action
 from booking.mixins import AutologgerMixin
 from booking.mixins import EditorRequriedMixin
 from booking.mixins import RoleRequiredMixin
-from booking.models import EmailTemplateType
+from booking.models import EmailTemplateType, KUEmailRecipient
 from booking.models import EventTime
 from booking.models import HostResource
 from booking.models import Locality
@@ -569,7 +569,7 @@ class BecomeSomethingView(AutologgerMixin, VisitBreadcrumbMixin,
                 if self.notify_mail_template_type:
                     self.object.autosend(
                         self.notify_mail_template_type,
-                        [request.user],
+                        [KUEmailRecipient(request.user)],
                         True
                     )
                 self.object.resource_accepts()

@@ -1,5 +1,4 @@
-{% if recipient.guest %}
-
+{% if recipient.is_guest %}
     {# Denne besked sendes til gæster #}
 
     <p>Kære {{ recipient.get_full_name }}.</p>

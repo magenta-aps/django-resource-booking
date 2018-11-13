@@ -1,4 +1,4 @@
-{% if recipient.guest %}
+{% if recipient.is_guest %}
 
     <p>Kære {{ recipient.get_full_name }}.</p>
 
@@ -24,7 +24,7 @@
 
     {% include 'booking/email/snippets/see_all.html' %}
 
-{% elif recipient.user.userprofile.is_host %}
+{% elif recipient.is_host %}
 
     {# Denne besked sendes til værter #}
 
@@ -53,7 +53,7 @@
         {% include 'booking/email/snippets/coordinators.html' %}
     </p>
 
-{% elif recipient.user.userprofile.is_teacher %}
+{% elif recipient.is_teacher %}
 
     {# Denne besked sendes til undervisere #}
 
