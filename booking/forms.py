@@ -1530,7 +1530,7 @@ class EmailTemplateForm(forms.ModelForm):
             full_text = getattr(self.instance, field)
             split = TemplateSplit(full_text)
 
-            guest_block = split.get_subblock_containing("recipient.guest")
+            guest_block = split.get_subblock_containing("recipient.is_guest")
             teacher_block = split.get_subblock_containing(
                 "recipient.user.userprofile.is_teacher"
             )

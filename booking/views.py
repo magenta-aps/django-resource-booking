@@ -97,6 +97,7 @@ from booking.models import EmailTemplate
 from booking.models import EmailTemplateType
 from booking.models import GymnasieLevel
 from booking.models import KUEmailMessage
+from booking.models import KUEmailRecipient
 from booking.models import MultiProductVisit
 from booking.models import MultiProductVisitTemp
 from booking.models import MultiProductVisitTempProduct
@@ -3731,9 +3732,7 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
         elif selected == "others":
             user_obj = DummyRecipient()
         if user_obj is not None:
-            formatted = KUEmailMessage.extract_addresses(user_obj)
-            if len(formatted) > 0:
-                ctx['recipient'] = formatted[0]
+            ctx['recipient'] = KUEmailRecipient(user_obj)
 
     def extend_context(self, context):
         # Get product from visit if only visit is present
