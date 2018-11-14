@@ -54,11 +54,13 @@ class ResourceTypeForm(forms.Form):
             for x in ResourceType.objects.all()
             if x.id not in EXCEPT_TYPES
         ],
-        required=True
+        required=True,
+        widget=forms.Select(attrs={'class':'form-control'})
     )
     unit = forms.ModelChoiceField(
         label=_(u'Enhed'),
         queryset=OrganizationalUnit.objects.all(),
+        widget=forms.Select(attrs={'class':'form-control'})
     )
 
     def __init__(self, **kwargs):
@@ -144,7 +146,8 @@ class EditItemResourceForm(EditResourceForm):
     class Meta:
         model = ItemResource
         fields = EditResourceForm.Meta.fields + ['name', 'locality']
-        widgets = EditResourceForm.Meta.widgets
+        widgets = {'locality':forms.Select(attrs={'class':'form-control'})}
+        widgets.update(EditResourceForm.Meta.widgets)
 
 
 class EditRoomResourceForm(EditResourceForm):
@@ -181,11 +184,13 @@ class ResourcePoolTypeForm(forms.Form):
         choices=[
             (x.id, x.name) for x in ResourceType.objects.all()
         ],
-        required=True
+        required=True,
+        widget=forms.Select(attrs={'class':'form-control'})
     )
     unit = forms.ModelChoiceField(
         label=_(u'Enhed'),
-        queryset=OrganizationalUnit.objects.all()
+        queryset=OrganizationalUnit.objects.all(),
+        widget=forms.Select(attrs={'class':'form-control'})
     )
 
     def __init__(self, **kwargs):
