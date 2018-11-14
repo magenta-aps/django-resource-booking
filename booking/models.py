@@ -4726,11 +4726,9 @@ class MultiProductVisit(Visit):
         params = {'visit': self, 'products': self.products}
         if self.autosend_enabled(template_type):
             if recipients is None:
-                recipients = set()
-            else:
-                recipients = set(recipients)
+                recipients = []
             if not only_these_recipients:
-                recipients.update(self.get_recipients(template_type))
+                recipients.extend(self.get_recipients(template_type))
 
             KUEmailMessage.send_email(
                 template_type,
@@ -4758,7 +4756,7 @@ class MultiProductVisit(Visit):
                             'booking': booking,
                             'booker': booking.booker
                         }),
-                        booking.booker,
+                        KUEmailRecipient(booking.booker),
                         self,
                         unit,
                         original_from_email=self.get_reply_recipients(
