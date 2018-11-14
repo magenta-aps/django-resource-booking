@@ -5852,6 +5852,8 @@ class KUEmailMessage(models.Model):
         ctype = ContentType.objects.get_for_model(instance)
         template_key = None if template_type is None else template_type.key
         htmlbody = None
+        if type(original_from_email) is not list:
+            original_from_email = [original_from_email]
         for (content, mimetype) in email_message.alternatives:
             if mimetype == 'text/html':
                 htmlbody = content
@@ -5864,6 +5866,7 @@ class KUEmailMessage(models.Model):
             original_from_email=", ".join([
                 address.formatted_address
                 for address in original_from_email
+                if isinstance(address, KUEmailRecipient)
             ]),
             recipients=', '.join(email_message.recipients()),
             content_type=ctype,
@@ -5915,7 +5918,7 @@ class KUEmailMessage(models.Model):
             # If we know the visit and the guest we can find the
             # booking if it is missing.
             if 'booking' not in ctx and \
-               'besoeg' in ctx and recipient.guest is not None:
+               'besoeg' in ctx and recipient.is_guest:
                 ctx['booking'] = Booking.objects.filter(
                     visit=ctx['besoeg'],
                     booker=recipient.guest
@@ -6091,7 +6094,7 @@ class KUEmailRecipient(models.Model):
         return u"Ukendt (%d)" % self.type
 
     @staticmethod
-    def multiple(bases, recipient_type):
+    def multiple(bases, recipient_type=None):
         if isinstance(bases, QuerySet):
             bases = list(bases)
         if type(bases) is not list:
