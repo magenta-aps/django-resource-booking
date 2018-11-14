@@ -3988,11 +3988,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             product = self.product
             unit = product.organizationalunit
             if recipients is None:
-                recipients = set()
-            else:
-                recipients = set(recipients)
+                recipients = []
             if not only_these_recipients:
-                recipients.update(self.get_recipients(template_type))
+                recipients.extend(self.get_recipients(template_type))
 
             # People who will receive any replies to the mail
             reply_recipients = self.get_reply_recipients(template_type)

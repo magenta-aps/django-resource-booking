@@ -1628,10 +1628,9 @@ class EmailTemplateForm(forms.ModelForm):
                 text = []
                 first = True
                 for condition, fieldname in [
-                    ("recipient.guest", field + "_guest"),
-                    ("recipient.user.userprofile.is_teacher",
-                     field + "_teacher"),
-                    ("recipient.user.userprofile.is_host", field + "_host")
+                    ("recipient.is_guest", field + "_guest"),
+                    ("recipient.is_teacher", field + "_teacher"),
+                    ("recipient.is_host", field + "_host")
                 ]:
                     sub_text = cleaned_data.get(fieldname, "").strip()
                     if len(sub_text) > 0:
