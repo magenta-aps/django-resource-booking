@@ -3630,13 +3630,13 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
 
         split = TemplateSplit(self.object.body)
         has_guest_block = split.get_subblock_containing(
-            "recipient.guest"
+            "recipient.is_guest"
         ) is not None
         has_teacher_block = split.get_subblock_containing(
-            "recipient.user.userprofile.is_teacher"
+            "recipient.is_teacher"
         ) is not None
         has_host_block = split.get_subblock_containing(
-            "recipient.user.userprofile.is_host"
+            "recipient.is_host"
         ) is not None
 
         recipient_output = []
