@@ -4631,11 +4631,9 @@ class MultiProductVisit(Visit):
         if self.autosend_enabled(template_type):
             unit = None  # TODO: What should the unit be?
             if recipients is None:
-                recipients = set()
-            else:
-                recipients = set(recipients)
+                recipients = []
             if not only_these_recipients:
-                recipients.update(self.get_recipients(template_type))
+                recipients.extend(self.get_recipients(template_type))
 
             # People who will receive any replies to the mail
             reply_recipients = self.get_reply_recipients(template_type)
@@ -4661,7 +4659,7 @@ class MultiProductVisit(Visit):
                                 'booking': booking,
                                 'booker': booking.booker
                             }),
-                            booking.booker,
+                            KUEmailRecipient(booking.booker),
                             self,
                             unit,
                             original_from_email=reply_recipients
