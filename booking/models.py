@@ -4020,7 +4020,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                                     'booking': booking,
                                     'booker': booking.booker
                                 },
-                                booking.booker,
+                                KUEmailRecipient(booking.booker),
                                 self,
                                 unit,
                                 original_from_email=reply_recipients
