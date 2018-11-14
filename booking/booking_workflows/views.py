@@ -192,11 +192,11 @@ class ChangeVisitTeachersView(AutologgerMixin, UpdateWithCancelView):
 
         if form.cleaned_data.get('send_emails', False):
             new_teachers = self.object.teachers.all()
-            recipients = [
+            recipients = KUEmailRecipient.multiple(list([
                 teacher
                 for teacher in new_teachers
                 if teacher not in old_teachers
-            ]
+            ]), KUEmailRecipient.TYPE_TEACHER)
             if len(recipients) > 0:
                 # Send a message to only these recipients
                 self.object.autosend(
@@ -251,11 +251,11 @@ class ChangeVisitHostsView(AutologgerMixin, UpdateWithCancelView):
 
         if form.cleaned_data.get('send_emails', False):
             new_hosts = self.object.hosts.all()
-            recipients = [
+            recipients = KUEmailRecipient.multiple(list([
                 host
                 for host in new_hosts
                 if host not in old_hosts
-            ]
+            ]), KUEmailRecipient.TYPE_HOST)
             if len(recipients) > 0:
                 # Send a message to only these recipients
                 self.object.autosend(
