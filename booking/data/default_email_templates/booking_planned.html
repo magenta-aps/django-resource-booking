@@ -2,13 +2,29 @@
 
     <p>Kære {{ recipient.get_full_name }}.</p>
 
-    <p>
-        Vi glæder os til at se dig til {{ product.title }}
-        {% include 'booking/email/snippets/visit_time.html' %}
-        på Københavns Universitet:
-        {% include 'booking/email/snippets/product_maplink.html' %}.
-        {% include 'booking/email/snippets/contact_addresses.html' with product=product vedr=1 %}
-    </p>
+    {% if visit.is_multiproductvisit %}
+        <p>
+            Vi glæder os til at se dig til:
+            <ul>
+            {% for subvisit in visit.real.subvisits %}
+                <li>
+                    {{ subvisit.product.title }},
+                    {% include 'booking/email/snippets/visit_time.html' with visit=subvisit %}:
+                    {% include 'booking/email/snippets/product_maplink.html' with product=subvisit.product %}.
+                </li>
+            {% endfor %}
+            </ul>
+            {% include 'booking/email/snippets/contact_addresses.html' with product=visit.real.products|get:0 vedr=1 %}
+        </p>
+    {% else %}
+        <p>
+            Vi glæder os til at se dig til {{ product.title }}
+            {% include 'booking/email/snippets/visit_time.html' %}
+            på Københavns Universitet:
+            {% include 'booking/email/snippets/product_maplink.html' %}.
+            {% include 'booking/email/snippets/contact_addresses.html' with product=product vedr=1 %}
+        </p>
+    {% endif %}
     <p>
         Detaljer for din tilmelding:
     </p>
