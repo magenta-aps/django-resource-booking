@@ -6,7 +6,7 @@
         <p>
             Vi glæder os til at se dig til:
             <ul>
-            {% for subvisit in visit.real.subvisits %}
+            {% for subvisit in visit.real.subvisits_by_time %}
                 <li>
                     {{ subvisit.product.title }},
                     {% include 'booking/email/snippets/visit_time.html' with visit=subvisit %}:
