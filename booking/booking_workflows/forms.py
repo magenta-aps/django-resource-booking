@@ -11,10 +11,14 @@ import booking.models
 
 
 class ChangeVisitStatusForm(forms.ModelForm):
-
     class Meta:
         model = Visit
         fields = ['workflow_status']
+        widgets = {
+            'workflow_status': forms.Select(
+                attrs={'class': 'form-control'}
+            )
+        }
 
     def __init__(self, *args, **kwargs):
         super(ChangeVisitStatusForm, self).__init__(*args, **kwargs)
@@ -34,6 +38,11 @@ class ChangeVisitResponsibleForm(forms.ModelForm):
     class Meta:
         model = MultiProductVisit
         fields = ['responsible']
+        widgets = {
+            'responsible': forms.Select(
+                attrs={'class': 'form-control'}
+            )
+        }
 
     def __init__(self, *args, **kwargs):
         super(ChangeVisitResponsibleForm, self).__init__(*args, **kwargs)
@@ -95,6 +104,11 @@ class ChangeVisitRoomsForm(forms.ModelForm):
     class Meta:
         model = Visit
         fields = ['room_status']
+        widgets = {
+            'room_status': forms.Select(
+                attrs={'class': 'form-control'}
+            )
+        }
 
 
 class ChangeVisitCommentsForm(forms.ModelForm):
