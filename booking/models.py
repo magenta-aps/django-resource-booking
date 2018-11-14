@@ -4504,6 +4504,10 @@ class MultiProductVisit(Visit):
         return self.subvisits_unordered.order_by('multi_priority')
 
     @property
+    def subvisits_by_time(self):
+        return self.subvisits_unordered.order_by('eventtime__start')
+
+    @property
     def products(self):
         return [visit.product for visit in self.subvisits if visit.product]
 
