@@ -394,10 +394,15 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
             elif recipient_type == EmailComposeView.RECIPIENT_ROOMRESPONSIBLE:
                 roomresponsible_ids.append(id)
 
-        return KUEmailRecipient.multiple(Guest.objects.filter(id__in=booker_ids), KUEmailRecipient.TYPE_GUEST) + \
-               KUEmailRecipient.multiple(User.objects.filter(username__in=user_ids)) + \
-               KUEmailRecipient.multiple(RoomResponsible.objects.filter(id__in=roomresponsible_ids), KUEmailRecipient.TYPE_ROOM_RESPONSIBLE) + \
-               KUEmailRecipient.multiple(customs)
+        return KUEmailRecipient.multiple(
+            Guest.objects.filter(id__in=booker_ids),
+            KUEmailRecipient.TYPE_GUEST
+        ) + KUEmailRecipient.multiple(
+            User.objects.filter(username__in=user_ids)
+        ) + KUEmailRecipient.multiple(
+            RoomResponsible.objects.filter(id__in=roomresponsible_ids),
+            KUEmailRecipient.TYPE_ROOM_RESPONSIBLE
+        ) + KUEmailRecipient.multiple(customs)
 
     def get_unit(self):
         return self.request.user.userprofile.organizationalunit
