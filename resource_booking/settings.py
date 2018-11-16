@@ -248,8 +248,6 @@ LOGGING = {
     },
 }
 
-
-
 # Whether to enable SAML
 USE_SAML = False
 MAKE_SAML_LOGIN_DEFAULT = False
