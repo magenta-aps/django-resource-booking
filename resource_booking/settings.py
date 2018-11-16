@@ -230,6 +230,26 @@ CKEDITOR_CONFIGS = {
 # 'theme_advanced_buttons2':
 # 'undo,redo,|,code,cleanup,visualaid,charmap,help'
 
+# Logging configuration: Log info level to console, even when running prod
+# Messages will end up in the webserver's log files
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+        },
+    },
+}
+
+
+
 # Whether to enable SAML
 USE_SAML = False
 MAKE_SAML_LOGIN_DEFAULT = False
