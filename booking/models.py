@@ -4511,15 +4511,18 @@ class MultiProductVisit(Visit):
     @property
     def display_title(self):
         # return _(u'prioriteret liste af %d tilbud') % len(self.products)
-        count = len(self.subvisits_unordered)
-        return __(
-            "%(title)s, %(count)d prioritet",
-            "%(title)s, %(count)d prioriteter",
-            count
-        ) % {
-            'title': self.primary_visit.display_title,
-            'count': count
-        }
+        try:
+            return self.bookings.first().booker.school.name
+        except:
+            count = len(self.subvisits_unordered)
+            return __(
+                "%(title)s, %(count)d prioritet",
+                "%(title)s, %(count)d prioriteter",
+                count
+            ) % {
+                'title': self.primary_visit.display_title,
+                'count': count
+            }
 
     @property
     def date_display(self):
