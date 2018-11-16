@@ -31,7 +31,7 @@ designed for the University of Copenhagen.""",
           'django-tinymce==2.0.4',
           'djangosaml2==0.13.0',
           'django-cron==0.4.6',
-          'django-ckeditor',
+          'django-ckeditor==5.1.1',
           'django-macros==0.4.0',
           'requests==2.19.1'
       ],
