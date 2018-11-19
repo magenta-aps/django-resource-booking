@@ -17,7 +17,7 @@ from django.db.models import Q
 from django.db.models import Sum
 from django.db.models.expressions import RawSQL
 from django.db.models.functions import Coalesce
-from django.http import Http404
+from django.http import Http404, HttpResponseBadRequest
 from django.http import HttpResponse
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
@@ -4132,6 +4132,15 @@ class MultiProductVisitAddProductView(BackMixin,
     model = MultiProductVisit
     form_class = MultiProductVisitProductsForm
     template_name = "visit/multi_products_edit.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if self.object.workflow_status not in [
+            Visit.WORKFLOW_STATUS_BEING_PLANNED
+        ]:
+            raise HttpResponseBadRequest(
+                u'Can only edit visits that are being planned'
+            )
 
     @property
     def available_products(self):

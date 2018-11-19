@@ -3511,6 +3511,9 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             return False
         return True
 
+    def is_being_planned(self):
+        return self.workflow_status == self.WORKFLOW_STATUS_BEING_PLANNED
+
     @property
     def has_changes_after_planned(self):
         # This is only valid for statuses that are considered planned
