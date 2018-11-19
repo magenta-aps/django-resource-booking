@@ -4511,6 +4511,10 @@ class MultiProductVisit(Visit):
     def products(self):
         return [visit.product for visit in self.subvisits if visit.product]
 
+    @property
+    def products_ordered(self):
+        return self.products
+
     def potential_responsible(self):
         units = OrganizationalUnit.objects.filter(
             product__eventtime__visit__set=self.subvisits_unordered

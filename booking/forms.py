@@ -20,14 +20,14 @@ from booking.models import BLANK_LABEL, BLANK_OPTION
 from booking.models import ClassBooking, TeacherBooking, \
     BookingGymnasieSubjectLevel
 from booking.models import EmailTemplate, EmailTemplateType
-from booking.models import SurveyXactEvaluation, SurveyXactEvaluationGuest
 from booking.models import Guest, Region, PostCode, School
 from booking.models import Locality, OrganizationalUnitType, OrganizationalUnit
 from booking.models import MultiProductVisitTemp, MultiProductVisitTempProduct
 from booking.models import Product
 from booking.models import StudyMaterial, ProductAutosend, Booking
 from booking.models import Subject, BookingGrundskoleSubjectLevel
-from booking.models import Visit
+from booking.models import SurveyXactEvaluation, SurveyXactEvaluationGuest
+from booking.models import Visit, MultiProductVisit, EventTime
 from booking.utils import binary_or, binary_and, TemplateSplit
 from booking.widgets import OrderedMultipleHiddenChooser
 from .fields import ExtensibleMultipleChoiceField, VisitEventTimeField
@@ -1944,6 +1944,47 @@ class MultiProductVisitTempProductsForm(forms.ModelForm):
             )
             relation.save()
         return mvpt
+
+
+class MultiProductVisitProductsForm(MultiProductVisitTempProductsForm):
+    class Meta:
+        model = MultiProductVisit
+        fields = ['required_visits']
+        widgets = MultiProductVisitTempProductsForm.Meta.widgets
+
+    def save(self, commit=True):
+        mpv = super(MultiProductVisitTempProductsForm, self).save(commit)
+        products_ordered = self.cleaned_data[self.products_key]
+
+        visits_by_product = {
+            visit.product: visit for visit in mpv.subvisits_unordered
+        }
+
+        for product, visit in visits_by_product.iteritems():
+            if product not in products_ordered:
+                visit.cancel_visit()
+
+        for index, product in enumerate(products_ordered):
+            visit = visits_by_product.get(product, None)
+            if visit is None:
+                eventtime = EventTime(
+                    product=product,
+                    bookable=False,
+                    has_specific_time=False
+                )
+                eventtime.save()
+                eventtime.make_visit(
+                    product=product,
+                    multi_master=mpv,
+                    multi_priority=index,
+                    is_multi_sub=True
+                )
+            elif visit.multi_priority != index:
+                visit.multi_priority = index
+                visit.save()
+        mpv.autoassign_resources()
+        mpv.save()
+        return mpv
 
 
 class EvaluationForm(forms.ModelForm):

@@ -1577,6 +1577,25 @@ li.subvisit-status-1 a.visit-link, li.subvisit-status-7 a.visit-link, li.subvisi
   text-decoration: line-through;
 }
 
+.initial-text {
+  display: none;
+}
+.initially-selected .initial-text {
+  display: inline;
+  font-size: 0.75em;
+}
+#selected-product-list .initial-text {
+  color: #3c763d;
+}
+#selected-product-list .initial-text .details {
+  display: none;
+}
+#deselected-product-list .initial-text {
+  color: #a94442;
+}
+
+
+
 
 /* MultiProductVisit END */
 
