@@ -4292,6 +4292,8 @@ class MultiProductVisitAddProductView(BackMixin,
             raise HttpResponseBadRequest(
                 u'Can only edit visits that are being planned'
             )
+        return super(MultiProductVisitAddProductView, self)\
+            .dispatch(request, *args, **kwargs)
 
     @property
     def available_products(self):
