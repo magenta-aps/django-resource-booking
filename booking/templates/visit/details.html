@@ -91,8 +91,8 @@
                         </ul>
                     </div>
                 {% endif %}
-                {% if object.is_multiproductvisit %}
-                    <a class="btn btn-primary" href="{% url 'visit-mpv-edit' object.id %}?back={{ request.get_full_path | urlencode }}">Tilføj besøg</a>
+                {% if object.is_multiproductvisit and object.is_being_planned %}
+                    <a class="btn btn-primary" href="{% url 'visit-mpv-edit' object.id %}?back={{ request.get_full_path | urlencode }}">{% trans 'Tilføj besøg' %}</a>
                 {% endif %}
             </div>
           </div>
