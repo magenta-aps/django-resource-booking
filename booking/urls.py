@@ -21,7 +21,7 @@ from booking.resource_based.views import ResourceRequirementListView
 from booking.resource_based.views import ResourceRequirementUpdateConfirmView
 from booking.resource_based.views import ResourceRequirementUpdateView
 from booking.resource_based.views import VisitResourceEditView
-from booking.views import BecomeHostView
+from booking.views import BecomeHostView, MultiProductVisitAddProductView
 from booking.views import BecomeTeacherView
 from booking.views import BookingAcceptView
 from booking.views import BookingEditView
@@ -200,6 +200,9 @@ urlpatterns = patterns(
     url(r'^visit/(?P<pk>[0-9]+)/book/success$',
         BookingSuccessView.as_view(modal=False),
         name='visit-booking-success'),
+    url(r'^visit/(?P<pk>[0-9]+)/mpvedit/?$',
+        MultiProductVisitAddProductView.as_view(),
+        name='visit-mpv-edit'),
 
     url(r'^booking/(?P<pk>[0-9]+)/?$',
         BookingDetailView.as_view(),
