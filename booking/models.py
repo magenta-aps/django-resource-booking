@@ -6252,10 +6252,10 @@ class SurveyXactEvaluationGuest(models.Model):
                 u"oenhed%d" % index: getattr_long(
                     product, 'organizationalunit.parent.id'
                 ),
-                u"undv_n%d" % index: ', '.join([
+                u"undvn%d" % index: ', '.join([
                     teacher.get_full_name() for teacher in teachers
                 ]),
-                u"undv_m%d" % index: ', '.join([
+                u"undvm%d" % index: ', '.join([
                     teacher.email for teacher in teachers
                 ])
             })
