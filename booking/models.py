@@ -6287,8 +6287,10 @@ class BookerResponseNonce(models.Model):
 
 class SurveyXactEvaluation(models.Model):
 
-    DEFAULT_STUDENT_SURVEY_ID = 946435
-    DEFAULT_TEACHER_SURVEY_ID = 946493
+    DEFAULT_STUDENT_SURVEY_ID = \
+        settings.SURVEYXACT['default_survey_id']['student']
+    DEFAULT_TEACHER_SURVEY_ID = \
+        settings.SURVEYXACT['default_survey_id']['teacher']
 
     surveyId = models.IntegerField()
 
@@ -6466,16 +6468,9 @@ class SurveyXactEvaluationGuest(models.Model):
         product = self.product
         visit = self.visit
         guest = self.guest
-        teachers = list(visit.assigned_teachers)
-        return {
+        data = {
             u'email': guest.email,
             u'ID': product.id,
-            u'enhed': getattr_long(product, 'organizationalunit.id'),
-            u'oenhed': getattr_long(
-                product, 'organizationalunit.parent.id'
-            ),
-            u'type': product.type,
-            u'titel': product.title,
             u'tid': visit.start_datetime.strftime('%Y.%m.%d %H:%M:%S')
             if visit.start_datetime is not None else None,
             u'niveau': Guest.grundskole_level_conversion.get(
@@ -6498,14 +6493,37 @@ class SurveyXactEvaluationGuest(models.Model):
             u'postnr': getattr_long(guest, 'school.postcode.number'),
             u'gæst': ' '.join(
                 prune_list([guest.firstname, guest.lastname], True)
-            ),
-            u'underv': ', '.join([
-                teacher.get_full_name() for teacher in teachers
-            ]),
-            u'underv_m': ', '.join([
-                teacher.email for teacher in teachers
-            ])
+            )
         }
+
+        visits = visit.subvisits_ordered \
+            if visit.is_multiproductvisit \
+            else [visit]
+
+        index = 1
+        for visit in visits:
+            teachers = list(visit.assigned_teachers)
+            product = visit.product
+            data.update({
+                u"akt%d" % index: product.title,
+                u"type%d" % index: product.type,
+                u"enhed%d" % index: getattr_long(
+                    product, 'organizationalunit.id'
+                ),
+                u"oenhed%d" % index: getattr_long(
+                    product, 'organizationalunit.parent.id'
+                ),
+                u"undv_n%d" % index: ', '.join([
+                    teacher.get_full_name() for teacher in teachers
+                ]),
+                u"undv_m%d" % index: ', '.join([
+                    teacher.email for teacher in teachers
+                ])
+            })
+            index += 1
+            if index > 4:
+                break
+        return data
 
     def link_clicked(self):
         self.status = self.STATUS_LINK_CLICKED
