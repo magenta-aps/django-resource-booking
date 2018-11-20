@@ -7,11 +7,13 @@
             Vi glæder os til at se dig til:
             <ul>
             {% for subvisit in visit.real.subvisits_by_time %}
+                {% if not subvisit.is_cancelled %}
                 <li>
                     {{ subvisit.product.title }},
                     {% include 'booking/email/snippets/visit_time.html' with visit=subvisit %}:
                     {% include 'booking/email/snippets/product_maplink.html' with product=subvisit.product %}.
                 </li>
+                {% endif %}
             {% endfor %}
             </ul>
             {% include 'booking/email/snippets/contact_addresses.html' with product=visit.real.products|get:0 vedr=1 %}
