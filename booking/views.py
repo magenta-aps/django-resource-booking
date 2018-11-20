@@ -4430,14 +4430,14 @@ class EvaluationEditView(BreadcrumbMixin, UpdateView):
             ]
 
 
-class EvaluationDetailView(BreadcrumbMixin, DetailView):
+class EvaluationDetailView(LoginRequiredMixin, BreadcrumbMixin, DetailView):
 
     template_name = "evaluation/details.html"
     model = SurveyXactEvaluation
 
-    def get(self, request, *args, **kwargs):
-        participant_id = kwargs.get('g', None)
-        message_id = kwargs.get('i', 1)
+    def post(self, request, *args, **kwargs):
+        participant_id = request.POST.get('guest', None)
+        message_id = request.POST.get('type', 1)
         if participant_id is not None:
             participant = SurveyXactEvaluationGuest.objects.get(
                 id=participant_id
@@ -4474,7 +4474,9 @@ class EvaluationRedirectView(RedirectView):
         return url
 
 
-class EvaluationStatisticsView(BreadcrumbMixin, TemplateView):
+class EvaluationStatisticsView(
+    LoginRequiredMixin, BreadcrumbMixin, TemplateView
+):
 
     template_name = "evaluation/statistics.html"
 
