@@ -4418,17 +4418,35 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             evaluation__for_students=False
         )
 
-    # @property
-    # def student_evaluation(self):
-    #     return SurveyXactEvaluation.objects.filter(guests__in=self.student_evaluation_guests).first()
-    #
-    # @property
-    # def teacher_evaluation(self):
-    #     return SurveyXactEvaluation.objects.filter(guests__in=self.teacher_evaluation_guests).first()
+    def evaluations(self, filter=None, ordered=False):
+        evaluation_ids = set()
+        for guest in SurveyXactEvaluationGuest.objects.filter(
+            guest__booking__visit=self,
+        ):
+            evaluation_ids.add(guest.evaluation.id)
+        evaluations = SurveyXactEvaluation.objects.filter(
+            id__in=evaluation_ids
+        )
+        if filter is not None:
+            evaluations = evaluations.filter(**filter)
+        evaluations = list(evaluations)
+        if ordered:
+            evaluations.sort(key=lambda e: self.products.index(e.product))
+        return evaluations
+
+    @property
+    def student_evaluation(self):
+        evaluations = self.evaluations({'for_students': True}, True)
+        return evaluations[0] if len(evaluations) > 0 else None
+
+    @property
+    def teacher_evaluation(self):
+        evaluations = self.evaluations({'for_teachers': True}, True)
+        return evaluations[0] if len(evaluations) > 0 else None
 
     @property
     def common_evaluation(self):
-        return self.surveyxactevaluation_set.filter(
+        return self.evaluations.filter(
             for_students=True, for_teachers=True
         ).first()
 
