@@ -2031,6 +2031,8 @@ class EvaluationForm(forms.ModelForm):
             for evalguest in self.instance.evaluationguests
         }
         for visit in self.product.get_visits():
+            if visit.is_multi_sub:
+                visit = visit.multi_master
             for booking in visit.booking_list:
                 guest = booking.booker
                 status = None

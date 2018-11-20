@@ -4418,6 +4418,20 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             evaluation__for_students=False
         )
 
+    # @property
+    # def student_evaluation(self):
+    #     return SurveyXactEvaluation.objects.filter(guests__in=self.student_evaluation_guests).first()
+    #
+    # @property
+    # def teacher_evaluation(self):
+    #     return SurveyXactEvaluation.objects.filter(guests__in=self.teacher_evaluation_guests).first()
+
+    @property
+    def common_evaluation(self):
+        return self.surveyxactevaluation_set.filter(
+            for_students=True, for_teachers=True
+        ).first()
+
     # Used by evaluation statistics page
     def evaluation_guestset(self):
         statuslist = [
@@ -6368,6 +6382,9 @@ class SurveyXactEvaluation(models.Model):
                 EmailTemplateType.NOTIFY_GUEST__EVALUATION_SECOND_STUDENTS
                 in autosends
         }
+
+    def __unicode__(self):
+        return u"SurveyXactEvaluation #%d (%s)" % (self.pk, self.product.title)
 
 
 class SurveyXactEvaluationGuest(models.Model):
