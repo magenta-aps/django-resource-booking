@@ -244,7 +244,15 @@ PUBLIC_URL_PROTOCOL = 'http'
 PUBLIC_URL_HOSTNAME = 'fokusku.dk'
 PUBLIC_URL_PORT = None
 
-SURVEYXACT = {}
+SURVEYXACT = {
+    'username': 'dummyuser',
+    'password': 'dummypassword',
+    'url': 'https://rest.survey-xact.dk/uploadrespondents?format=xml',
+    'default_survey_id': {
+        'student': 0,
+        'teacher': 0
+    }
+}
 
 # Add extra middleware defined in the local settings file to the ones
 # already specified.

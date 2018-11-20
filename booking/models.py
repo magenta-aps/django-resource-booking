@@ -6023,8 +6023,10 @@ class BookerResponseNonce(models.Model):
 
 class SurveyXactEvaluation(models.Model):
 
-    DEFAULT_STUDENT_SURVEY_ID = 946435
-    DEFAULT_TEACHER_SURVEY_ID = 946493
+    DEFAULT_STUDENT_SURVEY_ID = \
+        settings.SURVEYXACT['default_survey_id']['student']
+    DEFAULT_TEACHER_SURVEY_ID = \
+        settings.SURVEYXACT['default_survey_id']['teacher']
 
     surveyId = models.IntegerField()
 
