@@ -6270,7 +6270,7 @@ class SurveyXactEvaluationGuest(models.Model):
             )
         }
 
-        visits = visit.subvisits_ordered \
+        visits = visit.real.subvisits \
             if visit.is_multiproductvisit \
             else [visit]
 
