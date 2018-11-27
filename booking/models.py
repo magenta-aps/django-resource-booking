@@ -2155,7 +2155,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         return self.eventtime_set.filter(start__gte=timezone.now())
 
     @property
-    def future_bookable_times(self):
+    def cutoff_filter(self):
         cutoff_before = self.booking_cutoff_before
         if cutoff_before is None:
             cutoff_before = timedelta()
@@ -2163,6 +2163,17 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         cutoff_after = self.booking_cutoff_after
         if cutoff_after is not None:
             filter['start__lte'] = timezone.now() + cutoff_after
+        return filter
+
+    def future_bookable_times(self, use_cutoff=False):
+        filter = {'start__gte': timezone.now()}
+        if use_cutoff:
+            cutoff_before = self.booking_cutoff_before
+            if cutoff_before is not None:
+                filter['start__gte'] = timezone.now() + cutoff_before
+            cutoff_after = self.booking_cutoff_after
+            if cutoff_after is not None:
+                filter['start__lte'] = timezone.now() + cutoff_after
         return self.bookable_times.filter(**filter)
 
     @property
@@ -2513,7 +2524,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         # bookable time in the future, and that time isn't fully booked
         # if len(self.future_bookable_times) > 0:
         #     return True
-        for eventtime in self.future_bookable_times:
+        for eventtime in self.future_bookable_times(use_cutoff=True):
             if eventtime.visit is None:
                 return True
             if eventtime.visit.is_bookable:
