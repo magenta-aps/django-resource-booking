@@ -832,7 +832,8 @@ class BookingForm(forms.ModelForm):
         if self.scheduled and len(products) > 0:
             product = products[0]
             choices = [(None, BLANK_LABEL)]
-            qs = product.future_bookable_times.order_by('start', 'end')
+            qs = product.future_bookable_times(use_cutoff=True)\
+                .order_by('start', 'end')
             options = {}
             for eventtime in qs:
                 date = eventtime.interval_display

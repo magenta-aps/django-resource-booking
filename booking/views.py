@@ -1903,7 +1903,7 @@ class ProductDetailView(BreadcrumbMixin, ProductBookingDetailView):
                 can_edit = True
             if user.userprofile.can_create:
                 context['nr_bookable'] = len(
-                    self.object.future_bookable_times
+                    self.object.future_bookable_times()
                 )
                 context['nr_unbookable'] = len(
                     self.object.eventtime_set.all()
