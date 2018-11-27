@@ -14,9 +14,16 @@
         <div class="col-sm-12 col-md-9">
             <h1>
                 {% url 'product-view' object.product.pk as product_url %}
-                {% blocktrans with title=object.product.title %}
-                    Evaluering af <a href="{{ product_url }}">{{ title }}</a>
-                {% endblocktrans %}
+                {% if visit %}
+                    {% url 'visit-view' visit.pk as visit_url %}
+                    {% blocktrans with title=visit.display_title %}
+                        Evaluering af <a href="{{ visit_url }}">{{ title }}</a>
+                    {% endblocktrans %}
+                {% else %}
+                    {% blocktrans with title=object.product.title %}
+                        Evaluering af <a href="{{ product_url }}">{{ title }}</a>
+                    {% endblocktrans %}
+                {% endif %}
             </h1>
         </div>
         <div class="pull-right">
@@ -101,7 +108,7 @@
                                 </tr>
                                 </thead>
                                 <tbody>
-                                {% for participant in object.evaluationguests %}
+                                {% for participant in guests %}
                                     <form method="POST">
                                         {% csrf_token %}
                                         <input type="hidden" name="guest" value="{{ participant.id }}"/>
