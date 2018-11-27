@@ -390,6 +390,9 @@ class ProductForm(forms.ModelForm):
             'booking_close_days_before': NumberInput(
                 attrs={'class': 'form-control input-sm', 'min': 0},
             ),
+            'booking_max_days_in_future': NumberInput(
+                attrs={'class': 'form-control input-sm', 'min': 0},
+            ),
             'inquire_enabled': CheckboxInput()
         }
         labels = {
@@ -531,7 +534,7 @@ class StudentForADayForm(ProductForm):
                   'time_mode', 'duration', 'locality',
                   'tilbudsansvarlig', 'organizationalunit',
                   'preparation_time', 'comment', 'booking_close_days_before',
-                  'inquire_enabled',
+                  'booking_max_days_in_future', 'inquire_enabled',
                   )
         widgets = ProductForm.Meta.widgets
 
@@ -571,7 +574,7 @@ class TeacherProductForm(ProductForm):
                   'time_mode', 'duration', 'locality',
                   'tilbudsansvarlig', 'roomresponsible', 'organizationalunit',
                   'preparation_time', 'comment', 'booking_close_days_before',
-                  'inquire_enabled',
+                  'booking_max_days_in_future', 'inquire_enabled',
                   )
         widgets = ProductForm.Meta.widgets
 
@@ -589,7 +592,8 @@ class ClassProductForm(ProductForm):
                   'presentation_available', 'custom_available', 'custom_name',
                   'tilbudsansvarlig', 'roomresponsible', 'organizationalunit',
                   'preparation_time', 'comment', 'only_one_guest_per_visit',
-                  'booking_close_days_before', 'inquire_enabled',
+                  'booking_close_days_before', 'booking_max_days_in_future',
+                  'inquire_enabled',
                   )
         widgets = ProductForm.Meta.widgets
         labels = ProductForm.Meta.labels
@@ -1871,6 +1875,12 @@ class MultiProductVisitTempDateForm(forms.ModelForm):
                     reason += unicode(
                         _(u'Der er lukket for tilmelding '
                           u'%d dage før afholdelse.') %
+                        product.booking_close_days_before
+                    )
+                elif bookability == Product.NONBOOKABLE_REASON__BOOKING_FUTURE:
+                    reason += unicode(
+                        _(u'Der er lukket for tilmelding '
+                          u'%d dage efter dags dato.') %
                         product.booking_close_days_before
                     )
                 elif bookability == \
