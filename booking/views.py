@@ -4437,6 +4437,29 @@ class EvaluationDetailView(LoginRequiredMixin, BreadcrumbMixin, DetailView):
     template_name = "evaluation/details.html"
     model = SurveyXactEvaluation
 
+    def get_visit(self):
+        visit_id = self.kwargs.get('visit', None)
+        if visit_id is not None:
+            return Visit.objects.get(id=visit_id)
+
+    def get_product(self):
+        return self.object.product
+
+    def get_context_data(self, **kwargs):
+        context = {}
+        visit = self.get_visit()
+        if visit is not None:
+            context['guests'] = self.object.evaluationguests.filter(
+                guest__booking__visit=visit
+            )
+            context['visit'] = visit
+        else:
+            context['guests'] = self.object.evaluationguests
+        context.update(kwargs)
+        return super(EvaluationDetailView, self).get_context_data(
+            **context
+        )
+
     def post(self, request, *args, **kwargs):
         participant_id = request.POST.get('guest', None)
         message_id = request.POST.get('type', 1)
@@ -4448,19 +4471,30 @@ class EvaluationDetailView(LoginRequiredMixin, BreadcrumbMixin, DetailView):
         return super(EvaluationDetailView, self).get(request, *args, **kwargs)
 
     def get_breadcrumb_args(self):
-        return [self.object]
+        return [self.object, self.get_product(), self.get_visit()]
 
     @staticmethod
-    def build_breadcrumbs(evaluation):
-        return ProductDetailView.build_breadcrumbs(evaluation.product) + [
-            {
-                'text': _(u'Evaluering'),
-                'url': reverse(
-                    'evaluation-view',
-                    args=[evaluation.id]
-                )
-            }
-        ]
+    def build_breadcrumbs(evaluation, product, visit):
+        if visit is not None:
+            return VisitDetailView.build_breadcrumbs(visit) + [
+                {
+                    'text': _(u'Evaluering'),
+                    'url': reverse(
+                        'evaluation-view',
+                        args=[evaluation.id, visit.id]
+                    )
+                }
+            ]
+        else:
+            return ProductDetailView.build_breadcrumbs(product) + [
+                {
+                    'text': _(u'Evaluering'),
+                    'url': reverse(
+                        'evaluation-view',
+                        args=[evaluation.id]
+                    )
+                }
+            ]
 
 
 class EvaluationRedirectView(RedirectView):

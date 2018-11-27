@@ -468,7 +468,7 @@ urlpatterns = patterns(
     url(r'^evaluation/(?P<pk>[0-9]+)/edit/?$',
         EvaluationEditView.as_view(),
         name='evaluation-edit'),
-    url(r'^evaluation/(?P<pk>[0-9]+)/?$',
+    url(r'^evaluation/(?P<pk>[0-9]+)/(?P<visit>[0-9]+)?/?$',
         EvaluationDetailView.as_view(),
         name='evaluation-view'),
     url(r'^evaluation/(?P<pk>[0-9]+)/?$',
