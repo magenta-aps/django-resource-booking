@@ -2038,6 +2038,15 @@ class Product(AvailabilityUpdaterMixin, models.Model):
         null=True
     )
 
+    booking_max_days_in_future = models.IntegerField(
+        default=90,
+        verbose_name=_(
+            u'Maksimalt antal dage i fremtiden hvor der kan tilmeldes'
+        ),
+        blank=False,
+        null=True
+    )
+
     inquire_enabled = models.BooleanField(
         default=True,
         verbose_name=_(u'"Spørg om tilbud" aktiveret')
@@ -2104,9 +2113,14 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             return 1
 
     @property
-    def booking_cutoff(self):
+    def booking_cutoff_before(self):
         return timedelta(days=self.booking_close_days_before) \
             if self.booking_close_days_before is not None else None
+
+    @property
+    def booking_cutoff_after(self):
+        return timedelta(days=self.booking_max_days_in_future) \
+            if self.booking_max_days_in_future is not None else None
 
     @property
     def bookable_times(self):
@@ -2142,12 +2156,14 @@ class Product(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def future_bookable_times(self):
-        cutoff = self.booking_cutoff
-        if cutoff is None:
-            cutoff = timedelta()
-        return self.bookable_times.filter(
-            start__gte=timezone.now() + cutoff
-        )
+        cutoff_before = self.booking_cutoff_before
+        if cutoff_before is None:
+            cutoff_before = timedelta()
+        filter = {'start__gte': timezone.now() + cutoff_before}
+        cutoff_after = self.booking_cutoff_after
+        if cutoff_after is not None:
+            filter['start__lte'] = timezone.now() + cutoff_after
+        return self.bookable_times.filter(**filter)
 
     @property
     # QuerySet that finds all EventTimes that will be affected by a change
@@ -2528,6 +2544,7 @@ class Product(AvailabilityUpdaterMixin, models.Model):
     NONBOOKABLE_REASON__HAS_NO_BOOKABLE_VISITS = 3
     NONBOOKABLE_REASON__BOOKING_CUTOFF = 4
     NONBOOKABLE_REASON__NO_CALENDAR_TIME = 5
+    NONBOOKABLE_REASON__BOOKING_FUTURE = 6
 
     def is_bookable(self, start_time=None, end_time=None, return_reason=False):
 
@@ -2551,14 +2568,25 @@ class Product(AvailabilityUpdaterMixin, models.Model):
             if start_time is None:
                 return True
 
-            # We don't accept bookings made later
+            # The date that the user has chosen for his visit
+            start_date = start_time \
+                if isinstance(start_time, date) \
+                else start_time.date()
+
+            # We don't accept bookings performed later
             # than x days before visit start
-            cutoff = self.booking_cutoff
+            cutoff = self.booking_cutoff_before
             if cutoff is not None:
-                start_date = start_time if isinstance(start_time, date) \
-                    else start_time.date()
-                if start_date < timezone.now().date() + cutoff:
+                if timezone.now().date() > start_date - cutoff:
                     return self.NONBOOKABLE_REASON__BOOKING_CUTOFF \
+                        if return_reason else False
+
+            # We don't accept bookings for visits later
+            # than x days after today
+            cutoff = self.booking_cutoff_after
+            if cutoff is not None:
+                if start_date > timezone.now().date() + cutoff:
+                    return self.NONBOOKABLE_REASON__BOOKING_FUTURE \
                         if return_reason else False
 
             # If start_time is a date and there is no end_date assume
