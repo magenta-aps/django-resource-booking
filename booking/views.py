@@ -1653,14 +1653,14 @@ class SimpleRessourcesView(LoginRequiredMixin, BreadcrumbMixin,
 
     def get_form(self, form_class=None):
         form = super(SimpleRessourcesView, self).get_form(form_class)
+        unit = self.object.organizationalunit
         user_sorting = ['first_name', 'last_name', 'email']
 
         if 'potentielle_vaerter' in form.fields:
             qs = form.fields['potentielle_vaerter']._get_queryset()
             form.fields['potentielle_vaerter']._set_queryset(
                 qs.filter(
-                    userprofile__organizationalunit=self.object
-                    .organizationalunit
+                    userprofile__organizationalunit=unit
                 ).order_by(*user_sorting)
             )
             form.fields['potentielle_vaerter'].label_from_instance = \
@@ -1674,8 +1674,7 @@ class SimpleRessourcesView(LoginRequiredMixin, BreadcrumbMixin,
             qs = form.fields['potentielle_undervisere']._get_queryset()
             form.fields['potentielle_undervisere']._set_queryset(
                 qs.filter(
-                    userprofile__organizationalunit=
-                    self.object.organizationalunit
+                    userprofile__organizationalunit=unit
                 ).order_by(*user_sorting)
             )
             form.fields['potentielle_undervisere'].label_from_instance = \
@@ -1689,7 +1688,7 @@ class SimpleRessourcesView(LoginRequiredMixin, BreadcrumbMixin,
             qs = form.fields['roomresponsible']._get_queryset()
             form.fields['roomresponsible']._set_queryset(
                 qs.filter(
-                    organizationalunit=self.object.organizationalunit
+                    organizationalunit=unit
                 ).order_by(*user_sorting)
             )
             form.fields['roomresponsible'].label_from_instance = \
