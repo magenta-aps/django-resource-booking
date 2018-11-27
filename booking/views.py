@@ -4398,21 +4398,6 @@ class EvaluationEditView(BreadcrumbMixin, UpdateView):
         if self.object.product is None:
             self.object.product = self.get_product()
             self.object.save()
-        for visit in self.object.product.get_visits():
-            if visit.is_multi_sub:
-                visit = visit.multi_master
-            for booking in visit.booking_list:
-                guest = booking.booker
-                evaluationguest = SurveyXactEvaluationGuest.objects.filter(
-                    evaluation=self.object,
-                    guest=guest
-                ).first()
-                if evaluationguest is None:
-                    evaluationguest = SurveyXactEvaluationGuest(
-                        evaluation=self.object,
-                        guest=guest
-                    )
-                    evaluationguest.save()
         return response
 
     def get_breadcrumb_args(self):

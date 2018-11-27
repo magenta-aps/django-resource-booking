@@ -6401,6 +6401,23 @@ class SurveyXactEvaluation(models.Model):
                 in autosends
         }
 
+    def save(self, *args, **kwargs):
+        super(SurveyXactEvaluation, self).save(*args, **kwargs)
+        for visit in self.product.get_visits():
+            if visit.is_multi_sub:
+                visit = visit.multi_master
+            for booking in visit.booking_list:
+                guest = booking.booker
+                if SurveyXactEvaluationGuest.objects.filter(
+                    evaluation=self,
+                    guest=guest
+                ).count() == 0:
+                    evaluationguest = SurveyXactEvaluationGuest(
+                        evaluation=self,
+                        guest=guest
+                    )
+                    evaluationguest.save()
+
     def __unicode__(self):
         return u"SurveyXactEvaluation #%d (%s)" % (self.pk, self.product.title)
 
