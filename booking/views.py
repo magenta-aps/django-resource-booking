@@ -2477,7 +2477,9 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
             ] and not booking.is_waiting:
                 booking.autosend(
                     EmailTemplateType.notify_all__booking_complete,
-                    [booking.booker],
+                    KUEmailRecipient.multiple(
+                        booking.booker, KUEmailRecipient.TYPE_GUEST
+                    ),
                     True
                 )
 
