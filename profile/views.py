@@ -63,12 +63,15 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
 
         unit_qs = self.request.user.userprofile.get_unit_queryset()
 
-        today_qs = Visit.get_todays_visits().filter(
-            eventtime__product__organizationalunit=unit_qs
-        )
-        recent_qs = Visit.get_recently_held().filter(
-            eventtime__product__organizationalunit=unit_qs
-        )
+        today_qs = Visit.objects.filter(id__in=[
+            visit.id for visit in Visit.get_todays_visits()
+            if visit.real.unit_qs & unit_qs
+        ])
+
+        recent_qs = Visit.objects.filter(id__in=[
+            visit.id for visit in Visit.get_recently_held()
+            if visit.real.unit_qs & unit_qs
+        ])
 
         context['lists'].extend([{
             'color': self.HEADING_BLUE,
