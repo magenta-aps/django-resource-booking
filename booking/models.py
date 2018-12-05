@@ -3683,7 +3683,7 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             return self.multiproductvisit.unit
         try:
             return self.product.organizationalunit
-        except Exception as e:
+        except:
             pass
 
     def get_override_attr(self, attrname):
@@ -4414,7 +4414,6 @@ class MultiProductVisit(Visit):
             return self.products[0].organizationalunit
         except:
             pass
-
 
     def resources_assigned(self, requirement):
         resource_list = []
