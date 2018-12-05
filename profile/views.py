@@ -71,7 +71,9 @@ class ProfileView(BreadcrumbMixin, LoginRequiredMixin, TemplateView):
         recent_qs = Visit.objects.filter(id__in=[
             visit.id for visit in Visit.get_recently_held()
             if visit.real.unit_qs & unit_qs
-        ])
+        ]).order_by(
+            '-eventtime__start'
+        )
 
         context['lists'].extend([{
             'color': self.HEADING_BLUE,
