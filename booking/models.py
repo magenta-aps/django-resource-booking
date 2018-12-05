@@ -3407,8 +3407,11 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
 
     @property
     def display_title(self):
-        return self.product.title if self.product \
-            else _(u"Besøg #%d") % self.id
+        try:
+            return self.bookings.first().booker.school.name
+        except:
+            return self.product.title if self.product \
+                else _(u"Besøg #%d") % self.id
 
     @property
     def display_value(self):
