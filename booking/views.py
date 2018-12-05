@@ -48,6 +48,7 @@ from booking.forms import BookingListForm
 from booking.forms import ClassBookingBaseForm
 from booking.forms import ClassBookingForm
 from booking.forms import ClassProductForm
+from booking.forms import ConfirmForm
 from booking.forms import EditBookerForm
 from booking.forms import EmailComposeForm
 from booking.forms import EmailReplyForm
