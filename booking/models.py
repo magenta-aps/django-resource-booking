@@ -3677,6 +3677,15 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             pass
         return None
 
+    @property
+    def unit(self):
+        if self.is_multiproductvisit:
+            return self.multiproductvisit.unit
+        try:
+            return self.product.organizationalunit
+        except Exception as e:
+            pass
+
     def get_override_attr(self, attrname):
         result = getattr(self, 'override_' + attrname, None)
 
@@ -4398,6 +4407,14 @@ class MultiProductVisit(Visit):
 
     def planned_status_is_blocked(self):
         return True
+
+    @property
+    def unit(self):
+        try:
+            return self.products[0].organizationalunit
+        except:
+            pass
+
 
     def resources_assigned(self, requirement):
         resource_list = []
