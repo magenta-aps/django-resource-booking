@@ -1435,6 +1435,15 @@ a.template-overridden, a.template-overridden:hover, a.template-overridden:active
   display: inline-block;
 }
 
+.listcontainer .list-group-item ul > li > ul > li {
+    margin-top: 0;
+}
+
+.listcontainer .list-group-item ul > li > label {
+    font-weight: normal;
+    vertical-align: top;
+}
+
 .listcontainer .panel.panel-bookings .panel-heading .panel-title {
   font-size: 1em;
   display: inline-block;
