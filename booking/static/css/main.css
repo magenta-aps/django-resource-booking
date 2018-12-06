@@ -1029,7 +1029,7 @@ hr {
 
 /* Firefox-specific beautification of select dropdown buttons - rather than have an ugly grey box, put in a nice arrow */
 
-@-moz-document url-prefix() {
+@media screen and (min--moz-device-pixel-ratio:0) {
   select.form-control:not([multiple]) {
     padding-right: 25px;
     background-image: url("data:image/svg+xml,\
@@ -1572,6 +1572,25 @@ a.template-overridden, a.template-overridden:hover, a.template-overridden:active
 li.subvisit-status-1 a.visit-link, li.subvisit-status-7 a.visit-link, li.subvisit-status-8 a.visit-link {
   text-decoration: line-through;
 }
+
+.initial-text {
+  display: none;
+}
+.initially-selected .initial-text {
+  display: inline;
+  font-size: 0.75em;
+}
+#selected-product-list .initial-text {
+  color: #3c763d;
+}
+#selected-product-list .initial-text .details {
+  display: none;
+}
+#deselected-product-list .initial-text {
+  color: #a94442;
+}
+
+
 
 
 /* MultiProductVisit END */

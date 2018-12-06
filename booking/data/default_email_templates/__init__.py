@@ -22,7 +22,6 @@ IMPORT_MAP = {
     EmailTemplateType.NOTIFY_ALL__BOOKING_COMPLETE: 'booking_planned',
     EmailTemplateType.NOTIFY_ALL__BOOKING_CANCELED: 'booking_cancelled',
     EmailTemplateType.NOTITY_ALL__BOOKING_REMINDER: 'reminder',
-    EmailTemplateType.NOTIFY_ALL_EVALUATION: 'evaluation',
     EmailTemplateType.NOTIFY_GUEST_REMINDER: 'reminder',
     EmailTemplateType.NOTIFY_HOST__HOSTROLE_IDLE: 'no_hosts_notification',
     EmailTemplateType.SYSTEM__BASICMAIL_ENVELOPE: 'contact_mail',

@@ -17,7 +17,7 @@ from django.db.models import Q
 from django.db.models import Sum
 from django.db.models.expressions import RawSQL
 from django.db.models.functions import Coalesce
-from django.http import Http404
+from django.http import Http404, HttpResponseBadRequest
 from django.http import HttpResponse
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
@@ -37,7 +37,7 @@ from django.views.generic.edit import FormView, ProcessFormView
 import booking.models as booking_models
 import urls
 from booking.constants import LOGACTION_CREATE
-from booking.forms import AcceptBookingForm
+from booking.forms import AcceptBookingForm, MultiProductVisitProductsForm
 from booking.forms import AdminProductSearchForm
 from booking.forms import AssignmentHelpForm
 from booking.forms import BookerForm
@@ -48,6 +48,7 @@ from booking.forms import BookingListForm
 from booking.forms import ClassBookingBaseForm
 from booking.forms import ClassBookingForm
 from booking.forms import ClassProductForm
+from booking.forms import ConfirmForm
 from booking.forms import EditBookerForm
 from booking.forms import EmailComposeForm
 from booking.forms import EmailReplyForm
@@ -96,6 +97,7 @@ from booking.models import EmailTemplate
 from booking.models import EmailTemplateType
 from booking.models import GymnasieLevel
 from booking.models import KUEmailMessage
+from booking.models import KUEmailRecipient
 from booking.models import MultiProductVisit
 from booking.models import MultiProductVisitTemp
 from booking.models import MultiProductVisitTempProduct
@@ -296,7 +298,7 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
             )
             KUEmailMessage.send_email(
                 template, context, recipients, self.object,
-                original_from_email=request.user.userprofile.get_full_email()
+                original_from_email=KUEmailRecipient(request.user)
             )
             return super(EmailComposeView, self).form_valid(form)
 
@@ -393,11 +395,15 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
             elif recipient_type == EmailComposeView.RECIPIENT_ROOMRESPONSIBLE:
                 roomresponsible_ids.append(id)
 
-        return list(Guest.objects.filter(id__in=booker_ids)) + \
-            list(User.objects.filter(username__in=user_ids)) + \
-            list(RoomResponsible.objects.filter(
-                id__in=roomresponsible_ids)
-            ) + customs
+        return KUEmailRecipient.multiple(
+            Guest.objects.filter(id__in=booker_ids),
+            KUEmailRecipient.TYPE_GUEST
+        ) + KUEmailRecipient.multiple(
+            User.objects.filter(username__in=user_ids)
+        ) + KUEmailRecipient.multiple(
+            RoomResponsible.objects.filter(id__in=roomresponsible_ids),
+            KUEmailRecipient.TYPE_ROOM_RESPONSIBLE
+        ) + KUEmailRecipient.multiple(customs)
 
     def get_unit(self):
         return self.request.user.userprofile.organizationalunit
@@ -1653,14 +1659,15 @@ class SimpleRessourcesView(LoginRequiredMixin, BreadcrumbMixin,
 
     def get_form(self, form_class=None):
         form = super(SimpleRessourcesView, self).get_form(form_class)
+        unit = self.object.organizationalunit
+        user_sorting = ['first_name', 'last_name', 'email']
 
         if 'potentielle_vaerter' in form.fields:
             qs = form.fields['potentielle_vaerter']._get_queryset()
             form.fields['potentielle_vaerter']._set_queryset(
                 qs.filter(
-                    userprofile__organizationalunit=self.object
-                    .organizationalunit
-                )
+                    userprofile__organizationalunit=unit
+                ).order_by(*user_sorting)
             )
             form.fields['potentielle_vaerter'].label_from_instance = \
                 lambda obj: "%s (%s) <%s>" % (
@@ -1672,8 +1679,9 @@ class SimpleRessourcesView(LoginRequiredMixin, BreadcrumbMixin,
         if 'potentielle_undervisere' in form.fields:
             qs = form.fields['potentielle_undervisere']._get_queryset()
             form.fields['potentielle_undervisere']._set_queryset(
-                qs.filter(userprofile__organizationalunit=self.object
-                          .organizationalunit)
+                qs.filter(
+                    userprofile__organizationalunit=unit
+                ).order_by(*user_sorting)
             )
             form.fields['potentielle_undervisere'].label_from_instance = \
                 lambda obj: "%s (%s) <%s>" % (
@@ -1685,7 +1693,9 @@ class SimpleRessourcesView(LoginRequiredMixin, BreadcrumbMixin,
         if 'roomresponsible' in form.fields:
             qs = form.fields['roomresponsible']._get_queryset()
             form.fields['roomresponsible']._set_queryset(
-                qs.filter(organizationalunit=self.object.organizationalunit)
+                qs.filter(
+                    organizationalunit=unit
+                ).order_by(*user_sorting)
             )
             form.fields['roomresponsible'].label_from_instance = \
                 lambda obj: "%s <%s>" % (
@@ -2386,6 +2396,7 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
             put_in_waitinglist = False
 
             attendee_count = booking.booker.attendee_count
+
             if booking.visit.product.do_create_waiting_list and \
                     attendee_count > available_seats:
                 # Put in waiting list
@@ -2412,7 +2423,6 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
 
                 booking.waitinglist_spot = \
                     booking.visit.next_waiting_list_spot
-
             booking.save()
 
             for formname in ['gymnasiesubjectform', 'grundskolesubjectform']:
@@ -2472,7 +2482,9 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
             ] and not booking.is_waiting:
                 booking.autosend(
                     EmailTemplateType.notify_all__booking_complete,
-                    [booking.booker],
+                    KUEmailRecipient.multiple(
+                        booking.booker, KUEmailRecipient.TYPE_GUEST
+                    ),
                     True
                 )
 
@@ -2618,7 +2630,7 @@ class BookingSuccessView(DetailView):
             return ["booking/success.html"]
 
 
-class VisitBookingCreateView(BreadcrumbMixin, AutologgerMixin, CreateView):
+class VisitBookingCreateView(AutologgerMixin, CreateView):
     model = Booking
     visit = None
     object = None
@@ -3240,6 +3252,45 @@ class BookingDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
         ]
 
 
+class BookingCancelView(BreadcrumbMixin, ProductBookingUpdateView):
+
+    template_name = "booking/cancel.html"
+    model = Booking
+    form_class = ConfirmForm
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form = self.get_form()
+        if form.is_valid():
+            self.object.cancelled = True
+            self.object.save()
+            return redirect(
+                reverse('booking-view', args=[self.object.pk])
+            )
+        return self.render_to_response(
+            self.get_context_data(form=form)
+        )
+
+    def get_context_data(self, **kwargs):
+        context = {
+            'oncancel': reverse('booking-view', args=[self.object.id])
+        }
+        context.update(kwargs)
+        return super(BookingCancelView, self).get_context_data(**context)
+
+    def get_breadcrumb_args(self):
+        return [self.object]
+
+    @staticmethod
+    def build_breadcrumbs(booking):
+        return BookingDetailView.build_breadcrumbs(booking) + [
+            {
+                'url': reverse('booking-cancel', args=[booking.id]),
+                'text': _(u'Aflys')
+            }
+        ]
+
+
 class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
                       ProductBookingDetailView):
     """Display Booking details"""
@@ -3287,6 +3338,7 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
 
         context['bookinglistform'] = self.get_bookinglist_form()
         context['waitinglistform'] = self.get_waitinglist_form()
+        context['cancelledlistform'] = self.get_cancelledlist_form()
         context['waitingattendees'] = {
             booking.id: booking.booker.attendee_count
             for booking in self.object.waiting_list
@@ -3319,6 +3371,13 @@ class VisitDetailView(LoginRequiredMixin, LoggedViewMixin, BreadcrumbMixin,
             (booking.id, booking.id) for booking in self.object.waiting_list
             ]
         return waitinglistform
+
+    def get_cancelledlist_form(self, **kwargs):
+        cancelledlist = BookingListForm(data=kwargs)
+        cancelledlist.fields['bookings'].choices = [
+            (booking.id, booking.id) for booking in self.object.cancelled_list
+        ]
+        return cancelledlist
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -3583,9 +3642,7 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
         elif selected == "others":
             user_obj = DummyRecipient()
         if user_obj is not None:
-            formatted = KUEmailMessage.extract_addresses(user_obj)
-            if len(formatted) > 0:
-                ctx['recipient'] = formatted[0]
+            ctx['recipient'] = KUEmailRecipient(user_obj)
 
     def extend_context(self, context):
         # Get product from visit if only visit is present
@@ -3627,13 +3684,13 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
 
         split = TemplateSplit(self.object.body)
         has_guest_block = split.get_subblock_containing(
-            "recipient.guest"
+            "recipient.is_guest"
         ) is not None
         has_teacher_block = split.get_subblock_containing(
-            "recipient.user.userprofile.is_teacher"
+            "recipient.is_teacher"
         ) is not None
         has_host_block = split.get_subblock_containing(
-            "recipient.user.userprofile.is_host"
+            "recipient.is_host"
         ) is not None
 
         recipient_output = []
@@ -4040,13 +4097,14 @@ class MultiProductVisitTempProductsView(BreadcrumbMixin, UpdateView):
 
     def get_form(self):
         form = super(MultiProductVisitTempProductsView, self).get_form()
+        available_products = self.available_products
         form.fields[self.products_key].choices = [
             (product.id, product.title)
-            for product in self.available_products
+            for product in available_products
         ]
         form.initial[self.products_key] = [
             product for product in self.object.products_ordered
-            if product in self.available_products
+            if product in available_products
         ]
         return form
 
@@ -4122,6 +4180,60 @@ class MultiProductVisitTempConfirmView(BreadcrumbMixin, DetailView):
             {
                 'url': reverse('mpv-confirm', args=[mpv.id]),
                 'text': _(u'Bekræft')
+            }
+        ]
+
+
+class MultiProductVisitAddProductView(BackMixin,
+                                      MultiProductVisitTempProductsView):
+    model = MultiProductVisit
+    form_class = MultiProductVisitProductsForm
+    template_name = "visit/multi_products_edit.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if self.object.workflow_status not in [
+            Visit.WORKFLOW_STATUS_BEING_PLANNED
+        ]:
+            raise HttpResponseBadRequest(
+                u'Can only edit visits that are being planned'
+            )
+        return super(MultiProductVisitAddProductView, self)\
+            .dispatch(request, *args, **kwargs)
+
+    @property
+    def available_products(self):
+        visit = self.object
+        filter = {
+            'state': Product.ACTIVE,
+            'time_mode': Product.TIME_MODE_GUEST_SUGGESTED,
+        }
+        exclude = {
+            'type': Product.STUDENT_FOR_A_DAY
+        }
+        booking = visit.bookings.first()
+        booker = booking.booker
+        date = visit.date_ref
+        institution_level = booker.school.type
+        if institution_level != Subject.SUBJECT_TYPE_BOTH:
+            filter['institution_level'] = institution_level
+        products = Product.objects.filter(**filter).exclude(**exclude)
+        available_products = [
+            product
+            for product in products
+            if product.is_bookable(date)
+        ]
+        return available_products
+
+    def get_breadcrumb_args(self):
+        return [self.object]
+
+    @staticmethod
+    def build_breadcrumbs(visit):
+        return VisitDetailView.build_breadcrumbs(visit) + [
+            {
+                'url': reverse('visit-mpv-edit', args=[visit.id]),
+                'text': _(u'Redigér tilbud')
             }
         ]
 
