@@ -3952,7 +3952,6 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
             )
 
             if not only_these_recipients and template_type.send_to_booker:
-<<<<<<< HEAD
                 # Mails to bookers on MPVs are sent from the parent visit
                 if not self.is_multi_sub:
                     bookings = self.bookings.all()
@@ -3968,30 +3967,11 @@ class Visit(AvailabilityUpdaterMixin, models.Model):
                                     'booking': booking,
                                     'booker': booking.booker
                                 },
-                                booking.booker,
+                                KUEmailRecipient(booking.booker),
                                 self,
                                 unit,
                                 original_from_email=reply_recipients
                             )
-=======
-                for booking in self.bookings.all():
-                    if not booking.is_waiting or \
-                            template_type.send_to_booker_on_waitinglist:
-                        KUEmailMessage.send_email(
-                            template_type,
-                            {
-                                'visit': self,
-                                'besoeg': self,
-                                'product': product,
-                                'booking': booking,
-                                'booker': booking.booker
-                            },
-                            KUEmailRecipient(booking.booker),
-                            self,
-                            unit,
-                            original_from_email=reply_recipients
-                        )
->>>>>>> feature/ticket25121_recipients_classification
 
     def get_autosend_display(self):
         autosends = self.get_autosends(True, False, False)
