@@ -1530,12 +1530,14 @@ class EmailTemplateForm(forms.ModelForm):
             full_text = getattr(self.instance, field)
             split = TemplateSplit(full_text)
 
-            guest_block = split.get_subblock_containing("recipient.guest")
+            guest_block = split.get_subblock_containing(
+                "recipient.is_guest"
+            )
             teacher_block = split.get_subblock_containing(
-                "recipient.user.userprofile.is_teacher"
+                "recipient.is_teacher"
             )
             host_block = split.get_subblock_containing(
-                "recipient.user.userprofile.is_host"
+                "recipient.is_host"
             )
             try:
                 block = next(
@@ -1628,10 +1630,9 @@ class EmailTemplateForm(forms.ModelForm):
                 text = []
                 first = True
                 for condition, fieldname in [
-                    ("recipient.guest", field + "_guest"),
-                    ("recipient.user.userprofile.is_teacher",
-                     field + "_teacher"),
-                    ("recipient.user.userprofile.is_host", field + "_host")
+                    ("recipient.is_guest", field + "_guest"),
+                    ("recipient.is_teacher", field + "_teacher"),
+                    ("recipient.is_host", field + "_host")
                 ]:
                     sub_text = cleaned_data.get(fieldname, "").strip()
                     if len(sub_text) > 0:

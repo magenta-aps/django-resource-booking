@@ -97,6 +97,7 @@ from booking.models import EmailTemplate
 from booking.models import EmailTemplateType
 from booking.models import GymnasieLevel
 from booking.models import KUEmailMessage
+from booking.models import KUEmailRecipient
 from booking.models import MultiProductVisit
 from booking.models import MultiProductVisitTemp
 from booking.models import MultiProductVisitTempProduct
@@ -297,7 +298,7 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
             )
             KUEmailMessage.send_email(
                 template, context, recipients, self.object,
-                original_from_email=request.user.userprofile.get_full_email()
+                original_from_email=KUEmailRecipient(request.user)
             )
             return super(EmailComposeView, self).form_valid(form)
 
@@ -394,11 +395,15 @@ class EmailComposeView(FormMixin, HasBackButtonMixin, TemplateView):
             elif recipient_type == EmailComposeView.RECIPIENT_ROOMRESPONSIBLE:
                 roomresponsible_ids.append(id)
 
-        return list(Guest.objects.filter(id__in=booker_ids)) + \
-            list(User.objects.filter(username__in=user_ids)) + \
-            list(RoomResponsible.objects.filter(
-                id__in=roomresponsible_ids)
-            ) + customs
+        return KUEmailRecipient.multiple(
+            Guest.objects.filter(id__in=booker_ids),
+            KUEmailRecipient.TYPE_GUEST
+        ) + KUEmailRecipient.multiple(
+            User.objects.filter(username__in=user_ids)
+        ) + KUEmailRecipient.multiple(
+            RoomResponsible.objects.filter(id__in=roomresponsible_ids),
+            KUEmailRecipient.TYPE_ROOM_RESPONSIBLE
+        ) + KUEmailRecipient.multiple(customs)
 
     def get_unit(self):
         return self.request.user.userprofile.organizationalunit
@@ -2477,7 +2482,9 @@ class BookingView(AutologgerMixin, ModalMixin, ProductBookingUpdateView):
             ] and not booking.is_waiting:
                 booking.autosend(
                     EmailTemplateType.notify_all__booking_complete,
-                    [booking.booker],
+                    KUEmailRecipient.multiple(
+                        booking.booker, KUEmailRecipient.TYPE_GUEST
+                    ),
                     True
                 )
 
@@ -3635,9 +3642,7 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
         elif selected == "others":
             user_obj = DummyRecipient()
         if user_obj is not None:
-            formatted = KUEmailMessage.extract_addresses(user_obj)
-            if len(formatted) > 0:
-                ctx['recipient'] = formatted[0]
+            ctx['recipient'] = KUEmailRecipient(user_obj)
 
     def extend_context(self, context):
         # Get product from visit if only visit is present
@@ -3679,13 +3684,13 @@ class EmailTemplateDetailView(LoginRequiredMixin, BreadcrumbMixin, View):
 
         split = TemplateSplit(self.object.body)
         has_guest_block = split.get_subblock_containing(
-            "recipient.guest"
+            "recipient.is_guest"
         ) is not None
         has_teacher_block = split.get_subblock_containing(
-            "recipient.user.userprofile.is_teacher"
+            "recipient.is_teacher"
         ) is not None
         has_host_block = split.get_subblock_containing(
-            "recipient.user.userprofile.is_host"
+            "recipient.is_host"
         ) is not None
 
         recipient_output = []
